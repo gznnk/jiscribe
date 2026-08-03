@@ -153,6 +153,10 @@ const EXTRA_FIELD_ROWS: Readonly<Record<string, string[]>> = {
 	callout: [
 		'| `tail` | `object` | bottom at `0.2` | Tail tip placement: `{ "side": ..., "position": ... }`. `side` is the edge the tip sits on (`"top"` / `"right"` / `"bottom"` / `"left"`), `position` is 0–1 along that edge. Point it at the annotated object. |',
 	],
+	brace: [
+		'| `direction` | `string` | `"left"` | Which way the tip points, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `{`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |',
+		"| `tipPosition` | `number` | `0.5` | Where the tip sits along the long side, 0–1 from the top (`left`/`right`) or from the left (`up`/`down`). The label hangs off the tip, so this moves the label too. |",
+	],
 };
 
 /** Convert a schema-style description (XxxDoc names) to reference style (`xxx`). */

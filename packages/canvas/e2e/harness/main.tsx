@@ -1,3 +1,4 @@
+import { annotationPlugin } from "@workspace/plugin-annotation-shapes";
 import {
 	containerPlugin,
 	containerToolbarEntry,
@@ -26,7 +27,8 @@ import "./harness.css";
 // The flowchart / container / markdown / sticky / general shapes were removed from core, leaving
 // @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
 // @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
-// @workspace/plugin-general-shapes as their only source
+// @workspace/plugin-general-shapes as their only source; the annotation shapes
+// (@workspace/plugin-annotation-shapes) never lived in core
 // (docs/05_extensibility/plugin-architecture-requirements.md). They are registered in
 // devDependencies as a dev-only circular dependency for e2e, keeping the related specs alive.
 const plugins = [
@@ -36,19 +38,21 @@ const plugins = [
 	stickyPlugin,
 	umlPlugin,
 	generalPlugin,
+	annotationPlugin,
 ];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// The flowchart / container / general categories and the markdown / sticky presets come from
-// plugins and are not in core's default layout. The specs depend on the flyout buttons and on
-// both presets, so the harness passes a layout with the original arrangement.
+// The flowchart / container / general categories and the markdown / sticky / brace presets come
+// from plugins and are not in core's default layout. The specs depend on the flyout buttons and
+// on the presets, so the harness passes a layout with the original arrangement.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "callout" },
+	{ kind: "preset", presetId: "brace" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,

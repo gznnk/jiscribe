@@ -10,7 +10,8 @@ export type ToolTitle =
 	| "Polyline"
 	| "Polygon"
 	| "Sticky"
-	| "Markdown";
+	| "Markdown"
+	| "Brace";
 
 /** Edge id of a connector attachment anchor. */
 export type AnchorId =

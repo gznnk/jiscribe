@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@workspace/canvas": "workspace:*",
+		"@workspace/plugin-annotation-shapes": "workspace:*",
 		"@workspace/plugin-container-shapes": "workspace:*",
 		"@workspace/plugin-flowchart-shapes": "workspace:*",
 		"@workspace/plugin-general-shapes": "workspace:*",

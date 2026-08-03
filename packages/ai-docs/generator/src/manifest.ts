@@ -2,6 +2,7 @@ import {
 	builtinObjectDocDefinitions,
 	type ObjectDocDefinition,
 } from "@workspace/canvas/doc";
+import { annotationDocPlugin } from "@workspace/plugin-annotation-shapes/doc";
 import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
 import { generalDocPlugin } from "@workspace/plugin-general-shapes/doc";
 import { markdownDocPlugin } from "@workspace/plugin-markdown-shape/doc";
@@ -41,6 +42,8 @@ export const CANONICAL_TYPE_ORDER = [
 	"lock",
 	"shield",
 	"callout",
+	// annotation-shapes の汎用注釈（記法に属さない、図に説明を足す図形）
+	"brace",
 	"db",
 	"storedData",
 	"subroutine",
@@ -112,6 +115,7 @@ export const DETAIL_SECTION_TYPES = [
 	"document",
 	"actor",
 	"callout",
+	"brace",
 	"db",
 ] as const;
 
@@ -130,6 +134,7 @@ const definitionSources: ReadonlyArray<
 	[markdownDocPlugin.id, markdownDocPlugin.objects],
 	[stickyDocPlugin.id, stickyDocPlugin.objects],
 	[generalDocPlugin.id, generalDocPlugin.objects],
+	[annotationDocPlugin.id, annotationDocPlugin.objects],
 ];
 
 /** Merge the sources, failing on type-name collisions instead of last-wins. */

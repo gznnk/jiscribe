@@ -27,7 +27,7 @@ import type {
 // (docs/05_extensibility/plugin-architecture-requirements.md)。
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container / general カテゴリと markdown プリセットは core の既定 layout に
+// flowchart / container / general カテゴリと markdown / brace プリセットは core の既定 layout に
 // 含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
@@ -35,6 +35,7 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "callout" },
+	{ kind: "preset", presetId: "brace" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,

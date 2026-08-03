@@ -1,4 +1,17 @@
 {
+	"brace": {
+		"direction": {
+			"description": "Which way the tip points, away from the shapes being grouped: the arms reach the opposite edge, where those shapes are. \"left\" is the typographic \"{\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions — use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
+			"type": "string",
+			"enum": ["left", "right", "up", "down"]
+		},
+		"tipPosition": {
+			"description": "Where the tip sits along the span (the box's long side): 0 = top end for a left/right brace and left end for an up/down one, 1 = the other end. The label hangs off the tip, so this is also what moves the label. Omitted = 0.5.",
+			"type": "number",
+			"minimum": 0,
+			"maximum": 1
+		}
+	},
 	"callout": {
 		"tail": {
 			"description": "Tail placement: the tip sits on the bounding box's `side` edge at `position`. Choose the side facing the annotated object. The tail base stays in a fixed slot on that edge (left/top half vs right/bottom half, following the tip's half), so the tail always leans like a classic speech bubble. Omitted = bottom at 0.2.",

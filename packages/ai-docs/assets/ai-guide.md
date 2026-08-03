@@ -80,6 +80,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | `lock`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | authentication, protected resource                    |
 | `shield`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | security boundary, trust zone                         |
 | `callout`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | annotation bubble                                     |
+| `brace`                 | `x`,`y`,`width`,`height`             | stroke / text / rotation                         | group marker, grouping annotation                     |
 | `db`                    | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | data store                                            |
 | `storedData`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | generic stored data (file / cache)                    |
 | `subroutine`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | predefined process / call                             |

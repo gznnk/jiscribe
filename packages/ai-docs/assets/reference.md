@@ -80,6 +80,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `lock`             | Authentication, protected resource                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `shield`           | Security boundary, trust zone                         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `callout`          | Annotation bubble                                     | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `brace`            | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
 | `db`               | Data store                                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `storedData`       | Generic stored data (file / cache)                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `subroutine`       | Predefined process / call                             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
@@ -379,6 +380,33 @@ Speech-bubble callout, typically used for annotations and explanatory comments. 
 | `width`  | `number` | `160`           | Bounding-box width (px).                                                                                                                                                                                       |
 | `height` | `number` | `110`           | Bounding-box height (px).                                                                                                                                                                                      |
 | `tail`   | `object` | bottom at `0.2` | Tail tip placement: `{ "side": ..., "position": ... }`. `side` is the edge the tip sits on (`"top"` / `"right"` / `"bottom"` / `"left"`), `position` is 0–1 along that edge. Point it at the annotated object. |
+
+---
+
+### `brace`
+
+Curly brace shape, used to mark a run of shapes as one group and name it. Uses the same rect-based geometry (x/y/width/height) as `rect`, but the box is the bracket alone: its short side is how far the curve bulges, its long side how far the arms reach. "direction" is the way the tip points, away from what is being grouped — a "left" brace is the typographic "{" and groups what is to its right, so place the box just left of that run and give it a small width (e.g. 24x160). "tipPosition" (0..1) moves the tip along the span, from the top for a left/right brace and from the left for an up/down one. Text is drawn as a label just beyond the tip, auto-sized to the text itself and outside the box, so the box stays a thin band however long the label is. The brace has no fill. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "brace-1",
+	"type": "brace",
+	"x": 200,
+	"y": 150,
+	"width": 24,
+	"height": 160,
+	"text": "Label"
+}
+```
+
+| Field         | Type     | Default  | Description                                                                                                                                                                                                |
+| ------------- | -------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`           | `number` | `0`      | X of the bounding box's top-left.                                                                                                                                                                          |
+| `y`           | `number` | `0`      | Y of the bounding box's top-left.                                                                                                                                                                          |
+| `width`       | `number` | `24`     | Bounding-box width (px).                                                                                                                                                                                   |
+| `height`      | `number` | `160`    | Bounding-box height (px).                                                                                                                                                                                  |
+| `direction`   | `string` | `"left"` | Which way the tip points, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `{`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |
+| `tipPosition` | `number` | `0.5`    | Where the tip sits along the long side, 0–1 from the top (`left`/`right`) or from the left (`up`/`down`). The label hangs off the tip, so this moves the label too.                                        |
 
 ---
 

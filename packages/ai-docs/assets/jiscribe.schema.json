@@ -109,6 +109,9 @@
 					"$ref": "#/$defs/CalloutDoc"
 				},
 				{
+					"$ref": "#/$defs/BraceDoc"
+				},
+				{
 					"$ref": "#/$defs/DbDoc"
 				},
 				{
@@ -245,6 +248,9 @@
 				},
 				{
 					"$ref": "#/$defs/CalloutDoc"
+				},
+				{
+					"$ref": "#/$defs/BraceDoc"
 				},
 				{
 					"$ref": "#/$defs/DbDoc"
@@ -2458,6 +2464,100 @@
 				}
 			}
 		},
+		"BraceDoc": {
+			"description": "Curly brace shape, used to mark a run of shapes as one group and name it. Uses the same rect-based geometry (x/y/width/height) as RectDoc, but the box is the bracket alone: its short side is how far the curve bulges, its long side how far the arms reach. \"direction\" is the way the tip points, away from what is being grouped — a \"left\" brace is the typographic \"{\" and groups what is to its right, so place the box just left of that run and give it a small width (e.g. 24x160). \"tipPosition\" (0..1) moves the tip along the span, from the top for a left/right brace and from the left for an up/down one. Text is drawn as a label just beyond the tip, auto-sized to the text itself and outside the box, so the box stays a thin band however long the label is. The brace has no fill.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"brace\".",
+					"type": "string",
+					"const": "brace"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"direction": {
+					"description": "Which way the tip points, away from the shapes being grouped: the arms reach the opposite edge, where those shapes are. \"left\" is the typographic \"{\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions — use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
+					"type": "string",
+					"enum": ["left", "right", "up", "down"]
+				},
+				"tipPosition": {
+					"description": "Where the tip sits along the span (the box's long side): 0 = top end for a left/right brace and left end for an up/down one, 1 = the other end. The label hangs off the tip, so this is also what moves the label. Omitted = 0.5.",
+					"type": "number",
+					"minimum": 0,
+					"maximum": 1
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
 		"DbDoc": {
 			"description": "Database cylinder shape, typically used for data stores in architecture or ER diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cylinder. Text is laid out in the body region below the top cap ellipse (not the full bounding box).",
 			"type": "object",
@@ -4100,7 +4200,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / brace / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,
