@@ -22,8 +22,10 @@ export const EnvelopeFeatures = {
 } as const satisfies ObjectFeatures;
 
 /**
- * Corner radius as a fraction of the shorter side. Shared by the silhouette
- * and the outline, which rounds the same corners the drawing does.
+ * Corner radius as a fraction of the shorter side. Shared by the silhouette, the
+ * outline (which rounds the same corners the drawing does) and the flap, which
+ * creases from the 45° point of each top corner arc so it meets the body's own
+ * corner rather than the box's.
  */
 export const ENVELOPE_CORNER_RATIO = 0.05;
 

@@ -16,17 +16,17 @@ export const buildEnvelopeFigure: PictogramFigureBuilder = (
 	y,
 	width,
 	height,
-) => ({
-	body: [
-		buildRoundedRectPath(
-			x,
-			y,
-			width,
-			height,
-			Math.min(width, height) * ENVELOPE_CORNER_RATIO,
-		),
-	],
-	detail: [
-		`M ${x} ${y} L ${x + width / 2} ${y + height * ENVELOPE_FLAP_DEPTH_RATIO} L ${x + width} ${y}`,
-	],
-});
+) => {
+	const cornerRadius = Math.min(width, height) * ENVELOPE_CORNER_RATIO;
+	// The 45° point of the corner arc — where the rounded body comes closest to
+	// the box corner. A real envelope's flap creases from the corner itself, so
+	// starting at the end of the arc instead (on the flat top edge) leaves the
+	// flap visibly short of it; starting at the box corner overshoots the body.
+	const cornerInset = cornerRadius * (1 - Math.SQRT1_2);
+	return {
+		body: [buildRoundedRectPath(x, y, width, height, cornerRadius)],
+		detail: [
+			`M ${x + cornerInset} ${y + cornerInset} L ${x + width / 2} ${y + height * ENVELOPE_FLAP_DEPTH_RATIO} L ${x + width - cornerInset} ${y + cornerInset}`,
+		],
+	};
+};
