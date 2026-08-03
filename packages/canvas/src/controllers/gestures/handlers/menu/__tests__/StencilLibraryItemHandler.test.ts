@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { clickPlacedPlugin } from "../../../../__tests__/support/clickPlacedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { StencilLibraryItemHandler } from "../StencilLibraryItemHandler";
 
-const registries = createTestRegistries();
+// `pin` is the click-placed (non-drag-drawn) stand-in the plugin supplies.
+const registries = createCanvasRegistries({ plugins: [clickPlacedPlugin] });
 
 const makeState = (): CanvasControllerState =>
 	({
@@ -74,10 +76,10 @@ describe("StencilLibraryItemHandler", () => {
 		expect(left.shapeDrawing).toBeNull();
 	});
 
-	it("a click on a non-bounds-drawing shape (sticky) places it at the viewport center", () => {
+	it("a click on a non-bounds-drawing shape places it at the viewport center", () => {
 		const next = StencilLibraryItemHandler.handle(
 			makeState(),
-			makeEvent("click", "item:sticky"),
+			makeEvent("click", "item:pin"),
 			registries,
 		);
 		expect(next.rootIds).toHaveLength(1);
@@ -123,10 +125,10 @@ describe("StencilLibraryItemHandler", () => {
 			expect(next.stencilLibraryOpenCategory).toBeNull();
 		});
 
-		it("on a click that places a non-drawable shape (sticky)", () => {
+		it("on a click that places a non-drawable shape", () => {
 			const next = StencilLibraryItemHandler.handle(
 				openState(),
-				makeEvent("click", "item:sticky"),
+				makeEvent("click", "item:pin"),
 				registries,
 			);
 			expect(next.stencilLibraryOpenCategory).toBeNull();

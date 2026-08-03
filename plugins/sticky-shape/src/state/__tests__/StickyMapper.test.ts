@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { StickyDoc } from "../../../../../schemas/objects/annotations/sticky/StickyDoc";
-import {
-	stickyToDoc,
-	stickyToState,
-} from "../../../../../states/objects/annotations/sticky/StickyMapper";
-import type { StickyState } from "../../../../../states/objects/annotations/sticky/StickyState";
+import type { StickyDoc } from "../../schema/StickyDoc";
+import { stickyToDoc, stickyToState } from "../StickyMapper";
+import type { StickyState } from "../StickyState";
 
 describe("StickyMapper", () => {
 	describe("stickyToState", () => {

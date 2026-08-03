@@ -37,7 +37,7 @@ export type ObjectFactory = {
 	 * step from `calcDrawBounds`.
 	 *
 	 * The presence of this method indicates whether the shape can be drag-drawn.
-	 * Shapes without it (sticky, etc.) are center-placed on click.
+	 * Shapes without it are center-placed on click.
 	 */
 	createDocFromBounds?(
 		x1: number,

@@ -19,7 +19,7 @@ type FrameDefaults = Omit<ObjectDoc, "id"> & {
 type FrameObjectFactoryOptions = {
 	/**
 	 * Whether drag-drawing from a two-point bounds is supported (default true).
-	 * Shapes set to false (such as sticky) have no createDocFromBounds and are
+	 * Shapes set to false have no createDocFromBounds and are
 	 * center-placed on click.
 	 */
 	supportsBounds?: boolean;
@@ -28,7 +28,7 @@ type FrameObjectFactoryOptions = {
 /**
  * Builds a `ObjectFactory` from DEFAULTS for Frame-family shapes
  * (geometry: "rect", top-left origin x/y/width/height). Consolidates shapes
- * such as rect / diamond / sticky whose creation logic differs only in the
+ * such as rect / diamond / callout whose creation logic differs only in the
  * defaults and whether bounds are supported.
  *
  * Center-based ellipses (cx/cy/rx/ry) are out of scope because their placement

@@ -8,7 +8,7 @@ import type { ObjectBehaviorEntry } from "../../gestures/registry/ObjectBehavior
 
 /**
  * Creates the shared behavior for Frame-based objects (rect / ellipse / diamond /
- * svg / sticky, i.e. shapes with geometry: "rect" + transform).
+ * svg / callout, i.e. shapes with geometry: "rect" + transform).
  *
  * These shapes share identical move, group-transform, and group-rotation behavior:
  * cx/cy are shifted by delta, and transform/rotation are delegated to `FrameTransform`.

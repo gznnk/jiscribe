@@ -1,5 +1,6 @@
+import { createFrameObjectFactory } from "@workspace/canvas/unstable-doc";
+
 import { STICKY_DOC_DEFAULTS } from "./StickyDoc";
-import { createFrameObjectFactory } from "../../utils/createFrameObjectFactory";
 
 /**
  * Factory that creates Sticky shapes (shared Frame logic generated from defaults).

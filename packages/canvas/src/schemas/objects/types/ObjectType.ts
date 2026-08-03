@@ -6,7 +6,6 @@ export const ObjectTypes = [
 	"polygon",
 	"group",
 	"connector",
-	"sticky",
 	"svg",
 ] as const;
 

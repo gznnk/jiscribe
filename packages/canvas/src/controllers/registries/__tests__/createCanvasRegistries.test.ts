@@ -30,7 +30,7 @@ describe("createCanvasRegistries", () => {
 	describe("default (no config)", () => {
 		it("registers every object type", () => {
 			const registries = createCanvasRegistries();
-			for (const type of ["rect", "ellipse", "callout", "sticky"]) {
+			for (const type of ["rect", "ellipse", "callout", "polygon"]) {
 				expect(registries.objectMapper.getFeatures(type)).toBeDefined();
 			}
 			// gesture handlers are type-independent and always registered
@@ -65,12 +65,6 @@ describe("createCanvasRegistries", () => {
 			);
 			expect(presetTypes.has("rect")).toBe(true);
 			expect(presetTypes.has("ellipse")).toBe(false);
-		});
-
-		it("drops the svgDefs of the types left out", () => {
-			const registries = createCanvasRegistries({ objectTypes: ["rect"] });
-			// sticky is the only built-in contributing to <defs>, and it is not enabled.
-			expect(registries.objectSvgDefs.all()).toHaveLength(0);
 		});
 
 		it("still registers all gesture handlers (type-independent)", () => {
@@ -124,7 +118,7 @@ describe("createCanvasRegistries", () => {
 			expect(registries.objectTextEditOverflow.get("rect")).toBeUndefined();
 		});
 
-		it("registers a plugin's svgDefs, alongside the built-in contributions", () => {
+		it("registers a plugin's svgDefs, and only for the type declaring it", () => {
 			const HaloDefs = () => null;
 			const haloPlugin: CanvasPlugin = {
 				id: "halo-plugin",
@@ -133,19 +127,13 @@ describe("createCanvasRegistries", () => {
 						...buildFakeDefinition("halo"),
 						svgDefs: HaloDefs,
 					}),
+					plain: buildFakeDefinition("plain"),
 				},
 			};
 			const registries = createCanvasRegistries({ plugins: [haloPlugin] });
-			const contributions = registries.objectSvgDefs.all();
-			expect(contributions).toContainEqual({
-				type: "halo",
-				Component: HaloDefs,
-			});
-			// The sticky filter is a built-in contribution through the same seam, and
-			// plugins are applied after the built-ins.
-			expect(contributions.map((entry) => entry.type)).toEqual([
-				"sticky",
-				"halo",
+			// No built-in contributes to <defs>, so the plugin's entry is the only one.
+			expect(registries.objectSvgDefs.all()).toEqual([
+				{ type: "halo", Component: HaloDefs },
 			]);
 		});
 

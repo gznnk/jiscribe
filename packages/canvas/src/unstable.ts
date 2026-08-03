@@ -48,6 +48,14 @@ export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 export { readTextSlot } from "./states/objects/types/TextSlots";
 export type { TextSlots } from "./states/objects/types/TextSlots";
 
+// For a type that draws its own group instead of going through createFrameObject
+// (the sticky's shadowed paper, say): the same two derivations createFrameObject
+// makes internally. `calcTextRegion` is the seam the in-place editor also goes
+// through, so a renderer that places text itself must use it or the text jumps
+// on entering edit mode.
+export { calcTextRegion } from "./presentations/objects/utils/calcTextRegion";
+export { createSvgTransform } from "./presentations/objects/utils/createSvgTransform";
+
 export { resolveAutoColor } from "./presentations/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoColor";
 
@@ -110,6 +118,11 @@ export {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuStyled";
+
+// The swatch shown on a color menu's toggle button (a filled circle, checkered
+// when transparent). Pair it with a dropdown panel of your own swatches when the
+// type picks from a palette other than ObjectMenuColorPickerGrid's.
+export { ColorPreviewIcon } from "./controllers/ui/icons/ColorPreviewIcon";
 
 export { ObjectMenuDropdownPanel } from "./controllers/ui/menu/ObjectMenu/common/ObjectMenuDropdownPanel";
 export { ObjectMenuColorPickerGrid } from "./controllers/ui/menu/ObjectMenu/common/ObjectMenuColorPickerGrid";

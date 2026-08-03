@@ -34,7 +34,6 @@ export type {
 // (e.g. `containerToolbarEntry`).
 export {
 	DEFAULT_TOOLBAR_LAYOUT,
-	annotationToolbarEntry,
 	basicToolbarEntry,
 	type ToolbarEntry,
 } from "./controllers/ui/menu/Toolbar";

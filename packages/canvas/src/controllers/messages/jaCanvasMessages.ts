@@ -113,7 +113,9 @@ export const jaCanvasMessages: CanvasMessages = {
 	// カテゴリの ja ラベルは toolbar.layout のカテゴリエントリ側にある。record はホスト上書き用に残す
 	stencilCategoryLabels: {},
 
-	// PRESET_COLORS と STICKY_PRESET_COLORS の英語名を網羅する
+	// PRESET_COLORS の英語名を網羅する。プラグインが独自パレットを持つ場合も
+	// （@workspace/plugin-sticky-shape の付箋色など）名前をここのキーに合わせれば
+	// 辞書を自前で持たずに済む
 	colorNames: {
 		Red: "赤",
 		"Light Red": "薄い赤",

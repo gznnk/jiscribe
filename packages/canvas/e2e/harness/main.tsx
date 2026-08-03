@@ -11,6 +11,7 @@ import {
 	generalToolbarEntry,
 } from "@workspace/plugin-general-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
+import { stickyPlugin } from "@workspace/plugin-sticky-shape";
 import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
@@ -18,45 +19,42 @@ import "katex/dist/katex.min.css";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "../../src";
-import {
-	Canvas,
-	annotationToolbarEntry,
-	darkCanvasTheme,
-	extractCanvasSourceFromPng,
-} from "../../src";
+import { Canvas, darkCanvasTheme, extractCanvasSourceFromPng } from "../../src";
 import { createCanvasParser } from "../../src/doc";
 import "./harness.css";
 
-// The flowchart / container / markdown / general shapes were removed from core, leaving
+// The flowchart / container / markdown / sticky / general shapes were removed from core, leaving
 // @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape / @workspace/plugin-general-shapes as their only source
+// @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
+// @workspace/plugin-general-shapes as their only source
 // (docs/05_extensibility/plugin-architecture-requirements.md). They are registered in
 // devDependencies as a dev-only circular dependency for e2e, keeping the related specs alive.
 const plugins = [
 	flowchartPlugin,
 	containerPlugin,
 	markdownPlugin,
+	stickyPlugin,
 	umlPlugin,
 	generalPlugin,
 ];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// The flowchart / container / general categories and the markdown preset come from plugins
-// and are not in core's default layout. The specs depend on both flyout buttons and the Markdown
-// preset, so the harness passes a layout with the original arrangement.
+// The flowchart / container / general categories and the markdown / sticky presets come from
+// plugins and are not in core's default layout. The specs depend on the flyout buttons and on
+// both presets, so the harness passes a layout with the original arrangement.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "callout" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
 	containerToolbarEntry,
 	umlToolbarEntry,
 	generalToolbarEntry,
-	annotationToolbarEntry,
 ];
 
 const harnessParser = createCanvasParser({ plugins });

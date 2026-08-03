@@ -4,12 +4,6 @@ import {
 } from "../objects/annotations/callout/CalloutDoc";
 import { CalloutObjectFactory } from "../objects/annotations/callout/CalloutObjectFactory";
 import { validateCalloutDoc } from "../objects/annotations/callout/validateCalloutDoc";
-import {
-	STICKY_DOC_DEFAULTS,
-	StickyFeatures,
-} from "../objects/annotations/sticky/StickyDoc";
-import { StickyObjectFactory } from "../objects/annotations/sticky/StickyObjectFactory";
-import { validateStickyDoc } from "../objects/annotations/sticky/validateStickyDoc";
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
 import {
@@ -98,14 +92,6 @@ export const builtinObjectDocDefinitions = {
 		features: ConnectorFeatures,
 		validateDoc: validateConnectorDoc,
 		summary: "edge / arrow between objects",
-	},
-	sticky: {
-		features: StickyFeatures,
-		validateDoc: validateStickyDoc,
-		factory: StickyObjectFactory,
-		description: "Sticky note annotation.",
-		summary: "sticky note (no stroke or `rx`)",
-		defaults: STICKY_DOC_DEFAULTS,
 	},
 	svg: {
 		features: SvgFeatures,

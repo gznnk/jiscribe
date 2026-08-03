@@ -3,7 +3,6 @@ import { describe, it, expect } from "vitest";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import {
 	DEFAULT_TOOLBAR_LAYOUT,
-	annotationToolbarEntry,
 	basicToolbarEntry,
 	type ToolbarEntry,
 } from "../toolbarLayout";
@@ -38,22 +37,9 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 		}
 	});
 
-	/**
-	 * sticky is deliberately reachable two ways: pinned for the classic
-	 * direct-placement UX, and inside the annotation flyout next to callout.
-	 * Everything else appears exactly once.
-	 */
-	it("pins sticky and also lists it under annotation, and duplicates nothing else", () => {
-		const counts = new Map<string, number>();
-		for (const presetId of collectPresetIds(DEFAULT_TOOLBAR_LAYOUT)) {
-			counts.set(presetId, (counts.get(presetId) ?? 0) + 1);
-		}
-		expect(counts.get("sticky")).toBe(2);
-		expect(
-			[...counts]
-				.filter(([, count]) => count > 1)
-				.map(([presetId]) => presetId),
-		).toEqual(["sticky"]);
+	it("reaches every preset exactly once", () => {
+		const presetIds = collectPresetIds(DEFAULT_TOOLBAR_LAYOUT);
+		expect(presetIds).toHaveLength(new Set(presetIds).size);
 	});
 
 	it("gives every category a unique id", () => {
@@ -63,7 +49,7 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 		expect(categoryIds).toHaveLength(new Set(categoryIds).size);
 	});
 
-	it("keeps the basic primitives and sticky pinned directly on the bar", () => {
+	it("pins every core preset directly on the bar", () => {
 		const pinned = DEFAULT_TOOLBAR_LAYOUT.filter(
 			(entry) => entry.kind === "preset",
 		).map((entry) => entry.presetId);
@@ -72,15 +58,18 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 			"ellipse",
 			"polyline",
 			"polygon",
-			"sticky",
+			"callout",
 		]);
 	});
 
-	it("folds annotation into a category flyout", () => {
-		const categories = DEFAULT_TOOLBAR_LAYOUT.filter(
-			(entry) => entry.kind === "category",
-		).map((entry) => entry.id);
-		expect(categories).toEqual(["annotation"]);
+	/**
+	 * With sticky moved to `@workspace/plugin-sticky-shape`, callout is the only
+	 * annotation core owns, and a one-entry flyout is not worth the click.
+	 */
+	it("opens no category flyout at all", () => {
+		expect(
+			DEFAULT_TOOLBAR_LAYOUT.filter((entry) => entry.kind === "category"),
+		).toEqual([]);
 	});
 
 	it("excludes the basic category, whose members are pinned instead", () => {
@@ -98,10 +87,7 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 });
 
 describe("toolbar category entries", () => {
-	it.each([
-		["annotation", annotationToolbarEntry],
-		["basic", basicToolbarEntry],
-	] as [string, ToolbarEntry][])(
+	it.each([["basic", basicToolbarEntry]] as [string, ToolbarEntry][])(
 		"declares %s as a non-empty category",
 		(id, entry) => {
 			expect(entry.kind).toBe("category");
@@ -116,7 +102,7 @@ describe("toolbar category entries", () => {
 	);
 
 	it("carries an English and Japanese label for every built-in category", () => {
-		for (const entry of [annotationToolbarEntry, basicToolbarEntry]) {
+		for (const entry of [basicToolbarEntry]) {
 			if (entry.kind !== "category") {
 				continue;
 			}

@@ -1,16 +1,23 @@
+import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
+import type { TextEditable } from "@workspace/canvas/unstable";
+import {
+	TextOverlay,
+	calcTextRegion,
+	createSvgTransform,
+	readTextSlot,
+} from "@workspace/canvas/unstable";
 import type React from "react";
 import { memo } from "react";
 
-import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
-import type { StickyState } from "../../../../states/objects/annotations/sticky/StickyState";
-import { readTextSlot } from "../../../../states/objects/types/TextSlots";
-import { TextOverlay } from "../../base/TextOverlay";
-import type { TextEditable } from "../../base/TextOverlay";
-import { calcTextRegion } from "../../utils/calcTextRegion";
-import { createSvgTransform } from "../../utils/createSvgTransform";
+import type { StickyState } from "../state/StickyState";
 
 type StickyProps = StickyState & TextEditable;
 
+/**
+ * Drawn by hand rather than through `createFrameObject`: the paper sits under a
+ * blurred offset shadow, so the type owns a group of two polygons instead of the
+ * single styled shape that helper draws.
+ */
 const StickyComponent: React.FC<StickyProps> = (props) => {
 	const {
 		id,

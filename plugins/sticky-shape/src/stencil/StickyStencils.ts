@@ -1,5 +1,6 @@
+import type { Stencil } from "@workspace/canvas";
+
 import { StickyIcon } from "./StickyIcon";
-import type { Stencil } from "../Stencil";
 
 export const StickyStencils: Stencil[] = [
 	{

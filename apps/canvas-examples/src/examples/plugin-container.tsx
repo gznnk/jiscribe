@@ -1,5 +1,5 @@
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@workspace/canvas";
-import { Canvas, annotationToolbarEntry } from "@workspace/canvas";
+import { Canvas } from "@workspace/canvas";
 import { createCanvasParser } from "@workspace/canvas/doc";
 import {
 	containerPlugin,
@@ -14,11 +14,13 @@ import {
 	generalToolbarEntry,
 } from "@workspace/plugin-general-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
+import { stickyPlugin } from "@workspace/plugin-sticky-shape";
 import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 
-// flowchart / container / markdown / general 図形は core から削除され、それぞれ
+// flowchart / container / markdown / sticky / general 図形は core から削除され、それぞれ
 // @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape / @workspace/plugin-general-shapes が唯一の供給元
+// @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
+// @workspace/plugin-general-shapes が唯一の供給元
 // （docs/05_extensibility/plugin-architecture-requirements.md）。この example は
 // 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言を createCanvasParser と
 // Canvas の initialConfig の両方に渡すだけで、doc の検証と図形一式の登録が揃う。
@@ -26,26 +28,27 @@ const plugins = [
 	flowchartPlugin,
 	containerPlugin,
 	markdownPlugin,
+	stickyPlugin,
 	umlPlugin,
 	generalPlugin,
 ];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container / general カテゴリと markdown プリセットは core の既定 layout に
-// 含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
+// flowchart / container / general カテゴリと markdown / sticky プリセットは core の既定
+// layout に含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "callout" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
 	containerToolbarEntry,
 	umlToolbarEntry,
 	generalToolbarEntry,
-	annotationToolbarEntry,
 ];
 
 const pluginContainerParser = createCanvasParser({ plugins });

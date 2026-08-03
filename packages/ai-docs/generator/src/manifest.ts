@@ -5,6 +5,7 @@ import {
 import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
 import { generalDocPlugin } from "@workspace/plugin-general-shapes/doc";
 import { markdownDocPlugin } from "@workspace/plugin-markdown-shape/doc";
+import { stickyDocPlugin } from "@workspace/plugin-sticky-shape/doc";
 import { umlDocPlugin } from "@workspace/plugin-uml-shapes/doc";
 
 /**
@@ -127,6 +128,7 @@ const definitionSources: ReadonlyArray<
 	[flowchartDocPlugin.id, flowchartDocPlugin.objects],
 	[umlDocPlugin.id, umlDocPlugin.objects],
 	[markdownDocPlugin.id, markdownDocPlugin.objects],
+	[stickyDocPlugin.id, stickyDocPlugin.objects],
 	[generalDocPlugin.id, generalDocPlugin.objects],
 ];
 

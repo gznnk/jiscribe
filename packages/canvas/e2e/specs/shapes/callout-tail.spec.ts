@@ -11,7 +11,7 @@ import { selectors } from "../../support/selectors";
 const TAIL_HANDLE =
 	'[data-kind="control"][data-part="selection:callout:tailTip"]';
 
-/** Creates a callout by diagonal drag from the annotation flyout and returns its new id. */
+/** Creates a callout by diagonal drag from the pinned toolbar preset and returns its new id. */
 async function createCallout(
 	canvas: CanvasDriver,
 	from: { x: number; y: number },
@@ -20,7 +20,6 @@ async function createCallout(
 	const before = await canvas.captureObjects();
 	const beforeIds = new Set(before.map((obj) => obj.id));
 
-	await canvas.page.click(selectors.categoryButton("annotation"));
 	const item = canvas.page.locator(selectors.shapeItem("callout"));
 	await expect(item).toBeVisible();
 	await item.click();

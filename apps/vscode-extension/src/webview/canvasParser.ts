@@ -1,5 +1,6 @@
-// flowchart / container / markdown / uml / general 図形は @workspace/plugin-flowchart-shapes /
-// @workspace/plugin-container-shapes / @workspace/plugin-markdown-shape /
+// flowchart / container / markdown / sticky / uml / general 図形は
+// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
+// @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
 // @workspace/plugin-uml-shapes / @workspace/plugin-general-shapes から供給する
 // (docs/05_extensibility/plugin-architecture-requirements.md)。この Webview 側は React を
 // 含む Canvas 一式を既に読み込んでいるので、プラグインの通常エントリ (./index)
@@ -9,12 +10,14 @@ import { containerPlugin } from "@workspace/plugin-container-shapes";
 import { flowchartPlugin } from "@workspace/plugin-flowchart-shapes";
 import { generalPlugin } from "@workspace/plugin-general-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
+import { stickyPlugin } from "@workspace/plugin-sticky-shape";
 import { umlPlugin } from "@workspace/plugin-uml-shapes";
 
 export const plugins = [
 	flowchartPlugin,
 	containerPlugin,
 	markdownPlugin,
+	stickyPlugin,
 	umlPlugin,
 	generalPlugin,
 ];

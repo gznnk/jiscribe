@@ -1,6 +1,5 @@
 import {
 	Canvas,
-	annotationToolbarEntry,
 	type Camera,
 	type CanvasConfig,
 	type CanvasDoc,
@@ -35,13 +34,13 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "callout" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
 	containerToolbarEntry,
 	umlToolbarEntry,
 	generalToolbarEntry,
-	annotationToolbarEntry,
 ];
 
 /**

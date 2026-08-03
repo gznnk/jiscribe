@@ -1,7 +1,11 @@
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
-import type { CreateObjectType } from "../../types/CreateObjectType";
-import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import { DEFAULT_FONT_FAMILY } from "@workspace/canvas/unstable-doc";
 
+/**
+ * A paper sticky note: rect geometry with no stroke and no corner radius, drawn
+ * with a soft drop shadow. `fill` carries the paper color, which the palette in
+ * `StickyColorMenu` picks from rather than the general color grid.
+ */
 export const StickyFeatures = {
 	type: "sticky",
 	geometry: "rect",

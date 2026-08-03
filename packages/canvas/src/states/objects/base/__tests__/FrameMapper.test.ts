@@ -7,14 +7,49 @@ import type { PolylineDoc } from "../../../../schemas/objects/primitives/polylin
 import { PolylineFeatures } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
 import type { RectDoc } from "../../../../schemas/objects/primitives/rect/RectDoc";
 import { RectFeatures } from "../../../../schemas/objects/primitives/rect/RectDoc";
-import { stickyToState } from "../../annotations/sticky/StickyMapper";
+import type { CreateObjectType } from "../../../../schemas/objects/types/CreateObjectType";
+import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
 import type { ConnectorState } from "../../connections/connector/ConnectorState";
 import type { EllipseState } from "../../primitives/ellipse/EllipseState";
 import type { PolylineState } from "../../primitives/polyline/PolylineState";
 import { rectToDoc, rectToState } from "../../primitives/rect/RectMapper";
 import type { RectState } from "../../primitives/rect/RectState";
+import type { CreateObjectState } from "../../types/CreateObjectState";
 import { createFrameMapper } from "../FrameMapper";
 import { createPolyMapper } from "../PolyMapper";
+
+/**
+ * A stroke-less frame type, declared here rather than borrowed from a real shape:
+ * every built-in has `stroke: true` since sticky moved to
+ * `@workspace/plugin-sticky-shape`, and the mapper's behavior is a property of the
+ * descriptor, not of any one shape.
+ */
+const NoStrokeFeatures = {
+	type: "noStroke",
+	geometry: "rect",
+	transform: true,
+	stroke: false,
+	fill: true,
+	text: "body",
+	radius: false,
+	connectable: true,
+} as const satisfies ObjectFeatures;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const NoStrokeBrand: unique symbol;
+type NoStrokeDoc = CreateObjectType<
+	typeof NoStrokeFeatures,
+	typeof NoStrokeBrand
+>;
+type NoStrokeState = CreateObjectState<
+	typeof NoStrokeFeatures,
+	typeof NoStrokeBrand
+>;
+
+const { toState: noStrokeToState } = createFrameMapper<
+	NoStrokeDoc,
+	NoStrokeState
+>(NoStrokeFeatures);
 
 /**
  * Regression test for the pass-through approach.
@@ -129,10 +164,10 @@ describe("FrameMapper allow-list: does not carry keys other than the ones to pic
 		expect("bogusField" in state).toBe(false);
 	});
 
-	it("does not carry doc.stroke into the state for a shape with stroke disabled (sticky)", () => {
+	it("does not carry doc.stroke into the state for a shape with stroke disabled", () => {
 		const doc = {
-			id: "sticky-1",
-			type: "sticky",
+			id: "no-stroke-1",
+			type: NoStrokeFeatures.type,
 			x: 0,
 			y: 0,
 			width: 100,
@@ -140,9 +175,9 @@ describe("FrameMapper allow-list: does not carry keys other than the ones to pic
 			fill: "#ffff00",
 			stroke: "#000000",
 			strokeWidth: 4,
-		} as unknown as Parameters<typeof stickyToState>[0];
+		} as unknown as NoStrokeDoc;
 
-		const state = stickyToState(doc) as Record<string, unknown>;
+		const state = noStrokeToState(doc) as Record<string, unknown>;
 
 		// fill is picked up since features.fill=true, and stroke fields are dropped since features.stroke=false.
 		expect(state.fill).toBe("#ffff00");

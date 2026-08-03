@@ -1,7 +1,8 @@
+import { createFrameMapper } from "@workspace/canvas/unstable";
+
 import type { StickyState } from "./StickyState";
-import type { StickyDoc } from "../../../../schemas/objects/annotations/sticky/StickyDoc";
-import { StickyFeatures } from "../../../../schemas/objects/annotations/sticky/StickyDoc";
-import { createFrameMapper } from "../../base/FrameMapper";
+import type { StickyDoc } from "../schema/StickyDoc";
+import { StickyFeatures } from "../schema/StickyDoc";
 
 /** StickyDoc ↔ StickyState conversion (Frame-family shared logic generated from features). */
 export const { toState: stickyToState, toDoc: stickyToDoc } = createFrameMapper<

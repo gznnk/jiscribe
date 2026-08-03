@@ -10,10 +10,6 @@ import {
 	calloutGeometryKey,
 	calloutOutline,
 } from "../../presentations/objects/annotations/Callout";
-import {
-	Sticky,
-	StickyDefs,
-} from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
 	Ellipse,
@@ -32,12 +28,6 @@ import {
 } from "../../states/objects/annotations/callout/CalloutMapper";
 import type { CalloutState } from "../../states/objects/annotations/callout/CalloutState";
 import { isValidCalloutState } from "../../states/objects/annotations/callout/validateCalloutState";
-import {
-	stickyToDoc,
-	stickyToState,
-} from "../../states/objects/annotations/sticky/StickyMapper";
-import type { StickyState } from "../../states/objects/annotations/sticky/StickyState";
-import { isValidStickyState } from "../../states/objects/annotations/sticky/validateStickyState";
 import {
 	connectorToDoc,
 	connectorToState,
@@ -108,10 +98,8 @@ import {
 	LabelFontSizeMenu,
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
-import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
 import { CalloutStencils } from "../ui/objects/annotations/CalloutStencils";
-import { StickyStencils } from "../ui/objects/annotations/StickyStencils";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
@@ -266,32 +254,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 						},
 						{ type: "custom", id: "label-bold", component: LabelBoldMenu },
 					],
-				},
-			],
-		}),
-
-		sticky: defineObject({
-			...builtinObjectDocDefinitions.sticky,
-			mapper: { toDoc: stickyToDoc, toState: stickyToState },
-			stateValidator: isValidStickyState,
-			component: Sticky,
-			svgDefs: StickyDefs,
-			behavior: createFrameBehavior<StickyState>(),
-			stencils: StickyStencils,
-			menu: [
-				{
-					id: "style",
-					items: [
-						{ type: "custom", id: "sticky-color", component: StickyColorMenu },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
 				},
 			],
 		}),

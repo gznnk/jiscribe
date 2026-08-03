@@ -202,8 +202,8 @@ type CanvasProps = {
 		/**
 		 * Overrides the top-level arrangement of the shape tools: an ordered mix of
 		 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
-		 * for the default layout (basic primitives + sticky pinned, general /
-		 * annotation as flyouts).
+		 * for the default layout, which pins every core preset directly and opens no
+		 * flyout — anything a plugin supplies must be added here by the host.
 		 */
 		layout?: ToolbarEntry[];
 	};

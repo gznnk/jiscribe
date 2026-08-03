@@ -1,3 +1,13 @@
+import type { ObjectMenuItemProps } from "@workspace/canvas";
+import {
+	ColorPreviewIcon,
+	ObjectMenuButton,
+	ObjectMenuDropdownPanel,
+	ObjectMenuItemPositioner,
+	getFirstSelectedWithProp,
+	useCanvasMessages,
+	useSubmenuPosition,
+} from "@workspace/canvas/unstable";
 import { memo, useRef } from "react";
 
 import { STICKY_PRESET_COLORS } from "./StickyColorConstants";
@@ -6,16 +16,6 @@ import {
 	ColorPickerContainer,
 	ColorSwatch,
 } from "./StickyColorMenuStyled";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
-import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
-import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import {
-	ObjectMenuItemPositioner,
-	ObjectMenuButton,
-} from "../../ObjectMenuStyled";
-import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "sticky-color";
 
@@ -28,6 +28,13 @@ const getSelectedFillColor = (
 	return typeof fill === "string" ? fill : "transparent";
 };
 
+/**
+ * Paper-color menu (sticky only). Replaces the generic fill picker with the
+ * pastel palette, so the swatches on offer are the ones a note can plausibly be.
+ *
+ * The labels come from the canvas `colorNames` dictionary rather than a
+ * plugin-owned one: every preset name is a key it already carries.
+ */
 const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	objects,
 	selectedIds,

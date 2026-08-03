@@ -105,7 +105,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 
 		switch (event.type) {
 			case "click": {
-				// Shapes that don't support bounds drawing (sticky / polygon) are placed at the viewport center;
+				// Shapes that don't support bounds drawing are placed at the viewport center;
 				// shapes that do (rect / ellipse / polyline) toggle drawing mode
 				if (
 					!registries.objectFactory.supportsBoundsDrawing(preset.objectType)

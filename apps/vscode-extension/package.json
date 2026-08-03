@@ -131,6 +131,7 @@
 		"@workspace/plugin-flowchart-shapes": "workspace:*",
 		"@workspace/plugin-general-shapes": "workspace:*",
 		"@workspace/plugin-markdown-shape": "workspace:*",
+		"@workspace/plugin-sticky-shape": "workspace:*",
 		"@workspace/plugin-uml-shapes": "workspace:*",
 		"esbuild": "catalog:",
 		"katex": "catalog:",
