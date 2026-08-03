@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { diamondDefinition } from "../../../definitions";
 import type { DiamondDoc } from "../../../schema/diamond/DiamondDoc";
-import { diamondToDoc, diamondToState } from "../DiamondMapper";
 import type { DiamondState } from "../DiamondState";
+
+const { toDoc: diamondToDoc, toState: diamondToState } =
+	diamondDefinition.mapper;
 
 describe("DiamondMapper", () => {
 	describe("diamondToState", () => {

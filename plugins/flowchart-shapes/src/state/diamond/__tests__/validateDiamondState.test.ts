@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { isValidDiamondState } from "../validateDiamondState";
+import { diamondDefinition } from "../../../definitions";
+
+const isValidDiamondState = diamondDefinition.stateValidator;
 
 const validDiamond = {
 	id: "d1",

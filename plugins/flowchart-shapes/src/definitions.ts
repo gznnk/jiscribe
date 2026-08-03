@@ -2,7 +2,6 @@ import type { ObjectTypeDefinition } from "@workspace/canvas";
 import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
-	createFrameBehavior,
 	createFrameObjectDefinition,
 } from "@workspace/canvas-sdk";
 
@@ -116,84 +115,23 @@ import type { StoredDataDoc } from "./schema/storedData/StoredDataDoc";
 import type { SubroutineDoc } from "./schema/subroutine/SubroutineDoc";
 import type { TrapezoidDoc } from "./schema/trapezoid/TrapezoidDoc";
 import type { CardState } from "./state/card/CardState";
-import { crossToDoc, crossToState } from "./state/cross/CrossMapper";
 import type { CrossState } from "./state/cross/CrossState";
-import { isValidCrossState } from "./state/cross/validateCrossState";
-import { dbToDoc, dbToState } from "./state/db/DbMapper";
 import type { DbState } from "./state/db/DbState";
-import { isValidDbState } from "./state/db/validateDbState";
-import { delayToDoc, delayToState } from "./state/delay/DelayMapper";
 import type { DelayState } from "./state/delay/DelayState";
-import { isValidDelayState } from "./state/delay/validateDelayState";
-import { diamondToDoc, diamondToState } from "./state/diamond/DiamondMapper";
 import type { DiamondState } from "./state/diamond/DiamondState";
-import { isValidDiamondState } from "./state/diamond/validateDiamondState";
-import { displayToDoc, displayToState } from "./state/display/DisplayMapper";
 import type { DisplayState } from "./state/display/DisplayState";
-import { isValidDisplayState } from "./state/display/validateDisplayState";
-import {
-	documentToDoc,
-	documentToState,
-} from "./state/document/DocumentMapper";
 import type { DocumentState } from "./state/document/DocumentState";
-import { isValidDocumentState } from "./state/document/validateDocumentState";
-import { extractToDoc, extractToState } from "./state/extract/ExtractMapper";
 import type { ExtractState } from "./state/extract/ExtractState";
-import { isValidExtractState } from "./state/extract/validateExtractState";
-import { hexagonToDoc, hexagonToState } from "./state/hexagon/HexagonMapper";
 import type { HexagonState } from "./state/hexagon/HexagonState";
-import { isValidHexagonState } from "./state/hexagon/validateHexagonState";
-import {
-	loopLimitToDoc,
-	loopLimitToState,
-} from "./state/loopLimit/LoopLimitMapper";
 import type { LoopLimitState } from "./state/loopLimit/LoopLimitState";
-import { isValidLoopLimitState } from "./state/loopLimit/validateLoopLimitState";
-import {
-	manualInputToDoc,
-	manualInputToState,
-} from "./state/manualInput/ManualInputMapper";
 import type { ManualInputState } from "./state/manualInput/ManualInputState";
-import { isValidManualInputState } from "./state/manualInput/validateManualInputState";
-import {
-	multiDocumentToDoc,
-	multiDocumentToState,
-} from "./state/multiDocument/MultiDocumentMapper";
 import type { MultiDocumentState } from "./state/multiDocument/MultiDocumentState";
-import { isValidMultiDocumentState } from "./state/multiDocument/validateMultiDocumentState";
-import {
-	offPageConnectorToDoc,
-	offPageConnectorToState,
-} from "./state/offPageConnector/OffPageConnectorMapper";
 import type { OffPageConnectorState } from "./state/offPageConnector/OffPageConnectorState";
-import { isValidOffPageConnectorState } from "./state/offPageConnector/validateOffPageConnectorState";
-import {
-	parallelogramToDoc,
-	parallelogramToState,
-} from "./state/parallelogram/ParallelogramMapper";
 import type { ParallelogramState } from "./state/parallelogram/ParallelogramState";
-import { isValidParallelogramState } from "./state/parallelogram/validateParallelogramState";
-import { stadiumToDoc, stadiumToState } from "./state/stadium/StadiumMapper";
 import type { StadiumState } from "./state/stadium/StadiumState";
-import { isValidStadiumState } from "./state/stadium/validateStadiumState";
-import {
-	storedDataToDoc,
-	storedDataToState,
-} from "./state/storedData/StoredDataMapper";
 import type { StoredDataState } from "./state/storedData/StoredDataState";
-import { isValidStoredDataState } from "./state/storedData/validateStoredDataState";
-import {
-	subroutineToDoc,
-	subroutineToState,
-} from "./state/subroutine/SubroutineMapper";
 import type { SubroutineState } from "./state/subroutine/SubroutineState";
-import { isValidSubroutineState } from "./state/subroutine/validateSubroutineState";
-import {
-	trapezoidToDoc,
-	trapezoidToState,
-} from "./state/trapezoid/TrapezoidMapper";
 import type { TrapezoidState } from "./state/trapezoid/TrapezoidState";
-import { isValidTrapezoidState } from "./state/trapezoid/validateTrapezoidState";
 import { CardStencils } from "./stencil/CardStencils";
 import { CrossStencils } from "./stencil/CrossStencils";
 import { DbStencils } from "./stencil/DbStencils";
@@ -215,8 +153,9 @@ import { TrapezoidStencils } from "./stencil/TrapezoidStencils";
 
 /**
  * flowchart 18 図形の `ObjectTypeDefinition` 群。各定義は `./doc` の headless doc 定義
- * (features / validateDoc / factory) に render / interaction / editor UI 部を足して
- * 合成する (card は createFrameObjectDefinition 経由、他は spread + 手書き)。core の登録エントリ (initializeObjectRegistry.ts の
+ * (features / validateDoc / factory) に render / interaction / editor UI 部を
+ * `createFrameObjectDefinition`（mapper / stateValidator / behavior を features から
+ * 導出）で足して合成する。core の登録エントリ (initializeObjectRegistry.ts の
  * ALL_OBJECT_DEFINITIONS) と 1:1 で、意図的除外はない。menu は未宣言なので features から
  * 既定メニューが導出される (docs/05_extensibility/plugin-architecture-requirements.md)。
  */
@@ -234,77 +173,62 @@ export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
  * `visualBounds` is what keeps zoom-to-fit and the export viewBox from cropping
  * it (calcBelowLabelVisualBounds).
  */
-export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> = {
-	...crossDocDefinition,
-	mapper: { toDoc: crossToDoc, toState: crossToState },
-	stateValidator: isValidCrossState,
-	component: Cross,
-	textRegion: calcBelowLabelTextRegion,
-	visualBounds: calcBelowLabelVisualBounds,
-	outline: crossOutline,
-	behavior: createFrameBehavior<CrossState>(),
-	stencils: CrossStencils,
-};
+export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> =
+	createFrameObjectDefinition<CrossDoc, CrossState>({
+		doc: crossDocDefinition,
+		component: Cross,
+		textRegion: calcBelowLabelTextRegion,
+		visualBounds: calcBelowLabelVisualBounds,
+		outline: crossOutline,
+		stencils: CrossStencils,
+	});
 
-export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> = {
-	...dbDocDefinition,
-	mapper: { toDoc: dbToDoc, toState: dbToState },
-	stateValidator: isValidDbState,
-	component: Db,
-	textRegion: calcDbTextRegion,
-	outline: dbOutline,
-	behavior: createFrameBehavior<DbState>(),
-	stencils: DbStencils,
-};
+export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> =
+	createFrameObjectDefinition<DbDoc, DbState>({
+		doc: dbDocDefinition,
+		component: Db,
+		textRegion: calcDbTextRegion,
+		outline: dbOutline,
+		stencils: DbStencils,
+	});
 
-export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> = {
-	...delayDocDefinition,
-	mapper: { toDoc: delayToDoc, toState: delayToState },
-	stateValidator: isValidDelayState,
-	component: Delay,
-	textRegion: calcDelayTextRegion,
-	outline: delayOutline,
-	behavior: createFrameBehavior<DelayState>(),
-	stencils: DelayStencils,
-};
+export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> =
+	createFrameObjectDefinition<DelayDoc, DelayState>({
+		doc: delayDocDefinition,
+		component: Delay,
+		textRegion: calcDelayTextRegion,
+		outline: delayOutline,
+		stencils: DelayStencils,
+	});
 
 export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
-	{
-		...diamondDocDefinition,
-		mapper: { toDoc: diamondToDoc, toState: diamondToState },
-		stateValidator: isValidDiamondState,
+	createFrameObjectDefinition<DiamondDoc, DiamondState>({
+		doc: diamondDocDefinition,
 		component: Diamond,
 		textRegion: calcDiamondTextRegion,
 		outline: diamondOutline,
-		behavior: createFrameBehavior<DiamondState>(),
 		stencils: DiamondStencils,
-	};
+	});
 
 export const displayDefinition: ObjectTypeDefinition<DisplayDoc, DisplayState> =
-	{
-		...displayDocDefinition,
-		mapper: { toDoc: displayToDoc, toState: displayToState },
-		stateValidator: isValidDisplayState,
+	createFrameObjectDefinition<DisplayDoc, DisplayState>({
+		doc: displayDocDefinition,
 		component: Display,
 		textRegion: calcDisplayTextRegion,
 		outline: displayOutline,
-		behavior: createFrameBehavior<DisplayState>(),
 		stencils: DisplayStencils,
-	};
+	});
 
 export const documentDefinition: ObjectTypeDefinition<
 	DocumentDoc,
 	DocumentState
-> = {
-	...documentDocDefinition,
-	mapper: { toDoc: documentToDoc, toState: documentToState },
-	stateValidator: isValidDocumentState,
+> = createFrameObjectDefinition<DocumentDoc, DocumentState>({
+	doc: documentDocDefinition,
 	component: Document,
 	textRegion: calcDocumentTextRegion,
 	outline: documentOutline,
-	behavior: createFrameBehavior<DocumentState>(),
 	stencils: DocumentStencils,
-};
+});
 
 /**
  * The triangle narrows to a point, so the label hangs below the geometry box and
@@ -312,151 +236,118 @@ export const documentDefinition: ObjectTypeDefinition<
  * it (calcBelowLabelVisualBounds).
  */
 export const extractDefinition: ObjectTypeDefinition<ExtractDoc, ExtractState> =
-	{
-		...extractDocDefinition,
-		mapper: { toDoc: extractToDoc, toState: extractToState },
-		stateValidator: isValidExtractState,
+	createFrameObjectDefinition<ExtractDoc, ExtractState>({
+		doc: extractDocDefinition,
 		component: Extract,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: extractOutline,
-		behavior: createFrameBehavior<ExtractState>(),
 		stencils: ExtractStencils,
-	};
+	});
 
 export const hexagonDefinition: ObjectTypeDefinition<HexagonDoc, HexagonState> =
-	{
-		...hexagonDocDefinition,
-		mapper: { toDoc: hexagonToDoc, toState: hexagonToState },
-		stateValidator: isValidHexagonState,
+	createFrameObjectDefinition<HexagonDoc, HexagonState>({
+		doc: hexagonDocDefinition,
 		component: Hexagon,
 		textRegion: calcHexagonTextRegion,
 		outline: hexagonOutline,
-		behavior: createFrameBehavior<HexagonState>(),
 		stencils: HexagonStencils,
-	};
+	});
 
 export const loopLimitDefinition: ObjectTypeDefinition<
 	LoopLimitDoc,
 	LoopLimitState
-> = {
-	...loopLimitDocDefinition,
-	mapper: { toDoc: loopLimitToDoc, toState: loopLimitToState },
-	stateValidator: isValidLoopLimitState,
+> = createFrameObjectDefinition<LoopLimitDoc, LoopLimitState>({
+	doc: loopLimitDocDefinition,
 	component: LoopLimit,
 	textRegion: calcLoopLimitTextRegion,
 	outline: loopLimitOutline,
 	anchorRegion: calcLoopLimitAnchorRegion,
-	behavior: createFrameBehavior<LoopLimitState>(),
 	stencils: LoopLimitStencils,
-};
+});
 
 export const manualInputDefinition: ObjectTypeDefinition<
 	ManualInputDoc,
 	ManualInputState
-> = {
-	...manualInputDocDefinition,
-	mapper: { toDoc: manualInputToDoc, toState: manualInputToState },
-	stateValidator: isValidManualInputState,
+> = createFrameObjectDefinition<ManualInputDoc, ManualInputState>({
+	doc: manualInputDocDefinition,
 	component: ManualInput,
 	textRegion: calcManualInputTextRegion,
 	outline: manualInputOutline,
-	behavior: createFrameBehavior<ManualInputState>(),
 	stencils: ManualInputStencils,
-};
+});
 
 export const multiDocumentDefinition: ObjectTypeDefinition<
 	MultiDocumentDoc,
 	MultiDocumentState
-> = {
-	...multiDocumentDocDefinition,
-	mapper: { toDoc: multiDocumentToDoc, toState: multiDocumentToState },
-	stateValidator: isValidMultiDocumentState,
+> = createFrameObjectDefinition<MultiDocumentDoc, MultiDocumentState>({
+	doc: multiDocumentDocDefinition,
 	component: MultiDocument,
 	textRegion: calcMultiDocumentTextRegion,
 	outline: multiDocumentOutline,
-	behavior: createFrameBehavior<MultiDocumentState>(),
 	stencils: MultiDocumentStencils,
-};
+});
 
 export const offPageConnectorDefinition: ObjectTypeDefinition<
 	OffPageConnectorDoc,
 	OffPageConnectorState
-> = {
-	...offPageConnectorDocDefinition,
-	mapper: { toDoc: offPageConnectorToDoc, toState: offPageConnectorToState },
-	stateValidator: isValidOffPageConnectorState,
+> = createFrameObjectDefinition<OffPageConnectorDoc, OffPageConnectorState>({
+	doc: offPageConnectorDocDefinition,
 	component: OffPageConnector,
 	textRegion: calcOffPageConnectorTextRegion,
 	outline: offPageConnectorOutline,
 	anchorRegion: calcOffPageConnectorAnchorRegion,
-	behavior: createFrameBehavior<OffPageConnectorState>(),
 	stencils: OffPageConnectorStencils,
-};
+});
 
 export const parallelogramDefinition: ObjectTypeDefinition<
 	ParallelogramDoc,
 	ParallelogramState
-> = {
-	...parallelogramDocDefinition,
-	mapper: { toDoc: parallelogramToDoc, toState: parallelogramToState },
-	stateValidator: isValidParallelogramState,
+> = createFrameObjectDefinition<ParallelogramDoc, ParallelogramState>({
+	doc: parallelogramDocDefinition,
 	component: Parallelogram,
 	textRegion: calcParallelogramTextRegion,
 	outline: parallelogramOutline,
-	behavior: createFrameBehavior<ParallelogramState>(),
 	stencils: ParallelogramStencils,
-};
+});
 
 export const stadiumDefinition: ObjectTypeDefinition<StadiumDoc, StadiumState> =
-	{
-		...stadiumDocDefinition,
-		mapper: { toDoc: stadiumToDoc, toState: stadiumToState },
-		stateValidator: isValidStadiumState,
+	createFrameObjectDefinition<StadiumDoc, StadiumState>({
+		doc: stadiumDocDefinition,
 		component: Stadium,
 		textRegion: calcStadiumTextRegion,
 		outline: stadiumOutline,
-		behavior: createFrameBehavior<StadiumState>(),
 		stencils: StadiumStencils,
-	};
+	});
 
 export const storedDataDefinition: ObjectTypeDefinition<
 	StoredDataDoc,
 	StoredDataState
-> = {
-	...storedDataDocDefinition,
-	mapper: { toDoc: storedDataToDoc, toState: storedDataToState },
-	stateValidator: isValidStoredDataState,
+> = createFrameObjectDefinition<StoredDataDoc, StoredDataState>({
+	doc: storedDataDocDefinition,
 	component: StoredData,
 	textRegion: calcStoredDataTextRegion,
 	outline: storedDataOutline,
-	behavior: createFrameBehavior<StoredDataState>(),
 	stencils: StoredDataStencils,
-};
+});
 
 export const subroutineDefinition: ObjectTypeDefinition<
 	SubroutineDoc,
 	SubroutineState
-> = {
-	...subroutineDocDefinition,
-	mapper: { toDoc: subroutineToDoc, toState: subroutineToState },
-	stateValidator: isValidSubroutineState,
+> = createFrameObjectDefinition<SubroutineDoc, SubroutineState>({
+	doc: subroutineDocDefinition,
 	component: Subroutine,
 	textRegion: calcSubroutineTextRegion,
-	behavior: createFrameBehavior<SubroutineState>(),
 	stencils: SubroutineStencils,
-};
+});
 
 export const trapezoidDefinition: ObjectTypeDefinition<
 	TrapezoidDoc,
 	TrapezoidState
-> = {
-	...trapezoidDocDefinition,
-	mapper: { toDoc: trapezoidToDoc, toState: trapezoidToState },
-	stateValidator: isValidTrapezoidState,
+> = createFrameObjectDefinition<TrapezoidDoc, TrapezoidState>({
+	doc: trapezoidDocDefinition,
 	component: Trapezoid,
 	textRegion: calcTrapezoidTextRegion,
 	outline: trapezoidOutline,
-	behavior: createFrameBehavior<TrapezoidState>(),
 	stencils: TrapezoidStencils,
-};
+});

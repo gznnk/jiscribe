@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 
-import { validateDiamondDoc } from "../validateDiamondDoc";
+import { diamondDocDefinition } from "../../../doc";
+
+const validateDiamondDoc = diamondDocDefinition.validateDoc;
 
 const validDiamond = {
 	x: 0,
