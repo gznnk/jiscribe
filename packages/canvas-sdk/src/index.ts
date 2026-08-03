@@ -41,3 +41,8 @@ export {
 	ShapeBodyPath,
 	ShapeBodyPolygon,
 } from "./presentation/ShapeBodyStyled";
+
+// Stencil palette boilerplate: the `<svg>` frame every icon shares, and the
+// `stencils` array of a type whose single preset is named after the type.
+export { createStencilIcon } from "./stencil/createStencilIcon";
+export { createTypeStencils } from "./stencil/createTypeStencils";

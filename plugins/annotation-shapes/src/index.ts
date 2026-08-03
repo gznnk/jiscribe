@@ -55,15 +55,10 @@ export {
 } from "./controls";
 
 export { BraceIcon } from "./stencil/BraceIcon";
-export { BraceStencils } from "./stencil/BraceStencils";
 export { BracketIcon } from "./stencil/BracketIcon";
-export { BracketStencils } from "./stencil/BracketStencils";
 export { BracketWithStemIcon } from "./stencil/BracketWithStemIcon";
-export { BracketWithStemStencils } from "./stencil/BracketWithStemStencils";
 export { CalloutIcon } from "./stencil/CalloutIcon";
-export { CalloutStencils } from "./stencil/CalloutStencils";
 export { NoteIcon } from "./stencil/NoteIcon";
-export { NoteStencils } from "./stencil/NoteStencils";
 export { annotationToolbarEntry } from "./stencil/AnnotationToolbarEntry";
 
 export {

@@ -3,6 +3,7 @@ import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
 	createFrameObjectDefinition,
+	createTypeStencils,
 } from "@workspace/canvas-sdk";
 
 import {
@@ -90,21 +91,21 @@ import type { ServerState } from "./state/server/ServerState";
 import type { ShieldState } from "./state/shield/ShieldState";
 import type { SmartphoneState } from "./state/smartphone/SmartphoneState";
 import type { TerminalWindowState } from "./state/terminalWindow/TerminalWindowState";
-import { ActorStencils } from "./stencil/ActorStencils";
-import { BrowserWindowStencils } from "./stencil/BrowserWindowStencils";
-import { CloudStencils } from "./stencil/CloudStencils";
-import { EnvelopeStencils } from "./stencil/EnvelopeStencils";
-import { FileStencils } from "./stencil/FileStencils";
-import { FolderStencils } from "./stencil/FolderStencils";
-import { GearStencils } from "./stencil/GearStencils";
-import { LaptopStencils } from "./stencil/LaptopStencils";
-import { LockStencils } from "./stencil/LockStencils";
-import { PackageStencils } from "./stencil/PackageStencils";
-import { QueueStencils } from "./stencil/QueueStencils";
-import { ServerStencils } from "./stencil/ServerStencils";
-import { ShieldStencils } from "./stencil/ShieldStencils";
-import { SmartphoneStencils } from "./stencil/SmartphoneStencils";
-import { TerminalWindowStencils } from "./stencil/TerminalWindowStencils";
+import { ActorIcon } from "./stencil/ActorIcon";
+import { BrowserWindowIcon } from "./stencil/BrowserWindowIcon";
+import { CloudIcon } from "./stencil/CloudIcon";
+import { EnvelopeIcon } from "./stencil/EnvelopeIcon";
+import { FileIcon } from "./stencil/FileIcon";
+import { FolderIcon } from "./stencil/FolderIcon";
+import { GearIcon } from "./stencil/GearIcon";
+import { LaptopIcon } from "./stencil/LaptopIcon";
+import { LockIcon } from "./stencil/LockIcon";
+import { PackageIcon } from "./stencil/PackageIcon";
+import { QueueIcon } from "./stencil/QueueIcon";
+import { ServerIcon } from "./stencil/ServerIcon";
+import { ShieldIcon } from "./stencil/ShieldIcon";
+import { SmartphoneIcon } from "./stencil/SmartphoneIcon";
+import { TerminalWindowIcon } from "./stencil/TerminalWindowIcon";
 
 /**
  * The label hangs below the geometry box, so `visualBounds` is what keeps
@@ -117,7 +118,11 @@ export const actorDefinition: ObjectTypeDefinition<ActorDoc, ActorState> =
 		component: Actor,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
-		stencils: ActorStencils,
+		stencils: createTypeStencils({
+			objectType: "actor",
+			label: { en: "Actor", ja: "アクター" },
+			icon: ActorIcon,
+		}),
 	});
 
 /**
@@ -131,7 +136,11 @@ export const cloudDefinition: ObjectTypeDefinition<CloudDoc, CloudState> =
 		component: Cloud,
 		textRegion: calcCloudTextRegion,
 		outline: cloudOutline,
-		stencils: CloudStencils,
+		stencils: createTypeStencils({
+			objectType: "cloud",
+			label: { en: "Cloud", ja: "雲" },
+			icon: CloudIcon,
+		}),
 	});
 
 /** Rack units fill the box, so the label hangs below it; `outline` rounds its corners. */
@@ -142,7 +151,11 @@ export const serverDefinition: ObjectTypeDefinition<ServerDoc, ServerState> =
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: serverOutline,
-		stencils: ServerStencils,
+		stencils: createTypeStencils({
+			objectType: "server",
+			label: { en: "Server", ja: "サーバー" },
+			icon: ServerIcon,
+		}),
 	});
 
 /** Text goes in the content area under the title bar (calcWindowTextRegion). */
@@ -154,7 +167,11 @@ export const browserWindowDefinition: ObjectTypeDefinition<
 	component: BrowserWindow,
 	textRegion: calcWindowTextRegion,
 	outline: browserWindowOutline,
-	stencils: BrowserWindowStencils,
+	stencils: createTypeStencils({
+		objectType: "browserWindow",
+		label: { en: "Browser window", ja: "ブラウザ画面" },
+		icon: BrowserWindowIcon,
+	}),
 });
 
 /** Shares the browser's frame and therefore its text region. */
@@ -166,7 +183,11 @@ export const terminalWindowDefinition: ObjectTypeDefinition<
 	component: TerminalWindow,
 	textRegion: calcWindowTextRegion,
 	outline: terminalWindowOutline,
-	stencils: TerminalWindowStencils,
+	stencils: createTypeStencils({
+		objectType: "terminalWindow",
+		label: { en: "Terminal", ja: "端末" },
+		icon: TerminalWindowIcon,
+	}),
 });
 
 /** `outline` puts a connector's center anchor on the tab's slanted edge. */
@@ -176,7 +197,11 @@ export const folderDefinition: ObjectTypeDefinition<FolderDoc, FolderState> =
 		component: Folder,
 		textRegion: calcFolderTextRegion,
 		outline: folderOutline,
-		stencils: FolderStencils,
+		stencils: createTypeStencils({
+			objectType: "folder",
+			label: { en: "Folder", ja: "フォルダ" },
+			icon: FolderIcon,
+		}),
 	});
 
 /** `outline` puts a connector's center anchor on the folded corner's diagonal. */
@@ -186,7 +211,11 @@ export const fileDefinition: ObjectTypeDefinition<FileDoc, FileState> =
 		component: File,
 		textRegion: calcFileTextRegion,
 		outline: fileOutline,
-		stencils: FileStencils,
+		stencils: createTypeStencils({
+			objectType: "file",
+			label: { en: "File", ja: "ファイル" },
+			icon: FileIcon,
+		}),
 	});
 
 /**
@@ -200,7 +229,11 @@ export const packageDefinition: ObjectTypeDefinition<PackageDoc, PackageState> =
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: packageOutline,
-		stencils: PackageStencils,
+		stencils: createTypeStencils({
+			objectType: "package",
+			label: { en: "Package", ja: "パッケージ" },
+			icon: PackageIcon,
+		}),
 	});
 
 /** The flap crosses the whole body, so the label hangs below the box. */
@@ -213,7 +246,11 @@ export const envelopeDefinition: ObjectTypeDefinition<
 	textRegion: calcBelowLabelTextRegion,
 	visualBounds: calcBelowLabelVisualBounds,
 	outline: envelopeOutline,
-	stencils: EnvelopeStencils,
+	stencils: createTypeStencils({
+		objectType: "envelope",
+		label: { en: "Envelope", ja: "封筒" },
+		icon: EnvelopeIcon,
+	}),
 });
 
 /** The cells fill the box, so the label hangs below it. */
@@ -224,7 +261,11 @@ export const queueDefinition: ObjectTypeDefinition<QueueDoc, QueueState> =
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: queueOutline,
-		stencils: QueueStencils,
+		stencils: createTypeStencils({
+			objectType: "queue",
+			label: { en: "Queue", ja: "キュー" },
+			icon: QueueIcon,
+		}),
 	});
 
 /**
@@ -238,7 +279,11 @@ export const gearDefinition: ObjectTypeDefinition<GearDoc, GearState> =
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: gearOutline,
-		stencils: GearStencils,
+		stencils: createTypeStencils({
+			objectType: "gear",
+			label: { en: "Gear", ja: "歯車" },
+			icon: GearIcon,
+		}),
 	});
 
 /**
@@ -253,7 +298,11 @@ export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> =
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: lockOutline,
-		stencils: LockStencils,
+		stencils: createTypeStencils({
+			objectType: "lock",
+			label: { en: "Lock", ja: "錠" },
+			icon: LockIcon,
+		}),
 	});
 
 /** `outline` follows the taper, which leaves the bottom corners of the box empty. */
@@ -263,7 +312,11 @@ export const shieldDefinition: ObjectTypeDefinition<ShieldDoc, ShieldState> =
 		component: Shield,
 		textRegion: calcShieldTextRegion,
 		outline: shieldOutline,
-		stencils: ShieldStencils,
+		stencils: createTypeStencils({
+			objectType: "shield",
+			label: { en: "Shield", ja: "盾" },
+			icon: ShieldIcon,
+		}),
 	});
 
 /** Text sits on the screen (calcSmartphoneTextRegion), inside the case. */
@@ -275,7 +328,11 @@ export const smartphoneDefinition: ObjectTypeDefinition<
 	component: Smartphone,
 	textRegion: calcSmartphoneTextRegion,
 	outline: smartphoneOutline,
-	stencils: SmartphoneStencils,
+	stencils: createTypeStencils({
+		objectType: "smartphone",
+		label: { en: "Smartphone", ja: "スマートフォン" },
+		icon: SmartphoneIcon,
+	}),
 });
 
 /**
@@ -289,5 +346,9 @@ export const laptopDefinition: ObjectTypeDefinition<LaptopDoc, LaptopState> =
 		component: Laptop,
 		textRegion: calcLaptopTextRegion,
 		outline: laptopOutline,
-		stencils: LaptopStencils,
+		stencils: createTypeStencils({
+			objectType: "laptop",
+			label: { en: "Laptop", ja: "ノート PC" },
+			icon: LaptopIcon,
+		}),
 	});

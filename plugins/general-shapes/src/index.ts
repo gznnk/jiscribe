@@ -61,21 +61,6 @@ export * from "./presentation/Smartphone";
 export * from "./presentation/TerminalWindow";
 export * from "./presentation/shared";
 
-export { ActorStencils } from "./stencil/ActorStencils";
-export { BrowserWindowStencils } from "./stencil/BrowserWindowStencils";
-export { CloudStencils } from "./stencil/CloudStencils";
-export { EnvelopeStencils } from "./stencil/EnvelopeStencils";
-export { FileStencils } from "./stencil/FileStencils";
-export { FolderStencils } from "./stencil/FolderStencils";
-export { GearStencils } from "./stencil/GearStencils";
-export { LaptopStencils } from "./stencil/LaptopStencils";
-export { LockStencils } from "./stencil/LockStencils";
-export { PackageStencils } from "./stencil/PackageStencils";
-export { QueueStencils } from "./stencil/QueueStencils";
-export { ServerStencils } from "./stencil/ServerStencils";
-export { ShieldStencils } from "./stencil/ShieldStencils";
-export { SmartphoneStencils } from "./stencil/SmartphoneStencils";
-export { TerminalWindowStencils } from "./stencil/TerminalWindowStencils";
 export { generalToolbarEntry } from "./stencil/GeneralToolbarEntry";
 
 export {

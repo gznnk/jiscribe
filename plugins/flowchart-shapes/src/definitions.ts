@@ -3,6 +3,7 @@ import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
 	createFrameObjectDefinition,
+	createTypeStencils,
 } from "@workspace/canvas-sdk";
 
 import {
@@ -132,24 +133,24 @@ import type { StadiumState } from "./state/stadium/StadiumState";
 import type { StoredDataState } from "./state/storedData/StoredDataState";
 import type { SubroutineState } from "./state/subroutine/SubroutineState";
 import type { TrapezoidState } from "./state/trapezoid/TrapezoidState";
-import { CardStencils } from "./stencil/CardStencils";
-import { CrossStencils } from "./stencil/CrossStencils";
-import { DbStencils } from "./stencil/DbStencils";
-import { DelayStencils } from "./stencil/DelayStencils";
-import { DiamondStencils } from "./stencil/DiamondStencils";
-import { DisplayStencils } from "./stencil/DisplayStencils";
-import { DocumentStencils } from "./stencil/DocumentStencils";
-import { ExtractStencils } from "./stencil/ExtractStencils";
-import { HexagonStencils } from "./stencil/HexagonStencils";
-import { LoopLimitStencils } from "./stencil/LoopLimitStencils";
-import { ManualInputStencils } from "./stencil/ManualInputStencils";
-import { MultiDocumentStencils } from "./stencil/MultiDocumentStencils";
-import { OffPageConnectorStencils } from "./stencil/OffPageConnectorStencils";
-import { ParallelogramStencils } from "./stencil/ParallelogramStencils";
-import { StadiumStencils } from "./stencil/StadiumStencils";
-import { StoredDataStencils } from "./stencil/StoredDataStencils";
-import { SubroutineStencils } from "./stencil/SubroutineStencils";
-import { TrapezoidStencils } from "./stencil/TrapezoidStencils";
+import { CardIcon } from "./stencil/CardIcon";
+import { CrossIcon } from "./stencil/CrossIcon";
+import { DbIcon } from "./stencil/DbIcon";
+import { DelayIcon } from "./stencil/DelayIcon";
+import { DiamondIcon } from "./stencil/DiamondIcon";
+import { DisplayIcon } from "./stencil/DisplayIcon";
+import { DocumentIcon } from "./stencil/DocumentIcon";
+import { ExtractIcon } from "./stencil/ExtractIcon";
+import { HexagonIcon } from "./stencil/HexagonIcon";
+import { LoopLimitIcon } from "./stencil/LoopLimitIcon";
+import { ManualInputIcon } from "./stencil/ManualInputIcon";
+import { MultiDocumentIcon } from "./stencil/MultiDocumentIcon";
+import { OffPageConnectorIcon } from "./stencil/OffPageConnectorIcon";
+import { ParallelogramIcon } from "./stencil/ParallelogramIcon";
+import { StadiumIcon } from "./stencil/StadiumIcon";
+import { StoredDataIcon } from "./stencil/StoredDataIcon";
+import { SubroutineIcon } from "./stencil/SubroutineIcon";
+import { TrapezoidIcon } from "./stencil/TrapezoidIcon";
 
 /**
  * flowchart 18 図形の `ObjectTypeDefinition` 群。各定義は `./doc` の headless doc 定義
@@ -165,7 +166,11 @@ export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
 		component: Card,
 		textRegion: calcCardTextRegion,
 		outline: cardOutline,
-		stencils: CardStencils,
+		stencils: createTypeStencils({
+			objectType: "card",
+			label: { en: "Card", ja: "カード" },
+			icon: CardIcon,
+		}),
 	});
 
 /**
@@ -180,7 +185,11 @@ export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> =
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: crossOutline,
-		stencils: CrossStencils,
+		stencils: createTypeStencils({
+			objectType: "cross",
+			label: { en: "Junction", ja: "接合点" },
+			icon: CrossIcon,
+		}),
 	});
 
 export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> =
@@ -189,7 +198,11 @@ export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> =
 		component: Db,
 		textRegion: calcDbTextRegion,
 		outline: dbOutline,
-		stencils: DbStencils,
+		stencils: createTypeStencils({
+			objectType: "db",
+			label: { en: "Database", ja: "データベース" },
+			icon: DbIcon,
+		}),
 	});
 
 export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> =
@@ -198,7 +211,11 @@ export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> =
 		component: Delay,
 		textRegion: calcDelayTextRegion,
 		outline: delayOutline,
-		stencils: DelayStencils,
+		stencils: createTypeStencils({
+			objectType: "delay",
+			label: { en: "Delay", ja: "遅延" },
+			icon: DelayIcon,
+		}),
 	});
 
 export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
@@ -207,7 +224,13 @@ export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
 		component: Diamond,
 		textRegion: calcDiamondTextRegion,
 		outline: diamondOutline,
-		stencils: DiamondStencils,
+		stencils: createTypeStencils({
+			objectType: "diamond",
+			// Labelled "Decision" for its flowchart role; the type stays the generic
+			// geometric `diamond` (it only ever appears in the flowchart category).
+			label: { en: "Decision", ja: "判断" },
+			icon: DiamondIcon,
+		}),
 	});
 
 export const displayDefinition: ObjectTypeDefinition<DisplayDoc, DisplayState> =
@@ -216,7 +239,11 @@ export const displayDefinition: ObjectTypeDefinition<DisplayDoc, DisplayState> =
 		component: Display,
 		textRegion: calcDisplayTextRegion,
 		outline: displayOutline,
-		stencils: DisplayStencils,
+		stencils: createTypeStencils({
+			objectType: "display",
+			label: { en: "Display", ja: "表示" },
+			icon: DisplayIcon,
+		}),
 	});
 
 export const documentDefinition: ObjectTypeDefinition<
@@ -227,7 +254,11 @@ export const documentDefinition: ObjectTypeDefinition<
 	component: Document,
 	textRegion: calcDocumentTextRegion,
 	outline: documentOutline,
-	stencils: DocumentStencils,
+	stencils: createTypeStencils({
+		objectType: "document",
+		label: { en: "Document", ja: "書類" },
+		icon: DocumentIcon,
+	}),
 });
 
 /**
@@ -242,7 +273,11 @@ export const extractDefinition: ObjectTypeDefinition<ExtractDoc, ExtractState> =
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: extractOutline,
-		stencils: ExtractStencils,
+		stencils: createTypeStencils({
+			objectType: "extract",
+			label: { en: "Extract", ja: "抽出" },
+			icon: ExtractIcon,
+		}),
 	});
 
 export const hexagonDefinition: ObjectTypeDefinition<HexagonDoc, HexagonState> =
@@ -251,7 +286,11 @@ export const hexagonDefinition: ObjectTypeDefinition<HexagonDoc, HexagonState> =
 		component: Hexagon,
 		textRegion: calcHexagonTextRegion,
 		outline: hexagonOutline,
-		stencils: HexagonStencils,
+		stencils: createTypeStencils({
+			objectType: "hexagon",
+			label: { en: "Preparation", ja: "準備" },
+			icon: HexagonIcon,
+		}),
 	});
 
 export const loopLimitDefinition: ObjectTypeDefinition<
@@ -263,7 +302,11 @@ export const loopLimitDefinition: ObjectTypeDefinition<
 	textRegion: calcLoopLimitTextRegion,
 	outline: loopLimitOutline,
 	anchorRegion: calcLoopLimitAnchorRegion,
-	stencils: LoopLimitStencils,
+	stencils: createTypeStencils({
+		objectType: "loopLimit",
+		label: { en: "Loop Limit", ja: "ループ端" },
+		icon: LoopLimitIcon,
+	}),
 });
 
 export const manualInputDefinition: ObjectTypeDefinition<
@@ -274,7 +317,11 @@ export const manualInputDefinition: ObjectTypeDefinition<
 	component: ManualInput,
 	textRegion: calcManualInputTextRegion,
 	outline: manualInputOutline,
-	stencils: ManualInputStencils,
+	stencils: createTypeStencils({
+		objectType: "manualInput",
+		label: { en: "Manual Input", ja: "手動入力" },
+		icon: ManualInputIcon,
+	}),
 });
 
 export const multiDocumentDefinition: ObjectTypeDefinition<
@@ -285,7 +332,11 @@ export const multiDocumentDefinition: ObjectTypeDefinition<
 	component: MultiDocument,
 	textRegion: calcMultiDocumentTextRegion,
 	outline: multiDocumentOutline,
-	stencils: MultiDocumentStencils,
+	stencils: createTypeStencils({
+		objectType: "multiDocument",
+		label: { en: "Multi-document", ja: "複数書類" },
+		icon: MultiDocumentIcon,
+	}),
 });
 
 export const offPageConnectorDefinition: ObjectTypeDefinition<
@@ -297,7 +348,11 @@ export const offPageConnectorDefinition: ObjectTypeDefinition<
 	textRegion: calcOffPageConnectorTextRegion,
 	outline: offPageConnectorOutline,
 	anchorRegion: calcOffPageConnectorAnchorRegion,
-	stencils: OffPageConnectorStencils,
+	stencils: createTypeStencils({
+		objectType: "offPageConnector",
+		label: { en: "Off-page connector", ja: "他ページ結合子" },
+		icon: OffPageConnectorIcon,
+	}),
 });
 
 export const parallelogramDefinition: ObjectTypeDefinition<
@@ -308,7 +363,11 @@ export const parallelogramDefinition: ObjectTypeDefinition<
 	component: Parallelogram,
 	textRegion: calcParallelogramTextRegion,
 	outline: parallelogramOutline,
-	stencils: ParallelogramStencils,
+	stencils: createTypeStencils({
+		objectType: "parallelogram",
+		label: { en: "Data", ja: "データ" },
+		icon: ParallelogramIcon,
+	}),
 });
 
 export const stadiumDefinition: ObjectTypeDefinition<StadiumDoc, StadiumState> =
@@ -317,7 +376,11 @@ export const stadiumDefinition: ObjectTypeDefinition<StadiumDoc, StadiumState> =
 		component: Stadium,
 		textRegion: calcStadiumTextRegion,
 		outline: stadiumOutline,
-		stencils: StadiumStencils,
+		stencils: createTypeStencils({
+			objectType: "stadium",
+			label: { en: "Terminal", ja: "端子" },
+			icon: StadiumIcon,
+		}),
 	});
 
 export const storedDataDefinition: ObjectTypeDefinition<
@@ -328,7 +391,11 @@ export const storedDataDefinition: ObjectTypeDefinition<
 	component: StoredData,
 	textRegion: calcStoredDataTextRegion,
 	outline: storedDataOutline,
-	stencils: StoredDataStencils,
+	stencils: createTypeStencils({
+		objectType: "storedData",
+		label: { en: "Stored Data", ja: "記憶データ" },
+		icon: StoredDataIcon,
+	}),
 });
 
 export const subroutineDefinition: ObjectTypeDefinition<
@@ -338,7 +405,11 @@ export const subroutineDefinition: ObjectTypeDefinition<
 	doc: subroutineDocDefinition,
 	component: Subroutine,
 	textRegion: calcSubroutineTextRegion,
-	stencils: SubroutineStencils,
+	stencils: createTypeStencils({
+		objectType: "subroutine",
+		label: { en: "Subroutine", ja: "サブルーチン" },
+		icon: SubroutineIcon,
+	}),
 });
 
 export const trapezoidDefinition: ObjectTypeDefinition<
@@ -349,5 +420,9 @@ export const trapezoidDefinition: ObjectTypeDefinition<
 	component: Trapezoid,
 	textRegion: calcTrapezoidTextRegion,
 	outline: trapezoidOutline,
-	stencils: TrapezoidStencils,
+	stencils: createTypeStencils({
+		objectType: "trapezoid",
+		label: { en: "Manual Operation", ja: "手操作" },
+		icon: TrapezoidIcon,
+	}),
 });

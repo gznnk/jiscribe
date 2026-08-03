@@ -1,5 +1,8 @@
 import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { createFrameObjectDefinition } from "@workspace/canvas-sdk";
+import {
+	createFrameObjectDefinition,
+	createTypeStencils,
+} from "@workspace/canvas-sdk";
 
 import {
 	CalloutTailTipControl,
@@ -48,11 +51,11 @@ import {
 	isValidGroupMarkerDirection,
 	isValidGroupMarkerTipFields,
 } from "./state/shared/isValidGroupMarkerFields";
-import { BraceStencils } from "./stencil/BraceStencils";
-import { BracketStencils } from "./stencil/BracketStencils";
-import { BracketWithStemStencils } from "./stencil/BracketWithStemStencils";
-import { CalloutStencils } from "./stencil/CalloutStencils";
-import { NoteStencils } from "./stencil/NoteStencils";
+import { BraceIcon } from "./stencil/BraceIcon";
+import { BracketIcon } from "./stencil/BracketIcon";
+import { BracketWithStemIcon } from "./stencil/BracketWithStemIcon";
+import { CalloutIcon } from "./stencil/CalloutIcon";
+import { NoteIcon } from "./stencil/NoteIcon";
 
 /**
  * The label hangs off the tip, outside the geometry box, so `visualBounds` is
@@ -80,7 +83,16 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 			},
 		],
 		extraStyleProperties: GROUP_MARKER_TIP_STYLE_PROPERTIES,
-		stencils: BraceStencils,
+		/**
+		 * One stencil, not one per direction: drag-drawing already picks the axis from
+		 * the drawn proportions (createGroupMarkerObjectFactory), so four palette entries would be
+		 * four ways to reach the same shape.
+		 */
+		stencils: createTypeStencils({
+			objectType: "brace",
+			label: { en: "Brace", ja: "波括弧" },
+			icon: BraceIcon,
+		}),
 	});
 
 /**
@@ -106,7 +118,12 @@ export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 			},
 		],
 		extraStyleProperties: GROUP_MARKER_DIRECTION_STYLE_PROPERTY,
-		stencils: BracketStencils,
+		/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
+		stencils: createTypeStencils({
+			objectType: "bracket",
+			label: { en: "Bracket", ja: "角括弧" },
+			icon: BracketIcon,
+		}),
 	});
 
 /** Same as the brace, with the stem's end standing in for the brace's cusp. */
@@ -128,7 +145,12 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 		},
 	],
 	extraStyleProperties: GROUP_MARKER_TIP_STYLE_PROPERTIES,
-	stencils: BracketWithStemStencils,
+	/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
+	stencils: createTypeStencils({
+		objectType: "bracketWithStem",
+		label: { en: "Bracket with stem", ja: "角括弧（枝つき）" },
+		icon: BracketWithStemIcon,
+	}),
 });
 
 /**
@@ -156,7 +178,11 @@ export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 				handle: handleCalloutTailTip,
 			},
 		],
-		stencils: CalloutStencils,
+		stencils: createTypeStencils({
+			objectType: "callout",
+			label: { en: "Callout", ja: "吹き出し" },
+			icon: CalloutIcon,
+		}),
 	});
 
 /**
@@ -172,5 +198,9 @@ export const noteDefinition: ObjectTypeDefinition<NoteDoc, NoteState> =
 		component: Note,
 		textRegion: calcNoteTextRegion,
 		outline: noteOutline,
-		stencils: NoteStencils,
+		stencils: createTypeStencils({
+			objectType: "note",
+			label: { en: "Note", ja: "ノート" },
+			icon: NoteIcon,
+		}),
 	});
