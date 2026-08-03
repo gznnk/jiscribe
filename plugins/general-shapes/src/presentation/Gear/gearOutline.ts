@@ -1,5 +1,4 @@
-import type { ObjectOutlineCalculator } from "@workspace/canvas";
-import type { Dimensions } from "@workspace/geometry";
+import { centeredPolygonOutline } from "@workspace/canvas/unstable";
 
 import { calcGearPoints } from "./calcGearPoints";
 
@@ -12,7 +11,4 @@ import { calcGearPoints } from "./calcGearPoints";
  * exactly still moves a connector's endpoint continuously; it just moves fast
  * across a tooth.
  */
-export const gearOutline: ObjectOutlineCalculator<Dimensions> = ({
-	width,
-	height,
-}) => calcGearPoints(-width / 2, -height / 2, width, height);
+export const gearOutline = centeredPolygonOutline(calcGearPoints);
