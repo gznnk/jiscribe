@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { LoopLimitState } from "./LoopLimitState";
 import type { LoopLimitDoc } from "../../schema/loopLimit/LoopLimitDoc";

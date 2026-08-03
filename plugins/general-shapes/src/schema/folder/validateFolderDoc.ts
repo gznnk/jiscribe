@@ -1,5 +1,5 @@
-import type { ObjectDocValidateFn } from "@workspace/canvas/unstable-doc";
-import { createFrameDocValidator } from "@workspace/canvas/unstable-doc";
+import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
+import { createFrameDocValidator } from "@workspace/canvas-sdk/doc";
 
 import { FolderFeatures } from "./FolderDoc";
 

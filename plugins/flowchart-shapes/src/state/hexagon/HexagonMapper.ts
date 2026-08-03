@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { HexagonState } from "./HexagonState";
 import type { HexagonDoc } from "../../schema/hexagon/HexagonDoc";

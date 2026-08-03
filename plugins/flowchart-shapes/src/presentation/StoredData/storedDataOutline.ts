@@ -1,5 +1,5 @@
 import type { ObjectOutlineCalculator } from "@workspace/canvas";
-import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas/unstable";
+import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas-sdk";
 import { sampleEllipseArc } from "@workspace/geometry";
 
 import { STORED_DATA_CAP_RATIO } from "../../schema/storedData/StoredDataDoc";

@@ -1,6 +1,8 @@
-import { AUTO_COLOR } from "./autoColor";
-import { DEFAULT_FONT_FAMILY } from "../../../constants/defaultFontFamily";
-import type { TextSlot } from "../types/TextSlot";
+import type { TextSlot } from "@workspace/canvas/doc";
+import {
+	AUTO_COLOR,
+	DEFAULT_FONT_FAMILY,
+} from "@workspace/canvas/unstable-doc";
 
 /**
  * Typography the label falls back to for a field its slot leaves out, shared by

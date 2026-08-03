@@ -1,9 +1,6 @@
 import { isEnum, isNumber, isObject } from "@workspace/basic-validators";
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import {
-	AUTO_COLOR,
-	DEFAULT_FONT_FAMILY,
-} from "@workspace/canvas/unstable-doc";
+import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@workspace/canvas-sdk/doc";
 
 /**
  * Depth of the tail band as a fraction of the box's cross dimension (height

@@ -2,7 +2,7 @@ import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
 import {
 	AUTO_COLOR,
 	BELOW_LABEL_STYLE_DEFAULTS,
-} from "@workspace/canvas/unstable-doc";
+} from "@workspace/canvas-sdk/doc";
 
 /**
  * A server rack (a box divided into stacked units, each with a status light), used for hosts, nodes and running processes in architecture diagrams.

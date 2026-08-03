@@ -1,7 +1,7 @@
 import type { ObjectVisualBoundsCalculator } from "@workspace/canvas";
 import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
 import type { TextSlot } from "@workspace/canvas/doc";
-import { readTextSlot } from "@workspace/canvas/unstable";
+import { readTextSlot } from "@workspace/canvas-sdk";
 import type { Dimensions } from "@workspace/geometry";
 
 import { calcGroupMarkerTextRegion } from "./calcGroupMarkerTextRegion";

@@ -1,7 +1,4 @@
-import {
-	BelowLabelHitArea,
-	createFrameObject,
-} from "@workspace/canvas/unstable";
+import { BelowLabelHitArea, createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildExtractPoints } from "./buildExtractPoints";
 import { ExtractElement } from "./ExtractStyled";

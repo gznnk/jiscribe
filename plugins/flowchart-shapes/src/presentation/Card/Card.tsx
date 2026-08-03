@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildCardPoints } from "./buildCardPoints";
 import { CardElement } from "./CardStyled";

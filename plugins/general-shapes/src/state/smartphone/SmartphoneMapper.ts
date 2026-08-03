@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { SmartphoneState } from "./SmartphoneState";
 import type { SmartphoneDoc } from "../../schema/smartphone/SmartphoneDoc";

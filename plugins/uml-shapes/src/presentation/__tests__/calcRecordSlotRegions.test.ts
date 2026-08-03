@@ -1,5 +1,5 @@
 import type { TextSlot } from "@workspace/canvas/doc";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
+import { TEXT_LINE_HEIGHT } from "@workspace/canvas-sdk/doc";
 import { describe, it, expect } from "vitest";
 
 import {

@@ -1,7 +1,4 @@
-import {
-	BelowLabelHitArea,
-	createFrameObject,
-} from "@workspace/canvas/unstable";
+import { BelowLabelHitArea, createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildCrossPoints } from "./buildCrossPoints";
 import { CrossElement } from "./CrossStyled";

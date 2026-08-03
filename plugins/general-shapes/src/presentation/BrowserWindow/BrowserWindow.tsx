@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildBrowserWindowFigure } from "./buildBrowserWindowFigure";
 import type { BrowserWindowState } from "../../state/browserWindow/BrowserWindowState";

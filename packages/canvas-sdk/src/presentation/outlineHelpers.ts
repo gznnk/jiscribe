@@ -1,6 +1,5 @@
+import type { ObjectOutlineCalculator } from "@workspace/canvas";
 import type { Dimensions, Point } from "@workspace/geometry";
-
-import type { ObjectOutlineCalculator } from "../registry/ObjectOutlineRegistry";
 
 /**
  * Polyline sampling density for curved shape outlines. Density is a

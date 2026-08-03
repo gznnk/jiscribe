@@ -1,10 +1,10 @@
+import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
+import type { ObjectVisualBoundsCalculator } from "@workspace/canvas";
+import type { TextSlot } from "@workspace/canvas/doc";
+import { readTextSlot } from "@workspace/canvas/unstable";
 import type { Dimensions } from "@workspace/geometry";
 
 import { calcBelowLabelTextRegion } from "./calcBelowLabelTextRegion";
-import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
-import { readTextSlot } from "../../../states/objects/types/TextSlots";
-import type { ObjectVisualBoundsCalculator } from "../registry/ObjectVisualBoundsRegistry";
 
 /** The box the drawing fills, plus the slot the label is derived from. */
 type BelowLabelVisualBoundsState = Dimensions & {

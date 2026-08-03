@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { calcMultiDocumentSheets } from "./calcMultiDocumentSheets";
 import { MultiDocumentElement } from "./MultiDocumentStyled";

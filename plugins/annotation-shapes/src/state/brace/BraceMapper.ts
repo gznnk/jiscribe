@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { BraceState } from "./BraceState";
 import type { BraceDoc } from "../../schema/brace/BraceDoc";

@@ -1,10 +1,10 @@
 // UC1: container 図形の外部パッケージ。tier 2 の frame 系ベース実装を利用する。
 // schema/** の headless 部品 (createFrameObjectFactory / createFrameDocValidator /
 // validateOptionalNumber / AUTO_COLOR / DEFAULT_FONT_FAMILY) は
-// `@workspace/canvas/unstable-doc`、presentation / state / controls / menu 部品
+// `@workspace/canvas-sdk/doc`、presentation / state / controls / menu 部品
 // (createFrameObject / createFrameBehavior / createFrameMapper / createFrameStateValidator /
 // resolveAutoColor / PRECISION / ObjectMenuDropdownPanel / useCanvasMessages 等) は
-// `@workspace/canvas/unstable` 経由。selectionControls(ヘッダー高さコントロール、handle は
+// `@workspace/canvas-sdk` 経由。selectionControls(ヘッダー高さコントロール、handle は
 // プレーン関数)と header-color メニューも移植済み。headless な parse 入口は ./doc
 // (containerDocPlugin)。containerDefinition は core の container 定義と同一構成
 // (意図的除外ゼロ)。i18n はプラグイン所有辞書(src/messages/containerMessages.ts)を canvas の

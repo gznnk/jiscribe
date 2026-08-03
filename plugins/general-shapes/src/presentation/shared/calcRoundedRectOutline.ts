@@ -1,4 +1,4 @@
-import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas/unstable";
+import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas-sdk";
 import type { Point } from "@workspace/geometry";
 import { sampleEllipseArc } from "@workspace/geometry";
 

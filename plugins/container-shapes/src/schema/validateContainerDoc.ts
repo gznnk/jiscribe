@@ -1,9 +1,9 @@
 import { isCssSafeValue } from "@workspace/basic-validators";
-import type { ObjectDocValidateFn } from "@workspace/canvas/unstable-doc";
+import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
 import {
 	createFrameDocValidator,
 	validateOptionalNumber,
-} from "@workspace/canvas/unstable-doc";
+} from "@workspace/canvas-sdk/doc";
 
 import { ContainerFeatures } from "./ContainerDoc";
 

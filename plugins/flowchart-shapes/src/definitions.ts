@@ -3,7 +3,7 @@ import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
 	createFrameBehavior,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 
 import {
 	cardDocDefinition,

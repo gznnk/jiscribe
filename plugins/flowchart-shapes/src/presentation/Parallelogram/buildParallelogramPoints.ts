@@ -1,7 +1,7 @@
 import {
 	formatPolygonPoints,
 	centeredPolygonOutline,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 import type { Point } from "@workspace/geometry";
 
 import { PARALLELOGRAM_SKEW_RATIO } from "../../schema/parallelogram/ParallelogramDoc";

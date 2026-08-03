@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { QueueState } from "./QueueState";
 import type { QueueDoc } from "../../schema/queue/QueueDoc";

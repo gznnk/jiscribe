@@ -2,7 +2,7 @@ import type {
 	ObjectTextEditOverflowResolver,
 	ObjectTypeDefinition,
 } from "@workspace/canvas";
-import { createFrameBehavior } from "@workspace/canvas/unstable";
+import { createFrameBehavior } from "@workspace/canvas-sdk";
 
 import { recordDocDefinition } from "./doc";
 import { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";

@@ -1,8 +1,5 @@
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import {
-	DEFAULT_FONT_FAMILY,
-	AUTO_COLOR,
-} from "@workspace/canvas/unstable-doc";
+import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas-sdk/doc";
 
 /**
  * Height ratio of the cylinder cap ellipse (ry / height).

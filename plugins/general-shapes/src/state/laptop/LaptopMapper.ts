@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { LaptopState } from "./LaptopState";
 import type { LaptopDoc } from "../../schema/laptop/LaptopDoc";

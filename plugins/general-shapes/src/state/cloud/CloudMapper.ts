@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { CloudState } from "./CloudState";
 import type { CloudDoc } from "../../schema/cloud/CloudDoc";

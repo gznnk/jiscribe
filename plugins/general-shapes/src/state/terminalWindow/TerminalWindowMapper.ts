@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { TerminalWindowState } from "./TerminalWindowState";
 import type { TerminalWindowDoc } from "../../schema/terminalWindow/TerminalWindowDoc";

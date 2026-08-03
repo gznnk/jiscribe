@@ -1,0 +1,29 @@
+/**
+ * Shape-authoring kit for canvas plugins: the whole of `@workspace/canvas/unstable`
+ * plus the parts only plugins use. Headless counterpart is `./doc`.
+ */
+
+export * from "@workspace/canvas/unstable";
+
+// ---------------------------------------------------------------------------
+// Below-label shapes: the box is fully taken by the drawing, so the text hangs
+// under it as a caption sized from itself (server / actor / cross …).
+// ---------------------------------------------------------------------------
+// The three pieces go together: register the region as the type's `textRegion`
+// and the bounds as its `visualBounds` (without the latter, zoom-to-fit and the
+// export viewBox crop the label away), and place the hit area inside the shape's
+// own `data-kind="object"` group so the label can be grabbed. The typography
+// they measure with lives in `./doc` as BELOW_LABEL_STYLE_DEFAULTS.
+export {
+	BELOW_LABEL_GAP,
+	calcBelowLabelTextRegion,
+} from "./presentation/calcBelowLabelTextRegion";
+export { calcBelowLabelVisualBounds } from "./presentation/calcBelowLabelVisualBounds";
+export { BelowLabelHitArea } from "./presentation/BelowLabelHitArea";
+
+// Polygon/outline helpers for drawing frame-based plugin shapes and their connector outline.
+export { formatPolygonPoints } from "./presentation/formatPolygonPoints";
+export {
+	centeredPolygonOutline,
+	OUTLINE_CURVE_SEGMENTS,
+} from "./presentation/outlineHelpers";

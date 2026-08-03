@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { canvasThemeCssVars } from "@workspace/canvas/unstable";
+import { canvasThemeCssVars } from "@workspace/canvas-sdk";
 
 export const ColorPickerContainer = styled.div`
 	display: flex;

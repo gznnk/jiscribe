@@ -1,5 +1,5 @@
 import type { ObjectOutlineCalculator } from "@workspace/canvas";
-import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas/unstable";
+import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas-sdk";
 import { sampleEllipseArc } from "@workspace/geometry";
 import type { Dimensions } from "@workspace/geometry";
 

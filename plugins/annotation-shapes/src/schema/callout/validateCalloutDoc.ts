@@ -1,7 +1,7 @@
 import { isNumber, isObject } from "@workspace/basic-validators";
 import type { SemanticDiagnostic } from "@workspace/canvas/doc";
-import type { ObjectDocValidateFn } from "@workspace/canvas/unstable-doc";
-import { createFrameDocValidator } from "@workspace/canvas/unstable-doc";
+import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
+import { createFrameDocValidator } from "@workspace/canvas-sdk/doc";
 
 import {
 	CALLOUT_TAIL_SIDES,

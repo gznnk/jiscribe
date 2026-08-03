@@ -7,7 +7,7 @@ import {
 	AUTO_COLOR,
 	DEFAULT_FONT_FAMILY,
 	TEXT_LINE_HEIGHT,
-} from "@workspace/canvas/unstable-doc";
+} from "@workspace/canvas-sdk/doc";
 
 /** Slot holding the box title (class / entity / concept name). */
 export const RECORD_NAME_SLOT_ID = "name";

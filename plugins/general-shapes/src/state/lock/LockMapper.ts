@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { LockState } from "./LockState";
 import type { LockDoc } from "../../schema/lock/LockDoc";

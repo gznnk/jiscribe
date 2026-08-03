@@ -1,4 +1,4 @@
-import { centeredPolygonOutline } from "@workspace/canvas/unstable";
+import { centeredPolygonOutline } from "@workspace/canvas-sdk";
 
 import { calcNotePoints } from "./calcNotePoints";
 

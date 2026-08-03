@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { ShieldState } from "./ShieldState";
 import type { ShieldDoc } from "../../schema/shield/ShieldDoc";

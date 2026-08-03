@@ -1,4 +1,4 @@
-import { createFrameObjectFactory } from "@workspace/canvas/unstable-doc";
+import { createFrameObjectFactory } from "@workspace/canvas-sdk/doc";
 
 import { BROWSER_WINDOW_DOC_DEFAULTS } from "./BrowserWindowDoc";
 

@@ -1,5 +1,5 @@
 import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { createFrameBehavior } from "@workspace/canvas/unstable";
+import { createFrameBehavior } from "@workspace/canvas-sdk";
 
 import { markdownDocDefinition } from "./doc";
 import { Markdown } from "./presentation/Markdown";

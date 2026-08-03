@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { StickyState } from "./StickyState";
 import type { StickyDoc } from "../schema/StickyDoc";

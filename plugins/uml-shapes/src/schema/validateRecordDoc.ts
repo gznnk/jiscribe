@@ -1,11 +1,11 @@
 import { isObject, isString } from "@workspace/basic-validators";
 import type { SemanticDiagnostic } from "@workspace/canvas/doc";
 import { TEXT_SLOT_STYLE_KEYS } from "@workspace/canvas/doc";
-import type { ObjectDocValidateFn } from "@workspace/canvas/unstable-doc";
+import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
 import {
 	createFrameDocValidator,
 	validateTextSlotStyleFields,
-} from "@workspace/canvas/unstable-doc";
+} from "@workspace/canvas-sdk/doc";
 
 import {
 	RECORD_NAME_SLOT_ID,

@@ -3,11 +3,11 @@
 // （general-shapes）とも分ける（docs/05_extensibility/annotation-plugin-plan.md 参照）。
 // schema/** の headless 部品 (createFrameObjectFactory / createFrameDocValidator /
 // AUTO_COLOR / BELOW_LABEL_STYLE_DEFAULTS / TEXT_LINE_HEIGHT) は
-// `@workspace/canvas/unstable-doc`、presentation / state / controls 部品
+// `@workspace/canvas-sdk/doc`、presentation / state / controls 部品
 // (createFrameObject / createFrameBehavior / createFrameMapper /
 // createFrameStateValidator / measureTextWidth / calcVisualLineCount /
 // readTextSlot / centeredPolygonOutline / SelectionControlPill) は
-// `@workspace/canvas/unstable` 経由。
+// `@workspace/canvas-sdk` 経由。
 // headless な parse 入口は ./doc (annotationDocPlugin)。
 // 図形は 1 図形 1 フォルダ（schema/<id>/ ・ state/<id>/ ・ presentation/<Pascal>/）で、
 // 複数図形が共有する部品は各層の shared/ に置く。brace / bracket / bracketWithStem は

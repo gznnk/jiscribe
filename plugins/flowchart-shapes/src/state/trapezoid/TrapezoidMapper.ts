@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { TrapezoidState } from "./TrapezoidState";
 import type { TrapezoidDoc } from "../../schema/trapezoid/TrapezoidDoc";

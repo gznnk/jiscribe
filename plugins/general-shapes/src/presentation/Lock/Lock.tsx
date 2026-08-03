@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildLockFigure } from "./buildLockFigure";
 import type { LockState } from "../../state/lock/LockState";

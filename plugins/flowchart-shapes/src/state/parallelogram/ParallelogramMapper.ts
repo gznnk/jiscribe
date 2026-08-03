@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { ParallelogramState } from "./ParallelogramState";
 import type { ParallelogramDoc } from "../../schema/parallelogram/ParallelogramDoc";

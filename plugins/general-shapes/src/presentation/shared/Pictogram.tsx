@@ -1,4 +1,4 @@
-import type { FrameShapeProps } from "@workspace/canvas/unstable";
+import type { FrameShapeProps } from "@workspace/canvas-sdk";
 import type { ReactNode } from "react";
 
 import type { PictogramFigure } from "./PictogramFigure";

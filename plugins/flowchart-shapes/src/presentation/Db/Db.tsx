@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { DbElement } from "./DbStyled";
 import { DB_CAP_RATIO } from "../../schema/db/DbDoc";

@@ -1,6 +1,6 @@
 import { isNumber } from "@workspace/basic-validators";
 import type { ObjectStateValidator } from "@workspace/canvas";
-import { createFrameStateValidator } from "@workspace/canvas/unstable";
+import { createFrameStateValidator } from "@workspace/canvas-sdk";
 
 import { ContainerFeatures } from "../schema/ContainerDoc";
 

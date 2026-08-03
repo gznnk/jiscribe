@@ -1,10 +1,13 @@
+import type { ObjectTextRegionCalculator } from "@workspace/canvas";
+import type { TextSlot } from "@workspace/canvas/doc";
+import {
+	calcVisualLineCount,
+	measureTextWidth,
+} from "@workspace/canvas/unstable";
+import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
 import type { Dimensions } from "@workspace/geometry";
 
-import { calcVisualLineCount, measureTextWidth } from "./measureText";
-import { TEXT_LINE_HEIGHT } from "../../../constants/textLineHeight";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
-import { BELOW_LABEL_STYLE_DEFAULTS } from "../../../schemas/objects/utils/belowLabelStyleDefaults";
-import type { ObjectTextRegionCalculator } from "../registry/ObjectTextRegionRegistry";
+import { BELOW_LABEL_STYLE_DEFAULTS } from "../schema/belowLabelStyleDefaults";
 
 /** Empty band between the bottom edge of the box and the top of the label. */
 export const BELOW_LABEL_GAP = 4;

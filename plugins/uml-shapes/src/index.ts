@@ -2,9 +2,9 @@
 // 「1 図形に複数のテキストスロット」機構が公開 API だけで成立することの実証を兼ねる
 // （スロット集合の正本は state.text のキー、領域は textRegion calculator が slotId から返す）。
 // schema/** の headless 部品 (createFrameObjectFactory / createFrameDocValidator /
-// AUTO_COLOR / DEFAULT_FONT_FAMILY / TEXT_LINE_HEIGHT) は `@workspace/canvas/unstable-doc`、
+// AUTO_COLOR / DEFAULT_FONT_FAMILY / TEXT_LINE_HEIGHT) は `@workspace/canvas-sdk/doc`、
 // presentation / state 部品 (createFrameObject / TextOverlay / createFrameBehavior /
-// createFrameMapper / createFrameStateValidator) は `@workspace/canvas/unstable` 経由。
+// createFrameMapper / createFrameStateValidator) は `@workspace/canvas-sdk` 経由。
 // headless な parse 入口は ./doc (umlDocPlugin)。
 // (docs/05_extensibility/plugin-architecture-requirements.md 参照)。
 export * from "./schema/RecordDoc";

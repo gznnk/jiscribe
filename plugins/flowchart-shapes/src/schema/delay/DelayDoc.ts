@@ -1,8 +1,5 @@
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import {
-	DEFAULT_FONT_FAMILY,
-	AUTO_COLOR,
-} from "@workspace/canvas/unstable-doc";
+import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas-sdk/doc";
 
 /**
  * A delay shape (a rectangle whose right edge is a semicircular bulge), used for wait/delay steps in flowcharts.

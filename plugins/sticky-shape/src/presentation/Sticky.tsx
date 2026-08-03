@@ -1,11 +1,11 @@
 import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import type { TextEditable } from "@workspace/canvas/unstable";
+import type { TextEditable } from "@workspace/canvas-sdk";
 import {
 	TextOverlay,
 	calcTextRegion,
 	createSvgTransform,
 	readTextSlot,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 import type React from "react";
 import { memo } from "react";
 

@@ -7,7 +7,7 @@ import {
 	getFirstSelectedWithProp,
 	useCanvasMessages,
 	useSubmenuPosition,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 import { memo, useRef } from "react";
 
 import { STICKY_PRESET_COLORS } from "./StickyColorConstants";

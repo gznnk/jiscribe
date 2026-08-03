@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { GearState } from "./GearState";
 import type { GearDoc } from "../../schema/gear/GearDoc";

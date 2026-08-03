@@ -1,9 +1,9 @@
 // sticky 図形の外部パッケージ。tier 2 の frame 系ベース実装を利用する。
 // schema/** の headless 部品 (createFrameObjectFactory / createFrameDocValidator /
-// DEFAULT_FONT_FAMILY) は `@workspace/canvas/unstable-doc`、presentation / state /
+// DEFAULT_FONT_FAMILY) は `@workspace/canvas-sdk/doc`、presentation / state /
 // menu 部品 (createFrameBehavior / createFrameMapper / createFrameStateValidator /
 // TextOverlay / calcTextRegion / createSvgTransform / ObjectMenu UI キット) は
-// `@workspace/canvas/unstable` 経由。付箋の影に使うぼかしフィルタは
+// `@workspace/canvas-sdk` 経由。付箋の影に使うぼかしフィルタは
 // `ObjectTypeDefinition.svgDefs` でキャンバスの <defs> へ提供する。
 // headless な parse 入口は ./doc (stickyDocPlugin)。
 export * from "./schema/StickyDoc";

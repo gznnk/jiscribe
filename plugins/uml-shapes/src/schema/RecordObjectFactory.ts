@@ -1,4 +1,4 @@
-import { createFrameObjectFactory } from "@workspace/canvas/unstable-doc";
+import { createFrameObjectFactory } from "@workspace/canvas-sdk/doc";
 
 import { RECORD_DOC_DEFAULTS } from "./RecordDoc";
 

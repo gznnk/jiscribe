@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildHexagonPoints } from "./buildHexagonPoints";
 import { HexagonElement } from "./HexagonStyled";

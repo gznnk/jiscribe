@@ -2,7 +2,7 @@ import type {
 	SelectionControlContext,
 	SelectionControlEvent,
 } from "@workspace/canvas";
-import { PRECISION } from "@workspace/canvas/unstable";
+import { PRECISION } from "@workspace/canvas-sdk";
 import {
 	calcInverseAffineTransformedPoint,
 	degreesToRadians,

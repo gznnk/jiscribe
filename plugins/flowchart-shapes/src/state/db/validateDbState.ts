@@ -1,5 +1,5 @@
 import type { ObjectStateValidator } from "@workspace/canvas";
-import { createFrameStateValidator } from "@workspace/canvas/unstable";
+import { createFrameStateValidator } from "@workspace/canvas-sdk";
 
 import { DbFeatures } from "../../schema/db/DbDoc";
 

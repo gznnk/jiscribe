@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildShieldFigure } from "./buildShieldFigure";
 import type { ShieldState } from "../../state/shield/ShieldState";

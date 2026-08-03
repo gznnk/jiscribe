@@ -1,10 +1,10 @@
+import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
+import type { TextSlot } from "@workspace/canvas/doc";
+import { readTextSlot } from "@workspace/canvas/unstable";
 import type { Dimensions } from "@workspace/geometry";
 
 import { HitAreaRect } from "./BelowLabelHitAreaStyled";
-import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
-import type { TextSlot } from "../../../../schemas/objects/types/TextSlot";
-import { readTextSlot } from "../../../../states/objects/types/TextSlots";
-import { calcBelowLabelTextRegion } from "../../utils/calcBelowLabelTextRegion";
+import { calcBelowLabelTextRegion } from "../calcBelowLabelTextRegion";
 
 /** The box the drawing fills, plus the slot the label is sized from. */
 type BelowLabelHitAreaProps = {

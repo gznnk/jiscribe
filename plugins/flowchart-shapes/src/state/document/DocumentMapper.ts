@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { DocumentState } from "./DocumentState";
 import type { DocumentDoc } from "../../schema/document/DocumentDoc";

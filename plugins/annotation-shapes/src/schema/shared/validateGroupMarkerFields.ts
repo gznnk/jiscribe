@@ -1,5 +1,5 @@
 import type { SemanticDiagnostic } from "@workspace/canvas/doc";
-import type { ObjectDocValidateFn } from "@workspace/canvas/unstable-doc";
+import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
 
 import {
 	GROUP_MARKER_DIRECTIONS,

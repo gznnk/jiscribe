@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildDisplayPath } from "./buildDisplayPath";
 import { DisplayElement } from "./DisplayStyled";

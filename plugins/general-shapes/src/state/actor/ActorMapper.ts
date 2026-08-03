@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { ActorState } from "./ActorState";
 import type { ActorDoc } from "../../schema/actor/ActorDoc";

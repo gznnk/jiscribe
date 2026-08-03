@@ -1,4 +1,4 @@
-import { createFrameObjectFactory } from "@workspace/canvas/unstable-doc";
+import { createFrameObjectFactory } from "@workspace/canvas-sdk/doc";
 
 import { OFF_PAGE_CONNECTOR_DOC_DEFAULTS } from "./OffPageConnectorDoc";
 

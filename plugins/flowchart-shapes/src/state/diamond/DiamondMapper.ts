@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { DiamondState } from "./DiamondState";
 import type { DiamondDoc } from "../../schema/diamond/DiamondDoc";

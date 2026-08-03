@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { DelayState } from "./DelayState";
 import type { DelayDoc } from "../../schema/delay/DelayDoc";

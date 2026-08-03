@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { ContainerState } from "./ContainerState";
 import { ContainerFeatures } from "../schema/ContainerDoc";

@@ -1,7 +1,7 @@
 import { isObject, isString } from "@workspace/basic-validators";
 import type { ObjectStateValidator } from "@workspace/canvas";
-import { createFrameStateValidator } from "@workspace/canvas/unstable";
-import type { StateRecord } from "@workspace/canvas/unstable";
+import { createFrameStateValidator } from "@workspace/canvas-sdk";
+import type { StateRecord } from "@workspace/canvas-sdk";
 
 import {
 	RECORD_NAME_SLOT_ID,

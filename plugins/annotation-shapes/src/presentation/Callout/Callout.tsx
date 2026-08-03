@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildCalloutPath } from "./buildCalloutPath";
 import { CalloutElement } from "./CalloutStyled";

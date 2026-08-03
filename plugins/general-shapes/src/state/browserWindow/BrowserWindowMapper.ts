@@ -1,4 +1,4 @@
-import { createFrameMapper } from "@workspace/canvas/unstable";
+import { createFrameMapper } from "@workspace/canvas-sdk";
 
 import type { BrowserWindowState } from "./BrowserWindowState";
 import type { BrowserWindowDoc } from "../../schema/browserWindow/BrowserWindowDoc";

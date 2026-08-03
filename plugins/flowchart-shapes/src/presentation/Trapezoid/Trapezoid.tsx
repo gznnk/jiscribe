@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildTrapezoidPoints } from "./buildTrapezoidPoints";
 import { TrapezoidElement } from "./TrapezoidStyled";

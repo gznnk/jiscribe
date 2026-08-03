@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildDelayPath } from "./buildDelayPath";
 import { DelayElement } from "./DelayStyled";
