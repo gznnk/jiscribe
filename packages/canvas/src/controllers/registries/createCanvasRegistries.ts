@@ -8,6 +8,7 @@ import {
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
+import { createObjectGeometryKeyRegistry } from "../../presentations/objects/registry/ObjectGeometryKeyRegistry";
 import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { createObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
@@ -49,6 +50,7 @@ export const createCanvasRegistries = (
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
+		objectGeometryKey: createObjectGeometryKeyRegistry(),
 		objectVisualBounds: createObjectVisualBoundsRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		selectionControl: createSelectionControlRegistry(),

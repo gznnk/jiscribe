@@ -6,6 +6,7 @@ import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/O
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectGeometryKeyCalculator } from "../presentations/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsCalculator } from "../presentations/objects/registry/ObjectVisualBoundsRegistry";
@@ -64,6 +65,17 @@ export type ObjectTypeDefinition<
 
 	/** Band the edge connect points are centered on. Omitted = full bbox (see ObjectAnchorRegionRegistry). */
 	anchorRegion?: ObjectAnchorRegionCalculator;
+
+	/**
+	 * Key over whatever `outline` / `anchorRegion` read beyond the frame fields
+	 * (cx / cy / width / height / rotation / scaleX / scaleY), for the consumers
+	 * that memoize connector endpoint resolution on those fields. Required for a
+	 * type whose silhouette can change while the frame stands still (the
+	 * callout's tail) — without it, connectors attached to the shape keep the
+	 * endpoints resolved against the previous silhouette. Omitted = the frame
+	 * fields fully determine the resolved geometry (see ObjectGeometryKeyRegistry).
+	 */
+	geometryKey?: ObjectGeometryKeyCalculator;
 
 	/**
 	 * Everything the type draws, including what falls outside its geometry box.

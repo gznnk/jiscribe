@@ -1,6 +1,7 @@
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
+import type { ObjectGeometryKeyRegistry } from "../../presentations/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
@@ -39,6 +40,7 @@ export type CanvasRegistries = {
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
+	objectGeometryKey: ObjectGeometryKeyRegistry;
 	objectVisualBounds: ObjectVisualBoundsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	selectionControl: SelectionControlRegistry;

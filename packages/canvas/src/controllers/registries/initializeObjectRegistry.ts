@@ -7,6 +7,7 @@ import type {
 import {
 	Callout,
 	calcCalloutTextRegion,
+	calloutGeometryKey,
 	calloutOutline,
 } from "../../presentations/objects/annotations/Callout";
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
@@ -146,6 +147,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			component: Callout,
 			textRegion: calcCalloutTextRegion,
 			outline: calloutOutline,
+			geometryKey: calloutGeometryKey,
 			behavior: createFrameBehavior<CalloutState>(),
 			selectionControls: [
 				{
@@ -332,6 +334,9 @@ export const applyObjectDefinition = (
 	if (definition.anchorRegion) {
 		registries.objectAnchorRegion.register(type, definition.anchorRegion);
 	}
+	if (definition.geometryKey) {
+		registries.objectGeometryKey.register(type, definition.geometryKey);
+	}
 	if (definition.visualBounds) {
 		registries.objectVisualBounds.register(type, definition.visualBounds);
 	}
@@ -382,6 +387,7 @@ export const initializeObjectRegistry = (
 	registries.objectTextEditOverflow.clear();
 	registries.objectOutline.clear();
 	registries.objectAnchorRegion.clear();
+	registries.objectGeometryKey.clear();
 	registries.objectVisualBounds.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();

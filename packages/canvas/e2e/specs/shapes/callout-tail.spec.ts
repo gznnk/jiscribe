@@ -41,6 +41,21 @@ async function createCallout(
 	return created.id;
 }
 
+/** Reads the source endpoint (the first point) of the given connector. */
+async function connectorSourceY(
+	canvas: CanvasDriver,
+	id: string,
+): Promise<number | null> {
+	return canvas.page.evaluate((connectorId) => {
+		const el = document.querySelector(
+			`polyline[data-kind="connector"][data-id="${connectorId}"]`,
+		);
+		const first = el?.getAttribute("points")?.split(" ")[0];
+		const y = first?.split(",")[1];
+		return y === undefined ? null : Number(y);
+	}, id);
+}
+
 /** Reads the d attribute of the given callout's path. */
 async function calloutPathD(
 	canvas: CanvasDriver,
@@ -83,5 +98,32 @@ test.describe("callout tail re-attach", () => {
 			.not.toBe(before);
 		const after = await calloutPathD(canvas, id);
 		expect(after).toContain("L 100 0");
+	});
+
+	test("re-resolves an attached connector when the tail leaves its edge", async ({
+		canvas,
+	}) => {
+		await createCallout(canvas, { x: 300, y: 220 }, { x: 500, y: 380 });
+
+		// With the tail on the bottom edge, the tail band takes the bottom quarter,
+		// so the bottom anchor sits on the body edge at y=340 rather than y=380.
+		const connectorId = await canvas.createConnector("bottomCenter", {
+			x: 400,
+			y: 600,
+		});
+		expect(await connectorSourceY(canvas, connectorId)).toBeCloseTo(340, 0);
+
+		await canvas.selectAt({ x: 400, y: 250 });
+		await expect(canvas.page.locator(TAIL_HANDLE)).toBeVisible();
+
+		// Tail to the middle of the right edge: the bottom edge is now flat, so the
+		// anchor belongs at the bounding-box edge (y=380).
+		await canvas.drag({ x: 340, y: 380 }, { x: 500, y: 300 });
+
+		await expect
+			.poll(async () => connectorSourceY(canvas, connectorId), {
+				message: "the connector endpoint follows the moved tail",
+			})
+			.toBeCloseTo(380, 0);
 	});
 });
