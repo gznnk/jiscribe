@@ -30,7 +30,7 @@ describe("createCanvasRegistries", () => {
 	describe("default (no config)", () => {
 		it("registers every object type", () => {
 			const registries = createCanvasRegistries();
-			for (const type of ["rect", "ellipse", "callout", "polygon"]) {
+			for (const type of ["rect", "ellipse", "polyline", "polygon"]) {
 				expect(registries.objectMapper.getFeatures(type)).toBeDefined();
 			}
 			// gesture handlers are type-independent and always registered
@@ -54,8 +54,8 @@ describe("createCanvasRegistries", () => {
 			});
 			expect(registries.objectMapper.getFeatures("rect")).toBeDefined();
 			expect(registries.objectMapper.getFeatures("ellipse")).toBeDefined();
-			expect(registries.objectMapper.getFeatures("callout")).toBeUndefined();
-			expect(registries.objectFactory.get("callout")).toBeUndefined();
+			expect(registries.objectMapper.getFeatures("polygon")).toBeUndefined();
+			expect(registries.objectFactory.get("polygon")).toBeUndefined();
 		});
 
 		it("restricts the StencilLibrary presets to the enabled types", () => {

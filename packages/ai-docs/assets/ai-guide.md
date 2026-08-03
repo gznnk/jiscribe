@@ -80,6 +80,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | `lock`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | authentication, protected resource                    |
 | `shield`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | security boundary, trust zone                         |
 | `callout`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | annotation bubble                                     |
+| `note`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | comment box, UML note                                 |
 | `brace`                 | `x`,`y`,`width`,`height`             | stroke / text / rotation                         | group marker, grouping annotation                     |
 | `bracketWithStem`       | `x`,`y`,`width`,`height`             | stroke / text / rotation                         | group marker with a pointer, grouping annotation      |
 | `bracket`               | `x`,`y`,`width`,`height`             | stroke / text / rotation                         | group marker, grouping annotation                     |

@@ -1,9 +1,3 @@
-import {
-	CALLOUT_DOC_DEFAULTS,
-	CalloutFeatures,
-} from "../objects/annotations/callout/CalloutDoc";
-import { CalloutObjectFactory } from "../objects/annotations/callout/CalloutObjectFactory";
-import { validateCalloutDoc } from "../objects/annotations/callout/validateCalloutDoc";
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
 import {
@@ -61,15 +55,6 @@ export const builtinObjectDocDefinitions = {
 		description: "Ellipse (oval) shape.",
 		summary: "ellipse / oval node (center-based geometry)",
 		defaults: ELLIPSE_DOC_DEFAULTS,
-	},
-	callout: {
-		features: CalloutFeatures,
-		validateDoc: validateCalloutDoc,
-		factory: CalloutObjectFactory,
-		description:
-			"Speech-bubble callout, typically used for annotations and explanatory comments. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a bubble. The tail stays inside the bounding box, occupying a quarter of it on its side; text is laid out in the bubble body beside it. Point the tail at the annotated object via `tail` (default: bottom edge, position 0.2).",
-		summary: "annotation bubble",
-		defaults: CALLOUT_DOC_DEFAULTS,
 	},
 	group: {
 		features: GroupFeatures,

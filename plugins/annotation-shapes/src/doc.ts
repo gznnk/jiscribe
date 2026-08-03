@@ -22,6 +22,15 @@ import {
 } from "./schema/bracketWithStem/BracketWithStemDoc";
 import { BracketWithStemObjectFactory } from "./schema/bracketWithStem/BracketWithStemObjectFactory";
 import { validateBracketWithStemDoc } from "./schema/bracketWithStem/validateBracketWithStemDoc";
+import {
+	CALLOUT_DOC_DEFAULTS,
+	CalloutFeatures,
+} from "./schema/callout/CalloutDoc";
+import { CalloutObjectFactory } from "./schema/callout/CalloutObjectFactory";
+import { validateCalloutDoc } from "./schema/callout/validateCalloutDoc";
+import { NOTE_DOC_DEFAULTS, NoteFeatures } from "./schema/note/NoteDoc";
+import { NoteObjectFactory } from "./schema/note/NoteObjectFactory";
+import { validateNoteDoc } from "./schema/note/validateNoteDoc";
 
 export const braceDocDefinition: ObjectDocDefinition = {
 	features: BraceFeatures,
@@ -53,6 +62,26 @@ export const bracketWithStemDocDefinition: ObjectDocDefinition = {
 	defaults: BRACKET_WITH_STEM_DOC_DEFAULTS,
 };
 
+export const calloutDocDefinition: ObjectDocDefinition = {
+	features: CalloutFeatures,
+	validateDoc: validateCalloutDoc,
+	factory: CalloutObjectFactory,
+	description:
+		"Speech-bubble callout, typically used for annotations and explanatory comments. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a bubble. The tail stays inside the bounding box, occupying a quarter of it on its side; text is laid out in the bubble body beside it. Point the tail at the annotated object via `tail` (default: bottom edge, position 0.2).",
+	summary: "annotation bubble",
+	defaults: CALLOUT_DOC_DEFAULTS,
+};
+
+export const noteDocDefinition: ObjectDocDefinition = {
+	features: NoteFeatures,
+	validateDoc: validateNoteDoc,
+	factory: NoteObjectFactory,
+	description:
+		'Note shape: a box with its top-right corner folded back, holding a comment about the diagram — the UML note. It uses the same rect geometry (x/y/width/height) as RectDoc and only swaps the drawing, so it takes text inside the box, unlike the group markers in this package. Give it a landscape box (e.g. 180x110) and left-aligned text, and attach it to what it comments on with a connector. Two shapes are easily mistaken for it, and neither is the same thing: "document" (a wavy bottom edge) is a flowchart step that produces paperwork, and "file" is a portrait pictogram standing for a file on disk. Reach for "note" when the box holds prose *about* the diagram, and for those two when the shape *is* one of the things the diagram is about. Where the comment should point at one spot on one shape, CalloutDoc (a bubble with a tail) says so more directly.',
+	summary: "comment box, UML note",
+	defaults: NOTE_DOC_DEFAULTS,
+};
+
 /**
  * Headless `CanvasDocPlugin` for the annotation shapes: the doc-layer view of
  * `annotationPlugin`, teaching `createCanvasParser` the types without loading any
@@ -64,5 +93,7 @@ export const annotationDocPlugin: CanvasDocPlugin = {
 		brace: braceDocDefinition,
 		bracket: bracketDocDefinition,
 		bracketWithStem: bracketWithStemDocDefinition,
+		callout: calloutDocDefinition,
+		note: noteDocDefinition,
 	},
 };

@@ -53,18 +53,12 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 		const pinned = DEFAULT_TOOLBAR_LAYOUT.filter(
 			(entry) => entry.kind === "preset",
 		).map((entry) => entry.presetId);
-		expect(pinned).toEqual([
-			"rect",
-			"ellipse",
-			"polyline",
-			"polygon",
-			"callout",
-		]);
+		expect(pinned).toEqual(["rect", "ellipse", "polyline", "polygon"]);
 	});
 
 	/**
-	 * With sticky moved to `@workspace/plugin-sticky-shape`, callout is the only
-	 * annotation core owns, and a one-entry flyout is not worth the click.
+	 * Core owns nothing but the basic primitives, and all four are pinned, so no
+	 * flyout is left to open.
 	 */
 	it("opens no category flyout at all", () => {
 		expect(
@@ -80,6 +74,7 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 		const categoryIds = DEFAULT_TOOLBAR_LAYOUT.filter(
 			(entry) => entry.kind === "category",
 		).map((entry) => entry.id);
+		expect(categoryIds).not.toContain("annotation");
 		expect(categoryIds).not.toContain("flowchart");
 		expect(categoryIds).not.toContain("container");
 		expect(categoryIds).not.toContain("general");

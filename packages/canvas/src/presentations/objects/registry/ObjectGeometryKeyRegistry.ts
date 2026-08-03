@@ -5,17 +5,18 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * Condenses the state a type's outline / anchor region read beyond the frame
  * fields (cx / cy / width / height / rotation / scaleX / scaleY) into one
  * comparable value, for consumers that memoize connector endpoint resolution on
- * those frame fields (`useResolvedConnectorPoints`). The callout's tail is the
- * motivating case: it reshapes the outline while every frame field stays put,
- * so without a key the resolved endpoints go stale mid-drag.
+ * those frame fields (`useResolvedConnectorPoints`). The callout's tail
+ * (`@workspace/plugin-annotation-shapes`) is the motivating case: it reshapes the
+ * outline while every frame field stays put, so without a key the resolved
+ * endpoints go stale mid-drag.
  *
  * The return type is deliberately scalar: an array or object would compare
  * unequal on every re-map of the object and defeat the memo it feeds.
  * Implementations declare the extra fields they read on top of `ObjectState`
- * via `TState` (e.g.
- * `ObjectGeometryKeyCalculator<ObjectState & Pick<CalloutState, "tail">>`,
- * whose optional field keeps it assignable to the default instantiation the
- * registry stores).
+ * via `TState` (the callout's is
+ * `ObjectGeometryKeyCalculator<ObjectState & Pick<CalloutState, "tail">>`, whose
+ * optional field keeps it assignable to the default instantiation the registry
+ * stores).
  */
 export type ObjectGeometryKeyCalculator<
 	TState extends ObjectState = ObjectState,

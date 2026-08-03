@@ -74,9 +74,9 @@ describe("ObjectMapper", () => {
 		it("should handle meta with custom properties", () => {
 			const doc: ObjectDoc = {
 				id: "object-5",
-				type: "callout",
+				type: "svg",
 				meta: {
-					name: "Callout Note",
+					name: "Embedded SVG",
 					customProp: "custom value",
 					tags: ["note", "important"],
 				} as unknown as MetaDoc,
@@ -85,7 +85,7 @@ describe("ObjectMapper", () => {
 			const state = ObjectMapper.toState(doc);
 
 			expect(state.id).toBe("object-5");
-			expect(state.meta?.name).toBe("Callout Note");
+			expect(state.meta?.name).toBe("Embedded SVG");
 			expect((state.meta as Record<string, unknown>)?.customProp).toBe(
 				"custom value",
 			);
@@ -102,7 +102,7 @@ describe("ObjectMapper", () => {
 				"polygon",
 				"polyline",
 				"group",
-				"callout",
+				"svg",
 				"connector",
 			] as const;
 
@@ -215,7 +215,7 @@ describe("ObjectMapper", () => {
 				"polygon",
 				"polyline",
 				"group",
-				"callout",
+				"svg",
 				"connector",
 			] as const;
 
@@ -314,7 +314,7 @@ describe("ObjectMapper", () => {
 				"polygon",
 				"polyline",
 				"group",
-				"callout",
+				"svg",
 				"connector",
 			] as const;
 

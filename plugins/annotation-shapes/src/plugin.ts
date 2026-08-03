@@ -4,6 +4,8 @@ import {
 	braceDefinition,
 	bracketDefinition,
 	bracketWithStemDefinition,
+	calloutDefinition,
+	noteDefinition,
 } from "./definitions";
 
 /**
@@ -19,5 +21,7 @@ export const annotationPlugin: CanvasPlugin = {
 		brace: braceDefinition,
 		bracket: bracketDefinition,
 		bracketWithStem: bracketWithStemDefinition,
+		callout: calloutDefinition,
+		note: noteDefinition,
 	},
 };

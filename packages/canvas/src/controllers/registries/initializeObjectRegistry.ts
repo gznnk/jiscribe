@@ -4,12 +4,6 @@ import type {
 	AnyObjectTypeDefinition,
 	ObjectTypeDefinition,
 } from "../../plugin/ObjectTypeDefinition";
-import {
-	Callout,
-	calcCalloutTextRegion,
-	calloutGeometryKey,
-	calloutOutline,
-} from "../../presentations/objects/annotations/Callout";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
 	Ellipse,
@@ -22,12 +16,6 @@ import { Svg } from "../../presentations/objects/primitives/Svg";
 import { ConnectorExtraStyleProperties } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
-import {
-	calloutToDoc,
-	calloutToState,
-} from "../../states/objects/annotations/callout/CalloutMapper";
-import type { CalloutState } from "../../states/objects/annotations/callout/CalloutState";
-import { isValidCalloutState } from "../../states/objects/annotations/callout/validateCalloutState";
 import {
 	connectorToDoc,
 	connectorToState,
@@ -87,8 +75,6 @@ import {
 	rotateByGroup as polylineRotateByGroup,
 	transformByGroup as polylineTransformByGroup,
 } from "../behaviors/primitives/PolylineController";
-import { handleCalloutTailTip } from "../gestures/handlers/controls/callout/handleCalloutTailTip";
-import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -99,7 +85,6 @@ import {
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
-import { CalloutStencils } from "../ui/objects/annotations/CalloutStencils";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
@@ -129,25 +114,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			stencils: EllipseStencils,
-		}),
-
-		callout: defineObject({
-			...builtinObjectDocDefinitions.callout,
-			mapper: { toDoc: calloutToDoc, toState: calloutToState },
-			stateValidator: isValidCalloutState,
-			component: Callout,
-			textRegion: calcCalloutTextRegion,
-			outline: calloutOutline,
-			geometryKey: calloutGeometryKey,
-			behavior: createFrameBehavior<CalloutState>(),
-			selectionControls: [
-				{
-					name: "tailTip",
-					Component: CalloutTailTipControl,
-					handle: handleCalloutTailTip,
-				},
-			],
-			stencils: CalloutStencils,
 		}),
 
 		group: defineObject({

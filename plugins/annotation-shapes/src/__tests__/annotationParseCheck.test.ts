@@ -44,6 +44,25 @@ const doc = {
 			text: "presentation 層",
 		},
 		{
+			id: "callout-1",
+			type: "callout",
+			x: 260,
+			y: 160,
+			width: 160,
+			height: 110,
+			tail: { side: "bottom", position: 0.2 },
+			text: "しっぽで指す",
+		},
+		{
+			id: "note-1",
+			type: "note",
+			x: 260,
+			y: 0,
+			width: 180,
+			height: 110,
+			text: "パースは黙って落ちる",
+		},
+		{
 			id: "task-1",
 			type: "rect",
 			x: 60,
@@ -85,6 +104,8 @@ describe("annotation shapes", () => {
 		expect(ids).not.toContain("brace-1");
 		expect(ids).not.toContain("bracket-1");
 		expect(ids).not.toContain("bracket-with-stem-1");
+		expect(ids).not.toContain("callout-1");
+		expect(ids).not.toContain("note-1");
 		expect(result.warnings?.map((warning) => warning.path)).toContain(
 			"root[0].type",
 		);

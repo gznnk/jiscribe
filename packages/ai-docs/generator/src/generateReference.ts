@@ -118,13 +118,22 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 		text: "User",
 	},
 	callout: {
-		id: "note-1",
+		id: "callout-1",
 		type: "callout",
 		x: 200,
 		y: 150,
 		width: 160,
 		height: 110,
 		text: "Watch out here",
+	},
+	note: {
+		id: "note-1",
+		type: "note",
+		x: 200,
+		y: 150,
+		width: 180,
+		height: 110,
+		text: "Retries are capped at 3",
 	},
 	db: {
 		id: "db-1",

@@ -27,11 +27,10 @@ import { Canvas, darkCanvasTheme, extractCanvasSourceFromPng } from "../../src";
 import { createCanvasParser } from "../../src/doc";
 import "./harness.css";
 
-// The flowchart / container / markdown / sticky / general shapes were removed from core, leaving
-// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
+// The flowchart / container / markdown / sticky / general / annotation shapes were removed from
+// core, leaving @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
 // @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
-// @workspace/plugin-general-shapes as their only source; the annotation shapes
-// (@workspace/plugin-annotation-shapes) never lived in core
+// @workspace/plugin-general-shapes / @workspace/plugin-annotation-shapes as their only source
 // (docs/05_extensibility/plugin-architecture-requirements.md). They are registered in
 // devDependencies as a dev-only circular dependency for e2e, keeping the related specs alive.
 const plugins = [
@@ -54,7 +53,6 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
-	{ kind: "preset", presetId: "callout" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	annotationToolbarEntry,

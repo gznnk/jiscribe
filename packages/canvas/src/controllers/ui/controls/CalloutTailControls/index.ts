@@ -1,1 +1,0 @@
-export { CalloutTailTipControl } from "./CalloutTailTipControl";

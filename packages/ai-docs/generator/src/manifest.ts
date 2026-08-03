@@ -41,8 +41,9 @@ export const CANONICAL_TYPE_ORDER = [
 	"queue",
 	"lock",
 	"shield",
-	"callout",
 	// annotation-shapes の汎用注釈（記法に属さない、図に説明を足す図形）
+	"callout",
+	"note",
 	"brace",
 	"bracketWithStem",
 	"bracket",
@@ -117,6 +118,7 @@ export const DETAIL_SECTION_TYPES = [
 	"document",
 	"actor",
 	"callout",
+	"note",
 	"brace",
 	"bracketWithStem",
 	"bracket",

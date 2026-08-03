@@ -30,7 +30,7 @@ export type ResolvedConnectorPoints = {
  * re-route (#214).
  * Connectable types are all frame-based today; if poly shapes ever become
  * connectable, `points` must be added here. Per-type state beyond the frame
- * (the callout's tail) arrives as the trailing geometry key, so a type whose
+ * (a callout's tail) arrives as the trailing geometry key, so a type whose
  * silhouette moves on its own stays live by registering a `geometryKey`.
  */
 const getOwnerGeometryDeps = (

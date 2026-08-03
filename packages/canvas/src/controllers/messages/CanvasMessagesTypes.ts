@@ -92,7 +92,7 @@ export type CanvasMessageStrings = {
 export type CanvasMessages = CanvasMessageStrings & {
 	/** Overrides keyed by command id (e.g. `undo`, `bringToFront`, `move-up-large`) */
 	commandLabels: Record<string, string>;
-	/** Overrides keyed by stencil id (e.g. `rect`, `ellipse`, `callout`) */
+	/** Overrides keyed by stencil id (e.g. `rect`, `ellipse`, `polygon`) */
 	stencilLabels: Record<string, string>;
 	/** Overrides keyed by stencil category id (e.g. `flowchart`, `general`, `annotation`) */
 	stencilCategoryLabels: Record<string, string>;

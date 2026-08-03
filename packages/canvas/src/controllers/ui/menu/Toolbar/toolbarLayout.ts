@@ -51,16 +51,15 @@ export const basicToolbarEntry: ToolbarEntry = {
 
 /**
  * Default toolbar layout: every core preset pinned directly (the classic
- * direct-placement UX), no category flyout. `callout` is pinned rather than
- * folded because it is now the only annotation core owns — a one-entry flyout
- * costs a click for nothing. Anything a plugin supplies (the flowchart /
- * container / general categories, the `markdown` / `sticky` presets) is shown
- * only when the host adds it via `toolbar.layout`.
+ * direct-placement UX), no category flyout. Core owns the basic primitives and
+ * nothing else, so the four of them are the whole bar. Anything a plugin
+ * supplies (the annotation / flowchart / container / general categories, the
+ * `markdown` / `sticky` presets) is shown only when the host adds it via
+ * `toolbar.layout`.
  */
 export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
-	{ kind: "preset", presetId: "callout" },
 ];

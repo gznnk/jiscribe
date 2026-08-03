@@ -80,6 +80,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `lock`             | Authentication, protected resource                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `shield`           | Security boundary, trust zone                         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `callout`          | Annotation bubble                                     | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `note`             | Comment box, UML note                                 | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `brace`            | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
 | `bracketWithStem`  | Group marker with a pointer, grouping annotation      | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
 | `bracket`          | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
@@ -365,7 +366,7 @@ Speech-bubble callout, typically used for annotations and explanatory comments. 
 
 ```json
 {
-	"id": "note-1",
+	"id": "callout-1",
 	"type": "callout",
 	"x": 200,
 	"y": 150,
@@ -382,6 +383,31 @@ Speech-bubble callout, typically used for annotations and explanatory comments. 
 | `width`  | `number` | `160`           | Bounding-box width (px).                                                                                                                                                                                       |
 | `height` | `number` | `110`           | Bounding-box height (px).                                                                                                                                                                                      |
 | `tail`   | `object` | bottom at `0.2` | Tail tip placement: `{ "side": ..., "position": ... }`. `side` is the edge the tip sits on (`"top"` / `"right"` / `"bottom"` / `"left"`), `position` is 0–1 along that edge. Point it at the annotated object. |
+
+---
+
+### `note`
+
+Note shape: a box with its top-right corner folded back, holding a comment about the diagram — the UML note. It uses the same rect geometry (x/y/width/height) as `rect` and only swaps the drawing, so it takes text inside the box, unlike the group markers in this package. Give it a landscape box (e.g. 180x110) and left-aligned text, and attach it to what it comments on with a connector. Two shapes are easily mistaken for it, and neither is the same thing: "document" (a wavy bottom edge) is a flowchart step that produces paperwork, and "file" is a portrait pictogram standing for a file on disk. Reach for "note" when the box holds prose _about_ the diagram, and for those two when the shape _is_ one of the things the diagram is about. Where the comment should point at one spot on one shape, `callout` (a bubble with a tail) says so more directly. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "note-1",
+	"type": "note",
+	"x": 200,
+	"y": 150,
+	"width": 180,
+	"height": 110,
+	"text": "Retries are capped at 3"
+}
+```
+
+| Field    | Type     | Default | Description                       |
+| -------- | -------- | ------- | --------------------------------- |
+| `x`      | `number` | `0`     | X of the bounding box's top-left. |
+| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
+| `width`  | `number` | `180`   | Bounding-box width (px).          |
+| `height` | `number` | `110`   | Bounding-box height (px).         |
 
 ---
 

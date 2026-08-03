@@ -6,5 +6,5 @@
  * and a connector's label is not a slot (textEditState kind "connectorLabel").
  */
 
-/** The slot every single-text shape (rect, ellipse, callout, ...) holds. */
+/** The slot every single-text shape (rect, ellipse, svg, ...) holds. */
 export const BODY_TEXT_SLOT_ID = "body";

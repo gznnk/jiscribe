@@ -7,8 +7,8 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import type { ObjectBehaviorEntry } from "../../gestures/registry/ObjectBehaviorTypes";
 
 /**
- * Creates the shared behavior for Frame-based objects (rect / ellipse / diamond /
- * svg / callout, i.e. shapes with geometry: "rect" + transform).
+ * Creates the shared behavior for Frame-based objects (rect / ellipse / svg, and
+ * most plugin shapes, i.e. shapes with geometry: "rect" + transform).
  *
  * These shapes share identical move, group-transform, and group-rotation behavior:
  * cx/cy are shifted by delta, and transform/rotation are delegated to `FrameTransform`.

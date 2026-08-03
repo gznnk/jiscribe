@@ -35,7 +35,6 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
-	{ kind: "preset", presetId: "callout" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	annotationToolbarEntry,

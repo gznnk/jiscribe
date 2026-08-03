@@ -139,7 +139,7 @@ export const fileDocDefinition: ObjectDocDefinition = {
 	features: FileFeatures,
 	validateDoc: validateFileDoc,
 	factory: FileObjectFactory,
-	description: `File shape (a folded top-right corner), typically used for source files and configuration. ${RECT_GEOMETRY_NOTE} Text is laid out below the fold, so a portrait aspect ratio (e.g. 100x120) looks best. Distinct from the flowchart "document" (wavy bottom edge, a flowchart step) and "card" (clipped top-left corner).`,
+	description: `File shape (a folded top-right corner), typically used for source files and configuration. ${RECT_GEOMETRY_NOTE} Text is laid out below the fold, so a portrait aspect ratio (e.g. 100x120) looks best. Distinct from the flowchart "document" (wavy bottom edge, a flowchart step) and "card" (clipped top-left corner), and from "note", which folds the same corner but is a comment box about the diagram rather than a thing the diagram is about.`,
 	summary: "source file, configuration",
 	defaults: FILE_DOC_DEFAULTS,
 };

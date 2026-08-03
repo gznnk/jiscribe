@@ -109,6 +109,9 @@
 					"$ref": "#/$defs/CalloutDoc"
 				},
 				{
+					"$ref": "#/$defs/NoteDoc"
+				},
+				{
 					"$ref": "#/$defs/BraceDoc"
 				},
 				{
@@ -254,6 +257,9 @@
 				},
 				{
 					"$ref": "#/$defs/CalloutDoc"
+				},
+				{
+					"$ref": "#/$defs/NoteDoc"
 				},
 				{
 					"$ref": "#/$defs/BraceDoc"
@@ -1948,7 +1954,7 @@
 			}
 		},
 		"FileDoc": {
-			"description": "File shape (a folded top-right corner), typically used for source files and configuration. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out below the fold, so a portrait aspect ratio (e.g. 100x120) looks best. Distinct from the flowchart \"document\" (wavy bottom edge, a flowchart step) and \"card\" (clipped top-left corner).",
+			"description": "File shape (a folded top-right corner), typically used for source files and configuration. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out below the fold, so a portrait aspect ratio (e.g. 100x120) looks best. Distinct from the flowchart \"document\" (wavy bottom edge, a flowchart step) and \"card\" (clipped top-left corner), and from \"note\", which folds the same corner but is a comment box about the diagram rather than a thing the diagram is about.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -2449,6 +2455,101 @@
 				},
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"NoteDoc": {
+			"description": "Note shape: a box with its top-right corner folded back, holding a comment about the diagram — the UML note. It uses the same rect geometry (x/y/width/height) as RectDoc and only swaps the drawing, so it takes text inside the box, unlike the group markers in this package. Give it a landscape box (e.g. 180x110) and left-aligned text, and attach it to what it comments on with a connector. Two shapes are easily mistaken for it, and neither is the same thing: \"document\" (a wavy bottom edge) is a flowchart step that produces paperwork, and \"file\" is a portrait pictogram standing for a file on disk. Reach for \"note\" when the box holds prose *about* the diagram, and for those two when the shape *is* one of the things the diagram is about. Where the comment should point at one spot on one shape, CalloutDoc (a bubble with a tail) says so more directly.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"note\".",
+					"type": "string",
+					"const": "note"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 180",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 110",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"description": "Horizontal text alignment. Default: \"left\" (overrides the shared default \"center\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/TextAlign"
+						}
+					],
+					"default": "left"
+				},
+				"verticalAlign": {
+					"description": "Vertical text alignment. Default: \"top\" (overrides the shared default \"middle\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/VerticalAlign"
+						}
+					],
+					"default": "top"
 				},
 				"fontColor": {
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
@@ -4394,7 +4495,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

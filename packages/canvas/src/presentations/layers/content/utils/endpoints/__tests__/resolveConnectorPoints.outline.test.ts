@@ -1,7 +1,8 @@
 import type { Dimensions, Point } from "@workspace/geometry";
 import { describe, it, expect } from "vitest";
 
-import { defaultCanvasRegistries } from "../../../../../../controllers/registries/createCanvasRegistries";
+import { outlinedPlugin } from "../../../../../../controllers/__tests__/support/outlinedPlugin";
+import { createCanvasRegistries } from "../../../../../../controllers/registries/createCanvasRegistries";
 import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
@@ -15,8 +16,8 @@ import { resolveConnectorPoints } from "../resolveConnectorPoints";
  * box. The outline is fed from a synthetic registry so this exercises
  * resolveConnectorPoints in isolation from any particular shape's geometry
  * (per-shape outline correctness is covered by each shape's own outline unit
- * test). A separate check confirms the real registries register outlines for
- * core outline shapes but not for rect/ellipse.
+ * test). A separate check confirms the real registries pick an `outline` up off
+ * a definition, and that rect/ellipse deliberately register none.
  */
 
 const freeEndpoint = (x: number, y: number): EndpointRef =>
@@ -134,11 +135,14 @@ describe("resolveConnectorPoints — shape outline attachment", () => {
 	});
 });
 
-describe("defaultCanvasRegistries outline registration", () => {
-	it("registers outline calculators for core outline shapes but not rect/ellipse", () => {
-		const registry = defaultCanvasRegistries.objectOutline;
-		// callout keeps its outline registered in the core defaults.
-		expect(registry.get("callout")).toBeTypeOf("function");
+describe("createCanvasRegistries outline registration", () => {
+	it("registers the outline a definition declares, but none for rect/ellipse", () => {
+		// No built-in declares an outline any more, so the shape under test comes
+		// from a plugin (support/outlinedPlugin).
+		const registry = createCanvasRegistries({
+			plugins: [outlinedPlugin],
+		}).objectOutline;
+		expect(registry.get("outlined")).toBeTypeOf("function");
 		// rect / ellipse keep their analytic handling — no polygon provider.
 		expect(registry.get("rect")).toBeUndefined();
 		expect(registry.get("ellipse")).toBeUndefined();

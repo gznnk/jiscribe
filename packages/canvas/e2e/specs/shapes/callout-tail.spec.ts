@@ -1,43 +1,25 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
-import { selectors } from "../../support/selectors";
 
 /**
  * Guards re-attaching the callout tail:
  * - a handle (selection:callout:tailTip) appears at the tail tip on selection
  * - free-dragging that handle changes side / position and the path follows
+ *
+ * The callout is drawn out of the annotation category flyout, which is where it
+ * lives since it moved to @workspace/plugin-annotation-shapes.
  */
 
 const TAIL_HANDLE =
 	'[data-kind="control"][data-part="selection:callout:tailTip"]';
 
-/** Creates a callout by diagonal drag from the pinned toolbar preset and returns its new id. */
+/** Creates a callout by diagonal drag out of the annotation flyout and returns its new id. */
 async function createCallout(
 	canvas: CanvasDriver,
 	from: { x: number; y: number },
 	to: { x: number; y: number },
 ): Promise<string> {
-	const before = await canvas.captureObjects();
-	const beforeIds = new Set(before.map((obj) => obj.id));
-
-	const item = canvas.page.locator(selectors.shapeItem("callout"));
-	await expect(item).toBeVisible();
-	await item.click();
-
-	await canvas.drag(from, to);
-	await expect
-		.poll(async () => (await canvas.captureObjects()).length, {
-			message: "exactly one callout is created",
-		})
-		.toBe(before.length + 1);
-
-	const created = (await canvas.captureObjects()).find(
-		(obj) => !beforeIds.has(obj.id),
-	);
-	if (!created?.id) {
-		throw new Error("the created callout has no data-id");
-	}
-	return created.id;
+	return canvas.drawShapeFromFlyout("annotation", "callout", from, to);
 }
 
 /** Reads the source endpoint (the first point) of the given connector. */

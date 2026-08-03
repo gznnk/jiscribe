@@ -4,13 +4,14 @@ import { describe, expect, it } from "vitest";
 import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../../constants/connectorHitArea";
 import type { ConnectorLabel } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import { outlinedPlugin } from "../../../../__tests__/support/outlinedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
+import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 import { ConnectorClickHandler } from "../ConnectorClickHandler";
 
-const registries = createTestRegistries();
+const registries = createCanvasRegistries({ plugins: [outlinedPlugin] });
 
 /** Endpoints reference absent objects, so the path never resolves (placement stays out of it). */
 const makeConnector = (id: string, labelText: string): ConnectorState =>
@@ -198,14 +199,14 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 	});
 
 	it("measures the position along the same path the rendering resolves", () => {
-		// A callout 200x100 centered on the origin: its registered outline puts the
-		// center-anchored endpoint on the bubble body at (0, 25), while the
-		// bounding-box fallback would put it at (0, 50) and read the click as
+		// An outline shape 200x100 centered on the origin (support/outlinedPlugin):
+		// its registered outline puts the center-anchored endpoint at (0, 25), while
+		// the bounding-box fallback would put it at (0, 50) and read the click as
 		// position 0.5.
-		const callout = {
-			id: "co1",
-			type: "callout",
-			features: { type: "callout", geometry: "rect" },
+		const outlined = {
+			id: "ol1",
+			type: "outlined",
+			features: { type: "outlined", geometry: "rect" },
 			cx: 0,
 			cy: 0,
 			width: 200,
@@ -216,12 +217,12 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 		};
 		const attached = {
 			...freeConnector(),
-			source: { owner: { id: "co1" }, anchor: { kind: "center" } },
+			source: { owner: { id: "ol1" }, anchor: { kind: "center" } },
 			target: { anchor: { kind: "free", point: { x: 0, y: 500 } } },
 		};
 		const state = {
 			...makeState(""),
-			objects: { co1: callout, c1: attached },
+			objects: { ol1: outlined, c1: attached },
 		} as unknown as CanvasControllerState;
 
 		const next = dblclickAt(state, { x: 0, y: 275 });
