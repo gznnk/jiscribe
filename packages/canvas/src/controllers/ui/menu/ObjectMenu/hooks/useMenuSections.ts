@@ -3,8 +3,10 @@ import { useMemo } from "react";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
+import { filterTextSlotMenuSections } from "../utils/filterTextSlotMenuSections";
 
 const itemKey = (item: ObjectMenuItem): string =>
 	item.type === "custom" ? item.id : item.type;
@@ -66,13 +68,13 @@ const mergeSections = (arrays: ObjectMenuSection[][]): ObjectMenuSection[] => {
 };
 
 /**
- * Computes the menu sections to display from the current selection.
+ * Collects the menu sections of the current selection, before any slot narrowing.
  *
  * When a connector is selected (selectedConnectorId != null), returns the sections for
  * its type. When group objects are selected, expands the descendant concrete object
  * types; if multiple types are mixed, only the common sections are shown (AND-merge).
  */
-export const getMenuSections = (
+const collectSelectionSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
 ): ObjectMenuSection[] => {
@@ -124,6 +126,24 @@ export const getMenuSections = (
 };
 
 /**
+ * Computes the menu sections to display from the current selection.
+ *
+ * While a text slot is selected the sections are narrowed to the text items, so the
+ * menu never offers an action that the slot cannot receive. Doing it here keeps every
+ * `features.text === "slots"` type covered without each definition opting in.
+ */
+export const getMenuSections = (
+	state: CanvasControllerState,
+	objectMenuRegistry: ObjectMenuRegistry,
+): ObjectMenuSection[] => {
+	const sections = collectSelectionSections(state, objectMenuRegistry);
+	if (resolveSelectedTextSlot(state) === null) {
+		return sections;
+	}
+	return filterTextSlotMenuSections(sections);
+};
+
+/**
  * Memoized hook wrapper around {@link getMenuSections}, recomputing only when the selection changes.
  * When `enabled` is false (menu hidden, e.g. during a drag) the computation is skipped entirely so
  * the O(selection) work does not run every frame while the result is not shown.
@@ -132,12 +152,19 @@ export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
 ): ObjectMenuSection[] => {
-	const { selectedIds, selectedConnectorId, objects } = state;
+	const { selectedIds, selectedConnectorId, selectedTextSlot, objects } = state;
 	const { objectMenu } = useCanvasRegistries();
 
 	return useMemo(
 		() => (enabled ? getMenuSections(state, objectMenu) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[enabled, selectedIds, selectedConnectorId, objects, objectMenu],
+		[
+			enabled,
+			selectedIds,
+			selectedConnectorId,
+			selectedTextSlot,
+			objects,
+			objectMenu,
+		],
 	);
 };

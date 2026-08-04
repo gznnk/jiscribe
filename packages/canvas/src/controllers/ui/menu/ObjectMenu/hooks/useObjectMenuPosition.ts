@@ -33,6 +33,7 @@ export function useObjectMenuPosition(
 	const {
 		selectedIds,
 		selectedConnectorId,
+		selectedTextSlot,
 		objects,
 		viewport,
 		contextMenuPosition,
@@ -51,8 +52,14 @@ export function useObjectMenuPosition(
 		height: 40,
 	});
 
-	// Measure menu dimensions from DOM when it renders or selection changes
+	// Measure menu dimensions from DOM when it renders or selection changes.
+	// Slot selection changes the item set (see filterTextSlotMenuSections), so the
+	// width must be re-measured then too or the centering uses the stale width.
 	const selectedIdsString = selectedIds.slice().sort().join(",");
+	const selectedTextSlotKey =
+		selectedTextSlot === null
+			? null
+			: `${selectedTextSlot.objectId}:${selectedTextSlot.slotId}`;
 	const shouldRender = useMemo(() => {
 		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
 		if (!hasSelection) {
@@ -91,7 +98,13 @@ export function useObjectMenuPosition(
 			const rect = menuRef.current.getBoundingClientRect();
 			setMenuDimensions({ width: rect.width, height: rect.height });
 		}
-	}, [menuRef, shouldRender, selectedIdsString, selectedConnectorId]);
+	}, [
+		menuRef,
+		shouldRender,
+		selectedIdsString,
+		selectedConnectorId,
+		selectedTextSlotKey,
+	]);
 
 	return useMemo(() => {
 		if (!shouldRender) {

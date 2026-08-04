@@ -78,6 +78,9 @@ export const selectors = {
 	/** Connector creation anchor, drawn 20px outside the edge midpoint. */
 	createAnchor: (anchorId: AnchorId) => `[data-part="anchor:${anchorId}"]`,
 
+	/** The floating ObjectMenu container itself, not the buttons inside (they carry the same data attributes). */
+	objectMenu: 'div[data-kind="menu"][data-id="object-menu"]:not([data-part])',
+
 	/** Toggle button that opens an ObjectMenu dropdown. */
 	objectMenuToggle: (sectionId: string) => `[data-part="toggle:${sectionId}"]`,
 

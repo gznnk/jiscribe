@@ -1,5 +1,6 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { selectors } from "../../support/selectors";
 
 /**
  * Selecting one text slot inside a multi-slot shape, one level below the object.
@@ -9,6 +10,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * - while the slot is selected the object outline turns dashed and the transform
  *   handles go away, so only the slot box reads as the operated target
  * - a style change then lands on that slot alone, leaving the others as they were
+ * - the object menu drops to the text items, since nothing else applies to a slot
  * - Escape steps out one level at a time: the slot first, the object next
  * - Tab walks the slots in order and wraps around
  * - Enter opens the selected slot for editing
@@ -178,6 +180,63 @@ test.describe("record: selecting one text slot", () => {
 		expect((await textColorByContent(canvas))[ATTRIBUTES_TEXT]).toBe(
 			before[ATTRIBUTES_TEXT],
 		);
+	});
+
+	test("narrows the object menu to the text items while a slot is selected", async ({
+		canvas,
+	}) => {
+		await createFilledRecord(canvas);
+
+		const backgroundColorToggle = canvas.page.locator(
+			selectors.objectMenuToggle("bg-color"),
+		);
+		const stackOrderToggle = canvas.page.locator(
+			selectors.objectMenuToggle("stack-order"),
+		);
+		const fontSizeToggle = canvas.page.locator(
+			selectors.objectMenuToggle("font-size"),
+		);
+		const alignmentToggle = canvas.page.locator(
+			selectors.objectMenuToggle("alignment"),
+		);
+
+		await canvas.selectAt(ATTRIBUTES_SPOT);
+		await expect(backgroundColorToggle).toBeVisible();
+		await expect(stackOrderToggle).toBeVisible();
+
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
+		const fullMenuBox = await objectMenu.boundingBox();
+		expect(fullMenuBox).not.toBeNull();
+
+		await canvas.clickAt(NAME_SPOT);
+		await expect
+			.poll(async () => (await selectionOutlineHeights(canvas)).length, {
+				message: "the slot outline joins the object outline",
+			})
+			.toBe(2);
+
+		await expect(backgroundColorToggle).toHaveCount(0);
+		await expect(stackOrderToggle).toHaveCount(0);
+		await expect(fontSizeToggle).toBeVisible();
+		await expect(alignmentToggle).toBeVisible();
+
+		// The narrowed menu must be re-measured and stay centered on the shape,
+		// not keep the left edge computed from the full menu's width.
+		await expect
+			.poll(
+				async () => {
+					const narrowedMenuBox = await objectMenu.boundingBox();
+					if (narrowedMenuBox === null || fullMenuBox === null) {
+						return Number.POSITIVE_INFINITY;
+					}
+					const fullMenuCenterX = fullMenuBox.x + fullMenuBox.width / 2;
+					const narrowedMenuCenterX =
+						narrowedMenuBox.x + narrowedMenuBox.width / 2;
+					return Math.abs(narrowedMenuCenterX - fullMenuCenterX);
+				},
+				{ message: "the narrowed menu keeps the shape-centered position" },
+			)
+			.toBeLessThanOrEqual(2);
 	});
 
 	test("steps out of the slot on the first Escape and clears the selection on the second", async ({
