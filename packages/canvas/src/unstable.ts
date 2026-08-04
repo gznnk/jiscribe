@@ -81,7 +81,7 @@ export { getResizeCursorForRotation } from "./controllers/ui/utils";
 //   - `toggle:{sectionId}`     open/close a section
 //   - `set:{property}:{value}` update the selected object's property, committing at once
 //   - `command:{commandId}`    run a command
-//   - `slider:{property}`      slider (drag previews, dragEnd commits)
+//   - `slider:{property}`      slider (drag previews; dragEnd and a track click commit)
 // See packages/canvas/docs/04-gesture-system.md. Plugins should combine the shared parts
 // below or call `onPropertyUpdate`; writing `data-part` directly couples them to internals
 // and is discouraged.

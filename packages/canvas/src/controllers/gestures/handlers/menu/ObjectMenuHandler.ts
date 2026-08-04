@@ -15,7 +15,8 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * Logic needed by both paths (such as clearing selectedVertex) must be added to each of them.
  *
  * Events handled:
- * - click / doubleClick: menu item activation (equivalent; see the comment at the branch)
+ * - click / doubleClick: menu item activation (equivalent; see the comment at the branch),
+ *   or a commit of the slider value the native track click already produced
  * - drag: real-time slider update (no history recording)
  * - dragEnd: commit the slider's final value + record history
  *
@@ -42,15 +43,10 @@ export const ObjectMenuHandler: GestureHandler = {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
-		// Slider interaction: drag / dragEnd
+		// Slider interaction: drag / dragEnd / click
 		if (event.targetPart?.startsWith("slider:")) {
-			// pressed, dragStart, and click events do nothing and keep the state (values update on drag / dragEnd)
-			if (
-				event.type === "pressed" ||
-				event.type === "dragStart" ||
-				event.type === "click" ||
-				event.type === "doubleClick"
-			) {
+			// pressed and dragStart do nothing and keep the state (values update on drag / dragEnd / click)
+			if (event.type === "pressed" || event.type === "dragStart") {
 				return nextState;
 			}
 
@@ -77,8 +73,17 @@ export const ObjectMenuHandler: GestureHandler = {
 				return { ...newState, selectedVertex: null };
 			}
 
-			// dragEnd event: commit the final value (history recording is delegated to handleGesture)
-			if (event.type === "dragEnd") {
+			// dragEnd: commit the final value (history recording is delegated to handleGesture).
+			// click / doubleClick: a press on the track jumps the thumb natively and lifts
+			// without ever crossing the drag threshold, so no drag/dragEnd pair fires and the
+			// value the browser already wrote would otherwise never reach the doc (#248).
+			// Since pointerup emits exactly one of dragEnd / click / doubleClick, this cannot
+			// commit twice.
+			if (
+				event.type === "dragEnd" ||
+				event.type === "click" ||
+				event.type === "doubleClick"
+			) {
 				const newState = registries.styleProperty.apply(
 					state,
 					property,

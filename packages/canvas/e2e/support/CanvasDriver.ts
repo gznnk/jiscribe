@@ -615,6 +615,26 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * Click an ObjectMenu slider track without dragging, the way a user jumps the thumb to a
+	 * position. The section must already be open.
+	 *
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param ratio - Horizontal position on the track, 0 (left end / lowest value) to 1 (right end)
+	 */
+	async clickSliderAt(property: string, ratio: number) {
+		const slider = this.page.locator(selectors.objectMenuSlider(property));
+		await expect(slider).toBeVisible();
+		const box = await slider.boundingBox();
+		if (!box) {
+			throw new Error(`cannot read the position of slider ${property}`);
+		}
+		await this.page.mouse.click(
+			box.x + box.width * ratio,
+			box.y + box.height / 2,
+		);
+	}
+
+	/**
 	 * Type a value into the number input beside an ObjectMenu slider and commit with Enter. The
 	 * section must already be open; the input is found by its test-only data-testid hook.
 	 */

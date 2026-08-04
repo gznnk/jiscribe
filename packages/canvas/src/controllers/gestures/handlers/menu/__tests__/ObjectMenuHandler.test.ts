@@ -146,6 +146,44 @@ describe("ObjectMenuHandler", () => {
 			).toBe(6);
 			expect(next.commitVersion).toBe(6);
 		});
+
+		it("a click on the track commits the value the native jump produced (#248)", () => {
+			const next = ObjectMenuHandler.handle(
+				makeState(),
+				makeEvent("click", "slider:strokeWidth", "7"),
+				registries,
+			);
+			expect(
+				(next.objects["rect-1"] as unknown as { strokeWidth: number })
+					.strokeWidth,
+			).toBe(7);
+			expect(next.commitVersion).toBe(6);
+			expect(next.selectedVertex).toBeNull();
+		});
+
+		it("a doubleClick on the track commits like a click (two rapid track clicks pair up)", () => {
+			const next = ObjectMenuHandler.handle(
+				makeState(),
+				makeEvent("doubleClick", "slider:strokeWidth", "9"),
+				registries,
+			);
+			expect(
+				(next.objects["rect-1"] as unknown as { strokeWidth: number })
+					.strokeWidth,
+			).toBe(9);
+			expect(next.commitVersion).toBe(6);
+		});
+
+		it("a pressed on the slider changes no property (the value is committed on release)", () => {
+			const state = makeState();
+			const next = ObjectMenuHandler.handle(
+				state,
+				makeEvent("pressed", "slider:strokeWidth", "7"),
+				registries,
+			);
+			expect(next.objects).toBe(state.objects);
+			expect(next.commitVersion).toBe(5);
+		});
 	});
 
 	describe("menu chrome (no part)", () => {
