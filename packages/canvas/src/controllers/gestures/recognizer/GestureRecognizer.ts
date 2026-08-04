@@ -14,6 +14,7 @@ import type {
 	GestureType,
 	Mods,
 	PointerEventHandlers,
+	RecognizerCanvasState,
 	ScrollDelta,
 } from "./GestureRecognizerTypes";
 import {
@@ -30,7 +31,6 @@ import {
 	isNativePointerTarget,
 	readInputValue,
 } from "./utils";
-import type { CanvasControllerState } from "../../CanvasTypes";
 
 /** Fields every queued event carries, whatever produced it (DOM event, wheel conversion, long-press timer). */
 type InternalEventBase = {
@@ -204,7 +204,7 @@ export class GestureRecognizer {
 	private gestureCallback: GestureCallback;
 	private containerRef: React.RefObject<HTMLElement | null>;
 	private svgRef: React.RefObject<SVGSVGElement | null>;
-	private canvasStateRef: React.RefObject<CanvasControllerState>;
+	private canvasStateRef: React.RefObject<RecognizerCanvasState>;
 	private shouldPinchFromDrag: GestureRecognizerConfig["shouldPinchFromDrag"];
 
 	private pressed: Pressed | null = null;
@@ -417,11 +417,7 @@ export class GestureRecognizer {
 				// or fire — interrupting or mis-committing the drag (#25).
 				const canConvertDrag =
 					!this.pressed.dragging ||
-					(this.shouldPinchFromDrag?.(
-						this.pressed.targetKind,
-						this.canvasStateRef.current,
-					) ??
-						false);
+					(this.shouldPinchFromDrag?.(this.pressed.targetKind) ?? false);
 				if (
 					e.pointerType === "touch" &&
 					this.pressed.pointerType === "touch" &&

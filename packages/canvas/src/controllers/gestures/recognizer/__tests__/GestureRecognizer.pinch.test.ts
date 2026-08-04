@@ -130,7 +130,7 @@ const setup = (
 				edgeScrollEnabled: false,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
-		} as GestureRecognizerConfig["canvasStateRef"],
+		},
 		shouldPinchFromDrag: options.shouldPinchFromDrag,
 	};
 	const recognizer = new GestureRecognizer(config);
@@ -198,11 +198,8 @@ describe("GestureRecognizer pinch entry", () => {
 		dispatch(makeEvent("pointerdown", 120, 0, 1020, { pointerId: 2 }));
 		flushRaf();
 
-		// The policy is consulted with the drag's target kind and the current state
-		expect(shouldPinchFromDrag).toHaveBeenCalledWith(
-			"canvas",
-			expect.objectContaining({ edgeScrollEnabled: false }),
-		);
+		// The policy is consulted with the drag's target kind
+		expect(shouldPinchFromDrag).toHaveBeenCalledWith("canvas");
 
 		// The drag is closed at its last position before the pinch takes over
 		expect(types()).toEqual(["pressed", "dragStart", "dragEnd"]);

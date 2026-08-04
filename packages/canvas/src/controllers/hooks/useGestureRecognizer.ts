@@ -65,8 +65,11 @@ export const useGestureRecognizer = ({
 			svgRef,
 			canvasStateRef,
 			// Canvas pan drags may convert to a pinch on a second touch (the "which
-			// drags are pans" knowledge stays beside the routing, not the recognizer)
-			shouldPinchFromDrag: isViewportPanDrag,
+			// drags are pans" knowledge stays beside the routing, not the recognizer).
+			// The state the policy needs is read here through the ref, so the
+			// recognizer passes only the target kind.
+			shouldPinchFromDrag: (targetKind) =>
+				isViewportPanDrag(targetKind, canvasStateRef.current),
 		});
 	}
 

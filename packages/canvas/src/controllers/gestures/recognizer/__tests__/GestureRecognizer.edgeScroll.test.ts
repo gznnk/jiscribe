@@ -138,7 +138,7 @@ const setup = () => {
 				// Reference the same mutable viewport as getSvgPoint (share zoom / minX).
 				viewport: sim.viewport,
 			},
-		} as GestureRecognizerConfig["canvasStateRef"],
+		},
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();

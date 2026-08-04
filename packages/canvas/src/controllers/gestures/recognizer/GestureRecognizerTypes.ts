@@ -1,7 +1,7 @@
 import type { Point } from "@workspace/geometry";
 import type React from "react";
 
-import type { CanvasControllerState } from "../../CanvasTypes";
+import type { Viewport } from "../../../states/canvas/Viewport";
 
 export type Mods = {
 	shift: boolean;
@@ -85,11 +85,24 @@ export type PointerEventHandlers = {
 	onPointerCancel: React.PointerEventHandler<HTMLElement>;
 };
 
+/**
+ * The slice of canvas state the recognizer reads. Narrower than the controller
+ * state on purpose: the full state is structurally assignable to this, so callers
+ * pass their existing ref unchanged.
+ */
+export type RecognizerCanvasState = {
+	/** Current pan/zoom; supplies the rect for edge-proximity detection and the zoom that divides screen-px scroll deltas into SVG units. */
+	viewport: Viewport;
+	/** Whether a drag near the container edge auto-scrolls the viewport; false makes the drag stop at the edge. */
+	edgeScrollEnabled: boolean;
+};
+
 export type GestureRecognizerConfig = {
 	gestureCallback: GestureCallback;
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
-	canvasStateRef: React.RefObject<CanvasControllerState>;
+	/** Latest canvas state, read at gesture time. The recognizer touches only viewport and edgeScrollEnabled. */
+	canvasStateRef: React.RefObject<RecognizerCanvasState>;
 	/**
 	 * Policy consulted when a second touch arrives during a confirmed drag:
 	 * return true to close the drag with dragEnd and convert it into a pinch
@@ -98,12 +111,9 @@ export type GestureRecognizerConfig = {
 	 * drag confirms is unconditional. Omitted = never convert mid-drag. Keeps
 	 * the consumer's routing knowledge ("which drags are pans") out of the
 	 * recognizer (the canvas injects handlers/canvas/utils/isViewportPanDrag).
+	 * Any state the decision needs is closed over by the injecting side.
 	 *
 	 * @param targetKind - The drag's target kind fixed at pointerdown.
-	 * @param canvasState - The current controller state at decision time.
 	 */
-	shouldPinchFromDrag?: (
-		targetKind: string | undefined,
-		canvasState: CanvasControllerState,
-	) => boolean;
+	shouldPinchFromDrag?: (targetKind: string | undefined) => boolean;
 };
