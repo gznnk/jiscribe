@@ -414,7 +414,7 @@ Note shape: a box with its top-right corner folded back, holding a comment about
 
 ### `brace`
 
-Curly brace shape, used to mark a run of shapes as one group and name it. Uses the same rect-based geometry (x/y/width/height) as `rect`, but the box is the bracket alone: its short side is how far the curve bulges, its long side how far the arms reach. "direction" is the way the tip points, away from what is being grouped — a "left" brace is the typographic "{" and groups what is to its right, so place the box just left of that run and give it a small width (e.g. 24x160). "tipPosition" (0..1) moves the tip along the span, from the top for a left/right brace and from the left for an up/down one. Text is drawn as a label just beyond the tip, auto-sized to the text itself and outside the box, so the box stays a thin band however long the label is. The brace has no fill. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+Curly brace shape, used to mark a run of shapes as one group and name it. Uses the same rect-based geometry (x/y/width/height) as `rect`, but the box is the bracket alone: its short side is how far the curve bulges, its long side how far the arms reach. "direction" is the way the tip points, away from what is being grouped — a "left" brace is the typographic "{" and groups what is to its right, so place the box just left of that run and give it a small width (e.g. 24x160). "tipPosition" (0..1) moves the tip along the span, from the top for a left/right brace and from the left for an up/down one. Text is drawn as a label just beyond the tip, auto-sized to the text itself and outside the box, so the box stays a thin band however long the label is. The brace has no fill. Beyond the four edge midpoints it offers a connect point at its tip, "tip": aim a connector at the brace with { "kind": "connectPoint", "id": "tip" } so the line meets the cusp instead of a midpoint of the thin band. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -441,7 +441,7 @@ Curly brace shape, used to mark a run of shapes as one group and name it. Uses t
 
 ### `bracketWithStem`
 
-Square bracket with a stem, used to mark a run of shapes as one group and name it at a chosen point. Same box and same "direction" as `bracket`, except that the spine sits half way into the box and a straight stem runs out of it, at right angles, to the outer edge. "tipPosition" (0..1) moves the stem along the span, from the top for a left/right bracket and from the left for an up/down one, and the label hangs off the stem's end, auto-sized to the text itself and outside the box. Use `bracket` instead when the label needs to point at nothing in particular. It has no fill. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+Square bracket with a stem, used to mark a run of shapes as one group and name it at a chosen point. Same box and same "direction" as `bracket`, except that the spine sits half way into the box and a straight stem runs out of it, at right angles, to the outer edge. "tipPosition" (0..1) moves the stem along the span, from the top for a left/right bracket and from the left for an up/down one, and the label hangs off the stem's end, auto-sized to the text itself and outside the box. Use `bracket` instead when the label needs to point at nothing in particular. It has no fill. Beyond the four edge midpoints it offers a connect point named "tip", the stem's end, so a connector can meet the stem where the label does. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -468,7 +468,7 @@ Square bracket with a stem, used to mark a run of shapes as one group and name i
 
 ### `bracket`
 
-Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same "direction" as `brace` — a "left" bracket is the typographic "[" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no "tipPosition", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use `bracketWithStem` instead when the label should point at one particular place in the run. The bracket has no fill. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same "direction" as `brace` — a "left" bracket is the typographic "[" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no "tipPosition", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use `bracketWithStem` instead when the label should point at one particular place in the run. The bracket has no fill. Beyond the four edge midpoints it offers a connect point named "tip", which for a plain bracket is the middle of the spine — the same place its label points from. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -959,12 +959,26 @@ Choose whether the endpoint is fixed to an object (`OwnedEndpointRef`) or a free
 
 Options for `anchor.kind`:
 
-| `kind`           | Extra field          | Description                 |
-| ---------------- | -------------------- | --------------------------- |
-| `"center"`       | none                 | Center of the object.       |
-| `"connectPoint"` | `id: ConnectPointId` | A predefined connect point. |
+| `kind`           | Extra field                                               | Description                     |
+| ---------------- | --------------------------------------------------------- | ------------------------------- |
+| `"center"`       | none                                                      | Center of the object.           |
+| `"connectPoint"` | `id: ConnectPointId`                                      | A predefined connect point.     |
+| `"edge"`         | `side: "top" \| "right" \| "bottom" \| "left"`, `t: 0..1` | A free position along one edge. |
 
-`ConnectPointId` options: `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`. For the center, use `{ "kind": "center" }` (not a `connectPoint`).
+`"edge"` is the escape hatch, not the default. Reach for `"center"` or `"connectPoint"` first, and use
+`"edge"` only when the connection genuinely has to land where they cannot put it — several parallel
+lines arriving at one edge, or a line meeting a specific row of a `record`. `side` and `t` describe the
+object's **own local space**, before its rotation and flips, so the anchor stays on the same part of the
+shape however the shape is turned. `t` runs left → right on `"top"` / `"bottom"` and top → bottom on
+`"left"` / `"right"`; `t: 0.5` is the edge midpoint, which is the same place as the matching
+`ConnectPointId` and is clearer written that way.
+
+`ConnectPointId` options: `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"` on every
+connectable shape, plus whatever extra points the shape's own type names. Today that is `"tip"` on the
+three group markers (`brace` / `bracket` / `bracketWithStem`), which is where a connector aimed at one
+of them belongs — the cusp, the middle of the spine, or the stem's end, i.e. the place the label points
+from. An id the target shape's type does not name — `"tip"` on a `rect`, say — is not an error: the
+endpoint falls back to that shape's center. For the center, use `{ "kind": "center" }` (not a `connectPoint`).
 
 The object referenced by `owner.id` may be **only a box shape** — every object type
 except `polyline`, `polygon`, `group`, `svg`, and `connector` is connectable. Those

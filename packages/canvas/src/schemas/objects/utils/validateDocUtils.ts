@@ -6,7 +6,7 @@ import {
 
 import type { SemanticDiagnostic } from "../../canvas/validators/types";
 import { isArrowType } from "../types/ArrowType";
-import { isConnectPointId } from "../types/EndpointRef";
+import { isEdgeAnchorSide } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { isTextAlign } from "../types/TextAlign";
@@ -154,22 +154,57 @@ function validateNonFreeAnchor(
 		return [];
 	}
 	if (a.kind === "connectPoint") {
-		if (!isConnectPointId(a.id)) {
+		// Membership is not checked: the set is open (each object type may declare
+		// points of its own), so which ids exist is a registry question rather than a
+		// doc-schema one, and an id nothing declares renders as the owner's center
+		// (see resolveEndpoint). "center" is still rejected, because it is the one id
+		// that can never be declared: the center is its own anchor kind.
+		if (!isString(a.id) || a.id === "" || a.id === "center") {
 			return [
 				{
 					path: `${path}.anchor.id`,
-					message: "must be a valid ConnectPointId",
+					message:
+						"must be a non-empty string other than 'center' (use { kind: 'center' })",
 				},
 			];
 		}
 		return [];
 	}
+	if (a.kind === "edge") {
+		return validateEdgeAnchor(a, path);
+	}
 	return [
 		{
 			path: `${path}.anchor.kind`,
-			message: "must be 'center' or 'connectPoint' for owned endpoint",
+			message: "must be 'center', 'connectPoint' or 'edge' for owned endpoint",
 		},
 	];
+}
+
+/**
+ * Validate an edge anchor's `side` (one of the four) and `t` (a finite ratio in
+ * 0..1). A ratio outside the range is reported rather than clamped: the engine
+ * does not silently rewrite a doc, so an author (or an AI) sees the mistake
+ * instead of a connector quietly landing somewhere else.
+ */
+function validateEdgeAnchor(
+	a: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if (!isEdgeAnchorSide(a.side)) {
+		errors.push({
+			path: `${path}.anchor.side`,
+			message: "must be one of: top, right, bottom, left",
+		});
+	}
+	if (!isNumber(a.t) || !Number.isFinite(a.t) || a.t < 0 || a.t > 1) {
+		errors.push({
+			path: `${path}.anchor.t`,
+			message: "must be a number between 0 and 1",
+		});
+	}
+	return errors;
 }
 
 function validateFreeAnchor(

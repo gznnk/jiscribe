@@ -12,12 +12,18 @@ export type ToolTitle =
 	| "Sticky"
 	| "Markdown";
 
-/** Edge id of a connector attachment anchor. */
-export type AnchorId =
+/** Edge midpoint anchor, the four every connectable shape has. */
+export type EdgeAnchorId =
 	| "topCenter"
 	| "bottomCenter"
 	| "leftCenter"
 	| "rightCenter";
+
+/**
+ * Id of a connector attachment anchor: an edge midpoint, or a point a shape type
+ * declares for itself ("tip" on the group markers).
+ */
+export type AnchorId = EdgeAnchorId | "tip";
 
 /** Section id that opens a color picker in the ObjectMenu. */
 export type ColorSectionId =

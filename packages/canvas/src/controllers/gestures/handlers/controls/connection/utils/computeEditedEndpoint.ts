@@ -1,8 +1,15 @@
 import { roundToDecimal, type Point } from "@workspace/geometry";
 
-import { calcNearestAnchor } from "./calcNearestAnchor";
+import {
+	calcNearestAnchor,
+	type AnchorExclusion,
+	type AnchorSnapContext,
+} from "./calcNearestAnchor";
 import { PRECISION } from "../../../../../../constants/precision";
-import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
+import {
+	toEquivalentEdgeAnchor,
+	type EndpointRef,
+} from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
 
@@ -15,11 +22,24 @@ import type { ConnectorState } from "../../../../../../states/objects/connection
  *
  * When the hover target is the same object as the fixed side (self-loop), the
  * fixed side's anchor and center are excluded from the candidates so the connector
- * always attaches to a different edge midpoint (prevents center-to-center / same-edge
+ * always attaches somewhere else (prevents center-to-center / same-point
  * degeneration).
  *
- * Resolving the hover target (which depends on state.objects / registry) is done by
- * the caller; passing the already-resolved hoveredTarget keeps this function pure.
+ * Resolving the hover target and reading its geometry from the registries (both
+ * depend on state.objects / the registries) is done by the caller; passing them in
+ * already resolved keeps this function pure.
+ *
+ * @param baseConnector - The connector to derive the new state from; its fixed end
+ *   and waypoints are carried over untouched
+ * @param endpointToUpdate - Which end the cursor is dragging
+ * @param cursor - The dragged end's position in world coordinates
+ * @param hoveredTarget - The shape under the cursor, or null to land the end free
+ * @param fixedEndpoint - The end that is not being dragged; read only to recognize
+ *   a self-loop and to keep the dragged end off it
+ * @param hoveredTargetContext - The hovered shape's outline / anchor region /
+ *   declared points and the viewport zoom, which together decide how the cursor
+ *   snaps; omitted = bounding-box geometry at zoom 1
+ * @returns A new connector state with just the dragged end rewritten
  */
 export function computeEditedEndpoint(
 	baseConnector: ConnectorState,
@@ -27,16 +47,21 @@ export function computeEditedEndpoint(
 	cursor: Point,
 	hoveredTarget: { id: string; object: ObjectState } | null,
 	fixedEndpoint?: EndpointRef,
+	hoveredTargetContext?: AnchorSnapContext,
 ): ConnectorState {
 	const isSelfLoop =
 		hoveredTarget != null && fixedEndpoint?.owner?.id === hoveredTarget.id;
-	const exclude = isSelfLoop
+	const fixedAnchor = fixedEndpoint?.anchor;
+	const exclude: AnchorExclusion | undefined = isSelfLoop
 		? {
 				center: true,
 				connectPointId:
-					fixedEndpoint?.anchor.kind === "connectPoint"
-						? fixedEndpoint.anchor.id
-						: undefined,
+					fixedAnchor?.kind === "connectPoint" ? fixedAnchor.id : undefined,
+				// An edge midpoint is also an edge position, so excluding it by id is not
+				// enough: the free end has to be kept off the ratio it stands on too.
+				edge: fixedAnchor
+					? (toEquivalentEdgeAnchor(fixedAnchor) ?? undefined)
+					: undefined,
 			}
 		: undefined;
 
@@ -48,6 +73,7 @@ export function computeEditedEndpoint(
 					cursor.x,
 					cursor.y,
 					exclude,
+					hoveredTargetContext,
 				),
 			}
 		: {

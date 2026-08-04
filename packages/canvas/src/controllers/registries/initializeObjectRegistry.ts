@@ -269,6 +269,12 @@ export const applyObjectDefinition = (
 	if (definition.anchorRegion) {
 		registries.objectAnchorRegion.register(type, definition.anchorRegion);
 	}
+	if (definition.extraConnectPoints) {
+		registries.objectExtraConnectPoints.register(
+			type,
+			definition.extraConnectPoints,
+		);
+	}
 	if (definition.geometryKey) {
 		registries.objectGeometryKey.register(type, definition.geometryKey);
 	}
@@ -323,6 +329,7 @@ export const initializeObjectRegistry = (
 	registries.objectTextEditOverflow.clear();
 	registries.objectOutline.clear();
 	registries.objectAnchorRegion.clear();
+	registries.objectExtraConnectPoints.clear();
 	registries.objectGeometryKey.clear();
 	registries.objectVisualBounds.clear();
 	registries.objectBehavior.clear();

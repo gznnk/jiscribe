@@ -29,8 +29,10 @@ import {
 } from "./presentation/Callout";
 import { Note, calcNoteTextRegion, noteOutline } from "./presentation/Note";
 import {
+	calcGroupMarkerConnectPoints,
 	calcGroupMarkerTextRegion,
 	calcGroupMarkerVisualBounds,
+	groupMarkerGeometryKey,
 } from "./presentation/shared";
 import type { BraceDoc } from "./schema/brace/BraceDoc";
 import type { BracketDoc } from "./schema/bracket/BracketDoc";
@@ -61,8 +63,10 @@ import { NoteIcon } from "./stencil/NoteIcon";
  * The label hangs off the tip, outside the geometry box, so `visualBounds` is
  * what keeps zoom-to-fit and the export viewBox from cropping it. `outline`
  * stays undeclared on all three group markers: the box is the marker band itself, so the
- * default bounding-box outline is already the shape's extent, and connectors
- * attach to the band rather than to the label. `menu` likewise stays derived
+ * default bounding-box outline is already the shape's extent. The one place a
+ * connector should really land is the tip, so all three declare it as an
+ * `extraConnectPoints` anchor (`"tip"`), paired with the `geometryKey` that keeps
+ * such a connector live while the tip is dragged. `menu` likewise stays derived
  * from the features: the tip handle covers both `direction` and `tipPosition`,
  * so neither needs a section (they stay reachable through `onPropertyUpdate`
  * via the extra style properties).
@@ -73,6 +77,8 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 		component: Brace,
 		textRegion: calcGroupMarkerTextRegion,
 		visualBounds: calcGroupMarkerVisualBounds,
+		extraConnectPoints: calcGroupMarkerConnectPoints,
+		geometryKey: groupMarkerGeometryKey,
 		extraKeys: ["direction", "tipPosition"],
 		isExtraStateValid: isValidGroupMarkerTipFields,
 		selectionControls: [
@@ -108,6 +114,8 @@ export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 		component: Bracket,
 		textRegion: calcGroupMarkerTextRegion,
 		visualBounds: calcGroupMarkerVisualBounds,
+		extraConnectPoints: calcGroupMarkerConnectPoints,
+		geometryKey: groupMarkerGeometryKey,
 		extraKeys: ["direction"],
 		isExtraStateValid: isValidGroupMarkerDirection,
 		selectionControls: [
@@ -135,6 +143,8 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 	component: BracketWithStem,
 	textRegion: calcGroupMarkerTextRegion,
 	visualBounds: calcGroupMarkerVisualBounds,
+	extraConnectPoints: calcGroupMarkerConnectPoints,
+	geometryKey: groupMarkerGeometryKey,
 	extraKeys: ["direction", "tipPosition"],
 	isExtraStateValid: isValidGroupMarkerTipFields,
 	selectionControls: [
@@ -154,9 +164,10 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 });
 
 /**
- * The one definition here that needs a `geometryKey`: the tail tip handle moves
- * the silhouette while every frame field stands still, so without it a connector
- * attached to the callout keeps the endpoints it resolved before the drag. Text
+ * Its `geometryKey` covers the outline rather than a connect point: the tail tip
+ * handle moves the silhouette while every frame field stands still, so without it
+ * a connector attached to the callout keeps the endpoints it resolved before the
+ * drag. Text
  * goes inside the bubble body as it does in the note, so there is no label
  * outside the box and no `visualBounds` to widen; `outline` is required because
  * the tail band leaves the body edge short of the bounding box.

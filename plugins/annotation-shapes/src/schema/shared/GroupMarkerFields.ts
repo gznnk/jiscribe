@@ -46,6 +46,14 @@ export type GroupMarkerTipPositionField = {
 };
 
 /**
+ * Both tip-placing fields together, for the readers that take either kind of
+ * marker: each field is optional, so a plain bracket's state (no `tipPosition`)
+ * satisfies it and falls back to the defaults.
+ */
+export type GroupMarkerTipFields = GroupMarkerDirectionField &
+	GroupMarkerTipPositionField;
+
+/**
  * Styleable descriptors for a marker with a movable tip, so a host can drive
  * both fields through `onPropertyUpdate` (there is no built-in menu section for
  * them yet).

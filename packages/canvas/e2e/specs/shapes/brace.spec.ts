@@ -20,6 +20,8 @@ async function bracePathD(
  *   (calcGroupMarkerTextRegion), which no other shipped shape does
  * - the tip handle (selection:brace:tip) moves the tip along its edge and
  *   re-attaches it to another one, changing direction and tipPosition together
+ * - the tip is also a connection anchor of its own ("tip"), so a connector
+ *   attaches to the cusp and follows it when the handle is dragged
  */
 test.describe("brace", () => {
 	test("creates a g element from a drag", async ({ canvas }) => {
@@ -106,5 +108,43 @@ test.describe("brace", () => {
 				message: "the tip lands on the top edge",
 			})
 			.toContain("0 -100");
+	});
+
+	test("connects to the tip anchor and follows the tip when it is moved", async ({
+		canvas,
+	}) => {
+		const braceId = await canvas.drawShapeFromFlyout(
+			"annotation",
+			"brace",
+			{ x: 400, y: 200 },
+			{ x: 430, y: 400 },
+		);
+		await expect(canvas.page.locator(TIP_HANDLE)).toBeVisible();
+
+		// Move the tip a quarter down first, so it no longer coincides with the
+		// leftCenter edge anchor and the connector's landing point is unambiguous.
+		await canvas.drag({ x: 400, y: 300 }, { x: 250, y: 250 });
+		await expect
+			.poll(async () => bracePathD(canvas, braceId))
+			.toContain("-15 -50");
+
+		await canvas.selectAt({ x: 415, y: 300 });
+		const connectorId = await canvas.createConnector("tip", { x: 200, y: 250 });
+
+		const atTip = await canvas.objectById(connectorId).getAttribute("points");
+		expect(atTip).toBeTruthy();
+
+		// Drag the tip back to the middle of the edge; the endpoint must move with it.
+		// Re-selected at a different point on the brace: a second click on the very pixel
+		// the first one used coalesces into a double click and opens the label editor,
+		// which hides the controls this needs.
+		await canvas.selectAt({ x: 415, y: 350 });
+		await canvas.drag({ x: 400, y: 250 }, { x: 250, y: 340 });
+
+		await expect
+			.poll(async () => canvas.objectById(connectorId).getAttribute("points"), {
+				message: "the connector endpoint follows the moved tip",
+			})
+			.not.toBe(atTip);
 	});
 });

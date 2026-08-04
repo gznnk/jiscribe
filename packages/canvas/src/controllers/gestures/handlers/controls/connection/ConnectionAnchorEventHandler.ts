@@ -1,11 +1,13 @@
-import type { Point } from "@workspace/geometry";
+import { isTransformedFrame, type Point } from "@workspace/geometry";
 
+import type { AnchorSnapContext } from "./utils/calcNearestAnchor";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
 import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
 import { resolveEndpointOwner } from "../../../../../presentations/layers/content/utils/endpoints/resolveEndpointOwner";
+import type { ExtraConnectPoint } from "../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import { defaultRoutingForAnchors } from "../../../../../schemas/objects/types/ConnectorRouting";
 import {
@@ -13,8 +15,10 @@ import {
 	isSameEndpoint,
 } from "../../../../../schemas/objects/types/EndpointRef";
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -50,6 +54,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		if (!event.targetId || !event.targetPart) {
 			return state;
@@ -59,14 +64,52 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		if (event.type === "dragStart") {
 			return event.targetPart.startsWith("endpoint:")
 				? this.handleEditDragStart(state, event)
-				: this.handleCreateDragStart(state, event);
+				: this.handleCreateDragStart(state, event, registries);
 		} else if (event.type === "drag") {
-			return this.handleDrag(state, event); // shared by create/edit
+			return this.handleDrag(state, event, registries); // shared by create/edit
 		} else if (event.type === "dragEnd") {
-			return this.handleDragEnd(state, event); // shared by create/edit
+			return this.handleDragEnd(state, event, registries); // shared by create/edit
 		}
 
 		return state;
+	}
+
+	/**
+	 * The extra connection points the shape's type declares, in local coordinates.
+	 * Empty for a type that declares none, or for a shape whose state the calculator
+	 * cannot read (a non-frame owner).
+	 */
+	private readExtraConnectPoints(
+		obj: ObjectState | null | undefined,
+		registries: ICanvasRegistries,
+	): readonly ExtraConnectPoint[] {
+		if (!obj || !isTransformedFrame(obj)) {
+			return [];
+		}
+		return registries.objectExtraConnectPoints.get(obj.type)?.(obj) ?? [];
+	}
+
+	/**
+	 * The geometry the drop position is snapped against: the shape's outline,
+	 * anchor region and declared points, plus the zoom the px-denominated snap
+	 * distances are measured in. Empty geometry for a non-frame shape, which has
+	 * no anchors to snap to in the first place.
+	 */
+	private readAnchorSnapContext(
+		obj: ObjectState | null | undefined,
+		registries: ICanvasRegistries,
+		zoom: number,
+	): AnchorSnapContext {
+		if (!obj || !isTransformedFrame(obj)) {
+			return { zoom };
+		}
+		return {
+			outline: registries.objectOutline.get(obj.type)?.(obj) ?? null,
+			anchorRegion: registries.objectAnchorRegion.get(obj.type)?.(obj) ?? null,
+			extraConnectPoints:
+				registries.objectExtraConnectPoints.get(obj.type)?.(obj) ?? null,
+			zoom,
+		};
 	}
 
 	/**
@@ -76,6 +119,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 	private handleCreateDragStart(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// targetId = sourceObjectId, targetPart = "anchor:<anchorPosition>"
 		const sourceObjectId = event.targetId ?? "";
@@ -86,8 +130,13 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			return state;
 		}
 
-		// Validate anchor position
-		if (!isAnchorHandleId(anchorPosition)) {
+		// Validate anchor position: one of the universal handles, or a point this
+		// shape's own type declares (an id no type declares is a stale DOM node).
+		const isDeclaredExtra = this.readExtraConnectPoints(
+			sourceObject,
+			registries,
+		).some((extraConnectPoint) => extraConnectPoint.id === anchorPosition);
+		if (!isAnchorHandleId(anchorPosition) && !isDeclaredExtra) {
 			return state;
 		}
 
@@ -180,6 +229,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		event: CanvasEvent,
 		baseConnector: ConnectorState,
 		endpointToUpdate: "source" | "target",
+		registries: ICanvasRegistries,
 	): ConnectorState {
 		// The fixed endpoint (the one not being edited). Passed to computeEditedEndpoint
 		// to avoid the same anchor on a self-loop.
@@ -197,13 +247,15 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		// When the edited end lands free (no hover target), snap it onto the fixed end's exit
 		// axis if nearly aligned, so a near-straight connector collapses to one straight segment.
 		// Snapping the coordinate itself keeps the anchor handle, line, and arrow together.
+		const fixedObj = resolveEndpointOwner(state.objects, fixedEndpoint);
 		const cursor = hoveredTarget
 			? event.last
 			: snapFreeEndpointStraight(
 					event.last,
 					fixedEndpoint,
-					resolveEndpointOwner(state.objects, fixedEndpoint),
+					fixedObj,
 					SNAP_THRESHOLD_PX / state.viewport.zoom,
+					this.readExtraConnectPoints(fixedObj, registries),
 				);
 
 		return computeEditedEndpoint(
@@ -212,6 +264,11 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			cursor,
 			hoveredTarget,
 			fixedEndpoint,
+			this.readAnchorSnapContext(
+				hoveredTarget?.object,
+				registries,
+				state.viewport.zoom,
+			),
 		);
 	}
 
@@ -222,6 +279,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 	private handleDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// Determine which endpoint is being edited from targetPart
 		// Format: "anchor:<pos>" (create) or "endpoint:<source|target>" (edit)
@@ -243,6 +301,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				event,
 				base,
 				endpointToUpdate,
+				registries,
 			);
 
 			// Re-anchor parity with creation: when the connector has no explicit routing and
@@ -284,6 +343,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			event,
 			pendingConnector,
 			endpointToUpdate,
+			registries,
 		);
 
 		return {
@@ -318,6 +378,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 	private handleDragEnd(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		const { editingConnectorId } = state;
 
@@ -328,7 +389,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			// If the endpoint has not effectively changed since the start, it is a no-op.
 			// Leaving objects as-is (during handleDrag the entity ends at final position = start position)
 			// avoids handleGesture's auto-commit detection (a change in the objects reference) so nothing is pushed to history.
-			const finalConnector = this.handleDrag(state, event).objects[
+			const finalConnector = this.handleDrag(state, event, registries).objects[
 				editingConnectorId
 			];
 
@@ -371,7 +432,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 
 			// If the endpoint changed, commit the entity update (commitVersion is auto-incremented
 			// by handleGesture detecting the objects change, so it is not incremented here).
-			const dragResult = this.handleDrag(state, event);
+			const dragResult = this.handleDrag(state, event, registries);
 			return {
 				...dragResult,
 				editingConnectorId: null,
@@ -389,7 +450,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			};
 		}
 
-		const dragResult = this.handleDrag(state, event);
+		const dragResult = this.handleDrag(state, event, registries);
 		const finalConnector = dragResult.pendingConnector;
 		if (!finalConnector) {
 			return {

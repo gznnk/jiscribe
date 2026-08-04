@@ -8,6 +8,7 @@ import {
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import type { ConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
@@ -47,6 +48,8 @@ type EditorHandlers = {
  *   is measured along is the rendered one
  * @param anchorRegionRegistry - Per-canvas ObjectAnchorRegionRegistry, the companion of
  *   `outlineRegistry` in path resolution
+ * @param extraConnectPointsRegistry - Per-canvas ObjectExtraConnectPointsRegistry, the other
+ *   companion of `outlineRegistry` in path resolution
  * @returns The label editor, or null if it cannot be rendered
  */
 function renderConnectorLabelEditor(
@@ -57,6 +60,7 @@ function renderConnectorLabelEditor(
 	handlers: EditorHandlers,
 	outlineRegistry: ObjectOutlineRegistry,
 	anchorRegionRegistry: ObjectAnchorRegionRegistry,
+	extraConnectPointsRegistry: ObjectExtraConnectPointsRegistry,
 ): React.ReactElement | null {
 	const sourceObj = resolveEndpointOwner(objects, connector.source);
 	const targetObj = resolveEndpointOwner(objects, connector.target);
@@ -66,6 +70,7 @@ function renderConnectorLabelEditor(
 		targetObj,
 		outlineRegistry,
 		anchorRegionRegistry,
+		extraConnectPointsRegistry,
 	);
 	if (!resolved) {
 		return null;
@@ -196,6 +201,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			handlers,
 			registries.objectOutline,
 			registries.objectAnchorRegion,
+			registries.objectExtraConnectPoints,
 		);
 	}
 

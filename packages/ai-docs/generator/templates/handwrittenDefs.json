@@ -649,6 +649,9 @@
 					},
 					{
 						"$ref": "#/$defs/ConnectPointAnchorSpec"
+					},
+					{
+						"$ref": "#/$defs/EdgeAnchorSpec"
 					}
 				]
 			}
@@ -704,6 +707,29 @@
 			}
 		}
 	},
+	"EdgeAnchorSpec": {
+		"description": "Anchor at an arbitrary position along one edge of an object. Reach for a named anchor first: CenterAnchorSpec when the connector should simply point at the object, ConnectPointAnchorSpec for an edge midpoint or a point the shape type names itself. Use this only when the connection has to land somewhere those cannot express — several parallel lines arriving at one edge, or a line meeting a specific row of a record. \"side\" and \"t\" describe the object's own local space, before rotation and flips, so the anchor stays on the same part of the shape however the shape is turned.",
+		"type": "object",
+		"required": ["kind", "side", "t"],
+		"additionalProperties": false,
+		"properties": {
+			"kind": {
+				"type": "string",
+				"const": "edge"
+			},
+			"side": {
+				"description": "Which of the object's four local edges the anchor rides.",
+				"type": "string",
+				"enum": ["top", "right", "bottom", "left"]
+			},
+			"t": {
+				"description": "Position along that edge, from 0 to 1. Measured left to right on \"top\" / \"bottom\" and top to bottom on \"left\" / \"right\". 0.5 is the edge midpoint — the same place as the matching ConnectPointId, which is the clearer way to write it.",
+				"type": "number",
+				"minimum": 0,
+				"maximum": 1
+			}
+		}
+	},
 	"FreeAnchorSpec": {
 		"description": "Anchor at an arbitrary point in canvas space.",
 		"type": "object",
@@ -720,9 +746,9 @@
 		}
 	},
 	"ConnectPointId": {
-		"description": "Named connection point on a shape's edge. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
+		"description": "Named connection point on a shape. Every connectable shape has the four edge midpoints; a shape type may name further points of its own, and the group markers (brace / bracket / bracketWithStem) add \"tip\" for the cusp, spine middle, or stem end the label points from. An id the target shape's type does not name falls back to that shape's center, so \"tip\" on any other type is a silent miss rather than an error. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
 		"type": "string",
-		"enum": ["topCenter", "rightCenter", "bottomCenter", "leftCenter"]
+		"enum": ["topCenter", "rightCenter", "bottomCenter", "leftCenter", "tip"]
 	},
 	"Point": {
 		"description": "A 2D coordinate.",

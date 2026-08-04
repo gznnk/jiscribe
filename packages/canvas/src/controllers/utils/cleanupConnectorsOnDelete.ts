@@ -76,6 +76,7 @@ export function cleanupConnectorsOnDelete(
 			targetObj,
 			registries.objectOutline,
 			registries.objectAnchorRegion,
+			registries.objectExtraConnectPoints,
 		);
 
 		const updatedConnector = { ...connector };

@@ -1,4 +1,5 @@
 import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
@@ -41,6 +42,12 @@ export interface ICanvasRegistries {
 	 * resolution: it recenters the edge anchors of a tapering silhouette.
 	 */
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
+	/**
+	 * Per-type extra connection points, the third member of the connector
+	 * path-resolution set: it is what lets an endpoint name an anchor the shape's
+	 * type declares itself (the brace's `tip`).
+	 */
+	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
 	/**
 	 * Per-type visual bounds, read only by the commands that frame a view
 	 * (zoom-to-fit / zoom-to-selection) so decoration drawn outside a shape's

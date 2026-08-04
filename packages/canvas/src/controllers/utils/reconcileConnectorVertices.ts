@@ -49,6 +49,7 @@ export const reconcileConnectorVertices = (
 			state.objects,
 			registries.objectOutline,
 			registries.objectAnchorRegion,
+			registries.objectExtraConnectPoints,
 		);
 		if (!drawnPath) {
 			continue;

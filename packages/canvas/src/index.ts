@@ -148,6 +148,10 @@ export type {
 } from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
 export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
 export type { ObjectAnchorRegionCalculator } from "./presentations/objects/registry/ObjectAnchorRegionRegistry";
+export type {
+	ExtraConnectPoint,
+	ObjectExtraConnectPointsCalculator,
+} from "./presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 export type { ObjectGeometryKeyCalculator } from "./presentations/objects/registry/ObjectGeometryKeyRegistry";
 export type { ObjectVisualBoundsCalculator } from "./presentations/objects/registry/ObjectVisualBoundsRegistry";
 export type {

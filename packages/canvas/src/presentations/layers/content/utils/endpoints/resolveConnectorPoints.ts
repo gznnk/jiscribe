@@ -6,6 +6,10 @@ import { isConnectorDrawnOrthogonal } from "../../../../../schemas/objects/conne
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { ObjectAnchorRegionRegistry } from "../../../../objects/registry/ObjectAnchorRegionRegistry";
+import type {
+	ExtraConnectPoint,
+	ObjectExtraConnectPointsRegistry,
+} from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../../../objects/registry/ObjectOutlineRegistry";
 import {
 	alignVertexPath,
@@ -55,6 +59,28 @@ const resolveAnchorRegion = (
 };
 
 /**
+ * Reads the extra connection points a shape's type declares, or null when the
+ * shape is not a frame or has no registered calculator (only the four edge
+ * anchors are then offered).
+ */
+const resolveExtraConnectPoints = (
+	obj: ObjectState | null | undefined,
+	extraConnectPointsRegistry:
+		| Pick<ObjectExtraConnectPointsRegistry, "get">
+		| null
+		| undefined,
+): readonly ExtraConnectPoint[] | null => {
+	if (!obj || !extraConnectPointsRegistry) {
+		return null;
+	}
+	const calculator = extraConnectPointsRegistry.get(obj.type);
+	if (!calculator || !isTransformedFrame(obj)) {
+		return null;
+	}
+	return calculator(obj);
+};
+
+/**
  * Pure function that resolves both endpoints of a connector to actual coordinates. It handles
  * endpoint resolution and the outline adjustment for center anchors together. It takes the target
  * shapes individually rather than the whole objects map, so React component memoization stays effective.
@@ -71,6 +97,9 @@ const resolveAnchorRegion = (
  *   shapes attach on their true outline; omitted = bounding-box rect/ellipse handling
  * @param anchorRegionRegistry - Per-canvas ObjectAnchorRegionRegistry. When provided, a shape
  *   whose silhouette tapers centers its edge anchors on the declared band; omitted = full bounding box
+ * @param extraConnectPointsRegistry - Per-canvas ObjectExtraConnectPointsRegistry. When provided,
+ *   an endpoint may name an anchor the shape's type declares itself (the brace's `tip`); omitted =
+ *   such an endpoint degrades to the shape's center
  * @returns The resolved source / target points and intermediate waypoints, or null if resolution fails
  */
 export const resolveConnectorPoints = (
@@ -79,6 +108,10 @@ export const resolveConnectorPoints = (
 	targetObj: ObjectState | null | undefined,
 	outlineRegistry?: Pick<ObjectOutlineRegistry, "get"> | null,
 	anchorRegionRegistry?: Pick<ObjectAnchorRegionRegistry, "get"> | null,
+	extraConnectPointsRegistry?: Pick<
+		ObjectExtraConnectPointsRegistry,
+		"get"
+	> | null,
 ): { source: Point; target: Point; waypoints: Point[] } | null => {
 	const sourceOutline = resolveOutline(sourceObj, outlineRegistry);
 	const targetOutline = resolveOutline(targetObj, outlineRegistry);
@@ -90,6 +123,14 @@ export const resolveConnectorPoints = (
 		targetObj,
 		anchorRegionRegistry,
 	);
+	const sourceExtraConnectPoints = resolveExtraConnectPoints(
+		sourceObj,
+		extraConnectPointsRegistry,
+	);
+	const targetExtraConnectPoints = resolveExtraConnectPoints(
+		targetObj,
+		extraConnectPointsRegistry,
+	);
 
 	// Resolve endpoints to coordinates
 	let sourcePoint = resolveEndpoint(
@@ -97,12 +138,14 @@ export const resolveConnectorPoints = (
 		sourceObj,
 		sourceOutline,
 		sourceAnchorRegion,
+		sourceExtraConnectPoints,
 	);
 	let targetPoint = resolveEndpoint(
 		connectorState.target,
 		targetObj,
 		targetOutline,
 		targetAnchorRegion,
+		targetExtraConnectPoints,
 	);
 
 	if (!sourcePoint || !targetPoint) {
@@ -164,12 +207,14 @@ export const resolveConnectorPoints = (
 						sourcePoint,
 						waypoints[0],
 						sourceObj,
+						sourceExtraConnectPoints,
 					),
 					calcEndpointDirection(
 						connectorState.target.anchor,
 						targetPoint,
 						waypoints[waypoints.length - 1],
 						targetObj,
+						targetExtraConnectPoints,
 					),
 				),
 			};
@@ -183,6 +228,8 @@ export const resolveConnectorPoints = (
 			targetPoint,
 			sourceObj,
 			targetObj,
+			sourceExtraConnectPoints,
+			targetExtraConnectPoints,
 		);
 		return {
 			source: path[0],

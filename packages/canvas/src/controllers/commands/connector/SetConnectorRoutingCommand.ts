@@ -53,6 +53,7 @@ const bakeDrawnVertices = (
 		state.objects,
 		registries.objectOutline,
 		registries.objectAnchorRegion,
+		registries.objectExtraConnectPoints,
 	);
 	if (!path) {
 		return null;

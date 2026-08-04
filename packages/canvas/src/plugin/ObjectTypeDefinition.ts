@@ -6,6 +6,7 @@ import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/O
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsCalculator } from "../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyCalculator } from "../presentations/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
@@ -77,7 +78,17 @@ export type ObjectTypeDefinition<
 	anchorRegion?: ObjectAnchorRegionCalculator;
 
 	/**
-	 * Key over whatever `outline` / `anchorRegion` read beyond the frame fields
+	 * Named connection points this type offers on top of the four edge midpoints
+	 * every connectable shape has — the brace's `tip`, say. Each carries its own
+	 * local position and outward direction, so a connector attaches there and
+	 * leaves along it. Their ids are what a saved doc stores in
+	 * `{ kind: "connectPoint", id }`, so they must stay stable. Omitted = edge
+	 * midpoints only (see ObjectExtraConnectPointsRegistry).
+	 */
+	extraConnectPoints?: ObjectExtraConnectPointsCalculator;
+
+	/**
+	 * Key over whatever `outline` / `anchorRegion` / `extraConnectPoints` read beyond the frame fields
 	 * (cx / cy / width / height / rotation / scaleX / scaleY), for the consumers
 	 * that memoize connector endpoint resolution on those fields. Required for a
 	 * type whose silhouette can change while the frame stands still (the callout's

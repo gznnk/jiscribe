@@ -303,6 +303,7 @@ export function generateSchema(
 		"OwnerRef",
 		"CenterAnchorSpec",
 		"ConnectPointAnchorSpec",
+		"EdgeAnchorSpec",
 		"FreeAnchorSpec",
 		"ConnectPointId",
 		"Point",

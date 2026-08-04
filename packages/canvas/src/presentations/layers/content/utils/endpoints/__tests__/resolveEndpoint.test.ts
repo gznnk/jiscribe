@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../../../../objects/registry/ObjectExtraConnectPointsRegistry";
 import { resolveEndpoint } from "../resolveEndpoint";
 
 const freeEndpoint = (x: number, y: number): EndpointRef =>
@@ -17,6 +18,15 @@ const connectPointEndpoint = (id: string): EndpointRef =>
 	({
 		owner: { id: "obj-1" },
 		anchor: { kind: "connectPoint", id },
+	}) as EndpointRef;
+
+const edgeEndpoint = (
+	side: "top" | "right" | "bottom" | "left",
+	t: number,
+): EndpointRef =>
+	({
+		owner: { id: "obj-1" },
+		anchor: { kind: "edge", side, t },
 	}) as EndpointRef;
 
 const rectObj = (cx: number, cy: number): ObjectState =>
@@ -110,11 +120,80 @@ describe("resolveEndpoint", () => {
 			expect(result!.y).toBeCloseTo(100);
 		});
 
-		it("returns null for an invalid anchorId", () => {
+		it("falls back to the center for an id nothing declares", () => {
 			const obj = rectObj(100, 100);
 			expect(
 				resolveEndpoint(connectPointEndpoint("invalidPoint"), obj),
-			).toBeNull();
+			).toEqual({ x: 100, y: 100 });
 		});
+	});
+
+	describe("ConnectPointAnchor on a declared extra point", () => {
+		// The shape is 100x50 centered on (100, 100), so its local left edge is at
+		// x = -50 and the declared point sits a quarter of the height above center.
+		const leftTip: ExtraConnectPoint = {
+			id: "tip",
+			point: { x: -50, y: -12.5 },
+			direction: { x: -1, y: 0 },
+		};
+
+		it("resolves the declared point through the frame transform", () => {
+			expect(
+				resolveEndpoint(
+					connectPointEndpoint("tip"),
+					rectObj(100, 100),
+					null,
+					null,
+					[leftTip],
+				),
+			).toEqual({ x: 50, y: 87.5 });
+		});
+
+		it("carries the shape's rotation and flip", () => {
+			const flipped = {
+				...(rectObj(100, 100) as unknown as Record<string, unknown>),
+				scaleX: -1,
+			} as unknown as ObjectState;
+			expect(
+				resolveEndpoint(connectPointEndpoint("tip"), flipped, null, null, [
+					leftTip,
+				]),
+			).toEqual({ x: 150, y: 87.5 });
+		});
+
+		it("falls back to the center when the id is not among the declared ones", () => {
+			expect(
+				resolveEndpoint(
+					connectPointEndpoint("stem"),
+					rectObj(100, 100),
+					null,
+					null,
+					[leftTip],
+				),
+			).toEqual({ x: 100, y: 100 });
+		});
+	});
+});
+
+describe("EdgeAnchor", () => {
+	it("resolves the ratio along the named local side", () => {
+		// 100 x 50 rect centered on (200, 100): top edge y = 75, x spans 150..250.
+		expect(
+			resolveEndpoint(edgeEndpoint("top", 0.25), rectObj(200, 100)),
+		).toEqual({ x: 175, y: 75 });
+		expect(
+			resolveEndpoint(edgeEndpoint("right", 0.75), rectObj(200, 100)),
+		).toEqual({ x: 250, y: 112.5 });
+	});
+
+	it("resolves 0.5 to the same point as the matching edge midpoint", () => {
+		const obj = rectObj(200, 100);
+		expect(resolveEndpoint(edgeEndpoint("bottom", 0.5), obj)).toEqual(
+			resolveEndpoint(connectPointEndpoint("bottomCenter"), obj),
+		);
+	});
+
+	it("returns null when the owner is missing", () => {
+		expect(resolveEndpoint(edgeEndpoint("top", 0.25), null)).toBeNull();
 	});
 });

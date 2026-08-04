@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { useObjectAnchorRegionRegistry } from "../../../objects/registry/ObjectAnchorRegionRegistryContext";
+import { useObjectExtraConnectPointsRegistry } from "../../../objects/registry/ObjectExtraConnectPointsRegistryContext";
 import type { ObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistry";
 import { useObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistryContext";
 import { useObjectOutlineRegistry } from "../../../objects/registry/ObjectOutlineRegistryContext";
@@ -78,6 +79,7 @@ export const useResolvedConnectorPoints = (
 ): ResolvedConnectorPoints | null => {
 	const outlineRegistry = useObjectOutlineRegistry();
 	const anchorRegionRegistry = useObjectAnchorRegionRegistry();
+	const extraConnectPointsRegistry = useObjectExtraConnectPointsRegistry();
 	const geometryKeyRegistry = useObjectGeometryKeyRegistry();
 
 	// Keyed on the values the resolution reads (connector endpoints / routing and
@@ -90,6 +92,7 @@ export const useResolvedConnectorPoints = (
 			targetObj,
 			outlineRegistry,
 			anchorRegionRegistry,
+			extraConnectPointsRegistry,
 		);
 		if (!resolved) {
 			return null;
@@ -109,6 +112,7 @@ export const useResolvedConnectorPoints = (
 		...getOwnerGeometryDeps(targetObj, geometryKeyRegistry),
 		outlineRegistry,
 		anchorRegionRegistry,
+		extraConnectPointsRegistry,
 		geometryKeyRegistry,
 	]);
 	/* eslint-enable react-hooks/exhaustive-deps */

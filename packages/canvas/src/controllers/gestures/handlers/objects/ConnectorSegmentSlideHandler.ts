@@ -60,6 +60,7 @@ const resolveSegment = (
 		snapshot.objects,
 		registries.objectOutline,
 		registries.objectAnchorRegion,
+		registries.objectExtraConnectPoints,
 	);
 	if (!path || segmentIndex > path.length - 2) {
 		return null;

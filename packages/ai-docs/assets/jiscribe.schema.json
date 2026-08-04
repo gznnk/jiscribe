@@ -2584,7 +2584,7 @@
 			}
 		},
 		"BraceDoc": {
-			"description": "Curly brace shape, used to mark a run of shapes as one group and name it. Uses the same rect-based geometry (x/y/width/height) as RectDoc, but the box is the bracket alone: its short side is how far the curve bulges, its long side how far the arms reach. \"direction\" is the way the tip points, away from what is being grouped — a \"left\" brace is the typographic \"{\" and groups what is to its right, so place the box just left of that run and give it a small width (e.g. 24x160). \"tipPosition\" (0..1) moves the tip along the span, from the top for a left/right brace and from the left for an up/down one. Text is drawn as a label just beyond the tip, auto-sized to the text itself and outside the box, so the box stays a thin band however long the label is. The brace has no fill.",
+			"description": "Curly brace shape, used to mark a run of shapes as one group and name it. Uses the same rect-based geometry (x/y/width/height) as RectDoc, but the box is the bracket alone: its short side is how far the curve bulges, its long side how far the arms reach. \"direction\" is the way the tip points, away from what is being grouped — a \"left\" brace is the typographic \"{\" and groups what is to its right, so place the box just left of that run and give it a small width (e.g. 24x160). \"tipPosition\" (0..1) moves the tip along the span, from the top for a left/right brace and from the left for an up/down one. Text is drawn as a label just beyond the tip, auto-sized to the text itself and outside the box, so the box stays a thin band however long the label is. The brace has no fill. Beyond the four edge midpoints it offers a connect point at its tip, \"tip\": aim a connector at the brace with { \"kind\": \"connectPoint\", \"id\": \"tip\" } so the line meets the cusp instead of a midpoint of the thin band.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -2678,7 +2678,7 @@
 			}
 		},
 		"BracketWithStemDoc": {
-			"description": "Square bracket with a stem, used to mark a run of shapes as one group and name it at a chosen point. Same box and same \"direction\" as BracketDoc, except that the spine sits half way into the box and a straight stem runs out of it, at right angles, to the outer edge. \"tipPosition\" (0..1) moves the stem along the span, from the top for a left/right bracket and from the left for an up/down one, and the label hangs off the stem's end, auto-sized to the text itself and outside the box. Use BracketDoc instead when the label needs to point at nothing in particular. It has no fill.",
+			"description": "Square bracket with a stem, used to mark a run of shapes as one group and name it at a chosen point. Same box and same \"direction\" as BracketDoc, except that the spine sits half way into the box and a straight stem runs out of it, at right angles, to the outer edge. \"tipPosition\" (0..1) moves the stem along the span, from the top for a left/right bracket and from the left for an up/down one, and the label hangs off the stem's end, auto-sized to the text itself and outside the box. Use BracketDoc instead when the label needs to point at nothing in particular. It has no fill. Beyond the four edge midpoints it offers a connect point named \"tip\", the stem's end, so a connector can meet the stem where the label does.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -2772,7 +2772,7 @@
 			}
 		},
 		"BracketDoc": {
-			"description": "Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same \"direction\" as BraceDoc — a \"left\" bracket is the typographic \"[\" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no \"tipPosition\", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use BracketWithStemDoc instead when the label should point at one particular place in the run. The bracket has no fill.",
+			"description": "Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same \"direction\" as BraceDoc — a \"left\" bracket is the typographic \"[\" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no \"tipPosition\", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use BracketWithStemDoc instead when the label should point at one particular place in the run. The bracket has no fill. Beyond the four edge midpoints it offers a connect point named \"tip\", which for a plain bracket is the middle of the spine — the same place its label points from.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -4588,6 +4588,9 @@
 						},
 						{
 							"$ref": "#/$defs/ConnectPointAnchorSpec"
+						},
+						{
+							"$ref": "#/$defs/EdgeAnchorSpec"
 						}
 					]
 				}
@@ -4643,6 +4646,29 @@
 				}
 			}
 		},
+		"EdgeAnchorSpec": {
+			"description": "Anchor at an arbitrary position along one edge of an object. Reach for a named anchor first: CenterAnchorSpec when the connector should simply point at the object, ConnectPointAnchorSpec for an edge midpoint or a point the shape type names itself. Use this only when the connection has to land somewhere those cannot express — several parallel lines arriving at one edge, or a line meeting a specific row of a record. \"side\" and \"t\" describe the object's own local space, before rotation and flips, so the anchor stays on the same part of the shape however the shape is turned.",
+			"type": "object",
+			"required": ["kind", "side", "t"],
+			"additionalProperties": false,
+			"properties": {
+				"kind": {
+					"type": "string",
+					"const": "edge"
+				},
+				"side": {
+					"description": "Which of the object's four local edges the anchor rides.",
+					"type": "string",
+					"enum": ["top", "right", "bottom", "left"]
+				},
+				"t": {
+					"description": "Position along that edge, from 0 to 1. Measured left to right on \"top\" / \"bottom\" and top to bottom on \"left\" / \"right\". 0.5 is the edge midpoint — the same place as the matching ConnectPointId, which is the clearer way to write it.",
+					"type": "number",
+					"minimum": 0,
+					"maximum": 1
+				}
+			}
+		},
 		"FreeAnchorSpec": {
 			"description": "Anchor at an arbitrary point in canvas space.",
 			"type": "object",
@@ -4659,9 +4685,9 @@
 			}
 		},
 		"ConnectPointId": {
-			"description": "Named connection point on a shape's edge. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
+			"description": "Named connection point on a shape. Every connectable shape has the four edge midpoints; a shape type may name further points of its own, and the group markers (brace / bracket / bracketWithStem) add \"tip\" for the cusp, spine middle, or stem end the label points from. An id the target shape's type does not name falls back to that shape's center, so \"tip\" on any other type is a silent miss rather than an error. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
 			"type": "string",
-			"enum": ["topCenter", "rightCenter", "bottomCenter", "leftCenter"]
+			"enum": ["topCenter", "rightCenter", "bottomCenter", "leftCenter", "tip"]
 		},
 		"Point": {
 			"description": "A 2D coordinate.",

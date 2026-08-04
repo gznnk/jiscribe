@@ -3,7 +3,12 @@ import type { Point, Rect, TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
-import { calcConnectPoint } from "../../../../presentations/objects/utils/calcConnectPoint";
+import type { ExtraConnectPoint } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import {
+	calcConnectPoint,
+	calcExtraConnectPoint,
+	calcOutwardVector,
+} from "../../../../presentations/objects/utils/calcConnectPoint";
 import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
@@ -35,6 +40,12 @@ type ConnectionAnchorsProps = {
 	 */
 	anchorRegion?: Rect | null;
 	/**
+	 * The extra connection points the shape's type declares (from
+	 * ObjectExtraConnectPointsRegistry), in local coordinates. Each gets a dot of
+	 * its own beside the four edge ones.
+	 */
+	extraConnectPoints?: readonly ExtraConnectPoint[] | null;
+	/**
 	 * Zoom level for adjusting handle sizes.
 	 * @default 1
 	 */
@@ -44,8 +55,9 @@ type ConnectionAnchorsProps = {
 /**
  * ConnectionAnchors component for canvas.
  *
- * Displays the four edge connection anchors of a frame, at the same points a
- * connector would attach to (see calcConnectPoint).
+ * Displays the four edge connection anchors of a frame, plus whatever extra ones
+ * its type declares, at the same points a connector would attach to (see
+ * calcConnectPoint / calcExtraConnectPoint).
  * These anchors can be dragged to create new connectors.
  *
  * Each anchor has:
@@ -57,6 +69,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	frame,
 	outline,
 	anchorRegion,
+	extraConnectPoints,
 	zoom = 1,
 }) => {
 	const { rotation, scaleX, scaleY } = frame;
@@ -106,8 +119,22 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 		y: leftEdge.y - signX * Math.sin(radians) * adjustedOffset,
 	};
 
+	// A declared point is pushed off along its own declared outward direction, so
+	// the dot clears the shape the same way the edge ones do.
+	const extraAnchors = (extraConnectPoints ?? []).map((extraConnectPoint) => {
+		const edge = calcExtraConnectPoint(frame, extraConnectPoint);
+		const outward = calcOutwardVector(frame, extraConnectPoint.direction);
+		return {
+			position: extraConnectPoint.id,
+			point: {
+				x: edge.x + outward.x * adjustedOffset,
+				y: edge.y + outward.y * adjustedOffset,
+			},
+		};
+	});
+
 	const anchors: Array<{
-		position: ConnectPointId;
+		position: string;
 		point: { x: number; y: number };
 	}> = [
 		// { position: "center", point: { x: cx, y: cy } },
@@ -115,6 +142,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 		{ position: "rightCenter", point: rightCenterAnchor },
 		{ position: "bottomCenter", point: bottomCenterAnchor },
 		{ position: "leftCenter", point: leftCenterAnchor },
+		...extraAnchors,
 	];
 
 	return (

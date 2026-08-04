@@ -2,8 +2,7 @@ import type { Point } from "@workspace/geometry";
 
 import type {
 	GroupMarkerDirection,
-	GroupMarkerDirectionField,
-	GroupMarkerTipPositionField,
+	GroupMarkerTipFields,
 } from "../../schema/shared/GroupMarkerFields";
 import {
 	GROUP_MARKER_DIRECTION_DEFAULT,
@@ -108,17 +107,13 @@ export const calcGroupMarkerTip = (
 };
 
 /**
- * What the resolvers below read. Both optional fields are named even though each
- * resolver reads one of them, because a parameter of only optional fields is a
- * weak type: `{ tipPosition?: number }` alone would reject the plain bracket's
- * state, which declares `direction` and no tip position at all.
+ * Reads the direction off a state that may leave it out. It takes both tip
+ * fields even though it reads one, because a parameter of only optional fields
+ * is a weak type: `{ direction?: … }` alone would reject a state that declares
+ * only `tipPosition`.
  */
-type GroupMarkerResolvableFields = GroupMarkerDirectionField &
-	GroupMarkerTipPositionField;
-
-/** Reads the direction off a state that may leave it out. */
 export const resolveGroupMarkerDirection = (
-	state: GroupMarkerResolvableFields,
+	state: GroupMarkerTipFields,
 ): GroupMarkerDirection => state.direction ?? GROUP_MARKER_DIRECTION_DEFAULT;
 
 /**
@@ -127,5 +122,5 @@ export const resolveGroupMarkerDirection = (
  * which is where its label belongs.
  */
 export const resolveGroupMarkerTipPosition = (
-	state: GroupMarkerResolvableFields,
+	state: GroupMarkerTipFields,
 ): number => state.tipPosition ?? GROUP_MARKER_TIP_POSITION_DEFAULT;
