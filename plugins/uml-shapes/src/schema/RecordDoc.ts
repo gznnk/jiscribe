@@ -46,9 +46,9 @@ export type RecordListSlotId = Exclude<
 export const RECORD_FONT_SIZE = 14;
 
 /**
- * Height one drawn row occupies, in local pixels. Derived from the shared
- * line-height, and the unit a list compartment is measured in (a row that wraps
- * takes more than this and overflows — see calcRecordSlotRegions).
+ * Height one drawn row occupies at the default type size, in local pixels.
+ * Derived from the shared line-height; a compartment whose slot raises
+ * `fontSize` is measured from that size instead (calcRecordListHeight 参照).
  */
 export const RECORD_ROW_HEIGHT = RECORD_FONT_SIZE * TEXT_LINE_HEIGHT;
 
@@ -88,10 +88,16 @@ export const RECORD_HEADER_HEIGHT =
  *
  * @param rowCount - Rows to fit; 0 still yields one row's worth, so an empty
  *   compartment reads as a compartment rather than a hairline
+ * @param fontSize - Type size the rows are drawn at, in local pixels; defaults
+ *   to {@link RECORD_FONT_SIZE}, so callers sizing a fresh box can omit it
  * @returns Local pixels, never below one row plus the padding
  */
-export const calcRecordListHeight = (rowCount: number): number =>
-	Math.max(rowCount, 1) * RECORD_ROW_HEIGHT + RECORD_LIST_PADDING_Y * 2;
+export const calcRecordListHeight = (
+	rowCount: number,
+	fontSize: number = RECORD_FONT_SIZE,
+): number =>
+	Math.max(rowCount, 1) * fontSize * TEXT_LINE_HEIGHT +
+	RECORD_LIST_PADDING_Y * 2;
 
 /**
  * Typography a record slot has unless its doc says otherwise: the mapper fills
