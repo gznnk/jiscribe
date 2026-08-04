@@ -32,68 +32,124 @@ import {
 } from "./utils";
 import type { CanvasControllerState } from "../../CanvasTypes";
 
+/** Fields every queued event carries, whatever produced it (DOM event, wheel conversion, long-press timer). */
 type InternalEventBase = {
+	/** Client / screen X in px; feed converts it to world coordinates with getSvgPoint. */
 	clientX: number;
+	/** Client / screen Y in px, measured from the viewport top — not the canvas origin. */
 	clientY: number;
+	/** Shift state at this event's moment; each gesture takes mods from the event it fires on, not from pointerdown. */
 	shiftKey: boolean;
+	/** Alt state at this event's moment. */
 	altKey: boolean;
+	/** Ctrl state at this event's moment; on wheel it is what routes the gesture to zoom instead of scroll. */
 	ctrlKey: boolean;
+	/** Meta (Command) state at this event's moment. */
 	metaKey: boolean;
+	/**
+	 * Element the event was dispatched on: resolved into targetId / targetKind and used
+	 * as the hover-exclusion key. Nullable per the DOM type; feed casts it to Element.
+	 */
 	target: EventTarget | null;
+	/**
+	 * Event time in ms on the performance.now() time base (the synthesized longpress
+	 * fills it from performance.now()); becomes the fired gesture's time.
+	 */
 	timeStamp: number;
+	/**
+	 * DOM button number, read only from pointerdown (copied to Pressed.button, which every
+	 * gesture of that press reports). Ignored on move / up / cancel and on wheel.
+	 */
 	button: number;
 };
 
+/**
+ * A queued pointer event: forwarded from React by getHandlers, converted from a wheel
+ * event mid-drag by toWheelEvent, or synthesized by the long-press timer.
+ */
 export type PointerInternalEvent = InternalEventBase & {
-	// "longpress" is synthesized by the long-press timer (not a DOM event); its
-	// coordinate/modifier fields are copied from the pressed state at fire time.
+	/**
+	 * Pointer phase this event carries — the discriminant feed branches on. The four
+	 * DOM names arrive from React; "longpress" is synthesized by the long-press timer
+	 * instead, filled from the pressed state at fire time.
+	 */
 	type:
 		| "pointerdown"
 		| "pointermove"
 		| "pointerup"
 		| "pointercancel"
 		| "longpress";
+	/**
+	 * Pointer the event belongs to; events of any other pointer are dropped while a press
+	 * is held. Synthesized "longpress" and wheel-converted pointermove reuse the pressed id.
+	 */
 	pointerId: number;
-	// "mouse" | "pen" | "touch". Absent on pointermove synthesized from a wheel
-	// event (toWheelEvent) — only real touch pointers can enter a pinch.
+	/**
+	 * "mouse" | "pen" | "touch". Absent on pointermove synthesized from a wheel
+	 * event (toWheelEvent) — only real touch pointers can enter a pinch.
+	 */
 	pointerType?: string;
+	/** Horizontal wheel delta in screen px; present only on a wheel-converted pointermove, whose in-drag scroll it marks. */
 	deltaX?: number;
+	/** Vertical wheel delta in screen px, positive scrolling the viewport down; feed folds it into the drag's scrollDelta. */
 	deltaY?: number;
 };
 
+/** A wheel event queued as itself: reached toWheelEvent outside a confirmed drag. */
 export type WheelInternalEvent = InternalEventBase & {
+	/** Always "wheel"; the discriminant separating this from PointerInternalEvent. */
 	type: "wheel";
+	/** Horizontal wheel delta in screen px, taken straight from the DOM event; feed reads it as 0 when absent. */
 	deltaX?: number;
+	/** Vertical wheel delta in screen px, positive scrolling the viewport down; with ctrl held its sign picks the zoom direction. */
 	deltaY?: number;
 };
 
+/** One item of the RAF queue, fed to feed in arrival order. */
 export type InternalEvent = PointerInternalEvent | WheelInternalEvent;
 
 /**
  * Held state for an in-progress gesture. Created on pointerdown and reset to null on
- * pointerup / pointercancel / reset, so null means no gesture is in progress.
+ * pointerup / pointercancel / longPress / pinch entry / cancelPendingGesture, so null
+ * means no gesture is in progress.
  */
 export type Pressed = {
+	/** Pointer holding the press; events of every other pointer are ignored until it lifts. */
 	pointerId: number;
-	// Pointer type fixed at pointerdown. A pinch may only replace a gesture whose
-	// first pointer is a touch (a mouse press is never converted).
+	/**
+	 * Pointer type fixed at pointerdown. A pinch may only replace a gesture whose
+	 * first pointer is a touch (a mouse press is never converted).
+	 */
 	pointerType?: string;
 	/** SVG / world coordinates, fixed at gesture start */
 	start: Point;
-	/** SVG / world coordinates */
+	/**
+	 * SVG / world coordinates, rewritten on every pointermove (before the drag threshold
+	 * is met too). Edge scrolling adds the scrolled amount into it.
+	 */
 	last: Point;
 	/** Client / screen coordinates, fixed at gesture start */
 	clientStart: Point;
-	/** Client / screen coordinates */
+	/**
+	 * Client / screen coordinates, rewritten on every pointermove. Unaffected by edge
+	 * scrolling, and the position the synthesized long press fires at.
+	 */
 	clientLast: Point;
+	/** timeStamp of the pointerdown. Gestures carry the time of the event they fire on, not this one. */
 	time: number;
+	/** Event target of the pointerdown, fixed for the press: it does not follow the cursor during a drag. */
 	target: EventTarget | null;
+	/** data-id of the pressed [data-kind] element; undefined when getGestureTarget resolved nothing (background press). */
 	targetId?: string;
+	/** data-kind of the pressed element — the key handlers match on; undefined on a background press. */
 	targetKind?: string;
+	/** Nearest [data-part] within the pressed element (see getGestureTarget); undefined when it marks none. */
 	targetPart?: string;
+	/** Modifier snapshot at pointerdown. Fired gestures use the current event's mods; this copy is what the synthesized long press replays. */
 	mods: Mods;
 	/** Whether the move has exceeded the drag threshold (per pointerType, in screen px) and been confirmed as a drag */
 	dragging: boolean;
+	/** DOM button number fixed at pointerdown (0 left / 1 middle / 2 right), reported by every gesture of the press including the lift. */
 	button: number;
 	/**
 	 * Whether target is inside a `data-gesture="native-pointer"` element. Fixed at
@@ -110,17 +166,21 @@ export type Pressed = {
 
 /**
  * Held state for an in-progress two-finger pinch (pan + zoom). Entered when a second
- * touch pointerdown arrives before the first touch has confirmed a drag; the pending
- * press is discarded (no click fires — two fingers mean pan/zoom, not a tap). Both
- * pointers' events are consumed here until either lifts; the survivor stays inert
+ * touch pointerdown arrives before the first touch has confirmed a drag, or during a
+ * confirmed drag that shouldPinchFromDrag allows converting (closed with dragEnd first);
+ * the pending press is discarded (no click fires — two fingers mean pan/zoom, not a tap).
+ * Both pointers' events are consumed here until either lifts; the survivor stays inert
  * until it is lifted and pressed anew.
  */
 type Pinch = {
-	// pointerId -> latest client position of each of the two touches
+	/**
+	 * pointerId -> latest client position of each of the two touches. Exactly two entries,
+	 * seeded at pinch entry; a pointermove overwrites only its own pointer's entry.
+	 */
 	points: Map<number, Point>;
-	// Client midpoint / finger distance at the last fired pinch gesture. Each pinch
-	// gesture carries deltas relative to these, then overwrites them.
+	/** Client midpoint at the last fired pinch gesture; the pan delta is measured against it, then it is overwritten. */
 	lastMid: Point;
+	/** Client finger distance (px) at the last fired pinch gesture; zoomScale is the current distance over it (1 below PINCH_MIN_DISTANCE). */
 	lastDist: number;
 };
 
