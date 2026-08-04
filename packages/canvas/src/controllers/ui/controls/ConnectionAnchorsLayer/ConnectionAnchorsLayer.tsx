@@ -1,10 +1,15 @@
 import { isTransformedFrame } from "@workspace/geometry";
 import type { Point, Rect } from "@workspace/geometry";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
+import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import { useObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistryContext";
-import type { ExtraConnectPoint } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import type {
+	ExtraConnectPoint,
+	ObjectExtraConnectPointsRegistry,
+} from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useObjectExtraConnectPointsRegistry } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistryContext";
+import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import { useObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistryContext";
 import { calcEdgeAnchorPoint } from "../../../../presentations/objects/utils/calcConnectPoint";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
@@ -38,6 +43,37 @@ type ConnectionAnchorsLayerProps = {
 	activeDragKind: DragKind | null;
 };
 
+type ResolvedAnchorGeometry = {
+	/** The object's true outline polygon (null = bounding-box fallback in the dot components). */
+	outline: Point[] | null;
+	/** The band the edge anchors are centered on (null = full bounding box). */
+	anchorRegion: Rect | null;
+	/** The anchors the object's type declares beyond the edge ones (null = none). */
+	extraConnectPoints: readonly ExtraConnectPoint[] | null;
+};
+
+const EMPTY_ANCHOR_GEOMETRY: ResolvedAnchorGeometry = {
+	outline: null,
+	anchorRegion: null,
+	extraConnectPoints: null,
+};
+
+const resolveAnchorGeometry = (
+	obj: ObjectState | null,
+	outlineRegistry: ObjectOutlineRegistry,
+	anchorRegionRegistry: ObjectAnchorRegionRegistry,
+	extraConnectPointsRegistry: ObjectExtraConnectPointsRegistry,
+): ResolvedAnchorGeometry => {
+	if (!obj || !isTransformedFrame(obj)) {
+		return EMPTY_ANCHOR_GEOMETRY;
+	}
+	return {
+		outline: outlineRegistry.get(obj.type)?.(obj) ?? null,
+		anchorRegion: anchorRegionRegistry.get(obj.type)?.(obj) ?? null,
+		extraConnectPoints: extraConnectPointsRegistry.get(obj.type)?.(obj) ?? null,
+	};
+};
+
 /**
  * Renders ConnectionAnchors for frame-based objects when exactly one is selected.
  * Shows the four edge connection anchors, placed on the shape's outline and
@@ -63,54 +99,9 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	const anchorRegionRegistry = useObjectAnchorRegionRegistry();
 	const extraConnectPointsRegistry = useObjectExtraConnectPointsRegistry();
 
-	// Reads the object's true outline polygon (null for rect/ellipse/no-provider,
-	// which fall back to bounding-box anchors in the dot components).
-	const resolveOutline = (obj: ObjectState): Point[] | null => {
-		const provider = outlineRegistry.get(obj.type);
-		if (!provider || !isTransformedFrame(obj)) {
-			return null;
-		}
-		return provider(obj);
-	};
-
-	// Reads the band the edge anchors are centered on (null = full bounding box).
-	const resolveAnchorRegion = (obj: ObjectState): Rect | null => {
-		const provider = anchorRegionRegistry.get(obj.type);
-		if (!provider || !isTransformedFrame(obj)) {
-			return null;
-		}
-		return provider(obj);
-	};
-
-	// Reads the anchors the object's type declares beyond the edge ones (null = none).
-	const resolveExtraConnectPoints = (
-		obj: ObjectState,
-	): readonly ExtraConnectPoint[] | null => {
-		const provider = extraConnectPointsRegistry.get(obj.type);
-		if (!provider || !isTransformedFrame(obj)) {
-			return null;
-		}
-		return provider(obj);
-	};
-
-	// Do not render anchors while text editing
-	if (isTextEditing) {
-		return null;
-	}
-
 	// --- Source anchors (shown on single-selected, frame-based, non-group objects) ---
 	const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
 	const selectedObject = selectedId ? objects[selectedId] : null;
-	// Hidden while the selection is moved or transformed: the dots would just ride along
-	// the geometry being changed. A connection drag ("other") keeps them, since the anchor
-	// being dragged from is one of them.
-	const isShapeBeingMovedOrTransformed =
-		activeDragKind === "move" || activeDragKind === "transform";
-	const showSourceAnchors =
-		!isShapeBeingMovedOrTransformed &&
-		selectedObject != null &&
-		selectedObject.type !== "group" &&
-		isTransformedFrame(selectedObject);
 
 	// --- Target anchors (shown during a connection drag on the hovered object) ---
 	// Show anchors on the endpoint being edited (hover target).
@@ -137,15 +128,61 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	const targetObjectId = editingEndpointRef?.owner?.id;
 	const targetObject = targetObjectId ? objects[targetObjectId] : null;
 
+	// Memoized on the object reference: the calculators return fresh references on
+	// every call, and this layer re-renders on every pointer move of a connection
+	// drag, so resolving inline would defeat the dot components' memo() the whole
+	// time the object itself stands still.
+	const selectedGeometry = useMemo(
+		() =>
+			resolveAnchorGeometry(
+				selectedObject,
+				outlineRegistry,
+				anchorRegionRegistry,
+				extraConnectPointsRegistry,
+			),
+		[
+			selectedObject,
+			outlineRegistry,
+			anchorRegionRegistry,
+			extraConnectPointsRegistry,
+		],
+	);
+	const targetGeometry = useMemo(
+		() =>
+			resolveAnchorGeometry(
+				targetObject,
+				outlineRegistry,
+				anchorRegionRegistry,
+				extraConnectPointsRegistry,
+			),
+		[
+			targetObject,
+			outlineRegistry,
+			anchorRegionRegistry,
+			extraConnectPointsRegistry,
+		],
+	);
+
+	// Do not render anchors while text editing
+	if (isTextEditing) {
+		return null;
+	}
+
+	// Hidden while the selection is moved or transformed: the dots would just ride along
+	// the geometry being changed. A connection drag ("other") keeps them, since the anchor
+	// being dragged from is one of them.
+	const isShapeBeingMovedOrTransformed =
+		activeDragKind === "move" || activeDragKind === "transform";
+	const showSourceAnchors =
+		!isShapeBeingMovedOrTransformed &&
+		selectedObject != null &&
+		selectedObject.type !== "group" &&
+		isTransformedFrame(selectedObject);
+
 	const showTargetAnchors =
 		targetObject != null &&
 		targetObject.type !== "connector" &&
 		isTransformedFrame(targetObject);
-
-	const targetOutline = showTargetAnchors ? resolveOutline(targetObject) : null;
-	const targetAnchorRegion = showTargetAnchors
-		? resolveAnchorRegion(targetObject)
-		: null;
 
 	// Determine the active anchor on the hover target. An edge anchor has no dot of
 	// its own to highlight, so its landing point is resolved and drawn instead.
@@ -161,8 +198,8 @@ const ConnectionAnchorsLayerComponent: React.FC<
 			freeConnectPoint = calcEdgeAnchorPoint(
 				targetObject,
 				anchor,
-				targetOutline,
-				targetAnchorRegion,
+				targetGeometry.outline,
+				targetGeometry.anchorRegion,
 			);
 		}
 	}
@@ -173,18 +210,18 @@ const ConnectionAnchorsLayerComponent: React.FC<
 				<ConnectionAnchors
 					objectId={selectedId!}
 					frame={selectedObject!}
-					outline={resolveOutline(selectedObject!)}
-					anchorRegion={resolveAnchorRegion(selectedObject!)}
-					extraConnectPoints={resolveExtraConnectPoints(selectedObject!)}
+					outline={selectedGeometry.outline}
+					anchorRegion={selectedGeometry.anchorRegion}
+					extraConnectPoints={selectedGeometry.extraConnectPoints}
 					zoom={zoom}
 				/>
 			)}
 			{showTargetAnchors && (
 				<ConnectionTargetAnchors
 					frame={targetObject}
-					outline={targetOutline}
-					anchorRegion={targetAnchorRegion}
-					extraConnectPoints={resolveExtraConnectPoints(targetObject)}
+					outline={targetGeometry.outline}
+					anchorRegion={targetGeometry.anchorRegion}
+					extraConnectPoints={targetGeometry.extraConnectPoints}
 					activeAnchorId={activeAnchorId}
 					freeConnectPoint={freeConnectPoint}
 					zoom={zoom}

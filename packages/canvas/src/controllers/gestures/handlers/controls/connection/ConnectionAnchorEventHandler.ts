@@ -389,9 +389,8 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			// If the endpoint has not effectively changed since the start, it is a no-op.
 			// Leaving objects as-is (during handleDrag the entity ends at final position = start position)
 			// avoids handleGesture's auto-commit detection (a change in the objects reference) so nothing is pushed to history.
-			const finalConnector = this.handleDrag(state, event, registries).objects[
-				editingConnectorId
-			];
+			const dragResult = this.handleDrag(state, event, registries);
+			const finalConnector = dragResult.objects[editingConnectorId];
 
 			// Invariant guard: if committing the edit would make both ends free, discard the edit and revert.
 			// Normally unreachable since the UI (ConnectorControls) hides the owned-end handle, but this
@@ -432,7 +431,6 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 
 			// If the endpoint changed, commit the entity update (commitVersion is auto-incremented
 			// by handleGesture detecting the objects change, so it is not incremented here).
-			const dragResult = this.handleDrag(state, event, registries);
 			return {
 				...dragResult,
 				editingConnectorId: null,
