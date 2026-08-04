@@ -449,6 +449,8 @@ const CanvasComponent = ({
 
 	const { minX, minY, zoom } = state.viewport;
 
+	const selectedTextSlot = resolveSelectedTextSlot(state);
+
 	// Delegated to the command's canExecute as the single source of truth. Canvas provides
 	// the registries context, so it resolves against its directly-held bundle, not a hook.
 	const canZoomIn =
@@ -514,7 +516,7 @@ const CanvasComponent = ({
 								selectedIds={state.selectedIds}
 								objects={state.objects}
 								multiSelectGroup={state.multiSelectGroup}
-								selectedTextSlot={resolveSelectedTextSlot(state)}
+								selectedTextSlot={selectedTextSlot}
 							/>
 							<ConnectorControlsLayer
 								selectedConnectorId={state.selectedConnectorId}
@@ -528,6 +530,7 @@ const CanvasComponent = ({
 								multiSelectGroup={state.multiSelectGroup}
 								zoom={state.viewport.zoom}
 								isTextEditing={!!state.textEditState}
+								isTextSlotSelected={selectedTextSlot !== null}
 								activeDragKind={state.activeDragKind}
 							/>
 							<ConnectionAnchorsLayer

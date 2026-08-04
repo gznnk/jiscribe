@@ -6,6 +6,8 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * record is the type that has several, so it is the vehicle here. Guarded behavior:
  * - clicking a compartment of the already-selected record selects that slot, and
  *   the slot's own outline is drawn on top of the object's
+ * - while the slot is selected the object outline turns dashed and the transform
+ *   handles go away, so only the slot box reads as the operated target
  * - a style change then lands on that slot alone, leaving the others as they were
  * - Escape steps out one level at a time: the slot first, the object next
  * - Tab walks the slots in order and wraps around
@@ -62,6 +64,29 @@ async function selectionOutlineHeights(
 	);
 }
 
+/**
+ * `stroke-dasharray` of the object's own outline, which the overlay draws before the
+ * slot's. Absent (null) while the object itself is the operated target.
+ */
+async function objectOutlineDashArray(
+	canvas: CanvasDriver,
+): Promise<string | null> {
+	return canvas.page.evaluate(() => {
+		const outline = document.querySelector(
+			'[data-layer="selection-overlay"] rect',
+		);
+		return outline?.getAttribute("stroke-dasharray") ?? null;
+	});
+}
+
+/** How many resize/rotation handles are on screen; they all carry data-id="transform". */
+async function transformHandleCount(canvas: CanvasDriver): Promise<number> {
+	const controlDescriptors = await canvas.visibleControlIds();
+	return controlDescriptors.filter((descriptor) =>
+		descriptor.startsWith("transform/"),
+	).length;
+}
+
 /** Computed text color of each drawn text overlay, keyed by the text it holds. */
 async function textColorByContent(
 	canvas: CanvasDriver,
@@ -108,6 +133,32 @@ test.describe("record: selecting one text slot", () => {
 		await expect
 			.poll(async () => (await selectionOutlineHeights(canvas)).length)
 			.toBe(2);
+	});
+
+	test("dashes the object outline and drops the transform handles while a slot is selected", async ({
+		canvas,
+	}) => {
+		await createFilledRecord(canvas);
+
+		await canvas.selectAt(ATTRIBUTES_SPOT);
+		expect(await objectOutlineDashArray(canvas)).toBeNull();
+		expect(await transformHandleCount(canvas)).toBeGreaterThan(0);
+
+		await canvas.clickAt(NAME_SPOT);
+		await expect
+			.poll(() => objectOutlineDashArray(canvas), {
+				message: "the object outline goes dashed once a slot is selected",
+			})
+			.not.toBeNull();
+		expect(await transformHandleCount(canvas)).toBe(0);
+
+		await canvas.pressEscape();
+		await expect
+			.poll(() => objectOutlineDashArray(canvas), {
+				message: "leaving the slot restores the solid outline",
+			})
+			.toBeNull();
+		expect(await transformHandleCount(canvas)).toBeGreaterThan(0);
 	});
 
 	test("applies a font color to the selected slot alone", async ({

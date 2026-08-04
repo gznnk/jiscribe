@@ -24,6 +24,8 @@ type SelectionOverlayProps = {
  * Renders selection outlines for all selected objects and their descendants.
  * For multiple selection, also renders an outline for the multiSelectGroup bounding box.
  * Groups now have cached bounding frames, so no calculation is needed.
+ * While a text slot is selected, the outline of the object holding it turns dashed: the
+ * solid box is the slot being operated on, the dashed one the selection it sits inside.
  */
 const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	selectedIds,
@@ -55,7 +57,13 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 					return null;
 				}
 
-				return <Outline key={id} frame={obj} />;
+				return (
+					<Outline
+						key={id}
+						frame={obj}
+						dashed={selectedTextSlot?.objectId === id}
+					/>
+				);
 			})}
 			{/* For multiple selection, show bounding box outline of the virtual group */}
 			{selectedIds.length > 1 &&
