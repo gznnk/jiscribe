@@ -68,6 +68,7 @@ import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
@@ -513,6 +514,7 @@ const CanvasComponent = ({
 								selectedIds={state.selectedIds}
 								objects={state.objects}
 								multiSelectGroup={state.multiSelectGroup}
+								selectedTextSlot={resolveSelectedTextSlot(state)}
 							/>
 							<ConnectorControlsLayer
 								selectedConnectorId={state.selectedConnectorId}

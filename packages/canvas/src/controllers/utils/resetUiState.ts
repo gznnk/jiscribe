@@ -28,6 +28,7 @@ export type UiStateReset = Pick<
 	| "pendingConnector"
 	| "selectedConnectorId"
 	| "selectedVertex"
+	| "selectedTextSlot"
 	| "editingConnectorId"
 	| "editingEndpoint"
 	| "snapFeedback"
@@ -65,6 +66,7 @@ export const resetUiState = (): UiStateReset => ({
 	pendingConnector: null,
 	selectedConnectorId: null,
 	selectedVertex: null,
+	selectedTextSlot: null,
 	editingConnectorId: null,
 	editingEndpoint: null,
 	snapFeedback: null,

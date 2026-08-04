@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
-import { DeselectAllCommand } from "../DeselectAllCommand";
+import { EscapeSelectionCommand } from "../EscapeSelectionCommand";
 
 const registries = createTestRegistries();
 
@@ -25,8 +25,23 @@ const baseState = (
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
-describe("DeselectAllCommand", () => {
-	it("clears all selection and editing state at once", () => {
+/** A record whose slot selection is live: sole selection, slot still present. */
+const slotSelectedState = (): CanvasControllerState =>
+	baseState({
+		objects: {
+			"rec-1": {
+				id: "rec-1",
+				type: "record",
+				features: { text: "slots" },
+				text: { name: { text: "User" }, rows: { text: [] } },
+			},
+		} as never,
+		selectedIds: ["rec-1"],
+		selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
+	});
+
+describe("EscapeSelectionCommand", () => {
+	it("clears all selection and editing state when no text slot is selected", () => {
 		const state = baseState({
 			selectedIds: ["a", "b"],
 			selectedConnectorId: "c1",
@@ -37,7 +52,7 @@ describe("DeselectAllCommand", () => {
 			objectMenuOpenId: "a",
 			edgeScrollEnabled: true,
 		});
-		const next = DeselectAllCommand.execute(state, registries);
+		const next = EscapeSelectionCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
 		expect(next.selectedConnectorId).toBeNull();
 		expect(next.selectedVertex).toBeNull();
@@ -48,74 +63,65 @@ describe("DeselectAllCommand", () => {
 		expect(next.edgeScrollEnabled).toBe(false);
 	});
 
-	it("clears the object selection too when a text slot is selected, without an intermediate step", () => {
-		// Escape steps out one level at a time (EscapeSelectionCommand); the explicit
-		// deselect-all does not.
-		const state = baseState({
-			objects: {
-				"rec-1": {
-					id: "rec-1",
-					type: "record",
-					features: { text: "slots" },
-					text: { name: { text: "User" }, rows: { text: [] } },
-				},
-			} as never,
-			selectedIds: ["rec-1"],
-			selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
+	describe("staged deselection of a text slot", () => {
+		it("drops only the slot on the first press, keeping the object selected", () => {
+			const next = EscapeSelectionCommand.execute(
+				slotSelectedState(),
+				registries,
+			);
+			expect(next.selectedTextSlot).toBeNull();
+			expect(next.selectedIds).toEqual(["rec-1"]);
 		});
-		const next = DeselectAllCommand.execute(state, registries);
-		expect(next.selectedTextSlot).toBeNull();
-		expect(next.selectedIds).toEqual([]);
+
+		it("clears the object selection on the next press", () => {
+			const afterFirst = EscapeSelectionCommand.execute(
+				slotSelectedState(),
+				registries,
+			);
+			const next = EscapeSelectionCommand.execute(afterFirst, registries);
+			expect(next.selectedIds).toEqual([]);
+		});
+
+		it("clears everything at once when the slot selection is stale", () => {
+			// The object it names is no longer the selection, so there is no level to step out of.
+			const state = baseState({
+				selectedIds: ["other"],
+				selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
+			});
+			const next = EscapeSelectionCommand.execute(state, registries);
+			expect(next.selectedIds).toEqual([]);
+			expect(next.selectedTextSlot).toBeNull();
+		});
 	});
 
 	it("closes an open StencilLibrary category flyout", () => {
 		const state = baseState({ stencilLibraryOpenCategory: "flowchart" });
 		expect(
-			DeselectAllCommand.execute(state, registries).stencilLibraryOpenCategory,
+			EscapeSelectionCommand.execute(state, registries)
+				.stencilLibraryOpenCategory,
 		).toBeNull();
 	});
 
 	describe("canExecute", () => {
 		it("is executable when there is an object selection", () => {
 			expect(
-				DeselectAllCommand.canExecute(
+				EscapeSelectionCommand.canExecute(
 					baseState({ selectedIds: ["a"] }),
 					registries,
 				),
 			).toBe(true);
 		});
 
-		it("is executable when there is a connector selection", () => {
+		it("is executable when a text slot is selected", () => {
 			expect(
-				DeselectAllCommand.canExecute(
-					baseState({ selectedConnectorId: "c1" }),
-					registries,
-				),
-			).toBe(true);
-		});
-
-		it("is executable when there is a vertex selection", () => {
-			expect(
-				DeselectAllCommand.canExecute(
-					baseState({ selectedVertex: { objectId: "p1", vertexIndex: 0 } }),
-					registries,
-				),
+				EscapeSelectionCommand.canExecute(slotSelectedState(), registries),
 			).toBe(true);
 		});
 
 		it("is not executable when nothing is selected", () => {
-			expect(DeselectAllCommand.canExecute(baseState({}), registries)).toBe(
+			expect(EscapeSelectionCommand.canExecute(baseState({}), registries)).toBe(
 				false,
 			);
-		});
-
-		it("is executable when a StencilLibrary category flyout is open (Escape closes it)", () => {
-			expect(
-				DeselectAllCommand.canExecute(
-					baseState({ stencilLibraryOpenCategory: "flowchart" }),
-					registries,
-				),
-			).toBe(true);
 		});
 
 		it("is not executable during an object drag (other than area selection)", () => {
@@ -124,7 +130,7 @@ describe("DeselectAllCommand", () => {
 				eventStartSnapshot: { foo: 1 } as never,
 				areaSelection: null,
 			});
-			expect(DeselectAllCommand.canExecute(state, registries)).toBe(false);
+			expect(EscapeSelectionCommand.canExecute(state, registries)).toBe(false);
 		});
 
 		it("is executable during an area-selection drag", () => {
@@ -132,13 +138,7 @@ describe("DeselectAllCommand", () => {
 				eventStartSnapshot: { foo: 1 } as never,
 				areaSelection: { x: 0, y: 0 } as never,
 			});
-			expect(DeselectAllCommand.canExecute(state, registries)).toBe(true);
+			expect(EscapeSelectionCommand.canExecute(state, registries)).toBe(true);
 		});
-	});
-
-	it("keeps Escape out of its bindings, so it cannot shadow EscapeSelectionCommand", () => {
-		// findByShortcut returns the first match only, so the two must not both claim Escape.
-		const bindings = Object.values(DeselectAllCommand.shortcuts ?? {}).flat();
-		expect(bindings.some((binding) => binding.code === "Escape")).toBe(false);
 	});
 });

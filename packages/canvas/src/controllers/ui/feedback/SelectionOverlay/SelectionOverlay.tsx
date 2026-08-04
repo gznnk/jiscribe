@@ -3,13 +3,21 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 import { Outline } from "../Outline";
+import { TextSlotOutline } from "../TextSlotOutline";
 
 type SelectionOverlayProps = {
 	selectedIds: string[];
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
+	/**
+	 * Slot selection already validated by resolveSelectedTextSlot; a raw
+	 * state.selectedTextSlot must not be passed, as a stale one would draw a box
+	 * around a slot that is no longer selected
+	 */
+	selectedTextSlot?: CanvasControllerState["selectedTextSlot"];
 };
 
 /**
@@ -21,6 +29,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	selectedIds,
 	objects,
 	multiSelectGroup,
+	selectedTextSlot = null,
 }) => {
 	if (selectedIds.length === 0) {
 		return null;
@@ -54,6 +63,12 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 				isTransformedFrame(multiSelectGroup) && (
 					<Outline key="multi-select-group" frame={multiSelectGroup} />
 				)}
+			{selectedTextSlot && objects[selectedTextSlot.objectId] && (
+				<TextSlotOutline
+					object={objects[selectedTextSlot.objectId]}
+					slotId={selectedTextSlot.slotId}
+				/>
+			)}
 		</g>
 	);
 };

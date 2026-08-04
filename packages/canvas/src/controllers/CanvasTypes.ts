@@ -338,6 +338,16 @@ export type CanvasControllerState = CanvasState & {
 	} | null;
 
 	/**
+	 * Text slot addressed one level below the object selection. Only valid while that
+	 * object is the sole selection and still holds the slot; a stale value is neutralized
+	 * on read (resolveSelectedTextSlot) instead of being cleared at every selection write.
+	 */
+	selectedTextSlot: {
+		objectId: string;
+		slotId: string;
+	} | null;
+
+	/**
 	 * Connector being edited, used together with pendingConnector: null on new creation, the
 	 * original connector ID on edit. Cleared on dragEnd.
 	 */

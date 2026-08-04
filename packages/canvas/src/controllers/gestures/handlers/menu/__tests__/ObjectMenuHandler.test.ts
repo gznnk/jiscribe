@@ -30,6 +30,7 @@ const makeState = (): CanvasControllerState =>
 		selectedIds: ["rect-1"],
 		selectedConnectorId: null,
 		selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
+		selectedTextSlot: null,
 		multiSelectGroup: null,
 		textEditState: null,
 		objectMenuOpenId: null,

@@ -30,9 +30,10 @@ const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
  * are the authority, and the per-type contributions are `textRegion` and
  * `textEditOverflow`, which both take the slot id (see calcRecordTextRegion).
  *
- * The `text` menu section keeps fontStyle / textAlignment: a menu edit writes
- * into every slot at once (TextSlotStyleProperty), so the title band and the
- * rows — the bulk of the box — change together.
+ * The `text` menu section keeps fontStyle / textAlignment: with no slot picked
+ * a menu edit writes into every slot at once (TextSlotStyleProperty), so the
+ * title band and the rows — the bulk of the box — change together; clicking one
+ * slot first narrows the same edit to it.
  *
  * `createFrameObjectDefinition` is not used here: it derives the mapper from
  * features, and the record's is the derived one wrapped in the slot normal form

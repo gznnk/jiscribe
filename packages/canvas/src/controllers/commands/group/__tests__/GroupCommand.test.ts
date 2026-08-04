@@ -36,6 +36,7 @@ const makeState = (params: {
 }): CanvasControllerState =>
 	({
 		multiSelectGroup: null,
+		selectedTextSlot: null,
 		objectMenuOpenId: null,
 		lastDuplicate: null,
 		commitVersion: 0,

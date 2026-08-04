@@ -37,9 +37,9 @@ export const ModalShell: React.FC<ModalShellProps> = ({
 }) => {
 	useEffect(() => {
 		// Registered on capture: the modal lives inside the Canvas container, and on bubble
-		// useKeyboardShortcuts consumes Escape as DeselectAllCommand first, stopping
+		// useKeyboardShortcuts consumes Escape as EscapeSelectionCommand first, stopping
 		// propagation before it reaches document. stopPropagation here likewise suppresses
-		// deselection, so Escape only closes the modal.
+		// that command, so Escape only closes the modal.
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === "Escape") {
 				event.preventDefault();

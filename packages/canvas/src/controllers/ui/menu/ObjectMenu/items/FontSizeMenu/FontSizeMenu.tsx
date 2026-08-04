@@ -11,7 +11,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
+import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "font-size";
 const DEFAULT_FONT_SIZE = 14;
@@ -43,8 +43,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		isOpen,
 	);
 
-	const { selectedIds, objects } = canvasState;
-	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const slot = getSelectedOrFirstTextSlot(canvasState);
 	const fontSize = slot?.fontSize ?? DEFAULT_FONT_SIZE;
 
 	return (

@@ -28,6 +28,15 @@ const pickDefinedStyle = (
 };
 
 /**
+ * Whether a slot id would be re-sorted by the JS engine. Integer-like own keys
+ * are enumerated first, in ascending numeric order, so such an id would silently
+ * move within a slot map whose key order decides the default slot and the drawing
+ * order (issue #231).
+ */
+const isIntegerLikeSlotId = (slotId: string): boolean =>
+	String(Number(slotId)) === slotId && Number(slotId) >= 0;
+
+/**
  * Expands a doc's text group into the state normal form (keyed slots).
  *
  * A `"body"` type's flat doc becomes the single `body` slot, its root styling
@@ -35,7 +44,9 @@ const pickDefinedStyle = (
  * neither text nor styling, because a text-bearing shape always has a slot to
  * edit, which is what makes the key set the authority on slots. A `"slots"` type
  * is already in the normal form and passes through — its closed key set is the
- * type's own mapper to guarantee (see the record shape).
+ * type's own mapper to guarantee (see the record shape) — except for the one rule
+ * every type shares: an integer-like slot id is dropped here, since the key order
+ * would not survive it (see {@link isIntegerLikeSlotId}).
  *
  * @param textShape - The type's `features.text`; undefined yields no `text` key at all
  * @param doc - The doc being converted; only its text group is read
@@ -54,7 +65,16 @@ export const mapTextDocToState = (
 		};
 	}
 	if (textShape === "slots") {
-		return { text: isTextSlots(doc.text) ? { ...doc.text } : {} };
+		if (!isTextSlots(doc.text)) {
+			return { text: {} };
+		}
+		const slots: TextSlots = {};
+		for (const [slotId, slot] of Object.entries(doc.text)) {
+			if (!isIntegerLikeSlotId(slotId)) {
+				slots[slotId] = slot;
+			}
+		}
+		return { text: slots };
 	}
 	return {};
 };

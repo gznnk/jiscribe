@@ -13,8 +13,8 @@ import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
  *
  * The text group lives in `state.text` as keyed slots, so a dot-path write would
  * flatten it; "text" (the content, written into the default slot) and the six
- * styling properties (written into every slot) have their own handlers instead
- * of the flag gate.
+ * styling properties (written into the selected slot, or every slot when none is
+ * selected) have their own handlers instead of the flag gate.
  */
 export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
 	fill: new FeatureGatedStyleProperty("fill", "string"),

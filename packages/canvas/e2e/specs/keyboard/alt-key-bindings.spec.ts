@@ -10,7 +10,8 @@ import { selectors } from "../../support/selectors";
  * shortcut table went undetected.
  * - Redo: primary Ctrl+Shift+Z (nudge.spec and others) / alternate Ctrl+Y (RedoCommand)
  * - Delete: primary Delete (selection.spec) / alternate Backspace (DeleteCommand)
- * - DeselectAll: primary Escape (selection.spec) / alternate Ctrl+Shift+A (DeselectAllCommand)
+ * - DeselectAll: Ctrl+Shift+A (DeselectAllCommand). Escape is a separate command
+ *   (EscapeSelectionCommand, covered by selection.spec), so this is the only binding left here
  */
 test.describe("keyboard: alternate bindings", () => {
 	test("redoes on Ctrl+Y (alternate for Ctrl+Shift+Z)", async ({ canvas }) => {
@@ -69,9 +70,7 @@ test.describe("keyboard: alternate bindings", () => {
 		);
 	});
 
-	test("clears the selection on Ctrl+Shift+A (alternate for Escape)", async ({
-		canvas,
-	}) => {
+	test("clears the selection on Ctrl+Shift+A", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 440, y: 320 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 560, y: 200 }, { x: 700, y: 320 });

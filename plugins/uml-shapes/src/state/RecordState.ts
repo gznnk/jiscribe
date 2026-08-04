@@ -5,8 +5,8 @@ import type { RecordFeatures } from "../schema/RecordDoc";
 
 /**
  * The record's slots in the state normal form. `name` is always present and
- * always first, so Enter-started editing (which has no pointer position to
- * resolve a slot from) opens the title; the compartments below follow in
+ * always first, so editing that designates no slot (Enter with no slot
+ * selected) opens the title; the compartments below follow in
  * RECORD_SLOT_IDS order, and one the doc left out stays out — the key set is
  * what gives the box its compartments (createFrameObject enumerates it).
  *
