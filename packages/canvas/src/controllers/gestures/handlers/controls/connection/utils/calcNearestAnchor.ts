@@ -42,7 +42,7 @@ export const NAMED_ANCHOR_SNAP_PX = 12;
  * "grab the middle of a shape and connect" gesture working now that the rest of
  * the interior would otherwise project onto an edge.
  */
-export const CENTER_ANCHOR_DEPTH_PX = 16;
+export const CENTER_ANCHOR_DEPTH_PX = 32;
 
 /**
  * How much nearer, in screen px, a built-in anchor has to be than a declared one

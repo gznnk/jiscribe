@@ -59,7 +59,7 @@ type ConnectionTargetAnchorsProps = {
  *
  * The point nearest to the cursor (already computed by
  * ConnectionAnchorEventHandler) is visually highlighted; when the cursor is on a
- * free position along an edge instead, that landing point gets a ring of its own.
+ * free position along an edge instead, that landing point gets a dot of its own.
  * This is purely visual — no pointer events.
  */
 const ConnectionTargetAnchorsComponent: React.FC<
@@ -121,16 +121,16 @@ const ConnectionTargetAnchorsComponent: React.FC<
 				);
 			})}
 			{freeConnectPoint && (
-				// A ring rather than a filled dot: an active named anchor is solid, so the
-				// two states stay apart at a glance even at the same size.
+				// Styled exactly like an active named anchor: both mean "release here
+				// and the connector attaches", so they should read as the same state.
 				<circle
 					data-anchor-kind="edge"
 					cx={freeConnectPoint.x}
 					cy={freeConnectPoint.y}
 					r={adjustedRadius * 1.2}
-					strokeWidth={adjustedStrokeWidth * 2}
+					strokeWidth={adjustedStrokeWidth}
 					style={{
-						fill: theme.handleFill,
+						fill: theme.connectionAccent,
 						stroke: theme.connectionAccent,
 					}}
 				/>
