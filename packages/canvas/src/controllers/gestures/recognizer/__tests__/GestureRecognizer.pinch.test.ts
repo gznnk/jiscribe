@@ -27,7 +27,7 @@ import type * as RecognizerUtils from "../utils";
 
 const mockUtil = vi.hoisted(() => ({
 	isNativePointer: false,
-	kindAndId: { id: "obj-1", kind: "rect" } as { id: string; kind: string },
+	gestureTarget: { id: "obj-1", kind: "rect" } as RecognizerUtils.GestureTarget,
 }));
 
 vi.mock("../utils", async (importActual) => {
@@ -38,7 +38,7 @@ vi.mock("../utils", async (importActual) => {
 			x: clientX,
 			y: clientY,
 		}),
-		getKindAndId: () => mockUtil.kindAndId,
+		getGestureTarget: () => mockUtil.gestureTarget,
 		createGetHovered: () => () => [],
 		getInputValue: () => undefined,
 		readInputValue: () => undefined,
@@ -62,7 +62,7 @@ const flushRaf = (): void => {
 beforeEach(() => {
 	rafCallbacks = [];
 	mockUtil.isNativePointer = false;
-	mockUtil.kindAndId = { id: "obj-1", kind: "rect" };
+	mockUtil.gestureTarget = { id: "obj-1", kind: "rect" };
 	vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback): number => {
 		rafCallbacks.push(cb);
 		return rafCallbacks.length;
@@ -187,7 +187,7 @@ describe("GestureRecognizer pinch entry", () => {
 	});
 
 	it("a second touch during a drag the policy allows closes it with dragEnd and enters the pinch", () => {
-		mockUtil.kindAndId = { id: "canvas", kind: "canvas" };
+		mockUtil.gestureTarget = { id: "canvas", kind: "canvas" };
 		const shouldPinchFromDrag = vi.fn(() => true);
 		const { dispatch, types, events } = setup({ shouldPinchFromDrag });
 
@@ -216,7 +216,7 @@ describe("GestureRecognizer pinch entry", () => {
 	});
 
 	it("a second touch during a drag the policy rejects is ignored (no pinch, no dragEnd)", () => {
-		mockUtil.kindAndId = { id: "canvas", kind: "canvas" };
+		mockUtil.gestureTarget = { id: "canvas", kind: "canvas" };
 		const { dispatch, types } = setup({ shouldPinchFromDrag: () => false });
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerId: 1 }));

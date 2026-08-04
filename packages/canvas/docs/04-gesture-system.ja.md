@@ -104,7 +104,7 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 ### `data-kind` / `data-id` / `data-part`
 
-ジェスチャーの**対象を識別する**属性。`getKindAndId` が `closest("[data-kind]")` で最も近い要素を探し、
+ジェスチャーの**対象を識別する**属性。`getGestureTarget` が `closest("[data-kind]")` で最も近い要素を探し、
 `{ kind, id, part }` を解決してイベントの `targetKind` / `targetId` / `targetPart` に載せる。`part` はその要素
 **自身または配下**の最も近い `[data-part]` から読む。これにより、ヒット領域を複数描く図形でも
 `[data-kind]` 要素は 1 つに保てる（1 オブジェクト = 1 つの `data-kind="object"` 要素。e2e の

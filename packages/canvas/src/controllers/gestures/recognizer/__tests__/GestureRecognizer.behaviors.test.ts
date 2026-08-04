@@ -21,15 +21,15 @@ import type * as RecognizerUtils from "../utils";
  *   - origin suppression via isGestureOptedOut
  *   - lifecycle of cancelPendingGesture (abort, capture release, non-terminal resume)
  *
- * DOM-dependent utilities are replaced with deterministic stubs. getKindAndId's return value
+ * DOM-dependent utilities are replaced with deterministic stubs. getGestureTarget's return value
  * (= presence of targetId/targetKind) is switched per test via mockUtil.
  */
 
 const mockUtil = vi.hoisted(() => ({
-	kindAndId: { id: "obj-1", kind: "rect" } as {
-		id: string;
-		kind: string;
-	} | null,
+	gestureTarget: {
+		id: "obj-1",
+		kind: "rect",
+	} as RecognizerUtils.GestureTarget | null,
 	optedOut: false,
 	inputValue: undefined as string | undefined,
 	// world = client / zoom, letting tests verify screen-based decisions under zoom
@@ -47,7 +47,7 @@ vi.mock("../utils", async (importActual) => {
 			x: clientX / mockUtil.zoom,
 			y: clientY / mockUtil.zoom,
 		}),
-		getKindAndId: () => mockUtil.kindAndId,
+		getGestureTarget: () => mockUtil.gestureTarget,
 		createGetHovered: () => () => [],
 		getInputValue: () => mockUtil.inputValue,
 		readInputValue: () => mockUtil.inputValue,
@@ -72,7 +72,7 @@ const flushRaf = (): void => {
 beforeEach(() => {
 	rafCallbacks = [];
 	cancelledIds = [];
-	mockUtil.kindAndId = { id: "obj-1", kind: "rect" };
+	mockUtil.gestureTarget = { id: "obj-1", kind: "rect" };
 	mockUtil.optedOut = false;
 	mockUtil.inputValue = undefined;
 	mockUtil.zoom = 1;
@@ -246,12 +246,12 @@ describe("GestureRecognizer click / doubleClick", () => {
 	it("a doubleClick even when the target differs, as long as time and position match (OS convention; a control appearing under the cursor after the first click must not swallow the pair)", () => {
 		const { dispatch, types, events } = setup();
 
-		mockUtil.kindAndId = { id: "obj-1", kind: "connector" };
+		mockUtil.gestureTarget = { id: "obj-1", kind: "connector" };
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		dispatch(makeEvent("pointerup", 0, 0, 1000));
 		flushRaf();
 
-		mockUtil.kindAndId = { id: "obj-1", kind: "control" };
+		mockUtil.gestureTarget = { id: "obj-1", kind: "control" };
 		dispatch(makeEvent("pointerdown", 0, 0, 1100));
 		dispatch(makeEvent("pointerup", 0, 0, 1100));
 		flushRaf();
@@ -278,7 +278,7 @@ describe("GestureRecognizer click / doubleClick", () => {
 		// Regression: previously "no recent click recorded" was represented as undefined, so when
 		// targetId was undefined (background) and timeStamp < threshold, the first click turned into
 		// a doubleClick. Separating lastClick=null (no baseline recorded) ensures the first is always a click.
-		mockUtil.kindAndId = null;
+		mockUtil.gestureTarget = null;
 		dispatch(makeEvent("pointerdown", 0, 0, 100));
 		dispatch(makeEvent("pointerup", 0, 0, 100));
 		flushRaf();
@@ -289,7 +289,7 @@ describe("GestureRecognizer click / doubleClick", () => {
 	it("the third tap right after a doubleClick is a click even on the background (baseline reset)", () => {
 		const { dispatch, events } = setup();
 
-		mockUtil.kindAndId = null;
+		mockUtil.gestureTarget = null;
 		for (let i = 0; i < 3; i++) {
 			const t = 1000 + i * 100;
 			dispatch(makeEvent("pointerdown", 0, 0, t));
@@ -452,7 +452,7 @@ describe("GestureRecognizer propagated properties (mods / button / targetKind)",
 	it("targetKind is propagated to pressed", () => {
 		const { dispatch, events } = setup();
 
-		mockUtil.kindAndId = { id: "node-7", kind: "ellipse" };
+		mockUtil.gestureTarget = { id: "node-7", kind: "ellipse" };
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		flushRaf();
 
@@ -664,7 +664,7 @@ describe("GestureRecognizer doubleClick distance threshold (wiring)", () => {
 	it("even on the background (targetId undefined), a close distance produces a doubleClick", () => {
 		const { dispatch, events } = setup();
 
-		mockUtil.kindAndId = null;
+		mockUtil.gestureTarget = null;
 		dispatch(makeEvent("pointerdown", 200, 200, 1000));
 		dispatch(makeEvent("pointerup", 200, 200, 1000));
 		flushRaf();
@@ -693,7 +693,7 @@ describe("GestureRecognizer doubleClick distance threshold (wiring)", () => {
 		const { dispatch, events } = setup();
 
 		// Both targetIds are undefined, but the positions are far apart, so the distance check yields separate clicks.
-		mockUtil.kindAndId = null;
+		mockUtil.gestureTarget = null;
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		dispatch(makeEvent("pointerup", 0, 0, 1000));
 		flushRaf();

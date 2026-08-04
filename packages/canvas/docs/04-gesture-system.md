@@ -107,7 +107,7 @@ are located in `controllers/gestures/recognizer/utils/`.
 
 ### `data-kind` / `data-id` / `data-part`
 
-Attributes that **identify the target** of a gesture. `getKindAndId` finds the nearest element via `closest("[data-kind]")`,
+Attributes that **identify the target** of a gesture. `getGestureTarget` finds the nearest element via `closest("[data-kind]")`,
 resolves `{ kind, id, part }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart`. `part` is read from the
 nearest `[data-part]` **at or inside** that element, so a shape that draws several hit regions can mark each one while still
 exposing a single `[data-kind]` element (one object = one `data-kind="object"` element, which e2e's `captureObjects` counts on).

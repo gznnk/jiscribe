@@ -14,7 +14,7 @@ import type { ContainerState } from "../state/ContainerState";
  * resolution, header-band text via calcContainerTextRegion, memo) lives in
  * createFrameObject; here we draw the box as a header band + pass-through body
  * + border. The wrapping <g> carries the object's data-kind/data-id, so a click
- * on any capturing sub-part resolves to this container (getKindAndId).
+ * on any capturing sub-part resolves to this container (getGestureTarget).
  */
 export const Container = createFrameObject<ContainerState>((state, shape) => {
 	const {

@@ -42,7 +42,7 @@ vi.mock("../utils", () => ({
 		x: sim.viewport.minX + clientX / sim.viewport.zoom,
 		y: sim.viewport.minY + clientY / sim.viewport.zoom,
 	}),
-	getKindAndId: () => ({ id: "obj-1", kind: "rect" }),
+	getGestureTarget: () => ({ id: "obj-1", kind: "rect" }),
 	createGetHovered: () => () => [],
 	getInputValue: () => undefined,
 	readInputValue: () => undefined,

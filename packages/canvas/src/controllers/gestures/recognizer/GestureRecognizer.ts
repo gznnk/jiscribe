@@ -22,8 +22,8 @@ import {
 	calculateScrollDelta,
 	createGetHovered,
 	detectEdgeProximity,
+	getGestureTarget,
 	getInputValue,
-	getKindAndId,
 	getSvgPoint,
 	isDoubleClick,
 	isGestureOptedOut,
@@ -257,7 +257,7 @@ export class GestureRecognizer {
 		// Only reached outside a drag; toWheelEvent turns an in-drag wheel into pointermove.
 		if (e.type === "wheel") {
 			// Needed only as the hover-exclusion key — the gesture's target is fixed to canvas.
-			const target = getKindAndId(e.target as Element);
+			const target = getGestureTarget(e.target as Element);
 			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
@@ -393,7 +393,7 @@ export class GestureRecognizer {
 				return;
 			}
 
-			const target = getKindAndId(e.target as Element);
+			const target = getGestureTarget(e.target as Element);
 			const targetId = target?.id;
 			const targetKind = target?.kind;
 			const targetPart = target?.part;

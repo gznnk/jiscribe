@@ -5,7 +5,7 @@ import styled from "@emotion/styled";
  * click on the interior falls through to whatever object sits inside (or the
  * canvas) — the container is selectable only by its HEADER band and its OUTLINE
  * stroke. This needs no change to the hit-testing path: pass-through is purely
- * these pointer-events rules (getKindAndId walks to the wrapping <g data-kind>).
+ * these pointer-events rules (getGestureTarget walks to the wrapping <g data-kind>).
  */
 
 /** Optional background tint. `pointer-events: none` = never steals interior clicks. */

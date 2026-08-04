@@ -18,7 +18,7 @@ vi.mock("../utils", async (importActual) => {
 			x: clientX,
 			y: clientY,
 		}),
-		getKindAndId: () => ({ id: "obj-1", kind: "rect" }),
+		getGestureTarget: () => ({ id: "obj-1", kind: "rect" }),
 		createGetHovered: () => () => [],
 		getInputValue: () => undefined,
 		readInputValue: () => undefined,

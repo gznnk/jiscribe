@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { getKindAndId } from "../getKindAndId";
+import { getGestureTarget } from "../getGestureTarget";
 
 const makeEl = (kind?: string, id?: string, part?: string): Element => {
 	const attrs: Record<string, string | undefined> = {
@@ -57,29 +57,29 @@ const makeElNoMatch = (): Element =>
 		getAttribute: () => null,
 	}) as unknown as Element;
 
-describe("getKindAndId", () => {
+describe("getGestureTarget", () => {
 	it("returns null when there is no element with [data-kind]", () => {
-		expect(getKindAndId(makeElNoMatch())).toBeNull();
+		expect(getGestureTarget(makeElNoMatch())).toBeNull();
 	});
 
 	it("returns null when [data-kind] is present but data-id is missing", () => {
 		const el = makeEl("rect", undefined);
-		expect(getKindAndId(el)).toBeNull();
+		expect(getGestureTarget(el)).toBeNull();
 	});
 
 	it("returns { kind, id } when both [data-kind] and data-id are present", () => {
 		const el = makeEl("rect", "obj-1");
-		expect(getKindAndId(el)).toEqual({ kind: "rect", id: "obj-1" });
+		expect(getGestureTarget(el)).toEqual({ kind: "rect", id: "obj-1" });
 	});
 
 	it("returns the correct values when kind='control' and id='ctrl-2'", () => {
 		const el = makeEl("control", "ctrl-2");
-		expect(getKindAndId(el)).toEqual({ kind: "control", id: "ctrl-2" });
+		expect(getGestureTarget(el)).toEqual({ kind: "control", id: "ctrl-2" });
 	});
 
 	it("returns part when the element also carries data-part", () => {
 		const el = makeEl("connector", "c-1", "label");
-		expect(getKindAndId(el)).toEqual({
+		expect(getGestureTarget(el)).toEqual({
 			kind: "connector",
 			id: "c-1",
 			part: "label",
@@ -90,7 +90,7 @@ describe("getKindAndId", () => {
 		// A compartmented shape (record) keeps data-kind on a single element and puts
 		// data-part on the per-compartment hit element.
 		const { partEl } = makeNestedPartEl("object", "obj-1", "rows");
-		expect(getKindAndId(partEl)).toEqual({
+		expect(getGestureTarget(partEl)).toEqual({
 			kind: "object",
 			id: "obj-1",
 			part: "rows",
@@ -101,6 +101,6 @@ describe("getKindAndId", () => {
 		const { partEl } = makeNestedPartEl("object", "obj-1", "rows", {
 			partOutsideKind: true,
 		});
-		expect(getKindAndId(partEl)).toEqual({ kind: "object", id: "obj-1" });
+		expect(getGestureTarget(partEl)).toEqual({ kind: "object", id: "obj-1" });
 	});
 });
