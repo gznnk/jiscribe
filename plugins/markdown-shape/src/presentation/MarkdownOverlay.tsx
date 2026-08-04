@@ -1,5 +1,5 @@
-import type { FrameTextOverlayProps } from "@workspace/canvas/unstable";
-import { TextOverlayFrame } from "@workspace/canvas/unstable";
+import type { FrameTextOverlayProps } from "@workspace/canvas-sdk";
+import { TextOverlayFrame } from "@workspace/canvas-sdk";
 import { renderMarkdown } from "@workspace/markdown";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef } from "react";

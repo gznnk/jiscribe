@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildGearFigure } from "./buildGearFigure";
 import type { GearState } from "../../state/gear/GearState";

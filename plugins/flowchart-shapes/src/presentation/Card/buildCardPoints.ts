@@ -1,7 +1,7 @@
 import {
 	formatPolygonPoints,
 	centeredPolygonOutline,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 import type { Point } from "@workspace/geometry";
 
 import { CARD_CUT_RATIO } from "../../schema/card/CardDoc";

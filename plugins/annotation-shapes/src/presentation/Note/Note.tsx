@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildNoteFigure } from "./buildNoteFigure";
 import { NoteBodyPath, NoteFoldPath } from "./NoteStyled";

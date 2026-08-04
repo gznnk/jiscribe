@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { StadiumElement } from "./StadiumStyled";
 import type { StadiumState } from "../../state/stadium/StadiumState";

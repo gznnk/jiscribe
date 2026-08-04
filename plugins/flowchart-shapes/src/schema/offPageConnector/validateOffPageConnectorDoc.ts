@@ -1,8 +1,0 @@
-import type { ObjectDocValidateFn } from "@workspace/canvas/unstable-doc";
-import { createFrameDocValidator } from "@workspace/canvas/unstable-doc";
-
-import { OffPageConnectorFeatures } from "./OffPageConnectorDoc";
-
-/** Validates an OffPageConnectorDoc (Frame-family shared logic generated from features). */
-export const validateOffPageConnectorDoc: ObjectDocValidateFn =
-	createFrameDocValidator(OffPageConnectorFeatures);

@@ -1,8 +1,5 @@
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import {
-	AUTO_COLOR,
-	DEFAULT_FONT_FAMILY,
-} from "@workspace/canvas/unstable-doc";
+import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@workspace/canvas-sdk/doc";
 
 /**
  * A browser window (a frame with a title bar carrying three buttons), used for web UIs and screens.

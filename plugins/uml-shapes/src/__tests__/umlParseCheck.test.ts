@@ -1,13 +1,9 @@
-import { createCanvasParser } from "@workspace/canvas/doc";
-import { describe, expect, it } from "vitest";
+import type { ParseCheckDoc } from "@workspace/canvas-sdk/testing";
+import { createParseCheckSuite } from "@workspace/canvas-sdk/testing";
 
 import { umlDocPlugin } from "../doc";
 
-// Parse through a plugin-aware parser so the record shape is known to parse-time
-// structure/semantic validation. The headless `umlDocPlugin` carries no React deps.
-const parser = createCanvasParser({ plugins: [umlDocPlugin] });
-
-const makeDoc = (text: unknown) => ({
+const makeDoc = (text: unknown): ParseCheckDoc => ({
 	version: 1,
 	root: [
 		{
@@ -38,24 +34,22 @@ const makeDoc = (text: unknown) => ({
 	],
 });
 
-describe("record shape", () => {
-	it("parses the keyed text and accepts connector endpoints on it", () => {
-		const result = parser.parse(
-			JSON.stringify(
-				makeDoc({
-					name: { text: "User" },
-					attributes: { text: ["id: string", "name"] },
-					operations: { text: ["save()"] },
-				}),
-			),
-		);
-		expect("diagnostics" in result ? result.diagnostics : []).toEqual([]);
-		expect(result.kind).toBe("ok");
-	});
-
-	it("diagnoses the single-body form, which a record does not take", () => {
-		const result = parser.parse(JSON.stringify(makeDoc("User")));
-		const diagnostics = "diagnostics" in result ? result.diagnostics : [];
-		expect(diagnostics.map((entry) => entry.path)).toContain("root[0].text");
-	});
+// Parse through a plugin-aware parser so the record shape is known to parse-time
+// structure/semantic validation. The headless `umlDocPlugin` carries no React deps.
+createParseCheckSuite({
+	name: "record shape",
+	plugin: umlDocPlugin,
+	// The keyed text form, which is the only one a record takes.
+	sampleDoc: makeDoc({
+		name: { text: "User" },
+		attributes: { text: ["id: string", "name"] },
+		operations: { text: ["save()"] },
+	}),
+	rejects: [
+		{
+			name: "diagnoses the single-body form, which a record does not take",
+			doc: makeDoc("User"),
+			diagnosticPaths: ["root[0].text"],
+		},
+	],
 });

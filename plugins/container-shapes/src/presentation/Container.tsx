@@ -1,7 +1,4 @@
-import {
-	createFrameObject,
-	resolveAutoColor,
-} from "@workspace/canvas/unstable";
+import { createFrameObject, resolveAutoColor } from "@workspace/canvas-sdk";
 
 import { calcContainerHeaderHeight } from "./calcContainerHeaderHeight";
 import {

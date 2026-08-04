@@ -1,7 +1,7 @@
 import { isString } from "@workspace/basic-validators";
 import type { TextSlot } from "@workspace/canvas/doc";
-import { calcVisualLineCount } from "@workspace/canvas/unstable";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
+import { calcVisualLineCount } from "@workspace/canvas-sdk";
+import { TEXT_LINE_HEIGHT } from "@workspace/canvas-sdk/doc";
 import type { Dimensions, Rect } from "@workspace/geometry";
 
 import {

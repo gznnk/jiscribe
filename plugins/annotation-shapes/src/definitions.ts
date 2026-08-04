@@ -1,5 +1,8 @@
 import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { createFrameBehavior } from "@workspace/canvas/unstable";
+import {
+	createFrameObjectDefinition,
+	createTypeStencils,
+} from "@workspace/canvas-sdk";
 
 import {
 	CalloutTailTipControl,
@@ -33,34 +36,26 @@ import type { BraceDoc } from "./schema/brace/BraceDoc";
 import type { BracketDoc } from "./schema/bracket/BracketDoc";
 import type { BracketWithStemDoc } from "./schema/bracketWithStem/BracketWithStemDoc";
 import type { CalloutDoc } from "./schema/callout/CalloutDoc";
+import { isCalloutTail } from "./schema/callout/CalloutDoc";
 import type { NoteDoc } from "./schema/note/NoteDoc";
 import {
 	GROUP_MARKER_DIRECTION_STYLE_PROPERTY,
 	GROUP_MARKER_TIP_STYLE_PROPERTIES,
 } from "./schema/shared/GroupMarkerFields";
-import { braceToDoc, braceToState } from "./state/brace/BraceMapper";
 import type { BraceState } from "./state/brace/BraceState";
-import { isValidBraceState } from "./state/brace/validateBraceState";
-import { bracketToDoc, bracketToState } from "./state/bracket/BracketMapper";
 import type { BracketState } from "./state/bracket/BracketState";
-import { isValidBracketState } from "./state/bracket/validateBracketState";
-import {
-	bracketWithStemToDoc,
-	bracketWithStemToState,
-} from "./state/bracketWithStem/BracketWithStemMapper";
 import type { BracketWithStemState } from "./state/bracketWithStem/BracketWithStemState";
-import { isValidBracketWithStemState } from "./state/bracketWithStem/validateBracketWithStemState";
-import { calloutToDoc, calloutToState } from "./state/callout/CalloutMapper";
 import type { CalloutState } from "./state/callout/CalloutState";
-import { isValidCalloutState } from "./state/callout/validateCalloutState";
-import { noteToDoc, noteToState } from "./state/note/NoteMapper";
 import type { NoteState } from "./state/note/NoteState";
-import { isValidNoteState } from "./state/note/validateNoteState";
-import { BraceStencils } from "./stencil/BraceStencils";
-import { BracketStencils } from "./stencil/BracketStencils";
-import { BracketWithStemStencils } from "./stencil/BracketWithStemStencils";
-import { CalloutStencils } from "./stencil/CalloutStencils";
-import { NoteStencils } from "./stencil/NoteStencils";
+import {
+	isValidGroupMarkerDirection,
+	isValidGroupMarkerTipFields,
+} from "./state/shared/isValidGroupMarkerFields";
+import { BraceIcon } from "./stencil/BraceIcon";
+import { BracketIcon } from "./stencil/BracketIcon";
+import { BracketWithStemIcon } from "./stencil/BracketWithStemIcon";
+import { CalloutIcon } from "./stencil/CalloutIcon";
+import { NoteIcon } from "./stencil/NoteIcon";
 
 /**
  * The label hangs off the tip, outside the geometry box, so `visualBounds` is
@@ -72,39 +67,49 @@ import { NoteStencils } from "./stencil/NoteStencils";
  * so neither needs a section (they stay reachable through `onPropertyUpdate`
  * via the extra style properties).
  */
-export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> = {
-	...braceDocDefinition,
-	mapper: { toDoc: braceToDoc, toState: braceToState },
-	stateValidator: isValidBraceState,
-	component: Brace,
-	textRegion: calcGroupMarkerTextRegion,
-	visualBounds: calcGroupMarkerVisualBounds,
-	behavior: createFrameBehavior<BraceState>(),
-	selectionControls: [
-		{
-			name: "tip",
-			Component: GroupMarkerTipControl,
-			handle: handleGroupMarkerTip,
-		},
-	],
-	extraStyleProperties: GROUP_MARKER_TIP_STYLE_PROPERTIES,
-	stencils: BraceStencils,
-};
+export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
+	createFrameObjectDefinition<BraceDoc, BraceState>({
+		doc: braceDocDefinition,
+		component: Brace,
+		textRegion: calcGroupMarkerTextRegion,
+		visualBounds: calcGroupMarkerVisualBounds,
+		extraKeys: ["direction", "tipPosition"],
+		isExtraStateValid: isValidGroupMarkerTipFields,
+		selectionControls: [
+			{
+				name: "tip",
+				Component: GroupMarkerTipControl,
+				handle: handleGroupMarkerTip,
+			},
+		],
+		extraStyleProperties: GROUP_MARKER_TIP_STYLE_PROPERTIES,
+		/**
+		 * One stencil, not one per direction: drag-drawing already picks the axis from
+		 * the drawn proportions (createGroupMarkerObjectFactory), so four palette entries would be
+		 * four ways to reach the same shape.
+		 */
+		stencils: createTypeStencils({
+			objectType: "brace",
+			label: { en: "Brace", ja: "波括弧" },
+			icon: BraceIcon,
+		}),
+	});
 
 /**
  * Same as the brace, except that the tip does not move: the handle only ever
  * re-attaches the bracket to another edge (handleGroupMarkerDirection), and
- * `tipPosition` is neither declared nor styleable.
+ * `tipPosition` is neither declared nor styleable. `extraKeys` is the mapper's
+ * allow-list, so a `tipPosition` written onto a bracket doc is dropped rather
+ * than travelling as dead state.
  */
 export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
-	{
-		...bracketDocDefinition,
-		mapper: { toDoc: bracketToDoc, toState: bracketToState },
-		stateValidator: isValidBracketState,
+	createFrameObjectDefinition<BracketDoc, BracketState>({
+		doc: bracketDocDefinition,
 		component: Bracket,
 		textRegion: calcGroupMarkerTextRegion,
 		visualBounds: calcGroupMarkerVisualBounds,
-		behavior: createFrameBehavior<BracketState>(),
+		extraKeys: ["direction"],
+		isExtraStateValid: isValidGroupMarkerDirection,
 		selectionControls: [
 			{
 				name: "tip",
@@ -113,21 +118,25 @@ export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 			},
 		],
 		extraStyleProperties: GROUP_MARKER_DIRECTION_STYLE_PROPERTY,
-		stencils: BracketStencils,
-	};
+		/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
+		stencils: createTypeStencils({
+			objectType: "bracket",
+			label: { en: "Bracket", ja: "角括弧" },
+			icon: BracketIcon,
+		}),
+	});
 
 /** Same as the brace, with the stem's end standing in for the brace's cusp. */
 export const bracketWithStemDefinition: ObjectTypeDefinition<
 	BracketWithStemDoc,
 	BracketWithStemState
-> = {
-	...bracketWithStemDocDefinition,
-	mapper: { toDoc: bracketWithStemToDoc, toState: bracketWithStemToState },
-	stateValidator: isValidBracketWithStemState,
+> = createFrameObjectDefinition<BracketWithStemDoc, BracketWithStemState>({
+	doc: bracketWithStemDocDefinition,
 	component: BracketWithStem,
 	textRegion: calcGroupMarkerTextRegion,
 	visualBounds: calcGroupMarkerVisualBounds,
-	behavior: createFrameBehavior<BracketWithStemState>(),
+	extraKeys: ["direction", "tipPosition"],
+	isExtraStateValid: isValidGroupMarkerTipFields,
 	selectionControls: [
 		{
 			name: "tip",
@@ -136,8 +145,13 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 		},
 	],
 	extraStyleProperties: GROUP_MARKER_TIP_STYLE_PROPERTIES,
-	stencils: BracketWithStemStencils,
-};
+	/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
+	stencils: createTypeStencils({
+		objectType: "bracketWithStem",
+		label: { en: "Bracket with stem", ja: "角括弧（枝つき）" },
+		icon: BracketWithStemIcon,
+	}),
+});
 
 /**
  * The one definition here that needs a `geometryKey`: the tail tip handle moves
@@ -148,15 +162,15 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
  * the tail band leaves the body edge short of the bounding box.
  */
 export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
-	{
-		...calloutDocDefinition,
-		mapper: { toDoc: calloutToDoc, toState: calloutToState },
-		stateValidator: isValidCalloutState,
+	createFrameObjectDefinition<CalloutDoc, CalloutState>({
+		doc: calloutDocDefinition,
 		component: Callout,
 		textRegion: calcCalloutTextRegion,
 		outline: calloutOutline,
 		geometryKey: calloutGeometryKey,
-		behavior: createFrameBehavior<CalloutState>(),
+		extraKeys: ["tail"],
+		isExtraStateValid: (state) =>
+			state.tail === undefined || isCalloutTail(state.tail),
 		selectionControls: [
 			{
 				name: "tailTip",
@@ -164,8 +178,12 @@ export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 				handle: handleCalloutTailTip,
 			},
 		],
-		stencils: CalloutStencils,
-	};
+		stencils: createTypeStencils({
+			objectType: "callout",
+			label: { en: "Callout", ja: "吹き出し" },
+			icon: CalloutIcon,
+		}),
+	});
 
 /**
  * Like the callout, and unlike the group markers, the note takes its text inside
@@ -174,13 +192,15 @@ export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
  * the bounding box, so without it a connector aimed at the note's center would
  * stop in mid-air beside the fold.
  */
-export const noteDefinition: ObjectTypeDefinition<NoteDoc, NoteState> = {
-	...noteDocDefinition,
-	mapper: { toDoc: noteToDoc, toState: noteToState },
-	stateValidator: isValidNoteState,
-	component: Note,
-	textRegion: calcNoteTextRegion,
-	outline: noteOutline,
-	behavior: createFrameBehavior<NoteState>(),
-	stencils: NoteStencils,
-};
+export const noteDefinition: ObjectTypeDefinition<NoteDoc, NoteState> =
+	createFrameObjectDefinition<NoteDoc, NoteState>({
+		doc: noteDocDefinition,
+		component: Note,
+		textRegion: calcNoteTextRegion,
+		outline: noteOutline,
+		stencils: createTypeStencils({
+			objectType: "note",
+			label: { en: "Note", ja: "ノート" },
+			icon: NoteIcon,
+		}),
+	});

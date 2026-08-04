@@ -1,6 +1,6 @@
 import type { TextSlot } from "@workspace/canvas/doc";
-import type { FrameShapeProps } from "@workspace/canvas/unstable";
-import { BelowLabelHitArea } from "@workspace/canvas/unstable";
+import type { FrameShapeProps } from "@workspace/canvas-sdk";
+import { BelowLabelHitArea } from "@workspace/canvas-sdk";
 import type { Dimensions } from "@workspace/geometry";
 
 import { Pictogram } from "./Pictogram";

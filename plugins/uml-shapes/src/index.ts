@@ -1,16 +1,17 @@
 // UML 系図形の外部パッケージ。最初の図形は record（区画付きボックス）で、
 // 「1 図形に複数のテキストスロット」機構が公開 API だけで成立することの実証を兼ねる
 // （スロット集合の正本は state.text のキー、領域は textRegion calculator が slotId から返す）。
-// schema/** の headless 部品 (createFrameObjectFactory / createFrameDocValidator /
-// AUTO_COLOR / DEFAULT_FONT_FAMILY / TEXT_LINE_HEIGHT) は `@workspace/canvas/unstable-doc`、
-// presentation / state 部品 (createFrameObject / TextOverlay / createFrameBehavior /
-// createFrameMapper / createFrameStateValidator) は `@workspace/canvas/unstable` 経由。
+// ObjectDocDefinition は createFrameObjectDoc (`@workspace/canvas-sdk/doc`) が
+// features/defaults から導出するため RecordObjectFactory / validateRecordDoc は
+// 持たない。ObjectTypeDefinition は createFrameObjectDefinition を使わず直書き:
+// mapper がスロット正規形を被せた派生版のため (RecordMapper 参照)。schema/** の
+// headless 部品 (validateTextSlotStyleFields / AUTO_COLOR / DEFAULT_FONT_FAMILY /
+// TEXT_LINE_HEIGHT) は `@workspace/canvas-sdk/doc`、presentation / state 部品
+// (createFrameObject / TextOverlay / createFrameBehavior / createFrameMapper /
+// createFrameStateValidator) は `@workspace/canvas-sdk` 経由。
 // headless な parse 入口は ./doc (umlDocPlugin)。
 // (docs/05_extensibility/plugin-architecture-requirements.md 参照)。
 export * from "./schema/RecordDoc";
-export { RecordObjectFactory } from "./schema/RecordObjectFactory";
-export { validateRecordDoc } from "./schema/validateRecordDoc";
-
 export * from "./state/RecordState";
 export { recordToDoc, recordToState } from "./state/RecordMapper";
 export { isValidRecordState } from "./state/validateRecordState";

@@ -2,7 +2,7 @@ import type { SelectionControlProps } from "@workspace/canvas";
 import {
 	getResizeCursorForRotation,
 	SelectionControlPill,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,

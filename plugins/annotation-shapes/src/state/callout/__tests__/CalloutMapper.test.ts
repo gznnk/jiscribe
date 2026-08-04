@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
 
+import { calloutDefinition } from "../../../definitions";
 import type { CalloutDoc } from "../../../schema/callout/CalloutDoc";
-import { calloutToDoc, calloutToState } from "../CalloutMapper";
 import type { CalloutState } from "../CalloutState";
+
+const { toDoc: calloutToDoc, toState: calloutToState } =
+	calloutDefinition.mapper;
 
 /**
  * Callout is the only builtin that passes `extraKeys` to createFrameMapper, so

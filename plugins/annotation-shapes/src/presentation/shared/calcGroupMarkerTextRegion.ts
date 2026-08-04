@@ -1,13 +1,10 @@
 import type { ObjectTextRegionCalculator } from "@workspace/canvas";
 import type { TextSlot } from "@workspace/canvas/doc";
-import {
-	calcVisualLineCount,
-	measureTextWidth,
-} from "@workspace/canvas/unstable";
+import { calcVisualLineCount, measureTextWidth } from "@workspace/canvas-sdk";
 import {
 	BELOW_LABEL_STYLE_DEFAULTS,
 	TEXT_LINE_HEIGHT,
-} from "@workspace/canvas/unstable-doc";
+} from "@workspace/canvas-sdk/doc";
 import type { Dimensions, Rect } from "@workspace/geometry";
 
 import {

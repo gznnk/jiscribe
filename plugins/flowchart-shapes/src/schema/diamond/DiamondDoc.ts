@@ -1,8 +1,5 @@
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import {
-	DEFAULT_FONT_FAMILY,
-	AUTO_COLOR,
-} from "@workspace/canvas/unstable-doc";
+import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas-sdk/doc";
 
 /**
  * A diamond used for conditional branches in flowcharts.
@@ -12,6 +9,12 @@ import {
  * entire bounding box), and connector outline connections with the same mechanism as Rect.
  * A diamond needs no rounded corners, so it has no radius.
  */
+/**
+ * Inset that lands the text region's corners on the diamond edges: a centered
+ * rect of half the width and half the height (its corners satisfy x/a + y/b = 1).
+ */
+export const DIAMOND_INSET = 0.25;
+
 export const DiamondFeatures = {
 	type: "diamond",
 	geometry: "rect",

@@ -2,7 +2,7 @@ import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
 import {
 	AUTO_COLOR,
 	BELOW_LABEL_STYLE_DEFAULTS,
-} from "@workspace/canvas/unstable-doc";
+} from "@workspace/canvas-sdk/doc";
 
 import type { GroupMarkerDirectionField } from "../shared/GroupMarkerFields";
 import { GROUP_MARKER_DIRECTION_DEFAULT } from "../shared/GroupMarkerFields";

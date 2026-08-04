@@ -1,8 +1,5 @@
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import {
-	AUTO_COLOR,
-	DEFAULT_FONT_FAMILY,
-} from "@workspace/canvas/unstable-doc";
+import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@workspace/canvas-sdk/doc";
 
 /**
  * A folder with a tab on its top-left corner, used for directories and for grouping.

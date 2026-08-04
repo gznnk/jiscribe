@@ -18,6 +18,7 @@
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
 		"@workspace/canvas": "workspace:*",
+		"@workspace/canvas-sdk": "workspace:*",
 		"react": "catalog:"
 	},
 	"devDependencies": {
@@ -25,6 +26,7 @@
 		"@emotion/styled": "catalog:",
 		"@types/react": "catalog:",
 		"@workspace/canvas": "workspace:*",
+		"@workspace/canvas-sdk": "workspace:*",
 		"react": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

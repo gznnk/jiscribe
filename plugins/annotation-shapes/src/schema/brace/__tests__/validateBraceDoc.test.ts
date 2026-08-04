@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { braceDocDefinition } from "../../../doc";
 import { BRACE_DOC_DEFAULTS } from "../BraceDoc";
-import { BraceObjectFactory } from "../BraceObjectFactory";
-import { validateBraceDoc } from "../validateBraceDoc";
+
+const validateBraceDoc = braceDocDefinition.validateDoc;
+// A group marker always drag-draws (createGroupMarkerObjectFactory), and its
+// factory is what braceDocDefinition carries.
+const createBraceDocFromBounds =
+	braceDocDefinition.factory!.createDocFromBounds!;
 
 const baseDoc = { ...BRACE_DOC_DEFAULTS, id: "brace-1" } as Record<
 	string,
@@ -40,21 +45,21 @@ describe("validateBraceDoc", () => {
 
 describe("BraceObjectFactory", () => {
 	it("draws a tall drag as the typographic brace", () => {
-		const doc = BraceObjectFactory.createDocFromBounds(0, 0, 24, 160) as {
+		const doc = createBraceDocFromBounds(0, 0, 24, 160) as {
 			direction: string;
 		} | null;
 		expect(doc?.direction).toBe("left");
 	});
 
 	it("draws a wide drag along the horizontal axis instead", () => {
-		const doc = BraceObjectFactory.createDocFromBounds(0, 0, 300, 30) as {
+		const doc = createBraceDocFromBounds(0, 0, 300, 30) as {
 			direction: string;
 		} | null;
 		expect(doc?.direction).toBe("down");
 	});
 
 	it("keeps an explicit direction override", () => {
-		const doc = BraceObjectFactory.createDocFromBounds(0, 0, 300, 30, {
+		const doc = createBraceDocFromBounds(0, 0, 300, 30, {
 			direction: "up",
 		}) as { direction: string } | null;
 		expect(doc?.direction).toBe("up");

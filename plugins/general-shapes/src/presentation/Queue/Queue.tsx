@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildQueueFigure } from "./buildQueueFigure";
 import type { QueueState } from "../../state/queue/QueueState";

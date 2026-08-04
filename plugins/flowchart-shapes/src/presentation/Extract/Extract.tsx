@@ -1,10 +1,10 @@
 import {
 	BelowLabelHitArea,
+	ShapeBodyPolygon,
 	createFrameObject,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 
 import { buildExtractPoints } from "./buildExtractPoints";
-import { ExtractElement } from "./ExtractStyled";
 import type { ExtractState } from "../../state/extract/ExtractState";
 
 /**
@@ -21,7 +21,7 @@ export const Extract = createFrameObject<ExtractState>((state, shape) => (
 		transform={shape.transform}
 	>
 		<BelowLabelHitArea state={state} />
-		<ExtractElement
+		<ShapeBodyPolygon
 			strokeColor={shape.strokeColor}
 			fillColor={shape.fillColor}
 			strokeWidth={shape.strokeWidth}

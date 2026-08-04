@@ -2,8 +2,10 @@ import type { ObjectTypeDefinition } from "@workspace/canvas";
 import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
-	createFrameBehavior,
-} from "@workspace/canvas/unstable";
+	createFrameObjectDefinition,
+	createInsetTextRegion,
+	createTypeStencils,
+} from "@workspace/canvas-sdk";
 
 import {
 	cardDocDefinition,
@@ -27,40 +29,20 @@ import {
 } from "./doc";
 import { Card, calcCardTextRegion, cardOutline } from "./presentation/Card";
 import { Cross, crossOutline } from "./presentation/Cross";
-import { Db, calcDbTextRegion, dbOutline } from "./presentation/Db";
+import { Db, dbOutline } from "./presentation/Db";
 import { Delay, calcDelayTextRegion, delayOutline } from "./presentation/Delay";
-import {
-	Diamond,
-	calcDiamondTextRegion,
-	diamondOutline,
-} from "./presentation/Diamond";
-import {
-	Display,
-	calcDisplayTextRegion,
-	displayOutline,
-} from "./presentation/Display";
-import {
-	Document,
-	calcDocumentTextRegion,
-	documentOutline,
-} from "./presentation/Document";
+import { Diamond, diamondOutline } from "./presentation/Diamond";
+import { Display, displayOutline } from "./presentation/Display";
+import { Document, documentOutline } from "./presentation/Document";
 import { Extract, extractOutline } from "./presentation/Extract";
-import {
-	Hexagon,
-	calcHexagonTextRegion,
-	hexagonOutline,
-} from "./presentation/Hexagon";
+import { Hexagon, hexagonOutline } from "./presentation/Hexagon";
 import {
 	LoopLimit,
 	calcLoopLimitAnchorRegion,
 	calcLoopLimitTextRegion,
 	loopLimitOutline,
 } from "./presentation/LoopLimit";
-import {
-	ManualInput,
-	calcManualInputTextRegion,
-	manualInputOutline,
-} from "./presentation/ManualInput";
+import { ManualInput, manualInputOutline } from "./presentation/ManualInput";
 import {
 	MultiDocument,
 	calcMultiDocumentTextRegion,
@@ -69,12 +51,10 @@ import {
 import {
 	OffPageConnector,
 	calcOffPageConnectorAnchorRegion,
-	calcOffPageConnectorTextRegion,
 	offPageConnectorOutline,
 } from "./presentation/OffPageConnector";
 import {
 	Parallelogram,
-	calcParallelogramTextRegion,
 	parallelogramOutline,
 } from "./presentation/Parallelogram";
 import {
@@ -82,232 +62,203 @@ import {
 	calcStadiumTextRegion,
 	stadiumOutline,
 } from "./presentation/Stadium";
-import {
-	StoredData,
-	calcStoredDataTextRegion,
-	storedDataOutline,
-} from "./presentation/StoredData";
-import {
-	Subroutine,
-	calcSubroutineTextRegion,
-} from "./presentation/Subroutine";
-import {
-	Trapezoid,
-	calcTrapezoidTextRegion,
-	trapezoidOutline,
-} from "./presentation/Trapezoid";
+import { StoredData, storedDataOutline } from "./presentation/StoredData";
+import { Subroutine } from "./presentation/Subroutine";
+import { Trapezoid, trapezoidOutline } from "./presentation/Trapezoid";
 import type { CardDoc } from "./schema/card/CardDoc";
 import type { CrossDoc } from "./schema/cross/CrossDoc";
+import { DB_CAP_RATIO } from "./schema/db/DbDoc";
 import type { DbDoc } from "./schema/db/DbDoc";
 import type { DelayDoc } from "./schema/delay/DelayDoc";
+import { DIAMOND_INSET } from "./schema/diamond/DiamondDoc";
 import type { DiamondDoc } from "./schema/diamond/DiamondDoc";
+import {
+	DISPLAY_CAP_RATIO,
+	DISPLAY_LEFT_RATIO,
+} from "./schema/display/DisplayDoc";
 import type { DisplayDoc } from "./schema/display/DisplayDoc";
+import { DOCUMENT_WAVE_RATIO } from "./schema/document/DocumentDoc";
 import type { DocumentDoc } from "./schema/document/DocumentDoc";
 import type { ExtractDoc } from "./schema/extract/ExtractDoc";
+import { HEXAGON_CAP_RATIO } from "./schema/hexagon/HexagonDoc";
 import type { HexagonDoc } from "./schema/hexagon/HexagonDoc";
 import type { LoopLimitDoc } from "./schema/loopLimit/LoopLimitDoc";
+import { MANUAL_INPUT_SLOPE_RATIO } from "./schema/manualInput/ManualInputDoc";
 import type { ManualInputDoc } from "./schema/manualInput/ManualInputDoc";
 import type { MultiDocumentDoc } from "./schema/multiDocument/MultiDocumentDoc";
+import { OFF_PAGE_CONNECTOR_TIP_RATIO } from "./schema/offPageConnector/OffPageConnectorDoc";
 import type { OffPageConnectorDoc } from "./schema/offPageConnector/OffPageConnectorDoc";
+import { PARALLELOGRAM_SKEW_RATIO } from "./schema/parallelogram/ParallelogramDoc";
 import type { ParallelogramDoc } from "./schema/parallelogram/ParallelogramDoc";
 import type { StadiumDoc } from "./schema/stadium/StadiumDoc";
+import { STORED_DATA_CAP_RATIO } from "./schema/storedData/StoredDataDoc";
 import type { StoredDataDoc } from "./schema/storedData/StoredDataDoc";
+import { SUBROUTINE_BAR_RATIO } from "./schema/subroutine/SubroutineDoc";
 import type { SubroutineDoc } from "./schema/subroutine/SubroutineDoc";
+import { TRAPEZOID_SLOPE_RATIO } from "./schema/trapezoid/TrapezoidDoc";
 import type { TrapezoidDoc } from "./schema/trapezoid/TrapezoidDoc";
-import { cardToDoc, cardToState } from "./state/card/CardMapper";
 import type { CardState } from "./state/card/CardState";
-import { isValidCardState } from "./state/card/validateCardState";
-import { crossToDoc, crossToState } from "./state/cross/CrossMapper";
 import type { CrossState } from "./state/cross/CrossState";
-import { isValidCrossState } from "./state/cross/validateCrossState";
-import { dbToDoc, dbToState } from "./state/db/DbMapper";
 import type { DbState } from "./state/db/DbState";
-import { isValidDbState } from "./state/db/validateDbState";
-import { delayToDoc, delayToState } from "./state/delay/DelayMapper";
 import type { DelayState } from "./state/delay/DelayState";
-import { isValidDelayState } from "./state/delay/validateDelayState";
-import { diamondToDoc, diamondToState } from "./state/diamond/DiamondMapper";
 import type { DiamondState } from "./state/diamond/DiamondState";
-import { isValidDiamondState } from "./state/diamond/validateDiamondState";
-import { displayToDoc, displayToState } from "./state/display/DisplayMapper";
 import type { DisplayState } from "./state/display/DisplayState";
-import { isValidDisplayState } from "./state/display/validateDisplayState";
-import {
-	documentToDoc,
-	documentToState,
-} from "./state/document/DocumentMapper";
 import type { DocumentState } from "./state/document/DocumentState";
-import { isValidDocumentState } from "./state/document/validateDocumentState";
-import { extractToDoc, extractToState } from "./state/extract/ExtractMapper";
 import type { ExtractState } from "./state/extract/ExtractState";
-import { isValidExtractState } from "./state/extract/validateExtractState";
-import { hexagonToDoc, hexagonToState } from "./state/hexagon/HexagonMapper";
 import type { HexagonState } from "./state/hexagon/HexagonState";
-import { isValidHexagonState } from "./state/hexagon/validateHexagonState";
-import {
-	loopLimitToDoc,
-	loopLimitToState,
-} from "./state/loopLimit/LoopLimitMapper";
 import type { LoopLimitState } from "./state/loopLimit/LoopLimitState";
-import { isValidLoopLimitState } from "./state/loopLimit/validateLoopLimitState";
-import {
-	manualInputToDoc,
-	manualInputToState,
-} from "./state/manualInput/ManualInputMapper";
 import type { ManualInputState } from "./state/manualInput/ManualInputState";
-import { isValidManualInputState } from "./state/manualInput/validateManualInputState";
-import {
-	multiDocumentToDoc,
-	multiDocumentToState,
-} from "./state/multiDocument/MultiDocumentMapper";
 import type { MultiDocumentState } from "./state/multiDocument/MultiDocumentState";
-import { isValidMultiDocumentState } from "./state/multiDocument/validateMultiDocumentState";
-import {
-	offPageConnectorToDoc,
-	offPageConnectorToState,
-} from "./state/offPageConnector/OffPageConnectorMapper";
 import type { OffPageConnectorState } from "./state/offPageConnector/OffPageConnectorState";
-import { isValidOffPageConnectorState } from "./state/offPageConnector/validateOffPageConnectorState";
-import {
-	parallelogramToDoc,
-	parallelogramToState,
-} from "./state/parallelogram/ParallelogramMapper";
 import type { ParallelogramState } from "./state/parallelogram/ParallelogramState";
-import { isValidParallelogramState } from "./state/parallelogram/validateParallelogramState";
-import { stadiumToDoc, stadiumToState } from "./state/stadium/StadiumMapper";
 import type { StadiumState } from "./state/stadium/StadiumState";
-import { isValidStadiumState } from "./state/stadium/validateStadiumState";
-import {
-	storedDataToDoc,
-	storedDataToState,
-} from "./state/storedData/StoredDataMapper";
 import type { StoredDataState } from "./state/storedData/StoredDataState";
-import { isValidStoredDataState } from "./state/storedData/validateStoredDataState";
-import {
-	subroutineToDoc,
-	subroutineToState,
-} from "./state/subroutine/SubroutineMapper";
 import type { SubroutineState } from "./state/subroutine/SubroutineState";
-import { isValidSubroutineState } from "./state/subroutine/validateSubroutineState";
-import {
-	trapezoidToDoc,
-	trapezoidToState,
-} from "./state/trapezoid/TrapezoidMapper";
 import type { TrapezoidState } from "./state/trapezoid/TrapezoidState";
-import { isValidTrapezoidState } from "./state/trapezoid/validateTrapezoidState";
-import { CardStencils } from "./stencil/CardStencils";
-import { CrossStencils } from "./stencil/CrossStencils";
-import { DbStencils } from "./stencil/DbStencils";
-import { DelayStencils } from "./stencil/DelayStencils";
-import { DiamondStencils } from "./stencil/DiamondStencils";
-import { DisplayStencils } from "./stencil/DisplayStencils";
-import { DocumentStencils } from "./stencil/DocumentStencils";
-import { ExtractStencils } from "./stencil/ExtractStencils";
-import { HexagonStencils } from "./stencil/HexagonStencils";
-import { LoopLimitStencils } from "./stencil/LoopLimitStencils";
-import { ManualInputStencils } from "./stencil/ManualInputStencils";
-import { MultiDocumentStencils } from "./stencil/MultiDocumentStencils";
-import { OffPageConnectorStencils } from "./stencil/OffPageConnectorStencils";
-import { ParallelogramStencils } from "./stencil/ParallelogramStencils";
-import { StadiumStencils } from "./stencil/StadiumStencils";
-import { StoredDataStencils } from "./stencil/StoredDataStencils";
-import { SubroutineStencils } from "./stencil/SubroutineStencils";
-import { TrapezoidStencils } from "./stencil/TrapezoidStencils";
+import { CardIcon } from "./stencil/CardIcon";
+import { CrossIcon } from "./stencil/CrossIcon";
+import { DbIcon } from "./stencil/DbIcon";
+import { DelayIcon } from "./stencil/DelayIcon";
+import { DiamondIcon } from "./stencil/DiamondIcon";
+import { DisplayIcon } from "./stencil/DisplayIcon";
+import { DocumentIcon } from "./stencil/DocumentIcon";
+import { ExtractIcon } from "./stencil/ExtractIcon";
+import { HexagonIcon } from "./stencil/HexagonIcon";
+import { LoopLimitIcon } from "./stencil/LoopLimitIcon";
+import { ManualInputIcon } from "./stencil/ManualInputIcon";
+import { MultiDocumentIcon } from "./stencil/MultiDocumentIcon";
+import { OffPageConnectorIcon } from "./stencil/OffPageConnectorIcon";
+import { ParallelogramIcon } from "./stencil/ParallelogramIcon";
+import { StadiumIcon } from "./stencil/StadiumIcon";
+import { StoredDataIcon } from "./stencil/StoredDataIcon";
+import { SubroutineIcon } from "./stencil/SubroutineIcon";
+import { TrapezoidIcon } from "./stencil/TrapezoidIcon";
 
 /**
  * flowchart 18 図形の `ObjectTypeDefinition` 群。各定義は `./doc` の headless doc 定義
- * (features / validateDoc / factory) を spread し、render / interaction / editor UI 部を
- * 足して合成する。core の登録エントリ (initializeObjectRegistry.ts の
+ * (features / validateDoc / factory) に render / interaction / editor UI 部を
+ * `createFrameObjectDefinition`（mapper / stateValidator / behavior を features から
+ * 導出）で足して合成する。core の登録エントリ (initializeObjectRegistry.ts の
  * ALL_OBJECT_DEFINITIONS) と 1:1 で、意図的除外はない。menu は未宣言なので features から
  * 既定メニューが導出される (docs/05_extensibility/plugin-architecture-requirements.md)。
  */
-export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
-	...cardDocDefinition,
-	mapper: { toDoc: cardToDoc, toState: cardToState },
-	stateValidator: isValidCardState,
-	component: Card,
-	textRegion: calcCardTextRegion,
-	outline: cardOutline,
-	behavior: createFrameBehavior<CardState>(),
-	stencils: CardStencils,
-};
+export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
+	createFrameObjectDefinition<CardDoc, CardState>({
+		doc: cardDocDefinition,
+		component: Card,
+		textRegion: calcCardTextRegion,
+		outline: cardOutline,
+		stencils: createTypeStencils({
+			objectType: "card",
+			label: { en: "Card", ja: "カード" },
+			icon: CardIcon,
+		}),
+	});
 
 /**
  * The arms fill the box, so the label hangs below the geometry box and
  * `visualBounds` is what keeps zoom-to-fit and the export viewBox from cropping
  * it (calcBelowLabelVisualBounds).
  */
-export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> = {
-	...crossDocDefinition,
-	mapper: { toDoc: crossToDoc, toState: crossToState },
-	stateValidator: isValidCrossState,
-	component: Cross,
-	textRegion: calcBelowLabelTextRegion,
-	visualBounds: calcBelowLabelVisualBounds,
-	outline: crossOutline,
-	behavior: createFrameBehavior<CrossState>(),
-	stencils: CrossStencils,
-};
+export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> =
+	createFrameObjectDefinition<CrossDoc, CrossState>({
+		doc: crossDocDefinition,
+		component: Cross,
+		textRegion: calcBelowLabelTextRegion,
+		visualBounds: calcBelowLabelVisualBounds,
+		outline: crossOutline,
+		stencils: createTypeStencils({
+			objectType: "cross",
+			label: { en: "Junction", ja: "接合点" },
+			icon: CrossIcon,
+		}),
+	});
 
-export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> = {
-	...dbDocDefinition,
-	mapper: { toDoc: dbToDoc, toState: dbToState },
-	stateValidator: isValidDbState,
-	component: Db,
-	textRegion: calcDbTextRegion,
-	outline: dbOutline,
-	behavior: createFrameBehavior<DbState>(),
-	stencils: DbStencils,
-};
+export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> =
+	createFrameObjectDefinition<DbDoc, DbState>({
+		doc: dbDocDefinition,
+		component: Db,
+		// Restricts to the straight-sided cylinder body: below the full top cap
+		// ellipse (2 * DB_CAP_RATIO) and above the bottom bulge (DB_CAP_RATIO), so
+		// text never spills over the curved bottom at any aspect ratio.
+		textRegion: createInsetTextRegion({
+			top: DB_CAP_RATIO * 2,
+			bottom: DB_CAP_RATIO,
+		}),
+		outline: dbOutline,
+		stencils: createTypeStencils({
+			objectType: "db",
+			label: { en: "Database", ja: "データベース" },
+			icon: DbIcon,
+		}),
+	});
 
-export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> = {
-	...delayDocDefinition,
-	mapper: { toDoc: delayToDoc, toState: delayToState },
-	stateValidator: isValidDelayState,
-	component: Delay,
-	textRegion: calcDelayTextRegion,
-	outline: delayOutline,
-	behavior: createFrameBehavior<DelayState>(),
-	stencils: DelayStencils,
-};
+export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> =
+	createFrameObjectDefinition<DelayDoc, DelayState>({
+		doc: delayDocDefinition,
+		component: Delay,
+		textRegion: calcDelayTextRegion,
+		outline: delayOutline,
+		stencils: createTypeStencils({
+			objectType: "delay",
+			label: { en: "Delay", ja: "遅延" },
+			icon: DelayIcon,
+		}),
+	});
 
 export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
-	{
-		...diamondDocDefinition,
-		mapper: { toDoc: diamondToDoc, toState: diamondToState },
-		stateValidator: isValidDiamondState,
+	createFrameObjectDefinition<DiamondDoc, DiamondState>({
+		doc: diamondDocDefinition,
 		component: Diamond,
-		textRegion: calcDiamondTextRegion,
+		textRegion: createInsetTextRegion({
+			top: DIAMOND_INSET,
+			right: DIAMOND_INSET,
+			bottom: DIAMOND_INSET,
+			left: DIAMOND_INSET,
+		}),
 		outline: diamondOutline,
-		behavior: createFrameBehavior<DiamondState>(),
-		stencils: DiamondStencils,
-	};
+		stencils: createTypeStencils({
+			objectType: "diamond",
+			// Labelled "Decision" for its flowchart role; the type stays the generic
+			// geometric `diamond` (it only ever appears in the flowchart category).
+			label: { en: "Decision", ja: "判断" },
+			icon: DiamondIcon,
+		}),
+	});
 
 export const displayDefinition: ObjectTypeDefinition<DisplayDoc, DisplayState> =
-	{
-		...displayDocDefinition,
-		mapper: { toDoc: displayToDoc, toState: displayToState },
-		stateValidator: isValidDisplayState,
+	createFrameObjectDefinition<DisplayDoc, DisplayState>({
+		doc: displayDocDefinition,
 		component: Display,
-		textRegion: calcDisplayTextRegion,
+		// Insets the pointed left and rounded right so text sits in the flat middle band.
+		textRegion: createInsetTextRegion({
+			left: DISPLAY_LEFT_RATIO,
+			right: DISPLAY_CAP_RATIO,
+		}),
 		outline: displayOutline,
-		behavior: createFrameBehavior<DisplayState>(),
-		stencils: DisplayStencils,
-	};
+		stencils: createTypeStencils({
+			objectType: "display",
+			label: { en: "Display", ja: "表示" },
+			icon: DisplayIcon,
+		}),
+	});
 
 export const documentDefinition: ObjectTypeDefinition<
 	DocumentDoc,
 	DocumentState
-> = {
-	...documentDocDefinition,
-	mapper: { toDoc: documentToDoc, toState: documentToState },
-	stateValidator: isValidDocumentState,
+> = createFrameObjectDefinition<DocumentDoc, DocumentState>({
+	doc: documentDocDefinition,
 	component: Document,
-	textRegion: calcDocumentTextRegion,
+	// Stops the region above the wavy bottom edge (the wave swings one
+	// amplitude around its centerline).
+	textRegion: createInsetTextRegion({ bottom: DOCUMENT_WAVE_RATIO * 2 }),
 	outline: documentOutline,
-	behavior: createFrameBehavior<DocumentState>(),
-	stencils: DocumentStencils,
-};
+	stencils: createTypeStencils({
+		objectType: "document",
+		label: { en: "Document", ja: "書類" },
+		icon: DocumentIcon,
+	}),
+});
 
 /**
  * The triangle narrows to a point, so the label hangs below the geometry box and
@@ -315,151 +266,189 @@ export const documentDefinition: ObjectTypeDefinition<
  * it (calcBelowLabelVisualBounds).
  */
 export const extractDefinition: ObjectTypeDefinition<ExtractDoc, ExtractState> =
-	{
-		...extractDocDefinition,
-		mapper: { toDoc: extractToDoc, toState: extractToState },
-		stateValidator: isValidExtractState,
+	createFrameObjectDefinition<ExtractDoc, ExtractState>({
+		doc: extractDocDefinition,
 		component: Extract,
 		textRegion: calcBelowLabelTextRegion,
 		visualBounds: calcBelowLabelVisualBounds,
 		outline: extractOutline,
-		behavior: createFrameBehavior<ExtractState>(),
-		stencils: ExtractStencils,
-	};
+		stencils: createTypeStencils({
+			objectType: "extract",
+			label: { en: "Extract", ja: "抽出" },
+			icon: ExtractIcon,
+		}),
+	});
 
 export const hexagonDefinition: ObjectTypeDefinition<HexagonDoc, HexagonState> =
-	{
-		...hexagonDocDefinition,
-		mapper: { toDoc: hexagonToDoc, toState: hexagonToState },
-		stateValidator: isValidHexagonState,
+	createFrameObjectDefinition<HexagonDoc, HexagonState>({
+		doc: hexagonDocDefinition,
 		component: Hexagon,
-		textRegion: calcHexagonTextRegion,
+		// Insets by a full cap on both sides so the region aligns with the
+		// top/bottom edges between the pointed caps.
+		textRegion: createInsetTextRegion({
+			left: HEXAGON_CAP_RATIO,
+			right: HEXAGON_CAP_RATIO,
+		}),
 		outline: hexagonOutline,
-		behavior: createFrameBehavior<HexagonState>(),
-		stencils: HexagonStencils,
-	};
+		stencils: createTypeStencils({
+			objectType: "hexagon",
+			label: { en: "Preparation", ja: "準備" },
+			icon: HexagonIcon,
+		}),
+	});
 
 export const loopLimitDefinition: ObjectTypeDefinition<
 	LoopLimitDoc,
 	LoopLimitState
-> = {
-	...loopLimitDocDefinition,
-	mapper: { toDoc: loopLimitToDoc, toState: loopLimitToState },
-	stateValidator: isValidLoopLimitState,
+> = createFrameObjectDefinition<LoopLimitDoc, LoopLimitState>({
+	doc: loopLimitDocDefinition,
 	component: LoopLimit,
 	textRegion: calcLoopLimitTextRegion,
 	outline: loopLimitOutline,
 	anchorRegion: calcLoopLimitAnchorRegion,
-	behavior: createFrameBehavior<LoopLimitState>(),
-	stencils: LoopLimitStencils,
-};
+	stencils: createTypeStencils({
+		objectType: "loopLimit",
+		label: { en: "Loop Limit", ja: "ループ端" },
+		icon: LoopLimitIcon,
+	}),
+});
 
 export const manualInputDefinition: ObjectTypeDefinition<
 	ManualInputDoc,
 	ManualInputState
-> = {
-	...manualInputDocDefinition,
-	mapper: { toDoc: manualInputToDoc, toState: manualInputToState },
-	stateValidator: isValidManualInputState,
+> = createFrameObjectDefinition<ManualInputDoc, ManualInputState>({
+	doc: manualInputDocDefinition,
 	component: ManualInput,
-	textRegion: calcManualInputTextRegion,
+	// Insets the top by the full slope so text stays below the sloping top edge.
+	textRegion: createInsetTextRegion({ top: MANUAL_INPUT_SLOPE_RATIO }),
 	outline: manualInputOutline,
-	behavior: createFrameBehavior<ManualInputState>(),
-	stencils: ManualInputStencils,
-};
+	stencils: createTypeStencils({
+		objectType: "manualInput",
+		label: { en: "Manual Input", ja: "手動入力" },
+		icon: ManualInputIcon,
+	}),
+});
 
 export const multiDocumentDefinition: ObjectTypeDefinition<
 	MultiDocumentDoc,
 	MultiDocumentState
-> = {
-	...multiDocumentDocDefinition,
-	mapper: { toDoc: multiDocumentToDoc, toState: multiDocumentToState },
-	stateValidator: isValidMultiDocumentState,
+> = createFrameObjectDefinition<MultiDocumentDoc, MultiDocumentState>({
+	doc: multiDocumentDocDefinition,
 	component: MultiDocument,
 	textRegion: calcMultiDocumentTextRegion,
 	outline: multiDocumentOutline,
-	behavior: createFrameBehavior<MultiDocumentState>(),
-	stencils: MultiDocumentStencils,
-};
+	stencils: createTypeStencils({
+		objectType: "multiDocument",
+		label: { en: "Multi-document", ja: "複数書類" },
+		icon: MultiDocumentIcon,
+	}),
+});
 
 export const offPageConnectorDefinition: ObjectTypeDefinition<
 	OffPageConnectorDoc,
 	OffPageConnectorState
-> = {
-	...offPageConnectorDocDefinition,
-	mapper: { toDoc: offPageConnectorToDoc, toState: offPageConnectorToState },
-	stateValidator: isValidOffPageConnectorState,
+> = createFrameObjectDefinition<OffPageConnectorDoc, OffPageConnectorState>({
+	doc: offPageConnectorDocDefinition,
 	component: OffPageConnector,
-	textRegion: calcOffPageConnectorTextRegion,
+	// Insets the bottom by a full tip height so text stays in the rectangular
+	// band above the point.
+	textRegion: createInsetTextRegion({ bottom: OFF_PAGE_CONNECTOR_TIP_RATIO }),
 	outline: offPageConnectorOutline,
 	anchorRegion: calcOffPageConnectorAnchorRegion,
-	behavior: createFrameBehavior<OffPageConnectorState>(),
-	stencils: OffPageConnectorStencils,
-};
+	stencils: createTypeStencils({
+		objectType: "offPageConnector",
+		label: { en: "Off-page connector", ja: "他ページ結合子" },
+		icon: OffPageConnectorIcon,
+	}),
+});
 
 export const parallelogramDefinition: ObjectTypeDefinition<
 	ParallelogramDoc,
 	ParallelogramState
-> = {
-	...parallelogramDocDefinition,
-	mapper: { toDoc: parallelogramToDoc, toState: parallelogramToState },
-	stateValidator: isValidParallelogramState,
+> = createFrameObjectDefinition<ParallelogramDoc, ParallelogramState>({
+	doc: parallelogramDocDefinition,
 	component: Parallelogram,
-	textRegion: calcParallelogramTextRegion,
+	// Insets by a full skew on both sides so the region aligns with the
+	// slanted left/right edges.
+	textRegion: createInsetTextRegion({
+		left: PARALLELOGRAM_SKEW_RATIO,
+		right: PARALLELOGRAM_SKEW_RATIO,
+	}),
 	outline: parallelogramOutline,
-	behavior: createFrameBehavior<ParallelogramState>(),
-	stencils: ParallelogramStencils,
-};
+	stencils: createTypeStencils({
+		objectType: "parallelogram",
+		label: { en: "Data", ja: "データ" },
+		icon: ParallelogramIcon,
+	}),
+});
 
 export const stadiumDefinition: ObjectTypeDefinition<StadiumDoc, StadiumState> =
-	{
-		...stadiumDocDefinition,
-		mapper: { toDoc: stadiumToDoc, toState: stadiumToState },
-		stateValidator: isValidStadiumState,
+	createFrameObjectDefinition<StadiumDoc, StadiumState>({
+		doc: stadiumDocDefinition,
 		component: Stadium,
 		textRegion: calcStadiumTextRegion,
 		outline: stadiumOutline,
-		behavior: createFrameBehavior<StadiumState>(),
-		stencils: StadiumStencils,
-	};
+		stencils: createTypeStencils({
+			objectType: "stadium",
+			label: { en: "Terminal", ja: "端子" },
+			icon: StadiumIcon,
+		}),
+	});
 
 export const storedDataDefinition: ObjectTypeDefinition<
 	StoredDataDoc,
 	StoredDataState
-> = {
-	...storedDataDocDefinition,
-	mapper: { toDoc: storedDataToDoc, toState: storedDataToState },
-	stateValidator: isValidStoredDataState,
+> = createFrameObjectDefinition<StoredDataDoc, StoredDataState>({
+	doc: storedDataDocDefinition,
 	component: StoredData,
-	textRegion: calcStoredDataTextRegion,
+	// Insets both sides by the arc depth: the region starts where the straight
+	// top/bottom edges begin (left) and stops at the concave right arc's apex.
+	textRegion: createInsetTextRegion({
+		left: STORED_DATA_CAP_RATIO,
+		right: STORED_DATA_CAP_RATIO,
+	}),
 	outline: storedDataOutline,
-	behavior: createFrameBehavior<StoredDataState>(),
-	stencils: StoredDataStencils,
-};
+	stencils: createTypeStencils({
+		objectType: "storedData",
+		label: { en: "Stored Data", ja: "記憶データ" },
+		icon: StoredDataIcon,
+	}),
+});
 
 export const subroutineDefinition: ObjectTypeDefinition<
 	SubroutineDoc,
 	SubroutineState
-> = {
-	...subroutineDocDefinition,
-	mapper: { toDoc: subroutineToDoc, toState: subroutineToState },
-	stateValidator: isValidSubroutineState,
+> = createFrameObjectDefinition<SubroutineDoc, SubroutineState>({
+	doc: subroutineDocDefinition,
 	component: Subroutine,
-	textRegion: calcSubroutineTextRegion,
-	behavior: createFrameBehavior<SubroutineState>(),
-	stencils: SubroutineStencils,
-};
+	// Insets by one bar width on each side so text sits between the two vertical bars.
+	textRegion: createInsetTextRegion({
+		left: SUBROUTINE_BAR_RATIO,
+		right: SUBROUTINE_BAR_RATIO,
+	}),
+	stencils: createTypeStencils({
+		objectType: "subroutine",
+		label: { en: "Subroutine", ja: "サブルーチン" },
+		icon: SubroutineIcon,
+	}),
+});
 
 export const trapezoidDefinition: ObjectTypeDefinition<
 	TrapezoidDoc,
 	TrapezoidState
-> = {
-	...trapezoidDocDefinition,
-	mapper: { toDoc: trapezoidToDoc, toState: trapezoidToState },
-	stateValidator: isValidTrapezoidState,
+> = createFrameObjectDefinition<TrapezoidDoc, TrapezoidState>({
+	doc: trapezoidDocDefinition,
 	component: Trapezoid,
-	textRegion: calcTrapezoidTextRegion,
+	// Insets each side by the full slope so the region matches the narrow
+	// bottom edge and text never crosses the slanted sides.
+	textRegion: createInsetTextRegion({
+		left: TRAPEZOID_SLOPE_RATIO,
+		right: TRAPEZOID_SLOPE_RATIO,
+	}),
 	outline: trapezoidOutline,
-	behavior: createFrameBehavior<TrapezoidState>(),
-	stencils: TrapezoidStencils,
-};
+	stencils: createTypeStencils({
+		objectType: "trapezoid",
+		label: { en: "Manual Operation", ja: "手操作" },
+		icon: TrapezoidIcon,
+	}),
+});

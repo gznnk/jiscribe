@@ -10,11 +10,6 @@
  * so they can be imported without pulling in the UI.
  */
 
-// Raw registry registration, downgraded from the stable layer (#144 §3): the
-// declarative `CanvasPlugin.objects` is the intended path; this is the
-// lower-level primitive it's built on.
-export { applyObjectDefinition } from "./controllers/registries";
-
 export { createFrameObject } from "./presentations/objects/base/createFrameObject";
 export type {
 	FrameShapeProps,
@@ -67,29 +62,6 @@ export {
 	measureTextWidth,
 } from "./presentations/objects/utils/measureText";
 export type { TextMeasureFont } from "./presentations/objects/utils/measureText";
-
-// ---------------------------------------------------------------------------
-// Below-label shapes: the box is fully taken by the drawing, so the text hangs
-// under it as a caption sized from itself (server / actor / cross …).
-// ---------------------------------------------------------------------------
-// The three pieces go together: register the region as the type's `textRegion`
-// and the bounds as its `visualBounds` (without the latter, zoom-to-fit and the
-// export viewBox crop the label away), and place the hit area inside the shape's
-// own `data-kind="object"` group so the label can be grabbed. The typography
-// they measure with lives in `./unstable-doc` as BELOW_LABEL_STYLE_DEFAULTS.
-export {
-	BELOW_LABEL_GAP,
-	calcBelowLabelTextRegion,
-} from "./presentations/objects/utils/calcBelowLabelTextRegion";
-export { calcBelowLabelVisualBounds } from "./presentations/objects/utils/calcBelowLabelVisualBounds";
-export { BelowLabelHitArea } from "./presentations/objects/base/BelowLabelHitArea";
-
-// Polygon/outline helpers for drawing frame-based plugin shapes and their connector outline.
-export { formatPolygonPoints } from "./presentations/objects/utils/formatPolygonPoints";
-export {
-	centeredPolygonOutline,
-	OUTLINE_CURVE_SEGMENTS,
-} from "./presentations/objects/utils/outlineHelpers";
 
 export { PRECISION } from "./constants/precision";
 

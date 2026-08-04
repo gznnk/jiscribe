@@ -2,7 +2,7 @@ import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
 import {
 	AUTO_COLOR,
 	BELOW_LABEL_STYLE_DEFAULTS,
-} from "@workspace/canvas/unstable-doc";
+} from "@workspace/canvas-sdk/doc";
 
 /**
  * The flowchart "extract" symbol — an upward triangle (apex at the top), used

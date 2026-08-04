@@ -1,5 +1,5 @@
 import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import { createFrameObject, readTextSlot } from "@workspace/canvas/unstable";
+import { createFrameObject, readTextSlot } from "@workspace/canvas-sdk";
 
 import { calcGroupMarkerTextRegion } from "./calcGroupMarkerTextRegion";
 import {

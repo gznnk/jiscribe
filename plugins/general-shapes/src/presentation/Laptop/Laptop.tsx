@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildLaptopFigure } from "./buildLaptopFigure";
 import type { LaptopState } from "../../state/laptop/LaptopState";

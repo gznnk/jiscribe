@@ -1,7 +1,9 @@
 import type { SemanticDiagnostic } from "@workspace/canvas/doc";
 import { describe, it, expect } from "vitest";
 
-import { validateCalloutDoc } from "../validateCalloutDoc";
+import { calloutDocDefinition } from "../../../doc";
+
+const validateCalloutDoc = calloutDocDefinition.validateDoc;
 
 const validCallout = {
 	x: 10,

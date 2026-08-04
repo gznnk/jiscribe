@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildFileFigure } from "./buildFileFigure";
 import type { FileState } from "../../state/file/FileState";

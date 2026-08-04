@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 import type { Rect } from "@workspace/geometry";
 
 import { calcRecordSlotRegions } from "./calcRecordSlotRegions";

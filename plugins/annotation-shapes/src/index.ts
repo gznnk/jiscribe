@@ -1,13 +1,15 @@
 // 注釈図形の外部パッケージ。収載の線引きは「記法に属さない汎用注釈」で、flowchart / UML
 // のような特定記法の語彙（それぞれ専用パッケージ）とも、実物・人・場を表すピクトグラム
 // （general-shapes）とも分ける（docs/05_extensibility/annotation-plugin-plan.md 参照）。
-// schema/** の headless 部品 (createFrameObjectFactory / createFrameDocValidator /
-// AUTO_COLOR / BELOW_LABEL_STYLE_DEFAULTS / TEXT_LINE_HEIGHT) は
-// `@workspace/canvas/unstable-doc`、presentation / state / controls 部品
-// (createFrameObject / createFrameBehavior / createFrameMapper /
-// createFrameStateValidator / measureTextWidth / calcVisualLineCount /
-// readTextSlot / centeredPolygonOutline / SelectionControlPill) は
-// `@workspace/canvas/unstable` 経由。
+// 各図形の ObjectDocDefinition / ObjectTypeDefinition は createFrameObjectDoc /
+// createFrameObjectDefinition (`@workspace/canvas-sdk/doc` / `@workspace/canvas-sdk`)
+// が features/defaults から丸ごと導出するため、per-shape の ObjectFactory /
+// validate*Doc / Mapper / validate*State は持たない（group marker の factory だけは
+// schema/shared/createGroupMarkerObjectFactory を渡して差し替える）。schema/** の
+// headless 部品 (AUTO_COLOR / BELOW_LABEL_STYLE_DEFAULTS / TEXT_LINE_HEIGHT) は
+// `@workspace/canvas-sdk/doc`、presentation / controls 部品 (createFrameObject /
+// measureTextWidth / calcVisualLineCount / readTextSlot / centeredPolygonOutline /
+// SelectionControlPill) は `@workspace/canvas-sdk` 経由。
 // headless な parse 入口は ./doc (annotationDocPlugin)。
 // 図形は 1 図形 1 フォルダ（schema/<id>/ ・ state/<id>/ ・ presentation/<Pascal>/）で、
 // 複数図形が共有する部品は各層の shared/ に置く。brace / bracket / bracketWithStem は
@@ -25,48 +27,16 @@ export {
 } from "./schema/shared/validateGroupMarkerFields";
 
 export * from "./schema/brace/BraceDoc";
-export { BraceObjectFactory } from "./schema/brace/BraceObjectFactory";
-export { validateBraceDoc } from "./schema/brace/validateBraceDoc";
-
 export * from "./schema/bracket/BracketDoc";
-export { BracketObjectFactory } from "./schema/bracket/BracketObjectFactory";
-export { validateBracketDoc } from "./schema/bracket/validateBracketDoc";
-
 export * from "./schema/bracketWithStem/BracketWithStemDoc";
-export { BracketWithStemObjectFactory } from "./schema/bracketWithStem/BracketWithStemObjectFactory";
-export { validateBracketWithStemDoc } from "./schema/bracketWithStem/validateBracketWithStemDoc";
-
 export * from "./schema/callout/CalloutDoc";
-export { CalloutObjectFactory } from "./schema/callout/CalloutObjectFactory";
-export { validateCalloutDoc } from "./schema/callout/validateCalloutDoc";
-
 export * from "./schema/note/NoteDoc";
-export { NoteObjectFactory } from "./schema/note/NoteObjectFactory";
-export { validateNoteDoc } from "./schema/note/validateNoteDoc";
 
 export * from "./state/brace/BraceState";
-export { braceToDoc, braceToState } from "./state/brace/BraceMapper";
-export { isValidBraceState } from "./state/brace/validateBraceState";
-
 export * from "./state/bracket/BracketState";
-export { bracketToDoc, bracketToState } from "./state/bracket/BracketMapper";
-export { isValidBracketState } from "./state/bracket/validateBracketState";
-
 export * from "./state/bracketWithStem/BracketWithStemState";
-export {
-	bracketWithStemToDoc,
-	bracketWithStemToState,
-} from "./state/bracketWithStem/BracketWithStemMapper";
-export { isValidBracketWithStemState } from "./state/bracketWithStem/validateBracketWithStemState";
-
 export * from "./state/callout/CalloutState";
-export { calloutToDoc, calloutToState } from "./state/callout/CalloutMapper";
-export { isValidCalloutState } from "./state/callout/validateCalloutState";
-
 export * from "./state/note/NoteState";
-export { noteToDoc, noteToState } from "./state/note/NoteMapper";
-export { isValidNoteState } from "./state/note/validateNoteState";
-
 export * from "./state/shared/GroupMarkerControlState";
 
 export * from "./presentation/shared";
@@ -85,15 +55,10 @@ export {
 } from "./controls";
 
 export { BraceIcon } from "./stencil/BraceIcon";
-export { BraceStencils } from "./stencil/BraceStencils";
 export { BracketIcon } from "./stencil/BracketIcon";
-export { BracketStencils } from "./stencil/BracketStencils";
 export { BracketWithStemIcon } from "./stencil/BracketWithStemIcon";
-export { BracketWithStemStencils } from "./stencil/BracketWithStemStencils";
 export { CalloutIcon } from "./stencil/CalloutIcon";
-export { CalloutStencils } from "./stencil/CalloutStencils";
 export { NoteIcon } from "./stencil/NoteIcon";
-export { NoteStencils } from "./stencil/NoteStencils";
 export { annotationToolbarEntry } from "./stencil/AnnotationToolbarEntry";
 
 export {

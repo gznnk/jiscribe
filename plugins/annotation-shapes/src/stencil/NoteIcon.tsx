@@ -1,9 +1,4 @@
-import { memo } from "react";
-
-type NoteIconProps = {
-	width?: number;
-	height?: number;
-};
+import { createStencilIcon } from "@workspace/canvas-sdk";
 
 /**
  * The note at the stencil size. Drawn landscape, unlike the portrait file
@@ -12,35 +7,23 @@ type NoteIconProps = {
  * buildNoteFigure, so the icon keeps its own optical margins as the path
  * construction changes.
  */
-const NoteIconComponent: React.FC<NoteIconProps> = ({
-	width = 24,
-	height = 24,
-}) => {
-	return (
-		<svg
-			width={width}
-			height={height}
-			viewBox="0 0 24 24"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<path
-				d="M2 5 H17 L22 10 V19 H2 Z"
-				fill="none"
-				stroke="currentColor"
-				strokeWidth="2"
-				strokeLinejoin="round"
-				strokeLinecap="round"
-			/>
-			<path
-				d="M17 5 V10 H22"
-				fill="none"
-				stroke="currentColor"
-				strokeWidth="2"
-				strokeLinejoin="round"
-				strokeLinecap="round"
-			/>
-		</svg>
-	);
-};
-
-export const NoteIcon = memo(NoteIconComponent);
+export const NoteIcon = createStencilIcon(
+	<>
+		<path
+			d="M2 5 H17 L22 10 V19 H2 Z"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinejoin="round"
+			strokeLinecap="round"
+		/>
+		<path
+			d="M17 5 V10 H22"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinejoin="round"
+			strokeLinecap="round"
+		/>
+	</>,
+);

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { diamondDocDefinition } from "../../../doc";
 import { DIAMOND_DOC_DEFAULTS } from "../DiamondDoc";
-import { DiamondObjectFactory } from "../DiamondObjectFactory";
+
+// diamondDocDefinition.factory is always set here (createFrameObjectDoc supplies it).
+const DiamondObjectFactory = diamondDocDefinition.factory!;
 
 describe("DiamondObjectFactory", () => {
 	describe("createDoc", () => {

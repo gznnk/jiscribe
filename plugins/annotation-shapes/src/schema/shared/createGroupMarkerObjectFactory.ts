@@ -1,5 +1,5 @@
 import type { ObjectDoc } from "@workspace/canvas/doc";
-import { createFrameObjectFactory } from "@workspace/canvas/unstable-doc";
+import { createFrameObjectFactory } from "@workspace/canvas-sdk/doc";
 
 import type { GroupMarkerDirection } from "./GroupMarkerFields";
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { isValidStickyState } from "../validateStickyState";
+import { stickyDefinition } from "../../definition";
+
+const isValidStickyState = stickyDefinition.stateValidator;
 
 const validSticky = {
 	id: "s1",

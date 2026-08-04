@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildServerFigure } from "./buildServerFigure";
 import type { ServerState } from "../../state/server/ServerState";

@@ -1,5 +1,5 @@
 import type { SelectionControlProps } from "@workspace/canvas";
-import { SelectionControlPill } from "@workspace/canvas/unstable";
+import { SelectionControlPill } from "@workspace/canvas-sdk";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
