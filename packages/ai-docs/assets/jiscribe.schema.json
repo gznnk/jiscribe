@@ -169,6 +169,9 @@
 					"$ref": "#/$defs/GroupDoc"
 				},
 				{
+					"$ref": "#/$defs/ContainerDoc"
+				},
+				{
 					"$ref": "#/$defs/StickyDoc"
 				},
 				{
@@ -317,6 +320,9 @@
 				},
 				{
 					"$ref": "#/$defs/GroupDoc"
+				},
+				{
+					"$ref": "#/$defs/ContainerDoc"
 				},
 				{
 					"$ref": "#/$defs/StickyDoc"
@@ -4195,6 +4201,110 @@
 				}
 			}
 		},
+		"ContainerDoc": {
+			"description": "Container (\"frame\") shape: a titled rectangle that marks off a region of the diagram, typically a module, subsystem or bounded context. Uses the same rect-based geometry (x/y/width/height) as RectDoc. `text` is the title and is drawn in the top header band, never in the body; the body is click-through, so objects lying over it stay directly selectable. Objects are put inside it by geometry alone: give them coordinates within the box and place them after the container in `root` so they paint on top. A container has no `children` and does not carry its contents when it moves — wrap them in a GroupDoc when they must move together. The palette entries Frame / Boundary / Zone are all this type: Boundary is a container with `strokeDashType: \"dashed\"`, Zone one with a tinted `fill`.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"container\".",
+					"type": "string",
+					"const": "container"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"headerFill": {
+					"description": "Header band fill as a CSS color string, or \"auto\" to follow the theme surface color. Independent of `fill`, which paints the (click-through) body. Default: \"auto\"",
+					"type": "string",
+					"default": "auto"
+				},
+				"headerHeight": {
+					"description": "Height of the title header band in pixels, measured down from the top edge. Capped at `height` when drawn. Omitted = 28.",
+					"type": "number",
+					"minimum": 1
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 240",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"description": "Horizontal text alignment. Default: \"left\" (overrides the shared default \"center\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/TextAlign"
+						}
+					],
+					"default": "left"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (overrides the shared default \"normal\").",
+					"type": "string",
+					"default": "bold"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
 		"StickyDoc": {
 			"description": "Sticky note annotation.",
 			"type": "object",
@@ -4495,7 +4605,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / container / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

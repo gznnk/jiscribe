@@ -100,6 +100,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                   | open line                                             |
 | `polygon`               | `points` (auto-closed)               | stroke / fill                                    | closed shape from points                              |
 | `group`                 | `children`                           | rotation / flipX / flipY                         | container of child objects                            |
+| `container`             | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | titled region (module, subsystem, boundary)           |
 | `sticky`                | `x`,`y`,`width`,`height`             | fill / text / rotation                           | sticky note (no stroke or `rx`)                       |
 | `svg`                   | `x`,`y`,`width`,`height` + `svgText` | rotation only                                    | raw SVG escape hatch (opaque box)                     |
 | `connector` (in `root`) | `source`,`target`,`points:[]`        | stroke / startArrow / endArrow / routing / label | edge / arrow between objects                          |

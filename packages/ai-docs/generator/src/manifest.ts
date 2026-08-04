@@ -3,6 +3,7 @@ import {
 	type ObjectDocDefinition,
 } from "@workspace/canvas/doc";
 import { annotationDocPlugin } from "@workspace/plugin-annotation-shapes/doc";
+import { containerDocPlugin } from "@workspace/plugin-container-shapes/doc";
 import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
 import { generalDocPlugin } from "@workspace/plugin-general-shapes/doc";
 import { markdownDocPlugin } from "@workspace/plugin-markdown-shape/doc";
@@ -63,6 +64,7 @@ export const CANONICAL_TYPE_ORDER = [
 	"polyline",
 	"polygon",
 	"group",
+	"container",
 	"sticky",
 	"svg",
 	"connector",
@@ -123,9 +125,10 @@ export const DETAIL_SECTION_TYPES = [
 	"bracketWithStem",
 	"bracket",
 	"db",
+	"container",
 ] as const;
 
-/** Built-ins plus the shipped plugins (container-shapes is experimental and excluded). */
+/** Built-ins plus the shipped plugins. */
 const definitionSources: ReadonlyArray<
 	[
 		sourceName: string,
@@ -141,6 +144,7 @@ const definitionSources: ReadonlyArray<
 	[stickyDocPlugin.id, stickyDocPlugin.objects],
 	[generalDocPlugin.id, generalDocPlugin.objects],
 	[annotationDocPlugin.id, annotationDocPlugin.objects],
+	[containerDocPlugin.id, containerDocPlugin.objects],
 ];
 
 /** Merge the sources, failing on type-name collisions instead of last-wins. */

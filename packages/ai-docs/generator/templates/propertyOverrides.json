@@ -32,6 +32,18 @@
 			"enum": ["left", "right", "up", "down"]
 		}
 	},
+	"container": {
+		"headerFill": {
+			"description": "Header band fill as a CSS color string, or \"auto\" to follow the theme surface color. Independent of `fill`, which paints the (click-through) body. Default: \"auto\"",
+			"type": "string",
+			"default": "auto"
+		},
+		"headerHeight": {
+			"description": "Height of the title header band in pixels, measured down from the top edge. Capped at `height` when drawn. Omitted = 28.",
+			"type": "number",
+			"minimum": 1
+		}
+	},
 	"callout": {
 		"tail": {
 			"description": "Tail placement: the tip sits on the bounding box's `side` edge at `position`. Choose the side facing the annotated object. The tail base stays in a fixed slot on that edge (left/top half vs right/bottom half, following the tip's half), so the tail always leans like a classic speech bubble. Omitted = bottom at 0.2.",

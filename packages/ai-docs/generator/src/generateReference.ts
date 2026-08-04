@@ -144,6 +144,15 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 		height: 100,
 		text: "users",
 	},
+	container: {
+		id: "container-1",
+		type: "container",
+		x: 80,
+		y: 60,
+		width: 360,
+		height: 240,
+		text: "Auth service",
+	},
 };
 
 /** JSON example for the grouped catalog section (one representative type). */
@@ -172,6 +181,10 @@ const EXTRA_FIELD_ROWS: Readonly<Record<string, string[]>> = {
 	],
 	bracket: [
 		'| `direction` | `string` | `"left"` | Which side the spine sits on, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `[`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |',
+	],
+	container: [
+		'| `headerFill` | `string` | `"auto"` | Header band color, independent of `fill` (the body). `"auto"` follows the theme surface color. |',
+		"| `headerHeight` | `number` | `28` | Title band height in px, measured down from the top edge (min 1, capped at `height`). |",
 	],
 };
 

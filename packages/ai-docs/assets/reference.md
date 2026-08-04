@@ -100,6 +100,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `polyline`         | Open line                                             | `points`                                | Stroke                                |
 | `polygon`          | Closed shape from points                              | `points`                                | Stroke, Fill                          |
 | `group`            | Container of child objects                            | none                                    | Transform                             |
+| `container`        | Titled region (module, subsystem, boundary)           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `sticky`           | Sticky note (no stroke or `rx`)                       | `x`, `y`, `width`, `height`             | Fill, Text, Transform (no Stroke)     |
 | `svg`              | Raw SVG escape hatch (opaque box)                     | `x`, `y`, `width`, `height` + `svgText` | Transform only (rotation/flip)        |
 | `connector`        | Edge / arrow between objects                          | `points`                                | Stroke                                |
@@ -513,6 +514,33 @@ Database cylinder shape, typically used for data stores in architecture or ER di
 | `y`      | `number` | `0`     | Y of the bounding box's top-left. |
 | `width`  | `number` | `120`   | Bounding-box width (px).          |
 | `height` | `number` | `100`   | Bounding-box height (px).         |
+
+---
+
+### `container`
+
+Container ("frame") shape: a titled rectangle that marks off a region of the diagram, typically a module, subsystem or bounded context. Uses the same rect-based geometry (x/y/width/height) as `rect`. `text` is the title and is drawn in the top header band, never in the body; the body is click-through, so objects lying over it stay directly selectable. Objects are put inside it by geometry alone: give them coordinates within the box and place them after the container in `root` so they paint on top. A container has no `children` and does not carry its contents when it moves — wrap them in a `group` when they must move together. The palette entries Frame / Boundary / Zone are all this type: Boundary is a container with `strokeDashType: "dashed"`, Zone one with a tinted `fill`. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "container-1",
+	"type": "container",
+	"x": 80,
+	"y": 60,
+	"width": 360,
+	"height": 240,
+	"text": "Auth service"
+}
+```
+
+| Field          | Type     | Default  | Description                                                                                    |
+| -------------- | -------- | -------- | ---------------------------------------------------------------------------------------------- |
+| `x`            | `number` | `0`      | X of the bounding box's top-left.                                                              |
+| `y`            | `number` | `0`      | Y of the bounding box's top-left.                                                              |
+| `width`        | `number` | `240`    | Bounding-box width (px).                                                                       |
+| `height`       | `number` | `160`    | Bounding-box height (px).                                                                      |
+| `headerFill`   | `string` | `"auto"` | Header band color, independent of `fill` (the body). `"auto"` follows the theme surface color. |
+| `headerHeight` | `number` | `28`     | Title band height in px, measured down from the top edge (min 1, capped at `height`).          |
 
 ---
 

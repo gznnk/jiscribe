@@ -20,6 +20,7 @@
 		"@workspace/canvas": "workspace:*",
 		"@workspace/plugin-flowchart-shapes": "workspace:*",
 		"@workspace/plugin-annotation-shapes": "workspace:*",
+		"@workspace/plugin-container-shapes": "workspace:*",
 		"@workspace/plugin-general-shapes": "workspace:*",
 		"@workspace/plugin-markdown-shape": "workspace:*",
 		"@workspace/plugin-sticky-shape": "workspace:*",
