@@ -408,8 +408,9 @@ const CanvasComponent = ({
 	);
 
 	// The slot being edited carries the uncommitted editor text, so geometry derived from
-	// it follows every keystroke instead of jumping on commit. Rendering and editor
-	// placement only — hit testing, snapping and bboxes still read committed state.objects.
+	// it follows every keystroke instead of jumping on commit. Rendering, selection
+	// feedback and editor placement only — hit testing, snapping and bboxes still read
+	// committed state.objects.
 	const draftObjects = useMemo(
 		() => graftTextEditDraft(state.objects, state.textEditState),
 		[state.objects, state.textEditState],
@@ -514,7 +515,7 @@ const CanvasComponent = ({
 							/>
 							<SelectionOverlay
 								selectedIds={state.selectedIds}
-								objects={state.objects}
+								objects={draftObjects}
 								multiSelectGroup={state.multiSelectGroup}
 								selectedTextSlot={selectedTextSlot}
 							/>
