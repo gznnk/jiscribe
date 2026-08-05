@@ -31,6 +31,22 @@ const rectFrame = {
 	scaleY: 1,
 } as unknown as ObjectState;
 
+/**
+ * A rect roomy enough (center 200,200 / width 200 / height 100) that positions
+ * along its edges sit clear of both the edge midpoints and the center.
+ */
+const roomyRectFrame = {
+	id: "roomy-1",
+	type: "rect",
+	cx: 200,
+	cy: 200,
+	width: 200,
+	height: 100,
+	rotation: 0,
+	scaleX: 1,
+	scaleY: 1,
+} as unknown as ObjectState;
+
 describe("computeEditedEndpoint", () => {
 	it("makes target a free anchor at the cursor position when there is no hover target", () => {
 		const result = computeEditedEndpoint(
@@ -65,12 +81,25 @@ describe("computeEditedEndpoint", () => {
 		const result = computeEditedEndpoint(
 			baseConnector(),
 			"target",
-			{ x: 100, y: 200 }, // outside the frame's bottom edge
+			{ x: 100, y: 118 }, // just outside the frame's bottom edge midpoint
 			{ id: "rect-1", object: rectFrame },
 		);
 		expect(result.target).toEqual({
 			owner: { id: "rect-1" },
 			anchor: { kind: "connectPoint", id: "bottomCenter" },
+		});
+	});
+
+	it("owner-connects to a free position on an edge away from the named anchors", () => {
+		const result = computeEditedEndpoint(
+			baseConnector(),
+			"target",
+			{ x: 260, y: 245 }, // near the bottom edge but clear of every named anchor
+			{ id: "roomy-1", object: roomyRectFrame },
+		);
+		expect(result.target).toEqual({
+			owner: { id: "roomy-1" },
+			anchor: { kind: "edge", side: "bottom", t: 0.8 },
 		});
 	});
 
@@ -108,8 +137,25 @@ describe("computeEditedEndpoint", () => {
 		};
 
 		it("does not select the fixed side's anchor when returning to the same object as the fixed side", () => {
-			// Even with the cursor outside the bottom edge (where bottomCenter would normally be nearest),
-			// bottomCenter is excluded because it is the fixed side, so a different edge midpoint is chosen.
+			// The cursor sits on the bottom edge midpoint, where bottomCenter would normally
+			// win; it is the fixed side, so a different anchor is chosen.
+			const result = computeEditedEndpoint(
+				selfLoopBase(),
+				"target",
+				{ x: 100, y: 112 },
+				{ id: "rect-1", object: rectFrame },
+				fixedSource,
+			);
+			expect(result.target.owner).toEqual({ id: "rect-1" });
+			const anchor = result.target.anchor;
+			if (anchor.kind === "connectPoint") {
+				expect(anchor.id).not.toBe("bottomCenter");
+			}
+		});
+
+		it("keeps a free position clear of the point the fixed edge midpoint stands on", () => {
+			// The cursor rounds to bottom / 0.5 — the very place bottomCenter resolves to —
+			// so the ratio is pushed off it rather than landing on the fixed end.
 			const result = computeEditedEndpoint(
 				selfLoopBase(),
 				"target",
@@ -117,15 +163,14 @@ describe("computeEditedEndpoint", () => {
 				{ id: "rect-1", object: rectFrame },
 				fixedSource,
 			);
-			expect(result.target.owner).toEqual({ id: "rect-1" });
-			const anchor = result.target.anchor;
-			expect(anchor.kind).toBe("connectPoint");
-			if (anchor.kind === "connectPoint") {
-				expect(anchor.id).not.toBe("bottomCenter");
-			}
+			expect(result.target.anchor).toEqual({
+				kind: "edge",
+				side: "bottom",
+				t: 0.55,
+			});
 		});
 
-		it("does not select center in a self-loop (an edge midpoint is chosen even for a cursor near the center)", () => {
+		it("does not select center in a self-loop (a cursor near the center lands on an edge instead)", () => {
 			const result = computeEditedEndpoint(
 				selfLoopBase(),
 				"target",
@@ -133,7 +178,7 @@ describe("computeEditedEndpoint", () => {
 				{ id: "rect-1", object: rectFrame },
 				fixedSource,
 			);
-			expect(result.target.anchor.kind).toBe("connectPoint");
+			expect(result.target.anchor.kind).not.toBe("center");
 		});
 
 		it("exclusion does not apply when connecting to a different object (picks the nearest as-is)", () => {
@@ -141,7 +186,7 @@ describe("computeEditedEndpoint", () => {
 			const result = computeEditedEndpoint(
 				selfLoopBase(),
 				"target",
-				{ x: 100, y: 200 },
+				{ x: 100, y: 112 },
 				{ id: "rect-2", object: other },
 				fixedSource,
 			);

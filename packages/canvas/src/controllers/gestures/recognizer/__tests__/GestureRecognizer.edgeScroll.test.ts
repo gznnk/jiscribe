@@ -42,7 +42,7 @@ vi.mock("../utils", () => ({
 		x: sim.viewport.minX + clientX / sim.viewport.zoom,
 		y: sim.viewport.minY + clientY / sim.viewport.zoom,
 	}),
-	getKindAndId: () => ({ id: "obj-1", kind: "rect" }),
+	getGestureTarget: () => ({ id: "obj-1", kind: "rect" }),
 	createGetHovered: () => () => [],
 	getInputValue: () => undefined,
 	readInputValue: () => undefined,
@@ -138,7 +138,7 @@ const setup = () => {
 				// Reference the same mutable viewport as getSvgPoint (share zoom / minX).
 				viewport: sim.viewport,
 			},
-		} as GestureRecognizerConfig["canvasStateRef"],
+		},
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();

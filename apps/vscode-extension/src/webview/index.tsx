@@ -1,7 +1,5 @@
 import {
 	Canvas,
-	annotationToolbarEntry,
-	generalToolbarEntry,
 	type Camera,
 	type CanvasConfig,
 	type CanvasDoc,
@@ -9,8 +7,10 @@ import {
 	type CanvasHandle,
 	type ToolbarEntry,
 } from "@workspace/canvas";
+import { annotationToolbarEntry } from "@workspace/plugin-annotation-shapes";
 import { containerToolbarEntry } from "@workspace/plugin-container-shapes";
 import { flowchartToolbarEntry } from "@workspace/plugin-flowchart-shapes";
+import { generalToolbarEntry } from "@workspace/plugin-general-shapes";
 import { umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -28,8 +28,8 @@ import type {
 // (docs/05_extensibility/plugin-architecture-requirements.md)。
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container カテゴリと markdown プリセットは core の既定 layout に
-// 含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
+// annotation / flowchart / container / general カテゴリと markdown プリセットは core の既定
+// layout に含まれない（プラグイン供給）。ホスト側で並び順を決めて差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
@@ -38,8 +38,8 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
-	containerToolbarEntry,
 	umlToolbarEntry,
+	containerToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

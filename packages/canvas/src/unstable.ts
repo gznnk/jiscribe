@@ -10,11 +10,6 @@
  * so they can be imported without pulling in the UI.
  */
 
-// Raw registry registration, downgraded from the stable layer (#144 §3): the
-// declarative `CanvasPlugin.objects` is the intended path; this is the
-// lower-level primitive it's built on.
-export { applyObjectDefinition } from "./controllers/registries";
-
 export { createFrameObject } from "./presentations/objects/base/createFrameObject";
 export type {
 	FrameShapeProps,
@@ -35,27 +30,38 @@ export type { TextOverlayFrameProps } from "./presentations/objects/base/TextOve
 // what needs to change.
 export { TextOverlay } from "./presentations/objects/base/TextOverlay/TextOverlay";
 
-export { createFrameBehavior } from "./controllers/gestures/handlers/objects/base/FrameController";
+export { createFrameBehavior } from "./controllers/behaviors/base/FrameController";
 
 export { createFrameMapper } from "./states/objects/base/FrameMapper";
 
 export { createFrameStateValidator } from "./states/objects/utils/createFrameStateValidator";
 export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 
+// Reading a shape's own text off its state, for a renderer or a bounds calculator
+// that has to branch on whether a slot is empty. The keys of `TextSlots` are the
+// authority on the slots a shape has (there is no separate declaration).
+export { readTextSlot } from "./states/objects/types/TextSlots";
+export type { TextSlots } from "./states/objects/types/TextSlots";
+
+// For a type that draws its own group instead of going through createFrameObject
+// (the sticky's shadowed paper, say): the same two derivations createFrameObject
+// makes internally. `calcTextRegion` is the seam the in-place editor also goes
+// through, so a renderer that places text itself must use it or the text jumps
+// on entering edit mode.
+export { calcTextRegion } from "./presentations/objects/utils/calcTextRegion";
+export { createSvgTransform } from "./presentations/objects/utils/createSvgTransform";
+
 export { resolveAutoColor } from "./presentations/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoColor";
 
-// For shapes deriving a text box's height from its content. Counts displayed lines by
-// reproducing the wrapping of the display-side CSS (pre-wrap + break-word).
-export { calcVisualLineCount } from "./presentations/objects/utils/measureText";
-export type { TextMeasureFont } from "./presentations/objects/utils/measureText";
-
-// Polygon/outline helpers for drawing frame-based plugin shapes and their connector outline.
-export { formatPolygonPoints } from "./presentations/objects/utils/formatPolygonPoints";
+// For shapes deriving a text box's size from its content: measureTextWidth gives the
+// width of one line, calcVisualLineCount the number of lines by reproducing the
+// wrapping of the display-side CSS (pre-wrap + break-word).
 export {
-	centeredPolygonOutline,
-	OUTLINE_CURVE_SEGMENTS,
-} from "./presentations/objects/utils/outlineHelpers";
+	calcVisualLineCount,
+	measureTextWidth,
+} from "./presentations/objects/utils/measureText";
+export type { TextMeasureFont } from "./presentations/objects/utils/measureText";
 
 export { PRECISION } from "./constants/precision";
 
@@ -75,7 +81,7 @@ export { getResizeCursorForRotation } from "./controllers/ui/utils";
 //   - `toggle:{sectionId}`     open/close a section
 //   - `set:{property}:{value}` update the selected object's property, committing at once
 //   - `command:{commandId}`    run a command
-//   - `slider:{property}`      slider (drag previews, dragEnd commits)
+//   - `slider:{property}`      slider (drag previews; dragEnd and a track click commit)
 // See packages/canvas/docs/04-gesture-system.md. Plugins should combine the shared parts
 // below or call `onPropertyUpdate`; writing `data-part` directly couples them to internals
 // and is discouraged.
@@ -84,6 +90,11 @@ export {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuStyled";
+
+// The swatch shown on a color menu's toggle button (a filled circle, checkered
+// when transparent). Pair it with a dropdown panel of your own swatches when the
+// type picks from a palette other than ObjectMenuColorPickerGrid's.
+export { ColorPreviewIcon } from "./controllers/ui/icons/ColorPreviewIcon";
 
 export { ObjectMenuDropdownPanel } from "./controllers/ui/menu/ObjectMenu/common/ObjectMenuDropdownPanel";
 export { ObjectMenuColorPickerGrid } from "./controllers/ui/menu/ObjectMenu/common/ObjectMenuColorPickerGrid";

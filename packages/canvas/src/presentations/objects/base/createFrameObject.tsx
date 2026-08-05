@@ -105,7 +105,10 @@ export type FrameTextOverlayRenderer = (
  * whose body is not plain text passes one; it receives the placed box and draws
  * into `TextOverlayFrame` so display keeps matching the editing textarea.
  *
- * Shadowed stickies and svg wrapped by DOMPurify are out of scope because their draw structure differs.
+ * Out of scope for types whose draw structure differs: a shadowed shape drawing a
+ * group of its own (the sticky in `@workspace/plugin-sticky-shape`), and svg
+ * wrapped by DOMPurify. Those hand-write the component and reach for
+ * `calcTextRegion` / `createSvgTransform` directly.
  */
 export const createFrameObject = <TState extends FrameRenderState>(
 	draw: (state: TState, shape: FrameShapeProps) => ReactNode,
@@ -132,8 +135,8 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		const textRegionCalculator = useObjectTextRegionRegistry().get(type);
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 		// The features.text gate matches the one used by the text-edit gesture and
-		// property-update side: unset (cross / extract) draws no overlay, "body"
-		// draws its one named slot, "slots" enumerates state.text.
+		// property-update side: unset draws no overlay, "body" draws its one named
+		// slot, "slots" enumerates state.text.
 		const textShape = props.features?.text;
 
 		const shape: FrameShapeProps = {

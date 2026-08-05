@@ -10,7 +10,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
@@ -81,7 +81,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 		return (
 			event.targetKind === "menu" &&
 			event.targetId === "stencil-library" &&
-			isLeftButton(event)
+			isPerTargetInteraction(event)
 		);
 	},
 
@@ -105,7 +105,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 
 		switch (event.type) {
 			case "click": {
-				// Shapes that don't support bounds drawing (sticky / polygon) are placed at the viewport center;
+				// Shapes that don't support bounds drawing are placed at the viewport center;
 				// shapes that do (rect / ellipse / polyline) toggle drawing mode
 				if (
 					!registries.objectFactory.supportsBoundsDrawing(preset.objectType)

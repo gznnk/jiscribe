@@ -127,6 +127,20 @@
 			"fontColor": "#1F2937"
 		},
 		{
+			"id": "ctrl-behaviors",
+			"type": "rect",
+			"x": 500,
+			"y": 100,
+			"width": 110,
+			"height": 60,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"text": "behaviors",
+			"fontColor": "#1F2937"
+		},
+		{
 			"id": "ctrl-commands",
 			"type": "rect",
 			"x": 620,
@@ -608,6 +622,26 @@
 			],
 			"source": {
 				"owner": { "id": "ctrl-utils" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e29",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 555, "y": 390 },
+				{ "x": 730, "y": 390 }
+			],
+			"source": {
+				"owner": { "id": "ctrl-behaviors" },
 				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
 			},
 			"target": {

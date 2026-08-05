@@ -10,9 +10,11 @@ const baseState = (
 	overrides: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
 	({
+		objects: {},
 		selectedIds: [],
 		selectedConnectorId: null,
 		selectedVertex: null,
+		selectedTextSlot: null,
 		multiSelectGroup: null,
 		areaSelection: null,
 		shapeDrawing: null,
@@ -44,6 +46,26 @@ describe("DeselectAllCommand", () => {
 		expect(next.shapeDrawing).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.edgeScrollEnabled).toBe(false);
+	});
+
+	it("clears the object selection too when a text slot is selected, without an intermediate step", () => {
+		// Escape steps out one level at a time (EscapeSelectionCommand); the explicit
+		// deselect-all does not.
+		const state = baseState({
+			objects: {
+				"rec-1": {
+					id: "rec-1",
+					type: "record",
+					features: { text: "slots" },
+					text: { name: { text: "User" }, rows: { text: [] } },
+				},
+			} as never,
+			selectedIds: ["rec-1"],
+			selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
+		});
+		const next = DeselectAllCommand.execute(state, registries);
+		expect(next.selectedTextSlot).toBeNull();
+		expect(next.selectedIds).toEqual([]);
 	});
 
 	it("closes an open StencilLibrary category flyout", () => {
@@ -112,5 +134,11 @@ describe("DeselectAllCommand", () => {
 			});
 			expect(DeselectAllCommand.canExecute(state, registries)).toBe(true);
 		});
+	});
+
+	it("keeps Escape out of its bindings, so it cannot shadow EscapeSelectionCommand", () => {
+		// findByShortcut returns the first match only, so the two must not both claim Escape.
+		const bindings = Object.values(DeselectAllCommand.shortcuts ?? {}).flat();
+		expect(bindings.some((binding) => binding.code === "Escape")).toBe(false);
 	});
 });

@@ -1,5 +1,5 @@
 import type { TextSlot } from "@workspace/canvas/doc";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
+import { TEXT_LINE_HEIGHT } from "@workspace/canvas-sdk/doc";
 import { describe, it, expect } from "vitest";
 
 import {
@@ -24,8 +24,9 @@ const nameSlot = (text: string, style: Partial<TextSlot> = {}): TextSlot => ({
 });
 
 /** A compartment slot holding the given rows. */
-const listSlot = (rows: string[]): TextSlot => ({
+const listSlot = (rows: string[], style: Partial<TextSlot> = {}): TextSlot => ({
 	...RECORD_SLOT_STYLE_DEFAULTS,
+	...style,
 	text: rows,
 });
 
@@ -174,6 +175,28 @@ describe("calcRecordSlotRegions", () => {
 		expect(attributes?.y).toBe(-100 + RECORD_HEADER_HEIGHT);
 		expect(operations?.y).toBe(
 			-100 + RECORD_HEADER_HEIGHT + calcRecordListHeight(2),
+		);
+	});
+
+	it("a larger fontSize on a compartment grows its share of the box", () => {
+		const { attributes, operations } = calcRecordSlotRegions({
+			width: 180,
+			height: 300,
+			text: {
+				name: nameSlot("User"),
+				attributes: listSlot(["id: string", "email: string"], {
+					fontSize: 28,
+				}),
+				operations: listSlot([]),
+			},
+		});
+		expect(attributes?.height).toBe(calcRecordListHeight(2, 28));
+		// Each of the two rows grew by the line-height difference.
+		expect(attributes?.height).toBe(
+			calcRecordListHeight(2) + 2 * (lineHeightOf(28) - lineHeightOf(14)),
+		);
+		expect(operations?.y).toBe(
+			-150 + RECORD_HEADER_HEIGHT + calcRecordListHeight(2, 28),
 		);
 	});
 

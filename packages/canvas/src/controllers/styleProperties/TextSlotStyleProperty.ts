@@ -8,10 +8,10 @@ import type { TextSlots } from "../../states/objects/types/TextSlots";
  * A text styling property (fontSize, textAlign, …), supported by every object
  * that holds text whatever shape its doc uses (`features.text`).
  *
- * Text styling is stored per slot, so one update writes into **every** slot of
- * the object. That reproduces what the menus did while the styling was
- * shape-wide; a UI for styling one slot on its own would need a different
- * handler, not a different write here.
+ * Text styling is stored per slot, so the write targets whichever slots the
+ * selection addresses: the one slot selected below the object when there is
+ * one, otherwise **every** slot of the object. The menus read their current
+ * value through the same rule (getSelectedOrFirstTextSlot).
  */
 export class TextSlotStyleProperty extends SelectionStyleProperty {
 	constructor(readonly valueType: StyleValueType) {
@@ -26,12 +26,24 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		obj: ObjectState,
 		path: readonly string[],
 		value: string | number | boolean,
+		selectedSlotId: string | undefined,
 	): ObjectState | null {
 		const slots = (obj as ObjectState & TextStyleState).text;
 		if (slots === undefined) {
 			return null;
 		}
 		const property = path[0];
+		const selectedSlot =
+			selectedSlotId === undefined ? undefined : slots[selectedSlotId];
+		if (selectedSlotId !== undefined && selectedSlot !== undefined) {
+			return {
+				...obj,
+				text: {
+					...slots,
+					[selectedSlotId]: { ...selectedSlot, [property]: value },
+				},
+			} as ObjectState;
+		}
 		const updatedSlots: TextSlots = Object.fromEntries(
 			Object.entries(slots).map(([slotId, slot]) => [
 				slotId,

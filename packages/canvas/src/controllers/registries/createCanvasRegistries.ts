@@ -8,8 +8,12 @@ import {
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
+import { createObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import { createObjectGeometryKeyRegistry } from "../../presentations/objects/registry/ObjectGeometryKeyRegistry";
 import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
+import { createObjectSvgDefsRegistry } from "../../presentations/objects/registry/ObjectSvgDefsRegistry";
 import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
+import { createObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -48,6 +52,10 @@ export const createCanvasRegistries = (
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
+		objectExtraConnectPoints: createObjectExtraConnectPointsRegistry(),
+		objectGeometryKey: createObjectGeometryKeyRegistry(),
+		objectVisualBounds: createObjectVisualBoundsRegistry(),
+		objectSvgDefs: createObjectSvgDefsRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),

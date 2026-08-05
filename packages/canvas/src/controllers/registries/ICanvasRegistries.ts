@@ -1,5 +1,7 @@
 import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -20,7 +22,7 @@ import type { StencilRegistry } from "../ui/objects/StencilRegistry";
  * contract, so callers pass their real bundle where an `ICanvasRegistries` is
  * expected.
  *
- * The two geometry registries are declared by their real classes: they live in
+ * The three geometry registries are declared by their real classes: they live in
  * `presentations` but are imported type-only (as `CanvasRegistries` already
  * does), so no runtime edge is added and the graph stays acyclic.
  */
@@ -40,6 +42,18 @@ export interface ICanvasRegistries {
 	 * resolution: it recenters the edge anchors of a tapering silhouette.
 	 */
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
+	/**
+	 * Per-type extra connection points, the third member of the connector
+	 * path-resolution set: it is what lets an endpoint name an anchor the shape's
+	 * type declares itself (the brace's `tip`).
+	 */
+	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
+	/**
+	 * Per-type visual bounds, read only by the commands that frame a view
+	 * (zoom-to-fit / zoom-to-selection) so decoration drawn outside a shape's
+	 * geometry box — an actor's label, say — is not cropped.
+	 */
+	objectVisualBounds: ObjectVisualBoundsRegistry;
 	/**
 	 * Command lookup, used by `handleCommand` (reached from the menu/context/toolbar
 	 * gesture handlers). Inline shape — mirrors what the pure tree calls on the

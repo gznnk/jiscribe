@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { createFrameObject } from "@workspace/canvas-sdk";
 import type { Rect } from "@workspace/geometry";
 
 import { calcRecordSlotRegions } from "./calcRecordSlotRegions";
@@ -16,7 +16,7 @@ import type { RecordState } from "../state/RecordState";
  * calcRecordTextRegion, memo) lives in createFrameObject; here we draw the
  * compartments and the linework. The wrapping <g> carries the object's
  * data-kind/data-id, and each compartment carries its slot id as data-part, so a
- * double click resolves to the compartment it landed in (getKindAndId).
+ * double click resolves to the compartment it landed in (getGestureTarget).
  *
  * Every fill is laid down before any line, so a compartment's fill can never
  * cover the divider above it.

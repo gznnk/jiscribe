@@ -13,24 +13,27 @@ import type * as RecognizerUtils from "../utils";
  *
  * Covers paths that the batchOrdering / edgeScroll tests do not:
  *   - click / doubleClick decisions (threshold, triple-tap suppression, target-independence)
- *   - multitouch (ignoring the second pointerdown)
+ *   - multitouch (ignoring a second non-touch pointerdown; the touch pinch path
+ *     is covered by GestureRecognizer.pinch.test.ts)
  *   - pointercancel (dragEnd while dragging / silent when not dragging)
  *   - turning a wheel outside a drag into a wheel gesture
  *   - propagation of mods / button / targetKind
  *   - origin suppression via isGestureOptedOut
  *   - lifecycle of cancelPendingGesture (abort, capture release, non-terminal resume)
  *
- * DOM-dependent utilities are replaced with deterministic stubs. getKindAndId's return value
+ * DOM-dependent utilities are replaced with deterministic stubs. getGestureTarget's return value
  * (= presence of targetId/targetKind) is switched per test via mockUtil.
  */
 
 const mockUtil = vi.hoisted(() => ({
-	kindAndId: { id: "obj-1", kind: "rect" } as {
-		id: string;
-		kind: string;
-	} | null,
+	gestureTarget: {
+		id: "obj-1",
+		kind: "rect",
+	} as RecognizerUtils.GestureTarget | null,
 	optedOut: false,
 	inputValue: undefined as string | undefined,
+	// world = client / zoom, letting tests verify screen-based decisions under zoom
+	zoom: 1,
 }));
 
 // Replace only the DOM/layout-dependent utilities with deterministic stubs; use the real
@@ -41,10 +44,10 @@ vi.mock("../utils", async (importActual) => {
 	return {
 		...actual,
 		getSvgPoint: (_svg: unknown, clientX: number, clientY: number) => ({
-			x: clientX,
-			y: clientY,
+			x: clientX / mockUtil.zoom,
+			y: clientY / mockUtil.zoom,
 		}),
-		getKindAndId: () => mockUtil.kindAndId,
+		getGestureTarget: () => mockUtil.gestureTarget,
 		createGetHovered: () => () => [],
 		getInputValue: () => mockUtil.inputValue,
 		readInputValue: () => mockUtil.inputValue,
@@ -69,9 +72,10 @@ const flushRaf = (): void => {
 beforeEach(() => {
 	rafCallbacks = [];
 	cancelledIds = [];
-	mockUtil.kindAndId = { id: "obj-1", kind: "rect" };
+	mockUtil.gestureTarget = { id: "obj-1", kind: "rect" };
 	mockUtil.optedOut = false;
 	mockUtil.inputValue = undefined;
+	mockUtil.zoom = 1;
 	vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback): number => {
 		rafCallbacks.push(cb);
 		return rafCallbacks.length;
@@ -96,6 +100,7 @@ type Mods = {
 type MockPointerEvent = {
 	type: string;
 	pointerId: number;
+	pointerType?: string;
 	clientX: number;
 	clientY: number;
 	shiftKey: boolean;
@@ -112,10 +117,16 @@ const makeEvent = (
 	clientX: number,
 	clientY: number,
 	timeStamp: number,
-	options: { pointerId?: number; button?: number; mods?: Mods } = {},
+	options: {
+		pointerId?: number;
+		pointerType?: string;
+		button?: number;
+		mods?: Mods;
+	} = {},
 ): MockPointerEvent => ({
 	type,
 	pointerId: options.pointerId ?? 1,
+	pointerType: options.pointerType,
 	clientX,
 	clientY,
 	shiftKey: options.mods?.shiftKey ?? false,
@@ -158,7 +169,7 @@ const setup = (options: { container?: HTMLElement } = {}) => {
 				edgeScrollEnabled: false,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
-		} as GestureRecognizerConfig["canvasStateRef"],
+		},
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();
@@ -235,12 +246,12 @@ describe("GestureRecognizer click / doubleClick", () => {
 	it("a doubleClick even when the target differs, as long as time and position match (OS convention; a control appearing under the cursor after the first click must not swallow the pair)", () => {
 		const { dispatch, types, events } = setup();
 
-		mockUtil.kindAndId = { id: "obj-1", kind: "connector" };
+		mockUtil.gestureTarget = { id: "obj-1", kind: "connector" };
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		dispatch(makeEvent("pointerup", 0, 0, 1000));
 		flushRaf();
 
-		mockUtil.kindAndId = { id: "obj-1", kind: "control" };
+		mockUtil.gestureTarget = { id: "obj-1", kind: "control" };
 		dispatch(makeEvent("pointerdown", 0, 0, 1100));
 		dispatch(makeEvent("pointerup", 0, 0, 1100));
 		flushRaf();
@@ -267,7 +278,7 @@ describe("GestureRecognizer click / doubleClick", () => {
 		// Regression: previously "no recent click recorded" was represented as undefined, so when
 		// targetId was undefined (background) and timeStamp < threshold, the first click turned into
 		// a doubleClick. Separating lastClick=null (no baseline recorded) ensures the first is always a click.
-		mockUtil.kindAndId = null;
+		mockUtil.gestureTarget = null;
 		dispatch(makeEvent("pointerdown", 0, 0, 100));
 		dispatch(makeEvent("pointerup", 0, 0, 100));
 		flushRaf();
@@ -278,7 +289,7 @@ describe("GestureRecognizer click / doubleClick", () => {
 	it("the third tap right after a doubleClick is a click even on the background (baseline reset)", () => {
 		const { dispatch, events } = setup();
 
-		mockUtil.kindAndId = null;
+		mockUtil.gestureTarget = null;
 		for (let i = 0; i < 3; i++) {
 			const t = 1000 + i * 100;
 			dispatch(makeEvent("pointerdown", 0, 0, t));
@@ -297,6 +308,8 @@ describe("GestureRecognizer click / doubleClick", () => {
 	});
 });
 
+// Non-touch pointers (makeEvent leaves pointerType unset) never enter a pinch,
+// so a second pointerdown is simply ignored.
 describe("GestureRecognizer multitouch suppression", () => {
 	it("a second pointerdown during an ongoing gesture is ignored", () => {
 		const { dispatch, events, types } = setup();
@@ -439,7 +452,7 @@ describe("GestureRecognizer propagated properties (mods / button / targetKind)",
 	it("targetKind is propagated to pressed", () => {
 		const { dispatch, events } = setup();
 
-		mockUtil.kindAndId = { id: "node-7", kind: "ellipse" };
+		mockUtil.gestureTarget = { id: "node-7", kind: "ellipse" };
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		flushRaf();
 
@@ -494,6 +507,7 @@ describe("GestureRecognizer lifecycle", () => {
 		const released: number[] = [];
 		const container = {
 			setPointerCapture: (pointerId: number) => captured.push(pointerId),
+			hasPointerCapture: () => true,
 			releasePointerCapture: (pointerId: number) => released.push(pointerId),
 		} as unknown as HTMLElement;
 		const { dispatch, recognizer, types } = setup({ container });
@@ -540,6 +554,90 @@ describe("GestureRecognizer lifecycle", () => {
 	});
 });
 
+// The drag threshold is per pointerType (touch gets a wider slop than mouse/pen)
+// and measured in screen pixels, so the feel does not change with zoom.
+describe("GestureRecognizer drag threshold (per pointerType, screen px)", () => {
+	it("a touch move within the touch slop still resolves to a click", () => {
+		const { dispatch, types } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerType: "touch" }));
+		dispatch(makeEvent("pointermove", 9, 0, 1016, { pointerType: "touch" }));
+		dispatch(makeEvent("pointerup", 9, 0, 1032, { pointerType: "touch" }));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "click"]);
+	});
+
+	it("a touch move beyond the touch slop confirms the drag", () => {
+		const { dispatch, types } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerType: "touch" }));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 10, 0, 1016, { pointerType: "touch" }));
+		flushRaf();
+		dispatch(makeEvent("pointerup", 10, 0, 1032, { pointerType: "touch" }));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "dragStart", "dragEnd"]);
+	});
+
+	it("a mouse move of the same size already drags (the narrow mouse threshold)", () => {
+		const { dispatch, types } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 9, 0, 1016));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "dragStart"]);
+	});
+
+	it("the decision is screen-based: a 4px screen move confirms even when zoom shrinks it to 1 world px", () => {
+		mockUtil.zoom = 4;
+		const { dispatch, types, events } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 4, 0, 1016));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "dragStart"]);
+		// World coordinates on the gesture still reflect the zoomed mapping
+		expect(events.at(-1)?.last).toEqual({ x: 1, y: 0 });
+	});
+});
+
+// Processing is deferred to the RAF batch, so a quick touch tap can be fully over
+// before its pointerdown is processed; the DOM then rejects capture calls for the
+// no-longer-active pointer with NotFoundError. The recognizer must survive that
+// and still deliver the gesture.
+describe("GestureRecognizer pointer capture safety", () => {
+	it("a touch that lifted before the RAF batch ran still yields its tap (NotFoundError tolerated)", () => {
+		const container = {
+			setPointerCapture: () => {
+				throw new DOMException(
+					"No active pointer with the given id is found.",
+					"NotFoundError",
+				);
+			},
+			hasPointerCapture: () => false,
+			releasePointerCapture: () => {
+				throw new DOMException(
+					"No active pointer with the given id is found.",
+					"NotFoundError",
+				);
+			},
+		} as unknown as HTMLElement;
+		const { dispatch, types } = setup({ container });
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		dispatch(makeEvent("pointerup", 0, 0, 1010));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "click"]);
+	});
+});
+
 // The boundary precision of the threshold is covered by isDoubleClick's solitary test. Here we
 // check, with representative near/far cases, that the recognizer correctly snapshots the
 // pointerdown position and passes it to the decision (= pipeline wiring).
@@ -566,7 +664,7 @@ describe("GestureRecognizer doubleClick distance threshold (wiring)", () => {
 	it("even on the background (targetId undefined), a close distance produces a doubleClick", () => {
 		const { dispatch, events } = setup();
 
-		mockUtil.kindAndId = null;
+		mockUtil.gestureTarget = null;
 		dispatch(makeEvent("pointerdown", 200, 200, 1000));
 		dispatch(makeEvent("pointerup", 200, 200, 1000));
 		flushRaf();
@@ -577,11 +675,25 @@ describe("GestureRecognizer doubleClick distance threshold (wiring)", () => {
 		expect(finalsOf(events)).toEqual(["click", "doubleClick"]);
 	});
 
+	it("two touch taps beyond the mouse distance threshold still pair (touch gets the wider threshold)", () => {
+		const { dispatch, events } = setup();
+
+		// 10px apart: outside the 5px mouse threshold, inside the 20px touch one.
+		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerType: "touch" }));
+		dispatch(makeEvent("pointerup", 0, 0, 1000, { pointerType: "touch" }));
+		flushRaf();
+		dispatch(makeEvent("pointerdown", 10, 0, 1100, { pointerType: "touch" }));
+		dispatch(makeEvent("pointerup", 10, 0, 1100, { pointerType: "touch" }));
+		flushRaf();
+
+		expect(finalsOf(events)).toEqual(["click", "doubleClick"]);
+	});
+
 	it("regression: two consecutive background clicks at different positions do not coalesce into a doubleClick", () => {
 		const { dispatch, events } = setup();
 
 		// Both targetIds are undefined, but the positions are far apart, so the distance check yields separate clicks.
-		mockUtil.kindAndId = null;
+		mockUtil.gestureTarget = null;
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		dispatch(makeEvent("pointerup", 0, 0, 1000));
 		flushRaf();

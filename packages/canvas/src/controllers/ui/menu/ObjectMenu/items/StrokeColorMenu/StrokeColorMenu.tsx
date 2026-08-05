@@ -11,13 +11,14 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
 import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "stroke-color";
 
 type StrokeColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 const getSelectedStrokeColor = (state: CanvasControllerState): string => {

@@ -3,11 +3,14 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
- * GestureHandler that processes button interactions on the top toolbar.
- * Handles events with targetKind "menu" and targetId "toolbar".
+ * GestureHandler that processes interactions on the top toolbar.
+ * Handles events with targetKind "menu" and targetId "toolbar". Only the bar
+ * element carries those attributes; its buttons carry just data-part and resolve
+ * their kind/id through closest(), so a press on the bar's empty area arrives
+ * here with no targetPart and only dismisses the open menus.
  *
  * targetPart format:
  * - `command:{commandId}` → execute the command (canExecute is judged inside handleCommand)
@@ -28,16 +31,21 @@ export const ToolbarHandler: GestureHandler = {
 		return (
 			event.targetKind === "menu" &&
 			event.targetId === "toolbar" &&
-			isLeftButton(event)
+			isPerTargetInteraction(event)
 		);
 	},
 
 	handle(state, event, registries) {
 		let nextState = state;
 
-		// Close the context menu on a press over the toolbar
+		// Close the context menu and any open category flyout on a press over the
+		// toolbar — its buttons and its empty area alike.
 		if (event.type === "pressed") {
-			nextState = { ...nextState, contextMenuPosition: null };
+			nextState = {
+				...nextState,
+				contextMenuPosition: null,
+				stencilLibraryOpenCategory: null,
+			};
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";

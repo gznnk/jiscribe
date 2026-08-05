@@ -7,7 +7,8 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * Produces a shape's true outline (the drawn silhouette — NOT the bounding
  * box) as a closed polygon in the shape's local coordinate space (origin at
  * the center, width/height units, before transform), from its state
- * (width/height plus any per-shape fields, e.g. the callout's tail). Curved
+ * (width/height plus any per-shape fields, e.g. the callout's tail in
+ * `@workspace/plugin-annotation-shapes`). Curved
  * shapes return a sampled polyline. This is the single seam shared by the
  * connector endpoint resolver and the connection-anchor dots so both attach to
  * the drawn outline rather than the bounding box. Implementations declare what

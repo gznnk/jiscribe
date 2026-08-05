@@ -35,8 +35,6 @@ export type {
 // (e.g. `containerToolbarEntry`).
 export {
 	DEFAULT_TOOLBAR_LAYOUT,
-	generalToolbarEntry,
-	annotationToolbarEntry,
 	basicToolbarEntry,
 	type ToolbarEntry,
 } from "./controllers/ui/menu/Toolbar";
@@ -133,6 +131,7 @@ export type {
 	CustomItem,
 	BuiltinItemKey,
 	ObjectMenuItemProps,
+	ObjectMenuPropertyUpdater,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 export type {
 	SelectionControlContext,
@@ -141,6 +140,9 @@ export type {
 	SelectionControlProps,
 } from "./controllers/ui/controls/SelectionControlTypes";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
+// The slot id every single-text shape (`features.text: "body"`) holds, i.e. the
+// key its `state.text` carries. A shape with several slots names its own instead.
+export { BODY_TEXT_SLOT_ID } from "./constants/textSlotId";
 export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
 export type {
 	ObjectTextEditOverflowResolver,
@@ -148,6 +150,12 @@ export type {
 } from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
 export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
 export type { ObjectAnchorRegionCalculator } from "./presentations/objects/registry/ObjectAnchorRegionRegistry";
+export type {
+	ExtraConnectPoint,
+	ObjectExtraConnectPointsCalculator,
+} from "./presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+export type { ObjectGeometryKeyCalculator } from "./presentations/objects/registry/ObjectGeometryKeyRegistry";
+export type { ObjectVisualBoundsCalculator } from "./presentations/objects/registry/ObjectVisualBoundsRegistry";
 export type {
 	Stencil,
 	StencilIconProps,

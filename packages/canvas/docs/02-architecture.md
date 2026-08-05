@@ -31,6 +31,7 @@ packages/canvas/src/
 ├── controllers/            # state management + business logic
 │   ├── Canvas.tsx
 │   ├── gestures/           # recognizer + handlers + registry/ (GestureHandlerRegistry / ObjectBehaviorRegistry)
+│   ├── behaviors/          # ObjectBehavior implementations (moveByDelta / transformByGroup / rotateByGroup)
 │   ├── commands/           # Command pattern (selection/arrange/arrow/connector/group/history/text/view) + CommandRegistry
 │   ├── reducer/            # canvasReducer + CanvasActions
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc, etc.
@@ -44,7 +45,7 @@ packages/canvas/src/
 ```
 
 For each shape (rect / ellipse / diamond / group / polygon / polyline / connector / sticky / svg), there is a corresponding
-`states/objects/.../<shape>/`, `controllers/gestures/handlers/objects/...`, and
+`states/objects/.../<shape>/`, `controllers/behaviors/...`, and
 `presentations/objects/...`.
 
 ## Layer Composition and Dependencies
@@ -58,7 +59,8 @@ Dependency: `states → schemas` (State is converted from Doc).
 
 ### Logic Layer (controllers)
 
-- **gestures/handlers/**: Receive gestures and update `CanvasState`. Under `objects/` are per-shape Controllers (`moveByDelta` / `transformByGroup`) and EventHandlers, and under `base/` is shared transform logic (FrameTransform / PolyTransform / GroupTransform).
+- **gestures/handlers/**: Receive gestures and update `CanvasState`. Under `objects/` and `controls/` are the per-target EventHandlers.
+- **behaviors/**: `ObjectBehavior` implementations registered in `ObjectBehaviorRegistry` (`moveByDelta` / `transformByGroup` / `rotateByGroup`). Per-shape Controllers live under `primitives/` and `connections/`, shared transform logic under `base/` (FrameTransform / PolyTransform / GroupTransform). Consumed via the registry from `gestures`, `commands`, `reducer`, and `utils`.
 - **commands/**: Operations shared by shortcuts, menus, and the toolbar → [Command System](./05-command-system.md).
 - **reducer/**: Dispatches actions to the appropriate handlers → [State Update Flow](./06-state-update-flow.md).
 - **ui/**: UI control logic such as transform controls and menus.
@@ -124,6 +126,7 @@ graph TD
     end
     subgraph Controllers["Logic Layer (controllers)"]
         Gestures["gestures/handlers (+ registry/ · ObjectBehaviorEntry)"]
+        Behaviors["behaviors (moveByDelta / transformByGroup / rotateByGroup)"]
         Commands["commands (+ CommandRegistry)"]
         Reducer["reducer"]
         UI["ui (+ menu / controls / Stencil types)"]
@@ -138,6 +141,7 @@ graph TD
     PresentationComponents --> StatesTypes
     PresentationUtils --> StatesTypes
     Gestures --> StatesTypes
+    Behaviors --> StatesTypes
     Commands --> StatesTypes
     Reducer --> StatesTypes
     UI --> StatesTypes
@@ -177,7 +181,7 @@ Thanks to the Registry pattern, adding a shape is completed in "6 steps + regist
 1. **Schema**: `schemas/objects/primitives/<Shape>Doc.ts` (+ `validate<Shape>Doc.ts`)
 2. **State**: `states/objects/primitives/<shape>/<Shape>State.ts`
 3. **Mapper**: `states/objects/primitives/<shape>/<Shape>Mapper.ts` (Doc ↔ State)
-4. **Controller**: `controllers/gestures/handlers/objects/primitives/<Shape>Controller.ts` (`moveByDelta` / `transformByGroup`)
+4. **Controller**: `controllers/behaviors/primitives/<Shape>Controller.ts` (`moveByDelta` / `transformByGroup`)
 5. **Component**: `presentations/objects/primitives/<Shape>/<Shape>.tsx`
 6. **Registration**: Register it in **both** registration paths, because they populate different registry sets:
    - `controllers/registries/initializeObjectRegistry.ts` — mapper / component / behavior / state validator / menu (the UI-side registries)

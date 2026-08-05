@@ -7,7 +7,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
+import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 type BoldMenuProps = {
 	canvasState: CanvasControllerState;
@@ -19,8 +19,7 @@ type BoldMenuProps = {
  */
 const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
 	const messages = useCanvasMessages();
-	const { selectedIds, objects } = canvasState;
-	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const slot = getSelectedOrFirstTextSlot(canvasState);
 	const isBold = slot?.fontWeight === "bold";
 
 	return (

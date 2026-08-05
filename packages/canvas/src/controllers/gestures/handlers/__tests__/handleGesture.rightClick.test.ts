@@ -2,14 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { clickPlacedPlugin } from "../../../__tests__/support/clickPlacedPlugin";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
-import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { createCanvasRegistries } from "../../../registries/createCanvasRegistries";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
-const registries = createTestRegistries();
+// `pin` is the click-placed (non-drag-drawn) stand-in the plugin supplies; a
+// drag-drawn preset like rect enters drawing mode instead of placing on click.
+const registries = createCanvasRegistries({ plugins: [clickPlacedPlugin] });
 
 const emptyDoc: CanvasDoc = {
 	version: 1,
@@ -76,7 +79,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const state = baseState();
 			const nextState = handleGesture(
 				state,
-				clickOn(0, "menu", "stencil-library", "item:sticky"),
+				clickOn(0, "menu", "stencil-library", "item:pin"),
 				registries,
 			);
 			expect(nextState.rootIds.length).toBe(state.rootIds.length + 1);
@@ -86,7 +89,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const state = baseState();
 			const nextState = handleGesture(
 				state,
-				clickOn(2, "menu", "stencil-library", "item:sticky"),
+				clickOn(2, "menu", "stencil-library", "item:pin"),
 				registries,
 			);
 			expect(nextState.rootIds).toEqual(state.rootIds);

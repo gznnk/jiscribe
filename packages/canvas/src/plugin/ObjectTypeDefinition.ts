@@ -6,8 +6,11 @@ import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/O
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsCalculator } from "../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectGeometryKeyCalculator } from "../presentations/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectVisualBoundsCalculator } from "../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
 import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
@@ -47,6 +50,16 @@ export type ObjectTypeDefinition<
 	/** SVG renderer for the shape. Editable types read `isEditing` by self-declaring `FC<TState & TextEditable>`. */
 	component: FC<TState>;
 
+	/**
+	 * Shared SVG resources (filter / gradient / marker / …) that `component`
+	 * references by `url(#…)`. Rendered once per canvas inside the canvas-wide
+	 * `<defs>`, regardless of how many objects of this type exist — including
+	 * zero, so a reference never outlives its target. Element ids are
+	 * document-global, so prefix them with this type's name (`sticky-blur`) to
+	 * stay clear of other types (see ObjectSvgDefsRegistry).
+	 */
+	svgDefs?: FC;
+
 	/** Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry). */
 	textRegion?: ObjectTextRegionCalculator;
 
@@ -63,6 +76,36 @@ export type ObjectTypeDefinition<
 
 	/** Band the edge connect points are centered on. Omitted = full bbox (see ObjectAnchorRegionRegistry). */
 	anchorRegion?: ObjectAnchorRegionCalculator;
+
+	/**
+	 * Named connection points this type offers on top of the four edge midpoints
+	 * every connectable shape has — the brace's `tip`, say. Each carries its own
+	 * local position and outward direction, so a connector attaches there and
+	 * leaves along it. Their ids are what a saved doc stores in
+	 * `{ kind: "connectPoint", id }`, so they must stay stable. Omitted = edge
+	 * midpoints only (see ObjectExtraConnectPointsRegistry).
+	 */
+	extraConnectPoints?: ObjectExtraConnectPointsCalculator;
+
+	/**
+	 * Key over whatever `outline` / `anchorRegion` / `extraConnectPoints` read beyond the frame fields
+	 * (cx / cy / width / height / rotation / scaleX / scaleY), for the consumers
+	 * that memoize connector endpoint resolution on those fields. Required for a
+	 * type whose silhouette can change while the frame stands still (the callout's
+	 * tail, in `@workspace/plugin-annotation-shapes`) — without it, connectors
+	 * attached to the shape keep the
+	 * endpoints resolved against the previous silhouette. Omitted = the frame
+	 * fields fully determine the resolved geometry (see ObjectGeometryKeyRegistry).
+	 */
+	geometryKey?: ObjectGeometryKeyCalculator;
+
+	/**
+	 * Everything the type draws, including what falls outside its geometry box.
+	 * Read by the visual-extent consumers only (zoom-to-fit, export viewBox,
+	 * culling, menu placement) — selection and snapping keep using the geometry
+	 * box. Omitted = geometry box (see ObjectVisualBoundsRegistry).
+	 */
+	visualBounds?: ObjectVisualBoundsCalculator;
 
 	// --- Interaction (controllers) ---
 

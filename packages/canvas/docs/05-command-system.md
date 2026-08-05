@@ -51,16 +51,16 @@ Because `execute` is a pure function, each Command can be tested in isolation (s
 
 Commands are split into directories by purpose (`controllers/commands/`).
 
-| Directory    | Commands                                                                                                                                  |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `selection/` | SelectAll / DeselectAll / Delete / Cut / Copy / Duplicate                                                                                 |
-| `arrange/`   | `MoveCommands` (arrow-key nudge: up/down/left/right × normal/Shift, 8 commands) / BringToFront / BringForward / SendBackward / SendToBack |
-| `arrow/`     | SwapArrows (swap connector endpoints)                                                                                                     |
-| `connector/` | SetRoutingStraight / SetRoutingOrthogonal (line shape) / ResetConnectorRoute (drop authored vertices)                                     |
-| `group/`     | Group / Ungroup                                                                                                                           |
-| `history/`   | Undo / Redo                                                                                                                               |
-| `text/`      | StartTextEdit                                                                                                                             |
-| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection / ResetZoom                                                                                |
+| Directory    | Commands                                                                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selection/` | SelectAll / DeselectAll (Ctrl+Shift+A) / EscapeSelection (Escape) / SelectNextTextSlot / SelectPreviousTextSlot (Tab / Shift+Tab) / Delete / Cut / Copy / Duplicate |
+| `arrange/`   | `MoveCommands` (arrow-key nudge: up/down/left/right × normal/Shift, 8 commands) / BringToFront / BringForward / SendBackward / SendToBack                           |
+| `arrow/`     | SwapArrows (swap connector endpoints)                                                                                                                               |
+| `connector/` | SetRoutingStraight / SetRoutingOrthogonal (line shape) / ResetConnectorRoute (drop authored vertices)                                                               |
+| `group/`     | Group / Ungroup                                                                                                                                                     |
+| `history/`   | Undo / Redo                                                                                                                                                         |
+| `text/`      | StartTextEdit                                                                                                                                                       |
+| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection / ResetZoom                                                                                                          |
 
 > Note that the values `Command.category` can currently take are the four `selection` / `edit` / `arrange` / `view`,
 > which are used for grouping in the UI. The directory structure (table above) is more fine-grained because it

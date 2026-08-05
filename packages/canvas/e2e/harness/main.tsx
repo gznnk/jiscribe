@@ -1,4 +1,8 @@
 import {
+	annotationPlugin,
+	annotationToolbarEntry,
+} from "@workspace/plugin-annotation-shapes";
+import {
 	containerPlugin,
 	containerToolbarEntry,
 } from "@workspace/plugin-container-shapes";
@@ -6,7 +10,12 @@ import {
 	flowchartPlugin,
 	flowchartToolbarEntry,
 } from "@workspace/plugin-flowchart-shapes";
+import {
+	generalPlugin,
+	generalToolbarEntry,
+} from "@workspace/plugin-general-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
+import { stickyPlugin } from "@workspace/plugin-sticky-shape";
 import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
@@ -14,28 +23,31 @@ import "katex/dist/katex.min.css";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "../../src";
-import {
-	Canvas,
-	annotationToolbarEntry,
-	darkCanvasTheme,
-	extractCanvasSourceFromPng,
-	generalToolbarEntry,
-} from "../../src";
+import { Canvas, darkCanvasTheme, extractCanvasSourceFromPng } from "../../src";
 import { createCanvasParser } from "../../src/doc";
 import "./harness.css";
 
-// The flowchart / container / markdown shapes were removed from core, leaving
-// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape as their only source
+// The flowchart / container / markdown / sticky / general / annotation shapes were removed from
+// core, leaving @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
+// @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
+// @workspace/plugin-general-shapes / @workspace/plugin-annotation-shapes as their only source
 // (docs/05_extensibility/plugin-architecture-requirements.md). They are registered in
 // devDependencies as a dev-only circular dependency for e2e, keeping the related specs alive.
-const plugins = [flowchartPlugin, containerPlugin, markdownPlugin, umlPlugin];
+const plugins = [
+	flowchartPlugin,
+	containerPlugin,
+	markdownPlugin,
+	stickyPlugin,
+	umlPlugin,
+	generalPlugin,
+	annotationPlugin,
+];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// The flowchart and container categories and the markdown preset come from plugins and are
-// not in core's default layout. The specs depend on both flyout buttons and the Markdown
-// preset, so the harness passes a layout with the original arrangement.
+// The annotation / flowchart / container / general categories and the markdown / sticky presets
+// come from plugins and are not in core's default layout. The specs depend on the flyout buttons
+// and on the presets, so the harness passes a layout mirroring the apps' arrangement.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
@@ -44,8 +56,8 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
-	containerToolbarEntry,
 	umlToolbarEntry,
+	containerToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

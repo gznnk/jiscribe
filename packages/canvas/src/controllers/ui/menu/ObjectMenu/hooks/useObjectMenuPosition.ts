@@ -1,6 +1,7 @@
 import { type RefObject, useLayoutEffect, useMemo, useState } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
 
 /** Distance between the ObjectMenu and the object (px) */
@@ -32,22 +33,33 @@ export function useObjectMenuPosition(
 	const {
 		selectedIds,
 		selectedConnectorId,
+		selectedTextSlot,
 		objects,
 		viewport,
 		contextMenuPosition,
 		areaSelection,
-		eventStartSnapshot,
+		activeDragKind,
 		objectMenuOpenId,
 		textEditState,
 	} = state;
+
+	// The menu sits below the selection's drawn extent, so a shape whose label
+	// hangs outside its geometry box must not have the menu land on the label.
+	const { objectVisualBounds } = useCanvasRegistries();
 
 	const [menuDimensions, setMenuDimensions] = useState({
 		width: 0,
 		height: 40,
 	});
 
-	// Measure menu dimensions from DOM when it renders or selection changes
+	// Measure menu dimensions from DOM when it renders or selection changes.
+	// Slot selection changes the item set (see filterTextSlotMenuSections), so the
+	// width must be re-measured then too or the centering uses the stale width.
 	const selectedIdsString = selectedIds.slice().sort().join(",");
+	const selectedTextSlotKey =
+		selectedTextSlot === null
+			? null
+			: `${selectedTextSlot.objectId}:${selectedTextSlot.slotId}`;
 	const shouldRender = useMemo(() => {
 		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
 		if (!hasSelection) {
@@ -62,9 +74,9 @@ export function useObjectMenuPosition(
 		if (textEditState !== null) {
 			return false;
 		}
-		// Even when eventStartSnapshot is non-null, keep showing the menu if objectMenuOpenId is non-null
-		// (so the menu stays visible while dragging a slider)
-		if (eventStartSnapshot !== null && objectMenuOpenId === null) {
+		// Hidden for every kind of drag, except while an ObjectMenu dropdown is open
+		// (so the menu stays visible while dragging one of its sliders)
+		if (activeDragKind !== null && objectMenuOpenId === null) {
 			return false;
 		}
 		if (areaSelection !== null) {
@@ -75,7 +87,7 @@ export function useObjectMenuPosition(
 		selectedIds,
 		selectedConnectorId,
 		contextMenuPosition,
-		eventStartSnapshot,
+		activeDragKind,
 		areaSelection,
 		objectMenuOpenId,
 		textEditState,
@@ -86,7 +98,13 @@ export function useObjectMenuPosition(
 			const rect = menuRef.current.getBoundingClientRect();
 			setMenuDimensions({ width: rect.width, height: rect.height });
 		}
-	}, [menuRef, shouldRender, selectedIdsString, selectedConnectorId]);
+	}, [
+		menuRef,
+		shouldRender,
+		selectedIdsString,
+		selectedConnectorId,
+		selectedTextSlotKey,
+	]);
 
 	return useMemo(() => {
 		if (!shouldRender) {
@@ -98,7 +116,11 @@ export function useObjectMenuPosition(
 			selectedConnectorId !== null
 				? [selectedConnectorId, ...selectedIds]
 				: selectedIds;
-		const bounds = calcObjectsBoundingBox(targetIds, objects);
+		const bounds = calcObjectsBoundingBox(
+			targetIds,
+			objects,
+			objectVisualBounds,
+		);
 
 		if (!bounds) {
 			return { shouldRender: false, x: 0, y: 0 };
@@ -173,5 +195,6 @@ export function useObjectMenuPosition(
 		objects,
 		viewport,
 		menuDimensions,
+		objectVisualBounds,
 	]);
 }

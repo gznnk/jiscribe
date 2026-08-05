@@ -73,6 +73,12 @@ export type MenuPropertyUpdateAction = {
 	value: string;
 	/** true: recorded in history (blur/Enter), false: preview only */
 	commit: boolean;
+	/**
+	 * true: merge this commit with the preceding one for the same property and
+	 * selection into a single undo entry (slider key repeat). Ignored when
+	 * `commit` is false. Omitted means every commit is its own entry.
+	 */
+	coalesceHistory?: boolean;
 };
 
 /**

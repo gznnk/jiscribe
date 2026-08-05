@@ -1,5 +1,6 @@
 ﻿import { roundToDecimal } from "@workspace/geometry";
 
+import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
@@ -20,24 +21,28 @@ import {
  * Middle- and right-button interactions are also treated as canvas-level
  * behavior so grab-scroll and context menus work consistently above objects
  * and controls. Middle button pans only; right button pans and opens the
- * context menu.
+ * context menu. On touch, a one-finger background drag pans as well (area
+ * selection stays mouse-only for now).
  */
 export const CanvasEventHandler: GestureHandler = {
 	supports(event): boolean {
 		return (
-			event.targetKind === "canvas" || event.button === 1 || event.button === 2
+			event.targetKind === "canvas" ||
+			event.button === 1 ||
+			event.button === 2 ||
+			// Like right-button events, a long press is canvas-level wherever it
+			// lands (per-target handlers reject it via isPerTargetInteraction)
+			event.type === "longPress"
 		);
 	},
 
 	handle(state, event, registries) {
 		// Zoom handling
 		// Handle before commitTextEditIfNeeded so zooming does not interrupt an active text edit.
-		if (event.type === "zoom" && event.zoomDelta != null) {
-			const deltaY = event.zoomDelta;
-			const zoomDelta = deltaY > 0 ? ZOOM.OUT_FACTOR : ZOOM.IN_FACTOR;
+		if (event.type === "zoom" && event.zoomScale != null) {
 			const newZoom = Math.max(
 				ZOOM.MIN,
-				Math.min(ZOOM.MAX, state.viewport.zoom * zoomDelta),
+				Math.min(ZOOM.MAX, state.viewport.zoom * event.zoomScale),
 			);
 			const { minX, minY, width, height, zoom } = state.viewport;
 			const currentViewBoxWidth = width / zoom;
@@ -83,8 +88,30 @@ export const CanvasEventHandler: GestureHandler = {
 			};
 		}
 
-		// Commit text editing if active
-		let nextState = commitTextEditIfNeeded(state);
+		// Commit text editing if active. On touch this waits for the tap to resolve
+		// (the click branch below): a background touch may become a pan or a pinch,
+		// and viewport navigation must not destroy an active edit the way it doesn't
+		// for wheel scroll. The draw-mode branch re-runs the commit for its touch
+		// drags (starting to draw is a real edit-ending interaction).
+		const isTouch = event.pointerType === "touch";
+		let nextState = isTouch ? state : commitTextEditIfNeeded(state);
+
+		// Touch long press: open the context menu, mirroring the right-button click.
+		// The recognizer ends the gesture (the lift fires no click), so the touch
+		// tap-deferral does not apply — commit any active edit now, like the mouse
+		// path does.
+		if (event.type === "longPress") {
+			return {
+				...commitTextEditIfNeeded(nextState),
+				contextMenuPosition: {
+					clientX: event.clientLast.x,
+					clientY: event.clientLast.y,
+				},
+				// A new context menu supersedes any open ObjectMenu / category flyout.
+				objectMenuOpenId: null,
+				stencilLibraryOpenCategory: null,
+			};
+		}
 
 		// Middle-/right-button drag for viewport panning (GrabScroll).
 		// Middle button (1) pans only; right button (2) also opens the context
@@ -104,26 +131,12 @@ export const CanvasEventHandler: GestureHandler = {
 			}
 
 			if (event.type === "drag") {
-				// Calculate viewport offset from the initial state
-				// Use clientDelta (screen pixels) directly for viewport panning
-				const initialViewport =
-					state.eventStartSnapshot?.viewport ?? state.viewport;
-				const deltaX = event.clientDelta.x / initialViewport.zoom;
-				const deltaY = event.clientDelta.y / initialViewport.zoom;
-
 				nextState = {
 					...nextState,
-					viewport: {
-						...initialViewport,
-						minX: roundToDecimal(
-							initialViewport.minX - deltaX,
-							PRECISION.COORDINATE,
-						),
-						minY: roundToDecimal(
-							initialViewport.minY - deltaY,
-							PRECISION.COORDINATE,
-						),
-					},
+					viewport: calcPannedViewport(
+						state.eventStartSnapshot?.viewport ?? state.viewport,
+						event.clientDelta,
+					),
 				};
 			}
 			return nextState;
@@ -143,6 +156,9 @@ export const CanvasEventHandler: GestureHandler = {
 			shapeDrawing !== null &&
 			drawingObjectType !== null
 		) {
+			// No-op for mouse (already committed above); commits for touch draws.
+			nextState = commitTextEditIfNeeded(nextState);
+
 			// Starting to draw dismisses an open ObjectMenu / category flyout.
 			if (
 				nextState.objectMenuOpenId !== null ||
@@ -265,6 +281,31 @@ export const CanvasEventHandler: GestureHandler = {
 			return nextState;
 		}
 
+		// Touch: a one-finger drag on the canvas background pans instead of
+		// area-selecting (area selection is unavailable on touch for now; a
+		// multi-select alternative is a separate task). Scoped to drag events so a
+		// background tap still deselects via the click branch below.
+		if (
+			isTouch &&
+			event.button === 0 &&
+			(event.type === "dragStart" ||
+				event.type === "drag" ||
+				event.type === "dragEnd")
+		) {
+			// dragStart pans too: it already carries a threshold-sized clientDelta,
+			// and a slow touch stream may deliver only dragStart in a frame.
+			if (event.type === "dragStart" || event.type === "drag") {
+				nextState = {
+					...nextState,
+					viewport: calcPannedViewport(
+						state.eventStartSnapshot?.viewport ?? state.viewport,
+						event.clientDelta,
+					),
+				};
+			}
+			return nextState;
+		}
+
 		// Left-button drag for area selection
 		if (event.button === 0) {
 			if (event.type === "dragStart") {
@@ -355,8 +396,15 @@ export const CanvasEventHandler: GestureHandler = {
 			}
 		}
 
-		// Clear selection on press (left-click only)
-		if (event.type === "pressed" && event.button === 0) {
+		// Clear selection and close menus on a left press — on touch, only once the
+		// tap resolves (click). A pan or pinch must not clear the selection, the open
+		// menus, or an active edit; pinch suppresses click, so two-finger gestures
+		// preserve them automatically.
+		if (event.button === 0 && event.type === (isTouch ? "click" : "pressed")) {
+			if (isTouch) {
+				// The deferred commit from the top of handle()
+				nextState = commitTextEditIfNeeded(nextState);
+			}
 			nextState = {
 				...nextState,
 				selectedIds: [],

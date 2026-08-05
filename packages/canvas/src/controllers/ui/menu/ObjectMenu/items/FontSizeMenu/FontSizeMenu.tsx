@@ -11,7 +11,8 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "font-size";
 const DEFAULT_FONT_SIZE = 14;
@@ -24,7 +25,7 @@ const FONT_SIZE_STEP = 2;
 
 type FontSizeMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 /**
@@ -43,8 +44,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		isOpen,
 	);
 
-	const { selectedIds, objects } = canvasState;
-	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const slot = getSelectedOrFirstTextSlot(canvasState);
 	const fontSize = slot?.fontSize ?? DEFAULT_FONT_SIZE;
 
 	return (

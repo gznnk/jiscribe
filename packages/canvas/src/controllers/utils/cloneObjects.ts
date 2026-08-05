@@ -1,17 +1,20 @@
 import type { Point } from "@workspace/geometry";
 
-import type { EndpointRef } from "../../schemas/objects/types/EndpointRef";
+import {
+	isFreeEndpointRef,
+	type EndpointRef,
+} from "../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
-import { moveObjectTree } from "../gestures/handlers/objects/primitives/GroupController";
+import { moveObjectTree } from "../behaviors/primitives/GroupController";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 
 const remapEndpointRef = (
 	ref: EndpointRef,
 	idRemap: Map<string, string>,
 ): EndpointRef => {
-	if (!ref.owner) {
+	if (isFreeEndpointRef(ref)) {
 		return ref;
 	}
 	return {
@@ -25,7 +28,7 @@ const remapEndpointRef = (
  * their (already offset) owning shape, so they are returned unchanged.
  */
 const offsetFreeEndpoint = (ref: EndpointRef, offset: Point): EndpointRef => {
-	if (ref.owner || ref.anchor.kind !== "free") {
+	if (!isFreeEndpointRef(ref)) {
 		return ref;
 	}
 	return {

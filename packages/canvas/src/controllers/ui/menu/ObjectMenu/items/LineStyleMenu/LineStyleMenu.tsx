@@ -16,6 +16,7 @@ import {
 	ObjectMenuItemPositioner,
 	ObjectMenuButton,
 } from "../../ObjectMenuStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "line-style";
 
@@ -26,7 +27,7 @@ const SLIDER_MAX_STROKE_WIDTH = 20;
 
 type LineStyleMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({

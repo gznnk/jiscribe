@@ -1,7 +1,7 @@
 import {
 	formatPolygonPoints,
 	centeredPolygonOutline,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 import type { Point } from "@workspace/geometry";
 
 import { LOOP_LIMIT_CUT_RATIO } from "../../schema/loopLimit/LoopLimitDoc";

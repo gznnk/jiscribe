@@ -69,20 +69,24 @@ export const useKeyboardShortcuts = ({
 				return;
 			}
 
-			// Always suppress the browser default action when a binding exists
-			event.preventDefault();
-			event.stopPropagation();
-
 			// Callback-executed commands (undo/redo when externally owned, paste)
 			// are delegated without checking canExecute (see callbacks JSDoc).
 			const callback = callbacksRef.current?.[command.id];
 			if (callback) {
+				event.preventDefault();
+				event.stopPropagation();
 				callback();
 				return;
 			}
-			if (command.canExecute(canvasStateRef.current, registries)) {
-				dispatch({ type: "COMMAND", commandId: command.id });
+			// A binding the command cannot execute right now is left to the browser,
+			// so Tab keeps moving focus (and arrows keep scrolling) while the
+			// matching command is unavailable.
+			if (!command.canExecute(canvasStateRef.current, registries)) {
+				return;
 			}
+			event.preventDefault();
+			event.stopPropagation();
+			dispatch({ type: "COMMAND", commandId: command.id });
 		};
 
 		// Scoped to the container: keydown reaches here only while focus is inside

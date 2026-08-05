@@ -9,7 +9,7 @@ import {
 	resolveLocaleMessages,
 	useCanvasLocale,
 	useSubmenuPosition,
-} from "@workspace/canvas/unstable";
+} from "@workspace/canvas-sdk";
 import { memo, useRef } from "react";
 
 import { HeaderColorPreviewIcon } from "./HeaderColorPreviewIcon";

@@ -4,22 +4,7 @@ import type {
 	AnyObjectTypeDefinition,
 	ObjectTypeDefinition,
 } from "../../plugin/ObjectTypeDefinition";
-import {
-	Callout,
-	calcCalloutTextRegion,
-	calloutOutline,
-} from "../../presentations/objects/annotations/Callout";
-import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
-import {
-	Actor,
-	calcActorTextRegion,
-} from "../../presentations/objects/general/Actor";
-import {
-	Cloud,
-	calcCloudTextRegion,
-	cloudOutline,
-} from "../../presentations/objects/general/Cloud";
 import {
 	Ellipse,
 	calcEllipseTextRegion,
@@ -32,34 +17,10 @@ import { ConnectorExtraStyleProperties } from "../../schemas/objects/connections
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
 import {
-	calloutToDoc,
-	calloutToState,
-} from "../../states/objects/annotations/callout/CalloutMapper";
-import type { CalloutState } from "../../states/objects/annotations/callout/CalloutState";
-import { isValidCalloutState } from "../../states/objects/annotations/callout/validateCalloutState";
-import {
-	stickyToDoc,
-	stickyToState,
-} from "../../states/objects/annotations/sticky/StickyMapper";
-import type { StickyState } from "../../states/objects/annotations/sticky/StickyState";
-import { isValidStickyState } from "../../states/objects/annotations/sticky/validateStickyState";
-import {
 	connectorToDoc,
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
-import {
-	actorToDoc,
-	actorToState,
-} from "../../states/objects/general/actor/ActorMapper";
-import type { ActorState } from "../../states/objects/general/actor/ActorState";
-import { isValidActorState } from "../../states/objects/general/actor/validateActorState";
-import {
-	cloudToDoc,
-	cloudToState,
-} from "../../states/objects/general/cloud/CloudMapper";
-import type { CloudState } from "../../states/objects/general/cloud/CloudState";
-import { isValidCloudState } from "../../states/objects/general/cloud/validateCloudState";
 import {
 	ellipseToDoc,
 	ellipseToState,
@@ -93,29 +54,27 @@ import {
 } from "../../states/objects/primitives/svg/SvgMapper";
 import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
-import { handleCalloutTailTip } from "../gestures/handlers/controls/callout/handleCalloutTailTip";
-import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
+import { createFrameBehavior } from "../behaviors/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
 	rotateByGroup as connectorRotateByGroup,
 	transformByGroup as connectorTransformByGroup,
-} from "../gestures/handlers/objects/connections/ConnectorController";
+} from "../behaviors/connections/ConnectorController";
 import {
 	moveByDelta as groupMoveByDelta,
 	rotateByGroup as groupRotateByGroup,
 	transformByGroup as groupTransformByGroup,
-} from "../gestures/handlers/objects/primitives/GroupController";
+} from "../behaviors/primitives/GroupController";
 import {
 	moveByDelta as polygonMoveByDelta,
 	rotateByGroup as polygonRotateByGroup,
 	transformByGroup as polygonTransformByGroup,
-} from "../gestures/handlers/objects/primitives/PolygonController";
+} from "../behaviors/primitives/PolygonController";
 import {
 	moveByDelta as polylineMoveByDelta,
 	rotateByGroup as polylineRotateByGroup,
 	transformByGroup as polylineTransformByGroup,
-} from "../gestures/handlers/objects/primitives/PolylineController";
-import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
+} from "../behaviors/primitives/PolylineController";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -125,12 +84,7 @@ import {
 	LabelFontSizeMenu,
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
-import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
-import { CalloutStencils } from "../ui/objects/annotations/CalloutStencils";
-import { StickyStencils } from "../ui/objects/annotations/StickyStencils";
-import { ActorStencils } from "../ui/objects/general/ActorStencils";
-import { CloudStencils } from "../ui/objects/general/CloudStencils";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
@@ -160,45 +114,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			stencils: EllipseStencils,
-		}),
-
-		cloud: defineObject({
-			...builtinObjectDocDefinitions.cloud,
-			mapper: { toDoc: cloudToDoc, toState: cloudToState },
-			stateValidator: isValidCloudState,
-			component: Cloud,
-			textRegion: calcCloudTextRegion,
-			outline: cloudOutline,
-			behavior: createFrameBehavior<CloudState>(),
-			stencils: CloudStencils,
-		}),
-
-		actor: defineObject({
-			...builtinObjectDocDefinitions.actor,
-			mapper: { toDoc: actorToDoc, toState: actorToState },
-			stateValidator: isValidActorState,
-			component: Actor,
-			textRegion: calcActorTextRegion,
-			behavior: createFrameBehavior<ActorState>(),
-			stencils: ActorStencils,
-		}),
-
-		callout: defineObject({
-			...builtinObjectDocDefinitions.callout,
-			mapper: { toDoc: calloutToDoc, toState: calloutToState },
-			stateValidator: isValidCalloutState,
-			component: Callout,
-			textRegion: calcCalloutTextRegion,
-			outline: calloutOutline,
-			behavior: createFrameBehavior<CalloutState>(),
-			selectionControls: [
-				{
-					name: "tailTip",
-					Component: CalloutTailTipControl,
-					handle: handleCalloutTailTip,
-				},
-			],
-			stencils: CalloutStencils,
 		}),
 
 		group: defineObject({
@@ -309,31 +224,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			],
 		}),
 
-		sticky: defineObject({
-			...builtinObjectDocDefinitions.sticky,
-			mapper: { toDoc: stickyToDoc, toState: stickyToState },
-			stateValidator: isValidStickyState,
-			component: Sticky,
-			behavior: createFrameBehavior<StickyState>(),
-			stencils: StickyStencils,
-			menu: [
-				{
-					id: "style",
-					items: [
-						{ type: "custom", id: "sticky-color", component: StickyColorMenu },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
-		}),
-
 		// SVG is not created from the StencilLibrary (only added via AI / direct .jis.json authoring).
 		// Therefore factory / stencils are not registered.
 		svg: defineObject({
@@ -361,6 +251,9 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
+	if (definition.svgDefs) {
+		registries.objectSvgDefs.register(type, definition.svgDefs);
+	}
 	if (definition.textRegion) {
 		registries.objectTextRegion.register(type, definition.textRegion);
 	}
@@ -375,6 +268,18 @@ export const applyObjectDefinition = (
 	}
 	if (definition.anchorRegion) {
 		registries.objectAnchorRegion.register(type, definition.anchorRegion);
+	}
+	if (definition.extraConnectPoints) {
+		registries.objectExtraConnectPoints.register(
+			type,
+			definition.extraConnectPoints,
+		);
+	}
+	if (definition.geometryKey) {
+		registries.objectGeometryKey.register(type, definition.geometryKey);
+	}
+	if (definition.visualBounds) {
+		registries.objectVisualBounds.register(type, definition.visualBounds);
 	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
@@ -419,10 +324,14 @@ export const initializeObjectRegistry = (
 ): void => {
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();
+	registries.objectSvgDefs.clear();
 	registries.objectTextRegion.clear();
 	registries.objectTextEditOverflow.clear();
 	registries.objectOutline.clear();
 	registries.objectAnchorRegion.clear();
+	registries.objectExtraConnectPoints.clear();
+	registries.objectGeometryKey.clear();
+	registries.objectVisualBounds.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

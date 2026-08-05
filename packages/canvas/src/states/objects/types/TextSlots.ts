@@ -11,6 +11,11 @@ import { isTextSlot } from "../../../schemas/objects/types/TextSlot";
  * order; the first key is the default slot (Enter-started editing, and the
  * fallback when a pointer-derived slot id does not match).
  *
+ * Because that order carries meaning, an **integer-like slot id ("0", "1", …) is
+ * not allowed**: JS enumerates such own keys first and in ascending numeric
+ * order, which would move the slot regardless of where its type wrote it.
+ * mapTextDocToState drops one rather than let it reorder the map.
+ *
  * Text styling lives per slot and only there: there is no shape-wide typography
  * to fall back to, so every reader takes it off the slot it is drawing.
  */
@@ -30,8 +35,8 @@ export const isTextSlots = (value: unknown): value is TextSlots => {
 };
 
 /**
- * The slot opened when no slot is designated (Enter-started editing) and the
- * fallback for an unrecognized one.
+ * The slot opened when nothing designates one (Enter with no slot selected)
+ * and the fallback for an unrecognized one.
  *
  * @param text - The shape's slots; undefined for a shape that holds no text
  * @returns The first key in insertion order, or undefined when there is no slot

@@ -1,7 +1,12 @@
 import type { Point } from "@workspace/geometry";
 import type React from "react";
 
-import { DRAG_THRESHOLD } from "./GestureRecognizerConstants";
+import {
+	DRAG_THRESHOLD,
+	DRAG_THRESHOLD_TOUCH,
+	LONG_PRESS_DURATION_MS,
+	PINCH_MIN_DISTANCE,
+} from "./GestureRecognizerConstants";
 import type {
 	ClickSnapshot,
 	GestureCallback,
@@ -9,71 +14,142 @@ import type {
 	GestureType,
 	Mods,
 	PointerEventHandlers,
+	RecognizerCanvasState,
 	ScrollDelta,
 } from "./GestureRecognizerTypes";
 import {
+	calcPinchDist,
+	calcPinchMid,
 	calculateScrollDelta,
 	createGetHovered,
 	detectEdgeProximity,
+	getGestureTarget,
 	getInputValue,
-	getKindAndId,
 	getSvgPoint,
 	isDoubleClick,
 	isGestureOptedOut,
 	isNativePointerTarget,
 	readInputValue,
 } from "./utils";
-import type { CanvasControllerState } from "../../CanvasTypes";
 
+/** Fields every queued event carries, whatever produced it (DOM event, wheel conversion, long-press timer). */
 type InternalEventBase = {
+	/** Client / screen X in px; feed converts it to world coordinates with getSvgPoint. */
 	clientX: number;
+	/** Client / screen Y in px, measured from the viewport top — not the canvas origin. */
 	clientY: number;
+	/** Shift state at this event's moment; each gesture takes mods from the event it fires on, not from pointerdown. */
 	shiftKey: boolean;
+	/** Alt state at this event's moment. */
 	altKey: boolean;
+	/** Ctrl state at this event's moment; on wheel it is what routes the gesture to zoom instead of scroll. */
 	ctrlKey: boolean;
+	/** Meta (Command) state at this event's moment. */
 	metaKey: boolean;
+	/**
+	 * Element the event was dispatched on: resolved into targetId / targetKind and used
+	 * as the hover-exclusion key. Nullable per the DOM type; feed casts it to Element.
+	 */
 	target: EventTarget | null;
+	/**
+	 * Event time in ms on the performance.now() time base (the synthesized longpress
+	 * fills it from performance.now()); becomes the fired gesture's time.
+	 */
 	timeStamp: number;
+	/**
+	 * DOM button number, read only from pointerdown (copied to Pressed.button, which every
+	 * gesture of that press reports). Ignored on move / up / cancel and on wheel.
+	 */
 	button: number;
 };
 
+/**
+ * A queued pointer event: forwarded from React by getHandlers, converted from a wheel
+ * event mid-drag by toWheelEvent, or synthesized by the long-press timer.
+ */
 export type PointerInternalEvent = InternalEventBase & {
-	type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel";
+	/**
+	 * Pointer phase this event carries — the discriminant feed branches on. The four
+	 * DOM names arrive from React; "longpress" is synthesized by the long-press timer
+	 * instead, filled from the pressed state at fire time.
+	 */
+	type:
+		| "pointerdown"
+		| "pointermove"
+		| "pointerup"
+		| "pointercancel"
+		| "longpress";
+	/**
+	 * Pointer the event belongs to; events of any other pointer are dropped while a press
+	 * is held. Synthesized "longpress" and wheel-converted pointermove reuse the pressed id.
+	 */
 	pointerId: number;
+	/**
+	 * "mouse" | "pen" | "touch". Absent on pointermove synthesized from a wheel
+	 * event (toWheelEvent) — only real touch pointers can enter a pinch.
+	 */
+	pointerType?: string;
+	/** Horizontal wheel delta in screen px; present only on a wheel-converted pointermove, whose in-drag scroll it marks. */
 	deltaX?: number;
+	/** Vertical wheel delta in screen px, positive scrolling the viewport down; feed folds it into the drag's scrollDelta. */
 	deltaY?: number;
 };
 
+/** A wheel event queued as itself: reached toWheelEvent outside a confirmed drag. */
 export type WheelInternalEvent = InternalEventBase & {
+	/** Always "wheel"; the discriminant separating this from PointerInternalEvent. */
 	type: "wheel";
+	/** Horizontal wheel delta in screen px, taken straight from the DOM event; feed reads it as 0 when absent. */
 	deltaX?: number;
+	/** Vertical wheel delta in screen px, positive scrolling the viewport down; with ctrl held its sign picks the zoom direction. */
 	deltaY?: number;
 };
 
+/** One item of the RAF queue, fed to feed in arrival order. */
 export type InternalEvent = PointerInternalEvent | WheelInternalEvent;
 
 /**
  * Held state for an in-progress gesture. Created on pointerdown and reset to null on
- * pointerup / pointercancel / reset, so null means no gesture is in progress.
+ * pointerup / pointercancel / longPress / pinch entry / cancelPendingGesture, so null
+ * means no gesture is in progress.
  */
 export type Pressed = {
+	/** Pointer holding the press; events of every other pointer are ignored until it lifts. */
 	pointerId: number;
+	/**
+	 * Pointer type fixed at pointerdown. A pinch may only replace a gesture whose
+	 * first pointer is a touch (a mouse press is never converted).
+	 */
+	pointerType?: string;
 	/** SVG / world coordinates, fixed at gesture start */
 	start: Point;
-	/** SVG / world coordinates */
+	/**
+	 * SVG / world coordinates, rewritten on every pointermove (before the drag threshold
+	 * is met too). Edge scrolling adds the scrolled amount into it.
+	 */
 	last: Point;
 	/** Client / screen coordinates, fixed at gesture start */
 	clientStart: Point;
-	/** Client / screen coordinates */
+	/**
+	 * Client / screen coordinates, rewritten on every pointermove. Unaffected by edge
+	 * scrolling, and the position the synthesized long press fires at.
+	 */
 	clientLast: Point;
+	/** timeStamp of the pointerdown. Gestures carry the time of the event they fire on, not this one. */
 	time: number;
+	/** Event target of the pointerdown, fixed for the press: it does not follow the cursor during a drag. */
 	target: EventTarget | null;
+	/** data-id of the pressed [data-kind] element; undefined when getGestureTarget resolved nothing (background press). */
 	targetId?: string;
+	/** data-kind of the pressed element — the key handlers match on; undefined on a background press. */
 	targetKind?: string;
+	/** Nearest [data-part] within the pressed element (see getGestureTarget); undefined when it marks none. */
 	targetPart?: string;
+	/** Modifier snapshot at pointerdown. Fired gestures use the current event's mods; this copy is what the synthesized long press replays. */
 	mods: Mods;
-	/** Whether the move has exceeded DRAG_THRESHOLD and been confirmed as a drag */
+	/** Whether the move has exceeded the drag threshold (per pointerType, in screen px) and been confirmed as a drag */
 	dragging: boolean;
+	/** DOM button number fixed at pointerdown (0 left / 1 middle / 2 right), reported by every gesture of the press including the lift. */
 	button: number;
 	/**
 	 * Whether target is inside a `data-gesture="native-pointer"` element. Fixed at
@@ -89,12 +165,35 @@ export type Pressed = {
 };
 
 /**
+ * Held state for an in-progress two-finger pinch (pan + zoom). Entered when a second
+ * touch pointerdown arrives before the first touch has confirmed a drag, or during a
+ * confirmed drag that shouldPinchFromDrag allows converting (closed with dragEnd first);
+ * the pending press is discarded (no click fires — two fingers mean pan/zoom, not a tap).
+ * Both pointers' events are consumed here until either lifts; the survivor stays inert
+ * until it is lifted and pressed anew.
+ */
+type Pinch = {
+	/**
+	 * pointerId -> latest client position of each of the two touches. Exactly two entries,
+	 * seeded at pinch entry; a pointermove overwrites only its own pointer's entry.
+	 */
+	points: Map<number, Point>;
+	/** Client midpoint at the last fired pinch gesture; the pan delta is measured against it, then it is overwritten. */
+	lastMid: Point;
+	/** Client finger distance (px) at the last fired pinch gesture; zoomScale is the current distance over it (1 below PINCH_MIN_DISTANCE). */
+	lastDist: number;
+};
+
+/**
  * Converts raw DOM pointer / wheel events into gestures (pressed / dragStart / drag /
- * dragEnd / click / doubleClick / wheel), delivered one at a time via gestureCallback.
+ * dragEnd / click / doubleClick / wheel / pinch / longPress), delivered one at a time
+ * via gestureCallback.
  *
- * Events are queued by `enqueue` and drained once per frame by a RAF scheduled in
- * `schedule`, which thins consecutive pointermoves to one drag per frame while a single
- * queue keeps down→move→up arriving in the same frame in chronological order.
+ * Events are queued by `enqueue` and handled once per frame by `processBatch` (a RAF
+ * scheduled in `schedule`): every event is fed in chronological order, then per-frame
+ * aggregates fire in `settleBatch` (currently the pending pinch). enqueue thins
+ * consecutive same-pointer pointermoves to one drag per frame while a single queue
+ * keeps down→move→up arriving in the same frame in chronological order.
  *
  * Each Gesture carries world coordinates (start / last / delta) and screen coordinates
  * (clientStart / clientLast / clientDelta). The screen triple exists for the few readers
@@ -105,9 +204,30 @@ export class GestureRecognizer {
 	private gestureCallback: GestureCallback;
 	private containerRef: React.RefObject<HTMLElement | null>;
 	private svgRef: React.RefObject<SVGSVGElement | null>;
-	private canvasStateRef: React.RefObject<CanvasControllerState>;
+	private canvasStateRef: React.RefObject<RecognizerCanvasState>;
+	private shouldPinchFromDrag: GestureRecognizerConfig["shouldPinchFromDrag"];
 
 	private pressed: Pressed | null = null;
+
+	// Two-finger pinch state (null when not pinching). Mutually exclusive with pressed.
+	private pinch: Pinch | null = null;
+
+	// Event context of pinch moves accumulated during the current RAF batch, fired
+	// as a single pinch gesture at settleBatch. One gesture per frame is not only
+	// thinning: the zoom anchor (the midpoint in world coordinates) is derived from
+	// the DOM viewBox, which reflects at most one viewport update per frame — a second
+	// gesture in the same batch would anchor against a stale viewBox and drift.
+	private pinchPending: {
+		mods: Mods;
+		time: number;
+		target: EventTarget | null;
+	} | null = null;
+
+	// Timer armed at a touch pointerdown; when it fires while the press is still
+	// within the drag slop, the press becomes a longPress instead of a tap/drag.
+	// Cleared wherever the press stops being a candidate (drag confirmed, lift,
+	// cancel, pinch entry, external abort).
+	private longPressTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Baseline for double-click detection; null means no single click has been recorded.
 	// The null/undefined distinction matters: targetId is undefined on a background click,
@@ -123,6 +243,7 @@ export class GestureRecognizer {
 		this.containerRef = config.containerRef;
 		this.svgRef = config.svgRef;
 		this.canvasStateRef = config.canvasStateRef;
+		this.shouldPinchFromDrag = config.shouldPinchFromDrag;
 	}
 
 	/** Add an event to the queue and schedule processing. */
@@ -141,7 +262,7 @@ export class GestureRecognizer {
 		this.schedule();
 	}
 
-	/** Schedule event processing using requestAnimationFrame. */
+	/** Schedule one processBatch run using requestAnimationFrame. */
 	private schedule(): void {
 		if (this.scheduled) {
 			return;
@@ -150,15 +271,32 @@ export class GestureRecognizer {
 		this.rafId = requestAnimationFrame(() => {
 			this.scheduled = false;
 			this.rafId = null;
-
-			// Drain before feeding, so an enqueue during feed (edge scrolling) lands on a
-			// fresh queue for the next frame.
-			const batch = this.queue;
-			this.queue = [];
-			for (const e of batch) {
-				this.feed(e);
-			}
+			this.processBatch();
 		});
+	}
+
+	/**
+	 * Process one frame's batch: feed every queued event in chronological order,
+	 * then settleBatch.
+	 */
+	private processBatch(): void {
+		// Drain before feeding, so an enqueue during feed (edge scrolling) lands on a
+		// fresh queue for the next frame.
+		const batch = this.queue;
+		this.queue = [];
+		for (const e of batch) {
+			this.feed(e);
+		}
+		this.settleBatch();
+	}
+
+	/**
+	 * Batch-end settlement: per-frame aggregates fire here, once per RAF batch.
+	 * Currently that is the pending pinch — both fingers may have moved this batch,
+	 * and their combined effect must fire exactly once per frame (see pinchPending).
+	 */
+	private settleBatch(): void {
+		this.firePendingPinch();
 	}
 
 	/**
@@ -179,7 +317,7 @@ export class GestureRecognizer {
 		// Only reached outside a drag; toWheelEvent turns an in-drag wheel into pointermove.
 		if (e.type === "wheel") {
 			// Needed only as the hover-exclusion key — the gesture's target is fixed to canvas.
-			const target = getKindAndId(e.target as Element);
+			const target = getGestureTarget(e.target as Element);
 			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
@@ -211,14 +349,107 @@ export class GestureRecognizer {
 			return;
 		}
 
+		// Long-press timer fired. The clears at every ending path make a stale fire
+		// unlikely, but one can still race into the same batch as the ending event —
+		// so the press is validated again here.
+		if (e.type === "longpress") {
+			if (
+				this.pressed !== null &&
+				this.pressed.pointerId === e.pointerId &&
+				!this.pressed.dragging
+			) {
+				this.fireGestureFromPressed(this.pressed, {
+					type: "longPress",
+					last: this.pressed.last,
+					clientLast: this.pressed.clientLast,
+					delta: {
+						x: this.pressed.last.x - this.pressed.start.x,
+						y: this.pressed.last.y - this.pressed.start.y,
+					},
+					clientDelta: {
+						x: this.pressed.clientLast.x - this.pressed.clientStart.x,
+						y: this.pressed.clientLast.y - this.pressed.clientStart.y,
+					},
+					mods: this.pressed.mods,
+					time,
+				});
+				// The long press consumes the gesture: the lift that follows must not
+				// become a click (which would immediately close the opened menu).
+				this.releasePointer(e.pointerId);
+				this.pressed = null;
+			}
+			return;
+		}
+
+		// Pinch in progress: events of the two participating pointers are consumed here.
+		// Events of any other pointer fall through and die at the pressed checks below
+		// (pressed is null while pinching), except pointerdown which is caught next.
+		if (this.pinch !== null) {
+			if (this.pinch.points.has(e.pointerId)) {
+				if (e.type === "pointermove") {
+					this.pinch.points.set(e.pointerId, currentClientPos);
+					this.pinchPending = { mods, time, target: e.target };
+					return;
+				}
+				if (e.type === "pointerup" || e.type === "pointercancel") {
+					// A movement in the same batch is still real — apply it before ending
+					this.firePendingPinch();
+					this.endPinch();
+					return;
+				}
+			}
+		}
+
 		if (e.type === "pointerdown") {
-			// Multi-touch is not supported: a second pointerdown must not overwrite pressed,
-			// take capture, or fire, or it would interrupt or mis-commit the first drag.
-			if (this.pressed !== null) {
+			// Third and later fingers do not join or disturb the pinch.
+			if (this.pinch !== null) {
 				return;
 			}
 
-			const target = getKindAndId(e.target as Element);
+			if (this.pressed !== null) {
+				// A second touch switches to a pinch (pan/zoom) when the press has not
+				// confirmed a drag yet, or when the injected shouldPinchFromDrag policy
+				// allows converting the confirmed drag (the canvas allows its viewport
+				// pans — adding a finger mid-pan to zoom is a natural touch motion).
+				// Not from a native-pointer press (a slider mid-manipulation keeps its
+				// native drag). Otherwise, and for any mouse/pen mix, the extra
+				// pointerdown is ignored so it cannot overwrite pressed, take capture,
+				// or fire — interrupting or mis-committing the drag (#25).
+				const canConvertDrag =
+					!this.pressed.dragging ||
+					(this.shouldPinchFromDrag?.(this.pressed.targetKind) ?? false);
+				if (
+					e.pointerType === "touch" &&
+					this.pressed.pointerType === "touch" &&
+					!this.pressed.isNativePointerTarget &&
+					canConvertDrag
+				) {
+					// Close the pan drag first so the eventStartSnapshot lifecycle
+					// completes (dragStart saved it; only dragEnd clears it). A pan
+					// changes no doc, so this dragEnd commits nothing.
+					if (this.pressed.dragging) {
+						this.fireGestureFromPressed(this.pressed, {
+							type: "dragEnd",
+							last: this.pressed.last,
+							clientLast: this.pressed.clientLast,
+							delta: {
+								x: this.pressed.last.x - this.pressed.start.x,
+								y: this.pressed.last.y - this.pressed.start.y,
+							},
+							clientDelta: {
+								x: this.pressed.clientLast.x - this.pressed.clientStart.x,
+								y: this.pressed.clientLast.y - this.pressed.clientStart.y,
+							},
+							mods,
+							time,
+						});
+					}
+					this.startPinch(this.pressed, e, currentClientPos);
+				}
+				return;
+			}
+
+			const target = getGestureTarget(e.target as Element);
 			const targetId = target?.id;
 			const targetKind = target?.kind;
 			const targetPart = target?.part;
@@ -226,12 +457,13 @@ export class GestureRecognizer {
 
 			// Sliders and the like keep the browser's native drag behavior, so they are
 			// left uncaptured.
-			if (this.containerRef.current && !isNativePointer) {
-				this.containerRef.current.setPointerCapture(e.pointerId);
+			if (!isNativePointer) {
+				this.capturePointer(e.pointerId);
 			}
 
 			this.pressed = {
 				pointerId: e.pointerId,
+				pointerType: e.pointerType,
 				start: currentPos,
 				last: currentPos,
 				clientStart: currentClientPos,
@@ -247,6 +479,12 @@ export class GestureRecognizer {
 				edgeScrollArmed: false,
 				isNativePointerTarget: isNativePointer,
 			};
+
+			// Touch only: mouse users have the right button, and a held mouse press
+			// (e.g. hesitating before a drag) must not sprout a menu.
+			if (e.pointerType === "touch" && !isNativePointer) {
+				this.armLongPress(this.pressed);
+			}
 
 			this.fireGestureFromPressed(this.pressed, {
 				type: "pressed",
@@ -278,9 +516,16 @@ export class GestureRecognizer {
 			this.pressed.clientLast = currentClientPos;
 
 			if (!this.pressed.dragging) {
-				const distanceSquared = delta.x ** 2 + delta.y ** 2;
-				if (distanceSquared >= DRAG_THRESHOLD) {
+				// Screen-space distance: a world-based check would scale with zoom.
+				// Touch gets a wider slop — finger jitter easily exceeds the mouse value.
+				const distanceSquared = clientDelta.x ** 2 + clientDelta.y ** 2;
+				const dragThreshold =
+					this.pressed.pointerType === "touch"
+						? DRAG_THRESHOLD_TOUCH
+						: DRAG_THRESHOLD;
+				if (distanceSquared >= dragThreshold) {
 					this.pressed.dragging = true;
+					this.clearLongPress();
 					this.fireGestureFromPressed(this.pressed, {
 						type: "dragStart",
 						last: currentPos,
@@ -362,9 +607,8 @@ export class GestureRecognizer {
 		}
 
 		if (e.type === "pointerup") {
-			if (this.containerRef.current && !this.pressed.isNativePointerTarget) {
-				this.containerRef.current.releasePointerCapture(e.pointerId);
-			}
+			this.clearLongPress();
+			this.releasePointer(e.pointerId);
 
 			let eventType: "dragEnd" | "doubleClick" | "click";
 			if (this.pressed.dragging) {
@@ -373,6 +617,7 @@ export class GestureRecognizer {
 				const currentClick: ClickSnapshot = {
 					time,
 					clientPos: this.pressed.clientStart,
+					pointerType: this.pressed.pointerType,
 				};
 				const doubleClick = isDoubleClick(this.lastClick, currentClick);
 
@@ -396,9 +641,8 @@ export class GestureRecognizer {
 		}
 
 		if (e.type === "pointercancel") {
-			if (this.containerRef.current && !this.pressed.isNativePointerTarget) {
-				this.containerRef.current.releasePointerCapture(e.pointerId);
-			}
+			this.clearLongPress();
+			this.releasePointer(e.pointerId);
 
 			if (this.pressed.dragging) {
 				this.fireGestureFromPressed(this.pressed, {
@@ -416,6 +660,171 @@ export class GestureRecognizer {
 	}
 
 	/**
+	 * Take pointer capture on the container, tolerating a pointer that no longer
+	 * exists. Processing is deferred to the RAF batch, so a touch may have lifted
+	 * before its pointerdown is processed — the pointer is then no longer active and
+	 * setPointerCapture throws NotFoundError. Capturing is pointless at that point,
+	 * so the error is swallowed. (Mouse pointers are persistent and never hit this.)
+	 */
+	private capturePointer(pointerId: number): void {
+		const container = this.containerRef.current;
+		if (container === null) {
+			return;
+		}
+		try {
+			container.setPointerCapture(pointerId);
+		} catch {
+			// The pointer ended before the batch ran — nothing left to capture.
+		}
+	}
+
+	/**
+	 * Release pointer capture, guarded by hasPointerCapture. A lifted touch has
+	 * already lost both its activeness and its capture, and a bare
+	 * releasePointerCapture would throw NotFoundError (the same deferred-batch race
+	 * as capturePointer). The guard also makes the call a natural no-op for pointers
+	 * that were never captured (native-pointer targets).
+	 */
+	private releasePointer(pointerId: number): void {
+		const container = this.containerRef.current;
+		if (container?.hasPointerCapture(pointerId)) {
+			container.releasePointerCapture(pointerId);
+		}
+	}
+
+	/**
+	 * Arm the long-press timer for a fresh touch press. The fire is delivered as a
+	 * synthetic "longpress" internal event through the queue, so recognition stays
+	 * inside processBatch and keeps its ordering guarantees; the coordinate and
+	 * modifier fields are read from the (mutable) pressed state at fire time.
+	 */
+	private armLongPress(pressed: Pressed): void {
+		this.longPressTimer = setTimeout(() => {
+			this.longPressTimer = null;
+			this.enqueue({
+				type: "longpress",
+				pointerId: pressed.pointerId,
+				pointerType: pressed.pointerType,
+				clientX: pressed.clientLast.x,
+				clientY: pressed.clientLast.y,
+				shiftKey: pressed.mods.shift,
+				altKey: pressed.mods.alt,
+				ctrlKey: pressed.mods.ctrl,
+				metaKey: pressed.mods.meta,
+				target: pressed.target,
+				timeStamp: performance.now(),
+				button: pressed.button,
+			});
+		}, LONG_PRESS_DURATION_MS);
+	}
+
+	/** Disarm the pending long press, if any. */
+	private clearLongPress(): void {
+		if (this.longPressTimer !== null) {
+			clearTimeout(this.longPressTimer);
+			this.longPressTimer = null;
+		}
+	}
+
+	/**
+	 * Enter pinch mode from a press plus a second touch: capture the second pointer
+	 * (the first was captured at its pointerdown) and discard the press without
+	 * firing. For a not-yet-dragging press the tap-or-drag it was waiting to become
+	 * never happens; a converting canvas pan drag was already closed with dragEnd by
+	 * the caller.
+	 */
+	private startPinch(
+		pressed: Pressed,
+		e: PointerInternalEvent,
+		currentClientPos: Point,
+	): void {
+		this.clearLongPress();
+		this.capturePointer(e.pointerId);
+
+		const points = new Map([
+			[pressed.pointerId, pressed.clientLast],
+			[e.pointerId, currentClientPos],
+		]);
+		this.pinch = {
+			points,
+			lastMid: calcPinchMid(points),
+			lastDist: calcPinchDist(points),
+		};
+		this.pressed = null;
+	}
+
+	/**
+	 * Fire the pending pinch gesture for the accumulated finger positions, if any
+	 * (see pinchPending): zoomScale is the finger distance ratio since the last fired
+	 * pinch event (1 while degenerate, see PINCH_MIN_DISTANCE) and scrollDelta is the
+	 * midpoint movement negated (screen px, matching wheel-scroll direction). last
+	 * carries the midpoint in world coordinates — the zoom anchor. Like wheel, the
+	 * target is fixed to canvas.
+	 */
+	private firePendingPinch(): void {
+		if (this.pinch === null || this.pinchPending === null) {
+			return;
+		}
+		const pinch = this.pinch;
+		const { mods, time, target } = this.pinchPending;
+		this.pinchPending = null;
+
+		const mid = calcPinchMid(pinch.points);
+		const dist = calcPinchDist(pinch.points);
+		const zoomScale =
+			pinch.lastDist < PINCH_MIN_DISTANCE || dist < PINCH_MIN_DISTANCE
+				? 1
+				: dist / pinch.lastDist;
+		const midWorld = getSvgPoint(this.svgRef.current, mid.x, mid.y);
+
+		this.gestureCallback({
+			type: "pinch",
+			pointerType: "touch",
+			target,
+			targetId: "canvas",
+			targetKind: "canvas",
+			start: midWorld,
+			last: midWorld,
+			delta: { x: 0, y: 0 },
+			clientStart: mid,
+			clientLast: mid,
+			clientDelta: { x: 0, y: 0 },
+			mods,
+			getHovered: createGetHovered(
+				mid.x,
+				mid.y,
+				undefined,
+				this.containerRef.current,
+			),
+			time,
+			button: 0,
+			zoomScale,
+			scrollDelta: {
+				deltaX: pinch.lastMid.x - mid.x,
+				deltaY: pinch.lastMid.y - mid.y,
+			},
+		});
+
+		pinch.lastMid = mid;
+		pinch.lastDist = dist;
+	}
+
+	/**
+	 * Leave pinch mode, releasing both pointers' captures. The finger that is still
+	 * down (if any) stays inert until lifted; no gesture fires.
+	 */
+	private endPinch(): void {
+		if (this.pinch === null) {
+			return;
+		}
+		for (const pointerId of this.pinch.points.keys()) {
+			this.releasePointer(pointerId);
+		}
+		this.pinch = null;
+		this.pinchPending = null;
+	}
+
+	/**
 	 * Build and fire a Gesture whose identity fields (target / start / button) come from
 	 * the pressed state. Shared by every branch after pointerdown, which differ only in
 	 * type, coordinate snapshot and scrollDelta; the wheel branch has no pressed state.
@@ -426,7 +835,7 @@ export class GestureRecognizer {
 	private fireGestureFromPressed(
 		pressed: Pressed,
 		current: {
-			type: Exclude<GestureType, "wheel">;
+			type: Exclude<GestureType, "wheel" | "pinch">;
 			last: Point;
 			clientLast: Point;
 			delta: Point;
@@ -438,6 +847,7 @@ export class GestureRecognizer {
 	): void {
 		this.gestureCallback({
 			type: current.type,
+			pointerType: pressed.pointerType,
 			target: pressed.target,
 			targetId: pressed.targetId,
 			targetKind: pressed.targetKind,
@@ -473,6 +883,7 @@ export class GestureRecognizer {
 		return {
 			type: e.type as PointerInternalEvent["type"],
 			pointerId: e.pointerId,
+			pointerType: e.pointerType,
 			clientX: e.clientX,
 			clientY: e.clientY,
 			shiftKey: e.shiftKey,
@@ -526,7 +937,7 @@ export class GestureRecognizer {
 
 	/**
 	 * Abort the in-progress gesture: cancel the pending RAF batch, discard queued events,
-	 * release pointer capture, and clear pressed. Called on external state swaps
+	 * release pointer capture, and clear pressed / pinch. Called on external state swaps
 	 * (SYNC_EXTERNAL) and from useGestureRecognizer's effect cleanup (#14).
 	 *
 	 * NOT terminal — new events re-schedule processing as usual, which is what lets
@@ -539,16 +950,12 @@ export class GestureRecognizer {
 		}
 		this.scheduled = false;
 		this.queue = [];
+		this.clearLongPress();
 		if (this.pressed !== null) {
-			if (
-				this.containerRef.current &&
-				this.pressed.pointerId !== undefined &&
-				!this.pressed.isNativePointerTarget
-			) {
-				this.containerRef.current.releasePointerCapture(this.pressed.pointerId);
-			}
+			this.releasePointer(this.pressed.pointerId);
 			this.pressed = null;
 		}
+		this.endPinch();
 	}
 
 	/**

@@ -20,7 +20,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { SNAP_THRESHOLD_PX } from "../utils/snap/findSnap";
 import { snapLabelOffsetToLine } from "../utils/snapLabelOffsetToLine";
 
@@ -115,6 +115,7 @@ const handleDrag = (
 		snapshot.objects,
 		registries.objectOutline,
 		registries.objectAnchorRegion,
+		registries.objectExtraConnectPoints,
 	);
 	if (!points) {
 		return state;
@@ -208,7 +209,7 @@ const handleDragEnd = (
  * (path-length ratio) and `label.offset` (perpendicular distance).
  *
  * Only drag gestures land here; click / doubleClick on the same box stay with
- * ConnectorEventHandler, and to the label box rather than a segment band, which
+ * ConnectorClickHandler, and to the label box rather than a segment band, which
  * keeps the three connector handlers' supports() mutually exclusive (#110). The recognizer's 3px drag threshold is what keeps a sloppy
  * double click on the label from nudging it.
  *
@@ -219,7 +220,7 @@ const handleDragEnd = (
 export const ConnectorLabelDragHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
-			isLeftButton(event) &&
+			isPerTargetInteraction(event) &&
 			event.targetKind === "connector" &&
 			event.targetPart === "label" &&
 			(event.type === "dragStart" ||

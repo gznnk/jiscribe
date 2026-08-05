@@ -148,13 +148,23 @@ describe("validateEndpointRef", () => {
 			expect(errors.some((e) => e.path === "root.anchor.kind")).toBe(true);
 		});
 
-		it("errors for an invalid id in a connectPoint anchor", () => {
+		it("errors for a connectPoint id that is not a non-empty string", () => {
+			for (const id of ["", 42, null, undefined]) {
+				const ref = {
+					owner: { id: "rect-1" },
+					anchor: { kind: "connectPoint", id },
+				};
+				const errors = validateEndpointRef(ref, "root");
+				expect(errors.some((e) => e.path === "root.anchor.id")).toBe(true);
+			}
+		});
+
+		it("accepts an id no built-in names, since a shape type may declare its own", () => {
 			const ref = {
-				owner: { id: "rect-1" },
-				anchor: { kind: "connectPoint", id: "invalid" },
+				owner: { id: "brace-1" },
+				anchor: { kind: "connectPoint", id: "tip" },
 			};
-			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some((e) => e.path === "root.anchor.id")).toBe(true);
+			expect(validateEndpointRef(ref, "root")).toEqual([]);
 		});
 
 		it("all ConnectPointIds have no errors", () => {
@@ -175,6 +185,40 @@ describe("validateEndpointRef", () => {
 			};
 			const errors = validateEndpointRef(ref, "root");
 			expect(errors.some((e) => e.path === "root.anchor.id")).toBe(true);
+		});
+
+		it("edge anchor with a valid side and ratio has no errors", () => {
+			for (const side of ["top", "right", "bottom", "left"]) {
+				for (const t of [0, 0.5, 1]) {
+					const ref = {
+						owner: { id: "rect-1" },
+						anchor: { kind: "edge", side, t },
+					};
+					expect(validateEndpointRef(ref, "root")).toEqual([]);
+				}
+			}
+		});
+
+		it("errors for an edge anchor side that is not one of the four", () => {
+			for (const side of ["topCenter", "middle", "", 1, null, undefined]) {
+				const ref = {
+					owner: { id: "rect-1" },
+					anchor: { kind: "edge", side, t: 0.5 },
+				};
+				const errors = validateEndpointRef(ref, "root");
+				expect(errors.some((e) => e.path === "root.anchor.side")).toBe(true);
+			}
+		});
+
+		it("errors for an edge anchor ratio outside 0..1 or not a finite number", () => {
+			for (const t of [-0.1, 1.1, NaN, Infinity, "0.5", null, undefined]) {
+				const ref = {
+					owner: { id: "rect-1" },
+					anchor: { kind: "edge", side: "top", t },
+				};
+				const errors = validateEndpointRef(ref, "root");
+				expect(errors.some((e) => e.path === "root.anchor.t")).toBe(true);
+			}
 		});
 	});
 
@@ -384,12 +428,10 @@ describe("validateTextStyleFields", () => {
 		).toEqual([]);
 	});
 
-	it("errors for the removed textType key, whatever its value", () => {
-		for (const removed of ["text", "markdown"]) {
-			const errors = validateTextStyleFields({ textType: removed }, "root");
-			expect(errors[0].path).toBe("root.textType");
-			expect(errors[0].message).toContain('type "markdown"');
-		}
+	it("ignores unknown keys, including the removed textType", () => {
+		expect(
+			validateTextStyleFields({ textType: "markdown", unknownKey: 1 }, "root"),
+		).toEqual([]);
 	});
 
 	it("errors when fontSize is not a number", () => {

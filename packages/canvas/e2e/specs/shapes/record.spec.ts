@@ -185,6 +185,9 @@ test.describe("record (a box with compartments)", () => {
 		// center, so a mismatch between the editor's composed transform and the
 		// SVG's shows up only under rotation (catching transform-origin regressions).
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		// Creation leaves the record selected, and a click on the sole selection steps
+		// into a text slot (hiding the transform handles); step out first.
+		await canvas.deselect();
 		await canvas.selectAt({ x: 410, y: 240 });
 
 		// Swing the rotation handle to the bottom right for a large tilt; the exact angle does not matter.

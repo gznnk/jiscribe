@@ -11,14 +11,15 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "font-color";
 const DEFAULT_FONT_COLOR = "#333333";
 
 type FontColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 /**
@@ -39,8 +40,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 		isOpen,
 	);
 
-	const { selectedIds, objects } = canvasState;
-	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const slot = getSelectedOrFirstTextSlot(canvasState);
 	const currentColor = slot?.fontColor ?? DEFAULT_FONT_COLOR;
 
 	return (

@@ -1,10 +1,10 @@
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@workspace/canvas";
-import {
-	Canvas,
-	annotationToolbarEntry,
-	generalToolbarEntry,
-} from "@workspace/canvas";
+import { Canvas } from "@workspace/canvas";
 import { createCanvasParser } from "@workspace/canvas/doc";
+import {
+	annotationPlugin,
+	annotationToolbarEntry,
+} from "@workspace/plugin-annotation-shapes";
 import {
 	containerPlugin,
 	containerToolbarEntry,
@@ -13,21 +13,35 @@ import {
 	flowchartPlugin,
 	flowchartToolbarEntry,
 } from "@workspace/plugin-flowchart-shapes";
+import {
+	generalPlugin,
+	generalToolbarEntry,
+} from "@workspace/plugin-general-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
+import { stickyPlugin } from "@workspace/plugin-sticky-shape";
 import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 
-// flowchart / container / markdown 図形は core から削除され、それぞれ
-// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape が唯一の供給元
+// flowchart / container / markdown / sticky / general / annotation 図形は core から削除され、
+// それぞれ @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
+// @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
+// @workspace/plugin-general-shapes / @workspace/plugin-annotation-shapes が唯一の供給元
 // （docs/05_extensibility/plugin-architecture-requirements.md）。この example は
 // 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言を createCanvasParser と
 // Canvas の initialConfig の両方に渡すだけで、doc の検証と図形一式の登録が揃う。
-const plugins = [flowchartPlugin, containerPlugin, markdownPlugin, umlPlugin];
+const plugins = [
+	flowchartPlugin,
+	containerPlugin,
+	markdownPlugin,
+	stickyPlugin,
+	umlPlugin,
+	generalPlugin,
+	annotationPlugin,
+];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container カテゴリと markdown プリセットは core の既定 layout に
-// 含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
+// annotation / flowchart / container / general カテゴリと markdown / sticky プリセットは core の
+// 既定 layout に含まれない（プラグイン供給）。ホスト側で並び順を決めて差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
@@ -36,8 +50,8 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
-	containerToolbarEntry,
 	umlToolbarEntry,
+	containerToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

@@ -65,14 +65,18 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 
 	const viewport = useMemo(
 		() =>
-			calcFitViewport(objects, { width, height, padding }) ?? {
+			calcFitViewport(
+				objects,
+				{ width, height, padding },
+				registries.objectVisualBounds,
+			) ?? {
 				minX: 0,
 				minY: 0,
 				width,
 				height,
 				zoom: 1,
 			},
-		[objects, width, height, padding],
+		[objects, width, height, padding, registries],
 	);
 
 	// display: contents keeps the thumbnail out of layout while still letting
@@ -89,6 +93,9 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				objectTextRegion={registries.objectTextRegion}
 				objectOutline={registries.objectOutline}
 				objectAnchorRegion={registries.objectAnchorRegion}
+				objectExtraConnectPoints={registries.objectExtraConnectPoints}
+				objectGeometryKey={registries.objectGeometryKey}
+				objectSvgDefs={registries.objectSvgDefs}
 			>
 				<div style={themeCssVars}>
 					<CanvasView

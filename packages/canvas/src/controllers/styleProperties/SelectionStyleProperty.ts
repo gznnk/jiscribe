@@ -4,6 +4,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { collectDescendantIds } from "../utils/collectDescendantIds";
 import { createCowObjects } from "../utils/cowObjects";
+import { resolveSelectedTextSlot } from "../utils/resolveSelectedTextSlot";
 
 /** Coerces the menu's string value to the declared type. Returns null when a number fails to parse. */
 const coerceStyleValue = (
@@ -70,6 +71,9 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 	): CanvasControllerState {
 		const { selectedIds, selectedConnectorId, objects } = state;
 		const path = property.split(".");
+		// Resolved once: the raw state.selectedTextSlot may be stale, and every
+		// object visited below has to be matched against the same resolved value.
+		const selectedTextSlot = resolveSelectedTextSlot(state);
 
 		// Connector selected (selectedIds is empty)
 		if (selectedIds.length === 0 && selectedConnectorId !== null) {
@@ -77,7 +81,13 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			if (!connector) {
 				return state;
 			}
-			const updated = this.applyToObject(connector, property, path, value);
+			const updated = this.applyToObject(
+				connector,
+				property,
+				path,
+				value,
+				selectedTextSlot,
+			);
 			if (updated === null) {
 				return state;
 			}
@@ -100,7 +110,13 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 			if (!obj) {
 				continue;
 			}
-			const updated = this.applyToObject(obj, property, path, value);
+			const updated = this.applyToObject(
+				obj,
+				property,
+				path,
+				value,
+				selectedTextSlot,
+			);
 			if (updated === null) {
 				continue;
 			}
@@ -118,7 +134,13 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 					if (!descObj) {
 						continue;
 					}
-					const updated = this.applyToObject(descObj, property, path, value);
+					const updated = this.applyToObject(
+						descObj,
+						property,
+						path,
+						value,
+						selectedTextSlot,
+					);
 					if (updated === null) {
 						continue;
 					}
@@ -138,12 +160,20 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 	/**
 	 * Writes the coerced value into a supported object. The default is the dot-path
 	 * write; a property whose storage is not one path (text styling, which lives in
-	 * every slot) overrides this. Null means "does not apply" (skip).
+	 * the slots) overrides this. Null means "does not apply" (skip).
+	 *
+	 * @param obj - The object to write into; returned unchanged copies only
+	 * @param path - The property split on "." ("label.fill" → ["label", "fill"])
+	 * @param value - The value already coerced to the declared type
+	 * @param selectedSlotId - The text slot selected on this very object, undefined
+	 *   when none is (this object is not the slot's owner, or nothing is selected
+	 *   one level below the object). Only slot-storage handlers read it.
 	 */
 	protected writeValue(
 		obj: ObjectState,
 		path: readonly string[],
 		value: string | number | boolean,
+		_selectedSlotId: string | undefined,
 	): ObjectState | null {
 		return writeAtPath(
 			obj as unknown as Record<string, unknown>,
@@ -158,6 +188,7 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		property: string,
 		path: readonly string[],
 		value: string,
+		selectedTextSlot: CanvasControllerState["selectedTextSlot"],
 	): ObjectState | null {
 		const valueType = this.resolveValueType(obj, property);
 		if (valueType === undefined) {
@@ -167,6 +198,13 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		if (coerced === null) {
 			return null;
 		}
-		return this.writeValue(obj, path, coerced);
+		return this.writeValue(
+			obj,
+			path,
+			coerced,
+			selectedTextSlot?.objectId === obj.id
+				? selectedTextSlot.slotId
+				: undefined,
+		);
 	}
 }

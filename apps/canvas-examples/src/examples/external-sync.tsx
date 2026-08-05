@@ -8,7 +8,9 @@ const initialSourceText = JSON.stringify(
 		root: [
 			{
 				id: "hello",
-				type: "sticky",
+				// core 図形を使う（sticky はプラグイン供給になったので、外部同期の
+				// 例にプラグイン配線を持ち込まないための選択）。
+				type: "rect",
 				x: 120,
 				y: 120,
 				width: 180,

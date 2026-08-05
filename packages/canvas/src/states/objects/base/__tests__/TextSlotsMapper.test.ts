@@ -37,6 +37,40 @@ describe("mapTextDocToState", () => {
 		expect(mapTextDocToState("slots", {})).toEqual({ text: {} });
 	});
 
+	it("keeps the authored key order of a slots doc", () => {
+		const docText = {
+			operations: { text: [] },
+			name: { text: "User" },
+			attributes: { text: [] },
+		};
+		expect(
+			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
+		).toEqual(["operations", "name", "attributes"]);
+	});
+
+	it("drops integer-like slot ids, which JS would have re-sorted to the front", () => {
+		const docText = {
+			name: { text: "User" },
+			"0": { text: "first" },
+			"12": { text: "twelfth" },
+			attributes: { text: [] },
+		};
+		expect(
+			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
+		).toEqual(["name", "attributes"]);
+	});
+
+	it("keeps slot ids that only look numeric but keep their place", () => {
+		const docText = {
+			"01": { text: "padded" },
+			"-1": { text: "negative" },
+			"1a": { text: "suffixed" },
+		};
+		expect(
+			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
+		).toEqual(["01", "-1", "1a"]);
+	});
+
 	it("contributes nothing at all for a text-less type", () => {
 		expect(mapTextDocToState(undefined, { text: "hello" })).toEqual({});
 	});

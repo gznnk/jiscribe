@@ -21,8 +21,11 @@ import { CutCommand } from "../commands/selection/CutCommand";
 import { DeleteCommand } from "../commands/selection/DeleteCommand";
 import { DeselectAllCommand } from "../commands/selection/DeselectAllCommand";
 import { DuplicateCommand } from "../commands/selection/DuplicateCommand";
+import { EscapeSelectionCommand } from "../commands/selection/EscapeSelectionCommand";
 import { PasteCommand } from "../commands/selection/PasteCommand";
 import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
+import { SelectNextTextSlotCommand } from "../commands/selection/SelectNextTextSlotCommand";
+import { SelectPreviousTextSlotCommand } from "../commands/selection/SelectPreviousTextSlotCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ZoomInCommand } from "../commands/view/ZoomInCommand";
@@ -47,6 +50,9 @@ export const ALL_COMMANDS: Command[] = [
 	// Selection commands
 	SelectAllCommand,
 	DeselectAllCommand,
+	EscapeSelectionCommand,
+	SelectNextTextSlotCommand,
+	SelectPreviousTextSlotCommand,
 	DeleteCommand,
 	// Arrange commands
 	BringToFrontCommand,

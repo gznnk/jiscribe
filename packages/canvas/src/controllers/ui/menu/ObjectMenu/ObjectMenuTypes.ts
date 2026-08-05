@@ -14,6 +14,25 @@ export type BuiltinItemKey =
 	| "group";
 
 /**
+ * Applies a style property change from an ObjectMenu item to the current selection.
+ *
+ * @param property - Style property key resolved by the style-property registry (e.g. `strokeWidth`)
+ * @param value - New value as a string; the property's own parser converts it
+ * @param commit - true records the change in history (blur / Enter / key release),
+ *   false only previews it live
+ * @param coalesceHistory - true merges this commit into the immediately preceding
+ *   commit for the same property and selection, so a burst (e.g. arrow-key repeat
+ *   on a slider) becomes a single undo entry. Defaults to false, i.e. every commit
+ *   gets its own entry
+ */
+export type ObjectMenuPropertyUpdater = (
+	property: string,
+	value: string,
+	commit: boolean,
+	coalesceHistory?: boolean,
+) => void;
+
+/**
  * Contract for custom menu item components. Exposes only the slices of canvas
  * state that menu items need, not the whole controller state.
  */
@@ -23,7 +42,7 @@ export type ObjectMenuItemProps = {
 	selectedConnectorId: string | null;
 	/** ID of the currently open menu section (`toggle:{sectionId}`). */
 	openSectionId: string | null;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 export type BuiltinItem =

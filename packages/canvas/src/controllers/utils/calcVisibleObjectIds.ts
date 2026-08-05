@@ -3,6 +3,7 @@ import type { BoundingBox } from "@workspace/geometry";
 import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import { resolveEndpointOwner } from "../../presentations/layers/content/utils/endpoints";
+import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../states/canvas/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connections/connector/ConnectorState";
@@ -39,6 +40,12 @@ type CalcVisibleObjectIdsParams = {
 	textEditObjectId?: string | null;
 	/** Previous render's cache; unchanged objects reuse their bbox from it. */
 	prevCache?: VisibilityBBoxCache;
+	/**
+	 * Per-canvas ObjectVisualBoundsRegistry, so a shape stays mounted while only
+	 * what it draws outside its geometry box is on screen. Fixed for a canvas's
+	 * lifetime, which is what keeps the cache above valid across calls.
+	 */
+	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null;
 };
 
 type CalcVisibleObjectIdsResult = {
@@ -65,6 +72,7 @@ export function calcVisibleObjectIds({
 	viewport,
 	textEditObjectId,
 	prevCache,
+	visualBounds,
 }: CalcVisibleObjectIdsParams): CalcVisibleObjectIdsResult {
 	const { minX, minY, width, height, zoom } = viewport;
 	const visibleLeft = minX - VIEWPORT_CULL_MARGIN;
@@ -99,7 +107,7 @@ export function calcVisibleObjectIds({
 			bboxCache.set(id, prevEntry);
 			return prevEntry.bbox;
 		}
-		const bbox = calcObjectBoundingBox(obj, objects);
+		const bbox = calcObjectBoundingBox(obj, objects, visualBounds);
 		bboxCache.set(id, { obj, sourceOwner: null, targetOwner: null, bbox });
 		return bbox;
 	};

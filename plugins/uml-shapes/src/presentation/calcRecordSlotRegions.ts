@@ -1,7 +1,7 @@
 import { isString } from "@workspace/basic-validators";
 import type { TextSlot } from "@workspace/canvas/doc";
-import { calcVisualLineCount } from "@workspace/canvas/unstable";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
+import { calcVisualLineCount } from "@workspace/canvas-sdk";
+import { TEXT_LINE_HEIGHT } from "@workspace/canvas-sdk/doc";
 import type { Dimensions, Rect } from "@workspace/geometry";
 
 import {
@@ -62,13 +62,17 @@ const calcNameHeight = (
 
 /**
  * Height a slot asks for. The title is measured from its wrapped lines; a
- * compartment is measured from its row count alone, so a row too long for the
- * width wraps and overflows rather than widening the compartment's share.
+ * compartment is measured from its row count and its own `fontSize`, so a row
+ * too long for the width wraps and overflows rather than widening the
+ * compartment's share.
  */
 const calcSlotHeight = (width: number, slot: TextSlot | undefined): number => {
 	const content = slot?.text;
 	return Array.isArray(content)
-		? calcRecordListHeight(content.length)
+		? calcRecordListHeight(
+				content.length,
+				slot?.fontSize ?? RECORD_SLOT_STYLE_DEFAULTS.fontSize,
+			)
 		: calcNameHeight(width, slot);
 };
 

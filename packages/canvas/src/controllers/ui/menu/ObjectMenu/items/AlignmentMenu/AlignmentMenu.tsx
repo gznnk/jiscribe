@@ -16,7 +16,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
+import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "alignment";
 
@@ -60,8 +60,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		isOpen,
 	);
 
-	const { selectedIds, objects } = canvasState;
-	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const slot = getSelectedOrFirstTextSlot(canvasState);
 	const textAlign = slot?.textAlign ?? "left";
 	const verticalAlign = slot?.verticalAlign ?? "middle";
 

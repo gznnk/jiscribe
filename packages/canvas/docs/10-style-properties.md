@@ -20,6 +20,10 @@ ObjectMenu number input    ── MENU_PROPERTY_UPDATE ──→ canvasReducer  
                                                           handler.apply(...) ⇒ new state
 ```
 
+The slider straddles both: pointer interaction (drag and track click) rides the
+gesture route, while keyboard interaction (arrow keys and the like) produces no
+gesture and so goes through `MENU_PROPERTY_UPDATE`.
+
 Both routes hand the property name and the raw string value from the UI to
 `StylePropertyRegistry.apply`; everything property-specific — support gating, value
 coercion, write path — lives in the resolved handler.

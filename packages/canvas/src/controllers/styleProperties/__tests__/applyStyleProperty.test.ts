@@ -45,7 +45,11 @@ const applyStyleProperty = (
 
 type MinState = Pick<
 	CanvasControllerState,
-	"selectedIds" | "selectedConnectorId" | "objects" | "multiSelectGroup"
+	| "selectedIds"
+	| "selectedConnectorId"
+	| "objects"
+	| "multiSelectGroup"
+	| "selectedTextSlot"
 >;
 
 const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
@@ -54,6 +58,7 @@ const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 		selectedConnectorId: null,
 		objects: {},
 		multiSelectGroup: null,
+		selectedTextSlot: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -475,7 +480,7 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			expect("fontSize" in result.objects["r1"]).toBe(false);
 		});
 
-		it("writes into every slot, the menus having no per-slot control", () => {
+		it("writes into every slot while no single slot is selected", () => {
 			const r1 = keyedRect("r1");
 			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
 			const result = applyStyleProperty(state, "fontWeight", "bold");
@@ -520,6 +525,94 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
 			applyStyleProperty(state, "fontSize", "24");
 			expect(slotsOf(state, "r1").body.fontSize).toBe(12);
+		});
+
+		describe("with a slot selected below the object", () => {
+			/** A record-like shape: two slots, addressable one by one (features.text = "slots"). */
+			const slotRect = (id: string, style: Record<string, unknown> = {}) =>
+				({
+					...rectObj(id),
+					features: { ...RectFeatures, text: "slots" },
+					text: {
+						name: { text: "User", ...style },
+						rows: { text: ["id"], ...style },
+					},
+				}) as unknown as ObjectState;
+
+			it("writes the selected slot only, leaving the others as they were", () => {
+				const r1 = slotRect("r1", { fontSize: 12 });
+				const state = makeState({
+					selectedIds: ["r1"],
+					objects: { r1 },
+					selectedTextSlot: { objectId: "r1", slotId: "rows" },
+				});
+				const result = applyStyleProperty(state, "fontSize", "24");
+				expect(slotsOf(result, "r1")).toEqual({
+					name: { text: "User", fontSize: 12 },
+					rows: { text: ["id"], fontSize: 24 },
+				});
+			});
+
+			it("writes every slot once the selection covers more than the slot's object", () => {
+				const r1 = slotRect("r1");
+				const r2 = bodyRect("r2");
+				const state = makeState({
+					selectedIds: ["r1", "r2"],
+					objects: { r1, r2 },
+					selectedTextSlot: { objectId: "r1", slotId: "rows" },
+				});
+				const result = applyStyleProperty(state, "fontWeight", "bold");
+				expect(slotsOf(result, "r1").name.fontWeight).toBe("bold");
+				expect(slotsOf(result, "r1").rows.fontWeight).toBe("bold");
+				expect(slotsOf(result, "r2").body.fontWeight).toBe("bold");
+			});
+
+			it("writes every slot when the slot selection names another object", () => {
+				const r1 = slotRect("r1");
+				const state = makeState({
+					selectedIds: ["r1"],
+					objects: { r1 },
+					selectedTextSlot: { objectId: "gone", slotId: "rows" },
+				});
+				const result = applyStyleProperty(state, "fontWeight", "bold");
+				expect(slotsOf(result, "r1").name.fontWeight).toBe("bold");
+				expect(slotsOf(result, "r1").rows.fontWeight).toBe("bold");
+			});
+
+			it("does not carry the slot restriction into group descendants", () => {
+				// A group that itself holds slots: synthetic, but the only way one
+				// object can be both the slot's owner and a parent of descendants.
+				const g1 = {
+					...groupObj("g1", ["r1"]),
+					features: { ...GroupFeatures, text: "slots" },
+					text: { name: { text: "Group" }, rows: { text: ["a"] } },
+				} as unknown as ObjectState;
+				const r1 = slotRect("r1");
+				const state = makeState({
+					selectedIds: ["g1"],
+					objects: { g1, r1 },
+					selectedTextSlot: { objectId: "g1", slotId: "rows" },
+				});
+				const result = applyStyleProperty(state, "fontWeight", "bold");
+				expect(slotsOf(result, "g1").name.fontWeight).toBeUndefined();
+				expect(slotsOf(result, "g1").rows.fontWeight).toBe("bold");
+				expect(slotsOf(result, "r1").name.fontWeight).toBe("bold");
+				expect(slotsOf(result, "r1").rows.fontWeight).toBe("bold");
+			});
+
+			it("leaves the text content property writing the first slot", () => {
+				const r1 = slotRect("r1");
+				const state = makeState({
+					selectedIds: ["r1"],
+					objects: { r1 },
+					selectedTextSlot: { objectId: "r1", slotId: "rows" },
+				});
+				const result = applyStyleProperty(state, "text", "Account");
+				expect(slotsOf(result, "r1")).toEqual({
+					name: { text: "Account" },
+					rows: { text: ["id"] },
+				});
+			});
 		});
 	});
 

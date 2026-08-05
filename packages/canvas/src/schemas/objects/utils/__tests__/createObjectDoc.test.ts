@@ -68,26 +68,6 @@ describe("createObjectDoc", () => {
 		});
 	});
 
-	describe("sticky", () => {
-		it("sets x, y centered on the position", () => {
-			const doc = createObjectDoc("sticky", pos, registries.objectFactory);
-			const s = doc as unknown as {
-				x: number;
-				y: number;
-				width: number;
-				height: number;
-			};
-			expect(s.x).toBeCloseTo(pos.x - s.width / 2);
-			expect(s.y).toBeCloseTo(pos.y - s.height / 2);
-		});
-
-		it("type is 'sticky'", () => {
-			expect(
-				createObjectDoc("sticky", pos, registries.objectFactory).type,
-			).toBe("sticky");
-		});
-	});
-
 	describe("polyline", () => {
 		it("has 2 horizontal points centered on the position", () => {
 			const doc = createObjectDoc("polyline", pos, registries.objectFactory);

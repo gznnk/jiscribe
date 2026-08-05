@@ -30,7 +30,7 @@ describe("createCanvasRegistries", () => {
 	describe("default (no config)", () => {
 		it("registers every object type", () => {
 			const registries = createCanvasRegistries();
-			for (const type of ["rect", "ellipse", "cloud", "sticky"]) {
+			for (const type of ["rect", "ellipse", "polyline", "polygon"]) {
 				expect(registries.objectMapper.getFeatures(type)).toBeDefined();
 			}
 			// gesture handlers are type-independent and always registered
@@ -54,8 +54,8 @@ describe("createCanvasRegistries", () => {
 			});
 			expect(registries.objectMapper.getFeatures("rect")).toBeDefined();
 			expect(registries.objectMapper.getFeatures("ellipse")).toBeDefined();
-			expect(registries.objectMapper.getFeatures("cloud")).toBeUndefined();
-			expect(registries.objectFactory.get("cloud")).toBeUndefined();
+			expect(registries.objectMapper.getFeatures("polygon")).toBeUndefined();
+			expect(registries.objectFactory.get("polygon")).toBeUndefined();
 		});
 
 		it("restricts the StencilLibrary presets to the enabled types", () => {
@@ -116,6 +116,25 @@ describe("createCanvasRegistries", () => {
 			// A type that declares nothing stays on the default (scroll), which the
 			// editor applies via resolveTextEditOverflow.
 			expect(registries.objectTextEditOverflow.get("rect")).toBeUndefined();
+		});
+
+		it("registers a plugin's svgDefs, and only for the type declaring it", () => {
+			const HaloDefs = () => null;
+			const haloPlugin: CanvasPlugin = {
+				id: "halo-plugin",
+				objects: {
+					halo: defineObject({
+						...buildFakeDefinition("halo"),
+						svgDefs: HaloDefs,
+					}),
+					plain: buildFakeDefinition("plain"),
+				},
+			};
+			const registries = createCanvasRegistries({ plugins: [haloPlugin] });
+			// No built-in contributes to <defs>, so the plugin's entry is the only one.
+			expect(registries.objectSvgDefs.all()).toEqual([
+				{ type: "halo", Component: HaloDefs },
+			]);
 		});
 
 		it("derives menu sections from features when menu is omitted", () => {

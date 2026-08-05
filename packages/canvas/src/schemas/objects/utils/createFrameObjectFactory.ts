@@ -1,3 +1,4 @@
+import { calcDrawBounds } from "./calcDrawBounds";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectFactory } from "../types/ObjectFactory";
 import {
@@ -18,7 +19,7 @@ type FrameDefaults = Omit<ObjectDoc, "id"> & {
 type FrameObjectFactoryOptions = {
 	/**
 	 * Whether drag-drawing from a two-point bounds is supported (default true).
-	 * Shapes set to false (such as sticky) have no createDocFromBounds and are
+	 * Shapes set to false have no createDocFromBounds and are
 	 * center-placed on click.
 	 */
 	supportsBounds?: boolean;
@@ -27,7 +28,7 @@ type FrameObjectFactoryOptions = {
 /**
  * Builds a `ObjectFactory` from DEFAULTS for Frame-family shapes
  * (geometry: "rect", top-left origin x/y/width/height). Consolidates shapes
- * such as rect / diamond / sticky whose creation logic differs only in the
+ * such as rect / diamond / note whose creation logic differs only in the
  * defaults and whether bounds are supported.
  *
  * Center-based ellipses (cx/cy/rx/ry) are out of scope because their placement
@@ -68,12 +69,11 @@ export const createFrameObjectFactory = (
 			x2,
 			y2,
 			overrides,
-			minSize = 5,
+			minSize,
 			docDefaults,
 		) => {
-			const width = Math.abs(x2 - x1);
-			const height = Math.abs(y2 - y1);
-			if (width < minSize || height < minSize) {
+			const bounds = calcDrawBounds(x1, y1, x2, y2, minSize);
+			if (bounds === null) {
 				return null;
 			}
 			return {
@@ -81,10 +81,10 @@ export const createFrameObjectFactory = (
 				...pickSupportedDocDefaults(defaults, docDefaults),
 				...overrides,
 				id: crypto.randomUUID(),
-				x: Math.min(x1, x2),
-				y: Math.min(y1, y2),
-				width,
-				height,
+				x: bounds.left,
+				y: bounds.top,
+				width: bounds.width,
+				height: bounds.height,
 			};
 		};
 	}

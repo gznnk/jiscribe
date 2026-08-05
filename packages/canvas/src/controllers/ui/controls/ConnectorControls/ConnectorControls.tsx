@@ -3,7 +3,8 @@ import { memo } from "react";
 import { theme } from "../../../../constants/theme";
 import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/hooks/useResolvedConnectorPoints";
 import { resolveEndpointOwner } from "../../../../presentations/layers/content/utils/endpoints";
-import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
+import { isConnectorDrawnOrthogonal } from "../../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
+import { isFreeEndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
@@ -31,15 +32,19 @@ type ConnectorControlsProps = {
  *   (data-id=<id> + data-part="endpoint:source|target" → ConnectionAnchorEventHandler)
  * - Waypoint move handles: move existing waypoints
  *   (data-id=<id> + data-part="vertex:<i>" → reuses VertexControlHandler)
- * - Waypoint insert handles (straight only): the midpoint of each segment of the resolved path
+ * - Waypoint insert handles (lines drawn straight only): the midpoint of each segment of the resolved path
  *   [source, ...waypoints, target]. Drag to add a new waypoint
  *   (data-id=<id> + data-part="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
  *
  * The two shapes are edited differently because a point means a different thing in each. Under
- * straight a point is a bend the user places and then moves freely; under orthogonal the vertices
- * have to stay axis-aligned, so they are only ever moved a whole segment at a time — which needs no
- * handle at all and is not offered here: the segment itself is the target, and its hit band lives
- * with the connector (see ConnectorSegmentHitAreas).
+ * straight a point is a bend the user places and then moves freely, so it gets a handle; under
+ * orthogonal the vertices have to stay axis-aligned and are only ever moved a whole segment at a
+ * time, which needs no handle at all.
+ *
+ * Both routings also let a segment be grabbed along its whole length, but that hit band lives with
+ * the connector rather than here (ConnectorSegmentSlideHitAreas / ConnectorSegmentMoveHitAreas), so it
+ * works without selecting first. The insert handles sit on top of those bands at the segment
+ * midpoints: the middle of a straight segment adds a vertex, the rest of it moves the segment.
  *
  * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  */
@@ -68,15 +73,16 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	// When one endpoint is free, hide the handle of the paired owned endpoint.
 	// Otherwise the owned endpoint could be dragged into empty space (free), creating a free-free connector.
 	// The free endpoint's handle is always shown (for repositioning and reconnecting to a shape).
-	const sourceIsFree = !connectorState.source.owner;
-	const targetIsFree = !connectorState.target.owner;
+	const sourceIsFree = isFreeEndpointRef(connectorState.source);
+	const targetIsFree = isFreeEndpointRef(connectorState.target);
 	const showSourceHandle = sourceIsFree || !targetIsFree;
 	const showTargetHandle = targetIsFree || !sourceIsFree;
 
 	// Straight gets per-vertex move and insert handles; orthogonal makes each segment grabbable
-	// along its whole length instead.
-	// When routing is omitted, orthogonal is the default.
-	const isOrthogonal = isOrthogonalRouting(connectorState.routing);
+	// along its whole length instead. What decides is how the line is drawn, not the routing field:
+	// a self-loop is drawn as a rectangular loop even carrying "straight", and the insert handles
+	// index the drawn path, so offering them there would hand out handles nothing answers to.
+	const isOrthogonal = isConnectorDrawnOrthogonal(connectorState);
 	const waypoints = connectorState.points;
 	const selectedVertexIndex =
 		selectedVertex?.objectId === connectorState.id

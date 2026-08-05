@@ -7,7 +7,7 @@ import styled from "@emotion/styled";
  * unfilled record is still grabbable.
  *
  * Only the wrapping <g> carries data-kind/data-id: one object is one
- * data-kind element, and getKindAndId reads the nested data-part from there.
+ * data-kind element, and getGestureTarget reads the nested data-part from there.
  */
 
 /** One compartment: the title band and every row compartment are drawn alike. */

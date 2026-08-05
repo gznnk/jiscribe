@@ -1,0 +1,1 @@
+export { TextSlotOutline } from "./TextSlotOutline";

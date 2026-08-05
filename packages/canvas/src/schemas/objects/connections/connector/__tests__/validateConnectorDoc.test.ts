@@ -87,7 +87,9 @@ describe("validateConnectorDoc", () => {
 	it("is an error when source's connectPoint anchor has an invalid id", () => {
 		const badRef = {
 			owner: { id: "rect-1" },
-			anchor: { kind: "connectPoint", id: "invalid" },
+			// "center" is the one id a connectPoint can never carry: the center is
+			// its own anchor kind. Any other name is left to the shape's type.
+			anchor: { kind: "connectPoint", id: "center" },
 		};
 		const errors = validateConnectorDoc(
 			{ points: validPoints, source: badRef, target: freeRef },

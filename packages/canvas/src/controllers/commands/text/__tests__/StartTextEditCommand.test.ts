@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { DEFAULT_LABEL_PLACEMENT } from "../../../utils/applyLabelPlacement";
@@ -109,6 +110,57 @@ describe("StartTextEditCommand", () => {
 		expect(
 			StartTextEditCommand.execute(state, registries).textEditState,
 		).not.toHaveProperty("placement");
+	});
+
+	describe("a shape with slots", () => {
+		/** A record standing in: no built-in type declares `features.text = "slots"`. */
+		const stateWithSlotSelection = (
+			selectedTextSlot: CanvasControllerState["selectedTextSlot"],
+		) =>
+			deepFreezeState({
+				...createInitialControllerState(doc, registries),
+				objects: {
+					"rec-1": {
+						id: "rec-1",
+						type: "record",
+						features: { text: "slots" },
+						text: { name: { text: "User" }, rows: { text: ["id: string"] } },
+					},
+				} as never,
+				selectedIds: ["rec-1"],
+				selectedTextSlot,
+			});
+
+		it("edits the selected slot", () => {
+			const state = stateWithSlotSelection({
+				objectId: "rec-1",
+				slotId: "rows",
+			});
+			expect(
+				StartTextEditCommand.execute(state, registries).textEditState,
+			).toMatchObject({
+				objectId: "rec-1",
+				slotId: "rows",
+				text: "id: string",
+			});
+		});
+
+		it("edits the first slot when no slot is selected", () => {
+			const state = stateWithSlotSelection(null);
+			expect(
+				StartTextEditCommand.execute(state, registries).textEditState,
+			).toMatchObject({ objectId: "rec-1", slotId: "name" });
+		});
+
+		it("edits the first slot when the slot selection is stale", () => {
+			const state = stateWithSlotSelection({
+				objectId: "rec-1",
+				slotId: "operations",
+			});
+			expect(
+				StartTextEditCommand.execute(state, registries).textEditState,
+			).toMatchObject({ objectId: "rec-1", slotId: "name" });
+		});
 	});
 
 	it("an svg that does not support text does not start editing", () => {

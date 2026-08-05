@@ -1,9 +1,14 @@
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
+import {
+	AUTO_COLOR,
+	BELOW_LABEL_STYLE_DEFAULTS,
+} from "@workspace/canvas-sdk/doc";
 
 /**
- * A cross (plus) marker, used to mark junctions and for emphasis. It holds no
- * text (no `text` feature) — it is a marker, not a labeled box.
+ * A cross (plus) marker, used to mark junctions and for emphasis. The arms fill
+ * the whole box, so its text is drawn as a label below it, auto-sized to the
+ * text itself (calcBelowLabelTextRegion) — the marker stays a marker however
+ * long the note on it gets.
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering. This
  * lets it reuse Frame-based transforms and connector outline connections with
@@ -15,6 +20,7 @@ export const CrossFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
+	text: "body",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -35,4 +41,6 @@ export const CROSS_DOC_DEFAULTS: Omit<CrossDoc, "id"> = {
 	fill: "transparent",
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
+	text: "",
+	...BELOW_LABEL_STYLE_DEFAULTS,
 } as const as CrossDoc;

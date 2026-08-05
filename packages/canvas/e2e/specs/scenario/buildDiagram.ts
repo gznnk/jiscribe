@@ -10,7 +10,7 @@
 
 import type { CanvasDriver } from "../../support/CanvasDriver";
 import type {
-	AnchorId,
+	EdgeAnchorId,
 	ColorSectionId,
 	ToolTitle,
 } from "../../support/selectors";
@@ -66,7 +66,7 @@ export async function placeLabeledShape(
 }
 
 /** Midpoint of the target edge directly facing the given source anchor (the connector's drop point) */
-const facingEdgePoint = (target: Rect, sourceAnchor: AnchorId) => {
+const facingEdgePoint = (target: Rect, sourceAnchor: EdgeAnchorId) => {
 	switch (sourceAnchor) {
 		case "rightCenter":
 			return { x: target.x, y: target.y + target.height / 2 };
@@ -91,7 +91,7 @@ const facingEdgePoint = (target: Rect, sourceAnchor: AnchorId) => {
 export async function connectShapes(
 	canvas: CanvasDriver,
 	source: Rect,
-	sourceAnchor: AnchorId,
+	sourceAnchor: EdgeAnchorId,
 	target: Rect,
 ): Promise<string> {
 	await canvas.selectAt(center(source));

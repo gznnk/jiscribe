@@ -5,6 +5,7 @@ import {
 	numberOverride,
 	pickSupportedDocDefaults,
 } from "../../types/ObjectFactory";
+import { calcDrawBounds } from "../../utils/calcDrawBounds";
 
 export const EllipseObjectFactory: ObjectFactory = {
 	createDoc(position, overrides, docDefaults) {
@@ -25,21 +26,22 @@ export const EllipseObjectFactory: ObjectFactory = {
 		};
 	},
 
-	createDocFromBounds(x1, y1, x2, y2, overrides, minSize = 5, docDefaults) {
-		const width = Math.abs(x2 - x1);
-		const height = Math.abs(y2 - y1);
-		if (width < minSize || height < minSize) {
+	createDocFromBounds(x1, y1, x2, y2, overrides, minSize, docDefaults) {
+		const bounds = calcDrawBounds(x1, y1, x2, y2, minSize);
+		if (bounds === null) {
 			return null;
 		}
+		const rx = bounds.width / 2;
+		const ry = bounds.height / 2;
 		return {
 			...ELLIPSE_DOC_DEFAULTS,
 			...pickSupportedDocDefaults(ELLIPSE_DOC_DEFAULTS, docDefaults),
 			...overrides,
 			id: crypto.randomUUID(),
-			cx: (x1 + x2) / 2,
-			cy: (y1 + y2) / 2,
-			rx: width / 2,
-			ry: height / 2,
+			cx: bounds.left + rx,
+			cy: bounds.top + ry,
+			rx,
+			ry,
 		} as ObjectDoc;
 	},
 };

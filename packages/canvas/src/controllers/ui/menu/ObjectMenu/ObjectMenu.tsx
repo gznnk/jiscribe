@@ -20,19 +20,24 @@ import {
 	ObjectMenuSectionRow,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
-import type { ObjectMenuItem, ObjectMenuSection } from "./ObjectMenuTypes";
+import type {
+	ObjectMenuItem,
+	ObjectMenuPropertyUpdater,
+	ObjectMenuSection,
+} from "./ObjectMenuTypes";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
+import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 const renderItem = (
 	item: ObjectMenuItem,
 	canvasState: CanvasControllerState,
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void,
+	onPropertyUpdate: ObjectMenuPropertyUpdater,
 ): React.ReactNode => {
 	switch (item.type) {
 		case "arrowHead":
@@ -168,7 +173,12 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
-	const systemSections = shouldRender ? buildSystemSections(canvasState) : [];
+	// None of the system sections acts on a text slot, so they all go while one is selected.
+	const showSystemSections =
+		shouldRender && resolveSelectedTextSlot(canvasState) === null;
+	const systemSections = showSystemSections
+		? buildSystemSections(canvasState)
+		: [];
 	const allSections = [...objectSections, ...systemSections];
 
 	if (!shouldRender || allSections.length === 0) {

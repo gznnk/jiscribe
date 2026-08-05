@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { ObjectVisualBoundsRegistry } from "../../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import {
@@ -34,6 +35,22 @@ const poly = (
 	id: string,
 	points: Array<{ x: number; y: number }>,
 ): ObjectState => ({ id, type: "polyline", points }) as unknown as ObjectState;
+
+/**
+ * Stands in for a type that draws outside its geometry box (an actor's label):
+ * a 20x10 strip hung 4px below the box, centered horizontally.
+ */
+const labelBelowBox: Pick<ObjectVisualBoundsRegistry, "get"> = {
+	get: (type) =>
+		type !== "rect"
+			? undefined
+			: (state) => ({
+					x: -Math.max(state.width, 20) / 2,
+					y: -state.height / 2,
+					width: Math.max(state.width, 20),
+					height: state.height + 4 + 10,
+				}),
+};
 
 const freeConnector = (
 	overrides: Partial<Record<string, unknown>> = {},
@@ -183,6 +200,84 @@ describe("calcObjectBoundingBox", () => {
 		});
 	});
 
+	describe("visual bounds", () => {
+		// The stub hangs 14px (gap + strip) under a 100x50 rect at (100, 100),
+		// whose geometry box is 50..150 x 75..125.
+		it("keeps the geometry box when no registry is passed", () => {
+			const obj = rect("r", 100, 100, 100, 50);
+			expect(calcObjectBoundingBox(obj, { r: obj })).toEqual({
+				left: 50,
+				top: 75,
+				right: 150,
+				bottom: 125,
+			});
+		});
+
+		it("widens the box by what the type draws outside it", () => {
+			const obj = rect("r", 100, 100, 100, 50);
+			expect(calcObjectBoundingBox(obj, { r: obj }, labelBelowBox)).toEqual({
+				left: 50,
+				top: 75,
+				right: 150,
+				bottom: 139,
+			});
+		});
+
+		it("leaves a type without a registered calculator alone", () => {
+			const obj = poly("pl", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 },
+			]);
+			expect(calcObjectBoundingBox(obj, { pl: obj }, labelBelowBox)).toEqual(
+				calcObjectBoundingBox(obj, { pl: obj }),
+			);
+		});
+
+		it("rotates the extension with the shape", () => {
+			// At 90 degrees the strip below the box points left instead of down.
+			const obj = rect("r", 100, 100, 100, 50, 90);
+			const bbox = calcObjectBoundingBox(obj, { r: obj }, labelBelowBox);
+			expect(bbox!.left).toBeCloseTo(61);
+			expect(bbox!.right).toBeCloseTo(125);
+			expect(bbox!.top).toBeCloseTo(50);
+			expect(bbox!.bottom).toBeCloseTo(150);
+		});
+
+		it("mirrors the extension with a vertical flip", () => {
+			const obj = {
+				...rect("r", 100, 100, 100, 50),
+				scaleY: -1,
+			} as unknown as ObjectState;
+			const bbox = calcObjectBoundingBox(obj, { r: obj }, labelBelowBox);
+			expect(bbox!.top).toBeCloseTo(61);
+			expect(bbox!.bottom).toBeCloseTo(125);
+		});
+
+		it("cannot shrink the box below its geometry", () => {
+			const shrinking: Pick<ObjectVisualBoundsRegistry, "get"> = {
+				get: () => () => ({ x: 0, y: 0, width: 1, height: 1 }),
+			};
+			const obj = rect("r", 100, 100, 100, 50);
+			expect(calcObjectBoundingBox(obj, { r: obj }, shrinking)).toEqual({
+				left: 50,
+				top: 75,
+				right: 150,
+				bottom: 125,
+			});
+		});
+
+		it("reaches a group's children through the recursion", () => {
+			const child = rect("r", 100, 100, 100, 50);
+			const g = group("g", ["r"]);
+			expect(calcObjectBoundingBox(g, { r: child }, labelBelowBox)).toEqual({
+				left: 50,
+				top: 75,
+				right: 150,
+				bottom: 139,
+			});
+		});
+	});
+
 	it("returns null for an object of unknown shape", () => {
 		const unknownObj = { id: "u", type: "mystery" } as unknown as ObjectState;
 		expect(calcObjectBoundingBox(unknownObj, { u: unknownObj })).toBeNull();
@@ -207,6 +302,14 @@ describe("calcObjectsBoundingBox", () => {
 		expect(calcObjectsBoundingBox(["pl", "missing"], { pl: emptyPoly })).toBe(
 			null,
 		);
+	});
+
+	it("passes the visual-bounds registry down to each object", () => {
+		const r1 = rect("r1", 100, 100, 100, 50);
+		const r2 = rect("r2", 300, 300, 100, 50);
+		expect(
+			calcObjectsBoundingBox(["r1", "r2"], { r1, r2 }, labelBelowBox),
+		).toEqual({ left: 50, top: 75, right: 350, bottom: 339 });
 	});
 
 	it("unions shapes and connectors in a mixed selection", () => {

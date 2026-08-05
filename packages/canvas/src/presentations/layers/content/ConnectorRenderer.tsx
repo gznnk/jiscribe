@@ -2,12 +2,14 @@ import { memo, useMemo } from "react";
 
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
 import { calcConnectorLabelAnchor } from "./utils/label/calcConnectorLabelAnchor";
-import { isOrthogonalRouting } from "../../../schemas/objects/types/ConnectorRouting";
+import { isConnectorDrawnOrthogonal } from "../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
+import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import {
 	Connector,
-	ConnectorSegmentHitAreas,
+	ConnectorSegmentMoveHitAreas,
+	ConnectorSegmentSlideHitAreas,
 } from "../../objects/connections/Connector";
 import { ConnectorLabel } from "../../objects/connections/ConnectorLabel";
 
@@ -71,10 +73,18 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 				disablePointerEvents={disablePointerEvents}
 			/>
 			{/* Drawn between the line and the label, so the label keeps the pointer over itself. */}
-			{isOrthogonalRouting(connectorState.routing) && (
-				<ConnectorSegmentHitAreas
+			{isConnectorDrawnOrthogonal(connectorState) ? (
+				<ConnectorSegmentSlideHitAreas
 					id={connectorState.id}
 					points={resolved.points}
+					disablePointerEvents={disablePointerEvents}
+				/>
+			) : (
+				<ConnectorSegmentMoveHitAreas
+					id={connectorState.id}
+					points={resolved.points}
+					sourceIsFree={isFreeEndpointRef(connectorState.source)}
+					targetIsFree={isFreeEndpointRef(connectorState.target)}
 					disablePointerEvents={disablePointerEvents}
 				/>
 			)}

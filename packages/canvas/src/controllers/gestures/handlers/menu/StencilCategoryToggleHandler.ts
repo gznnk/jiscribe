@@ -2,7 +2,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * GestureHandler for the StencilLibrary category toggle buttons in the toolbar.
@@ -13,8 +13,14 @@ import { isLeftButton } from "../utils/isLeftButton";
  *
  * This handler only owns the toggle itself. Dismissal on outside interactions
  * is handled by the selection/press handlers and commands that clear
- * stencilLibraryOpenCategory (and resetUiState for bulk resets), mirroring how
- * objectMenuOpenId is cleared — there is no central clear in handleGesture.
+ * stencilLibraryOpenCategory (and resetUiState for bulk resets) — there is no
+ * central clear in handleGesture. Most of them clear objectMenuOpenId in the
+ * same breath; ToolbarHandler is the exception, closing only the flyout since a
+ * toolbar press is not meant to dismiss the ObjectMenu.
+ *
+ * The flyout element carries this same targetId with no toggle: prefix, so a
+ * press on its padding lands here and is deliberately inert (without it the
+ * press would resolve to the toolbar background and close the flyout).
  */
 const TOGGLE_PREFIX = "toggle:";
 
@@ -23,7 +29,7 @@ export const StencilCategoryToggleHandler: GestureHandler = {
 		return (
 			event.targetKind === "menu" &&
 			event.targetId === "stencil-category" &&
-			isLeftButton(event)
+			isPerTargetInteraction(event)
 		);
 	},
 

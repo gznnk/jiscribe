@@ -615,6 +615,44 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * Click an ObjectMenu slider track without dragging, the way a user jumps the thumb to a
+	 * position. The section must already be open.
+	 *
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param ratio - Horizontal position on the track, 0 (left end / lowest value) to 1 (right end)
+	 */
+	async clickSliderAt(property: string, ratio: number) {
+		const slider = this.page.locator(selectors.objectMenuSlider(property));
+		await expect(slider).toBeVisible();
+		const box = await slider.boundingBox();
+		if (!box) {
+			throw new Error(`cannot read the position of slider ${property}`);
+		}
+		await this.page.mouse.click(
+			box.x + box.width * ratio,
+			box.y + box.height / 2,
+		);
+	}
+
+	/**
+	 * Focus an ObjectMenu slider and nudge it from the keyboard. The section must already be open.
+	 * Each press is its own keydown/keyup pair, so presses within the history coalesce window
+	 * collapse into a single undo entry, just like a held key.
+	 *
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param key - Key name to press, e.g. "ArrowRight" / "Home" / "PageUp"
+	 * @param repeat - Number of presses, defaults to 1
+	 */
+	async pressSliderKey(property: string, key: string, repeat = 1) {
+		const slider = this.page.locator(selectors.objectMenuSlider(property));
+		await expect(slider).toBeVisible();
+		await slider.focus();
+		for (let i = 0; i < repeat; i++) {
+			await slider.press(key);
+		}
+	}
+
+	/**
 	 * Type a value into the number input beside an ObjectMenu slider and commit with Enter. The
 	 * section must already be open; the input is found by its test-only data-testid hook.
 	 */
@@ -708,6 +746,9 @@ export class CanvasDriver {
 	/**
 	 * Drag a transform handle (the eight resize directions or rotation). The target must already
 	 * be selected, and `handle` uses the same identifiers as selectors.transformControl.
+	 *
+	 * @param options.inspect - Runs with the button still down, like dragInspecting; the release
+	 *   happens even if it throws
 	 */
 	async dragTransformHandle(
 		handle:
@@ -721,7 +762,15 @@ export class CanvasDriver {
 			| "bottomRight"
 			| "rotation",
 		to: { x: number; y: number },
-		{ shift = false, ctrl = false }: { shift?: boolean; ctrl?: boolean } = {},
+		{
+			shift = false,
+			ctrl = false,
+			inspect,
+		}: {
+			shift?: boolean;
+			ctrl?: boolean;
+			inspect?: () => Promise<void>;
+		} = {},
 	) {
 		const control = this.page.locator(selectors.transformControl(handle));
 		await expect(control).toBeVisible();
@@ -732,7 +781,7 @@ export class CanvasDriver {
 		// The handle box is screen coordinates and `to` is content coordinates; align on screen.
 		const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 		const toScreen = this.toScreen(to);
-		if (!shift && !ctrl) {
+		if (!shift && !ctrl && !inspect) {
 			await this.dragScreen(from, toScreen, 10);
 			return;
 		}
@@ -748,12 +797,16 @@ export class CanvasDriver {
 			await this.page.keyboard.down("Control");
 		}
 		await this.page.mouse.move(toScreen.x, toScreen.y, { steps: 10 });
-		await this.page.mouse.up();
-		if (shift) {
-			await this.page.keyboard.up("Shift");
-		}
-		if (ctrl) {
-			await this.page.keyboard.up("Control");
+		try {
+			await inspect?.();
+		} finally {
+			await this.page.mouse.up();
+			if (shift) {
+				await this.page.keyboard.up("Shift");
+			}
+			if (ctrl) {
+				await this.page.keyboard.up("Control");
+			}
 		}
 	}
 

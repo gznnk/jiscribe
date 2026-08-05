@@ -2,13 +2,13 @@ import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
 import { PRECISION } from "../../../constants/precision";
+import { isSelfLoopConnector } from "../../../schemas/objects/connections/connector/isSelfLoopConnector";
 import { isOrthogonalRouting } from "../../../schemas/objects/types/ConnectorRouting";
 import type { ConnectorRouting } from "../../../schemas/objects/types/ConnectorRouting";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../utils/calcConnectorBoundingBox";
-import { isSelfLoopConnector } from "../../utils/isSelfLoopConnector";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -53,6 +53,7 @@ const bakeDrawnVertices = (
 		state.objects,
 		registries.objectOutline,
 		registries.objectAnchorRegion,
+		registries.objectExtraConnectPoints,
 	);
 	if (!path) {
 		return null;

@@ -1,7 +1,7 @@
 import type { Point } from "@workspace/geometry";
 import type React from "react";
 
-import type { CanvasControllerState } from "../../CanvasTypes";
+import type { Viewport } from "../../../states/canvas/Viewport";
 
 export type Mods = {
 	shift: boolean;
@@ -17,7 +17,11 @@ export type GestureType =
 	| "dragEnd"
 	| "click"
 	| "doubleClick"
-	| "wheel";
+	| "wheel"
+	| "pinch"
+	// Touch only: a press held for LONG_PRESS_DURATION_MS within the drag slop.
+	// Ends the gesture — the pointerup that follows fires nothing (no click).
+	| "longPress";
 
 export type HoveredElement = {
 	id: string;
@@ -39,10 +43,17 @@ export type ScrollDelta = {
 export type ClickSnapshot = {
 	time: number;
 	clientPos: Point;
+	// "mouse" | "pen" | "touch"; from the press that produced the click. Selects
+	// the double-click distance threshold (touch gets the wider one).
+	pointerType?: string;
 };
 
 export type Gesture = {
 	type: GestureType;
+	// "mouse" | "pen" | "touch"; fixed at pointerdown. Absent on wheel gestures.
+	// Consumers branch on it where an operation's meaning differs by input device
+	// (e.g. a touch canvas drag pans instead of area-selecting).
+	pointerType?: string;
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
@@ -60,8 +71,8 @@ export type Gesture = {
 	getHovered: () => HoveredElement[];
 	time: number;
 	button: number;
-	zoomDelta?: number; // Optional zoom delta (deltaY from wheel event, zoom events only)
-	scrollDelta?: ScrollDelta; // Optional scroll delta for edge scrolling
+	zoomScale?: number; // Optional multiplicative zoom factor (wheel: fixed step from the deltaY sign; pinch: distance ratio since the last pinch event)
+	scrollDelta?: ScrollDelta; // Optional scroll delta in screen px (wheel, edge scrolling, pinch pan)
 	inputValue?: string; // Optional input value from native-pointer elements (data-gesture="native-pointer")
 };
 
@@ -74,9 +85,35 @@ export type PointerEventHandlers = {
 	onPointerCancel: React.PointerEventHandler<HTMLElement>;
 };
 
+/**
+ * The slice of canvas state the recognizer reads. Narrower than the controller
+ * state on purpose: the full state is structurally assignable to this, so callers
+ * pass their existing ref unchanged.
+ */
+export type RecognizerCanvasState = {
+	/** Current pan/zoom; supplies the rect for edge-proximity detection and the zoom that divides screen-px scroll deltas into SVG units. */
+	viewport: Viewport;
+	/** Whether a drag near the container edge auto-scrolls the viewport; false makes the drag stop at the edge. */
+	edgeScrollEnabled: boolean;
+};
+
 export type GestureRecognizerConfig = {
 	gestureCallback: GestureCallback;
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
-	canvasStateRef: React.RefObject<CanvasControllerState>;
+	/** Latest canvas state, read at gesture time. The recognizer touches only viewport and edgeScrollEnabled. */
+	canvasStateRef: React.RefObject<RecognizerCanvasState>;
+	/**
+	 * Policy consulted when a second touch arrives during a confirmed drag:
+	 * return true to close the drag with dragEnd and convert it into a pinch
+	 * (viewport pans), false to keep ignoring the extra touch (object drags,
+	 * shape drawing — #25). Consulted only after dragStart; pinch entry before a
+	 * drag confirms is unconditional. Omitted = never convert mid-drag. Keeps
+	 * the consumer's routing knowledge ("which drags are pans") out of the
+	 * recognizer (the canvas injects handlers/canvas/utils/isViewportPanDrag).
+	 * Any state the decision needs is closed over by the injecting side.
+	 *
+	 * @param targetKind - The drag's target kind fixed at pointerdown.
+	 */
+	shouldPinchFromDrag?: (targetKind: string | undefined) => boolean;
 };

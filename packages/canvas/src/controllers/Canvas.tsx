@@ -65,9 +65,11 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
+import type { ObjectMenuPropertyUpdater } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
@@ -202,8 +204,8 @@ type CanvasProps = {
 		/**
 		 * Overrides the top-level arrangement of the shape tools: an ordered mix of
 		 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
-		 * for the default layout (basic primitives + sticky pinned, general /
-		 * annotation as flyouts).
+		 * for the default layout, which pins every core preset directly and opens no
+		 * flyout — anything a plugin supplies must be added here by the host.
 		 */
 		layout?: ToolbarEntry[];
 	};
@@ -387,9 +389,15 @@ const CanvasComponent = ({
 	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
-	const handleMenuPropertyUpdate = useCallback(
-		(property: string, value: string, commit: boolean) => {
-			dispatch({ type: "MENU_PROPERTY_UPDATE", property, value, commit });
+	const handleMenuPropertyUpdate = useCallback<ObjectMenuPropertyUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "MENU_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
 		},
 		[dispatch],
 	);
@@ -407,8 +415,9 @@ const CanvasComponent = ({
 	);
 
 	// The slot being edited carries the uncommitted editor text, so geometry derived from
-	// it follows every keystroke instead of jumping on commit. Rendering and editor
-	// placement only — hit testing, snapping and bboxes still read committed state.objects.
+	// it follows every keystroke instead of jumping on commit. Rendering, selection
+	// feedback and editor placement only — hit testing, snapping and bboxes still read
+	// committed state.objects.
 	const draftObjects = useMemo(
 		() => graftTextEditDraft(state.objects, state.textEditState),
 		[state.objects, state.textEditState],
@@ -421,6 +430,7 @@ const CanvasComponent = ({
 		state.rootIds,
 		state.viewport,
 		state.textEditState?.objectId ?? null,
+		registries.objectVisualBounds,
 	);
 
 	const {
@@ -446,6 +456,8 @@ const CanvasComponent = ({
 	);
 
 	const { minX, minY, zoom } = state.viewport;
+
+	const selectedTextSlot = resolveSelectedTextSlot(state);
 
 	// Delegated to the command's canExecute as the single source of truth. Canvas provides
 	// the registries context, so it resolves against its directly-held bundle, not a hook.
@@ -510,8 +522,9 @@ const CanvasComponent = ({
 							/>
 							<SelectionOverlay
 								selectedIds={state.selectedIds}
-								objects={state.objects}
+								objects={draftObjects}
 								multiSelectGroup={state.multiSelectGroup}
+								selectedTextSlot={selectedTextSlot}
 							/>
 							<ConnectorControlsLayer
 								selectedConnectorId={state.selectedConnectorId}
@@ -525,6 +538,8 @@ const CanvasComponent = ({
 								multiSelectGroup={state.multiSelectGroup}
 								zoom={state.viewport.zoom}
 								isTextEditing={!!state.textEditState}
+								isTextSlotSelected={selectedTextSlot !== null}
+								activeDragKind={state.activeDragKind}
 							/>
 							<ConnectionAnchorsLayer
 								selectedIds={state.selectedIds}
@@ -534,6 +549,7 @@ const CanvasComponent = ({
 								editingConnectorId={state.editingConnectorId}
 								editingEndpoint={state.editingEndpoint}
 								isTextEditing={!!state.textEditState}
+								activeDragKind={state.activeDragKind}
 							/>
 							<VertexControlsLayer
 								selectedIds={state.selectedIds}

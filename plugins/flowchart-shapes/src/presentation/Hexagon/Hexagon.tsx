@@ -1,12 +1,11 @@
-import { createFrameObject } from "@workspace/canvas/unstable";
+import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildHexagonPoints } from "./buildHexagonPoints";
-import { HexagonElement } from "./HexagonStyled";
 import type { HexagonState } from "../../state/hexagon/HexagonState";
 
 /** Hexagon presentation (shared Frame logic lives in createFrameObject; only the shape is swapped in). */
 export const Hexagon = createFrameObject<HexagonState>((state, shape) => (
-	<HexagonElement
+	<ShapeBodyPolygon
 		{...shape}
 		points={buildHexagonPoints(
 			-state.width / 2,

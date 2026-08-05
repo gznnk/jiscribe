@@ -1,6 +1,7 @@
 import type { ObjectDoc } from "../../base/ObjectDoc";
 import type { ObjectFactory } from "../../types/ObjectFactory";
 import { AUTO_COLOR } from "../../utils/autoColor";
+import { DEFAULT_MIN_DRAW_SIZE } from "../../utils/calcDrawBounds";
 
 const POLY_STROKE = AUTO_COLOR;
 const POLY_STROKE_WIDTH = 2;
@@ -28,7 +29,14 @@ export const PolylineObjectFactory: ObjectFactory = {
 		return { halfWidth: POLYLINE_HALF_WIDTH, halfHeight: 0 };
 	},
 
-	createDocFromBounds(x1, y1, x2, y2, overrides, minSize = 5) {
+	createDocFromBounds(
+		x1,
+		y1,
+		x2,
+		y2,
+		overrides,
+		minSize = DEFAULT_MIN_DRAW_SIZE,
+	) {
 		const dx = x2 - x1;
 		const dy = y2 - y1;
 		const dist = Math.sqrt(dx * dx + dy * dy);

@@ -1,4 +1,4 @@
-import { getKindAndId } from "./getKindAndId";
+import { getGestureTarget } from "./getGestureTarget";
 import type { HoveredElement } from "../GestureRecognizerTypes";
 
 /**
@@ -43,7 +43,7 @@ export const getHoveredElements = (
 	const hovered: HoveredElement[] = [];
 	const seenIds = new Set<string>();
 	for (const el of elements) {
-		const item = getKindAndId(el);
+		const item = getGestureTarget(el);
 		if (!item) {
 			continue;
 		}
