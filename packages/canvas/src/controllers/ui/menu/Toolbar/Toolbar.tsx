@@ -52,7 +52,8 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
  * Combines the shape tools (StencilLibrary), zoom readout, and help (?) into a single bar.
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
- * - Zoom +/- is currently visual only (actual control is via wheel / pinch).
+ * - Zoom +/- and the readout go through the command system (ToolbarHandler → handleCommand),
+ *   the same path as the keyboard shortcuts and the context menu.
  * - Help is shown as a modal and can also be opened with the `?` key. It does not depend on the Canvas reducer.
  */
 const ToolbarComponent: React.FC<ToolbarProps> = ({
@@ -101,7 +102,12 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 
 	return (
 		<>
-			<ToolbarContainer>
+			{/* The one [data-kind] element of the bar: its own buttons carry only
+			    data-part and resolve their kind/id here through closest(), and a press
+			    on the empty area arrives with no part (dismissing the open menus).
+			    Nested targets with a different id (stencil-category / stencil-library)
+			    keep their own [data-kind] and still win. */}
+			<ToolbarContainer data-kind="menu" data-id="toolbar">
 				{/* Left: host slot (when provided) and shape tools */}
 				<ToolbarGroup>
 					{leading != null && (
@@ -157,8 +163,6 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label={messages.toolbarZoomOut}
 						title={messages.toolbarZoomOut}
 						disabled={!canZoomOut}
-						data-kind="menu"
-						data-id="toolbar"
 						data-part="command:zoomOut"
 					>
 						−
@@ -167,8 +171,6 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						type="button"
 						aria-label={messages.toolbarResetZoom}
 						title={messages.toolbarResetZoom}
-						data-kind="menu"
-						data-id="toolbar"
 						data-part="command:resetZoom"
 					>
 						{Math.round(zoom * 100)}%
@@ -178,8 +180,6 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label={messages.toolbarZoomIn}
 						title={messages.toolbarZoomIn}
 						disabled={!canZoomIn}
-						data-kind="menu"
-						data-id="toolbar"
 						data-part="command:zoomIn"
 					>
 						+

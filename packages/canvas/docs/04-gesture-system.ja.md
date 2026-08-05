@@ -164,7 +164,7 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 ```ts
 const isActivation = event.type === "click" || event.type === "doubleClick";
-if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
+if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
 	return handleCommand(state, commandId);
 }
 ```

@@ -1,8 +1,9 @@
 import { test, expect } from "../../fixtures";
+import { selectors } from "../../support/selectors";
 
 /**
  * The zoom buttons of the toolbar (gesture path: kind=menu / id=toolbar /
- * part=command:*).
+ * part=command:*, with kind / id coming from the bar element around them).
  *
  * Two quick presses on the same button make the second one a doubleClick because of the
  * recognizer's exclusivity rule, but ToolbarHandler treats click and doubleClick alike,
@@ -10,9 +11,9 @@ import { test, expect } from "../../fixtures";
  * This detects a regression of that.
  */
 
-const zoomInButton = '[data-id="toolbar"][data-part="command:zoomIn"]';
-const zoomOutButton = '[data-id="toolbar"][data-part="command:zoomOut"]';
-const readout = '[data-id="toolbar"][data-part="command:resetZoom"]';
+const zoomInButton = selectors.toolbarCommand("zoomIn");
+const zoomOutButton = selectors.toolbarCommand("zoomOut");
+const readout = selectors.toolbarCommand("resetZoom");
 
 test.describe("toolbar zoom buttons", () => {
 	test("zooms one step per click and returns to 100% on reset", async ({

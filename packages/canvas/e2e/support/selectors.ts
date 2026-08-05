@@ -37,6 +37,18 @@ export const selectors = {
 	/** Toolbar tool button. */
 	toolButton: (tool: ToolTitle) => `button[title="${tool}"]`,
 
+	/** The toolbar bar itself; the only element of the bar carrying data-kind / data-id. */
+	toolbar: '[data-kind="menu"][data-id="toolbar"]',
+
+	/**
+	 * Toolbar command button (zoom and so on). Written as a descendant selector
+	 * because the buttons carry only data-part: that mirrors how the gesture
+	 * system resolves them (the nearest [data-kind] ancestor supplies kind / id)
+	 * and keeps them apart from the `command:*` parts of the other menus.
+	 */
+	toolbarCommand: (commandId: string) =>
+		`[data-kind="menu"][data-id="toolbar"] [data-part="command:${commandId}"]`,
+
 	/** StencilLibrary category button; the toggle that opens a flyout. */
 	categoryButton: (categoryId: string) =>
 		`[data-id="stencil-category"][data-part="toggle:${categoryId}"]`,

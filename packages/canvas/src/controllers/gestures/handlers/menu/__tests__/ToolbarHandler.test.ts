@@ -17,6 +17,7 @@ const makeState = (): CanvasControllerState =>
 		multiSelectGroup: null,
 		textEditState: null,
 		contextMenuPosition: { x: 1, y: 1 },
+		stencilLibraryOpenCategory: "flowchart",
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 	}) as unknown as CanvasControllerState;
 
@@ -84,6 +85,16 @@ describe("ToolbarHandler", () => {
 			registries,
 		);
 		expect(next.contextMenuPosition).toBeNull();
+		expect(next.viewport.zoom).toBe(1);
+	});
+
+	it("a pressed on the bar's empty area (no targetPart) closes the category flyout", () => {
+		const next = ToolbarHandler.handle(
+			makeState(),
+			makeEvent("pressed", "toolbar"),
+			registries,
+		);
+		expect(next.stencilLibraryOpenCategory).toBeNull();
 		expect(next.viewport.zoom).toBe(1);
 	});
 });

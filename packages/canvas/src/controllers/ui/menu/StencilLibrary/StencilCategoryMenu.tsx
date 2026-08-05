@@ -66,8 +66,14 @@ const StencilCategoryMenuComponent: React.FC<StencilCategoryMenuProps> = ({
 				<Icon width={ICON_SIZE} height={ICON_SIZE} />
 				<ChevronDownIcon width={CARET_SIZE} height={CARET_SIZE} />
 			</StencilCategoryButton>
+			{/* The flyout claims its own gesture target so a press on its padding is
+			    not read as a press on the toolbar background (which closes it). */}
 			{isOpen && (
-				<StencilCategoryFlyout data-category-flyout={id}>
+				<StencilCategoryFlyout
+					data-category-flyout={id}
+					data-kind="menu"
+					data-id="stencil-category"
+				>
 					{presets.map((preset) => (
 						<StencilLibraryItem
 							key={preset.id}

@@ -24,6 +24,30 @@ async function canvasCursor(canvas: CanvasDriver): Promise<string> {
 		.evaluate((el) => getComputedStyle(el).cursor);
 }
 
+/**
+ * A viewport point on the toolbar that hits the bar itself, not a button. Scans
+ * the bar's midline and takes the middle of the gaps, so it holds whatever
+ * layout the harness mounts.
+ */
+async function toolbarEmptyPoint(
+	canvas: CanvasDriver,
+): Promise<{ x: number; y: number }> {
+	return canvas.page.locator(selectors.toolbar).evaluate((el) => {
+		const box = el.getBoundingClientRect();
+		const y = box.top + box.height / 2;
+		const hits: number[] = [];
+		for (let x = box.left + 2; x < box.right - 2; x += 4) {
+			if (document.elementFromPoint(x, y) === el) {
+				hits.push(x);
+			}
+		}
+		if (hits.length === 0) {
+			throw new Error("the toolbar has no empty area at this viewport size");
+		}
+		return { x: hits[Math.floor(hits.length / 2)], y };
+	});
+}
+
 test.describe("StencilLibrary category flyout", () => {
 	test("creates a shape by dragging one out of an opened category flyout", async ({
 		canvas,
@@ -86,5 +110,22 @@ test.describe("StencilLibrary category flyout", () => {
 		await expect(
 			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
 		).toHaveCount(0);
+	});
+
+	test("closes the flyout on a press over the toolbar's empty area", async ({
+		canvas,
+	}) => {
+		await canvas.page.click(selectors.categoryButton(FLOWCHART));
+		await expect(
+			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+		).toBeVisible();
+
+		const empty = await toolbarEmptyPoint(canvas);
+		await canvas.page.mouse.move(empty.x, empty.y);
+		await canvas.page.mouse.down();
+		await expect(
+			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+		).toHaveCount(0);
+		await canvas.page.mouse.up();
 	});
 });

@@ -167,7 +167,7 @@ zoom ± buttons, the handler uses **both** `click` and `doubleClick` as executio
 
 ```ts
 const isActivation = event.type === "click" || event.type === "doubleClick";
-if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
+if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
 	return handleCommand(state, commandId);
 }
 ```
