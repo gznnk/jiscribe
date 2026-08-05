@@ -4,12 +4,17 @@ import { theme } from "../../../../constants/theme";
 import { resolveAutoColor } from "../resolveAutoColor";
 
 describe("resolveAutoColor", () => {
-	it('resolves "auto" for the ink role to the theme foreground (theme.foreground)', () => {
-		expect(resolveAutoColor("auto", "ink")).toBe(theme.foreground);
+	it('resolves "auto" for the ink role to the shape ink token (theme.objectInk)', () => {
+		expect(resolveAutoColor("auto", "ink")).toBe(theme.objectInk);
 	});
 
-	it('resolves "auto" for the surface role to the theme surface (theme.surface)', () => {
-		expect(resolveAutoColor("auto", "surface")).toBe(theme.surface);
+	it('resolves "auto" for the surface role to the shape face token (theme.objectSurface)', () => {
+		expect(resolveAutoColor("auto", "surface")).toBe(theme.objectSurface);
+	});
+
+	it("shape tokens are distinct from the UI chrome tokens", () => {
+		expect(resolveAutoColor("auto", "ink")).not.toBe(theme.foreground);
+		expect(resolveAutoColor("auto", "surface")).not.toBe(theme.surface);
 	});
 
 	it("returns a concrete color as-is regardless of role", () => {
@@ -18,8 +23,8 @@ describe("resolveAutoColor", () => {
 		expect(resolveAutoColor("transparent", "surface")).toBe("transparent");
 	});
 
-	it("returns the role default when unspecified (ink: foreground / surface: transparent)", () => {
-		expect(resolveAutoColor(undefined, "ink")).toBe(theme.foreground);
+	it("returns the role default when unspecified (ink: objectInk / surface: transparent)", () => {
+		expect(resolveAutoColor(undefined, "ink")).toBe(theme.objectInk);
 		expect(resolveAutoColor(undefined, "surface")).toBe("transparent");
 	});
 
@@ -28,6 +33,8 @@ describe("resolveAutoColor", () => {
 	});
 
 	it('"auto" prefers the role token even when a fallback is given', () => {
-		expect(resolveAutoColor("auto", "surface", "red")).toBe(theme.surface);
+		expect(resolveAutoColor("auto", "surface", "red")).toBe(
+			theme.objectSurface,
+		);
 	});
 });

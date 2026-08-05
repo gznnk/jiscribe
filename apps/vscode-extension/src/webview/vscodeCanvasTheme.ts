@@ -43,5 +43,7 @@ export const vscodeCanvasTheme: CanvasTheme = {
 		scrollbarThumb: "var(--vscode-scrollbarSlider-background, #d1d5db)",
 		scrollbarThumbHover:
 			"var(--vscode-scrollbarSlider-hoverBackground, #9ca3af)",
+		objectInk: "var(--vscode-editor-foreground, #ffffff)",
+		objectSurface: "var(--vscode-editorWidget-background, #252526)",
 	},
 };

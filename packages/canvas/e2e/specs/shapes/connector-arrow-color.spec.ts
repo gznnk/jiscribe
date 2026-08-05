@@ -57,7 +57,7 @@ test.describe("connector arrow color following", () => {
 	}) => {
 		const connectorId = await buildHorizontalConnector(canvas);
 
-		// With the default color (auto → theme foreground) the arrow fill and line stroke should
+		// With the default color (auto → theme objectInk) the arrow fill and line stroke should
 		// already agree.
 		const initial = await readColors(canvas, connectorId);
 		expect(initial.arrowFill).toBeTruthy();

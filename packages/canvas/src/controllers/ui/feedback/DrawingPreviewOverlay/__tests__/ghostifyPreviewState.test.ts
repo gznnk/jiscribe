@@ -41,7 +41,7 @@ describe("ghostifyPreviewState", () => {
 	it("resolves an auto stroke to the theme ink so the ghost matches the placed shape", () => {
 		const ghost = asRecord(ghostifyPreviewState(state({ stroke: AUTO_COLOR })));
 		expect(ghost.stroke).toBe(resolveAutoColor(AUTO_COLOR, "ink"));
-		expect(ghost.stroke).toBe(theme.foreground);
+		expect(ghost.stroke).toBe(theme.objectInk);
 	});
 
 	it("treats an absent stroke as auto", () => {
