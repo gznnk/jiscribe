@@ -20,6 +20,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "border-style";
 
@@ -38,7 +39,7 @@ type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 /**

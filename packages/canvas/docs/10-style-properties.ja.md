@@ -19,6 +19,10 @@ ObjectMenu 数値入力          ── MENU_PROPERTY_UPDATE ──→ canvasRed
                                                             handler.apply(...) ⇒ 新しい state
 ```
 
+スライダーは両方にまたがる。ポインタ操作（ドラッグとトラッククリック）は
+gesture 経路を通り、キーボード操作（矢印キー等）は gesture が発生しないため
+`MENU_PROPERTY_UPDATE` を通る。
+
 どちらの経路も UI から来たプロパティ名と生の文字列値を
 `StylePropertyRegistry.apply` に渡すだけで、プロパティ固有のこと —
 対応可否の gate・値の型強制・書き込み先 — はすべて解決されたハンドラ側にある。

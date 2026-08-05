@@ -158,4 +158,56 @@ describe("canvasReducer (integration)", () => {
 			expect(state.history.past).toHaveLength(1);
 		});
 	});
+
+	// The coalesce window is 1000ms of wall-clock time, so back-to-back dispatches
+	// in a test naturally fall inside it.
+	describe("MENU_PROPERTY_UPDATE history coalescing", () => {
+		const commitStrokeWidth = (
+			state: CanvasControllerState,
+			value: string,
+			coalesceHistory: boolean,
+		): CanvasControllerState =>
+			canvasReducer(state, {
+				type: "MENU_PROPERTY_UPDATE",
+				property: "strokeWidth",
+				value,
+				commit: true,
+				coalesceHistory,
+			});
+
+		it("merges consecutive coalescing commits into a single entry", () => {
+			let state = createState();
+			state = commitStrokeWidth(state, "4", true);
+			expect(state.history.past).toHaveLength(1);
+
+			state = commitStrokeWidth(state, "5", true);
+			state = commitStrokeWidth(state, "6", true);
+			expect(state.history.past).toHaveLength(1);
+		});
+
+		it("records one entry per commit without coalesceHistory", () => {
+			let state = createState();
+			state = commitStrokeWidth(state, "4", false);
+			state = commitStrokeWidth(state, "5", false);
+			state = commitStrokeWidth(state, "6", false);
+			expect(state.history.past).toHaveLength(3);
+		});
+
+		it("does not merge across a changed selection", () => {
+			let state = createState();
+			state = commitStrokeWidth(state, "4", true);
+			expect(state.history.past).toHaveLength(1);
+
+			state = { ...state, selectedIds: ["rect-2"] };
+			state = commitStrokeWidth(state, "5", true);
+			expect(state.history.past).toHaveLength(2);
+		});
+
+		it("does not merge a coalescing commit into a preceding non-coalescing one", () => {
+			let state = createState();
+			state = commitStrokeWidth(state, "4", false);
+			state = commitStrokeWidth(state, "5", true);
+			expect(state.history.past).toHaveLength(2);
+		});
+	});
 });

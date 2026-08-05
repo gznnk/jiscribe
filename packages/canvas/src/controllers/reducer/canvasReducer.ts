@@ -88,7 +88,8 @@ export const createCanvasReducer =
 
 			case "MENU_PROPERTY_UPDATE": {
 				// Property updates from the ObjectMenu take two paths.
-				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React onChange events (e.g. number-input).
+				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React onChange
+				//     events (number-input, and a slider driven from the keyboard, which fires no gesture).
 				// (2) ObjectMenuHandler: via the gesture system (set: / slider:). That path does not go through here.
 				const updated = registries.styleProperty.apply(
 					state,
@@ -111,6 +112,12 @@ export const createCanvasReducer =
 				const committedResult = {
 					...updatedWithVertexCleared,
 					commitVersion: state.commitVersion + 1,
+					historyCoalesce: action.coalesceHistory
+						? {
+								...updatedWithVertexCleared.historyCoalesce,
+								pending: buildMenuPropertyCoalesceKey(state, action.property),
+							}
+						: updatedWithVertexCleared.historyCoalesce,
 				};
 				const reconciledResult = reconcileConnectorVertices(
 					committedResult,
@@ -202,6 +209,25 @@ export const createCanvasReducer =
 				return state;
 		}
 	};
+
+/** Prefix of the coalesce key for consecutive ObjectMenu property commits */
+const MENU_PROPERTY_COALESCE_PREFIX = "menu-property";
+
+/**
+ * Builds the coalesce key for an ObjectMenu property commit. The target identity is
+ * part of the key, so a changed selection (or a different property) automatically
+ * becomes a separate undo entry.
+ */
+const buildMenuPropertyCoalesceKey = (
+	state: CanvasControllerState,
+	property: string,
+): string => {
+	const target =
+		state.selectedIds.length > 0
+			? state.selectedIds.join(",")
+			: (state.selectedConnectorId ?? "");
+	return `${MENU_PROPERTY_COALESCE_PREFIX}:${property}:${target}`;
+};
 
 /**
  * Time window (milliseconds) for coalescing consecutive operations into a single undo entry.

@@ -11,7 +11,8 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  *
  * Property updates from the ObjectMenu take two paths:
  * (1) This handler: via the gesture system (set: / slider:). Most property changes go through here.
- * (2) The MENU_PROPERTY_UPDATE case in canvasReducer: via React onChange (e.g. number-input). Does not go through here.
+ * (2) The MENU_PROPERTY_UPDATE case in canvasReducer: via React onChange (number-input, and a
+ *     slider driven from the keyboard, which produces no gesture). Does not go through here.
  * Logic needed by both paths (such as clearing selectedVertex) must be added to each of them.
  *
  * Events handled:

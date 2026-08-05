@@ -130,6 +130,7 @@ export type {
 	CustomItem,
 	BuiltinItemKey,
 	ObjectMenuItemProps,
+	ObjectMenuPropertyUpdater,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 export type {
 	SelectionControlContext,

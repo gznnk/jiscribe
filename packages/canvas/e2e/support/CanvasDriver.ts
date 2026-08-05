@@ -635,6 +635,24 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * Focus an ObjectMenu slider and nudge it from the keyboard. The section must already be open.
+	 * Each press is its own keydown/keyup pair, so presses within the history coalesce window
+	 * collapse into a single undo entry, just like a held key.
+	 *
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param key - Key name to press, e.g. "ArrowRight" / "Home" / "PageUp"
+	 * @param repeat - Number of presses, defaults to 1
+	 */
+	async pressSliderKey(property: string, key: string, repeat = 1) {
+		const slider = this.page.locator(selectors.objectMenuSlider(property));
+		await expect(slider).toBeVisible();
+		await slider.focus();
+		for (let i = 0; i < repeat; i++) {
+			await slider.press(key);
+		}
+	}
+
+	/**
 	 * Type a value into the number input beside an ObjectMenu slider and commit with Enter. The
 	 * section must already be open; the input is found by its test-only data-testid hook.
 	 */

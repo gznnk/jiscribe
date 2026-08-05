@@ -65,6 +65,7 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
+import type { ObjectMenuPropertyUpdater } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
@@ -388,9 +389,15 @@ const CanvasComponent = ({
 	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
-	const handleMenuPropertyUpdate = useCallback(
-		(property: string, value: string, commit: boolean) => {
-			dispatch({ type: "MENU_PROPERTY_UPDATE", property, value, commit });
+	const handleMenuPropertyUpdate = useCallback<ObjectMenuPropertyUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "MENU_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
 		},
 		[dispatch],
 	);

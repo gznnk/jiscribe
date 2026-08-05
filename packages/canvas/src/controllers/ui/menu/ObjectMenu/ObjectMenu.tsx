@@ -20,20 +20,24 @@ import {
 	ObjectMenuSectionRow,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
-import type { ObjectMenuItem, ObjectMenuSection } from "./ObjectMenuTypes";
+import type {
+	ObjectMenuItem,
+	ObjectMenuPropertyUpdater,
+	ObjectMenuSection,
+} from "./ObjectMenuTypes";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 const renderItem = (
 	item: ObjectMenuItem,
 	canvasState: CanvasControllerState,
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void,
+	onPropertyUpdate: ObjectMenuPropertyUpdater,
 ): React.ReactNode => {
 	switch (item.type) {
 		case "arrowHead":

@@ -8,6 +8,7 @@ import {
 	ObjectMenuSliderLabel,
 	ObjectMenuSliderNumberInput,
 } from "./ObjectMenuSliderStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuSliderProps = {
 	value: number;
@@ -26,7 +27,7 @@ type ObjectMenuSliderProps = {
 	step?: number;
 	label?: string;
 	property: string;
-	onPropertyUpdate?: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate?: ObjectMenuPropertyUpdater;
 };
 
 const clamp = (value: number, lower: number, upper: number): number =>
@@ -65,11 +66,37 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	inputValueRef.current = inputValue;
 	// whether the user has made a valid edit that has not yet been committed
 	const pendingCommit = useRef(false);
+	// Pointer changes on the track are written by the gesture path (ObjectMenuHandler),
+	// which is the sole writer for them; dispatching from onChange too would fire on
+	// every drag frame. Keyboard changes have no gesture of their own, so they are the
+	// only ones this component forwards, gated by this flag.
+	const isKeyboardEditing = useRef(false);
+	// keyboard-driven value previewed but not yet committed (null when there is none)
+	const uncommittedKeyboardValue = useRef<string | null>(null);
 
 	const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = Number.parseInt(e.target.value, 10);
 		setSliderValue(newValue);
 		setInputValue(String(newValue));
+		if (isKeyboardEditing.current) {
+			uncommittedKeyboardValue.current = String(newValue);
+			onPropertyUpdate?.(property, String(newValue), false);
+		}
+	};
+
+	const handleSliderKeyDown = () => {
+		isKeyboardEditing.current = true;
+	};
+
+	// Commits on key release, or on blur when focus leaves before a keyup arrives.
+	// A held key thus becomes many previews plus one commit, matching drag/dragEnd.
+	const commitKeyboardEdit = () => {
+		const committedValue = uncommittedKeyboardValue.current;
+		isKeyboardEditing.current = false;
+		uncommittedKeyboardValue.current = null;
+		if (committedValue !== null) {
+			onPropertyUpdate?.(property, committedValue, true, true);
+		}
 	};
 
 	const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,6 +176,9 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 				step={step}
 				value={sliderValue}
 				onChange={handleSliderChange}
+				onKeyDown={handleSliderKeyDown}
+				onKeyUp={commitKeyboardEdit}
+				onBlur={commitKeyboardEdit}
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`slider:${property}`}

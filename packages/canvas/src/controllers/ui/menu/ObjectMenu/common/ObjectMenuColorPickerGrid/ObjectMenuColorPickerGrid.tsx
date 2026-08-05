@@ -14,13 +14,14 @@ import {
 } from "../../../../../../schemas/objects/utils/autoColor";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuColorPickerGridProps = {
 	/** Currently selected color */
 	currentColor: string;
 	/** Property name (e.g. "fill", "stroke") */
 	property: string;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 /**
