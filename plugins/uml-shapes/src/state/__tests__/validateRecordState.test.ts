@@ -28,6 +28,31 @@ describe("isValidRecordState", () => {
 		).toBe(true);
 	});
 
+	it("accepts a stereotype above the title", () => {
+		expect(
+			isValidRecordState({
+				...baseState,
+				text: {
+					name: { text: "Repository" },
+					stereotype: { text: "<<interface>>" },
+					operations: { text: ["save()"] },
+				},
+			}),
+		).toBe(true);
+	});
+
+	it("rejects a stereotype holding rows instead of one string", () => {
+		expect(
+			isValidRecordState({
+				...baseState,
+				text: {
+					name: { text: "Repository" },
+					stereotype: { text: ["<<interface>>"] },
+				},
+			}),
+		).toBe(false);
+	});
+
 	it("accepts a title-only record", () => {
 		// 区画の欠落は「その区画を持たない箱」であって壊れた state ではない。
 		expect(

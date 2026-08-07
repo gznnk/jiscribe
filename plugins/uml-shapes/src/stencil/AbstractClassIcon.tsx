@@ -1,0 +1,20 @@
+import { createStencilIcon } from "@workspace/canvas-sdk";
+
+import {
+	UmlIconBodyRows,
+	UmlIconFrame,
+	UmlIconTitleDivider,
+} from "./UmlIconParts";
+
+/**
+ * Mark: a dashed outline for the type that has no instances. The dash pattern
+ * sums to 5.5, which divides the 66.3 perimeter of the frame close to evenly so
+ * the corners do not land mid-dash.
+ */
+export const AbstractClassIcon = createStencilIcon(
+	<>
+		<UmlIconFrame strokeDasharray="3.3 2.2" />
+		<UmlIconTitleDivider />
+		<UmlIconBodyRows />
+	</>,
+);

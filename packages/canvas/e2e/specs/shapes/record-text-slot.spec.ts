@@ -12,12 +12,12 @@ import { selectors } from "../../support/selectors";
  * - a style change then lands on that slot alone, leaving the others as they were
  * - the object menu drops to the text items, since nothing else applies to a slot
  * - Escape steps out one level at a time: the slot first, the object next
- * - Tab walks the slots in order and wraps around
+ * - Tab walks the slots down the box and wraps around, over three slots as well as two
  * - Enter opens the selected slot for editing
  *
- * Coordinate note (shared with record.spec): created at 220x80, an empty title
- * band is the top 28px (content y=[200,228]) and the row compartment sits below
- * it (y=[228,280]).
+ * Coordinate note (shared with record.spec): created at 220x80, a title band
+ * holding a one-line title is the top 28px (content y=[200,228]) and the row
+ * compartment sits below it (y=[228,280]).
  */
 
 const CATEGORY = "uml";
@@ -33,20 +33,20 @@ const NAME_TEXT = "User";
 const ATTRIBUTES_TEXT = "id: string";
 
 /**
- * Creates an entity with both slots filled in and nothing selected, so each test
- * starts from the same committed content.
+ * Creates an object record and puts the test's own text in both slots in place of
+ * the stencil's sample, so each test starts from the same committed content.
  */
 async function createFilledRecord(canvas: CanvasDriver): Promise<string> {
 	const id = await canvas.drawShapeFromFlyout(
 		CATEGORY,
-		"entity",
+		"object",
 		RECORD_FROM,
 		RECORD_TO,
 	);
 	await canvas.deselect();
-	await canvas.typeTextAt(NAME_SPOT, NAME_TEXT);
+	await canvas.replaceTextAt(NAME_SPOT, NAME_TEXT);
 	await canvas.commitText();
-	await canvas.typeTextAt(ATTRIBUTES_SPOT, ATTRIBUTES_TEXT);
+	await canvas.replaceTextAt(ATTRIBUTES_SPOT, ATTRIBUTES_TEXT);
 	await canvas.commitText();
 	return id;
 }
@@ -108,6 +108,42 @@ async function textColorByContent(
 		}
 		return colors;
 	});
+}
+
+/**
+ * The `data-part` of the compartment the selected slot outline sits on, or
+ * undefined while no slot is selected. The overlay carries no slot id, so the
+ * slot is named by matching the outline's rect against the compartments'. A
+ * stereotype and a title band are the same height, so height alone would not
+ * name them.
+ */
+async function selectedSlotPart(
+	canvas: CanvasDriver,
+	id: string,
+): Promise<string | undefined> {
+	return canvas.page.evaluate((objectId) => {
+		const outlines = [
+			...document.querySelectorAll('[data-layer="selection-overlay"] rect'),
+		];
+		// The object's own outline comes first and the slot's last, so fewer than
+		// two means only the object is selected.
+		if (outlines.length < 2) {
+			return undefined;
+		}
+		const slotOutline = outlines[outlines.length - 1];
+		const compartments = [
+			...document.querySelectorAll(
+				`[data-kind="object"][data-id="${objectId}"] [data-part]`,
+			),
+		];
+		const matched = compartments.find(
+			(compartment) =>
+				compartment.getAttribute("y") === slotOutline.getAttribute("y") &&
+				compartment.getAttribute("height") ===
+					slotOutline.getAttribute("height"),
+		);
+		return matched?.getAttribute("data-part") ?? undefined;
+	}, id);
 }
 
 /** Selects the record, then its title band as a slot (two different spots, so no dblclick). */
@@ -261,31 +297,53 @@ test.describe("record: selecting one text slot", () => {
 			.toBe(false);
 	});
 
-	test("walks the slots with Tab and wraps around", async ({ canvas }) => {
-		await createFilledRecord(canvas);
+	test("walks the slots with Tab top to bottom and wraps around", async ({
+		canvas,
+	}) => {
+		const id = await createFilledRecord(canvas);
 		await canvas.selectAt(ATTRIBUTES_SPOT);
 
-		/** Height of the slot outline; the two compartments differ in height, so it names the slot. */
-		const slotOutlineHeight = async (): Promise<number | undefined> =>
-			(await selectionOutlineHeights(canvas))[1];
+		// Tab follows the state's key order, which the mapper keeps equal to the
+		// stacking order (RecordMapper 参照).
+		for (const expectedPart of ["name", "attributes", "name"]) {
+			await canvas.page.keyboard.press("Tab");
+			await expect
+				.poll(() => selectedSlotPart(canvas, id), {
+					message: `Tab reaches the ${expectedPart} slot`,
+				})
+				.toBe(expectedPart);
+		}
+	});
 
-		await canvas.page.keyboard.press("Tab");
-		await expect
-			.poll(slotOutlineHeight, { message: "Tab enters at the first slot" })
-			.not.toBeUndefined();
-		const firstSlotHeight = await slotOutlineHeight();
+	test("walks all three slots of a stereotyped record with Tab top to bottom before wrapping", async ({
+		canvas,
+	}) => {
+		// The interface stencil is the preset carrying a stereotype: 220x100, so the
+		// two 28px bands leave the operations compartment 44.
+		const id = await canvas.drawShapeFromFlyout(
+			CATEGORY,
+			"interface",
+			RECORD_FROM,
+			{ x: 520, y: 300 },
+		);
+		await canvas.deselect();
+		await canvas.selectAt({ x: 410, y: 280 });
 
-		await canvas.page.keyboard.press("Tab");
-		await expect
-			.poll(slotOutlineHeight, { message: "Tab moves on to the next slot" })
-			.not.toBe(firstSlotHeight);
-
-		await canvas.page.keyboard.press("Tab");
-		await expect
-			.poll(slotOutlineHeight, {
-				message: "Tab wraps around to the first slot",
-			})
-			.toBe(firstSlotHeight);
+		// The stereotype band is on top, so it is where Tab enters and where the
+		// fourth Tab wraps back to.
+		for (const expectedPart of [
+			"stereotype",
+			"name",
+			"operations",
+			"stereotype",
+		]) {
+			await canvas.page.keyboard.press("Tab");
+			await expect
+				.poll(() => selectedSlotPart(canvas, id), {
+					message: `Tab reaches the ${expectedPart} slot`,
+				})
+				.toBe(expectedPart);
+		}
 	});
 
 	test("opens the selected slot for editing on Enter", async ({ canvas }) => {

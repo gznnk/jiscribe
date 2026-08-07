@@ -16,12 +16,19 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *   the bottom of the box, past which the editor turns to scrolling
  * - editing a row compartment, which does not follow the band, stays inside the
  *   compartment and the overflow is reached by scrolling
- * - the compartments follow from which slots exist. The entity stencil has the
+ * - the compartments follow from which slots exist. The object stencil has the
  *   two name + attributes, the class stencil adds operations for three. With
  *   three, the middle one takes what its rows need and the bottom one the rest
+ * - a stereotype band (the interface stencil) stacks above the title as a slot of
+ *   its own
  *
- * Coordinate note: created at 220x80, an empty title band is the top 28px
- * (content y=[200,228]) and the row compartment sits below it (y=[228,280]).
+ * Every stencil drops the box in with sample text already in its slots
+ * (RecordStencils 参照), so a slot is edited by replacing what is there rather
+ * than typing into an empty one.
+ *
+ * Coordinate note: created at 220x80, a title band holding the stencil's
+ * one-line title is the top 28px (content y=[200,228]) and the row compartment
+ * sits below it (y=[228,280]).
  */
 
 const CATEGORY = "uml";
@@ -33,22 +40,44 @@ const NAME_SPOT = { x: 410, y: 212 };
 /** Inside the row compartment (below the title band). */
 const ATTRIBUTES_SPOT = { x: 410, y: 255 };
 
-/** Creates an entity from the uml flyout by diagonal drag and returns the new object's {id, tag}. */
+/** The title the object stencil starts with; one line, so the band opens at its 28px. */
+const OBJECT_STENCIL_NAME = "Object";
+/** The attribute rows the object stencil starts with, as the editor joins them. */
+const OBJECT_STENCIL_ATTRIBUTES =
+	"attribute = value\nattribute = value\nattribute = value";
+
+/** Creates an object record from the uml flyout by diagonal drag and returns the new object's {id, tag}. */
 async function createRecord(
 	canvas: CanvasDriver,
 	from: { x: number; y: number },
 	to: { x: number; y: number },
 ): Promise<{ id: string; tag: string }> {
-	const id = await canvas.drawShapeFromFlyout(CATEGORY, "entity", from, to);
+	const id = await canvas.drawShapeFromFlyout(CATEGORY, "object", from, to);
 	const created = (await canvas.captureObjects()).find((obj) => obj.id === id);
 	return { id, tag: created?.tag ?? "" };
+}
+
+/** The data-part of every compartment of the record, top to bottom: the box's slot set as drawn. */
+async function partNames(
+	canvas: CanvasDriver,
+	id: string,
+): Promise<(string | null)[]> {
+	return canvas.page.evaluate((objectId) => {
+		const group = document.querySelector(`[data-id="${objectId}"]`);
+		if (!group) {
+			return [];
+		}
+		return [...group.querySelectorAll("[data-part]")].map((el) =>
+			el.getAttribute("data-part"),
+		);
+	}, id);
 }
 
 /** Local y and height of a compartment rect (data-part); how the band's growth is read. */
 async function partRect(
 	canvas: CanvasDriver,
 	id: string,
-	part: "name" | "attributes" | "operations",
+	part: "stereotype" | "name" | "attributes" | "operations",
 ): Promise<{ y: number; height: number }> {
 	const rect = await canvas.page.evaluate(
 		({ objectId, partName }) => {
@@ -97,23 +126,15 @@ test.describe("record (a box with compartments)", () => {
 		// One object = one data-kind=object element; the compartments carry only data-part.
 		expect(record.tag).toBe("g");
 
-		const parts = await canvas.page.evaluate((id) => {
-			const group = document.querySelector(`[data-id="${id}"]`);
-			if (!group) {
-				return [];
-			}
-			return [...group.querySelectorAll("[data-part]")].map((el) =>
-				el.getAttribute("data-part"),
-			);
-		}, record.id);
-		expect(parts).toEqual(["name", "attributes"]);
+		expect(await partNames(canvas, record.id)).toEqual(["name", "attributes"]);
 	});
 
 	test("builds the class stencil with 3 compartments where the middle one takes only its rows", async ({
 		canvas,
 	}) => {
-		// 220x120 box. The empty title band takes 28 and the empty middle 25 (one
-		// row plus padding), leaving 67 for the bottom compartment.
+		// 220x120 box. The one-line title band takes 28 and the middle 25 (the
+		// stencil's single attribute row plus padding), leaving 67 for the bottom
+		// compartment, which the stencil's two operation rows do not fill.
 		const id = await canvas.drawShapeFromFlyout(
 			CATEGORY,
 			"class",
@@ -122,16 +143,11 @@ test.describe("record (a box with compartments)", () => {
 		);
 		await canvas.deselect();
 
-		const parts = await canvas.page.evaluate((objectId) => {
-			const group = document.querySelector(`[data-id="${objectId}"]`);
-			if (!group) {
-				return [];
-			}
-			return [...group.querySelectorAll("[data-part]")].map((el) =>
-				el.getAttribute("data-part"),
-			);
-		}, id);
-		expect(parts).toEqual(["name", "attributes", "operations"]);
+		expect(await partNames(canvas, id)).toEqual([
+			"name",
+			"attributes",
+			"operations",
+		]);
 
 		expect((await partRect(canvas, id, "attributes")).height).toBe(25);
 		expect((await partRect(canvas, id, "operations")).height).toBe(
@@ -140,7 +156,7 @@ test.describe("record (a box with compartments)", () => {
 
 		// Two rows in the middle grow it to two rows' worth (21 * 2 + 4) and shrink
 		// the bottom by the same amount. The box height does not move.
-		await canvas.typeTextAt({ x: 410, y: 240 }, "id: string\nname: string");
+		await canvas.replaceTextAt({ x: 410, y: 240 }, "id: string\nname: string");
 		await canvas.commitText();
 		await expect
 			.poll(async () => (await partRect(canvas, id, "attributes")).height, {
@@ -159,15 +175,18 @@ test.describe("record (a box with compartments)", () => {
 		await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
-		// Double-clicking the title band opens the name slot, starting empty.
-		await canvas.typeTextAt(NAME_SPOT, "User");
-		await expect(canvas.textArea()).toHaveValue("User");
+		// Double-clicking the title band opens the name slot on the stencil's title.
+		await canvas.typeTextAt(NAME_SPOT, "");
+		await expect(canvas.textArea()).toHaveValue(OBJECT_STENCIL_NAME);
+		await canvas.textArea().fill("User");
 		await canvas.commitText();
 		await expect(canvas.page.locator("body")).toContainText("User");
 
-		// Double-clicking the row compartment opens the attributes slot, without the name's content.
-		await canvas.typeTextAt(ATTRIBUTES_SPOT, "id: string");
-		await expect(canvas.textArea()).toHaveValue("id: string");
+		// Double-clicking the row compartment opens the attributes slot, with its own
+		// rows rather than the name's content.
+		await canvas.typeTextAt(ATTRIBUTES_SPOT, "");
+		await expect(canvas.textArea()).toHaveValue(OBJECT_STENCIL_ATTRIBUTES);
+		await canvas.textArea().fill("id: string");
 		// The text of the slot that is not being edited (name) stays visible.
 		await expect(canvas.page.locator("body")).toContainText("User");
 		await canvas.commitText();
@@ -236,8 +255,8 @@ test.describe("record (a box with compartments)", () => {
 
 		expect(await outlineHeight(canvas, record.id)).toBe(80);
 
-		// More rows than the compartment fits (header + padding (32) + 21 * 3 = 95 > 80).
-		await canvas.typeTextAt(
+		// More rows than the compartment fits (band 28 + 21 * 3 + padding 4 = 95 > 80).
+		await canvas.replaceTextAt(
 			ATTRIBUTES_SPOT,
 			"id: string\nname: string\nemail: string",
 		);
@@ -263,7 +282,7 @@ test.describe("record (a box with compartments)", () => {
 		const attributesBefore = await partRect(canvas, record.id, "attributes");
 
 		// Hold more rows than the 52px compartment fits, still in edit mode.
-		await canvas.typeTextAt(ATTRIBUTES_SPOT, "a\nb\nc\nd\ne\nf");
+		await canvas.replaceTextAt(ATTRIBUTES_SPOT, "a\nb\nc\nd\ne\nf");
 		await expect(canvas.textArea()).toHaveValue("a\nb\nc\nd\ne\nf");
 
 		// attributes takes what the band leaves, so it does not follow the draft. A
@@ -308,7 +327,7 @@ test.describe("record (a box with compartments)", () => {
 		expect((await partRect(canvas, record.id, "name")).height).toBe(28);
 
 		// A two-line title with an explicit break grows it by one row (14 * 1.5 = 21).
-		await canvas.typeTextAt(NAME_SPOT, "User\nAccount");
+		await canvas.replaceTextAt(NAME_SPOT, "User\nAccount");
 		await canvas.commitText();
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
@@ -336,7 +355,7 @@ test.describe("record (a box with compartments)", () => {
 		// Type a line break with the editor still open. The band height is derived
 		// from the editing draft rather than the committed state, so it has to have
 		// grown by now.
-		await canvas.typeTextAt(NAME_SPOT, "User\nAccount");
+		await canvas.replaceTextAt(NAME_SPOT, "User\nAccount");
 		await expect(canvas.textArea()).toHaveValue("User\nAccount");
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
@@ -363,14 +382,15 @@ test.describe("record (a box with compartments)", () => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
-		await canvas.typeTextAt(NAME_SPOT, "User\nAccount");
+		await canvas.replaceTextAt(NAME_SPOT, "User\nAccount");
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height)
 			.toBe(49);
 
 		await canvas.cancelText();
 
-		// The draft is dropped, so the band returns to the committed value, one row for an empty title.
+		// The draft is dropped, so the band returns to the committed value, one row
+		// for the stencil's one-line title.
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
 				message: "cancelling returns the band to its original height",
@@ -385,7 +405,7 @@ test.describe("record (a box with compartments)", () => {
 		await canvas.deselect();
 
 		// 5 rows = 21 * 5 + 7 = 112px, past the box height of 80px.
-		await canvas.typeTextAt(NAME_SPOT, "A\nB\nC\nD\nE");
+		await canvas.replaceTextAt(NAME_SPOT, "A\nB\nC\nD\nE");
 		await expect(canvas.textArea()).toHaveValue("A\nB\nC\nD\nE");
 
 		// The band stops at the box's bottom edge (the clamp in calcRecordSlotRegions).
@@ -426,7 +446,10 @@ test.describe("record (a box with compartments)", () => {
 		await canvas.deselect();
 
 		// Too long for a single line in a 220px box (208px usable for text).
-		await canvas.typeTextAt(NAME_SPOT, "Authentication Provider Configuration");
+		await canvas.replaceTextAt(
+			NAME_SPOT,
+			"Authentication Provider Configuration",
+		);
 		await canvas.commitText();
 
 		// The band height is always rows * 21 + 7, so 49 or more means it wrapped onto at least two lines.
@@ -435,5 +458,38 @@ test.describe("record (a box with compartments)", () => {
 				message: "a wrapped title grows the band to two rows or more",
 			})
 			.toBeGreaterThanOrEqual(49);
+	});
+
+	test("stacks the interface stencil's stereotype band above the title and edits it as its own slot", async ({
+		canvas,
+	}) => {
+		// 220x100 box: the stereotype and title bands take 28 each, leaving 44 for
+		// the operations compartment.
+		const id = await canvas.drawShapeFromFlyout(
+			CATEGORY,
+			"interface",
+			{ x: 300, y: 200 },
+			{ x: 520, y: 300 },
+		);
+		await canvas.deselect();
+
+		expect(await partNames(canvas, id)).toEqual([
+			"stereotype",
+			"name",
+			"operations",
+		]);
+
+		// Stacked top to bottom in that order, each starting where the one above ends.
+		const stereotype = await partRect(canvas, id, "stereotype");
+		const name = await partRect(canvas, id, "name");
+		const operations = await partRect(canvas, id, "operations");
+		expect(stereotype.height).toBe(28);
+		expect(name.y).toBeCloseTo(stereotype.y + stereotype.height, 3);
+		expect(operations.y).toBeCloseTo(name.y + name.height, 3);
+
+		// The band resolves to the stereotype slot rather than the title below it.
+		await canvas.typeTextAt({ x: 410, y: 212 }, "");
+		await expect(canvas.textArea()).toHaveValue("<<interface>>");
+		await canvas.cancelText();
 	});
 });

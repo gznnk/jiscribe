@@ -4,17 +4,20 @@ import type { TextSlot } from "@workspace/canvas/doc";
 import type { RecordFeatures } from "../schema/RecordDoc";
 
 /**
- * The record's slots in the state normal form. `name` is always present and
- * always first, so editing that designates no slot (Enter with no slot
- * selected) opens the title; the compartments below follow in
- * RECORD_SLOT_IDS order, and one the doc left out stays out — the key set is
- * what gives the box its compartments (createFrameObject enumerates it).
+ * The record's slots in the state normal form. `name` is always present, and a
+ * slot the doc left out stays out — the key set is what gives the box its
+ * compartments (createFrameObject enumerates it). The keys are in the order the
+ * compartments stack, the stereotype ahead of the title
+ * (calcRecordSlotRegions 参照), which also makes the stereotype the first key —
+ * and so the default slot — on a box that has one (normalizeRecordText 参照).
  *
  * Structurally the same as RecordTextDoc: a keyed doc and its state hold the same
  * slot shape, the mapper only filling omitted styling from
- * RECORD_SLOT_STYLE_DEFAULTS.
+ * RECORD_SLOT_STYLE_DEFAULTS_BY_ID.
  */
 export type RecordTextState = {
+	/** Stereotype line drawn above the title; absent when the box has no stereotype band. */
+	stereotype?: TextSlot<string>;
 	/** Title shown in the top band. */
 	name: TextSlot<string>;
 	/** Attribute rows; absent when the box has no attribute compartment. */

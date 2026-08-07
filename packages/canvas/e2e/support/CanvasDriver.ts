@@ -487,6 +487,16 @@ export class CanvasDriver {
 		await this.page.keyboard.type(text);
 	}
 
+	/**
+	 * Open the text editor and put `text` in place of what the slot already holds.
+	 * The editor opens with the caret at the end of the existing value, so
+	 * typeTextAt would append to a stencil that drops its shape in pre-filled.
+	 */
+	async replaceTextAt(point: { x: number; y: number }, text: string) {
+		await this.typeTextAt(point, "");
+		await this.textArea().fill(text);
+	}
+
 	/** Commit a text edit by clicking outside; Escape cancels, so it is not used here. */
 	async commitText() {
 		const screen = this.toScreen(EMPTY_SPOT);

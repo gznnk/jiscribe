@@ -4,20 +4,21 @@ import { describe, it, expect } from "vitest";
 
 import {
 	calcRecordListHeight,
-	RECORD_HEADER_HEIGHT,
+	RECORD_BAND_HEIGHT,
 	RECORD_SLOT_STYLE_DEFAULTS,
 } from "../../schema/RecordDoc";
 import { calcRecordSlotRegions } from "../calcRecordSlotRegions";
 import { calcRecordTextRegion } from "../calcRecordTextRegion";
 
 /**
- * The band height is derived through the shared text measurement, which has no
- * canvas in the node environment and falls back to `characters × fontSize × 0.6`
- * (measureText 参照). At the default fontSize 14 that is 8.4px per character, and
- * a 180px box wraps at 168px = 20 characters — what the wrapping cases below are
- * written against.
+ * A text band's slot (the stereotype, the title). Its height is derived through
+ * the shared text measurement, which has no canvas in the node environment and
+ * falls back to `characters × fontSize × 0.6` (measureText 参照) — the fallback
+ * ignores fontWeight, so the bold title measures as the regular one here. At the
+ * default fontSize 14 that is 8.4px per character, and a 180px box wraps at
+ * 168px = 20 characters — what the wrapping cases below are written against.
  */
-const nameSlot = (text: string, style: Partial<TextSlot> = {}): TextSlot => ({
+const bandSlot = (text: string, style: Partial<TextSlot> = {}): TextSlot => ({
 	...RECORD_SLOT_STYLE_DEFAULTS,
 	...style,
 	text,
@@ -35,7 +36,7 @@ const titleAndAttributes = (
 	title: string,
 	style: Partial<TextSlot> = {},
 ): Record<string, TextSlot> => ({
-	name: nameSlot(title, style),
+	name: bandSlot(title, style),
 	attributes: listSlot([]),
 });
 
@@ -65,13 +66,13 @@ describe("calcRecordSlotRegions", () => {
 			x: -90,
 			y: -50,
 			width: 180,
-			height: RECORD_HEADER_HEIGHT,
+			height: RECORD_BAND_HEIGHT,
 		});
 		expect(attributes).toEqual({
 			x: -90,
-			y: -50 + RECORD_HEADER_HEIGHT,
+			y: -50 + RECORD_BAND_HEIGHT,
 			width: 180,
-			height: 100 - RECORD_HEADER_HEIGHT,
+			height: 100 - RECORD_BAND_HEIGHT,
 		});
 	});
 
@@ -81,7 +82,7 @@ describe("calcRecordSlotRegions", () => {
 			height: 100,
 			text: titleAndAttributes("User"),
 		});
-		expect(name.height).toBe(RECORD_HEADER_HEIGHT);
+		expect(name.height).toBe(RECORD_BAND_HEIGHT);
 	});
 
 	it("a larger fontSize grows the band by that line height", () => {
@@ -91,7 +92,7 @@ describe("calcRecordSlotRegions", () => {
 			text: titleAndAttributes("User", { fontSize: 28 }),
 		});
 		expect(name.height).toBe(
-			RECORD_HEADER_HEIGHT - lineHeightOf(14) + lineHeightOf(28),
+			RECORD_BAND_HEIGHT - lineHeightOf(14) + lineHeightOf(28),
 		);
 		// The compartment gives up exactly what the band took.
 		expect(name.height + (attributes?.height ?? 0)).toBe(200);
@@ -104,7 +105,7 @@ describe("calcRecordSlotRegions", () => {
 			height: 200,
 			text: titleAndAttributes("User\nAccount"),
 		});
-		expect(name.height).toBe(RECORD_HEADER_HEIGHT + lineHeightOf(14));
+		expect(name.height).toBe(RECORD_BAND_HEIGHT + lineHeightOf(14));
 	});
 
 	it("a title too long for the width wraps and grows the band", () => {
@@ -115,7 +116,7 @@ describe("calcRecordSlotRegions", () => {
 			height: 200,
 			text: titleAndAttributes("aaaaaaaaaa aaaaaaaaaa"),
 		});
-		expect(name.height).toBe(RECORD_HEADER_HEIGHT + lineHeightOf(14));
+		expect(name.height).toBe(RECORD_BAND_HEIGHT + lineHeightOf(14));
 	});
 
 	it("the same title in a wider box stays on one line", () => {
@@ -124,7 +125,7 @@ describe("calcRecordSlotRegions", () => {
 			height: 200,
 			text: titleAndAttributes("aaaaaaaaaa aaaaaaaaaa"),
 		});
-		expect(name.height).toBe(RECORD_HEADER_HEIGHT);
+		expect(name.height).toBe(RECORD_BAND_HEIGHT);
 	});
 
 	it("leaves no gap and no overlap between the compartments", () => {
@@ -157,24 +158,62 @@ describe("calcRecordSlotRegions", () => {
 		expect(attributes?.height).toBe(0);
 	});
 
+	it("stacks the stereotype above the title and the compartments below both", () => {
+		const { stereotype, name, attributes, operations } = calcRecordSlotRegions({
+			width: 180,
+			height: 200,
+			text: {
+				stereotype: bandSlot("<<interface>>"),
+				name: bandSlot("Repository"),
+				attributes: listSlot(["id: string"]),
+				operations: listSlot(["save()"]),
+			},
+		});
+		expect(stereotype).toEqual({
+			x: -90,
+			y: -100,
+			width: 180,
+			height: RECORD_BAND_HEIGHT,
+		});
+		expect(name).toEqual({
+			x: -90,
+			y: -100 + RECORD_BAND_HEIGHT,
+			width: 180,
+			height: RECORD_BAND_HEIGHT,
+		});
+		expect(attributes).toEqual({
+			x: -90,
+			y: -100 + RECORD_BAND_HEIGHT * 2,
+			width: 180,
+			height: calcRecordListHeight(1),
+		});
+		// The bottom compartment takes what the three above it left.
+		expect(operations).toEqual({
+			x: -90,
+			y: -100 + RECORD_BAND_HEIGHT * 2 + calcRecordListHeight(1),
+			width: 180,
+			height: 200 - RECORD_BAND_HEIGHT * 2 - calcRecordListHeight(1),
+		});
+	});
+
 	it("sizes a middle compartment to its rows and leaves the rest to the bottom one", () => {
 		const { name, attributes, operations } = calcRecordSlotRegions({
 			width: 180,
 			height: 200,
 			text: {
-				name: nameSlot("User"),
+				name: bandSlot("User"),
 				attributes: listSlot(["id: string", "email: string"]),
 				operations: listSlot([]),
 			},
 		});
-		expect(name.height).toBe(RECORD_HEADER_HEIGHT);
+		expect(name.height).toBe(RECORD_BAND_HEIGHT);
 		expect(attributes?.height).toBe(calcRecordListHeight(2));
 		expect(operations?.height).toBe(
-			200 - RECORD_HEADER_HEIGHT - calcRecordListHeight(2),
+			200 - RECORD_BAND_HEIGHT - calcRecordListHeight(2),
 		);
-		expect(attributes?.y).toBe(-100 + RECORD_HEADER_HEIGHT);
+		expect(attributes?.y).toBe(-100 + RECORD_BAND_HEIGHT);
 		expect(operations?.y).toBe(
-			-100 + RECORD_HEADER_HEIGHT + calcRecordListHeight(2),
+			-100 + RECORD_BAND_HEIGHT + calcRecordListHeight(2),
 		);
 	});
 
@@ -183,7 +222,7 @@ describe("calcRecordSlotRegions", () => {
 			width: 180,
 			height: 300,
 			text: {
-				name: nameSlot("User"),
+				name: bandSlot("User"),
 				attributes: listSlot(["id: string", "email: string"], {
 					fontSize: 28,
 				}),
@@ -196,7 +235,7 @@ describe("calcRecordSlotRegions", () => {
 			calcRecordListHeight(2) + 2 * (lineHeightOf(28) - lineHeightOf(14)),
 		);
 		expect(operations?.y).toBe(
-			-150 + RECORD_HEADER_HEIGHT + calcRecordListHeight(2, 28),
+			-150 + RECORD_BAND_HEIGHT + calcRecordListHeight(2, 28),
 		);
 	});
 
@@ -205,7 +244,7 @@ describe("calcRecordSlotRegions", () => {
 			width: 180,
 			height: 200,
 			text: {
-				name: nameSlot("User"),
+				name: bandSlot("User"),
 				attributes: listSlot([]),
 				operations: listSlot(["save()"]),
 			},
@@ -218,13 +257,13 @@ describe("calcRecordSlotRegions", () => {
 			width: 180,
 			height: 60,
 			text: {
-				name: nameSlot("User"),
+				name: bandSlot("User"),
 				attributes: listSlot(["a", "b", "c", "d", "e"]),
 				operations: listSlot([]),
 			},
 		});
-		expect(name.height).toBe(RECORD_HEADER_HEIGHT);
-		expect(attributes?.height).toBe(60 - RECORD_HEADER_HEIGHT);
+		expect(name.height).toBe(RECORD_BAND_HEIGHT);
+		expect(attributes?.height).toBe(60 - RECORD_BAND_HEIGHT);
 		expect(operations?.height).toBe(0);
 	});
 
@@ -233,7 +272,7 @@ describe("calcRecordSlotRegions", () => {
 			width: 180,
 			height: 45,
 			text: {
-				name: nameSlot("User\nAccount"),
+				name: bandSlot("User\nAccount"),
 				attributes: listSlot(["a", "b", "c"]),
 				operations: listSlot(["x"]),
 			},

@@ -6,13 +6,13 @@ import type { Dimensions, Rect } from "@workspace/geometry";
 
 import {
 	calcRecordListHeight,
-	RECORD_NAME_PADDING_X,
-	RECORD_NAME_PADDING_Y_TOTAL,
+	RECORD_BAND_PADDING_X,
+	RECORD_BAND_PADDING_Y_TOTAL,
 	RECORD_NAME_SLOT_ID,
 	RECORD_SLOT_IDS,
-	RECORD_SLOT_STYLE_DEFAULTS,
+	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
 } from "../schema/RecordDoc";
-import type { RecordListSlotId } from "../schema/RecordDoc";
+import type { RecordSlotId } from "../schema/RecordDoc";
 
 /**
  * What the region split reads off the state: the untransformed box size plus the
@@ -28,7 +28,9 @@ export type RecordSlotRegionsState = Dimensions & {
 
 /** The record's compartments, keyed by slot id, top to bottom. */
 export type RecordSlotRegions = {
-	/** Title band across the top; a record always has one. */
+	/** Stereotype band above the title; absent when the box does not have one. */
+	stereotype?: Rect;
+	/** Title band; a record always has one, at the top unless a stereotype band sits over it. */
 	name: Rect;
 	/** Attribute compartment; absent when the box does not have one. */
 	attributes?: Rect;
@@ -37,43 +39,50 @@ export type RecordSlotRegions = {
 };
 
 /**
- * Height the title band needs for its slot: every line the title occupies once
- * wrapped in the box width, plus the padding around it. Follows the slot's own
- * typography, so raising `fontSize` or writing a title too long for the width
- * grows the band instead of clipping it.
+ * Height a text band (the stereotype, the title) needs for its slot: every line
+ * the text occupies once wrapped in the box width, plus the padding around it.
+ * Follows the slot's own typography, falling back to that slot id's defaults, so
+ * raising `fontSize` or writing a title too long for the width grows the band
+ * instead of clipping it.
  */
-const calcNameHeight = (
+const calcBandHeight = (
 	width: number,
-	nameSlot: TextSlot | undefined,
+	slotId: RecordSlotId,
+	slot: TextSlot | undefined,
 ): number => {
-	const text = isString(nameSlot?.text) ? nameSlot.text : "";
-	const fontSize = nameSlot?.fontSize ?? RECORD_SLOT_STYLE_DEFAULTS.fontSize;
+	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
+	const text = isString(slot?.text) ? slot.text : "";
+	const fontSize = slot?.fontSize ?? styleDefaults.fontSize;
 	const lineCount = calcVisualLineCount(
 		text,
 		{
 			fontSize,
-			fontFamily: nameSlot?.fontFamily ?? RECORD_SLOT_STYLE_DEFAULTS.fontFamily,
-			fontWeight: nameSlot?.fontWeight ?? RECORD_SLOT_STYLE_DEFAULTS.fontWeight,
+			fontFamily: slot?.fontFamily ?? styleDefaults.fontFamily,
+			fontWeight: slot?.fontWeight ?? styleDefaults.fontWeight,
 		},
-		width - RECORD_NAME_PADDING_X * 2,
+		width - RECORD_BAND_PADDING_X * 2,
 	);
-	return lineCount * fontSize * TEXT_LINE_HEIGHT + RECORD_NAME_PADDING_Y_TOTAL;
+	return lineCount * fontSize * TEXT_LINE_HEIGHT + RECORD_BAND_PADDING_Y_TOTAL;
 };
 
 /**
- * Height a slot asks for. The title is measured from its wrapped lines; a
+ * Height a slot asks for. A text band is measured from its wrapped lines; a
  * compartment is measured from its row count and its own `fontSize`, so a row
  * too long for the width wraps and overflows rather than widening the
  * compartment's share.
  */
-const calcSlotHeight = (width: number, slot: TextSlot | undefined): number => {
+const calcSlotHeight = (
+	width: number,
+	slotId: RecordSlotId,
+	slot: TextSlot | undefined,
+): number => {
 	const content = slot?.text;
 	return Array.isArray(content)
 		? calcRecordListHeight(
 				content.length,
-				slot?.fontSize ?? RECORD_SLOT_STYLE_DEFAULTS.fontSize,
+				slot?.fontSize ?? RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId].fontSize,
 			)
-		: calcNameHeight(width, slot);
+		: calcBandHeight(width, slotId, slot);
 };
 
 /**
@@ -109,17 +118,16 @@ export const calcRecordSlotRegions = (
 		const isLast = index === presentSlotIds.length - 1;
 		const slotHeight = isLast
 			? remaining
-			: Math.min(calcSlotHeight(width, state.text?.[slotId]), remaining);
+			: Math.min(
+					calcSlotHeight(width, slotId, state.text?.[slotId]),
+					remaining,
+				);
 		placed[slotId] = { x: left, y: top, width, height: slotHeight };
 		top += slotHeight;
 		remaining -= slotHeight;
 	});
 
-	const regions: RecordSlotRegions = { name: placed[RECORD_NAME_SLOT_ID] };
-	for (const slotId of presentSlotIds) {
-		if (slotId !== RECORD_NAME_SLOT_ID) {
-			regions[slotId satisfies RecordListSlotId] = placed[slotId];
-		}
-	}
-	return regions;
+	// `name` is spelled out because the type has it required, `placed` being keyed
+	// by the slot ids this box happens to have.
+	return { ...placed, name: placed[RECORD_NAME_SLOT_ID] };
 };

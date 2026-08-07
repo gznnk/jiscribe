@@ -7,16 +7,17 @@ import {
 	RecordDivider,
 	RecordOutline,
 } from "./RecordBoxStyled";
-import { RECORD_SLOT_IDS } from "../schema/RecordDoc";
+import { isRecordListSlotId, RECORD_SLOT_IDS } from "../schema/RecordDoc";
 import type { RecordState } from "../state/RecordState";
 
 /**
- * Record presentation: a title band over one or two compartments of rows. Shared
- * Frame logic (transform, color resolution, per-slot text overlays placed by
- * calcRecordTextRegion, memo) lives in createFrameObject; here we draw the
- * compartments and the linework. The wrapping <g> carries the object's
- * data-kind/data-id, and each compartment carries its slot id as data-part, so a
- * double click resolves to the compartment it landed in (getGestureTarget).
+ * Record presentation: a title band, optionally under a stereotype line, over one
+ * or two compartments of rows. Shared Frame logic (transform, color resolution,
+ * per-slot text overlays placed by calcRecordTextRegion, memo) lives in
+ * createFrameObject; here we draw the compartments and the linework. The wrapping
+ * <g> carries the object's data-kind/data-id, and each compartment carries its
+ * slot id as data-part, so a double click resolves to the compartment it landed
+ * in (getGestureTarget).
  *
  * Every fill is laid down before any line, so a compartment's fill can never
  * cover the divider above it.
@@ -41,6 +42,13 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 		const region = regions[slotId];
 		return region === undefined ? [] : [{ slotId, region }];
 	});
+	// A divider is drawn along a compartment's top edge. The stereotype and the
+	// title are one header compartment split into two bands, so only the rows
+	// compartments take one — and the title always being present keeps the line
+	// off the box's own top edge.
+	const dividedCompartments = compartments.filter(({ slotId }) =>
+		isRecordListSlotId(slotId),
+	);
 
 	return (
 		<g data-kind={dataKind} data-id={dataId} transform={transform}>
@@ -55,7 +63,7 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 					fillColor={fillColor}
 				/>
 			))}
-			{compartments.slice(1).map(({ slotId, region }) => (
+			{dividedCompartments.map(({ slotId, region }) => (
 				<RecordDivider
 					key={slotId}
 					x1={region.x}

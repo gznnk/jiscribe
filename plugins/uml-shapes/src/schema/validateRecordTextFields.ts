@@ -4,13 +4,21 @@ import { TEXT_SLOT_STYLE_KEYS } from "@workspace/canvas/doc";
 import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
 import { validateTextSlotStyleFields } from "@workspace/canvas-sdk/doc";
 
-import { RECORD_NAME_SLOT_ID, RECORD_SLOT_IDS } from "./RecordDoc";
+import {
+	isRecordListSlotId,
+	isRecordSlotId,
+	RECORD_SLOT_IDS,
+} from "./RecordDoc";
+import type { RecordSlotId } from "./RecordDoc";
 
-/** The slot ids spelled out for a diagnostic, e.g. `"name" / "attributes" / "operations"`. */
+/** The slot ids spelled out for a diagnostic: `"stereotype" / "name" / …`, in RECORD_SLOT_IDS order. */
 const RECORD_SLOT_ID_LIST = RECORD_SLOT_IDS.map((id) => `"${id}"`).join(" / ");
 
-/** Validates the title's content: one string, newlines and all. */
-const validateName = (content: unknown, path: string): SemanticDiagnostic[] =>
+/** Validates a text band's content: one string, newlines and all. */
+const validateBandText = (
+	content: unknown,
+	path: string,
+): SemanticDiagnostic[] =>
 	isString(content) ? [] : [{ path, message: "must be a string" }];
 
 /** Validates a compartment's rows: every entry is one row, so an embedded newline would silently split it. */
@@ -38,24 +46,14 @@ const validateRows = (content: unknown, path: string): SemanticDiagnostic[] => {
 };
 
 /**
- * The content each slot fixes. The title is one string; every other slot is a
- * compartment of rows, so they share one check — the difference between them is
- * what they mean, not what they hold.
+ * Validates one slot: its content in the shape that slot fixes, plus its own
+ * styling. Slots on the same side of the band / compartment split share one
+ * content check — the difference between the two compartments, as between the two
+ * text bands, is what they mean and not what they hold.
  */
-const validateSlotContent: Record<
-	string,
-	(content: unknown, path: string) => SemanticDiagnostic[]
-> = Object.fromEntries(
-	RECORD_SLOT_IDS.map((slotId) => [
-		slotId,
-		slotId === RECORD_NAME_SLOT_ID ? validateName : validateRows,
-	]),
-);
-
-/** Validates one slot: its content in the shape that slot fixes, plus its own styling. */
 const validateSlot = (
 	value: unknown,
-	slotId: string,
+	slotId: RecordSlotId,
 	path: string,
 ): SemanticDiagnostic[] => {
 	if (!isObject(value)) {
@@ -67,8 +65,11 @@ const validateSlot = (
 			},
 		];
 	}
+	const validateContent = isRecordListSlotId(slotId)
+		? validateRows
+		: validateBandText;
 	return [
-		...validateSlotContent[slotId](value.text, `${path}.text`),
+		...validateContent(value.text, `${path}.text`),
 		...validateTextSlotStyleFields(value, path),
 	];
 };
@@ -96,9 +97,7 @@ const validateRecordText: ObjectDocValidateFn = (o, path) => {
 		];
 	}
 
-	const unknownKeys = Object.keys(text).filter(
-		(key) => !(RECORD_SLOT_IDS as readonly string[]).includes(key),
-	);
+	const unknownKeys = Object.keys(text).filter((key) => !isRecordSlotId(key));
 	return [
 		...unknownKeys.map((key) => ({
 			path: `${textPath}.${key}`,
