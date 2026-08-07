@@ -30,6 +30,7 @@ import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
+import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -70,6 +71,7 @@ import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
+import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
@@ -455,7 +457,17 @@ const CanvasComponent = ({
 		[viewportHandle, exportHandle],
 	);
 
-	const { minX, minY, zoom } = state.viewport;
+	// The camera the scene is drawn with. It is the committed one moved onto the
+	// device pixel grid, so text stops creeping inside its shape as the viewport
+	// pans (see snapViewportToDevicePixels). Every layer that positions itself
+	// from the camera has to take this one, or the SVG and the HTML overlays
+	// above it would sit a fraction of a pixel apart.
+	const devicePixelRatio = useDevicePixelRatio();
+	const drawnViewport = useMemo(
+		() => snapViewportToDevicePixels(state.viewport, devicePixelRatio),
+		[state.viewport, devicePixelRatio],
+	);
+	const { minX, minY, zoom } = drawnViewport;
 
 	const selectedTextSlot = resolveSelectedTextSlot(state);
 
@@ -501,7 +513,7 @@ const CanvasComponent = ({
 						<CanvasView
 							objects={draftObjects}
 							rootIds={state.rootIds}
-							viewport={state.viewport}
+							viewport={drawnViewport}
 							svgRef={svgRef}
 							textEditObjectId={state.textEditState?.objectId ?? null}
 							textEditSlotId={

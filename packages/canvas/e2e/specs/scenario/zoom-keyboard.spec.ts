@@ -1,3 +1,4 @@
+import { halfDevicePixelInWorld } from "./halfDevicePixelInWorld";
 import { test, expect } from "../../fixtures";
 
 /**
@@ -40,8 +41,13 @@ test.describe("keyboard zoom", () => {
 
 		const after = parseViewBox(await canvas.getViewBox());
 		// Anchored on the center, so the world coordinates of the screen center stay put.
-		expect(centerX(after)).toBeCloseTo(centerX(before), 0);
-		expect(centerY(after)).toBeCloseTo(centerY(before), 0);
+		const slack = await halfDevicePixelInWorld(canvas, after.width);
+		expect(Math.abs(centerX(after) - centerX(before))).toBeLessThanOrEqual(
+			slack,
+		);
+		expect(Math.abs(centerY(after) - centerY(before))).toBeLessThanOrEqual(
+			slack,
+		);
 	});
 
 	test("widens the viewBox and keeps the center when zooming out with Ctrl+-", async ({
@@ -58,7 +64,12 @@ test.describe("keyboard zoom", () => {
 			.toBeGreaterThan(before.width);
 
 		const after = parseViewBox(await canvas.getViewBox());
-		expect(centerX(after)).toBeCloseTo(centerX(before), 0);
-		expect(centerY(after)).toBeCloseTo(centerY(before), 0);
+		const slack = await halfDevicePixelInWorld(canvas, after.width);
+		expect(Math.abs(centerX(after) - centerX(before))).toBeLessThanOrEqual(
+			slack,
+		);
+		expect(Math.abs(centerY(after) - centerY(before))).toBeLessThanOrEqual(
+			slack,
+		);
 	});
 });

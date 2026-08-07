@@ -13,6 +13,7 @@ import {
 } from "../../../../presentations/objects/connections/ConnectorLabel";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
 
 type ConnectorLabelEditorProps = {
 	/** Label anchor (world coordinates on the route). The editor is centered here. */
@@ -74,8 +75,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		if (!el) {
 			return;
 		}
-		el.style.height = "0px";
-		el.style.height = `${el.scrollHeight}px`;
+		fitTextAreaHeight(el, fontSize);
 	}, [text, width, fontSize, fontWeight]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
