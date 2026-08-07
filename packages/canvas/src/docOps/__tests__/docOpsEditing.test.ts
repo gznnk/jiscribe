@@ -703,3 +703,234 @@ describe("addObjectsToGroup / removeObjectsFromGroup", () => {
 		expect(rootIds(doc)).toEqual(["group-1", "rect-3", "rect-4"]);
 	});
 });
+
+describe("a rotated group", () => {
+	/** Two rects in a group turned by `rotation`, with a third rect left outside. */
+	const rotatedGroup = (rotation: number): CanvasDoc => {
+		const doc = emptyDoc();
+		for (const x of [0, 200, 400]) {
+			docOps.addObject(doc, "rect", { x, y: 0, width: 100, height: 100 });
+		}
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+		readObject(doc, "group-1").rotation = rotation;
+		return doc;
+	};
+
+	const groupChildIds = (doc: CanvasDoc): string[] =>
+		(readObject(doc, "group-1").children as ObjectDoc[]).map(
+			(child) => child.id,
+		);
+
+	it("cannot be dissolved, because its rotation has nowhere to go", () => {
+		const doc = rotatedGroup(30);
+
+		expect(() => docOps.ungroupObject(doc, "group-1")).toThrow(/rotated by 30/);
+		expect(rootIds(doc)).toEqual(["group-1", "rect-3"]);
+	});
+
+	it("takes no new member, and lets none of its own go", () => {
+		const doc = rotatedGroup(30);
+
+		expect(() => docOps.addObjectsToGroup(doc, "group-1", ["rect-3"])).toThrow(
+			/rotated/,
+		);
+		expect(() => docOps.removeObjectsFromGroup(doc, ["rect-1"])).toThrow(
+			/rotated/,
+		);
+		expect(groupChildIds(doc)).toEqual(["rect-1", "rect-2"]);
+		expect(rootIds(doc)).toEqual(["group-1", "rect-3"]);
+	});
+
+	it("is only refused once actually turned, not for a written-out 0", () => {
+		const doc = rotatedGroup(0);
+
+		expect(docOps.addObjectsToGroup(doc, "group-1", ["rect-3"])).toEqual([]);
+		expect(groupChildIds(doc)).toEqual(["rect-1", "rect-2", "rect-3"]);
+		expectValid(doc);
+	});
+});
+
+describe("an id given more than once", () => {
+	const groupedPair = (): CanvasDoc => {
+		const doc = emptyDoc();
+		for (const x of [0, 200, 400, 600]) {
+			docOps.addObject(doc, "rect", { x, y: 0, width: 100, height: 100 });
+		}
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+		return doc;
+	};
+
+	const childIds = (doc: CanvasDoc, groupId: string): string[] =>
+		(readObject(doc, groupId).children as ObjectDoc[]).map((child) => child.id);
+
+	it("is not two objects, so it cannot make a group on its own", () => {
+		const doc = groupedPair();
+
+		expect(() => docOps.groupObjects(doc, ["rect-3", "rect-3"])).toThrow(
+			/at least 2 objects, got 1/,
+		);
+		expect(rootIds(doc)).toEqual(["group-1", "rect-3", "rect-4"]);
+	});
+
+	it("moves into a group once, leaving the object beside it alone", () => {
+		const doc = groupedPair();
+
+		docOps.addObjectsToGroup(doc, "group-1", ["rect-3", "rect-3"]);
+
+		expect(childIds(doc, "group-1")).toEqual(["rect-1", "rect-2", "rect-3"]);
+		expect(rootIds(doc)).toEqual(["group-1", "rect-4"]);
+		expectValid(doc);
+	});
+
+	it("leaves a group once, and is reported once", () => {
+		const doc = groupedPair();
+
+		expect(docOps.removeObjectsFromGroup(doc, ["rect-1", "rect-1"])).toEqual({
+			releasedIds: ["rect-1"],
+			droppedGroupIds: [],
+		});
+		expect(rootIds(doc)).toEqual(["group-1", "rect-1", "rect-3", "rect-4"]);
+		expect(childIds(doc, "group-1")).toEqual(["rect-2"]);
+		expectValid(doc);
+	});
+
+	it("is deleted once when both a group and its child are named", () => {
+		const doc = groupedPair();
+
+		expect(docOps.deleteObjects(doc, ["group-1", "rect-1"])).toEqual({
+			deletedIds: ["group-1", "rect-1", "rect-2"],
+			cascadedIds: [],
+		});
+		expect(rootIds(doc)).toEqual(["rect-3", "rect-4"]);
+		expectValid(doc);
+	});
+});
+
+describe("groups emptied by a cascade", () => {
+	/** A group holding another group, so emptying the inner one empties the outer. */
+	const nestedGroups = (): CanvasDoc => {
+		const doc = emptyDoc();
+		for (const x of [0, 200, 400]) {
+			docOps.addObject(doc, "rect", { x, y: 0, width: 100, height: 100 });
+		}
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+		docOps.groupObjects(doc, ["group-1", "rect-3"]);
+		return doc;
+	};
+
+	it("go in the same pass, innermost first", () => {
+		const doc = nestedGroups();
+
+		const { cascadedIds } = docOps.deleteObjects(doc, [
+			"rect-1",
+			"rect-2",
+			"rect-3",
+		]);
+
+		expect(cascadedIds).toEqual(["group-1", "group-2"]);
+		expect(doc.root).toEqual([]);
+	});
+
+	it("survive as long as one child is left", () => {
+		const doc = nestedGroups();
+
+		expect(docOps.deleteObjects(doc, ["rect-1"]).cascadedIds).toEqual([]);
+		expect(rootIds(doc)).toEqual(["group-2"]);
+		expectValid(doc);
+	});
+});
+
+describe("objects measured from their points", () => {
+	/** A polygon whose factory vertices are replaced by a plain 100x60 triangle. */
+	const triangleDoc = (): CanvasDoc => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "polygon", { x: 0, y: 0 });
+		readObject(doc, "polygon-1").points = [
+			{ x: 10, y: 20 },
+			{ x: 110, y: 20 },
+			{ x: 60, y: 80 },
+		];
+		return doc;
+	};
+
+	it("move by shifting every vertex, measured from the box the points span", () => {
+		const doc = triangleDoc();
+
+		docOps.moveObject(doc, "polygon-1", { x: 100, y: 0 });
+
+		expect(readObject(doc, "polygon-1").points).toEqual([
+			{ x: 100, y: 0 },
+			{ x: 200, y: 0 },
+			{ x: 150, y: 60 },
+		]);
+		expectValid(doc);
+	});
+
+	it("resize about that box's top-left, which is a vertex only by chance", () => {
+		const doc = triangleDoc();
+
+		docOps.resizeObject(doc, "polygon-1", { width: 200, height: 120 });
+
+		expect(readObject(doc, "polygon-1").points).toEqual([
+			{ x: 10, y: 20 },
+			{ x: 210, y: 20 },
+			{ x: 110, y: 140 },
+		]);
+	});
+
+	it("cannot be resized once flat on an axis, with nothing to scale up from", () => {
+		const doc = triangleDoc();
+		readObject(doc, "polygon-1").points = [
+			{ x: 40, y: 0 },
+			{ x: 40, y: 100 },
+		];
+
+		expect(() => docOps.resizeObject(doc, "polygon-1", { width: 80 })).toThrow(
+			/zero-width or zero-height/,
+		);
+	});
+});
+
+describe("objects measured from their children", () => {
+	it("bring the whole group along when aligned by the box it occupies", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 40, width: 100, height: 100 });
+		docOps.addObject(doc, "rect", { x: 200, y: 40, width: 100, height: 100 });
+		docOps.addObject(doc, "rect", { x: 400, y: 0, width: 100, height: 100 });
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+
+		docOps.alignObjects(doc, ["group-1", "rect-3"], "top");
+
+		expect(readObject(doc, "rect-1")).toMatchObject({ x: 0, y: 0 });
+		expect(readObject(doc, "rect-2")).toMatchObject({ x: 200, y: 0 });
+		expect(readObject(doc, "rect-3")).toMatchObject({ x: 400, y: 0 });
+		expectValid(doc);
+	});
+
+	it("have no box at all while empty, so they cannot be placed", () => {
+		const doc = emptyDoc();
+		doc.root.push({
+			id: "group-1",
+			type: "group",
+			children: [],
+		} as unknown as ObjectDoc);
+
+		expect(() => docOps.moveObject(doc, "group-1", { x: 10 })).toThrow(
+			/has no position that can be changed/,
+		);
+	});
+
+	it("are refused outright when this instance does not know the type", () => {
+		const doc = emptyDoc();
+		doc.root.push({
+			id: "gadget-1",
+			type: "gadget",
+			x: 0,
+			y: 0,
+		} as unknown as ObjectDoc);
+
+		expect(() => docOps.moveObject(doc, "gadget-1", { x: 10 })).toThrow(
+			/"gadget"\) has no position that can be changed/,
+		);
+	});
+});
