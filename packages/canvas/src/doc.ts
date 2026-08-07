@@ -8,10 +8,12 @@
 // handlers — use this entry to keep those UI dependencies out of their bundle.
 //
 // The doc-ops are definition-driven: `createDocOps({ presetDefinitions?, plugins? })`
-// resolves the same ObjectDocDefinition set as the parser, so building (`addObject` /
-// `connect`) and editing what is already there (delete / move / resize / style / retext /
-// re-route / align / group) handle built-in and plugin types uniformly, following each
-// type's `features`. They take already-typed params (no zod; tool-input validation is the
+// resolves the same ObjectDocDefinition set as the parser. `create` is the factory prefix
+// (as in createCanvasParser) — the DocOps it returns covers the whole edit vocabulary, not
+// only creation: building (`addObject` / `connect`) and reworking what is already there
+// (delete / move / resize / style / retext / re-route / align / group) handle built-in and
+// plugin types uniformly, following each type's `features`.
+// They take already-typed params (no zod; tool-input validation is the
 // adapter's responsibility) and reuse the same ObjectFactory as the canvas, producing
 // correct ObjectDocs down to the style defaults. Every op mutates the doc in place and
 // checks its arguments first, so a call that throws leaves the doc untouched.

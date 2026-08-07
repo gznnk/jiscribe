@@ -71,22 +71,24 @@ const findHoldingGroup = (
  * two members moves with the group without being part of it.
  *
  * @param doc - Mutated in place: the members are lifted out and the group put in their place
- * @param ids - Ids to group; at least 2, all existing, and all siblings of one another (a
- *   group cannot span two different parents)
+ * @param ids - Ids to group; at least 2 distinct ones, all existing, and all siblings of one
+ *   another (a group cannot span two different parents). Repeats are counted once
  * @returns The id assigned to the new group, `group-N` unique across the root tree
- * @throws {@link DocOperationError} for fewer than 2 ids, an id that is missing, a connector,
- *   or a set spread across different parents — before anything is moved
+ * @throws {@link DocOperationError} for fewer than 2 distinct ids, an id that is missing, a
+ *   connector, or a set spread across different parents — before anything is moved
  */
 export const groupObjects = (
 	doc: CanvasDoc,
 	ids: readonly string[],
 ): string => {
-	if (ids.length < 2) {
+	// Counted before the minimum, so ["rect-1", "rect-1"] is one object and not a pair.
+	const distinctIds = [...new Set(ids)];
+	if (distinctIds.length < 2) {
 		throw new DocOperationError(
-			`grouping needs at least 2 objects, got ${ids.length}`,
+			`grouping needs at least 2 objects, got ${distinctIds.length}`,
 		);
 	}
-	const locations = requireObjects(doc, ids);
+	const locations = requireObjects(doc, distinctIds);
 
 	const connectorIds = locations
 		.filter(({ object }) => isConnectorObject(object))

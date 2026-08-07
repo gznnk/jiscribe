@@ -30,8 +30,10 @@ import type { DocDefinitionsConfig } from "../schemas/plugin/resolveDocDefinitio
 import { resolveDocDefinitions } from "../schemas/plugin/resolveDocDefinitions";
 
 /**
- * Doc-ops instance driven by doc definitions. Built-in and plugin types alike are handled
- * uniformly, following the factory / features passed to `createDocOps`.
+ * The whole set of programmatic edits to a CanvasDoc: building it up (`addObject` /
+ * `connect`) and reworking what is already there (delete / move / resize / style / retext /
+ * re-route / align / group). Built-in and plugin types alike are handled uniformly,
+ * following the factory / features passed to `createDocOps`.
  *
  * Every op mutates `doc` in place and checks its arguments before it writes, so a call that
  * throws `DocOperationError` leaves the document exactly as it was.
@@ -112,7 +114,8 @@ export type DocOps = {
 	): void;
 	/**
 	 * Wrap sibling objects in a new group and return its id.
-	 * Throws `DocOperationError` for fewer than 2 ids, a connector, or members of different parents.
+	 * Throws `DocOperationError` for fewer than 2 distinct ids, a connector, or members of
+	 * different parents.
 	 */
 	groupObjects(doc: CanvasDoc, ids: readonly string[]): string;
 	/**
@@ -142,7 +145,8 @@ export type DocOps = {
 };
 
 /**
- * Build a {@link DocOps}.
+ * Build a {@link DocOps}. `create` here is the factory prefix — it makes the instance, and
+ * that instance covers editing just as much as building (see {@link DocOps}).
  *
  * @param config - Resolved by {@link resolveDocDefinitions}, whose preset/plugin merging and
  *   duplicate-type detection mirror createCanvasParser. Omit to handle only built-in definitions
