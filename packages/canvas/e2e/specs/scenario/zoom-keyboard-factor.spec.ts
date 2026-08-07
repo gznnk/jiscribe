@@ -1,3 +1,4 @@
+import { halfDevicePixelInWorld } from "./halfDevicePixelInWorld";
 import { test, expect } from "../../fixtures";
 
 /**
@@ -57,8 +58,9 @@ test.describe("keyboard zoom snapping to fixed stops", () => {
 		expect(vb0.height / vb2.height).toBeCloseTo(1.5, 3);
 
 		// Anchored on the center: the world coordinates of the screen center hold across the steps.
-		expect(centerX(vb2)).toBeCloseTo(centerX(vb0), 0);
-		expect(centerY(vb2)).toBeCloseTo(centerY(vb0), 0);
+		const slack = await halfDevicePixelInWorld(canvas, vb2.width);
+		expect(Math.abs(centerX(vb2) - centerX(vb0))).toBeLessThanOrEqual(slack);
+		expect(Math.abs(centerY(vb2) - centerY(vb0))).toBeLessThanOrEqual(slack);
 	});
 
 	test("snaps to the stops 100% -> 75% -> 50% on Ctrl+-", async ({
@@ -83,8 +85,9 @@ test.describe("keyboard zoom snapping to fixed stops", () => {
 		expect(zoomOf(vb0, vb2)).toBeCloseTo(0.5, 3);
 		expect(vb0.height / vb2.height).toBeCloseTo(0.5, 3);
 
-		expect(centerX(vb2)).toBeCloseTo(centerX(vb0), 0);
-		expect(centerY(vb2)).toBeCloseTo(centerY(vb0), 0);
+		const slack = await halfDevicePixelInWorld(canvas, vb2.width);
+		expect(Math.abs(centerX(vb2) - centerX(vb0))).toBeLessThanOrEqual(slack);
+		expect(Math.abs(centerY(vb2) - centerY(vb0))).toBeLessThanOrEqual(slack);
 	});
 
 	test("returns to exactly 100% when zooming out after zooming in", async ({
