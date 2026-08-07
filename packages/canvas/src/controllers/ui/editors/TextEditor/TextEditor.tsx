@@ -9,6 +9,7 @@ import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
+import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
 
 type TextEditorProps = {
 	objectId: string;
@@ -88,8 +89,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		if (!el) {
 			return;
 		}
-		el.style.height = "0px";
-		el.style.height = `${el.scrollHeight}px`;
+		fitTextAreaHeight(el, fontSize);
 	}, [text, width, height, fontSize, resolvedFontFamily, fontWeight]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
