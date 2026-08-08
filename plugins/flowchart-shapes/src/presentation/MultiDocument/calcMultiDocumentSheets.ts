@@ -6,7 +6,9 @@ import { MULTI_DOCUMENT_OFFSET_RATIO } from "../../schema/multiDocument/MultiDoc
  * Bounding boxes of the three stacked sheets (back → front) for a multi-document
  * whose overall bounding box has its top-left corner at (x, y). The front sheet
  * sits at the bottom-left; each back sheet steps one offset up and to the right.
- * Single source shared by the renderer, the draw-drag preview, and the outline.
+ * The sheets overlap: the renderer clips each one to the area outside the
+ * sheets in front of it (MultiDocument.tsx), and the connector outline takes
+ * their union (calcMultiDocumentSilhouette).
  */
 export const calcMultiDocumentSheets = (
 	x: number,

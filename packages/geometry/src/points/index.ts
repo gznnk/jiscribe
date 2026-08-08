@@ -12,3 +12,4 @@ export * from "./castRayOnPolygon";
 export * from "./sampleEllipseArc";
 export * from "./sampleCubicBezier";
 export * from "./sampleQuadraticBezier";
+export * from "./sliceQuadraticBezier";
