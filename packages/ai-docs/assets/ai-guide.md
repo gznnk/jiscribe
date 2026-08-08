@@ -141,9 +141,12 @@ entity, an ontology concept with its properties. Its `text` is a set of named
 slots and a plain string is rejected — put the title in `name.text` and **one
 array entry per row** in a compartment's `text` (never a newline inside an entry).
 
-**Which slots you write is what gives the box its compartments.** There are three:
-`name` (always drawn), `attributes`, and `operations`, stacked in that order.
-Leave a compartment's slot out entirely and the box does not have it.
+**Which slots you write is what gives the box its compartments.** There are four:
+`stereotype`, `name` (always drawn), `attributes`, and `operations`, stacked in
+that order. Leave a slot out entirely and the box does not have it. `stereotype`
+is an optional thin band above the title — write it for an interface, an abstract
+class, or an enum (`{ "text": "<<interface>>" }`); no divider separates it from
+`name`, so the two read as one header.
 
 ```json
 {
@@ -160,8 +163,8 @@ Leave a compartment's slot out entirely and the box does not have it.
 }
 ```
 
-A UML class adds the third slot; a DTO, an ER entity, or a value object leaves it
-out and stays two-compartment:
+A UML class adds the `operations` slot; a DTO, an ER entity, or a value object
+leaves it out and stays two-compartment:
 
 ```json
 {
@@ -184,13 +187,15 @@ keeps the compartment and draws it empty, which is how you say "this class has n
 operations" rather than "this box has no operations compartment".
 
 Each slot carries **its own** typography (`textAlign` / `verticalAlign` /
-`fontColor` / `fontSize` / `fontFamily` / `fontWeight`, all optional and written
+`fontColor` / `fontSize` / `fontFamily` / `fontWeight` / `fontStyle` /
+`textDecoration`, all optional and written
 beside `text`); a `record` has **no shape-wide** text fields, so writing them at
-the top level is an error. Slot defaults differ from other shapes where the
-compartments need it — `textAlign` `"left"`, `verticalAlign` `"top"`, `fontSize`
-`14` (the 21px row pitch is sized for it) — and `fill` defaults to `"auto"` like
-`markdown`. Every band draws exactly what its slot's typography says; rows are
-packed one line per entry.
+the top level is an error. Slot defaults follow what the slot is for — the
+`stereotype` and `name` bands are centered (and `name` is bold), the row
+compartments are `textAlign` `"left"` / `verticalAlign` `"top"`, and every slot is
+`fontSize` `14` (the 21px row pitch is sized for it) — and `fill` defaults to
+`"auto"` like `markdown`. Every band draws exactly what its slot's typography
+says; rows are packed one line per entry.
 
 The **height is never adjusted to the content** — the compartments divide up
 whatever height you give. Each compartment above the bottom one takes the height
@@ -199,11 +204,12 @@ remainder and clips anything past the box. So size it yourself:
 
 - title + one compartment of N rows: `32 + 21 * N`
 - add a second compartment of M rows: `+ 21 * M + 4`
+- add a `stereotype` band: `+ 28`
 
-The **title band** is the one part that grows with its text: a larger
-`name.fontSize`, a newline, or a title too long for the `width` makes the band
-taller (one 1.5×fontSize line per displayed line plus 7px) and pushes the
-compartments down, so add that much to the `height` too.
+The **header bands** are the parts that grow with their text: a larger
+`fontSize`, a newline, or a string too long for the `width` makes the band taller
+(one 1.5×fontSize line per displayed line plus 7px) and pushes the compartments
+down, so add that much to the `height` too.
 
 ### Raw SVG (`svg`) — escape hatch for complex visuals
 

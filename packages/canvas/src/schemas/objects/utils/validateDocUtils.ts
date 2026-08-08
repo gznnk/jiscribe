@@ -306,9 +306,10 @@ export function validateFillStyleFields(
 
 /**
  * Validate the styling fields a text carries — `textAlign`, `verticalAlign`,
- * `fontColor` (safe CSS color), `fontSize` (≥ 1), `fontFamily`/`fontWeight` (safe
- * CSS values). The same six names appear flat on a single-body doc and inside
- * each slot of a keyed one, so both forms validate them through here.
+ * `fontColor` (safe CSS color), `fontSize` (≥ 1), and
+ * `fontFamily`/`fontWeight`/`fontStyle`/`textDecoration` (safe CSS values). The
+ * same names appear flat on a single-body doc and inside each slot of a keyed
+ * one, so both forms validate them through here.
  *
  * @param o - The object carrying the styling: the doc itself, or one of its text slots
  * @param path - Diagnostic path of `o`, which each field name is appended to
@@ -351,6 +352,20 @@ export function validateTextSlotStyleFields(
 		errors.push({
 			path: `${path}.fontWeight`,
 			message: "must be a safe CSS font-weight value",
+			beyondSchema: true,
+		});
+	}
+	if ("fontStyle" in o && !isCssSafeValue(o.fontStyle)) {
+		errors.push({
+			path: `${path}.fontStyle`,
+			message: "must be a safe CSS font-style value",
+			beyondSchema: true,
+		});
+	}
+	if ("textDecoration" in o && !isCssSafeValue(o.textDecoration)) {
+		errors.push({
+			path: `${path}.textDecoration`,
+			message: "must be a safe CSS text-decoration value",
 			beyondSchema: true,
 		});
 	}

@@ -912,4 +912,31 @@ test.describe("connector label", () => {
 			)
 			.toBeLessThanOrEqual(HEIGHT_TOLERANCE_PX);
 	});
+
+	// A line box is fontSize × 1.5 tall, so an odd size makes the drawn box end on
+	// a half pixel. The editor used to take its height from scrollHeight, which is
+	// a whole number, and the extra half pixel moved the label the moment editing
+	// started (see fitTextAreaHeight).
+	test("re-opens the editor on the label at an odd font size", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-font-size");
+		await canvas.setNumberInput("label.fontSize", 15);
+		await canvas.deselect();
+
+		const committed = await labelBoxOf(canvas, connectorId).boundingBox();
+		await canvas.typeTextAt(onLine, "");
+		const editing = await canvas.page
+			.locator(selectors.textEditor)
+			.boundingBox();
+
+		expect(editing?.y).toBeCloseTo(committed?.y ?? 0, 3);
+		expect(editing?.height).toBeCloseTo(committed?.height ?? 0, 3);
+	});
 });

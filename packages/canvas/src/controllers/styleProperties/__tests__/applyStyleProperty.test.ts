@@ -490,6 +490,26 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			});
 		});
 
+		it("writes fontStyle and textDecoration into the slot as strings", () => {
+			const r1 = bodyRect("r1");
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const italic = applyStyleProperty(state, "fontStyle", "italic");
+			expect(slotsOf(italic, "r1").body).toEqual({
+				text: "hello",
+				fontStyle: "italic",
+			});
+			// The two decoration lines arrive as one space-separated value.
+			const decorated = applyStyleProperty(
+				state,
+				"textDecoration",
+				"underline line-through",
+			);
+			expect(slotsOf(decorated, "r1").body).toEqual({
+				text: "hello",
+				textDecoration: "underline line-through",
+			});
+		});
+
 		it("keeps the slot's content and its other styling", () => {
 			const r1 = bodyRect("r1", { textAlign: "right", fontSize: 12 });
 			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });

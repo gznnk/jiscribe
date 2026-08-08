@@ -7,7 +7,7 @@ import { createFrameBehavior } from "@workspace/canvas-sdk";
 import { recordDocDefinition } from "./doc";
 import { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
 import { RecordBox } from "./presentation/RecordBox";
-import { RECORD_NAME_SLOT_ID } from "./schema/RecordDoc";
+import { isRecordListSlotId } from "./schema/RecordDoc";
 import type { RecordDoc } from "./schema/RecordDoc";
 import { recordToDoc, recordToState } from "./state/RecordMapper";
 import type { RecordState } from "./state/RecordState";
@@ -15,15 +15,15 @@ import { isValidRecordState } from "./state/validateRecordState";
 import { RecordStencils } from "./stencil/RecordStencils";
 
 /**
- * The title band is sized from the title itself (calcRecordSlotRegions), so it
- * follows the draft while it is typed and the editor may grow with it, down to
- * the box's bottom edge. A row compartment stays `"scroll"`: its region already
- * follows the draft where it can, and letting the editor pass it would spill over
- * the compartment below.
+ * A text band (the title, the stereotype above it) is sized from its own text
+ * (calcRecordSlotRegions), so it follows the draft while it is typed and the
+ * editor may grow with it, down to the box's bottom edge. A row compartment stays
+ * `"scroll"`: its region already follows the draft where it can, and letting the
+ * editor pass it would spill over the compartment below.
  */
 const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
 	slotId,
-) => (slotId === RECORD_NAME_SLOT_ID ? "grow" : "scroll");
+) => (isRecordListSlotId(slotId) ? "scroll" : "grow");
 
 /**
  * The record's text slots need no declaration here: the keys of `state.text`

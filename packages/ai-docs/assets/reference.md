@@ -592,11 +592,13 @@ one array entry per row in a compartment's `text` (**no newline inside an entry*
 — add another entry). Typography belongs to each slot, so a `record` has **no**
 shape-wide `textAlign` / `fontSize` / ... fields.
 
-**The slots you write are the compartments the box has.** There are three —
-`name`, `attributes`, `operations` — stacked in that order. `name` is always
-drawn; omit either of the others and the box simply does not have that
-compartment. An empty array (`{ "text": [] }`) is different: it keeps the
-compartment and draws it empty.
+**The slots you write are the compartments the box has.** There are four —
+`stereotype`, `name`, `attributes`, `operations` — stacked in that order. `name`
+is always drawn; omit any of the others and the box simply does not have that
+band or compartment. An empty array (`{ "text": [] }`) is different: it keeps the
+compartment and draws it empty. `stereotype` is a thin band above the title, for
+a UML stereotype such as `"<<interface>>"`; no divider is drawn between it and
+`name`, so the two read as one header.
 
 ```json
 {
@@ -613,8 +615,8 @@ compartment and draws it empty.
 }
 ```
 
-A UML class with operations adds the third slot (`"height": 120` fits two rows in
-each compartment):
+A UML class adds the `operations` slot (`"height": 120` fits two rows in each
+compartment):
 
 ```json
 {
@@ -632,22 +634,45 @@ each compartment):
 }
 ```
 
+An interface or an abstract class adds the `stereotype` band on top
+(`"height": 102` = 28 for the band + 28 for the title + 46 for two operation
+rows):
+
+```json
+{
+	"id": "rec-3",
+	"type": "record",
+	"x": 660,
+	"y": 150,
+	"width": 200,
+	"height": 102,
+	"text": {
+		"stereotype": { "text": "<<interface>>" },
+		"name": { "text": "Repository" },
+		"operations": { "text": ["find(id)", "save(entity)"] }
+	}
+}
+```
+
 | Field                  | Type       | Default | Description                                                       |
 | ---------------------- | ---------- | ------- | ----------------------------------------------------------------- |
 | `x`                    | `number`   | `0`     | X of the bounding box's top-left.                                 |
 | `y`                    | `number`   | `0`     | Y of the bounding box's top-left.                                 |
 | `width`                | `number`   | `180`   | Bounding-box width (px).                                          |
 | `height`               | `number`   | `95`    | Bounding-box height (px). Not auto-fitted to the rows.            |
+| `text.stereotype.text` | `string`   | —       | Stereotype above the title. Slot absent = no band.                |
 | `text.name.text`       | `string`   | `""`    | Title in the top band; the band is always drawn.                  |
 | `text.attributes.text` | `string[]` | —       | Attribute rows, one entry per line. Slot absent = no compartment. |
 | `text.operations.text` | `string[]` | —       | Operation rows, one entry per line. Slot absent = no compartment. |
 
 Every slot also takes `textAlign` / `verticalAlign` / `fontColor` / `fontSize` /
 `fontFamily` / `fontWeight` beside its `text`, with the same meanings as the
-shape-wide fields of other shapes. The defaults differ where the compartments
-need it: `textAlign` `"left"`, `verticalAlign` `"top"`, `fontSize` `14` (the 21px
-row pitch is sized for it); the rest are the shared defaults. `fill` defaults to
-`"auto"` (theme surface) rather than `"transparent"`.
+shape-wide fields of other shapes. The defaults follow what each slot is for: the
+two header bands are centered (`textAlign` `"center"`, `verticalAlign` `"middle"`)
+and `name` is `fontWeight` `"bold"` on top of that, while the row compartments are
+`textAlign` `"left"`, `verticalAlign` `"top"`. Every slot defaults to `fontSize`
+`14` (the 21px row pitch is sized for it); the rest are the shared defaults.
+`fill` defaults to `"auto"` (theme surface) rather than `"transparent"`.
 
 The **height is not adjusted to the content**: the compartments divide up whatever
 height you give. Every compartment above the bottom one takes the height its own
@@ -656,13 +681,14 @@ and clips rows below the box edge. Heights that fit exactly:
 
 - title + one compartment of N rows: `32 + 21 × N`
 - add a second compartment of M rows: `+ 21 × M + 4`
+- add a `stereotype` band: `+ 28`
 
-The **title band** follows its own slot. Its height is
-`1.5 × name.fontSize × (displayed lines) + 7`, so raising `name.fontSize`,
-writing a newline in `name.text`, or giving a title too long for the `width`
+Each **header band** follows its own slot. Its height is
+`1.5 × fontSize × (displayed lines) + 7`, so raising the slot's `fontSize`,
+writing a newline in its `text`, or giving it a string too long for the `width`
 makes the band taller and starts the compartments lower — add the extra to
-`height` as well. With the default `fontSize` 14 and a one-line title the band is
-the 28px the formulas above assume.
+`height` as well. With the default `fontSize` 14 and one line the band is the
+28px the formulas above assume.
 
 ---
 
@@ -1039,15 +1065,17 @@ Applies to every box shape, plus `polygon`. For `actor`, the fill paints the hea
 
 Applies to every box shape. A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
 
-| Field           | Type            | Default          | Description                                                                       |
-| --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
-| `text`          | `string`        | `""`             | Text content.                                                                     |
-| `textAlign`     | `TextAlign`     | `"center"`       | Horizontal alignment.                                                             |
-| `verticalAlign` | `VerticalAlign` | `"middle"`       | Vertical alignment.                                                               |
-| `fontColor`     | `string`        | `"auto"`         | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`). |
-| `fontSize`      | `number`        | `16`             | Font size (px).                                                                   |
-| `fontFamily`    | `string`        | `"Noto Sans JP"` | Font family.                                                                      |
-| `fontWeight`    | `string`        | `"normal"`       | Font weight.                                                                      |
+| Field            | Type            | Default          | Description                                                                       |
+| ---------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
+| `text`           | `string`        | `""`             | Text content.                                                                     |
+| `textAlign`      | `TextAlign`     | `"center"`       | Horizontal alignment.                                                             |
+| `verticalAlign`  | `VerticalAlign` | `"middle"`       | Vertical alignment.                                                               |
+| `fontColor`      | `string`        | `"auto"`         | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`). |
+| `fontSize`       | `number`        | `16`             | Font size (px).                                                                   |
+| `fontFamily`     | `string`        | `"Noto Sans JP"` | Font family.                                                                      |
+| `fontWeight`     | `string`        | `"normal"`       | Font weight.                                                                      |
+| `fontStyle`      | `string`        | `"normal"`       | Font style: `"normal"` or `"italic"`.                                             |
+| `textDecoration` | `string`        | `"none"`         | Decoration lines: `"underline"`, `"line-through"`, or `"underline line-through"`. |
 
 `TextAlign`: `"left"` / `"center"` / `"right"`
 

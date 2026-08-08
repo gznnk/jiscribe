@@ -40,6 +40,11 @@ export const CanvasRoot = styled.div`
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;
 
+	/* Same as the Svg style (CanvasViewStyled 参照): hosts may set
+	   font-synthesis: none, which would leave the text editor overlays —
+	   rendered outside the SVG — without synthetic italic/bold. */
+	font-synthesis: weight style;
+
 	input,
 	textarea {
 		user-select: text;

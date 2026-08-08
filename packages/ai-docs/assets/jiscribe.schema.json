@@ -408,6 +408,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -516,6 +522,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -598,6 +610,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -682,6 +700,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -764,6 +788,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -848,6 +878,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -930,6 +966,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -1014,6 +1056,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1097,6 +1145,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1179,6 +1233,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -1266,6 +1326,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1349,6 +1415,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1431,6 +1503,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -1518,6 +1596,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1603,6 +1687,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -1690,6 +1780,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1776,6 +1872,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1791,7 +1893,7 @@
 			}
 		},
 		"PackageDoc": {
-			"description": "Isometric box shape, typically used for libraries, build artifacts and deployment units. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A square aspect ratio (e.g. 110x110) looks best. Prefer \"server\" for something that runs rather than something that is deployed.",
+			"description": "Isometric box shape, typically used for libraries, build artifacts and deployment units. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. The hexagon is a cube in isometric projection, so it reads as a cube only when the box is slightly taller than wide (e.g. 95x110); a square box widens it. Prefer \"server\" for something that runs rather than something that is deployed.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -1817,7 +1919,7 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 110",
+					"description": "Bounding-box width in pixels. Default when created from the palette: 95",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1861,6 +1963,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -1945,6 +2053,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2027,6 +2141,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -2114,6 +2234,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2199,6 +2325,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -2286,6 +2418,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2371,6 +2509,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -2474,6 +2618,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2569,6 +2719,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2662,6 +2818,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -2757,6 +2919,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2845,6 +3013,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -2927,6 +3101,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3011,6 +3191,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3093,6 +3279,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3177,6 +3369,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3259,6 +3457,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3343,6 +3547,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3425,6 +3635,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3509,6 +3725,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3591,6 +3813,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3678,6 +3906,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3764,6 +3998,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3847,6 +4087,12 @@
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -3862,7 +4108,7 @@
 			}
 		},
 		"RecordDoc": {
-			"description": "Record: a titled box with compartments of rows underneath (a UML class, an ER entity, an ontology concept with its properties). Uses the same rect-based geometry (x/y/width/height) as RectDoc. Unlike every other shape, its \"text\" is a keyed object of slots — \"name\" for the title band, then \"attributes\" and \"operations\" for the compartments — and the plain-string form is rejected. Which slots you write is what gives the box its compartments: omit \"operations\" for a two-compartment box, omit both for a plain titled box. Typography belongs to each slot, so there are no shape-wide textAlign/fontSize/... fields here. The box is not auto-fitted to its rows.",
+			"description": "Record: a titled box with compartments of rows underneath (a UML class, an ER entity, an ontology concept with its properties). Uses the same rect-based geometry (x/y/width/height) as RectDoc. Unlike every other shape, its \"text\" is a keyed object of slots — an optional \"stereotype\" band, \"name\" for the title band, then \"attributes\" and \"operations\" for the compartments — and the plain-string form is rejected. Which slots you write is what gives the box its compartments: omit \"operations\" for a two-compartment box, omit both for a plain titled box. Typography belongs to each slot, so there are no shape-wide textAlign/fontSize/... fields here. The box is not auto-fitted to its rows.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -3893,7 +4139,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). The title band is the one part that grows with its content — a larger name fontSize, a newline, or a name too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
+					"description": "Bounding-box height in pixels. Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). A written \"stereotype\" adds a band of its own above the title, 28 more at the default fontSize. Either header band grows with its content — a larger fontSize, a newline, or text too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
 					"type": "number",
 					"minimum": 0
 				},
@@ -3912,38 +4158,38 @@
 					"default": "auto"
 				},
 				"text": {
-					"description": "The text slots. Not a string: a record keeps its title and its compartments apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Which slots you write is what gives the box its compartments — write \"attributes\" alone for a two-compartment box (an ER entity, a DTO), add \"operations\" for a UML class, omit both for a plain titled box. Default: { \"name\": { \"text\": \"\" }, \"attributes\": { \"text\": [] } }",
+					"description": "The text slots. Not a string: a record keeps its title and its compartments apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Which slots you write is what gives the box its compartments — write \"attributes\" alone for a two-compartment box (an ER entity, a DTO), add \"operations\" for a UML class, omit both for a plain titled box; \"stereotype\" is a band rather than a compartment and is what marks an interface, an abstract class, or an enum. Default: { \"name\": { \"text\": \"\" }, \"attributes\": { \"text\": [] } }",
 					"type": "object",
 					"additionalProperties": false,
 					"properties": {
-						"name": {
-							"description": "Title slot, shown in the top band. Always drawn, whether or not you write it.",
+						"stereotype": {
+							"description": "Stereotype band above the title, holding a UML stereotype such as \"<<interface>>\", \"<<abstract>>\", or \"<<enum>>\". Optional, and unlike a compartment it has no empty form: omit the slot and the band is not drawn at all. No divider is drawn between it and the title, so the two read as one header.",
 							"type": "object",
 							"additionalProperties": false,
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Title string. Default: \"\"",
+									"description": "Stereotype string, conventionally written between guillemets (\"<<interface>>\"). Default: \"\"",
 									"type": "string",
 									"default": ""
 								},
 								"textAlign": {
-									"description": "Horizontal text alignment. Default: \"left\" (a record slot's default, not the shared \"center\")",
+									"description": "Horizontal text alignment. Default: \"center\"",
 									"allOf": [
 										{
 											"$ref": "#/$defs/TextAlign"
 										}
 									],
-									"default": "left"
+									"default": "center"
 								},
 								"verticalAlign": {
-									"description": "Vertical text alignment. Default: \"top\" (a record slot's default, not the shared \"middle\")",
+									"description": "Vertical text alignment. Default: \"middle\"",
 									"allOf": [
 										{
 											"$ref": "#/$defs/VerticalAlign"
 										}
 									],
-									"default": "top"
+									"default": "middle"
 								},
 								"fontColor": {
 									"$ref": "#/$defs/TextStyle/properties/fontColor"
@@ -3959,6 +4205,66 @@
 								},
 								"fontWeight": {
 									"$ref": "#/$defs/TextStyle/properties/fontWeight"
+								},
+								"fontStyle": {
+									"$ref": "#/$defs/TextStyle/properties/fontStyle"
+								},
+								"textDecoration": {
+									"$ref": "#/$defs/TextStyle/properties/textDecoration"
+								}
+							}
+						},
+						"name": {
+							"description": "Title slot, shown in the top band. Always drawn, whether or not you write it.",
+							"type": "object",
+							"additionalProperties": false,
+							"required": ["text"],
+							"properties": {
+								"text": {
+									"description": "Title string. Default: \"\"",
+									"type": "string",
+									"default": ""
+								},
+								"textAlign": {
+									"description": "Horizontal text alignment. Default: \"center\"",
+									"allOf": [
+										{
+											"$ref": "#/$defs/TextAlign"
+										}
+									],
+									"default": "center"
+								},
+								"verticalAlign": {
+									"description": "Vertical text alignment. Default: \"middle\"",
+									"allOf": [
+										{
+											"$ref": "#/$defs/VerticalAlign"
+										}
+									],
+									"default": "middle"
+								},
+								"fontColor": {
+									"$ref": "#/$defs/TextStyle/properties/fontColor"
+								},
+								"fontSize": {
+									"description": "Font size in pixels. Default: 14 (the 21px row pitch and the height formula 32 + 21 * rows.length are sized for it)",
+									"type": "number",
+									"minimum": 1,
+									"default": 14
+								},
+								"fontFamily": {
+									"$ref": "#/$defs/TextStyle/properties/fontFamily"
+								},
+								"fontWeight": {
+									"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (a record's title is bold unless you override it)",
+									"type": "string",
+									"default": "bold"
+								},
+								"fontStyle": {
+									"$ref": "#/$defs/TextStyle/properties/fontStyle"
+								},
+								"textDecoration": {
+									"$ref": "#/$defs/TextStyle/properties/textDecoration"
 								}
 							}
 						},
@@ -4008,6 +4314,12 @@
 								},
 								"fontWeight": {
 									"$ref": "#/$defs/TextStyle/properties/fontWeight"
+								},
+								"fontStyle": {
+									"$ref": "#/$defs/TextStyle/properties/fontStyle"
+								},
+								"textDecoration": {
+									"$ref": "#/$defs/TextStyle/properties/textDecoration"
 								}
 							}
 						},
@@ -4057,6 +4369,12 @@
 								},
 								"fontWeight": {
 									"$ref": "#/$defs/TextStyle/properties/fontWeight"
+								},
+								"fontStyle": {
+									"$ref": "#/$defs/TextStyle/properties/fontStyle"
+								},
+								"textDecoration": {
+									"$ref": "#/$defs/TextStyle/properties/textDecoration"
 								}
 							}
 						}
@@ -4291,6 +4609,12 @@
 					"type": "string",
 					"default": "bold"
 				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -4371,6 +4695,12 @@
 				},
 				"fontWeight": {
 					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -4802,6 +5132,16 @@
 					"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"normal\"",
 					"type": "string",
 					"default": "normal"
+				},
+				"fontStyle": {
+					"description": "Font style: \"normal\" or \"italic\". Default: \"normal\"",
+					"type": "string",
+					"default": "normal"
+				},
+				"textDecoration": {
+					"description": "Text decoration lines: \"underline\", \"line-through\", or \"underline line-through\" for both. \"none\" or omitted means no decoration. Default: \"none\"",
+					"type": "string",
+					"default": "none"
 				}
 			}
 		},

@@ -7,21 +7,28 @@ import { AUTO_COLOR } from "@workspace/canvas-sdk/doc";
 
 import type { RecordState, RecordTextState } from "./RecordState";
 import {
-	RECORD_ATTRIBUTES_SLOT_ID,
+	isRecordListSlotId,
 	RECORD_NAME_SLOT_ID,
-	RECORD_OPERATIONS_SLOT_ID,
-	RECORD_SLOT_STYLE_DEFAULTS,
+	RECORD_SLOT_IDS,
+	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
 	RecordFeatures,
 } from "../schema/RecordDoc";
-import type { RecordDoc } from "../schema/RecordDoc";
+import type { RecordDoc, RecordSlotId } from "../schema/RecordDoc";
 
-/** Forces the title slot's content to a string, filling omitted styling from the record defaults. */
-const normalizeNameSlot = (value: unknown): TextSlot<string> => {
+/**
+ * Forces a text band's content to a string, filling omitted styling from the
+ * slot's own defaults.
+ */
+const normalizeBandSlot = (
+	value: unknown,
+	slotId: RecordSlotId,
+): TextSlot<string> => {
+	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
 	if (!isTextSlot(value)) {
-		return { ...RECORD_SLOT_STYLE_DEFAULTS, text: "" };
+		return { ...styleDefaults, text: "" };
 	}
 	return {
-		...RECORD_SLOT_STYLE_DEFAULTS,
+		...styleDefaults,
 		...value,
 		text: isString(value.text) ? value.text : "",
 	};
@@ -29,50 +36,56 @@ const normalizeNameSlot = (value: unknown): TextSlot<string> => {
 
 /**
  * Forces a compartment slot's content to an array of rows, filling omitted
- * styling from the record defaults. The array is always fresh, so records
+ * styling from the slot's own defaults. The array is always fresh, so records
  * created from the same doc defaults never share one.
  */
-const normalizeListSlot = (value: unknown): TextSlot<string[]> => {
+const normalizeListSlot = (
+	value: unknown,
+	slotId: RecordSlotId,
+): TextSlot<string[]> => {
+	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
 	if (!isTextSlot(value)) {
-		return { ...RECORD_SLOT_STYLE_DEFAULTS, text: [] };
+		return { ...styleDefaults, text: [] };
 	}
 	const content = value.text;
 	return {
-		...RECORD_SLOT_STYLE_DEFAULTS,
+		...styleDefaults,
 		...value,
 		text: Array.isArray(content) ? content.filter(isString) : [],
 	};
 };
 
 /**
- * Forces the slots into the record's normal form: the title always present and
- * first, every written compartment typed and styled (omitted typography filled
- * from RECORD_SLOT_STYLE_DEFAULTS — without this, a parsed doc would render with
+ * Forces the slots into the record's normal form: the title always present, every
+ * written slot typed and styled (omitted typography filled from
+ * RECORD_SLOT_STYLE_DEFAULTS_BY_ID — without this, a parsed doc would render with
  * the shared center/middle/16 fallbacks the schema's documented defaults
- * contradict), and the compartments in RECORD_SLOT_IDS order.
+ * contradict), and the keys in RECORD_SLOT_IDS order.
  *
- * A compartment the doc left out stays out: the key set is what the drawing and
- * the region split read the box's compartments from. The generic doc → state
- * pass-through keeps whatever a document happened to write (including the wrong
- * order, which would move the Enter-editing default and stack the compartments
- * the wrong way round), so the invariant has to be established once, here.
+ * A slot the doc left out stays out: the key set is what the drawing and the
+ * region split read the box's compartments from. The generic doc → state
+ * pass-through keeps whatever order a document happened to write, so the order
+ * has to be established once, here.
+ *
+ * The key order is the order the compartments stack in, which is what makes Tab
+ * walk the slots down the box (TextSlots 参照). It costs the title the first key:
+ * on a stereotyped record `stereotype` holds it, so editing that designates no
+ * slot (Enter with nothing but the object selected) opens the stereotype band.
  */
 const normalizeRecordText = (text: unknown): RecordTextState => {
 	const slots = isObject(text) ? text : {};
-	const normalized: RecordTextState = {
-		[RECORD_NAME_SLOT_ID]: normalizeNameSlot(slots[RECORD_NAME_SLOT_ID]),
-	};
-	if (slots[RECORD_ATTRIBUTES_SLOT_ID] !== undefined) {
-		normalized[RECORD_ATTRIBUTES_SLOT_ID] = normalizeListSlot(
-			slots[RECORD_ATTRIBUTES_SLOT_ID],
-		);
+	const normalized: Partial<Record<RecordSlotId, TextSlot<string | string[]>>> =
+		{};
+	for (const slotId of RECORD_SLOT_IDS) {
+		const value = slots[slotId];
+		if (value === undefined && slotId !== RECORD_NAME_SLOT_ID) {
+			continue;
+		}
+		normalized[slotId] = isRecordListSlotId(slotId)
+			? normalizeListSlot(value, slotId)
+			: normalizeBandSlot(value, slotId);
 	}
-	if (slots[RECORD_OPERATIONS_SLOT_ID] !== undefined) {
-		normalized[RECORD_OPERATIONS_SLOT_ID] = normalizeListSlot(
-			slots[RECORD_OPERATIONS_SLOT_ID],
-		);
-	}
-	return normalized;
+	return normalized as RecordTextState;
 };
 
 const frameMapper = createFrameMapper<RecordDoc, RecordState>(RecordFeatures);

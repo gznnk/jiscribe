@@ -1,5 +1,4 @@
 import { test, expect } from "../../fixtures";
-import { selectors } from "../../support/selectors";
 
 /**
  * Text style settings on a Sticky.
@@ -32,7 +31,7 @@ test.describe("Sticky text style", () => {
 		await canvas.openObjectMenu("font-size");
 		await canvas.setNumberInput("fontSize", 36);
 		await canvas.setColor("font-color", "#0ea5e9");
-		await canvas.page.click(selectors.objectMenuSet("fontWeight", "bold"));
+		await canvas.setTextFormat("fontWeight", "bold");
 
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontSize)

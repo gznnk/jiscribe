@@ -170,6 +170,9 @@ type SvgTextStyle = {
 	fontSize: number;
 	fontFamily: string;
 	fontWeight: string;
+	fontStyle: string;
+	/** CSS text-decoration-line, already reduced to the line keywords ("none" when undecorated). */
+	textDecoration: string;
 	fill: string;
 	/** Line box height in user units. */
 	lineHeight: number;
@@ -193,6 +196,10 @@ const readSvgTextStyle = (
 		fontSize,
 		fontFamily: textStyle.fontFamily || "sans-serif",
 		fontWeight: textStyle.fontWeight || "normal",
+		fontStyle: textStyle.fontStyle || "normal",
+		// The `textDecoration` shorthand also computes style/color/thickness
+		// ("none solid rgb(0, 0, 0)"), which SVG's text-decoration cannot take.
+		textDecoration: textStyle.textDecorationLine || "none",
 		fill: textStyle.color || "#000000",
 		lineHeight: parsePxOr(textStyle.lineHeight, fontSize * 1.5),
 		anchor: toTextAnchor(textStyle.textAlign),
@@ -230,7 +237,10 @@ const createSvgText = (
 ): SVGTextElement => {
 	const innerWidth = Math.max(0, box.width - box.insetX * 2);
 
-	measureContext.font = `${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
+	// The CSS font shorthand fixes the order style → weight → size → family; a
+	// style after the weight makes the whole declaration invalid and the context
+	// keeps its previous font.
+	measureContext.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
 	const measure = (text: string): number =>
 		measureContext.measureText(text).width;
 
@@ -274,6 +284,8 @@ const createSvgText = (
 	textElement.setAttribute("font-family", style.fontFamily);
 	textElement.setAttribute("font-size", String(style.fontSize));
 	textElement.setAttribute("font-weight", style.fontWeight);
+	textElement.setAttribute("font-style", style.fontStyle);
+	textElement.setAttribute("text-decoration", style.textDecoration);
 	textElement.setAttribute("text-anchor", style.anchor);
 
 	lines.forEach((line, index) => {

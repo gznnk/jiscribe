@@ -153,6 +153,8 @@ function renderTextEditor(
 			fontSize={slot?.fontSize}
 			fontFamily={slot?.fontFamily}
 			fontWeight={slot?.fontWeight}
+			fontStyle={slot?.fontStyle}
+			textDecoration={slot?.textDecoration}
 			onChange={handlers.onChange}
 			onEscape={handlers.onEscape}
 		/>

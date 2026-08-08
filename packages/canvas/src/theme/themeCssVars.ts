@@ -35,6 +35,8 @@ export const THEME_TOKEN_CSS_VARS: Record<keyof CanvasThemeTokens, string> = {
 	scrollbarTrack: "--jiscribe-scrollbar-track",
 	scrollbarThumb: "--jiscribe-scrollbar-thumb",
 	scrollbarThumbHover: "--jiscribe-scrollbar-thumb-hover",
+	objectInk: "--jiscribe-object-ink",
+	objectSurface: "--jiscribe-object-surface",
 };
 
 /**

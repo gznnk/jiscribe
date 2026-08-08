@@ -66,10 +66,13 @@ the saved value does not become theme-dependent, it does not break portability. 
 The color that `"auto"` "should follow" is determined by the field's role. Resolution is **consolidated
 into a single function**, `resolveAutoColor(value, role)` (`presentations/objects/utils/resolveAutoColor.ts`).
 
-| Role             | Target fields          | Resolves to (theme token)                         |
-| ---------------- | ---------------------- | ------------------------------------------------- |
-| Foreground (ink) | `stroke` / `fontColor` | `theme.foreground` (`var(--jiscribe-foreground)`) |
-| Surface          | `fill`                 | `theme.surface` (`var(--jiscribe-surface)`)       |
+| Role    | Target fields          | Resolves to (theme token)                                |
+| ------- | ---------------------- | -------------------------------------------------------- |
+| Ink     | `stroke` / `fontColor` | `theme.objectInk` (`var(--jiscribe-object-ink)`)         |
+| Surface | `fill`                 | `theme.objectSurface` (`var(--jiscribe-object-surface)`) |
+
+These two are shape-only tokens, separate from the UI chrome's `foreground` / `surface`, so a host can
+set the shape ink (e.g. pure black on a light theme) without changing its menu text color.
 
 **Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because
 `var(--jiscribe-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,

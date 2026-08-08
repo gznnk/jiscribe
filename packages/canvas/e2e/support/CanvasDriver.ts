@@ -487,6 +487,16 @@ export class CanvasDriver {
 		await this.page.keyboard.type(text);
 	}
 
+	/**
+	 * Open the text editor and put `text` in place of what the slot already holds.
+	 * The editor opens with the caret at the end of the existing value, so
+	 * typeTextAt would append to a stencil that drops its shape in pre-filled.
+	 */
+	async replaceTextAt(point: { x: number; y: number }, text: string) {
+		await this.typeTextAt(point, "");
+		await this.textArea().fill(text);
+	}
+
 	/** Commit a text edit by clicking outside; Escape cancels, so it is not used here. */
 	async commitText() {
 		const screen = this.toScreen(EMPTY_SPOT);
@@ -666,6 +676,27 @@ export class CanvasDriver {
 	async setVerticalAlign(value: "top" | "middle" | "bottom") {
 		await this.openObjectMenu("alignment");
 		await this.page.click(selectors.objectMenuSet("verticalAlign", value));
+	}
+
+	/**
+	 * Toggle one text format (bold / italic / underline / strikethrough) of the selected shape.
+	 * The submenu stays open after a press, so it is only opened when its buttons are absent.
+	 *
+	 * @param property - Style property the button writes, as it appears in the `set:` data-part
+	 * @param value - Value the button writes; the buttons carry the value the *next* press lands
+	 *   on, so a toggle-off names the cleared value ("normal" / "none")
+	 */
+	async setTextFormat(
+		property: "fontWeight" | "fontStyle" | "textDecoration",
+		value: string,
+	) {
+		const italicButton = this.page.locator(
+			'[data-id="object-menu"][data-part^="set:fontStyle:"]',
+		);
+		if ((await italicButton.count()) === 0) {
+			await this.openObjectMenu("text-format");
+		}
+		await this.page.click(selectors.objectMenuSet(property, value));
 	}
 
 	/** Set the dash style of the selected line, connector or shape border. */
@@ -999,15 +1030,20 @@ export class CanvasDriver {
 	 * For rect and ellipse the shape element and the foreignObject are siblings within a
 	 * fragment, while a Sticky holds the foreignObject as a child of its `<g data-id>`. To cover
 	 * both, this looks among the data-id element's descendants first and falls back to its
-	 * following siblings. font-size / color / font-weight / text-align live on the text element
-	 * and vertical alignment (align-items) on the wrapper, so both are read.
+	 * following siblings. font-size / color / font-weight / font-style / text-decoration /
+	 * text-align live on the text element and vertical alignment (align-items) on the wrapper,
+	 * so both are read.
 	 *
-	 * @returns null when there is no text, or when editing has replaced the TextOverlay
+	 * @returns null when there is no text, or when editing has replaced the TextOverlay.
+	 *   `textDecoration` is the computed `text-decoration-line` ("none" / "underline" /
+	 *   "underline line-through"), not the shorthand, which also carries style and color
 	 */
 	async textStyleOf(id: string): Promise<{
 		fontSize: string;
 		color: string;
 		fontWeight: string;
+		fontStyle: string;
+		textDecoration: string;
 		textAlign: string;
 		verticalAlign: string;
 	} | null> {
@@ -1036,6 +1072,8 @@ export class CanvasDriver {
 				fontSize: textStyle.fontSize,
 				color: textStyle.color,
 				fontWeight: textStyle.fontWeight,
+				fontStyle: textStyle.fontStyle,
+				textDecoration: textStyle.textDecorationLine,
 				textAlign: textStyle.textAlign,
 				verticalAlign: getComputedStyle(wrapper).alignItems,
 			};

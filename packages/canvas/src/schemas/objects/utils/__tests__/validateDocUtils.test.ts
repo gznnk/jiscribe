@@ -397,6 +397,8 @@ describe("validateTextStyleFields", () => {
 			fontSize: 16,
 			fontFamily: "Noto Sans JP",
 			fontWeight: "normal",
+			fontStyle: "italic",
+			textDecoration: "underline line-through",
 		};
 		expect(validateTextStyleFields(o, "root")).toEqual([]);
 	});
@@ -466,6 +468,22 @@ describe("validateTextStyleFields", () => {
 			"root",
 		);
 		expect(errors[0].path).toBe("root.fontWeight");
+	});
+
+	it("errors when fontStyle contains a CSS breakout", () => {
+		const errors = validateTextStyleFields(
+			{ fontStyle: "italic } html {" },
+			"root",
+		);
+		expect(errors[0].path).toBe("root.fontStyle");
+	});
+
+	it("errors when textDecoration contains a CSS breakout", () => {
+		const errors = validateTextStyleFields(
+			{ textDecoration: "underline } html {" },
+			"root",
+		);
+		expect(errors[0].path).toBe("root.textDecoration");
 	});
 });
 

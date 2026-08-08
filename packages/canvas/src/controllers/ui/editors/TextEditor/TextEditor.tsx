@@ -9,6 +9,7 @@ import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
+import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
 
 type TextEditorProps = {
 	objectId: string;
@@ -36,6 +37,8 @@ type TextEditorProps = {
 	fontSize?: number;
 	fontFamily?: string;
 	fontWeight?: string;
+	fontStyle?: string;
+	textDecoration?: string;
 	onChange: (text: string) => void;
 	onEscape?: () => void;
 };
@@ -59,6 +62,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	fontSize = 16,
 	fontFamily,
 	fontWeight = "normal",
+	fontStyle = "normal",
+	textDecoration = "none",
 	onChange,
 	onEscape,
 }) => {
@@ -88,9 +93,16 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		if (!el) {
 			return;
 		}
-		el.style.height = "0px";
-		el.style.height = `${el.scrollHeight}px`;
-	}, [text, width, height, fontSize, resolvedFontFamily, fontWeight]);
+		fitTextAreaHeight(el, fontSize);
+	}, [
+		text,
+		width,
+		height,
+		fontSize,
+		resolvedFontFamily,
+		fontWeight,
+		fontStyle,
+	]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
@@ -153,6 +165,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 					fontSize,
 					fontFamily: resolvedFontFamily,
 					fontWeight,
+					fontStyle,
+					textDecoration,
 				}}
 				ref={textAreaRef}
 				onChange={handleChange}

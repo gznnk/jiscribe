@@ -44,7 +44,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	textEditSlotId,
 	isDrawMode = false,
 	visibleObjectIds,
-	showGrid = true,
+	showGrid = false,
 	gridSize = 25,
 	background,
 	surfaceColor,

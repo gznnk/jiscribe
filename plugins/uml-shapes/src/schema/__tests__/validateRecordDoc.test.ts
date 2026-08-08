@@ -97,8 +97,35 @@ describe("validateRecordDoc", () => {
 			{
 				path: "root[0].text.rows",
 				message:
-					'is not a slot of a record: use "name" / "attributes" / "operations"',
+					'is not a slot of a record: use "stereotype" / "name" / "attributes" / "operations"',
 			},
+		]);
+	});
+
+	it("accepts a stereotype above the title", () => {
+		expect(
+			validate({
+				...baseDoc,
+				text: {
+					stereotype: { text: "<<interface>>" },
+					name: { text: "Repository" },
+					operations: { text: ["save()"] },
+				},
+			}),
+		).toEqual([]);
+	});
+
+	it("rejects rows written into the stereotype, which is one line of text", () => {
+		expect(
+			validate({
+				...baseDoc,
+				text: {
+					stereotype: { text: ["<<interface>>"] },
+					name: { text: "Repository" },
+				},
+			}),
+		).toEqual([
+			{ path: "root[0].text.stereotype.text", message: "must be a string" },
 		]);
 	});
 

@@ -69,6 +69,8 @@ export type FrameTextOverlayProps = {
 	fontSize?: number;
 	fontFamily?: string;
 	fontWeight?: string;
+	fontStyle?: string;
+	textDecoration?: string;
 	/**
 	 * True while the in-place editor is open **on this slot**: draw nothing, or it
 	 * doubles up with the textarea. The shape's other slots stay drawn.
@@ -165,6 +167,8 @@ export const createFrameObject = <TState extends FrameRenderState>(
 				fontSize: slot.fontSize,
 				fontFamily: slot.fontFamily,
 				fontWeight: slot.fontWeight,
+				fontStyle: slot.fontStyle,
+				textDecoration: slot.textDecoration,
 				// Only the slot the editor is over must go blank; a caller that
 				// names no slot is editing the shape as a whole.
 				isEditing:

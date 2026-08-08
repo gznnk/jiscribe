@@ -6,8 +6,12 @@ import { AUTO_COLOR } from "../../../schemas/objects/utils/autoColor";
  *
  * Color fields follow different theme colors depending on their role:
  *
- * - `ink`     … stroke / fontColor. The "ink" that shows against the background = theme foreground.
- * - `surface` … fill. The "face" of a shape = the theme's panel surface.
+ * - `ink`     … stroke / fontColor. The "ink" that shows against the background = `theme.objectInk`.
+ * - `surface` … fill. The "face" of a shape = `theme.objectSurface`.
+ *
+ * Both are shape-only tokens, kept separate from the UI chrome tokens
+ * (`foreground` / `surface`) so a theme can set the shape ink independently of
+ * its menu text color.
  *
  * Single rule: **`"auto"` resolves to the role's theme token, and the result is applied
  * via CSS (style / emotion)**. The resolved value (`var(--jiscribe-*)`) is not resolved by
@@ -19,22 +23,22 @@ export type AutoColorRole = "ink" | "surface";
 
 /** The theme token that auto resolves to. */
 const ROLE_TOKEN: Record<AutoColorRole, string> = {
-	ink: theme.foreground,
-	surface: theme.surface,
+	ink: theme.objectInk,
+	surface: theme.objectSurface,
 };
 
 /** Per-role fallback when the value is unspecified (undefined). */
 const ROLE_FALLBACK: Record<AutoColorRole, string> = {
-	ink: theme.foreground,
+	ink: theme.objectInk,
 	surface: "transparent",
 };
 
 /**
  * Resolves a color value to a CSS value for rendering.
  *
- * - `"auto"` → the role's theme token (ink: foreground / surface: surface)
+ * - `"auto"` → the role's theme token (ink: objectInk / surface: objectSurface)
  * - concrete color → passed through as-is
- * - unspecified → `fallback`, or the role default if none (ink: foreground / surface: transparent)
+ * - unspecified → `fallback`, or the role default if none (ink: objectInk / surface: transparent)
  */
 export const resolveAutoColor = (
 	value: string | undefined,

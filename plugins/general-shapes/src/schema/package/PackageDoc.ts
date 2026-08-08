@@ -24,9 +24,10 @@ export const PackageFeatures = {
 /**
  * Where the isometric box's side edges start, as a fraction of the height from
  * the top (and, mirrored, from the bottom). Shared by the silhouette and the
- * outline.
+ * outline. Together with a width of `height * √3/2` it makes the hexagon
+ * regular, which is the isometric projection of a cube.
  */
-export const PACKAGE_SHOULDER_RATIO = 0.26;
+export const PACKAGE_SHOULDER_RATIO = 0.25;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const PackageDocBrand: unique symbol;
@@ -40,7 +41,7 @@ export const PACKAGE_DOC_DEFAULTS: Omit<PackageDoc, "id"> = {
 	type: "package",
 	x: 0,
 	y: 0,
-	width: 110,
+	width: 95,
 	height: 110,
 	fill: "transparent",
 	stroke: AUTO_COLOR,

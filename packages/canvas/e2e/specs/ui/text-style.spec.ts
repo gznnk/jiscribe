@@ -79,17 +79,71 @@ test.describe("text styling through the ObjectMenu", () => {
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		// Bold is a standalone toggle button (applied immediately, no dropdown).
-		await canvas.page.click(selectors.objectMenuSet("fontWeight", "bold"));
+		await canvas.setTextFormat("fontWeight", "bold");
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("700");
 
-		// On a second press the button's data-id flips to the normal side, which clears it.
-		await canvas.page.click(selectors.objectMenuSet("fontWeight", "normal"));
+		// On a second press the button's data-part flips to the normal side, which clears it.
+		await canvas.setTextFormat("fontWeight", "normal");
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("400");
+	});
+
+	test("sets font-style to italic with the Italic toggle and back to normal on a second press", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.setTextFormat("fontStyle", "italic");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
+			.toBe("italic");
+
+		await canvas.setTextFormat("fontStyle", "normal");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
+			.toBe("normal");
+	});
+
+	test("sets text-decoration to underline with the Underline toggle and back to none on a second press", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.setTextFormat("textDecoration", "underline");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
+
+		await canvas.setTextFormat("textDecoration", "none");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("none");
+	});
+
+	test("keeps the underline while the strikethrough is toggled on and off", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		await canvas.setTextFormat("textDecoration", "underline");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
+
+		// With the underline on, the strikethrough button writes both lines at once.
+		await canvas.setTextFormat("textDecoration", "underline line-through");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline line-through");
+
+		// Turning the strikethrough back off leaves the underline standing.
+		await canvas.setTextFormat("textDecoration", "underline");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textDecoration)
+			.toBe("underline");
 	});
 
 	test("follows text-align when the horizontal alignment is set to right", async ({

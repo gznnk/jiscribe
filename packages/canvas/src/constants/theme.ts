@@ -18,10 +18,10 @@ import { darkCanvasTheme } from "../theme/themePresets";
  * onto the neutral tokens by passing `var(--vscode-...)` strings as token
  * values.
  *
- * Note: this only covers the colors of the UI chrome (menus, toolbars,
- * selection frames, etc.). The colors of the shapes themselves
- * (fill/stroke/fontColor) are data saved in the document and are not the
- * subject of theme tokens.
+ * Note: this mostly covers the colors of the UI chrome (menus, toolbars,
+ * selection frames, etc.). Concrete shape colors (fill/stroke/fontColor) are
+ * data saved in the document, but the theme-following value `"auto"` resolves
+ * to the shape-only `objectInk` / `objectSurface` tokens.
  */
 export const theme = Object.fromEntries(
 	(Object.keys(THEME_TOKEN_CSS_VARS) as (keyof CanvasThemeTokens)[]).map(

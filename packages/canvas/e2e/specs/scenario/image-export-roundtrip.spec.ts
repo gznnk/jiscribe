@@ -230,16 +230,18 @@ test("emits every slot of a record (multi-slot) shape as <text> in the SVG expor
 }) => {
 	await canvas.drawShapeFromFlyout(
 		"uml",
-		"entity",
+		"object",
 		{ x: 300, y: 200 },
 		{ x: 520, y: 280 },
 	);
 	await canvas.deselect();
 
-	// The title band (within the top 28px) is the name slot; below it is the attributes slot.
-	await canvas.typeTextAt({ x: 410, y: 212 }, "Users");
+	// The title band (within the top 28px) is the name slot; below it is the
+	// attributes slot. The stencil drops the box in with sample text, so both are
+	// filled in place of it rather than typed into.
+	await canvas.replaceTextAt({ x: 410, y: 212 }, "Users");
 	await canvas.commitText();
-	await canvas.typeTextAt({ x: 410, y: 255 }, "id: string\nname: string");
+	await canvas.replaceTextAt({ x: 410, y: 255 }, "id: string\nname: string");
 	await canvas.commitText();
 	await canvas.deselect();
 
