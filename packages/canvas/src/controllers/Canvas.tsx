@@ -37,6 +37,8 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
+import type { CanvasSelectionHandle } from "./hooks/useSelectionHandle";
+import { useSelectionHandle } from "./hooks/useSelectionHandle";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
@@ -66,14 +68,14 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
+import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { Camera } from "../states/canvas/Viewport";
 import type { ObjectMenuPropertyUpdater } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { Camera } from "../states/canvas/Viewport";
 
 type CanvasProps = {
 	// ── Model & persistence (the core contract) ──
@@ -243,11 +245,11 @@ type CanvasProps = {
 	// ── Imperative handle ──
 	/**
 	 * Receives the imperative Canvas handle ({@link CanvasHandle}), grouping every
-	 * imperative API by subsystem: `ref.current.viewport.setViewport(camera)` to
-	 * move pan/zoom (fit-to-content, jump-to-node, a scripted intro), and
-	 * `ref.current.export.toSvgString()` / `toPngBlob()` to get the exported image
-	 * programmatically. Imperative by design so the view cannot feed back into a
-	 * render loop the way a controlled value prop would.
+	 * imperative API by subsystem: `ref.current.viewport` to move pan/zoom
+	 * (fit-to-content, jump-to-node, a scripted intro), `ref.current.selection` to
+	 * select objects programmatically, and `ref.current.export.toSvgString()` /
+	 * `toPngBlob()` to get the exported image. Imperative by design so the view
+	 * cannot feed back into a render loop the way a controlled value prop would.
 	 */
 	ref?: React.Ref<CanvasHandle>;
 };
@@ -260,6 +262,8 @@ type CanvasProps = {
 export type CanvasHandle = {
 	/** Pan/zoom control (see {@link CanvasViewportHandle}). */
 	viewport: CanvasViewportHandle;
+	/** Selection control (see {@link CanvasSelectionHandle}). */
+	selection: CanvasSelectionHandle;
 	/** Image export (see {@link CanvasExportHandle}). */
 	export: CanvasExportHandle;
 };
@@ -349,9 +353,11 @@ const CanvasComponent = ({
 		onSelectionChange,
 	);
 
-	// The canvas stays authoritative for the live camera: the host reads it out and pushes
-	// changes back imperatively, with no controlled prop that could fight a gesture.
-	const viewportHandle = useViewportHandle(dispatch);
+	// The canvas stays authoritative for the live camera and selection: the host reads them
+	// out and pushes changes back imperatively, with no controlled prop that could fight a
+	// gesture.
+	const viewportHandle = useViewportHandle(dispatch, state, registries);
+	const selectionHandle = useSelectionHandle(dispatch, state);
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
@@ -453,8 +459,12 @@ const CanvasComponent = ({
 
 	useImperativeHandle(
 		ref,
-		() => ({ viewport: viewportHandle, export: exportHandle }),
-		[viewportHandle, exportHandle],
+		() => ({
+			viewport: viewportHandle,
+			selection: selectionHandle,
+			export: exportHandle,
+		}),
+		[viewportHandle, selectionHandle, exportHandle],
 	);
 
 	// The camera the scene is drawn with. It is the committed one moved onto the

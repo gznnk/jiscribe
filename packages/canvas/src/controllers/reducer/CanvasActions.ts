@@ -41,6 +41,16 @@ export type SetViewportAction = {
 };
 
 /**
+ * Set selection action - replaces the selection with the given ids (an empty
+ * list clears it). Dispatched by the imperative `ref.current.selection.select`
+ * (useSelectionHandle) so a host can select programmatically.
+ */
+export type SetSelectionAction = {
+	type: "SET_SELECTION";
+	ids: readonly string[];
+};
+
+/**
  * Command action - handles keyboard shortcuts and context menu commands
  */
 export type CommandAction = {
@@ -115,6 +125,7 @@ export type CanvasAction =
 	| ContainerResizeAction
 	| SyncExternalAction
 	| SetViewportAction
+	| SetSelectionAction
 	| CommandAction
 	| UpdateTextEditAction
 	| EndTextEditAction

@@ -1,7 +1,4 @@
-import { isGroupState } from "../../../states/objects/primitives/group/GroupState";
-import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
-import { calcObjectBoundingBox } from "../../utils/calcObjectBoundingBox";
-import { calcViewportForBounds } from "../../utils/calcViewportForBounds";
+import { calcSelectionFitViewport } from "../../utils/calcSelectionFitViewport";
 import type { ExecutableCommand } from "../CommandTypes";
 
 const PADDING_PX = 48;
@@ -19,70 +16,22 @@ export const ZoomToSelectionCommand: ExecutableCommand = {
 	canExecute: (state) => state.selectedIds.length > 0,
 
 	execute: (state, registries) => {
-		const { viewport } = state;
-
-		const targetIds = buildSelectedIdsWithDescendants(
+		const fitted = calcSelectionFitViewport(
 			state.selectedIds,
 			state.objects,
-		);
-
-		let minX = Infinity,
-			maxX = -Infinity,
-			minY = Infinity,
-			maxY = -Infinity;
-		let hasValidObject = false;
-
-		for (const id of targetIds) {
-			const obj = state.objects[id];
-			// Skip groups: targetIds already contains their descendants,
-			// so recursing into them would only duplicate work.
-			if (!obj || isGroupState(obj)) {
-				continue;
-			}
-
-			const bbox = calcObjectBoundingBox(
-				obj,
-				state.objects,
-				registries.objectVisualBounds,
-			);
-			if (!bbox) {
-				continue;
-			}
-
-			minX = Math.min(minX, bbox.left);
-			maxX = Math.max(maxX, bbox.right);
-			minY = Math.min(minY, bbox.top);
-			maxY = Math.max(maxY, bbox.bottom);
-			hasValidObject = true;
-		}
-
-		if (!hasValidObject) {
-			return state;
-		}
-
-		// For degenerate targets with no extent to fit (both axes size 0, e.g. a
-		// single-point Poly or a degenerate Frame), calcViewportForBounds returns
-		// null; keep the current viewport (consistent with the "no target" no-op guard).
-		const fitted = calcViewportForBounds(
-			{ left: minX, top: minY, right: maxX, bottom: maxY },
 			{
-				width: viewport.width,
-				height: viewport.height,
+				width: state.viewport.width,
+				height: state.viewport.height,
 				padding: PADDING_PX,
 			},
+			registries.objectVisualBounds,
 		);
+		// For degenerate targets with no extent to fit (both axes size 0, e.g. a
+		// single-point Poly or a degenerate Frame), keep the current viewport
+		// (consistent with the "no targets" no-op guard).
 		if (!fitted) {
 			return state;
 		}
-
-		return {
-			...state,
-			viewport: {
-				...viewport,
-				zoom: fitted.zoom,
-				minX: fitted.minX,
-				minY: fitted.minY,
-			},
-		};
+		return { ...state, viewport: fitted };
 	},
 };

@@ -17,8 +17,8 @@ type FitOptions = {
 /**
  * Pure function that computes a Viewport fitting the given content bounds.
  *
- * Shared by `calcFitViewport` (ZoomToFit / CanvasThumbnail) and
- * `ZoomToSelectionCommand` so the fit behavior does not drift.
+ * Shared by `calcFitViewport` (whole content) and `calcSelectionFitViewport`
+ * (selection) so the fit behavior does not drift.
  *
  * Treats width and height as separate zoom candidates and derives the fit
  * ratio from only the valid axes (size > 0), so horizontal/vertical lines
