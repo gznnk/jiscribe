@@ -5,7 +5,7 @@ import { createTestState } from "./support/createTestState";
 import { runCommands } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 
@@ -75,7 +75,12 @@ describe("canvasReducer (integration)", () => {
 		it("END_TEXT_EDIT records when the text changes on commit", () => {
 			const state = createTestState(twoRectsDoc, {
 				selectedIds: ["rect-1"],
-				textEditState: { objectId: "rect-1", text: "hello" },
+				textEditState: {
+					kind: "shape",
+					objectId: "rect-1",
+					slotId: "body",
+					text: "hello",
+				},
 			});
 			const after = canvasReducer(state, {
 				type: "END_TEXT_EDIT",
@@ -88,7 +93,12 @@ describe("canvasReducer (integration)", () => {
 		it("cancelling END_TEXT_EDIT does not record and only clears textEditState", () => {
 			const state = createTestState(twoRectsDoc, {
 				selectedIds: ["rect-1"],
-				textEditState: { objectId: "rect-1", text: "hello" },
+				textEditState: {
+					kind: "shape",
+					objectId: "rect-1",
+					slotId: "body",
+					text: "hello",
+				},
 			});
 			const after = canvasReducer(state, {
 				type: "END_TEXT_EDIT",
@@ -101,7 +111,12 @@ describe("canvasReducer (integration)", () => {
 		it("END_TEXT_EDIT does not record on commit if the text has not changed", () => {
 			let state = createTestState(twoRectsDoc, {
 				selectedIds: ["rect-1"],
-				textEditState: { objectId: "rect-1", text: "hello" },
+				textEditState: {
+					kind: "shape",
+					objectId: "rect-1",
+					slotId: "body",
+					text: "hello",
+				},
 			});
 			// First time: the text changes, so it is recorded
 			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
@@ -110,7 +125,12 @@ describe("canvasReducer (integration)", () => {
 			// Commit again with the same text → no diff, so commitVersion does not increase and nothing is recorded
 			state = {
 				...state,
-				textEditState: { objectId: "rect-1", text: "hello" },
+				textEditState: {
+					kind: "shape",
+					objectId: "rect-1",
+					slotId: "body",
+					text: "hello",
+				},
 			};
 			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
 			expect(state.history.past).toHaveLength(1);
@@ -136,6 +156,58 @@ describe("canvasReducer (integration)", () => {
 				commit: true,
 			});
 			expect(state.history.past).toHaveLength(1);
+		});
+	});
+
+	// The coalesce window is 1000ms of wall-clock time, so back-to-back dispatches
+	// in a test naturally fall inside it.
+	describe("MENU_PROPERTY_UPDATE history coalescing", () => {
+		const commitStrokeWidth = (
+			state: CanvasControllerState,
+			value: string,
+			coalesceHistory: boolean,
+		): CanvasControllerState =>
+			canvasReducer(state, {
+				type: "MENU_PROPERTY_UPDATE",
+				property: "strokeWidth",
+				value,
+				commit: true,
+				coalesceHistory,
+			});
+
+		it("merges consecutive coalescing commits into a single entry", () => {
+			let state = createState();
+			state = commitStrokeWidth(state, "4", true);
+			expect(state.history.past).toHaveLength(1);
+
+			state = commitStrokeWidth(state, "5", true);
+			state = commitStrokeWidth(state, "6", true);
+			expect(state.history.past).toHaveLength(1);
+		});
+
+		it("records one entry per commit without coalesceHistory", () => {
+			let state = createState();
+			state = commitStrokeWidth(state, "4", false);
+			state = commitStrokeWidth(state, "5", false);
+			state = commitStrokeWidth(state, "6", false);
+			expect(state.history.past).toHaveLength(3);
+		});
+
+		it("does not merge across a changed selection", () => {
+			let state = createState();
+			state = commitStrokeWidth(state, "4", true);
+			expect(state.history.past).toHaveLength(1);
+
+			state = { ...state, selectedIds: ["rect-2"] };
+			state = commitStrokeWidth(state, "5", true);
+			expect(state.history.past).toHaveLength(2);
+		});
+
+		it("does not merge a coalescing commit into a preceding non-coalescing one", () => {
+			let state = createState();
+			state = commitStrokeWidth(state, "4", false);
+			state = commitStrokeWidth(state, "5", true);
+			expect(state.history.past).toHaveLength(2);
 		});
 	});
 });

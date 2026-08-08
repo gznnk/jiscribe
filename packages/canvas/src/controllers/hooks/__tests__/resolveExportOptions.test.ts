@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { EXPORT_FIT_PADDING, resolveExportOptions } from "../useCanvasExport";
 
 /**
@@ -52,9 +52,14 @@ describe("resolveExportOptions", () => {
 
 	it("derives the viewBox from content bounds + the given margin", () => {
 		const state = createStateWithRect();
-		const options = resolveExportOptions(state, registries.objectMapper, {
-			margin: 5,
-		});
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries.objectVisualBounds,
+			{
+				margin: 5,
+			},
+		);
 		expect(options.viewBox).toEqual({ x: -5, y: -5, width: 20, height: 20 });
 	});
 
@@ -77,10 +82,15 @@ describe("resolveExportOptions", () => {
 			objects: { "poly-1": horizontalPolyline },
 			rootIds: ["poly-1"],
 		} as unknown as Parameters<typeof resolveExportOptions>[0];
-		const options = resolveExportOptions(state, registries.objectMapper, {
-			margin: 0,
-			includeSource: false,
-		});
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries.objectVisualBounds,
+			{
+				margin: 0,
+				includeSource: false,
+			},
+		);
 		expect(options.viewBox).toEqual({
 			x: 0,
 			y: 99.5, // content (y=100) sits at the center of the height-1 band
@@ -97,17 +107,27 @@ describe("resolveExportOptions", () => {
 
 	it("omits the source when includeSource is false", () => {
 		const state = createStateWithRect();
-		const options = resolveExportOptions(state, registries.objectMapper, {
-			includeSource: false,
-		});
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries.objectVisualBounds,
+			{
+				includeSource: false,
+			},
+		);
 		expect(options.source).toBeUndefined();
 	});
 
 	it('maps transparentBackground to "transparent", default to undefined (live theme background)', () => {
 		expect(
-			resolveExportOptions(emptyState, registries.objectMapper, {
-				transparentBackground: true,
-			}).background,
+			resolveExportOptions(
+				emptyState,
+				registries.objectMapper,
+				registries.objectVisualBounds,
+				{
+					transparentBackground: true,
+				},
+			).background,
 		).toBe("transparent");
 		expect(
 			resolveExportOptions(emptyState, registries.objectMapper).background,

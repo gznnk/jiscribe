@@ -71,7 +71,7 @@ execute: (state: CanvasState) => CanvasState; // 副作用なし
 >
 > **境界の所在**: 検証の境界は parser（`parseCanvasText`）に一元化し、`Canvas` は
 > 再検証しない。`Canvas` へ渡す `CanvasDoc` を `parseCanvasText` に通すのは **host の責務**
-> であり（→ `Canvas.tsx` の `canvasDoc` prop コメント）、`SYNC_EXTERNAL` / `canvasToState`
+> であり（→ `Canvas.tsx` の `doc` prop コメント）、`SYNC_EXTERNAL` / `canvasToState`
 > の入口で再検証しないのは重複検証を避けるための**意図的な設計判断**。`Canvas` は検証済み
 > doc を渡す契約に依存するため、host 側で `parseCanvasText` を必ず通すこと。
 >

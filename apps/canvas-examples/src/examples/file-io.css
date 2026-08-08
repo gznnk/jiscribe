@@ -1,0 +1,29 @@
+.file-toolbar-buttons {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+}
+
+.file-toolbar-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	background: transparent;
+	color: currentColor;
+	cursor: pointer;
+	transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.file-toolbar-button:hover {
+	background-color: rgba(128, 128, 128, 0.2);
+}
+
+.file-toolbar-button:active {
+	background-color: rgba(128, 128, 128, 0.3);
+}

@@ -4,10 +4,10 @@ import { useConstant } from "./useConstant";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
-import { createNonceDeliveryGuard } from "../utils/createNonceDeliveryGuard";
-import { createSaveRequestScheduler } from "../utils/createSaveRequestScheduler";
-import type { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
+import { createNonceDeliveryGuard } from "./support/createNonceDeliveryGuard";
+import { createSaveRequestScheduler } from "./support/createSaveRequestScheduler";
+import type { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";
 
 /**
  * Custom hook that notifies the parent component when a save is required
@@ -23,13 +23,16 @@ import type { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTra
  * @param onCommit - Callback invoked on save, receiving the CanvasDoc and saveNonce
  * @param selfSaveNonceTracker - Shared tracker; each delivered nonce is registered
  *   so useSyncExternalDoc can recognize its fold-back as a self-save
+ * @param registries - Passed in explicitly (not read via context) because Canvas
+ *   is the provider of the registries context and so cannot consume it via a hook
  */
 export const useNotifySaveRequest = (
 	state: CanvasControllerState,
 	onCommit: ((doc: CanvasDoc, saveNonce: string) => void) | undefined,
 	selfSaveNonceTracker: ReturnType<typeof createSelfSaveNonceTracker>,
+	registries: CanvasRegistries,
 ): void => {
-	const { objectMapper } = useCanvasRegistries();
+	const { objectMapper } = registries;
 
 	// onCommit goes through a ref so a parent passing a new function on every
 	// render cannot re-fire the effect below and resend the same saveNonce.

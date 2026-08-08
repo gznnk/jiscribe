@@ -1,15 +1,14 @@
 import type { AnchorSpec } from "./EndpointRef";
 
 /**
- * Available connector routing modes.
+ * How a connector's segments are drawn. This is the **shape** of the line and nothing else — who
+ * decides the path is answered by `points` (empty = the engine routes it, non-empty = the author's
+ * own vertices, see ConnectorDoc), so the two are independent.
  *
- * - `orthogonal`: Automatically generates a horizontal/vertical route at render
- *   time from the endpoints and the shapes of the connected objects. `points` is
- *   unused and always empty (the route is a derived value and is not persisted).
+ * - `orthogonal`: every segment is axis-aligned, so the line only ever bends at right angles.
  *   **Default** (used when `routing` is omitted).
- * - `straight`: Connects the endpoints with a straight line, or a polyline
- *   passing through `points` (manual waypoints) if present. Specify explicitly
- *   only when a straight line is desired.
+ * - `straight`: segments run at any angle, from a single direct line to a polyline through the
+ *   points. Specify explicitly only when right angles are not wanted.
  */
 export const ConnectorRoutings = ["straight", "orthogonal"] as const;
 
@@ -27,11 +26,15 @@ export const isOrthogonalRouting = (
 ): boolean => routing !== "straight";
 
 /**
- * routing の既定をアンカー種から導く（作成時と、明示 routing の無いコネクターの再アンカー時に
- * 使う）。connectPoint は辺の法線という出口方向を持つので orthogonal 経路が意図通りに見えるが、
- * center は出口方向を持たず orthogonal が恣意的な向きに倒れる。そのためどちらかの端点が center の
- * ときは straight を、両端が connectPoint（向きを持つ）のときは undefined（= 省略時の orthogonal
- * 既定）を返す。あくまで既定の導出で、ユーザーが明示指定した routing を縛る恒久制約ではない。
+ * Derive the default line shape from the anchor kinds, at creation and when re-anchoring a
+ * connector that has no explicit routing.
+ *
+ * A connectPoint carries an exit direction (its edge normal), so a right-angled path reads as
+ * intended; a center has none, and a right-angled path from it falls into an arbitrary
+ * orientation. This only derives a default and never constrains a routing the user set.
+ *
+ * @returns "straight" when either endpoint is a center, undefined when both are connectPoints
+ *   so the omitted-value default of orthogonal applies
  */
 export const defaultRoutingForAnchors = (
 	a: AnchorSpec,

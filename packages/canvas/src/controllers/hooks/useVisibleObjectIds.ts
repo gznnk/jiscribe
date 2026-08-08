@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 
+import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../states/canvas/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { calcVisibleObjectIds } from "../utils/calcVisibleObjectIds";
@@ -19,6 +20,7 @@ export const useVisibleObjectIds = (
 	rootIds: string[],
 	viewport: Viewport,
 	textEditObjectId: string | null,
+	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
 ): ReadonlySet<string> => {
 	const bboxCacheRef = useRef<VisibilityBBoxCache>(new Map());
 	const prevVisibleIdsRef = useRef<ReadonlySet<string> | null>(null);
@@ -30,6 +32,7 @@ export const useVisibleObjectIds = (
 			viewport,
 			textEditObjectId,
 			prevCache: bboxCacheRef.current,
+			visualBounds,
 		});
 		bboxCacheRef.current = bboxCache;
 
@@ -48,5 +51,5 @@ export const useVisibleObjectIds = (
 		}
 		prevVisibleIdsRef.current = visibleIds;
 		return visibleIds;
-	}, [objects, rootIds, viewport, textEditObjectId]);
+	}, [objects, rootIds, viewport, textEditObjectId, visualBounds]);
 };

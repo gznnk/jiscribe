@@ -1,12 +1,12 @@
 import { CopyCommand } from "./CopyCommand";
 import { DeleteCommand } from "./DeleteCommand";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Cut command: copies the current selection to the clipboard and then deletes it.
  * Composes CopyCommand and DeleteCommand.
  */
-export const CutCommand: Command = {
+export const CutCommand: ExecutableCommand = {
 	id: "cut",
 	label: "Cut",
 	category: "edit",

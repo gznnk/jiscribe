@@ -1,33 +1,30 @@
 import type { Point } from "../types/Point";
 
 /**
- * Applies an affine transformation to a point using pre-computed cos/sin.
+ * Applies an affine transform (scale, then rotate, then translate) to a point
+ * using pre-computed cos/sin. Trig-free core of
+ * {@link calcAffineTransformedPoint}: pass one cos/sin pair when transforming
+ * many points with the same rotation.
  *
- * This is the trig-free core shared by {@link calcAffineTransformedPoint} and by
- * callers that transform multiple points with the same rotation. Computing
- * `Math.cos`/`Math.sin` once and passing them here avoids recomputing the
- * trigonometric values for every point.
- *
- * @param px - X-coordinate of the point to transform
- * @param py - Y-coordinate of the point to transform
- * @param sx - Scale factor in x-direction
- * @param sy - Scale factor in y-direction
- * @param cosTheta - Pre-computed cosine of the rotation angle
- * @param sinTheta - Pre-computed sine of the rotation angle
- * @param tx - Translation distance in x-direction
- * @param ty - Translation distance in y-direction
- * @returns The transformed point
+ * @param px - Point x in local space (origin at the shape center)
+ * @param py - Point y in local space
+ * @param sx - Horizontal scale; callers pass a `FlipScale` (1 or -1)
+ * @param sy - Vertical scale; callers pass a `FlipScale` (1 or -1)
+ * @param cosAngle - `Math.cos` of the rotation angle in radians
+ * @param sinAngle - `Math.sin` of the same angle
+ * @param tx - Translation x, usually the shape center in world space
+ * @param ty - Translation y, usually the shape center in world space
  */
 export const applyAffineWithTrig = (
 	px: number,
 	py: number,
 	sx: number,
 	sy: number,
-	cosTheta: number,
-	sinTheta: number,
+	cosAngle: number,
+	sinAngle: number,
 	tx: number,
 	ty: number,
 ): Point => ({
-	x: sx * cosTheta * px - sy * sinTheta * py + tx,
-	y: sx * sinTheta * px + sy * cosTheta * py + ty,
+	x: sx * cosAngle * px - sy * sinAngle * py + tx,
+	y: sx * sinAngle * px + sy * cosAngle * py + ty,
 });

@@ -1,6 +1,6 @@
-import type { CanvasMessages } from "./CanvasMessages";
+import type { CanvasMessages } from "./CanvasMessagesTypes";
 
-/** Japanese dictionary. Hosts pass this to the `messages` prop of Canvas. */
+/** Japanese dictionary. Built-in; resolved via the `locale` prop of Canvas. */
 export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomOut: "ズームアウト",
 	toolbarResetZoom: "ズームを100%に戻す",
@@ -26,9 +26,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	shortcutHelpCategoryArrange: "配置",
 	shortcutHelpCategoryView: "表示",
 
-	contextMenuPaste: "貼り付け",
-	contextMenuExport: "エクスポート…",
-
 	clipboardWriteError:
 		"クリップボードへの書き込みに失敗しました。アプリ内での貼り付けは引き続き利用できます。",
 	exportImageError: "画像のエクスポートに失敗しました。",
@@ -44,11 +41,14 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuAlignTop: "上揃え",
 	menuAlignMiddle: "上下中央揃え",
 	menuAlignBottom: "下揃え",
+	menuTextFormat: "テキスト書式",
 	menuBold: "太字",
+	menuItalic: "イタリック",
+	menuUnderline: "下線",
+	menuStrikethrough: "取り消し線",
 	menuFontSize: "フォントサイズ",
 	menuFontColor: "文字色",
 	menuBackgroundColor: "背景色",
-	menuHeaderColor: "ヘッダ色",
 	menuStrokeColor: "枠線の色",
 	menuLineColor: "線の色",
 	menuLineStyle: "線のスタイル",
@@ -79,10 +79,15 @@ export const jaCanvasMessages: CanvasMessages = {
 		redo: "やり直し",
 		copy: "コピー",
 		cut: "切り取り",
+		paste: "貼り付け",
+		export: "エクスポート…",
 		delete: "削除",
 		duplicate: "複製",
 		selectAll: "すべて選択",
 		deselectAll: "選択を解除",
+		escapeSelection: "選択を1段戻す",
+		selectNextTextSlot: "次のテキストスロットを選択",
+		selectPreviousTextSlot: "前のテキストスロットを選択",
 		group: "グループ化",
 		ungroup: "グループ解除",
 		bringToFront: "最前面へ移動",
@@ -97,6 +102,7 @@ export const jaCanvasMessages: CanvasMessages = {
 		swapArrows: "矢印を入れ替え",
 		setRoutingStraight: "直線経路",
 		setRoutingOrthogonal: "直角経路",
+		resetConnectorRoute: "経路を自動に戻す",
 		"start-text-edit": "テキスト編集を開始",
 		"move-up": "上へ移動",
 		"move-up-large": "上へ移動 (10px)",
@@ -108,47 +114,15 @@ export const jaCanvasMessages: CanvasMessages = {
 		"move-right-large": "右へ移動 (10px)",
 	},
 
-	shapePresetLabels: {
-		rect: "長方形",
-		"rect-markdown": "Markdown",
-		ellipse: "楕円",
-		diamond: "判断",
-		polygon: "多角形",
-		polyline: "折れ線",
-		db: "データベース",
-		sticky: "付箋",
-		frame: "枠",
-		boundary: "境界",
-		zone: "ゾーン",
-		process: "処理",
-		stadium: "端子",
-		document: "書類",
-		manualInput: "手動入力",
-		delay: "遅延",
-		hexagon: "準備",
-		parallelogram: "データ",
-		trapezoid: "手操作",
-		card: "カード",
-		subroutine: "サブルーチン",
-		onPageConnector: "結合子",
-		offPageConnector: "他ページ結合子",
-		cross: "接合点",
-		extract: "抽出",
-		display: "表示",
-		cloud: "雲",
-		actor: "アクター",
-		callout: "吹き出し",
-	},
+	// プリセットの ja ラベルは各プリセット定義側にある。record はホスト上書き用に残す
+	stencilLabels: {},
 
-	shapeCategoryLabels: {
-		basic: "基本",
-		flowchart: "フローチャート",
-		container: "コンテナ",
-		general: "一般",
-		annotation: "注釈",
-	},
+	// カテゴリの ja ラベルは toolbar.layout のカテゴリエントリ側にある。record はホスト上書き用に残す
+	stencilCategoryLabels: {},
 
-	// PRESET_COLORS と STICKY_PRESET_COLORS の英語名を網羅する
+	// PRESET_COLORS の英語名を網羅する。プラグインが独自パレットを持つ場合も
+	// （@workspace/plugin-sticky-shape の付箋色など）名前をここのキーに合わせれば
+	// 辞書を自前で持たずに済む
 	colorNames: {
 		Red: "赤",
 		"Light Red": "薄い赤",
@@ -188,6 +162,13 @@ export const jaCanvasMessages: CanvasMessages = {
 		FilledDiamond: "塗りつぶしひし形",
 		HollowDiamond: "白抜きひし形",
 		Circle: "丸",
+		HollowCircle: "白抜き丸",
+		Cross: "バツ印",
+		CrowFootMany: "鳥足（多）",
+		CrowFootOneMany: "鳥足（1 以上）",
+		CrowFootZeroMany: "鳥足（0 以上）",
+		CrowFootOne: "鳥足（1 のみ）",
+		CrowFootZeroOne: "鳥足（0 または 1）",
 		None: "なし",
 	},
 };

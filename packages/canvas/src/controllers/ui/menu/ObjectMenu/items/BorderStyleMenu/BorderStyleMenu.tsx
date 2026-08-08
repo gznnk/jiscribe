@@ -13,10 +13,14 @@ import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
-import { MenuSlider } from "../../common/MenuSlider";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
+import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "border-style";
 
@@ -35,7 +39,7 @@ type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 /**
@@ -59,7 +63,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	);
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -70,7 +74,11 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 				<DashedCircleIcon title={messages.menuBorderStyle} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<BorderStyleMenuWrapper>
 						{/* Stroke Dash Type */}
 						<BorderStyleSection>
@@ -103,7 +111,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							</ObjectMenuButton>
 						</BorderStyleSection>
 
-						<MenuSlider
+						<ObjectMenuSlider
 							label={messages.menuBorderWidth}
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
@@ -114,7 +122,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 						/>
 
 						{showRadius && (
-							<MenuSlider
+							<ObjectMenuSlider
 								label={messages.menuCornerRadius}
 								value={cornerRadius}
 								min={MIN_CORNER_RADIUS}
@@ -125,9 +133,9 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							/>
 						)}
 					</BorderStyleMenuWrapper>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

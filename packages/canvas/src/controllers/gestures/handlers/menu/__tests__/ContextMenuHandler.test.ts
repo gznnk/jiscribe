@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ContextMenuHandler } from "../ContextMenuHandler";
 

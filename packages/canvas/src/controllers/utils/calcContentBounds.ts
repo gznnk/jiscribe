@@ -1,6 +1,7 @@
 import type { BoundingBox } from "@workspace/geometry";
 
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
+import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
@@ -11,9 +12,16 @@ import { isGroupState } from "../../states/objects/primitives/group/GroupState";
  * The single source of the "whole content extent": shared by
  * `calcFitViewport` (zoom-to-fit / thumbnail) and the image-export viewBox.
  * Returns `null` when there is no extent (no objects / all degenerate).
+ *
+ * @param objects - The object map; groups are skipped because the loop already
+ *   visits their children directly
+ * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry. Both consumers of
+ *   this extent frame the drawing, so they pass it; omitting it crops whatever a
+ *   shape draws outside its geometry box
  */
 export const calcContentBounds = (
 	objects: Record<string, ObjectState>,
+	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
 ): BoundingBox | null => {
 	let minX = Infinity,
 		maxX = -Infinity,
@@ -28,7 +36,7 @@ export const calcContentBounds = (
 			continue;
 		}
 
-		const bbox = calcObjectBoundingBox(obj, objects);
+		const bbox = calcObjectBoundingBox(obj, objects, visualBounds);
 		if (!bbox) {
 			continue;
 		}

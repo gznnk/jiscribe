@@ -1,5 +1,5 @@
+import { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";
 import { useConstant } from "./useConstant";
-import { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
 
 /**
  * Provides the self-save nonce tracker as a single instance stable for the

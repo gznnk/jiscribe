@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { createTestRegistries } from "../../../../controllers/setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../controllers/registries/createCanvasRegistries";
 import { createObjectDocFromBounds } from "../createObjectDocFromBounds";
 
 const registries = createTestRegistries();
@@ -16,7 +16,7 @@ describe("createObjectDocFromBounds", () => {
 					0,
 					2,
 					2,
-					registries.shapeFactory,
+					registries.objectFactory,
 				),
 			).toBeNull();
 		});
@@ -29,7 +29,7 @@ describe("createObjectDocFromBounds", () => {
 				0,
 				3,
 				4,
-				registries.shapeFactory,
+				registries.objectFactory,
 			);
 			expect(doc).not.toBeNull();
 		});
@@ -41,7 +41,7 @@ describe("createObjectDocFromBounds", () => {
 				0,
 				10,
 				0,
-				registries.shapeFactory,
+				registries.objectFactory,
 			);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("polyline");
@@ -58,7 +58,7 @@ describe("createObjectDocFromBounds", () => {
 				0,
 				10,
 				0,
-				registries.shapeFactory,
+				registries.objectFactory,
 				{
 					stroke: "#ff0000",
 				},
@@ -73,7 +73,7 @@ describe("createObjectDocFromBounds", () => {
 				0,
 				10,
 				0,
-				registries.shapeFactory,
+				registries.objectFactory,
 			);
 			expect(doc?.id).toMatch(
 				/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
@@ -90,7 +90,7 @@ describe("createObjectDocFromBounds", () => {
 					0,
 					3,
 					100,
-					registries.shapeFactory,
+					registries.objectFactory,
 				),
 			).toBeNull();
 		});
@@ -103,7 +103,7 @@ describe("createObjectDocFromBounds", () => {
 					0,
 					100,
 					3,
-					registries.shapeFactory,
+					registries.objectFactory,
 				),
 			).toBeNull();
 		});
@@ -115,7 +115,7 @@ describe("createObjectDocFromBounds", () => {
 				20,
 				60,
 				80,
-				registries.shapeFactory,
+				registries.objectFactory,
 			);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("rect");
@@ -138,7 +138,7 @@ describe("createObjectDocFromBounds", () => {
 				80,
 				10,
 				20,
-				registries.shapeFactory,
+				registries.objectFactory,
 			);
 			const r = doc as unknown as {
 				x: number;
@@ -159,7 +159,7 @@ describe("createObjectDocFromBounds", () => {
 				0,
 				100,
 				100,
-				registries.shapeFactory,
+				registries.objectFactory,
 				{
 					fill: "blue",
 				},
@@ -176,7 +176,7 @@ describe("createObjectDocFromBounds", () => {
 					0,
 					15,
 					100,
-					registries.shapeFactory,
+					registries.objectFactory,
 					{},
 					20,
 				),
@@ -192,7 +192,7 @@ describe("createObjectDocFromBounds", () => {
 				0,
 				40,
 				20,
-				registries.shapeFactory,
+				registries.objectFactory,
 			);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("ellipse");

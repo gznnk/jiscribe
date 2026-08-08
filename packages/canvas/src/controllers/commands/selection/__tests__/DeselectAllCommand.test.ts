@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { DeselectAllCommand } from "../DeselectAllCommand";
 
 const registries = createTestRegistries();
@@ -10,15 +10,17 @@ const baseState = (
 	overrides: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
 	({
+		objects: {},
 		selectedIds: [],
 		selectedConnectorId: null,
 		selectedVertex: null,
+		selectedTextSlot: null,
 		multiSelectGroup: null,
 		areaSelection: null,
 		shapeDrawing: null,
 		eventStartSnapshot: null,
 		objectMenuOpenId: null,
-		shapeLibraryOpenCategory: null,
+		stencilLibraryOpenCategory: null,
 		edgeScrollEnabled: false,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -46,10 +48,30 @@ describe("DeselectAllCommand", () => {
 		expect(next.edgeScrollEnabled).toBe(false);
 	});
 
-	it("closes an open ShapeLibrary category flyout", () => {
-		const state = baseState({ shapeLibraryOpenCategory: "flowchart" });
+	it("clears the object selection too when a text slot is selected, without an intermediate step", () => {
+		// Escape steps out one level at a time (EscapeSelectionCommand); the explicit
+		// deselect-all does not.
+		const state = baseState({
+			objects: {
+				"rec-1": {
+					id: "rec-1",
+					type: "record",
+					features: { text: "slots" },
+					text: { name: { text: "User" }, rows: { text: [] } },
+				},
+			} as never,
+			selectedIds: ["rec-1"],
+			selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
+		});
+		const next = DeselectAllCommand.execute(state, registries);
+		expect(next.selectedTextSlot).toBeNull();
+		expect(next.selectedIds).toEqual([]);
+	});
+
+	it("closes an open StencilLibrary category flyout", () => {
+		const state = baseState({ stencilLibraryOpenCategory: "flowchart" });
 		expect(
-			DeselectAllCommand.execute(state, registries).shapeLibraryOpenCategory,
+			DeselectAllCommand.execute(state, registries).stencilLibraryOpenCategory,
 		).toBeNull();
 	});
 
@@ -87,10 +109,10 @@ describe("DeselectAllCommand", () => {
 			);
 		});
 
-		it("is executable when a ShapeLibrary category flyout is open (Escape closes it)", () => {
+		it("is executable when a StencilLibrary category flyout is open (Escape closes it)", () => {
 			expect(
 				DeselectAllCommand.canExecute(
-					baseState({ shapeLibraryOpenCategory: "flowchart" }),
+					baseState({ stencilLibraryOpenCategory: "flowchart" }),
 					registries,
 				),
 			).toBe(true);
@@ -112,5 +134,11 @@ describe("DeselectAllCommand", () => {
 			});
 			expect(DeselectAllCommand.canExecute(state, registries)).toBe(true);
 		});
+	});
+
+	it("keeps Escape out of its bindings, so it cannot shadow EscapeSelectionCommand", () => {
+		// findByShortcut returns the first match only, so the two must not both claim Escape.
+		const bindings = Object.values(DeselectAllCommand.shortcuts ?? {}).flat();
+		expect(bindings.some((binding) => binding.code === "Escape")).toBe(false);
 	});
 });

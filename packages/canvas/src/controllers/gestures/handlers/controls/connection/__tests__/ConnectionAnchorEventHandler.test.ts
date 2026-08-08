@@ -9,7 +9,7 @@ import type { ConnectorState } from "../../../../../../states/objects/connection
 import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
-import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -152,6 +152,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 10,
 				y: 10,
 			}),
+			registries,
 		);
 		const afterEnd = handler.handle(
 			afterStart,
@@ -159,6 +160,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 50,
 				y: 50,
 			}),
+			registries,
 		);
 
 		expect(afterEnd.rootIds).toEqual(["c1", "c2", "c3"]);
@@ -175,6 +177,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 10,
 				y: 10,
 			}),
+			registries,
 		);
 		// On dragStart, no pendingConnector is created; only the edit target is recorded
 		expect(afterStart.pendingConnector).toBeNull();
@@ -187,6 +190,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 80,
 				y: 80,
 			}),
+			registries,
 		);
 		const updated = afterEnd.objects["c1"] as ConnectorState;
 		expect(updated.target.anchor).toEqual({
@@ -208,6 +212,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 10,
 				y: 10,
 			}),
+			registries,
 		);
 		// Confirm dragEnd at the original target position (10,10) -> the endpoint is unchanged
 		const afterEnd = handler.handle(
@@ -216,6 +221,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 10,
 				y: 10,
 			}),
+			registries,
 		);
 
 		// The objects reference is unchanged = handleGesture's auto-commit check does not fire
@@ -234,6 +240,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 10,
 				y: 10,
 			}),
+			registries,
 		);
 		const afterEnd = handler.handle(
 			afterStart,
@@ -241,6 +248,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 99,
 				y: 99,
 			}),
+			registries,
 		);
 
 		expect(afterEnd.objects).not.toBe(state.objects);
@@ -270,6 +278,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 10,
 				y: 10,
 			}),
+			registries,
 		);
 		const afterEnd = handler.handle(
 			afterStart,
@@ -277,6 +286,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 80,
 				y: 80,
 			}),
+			registries,
 		);
 
 		// The new connector goes to the end of rootIds (frontmost) and is drawn above rect-1
@@ -307,10 +317,12 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		const afterStart = handler.handle(
 			state,
 			dragEvent("dragStart", "rect-1", "anchor:rightCenter", { x: 10, y: 10 }),
+			registries,
 		);
 		const afterEnd = handler.handle(
 			afterStart,
 			dragEvent("dragEnd", "rect-1", "anchor:rightCenter", { x: 80, y: 80 }),
+			registries,
 		);
 
 		const connectorId = afterEnd.rootIds[afterEnd.rootIds.length - 1];
@@ -383,6 +395,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				x: 10,
 				y: 10,
 			}),
+			registries,
 		);
 
 		// No explicit field (omitted); the default interpretation makes it orthogonal.
@@ -420,12 +433,14 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		const afterStart = handler.handle(
 			state,
 			dragEvent("dragStart", "rect-1", "anchor:rightCenter", { x: 10, y: 10 }),
+			registries,
 		);
 		const afterEnd = handler.handle(
 			afterStart,
 			dragEvent("dragEnd", "rect-1", "anchor:rightCenter", { x: 80, y: 80 }, [
 				"blob",
 			]),
+			registries,
 		);
 
 		const connectorId = afterEnd.rootIds[afterEnd.rootIds.length - 1];
@@ -446,12 +461,14 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			const afterStart = handler.handle(
 				state,
 				dragEvent("dragStart", "c1", "endpoint:target", { x: 10, y: 10 }),
+				registries,
 			);
 			const afterEnd = handler.handle(
 				afterStart,
 				dragEvent("dragEnd", "c1", "endpoint:target", { x: 80, y: 80 }, [
 					"blob",
 				]),
+				registries,
 			);
 
 			const updated = afterEnd.objects["c1"] as ConnectorState;
@@ -470,10 +487,12 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			const afterStart = handler.handle(
 				state,
 				dragEvent("dragStart", "c1", "endpoint:target", { x: 10, y: 10 }),
+				registries,
 			);
 			const afterEnd = handler.handle(
 				afterStart,
 				dragEvent("dragEnd", "c1", "endpoint:target", { x: 10, y: 10 }),
+				registries,
 			);
 
 			expect(
@@ -493,12 +512,14 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			const afterStart = handler.handle(
 				state,
 				dragEvent("dragStart", "c1", "endpoint:target", { x: 10, y: 10 }),
+				registries,
 			);
 			const afterEnd = handler.handle(
 				afterStart,
 				dragEvent("dragEnd", "c1", "endpoint:target", { x: 80, y: 80 }, [
 					"blob",
 				]),
+				registries,
 			);
 
 			const updated = afterEnd.objects["c1"] as ConnectorState;

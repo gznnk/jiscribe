@@ -57,23 +57,26 @@ The saved format is `CanvasDoc` (`schemas/canvas/CanvasDoc.ts`).
 - `root` … A single array mixing shapes (rect / ellipse / diamond / polyline / polygon / group / sticky / svg) and connectors. **The array order is itself the stacking order (z-order).**
 - Connector (`type: "connector"`) … Each endpoint references its target shape via `source` / `target` using an `owner{type,id}` plus an `anchor`. Connectors are placed only directly under `root` and are never children of a group. At least one endpoint must be owned (a connector with both ends free is invalid).
 - Color fields (`stroke` / `fontColor` / `fill`) … In addition to a concrete CSS color, they may take the sentinel value `"auto"` (follow the theme). `"auto"` is resolved to the theme's foreground color at render time (see [Presentation and Theme](./08-presentation-and-theme.md)). The default `stroke` / `fontColor` for a new shape is `"auto"`.
-- For the full format specification, see `../ai/reference.md` and `../ai/jiscribe.schema.json`.
+- For the full format specification, see `../../ai-docs/assets/reference.md` and `../../ai-docs/assets/jiscribe.schema.json`.
 
 ### Text Model Asymmetry (a shape's `text` vs. a connector's `label`)
 
 The storage shape of the text-bearing fields is **intentionally asymmetric** between shapes and connectors.
 
-- **Shapes (rect / ellipse / diamond / sticky)** … hold `text` / `textAlign` / `fontColor` … **flat at the top level** (`features.text` composes `TextStyleDoc`).
+- **Single-body shapes (rect / ellipse / diamond / sticky, …)** … hold `text` / `textAlign` / `fontColor` … **flat at the top level** (`features.text: "body"` composes `TextStyleDoc`).
+- **Multi-slot shapes (e.g. the uml-shapes record)** … declare `features.text: "slots"` and hold `text` as an **object keyed by slot id** (`text: { name: {…}, rows: {…} }`; each slot is a `TextSlot` = content plus typography, and the slot set is closed per type).
 - **Connectors** … hold their annotation as a **single nested object**
   `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
   (no `features.text`). The background `fill` and border `stroke` / `strokeWidth` / `strokeDashType` borrow the same vocabulary as shapes, but differ in that they are nested inside `label`.
 
-This difference does not reflect layer convenience but a **difference in role**. A shape's `text` is "the _body_ of that shape" (central, essentially the main actor, with in-box alignment). A connector's text is "an _annotation_ attached to an edge (edge label)" (optional, secondary, with no notion of alignment), and it additionally has **connector-specific placement axes**: `position` (a ratio along the route) and `offset` (perpendicular distance). Reusing a flat form would introduce distortions: (1) these connector-specific fields would mix in with the other keys and their ownership would become unreadable; (2) a short tag on a line would carry irrelevant `textAlign` / `verticalAlign` / `textType`. The judgment is that **different things may take different shapes** (forcing them to match would be "false consistency"). Even from the perspective of the AI that generates the JSON, this is consistent with the premise that each type has different capabilities (the capability table in `../ai/ai-guide.md`), so the cost of confusion is low.
+On the State side both shape forms normalize to the **one keyed-slot form** (a `"body"` type's mapper expands it into the single `body` slot and folds it back on save; see `TextSlotsMapper`). The rendering / editing / styling consumers read only this normal form and never branch on the doc's shape.
+
+This difference does not reflect layer convenience but a **difference in role**. A shape's `text` is "the _body_ of that shape" (central, essentially the main actor, with in-box alignment). A connector's text is "an _annotation_ attached to an edge (edge label)" (optional, secondary, with no notion of alignment), and it additionally has **connector-specific placement axes**: `position` (a ratio along the route) and `offset` (perpendicular distance). Reusing a flat form would introduce distortions: (1) these connector-specific fields would mix in with the other keys and their ownership would become unreadable; (2) a short tag on a line would carry irrelevant `textAlign` / `verticalAlign`. The judgment is that **different things may take different shapes** (forcing them to match would be "false consistency"). Even from the perspective of the AI that generates the JSON, this is consistent with the premise that each type has different capabilities (the capability table in `../../ai-docs/assets/ai-guide.md`), so the cost of confusion is low.
 
 Guidance for when this asymmetry bothers you:
 
 - **The fix is to "raise," not "lower."** If you want symmetry, the right approach is not to flatten the connector (which revives the distortions above: specific fields floating loose, irrelevant fields attached), but to **align shapes to the `label` nesting as well**. Since the policy is that backward compatibility is unnecessary (we are the only users), this is technically feasible.
-- **But do not do it until a second reason appears.** Nesting shape text is a large-scale change that ripples across rect/ellipse/diamond/sticky, `TextOverlay`, the text editor, styling, and the validators as a whole, and all it buys right now is visual symmetry. Undertake it once a **second motivation** appears — a shape needing multiple text regions or badges, a label needing a different placement concept, etc. — at which point the rework cost is justified.
+- **But do not do it until a second reason appears.** When that second motivation — a shape needing multiple text regions — actually arrived with #167, the answer taken was not unifying on `label` nesting but **named text slots** (State always keyed, the single-body doc keeping its flat sugar). Folding the connector `label` into a slot (removing the type-specific branch) remains an optional follow-up for when more motivation accumulates.
 - **Perfect symmetry is inherently unattainable.** Even if everything were nested, the key names would still **differ in meaning** — shape = body (`text`), connector = annotation (`label`) — so some asymmetry conceptually remains no matter what.
 
 **Nesting support in the styling UI (dot notation)**: The styling property-update plumbing
@@ -114,18 +117,18 @@ Validation happens in two stages. If the structure does not hold, semantic valid
    traversing the entire document.
    - **Uniqueness of IDs**: IDs must not be duplicated across the root tree (including connectors).
      Because `CanvasDoc` is a nested tree, a "parent-child cycle" cannot occur structurally; any case that looks like a cycle is effectively "different objects sharing the same ID" — that is, nothing more than an ID duplication.
-   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (group / polyline / polygon / connector are not allowed). A self-loop where source and target point to the same object is permitted and is drawn as a rectangular loop via a dedicated orthogonal route (see `resolveConnectorPoints` / `routeSelfLoop`).
+   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (group / polyline / polygon / connector are not allowed). A self-loop where source and target point to the same object is permitted and, while its `points` are empty, is drawn as a rectangular loop via a dedicated orthogonal route (see `resolveConnectorPoints` / `routeSelfLoop`); vertices replace that fixed ring with the authored path.
 
 The `objectDocValidatorRegistry` used for validation is needed only at parse time, so `parseCanvasText`
 initializes it idempotently if it is uninitialized. This structurally lets callers avoid false positives caused by picking the wrong entry point.
 
 ### A Parser-Only Entry Point
 
-`parser.ts` is a separate entry point that includes no UI dependencies (react / emotion / katex).
-It is aimed at consumers who "just want to parse text into a `CanvasDoc`" (such as the DiagnosticProvider on the Node side of the VSCode extension).
+`doc.ts` is a separate headless entry point that includes no UI dependencies (react / emotion / katex).
+It is aimed at consumers who "just want to parse text into a `CanvasDoc`" or build one programmatically (such as the DiagnosticProvider on the Node side of the VSCode extension, or the MCP server).
 
 ```ts
-import { parseCanvasText } from "@workspace/canvas/parser";
+import { parseCanvasText } from "@workspace/canvas/doc";
 ```
 
 Assuming that any Doc that has passed this boundary is valid, internal functions omit defensive checks

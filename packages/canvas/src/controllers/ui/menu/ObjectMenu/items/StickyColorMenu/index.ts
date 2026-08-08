@@ -1,1 +1,0 @@
-export { StickyColorMenu } from "./StickyColorMenu";

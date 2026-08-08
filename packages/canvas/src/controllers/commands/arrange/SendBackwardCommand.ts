@@ -1,9 +1,9 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
 import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const SendBackwardCommand: Command = {
+export const SendBackwardCommand: ExecutableCommand = {
 	id: "sendBackward",
 	label: "Send Backward",
 	category: "arrange",

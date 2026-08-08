@@ -1,0 +1,38 @@
+{
+	"name": "@workspace/plugin-annotation-shapes",
+	"version": "0.0.0",
+	"private": true,
+	"description": "記法に属さない汎用注釈図形（callout / note / brace ほか）を canvas 公開 API のみで外部パッケージとして提供する（docs/05_extensibility/annotation-plugin-plan.md）",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./doc": "./src/doc.ts"
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@workspace/basic-validators": "workspace:*",
+		"@workspace/geometry": "workspace:*"
+	},
+	"peerDependencies": {
+		"@emotion/react": "catalog:",
+		"@emotion/styled": "catalog:",
+		"@workspace/canvas": "workspace:*",
+		"@workspace/canvas-sdk": "workspace:*",
+		"react": "catalog:"
+	},
+	"devDependencies": {
+		"@emotion/react": "catalog:",
+		"@emotion/styled": "catalog:",
+		"@types/react": "catalog:",
+		"@workspace/canvas": "workspace:*",
+		"@workspace/canvas-sdk": "workspace:*",
+		"react": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

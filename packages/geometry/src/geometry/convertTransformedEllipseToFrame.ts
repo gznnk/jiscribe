@@ -2,15 +2,15 @@ import type { TransformedEllipse } from "../types/TransformedEllipse";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * Converts a TransformedEllipse (center/radii based) to a TransformedFrame (center/dimensions based).
+ * Converts a {@link TransformedEllipse} (center + radii) to a {@link TransformedFrame} (center + dimensions).
  *
- * @param geometry - The transformed ellipse geometry
- * @returns The corresponding TransformedFrame
+ * @param ellipse - The ellipse to convert; its rotation and flips carry over
+ *   unchanged, so only the radii are reinterpreted
  */
 export const convertTransformedEllipseToFrame = (
-	geometry: TransformedEllipse,
+	ellipse: TransformedEllipse,
 ): TransformedFrame => {
-	const { cx, cy, rx, ry, rotation, scaleX, scaleY } = geometry;
+	const { cx, cy, rx, ry, rotation, scaleX, scaleY } = ellipse;
 	return {
 		cx,
 		cy,

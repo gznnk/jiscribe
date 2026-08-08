@@ -5,7 +5,7 @@ import { canvasToState } from "../../states/canvas/CanvasMapper";
 import { createDocSnapshotFromDoc } from "../../states/canvas/DocSnapshot";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resetUiState } from "../utils/resetUiState";
 
 /**

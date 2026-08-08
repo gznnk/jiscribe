@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import type { CanvasAction } from "../../reducer/CanvasActions";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { enqueueClipboardPaste } from "../useClipboardPaste";
 
 const registries = createTestRegistries();

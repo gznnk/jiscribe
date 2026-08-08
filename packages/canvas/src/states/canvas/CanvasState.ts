@@ -26,4 +26,10 @@ export type CanvasState = {
 	 * Current viewport state.
 	 */
 	viewport: Viewport;
+
+	/**
+	 * Canvas surface color (doc content, round-tripped through save/history).
+	 * Undefined means "follow the theme background" (see CanvasDoc.background).
+	 */
+	background?: string;
 };

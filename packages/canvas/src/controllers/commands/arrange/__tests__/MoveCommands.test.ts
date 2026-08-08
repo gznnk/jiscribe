@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { moveCommands } from "../MoveCommands";
 
 const registries = createTestRegistries();
@@ -178,7 +178,12 @@ describe("moveCommands", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
-				textEditState: { objectId: "a", text: "" },
+				textEditState: {
+					kind: "shape",
+					objectId: "a",
+					slotId: "body",
+					text: "",
+				},
 			});
 			expect(commandById("move-up").canExecute(state, registries)).toBe(false);
 		});

@@ -6,6 +6,7 @@ import {
 import type { FreeEndpointRef } from "../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
 /**
  * Clean up connectors that are affected by shape deletion.
@@ -17,10 +18,13 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *
  * @param state - The canvas state before deletion (used to resolve endpoint coordinates)
  * @param idsToDelete - The set of IDs of objects to delete
+ * @param registries - Per-canvas registries, read for the outline / anchor-region
+ *   geometry so the endpoint left behind sits where the line was drawn
  */
 export function cleanupConnectorsOnDelete(
 	state: CanvasControllerState,
 	idsToDelete: Set<string>,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	const updatedObjects = { ...state.objects };
 	const removedConnectorIds = new Set<string>();
@@ -61,11 +65,19 @@ export function cleanupConnectorsOnDelete(
 		}
 
 		// One endpoint deleted → convert the deleted side to Free
-		// Use resolveConnectorPoints to get the visual coordinates, including outline adjustment for center anchors.
+		// Use resolveConnectorPoints with the same registries the rendering uses, so the frozen
+		// coordinate is the one that was on screen (outline adjustment for center anchors included).
 		// Since it uses the pre-deletion state.objects, both endpoint objects still exist.
 		const sourceObj = resolveEndpointOwner(state.objects, connector.source);
 		const targetObj = resolveEndpointOwner(state.objects, connector.target);
-		const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
+		const resolved = resolveConnectorPoints(
+			connector,
+			sourceObj,
+			targetObj,
+			registries.objectOutline,
+			registries.objectAnchorRegion,
+			registries.objectExtraConnectPoints,
+		);
 
 		const updatedConnector = { ...connector };
 		let shouldDeleteConnector = false;

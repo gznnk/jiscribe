@@ -18,7 +18,7 @@ vi.mock("../utils", async (importActual) => {
 			x: clientX,
 			y: clientY,
 		}),
-		getKindAndId: () => ({ id: "obj-1", kind: "rect" }),
+		getGestureTarget: () => ({ id: "obj-1", kind: "rect" }),
 		createGetHovered: () => () => [],
 		getInputValue: () => undefined,
 		readInputValue: () => undefined,
@@ -99,7 +99,7 @@ const setup = () => {
 				edgeScrollEnabled: false,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 			},
-		} as GestureRecognizerConfig["canvasStateRef"],
+		},
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();

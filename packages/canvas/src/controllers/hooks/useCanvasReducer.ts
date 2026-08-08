@@ -7,7 +7,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { createCanvasReducer } from "../reducer/canvasReducer";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
 
 /**
  * Custom hook that sets up the canvas state-management reducer, including
@@ -20,7 +20,7 @@ import type { CanvasRegistries } from "../setup/CanvasRegistries";
  *   later changes are folded in via the SET_DOC_DEFAULTS action)
  * @param initialCamera - Seeds the initial viewport so the first paint lands at
  *   the host's pan/zoom instead of flashing the default (only read at mount time;
- *   later programmatic changes go through `viewportRef.setViewport`).
+ *   later programmatic changes go through `ref.current.viewport.setViewport`).
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,

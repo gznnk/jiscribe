@@ -3,48 +3,50 @@ import { degreesToRadians } from "../common/degreesToRadians";
 import type { Point } from "../types/Point";
 
 /**
- * World `toward` point expressed as a local (centered, unrotated) offset from a
- * rotated shape's center, plus the trig values needed to map a resulting local
- * point back to world space via {@link calcWorldPointFromLocalOffset}.
+ * A world point expressed as a local (centered, unrotated) offset from a rotated
+ * shape's center, together with the cos/sin needed to map a local point back to
+ * world space via {@link calcWorldPointFromLocalOffset}.
  */
 export type LocalOffsetForRotation = {
-	/** Local (centered, unrotated) offset from center. */
+	/** X offset from the center in local (unrotated) space. */
 	dx: number;
+	/** Y offset from the center in local (unrotated) space. */
 	dy: number;
-	/** Pre-computed cos/sin of the rotation, reused for the reverse rotation. */
+	/** Cosine of the shape rotation, reused for the reverse rotation. */
 	cos: number;
+	/** Sine of the shape rotation, reused for the reverse rotation. */
 	sin: number;
-	/** Whether rotation is non-zero. When false, world offset equals local offset. */
+	/** When false, the local offset already equals the world offset. */
 	isRotated: boolean;
 };
 
 /**
- * Convert a world-space `toward` point into a local (centered, unrotated) offset
- * from the shape's center.
+ * Converts a world-space `toward` point into a local (centered, unrotated)
+ * offset from the shape's center. `rotationDeg === 0` needs no trig.
  *
- * Fast path: rotation === 0 (the vast majority of shapes) needs no trig — the
- * world offset is already the local offset, so cos/sin default to 1/0.
+ * @param cx - Shape center x in world space
+ * @param cy - Shape center y in world space
+ * @param rotationDeg - Shape rotation in degrees (`Transform.rotation`)
+ * @param toward - The world-space point to express as a local offset
  */
 export function calcLocalOffsetForRotation(
 	cx: number,
 	cy: number,
-	rotation: number,
+	rotationDeg: number,
 	toward: Point,
 ): LocalOffsetForRotation {
 	let cos = 1;
 	let sin = 0;
 	let dx = toward.x - cx;
 	let dy = toward.y - cy;
-	const isRotated = rotation !== 0;
+	const isRotated = rotationDeg !== 0;
 	if (isRotated) {
-		// Compute cos/sin once and reuse for both rotation directions below.
-		const rotationRad = degreesToRadians(rotation);
+		const rotationRad = degreesToRadians(rotationDeg);
 		cos = Math.cos(rotationRad);
 		sin = Math.sin(rotationRad);
 
-		// world -> local (centered, unrotated): rotate `toward` around center by
-		// -rotation. cos(-θ)=cos and sin(-θ)=-sin, so we reuse the same cos/sin and
-		// keep the local offset as plain numbers (no Point allocation).
+		// world -> local: rotate by -rotation. cos(-θ)=cos and sin(-θ)=-sin, so one
+		// cos/sin pair serves both directions and no Point is allocated.
 		const wx = dx;
 		const wy = dy;
 		dx = wx * cos + wy * sin;
@@ -54,10 +56,15 @@ export function calcLocalOffsetForRotation(
 }
 
 /**
- * Map a local (centered, unrotated) point back to world space, inverting the
- * transform of {@link calcLocalOffsetForRotation}.
+ * Maps a local (centered, unrotated) point back to world space, inverting
+ * {@link calcLocalOffsetForRotation}. Unrotated shapes skip the trig.
  *
- * Fast path: when the shape is not rotated, skip the trig and just translate.
+ * @param cx - Shape center x in world space
+ * @param cy - Shape center y in world space
+ * @param localX - Point x in local space, offset from the center
+ * @param localY - Point y in local space, offset from the center
+ * @param offset - The trig from {@link calcLocalOffsetForRotation} for the same
+ *   shape; `localX` / `localY` need not be that call's `dx` / `dy`
  */
 export function calcWorldPointFromLocalOffset(
 	cx: number,
@@ -69,7 +76,6 @@ export function calcWorldPointFromLocalOffset(
 	if (!offset.isRotated) {
 		return { x: cx + localX, y: cy + localY };
 	}
-	// local -> world: rotate the local point back around center by +rotation.
 	return calcRotatedPointWithTrig(
 		cx + localX,
 		cy + localY,

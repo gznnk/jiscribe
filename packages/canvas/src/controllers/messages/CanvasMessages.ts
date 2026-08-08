@@ -1,113 +1,10 @@
+import type { CanvasMessages } from "./CanvasMessagesTypes";
+import { jaCanvasMessages } from "./jaCanvasMessages";
+import {
+	resolveLocaleMessages,
+	type LocaleMessages,
+} from "./resolveLocaleMessages";
 import type { Command } from "../commands/CommandTypes";
-
-/**
- * Flat UI strings owned by the canvas components (tooltips, aria-labels,
- * menu titles, toast messages). Every key has an English default in
- * `defaultCanvasMessages`.
- */
-export type CanvasMessageStrings = {
-	// Toolbar
-	toolbarZoomOut: string;
-	toolbarResetZoom: string;
-	toolbarZoomIn: string;
-	/** aria-label of the help (?) button */
-	toolbarShowShortcutHelp: string;
-	/** title (tooltip) of the help (?) button */
-	toolbarShortcutHelp: string;
-
-	// Export dialog
-	exportDialogTitle: string;
-	exportDialogFormat: string;
-	exportDialogFormatPng: string;
-	exportDialogFormatSvg: string;
-	exportDialogMargin: string;
-	exportDialogIncludeSource: string;
-	exportDialogTransparentBackground: string;
-	exportDialogSubmit: string;
-	exportDialogCancel: string;
-	/** aria-label of the dialog's close (×) button */
-	exportDialogClose: string;
-
-	// Shortcut help modal
-	shortcutHelpTitle: string;
-	shortcutHelpClose: string;
-	shortcutHelpCategoryEdit: string;
-	shortcutHelpCategorySelection: string;
-	shortcutHelpCategoryArrange: string;
-	shortcutHelpCategoryView: string;
-
-	// Context menu
-	contextMenuPaste: string;
-	contextMenuExport: string;
-
-	// Error toasts
-	clipboardWriteError: string;
-	exportImageError: string;
-
-	// Color picker
-	colorPickerAuto: string;
-	colorPickerAutoTitle: string;
-	colorPickerCssColorPlaceholder: string;
-
-	// Object menu items
-	menuTextAlignment: string;
-	menuAlignLeft: string;
-	menuAlignCenter: string;
-	menuAlignRight: string;
-	menuAlignTop: string;
-	menuAlignMiddle: string;
-	menuAlignBottom: string;
-	menuBold: string;
-	menuFontSize: string;
-	menuFontColor: string;
-	menuBackgroundColor: string;
-	menuHeaderColor: string;
-	menuStrokeColor: string;
-	menuLineColor: string;
-	menuLineStyle: string;
-	menuLineWidth: string;
-	menuBorderStyle: string;
-	menuBorderWidth: string;
-	menuCornerRadius: string;
-	menuSolidLine: string;
-	menuDashedLine: string;
-	menuDottedLine: string;
-	menuLockAspectRatio: string;
-	menuUnlockAspectRatio: string;
-	menuConnectorRouting: string;
-	menuRoutingOrthogonal: string;
-	menuRoutingStraight: string;
-	menuStartArrow: string;
-	menuEndArrow: string;
-	menuSwapArrows: string;
-	menuLabelBold: string;
-	menuLabelFontSize: string;
-	menuLabelFontColor: string;
-	menuLabelBackgroundColor: string;
-	menuLabelBorderColor: string;
-	menuLabelBorderStyle: string;
-};
-
-/**
- * All UI strings of the canvas.
- *
- * The flat keys cover strings hardcoded in components. The record keys
- * override labels whose English defaults live next to their definitions
- * (commands, shape presets, color presets, arrow types); an entry missing
- * from a record falls back to that definition's label.
- */
-export type CanvasMessages = CanvasMessageStrings & {
-	/** Overrides keyed by command id (e.g. `undo`, `bringToFront`, `move-up-large`) */
-	commandLabels: Record<string, string>;
-	/** Overrides keyed by shape preset id (e.g. `rect`, `ellipse`, `sticky`) */
-	shapePresetLabels: Record<string, string>;
-	/** Overrides keyed by shape category id (e.g. `flowchart`, `general`, `annotation`) */
-	shapeCategoryLabels: Record<string, string>;
-	/** Overrides keyed by the English color preset name (e.g. `Red`, `Light Blue`) */
-	colorNames: Record<string, string>;
-	/** Overrides keyed by arrow type (e.g. `FilledTriangle`, `None`) */
-	arrowTypeNames: Record<string, string>;
-};
 
 /** English defaults. Hosts override parts of this via the `messages` prop of Canvas. */
 export const defaultCanvasMessages: CanvasMessages = {
@@ -135,9 +32,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	shortcutHelpCategoryArrange: "Arrange",
 	shortcutHelpCategoryView: "View",
 
-	contextMenuPaste: "Paste",
-	contextMenuExport: "Export…",
-
 	clipboardWriteError:
 		"Failed to write to the clipboard. Paste inside the app is still available.",
 	exportImageError: "Failed to export the image.",
@@ -153,11 +47,14 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuAlignTop: "Top",
 	menuAlignMiddle: "Middle",
 	menuAlignBottom: "Bottom",
+	menuTextFormat: "Text Format",
 	menuBold: "Bold",
+	menuItalic: "Italic",
+	menuUnderline: "Underline",
+	menuStrikethrough: "Strikethrough",
 	menuFontSize: "Font Size",
 	menuFontColor: "Font Color",
 	menuBackgroundColor: "Background Color",
-	menuHeaderColor: "Header Color",
 	menuStrokeColor: "Stroke Color",
 	menuLineColor: "Line Color",
 	menuLineStyle: "Line Style",
@@ -184,24 +81,51 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuLabelBorderStyle: "Label Border Style",
 
 	commandLabels: {},
-	shapePresetLabels: {},
-	shapeCategoryLabels: {},
+	stencilLabels: {},
+	stencilCategoryLabels: {},
 	colorNames: {},
 	arrowTypeNames: {},
 };
 
-/** Merges host-supplied partial messages over the English defaults. */
-export const mergeCanvasMessages = (
+/** Built-in dictionaries the canvas resolves from `locale` on its own. */
+const builtinCanvasMessagesByLocale: LocaleMessages<CanvasMessages> = {
+	en: defaultCanvasMessages,
+	ja: jaCanvasMessages,
+};
+
+/**
+ * Resolves the effective messages for a locale, then applies host overrides.
+ * Flat keys: English defaults ← built-in locale dictionary ← overrides. Record
+ * fields are merged key by key (built-in locale record ← overrides record).
+ */
+export const resolveCanvasMessages = (
+	locale: string,
 	overrides?: Partial<CanvasMessages>,
-): CanvasMessages => ({
-	...defaultCanvasMessages,
-	...overrides,
-	commandLabels: { ...overrides?.commandLabels },
-	shapePresetLabels: { ...overrides?.shapePresetLabels },
-	shapeCategoryLabels: { ...overrides?.shapeCategoryLabels },
-	colorNames: { ...overrides?.colorNames },
-	arrowTypeNames: { ...overrides?.arrowTypeNames },
-});
+): CanvasMessages => {
+	const localized = resolveLocaleMessages(
+		builtinCanvasMessagesByLocale,
+		locale,
+	);
+	return {
+		...defaultCanvasMessages,
+		...localized,
+		...overrides,
+		commandLabels: { ...localized.commandLabels, ...overrides?.commandLabels },
+		stencilLabels: {
+			...localized.stencilLabels,
+			...overrides?.stencilLabels,
+		},
+		stencilCategoryLabels: {
+			...localized.stencilCategoryLabels,
+			...overrides?.stencilCategoryLabels,
+		},
+		colorNames: { ...localized.colorNames, ...overrides?.colorNames },
+		arrowTypeNames: {
+			...localized.arrowTypeNames,
+			...overrides?.arrowTypeNames,
+		},
+	};
+};
 
 /** Resolves a command's display label: override by id, else the command's English label. */
 export const getCommandLabel = (

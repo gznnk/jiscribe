@@ -4,14 +4,14 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Command that deletes the current selection. Prioritizes vertex deletion when a
  * vertex is selected; otherwise removes selected objects (with group descendants)
  * and the selected connector, then cleans up connectors and groups.
  */
-export const DeleteCommand: Command = {
+export const DeleteCommand: ExecutableCommand = {
 	id: "delete",
 	label: "Delete",
 	category: "edit",
@@ -27,7 +27,7 @@ export const DeleteCommand: Command = {
 		);
 	},
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		// When a selectedVertex exists, prioritize vertex deletion.
 		// Even if selectedIds still contains objects, return from this branch so we
 		// don't fall through to object deletion.
@@ -98,7 +98,11 @@ export const DeleteCommand: Command = {
 		}
 
 		// Clean up connectors (run first so coordinates resolve against the pre-delete state)
-		const stateAfterConnectors = cleanupConnectorsOnDelete(state, idsToDelete);
+		const stateAfterConnectors = cleanupConnectorsOnDelete(
+			state,
+			idsToDelete,
+			registries,
+		);
 
 		const updatedObjects = { ...stateAfterConnectors.objects };
 
@@ -136,7 +140,7 @@ export const DeleteCommand: Command = {
 			selectedIds: [] as string[],
 			selectedConnectorId: null,
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

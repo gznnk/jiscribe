@@ -3,8 +3,8 @@ import { describe, it, expect } from "vitest";
 import { calcKeyPointsBoundingBox } from "../../geometry/calcKeyPointsBoundingBox";
 
 describe("calcKeyPointsBoundingBox", () => {
-	it("軸平行な矩形のキーポイントから正しいBBを返す", () => {
-		const kp = {
+	it("computes the box from the key points of an axis-aligned rectangle", () => {
+		const keyPoints = {
 			topLeft: { x: 0, y: 0 },
 			topCenter: { x: 50, y: 0 },
 			topRight: { x: 100, y: 0 },
@@ -14,17 +14,17 @@ describe("calcKeyPointsBoundingBox", () => {
 			bottomLeft: { x: 0, y: 60 },
 			leftCenter: { x: 0, y: 30 },
 		};
-		const result = calcKeyPointsBoundingBox(kp);
+		const result = calcKeyPointsBoundingBox(keyPoints);
 		expect(result.left).toBe(0);
 		expect(result.right).toBe(100);
 		expect(result.top).toBe(0);
 		expect(result.bottom).toBe(60);
 	});
 
-	it("回転した矩形のキーポイントから正しいBBを返す", () => {
-		// 45度回転した正方形（一辺100）の頂点
+	it("computes the box from the key points of a rotated rectangle", () => {
+		// Vertices of a square with side 100 rotated 45 degrees.
 		const d = 50 * Math.SQRT2;
-		const kp = {
+		const keyPoints = {
 			topLeft: { x: 0, y: -d },
 			topCenter: { x: d / 2, y: -d / 2 },
 			topRight: { x: d, y: 0 },
@@ -34,7 +34,7 @@ describe("calcKeyPointsBoundingBox", () => {
 			bottomLeft: { x: -d, y: 0 },
 			leftCenter: { x: -d / 2, y: -d / 2 },
 		};
-		const result = calcKeyPointsBoundingBox(kp);
+		const result = calcKeyPointsBoundingBox(keyPoints);
 		expect(result.left).toBeCloseTo(-d);
 		expect(result.right).toBeCloseTo(d);
 		expect(result.top).toBeCloseTo(-d);

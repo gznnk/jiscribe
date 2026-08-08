@@ -11,7 +11,7 @@ import {
 	type StateRecord,
 } from "./validateStateUtils";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import type { ObjectStateValidateFn } from "../../registry/ObjectStateValidatorRegistry";
+import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
 
 /**
  * Builds a state validator for Frame-type objects (geometry: "rect" | "ellipse")
@@ -24,7 +24,7 @@ import type { ObjectStateValidateFn } from "../../registry/ObjectStateValidatorR
 export const createFrameStateValidator = (
 	features: ObjectFeatures,
 	isExtraValid?: (o: StateRecord) => boolean,
-): ObjectStateValidateFn => {
+): ObjectStateValidator => {
 	return (value) => {
 		if (!isObject(value)) {
 			return false;
@@ -36,7 +36,8 @@ export const createFrameStateValidator = (
 			(!features.transform || isValidTransformState(o)) &&
 			(!features.stroke || isValidStrokeStyleState(o)) &&
 			(!features.fill || isValidFillStyleState(o)) &&
-			(!features.text || isValidTextStyleState(o)) &&
+			(features.text === undefined ||
+				isValidTextStyleState(o, features.text)) &&
 			(!features.radius || isValidRadiusStyleState(o)) &&
 			(isExtraValid === undefined || isExtraValid(o))
 		);

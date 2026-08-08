@@ -32,7 +32,7 @@ export type SyncExternalAction = {
 
 /**
  * Set viewport action - applies a camera (pan/zoom), keeping the measured
- * width/height. Dispatched by the imperative `viewportRef.setViewport`
+ * width/height. Dispatched by the imperative `ref.current.viewport.setViewport`
  * (useViewportHandle) so a host can move the view programmatically.
  */
 export type SetViewportAction = {
@@ -73,6 +73,12 @@ export type MenuPropertyUpdateAction = {
 	value: string;
 	/** true: recorded in history (blur/Enter), false: preview only */
 	commit: boolean;
+	/**
+	 * true: merge this commit with the preceding one for the same property and
+	 * selection into a single undo entry (slider key repeat). Ignored when
+	 * `commit` is false. Omitted means every commit is its own entry.
+	 */
+	coalesceHistory?: boolean;
 };
 
 /**

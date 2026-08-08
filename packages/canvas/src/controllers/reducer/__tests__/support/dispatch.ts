@@ -1,6 +1,6 @@
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";
 
@@ -15,9 +15,9 @@ export const testReducerRegistries = createTestRegistries();
 const canvasReducer = createCanvasReducer(testReducerRegistries);
 
 /**
- * 一連の action を canvasReducer で順に畳み込み、最終 state を返す。
- * 結合テストで「dispatch を連続実行した結果」を表現するための薄いヘルパー。
- * 各ステップの入力 state を凍結し、reducer 経路の in-place ミューテートを検知する。
+ * Fold a sequence of actions through canvasReducer and return the final state, expressing
+ * "the result of dispatching in a row" for integration tests. Each step's input state is
+ * frozen, so an in-place mutation along the reducer path is detected.
  */
 export const applyActions = (
 	state: CanvasControllerState,
@@ -28,15 +28,15 @@ export const applyActions = (
 		state,
 	);
 
-/** COMMAND action を組み立てる小さなファクトリ */
+/** Small factory for a COMMAND action. */
 export const command = (commandId: string): CanvasAction => ({
 	type: "COMMAND",
 	commandId,
 });
 
 /**
- * 複数のコマンドを ID 列で順に実行する糖衣。
- * 例: runCommands(state, "move-right", "move-right", "undo")
+ * Sugar for running several commands in order by id.
+ * e.g. runCommands(state, "move-right", "move-right", "undo")
  */
 export const runCommands = (
 	state: CanvasControllerState,

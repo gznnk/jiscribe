@@ -2,14 +2,17 @@
 
 import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
-import { MenuSlider } from "../../common/MenuSlider";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
+import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "font-size";
 const DEFAULT_FONT_SIZE = 14;
@@ -22,7 +25,7 @@ const FONT_SIZE_STEP = 2;
 
 type FontSizeMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 /**
@@ -41,13 +44,11 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		isOpen,
 	);
 
-	const { selectedIds, objects } = canvasState;
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontSize");
-	const fontSize =
-		(obj as TextStyleState | undefined)?.fontSize ?? DEFAULT_FONT_SIZE;
+	const slot = getSelectedOrFirstTextSlot(canvasState);
+	const fontSize = slot?.fontSize ?? DEFAULT_FONT_SIZE;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -58,9 +59,13 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 				<FontSizeIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<FontSizeMenuWrapper>
-						<MenuSlider
+						<ObjectMenuSlider
 							label={messages.menuFontSize}
 							value={fontSize}
 							min={MIN_FONT_SIZE}
@@ -72,9 +77,9 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 							onPropertyUpdate={onPropertyUpdate}
 						/>
 					</FontSizeMenuWrapper>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

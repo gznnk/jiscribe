@@ -1,13 +1,14 @@
 import { useMemo } from "react";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { useCanvasRegistries } from "../../../../contexts/CanvasRegistriesContext";
+import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
-import type { MenuItem, MenuSection } from "../ObjectMenuTypes";
+import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
+import { filterTextSlotMenuSections } from "../utils/filterTextSlotMenuSections";
 
-const itemKey = (item: MenuItem): string =>
+const itemKey = (item: ObjectMenuItem): string =>
 	item.type === "custom" ? item.id : item.type;
 
 /**
@@ -15,7 +16,7 @@ const itemKey = (item: MenuItem): string =>
  * Keeps only the items common to all types.
  * For borderStyle, radius is enabled only when every type has radius: true.
  */
-const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
+const mergeItems = (arrays: ObjectMenuItem[][]): ObjectMenuItem[] => {
 	if (arrays.length === 1) {
 		return arrays[0];
 	}
@@ -45,7 +46,7 @@ const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
  * Keeps only sections whose id is common to all types, and AND-merges the items
  * within each section as well.
  */
-const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
+const mergeSections = (arrays: ObjectMenuSection[][]): ObjectMenuSection[] => {
 	if (arrays.length === 0) {
 		return [];
 	}
@@ -67,16 +68,16 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 };
 
 /**
- * Computes the menu sections to display from the current selection.
+ * Collects the menu sections of the current selection, before any slot narrowing.
  *
  * When a connector is selected (selectedConnectorId != null), returns the sections for
  * its type. When group objects are selected, expands the descendant concrete object
  * types; if multiple types are mixed, only the common sections are shown (AND-merge).
  */
-export const getMenuSections = (
+const collectSelectionSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
-): MenuSection[] => {
+): ObjectMenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 
 	// When a connector is selected, return the connector's sections instead of selectedIds
@@ -85,47 +86,61 @@ export const getMenuSections = (
 		if (!connector) {
 			return [];
 		}
-		return objectMenuRegistry.getSections(connector.type, connector);
+		return objectMenuRegistry.getSections(connector.type);
 	}
 
 	if (selectedIds.length === 0) {
 		return [];
 	}
 
-	// Collect the concrete object types in the selection, keeping one representative
-	// instance per type. group types expand into their descendant concrete objects.
-	// The selected object (or its descendant) is itself a valid representative, so no
-	// full-objects scan is needed.
-	const representatives = new Map<string, ObjectState>();
+	// Collect the concrete object types in the selection. group types expand into
+	// their descendant concrete objects.
+	const selectedTypes = new Set<string>();
 	for (const id of selectedIds) {
 		const obj = objects[id];
 		if (!obj) {
 			continue;
 		}
 		if (obj.type !== "group") {
-			if (!representatives.has(obj.type)) {
-				representatives.set(obj.type, obj);
-			}
+			selectedTypes.add(obj.type);
 		} else {
 			for (const descId of collectDescendantIds(id, objects)) {
 				const desc = objects[descId];
-				if (desc && desc.type !== "group" && !representatives.has(desc.type)) {
-					representatives.set(desc.type, desc);
+				if (desc && desc.type !== "group") {
+					selectedTypes.add(desc.type);
 				}
 			}
 		}
 	}
 
-	if (representatives.size === 0) {
+	if (selectedTypes.size === 0) {
 		return [];
 	}
 
-	// Get the menu sections from each type's representative, then AND-merge them
-	const sectionArrays = [...representatives].map(([type, representative]) =>
-		objectMenuRegistry.getSections(type, representative),
+	// Get each type's menu sections, then AND-merge them
+	const sectionArrays = [...selectedTypes].map((type) =>
+		objectMenuRegistry.getSections(type),
 	);
 
 	return mergeSections(sectionArrays);
+};
+
+/**
+ * Computes the menu sections to display from the current selection.
+ *
+ * While a text slot is selected the sections are narrowed to the text items, so the
+ * menu never offers an action that the slot cannot receive. Doing it here keeps every
+ * `features.text === "slots"` type covered without each definition opting in.
+ */
+export const getMenuSections = (
+	state: CanvasControllerState,
+	objectMenuRegistry: ObjectMenuRegistry,
+): ObjectMenuSection[] => {
+	const sections = collectSelectionSections(state, objectMenuRegistry);
+	if (resolveSelectedTextSlot(state) === null) {
+		return sections;
+	}
+	return filterTextSlotMenuSections(sections);
 };
 
 /**
@@ -136,13 +151,20 @@ export const getMenuSections = (
 export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
-): MenuSection[] => {
-	const { selectedIds, selectedConnectorId, objects } = state;
+): ObjectMenuSection[] => {
+	const { selectedIds, selectedConnectorId, selectedTextSlot, objects } = state;
 	const { objectMenu } = useCanvasRegistries();
 
 	return useMemo(
 		() => (enabled ? getMenuSections(state, objectMenu) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[enabled, selectedIds, selectedConnectorId, objects, objectMenu],
+		[
+			enabled,
+			selectedIds,
+			selectedConnectorId,
+			selectedTextSlot,
+			objects,
+			objectMenu,
+		],
 	);
 };

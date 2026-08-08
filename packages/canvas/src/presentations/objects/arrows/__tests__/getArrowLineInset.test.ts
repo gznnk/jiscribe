@@ -22,9 +22,36 @@ describe("getArrowLineInset", () => {
 		expect(getArrowLineInset("HollowDiamond")).toBe(ARROW_SIZE);
 	});
 
-	it("OpenArrow / None / undefined do not shorten (0)", () => {
+	it("HollowCircle, being hollow, stops at the far edge (ARROW_SIZE)", () => {
+		expect(getArrowLineInset("HollowCircle")).toBe(ARROW_SIZE);
+	});
+
+	it("OpenArrow / Cross / None / undefined do not shorten (0)", () => {
 		expect(getArrowLineInset("OpenArrow")).toBe(0);
+		expect(getArrowLineInset("Cross")).toBe(0);
 		expect(getArrowLineInset("None")).toBe(0);
 		expect(getArrowLineInset(undefined)).toBe(0);
+	});
+
+	it("every crow's foot mark is inset, since it draws its own spine", () => {
+		expect(getArrowLineInset("CrowFootMany")).toBe(ARROW_SIZE);
+		expect(getArrowLineInset("CrowFootOneMany")).toBeGreaterThan(ARROW_SIZE);
+		expect(getArrowLineInset("CrowFootOne")).toBeGreaterThan(0);
+		expect(getArrowLineInset("CrowFootZeroMany")).toBeGreaterThan(
+			getArrowLineInset("CrowFootOneMany"),
+		);
+		expect(getArrowLineInset("CrowFootZeroOne")).toBeGreaterThan(
+			getArrowLineInset("CrowFootOne"),
+		);
+	});
+
+	it("the zero circle lengthens a mark by its diameter", () => {
+		const circleDiameter =
+			getArrowLineInset("CrowFootZeroMany") -
+			getArrowLineInset("CrowFootOneMany");
+		expect(circleDiameter).toBeGreaterThan(0);
+		expect(
+			getArrowLineInset("CrowFootZeroOne") - getArrowLineInset("CrowFootOne"),
+		).toBeCloseTo(circleDiameter);
 	});
 });

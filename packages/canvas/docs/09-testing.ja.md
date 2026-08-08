@@ -72,16 +72,15 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 ## E2E（Playwright）
 
-実ブラウザ・実 UI 操作での非回帰テスト。`apps/canvas-demo/e2e/` に置く。
+実ブラウザ・実 UI 操作での非回帰テスト。`packages/canvas/e2e/` に置く。
 
-- `playwright.config.ts` が vite dev（port 5174）を `webServer` で自動起動。`testDir: e2e/specs`
+- `playwright.config.mts` がテスト専用ハーネス（`e2e/harness/`、`Canvas` をマウントする最小 Vite アプリ）を
+  `webServer` で自動起動。`testDir: e2e/specs`
 - `support/CanvasDriver.ts` … 描画・選択・テキスト・色・コネクター操作の API。
   `support/selectors.ts` … `data-kind` / `data-id` セレクタ定数。`fixtures.ts` が CanvasDriver を注入
 - `specs/` がテスト本体（CI ゲート）。カテゴリ: `arrange` / `driver` / `editing` / `keyboard` /
   `scenario` / `shapes` / `ui`（+ `smoke.spec.ts`）
-- `e2e/demo/` は**マーケ素材生成用**のデモ（`testDir` 外）。回帰検知ではなくスクリーンショット／録画用で、
-  重く flake しやすいため通常の CI ゲートから外し `test:e2e:demo` でのみ実行する
-- 実行: `pnpm --filter canvas-demo test:e2e`（`:headed` / `:ui` / `:demo` あり）
+- 実行: `pnpm --filter @workspace/canvas test:e2e`（`:headed` / `:ui` あり）
 
 設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
 （`expect.poll` 等）で安定させ、本当の不具合を隠さない。
@@ -94,7 +93,8 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 レイヤーの一方向依存（[アーキテクチャ](./02-architecture.ja.md)）を機械的に担保するため、
 madge で循環依存を検出する。
 
-- 実行: `pnpm dep:circle`
+- 実行: `pnpm dep:check`（ワークスペース全体）/ `pnpm --filter @workspace/canvas dep:check`（canvas のみ）
+- CI の checks ジョブでも `pnpm dep:check` が走る
 
 ## 一括実行（タスク完了時のチェック）
 
@@ -103,8 +103,9 @@ madge で循環依存を検出する。
 ```bash
 pnpm lint --fix
 pnpm format
-pnpm build:demo
+pnpm build:examples
 pnpm typecheck
+pnpm dep:check
 pnpm lint
 pnpm --filter @workspace/canvas test
 ```

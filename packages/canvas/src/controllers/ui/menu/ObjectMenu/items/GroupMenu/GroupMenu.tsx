@@ -5,7 +5,10 @@ import { useCommandState } from "../../../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { GroupIcon } from "../../../../icons/GroupIcon";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 type GroupMenuProps = {
 	canvasState: CanvasControllerState;
@@ -30,7 +33,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	const { command, enabled } = resolved;
 
 	return (
-		<MenuItemPositioner>
+		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isGroup}
 				disabled={!enabled}
@@ -40,7 +43,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 			>
 				<GroupIcon title={getCommandLabel(messages, command)} />
 			</ObjectMenuButton>
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

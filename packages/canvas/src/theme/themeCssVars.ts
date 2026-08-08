@@ -26,7 +26,6 @@ export const THEME_TOKEN_CSS_VARS: Record<keyof CanvasThemeTokens, string> = {
 	inputPlaceholder: "--jiscribe-input-placeholder",
 	errorFg: "--jiscribe-error-fg",
 	shadow: "--jiscribe-shadow",
-	gridLine: "--jiscribe-grid-line",
 	sliderTrack: "--jiscribe-slider-track",
 	transparentChecker: "--jiscribe-transparent-checker",
 	radius: "--jiscribe-radius",
@@ -36,6 +35,8 @@ export const THEME_TOKEN_CSS_VARS: Record<keyof CanvasThemeTokens, string> = {
 	scrollbarTrack: "--jiscribe-scrollbar-track",
 	scrollbarThumb: "--jiscribe-scrollbar-thumb",
 	scrollbarThumbHover: "--jiscribe-scrollbar-thumb-hover",
+	objectInk: "--jiscribe-object-ink",
+	objectSurface: "--jiscribe-object-surface",
 };
 
 /**

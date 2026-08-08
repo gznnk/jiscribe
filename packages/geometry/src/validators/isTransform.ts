@@ -1,28 +1,25 @@
 import { isNumber, isObject } from "@workspace/basic-validators";
 
+import { isFlipScale } from "./isFlipScale";
 import type { Transform } from "../types/Transform";
 
 /**
- * Check if an object has Transform properties.
- * Validates transformation properties:
- * - rotation (number)
- * - scaleX (number)
- * - scaleY (number)
+ * Type guard for {@link Transform}. `scaleX` / `scaleY` must be flip flags (1 or -1).
  *
- * @param obj - The object to check
- * @returns True if the object has Transform properties, false otherwise
+ * @param value - Value to narrow; only the transform fields are checked, so any
+ *   transformed shape passes
  */
-export const isTransform = (obj: unknown): obj is Transform => {
-	if (!isObject(obj)) {
+export const isTransform = (value: unknown): value is Transform => {
+	if (!isObject(value)) {
 		return false;
 	}
 
 	return (
-		"rotation" in obj &&
-		isNumber(obj.rotation) &&
-		"scaleX" in obj &&
-		isNumber(obj.scaleX) &&
-		"scaleY" in obj &&
-		isNumber(obj.scaleY)
+		"rotation" in value &&
+		isNumber(value.rotation) &&
+		"scaleX" in value &&
+		isFlipScale(value.scaleX) &&
+		"scaleY" in value &&
+		isFlipScale(value.scaleY)
 	);
 };

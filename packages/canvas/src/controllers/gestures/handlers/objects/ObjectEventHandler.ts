@@ -14,14 +14,17 @@ import { getAncestors } from "./utils/getAncestors";
 import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
+import {
+	readTextSlot,
+	resolveTextSlotId,
+} from "../../../../states/objects/types/TextSlots";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../CanvasTypes";
-import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
@@ -30,7 +33,8 @@ import type {
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import type { Mods } from "../../registry/ObjectBehaviorTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -72,9 +76,58 @@ function handleObjectClick(
 		selectedConnectorId: null,
 		// Clear the vertex selection
 		selectedVertex: null,
+		// Clear the text slot selection
+		selectedTextSlot: null,
 		// Close the submenu on selection change
 		objectMenuOpenId: null,
-		shapeLibraryOpenCategory: null,
+		stencilLibraryOpenCategory: null,
+	};
+}
+
+/**
+ * Selects the text slot a click landed in, one level below the object selection.
+ * The caller decides that the click addresses a slot; this only maps the pressed
+ * element's [data-part] onto a slot of the shape.
+ *
+ * Unlike the double-click path it does not go through resolveTextSlotId: a click that
+ * misses every slot (no [data-part], or one naming something else) must not select the
+ * first slot by fallback, it steps back up to the object level by clearing the slot.
+ */
+function handleTextSlotClick(
+	canvasState: CanvasControllerState,
+	targetObject: ObjectState,
+	targetPart: string | undefined,
+): CanvasControllerState {
+	if (
+		targetObject.features?.text !== "slots" ||
+		!isTextStyleState(targetObject)
+	) {
+		return canvasState;
+	}
+
+	const slots = targetObject.text;
+	const slotId =
+		slots !== undefined &&
+		targetPart !== undefined &&
+		Object.prototype.hasOwnProperty.call(slots, targetPart)
+			? targetPart
+			: null;
+
+	const currentSlot = canvasState.selectedTextSlot;
+	if (slotId === null) {
+		return currentSlot === null
+			? canvasState
+			: { ...canvasState, selectedTextSlot: null };
+	}
+	if (
+		currentSlot?.objectId === targetObject.id &&
+		currentSlot.slotId === slotId
+	) {
+		return canvasState;
+	}
+	return {
+		...canvasState,
+		selectedTextSlot: { objectId: targetObject.id, slotId },
 	};
 }
 
@@ -302,14 +355,17 @@ function handleObjectDragStart(
 		...canvasState,
 		selectedIds,
 		multiSelectGroup: newMultiSelectGroup,
+		activeDragKind: "move" as const,
 		edgeScrollEnabled: true,
 		// Clear the connector selection to guarantee mutual exclusion
 		selectedConnectorId: null,
 		// Clear the vertex selection
 		selectedVertex: null,
+		// Clear the text slot selection
+		selectedTextSlot: null,
 		// Close the object menu dropdown at drag start
 		objectMenuOpenId: null,
-		shapeLibraryOpenCategory: null,
+		stencilLibraryOpenCategory: null,
 		eventStartSnapshot: canvasState.eventStartSnapshot
 			? {
 					...canvasState.eventStartSnapshot,
@@ -356,14 +412,15 @@ function handleObjectDragEnd(
  */
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "object" && isLeftButton(event);
+		return event.targetKind === "object" && isPerTargetInteraction(event);
 	},
 
 	handle(state, event, registries) {
 		// Any event that reaches this handler is outside the text-editing overlay
-		// (the overlay covers the edited shape's bbox and is gesture-excluded),
-		// so a pending edit is always committed first, like any outside tap.
-		let nextState = commitTextEditIfNeeded(state);
+		// (the overlay covers the edited shape's bbox and is gesture-excluded), so a
+		// pending edit is committed first, like any outside tap — deferred only for
+		// a touch press (see commitTextEditUnlessTouchPress).
+		let nextState = commitTextEditUnlessTouchPress(state, event);
 
 		const targetObjectId = event.targetId;
 		if (!targetObjectId) {
@@ -386,23 +443,47 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the click event
 		if (event.type === "click") {
-			return handleObjectClick(nextState, targetObject, event.mods);
+			const afterClick = handleObjectClick(nextState, targetObject, event.mods);
+			// A click that leaves the selection as it was, on the object that is already
+			// the whole selection, addresses a text slot inside it instead. Any modifier
+			// belongs to selection editing, so it is left to handleObjectClick alone.
+			const addressesTextSlot =
+				afterClick === nextState &&
+				!event.mods.ctrl &&
+				!event.mods.meta &&
+				!event.mods.shift &&
+				!event.mods.alt &&
+				nextState.selectedIds.length === 1 &&
+				nextState.selectedIds[0] === targetObject.id;
+			if (!addressesTextSlot) {
+				return afterClick;
+			}
+			return handleTextSlotClick(afterClick, targetObject, event.targetPart);
 		}
 
 		// Handle the double-click event
 		if (event.type === "doubleClick") {
-			// Start text editing only for shapes that have text (features.text).
-			// isTextStyleState is a loose guard that only checks whether the text attributes
-			// are consistent, so it also lets through shapes with no text at all
-			// (svg / polyline / polygon, etc.). Treat the same features.text used by the
-			// property-update side (FeatureGatedStyleProperty's text gate) as authoritative.
+			// Start text editing only for shapes that have text (features.text, in
+			// either shape). isTextStyleState is a loose guard that only checks whether
+			// the text attributes are consistent, so it also lets through shapes with no
+			// text at all (svg / polyline / polygon, etc.). Treat the same features.text
+			// used by the property-update side (TextSlotStyleProperty) as authoritative.
 			const features = targetObject.features;
-			if (features?.text === true && isTextStyleState(targetObject)) {
+			if (features?.text !== undefined && isTextStyleState(targetObject)) {
+				// The pressed element's [data-part] names the slot (as it does for a
+				// connector's label). It comes from the DOM, so resolveTextSlotId
+				// honors it only when it matches a slot and otherwise opens the first.
+				const slotId = resolveTextSlotId(targetObject.text, event.targetPart);
+				if (slotId === undefined) {
+					return nextState;
+				}
 				return {
 					...nextState,
 					textEditState: {
+						kind: "shape",
 						objectId: targetObject.id,
-						text: targetObject.text ?? "",
+						slotId,
+						text: readTextSlot(targetObject.text, slotId),
 					},
 				};
 			}

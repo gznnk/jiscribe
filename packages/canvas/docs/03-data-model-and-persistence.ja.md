@@ -54,36 +54,43 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
 - `root` … 図形（rect / ellipse / diamond / polyline / polygon / group / sticky / svg）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
 - コネクター（`type: "connector"`）… 端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する。`root` 直下にのみ置かれ、group の子にはならない。少なくとも一方の端点が owned であること（両端 free は不正）
 - 色フィールド（`stroke` / `fontColor` / `fill`）… 具体的な CSS 色のほか、sentinel 値 `"auto"`（テーマ追従）を取りうる。`"auto"` は描画時にテーマ前景色へ解決される（[表示・テーマ](./08-presentation-and-theme.ja.md) 参照）。新規図形の `stroke` / `fontColor` の既定値は `"auto"`
-- 形式仕様の全文は `../ai/reference.md` と `../ai/jiscribe.schema.json` を参照
+- 形式仕様の全文は `../../ai-docs/assets/reference.md` と `../../ai-docs/assets/jiscribe.schema.json` を参照
 
 ### テキストモデルの非対称（図形の `text` とコネクターの `label`）
 
 文字を持つフィールドの格納形が、図形とコネクターで **意図的に非対称** になっている。
 
-- **図形（rect / ellipse / diamond / sticky）** … `text` / `textAlign` / `fontColor` … を
-  **トップ階層にフラット**で持つ（`features.text` が `TextStyleDoc` を合成する）。
+- **単一本文の図形（rect / ellipse / diamond / sticky など）** … `text` / `textAlign` / `fontColor` … を
+  **トップ階層にフラット**で持つ（`features.text: "body"` が `TextStyleDoc` を合成する）。
+- **複数スロットの図形（uml-shapes の record など）** … `features.text: "slots"` を宣言し、`text` を
+  **スロット ID キーのオブジェクト**で持つ（`text: { name: {…}, rows: {…} }`。各スロットは
+  `TextSlot` = 内容＋タイポグラフィで、スロット集合は型ごとにクローズド）。
 - **コネクター** … 注記を
   `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
   の **ネストした 1 オブジェクト**で持つ（`features.text` は立てない）。背景 `fill`・枠線
   `stroke`/`strokeWidth`/`strokeDashType` は図形と同じ語彙を借りるが、`label` の中にネストする点が異なる。
 
+State 側は図形のどちらの形も **keyed スロット一形**に正規化される（`"body"` 型は mapper が単一
+`body` スロットへ展開し、保存時に畳み戻す。`TextSlotsMapper` 参照）。描画・編集・スタイリングの
+consumer はこの正規形だけを読むので、doc の形による分岐を持たない。
+
 この差は層の都合ではなく、**役割（ロール）の違い**を映したもの。図形の `text` は「その図形の
 _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネクターの文字は「辺に付く _注記_（edge label）」
 （任意・副次的・整列概念なし）で、さらに `position`（経路に沿った比率）/ `offset`（垂直距離）という
 **コネクター固有の配置軸**を持つ。フラットに流用すると (1) これら固有フィールドが他キーと混ざって
-帰属が読めない (2) 線の短いタグに無関係な `textAlign` / `verticalAlign` / `textType` が付く、という
+帰属が読めない (2) 線の短いタグに無関係な `textAlign` / `verticalAlign` が付く、という
 歪みが出る。**違うものは違う形でよい**（無理に揃えるのは「偽の一貫性」）という判断。これは JSON を
-生成する AI から見ても、型ごとに能力が違う前提（`../ai/ai-guide.md` の能力表）と整合し、混乱コストは低い。
+生成する AI から見ても、型ごとに能力が違う前提（`../../ai-docs/assets/ai-guide.md` の能力表）と整合し、混乱コストは低い。
 
 この非対称が気になった場合の指針:
 
 - **解は「下げる」ではなく「上げる」**。対称性を取りたいなら、コネクターを平らにする（固有フィールドが
   浮く・無関係フィールドが付く前述の歪みが復活する）のではなく、**図形側も `label` ネストに寄せて
   揃える**のが筋。後方互換は不要方針（自分しか使っていない）なので技術的には可能。
-- **ただし second reason が出るまでやらない**。図形テキストのネスト化は rect/ellipse/diamond/sticky・
-  `TextOverlay`・テキストエディタ・スタイリング・バリデータ全体に波及する大改修で、いま得られるのは
-  見た目の対称性だけ。図形に複数テキスト領域やバッジが要る、ラベルにも別の配置概念が要る、等の
-  **第二の動機**が出た時点で着手すれば改修コストが正当化される。
+- **ただし second reason が出るまでやらない**。実際に #167 で「図形に複数テキスト領域」という
+  第二の動機が現れた際、採ったのは label ネストへの統一ではなく**名前付きテキストスロット**
+  （State は常に keyed、単一本文の doc はフラット糖衣を維持）だった。コネクター `label` の
+  スロット統合（型固有分岐の撤去）は、さらに動機が揃った時点の任意課題として残っている。
 - **完全対称は本質的に取れない**。仮に全部ネストしても、キー名は図形＝本文（`text`）、
   コネクター＝注記（`label`）で **意味が違う**ため、ある種の非対称は概念上どうしても残る。
 
@@ -129,11 +136,12 @@ type CanvasParseResult =
 
 ### パーサー専用エントリ
 
-`parser.ts` は UI 依存（react / emotion / katex）を含まない別エントリ。
-「テキストを `CanvasDoc` にパースしたいだけ」の利用者（VSCode 拡張の Node 側 DiagnosticProvider など）向け。
+`doc.ts` は UI 依存（react / emotion / katex）を含まない headless な別エントリ。
+「テキストを `CanvasDoc` にパースしたいだけ」「プログラムから `CanvasDoc` を組み立てたいだけ」の
+利用者（VSCode 拡張の Node 側 DiagnosticProvider・MCP サーバーなど）向け。
 
 ```ts
-import { parseCanvasText } from "@workspace/canvas/parser";
+import { parseCanvasText } from "@workspace/canvas/doc";
 ```
 
 この境界を通った Doc は正当であることを前提に、内部関数は防御的チェックを省く

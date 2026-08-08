@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
 	ConnectPointIds,
+	EdgeAnchorSides,
 	isConnectPointId,
+	isEdgeAnchorSide,
 	isFreeEndpointRef,
 	isOwnedEndpointRef,
 	isSameEndpoint,
+	toEquivalentEdgeAnchor,
 } from "../EndpointRef";
 
 describe("isConnectPointId", () => {
@@ -203,6 +206,16 @@ describe("isSameEndpoint", () => {
 				),
 			).toBe(false);
 		});
+
+		it("compares an edge anchor by side and ratio", () => {
+			const ref = (side: "top" | "bottom", t: number) => ({
+				owner: { id: "a" },
+				anchor: { kind: "edge", side, t } as const,
+			});
+			expect(isSameEndpoint(ref("top", 0.25), ref("top", 0.25))).toBe(true);
+			expect(isSameEndpoint(ref("top", 0.25), ref("top", 0.3))).toBe(false);
+			expect(isSameEndpoint(ref("top", 0.25), ref("bottom", 0.25))).toBe(false);
+		});
 	});
 
 	describe("comparing two FreeEndpointRefs", () => {
@@ -234,5 +247,45 @@ describe("isSameEndpoint", () => {
 				),
 			).toBe(false);
 		});
+	});
+});
+
+describe("isEdgeAnchorSide", () => {
+	it.each(EdgeAnchorSides)("accepts the side %s", (side) => {
+		expect(isEdgeAnchorSide(side)).toBe(true);
+	});
+
+	it.each(["topCenter", "middle", "", 0, null, undefined, {}])(
+		"rejects %p",
+		(value) => {
+			expect(isEdgeAnchorSide(value)).toBe(false);
+		},
+	);
+});
+
+describe("toEquivalentEdgeAnchor", () => {
+	it("returns an edge anchor unchanged", () => {
+		const anchor = { kind: "edge", side: "left", t: 0.2 } as const;
+		expect(toEquivalentEdgeAnchor(anchor)).toBe(anchor);
+	});
+
+	it("restates each built-in edge midpoint as the middle of its side", () => {
+		expect(
+			toEquivalentEdgeAnchor({ kind: "connectPoint", id: "topCenter" }),
+		).toEqual({ kind: "edge", side: "top", t: 0.5 });
+		expect(
+			toEquivalentEdgeAnchor({ kind: "connectPoint", id: "leftCenter" }),
+		).toEqual({ kind: "edge", side: "left", t: 0.5 });
+	});
+
+	it("returns null for anchors that hold no edge position of their own", () => {
+		expect(toEquivalentEdgeAnchor({ kind: "center" })).toBeNull();
+		expect(
+			toEquivalentEdgeAnchor({ kind: "free", point: { x: 0, y: 0 } }),
+		).toBeNull();
+		// A declared id: where it sits is the owner type's business, not the edge's.
+		expect(
+			toEquivalentEdgeAnchor({ kind: "connectPoint", id: "tip" }),
+		).toBeNull();
 	});
 });

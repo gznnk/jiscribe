@@ -1,14 +1,14 @@
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { resetUiState } from "../../utils/resetUiState";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Redo command.
  * Shortcut: Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y
  * Restores the next state from history.
  */
-export const RedoCommand: Command = {
+export const RedoCommand: ExecutableCommand = {
 	id: "redo",
 	label: "Redo",
 	category: "edit",

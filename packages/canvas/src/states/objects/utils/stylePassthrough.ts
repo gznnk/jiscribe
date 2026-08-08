@@ -1,14 +1,15 @@
 import { FILL_STYLE_KEYS } from "../../../schemas/objects/base/FillStyleDoc";
 import { RADIUS_STYLE_KEYS } from "../../../schemas/objects/base/RadiusStyleDoc";
 import { STROKE_STYLE_KEYS } from "../../../schemas/objects/base/StrokeStyleDoc";
-import { TEXT_STYLE_KEYS } from "../../../schemas/objects/base/TextStyleDoc";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 
 /**
  * Collects the pass-through keys for the style groups enabled in `features`.
- * stroke / fill / text / radius share the same field names between Doc and State,
- * so they are direction-independent. geometry and transform are excluded here since
- * the converters (convert* / mapTransform*) rebuild them.
+ * stroke / fill / radius share the same field names between Doc and State, so they
+ * are direction-independent. geometry and transform are excluded here since the
+ * converters (convert* / mapTransform*) rebuild them, and so is the whole text group:
+ * Doc and State disagree on where its styling sits (flat on the Doc, inside each slot
+ * in the State), so mapText* rebuilds it too.
  *
  * Because each key array is an exhaustive constant (`exhaustiveKeysOf`), adding a field
  * to any style Doc forces the constant to be updated (compile error), and once updated the
@@ -20,7 +21,6 @@ export const collectStyleKeys = (
 ): readonly string[] => [
 	...(features.stroke ? STROKE_STYLE_KEYS : []),
 	...(features.fill ? FILL_STYLE_KEYS : []),
-	...(features.text ? TEXT_STYLE_KEYS : []),
 	...(features.radius ? RADIUS_STYLE_KEYS : []),
 ];
 

@@ -4,17 +4,21 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
-import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
 import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "stroke-color";
 
 type StrokeColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 const getSelectedStrokeColor = (state: CanvasControllerState): string => {
@@ -46,7 +50,7 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	);
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -60,15 +64,19 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 				/>
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
-					<ColorPickerGrid
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
+					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
 						property="stroke"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

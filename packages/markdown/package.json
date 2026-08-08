@@ -13,13 +13,11 @@
 	},
 	"dependencies": {
 		"dompurify": "catalog:",
-		"highlight.js": "catalog:",
 		"katex": "catalog:",
 		"markdown-it": "^14.1.0",
 		"markdown-it-link-attributes": "^4.0.1"
 	},
 	"devDependencies": {
-		"@types/highlight.js": "^10.1.0",
 		"@types/katex": "^0.16.7",
 		"@types/markdown-it": "^14.1.2",
 		"@types/markdown-it-link-attributes": "^3.0.5",

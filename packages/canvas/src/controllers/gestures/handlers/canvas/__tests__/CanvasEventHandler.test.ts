@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { CanvasEventHandler } from "../CanvasEventHandler";
 
 const registries = createTestRegistries();
 
 const makeTextRect = (id: string, text: string): ObjectState =>
-	({ id, type: "rect", text }) as unknown as ObjectState;
+	({ id, type: "rect", text: { body: { text } } }) as unknown as ObjectState;
 
 const makeState = (
 	overrides: Partial<CanvasControllerState> = {},
@@ -25,7 +25,12 @@ const makeState = (
 		areaSelection: null,
 		contextMenuPosition: null,
 		objectMenuOpenId: null,
-		textEditState: { objectId: "a", text: "edited text" },
+		textEditState: {
+			kind: "shape",
+			objectId: "a",
+			slotId: "body",
+			text: "edited text",
+		},
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		commitVersion: 0,
 		...overrides,
@@ -52,7 +57,9 @@ describe("CanvasEventHandler", () => {
 			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).toEqual({
+				kind: "shape",
 				objectId: "a",
+				slotId: "body",
 				text: "edited text",
 			});
 			expect(nextState.viewport.minX).toBe(10);
@@ -78,14 +85,16 @@ describe("CanvasEventHandler", () => {
 			const state = makeState();
 			const event = makeEvent({
 				type: "zoom",
-				zoomDelta: -100,
+				zoomScale: 1.1,
 				last: { x: 0, y: 0 },
 			});
 
 			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).toEqual({
+				kind: "shape",
 				objectId: "a",
+				slotId: "body",
 				text: "edited text",
 			});
 			expect(nextState.viewport.zoom).toBeCloseTo(1.1);
@@ -101,22 +110,201 @@ describe("CanvasEventHandler", () => {
 
 			expect(nextState.textEditState).toBeNull();
 			expect(
-				(nextState.objects["a"] as ObjectState & { text: string }).text,
+				(
+					nextState.objects["a"] as ObjectState & {
+						text: { body: { text: string } };
+					}
+				).text.body.text,
 			).toBe("edited text");
 			expect(nextState.selectedIds).toEqual([]);
 		});
 	});
 
-	it("a background press closes an open ShapeLibrary category flyout", () => {
+	describe("touch: deselection and edit commit wait for the tap to resolve", () => {
+		it("a touch press keeps the selection, menus, and the active edit", () => {
+			const state = makeState({
+				contextMenuPosition: { clientX: 10, clientY: 10 },
+			} as Partial<CanvasControllerState>);
+			const event = makeEvent({
+				type: "pressed",
+				button: 0,
+				pointerType: "touch",
+			});
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			expect(nextState.textEditState).not.toBeNull();
+			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.contextMenuPosition).toEqual({
+				clientX: 10,
+				clientY: 10,
+			});
+		});
+
+		it("a touch pan drag pans while keeping the selection and the active edit", () => {
+			const state = makeState();
+			const event = makeEvent({
+				type: "drag",
+				button: 0,
+				pointerType: "touch",
+				clientDelta: { x: 100, y: 50 },
+			});
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			expect(nextState.textEditState).not.toBeNull();
+			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.viewport.minX).toBeCloseTo(-100);
+			expect(nextState.viewport.minY).toBeCloseTo(-50);
+		});
+
+		it("a touch tap (click) commits the edit and clears the selection", () => {
+			const state = makeState();
+			const event = makeEvent({
+				type: "click",
+				button: 0,
+				pointerType: "touch",
+			});
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			expect(nextState.textEditState).toBeNull();
+			expect(
+				(
+					nextState.objects["a"] as ObjectState & {
+						text: { body: { text: string } };
+					}
+				).text.body.text,
+			).toBe("edited text");
+			expect(nextState.selectedIds).toEqual([]);
+		});
+
+		it("a mouse click after its press does not re-clear on click (unchanged mouse path)", () => {
+			const state = makeState({
+				textEditState: null,
+			} as Partial<CanvasControllerState>);
+			const event = makeEvent({ type: "click", button: 0 });
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			// Mouse clears on pressed, not click; the selection here is untouched
+			expect(nextState.selectedIds).toEqual(["a"]);
+		});
+	});
+
+	describe("touch long press", () => {
+		it("opens the context menu at the press position and commits the active edit", () => {
+			const state = makeState();
+			const event = makeEvent({
+				type: "longPress",
+				button: 0,
+				pointerType: "touch",
+				clientLast: { x: 320, y: 240 },
+			});
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			expect(nextState.contextMenuPosition).toEqual({
+				clientX: 320,
+				clientY: 240,
+			});
+			expect(nextState.textEditState).toBeNull();
+			// Selection stays, mirroring the right-button click
+			expect(nextState.selectedIds).toEqual(["a"]);
+		});
+	});
+
+	describe("area selection (marquee)", () => {
+		const bboxes = {
+			a: { left: 10, right: 20, top: 10, bottom: 20 },
+			b: { left: 30, right: 40, top: 30, bottom: 40 },
+		};
+		const makeMarqueeState = (
+			overrides: Partial<CanvasControllerState> = {},
+		): CanvasControllerState =>
+			makeState({
+				objects: {
+					a: makeTextRect("a", ""),
+					b: makeTextRect("b", ""),
+				},
+				rootIds: ["a", "b"],
+				selectedIds: [],
+				textEditState: null,
+				eventStartSnapshot: { bboxes },
+				...overrides,
+			} as Partial<CanvasControllerState>);
+
+		it("dragStart initializes hitIds to empty and clears multiSelectGroup", () => {
+			const state = makeMarqueeState({
+				multiSelectGroup: { id: "stale" },
+			} as Partial<CanvasControllerState>);
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({
+					type: "dragStart",
+					start: { x: 0, y: 0 },
+					last: { x: 0, y: 0 },
+				}),
+				registries,
+			);
+			expect(nextState.areaSelection).toEqual({
+				startX: 0,
+				startY: 0,
+				endX: 0,
+				endY: 0,
+				hitIds: [],
+			});
+			expect(nextState.multiSelectGroup).toBeNull();
+		});
+
+		it("a changed hit set recomputes the selection and stores the new hitIds", () => {
+			const state = makeMarqueeState({
+				areaSelection: { startX: 0, startY: 0, endX: 5, endY: 5, hitIds: [] },
+			} as Partial<CanvasControllerState>);
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({ type: "drag", last: { x: 50, y: 50 } }),
+				registries,
+			);
+			expect(nextState.selectedIds).toEqual(["a", "b"]);
+			expect(nextState.multiSelectGroup).not.toBeNull();
+			expect(nextState.areaSelection?.hitIds).toEqual(["a", "b"]);
+		});
+
+		it("an identical hit set early-outs, keeping selectedIds / multiSelectGroup by reference", () => {
+			const state = makeMarqueeState({
+				areaSelection: { startX: 0, startY: 0, endX: 5, endY: 5, hitIds: [] },
+			} as Partial<CanvasControllerState>);
+			const firstFrame = CanvasEventHandler.handle(
+				state,
+				makeEvent({ type: "drag", last: { x: 50, y: 50 } }),
+				registries,
+			);
+			const secondFrame = CanvasEventHandler.handle(
+				firstFrame,
+				makeEvent({ type: "drag", last: { x: 55, y: 55 } }),
+				registries,
+			);
+			expect(secondFrame.selectedIds).toBe(firstFrame.selectedIds);
+			expect(secondFrame.multiSelectGroup).toBe(firstFrame.multiSelectGroup);
+			expect(secondFrame.areaSelection?.hitIds).toBe(
+				firstFrame.areaSelection?.hitIds,
+			);
+			expect(secondFrame.areaSelection?.endX).toBe(55);
+			expect(secondFrame.areaSelection?.endY).toBe(55);
+		});
+	});
+
+	it("a background press closes an open StencilLibrary category flyout", () => {
 		const state = makeState({
 			textEditState: null,
-			shapeLibraryOpenCategory: "flowchart",
+			stencilLibraryOpenCategory: "flowchart",
 		} as Partial<CanvasControllerState>);
 		const nextState = CanvasEventHandler.handle(
 			state,
 			makeEvent({ type: "pressed", button: 0 }),
 			registries,
 		);
-		expect(nextState.shapeLibraryOpenCategory).toBeNull();
+		expect(nextState.stencilLibraryOpenCategory).toBeNull();
 	});
 });

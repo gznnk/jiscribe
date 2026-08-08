@@ -1,11 +1,40 @@
-// Import the parser-only entry, not the root entry (which pulls in the Canvas
-// component). This keeps UI deps (react / @emotion / katex) out of the Node
-// bundle (extension.js) so activation stays light.
+// Import the headless `./doc` entry, not the root entry (which pulls in the Canvas
+// component). This keeps UI deps (react / @emotion / katex) out of the Node bundle
+// (extension.js) so activation stays light.
+//
+// The flowchart / container / markdown / sticky / general / annotation plugins are wired in through their own headless
+// `./doc` entries: those import only `@workspace/canvas/doc` / `@workspace/canvas/unstable-doc`
+// (no React, and for markdown no markdown-it / KaTeX either — rendering lives in its
+// presentation), so esbuild keeps the Node bundle small even though it now validates
+// plugin shapes too (docs/05_extensibility/plugin-architecture-requirements.md
+// §7「unstable 層の Node/UI 分割」)。
 import {
-	parseCanvasText,
+	createCanvasParser,
 	type SemanticDiagnostic,
-} from "@workspace/canvas/parser";
+} from "@workspace/canvas/doc";
+import { annotationDocPlugin } from "@workspace/plugin-annotation-shapes/doc";
+import { containerDocPlugin } from "@workspace/plugin-container-shapes/doc";
+import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
+import { generalDocPlugin } from "@workspace/plugin-general-shapes/doc";
+import { markdownDocPlugin } from "@workspace/plugin-markdown-shape/doc";
+import { stickyDocPlugin } from "@workspace/plugin-sticky-shape/doc";
+import { umlDocPlugin } from "@workspace/plugin-uml-shapes/doc";
 import * as vscode from "vscode";
+
+// Plugin-aware parser: built-in types plus the flowchart / container / markdown / sticky /
+// general / annotation plugin shapes, so .jis.json files using those shapes validate instead of reporting them
+// unknown.
+const canvasParser = createCanvasParser({
+	plugins: [
+		flowchartDocPlugin,
+		containerDocPlugin,
+		markdownDocPlugin,
+		stickyDocPlugin,
+		umlDocPlugin,
+		generalDocPlugin,
+		annotationDocPlugin,
+	],
+});
 
 /**
  * Surfaces .jis.json semantic errors in VSCode's Problems panel.
@@ -60,10 +89,10 @@ export class DiagnosticProvider {
 		// Clear the previous diagnostics before re-validating.
 		this.collection.delete(document.uri);
 
-		// parseCanvasText() never throws; it returns a discriminated union.
+		// parse() never throws; it returns a discriminated union.
 		// Syntax errors and schema-expressible structure errors are left to the
 		// JSON schema (see class doc); only validator-only rules are reported here.
-		const result = parseCanvasText(text);
+		const result = canvasParser.parse(text);
 		switch (result.kind) {
 			case "ok":
 				return;

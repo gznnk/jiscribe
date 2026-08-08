@@ -1,0 +1,45 @@
+import { createStencilIcon } from "@workspace/canvas-sdk";
+
+export const MarkdownIcon = createStencilIcon(
+	<>
+		<rect
+			x="3"
+			y="3"
+			width="18"
+			height="18"
+			rx="2"
+			ry="2"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinejoin="round"
+		/>
+		<line
+			x1="7"
+			y1="8"
+			x2="17"
+			y2="8"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+		/>
+		<line
+			x1="7"
+			y1="12"
+			x2="17"
+			y2="12"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+		/>
+		<line
+			x1="7"
+			y1="16"
+			x2="13"
+			y2="16"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+		/>
+	</>,
+);

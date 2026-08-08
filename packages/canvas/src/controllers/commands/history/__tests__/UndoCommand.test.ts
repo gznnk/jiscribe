@@ -7,7 +7,7 @@ import {
 	type DocSnapshot,
 } from "../../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { UndoCommand } from "../UndoCommand";
 
 const registries = createTestRegistries();
@@ -138,7 +138,12 @@ describe("UndoCommand", () => {
 						past: [snapshotPrev],
 						present: snapshotCurrent,
 						future: [],
-						textEditState: { objectId: "r1", text: "" },
+						textEditState: {
+							kind: "shape",
+							objectId: "r1",
+							slotId: "body",
+							text: "",
+						},
 					}),
 					registries,
 				),

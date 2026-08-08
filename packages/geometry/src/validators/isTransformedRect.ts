@@ -3,12 +3,11 @@ import { isTransform } from "./isTransform";
 import type { TransformedRect } from "../types/TransformedRect";
 
 /**
- * Check if an object is a TransformedRect.
- * Validates both Rect and Transform properties.
+ * Type guard for {@link TransformedRect}.
  *
- * @param obj - The object to check
- * @returns True if the object is a TransformedRect, false otherwise
+ * @param value - Value to narrow; the rect fields and the transform fields must
+ *   all be present, so a bare {@link Rect} does not pass
  */
-export const isTransformedRect = (obj: unknown): obj is TransformedRect => {
-	return isRect(obj) && isTransform(obj);
+export const isTransformedRect = (value: unknown): value is TransformedRect => {
+	return isRect(value) && isTransform(value);
 };

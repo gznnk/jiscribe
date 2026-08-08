@@ -2,19 +2,21 @@
 
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
-import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
 import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
+import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "alignment";
 
@@ -58,15 +60,12 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		isOpen,
 	);
 
-	const { selectedIds, objects } = canvasState;
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "textAlign") as
-		| TextStyleState
-		| undefined;
-	const textAlign = obj?.textAlign ?? "left";
-	const verticalAlign = obj?.verticalAlign ?? "middle";
+	const slot = getSelectedOrFirstTextSlot(canvasState);
+	const textAlign = slot?.textAlign ?? "left";
+	const verticalAlign = slot?.verticalAlign ?? "middle";
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -77,7 +76,11 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 				<AlignLeftIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<AlignmentMenuContent>
 						<AlignmentRow>
 							{horizontalAlignments.map(({ value, Icon, messageKey }) => (
@@ -108,9 +111,9 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 							))}
 						</AlignmentRow>
 					</AlignmentMenuContent>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

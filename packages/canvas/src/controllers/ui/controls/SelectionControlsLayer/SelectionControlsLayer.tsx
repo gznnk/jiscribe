@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 
 type SelectionControlsLayerProps = {
 	selectedIds: string[];
@@ -41,10 +41,10 @@ const SelectionControlsLayerComponent: React.FC<
 		<>
 			{controls.map((control) => (
 				<control.Component
-					key={control.handler.part}
+					key={control.part}
 					object={selectedObject}
 					zoom={zoom}
-					part={control.handler.part}
+					part={control.part}
 				/>
 			))}
 		</>

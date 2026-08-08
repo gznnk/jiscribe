@@ -1,5 +1,14 @@
-﻿import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import {
+	memo,
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
+import { CanvasProviders } from "./CanvasProviders";
 import {
 	CanvasRoot,
 	Container,
@@ -8,7 +17,6 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
-import { CanvasProviders } from "./contexts/CanvasProviders";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
 import { useCanvasExport, EXPORT_FIT_PADDING } from "./hooks/useCanvasExport";
 import type {
@@ -22,6 +30,7 @@ import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
+import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -33,10 +42,10 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
 import { useViewportHandle } from "./hooks/useViewportHandle";
-import { mergeCanvasMessages } from "./messages/CanvasMessages";
-import type { CanvasMessages } from "./messages/CanvasMessages";
-import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
-import type { CanvasConfig } from "./setup";
+import { resolveCanvasMessages } from "./messages/CanvasMessages";
+import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
+import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
+import type { CanvasConfig } from "./registries";
 import { CanvasView } from "../presentations/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -57,12 +66,17 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
+import type { ObjectMenuPropertyUpdater } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
+import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
+import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
 type CanvasProps = {
+	// ── Model & persistence (the core contract) ──
 	/**
 	 * The CanvasDoc to display.
 	 *
@@ -73,7 +87,7 @@ type CanvasProps = {
 	 * internal traversals. Validation is done at the external-input boundary (host)
 	 * → see packages/canvas/docs/01-design-philosophy.md principle 4.
 	 */
-	canvasDoc: CanvasDoc;
+	doc: CanvasDoc;
 	/**
 	 * Nonce from the most recent incoming sync message. Matched against the
 	 * delivered save nonces so a fold-back of our own save is recognized and
@@ -86,6 +100,74 @@ type CanvasProps = {
 	 * The second argument is the saveNonce that should be echoed back via syncNonce.
 	 */
 	onCommit?: (doc: CanvasDoc, saveNonce: string) => void;
+
+	// ── Host notifications (read-out only) ──
+	/**
+	 * Callback invoked when the selection changes, receiving the new set of
+	 * selected IDs (empty when nothing is selected). Shapes and the connector
+	 * are mutually exclusive and reported together as one ordered list. Use this
+	 * to drive host UI outside the canvas (e.g. an external property panel).
+	 */
+	onSelectionChange?: (selectedIds: string[]) => void;
+	/**
+	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
+	 * `ref.current.viewport.setViewport` (not on container resize). Read-only: use
+	 * it to persist or mirror the view. Do **not** feed it back into
+	 * `initialConfig.viewport` (mount-only) or drive the view from it — the canvas
+	 * owns the live camera; a mirror-back would fight continuous gestures. Push
+	 * programmatic changes via `ref.current.viewport` instead.
+	 */
+	onViewportChange?: (viewport: Camera) => void;
+
+	// ── Appearance & localization (live) ──
+	/**
+	 * Theme injected by the host (default: `darkCanvasTheme`). Appearance tokens
+	 * are exposed to styles as `--jiscribe-*` CSS custom properties on the
+	 * Canvas root; handle dimensions and the default font are distributed via
+	 * context. A VSCode host passes tokens holding `var(--vscode-...)` values
+	 * to follow the editor theme; other hosts can pass `lightCanvasTheme` or
+	 * their own `CanvasTheme`.
+	 */
+	theme?: CanvasTheme;
+	/**
+	 * Background grid settings. Omit for the default grid (shown, 25 world units);
+	 * each field is optional, so `{ show: false }` alone is valid. Live: can be
+	 * changed at runtime. Since an object literal breaks `<Canvas>`'s memo, a host
+	 * rendering this inline can `useMemo` it to avoid extra re-renders.
+	 *
+	 * The grid line color is not a setting here — it is derived from the effective
+	 * canvas surface (theme background, or the doc's `background`) so it stays
+	 * readable on any color.
+	 */
+	grid?: {
+		/**
+		 * Whether to render the grid (default `true`). The grid is a viewing aid
+		 * only — it is already excluded from image export — so this toggles the
+		 * on-screen display without changing exported images.
+		 */
+		show?: boolean;
+		/**
+		 * Base grid spacing in world units (default `25`). Sets the medium grid
+		 * interval; bold lines fall every 4× this value and the multi-level grid
+		 * adapts to zoom (see the canvas's grid layer). Ignored when `show` is
+		 * `false`.
+		 */
+		size?: number;
+	};
+	/**
+	 * Active locale (default `"en"`). Selects the canvas's built-in dictionary
+	 * (en / ja) and is exposed to plugins via `useCanvasLocale`. Resolution is
+	 * exact → language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
+	 */
+	locale?: string;
+	/**
+	 * Partial overrides applied on top of the locale-resolved dictionary
+	 * (tooltips, menus, toasts). Use this to tweak individual strings; use
+	 * `locale` to pick the language.
+	 */
+	messages?: Partial<CanvasMessages>;
+
+	// ── Host-integration escape hatches ──
 	/**
 	 * When provided, Ctrl+Z is delegated to this callback instead of Canvas's
 	 * internal undo stack. Use this in VSCode to forward undo to the host editor.
@@ -97,179 +179,158 @@ type CanvasProps = {
 	 */
 	onRedo?: () => void;
 	/**
-	 * Callback invoked when the selection changes, receiving the new set of
-	 * selected IDs (empty when nothing is selected). Shapes and the connector
-	 * are mutually exclusive and reported together as one ordered list. Use this
-	 * to drive host UI outside the canvas (e.g. an external property panel).
-	 */
-	onSelectionChange?: (selectedIds: string[]) => void;
-	/**
-	 * Partial overrides of the UI strings (tooltips, menus, toasts).
-	 * Defaults to English; the host decides the language (e.g. a VSCode host
-	 * can pass a Japanese dictionary based on `vscode.env.language`).
-	 */
-	messages?: Partial<CanvasMessages>;
-	/**
-	 * Theme injected by the host (default: `darkCanvasTheme`). Appearance tokens
-	 * are exposed to styles as `--jiscribe-*` CSS custom properties on the
-	 * Canvas root; handle dimensions and the default font are distributed via
-	 * context. A VSCode host passes tokens holding `var(--vscode-...)` values
-	 * to follow the editor theme; other hosts can pass `lightCanvasTheme` or
-	 * their own `CanvasTheme`.
-	 */
-	theme?: CanvasTheme;
-	/**
-	 * Focus the canvas on mount so keyboard shortcuts work immediately (default true).
-	 * Shortcuts are scoped to the focused Canvas; set false when embedding multiple
-	 * Canvases (or when the host manages focus) so mounting does not steal focus.
-	 */
-	autoFocus?: boolean;
-	/**
-	 * Initial camera (pan + zoom) applied once at mount, so the first paint lands
-	 * at the host's view (restore a saved view, …) instead of the doc default.
-	 * Read only at mount; later changes are ignored. To move the view after mount,
-	 * use `viewportRef.setViewport` — not this prop.
-	 */
-	defaultViewport?: Camera;
-	/**
-	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
-	 * `viewportRef.setViewport` (not on container resize). Read-only: use it to
-	 * persist or mirror the view. Do **not** feed it back into `defaultViewport`
-	 * (mount-only) or drive the view from it — the canvas owns the live camera; a
-	 * mirror-back would fight continuous gestures. Push programmatic changes via
-	 * `viewportRef` instead.
-	 */
-	onViewportChange?: (viewport: Camera) => void;
-	/**
-	 * Receives the imperative viewport API ({@link CanvasViewportHandle}). Use its
-	 * `setViewport(camera)` to move pan/zoom programmatically (fit-to-content,
-	 * jump-to-node, a scripted intro). Imperative by design so it cannot feed back
-	 * into a render loop the way a controlled `viewport` value prop would.
-	 */
-	viewportRef?: React.Ref<CanvasViewportHandle>;
-	/**
-	 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
-	 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
-	 */
-	toolbarLeading?: React.ReactNode;
-	/**
-	 * Host UI inserted at the right edge of the toolbar (e.g. a settings button).
-	 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
-	 */
-	toolbarTrailing?: React.ReactNode;
-	/**
-	 * Overrides the top-level arrangement of the shape tools: an ordered mix of
-	 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
-	 * for the default layout (basic primitives + sticky pinned, flowchart /
-	 * general / annotation as flyouts).
-	 */
-	toolbarLayout?: ToolbarEntry[];
-	/**
-	 * Per-canvas configuration of the available object types, commands, and
-	 * registries. Restricts what this canvas can create/handle (plugin-style
-	 * extensibility and feature-gating), independently of any other `<Canvas>` on
-	 * the page. Omit for the full default set (all shapes and commands).
-	 *
-	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
-	 * whose object types remain enabled — otherwise state construction throws
-	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
-	 *
-	 * Read **once at mount**: the capability set is part of a canvas's identity,
-	 * so later `initialConfig` changes are ignored. To reconfigure, remount with a
-	 * new React `key` (`<Canvas key={configId} initialConfig={...} />`).
-	 */
-	initialConfig?: CanvasConfig;
-	/**
-	 * Receives the imperative export API ({@link CanvasExportHandle}). Use it
-	 * when the host needs the exported image programmatically (e.g. writing a
-	 * `.jis.png` on save) instead of through the export dialog.
-	 */
-	exportRef?: React.Ref<CanvasExportHandle>;
-	/**
 	 * When provided, the export dialog delivers the exported image here instead
 	 * of triggering a browser download. Use this when the host owns file saving
 	 * (e.g. the VSCode extension writing into the workspace).
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
+
+	// ── Toolbar (host UI slots) ──
+	/**
+	 * Host-provided toolbar customization: UI slots at the edges (`leading` /
+	 * `trailing`) and an override of the shape-tool arrangement (`layout`). Grouped
+	 * for cohesion; since the JSX slots already break `<Canvas>`'s memo, a host
+	 * rendering this inline can `useMemo` the object to avoid extra re-renders.
+	 */
+	toolbar?: {
+		/**
+		 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
+		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+		 */
+		leading?: React.ReactNode;
+		/**
+		 * Host UI inserted at the right edge of the toolbar (e.g. a settings button).
+		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+		 */
+		trailing?: React.ReactNode;
+		/**
+		 * Overrides the top-level arrangement of the shape tools: an ordered mix of
+		 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
+		 * for the default layout, which pins every core preset directly and opens no
+		 * flyout — anything a plugin supplies must be added here by the host.
+		 */
+		layout?: ToolbarEntry[];
+	};
+
+	// ── Focus behavior ──
+	/**
+	 * Focus the canvas on mount so keyboard shortcuts work immediately (default
+	 * true). Shortcuts are scoped to the focused canvas; set false when embedding
+	 * multiple canvases (or when the host manages focus) so mounting does not
+	 * steal focus. Top-level (not in `initialConfig`) to match the React-idiomatic
+	 * `autoFocus` spelling.
+	 */
+	autoFocus?: boolean;
+
+	// ── Mount-time setup (read once; remount with a new key to change) ──
+	/**
+	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
+	 * capability set (available object types, commands, plugins) plus the initial
+	 * view (`viewport`). Restricts what this canvas can create/handle (plugin-style
+	 * extensibility and feature-gating), independently of any other `<Canvas>` on
+	 * the page. Omit for the full default set.
+	 *
+	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
+	 * whose object types remain enabled — otherwise state construction throws
+	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
+	 *
+	 * Later changes are ignored (the configuration is part of a canvas's identity).
+	 * To reconfigure, remount with a new React `key`
+	 * (`<Canvas key={configId} initialConfig={...} />`).
+	 */
+	initialConfig?: CanvasConfig;
+
+	// ── Imperative handle ──
+	/**
+	 * Receives the imperative Canvas handle ({@link CanvasHandle}), grouping every
+	 * imperative API by subsystem: `ref.current.viewport.setViewport(camera)` to
+	 * move pan/zoom (fit-to-content, jump-to-node, a scripted intro), and
+	 * `ref.current.export.toSvgString()` / `toPngBlob()` to get the exported image
+	 * programmatically. Imperative by design so the view cannot feed back into a
+	 * render loop the way a controlled value prop would.
+	 */
+	ref?: React.Ref<CanvasHandle>;
 };
 
-const CanvasComponent: React.FC<CanvasProps> = ({
-	canvasDoc,
+/**
+ * Imperative Canvas API delivered through the component `ref`. Each subsystem
+ * owns a namespace; new imperative capabilities are added as new namespaces
+ * rather than new props.
+ */
+export type CanvasHandle = {
+	/** Pan/zoom control (see {@link CanvasViewportHandle}). */
+	viewport: CanvasViewportHandle;
+	/** Image export (see {@link CanvasExportHandle}). */
+	export: CanvasExportHandle;
+};
+
+const CanvasComponent = ({
+	doc,
 	syncNonce,
 	onCommit,
+	onSelectionChange,
+	onViewportChange,
+	theme = darkCanvasTheme,
+	grid,
+	locale = "en",
+	messages,
 	onUndo,
 	onRedo,
-	onSelectionChange,
-	messages,
-	theme = darkCanvasTheme,
-	autoFocus = true,
-	defaultViewport,
-	onViewportChange,
-	viewportRef,
-	toolbarLeading,
-	toolbarTrailing,
-	toolbarLayout,
-	initialConfig,
-	exportRef,
 	onExportImage,
-}) => {
-	// Merged UI strings (English defaults + host overrides), distributed via context
+	toolbar,
+	autoFocus = true,
+	initialConfig,
+	ref,
+}: CanvasProps) => {
 	const mergedMessages = useMemo(
-		() => mergeCanvasMessages(messages),
-		[messages],
+		() => resolveCanvasMessages(locale, messages),
+		[locale, messages],
 	);
 
-	// Appearance tokens as --jiscribe-* custom properties, injected on the root
-	// so every descendant style resolves the host-injected theme.
 	const themeCssVars = useMemo(() => buildThemeCssVars(theme.tokens), [theme]);
 
-	// Theme-derived defaults for newly created objects (read by gesture handlers
-	// via state.docDefaults).
 	const docDefaults = useMemo(
 		() => ({ fontFamily: theme.fontFamily }),
 		[theme.fontFamily],
 	);
 
-	// rootRef: the gesture surface (toolbar + canvas area). Attaches pointerHandlers
-	// and pointer capture. canvasRef: the canvas area only. Used for size measurement,
-	// wheel, and menu bounds, aligning edge scrolling to the area below the toolbar.
+	// rootRef spans toolbar + canvas area and carries pointer capture; canvasRef is the
+	// canvas area alone, which keeps edge scrolling aligned to the region below the toolbar.
 	const rootRef = useRef<HTMLDivElement>(null);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	// Per-canvas registry bundle: a configured set when `initialConfig` is given,
-	// otherwise the shared full default. Built once at mount (see the `initialConfig`
-	// prop doc); the stable instance is closed over by the reducer (pure tree) and
-	// provided via context (React tree), so the two can never desync.
+	// The stable instance is both closed over by the reducer and provided via context, so
+	// the two can never desync. Canvas is the provider, so its own hooks must take
+	// `registries` as an explicit argument — reading context here yields the default,
+	// missing any plugin types.
 	const [registries] = useState(() =>
 		initialConfig
 			? createCanvasRegistries(initialConfig)
 			: defaultCanvasRegistries,
 	);
 
-	// Reducer for canvas state management with history. defaultViewport (if any)
-	// seeds the initial viewport so the first paint is already at the host's
-	// pan/zoom — see useCanvasReducer for the mount handoff.
+	// initialConfig.viewport seeds the initial viewport so the first paint is already at
+	// the host's pan/zoom (see useCanvasReducer for the mount handoff).
 	const [state, dispatch] = useCanvasReducer(
-		canvasDoc,
+		doc,
 		registries,
 		docDefaults,
-		defaultViewport,
+		initialConfig?.viewport,
 	);
 
-	// Keep the reducer-held docDefaults in sync when the host swaps themes at
-	// runtime (the reducer no-ops when the values are unchanged).
+	// Keeps docDefaults current when the host swaps themes at runtime; the reducer no-ops
+	// when the values are unchanged.
 	useEffect(() => {
 		dispatch({ type: "SET_DOC_DEFAULTS", docDefaults });
 	}, [docDefaults, dispatch]);
 
-	// Single error-toast slot shared by all error sources (clipboard, export)
+	// Single toast slot shared by every error source (clipboard, export).
 	const { errorNotification, notifyError } = useErrorNotification();
 
-	// Clipboard write side effect: fired whenever internalClipboard changes (Copy / Cut)
 	useClipboardWrite(state.internalClipboard, notifyError);
 
-	// Gesture handling — declared before useSyncExternalDoc so resetGestureState is available
+	// Declared before useSyncExternalDoc so resetGestureState is available to it.
 	const { pointerHandlers, wheelHandler, resetGestureState } =
 		useGestureRecognizer({
 			dispatch,
@@ -278,79 +339,75 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			canvasState: state,
 		});
 
-	// Shared between the save-delivery and external-sync hooks: matches each
-	// delivered save against its fold-back so overlapping saves that fold back
-	// out of order are still recognized as self-saves (issue #29).
+	// Shared between the save-delivery and external-sync hooks so overlapping saves that
+	// fold back out of order are still recognized as self-saves (#29).
 	const selfSaveNonceTracker = useSelfSaveNonceTracker();
 
-	// Notify the host when the selection changes (external UI integration)
 	useNotifySelectionChange(
 		state.selectedIds,
 		state.selectedConnectorId,
 		onSelectionChange,
 	);
 
-	// Viewport integration: expose an imperative setter for programmatic pan/zoom
-	// (viewportRef) and notify the host of camera changes (onViewportChange). The
-	// canvas stays authoritative for the live camera — the host reads it out and
-	// pushes changes in imperatively, with no controlled value prop that could
-	// feed back and fight continuous gestures.
-	useViewportHandle(viewportRef, dispatch);
+	// The canvas stays authoritative for the live camera: the host reads it out and pushes
+	// changes back imperatively, with no controlled prop that could fight a gesture.
+	const viewportHandle = useViewportHandle(dispatch);
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
-	// Notify parent component when a save is required (after commit or undo/redo)
-	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker);
+	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
 
-	// Sync external canvasDoc changes
 	useSyncExternalDoc({
-		canvasDoc,
+		canvasDoc: doc,
 		syncNonce,
 		canvasState: state,
 		dispatch,
 		resetGestureState,
 		selfSaveNonceTracker,
+		registries,
 	});
 
-	// Use wheel handler from GestureRecognizer.
-	// Scoped to canvasRef (the container element) so wheel events outside the canvas are not captured.
+	// Scoped to canvasRef so wheel events outside the canvas are not captured.
 	useCanvasWheel(canvasRef, wheelHandler);
 
-	// Container resize handling
 	useContainerResize(canvasRef, dispatch);
 
-	// Keyboard shortcuts handling — scoped to the focusable canvas root (rootRef),
-	// so with multiple Canvases on a page only the focused one handles shortcuts.
+	const handlePaste = useClipboardPaste(
+		state.internalClipboard,
+		dispatch,
+		registries,
+	);
+
+	// Scoped to the focusable canvas root, so with several Canvases on a page only the
+	// focused one handles shortcuts.
 	useKeyboardShortcuts({
 		containerRef: rootRef,
 		canvasState: state,
 		dispatch,
-		onUndo,
-		onRedo,
+		callbacks: { undo: onUndo, redo: onRedo, paste: handlePaste },
+		registries,
 	});
 
-	// Paste handling (keyboard shortcut + context menu)
-	const handlePaste = useClipboardPaste(
-		rootRef,
-		state.internalClipboard,
-		dispatch,
-	);
-
-	// Focus management for the keyboard scope: initial focus (autoFocus) and
-	// reclaiming focus when it silently falls to body (focused element unmounted).
+	// Initial focus plus reclaiming it when it silently falls to body because the focused
+	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
-	const handleMenuPropertyUpdate = useCallback(
-		(property: string, value: string, commit: boolean) => {
-			dispatch({ type: "MENU_PROPERTY_UPDATE", property, value, commit });
+	const handleMenuPropertyUpdate = useCallback<ObjectMenuPropertyUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "MENU_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
 		},
 		[dispatch],
 	);
 
-	// Context menu handling
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
-			// For data-gesture="none" elements (e.g. the textarea during text editing),
-			// show the browser's native context menu.
+			// data-gesture="none" elements (e.g. the text-editing textarea) keep the
+			// browser's native context menu.
 			if (isGestureOptedOut(e.target)) {
 				return;
 			}
@@ -359,18 +416,27 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		[],
 	);
 
-	// Viewport culling (issue #212): only objects intersecting the visible
-	// world rect are rendered. Export clones the live SVG DOM, so it suspends
-	// culling for the duration of the snapshot via withCullingSuspended.
+	// The slot being edited carries the uncommitted editor text, so geometry derived from
+	// it follows every keystroke instead of jumping on commit. Rendering, selection
+	// feedback and editor placement only — hit testing, snapping and bboxes still read
+	// committed state.objects.
+	const draftObjects = useMemo(
+		() => graftTextEditDraft(state.objects, state.textEditState),
+		[state.objects, state.textEditState],
+	);
+
+	// Only objects intersecting the visible world rect are rendered (#212). Export clones
+	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.
 	const { visibleObjectIds, withCullingSuspended } = useViewportCulling(
 		state.objects,
 		state.rootIds,
 		state.viewport,
 		state.textEditState?.objectId ?? null,
+		registries.objectVisualBounds,
 	);
 
-	// Image export: the imperative exportRef API and the export dialog
 	const {
+		exportHandle,
 		isExportDialogOpen,
 		openExportDialog,
 		closeExportDialog,
@@ -379,18 +445,34 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		svgRef,
 		canvasState: state,
 		registries,
-		exportRef,
 		onExportImage,
 		dispatch,
 		notifyError,
 		withCullingSuspended,
 	});
 
-	const { minX, minY, zoom } = state.viewport;
+	useImperativeHandle(
+		ref,
+		() => ({ viewport: viewportHandle, export: exportHandle }),
+		[viewportHandle, exportHandle],
+	);
 
-	// Zoom button enabled/disabled state is delegated to the command's canExecute (single source of truth).
-	// Canvas provides the registries context, so it cannot read it back via a hook
-	// and uses the pure resolver against its directly-held bundle instead.
+	// The camera the scene is drawn with. It is the committed one moved onto the
+	// device pixel grid, so text stops creeping inside its shape as the viewport
+	// pans (see snapViewportToDevicePixels). Every layer that positions itself
+	// from the camera has to take this one, or the SVG and the HTML overlays
+	// above it would sit a fraction of a pixel apart.
+	const devicePixelRatio = useDevicePixelRatio();
+	const drawnViewport = useMemo(
+		() => snapViewportToDevicePixels(state.viewport, devicePixelRatio),
+		[state.viewport, devicePixelRatio],
+	);
+	const { minX, minY, zoom } = drawnViewport;
+
+	const selectedTextSlot = resolveSelectedTextSlot(state);
+
+	// Delegated to the command's canExecute as the single source of truth. Canvas provides
+	// the registries context, so it resolves against its directly-held bundle, not a hook.
 	const canZoomIn =
 		resolveCommandState(state, registries, "zoomIn")?.enabled ?? false;
 	const canZoomOut =
@@ -399,9 +481,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	return (
 		<CanvasProviders
 			theme={theme}
+			locale={locale}
 			messages={mergedMessages}
 			registries={registries}
-			viewportRef={canvasRef}
+			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot
 				ref={rootRef}
@@ -412,13 +495,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			>
 				<Toolbar
 					activePresetId={state.shapeDrawing?.preset.id ?? null}
-					openCategoryId={state.shapeLibraryOpenCategory}
+					openCategoryId={state.stencilLibraryOpenCategory}
 					zoom={state.viewport.zoom}
 					canZoomIn={canZoomIn}
 					canZoomOut={canZoomOut}
-					layout={toolbarLayout}
-					leading={toolbarLeading}
-					trailing={toolbarTrailing}
+					layout={toolbar?.layout}
+					leading={toolbar?.leading}
+					trailing={toolbar?.trailing}
 				/>
 				<Viewport
 					data-id="canvas"
@@ -428,13 +511,22 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 				>
 					<Container>
 						<CanvasView
-							objects={state.objects}
+							objects={draftObjects}
 							rootIds={state.rootIds}
-							viewport={state.viewport}
+							viewport={drawnViewport}
 							svgRef={svgRef}
 							textEditObjectId={state.textEditState?.objectId ?? null}
+							textEditSlotId={
+								state.textEditState?.kind === "shape"
+									? state.textEditState.slotId
+									: null
+							}
 							isDrawMode={!!state.shapeDrawing}
 							visibleObjectIds={visibleObjectIds}
+							showGrid={grid?.show}
+							gridSize={grid?.size}
+							background={state.background}
+							surfaceColor={theme.tokens.canvasBg}
 						>
 							<PendingConnectorOverlay
 								pendingConnector={state.pendingConnector}
@@ -442,8 +534,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 							/>
 							<SelectionOverlay
 								selectedIds={state.selectedIds}
-								objects={state.objects}
+								objects={draftObjects}
 								multiSelectGroup={state.multiSelectGroup}
+								selectedTextSlot={selectedTextSlot}
 							/>
 							<ConnectorControlsLayer
 								selectedConnectorId={state.selectedConnectorId}
@@ -457,6 +550,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								multiSelectGroup={state.multiSelectGroup}
 								zoom={state.viewport.zoom}
 								isTextEditing={!!state.textEditState}
+								isTextSlotSelected={selectedTextSlot !== null}
+								activeDragKind={state.activeDragKind}
 							/>
 							<ConnectionAnchorsLayer
 								selectedIds={state.selectedIds}
@@ -466,6 +561,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								editingConnectorId={state.editingConnectorId}
 								editingEndpoint={state.editingEndpoint}
 								isTextEditing={!!state.textEditState}
+								activeDragKind={state.activeDragKind}
 							/>
 							<VertexControlsLayer
 								selectedIds={state.selectedIds}
@@ -480,7 +576,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								isTextEditing={!!state.textEditState}
 							/>
 							<DragGhost
-								shapeLibraryDrag={state.shapeLibraryDrag}
+								stencilLibraryDrag={state.stencilLibraryDrag}
 								docDefaults={state.docDefaults}
 							/>
 							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
@@ -494,7 +590,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								viewport={state.viewport}
 							/>
 						</CanvasView>
-						{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
+						{/* HTML that follows scroll and scales with zoom */}
 						<ZoomScaledOverlay
 							style={{
 								left: -minX * zoom,
@@ -504,7 +600,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 						>
 							<TextEditorLayer
 								textEditState={state.textEditState}
-								objects={state.objects}
+								objects={draftObjects}
 								onTextChange={(text) =>
 									dispatch({ type: "UPDATE_TEXT_EDIT", text })
 								}
@@ -513,7 +609,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								}
 							/>
 						</ZoomScaledOverlay>
-						{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
+						{/* HTML whose position follows zoom but whose size does not */}
 						<ScrollSyncedOverlay
 							style={{ left: -minX * zoom, top: -minY * zoom }}
 						>

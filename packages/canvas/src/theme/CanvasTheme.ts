@@ -17,8 +17,9 @@
 
 /**
  * Appearance tokens injected as `--jiscribe-*` CSS custom properties.
- * Colors of the shapes themselves (fill/stroke/fontColor) are document data
- * and are not part of the theme.
+ * Concrete shape colors (fill/stroke/fontColor) are document data, but the
+ * theme-following value `"auto"` resolves to the `objectInk` / `objectSurface`
+ * tokens; every other token is for the UI chrome.
  */
 export type CanvasThemeTokens = {
 	/** Canvas base color (editor background) */
@@ -55,8 +56,6 @@ export type CanvasThemeTokens = {
 	errorFg: string;
 	/** Drop shadow for floating UI (full box-shadow value) */
 	shadow: string;
-	/** Grid line color */
-	gridLine: string;
 	/** Track color for sliders, etc. (a mid gray visible against the surface) */
 	sliderTrack: string;
 	/**
@@ -78,6 +77,10 @@ export type CanvasThemeTokens = {
 	scrollbarThumb: string;
 	/** Scrollbar thumb color on hover */
 	scrollbarThumbHover: string;
+	/** Color that `"auto"` resolves to for a shape's ink (`stroke` / `fontColor`) */
+	objectInk: string;
+	/** Color that `"auto"` resolves to for a shape's face (`fill`) */
+	objectSurface: string;
 };
 
 /**

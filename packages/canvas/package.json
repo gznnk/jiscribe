@@ -6,17 +6,19 @@
 	"types": "src/index.ts",
 	"exports": {
 		".": "./src/index.ts",
-		"./parser": "./src/parser.ts",
-		"./doc-ops": "./src/doc-ops/index.ts",
+		"./unstable": "./src/unstable.ts",
+		"./doc": "./src/doc.ts",
+		"./unstable-doc": "./src/unstable-doc.ts",
 		"./png-source": "./src/png-source.ts",
-		"./svg-source": "./src/svg-source.ts",
-		"./ai/schema": "./ai/jiscribe.schema.json",
-		"./ai/guide": "./ai/ai-guide.md",
-		"./ai/reference": "./ai/reference.md"
+		"./svg-source": "./src/svg-source.ts"
 	},
 	"scripts": {
 		"lint": "eslint .",
+		"dev:harness": "vite e2e/harness",
 		"test": "vitest run",
+		"test:e2e": "playwright test",
+		"test:e2e:headed": "playwright test --headed",
+		"test:e2e:ui": "playwright test --ui",
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest run --coverage",
 		"test:ui": "vitest --ui",
@@ -32,20 +34,31 @@
 		"@emotion/styled": "catalog:",
 		"@workspace/basic-validators": "workspace:*",
 		"@workspace/geometry": "workspace:*",
-		"@workspace/markdown": "workspace:*",
 		"@workspace/utility-types": "workspace:*",
 		"dompurify": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.60.0",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react-swc": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
 		"@vitest/ui": "^2.1.8",
+		"@workspace/plugin-annotation-shapes": "workspace:*",
+		"@workspace/plugin-container-shapes": "workspace:*",
+		"@workspace/plugin-flowchart-shapes": "workspace:*",
+		"@workspace/plugin-general-shapes": "workspace:*",
+		"@workspace/plugin-markdown-shape": "workspace:*",
+		"@workspace/plugin-sticky-shape": "workspace:*",
+		"@workspace/plugin-uml-shapes": "workspace:*",
+		"katex": "catalog:",
 		"madge": "catalog:",
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	}
 }

@@ -2,27 +2,45 @@ import { describe, it, expect } from "vitest";
 
 import { isTextStyleState } from "../TextStyleState";
 
-// NOTE: Validation of concrete CSS colors depends on isCssColor (CSS.supports), which
-// cannot be verified because this package's vitest environment (node) has no CSS.
-// Here we cover the acceptance of the sentinel "auto" (a path short-circuited independent of env).
+// NOTE: The styling inside a slot is checked by isTextSlot (its own suite); this
+// one covers the shape of `text` itself, which is all TextStyleState declares.
 describe("isTextStyleState", () => {
-	it('accepts a fontColor of the sentinel "auto" (theme-following)', () => {
-		// Rejecting auto would prevent TextEditorLayer from rendering and break text editing (issue #38)
-		expect(isTextStyleState({ fontColor: "auto" })).toBe(true);
+	it("accepts an object with no text at all", () => {
+		expect(isTextStyleState({})).toBe(true);
+		expect(isTextStyleState({ text: undefined })).toBe(true);
 	});
 
-	it("can validate via other text properties even without fontColor", () => {
+	it("accepts styled slots of either content kind", () => {
 		expect(
 			isTextStyleState({
-				text: "hello",
-				textAlign: "center",
-				verticalAlign: "middle",
-				fontSize: 16,
+				text: {
+					body: {
+						text: "hello",
+						// Rejecting auto would prevent TextEditorLayer from rendering and
+						// break text editing (issue #38).
+						fontColor: "auto",
+						textAlign: "center",
+						verticalAlign: "middle",
+						fontSize: 16,
+					},
+				},
+			}),
+		).toBe(true);
+		expect(
+			isTextStyleState({
+				text: { name: { text: "User" }, rows: { text: ["id"] } },
 			}),
 		).toBe(true);
 	});
 
-	it("rejects an invalid textAlign before reaching fontColor validation", () => {
-		expect(isTextStyleState({ textAlign: "justify" })).toBe(false);
+	it("rejects a slot whose styling is malformed", () => {
+		expect(
+			isTextStyleState({ text: { body: { text: "x", textAlign: "justify" } } }),
+		).toBe(false);
+	});
+
+	it("rejects a bare content: a slot is always an object", () => {
+		expect(isTextStyleState({ text: "hello" })).toBe(false);
+		expect(isTextStyleState({ text: { body: "hello" } })).toBe(false);
 	});
 });

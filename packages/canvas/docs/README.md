@@ -2,7 +2,7 @@
 
 # canvas Design Documentation
 
-A set of documents that organize the design of `@workspace/canvas` into 10 pillars.
+A set of documents that organize the design of `@workspace/canvas` into 11 pillars.
 For a high-level overview, we recommend reading [Design Philosophy](./01-design-philosophy.md) and
 [Architecture](./02-architecture.md) first.
 
@@ -23,10 +23,11 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 | 8   | [Presentation and Theme](./08-presentation-and-theme.md)         | Pure rendering in presentations, color usage conventions, and VSCode theme tokens                                      |
 | 9   | [Testing](./09-testing.md)                                       | Unit / integration (vitest), E2E (Playwright), and circular dependency checks (madge)                                  |
 | 10  | [Style Property System](./10-style-properties.md)                | StylePropertyRegistry, feature-gated / shape-declared property declarations, and dot-notation nested writes            |
+| 11  | [Shape Design Decisions](./11-shape-design.md)                   | The criteria for adding or extending a shape (e.g., splitting geometry into user-specified vs. engine-derived)         |
 
 ## AI Reference
 
-Materials intended for AI, such as the format specification and authoring procedures, are located under `../ai/` (a separate track from this design documentation).
+Materials intended for AI, such as the format specification and authoring procedures, are located under `packages/ai-docs/assets/` (a separate track from this design documentation).
 
-- [Canvas Doc Reference](../ai/reference.md)
-- [AI Authoring Guide](../ai/ai-guide.md)
+- [Canvas Doc Reference](../../ai-docs/assets/reference.md)
+- [AI Authoring Guide](../../ai-docs/assets/ai-guide.md)

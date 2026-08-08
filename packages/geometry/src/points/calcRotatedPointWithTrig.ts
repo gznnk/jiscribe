@@ -1,35 +1,31 @@
 import type { Point } from "../types/Point";
 
 /**
- * Rotates a point around a center using pre-computed cos/sin.
+ * Rotates point `(px, py)` around center `(cx, cy)` using pre-computed cos/sin.
+ * Trig-free core of {@link calcRotatedPoint}: pass one cos/sin pair when
+ * rotating many points by the same angle. For the inverse rotation pass
+ * `(cosAngle, -sinAngle)`.
  *
- * This is the trig-free core shared by {@link calcRotatedPoint} and by callers
- * that rotate multiple points — or the same angle in both directions — with one
- * cos/sin pair. Computing `Math.cos`/`Math.sin` once and passing them here avoids
- * recomputing the trigonometric values per call. For the inverse rotation,
- * pass `(cosTheta, -sinTheta)` since `cos(-θ) = cos(θ)` and `sin(-θ) = -sin(θ)`.
- *
- * @param px - X-coordinate of the point to rotate
- * @param py - Y-coordinate of the point to rotate
- * @param cx - X-coordinate of the rotation center
- * @param cy - Y-coordinate of the rotation center
- * @param cosTheta - Pre-computed cosine of the rotation angle
- * @param sinTheta - Pre-computed sine of the rotation angle
- * @returns The rotated point
+ * @param px - X of the point to rotate
+ * @param py - Y of the point to rotate
+ * @param cx - X of the center to rotate around
+ * @param cy - Y of the center to rotate around
+ * @param cosAngle - `Math.cos` of the rotation angle in radians
+ * @param sinAngle - `Math.sin` of the same angle
  */
 export const calcRotatedPointWithTrig = (
 	px: number,
 	py: number,
 	cx: number,
 	cy: number,
-	cosTheta: number,
-	sinTheta: number,
+	cosAngle: number,
+	sinAngle: number,
 ): Point => {
 	const dx = px - cx;
 	const dy = py - cy;
 
 	return {
-		x: cx + (dx * cosTheta - dy * sinTheta),
-		y: cy + (dx * sinTheta + dy * cosTheta),
+		x: cx + (dx * cosAngle - dy * sinAngle),
+		y: cy + (dx * sinAngle + dy * cosAngle),
 	};
 };

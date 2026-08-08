@@ -8,7 +8,14 @@ import type { ObjectFeatures } from "../../../objects/types/ObjectFeatures";
 import { initializeObjectDocValidatorRegistry } from "../../../registry/initializeObjectDocValidatorRegistry";
 import { objectDocValidatorRegistry } from "../../../registry/ObjectDocValidatorRegistry";
 import type { CanvasDoc } from "../../CanvasDoc";
-import { validateSemantics } from "../validateSemantics";
+import type { SemanticDiagnostic } from "../types";
+import { validateSemantics as validateSemanticsWithRegistry } from "../validateSemantics";
+
+// validateSemantics now takes a registry argument (createCanvasParser can supply a
+// non-global one); this suite still exercises it against the global registry (populated
+// per-describe-block below), so wrap it to keep every existing single-arg call site unchanged.
+const validateSemantics = (doc: CanvasDoc): SemanticDiagnostic[] =>
+	validateSemanticsWithRegistry(doc, objectDocValidatorRegistry);
 
 const rect = (id: string): RectDoc =>
 	({ id, type: "rect" }) as unknown as RectDoc;
@@ -383,12 +390,9 @@ describe("validateSemantics (connectable via the real registry)", () => {
 		],
 	});
 
-	it.each(["rect", "ellipse", "diamond", "sticky"])(
-		"%s is connectable (no error)",
-		(type) => {
-			expect(validateSemantics(targetDoc(type))).toEqual([]);
-		},
-	);
+	it.each(["rect", "ellipse"])("%s is connectable (no error)", (type) => {
+		expect(validateSemantics(targetDoc(type))).toEqual([]);
+	});
 
 	it.each(["polyline", "polygon", "svg", "group"])(
 		"%s is not connectable (not connectable)",

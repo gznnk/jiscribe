@@ -2,9 +2,9 @@ import { type RefObject, useEffect, useRef } from "react";
 
 /**
  * Keeps the focusable canvas root (tabIndex-ed CanvasRoot) holding focus so the
- * container-scoped keyboard listeners (useKeyboardShortcuts / useClipboardPaste)
- * stay reachable. Shortcuts are scoped to the focused Canvas — this hook is what
- * guarantees "the Canvas the user is working in" actually has focus.
+ * container-scoped keyboard listener (useKeyboardShortcuts) stays reachable.
+ * Shortcuts are scoped to the focused Canvas — this hook is what guarantees
+ * "the Canvas the user is working in" actually has focus.
  *
  * Responsibilities:
  * - Initial focus on mount (opt-out via autoFocus, e.g. multi-Canvas embedding

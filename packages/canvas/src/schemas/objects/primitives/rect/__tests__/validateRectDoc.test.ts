@@ -15,7 +15,6 @@ const validRect = {
 	strokeDashType: "solid",
 	fill: "#fff",
 	text: "hello",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: "#000",

@@ -3,6 +3,12 @@ import type { Point } from "../types/Point";
 /**
  * Samples points along a cubic Bézier curve over t ∈ [0, 1] (both endpoints
  * inclusive). Returns `segments + 1` points.
+ *
+ * @param p0 - Start point of the curve
+ * @param control1 - First control point, pulling the curve away from `p0`
+ * @param control2 - Second control point, pulling the curve away from `p3`
+ * @param p3 - End point of the curve
+ * @param segments - Number of segments to divide t ∈ [0, 1] into
  */
 export function sampleCubicBezier(
 	p0: Point,

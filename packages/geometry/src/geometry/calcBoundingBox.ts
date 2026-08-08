@@ -4,12 +4,10 @@ import type { BoundingBox } from "../types/BoundingBox";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * Calculates the bounding box of a TransformedFrame.
- * Returns the box coordinates representing the frame's outer bounds.
- * Note: cx and cy represent the center coordinates of the frame.
+ * Axis-aligned bounding box of a transformed frame.
  *
- * @param frame - The transformed frame to calculate bounding box for
- * @returns The bounding box with top, left, right, bottom coordinates
+ * @param frame - The shape to enclose; `rotation` grows the box, while the
+ *   flips cannot change its extents
  */
 export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 	const { cx, cy } = frame;
@@ -19,20 +17,19 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 
-	// For elements with rotation, calculate all four corners and find bounding box
 	if (rotation !== 0) {
+		// Compute cos/sin once and reuse across all four corners.
 		const radians = degreesToRadians(rotation);
-		const cosTheta = Math.cos(radians);
-		const sinTheta = Math.sin(radians);
+		const cosAngle = Math.cos(radians);
+		const sinAngle = Math.sin(radians);
 
-		// Calculate all four corners
 		const topLeft = applyAffineWithTrig(
 			-halfWidth,
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		);
@@ -42,8 +39,8 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		);
@@ -53,8 +50,8 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		);
@@ -64,13 +61,12 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		);
 
-		// Find min/max values
 		const left = Math.min(topLeft.x, bottomLeft.x, topRight.x, bottomRight.x);
 		const right = Math.max(topLeft.x, bottomLeft.x, topRight.x, bottomRight.x);
 		const top = Math.min(topLeft.y, bottomLeft.y, topRight.y, bottomRight.y);
@@ -79,8 +75,7 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 		return { top, left, right, bottom };
 	}
 
-	// Optimized path for non-rotated elements
-	// Note: scaleX and scaleY are 1 or -1 (flip only), so dimensions don't change
+	// Unrotated fast path: scale is a flip flag, so it cannot change the extents.
 	return {
 		top: cy - halfHeight,
 		left: cx - halfWidth,

@@ -4,14 +4,14 @@ import { applyInverseAffineWithTrig } from "../applyInverseAffineWithTrig";
 import { calcInverseAffineTransformedPoint } from "../calcInverseAffineTransformedPoint";
 
 describe("applyInverseAffineWithTrig", () => {
-	it("cos=1・sin=0 は回転なし（theta=0）の特例パスと同一結果になる", () => {
+	it("matches the no-rotation fast path when cos=1 and sin=0", () => {
 		const result = applyInverseAffineWithTrig(7, 7, 2, 2, 1, 0, 5, 5);
 		expect(result.x).toBe(1); // (7-5)/2
 		expect(result.y).toBe(1); // (7-5)/2
 	});
 
-	it("順変換の逆になっている（90度回転）", () => {
-		// (0, 1) は (1, 0) を90度回転した点。逆変換で (1, 0) に戻る
+	it("inverts the forward transform for a 90 degree rotation", () => {
+		// (0, 1) is (1, 0) rotated by 90 degrees, so the inverse returns (1, 0).
 		const result = applyInverseAffineWithTrig(
 			0,
 			1,
@@ -26,17 +26,17 @@ describe("applyInverseAffineWithTrig", () => {
 		expect(result.y).toBeCloseTo(0);
 	});
 
-	it("同一 theta から計算した cos/sin で calcInverseAffineTransformedPoint と一致する", () => {
-		const theta = 0.7;
-		const cosTheta = Math.cos(theta);
-		const sinTheta = Math.sin(theta);
+	it("agrees with calcInverseAffineTransformedPoint given cos/sin of the same angle", () => {
+		const angleRad = 0.7;
+		const cosAngle = Math.cos(angleRad);
+		const sinAngle = Math.sin(angleRad);
 		const viaHelper = applyInverseAffineWithTrig(
 			3,
 			-4,
 			1.5,
 			2,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			7,
 			-2,
 		);
@@ -45,7 +45,7 @@ describe("applyInverseAffineWithTrig", () => {
 			-4,
 			1.5,
 			2,
-			theta,
+			angleRad,
 			7,
 			-2,
 		);

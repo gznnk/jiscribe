@@ -23,8 +23,8 @@ export class ObjectMapperRegistry {
 			// reference, never a copy) so consumers can read per-type specs from the
 			// object without a registry lookup — works for custom types too (#165).
 			toState: (doc) => {
-				// mapper.toState は常に新規リテラルを返すので所有物として破壊代入できる
-				// （CanvasMapper.processObject の parentId/childIds 代入と同じ契約）
+				// mapper.toState always returns a fresh literal, so this owns it and may assign
+				// in place — the same contract as CanvasMapper.processObject's parentId/childIds.
 				const state = mapper.toState(doc as TDoc);
 				state.features = features;
 				return state;

@@ -1,5 +1,5 @@
 /**
- * Line height shared by text display (TextOverlay) and text editing (TextEditor).
+ * Line height shared by text display (TextOverlayFrame) and text editing (TextEditor).
  *
  * Because a textarea is a form element, it does not inherit line-height from its
  * ancestors and instead uses the UA default (normal ≈ 1.2). A div, on the other

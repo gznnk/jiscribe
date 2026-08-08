@@ -7,9 +7,9 @@ import { cleanupGroups } from "../../utils/cleanupGroups";
 import { findLowestCommonAncestor } from "../../utils/findLowestCommonAncestor";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const GroupCommand: Command = {
+export const GroupCommand: ExecutableCommand = {
 	id: "group",
 	label: "Group",
 	category: "arrange",
@@ -151,7 +151,7 @@ export const GroupCommand: Command = {
 			// the real group object (multiSelectGroup takes precedence in both).
 			multiSelectGroup: null,
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

@@ -5,7 +5,6 @@ import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import { AlignmentMenu } from "./items/AlignmentMenu";
 import { ArrowHeadMenu } from "./items/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./items/BackgroundColorMenu";
-import { BoldMenu } from "./items/BoldMenu";
 import { BorderStyleMenu } from "./items/BorderStyleMenu";
 import { FontColorMenu } from "./items/FontColorMenu";
 import { FontSizeMenu } from "./items/FontSizeMenu";
@@ -15,22 +14,31 @@ import { LineColorMenu } from "./items/LineColorMenu";
 import { LineStyleMenu } from "./items/LineStyleMenu";
 import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
+import { TextFormatMenu } from "./items/TextFormatMenu";
 import {
 	ObjectMenuContainer,
-	ObjectMenuSection,
+	ObjectMenuSectionRow,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
-import type { MenuItem, MenuSection, MenuItemProps } from "./ObjectMenuTypes";
+import type {
+	ObjectMenuItem,
+	ObjectMenuPropertyUpdater,
+	ObjectMenuSection,
+} from "./ObjectMenuTypes";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
+import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
-const renderItem = (item: MenuItem, props: MenuItemProps): React.ReactNode => {
-	const { canvasState, onPropertyUpdate } = props;
+const renderItem = (
+	item: ObjectMenuItem,
+	canvasState: CanvasControllerState,
+	onPropertyUpdate: ObjectMenuPropertyUpdater,
+): React.ReactNode => {
 	switch (item.type) {
 		case "arrowHead":
 			return <ArrowHeadMenu key="arrowHead" canvasState={canvasState} />;
@@ -86,7 +94,7 @@ const renderItem = (item: MenuItem, props: MenuItemProps): React.ReactNode => {
 						canvasState={canvasState}
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-					<BoldMenu canvasState={canvasState} />
+					<TextFormatMenu canvasState={canvasState} />
 				</React.Fragment>
 			);
 		case "textAlignment":
@@ -103,7 +111,10 @@ const renderItem = (item: MenuItem, props: MenuItemProps): React.ReactNode => {
 			return (
 				<item.component
 					key={item.id}
-					canvasState={canvasState}
+					objects={canvasState.objects}
+					selectedIds={canvasState.selectedIds}
+					selectedConnectorId={canvasState.selectedConnectorId}
+					openSectionId={canvasState.objectMenuOpenId}
 					onPropertyUpdate={onPropertyUpdate}
 				/>
 			);
@@ -112,8 +123,8 @@ const renderItem = (item: MenuItem, props: MenuItemProps): React.ReactNode => {
 
 const buildSystemSections = (
 	canvasState: CanvasControllerState,
-): MenuSection[] => {
-	const systemSections: MenuSection[] = [];
+): ObjectMenuSection[] => {
+	const systemSections: ObjectMenuSection[] = [];
 
 	// To show StackOrder including connector selection (selectedConnectorId), use
 	// isArrangeableSelection, which judges by the effective selection rather than selectedIds alone.
@@ -162,20 +173,23 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
-	const systemSections = shouldRender ? buildSystemSections(canvasState) : [];
+	// None of the system sections acts on a text slot, so they all go while one is selected.
+	const showSystemSections =
+		shouldRender && resolveSelectedTextSlot(canvasState) === null;
+	const systemSections = showSystemSections
+		? buildSystemSections(canvasState)
+		: [];
 	const allSections = [...objectSections, ...systemSections];
 
 	if (!shouldRender || allSections.length === 0) {
 		return null;
 	}
 
-	const itemProps: MenuItemProps = { canvasState, onPropertyUpdate };
-
 	// Since both objectSections and systemSections may contain the same item type,
 	// prefer the first occurrence and prevent duplicate rendering
 	const renderedItemKeys = new Set<string>();
 
-	// Wrap each section in an ObjectMenuSection. Dividers are drawn in CSS (::before), and
+	// Wrap each section in an ObjectMenuSectionRow. Dividers are drawn in CSS (::before), and
 	// empty sections (custom returns null / all items skipped as duplicates) are
 	// automatically collapsed along with their divider via `:empty`.
 	const sections = allSections.map((section) => {
@@ -186,10 +200,12 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				return;
 			}
 			renderedItemKeys.add(key);
-			sectionItems.push(renderItem(item, itemProps));
+			sectionItems.push(renderItem(item, canvasState, onPropertyUpdate));
 		});
 		return (
-			<ObjectMenuSection key={section.id}>{sectionItems}</ObjectMenuSection>
+			<ObjectMenuSectionRow key={section.id}>
+				{sectionItems}
+			</ObjectMenuSectionRow>
 		);
 	});
 

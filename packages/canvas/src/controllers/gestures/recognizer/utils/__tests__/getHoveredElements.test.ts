@@ -13,6 +13,9 @@ const makeEl = (kind?: string, id?: string, part?: string): Element => {
 			if (selector === "[data-kind]" && kind !== undefined) {
 				return el as Element;
 			}
+			if (selector === "[data-part]" && part !== undefined) {
+				return el as Element;
+			}
 			return null;
 		},
 		getAttribute: (attr: string) => attrs[attr] ?? null,

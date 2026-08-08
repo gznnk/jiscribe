@@ -8,8 +8,8 @@ const freezeRecursively = (value: unknown, seen: WeakSet<object>): void => {
 		return;
 	}
 	seen.add(value);
-	// Object.freeze は Map / Set の set / add を防げないため対象外にする
-	// （キャッシュ用途の意図的なミュータブル構造は自然にここで除外される）
+	// Object.freeze cannot stop Map/Set set/add, so they are skipped — which also excludes
+	// the deliberately mutable cache structures.
 	if (value instanceof Map || value instanceof Set) {
 		return;
 	}
@@ -20,16 +20,15 @@ const freezeRecursively = (value: unknown, seen: WeakSet<object>): void => {
 };
 
 /**
- * テスト用: state を再帰的に Object.freeze して返す。
+ * Recursively Object.freeze a state for tests.
  *
- * ハンドラー / コマンドは state を immutable に更新する規約であり、handleGesture の
- * 変更検知（commitVersion のインクリメント条件）はこの規約を前提とした参照比較で行う。
- * 規約に反して in-place ミューテートすると変更が検知されず phantom history の原因に
- * なるため（issue #19）、テストに渡す state を凍結し、違反を strict mode の
- * TypeError で即座に検知する。
+ * Handlers and commands are required to update state immutably, and handleGesture's change
+ * detection (what increments commitVersion) is a reference comparison resting on that rule.
+ * An in-place mutation goes undetected and causes phantom history (#19), so freezing the
+ * state handed to a test turns a violation into an immediate strict-mode TypeError.
  *
- * history 配下だけは凍結しない: DocSnapshot は resolveDocSnapshot が write-once
- * メモ化として意図的に in-place 更新するため（DocSnapshot.ts の invariant を参照）。
+ * Everything under `history` is left unfrozen: resolveDocSnapshot updates DocSnapshot in
+ * place on purpose, as write-once memoization (see the invariant in DocSnapshot.ts).
  */
 export const deepFreezeState = (
 	state: CanvasControllerState,

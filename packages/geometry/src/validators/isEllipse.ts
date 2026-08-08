@@ -7,27 +7,24 @@ import {
 import type { Ellipse } from "../types/Ellipse";
 
 /**
- * Check if an object is an Ellipse (primitive).
- * Validates all required Ellipse properties:
- * - Position: cx, cy (numbers)
- * - Radii: rx, ry (non-negative numbers)
+ * Type guard for {@link Ellipse}. Radii must be non-negative.
  *
- * @param obj - The object to check
- * @returns True if the object is an Ellipse, false otherwise
+ * @param value - Value to narrow; extra properties are allowed, so a
+ *   {@link TransformedEllipse} passes too
  */
-export const isEllipse = (obj: unknown): obj is Ellipse => {
-	if (!isObject(obj)) {
+export const isEllipse = (value: unknown): value is Ellipse => {
+	if (!isObject(value)) {
 		return false;
 	}
 
 	return (
-		"cx" in obj &&
-		isNumber(obj.cx) &&
-		"cy" in obj &&
-		isNumber(obj.cy) &&
-		"rx" in obj &&
-		isNonNegativeNumber(obj.rx) &&
-		"ry" in obj &&
-		isNonNegativeNumber(obj.ry)
+		"cx" in value &&
+		isNumber(value.cx) &&
+		"cy" in value &&
+		isNumber(value.cy) &&
+		"rx" in value &&
+		isNonNegativeNumber(value.rx) &&
+		"ry" in value &&
+		isNonNegativeNumber(value.ry)
 	);
 };

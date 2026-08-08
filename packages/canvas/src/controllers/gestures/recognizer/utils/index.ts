@@ -1,9 +1,11 @@
+export { calcPinchDist } from "./calcPinchDist";
+export { calcPinchMid } from "./calcPinchMid";
 export { calculateScrollDelta } from "./calculateScrollDelta";
 export { detectEdgeProximity, type EdgeProximity } from "./detectEdgeProximity";
 export { findGestureElement, type GestureToken } from "./findGestureElement";
+export { getGestureTarget, type GestureTarget } from "./getGestureTarget";
 export { createGetHovered, getHoveredElements } from "./getHoveredElements";
 export { getInputValue, readInputValue } from "./getInputValue";
-export { getKindAndId } from "./getKindAndId";
 export { getSvgPoint } from "./getSvgPoint";
 export { isDoubleClick } from "./isDoubleClick";
 export { isGestureOptedOut } from "./isGestureOptedOut";

@@ -7,6 +7,175 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-08
+
+The largest release so far. The shape set grew from 8 drawable types to 47, text
+became addressable per compartment, connectors now follow the real silhouette of
+a shape and can be routed by hand, and touch input is supported.
+
+### Added
+
+#### Shapes
+
+The shape library is now organised into categories, each opening as a flyout from
+the toolbar: **Flowchart**, **UML**, **Container**, **General**, and **Annotation**,
+alongside the pinned Rectangle / Ellipse / Polyline / Polygon / Sticky / Markdown.
+
+- **Flowchart set (18 shapes)**: `subroutine`, `trapezoid`, `manualInput`, `card`,
+  `delay`, `display`, `extract`, `cross`, `multiDocument`, `storedData`, `loopLimit`,
+  `offPageConnector`, plus `stadium`, `parallelogram`, `hexagon`, `document` and the
+  existing `diamond` / `db`. On-page connector, Process and Decision are also
+  available as presets. The palette is laid out in meaning groups (core flow →
+  data & I/O → manual → loop bounds, markers and connectors).
+- **General / system shapes (15)**: `server`, `browserWindow`, `terminalWindow`,
+  `folder`, `file`, `package`, `envelope`, `queue`, `gear`, `lock`, `shield`,
+  `smartphone`, `laptop`, plus `actor` and `cloud` — aimed at architecture diagrams
+  and code-reading notes.
+- **Container shapes**: `container` with **Frame** / **Boundary** (dashed) / **Zone**
+  (tinted) presets, for enclosing a region of the diagram. Clicks pass through the
+  body, so only the header band and the border select it; the title lives in the
+  header. Dragging the container moves what it encloses via the existing group
+  mechanism. The header fill is its own colour field (`headerFill`, defaults to
+  `auto`), and its height can be dragged.
+- **UML class shapes**: `record` now has variable compartments — `stereotype`,
+  `name`, `attributes` and `operations`, where every key you write becomes a
+  compartment and every key you omit disappears. Ships as five stencils: Object,
+  Class, Interface, Abstract Class and Enum, each with its own icon and sample
+  notation.
+- **Annotation shapes (5)**: `brace`, `bracket`, `bracketWithStem`, `note` and
+  `callout`. The three bracket-family shapes carry their label outside the band, so
+  the bracket stays thin while the label grows, and their tip can be dragged.
+- **Markdown is now its own shape type** (`type: "markdown"`) instead of a style
+  attribute on a rectangle. See **Changed** for the migration.
+
+#### Text
+
+- **Named text slots**: A shape can hold several independently styled pieces of
+  text. Click a compartment of a selected shape to select just that slot — text
+  styling then applies to that slot only, the object menu narrows to text items,
+  the selection frame turns dashed, and **Tab** / **Shift+Tab** cycle between slots.
+  **Escape** clears the slot first and the object second.
+- **Italic, underline and strikethrough** for text, carried all the way through to
+  PNG / SVG export.
+- **Text regions follow the shape's silhouette** rather than its bounding box, so
+  text no longer spills out of trapezoids, triangles and other non-rectangular shapes.
+- **Line wrapping is measured, not estimated**, so a `record`'s name band and
+  connector labels track their real height — including live while you type.
+- **Shapes that are drawn edge-to-edge hang their label below the box** (actor,
+  server, package, envelope, queue, gear, lock, cross, extract), auto-sized from
+  the text content.
+
+#### Connectors
+
+- **Endpoints snap to a shape's true outline**, not its bounding rectangle, so
+  connectors on diamonds, hexagons, clouds and the rest meet the shape where it is
+  actually drawn.
+- **Anchors sit where the shape's form wants them**: an `anchorRegion` per type
+  pulls the four side anchors onto the real edge, shapes can declare extra named
+  anchors (the tips of `brace` / `bracket` / `bracketWithStem`), and dropping an
+  endpoint away from a named anchor pins it to an arbitrary position along an edge.
+- **Right-angle routes can be shaped by hand**: drag any segment of an orthogonal
+  connector to move it. Runs that touch an endpoint keep their length and stay
+  joined to the shape, collinear runs move as one, and the route is cleaned up
+  after each drag so every saved corner is a real right angle. **Reset route to
+  automatic** in the context menu discards the manual route. Straight connectors
+  can be dragged the same way.
+- **Connector labels can be dragged** along and away from the line (magnetically
+  snapping to the line, **Ctrl** to release), and double-clicking a label-less
+  connector creates the label at the point you clicked.
+- **Seven new UML / ER arrowheads** (8 → 15): Cross and Hollow Circle for UML,
+  plus the five crow's-foot notations (Many, One-Many, Zero-Many, One, Zero-One).
+- **Routing defaults follow the anchor kind** — a connector created on a centre
+  anchor starts out straight, one created on a side anchor starts out orthogonal.
+- **Dragging a free endpoint snaps it to the fixed end's axis**, so a straight
+  horizontal or vertical connector is easy to land.
+- The transform frame and connection anchors are hidden while dragging.
+
+#### Touch
+
+- **Two-finger pinch to zoom, one-finger drag to pan**, including handing over from
+  a pan to a pinch when a second finger lands.
+- **Long-press opens the context menu.**
+- Drag thresholds are measured in screen pixels with a wider threshold for touch,
+  and deselection / text-edit commit wait for the tap to be confirmed.
+
+#### Canvas
+
+- **Background colour can be set in the document** (`background`, a literal CSS
+  colour at the top level). It survives save, undo/redo and external sync, and is
+  applied to image export as well. The grid colour is derived from it.
+- **Grid visibility and size are configurable**, and the grid is now **off by
+  default** (see **Changed**).
+- **Documents with unrecognised content load instead of failing.** Unknown object
+  types, unknown enum values and unknown anchor kinds are dropped at the parse
+  boundary and reported as warnings; groups left empty and connectors attached to a
+  dropped object are removed with them. Previously a single unknown value rejected
+  the whole file.
+- **Slider keyboard control**: arrow keys adjust the property, and a burst of key
+  presses collapses into a single undo entry. Clicking the slider track now also
+  updates the property.
+
+### Changed
+
+- **BREAKING (file format)**: `textType` was removed. A `rect` with
+  `textType: "markdown"` must become `type: "markdown"` — loading the old form
+  reports a diagnostic pointing at the replacement, but does not convert it
+  automatically. Markdown rendering on other shapes (sticky, callout, …) is gone.
+- **BREAKING (file format)**: The UML stencil id `entity` was renamed to `object`.
+- **Syntax highlighting in Markdown code fences was removed.** The highlight theme
+  CSS was never loaded in any host, so `hljs-*` classes were emitted with no colour,
+  and highlighting never appeared in PNG / SVG export at all. Removing
+  `highlight.js` cut the webview bundle by 14% (1.15 MB → 0.99 MB). Code fences are
+  still rendered, and `language-*` classes remain, so a highlighter can be added
+  back later.
+- **The grid is hidden by default.**
+- **Default shape colours changed.** `fill` / `stroke` / `fontColor` set to `auto`
+  now resolve through dedicated theme entries (shape ink and shape surface) rather
+  than the canvas foreground / surface, so shapes read correctly against the canvas
+  in both light and dark VS Code themes.
+- **The bundled AI authoring assets (guide, reference, JSON schema) are now
+  generated from the shape definitions themselves**, which removes the drift that
+  had crept into the connectable list and several default values. They cover all 47
+  shapes. If you use AI authoring, re-run the **Set up AI** command to refresh the
+  assets under `.jiscribe/`.
+
+### Fixed
+
+- **Math (KaTeX) in Markdown shapes is typeset correctly** — the webview was
+  missing the KaTeX stylesheet, so formulas rendered as unstyled markup.
+- **Text no longer crawls while panning.** The rendering camera is snapped to device
+  pixels, so glyphs and shape outlines move together instead of drifting apart.
+- **Text no longer shakes by a pixel while resizing a shape.**
+- **The editing textarea lines up with the rendered text.** Its transform is now
+  composed from the same local origin as the display layer, its height matches the
+  line box exactly, and the auto-grow mode stops at the bottom edge of the shape.
+- **Aspect-ratio lock can be toggled on a group selection** (the control was inert).
+- **Shortcuts that cannot run no longer swallow the key event**, so the keystroke
+  falls through to VS Code instead of disappearing.
+- **The object menu is hidden while editing text**, where it used to cover the text
+  being typed.
+- **Double-click no longer requires both clicks to land on the same element**, which
+  makes label editing reliable on top of insertion handles.
+- **The arrowhead preview uses the same line width as the arrow it creates.**
+- Fixes to shapes and features introduced in this release are not listed
+  individually.
+
+### Performance
+
+- **Off-screen objects are skipped.** Viewport culling keeps objects outside the
+  visible area out of the reconcile pass, which is the main win on large documents.
+- **Dragging no longer copies the whole object map each frame** — it now goes
+  through a copy-on-write view.
+- **Connector routes are memoised on their geometry**, so edits that do not move
+  anything (colour, text, style) no longer re-route the diagram.
+- **Multi-select resize** caches vertex collection at drag start instead of
+  re-collecting every frame, and **marquee selection** skips recomputation on frames
+  where the hit set is unchanged.
+- Connection-drag anchor resolution, the object menu's group lookup during drags,
+  paste's group-frame rederivation, Markdown re-parsing on the edit toggle, and the
+  unknown-content strip pass all do less redundant work.
+- The webview bundle is 14% smaller (see **Changed**).
+
 ## [0.6.1] - 2026-07-13
 
 ### Fixed

@@ -23,7 +23,7 @@ packages/canvas/src/
 │   │   ├── CanvasDoc.ts
 │   │   └── validators/     # parseCanvasText / validateStructure / validateSemantics
 │   ├── objects/            # base / primitives / connections / annotations / types + 型別 validateXxxDoc
-│   └── registry/           # ObjectDocValidatorRegistry / ShapeFactoryRegistry（+ 初期化）
+│   └── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry（+ 初期化）
 ├── states/                 # ランタイム状態型（State モデル）+ Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
 │   ├── objects/            # base / primitives / connections / annotations（State + Mapper）
@@ -31,19 +31,21 @@ packages/canvas/src/
 ├── controllers/            # 状態管理 + ビジネスロジック
 │   ├── Canvas.tsx
 │   ├── gestures/           # recognizer（認識）+ handlers + registry/（GestureHandlerRegistry / ObjectBehaviorRegistry）
+│   ├── behaviors/          # ObjectBehavior 実装（moveByDelta / transformByGroup / rotateByGroup）
 │   ├── commands/           # Command パターン（selection/arrange/arrow/connector/group/history/text/view）+ CommandRegistry
 │   ├── reducer/            # canvasReducer + CanvasActions
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc など
-│   ├── setup/              # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
-│   ├── ui/                 # 変形コントロール・メニュー・アイコンなど UI 制御（ShapePresetRegistry / ObjectMenuRegistry を含む）
+│   ├── registries/         # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
+│   ├── ui/                 # 変形コントロール・メニュー・アイコンなど UI 制御（StencilRegistry / ObjectMenuRegistry を含む）
 │   └── utils/
 ├── presentations/          # 純粋な描画コンポーネント（layers / objects / defs）
-│   └── objects/registry/   # ObjectComponentRegistry / ShapePreviewRegistry
+│   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
+├── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
 └── constants/              # theme.ts / precision.ts など
 ```
 
 形状ごと（rect / ellipse / diamond / group / polygon / polyline / connector / sticky / svg）に、
-`states/objects/.../<shape>/` と `controllers/gestures/handlers/objects/...`、
+`states/objects/.../<shape>/` と `controllers/behaviors/...`、
 `presentations/objects/...` が対応する。
 
 ## レイヤー構成と依存関係
@@ -57,38 +59,39 @@ packages/canvas/src/
 
 ### ロジック層（controllers）
 
-- **gestures/handlers/**: ジェスチャーを受けて `CanvasState` を更新する。`objects/` 配下に形状ごとの Controller（`moveByDelta` / `transformByGroup`）と EventHandler、`base/` に共通変形ロジック（FrameTransform / PolyTransform / GroupTransform）。
+- **gestures/handlers/**: ジェスチャーを受けて `CanvasState` を更新する。`objects/` と `controls/` の配下に対象ごとの EventHandler を置く。
+- **behaviors/**: `ObjectBehaviorRegistry` に登録される `ObjectBehavior` 実装（`moveByDelta` / `transformByGroup` / `rotateByGroup`）。形状ごとの Controller は `primitives/` と `connections/`、共通変形ロジックは `base/`（FrameTransform / PolyTransform / GroupTransform）。`gestures` / `commands` / `reducer` / `utils` からレジストリ経由で使われる。
 - **commands/**: ショートカット・メニュー・ツールバー共通の操作 → [コマンドシステム](./05-command-system.ja.md)。
 - **reducer/**: アクションを各ハンドラへ振り分ける → [状態更新フロー](./06-state-update-flow.ja.md)。
 - **ui/**: 変形コントロールやメニューなど UI 制御ロジック。
 
-依存: `controllers → states / schemas`。`controllers → presentations` も存在し、多くは utilities だが、一部の UI コントローラは表示層の**コンポーネント**（例: `PendingConnectorOverlay` → `ConnectorRenderer`、`ArrowHeadIconPreview` → `Arrow`）や presentations 層の `ObjectComponentRegistryContext` も import する。方向（controllers は presentations に依存してよいが逆は禁止）は保たれている。
+依存: `controllers → states / schemas`。`controllers → presentations` も存在する。大半はユーティリティ参照で、代表はコネクタ端点解決・直交ルーティング（`presentations/layers/content/utils/endpoints` / `routing`）— `ui` に加えて `gestures`（Free 端点のスナップ・再アンカー）と `utils`（削除時の端点 Free 化・バウンディングボックス・可視判定）からも参照される。削除時に永続化される Free 端点座標もこの解決を通す（削除時点の見た目の位置を捕捉する意図）。一部の UI コントローラは表示層の**コンポーネント**（例: `PendingConnectorOverlay` → `ConnectorRenderer`、`ArrowHeadIconPreview` → `Arrow`）や presentations 層の registry Context（`PresentationRegistriesProvider` など）も import する。方向（controllers は presentations に依存してよいが逆は禁止）は保たれている。
 
 ### 表示層（presentations）
 
 State を Props として受け取り SVG を描画する純粋コンポーネント（Dumb Component）。
 ロジック・状態を持たず、イベントハンドラは Props 経由で受け取る → [表示・テーマ](./08-presentation-and-theme.ja.md)。
 
-依存: `presentations → states`（Props の型として参照）。
+依存: `presentations → states / schemas`（Props の型に加え、`EndpointRef` などの schema 型や `AUTO_COLOR` などの定数も参照する）。
 
 ### レジストリ群（分散型 — 単一の「registry 層」は存在しない）
 
 **トップレベルの `src/registry/` ディレクトリも `ObjectRegistry` クラスも存在しない**。形状ごとの機能は、**それぞれが属するレイヤーに共配置された**複数の小さなレジストリで解決される。
 
-| レジストリクラス                                        | 場所                                          | 解決する対象                                              |
-| ------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------- |
-| `ShapeFactoryRegistry`                                  | `schemas/registry/`                           | 型別 ShapeFactory（Doc / bounds 生成）                    |
-| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry` | `states/registry/`                            | Doc ↔ State Mapper（+ features）・State バリデータ        |
-| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`     | `controllers/gestures/registry/`              | ジェスチャーハンドラ・`moveByDelta` / `transformByGroup`  |
-| `ObjectComponentRegistry` / `ShapePreviewRegistry`      | `presentations/objects/registry/`             | 描画コンポーネント・プレビュー描画                        |
-| `ShapePresetRegistry` / `ObjectMenuRegistry`            | `controllers/registry/`, `controllers/ui/...` | ShapeLibrary プリセット・型別 ObjectMenu                  |
-| `CommandRegistry`                                       | `controllers/commands/`                       | コマンド（[コマンドシステム](./05-command-system.ja.md)） |
+| レジストリクラス                                                                 | 場所                                   | 解決する対象                                                      |
+| -------------------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------- |
+| `ObjectFactoryRegistry`                                                          | `schemas/registry/`                    | 型別 ObjectFactory（Doc / bounds 生成）                           |
+| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                          | `states/registry/`                     | Doc ↔ State Mapper（+ features）・State バリデータ                |
+| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                              | `controllers/gestures/registry/`       | ジェスチャーハンドラ・`moveByDelta` / `transformByGroup`          |
+| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry` | `presentations/objects/registry/`      | 描画コンポーネント・編集テキスト領域・ヒットテスト / スナップ輪郭 |
+| `StencilRegistry` / `ObjectMenuRegistry` / `SelectionControlRegistry`            | `controllers/ui/...`（各ドメイン配下） | StencilLibrary プリセット・型別 ObjectMenu・型別 SelectionControl |
+| `CommandRegistry`                                                                | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）         |
 
 各レジストリは形状タイプ（`"rect"`, `"ellipse"` など）をキーにするため、形状横断的な処理を `if (type === ...)` の分岐なしで型安全に書ける。
 
 ### canvas 単位のレジストリ（`CanvasConfig`）
 
-これらのレジストリは**モジュールシングルトンではない**。各 `<Canvas>` インスタンスが自前の**バンドル**（`CanvasRegistries`＝各レジストリクラスのインスタンス一式）を持ち、`controllers/setup/createCanvasRegistries(config?)` が生成する。これにより、同一ページ上の2つの canvas を異なる object type / command セットで動かせる（プラグイン的拡張・機能制限）。`config` 未指定時は共有のフルデフォルト（`defaultCanvasRegistries`）を再利用する。
+これらのレジストリは**モジュールシングルトンではない**。各 `<Canvas>` インスタンスが自前の**バンドル**（`CanvasRegistries`＝各レジストリクラスのインスタンス一式）を持ち、`controllers/registries/createCanvasRegistries(config?)` が生成する。これにより、同一ページ上の2つの canvas を異なる object type / command セットで動かせる（プラグイン的拡張・機能制限）。`config` 未指定時は共有のフルデフォルト（`defaultCanvasRegistries`）を再利用する。
 
 ```ts
 <Canvas initialConfig={{ objectTypes: ["rect", "ellipse"], commands: ["undo", "redo"] }} />
@@ -109,18 +112,26 @@ State を Props として受け取り SVG を描画する純粋コンポーネ�
 
 ## 依存関係グラフ
 
+Jiscribe 版（レイヤーを枠で表現した見やすい図）は [02-architecture.jis.json](./02-architecture.jis.json) を参照。
+
 ```mermaid
 graph TD
+    subgraph Plugin["拡張シーム (plugin)"]
+        PluginVocab["ObjectTypeDefinition&lt;TDoc,TState&gt; / defineObject / CanvasPlugin"]
+    end
     subgraph Presentations["表示層 (presentations)"]
         PresentationComponents["React Components"]
-        PresentationUtils["utils（座標解決など）"]
+        PresentationUtils["utils（コネクタ端点解決・直交ルーティングなど）"]
+        PresentationRegistryTypes["registry 契約（component / textRegion / outline）"]
     end
     subgraph Controllers["ロジック層 (controllers)"]
         Gestures["gestures/handlers (+ registry/)"]
+        Behaviors["behaviors（moveByDelta / transformByGroup / rotateByGroup）"]
         Commands["commands (+ CommandRegistry)"]
         Reducer["reducer"]
         UI["ui"]
-        Setup["setup（initializeObjectRegistry が全レジストリを登録）"]
+        CtrlUtils["utils"]
+        Registries["registries（applyObjectDefinition が定義を各レジストリへ配線）"]
     end
     subgraph States["データ層"]
         StatesTypes["states/（State 型 + Mapper + ObjectMapperRegistry）"]
@@ -128,17 +139,40 @@ graph TD
     end
 
     PresentationComponents --> StatesTypes
+    PresentationUtils --> StatesTypes
     Gestures --> StatesTypes
+    Behaviors --> StatesTypes
     Commands --> StatesTypes
     Reducer --> StatesTypes
     UI --> StatesTypes
+    CtrlUtils --> StatesTypes
+    Registries --> StatesTypes
+    Gestures --> PresentationUtils
+    CtrlUtils --> PresentationUtils
+    UI --> PresentationUtils
     UI --> PresentationComponents
-    Setup --> StatesTypes
-    Setup --> PresentationComponents
+    UI --> PresentationRegistryTypes
+    Registries --> PresentationComponents
+    Registries --> PresentationRegistryTypes
     StatesTypes --> SchemasTypes
+
+    %% plugin は全レイヤーの型契約を集約し、registries がそれを消費する。
+    %% Registries -> Plugin と Plugin -> Gestures/UI で controllers <-> plugin になる。
+    Registries --> Plugin
+    Plugin --> Gestures
+    Plugin --> UI
+    Plugin --> PresentationRegistryTypes
+    Plugin --> StatesTypes
+    Plugin --> SchemasTypes
 ```
 
-依存方向は CI でも担保している（[テスト](./09-testing.ja.md) の madge `dep:circle`）。
+schemas の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `constants/`（theme など）への直接参照はほぼ全域から存在するため、図では省略している。
+
+**`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、schemas の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、presentations の component/textRegion/outline 契約）ため、`plugin` は4レイヤーすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
+
+これは意図的に、具象的な import 循環には**なっていない**: `plugin` が import するのは leaf の型モジュール（`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `ObjectTextEditOverflowTypes` / `Stencil`）だけで、`plugin` を消費するのは `registries/initializeObjectRegistry` など別のファイル群であり、これらの leaf モジュールから逆に import されることはない。そのため madge `dep:check` はフォルダ同士が相互参照していても green のまま。`applyObjectDefinition`（実行時の配線）を `plugin` ではなく `registries` に置いていることがこれを保っている。
+
+依存方向は CI でも担保している（[テスト](./09-testing.ja.md) の madge `dep:check`）。
 
 ## 新しい形状の追加手順
 
@@ -147,10 +181,10 @@ Registry パターンにより、形状追加は「6 ステップ + 登録」で
 1. **Schema**: `schemas/objects/primitives/<Shape>Doc.ts`（+ `validate<Shape>Doc.ts`）
 2. **State**: `states/objects/primitives/<shape>/<Shape>State.ts`
 3. **Mapper**: `states/objects/primitives/<shape>/<Shape>Mapper.ts`（Doc ↔ State）
-4. **Controller**: `controllers/gestures/handlers/objects/primitives/<Shape>Controller.ts`（`moveByDelta` / `transformByGroup`）
+4. **Controller**: `controllers/behaviors/primitives/<Shape>Controller.ts`（`moveByDelta` / `transformByGroup`）
 5. **Component**: `presentations/objects/primitives/<Shape>/<Shape>.tsx`
 6. **登録**: 登録先レジストリが分かれているため、**2 箇所**に登録する。
-   - `controllers/setup/initializeObjectRegistry.ts` — Mapper / Component / behavior / State バリデータ / menu（UI 側レジストリ群）
+   - `controllers/registries/initializeObjectRegistry.ts` — Mapper / Component / behavior / State バリデータ / menu（UI 側レジストリ群）
    - `schemas/registry/initializeObjectDocValidatorRegistry.ts` — Doc バリデータ。**ここを忘れない**こと。これは `parseCanvasText` が遅延初期化する独立した schema 層レジストリなので、ここに登録し忘れると UI では動くのにパーサーが未知の型として reject する。
 
 既存ロジックの分岐を増やさず、登録だけで形状横断処理（変形・スナップ・描画）に乗る。

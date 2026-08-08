@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 
 /**
  * Handles a COMMAND action.
@@ -16,6 +16,15 @@ export const handleCommand = (
 
 	if (!command) {
 		console.warn(`Command not found: ${commandId}`);
+		return state;
+	}
+
+	if (!command.execute) {
+		// Callback-executed command (definition-only registration, e.g. paste):
+		// reaching here means a caller dispatched COMMAND without wiring the callback.
+		console.warn(
+			`Command is callback-executed, not dispatchable: ${commandId}`,
+		);
 		return state;
 	}
 

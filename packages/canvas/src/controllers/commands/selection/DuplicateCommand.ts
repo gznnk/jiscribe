@@ -10,9 +10,9 @@ import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const DuplicateCommand: Command = {
+export const DuplicateCommand: ExecutableCommand = {
 	id: "duplicate",
 	label: "Duplicate",
 	category: "edit",

@@ -39,10 +39,11 @@ export const vscodeCanvasTheme: CanvasTheme = {
 		inputPlaceholder: "var(--vscode-input-placeholderForeground, #989898)",
 		errorFg: "var(--vscode-errorForeground, #f48771)",
 		shadow: "0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.36))",
-		gridLine: "var(--vscode-editorIndentGuide-background, #2a2a2a)",
 		sliderTrack: "var(--vscode-scrollbarSlider-background, #6e6e6e)",
 		scrollbarThumb: "var(--vscode-scrollbarSlider-background, #d1d5db)",
 		scrollbarThumbHover:
 			"var(--vscode-scrollbarSlider-hoverBackground, #9ca3af)",
+		objectInk: "var(--vscode-editor-foreground, #ffffff)",
+		objectSurface: "var(--vscode-editorWidget-background, #252526)",
 	},
 };

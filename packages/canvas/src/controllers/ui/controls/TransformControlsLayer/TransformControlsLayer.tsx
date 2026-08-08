@@ -3,6 +3,7 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import type { DragKind } from "../../../CanvasTypes";
 import { TransformControls } from "../TransformControls";
 
 type TransformControlsLayerProps = {
@@ -11,6 +12,13 @@ type TransformControlsLayerProps = {
 	multiSelectGroup?: GroupState | null;
 	zoom?: number;
 	isTextEditing: boolean;
+	/**
+	 * Whether a text slot is selected inside the object; already validated by
+	 * resolveSelectedTextSlot, since a stale flag would keep the handles hidden
+	 */
+	isTextSlotSelected: boolean;
+	/** Kind of the drag in progress; null when none is */
+	activeDragKind: DragKind | null;
 };
 
 /**
@@ -20,9 +28,29 @@ type TransformControlsLayerProps = {
  */
 const TransformControlsLayerComponent: React.FC<
 	TransformControlsLayerProps
-> = ({ selectedIds, objects, multiSelectGroup, zoom = 1, isTextEditing }) => {
+> = ({
+	selectedIds,
+	objects,
+	multiSelectGroup,
+	zoom = 1,
+	isTextEditing,
+	isTextSlotSelected,
+	activeDragKind,
+}) => {
 	// Do not render controls while text editing
 	if (isTextEditing) {
+		return null;
+	}
+
+	// Hidden while a slot is selected: resizing and rotating still act on the whole
+	// object, so handles on its frame would compete with the slot box for the eye.
+	if (isTextSlotSelected) {
+		return null;
+	}
+
+	// Hidden while the selection is moved: the frame would only trail the shapes it
+	// belongs to. A transform drag keeps it — the handle being dragged is part of it.
+	if (activeDragKind === "move") {
 		return null;
 	}
 

@@ -44,7 +44,8 @@ const extensionConfig = {
 // ── Webview のビルド設定（ブラウザ環境で動く）────────────────────────────
 // VSCode のパネル内に表示される UI（SVGキャンバス）は Webview という仕組みで動く。
 // Webview はブラウザと同じ環境なので、ブラウザ向けにバンドルする必要がある。
-// src/webview/index.tsx を単一ファイル dist/webview.js にバンドルする。
+// src/webview/index.tsx を dist/webview.js にバンドルする
+// （import された CSS は dist/webview.css、フォントは dist/fonts/ に分離出力される）。
 const webviewConfig = {
 	// バンドルの起点となるファイル（React コンポーネントのルート）
 	entryPoints: [join(__dirname, "src", "webview", "index.tsx")],
@@ -63,20 +64,31 @@ const webviewConfig = {
 	// これにより各ファイルで "import React from 'react'" を書かずに JSX が使える
 	jsx: "automatic",
 	// 拡張子ごとのファイルの扱い方
+	// css: KaTeX のスタイル（数式は KaTeX の HTML + CSS で組まれるため必須）。
+	//      esbuild は JS から import された CSS を outfile と同名の dist/webview.css
+	//      にまとめて出力する。読み込みは webviewHtml.ts の <link> が担う。
+	// woff2/woff/ttf: katex.min.css の @font-face が参照するフォント実体。
+	//      file ローダーで dist/fonts/ にコピーし、CSS 内の url() を相対パスに書き換える
+	//      （Webview の CSP は font-src に cspSource を許可済み）。
 	loader: {
 		".tsx": "tsx",
 		".ts": "ts",
+		".css": "css",
+		".woff2": "file",
+		".woff": "file",
+		".ttf": "file",
 	},
+	assetNames: "fonts/[name]-[hash]",
 };
 
 // ── AI アセットのコピー ──────────────────────────────────────────────────
-// canvas パッケージの配布アセット（ai/）を dist/ に配置する。
+// ai-docs パッケージの配布アセット（assets/）を dist/ に配置する。
 // - jiscribe.schema.json: VSCode の jsonValidation が参照し、.jis.json の補完・検証を提供する。
 // - ai-guide.md: 「Set up AI」がワークスペースへ配置する AI オーサリングガイド（入口）。
 // - reference.md: ai-guide が参照する詳細リファレンス（同じ .jiscribe/ に置くためリンクが解決する）。
-// 配布元は packages/canvas/ai/（配布アセット正本）。
+// 配布元は packages/ai-docs/assets/（配布アセット正本。pnpm generate:ai の生成物）。
 function copyAiAssets() {
-	const aiDir = join(__dirname, "../../packages/canvas/ai");
+	const aiDir = join(__dirname, "../../packages/ai-docs/assets");
 	const distDir = join(__dirname, "dist");
 	mkdirSync(distDir, { recursive: true });
 

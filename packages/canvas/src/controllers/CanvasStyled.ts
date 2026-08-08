@@ -28,6 +28,28 @@ export const CanvasRoot = styled.div`
 	height: 100%;
 	overflow: hidden;
 	outline: none;
+
+	/* Touch foundation: without touch-action none, the browser claims touch moves
+	   for page pan/zoom and aborts in-progress drags with pointercancel. Scrollable
+	   descendants (textarea, help modal body) still pan natively — touch-action is
+	   consulted only up to the scrolling element itself. user-select / touch-callout
+	   suppress long-press text selection and the OS callout; both inherit, so
+	   editable fields opt back in below. */
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+
+	/* Same as the Svg style (CanvasViewStyled 参照): hosts may set
+	   font-synthesis: none, which would leave the text editor overlays —
+	   rendered outside the SVG — without synthetic italic/bold. */
+	font-synthesis: weight style;
+
+	input,
+	textarea {
+		user-select: text;
+		-webkit-user-select: text;
+	}
 `;
 
 /**

@@ -1,7 +1,4 @@
-/**
- * Represents a point in 2D space with x and y coordinates.
- * Basic building block for positioning elements on the canvas.
- */
+/** A point in 2D space. */
 export type Point = {
 	x: number;
 	y: number;

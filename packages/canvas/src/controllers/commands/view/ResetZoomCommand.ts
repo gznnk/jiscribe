@@ -1,7 +1,7 @@
 import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../constants/precision";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /** Target zoom factor to reset to (100%). */
 const RESET_ZOOM = 1;
@@ -11,7 +11,7 @@ const RESET_ZOOM = 1;
  * Keeps the viewport center fixed and only sets the factor to 1.
  * Triggered by clicking the zoom value display in the toolbar.
  */
-export const ResetZoomCommand: Command = {
+export const ResetZoomCommand: ExecutableCommand = {
 	id: "resetZoom",
 	label: "Reset Zoom",
 	category: "view",

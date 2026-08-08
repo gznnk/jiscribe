@@ -1,8 +1,55 @@
 import { describe, expect, it } from "vitest";
 
-import { stickyToState } from "../../annotations/sticky/StickyMapper";
+import type { ConnectorDoc } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { ConnectorFeatures } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { EllipseFeatures } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
+import type { PolylineDoc } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
+import { PolylineFeatures } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
+import type { RectDoc } from "../../../../schemas/objects/primitives/rect/RectDoc";
+import { RectFeatures } from "../../../../schemas/objects/primitives/rect/RectDoc";
+import type { CreateObjectType } from "../../../../schemas/objects/types/CreateObjectType";
+import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
+import type { ConnectorState } from "../../connections/connector/ConnectorState";
+import type { EllipseState } from "../../primitives/ellipse/EllipseState";
+import type { PolylineState } from "../../primitives/polyline/PolylineState";
 import { rectToDoc, rectToState } from "../../primitives/rect/RectMapper";
 import type { RectState } from "../../primitives/rect/RectState";
+import type { CreateObjectState } from "../../types/CreateObjectState";
+import { createFrameMapper } from "../FrameMapper";
+import { createPolyMapper } from "../PolyMapper";
+
+/**
+ * A stroke-less frame type, declared here rather than borrowed from a real shape:
+ * every built-in has `stroke: true` since sticky moved to
+ * `@workspace/plugin-sticky-shape`, and the mapper's behavior is a property of the
+ * descriptor, not of any one shape.
+ */
+const NoStrokeFeatures = {
+	type: "noStroke",
+	geometry: "rect",
+	transform: true,
+	stroke: false,
+	fill: true,
+	text: "body",
+	radius: false,
+	connectable: true,
+} as const satisfies ObjectFeatures;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const NoStrokeBrand: unique symbol;
+type NoStrokeDoc = CreateObjectType<
+	typeof NoStrokeFeatures,
+	typeof NoStrokeBrand
+>;
+type NoStrokeState = CreateObjectState<
+	typeof NoStrokeFeatures,
+	typeof NoStrokeBrand
+>;
+
+const { toState: noStrokeToState } = createFrameMapper<
+	NoStrokeDoc,
+	NoStrokeState
+>(NoStrokeFeatures);
 
 /**
  * Regression test for the pass-through approach.
@@ -30,6 +77,26 @@ describe("FrameMapper pass-through: does not leak runtime-only fields into the D
 
 		const roundTripped = rectToDoc(state as never) as Record<string, unknown>;
 		expect(roundTripped.rx).toBe(12);
+	});
+
+	it("drops unknown doc keys through a doc→state→doc round-trip", () => {
+		// 未知プロパティは「表示では無視・保存時に消える」仕様。その保存側の実体が
+		// この allow-list による脱落なので、往復で消えることを仕様として固定する。
+		const doc = {
+			id: "rect-1",
+			type: "rect",
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			unknownKey: "keep-out",
+		} as unknown as Parameters<typeof rectToState>[0];
+
+		const state = rectToState(doc) as Record<string, unknown>;
+		expect("unknownKey" in state).toBe(false);
+
+		const roundTripped = rectToDoc(state as never) as Record<string, unknown>;
+		expect("unknownKey" in roundTripped).toBe(false);
 	});
 
 	it("rectToDoc does not include parentId in the Doc", () => {
@@ -97,10 +164,10 @@ describe("FrameMapper allow-list: does not carry keys other than the ones to pic
 		expect("bogusField" in state).toBe(false);
 	});
 
-	it("does not carry doc.stroke into the state for a shape with stroke disabled (sticky)", () => {
+	it("does not carry doc.stroke into the state for a shape with stroke disabled", () => {
 		const doc = {
-			id: "sticky-1",
-			type: "sticky",
+			id: "no-stroke-1",
+			type: NoStrokeFeatures.type,
 			x: 0,
 			y: 0,
 			width: 100,
@@ -108,13 +175,41 @@ describe("FrameMapper allow-list: does not carry keys other than the ones to pic
 			fill: "#ffff00",
 			stroke: "#000000",
 			strokeWidth: 4,
-		} as unknown as Parameters<typeof stickyToState>[0];
+		} as unknown as NoStrokeDoc;
 
-		const state = stickyToState(doc) as Record<string, unknown>;
+		const state = noStrokeToState(doc) as Record<string, unknown>;
 
 		// fill is picked up since features.fill=true, and stroke fields are dropped since features.stroke=false.
 		expect(state.fill).toBe("#ffff00");
 		expect("stroke" in state).toBe(false);
 		expect("strokeWidth" in state).toBe(false);
+	});
+});
+
+/**
+ * Compile-time regression guard for the features↔Doc/State binding.
+ *
+ * `createFrameMapper` / `createPolyMapper` tie the descriptor to `TDoc["type"]`, so a call
+ * that names three different object types no longer compiles. Nothing here runs — the
+ * `@ts-expect-error` directives fail `pnpm typecheck` if a constraint is ever loosened.
+ */
+describe("mapper factories reject a features / Doc / State mismatch", () => {
+	it("is enforced at compile time", () => {
+		// Correct pairings, including connector whose Doc narrows points to optional.
+		createFrameMapper<RectDoc, RectState>(RectFeatures);
+		createPolyMapper<ConnectorDoc, ConnectorState>(ConnectorFeatures);
+
+		// @ts-expect-error EllipseState.type is "ellipse", so it cannot pair with RectDoc
+		createFrameMapper<RectDoc, EllipseState>(RectFeatures);
+
+		// @ts-expect-error EllipseFeatures.type is "ellipse", so it cannot describe RectDoc
+		createFrameMapper<RectDoc, RectState>(EllipseFeatures);
+
+		createFrameMapper<PolylineDoc, PolylineState>(
+			// @ts-expect-error PolylineFeatures.geometry is "poly", not a Frame family one
+			PolylineFeatures,
+		);
+
+		expect(true).toBe(true);
 	});
 });

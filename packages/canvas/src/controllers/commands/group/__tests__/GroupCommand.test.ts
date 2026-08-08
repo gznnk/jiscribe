@@ -4,7 +4,7 @@ import { GroupFeatures } from "../../../../schemas/objects/primitives/group/Grou
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { GroupCommand } from "../GroupCommand";
 
 const registries = createTestRegistries();
@@ -36,6 +36,7 @@ const makeState = (params: {
 }): CanvasControllerState =>
 	({
 		multiSelectGroup: null,
+		selectedTextSlot: null,
 		objectMenuOpenId: null,
 		lastDuplicate: null,
 		commitVersion: 0,

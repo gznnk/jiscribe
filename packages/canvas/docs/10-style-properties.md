@@ -20,6 +20,10 @@ ObjectMenu number input    ── MENU_PROPERTY_UPDATE ──→ canvasReducer  
                                                           handler.apply(...) ⇒ new state
 ```
 
+The slider straddles both: pointer interaction (drag and track click) rides the
+gesture route, while keyboard interaction (arrow keys and the like) produces no
+gesture and so goes through `MENU_PROPERTY_UPDATE`.
+
 Both routes hand the property name and the raw string value from the UI to
 `StylePropertyRegistry.apply`; everything property-specific — support gating, value
 coercion, write path — lives in the resolved handler.
@@ -53,7 +57,7 @@ registry know nothing about individual properties.
 
 **System properties** (`styleProperties/systemStyleProperties.ts`) — the closed set
 tied 1:1 to `ObjectFeatures` flags, registered into every bundle at creation
-(`setup/initializeStyleProperties`):
+(`registries/initializeStyleProperties`):
 
 ```ts
 export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
@@ -65,17 +69,18 @@ export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
 ```
 
 **Shape-specific properties** — properties that do not belong on `ObjectFeatures`
-(e.g. container's `headerFill`, connector's `label.*`). Declared next to the shape's
-Doc and wired through its `ObjectTypeDefinition`:
+(e.g. connector's `label.*`, or the container plugin's `headerFill`). Declared next
+to the shape's Doc and wired through its `ObjectTypeDefinition`. Example from the
+container plugin (`plugins/container-shapes`, where the shape now lives):
 
 ```ts
-// ContainerDoc.ts — next to `headerFill?: string`
+// plugins/container-shapes/src/schema/ContainerDoc.ts — next to `headerFill?: string`
 export const ContainerExtraStyleProperties = {
 	headerFill: { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
-// initializeObjectRegistry.ts
-container: defineObject({
+// plugins/container-shapes/src/definition.ts
+export const containerDefinition = defineObject({
 	features: ContainerFeatures,
 	extraStyleProperties: ContainerExtraStyleProperties,
 	// …
@@ -84,10 +89,11 @@ container: defineObject({
 
 The declaration's existence **is** the gate: no separate flag, and a property nobody
 declares applies to nothing (fail-closed). Because registration flows through
-`applyObjectDefinition`, plugin/custom shapes added via `CanvasConfig.customize` get
-the same capability, and `initializeObjectRegistry`'s clear cycle clears only the
-per-type extras (`clearExtras`) — system handlers are canvas-wide, like gesture
-handlers and commands.
+`applyObjectDefinition`, plugin/custom shapes added via `CanvasConfig.plugins`
+(see docs/05_extensibility/plugin-architecture-requirements.md) get the same capability, and
+`initializeObjectRegistry`'s clear cycle clears only the per-type extras
+(`clearExtras`) — system handlers are canvas-wide, like gesture handlers and
+commands.
 
 ## Dot notation = generic nested writes
 

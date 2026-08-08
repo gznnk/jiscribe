@@ -10,10 +10,10 @@
 生の pointer / wheel イベントはキャンバスのルート（`Viewport`）に集約され、
 `GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
 
-`GestureType` は次の 7 種:
+`GestureType` は次の 9 種:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
 ```
 
 `Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
@@ -29,24 +29,50 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
   オブジェクト／テキスト系ハンドラはこれに依存している（DOM 標準の加算式に変えると回帰リスクが大きい）。
 - **RAF バッチ**: 高頻度な pointermove は `requestAnimationFrame` でまとめて 1 つの `drag` に集約し、
   毎フレーム以上の状態更新が走らないようにする（[設計思想](./01-design-philosophy.ja.md) の性能優先）。
+- **2本指ピンチ（タッチ）**: 1本目のタッチがドラッグ確定する前に2本目の pointerdown が来ると、
+  保留中の press を破棄してピンチモードに入る。`pinch` は `zoomScale`（指間距離比）と
+  `scrollDelta`（中点移動）を載せ、1フレーム1発火に集約される（`settleBatch`）。
+  キャンバスのパンドラッグ中は2本目で `dragEnd` を発火してパンを閉じ、ピンチへ移行する。
+  図形ドラッグ中・シェイプ描画中およびマウス／ペンでは追加の pointerdown を単に無視する
+  （パーム耐性、issue #25）。
+- **タッチの長押し**: ドラッグ許容量内で `LONG_PRESS_DURATION_MS`（500ms）保持すると `longPress` が
+  発火し、ジェスチャーを消費する（離しても click は出ない）。着地点を問わず CanvasEventHandler に
+  ルーティングされ（per-target ハンドラは中/右ボタン同様 `isPerTargetInteraction` で拒否）、
+  右クリック相当としてコンテキストメニューを開く。
+- **タッチのパン**: `Gesture` は `pointerType` を持ち、CanvasEventHandler がタッチの1本指
+  背景ドラッグをエリア選択ではなくビューポートのパン（GrabScroll パス）へルーティングする。
+  タッチでのエリア選択は当面利用不可。またタッチでは背景の選択解除を `pressed` でなく
+  タップ確定（`click`）まで遅延し、per-target ハンドラもタッチの press ではテキスト編集の
+  コミットを同様に遅延する（`commitTextEditUnlessTouchPress`）。このためパンやピンチでは
+  選択・開いたメニュー・編集中テキストが保持される（ピンチの指がオブジェクトや
+  コントロールに乗っても同じ）。
 
 ## ハンドラ構成：canvas / controls / menu / objects
 
 `handleGesture`（`controllers/gestures/handlers/handleGesture.ts`）がルーター。
-`Gesture` を `CanvasEvent` に変換し（`wheel` は `ctrl` の有無で `zoom` / `scroll` に分岐）、
+`Gesture` を `CanvasEvent` に変換し（`wheel` は `ctrl` の有無で `zoom` / `scroll` に分岐、
+`pinch` は `zoom` → `scroll` の順に分解）、
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
-自分が処理すべきイベントかを判定する。
+自分が処理すべきイベントかを判定する。registry には `targetKind` ごとに 1 ハンドラだけを
+登録する。さらに細かい分岐（`targetId` / `data-part` / イベント種）が要る kind では、
+そのハンドラがルーターになり、同じフォルダ内のサブハンドラへ委譲する。
 
-| ハンドラ群  | 対象                                                                   | 主なファイル                                                                                       |
-| ----------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                 | `CanvasEventHandler.ts`                                                                            |
-| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                         | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                   |
-| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `ShapeLibraryItemHandler.ts` |
-| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動）                   | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, 形状別 Controller                             |
+| ハンドラ群  | 対象                                                                       | 主なファイル                                                                                                                                                                                     |
+| ----------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                     | `CanvasEventHandler.ts`                                                                                                                                                                          |
+| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                             | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                                                                                                 |
+| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ     | `MenuEventHandler.ts`（ルーター）, `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`, `StencilCategoryToggleHandler.ts`                       |
+| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動・ラベル移動・線分移動） | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`（ルーター）, `ConnectorClickHandler.ts`, `ConnectorLabelDragHandler.ts`, `ConnectorSegmentSlideHandler.ts`, `ConnectorSegmentMoveHandler.ts` |
 
 `handleGesture` は `dragStart` で `eventStartSnapshot`（操作開始時の objects / keyPoints /
 snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば
 `commitVersion` を進め、履歴記録のトリガにする（詳細は [状態更新フロー](./06-state-update-flow.ja.md)）。
+
+`activeDragKind`（`"move"` / `"transform"` / `"other"`）も同じ `dragStart` / `dragEnd` の境界に従う。
+`handleGesture` が全ドラッグを `"other"` で始めて `dragEnd` でクリアするので、`!== null` は常に
+「ドラッグ中」を意味する。区別が必要なハンドラは自分の `dragStart` で上書きする
+（`ObjectEventHandler` が `"move"`、`TransformControlHandler` が `"transform"`）。UI はこれを見て、
+移動中は変形フレームと接続アンカーを、変形中は接続アンカーを隠し、ObjectMenu はドラッグ中すべてで隠す。
 
 ## 連携属性 `data-gesture` / `data-kind` / `data-id` / `data-part`
 
@@ -78,8 +104,11 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 ### `data-kind` / `data-id` / `data-part`
 
-ジェスチャーの**対象を識別する**属性。`getKindAndId` が `closest("[data-kind]")` で最も近い要素を探し、
-`{ kind, id, part }` を解決してイベントの `targetKind` / `targetId` / `targetPart` に載せる。
+ジェスチャーの**対象を識別する**属性。`getGestureTarget` が `closest("[data-kind]")` で最も近い要素を探し、
+`{ kind, id, part }` を解決してイベントの `targetKind` / `targetId` / `targetPart` に載せる。`part` はその要素
+**自身または配下**の最も近い `[data-part]` から読む。これにより、ヒット領域を複数描く図形でも
+`[data-kind]` 要素は 1 つに保てる（1 オブジェクト = 1 つの `data-kind="object"` 要素。e2e の
+`captureObjects` がこの契約に依存している）。
 
 3 属性はそれぞれ 1 軸を担い、`kind`（粗）→ `part` 接頭辞（細）の 2 段ルーティングツリーを成す（issue #81）:
 
@@ -101,6 +130,13 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-part="label"`。
 ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。
+ラベルボックスのドラッグは経路上の移動（`label.position` / `label.offset`）になり、
+線から `SNAP_THRESHOLD_PX` 以内に落とすと `offset` は 0 に吸着する（Ctrl 押下で解除）。
+ラベルが無いときは線のダブルクリックがクリック点（経路へ射影し同じ吸着をかけた位置）に
+ラベルを作る。確定するまでは `textEditState` が保持し、コネクターには書き込まない。
+複数スロットを持つ図形は入れ子の形を使う: `record` の `<g data-kind="object">` は
+`data-part="name"` / `data-part="rows"` を持つ 2 つの区画矩形を包み、ダブルクリックした区画から
+編集スロットを解決する（`resolveTextSlotId` が値を `state.text` のキーと照合する）。
 
 #### 移行（issue #81）— 完了
 
@@ -128,7 +164,7 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 ```ts
 const isActivation = event.type === "click" || event.type === "doubleClick";
-if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
+if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
 	return handleCommand(state, commandId);
 }
 ```

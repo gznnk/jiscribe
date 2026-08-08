@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import {
 	SetRoutingOrthogonalCommand,
 	SetRoutingStraightCommand,
@@ -12,12 +12,16 @@ import {
 
 const registries = createTestRegistries();
 
-/** By default both ends are free (not a self-loop). Passing owners makes the endpoints owned. */
+/**
+ * By default both ends are free (not a self-loop). Passing owners makes the endpoints owned;
+ * passing freePoints places the free endpoints (defaults: source (0,0), target (10,10)).
+ */
 const makeConnector = (
 	id: string,
 	routing: "straight" | "orthogonal" | undefined,
 	points: Point[],
 	owners?: { sourceId?: string; targetId?: string },
+	freePoints?: { source?: Point; target?: Point },
 ): ConnectorState =>
 	({
 		id,
@@ -29,13 +33,23 @@ const makeConnector = (
 					owner: { id: owners.sourceId },
 					anchor: { kind: "center" },
 				}
-			: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+			: {
+					anchor: {
+						kind: "free",
+						point: freePoints?.source ?? { x: 0, y: 0 },
+					},
+				},
 		target: owners?.targetId
 			? {
 					owner: { id: owners.targetId },
 					anchor: { kind: "center" },
 				}
-			: { anchor: { kind: "free", point: { x: 10, y: 10 } } },
+			: {
+					anchor: {
+						kind: "free",
+						point: freePoints?.target ?? { x: 10, y: 10 },
+					},
+				},
 	}) as unknown as ConnectorState;
 
 const makeRect = (id: string): ObjectState =>
@@ -55,7 +69,7 @@ const makeState = (params: {
 
 describe("SetConnectorRoutingCommand", () => {
 	describe("SetRoutingOrthogonalCommand", () => {
-		it("discards manual waypoints (points) when switching to orthogonal", () => {
+		it("keeps the route's vertices when switching to orthogonal (only ResetConnectorRoute drops them)", () => {
 			const waypoints: Point[] = [{ x: 10, y: 20 }];
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -67,27 +81,55 @@ describe("SetConnectorRoutingCommand", () => {
 			const conn = next.objects["c1"] as ConnectorState;
 
 			expect(conn.routing).toBe("orthogonal");
-			expect(conn.points).toEqual([]);
-			// the waypoint handles disappear, so the selected waypoint is cleared
+			expect(conn.points).toBe(waypoints);
+			// the per-vertex handles disappear under orthogonal, so the selected vertex is cleared
 			expect(next.selectedVertex).toBeNull();
 			expect(next.commitVersion).toBe(1);
 		});
 	});
 
 	describe("SetRoutingStraightCommand", () => {
-		it("preserves existing waypoints when switching to straight", () => {
-			const waypoints: Point[] = [{ x: 10, y: 20 }];
+		it("switching to straight bakes the drawn path, not the stale stored vertices", () => {
+			// Stored while the target sat at y=100; the target has since moved to y=120, so the
+			// drawn path (alignVertexPath) ends at {50,120} while the stored list still says {50,100}.
+			const staleVertices: Point[] = [
+				{ x: 50, y: 0 },
+				{ x: 50, y: 100 },
+			];
 			const state = makeState({
 				selectedConnectorId: "c1",
-				objects: { c1: makeConnector("c1", "orthogonal", waypoints) },
+				objects: {
+					c1: makeConnector("c1", "orthogonal", staleVertices, undefined, {
+						source: { x: 0, y: 0 },
+						target: { x: 100, y: 120 },
+					}),
+				},
 			});
 
 			const next = SetRoutingStraightCommand.execute(state, registries);
 			const conn = next.objects["c1"] as ConnectorState;
 
 			expect(conn.routing).toBe("straight");
-			expect(conn.points).toBe(waypoints);
+			expect(conn.points).toEqual([
+				{ x: 50, y: 0 },
+				{ x: 50, y: 120 },
+			]);
 			expect(next.commitVersion).toBe(1);
+		});
+
+		it("a connector with no vertices keeps none (straight draws the direct line)", () => {
+			const emptyPoints: Point[] = [];
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1: makeConnector("c1", "orthogonal", emptyPoints) },
+			});
+
+			const next = SetRoutingStraightCommand.execute(state, registries);
+			const conn = next.objects["c1"] as ConnectorState;
+
+			expect(conn.routing).toBe("straight");
+			// the engine-routed corners are not baked either — empty stays empty
+			expect(conn.points).toBe(emptyPoints);
 		});
 	});
 

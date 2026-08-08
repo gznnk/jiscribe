@@ -4,8 +4,12 @@ import type { ConnectorDoc } from "../../objects/connections/connector/Connector
 import type { GroupDoc } from "../../objects/primitives/group/GroupDoc";
 import type { EndpointRef } from "../../objects/types/EndpointRef";
 import type { ObjectType } from "../../objects/types/ObjectType";
-import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
+import type { createObjectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
 import type { CanvasDoc } from "../CanvasDoc";
+
+type ObjectDocValidatorRegistry = ReturnType<
+	typeof createObjectDocValidatorRegistry
+>;
 
 /**
  * Checks consistency that can only be determined by traversing the whole document.
@@ -25,7 +29,10 @@ import type { CanvasDoc } from "../CanvasDoc";
  * toward the opposite end, which for a self-loop collapses to null (adjustToOutline fails), leaving
  * the connector silently undrawn. So a self-loop with a center anchor is rejected here.
  */
-export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
+export function validateSemantics(
+	doc: CanvasDoc,
+	registry: ObjectDocValidatorRegistry,
+): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
 	const seenIds = new Set<string>();
 	// id → type map, used to look up the actual type of a reference target during referential-integrity checks.
@@ -74,11 +81,13 @@ export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 				connector.source,
 				`${connPath}.source`,
 				idToType,
+				registry,
 			);
 			const targetErrors = validateEndpoint(
 				connector.target,
 				`${connPath}.target`,
 				idToType,
+				registry,
 			);
 			errors.push(...sourceErrors, ...targetErrors);
 
@@ -116,6 +125,7 @@ function validateEndpoint(
 	endpoint: EndpointRef | undefined,
 	path: string,
 	idToType: Map<string, ObjectType>,
+	registry: ObjectDocValidatorRegistry,
 ): SemanticDiagnostic[] {
 	const ownerId = endpoint?.owner?.id;
 	if (ownerId == null) {
@@ -133,7 +143,7 @@ function validateEndpoint(
 		];
 	}
 
-	if (!objectDocValidatorRegistry.isConnectable(refType)) {
+	if (!registry.isConnectable(refType)) {
 		return [
 			{
 				path,

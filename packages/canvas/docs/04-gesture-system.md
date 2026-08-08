@@ -10,10 +10,10 @@ For how the state changes triggered by gestures are reflected, see [State Update
 Raw pointer/wheel events are aggregated at the canvas root (`Viewport`), and
 the `GestureRecognizer` (`controllers/gestures/recognizer/`) converts them into a `Gesture`.
 
-There are seven `GestureType`s:
+There are nine `GestureType`s:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
 ```
 
 A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
@@ -31,24 +31,51 @@ Key points:
   the DOM-standard cumulative counting model would carry a large regression risk).
 - **RAF batching**: High-frequency pointermove events are batched into a single `drag` via `requestAnimationFrame`,
   so that no more than one state update per frame is triggered (see the performance priority in [Design Philosophy](./01-design-philosophy.md)).
+- **Two-finger pinch (touch)**: A second touch pointerdown arriving before the first touch confirms a drag
+  discards the pending press and enters pinch mode; `pinch` gestures carry `zoomScale` (finger-distance
+  ratio) and `scrollDelta` (midpoint movement), coalesced to one per frame (`settleBatch`).
+  During a canvas pan drag the second touch closes the pan with `dragEnd` and enters the pinch; during an
+  object drag or shape drawing — and for mouse/pen — an extra pointerdown is simply ignored (palm
+  rejection, issue #25).
+- **Touch long press**: A touch press held for `LONG_PRESS_DURATION_MS` (500ms) within the touch drag slop
+  fires `longPress` and consumes the gesture (the lift fires no click). It routes to CanvasEventHandler
+  wherever it lands — per-target handlers reject it via `isPerTargetInteraction`, like middle/right
+  buttons — and opens the context menu, mirroring the right-button click.
+- **Touch panning**: Gestures carry `pointerType`, and CanvasEventHandler routes a one-finger touch drag on
+  the canvas background to viewport panning (the GrabScroll path) instead of area selection. Area selection
+  is unavailable on touch for now. On touch, background deselection waits for the tap to resolve (`click`)
+  instead of firing on `pressed`, and the per-target handlers defer the text-edit commit for a touch press
+  the same way (`commitTextEditUnlessTouchPress`), so pans and pinches preserve the selection, open menus,
+  and an active edit — even when a pinch finger lands on an object or control.
 
 ## Handler composition: canvas / controls / menu / objects
 
 `handleGesture` (`controllers/gestures/handlers/handleGesture.ts`) is the router.
-It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `scroll` depending on whether `ctrl` is held)
+It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `scroll` depending on whether `ctrl` is held;
+`pinch` decomposes into `zoom` followed by `scroll`)
 and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
-determine whether it should process the event.
+determine whether it should process the event. The registry holds exactly one handler per
+`targetKind`; where a kind needs finer splitting (by `targetId`, `data-part`, or event type), that
+handler is a router delegating to sub-handlers inside its own folder.
 
-| Handler group | Target                                                               | Main files                                                                                         |
-| ------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)    | `CanvasEventHandler.ts`                                                                            |
-| `controls/`   | Transform controls (resize, rotate, vertex, connection)              | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                   |
-| `menu/`       | Context menu, object menu, toolbar, shape library                    | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `ShapeLibraryItemHandler.ts` |
-| `objects/`    | Shapes and connectors themselves (move, select, launch text editing) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, shape-specific Controllers                    |
+| Handler group | Target                                                                                                              | Main files                                                                                                                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)                                                   | `CanvasEventHandler.ts`                                                                                                                                                                       |
+| `controls/`   | Transform controls (resize, rotate, vertex, connection)                                                             | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                                                                                              |
+| `menu/`       | Context menu, object menu, toolbar, stencil library                                                                 | `MenuEventHandler.ts` (router), `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`, `StencilCategoryToggleHandler.ts`                       |
+| `objects/`    | Shapes and connectors themselves (move, select, launch text editing, drag a connector label or one of its segments) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts` (router), `ConnectorClickHandler.ts`, `ConnectorLabelDragHandler.ts`, `ConnectorSegmentSlideHandler.ts`, `ConnectorSegmentMoveHandler.ts` |
 
 On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoints /
 snapCandidates, etc. at the start of the operation), and clears it on `dragEnd`. If the doc has actually changed
 on `dragEnd`, it advances `commitVersion`, triggering history recording (see [State Update Flow](./06-state-update-flow.md) for details).
+
+`activeDragKind` (`"move"` / `"transform"` / `"other"`) follows that same
+`dragStart` / `dragEnd` boundary: `handleGesture` starts every drag at `"other"` and clears it
+on `dragEnd`, so `!== null` always means "a drag is under way". A handler whose drag needs to be
+told apart overwrites the kind in its own `dragStart` — `ObjectEventHandler` sets `"move"` and
+`TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame and the
+connection anchors while a selection is moved, the anchors while it is transformed, and the
+ObjectMenu for every kind of drag.
 
 ## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part`
 
@@ -80,8 +107,10 @@ are located in `controllers/gestures/recognizer/utils/`.
 
 ### `data-kind` / `data-id` / `data-part`
 
-Attributes that **identify the target** of a gesture. `getKindAndId` finds the nearest element via `closest("[data-kind]")`,
-resolves `{ kind, id, part }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart`.
+Attributes that **identify the target** of a gesture. `getGestureTarget` finds the nearest element via `closest("[data-kind]")`,
+resolves `{ kind, id, part }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart`. `part` is read from the
+nearest `[data-part]` **at or inside** that element, so a shape that draws several hit regions can mark each one while still
+exposing a single `[data-kind]` element (one object = one `data-kind="object"` element, which e2e's `captureObjects` counts on).
 
 Each attribute carries exactly one axis, forming the two-level routing tree `kind` (coarse) → `part` prefix (fine) (issue #81):
 
@@ -102,7 +131,14 @@ Rules:
   target" is expressed with `data-gesture="none"`, not with a handler-less kind.
 
 Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
-With a committed label, only a double click on the label box (not the bare line) starts label editing.
+With a committed label, only a double click on the label box (not the bare line) starts label editing,
+and dragging the box moves the label along the path (`label.position` / `label.offset`),
+with `offset` snapping to 0 within `SNAP_THRESHOLD_PX` of the line (bypassed by holding Ctrl).
+With no label yet, a double click on the bare line creates one at the clicked point (projected onto
+the path and snapped the same way), carried in `textEditState` until the edit is committed.
+A multi-slot shape uses the nested form instead: the `record` shape's `<g data-kind="object">` wraps two
+compartment rects carrying `data-part="name"` / `data-part="rows"`, which is how a double click resolves
+the text slot it landed in (`resolveTextSlotId` checks the value against the keys of `state.text`).
 
 #### Migration (issue #81) — completed
 
@@ -131,7 +167,7 @@ zoom ± buttons, the handler uses **both** `click` and `doubleClick` as executio
 
 ```ts
 const isActivation = event.type === "click" || event.type === "doubleClick";
-if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
+if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
 	return handleCommand(state, commandId);
 }
 ```

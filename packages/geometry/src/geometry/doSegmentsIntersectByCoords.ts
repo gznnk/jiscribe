@@ -1,20 +1,22 @@
+import { EPSILON } from "../constants/EPSILON";
+
 /**
- * 数値座標版の線分交差判定。`doSegmentsIntersect` の計算コアで、Point を一切確保しない。
- * ホットパス（`isLineIntersectingBox` の 4 辺判定やルーティングの経路再計算）から
- * 中間オブジェクトのアロケーション無しで呼べるよう、座標をそのまま受け取る。
+ * Coordinate-based segment intersection test: the computation core of
+ * `doSegmentsIntersect`, allocating no Point. Hot paths (the four-edge
+ * test in `isLineIntersectingBox`, connector re-routing) call it directly.
  *
- * 平行・共線は常に非交差。非平行のとき `inclusive` で端点接触を交差に含めるか制御する。
+ * Parallel and colinear segments never intersect. Otherwise `inclusive`
+ * decides whether touching at an endpoint counts as an intersection.
  *
- * @param p1x - 第 1 線分の始点 x
- * @param p1y - 第 1 線分の始点 y
- * @param p2x - 第 1 線分の終点 x
- * @param p2y - 第 1 線分の終点 y
- * @param q1x - 第 2 線分の始点 x
- * @param q1y - 第 2 線分の始点 y
- * @param q2x - 第 2 線分の終点 x
- * @param q2y - 第 2 線分の終点 y
- * @param inclusive - true なら端点での接触も交差とみなす
- * @returns 線分が交差すれば true
+ * @param p1x - Start x of the first segment
+ * @param p1y - Start y of the first segment
+ * @param p2x - End x of the first segment
+ * @param p2y - End y of the first segment
+ * @param q1x - Start x of the second segment
+ * @param q1y - Start y of the second segment
+ * @param q2x - End x of the second segment
+ * @param q2y - End y of the second segment
+ * @param inclusive - Whether a touch at an endpoint counts as an intersection
  */
 export const doSegmentsIntersectByCoords = (
 	p1x: number,
@@ -33,9 +35,10 @@ export const doSegmentsIntersectByCoords = (
 	const sy = q2y - q1y;
 	const denominator = rx * sy - ry * sx;
 
-	if (denominator === 0) {
+	// Parallel or colinear
+	if (Math.abs(denominator) < EPSILON) {
 		return false;
-	} // Parallel or colinear → always non-intersecting
+	}
 
 	const qpx = q1x - p1x;
 	const qpy = q1y - p1y;

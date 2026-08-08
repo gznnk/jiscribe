@@ -5,13 +5,13 @@ import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Command that copies the current selection (including descendants and fully
  * enclosed connectors) into the internal clipboard, preserving z-order.
  */
-export const CopyCommand: Command = {
+export const CopyCommand: ExecutableCommand = {
 	id: "copy",
 	label: "Copy",
 	category: "edit",

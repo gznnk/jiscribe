@@ -2,27 +2,30 @@
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
-import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
-import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "font-color";
 const DEFAULT_FONT_COLOR = "#333333";
 
 type FontColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 /**
  * Font color menu.
  * Changes the font color of the selected text object.
- * Since ColorPickerGrid coordinates with the gesture system via data attributes,
+ * Since ObjectMenuColorPickerGrid coordinates with the gesture system via data attributes,
  * this component only retrieves and displays the current color.
  */
 const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
@@ -37,13 +40,11 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 		isOpen,
 	);
 
-	const { selectedIds, objects } = canvasState;
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontColor");
-	const currentColor =
-		(obj as TextStyleState | undefined)?.fontColor ?? DEFAULT_FONT_COLOR;
+	const slot = getSelectedOrFirstTextSlot(canvasState);
+	const currentColor = slot?.fontColor ?? DEFAULT_FONT_COLOR;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -54,15 +55,19 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 				<FontColorIcon underlineColor={resolveAutoColor(currentColor, "ink")} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
-					<ColorPickerGrid
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
+					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
 						property="fontColor"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

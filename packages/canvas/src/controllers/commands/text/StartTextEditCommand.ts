@@ -1,22 +1,31 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
-import type { Command } from "../CommandTypes";
+import {
+	getFirstTextSlotId,
+	readTextSlot,
+} from "../../../states/objects/types/TextSlots";
+import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
+import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Whether the shape can start text editing.
- * Only shapes that hold text (features.text) qualify; the structural guard
- * supplements this by checking value validity. isTextStyleState alone is a loose
- * guard that only checks the text attributes are internally consistent, so it would
- * also pass shapes with no text at all (svg / polyline / polygon, etc.); this aligns
- * on the same features.text criterion used by the property-update side
- * (FeatureGatedStyleProperty's text gate).
+ * Only shapes that hold text (features.text, in either shape) qualify; the
+ * structural guard supplements this by checking value validity. isTextStyleState
+ * alone is a loose guard that only checks the text attributes are internally
+ * consistent, so it would also pass shapes with no text at all (svg / polyline /
+ * polygon, etc.); this aligns on the same features.text criterion used by the
+ * property-update side (TextSlotStyleProperty).
  */
 const canEditText = (
 	object: ObjectState | undefined,
-): object is ObjectState & { text?: string } =>
-	object != null && object.features?.text === true && isTextStyleState(object);
+): object is ObjectState & TextStyleState =>
+	object != null &&
+	object.features?.text !== undefined &&
+	isTextStyleState(object);
 
-export const StartTextEditCommand: Command = {
+export const StartTextEditCommand: ExecutableCommand = {
 	id: "start-text-edit",
 	label: "Start Text Editing",
 	category: "edit",
@@ -50,11 +59,19 @@ export const StartTextEditCommand: Command = {
 			if (connector?.type !== "connector") {
 				return state;
 			}
+			const labelText =
+				(connector as { label?: { text?: string } }).label?.text ?? "";
 			return {
 				...state,
 				textEditState: {
+					kind: "connectorLabel",
 					objectId: state.selectedConnectorId,
-					text: (connector as { label?: { text?: string } }).label?.text ?? "",
+					text: labelText,
+					// Enter carries no pointer position, so a label being created takes
+					// the default placement. Without it the commit would spread the
+					// connector's own keys and revive the placement of a deleted label
+					// (the pointer path overrides those with the clicked point).
+					...(labelText === "" ? { placement: DEFAULT_LABEL_PLACEMENT } : {}),
 				},
 			};
 		}
@@ -66,11 +83,23 @@ export const StartTextEditCommand: Command = {
 			return state;
 		}
 
+		// Enter carries no pointer position, so the slot already selected one level
+		// below the object decides; resolveSelectedTextSlot validates it against
+		// this very single selection, so a stale one falls back to the first slot.
+		const slotId =
+			resolveSelectedTextSlot(state)?.slotId ??
+			getFirstTextSlotId(targetObject.text);
+		if (slotId === undefined) {
+			return state;
+		}
+
 		return {
 			...state,
 			textEditState: {
+				kind: "shape",
 				objectId,
-				text: targetObject.text ?? "",
+				slotId,
+				text: readTextSlot(targetObject.text, slotId),
 			},
 		};
 	},

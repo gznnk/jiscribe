@@ -3,7 +3,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * GestureHandler that processes ObjectMenu item interactions.
@@ -11,11 +11,13 @@ import { isLeftButton } from "../utils/isLeftButton";
  *
  * Property updates from the ObjectMenu take two paths:
  * (1) This handler: via the gesture system (set: / slider:). Most property changes go through here.
- * (2) The MENU_PROPERTY_UPDATE case in canvasReducer: via React onChange (e.g. number-input). Does not go through here.
+ * (2) The MENU_PROPERTY_UPDATE case in canvasReducer: via React onChange (number-input, and a
+ *     slider driven from the keyboard, which produces no gesture). Does not go through here.
  * Logic needed by both paths (such as clearing selectedVertex) must be added to each of them.
  *
  * Events handled:
- * - click: menu item click
+ * - click / doubleClick: menu item activation (equivalent; see the comment at the branch),
+ *   or a commit of the slider value the native track click already produced
  * - drag: real-time slider update (no history recording)
  * - dragEnd: commit the slider's final value + record history
  *
@@ -30,7 +32,7 @@ export const ObjectMenuHandler: GestureHandler = {
 		return (
 			event.targetKind === "menu" &&
 			event.targetId === "object-menu" &&
-			isLeftButton(event)
+			isPerTargetInteraction(event)
 		);
 	},
 
@@ -42,15 +44,10 @@ export const ObjectMenuHandler: GestureHandler = {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
-		// Slider interaction: drag / dragEnd
+		// Slider interaction: drag / dragEnd / click
 		if (event.targetPart?.startsWith("slider:")) {
-			// pressed, dragStart, and click events do nothing and keep the state (values update on drag / dragEnd)
-			if (
-				event.type === "pressed" ||
-				event.type === "dragStart" ||
-				event.type === "click" ||
-				event.type === "doubleClick"
-			) {
+			// pressed and dragStart do nothing and keep the state (values update on drag / dragEnd / click)
+			if (event.type === "pressed" || event.type === "dragStart") {
 				return nextState;
 			}
 
@@ -77,8 +74,17 @@ export const ObjectMenuHandler: GestureHandler = {
 				return { ...newState, selectedVertex: null };
 			}
 
-			// dragEnd event: commit the final value (history recording is delegated to handleGesture)
-			if (event.type === "dragEnd") {
+			// dragEnd: commit the final value (history recording is delegated to handleGesture).
+			// click / doubleClick: a press on the track jumps the thumb natively and lifts
+			// without ever crossing the drag threshold, so no drag/dragEnd pair fires and the
+			// value the browser already wrote would otherwise never reach the doc (#248).
+			// Since pointerup emits exactly one of dragEnd / click / doubleClick, this cannot
+			// commit twice.
+			if (
+				event.type === "dragEnd" ||
+				event.type === "click" ||
+				event.type === "doubleClick"
+			) {
 				const newState = registries.styleProperty.apply(
 					state,
 					property,
@@ -94,8 +100,16 @@ export const ObjectMenuHandler: GestureHandler = {
 			return state;
 		}
 
-		// Menu item click
-		if (event.type === "click" && event.targetPart) {
+		// Menu item activation. doubleClick activates like click (the ToolbarHandler
+		// pattern): the recognizer pairs any two rapid same-position clicks without
+		// comparing targets, so the second press of a toggle whose data-part changes
+		// with the value (set:fontWeight:bold → set:fontWeight:normal) arrives as
+		// doubleClick and must still fire. Each pointerup emits exactly one of
+		// click / doubleClick, so this cannot run an action twice.
+		if (
+			(event.type === "click" || event.type === "doubleClick") &&
+			event.targetPart
+		) {
 			const actionId = event.targetPart;
 
 			// toggle button: toggle a section open/closed

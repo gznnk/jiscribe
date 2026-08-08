@@ -1,9 +1,17 @@
 import { isArray, isObject, isString } from "@workspace/basic-validators";
 
 import type { SemanticDiagnostic } from "./types";
-import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
+import type { createObjectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
 
-function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
+type ObjectDocValidatorRegistry = ReturnType<
+	typeof createObjectDocValidatorRegistry
+>;
+
+function validateObjectNode(
+	obj: unknown,
+	path: string,
+	registry: ObjectDocValidatorRegistry,
+): SemanticDiagnostic[] {
 	if (!isObject(obj)) {
 		return [{ path, message: "must be an object" }];
 	}
@@ -22,8 +30,10 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 
 	// Reject unregistered (unknown) types here. Letting one through makes validation
 	// return ok, but then mapper resolution in canvasToState throws and crashes the
-	// whole editor. A type is registered if the registry has features for it.
-	if (objectDocValidatorRegistry.getFeatures(o.type as string) === undefined) {
+	// whole editor. In the parse pipeline stripUnknownContent removes them (with a
+	// warning) before this runs, so this check is a safety net for direct callers.
+	// A type is registered if the registry has features for it.
+	if (registry.getFeatures(o.type as string) === undefined) {
 		errors.push({
 			path: `${path}.type`,
 			message: `Unknown object type "${o.type as string}".`,
@@ -32,9 +42,7 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 	}
 
 	// Delegate per-type validation to the registry
-	errors.push(
-		...objectDocValidatorRegistry.validate(o.type as string, o, path),
-	);
+	errors.push(...registry.validate(o.type as string, o, path));
 
 	// Group children recursion is a structural rule, so handle it here in validateStructure
 	if (o.type === "group") {
@@ -62,7 +70,7 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 							"connector must be a top-level entry of 'root', not inside a group's children",
 					});
 				}
-				errors.push(...validateObjectNode(child, childPath));
+				errors.push(...validateObjectNode(child, childPath, registry));
 			});
 		}
 	}
@@ -77,7 +85,10 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
  *
  * @returns A list of diagnostics; empty when the document is structurally valid.
  */
-export function validateStructure(doc: unknown): SemanticDiagnostic[] {
+export function validateStructure(
+	doc: unknown,
+	registry: ObjectDocValidatorRegistry,
+): SemanticDiagnostic[] {
 	if (!isObject(doc)) {
 		return [
 			{
@@ -108,6 +119,12 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 		});
 	}
 
+	// Optional canvas surface color. When present it must be a color string;
+	// omitted means "follow the theme background" (see CanvasDoc.background).
+	if (d.background !== undefined && !isString(d.background)) {
+		errors.push({ path: "background", message: "must be a string" });
+	}
+
 	if (!isArray(d.root)) {
 		errors.push({ path: "root", message: "must be an array" });
 	} else {
@@ -115,7 +132,7 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 		// through validateObjectNode → the registry dispatches by type (connector uses
 		// validateConnectorDoc).
 		(d.root as unknown[]).forEach((obj, i) => {
-			errors.push(...validateObjectNode(obj, `root[${i}]`));
+			errors.push(...validateObjectNode(obj, `root[${i}]`, registry));
 		});
 	}
 

@@ -2,15 +2,15 @@ import type { TransformedFrame } from "../types/TransformedFrame";
 import type { TransformedRect } from "../types/TransformedRect";
 
 /**
- * Converts a TransformedRect (top-left based) to a TransformedFrame (center based).
+ * Converts a {@link TransformedRect} (top-left based) to a {@link TransformedFrame} (center based).
  *
- * @param geometry - The transformed rectangle geometry
- * @returns The corresponding TransformedFrame
+ * @param rect - The rect to convert; its rotation and flips carry over
+ *   unchanged, and `x` / `y` are its top-left corner before rotation
  */
 export const convertTransformedRectToFrame = (
-	geometry: TransformedRect,
+	rect: TransformedRect,
 ): TransformedFrame => {
-	const { x, y, width, height, rotation, scaleX, scaleY } = geometry;
+	const { x, y, width, height, rotation, scaleX, scaleY } = rect;
 	return {
 		cx: x + width / 2,
 		cy: y + height / 2,

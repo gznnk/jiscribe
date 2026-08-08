@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { ICanvasRegistries } from "../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
 /**
  * Definition of a keyboard shortcut.
@@ -68,8 +68,12 @@ export type Command = {
 	/**
 	 * Executes the command and returns a new CanvasControllerState.
 	 * Implemented as a pure function (no side effects).
+	 * Omitted for callback-executed commands (e.g. paste, whose async clipboard
+	 * read cannot be a pure state transition): the registry then holds only the
+	 * definition (shortcut / label / category) and execution is wired via the
+	 * `callbacks` map of useKeyboardShortcuts.
 	 */
-	execute: (
+	execute?: (
 		state: CanvasControllerState,
 		registries: ICanvasRegistries,
 	) => CanvasControllerState;
@@ -78,4 +82,12 @@ export type Command = {
 	 * Platform-specific keyboard shortcuts.
 	 */
 	shortcuts?: PlatformKeyBindings;
+};
+
+/**
+ * A Command whose `execute` is statically guaranteed present.
+ * Used where another command composes `execute` directly (e.g. Cut = Copy + Delete).
+ */
+export type ExecutableCommand = Command & {
+	execute: NonNullable<Command["execute"]>;
 };

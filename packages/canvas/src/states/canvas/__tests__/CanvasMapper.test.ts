@@ -132,6 +132,33 @@ describe("CanvasMapper", () => {
 			]);
 			expect(roundTripped.root[1].type).toBe("connector");
 		});
+
+		it("carries a doc-authored background through the round trip", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				background: "#0f172a",
+				root: [createRectDoc("rect-1")],
+			} as unknown as CanvasDoc;
+
+			const state = canvasToState(doc, objectMapperRegistry);
+			expect(state.background).toBe("#0f172a");
+
+			const roundTripped = canvasToDoc(state, objectMapperRegistry);
+			expect(roundTripped.background).toBe("#0f172a");
+		});
+
+		it("omits background when the doc has none (absent = follow theme)", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [createRectDoc("rect-1")],
+			} as unknown as CanvasDoc;
+
+			const roundTripped = canvasToDoc(
+				canvasToState(doc, objectMapperRegistry),
+				objectMapperRegistry,
+			);
+			expect("background" in roundTripped).toBe(false);
+		});
 	});
 
 	describe("canvasToState", () => {

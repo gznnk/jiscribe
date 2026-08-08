@@ -15,13 +15,38 @@ export function updateGroupBoundsFromRoot(
 	state: CanvasControllerState,
 	groupId: string,
 ): CanvasControllerState {
-	const rootGroupId = findRootGroupId(state.objects, groupId);
-	if (!rootGroupId) {
+	return updateGroupBoundsFromRoots(state, [groupId]);
+}
+
+/**
+ * Batch version of updateGroupBoundsFromRoot: resolves each group to its root,
+ * dedupes the roots, and updates all their subtrees on a single copy of the
+ * objects map. Use this over calling the single version in a loop, which would
+ * clone the whole objects map once per group (issue #160).
+ *
+ * @param state - Current canvas controller state with updated object positions
+ * @param groupIds - IDs of the groups whose root subtrees should be updated
+ * @returns Updated canvas controller state with recalculated group bounds
+ */
+export function updateGroupBoundsFromRoots(
+	state: CanvasControllerState,
+	groupIds: string[],
+): CanvasControllerState {
+	const rootGroupIds = new Set<string>();
+	for (const groupId of groupIds) {
+		const rootGroupId = findRootGroupId(state.objects, groupId);
+		if (rootGroupId) {
+			rootGroupIds.add(rootGroupId);
+		}
+	}
+	if (rootGroupIds.size === 0) {
 		return state;
 	}
 
 	const updatedObjects = { ...state.objects };
-	updateGroupsFromRoot(updatedObjects, rootGroupId);
+	for (const rootGroupId of rootGroupIds) {
+		updateGroupsFromRoot(updatedObjects, rootGroupId);
+	}
 
 	return {
 		...state,

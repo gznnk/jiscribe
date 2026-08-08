@@ -2,26 +2,36 @@ import type { BoundingBox } from "../types/BoundingBox";
 import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 
 /**
- * FrameKeyPoints の4隅から AABB（軸方向バウンディングボックス）を計算する。
+ * Axis-aligned bounding box of the four corners of a {@link FrameKeyPoints}.
+ *
+ * @param keyPoints - Key points to enclose; only the four corners are read,
+ *   since the edge midpoints can never lie outside them
  */
-export const calcKeyPointsBoundingBox = (kp: FrameKeyPoints): BoundingBox => ({
+export const calcKeyPointsBoundingBox = (
+	keyPoints: FrameKeyPoints,
+): BoundingBox => ({
 	left: Math.min(
-		kp.topLeft.x,
-		kp.topRight.x,
-		kp.bottomLeft.x,
-		kp.bottomRight.x,
+		keyPoints.topLeft.x,
+		keyPoints.topRight.x,
+		keyPoints.bottomLeft.x,
+		keyPoints.bottomRight.x,
 	),
 	right: Math.max(
-		kp.topLeft.x,
-		kp.topRight.x,
-		kp.bottomLeft.x,
-		kp.bottomRight.x,
+		keyPoints.topLeft.x,
+		keyPoints.topRight.x,
+		keyPoints.bottomLeft.x,
+		keyPoints.bottomRight.x,
 	),
-	top: Math.min(kp.topLeft.y, kp.topRight.y, kp.bottomLeft.y, kp.bottomRight.y),
+	top: Math.min(
+		keyPoints.topLeft.y,
+		keyPoints.topRight.y,
+		keyPoints.bottomLeft.y,
+		keyPoints.bottomRight.y,
+	),
 	bottom: Math.max(
-		kp.topLeft.y,
-		kp.topRight.y,
-		kp.bottomLeft.y,
-		kp.bottomRight.y,
+		keyPoints.topLeft.y,
+		keyPoints.topRight.y,
+		keyPoints.bottomLeft.y,
+		keyPoints.bottomRight.y,
 	),
 });

@@ -2,11 +2,11 @@ import { isGroupState } from "../../../states/objects/primitives/group/GroupStat
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { calcObjectBoundingBox } from "../../utils/calcObjectBoundingBox";
 import { calcViewportForBounds } from "../../utils/calcViewportForBounds";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 const PADDING_PX = 48;
 
-export const ZoomToSelectionCommand: Command = {
+export const ZoomToSelectionCommand: ExecutableCommand = {
 	id: "zoomToSelection",
 	label: "Zoom to Selection",
 	category: "view",
@@ -18,7 +18,7 @@ export const ZoomToSelectionCommand: Command = {
 
 	canExecute: (state) => state.selectedIds.length > 0,
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		const { viewport } = state;
 
 		const targetIds = buildSelectedIdsWithDescendants(
@@ -40,7 +40,11 @@ export const ZoomToSelectionCommand: Command = {
 				continue;
 			}
 
-			const bbox = calcObjectBoundingBox(obj, state.objects);
+			const bbox = calcObjectBoundingBox(
+				obj,
+				state.objects,
+				registries.objectVisualBounds,
+			);
 			if (!bbox) {
 				continue;
 			}

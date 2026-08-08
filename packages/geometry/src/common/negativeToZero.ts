@@ -1,8 +1,7 @@
 /**
- * Converts negative values to zero.
+ * Clamps negative values to zero, passing every other value through.
  *
- * @param value - Number to check and potentially convert
- * @returns The original value or zero if the value was negative
+ * @param value - Number to clamp; NaN is not negative, so it passes through
  */
 export const negativeToZero = (value: number): number => {
 	return value < 0 ? 0 : value;

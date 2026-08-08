@@ -5,9 +5,13 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import { handlePaste } from "./handlers/handlePaste";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
+import {
+	reconcileConnectorVertices,
+	reconcileConnectorVerticesIfCommitted,
+} from "../utils/reconcileConnectorVertices";
 import { resetUiState } from "../utils/resetUiState";
 
 /**
@@ -26,7 +30,12 @@ export const createCanvasReducer =
 		switch (action.type) {
 			case "GESTURE": {
 				const gestureResult = handleGesture(state, action.gesture, registries);
-				return recordHistoryIfNeeded(gestureResult, state);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					gestureResult,
+					state,
+					registries,
+				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "COMMAND": {
@@ -35,7 +44,12 @@ export const createCanvasReducer =
 					action.commandId,
 					registries,
 				);
-				return recordHistoryIfNeeded(commandResult, state);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					commandResult,
+					state,
+					registries,
+				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "SET_DOC_DEFAULTS": {
@@ -74,7 +88,8 @@ export const createCanvasReducer =
 
 			case "MENU_PROPERTY_UPDATE": {
 				// Property updates from the ObjectMenu take two paths.
-				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React onChange events (e.g. number-input).
+				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React onChange
+				//     events (number-input, and a slider driven from the keyboard, which fires no gesture).
 				// (2) ObjectMenuHandler: via the gesture system (set: / slider:). That path does not go through here.
 				const updated = registries.styleProperty.apply(
 					state,
@@ -92,13 +107,23 @@ export const createCanvasReducer =
 				if (!action.commit) {
 					return updatedWithVertexCleared;
 				}
-				return recordHistoryIfNeeded(
-					{
-						...updatedWithVertexCleared,
-						commitVersion: state.commitVersion + 1,
-					},
-					state,
+				// This case decides the commit itself (action.commit above), so the
+				// unconditional reconcile applies — no commitVersion gate to re-check.
+				const committedResult = {
+					...updatedWithVertexCleared,
+					commitVersion: state.commitVersion + 1,
+					historyCoalesce: action.coalesceHistory
+						? {
+								...updatedWithVertexCleared.historyCoalesce,
+								pending: buildMenuPropertyCoalesceKey(state, action.property),
+							}
+						: updatedWithVertexCleared.historyCoalesce,
+				};
+				const reconciledResult = reconcileConnectorVertices(
+					committedResult,
+					registries,
 				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "SYNC_EXTERNAL": {
@@ -114,6 +139,7 @@ export const createCanvasReducer =
 					...state,
 					objects: action.payload.objects,
 					rootIds: action.payload.rootIds,
+					background: action.payload.background,
 					...resetUiState(),
 					// An external change is a history boundary. Since past is pushed directly without going
 					// through recordHistoryIfNeeded, explicitly reset the coalesce state here (do not carry
@@ -147,7 +173,12 @@ export const createCanvasReducer =
 
 				if (action.commit) {
 					const commitResult = commitTextEditIfNeeded(state);
-					return recordHistoryIfNeeded(commitResult, state);
+					const reconciledResult = reconcileConnectorVerticesIfCommitted(
+						commitResult,
+						state,
+						registries,
+					);
+					return recordHistoryIfNeeded(reconciledResult, state);
 				}
 
 				// On cancel, clear only textEditState
@@ -159,7 +190,12 @@ export const createCanvasReducer =
 
 			case "PASTE": {
 				const pasteResult = handlePaste(state, action.data, registries);
-				return recordHistoryIfNeeded(pasteResult, state);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					pasteResult,
+					state,
+					registries,
+				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "CLOSE_CONTEXT_MENU": {
@@ -173,6 +209,25 @@ export const createCanvasReducer =
 				return state;
 		}
 	};
+
+/** Prefix of the coalesce key for consecutive ObjectMenu property commits */
+const MENU_PROPERTY_COALESCE_PREFIX = "menu-property";
+
+/**
+ * Builds the coalesce key for an ObjectMenu property commit. The target identity is
+ * part of the key, so a changed selection (or a different property) automatically
+ * becomes a separate undo entry.
+ */
+const buildMenuPropertyCoalesceKey = (
+	state: CanvasControllerState,
+	property: string,
+): string => {
+	const target =
+		state.selectedIds.length > 0
+			? state.selectedIds.join(",")
+			: (state.selectedConnectorId ?? "");
+	return `${MENU_PROPERTY_COALESCE_PREFIX}:${property}:${target}`;
+};
 
 /**
  * Time window (milliseconds) for coalescing consecutive operations into a single undo entry.

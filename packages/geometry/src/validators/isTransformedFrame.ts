@@ -3,12 +3,13 @@ import { isTransform } from "./isTransform";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * Check if an object is a TransformedFrame.
- * Validates both Frame and Transform properties.
+ * Type guard for {@link TransformedFrame}.
  *
- * @param obj - The object to check
- * @returns True if the object is a TransformedFrame, false otherwise
+ * @param value - Value to narrow; the frame fields and the transform fields
+ *   must all be present, so a bare {@link Frame} does not pass
  */
-export const isTransformedFrame = (obj: unknown): obj is TransformedFrame => {
-	return isFrame(obj) && isTransform(obj);
+export const isTransformedFrame = (
+	value: unknown,
+): value is TransformedFrame => {
+	return isFrame(value) && isTransform(value);
 };

@@ -7,27 +7,24 @@ import {
 import type { Frame } from "../types/Frame";
 
 /**
- * Check if an object is a Frame (primitive).
- * Validates all required Frame properties:
- * - Position: cx, cy (numbers)
- * - Size: width, height (non-negative numbers)
+ * Type guard for {@link Frame}. Width and height must be non-negative.
  *
- * @param obj - The object to check
- * @returns True if the object is a Frame, false otherwise
+ * @param value - Value to narrow; extra properties are allowed, so a
+ *   {@link TransformedFrame} passes too
  */
-export const isFrame = (obj: unknown): obj is Frame => {
-	if (!isObject(obj)) {
+export const isFrame = (value: unknown): value is Frame => {
+	if (!isObject(value)) {
 		return false;
 	}
 
 	return (
-		"cx" in obj &&
-		isNumber(obj.cx) &&
-		"cy" in obj &&
-		isNumber(obj.cy) &&
-		"width" in obj &&
-		isNonNegativeNumber(obj.width) &&
-		"height" in obj &&
-		isNonNegativeNumber(obj.height)
+		"cx" in value &&
+		isNumber(value.cx) &&
+		"cy" in value &&
+		isNumber(value.cy) &&
+		"width" in value &&
+		isNonNegativeNumber(value.width) &&
+		"height" in value &&
+		isNonNegativeNumber(value.height)
 	);
 };

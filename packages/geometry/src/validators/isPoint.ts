@@ -3,8 +3,10 @@ import { isNumber, isObject } from "@workspace/basic-validators";
 import type { Point } from "../types/Point";
 
 /**
- * Type guard to check if a value is a valid Point object.
- * Validates that the value has x and y properties that are both numbers.
+ * Type guard for {@link Point}.
+ *
+ * @param value - Value to narrow; extra properties are allowed, so any object
+ *   carrying numeric `x` / `y` passes
  */
 export const isPoint = (value: unknown): value is Point => {
 	if (!isObject(value)) {

@@ -1,15 +1,20 @@
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { createInitialControllerState } from "../../createInitialControllerState";
 
 /**
- * 結合テスト用の CanvasControllerState を構築する。
+ * Build a CanvasControllerState for integration tests.
  *
- * production と同じ createInitialControllerState を土台にするため、初期 state の
- * デフォルト値が prod とドリフトしない。テスト固有の差分（選択など）は overrides で渡す。
- * 返す state は deepFreezeState で凍結し、in-place ミューテートを検知する。
+ * Built on the same createInitialControllerState production uses, so the initial defaults
+ * cannot drift from prod. The returned state is frozen by deepFreezeState to detect in-place
+ * mutation.
+ *
+ * @param doc - Seeds the objects and rootIds; pass one already shaped like a parsed doc, since
+ *   nothing here validates it
+ * @param overrides - Test-specific differences such as the selection, applied over the initial
+ *   state as a shallow merge, so a nested field must be supplied whole
  */
 export const createTestState = (
 	doc: CanvasDoc,

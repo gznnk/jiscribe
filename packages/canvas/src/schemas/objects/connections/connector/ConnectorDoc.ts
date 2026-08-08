@@ -22,7 +22,7 @@ export const ConnectorFeatures = {
 
 /**
  * Connector-specific styleable properties beyond the ObjectFeatures flags
- * (ExtraStylePropertyRegistry 参照). The `label.` prefix is a nested write path
+ * (see ExtraStylePropertyRegistry). The `label.` prefix is a nested write path
  * into `connector.label`; a connector without a label ignores these (no-op).
  */
 export const ConnectorExtraStyleProperties = {
@@ -41,8 +41,8 @@ export const ConnectorExtraStyleProperties = {
  * Held as a **single nested object**, distinct from a shape's body text (the flat TextStyleDoc at
  * features.text). The reasons are: (1) `position` / `offset`, which describe placement along the
  * path, are connector-specific and we want the structure to make ownership explicit; (2) a short
- * tag on a line needs no alignment or markdown. Only color, size, and weight are borrowed from
- * TextStyleDoc for the style (no alignment or textType).
+ * tag on a line needs no alignment. Only color, size, and weight are borrowed from
+ * TextStyleDoc for the style (no alignment).
  *
  * A label whose `text` is an empty string is equivalent to "none" and is removed on save.
  *
@@ -70,14 +70,18 @@ declare const ConnectorDocBrand: unique symbol;
 /**
  * Doc for a connector (connection line).
  *
- * Semantics of `points`: holds **only the intermediate waypoints** in source → target order, in
- * world coordinates. Endpoint coordinates are not included (the source of truth for endpoints is the
- * `source` / `target` EndpointRef, and owned anchors are dynamically resolved at render time).
- * A straight connector has an empty array.
+ * Semantics of `points`: the route's **own vertices** — the corners the line bends at — in
+ * source → target order, in world coordinates. Endpoint coordinates are not included (the source of
+ * truth for endpoints is the `source` / `target` EndpointRef, and owned anchors are dynamically
+ * resolved at render time). Empty means the path is the engine's to choose.
  *
- * When `routing` is `"orthogonal"` (the default when omitted), the path is auto-generated at render
- * time and `points` is unused (always empty; derived values are not persisted). Specify `"straight"`
- * explicitly only when a straight line is desired.
+ * Non-empty, `points` **is** the path under either line shape: the drawn corners are exactly the
+ * stored ones. Only the vertex next to each endpoint is adjusted while an endpoint moves, sliding
+ * along to keep its segment axis-aligned (`alignVertexPath`); when the operation commits, that
+ * adjusted list is written back here (`reconcileConnectorVertices`), so at rest the stored list
+ * always matches what is drawn. Nothing else is corrected — a shape dragged across the route is
+ * crossed, and a route folded back on itself stays folded. Use ResetConnectorRouteCommand to hand
+ * the path back to the engine.
  *
  * Unlike polyline/polygon — whose `points` *is* the shape and is required — a connector's waypoints
  * are optional here (unspecified means none). The shared `Poly` geometry types them as required, so
@@ -101,7 +105,7 @@ export type ConnectorDoc = Prettify<
 		>,
 		"points"
 	> & {
-		/** Intermediate waypoints (source → target). Omitted means none (a straight connector). */
+		/** The route's vertices (source → target). Omitted means the engine routes the whole path. */
 		points?: Point[];
 	}
 >;

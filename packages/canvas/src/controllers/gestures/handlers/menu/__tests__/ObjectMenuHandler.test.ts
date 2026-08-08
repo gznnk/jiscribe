@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { RectFeatures } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ObjectMenuHandler } from "../ObjectMenuHandler";
 
@@ -30,6 +30,7 @@ const makeState = (): CanvasControllerState =>
 		selectedIds: ["rect-1"],
 		selectedConnectorId: null,
 		selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
+		selectedTextSlot: null,
 		multiSelectGroup: null,
 		textEditState: null,
 		objectMenuOpenId: null,
@@ -39,7 +40,7 @@ const makeState = (): CanvasControllerState =>
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
-	type: "pressed" | "click" | "drag" | "dragEnd",
+	type: "pressed" | "click" | "doubleClick" | "drag" | "dragEnd",
 	targetPart: string | undefined,
 	inputValue?: string,
 	targetKind = "menu",
@@ -88,6 +89,16 @@ describe("ObjectMenuHandler", () => {
 			expect(next.commitVersion).toBe(6);
 			expect(next.selectedVertex).toBeNull();
 		});
+
+		it("a doubleClick activates like a click (a rapid second press of a value-dependent toggle, e.g. bold → normal, arrives as doubleClick)", () => {
+			const next = ObjectMenuHandler.handle(
+				makeState(),
+				makeEvent("doubleClick", "set:fill:#dc2626"),
+				registries,
+			);
+			expect(fillOf(next)).toBe("#dc2626");
+			expect(next.commitVersion).toBe(6);
+		});
 	});
 
 	describe("toggle:{sectionId}", () => {
@@ -134,6 +145,44 @@ describe("ObjectMenuHandler", () => {
 					.strokeWidth,
 			).toBe(6);
 			expect(next.commitVersion).toBe(6);
+		});
+
+		it("a click on the track commits the value the native jump produced (#248)", () => {
+			const next = ObjectMenuHandler.handle(
+				makeState(),
+				makeEvent("click", "slider:strokeWidth", "7"),
+				registries,
+			);
+			expect(
+				(next.objects["rect-1"] as unknown as { strokeWidth: number })
+					.strokeWidth,
+			).toBe(7);
+			expect(next.commitVersion).toBe(6);
+			expect(next.selectedVertex).toBeNull();
+		});
+
+		it("a doubleClick on the track commits like a click (two rapid track clicks pair up)", () => {
+			const next = ObjectMenuHandler.handle(
+				makeState(),
+				makeEvent("doubleClick", "slider:strokeWidth", "9"),
+				registries,
+			);
+			expect(
+				(next.objects["rect-1"] as unknown as { strokeWidth: number })
+					.strokeWidth,
+			).toBe(9);
+			expect(next.commitVersion).toBe(6);
+		});
+
+		it("a pressed on the slider changes no property (the value is committed on release)", () => {
+			const state = makeState();
+			const next = ObjectMenuHandler.handle(
+				state,
+				makeEvent("pressed", "slider:strokeWidth", "7"),
+				registries,
+			);
+			expect(next.objects).toBe(state.objects);
+			expect(next.commitVersion).toBe(5);
 		});
 	});
 

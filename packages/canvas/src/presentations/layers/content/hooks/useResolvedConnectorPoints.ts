@@ -3,7 +3,11 @@ import { useMemo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
-import { useShapeOutlineRegistry } from "../../../objects/registry/ShapeOutlineRegistryContext";
+import { useObjectAnchorRegionRegistry } from "../../../objects/registry/ObjectAnchorRegionRegistryContext";
+import { useObjectExtraConnectPointsRegistry } from "../../../objects/registry/ObjectExtraConnectPointsRegistryContext";
+import type { ObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistry";
+import { useObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistryContext";
+import { useObjectOutlineRegistry } from "../../../objects/registry/ObjectOutlineRegistryContext";
 import { resolveConnectorPoints } from "../utils/endpoints";
 
 /**
@@ -26,9 +30,14 @@ export type ResolvedConnectorPoints = {
  * the owner but keep these values, so keying the memo on them skips the
  * re-route (#214).
  * Connectable types are all frame-based today; if poly shapes ever become
- * connectable, `points` must be added here.
+ * connectable, `points` must be added here. Per-type state beyond the frame
+ * (a callout's tail) arrives as the trailing geometry key, so a type whose
+ * silhouette moves on its own stays live by registering a `geometryKey`.
  */
-const getOwnerGeometryDeps = (obj: ObjectState | null) => {
+const getOwnerGeometryDeps = (
+	obj: ObjectState | null,
+	geometryKeyRegistry: ObjectGeometryKeyRegistry,
+) => {
 	const frame = obj as (ObjectState & Partial<TransformedFrame>) | null;
 	return [
 		obj?.id,
@@ -41,6 +50,7 @@ const getOwnerGeometryDeps = (obj: ObjectState | null) => {
 		frame?.rotation,
 		frame?.scaleX,
 		frame?.scaleY,
+		obj ? geometryKeyRegistry.get(obj.type)?.(obj) : undefined,
 	] as const;
 };
 
@@ -67,7 +77,10 @@ export const useResolvedConnectorPoints = (
 	sourceObj: ObjectState | null,
 	targetObj: ObjectState | null,
 ): ResolvedConnectorPoints | null => {
-	const outlineRegistry = useShapeOutlineRegistry();
+	const outlineRegistry = useObjectOutlineRegistry();
+	const anchorRegionRegistry = useObjectAnchorRegionRegistry();
+	const extraConnectPointsRegistry = useObjectExtraConnectPointsRegistry();
+	const geometryKeyRegistry = useObjectGeometryKeyRegistry();
 
 	// Keyed on the values the resolution reads (connector endpoints / routing and
 	// the owners' geometry) instead of the object references: property edits clone
@@ -78,6 +91,8 @@ export const useResolvedConnectorPoints = (
 			sourceObj,
 			targetObj,
 			outlineRegistry,
+			anchorRegionRegistry,
+			extraConnectPointsRegistry,
 		);
 		if (!resolved) {
 			return null;
@@ -93,9 +108,12 @@ export const useResolvedConnectorPoints = (
 		connectorState.target,
 		connectorState.points,
 		connectorState.routing,
-		...getOwnerGeometryDeps(sourceObj),
-		...getOwnerGeometryDeps(targetObj),
+		...getOwnerGeometryDeps(sourceObj, geometryKeyRegistry),
+		...getOwnerGeometryDeps(targetObj, geometryKeyRegistry),
 		outlineRegistry,
+		anchorRegionRegistry,
+		extraConnectPointsRegistry,
+		geometryKeyRegistry,
 	]);
 	/* eslint-enable react-hooks/exhaustive-deps */
 };

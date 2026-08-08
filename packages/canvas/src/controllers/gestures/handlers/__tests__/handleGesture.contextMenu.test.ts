@@ -5,7 +5,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
@@ -83,10 +83,10 @@ describe("handleGesture - context menu auto-close", () => {
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
-	it("closes the menu on left-click press over a shape library item", () => {
+	it("closes the menu on left-click press over a stencil library item", () => {
 		const nextState = handleGesture(
 			openMenuState(),
-			pressedOn("menu", "shape-library", "item:rect"),
+			pressedOn("menu", "stencil-library", "item:rect"),
 			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();

@@ -11,13 +11,14 @@ import type {
 	EventStartSnapshot,
 	KeyPointsCache,
 } from "../../CanvasTypes";
-import type { CanvasRegistries } from "../../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../../registries/CanvasRegistries";
 import { buildObjectBBoxes } from "../../utils/buildObjectBBoxes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { materializeObjects } from "../../utils/cowObjects";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
+import { ZOOM } from "../../../constants/zoom";
 
 /**
  * Event types that should trigger saving the current state as eventStartSnapshot.
@@ -34,7 +35,8 @@ const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
 /**
  * Main gesture router.
  * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
- * Also manages eventStartSnapshot lifecycle (save on dragStart, clear on dragEnd).
+ * Also manages the eventStartSnapshot and activeDragKind lifecycle (set on dragStart,
+ * cleared on dragEnd).
  * Automatically records history when commitVersion changes.
  *
  * Routing uses the canvas's own gesture handler registry, passed in via
@@ -48,19 +50,31 @@ export const handleGesture = (
 	let nextState = state;
 
 	// Convert Gesture to CanvasEvent
-	// wheel is converted to scroll/zoom, others are passed through
+	// wheel is converted to scroll/zoom, pinch to zoom (+ a derived scroll below),
+	// others are passed through
 	let canvasEvent: CanvasEvent;
 	if (gesture.type === "wheel") {
 		if (gesture.mods.ctrl) {
+			// One fixed-factor step per wheel event, from the deltaY sign alone
 			canvasEvent = {
 				...gesture,
 				type: "zoom",
-				zoomDelta: gesture.scrollDelta?.deltaY,
+				zoomScale:
+					(gesture.scrollDelta?.deltaY ?? 0) > 0
+						? ZOOM.OUT_FACTOR
+						: ZOOM.IN_FACTOR,
 				scrollDelta: undefined,
 			} as CanvasEvent;
 		} else {
 			canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
 		}
+	} else if (gesture.type === "pinch") {
+		// zoomScale rides on the gesture; last (the finger midpoint) is the anchor
+		canvasEvent = {
+			...gesture,
+			type: "zoom",
+			scrollDelta: undefined,
+		} as CanvasEvent;
 	} else {
 		canvasEvent = gesture as CanvasEvent;
 	}
@@ -144,6 +158,10 @@ export const handleGesture = (
 			keyPointsCache: newCache,
 			snapCandidatesCache,
 			eventStartSnapshot,
+			// The default every drag starts from. A handler that gives its drag a
+			// meaning refines it in its own dragStart; anything else stays "other",
+			// which is what keeps "a drag is under way" true for all of them.
+			activeDragKind: "other",
 		};
 	}
 
@@ -159,12 +177,22 @@ export const handleGesture = (
 		});
 	}
 
+	// Pinch: the pan component follows the zoom as a scroll event. Order matters —
+	// the zoom anchors at the midpoint first, then the pan applies at the new zoom.
+	if (gesture.type === "pinch" && gesture.scrollDelta) {
+		derivedEvents.push({
+			...canvasEvent,
+			type: "scroll",
+			scrollDelta: gesture.scrollDelta,
+		});
+	}
+
 	// Process all events
 	for (const event of derivedEvents) {
 		nextState = registries.gestureHandler.handle(nextState, event, registries);
 	}
 
-	// Clear eventStartSnapshot on event end
+	// Clear eventStartSnapshot / activeDragKind on event end
 	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
 		// Only commit if objects/rootIds actually changed.
 		// (connectors are also part of rootIds, so comparing rootIds detects them)
@@ -180,6 +208,7 @@ export const handleGesture = (
 			// gesture's snapshot only ever hold plain records (#213). No-op when plain.
 			objects: materializeObjects(nextState.objects),
 			eventStartSnapshot: null,
+			activeDragKind: null,
 			snapFeedback: null,
 			axisLockFeedback: null,
 			...(hasDocChanges ? { commitVersion: state.commitVersion + 1 } : {}),

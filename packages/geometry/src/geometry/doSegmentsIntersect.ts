@@ -2,16 +2,15 @@ import { doSegmentsIntersectByCoords } from "./doSegmentsIntersectByCoords";
 import type { Point } from "../types/Point";
 
 /**
- * Determines if two line segments intersect.
- * Parallel or colinear lines are always considered non-intersecting.
- * For non-parallel segments, the inclusive flag controls whether touching at endpoints counts as intersection.
+ * Whether two line segments intersect. Parallel and colinear segments never
+ * intersect; otherwise `inclusive` decides whether touching at an endpoint
+ * counts as an intersection.
  *
- * @param p1 - Starting point of the first line segment
- * @param p2 - Ending point of the first line segment
- * @param q1 - Starting point of the second line segment
- * @param q2 - Ending point of the second line segment
- * @param inclusive - If true, includes intersection at endpoints. Default: true
- * @returns True if the line segments intersect, false otherwise
+ * @param p1 - Start of the first segment
+ * @param p2 - End of the first segment
+ * @param q1 - Start of the second segment
+ * @param q2 - End of the second segment
+ * @param inclusive - Whether a touch at an endpoint counts as an intersection
  */
 export const doSegmentsIntersect = (
 	p1: Point,

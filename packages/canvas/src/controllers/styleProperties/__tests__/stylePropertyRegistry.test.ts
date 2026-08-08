@@ -4,8 +4,8 @@ import type { StyleValueType } from "../../../schemas/objects/types/ExtraStylePr
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
-import { ALL_OBJECT_DEFINITIONS } from "../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { ALL_OBJECT_DEFINITIONS } from "../../registries/initializeObjectRegistry";
 import { FeatureGatedStyleProperty } from "../FeatureGatedStyleProperty";
 import { SYSTEM_STYLE_PROPERTIES } from "../systemStyleProperties";
 
@@ -47,6 +47,7 @@ const makeState = (
 		selectedConnectorId: null,
 		objects: {},
 		multiSelectGroup: null,
+		selectedTextSlot: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -110,7 +111,7 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 });
 
 describe("shape-declared extra properties (registry-driven)", () => {
-	it("the wiring exposes at least one extra declaration (container/connector)", () => {
+	it("the wiring exposes at least one extra declaration (e.g. connector label.*)", () => {
 		expect(EXTRA_DECLARATIONS.length).toBeGreaterThan(0);
 	});
 

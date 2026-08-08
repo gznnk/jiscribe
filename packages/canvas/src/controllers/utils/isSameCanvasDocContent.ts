@@ -22,5 +22,6 @@ export function isSameCanvasDocContent(
 const stringifyDocContent = (doc: CanvasDoc): string =>
 	JSON.stringify({
 		version: doc.version,
+		background: doc.background,
 		root: doc.root,
 	});

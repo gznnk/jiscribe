@@ -1,15 +1,15 @@
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { SelectionControlRegistry } from "../../../registry/SelectionControlRegistry";
-import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import type { SelectionControlRegistry } from "../../../ui/controls/SelectionControlRegistry";
 import type { ControlStrategy } from "../../registry/ControlStrategy";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { parseSelectionControlObjectType } from "../../registry/SelectionControlHandler";
-import { isLeftButton } from "../utils/isLeftButton";
+import { parseSelectionControlObjectType } from "../../registry/RegisteredSelectionControl";
+import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * Main handler for all control-level events.
@@ -36,7 +36,7 @@ export class ControlEventHandler implements GestureHandler {
 	}
 
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "control" && isLeftButton(event);
+		return event.targetKind === "control" && isPerTargetInteraction(event);
 	}
 
 	handle(
@@ -44,8 +44,9 @@ export class ControlEventHandler implements GestureHandler {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// Commit text editing if active
-		let nextState = commitTextEditIfNeeded(state);
+		// Commit text editing if active (deferred for a touch press — it may
+		// still become a pinch; see commitTextEditUnlessTouchPress)
+		let nextState = commitTextEditUnlessTouchPress(state, event);
 
 		// Close the context menu on a press over a control.
 		// (Controls are normally unreachable while the menu is open, but this keeps
@@ -90,7 +91,7 @@ export class ControlEventHandler implements GestureHandler {
 		// The parsed segment is untrusted DOM text; an unknown type simply
 		// misses the registry.
 		const controls = this.selectionControls.get(objectType as ObjectType);
-		return controls?.find((control) => control.handler.supports(event))
-			?.handler;
+		return controls?.find((control) => control.strategy.supports(event))
+			?.strategy;
 	}
 }

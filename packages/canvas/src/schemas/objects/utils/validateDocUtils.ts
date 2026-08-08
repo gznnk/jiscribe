@@ -6,11 +6,10 @@ import {
 
 import type { SemanticDiagnostic } from "../../canvas/validators/types";
 import { isArrowType } from "../types/ArrowType";
-import { isConnectPointId } from "../types/EndpointRef";
+import { isEdgeAnchorSide } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { isTextAlign } from "../types/TextAlign";
-import { isTextType } from "../types/TextType";
 import { isVerticalAlign } from "../types/VerticalAlign";
 
 /**
@@ -155,22 +154,57 @@ function validateNonFreeAnchor(
 		return [];
 	}
 	if (a.kind === "connectPoint") {
-		if (!isConnectPointId(a.id)) {
+		// Membership is not checked: the set is open (each object type may declare
+		// points of its own), so which ids exist is a registry question rather than a
+		// doc-schema one, and an id nothing declares renders as the owner's center
+		// (see resolveEndpoint). "center" is still rejected, because it is the one id
+		// that can never be declared: the center is its own anchor kind.
+		if (!isString(a.id) || a.id === "" || a.id === "center") {
 			return [
 				{
 					path: `${path}.anchor.id`,
-					message: "must be a valid ConnectPointId",
+					message:
+						"must be a non-empty string other than 'center' (use { kind: 'center' })",
 				},
 			];
 		}
 		return [];
 	}
+	if (a.kind === "edge") {
+		return validateEdgeAnchor(a, path);
+	}
 	return [
 		{
 			path: `${path}.anchor.kind`,
-			message: "must be 'center' or 'connectPoint' for owned endpoint",
+			message: "must be 'center', 'connectPoint' or 'edge' for owned endpoint",
 		},
 	];
+}
+
+/**
+ * Validate an edge anchor's `side` (one of the four) and `t` (a finite ratio in
+ * 0..1). A ratio outside the range is reported rather than clamped: the engine
+ * does not silently rewrite a doc, so an author (or an AI) sees the mistake
+ * instead of a connector quietly landing somewhere else.
+ */
+function validateEdgeAnchor(
+	a: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if (!isEdgeAnchorSide(a.side)) {
+		errors.push({
+			path: `${path}.anchor.side`,
+			message: "must be one of: top, right, bottom, left",
+		});
+	}
+	if (!isNumber(a.t) || !Number.isFinite(a.t) || a.t < 0 || a.t > 1) {
+		errors.push({
+			path: `${path}.anchor.t`,
+			message: "must be a number between 0 and 1",
+		});
+	}
+	return errors;
 }
 
 function validateFreeAnchor(
@@ -271,23 +305,21 @@ export function validateFillStyleFields(
 }
 
 /**
- * Validate optional text style fields: `text`, `textType`, `textAlign`, `verticalAlign`,
- * `fontColor` (safe CSS color), `fontSize` (≥ 1), `fontFamily`/`fontWeight` (safe CSS values).
+ * Validate the styling fields a text carries — `textAlign`, `verticalAlign`,
+ * `fontColor` (safe CSS color), `fontSize` (≥ 1), and
+ * `fontFamily`/`fontWeight`/`fontStyle`/`textDecoration` (safe CSS values). The
+ * same names appear flat on a single-body doc and inside each slot of a keyed
+ * one, so both forms validate them through here.
+ *
+ * @param o - The object carrying the styling: the doc itself, or one of its text slots
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @returns One diagnostic per malformed field; empty when every field is absent or valid
  */
-export function validateTextStyleFields(
+export function validateTextSlotStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("text" in o && !isString(o.text)) {
-		errors.push({ path: `${path}.text`, message: "must be a string" });
-	}
-	if ("textType" in o && !isTextType(o.textType)) {
-		errors.push({
-			path: `${path}.textType`,
-			message: "must be one of: text, markdown",
-		});
-	}
 	if ("textAlign" in o && !isTextAlign(o.textAlign)) {
 		errors.push({
 			path: `${path}.textAlign`,
@@ -323,6 +355,42 @@ export function validateTextStyleFields(
 			beyondSchema: true,
 		});
 	}
+	if ("fontStyle" in o && !isCssSafeValue(o.fontStyle)) {
+		errors.push({
+			path: `${path}.fontStyle`,
+			message: "must be a safe CSS font-style value",
+			beyondSchema: true,
+		});
+	}
+	if ("textDecoration" in o && !isCssSafeValue(o.textDecoration)) {
+		errors.push({
+			path: `${path}.textDecoration`,
+			message: "must be a safe CSS text-decoration value",
+			beyondSchema: true,
+		});
+	}
+	return errors;
+}
+
+/**
+ * Validate the text group of a single-body doc (features.text: "body"): `text`
+ * as a plain string plus the flat styling fields. A keyed object is rejected
+ * here — a type whose text is keyed declares `text: "slots"` and validates its
+ * own closed slot set (see the record shape).
+ *
+ * @param o - The doc to check; a missing `text` is valid (it reads as empty)
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @returns One diagnostic per malformed field; empty when the whole group is valid
+ */
+export function validateTextStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if ("text" in o && !isString(o.text)) {
+		errors.push({ path: `${path}.text`, message: "must be a string" });
+	}
+	errors.push(...validateTextSlotStyleFields(o, path));
 	return errors;
 }
 

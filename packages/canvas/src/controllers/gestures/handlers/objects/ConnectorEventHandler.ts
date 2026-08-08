@@ -1,102 +1,51 @@
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { ConnectorClickHandler } from "./ConnectorClickHandler";
+import { ConnectorLabelDragHandler } from "./ConnectorLabelDragHandler";
+import { ConnectorSegmentMoveHandler } from "./ConnectorSegmentMoveHandler";
+import { ConnectorSegmentSlideHandler } from "./ConnectorSegmentSlideHandler";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
- * Handles click events on connectors.
- * Connectors are selected independently from objects (selectedConnectorId vs selectedIds).
- * Only single selection is supported; selecting a connector clears selectedIds, and vice versa.
- *
- * Label editing (label.text) starts on a double click, with the edit target
- * depending on whether a label exists:
- * - No committed label: a double click anywhere on the line starts editing
- *   (there is no label box to aim at yet).
- * - Committed label: only a double click on the label box (targetPart "label")
- *   starts editing; a double click on the bare line just selects.
- *
- * While editing, the label box is covered by the editor overlay
- * (data-gesture="none"), so any tap that reaches this handler is outside the
- * label and commits the pending edit like any other outside tap.
+ * Sub-handlers of the "connector" targetKind, exported for the exclusivity test.
+ */
+export const CONNECTOR_HANDLERS: readonly GestureHandler[] = [
+	ConnectorLabelDragHandler,
+	ConnectorSegmentSlideHandler,
+	ConnectorSegmentMoveHandler,
+	ConnectorClickHandler,
+];
+
+/**
+ * Main handler for all connector-level events.
+ * Routes each event to the first sub-handler whose supports() accepts it:
+ * clicks (click / pressed / doubleClick) to ConnectorClickHandler, drags on the
+ * label box to ConnectorLabelDragHandler, drags on a "segment-slide:<i>" band to
+ * ConnectorSegmentSlideHandler, and on a "segment-move:<i>" band to
+ * ConnectorSegmentMoveHandler. Their supports() are mutually exclusive, so
+ * the array order never decides routing.
  */
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return (
-			isLeftButton(event) &&
-			event.targetKind === "connector" &&
-			// TODO: this filtering may no longer be necessary here
-			(event.type === "click" ||
-				event.type === "pressed" ||
-				event.type === "doubleClick")
-		);
+		return event.targetKind === "connector" && isPerTargetInteraction(event);
 	},
 
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		const connectorId = event.targetId;
-		let nextState = commitTextEditIfNeeded(state);
-
-		// A double click selects the connector, and starts label editing when it
-		// hits the edit target (see the doc comment above).
-		if (event.type === "doubleClick") {
-			if (!connectorId) {
-				return nextState;
+		for (const handler of CONNECTOR_HANDLERS) {
+			if (handler.supports(event)) {
+				return handler.handle(state, event, registries);
 			}
-			const connector = nextState.objects[connectorId];
-			if (connector?.type !== "connector") {
-				return nextState;
-			}
-			const labelText = (connector as ConnectorState).label?.text ?? "";
-			const selectedState = {
-				...nextState,
-				selectedConnectorId: connectorId,
-				selectedIds: [],
-				multiSelectGroup: null,
-				// Close the submenu / category flyout on selection change
-				objectMenuOpenId: null,
-				shapeLibraryOpenCategory: null,
-			};
-			if (labelText !== "" && event.targetPart !== "label") {
-				return selectedState;
-			}
-			return {
-				...selectedState,
-				textEditState: {
-					objectId: connectorId,
-					text: labelText,
-				},
-			};
 		}
 
-		// A press on a connector closes the context menu (button is guarded in supports, selection happens on click)
-		if (event.type === "pressed") {
-			nextState = { ...nextState, contextMenuPosition: null };
-		}
-
-		// A click selects the connector (clearing shape selection to enforce exclusivity)
-		// No change if the same connector is already selected
-		if (
-			event.type === "click" &&
-			connectorId &&
-			nextState.selectedConnectorId !== connectorId
-		) {
-			nextState = {
-				...nextState,
-				selectedConnectorId: connectorId,
-				selectedIds: [],
-				multiSelectGroup: null,
-				// Close the submenu / category flyout on selection change
-				objectMenuOpenId: null,
-				shapeLibraryOpenCategory: null,
-			};
-		}
-
-		return nextState;
+		// Events no sub-handler claims (a drag on the bare line, say) pass through
+		return state;
 	},
 };

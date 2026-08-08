@@ -9,7 +9,7 @@ export const RectFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: true,
+	text: "body",
 	radius: true,
 	connectable: true,
 } as const satisfies ObjectFeatures;
@@ -33,7 +33,6 @@ export const RECT_DOC_DEFAULTS: Omit<RectDoc, "id"> = {
 	strokeWidth: 2,
 	rx: 0,
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,

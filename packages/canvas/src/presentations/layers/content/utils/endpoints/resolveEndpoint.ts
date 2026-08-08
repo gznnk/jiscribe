@@ -1,13 +1,19 @@
 import {
-	calcFrameKeyPoint,
-	calcOutlinePointTowardForPolygon,
 	isCenterPoint,
 	isTransformedFrame,
 	type Point,
+	type Rect,
 } from "@workspace/geometry";
 
 import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
+import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
+import {
+	calcConnectPoint,
+	calcEdgeAnchorPoint,
+	calcExtraConnectPoint,
+} from "../../../../objects/utils/calcConnectPoint";
 
 /**
  * Resolves an EndpointRef to a Point coordinate. It takes a single target
@@ -17,22 +23,38 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
  * Supported anchor kinds:
  * - free: returns the specified point as-is
  * - center: returns the referenced shape's center point (cx, cy)
- * - connectPoint: returns the specified connection point (an edge midpoint such
- *   as topCenter / rightCenter)
+ * - connectPoint: returns the specified connection point — one of the four edge
+ *   anchors (topCenter / rightCenter / …) or a point the shape's type declares
+ *   itself (the brace's `tip`)
+ * - edge: returns a free position along one of the shape's local edges, given as
+ *   a side and a ratio along it
+ *
+ * A connectPoint id that is neither builtin nor declared resolves to the shape's
+ * center rather than failing, so a doc written against a build where the shape
+ * declared more points still draws its connectors.
  *
  * @param endpoint - The endpoint reference to resolve. Carries the anchor kind
  *   (free / center / connectPoint)
  * @param obj - State of the shape the endpoint references. null/undefined when
  *   unreferenced (free) or not found
- * @param outline - The shape's local outline polygon (from ShapeOutlineRegistry).
- *   When present, a connectPoint anchor snaps onto the true edge; omitted =
- *   bounding-box edge midpoint (rect/ellipse behavior)
+ * @param outline - The shape's local outline polygon (from ObjectOutlineRegistry).
+ *   When present, a connectPoint or edge anchor snaps onto the true edge; omitted =
+ *   bounding-box edge (rect/ellipse behavior). Not consulted for extra points
+ * @param anchorRegion - The shape's local anchor region (from
+ *   ObjectAnchorRegionRegistry). Centers the edge anchors on that band, and
+ *   spreads an edge anchor's ratio over it, instead of the bounding box;
+ *   omitted = full bounding box
+ * @param extraConnectPoints - The shape's declared extra anchors (from
+ *   ObjectExtraConnectPointsRegistry), in local coordinates; omitted = the four
+ *   edge anchors only
  * @returns The resolved coordinate, or null if it cannot be resolved
  */
 export const resolveEndpoint = (
 	endpoint: EndpointRef,
 	obj: ObjectState | null | undefined,
 	outline?: readonly Point[] | null,
+	anchorRegion?: Rect | null,
+	extraConnectPoints?: readonly ExtraConnectPoint[] | null,
 ): Point | null => {
 	// FreeAnchor: point is directly specified
 	if (endpoint.anchor.kind === "free") {
@@ -51,36 +73,40 @@ export const resolveEndpoint = (
 		}
 	}
 
-	// ConnectPointAnchor: use a specific connection point on the object's edge
+	// EdgeAnchor: a free position along one of the object's local edges. Only a
+	// frame has edges; anything else degrades to the center rather than dropping
+	// the connector, the way an undeclared connectPoint id does.
+	if (endpoint.anchor.kind === "edge") {
+		if (isTransformedFrame(obj)) {
+			return calcEdgeAnchorPoint(obj, endpoint.anchor, outline, anchorRegion);
+		}
+		if (isCenterPoint(obj)) {
+			return { x: obj.cx, y: obj.cy };
+		}
+	}
+
+	// ConnectPointAnchor: a named point on the object — an edge anchor or one the
+	// object's type declares. The center is never a connectPoint id (it is its own
+	// kind === "center" anchor).
 	if (endpoint.anchor.kind === "connectPoint") {
 		const anchorId = endpoint.anchor.id;
 
 		// Check if the object has transform properties (Frame-based)
 		if (isTransformedFrame(obj)) {
-			// Compute only the requested edge key point (avoids calculating all 8).
-			// The center is never a connectPoint id (it is its own kind === "center"
-			// anchor); an unknown id falls through to null.
-			switch (anchorId) {
-				case "topCenter":
-				case "rightCenter":
-				case "bottomCenter":
-				case "leftCenter": {
-					// The bounding-box edge midpoint doubles as the outward direction
-					// (center → midpoint) for outline shapes; casting that ray onto the
-					// true outline lands the anchor on the drawn edge. Rect/ellipse have
-					// no outline registered, so they keep the midpoint as-is.
-					const boxEdgeMidpoint = calcFrameKeyPoint(obj, anchorId);
-					if (outline && outline.length >= 2) {
-						return (
-							calcOutlinePointTowardForPolygon(outline, obj, boxEdgeMidpoint) ??
-							boxEdgeMidpoint
-						);
-					}
-					return boxEdgeMidpoint;
-				}
-				default:
-					return null;
+			if (isConnectPointId(anchorId)) {
+				return calcConnectPoint(obj, anchorId, outline, anchorRegion);
 			}
+			const declared = extraConnectPoints?.find(
+				(candidate) => candidate.id === anchorId,
+			);
+			if (declared) {
+				return calcExtraConnectPoint(obj, declared);
+			}
+		}
+
+		// Undeclared id: degrade to the center instead of dropping the connector.
+		if (isCenterPoint(obj)) {
+			return { x: obj.cx, y: obj.cy };
 		}
 	}
 

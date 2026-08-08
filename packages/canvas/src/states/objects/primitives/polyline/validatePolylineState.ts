@@ -1,6 +1,6 @@
 import { isObject } from "@workspace/basic-validators";
 
-import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
+import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import {
 	hasValidIdAndType,
 	isValidArrowFields,
@@ -10,7 +10,7 @@ import {
 } from "../../utils/validateStateUtils";
 
 /** Validates PolylineState (Poly + stroke + arrow endpoints). */
-export const isValidPolylineState: ObjectStateValidateFn = (value) => {
+export const isValidPolylineState: ObjectStateValidator = (value) => {
 	if (!isObject(value)) {
 		return false;
 	}

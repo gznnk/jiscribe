@@ -15,7 +15,7 @@ const validRect = {
 	stroke: "#000",
 	strokeWidth: 2,
 	fill: "#fff",
-	fontSize: 16,
+	text: { body: { text: "label", fontSize: 16 } },
 	rx: 4,
 };
 
@@ -33,6 +33,9 @@ describe("isValidRectState", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
+				// Unstyled, but the slot itself is part of the minimum: the mapper
+				// materializes `body` for every rect, drawn or loaded (issue #235).
+				text: { body: { text: "" } },
 			}),
 		).toBe(true);
 	});
@@ -58,8 +61,13 @@ describe("isValidRectState", () => {
 		expect(isValidRectState({ ...validRect, cx: -100, cy: -50 })).toBe(true);
 	});
 
-	it("fontSize < 1 is false (>= 1)", () => {
-		expect(isValidRectState({ ...validRect, fontSize: 0 })).toBe(false);
+	it("a slot's fontSize < 1 is false (>= 1)", () => {
+		expect(
+			isValidRectState({
+				...validRect,
+				text: { body: { text: "label", fontSize: 0 } },
+			}),
+		).toBe(false);
 	});
 
 	it("stroke / fill containing CSS injection is false", () => {

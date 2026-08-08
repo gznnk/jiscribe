@@ -4,9 +4,9 @@ import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
 import type { CanvasAction } from "../reducer/CanvasActions";
-import type { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
+import type { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";
 import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
 
 export type UseSyncExternalDocParams = {
@@ -25,6 +25,11 @@ export type UseSyncExternalDocParams = {
 	 * fold-back of our own save apart from a genuine external change.
 	 */
 	selfSaveNonceTracker: ReturnType<typeof createSelfSaveNonceTracker>;
+	/**
+	 * Passed in explicitly (not read via context) because Canvas is the provider
+	 * of the registries context and so cannot consume it via a hook.
+	 */
+	registries: CanvasRegistries;
 };
 
 /**
@@ -41,9 +46,10 @@ export const useSyncExternalDoc = ({
 	dispatch,
 	resetGestureState,
 	selfSaveNonceTracker,
+	registries,
 }: UseSyncExternalDocParams): void => {
 	const hasMountedRef = useRef(false);
-	const { objectMapper } = useCanvasRegistries();
+	const { objectMapper } = registries;
 
 	// Always-fresh mirror of state so the sync effect below does not need to
 	// depend on (and re-run for) every state change.

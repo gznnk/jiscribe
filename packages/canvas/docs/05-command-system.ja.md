@@ -45,22 +45,22 @@ type Command = {
 - `handleCommand`（`commands/handlers/handleCommand.ts`）… `get` → `canExecute` → `execute` を仲介
 - `useKeyboardShortcuts`（`hooks/`）… keydown を `findByShortcut` で解決して dispatch（入力フィールド上では無効化）
 - `CommandUtils`… プラットフォーム判定・`getPlatformShortcuts` / `formatShortcut`（`⌘A` ↔ `Ctrl+A`）
-- 登録は `setup/`（`initializeCommands`）でまとめて行う
+- 登録は `registries/`（`initializeCommands`）でまとめて行う
 
 ## カテゴリと収録コマンド
 
 コマンドは目的別にディレクトリ分割されている（`controllers/commands/`）。
 
-| ディレクトリ | コマンド                                                                                                                         |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `selection/` | SelectAll / DeselectAll / Delete / Cut / Copy / Duplicate                                                                        |
-| `arrange/`   | `MoveCommands`（矢印キーの nudge: 上下左右 × 通常/Shift の 8 コマンド）/ BringToFront / BringForward / SendBackward / SendToBack |
-| `arrow/`     | SwapArrows（コネクター端点の入れ替え）                                                                                           |
-| `connector/` | SetRoutingStraight / SetRoutingOrthogonal（コネクターの経路切り替え）                                                            |
-| `group/`     | Group / Ungroup                                                                                                                  |
-| `history/`   | Undo / Redo                                                                                                                      |
-| `text/`      | StartTextEdit                                                                                                                    |
-| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection / ResetZoom                                                                       |
+| ディレクトリ | コマンド                                                                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selection/` | SelectAll / DeselectAll（Ctrl+Shift+A）/ EscapeSelection（Escape）/ SelectNextTextSlot / SelectPreviousTextSlot（Tab / Shift+Tab）/ Delete / Cut / Copy / Duplicate |
+| `arrange/`   | `MoveCommands`（矢印キーの nudge: 上下左右 × 通常/Shift の 8 コマンド）/ BringToFront / BringForward / SendBackward / SendToBack                                    |
+| `arrow/`     | SwapArrows（コネクター端点の入れ替え）                                                                                                                              |
+| `connector/` | SetRoutingStraight / SetRoutingOrthogonal（コネクターの経路切り替え）                                                                                               |
+| `group/`     | Group / Ungroup                                                                                                                                                     |
+| `history/`   | Undo / Redo                                                                                                                                                         |
+| `text/`      | StartTextEdit                                                                                                                                                       |
+| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection / ResetZoom                                                                                                          |
 
 > なお `Command.category` フィールドが現状取り得る値は `selection` / `edit` / `arrange` / `view` の 4 つで、
 > UI 上のグルーピングに使う。ディレクトリ構成（上表）の方が細かいのは、実装上の整理単位だからである。

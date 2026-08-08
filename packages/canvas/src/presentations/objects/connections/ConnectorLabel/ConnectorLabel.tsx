@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 
 import { LabelBox } from "./ConnectorLabelStyled";
 import {
-	calcConnectorLabelBox,
+	resolveConnectorLabelBox,
 	CONNECTOR_LABEL_DEFAULTS,
 } from "./utils/connectorLabelLayout";
 import { resolveLabelFill } from "./utils/resolveLabelFill";
@@ -52,10 +52,9 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	// skips the per-line measureText.
 	const { width, height } = useMemo(
 		() =>
-			calcConnectorLabelBox(
-				text,
-				{ fontSize, fontFamily, fontWeight },
-				strokeWidth,
+			resolveConnectorLabelBox(
+				{ text, fontSize, fontWeight, strokeWidth },
+				fontFamily,
 			),
 		[text, fontSize, fontFamily, fontWeight, strokeWidth],
 	);
@@ -78,7 +77,8 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 			height={height}
 			// Treat as connector so a hit resolves to the parent connector.
 			// data-part marks this as the label box: with a committed label, only a
-			// double click here (not on the bare line) starts editing.
+			// double click here (not on the bare line) starts editing, and a drag
+			// here moves the label along the path.
 			data-kind="connector"
 			data-id={id}
 			data-part="label"
@@ -106,5 +106,9 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 /**
  * Renders a connector's label as a horizontally centered box at the given
  * anchor on the path. Returns null for empty text.
+ *
+ * The DOM shape is load-bearing: image export reads the box style off the
+ * single child of the foreignObject (see connectorLabelToSvgGroup), and the
+ * gesture layer resolves hits through the data attributes above.
  */
 export const ConnectorLabel = memo(ConnectorLabelComponent);

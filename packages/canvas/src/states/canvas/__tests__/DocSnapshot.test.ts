@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createTestRegistries } from "../../../controllers/setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../controllers/registries/createCanvasRegistries";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { canvasToDoc, canvasToState } from "../CanvasMapper";
 import {

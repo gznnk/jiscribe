@@ -6,11 +6,13 @@ import {
 	threeRectsWithConnectorDoc,
 	twoRectsWithConnectorDoc,
 } from "./support/fixtures";
+import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
 import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
 
 const registries = createTestRegistries();
 
@@ -43,6 +45,25 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 		violations.push(
 			`selectedConnectorId references nonexistent object ${state.selectedConnectorId}`,
 		);
+	}
+
+	// A slot selection, once it survives the resolver, must name a live slot of the
+	// sole selected object. The raw selectedTextSlot is deliberately allowed to go
+	// stale (resolveSelectedTextSlot's contract), so only the resolved value is pinned.
+	const resolvedTextSlot = resolveSelectedTextSlot(state);
+	if (resolvedTextSlot !== null) {
+		const { objectId, slotId } = resolvedTextSlot;
+		if (state.selectedIds.length !== 1 || state.selectedIds[0] !== objectId) {
+			violations.push(
+				`selectedTextSlot resolves to ${objectId} which is not the sole selection`,
+			);
+		}
+		const owner = state.objects[objectId];
+		if (!isTextStyleState(owner) || owner.text?.[slotId] === undefined) {
+			violations.push(
+				`selectedTextSlot resolves to slot ${slotId} which ${objectId} does not have`,
+			);
+		}
 	}
 
 	// rootIds: no duplicates, no dangling references, only top-level elements.
@@ -145,6 +166,16 @@ describe("every command preserves structural invariants", () => {
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
 					selectedIds: ["rect-1", "rect-2"],
+				}),
+		},
+		{
+			// No built-in type spells its text out as slots, so this exercises the
+			// stale side: no command may turn a raw selectedTextSlot into a live one.
+			label: "one shape selected with a stale text slot",
+			build: () =>
+				createCommandState(twoRectsWithConnectorDoc, {
+					selectedIds: ["rect-1"],
+					selectedTextSlot: { objectId: "rect-1", slotId: "no-such-slot" },
 				}),
 		},
 		{

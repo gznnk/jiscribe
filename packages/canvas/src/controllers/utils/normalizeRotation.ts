@@ -1,4 +1,4 @@
-import { normalizeAngle, roundToDecimal } from "@workspace/geometry";
+import { normalizeAngleDeg, roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../constants/precision";
 
@@ -17,6 +17,9 @@ import { PRECISION } from "../../constants/precision";
  * ```
  */
 export function normalizeRotation(degrees: number): number {
-	const rounded = roundToDecimal(normalizeAngle(degrees), PRECISION.ROTATION);
+	const rounded = roundToDecimal(
+		normalizeAngleDeg(degrees),
+		PRECISION.ROTATION,
+	);
 	return rounded >= 360 ? 0 : rounded;
 }

@@ -4,15 +4,16 @@ import { isPoint } from "./isPoint";
 import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 
 /**
- * Type guard to check if a value is a valid FrameKeyPoints object.
- * Validates that the value has all required point properties (8 points).
+ * Type guard for {@link FrameKeyPoints}. All eight points must be present and valid.
+ *
+ * @param value - Value to narrow; extra properties are allowed, but every one
+ *   of the eight keys must hold a valid {@link Point}
  */
 export const isFrameKeyPoints = (value: unknown): value is FrameKeyPoints => {
 	if (!isObject(value)) {
 		return false;
 	}
 
-	// Check all required point properties
 	const requiredPoints = [
 		"topLeft",
 		"topCenter",

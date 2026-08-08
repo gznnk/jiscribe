@@ -2,9 +2,9 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
 import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const SendToBackCommand: Command = {
+export const SendToBackCommand: ExecutableCommand = {
 	id: "sendToBack",
 	label: "Send to Back",
 	category: "arrange",

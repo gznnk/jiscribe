@@ -9,16 +9,15 @@ import {
 	ToolbarIconButton,
 	ZoomReadout,
 } from "./ToolbarStyled";
-import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
-import { SHAPE_CATEGORY_DEFINITIONS } from "../ShapeLibrary/shapeCategories";
-import { ShapeCategoryMenu } from "../ShapeLibrary/ShapeCategoryMenu";
-import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
+import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
+import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
 
 type ToolbarProps = {
-	/** ID of the shape preset currently being drawn (for the tool's active state) */
+	/** ID of the stencil currently being drawn (for the tool's active state) */
 	activePresetId: string | null;
 	/** ID of the category whose flyout is open (reducer state); null = none */
 	openCategoryId: string | null;
@@ -30,9 +29,9 @@ type ToolbarProps = {
 	canZoomOut: boolean;
 	/** Top-level arrangement of the shape tools (pinned presets + category flyouts) */
 	layout?: ToolbarEntry[];
-	/** Host UI at the left edge (see CanvasProps.toolbarLeading) */
+	/** Host UI at the left edge (see CanvasProps.toolbar.leading) */
 	leading?: React.ReactNode;
-	/** Host UI at the right edge (see CanvasProps.toolbarTrailing) */
+	/** Host UI at the right edge (see CanvasProps.toolbar.trailing) */
 	trailing?: React.ReactNode;
 };
 
@@ -50,10 +49,11 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
 
 /**
  * Unified toolbar centered at the top.
- * Combines the shape tools (ShapeLibrary), zoom readout, and help (?) into a single bar.
+ * Combines the shape tools (StencilLibrary), zoom readout, and help (?) into a single bar.
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
- * - Zoom +/- is currently visual only (actual control is via wheel / pinch).
+ * - Zoom +/- and the readout go through the command system (ToolbarHandler → handleCommand),
+ *   the same path as the keyboard shortcuts and the context menu.
  * - Help is shown as a modal and can also be opened with the `?` key. It does not depend on the Canvas reducer.
  */
 const ToolbarComponent: React.FC<ToolbarProps> = ({
@@ -67,16 +67,16 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	trailing,
 }) => {
 	const messages = useCanvasMessages();
-	const { shapePreset } = useCanvasRegistries();
+	const { stencil } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
 	// The open category flyout (`openCategoryId`) lives in reducer state; the
-	// toggle goes through ShapeCategoryToggleHandler and dismissal through the
+	// toggle goes through StencilCategoryToggleHandler and dismissal through the
 	// handlers/commands that clear it, so the Toolbar is stateless here and
 	// multiple <Canvas> instances stay independent.
 
-	// Escape での閉じ処理は ModalShell が担う。ここは「?」で開くだけ。
+	// ModalShell owns closing on Escape; this only opens on "?".
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (isHelpOpen) {
@@ -102,7 +102,12 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 
 	return (
 		<>
-			<ToolbarContainer>
+			{/* The one [data-kind] element of the bar: its own buttons carry only
+			    data-part and resolve their kind/id here through closest(), and a press
+			    on the empty area arrives with no part (dismissing the open menus).
+			    Nested targets with a different id (stencil-category / stencil-library)
+			    keep their own [data-kind] and still win. */}
+			<ToolbarContainer data-kind="menu" data-id="toolbar">
 				{/* Left: host slot (when provided) and shape tools */}
 				<ToolbarGroup>
 					{leading != null && (
@@ -113,28 +118,36 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					)}
 					{layout.map((entry) => {
 						if (entry.kind === "preset") {
-							const preset = shapePreset.get(entry.presetId);
+							const preset = stencil.get(entry.presetId);
 							if (!preset) {
 								return null;
 							}
 							return (
-								<ShapeLibraryItem
+								<StencilLibraryItem
 									key={`preset:${entry.presetId}`}
 									preset={preset}
 									isActive={activePresetId === preset.id}
 								/>
 							);
 						}
-						const category = SHAPE_CATEGORY_DEFINITIONS[entry.categoryId];
-						if (!category) {
+						// Resolve the layout's presetIds in order; a preset that isn't
+						// registered (e.g. a plugin not applied) is silently skipped.
+						const presets = entry.presetIds
+							.map((id) => stencil.get(id))
+							.filter((preset) => preset !== undefined);
+						// A category with no resolvable presets has nothing to show, so
+						// skip the button/flyout entirely rather than rendering an empty one.
+						if (presets.length === 0) {
 							return null;
 						}
 						return (
-							<ShapeCategoryMenu
-								key={`category:${entry.categoryId}`}
-								category={category}
-								presets={shapePreset.byCategory(entry.categoryId)}
-								isOpen={openCategoryId === entry.categoryId}
+							<StencilCategoryMenu
+								key={`category:${entry.id}`}
+								id={entry.id}
+								label={entry.label}
+								icon={entry.icon}
+								presets={presets}
+								isOpen={openCategoryId === entry.id}
 								activePresetId={activePresetId}
 							/>
 						);
@@ -150,8 +163,6 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label={messages.toolbarZoomOut}
 						title={messages.toolbarZoomOut}
 						disabled={!canZoomOut}
-						data-kind="menu"
-						data-id="toolbar"
 						data-part="command:zoomOut"
 					>
 						−
@@ -160,8 +171,6 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						type="button"
 						aria-label={messages.toolbarResetZoom}
 						title={messages.toolbarResetZoom}
-						data-kind="menu"
-						data-id="toolbar"
 						data-part="command:resetZoom"
 					>
 						{Math.round(zoom * 100)}%
@@ -171,8 +180,6 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label={messages.toolbarZoomIn}
 						title={messages.toolbarZoomIn}
 						disabled={!canZoomIn}
-						data-kind="menu"
-						data-id="toolbar"
 						data-part="command:zoomIn"
 					>
 						+

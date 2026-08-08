@@ -9,10 +9,14 @@ import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
-import { MenuSlider } from "../../common/MenuSlider";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
+import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { MenuItemPositioner, ObjectMenuButton } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuItemPositioner,
+	ObjectMenuButton,
+} from "../../ObjectMenuStyled";
+import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "line-style";
 
@@ -23,7 +27,7 @@ const SLIDER_MAX_STROKE_WIDTH = 20;
 
 type LineStyleMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
+	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
@@ -41,7 +45,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	);
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -52,7 +56,11 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 				<LineStyleIcon title={messages.menuLineStyle} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<LineStyleMenuWrapper>
 						<LineStyleSection>
 							<ObjectMenuButton
@@ -84,7 +92,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 							</ObjectMenuButton>
 						</LineStyleSection>
 
-						<MenuSlider
+						<ObjectMenuSlider
 							label={messages.menuLineWidth}
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
@@ -94,9 +102,9 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 							onPropertyUpdate={onPropertyUpdate}
 						/>
 					</LineStyleMenuWrapper>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

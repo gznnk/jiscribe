@@ -1,10 +1,10 @@
 import { type RefObject, useLayoutEffect, useRef, useState } from "react";
 
-import { useCanvasViewportRef } from "../../../../contexts/CanvasViewportRefContext";
+import { useCanvasViewportElementRef } from "../../../../CanvasViewportElementRefContext";
 
 /**
  * Distance between the menu button and the submenu (px).
- * Corresponds to the DropdownPanel CSS (top: 40px / bottom: 40px).
+ * Corresponds to the ObjectMenuDropdownPanel CSS (top: 40px / bottom: 40px).
  */
 const SUBMENU_DISTANCE = 40;
 
@@ -14,7 +14,7 @@ const VIEWPORT_MARGIN = 8;
 export type SubmenuPlacement = "down" | "up";
 
 type SubmenuPositionResult = {
-	/** ref passed to the submenu element (DropdownPanel). Used to measure its actual size */
+	/** ref passed to the submenu element (ObjectMenuDropdownPanel). Used to measure its actual size */
 	submenuRef: RefObject<HTMLDivElement | null>;
 	/** Vertical expansion direction of the submenu */
 	placement: SubmenuPlacement;
@@ -30,7 +30,7 @@ type SubmenuPositionResult = {
  *
  * Because the submenu uses position: absolute, it is clipped by the canvas root element's
  * overflow: hidden. Boundaries therefore use the canvas root element's getBoundingClientRect()
- * (browser viewport coordinates), obtained via CanvasViewportRefContext.
+ * (browser viewport coordinates), obtained via CanvasViewportElementRefContext.
  *
  * The submenu's actual size is measured from the real DOM after rendering using useLayoutEffect
  * (applied before paint, so no flicker occurs).
@@ -43,7 +43,7 @@ export function useSubmenuPosition(
 	menuItemRef: RefObject<HTMLDivElement | null>,
 	isOpen: boolean,
 ): SubmenuPositionResult {
-	const viewportRef = useCanvasViewportRef();
+	const viewportElementRef = useCanvasViewportElementRef();
 	const submenuRef = useRef<HTMLDivElement>(null);
 	const [position, setPosition] = useState<{
 		placement: SubmenuPlacement;
@@ -69,7 +69,7 @@ export function useSubmenuPosition(
 
 		// Rectangle of the canvas area (browser viewport coordinates).
 		// Falls back to the whole browser window when outside the provider or the ref is unset.
-		const viewportElement = viewportRef?.current ?? null;
+		const viewportElement = viewportElementRef?.current ?? null;
 		const areaRect = viewportElement
 			? viewportElement.getBoundingClientRect()
 			: {
@@ -107,7 +107,7 @@ export function useSubmenuPosition(
 		}
 
 		setPosition({ placement, offsetX });
-	}, [isOpen, menuItemRef, viewportRef]);
+	}, [isOpen, menuItemRef, viewportElementRef]);
 
 	return { submenuRef, ...position };
 }

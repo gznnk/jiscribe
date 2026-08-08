@@ -4,7 +4,7 @@ import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { deepFreezeState } from "../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { cleanupConnectorsOnDelete } from "../cleanupConnectorsOnDelete";
 
 const registries = createTestRegistries();
@@ -47,7 +47,11 @@ describe("cleanupConnectorsOnDelete", () => {
 			rectDoc("r2", 100, 0),
 			connDoc("c1", owned("r1"), owned("r2")),
 		]);
-		const after = cleanupConnectorsOnDelete(state, new Set(["unrelated"]));
+		const after = cleanupConnectorsOnDelete(
+			state,
+			new Set(["unrelated"]),
+			registries,
+		);
 		expect(after).toBe(state);
 	});
 
@@ -57,7 +61,11 @@ describe("cleanupConnectorsOnDelete", () => {
 			rectDoc("r2", 100, 0),
 			connDoc("c1", owned("r1"), owned("r2")),
 		]);
-		const after = cleanupConnectorsOnDelete(state, new Set(["r1", "r2"]));
+		const after = cleanupConnectorsOnDelete(
+			state,
+			new Set(["r1", "r2"]),
+			registries,
+		);
 		expect(after.objects["c1"]).toBeUndefined();
 		expect(after.rootIds).not.toContain("c1");
 	});
@@ -68,7 +76,7 @@ describe("cleanupConnectorsOnDelete", () => {
 			rectDoc("r2", 100, 0),
 			connDoc("c1", owned("r1"), owned("r2")),
 		]);
-		const after = cleanupConnectorsOnDelete(state, new Set(["r2"]));
+		const after = cleanupConnectorsOnDelete(state, new Set(["r2"]), registries);
 		const c1 = after.objects["c1"] as ConnectorState | undefined;
 		expect(c1).toBeDefined();
 		expect(after.rootIds).toContain("c1");
@@ -82,7 +90,7 @@ describe("cleanupConnectorsOnDelete", () => {
 			rectDoc("r1", 0, 0),
 			connDoc("c1", owned("r1"), free(200, 0)),
 		]);
-		const after = cleanupConnectorsOnDelete(state, new Set(["r1"]));
+		const after = cleanupConnectorsOnDelete(state, new Set(["r1"]), registries);
 		expect(after.objects["c1"]).toBeUndefined();
 		expect(after.rootIds).not.toContain("c1");
 	});

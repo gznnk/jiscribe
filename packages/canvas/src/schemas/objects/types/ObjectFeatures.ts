@@ -3,8 +3,8 @@ import type { ObjectType } from "./ObjectType";
 
 /**
  * Per-type declaration descriptor for canvas objects.
- * The boolean flags control which feature interfaces are included in the
- * generated object types (Doc / State).
+ * The flags control which feature interfaces are included in the generated
+ * object types (Doc / State); `text` also picks between the two doc shapes.
  */
 export type ObjectFeatures = {
 	/** Object type identifier */
@@ -17,8 +17,8 @@ export type ObjectFeatures = {
 	stroke?: boolean;
 	/** Fill/background styling (FillStyleDoc) */
 	fill?: boolean;
-	/** Text content and styling */
-	text?: boolean;
+	/** Text shape: "body" is a single body (root-form doc), "slots" is named slots (keyed-form doc) */
+	text?: "body" | "slots";
 	/** Corner radius styling (for rect) */
 	radius?: boolean;
 	/** Arrowhead ends (startArrow / endArrow) */

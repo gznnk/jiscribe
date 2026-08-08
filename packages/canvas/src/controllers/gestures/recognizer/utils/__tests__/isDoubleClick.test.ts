@@ -2,18 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import {
 	DOUBLE_CLICK_DISTANCE_THRESHOLD,
+	DOUBLE_CLICK_DISTANCE_THRESHOLD_TOUCH,
 	DOUBLE_CLICK_THRESHOLD,
 } from "../../GestureRecognizerConstants";
 import type { ClickSnapshot } from "../../GestureRecognizerTypes";
 import { isDoubleClick } from "../isDoubleClick";
 
-// The threshold is defined as a squared value, so the distance boundary is its square root.
+// The thresholds are defined as squared values, so the distance boundaries are their square roots.
 const DISTANCE = Math.sqrt(DOUBLE_CLICK_DISTANCE_THRESHOLD);
+const DISTANCE_TOUCH = Math.sqrt(DOUBLE_CLICK_DISTANCE_THRESHOLD_TOUCH);
 
 const snapshot = (overrides: Partial<ClickSnapshot> = {}): ClickSnapshot => ({
 	time: 1000,
-	targetId: "obj-1",
-	targetPart: undefined,
 	clientPos: { x: 0, y: 0 },
 	...overrides,
 });
@@ -26,7 +26,7 @@ describe("isDoubleClick", () => {
 	});
 
 	describe("all conditions are satisfied", () => {
-		it("true when same target, within time, and within distance", () => {
+		it("true when within time and within distance", () => {
 			const previous = snapshot({ time: 1000, clientPos: { x: 0, y: 0 } });
 			const current = snapshot({ time: 1100, clientPos: { x: 2, y: 1 } });
 			expect(isDoubleClick(previous, current)).toBe(true);
@@ -35,32 +35,6 @@ describe("isDoubleClick", () => {
 		it("true even at distance 0 (exact same position)", () => {
 			const previous = snapshot({ time: 1000 });
 			const current = snapshot({ time: 1000 });
-			expect(isDoubleClick(previous, current)).toBe(true);
-		});
-	});
-
-	describe("target", () => {
-		it("false when targetId differs", () => {
-			const previous = snapshot({ targetId: "obj-1" });
-			const current = snapshot({ time: 1100, targetId: "obj-2" });
-			expect(isDoubleClick(previous, current)).toBe(false);
-		});
-
-		it("treated as a match when both are undefined (background to background)", () => {
-			const previous = snapshot({ targetId: undefined });
-			const current = snapshot({ time: 1100, targetId: undefined });
-			expect(isDoubleClick(previous, current)).toBe(true);
-		});
-
-		it("false when targetPart differs (two buttons of the same menu, or line vs label)", () => {
-			const previous = snapshot({ targetPart: "set:fill:red" });
-			const current = snapshot({ time: 1100, targetPart: "set:fill:blue" });
-			expect(isDoubleClick(previous, current)).toBe(false);
-		});
-
-		it("true when targetPart matches too (same button tapped twice)", () => {
-			const previous = snapshot({ targetPart: "command:zoomIn" });
-			const current = snapshot({ time: 1100, targetPart: "command:zoomIn" });
 			expect(isDoubleClick(previous, current)).toBe(true);
 		});
 	});
@@ -102,6 +76,38 @@ describe("isDoubleClick", () => {
 			const previous = snapshot({ clientPos: { x: 0, y: 0 } });
 			// The distance of (4,4) is √32 ≈ 5.66 > √25=5, so it is outside
 			const current = snapshot({ time: 1100, clientPos: { x: 4, y: 4 } });
+			expect(isDoubleClick(previous, current)).toBe(false);
+		});
+	});
+
+	describe("touch distance threshold (wider than mouse)", () => {
+		it("a touch tap beyond the mouse threshold but within the touch threshold is inside (true)", () => {
+			const previous = snapshot({ clientPos: { x: 0, y: 0 } });
+			const current = snapshot({
+				time: 1100,
+				clientPos: { x: DISTANCE + 1, y: 0 },
+				pointerType: "touch",
+			});
+			expect(isDoubleClick(previous, current)).toBe(true);
+		});
+
+		it("a touch tap exactly at the touch threshold is outside (false)", () => {
+			const previous = snapshot({ clientPos: { x: 0, y: 0 } });
+			const current = snapshot({
+				time: 1100,
+				clientPos: { x: DISTANCE_TOUCH, y: 0 },
+				pointerType: "touch",
+			});
+			expect(isDoubleClick(previous, current)).toBe(false);
+		});
+
+		it("a mouse click at the same distance stays outside (the wider threshold is touch-only)", () => {
+			const previous = snapshot({ clientPos: { x: 0, y: 0 } });
+			const current = snapshot({
+				time: 1100,
+				clientPos: { x: DISTANCE + 1, y: 0 },
+				pointerType: "mouse",
+			});
 			expect(isDoubleClick(previous, current)).toBe(false);
 		});
 	});

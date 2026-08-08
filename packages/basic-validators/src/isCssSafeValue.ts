@@ -1,16 +1,17 @@
 import { isString } from "./isString";
 
-// CSS 宣言・ブロック・style 要素・コメント・エスケープ・危険な関数からの
-// 抜け出しに使われうる文字列。1つでも含めば「安全でない」と判定する。
+// Sequences usable to escape a CSS declaration, block, style element, comment, or
+// a dangerous function. Containing any one of them makes the value unsafe.
 const CSS_BREAKOUT = /[;{}<>\\]|url\(|expression\(|\/\*|\*\//i;
 
 /**
- * Check if a value is a string that is safe to interpolate into a CSS context.
+ * Type guard for a string safe to interpolate into a CSS context. Rejects the CSS injection
+ * vectors listed in `CSS_BREAKOUT` — `;` `{` `}` `<` `>` `\`, `url(`, `expression(` and comment
+ * delimiters. Being a pure regex check, it holds in Node as well as the browser.
  *
- * Rejects characters/sequences that could break out of a CSS declaration
- * (`;` `{` `}` `<` `>`, `url(`, CSS comment delimiters, etc.), i.e. CSS
- * injection vectors. Unlike `isCssColor`, this is a pure, environment-agnostic
- * check (no `CSS.supports`), so it is safe to run in Node and the browser.
+ * @param value - Value to narrow; safety is all that is checked, so meaningless CSS such as
+ *   `"not-a-color"` still passes — strict validity needs a CSS parser and lives in
+ *   `@workspace/canvas` (`states/objects/utils/isCssColor`)
  */
 export const isCssSafeValue = (value: unknown): value is string =>
 	isString(value) && !CSS_BREAKOUT.test(value);

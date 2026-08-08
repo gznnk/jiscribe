@@ -1,14 +1,14 @@
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { resetUiState } from "../../utils/resetUiState";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Undo command.
  * Shortcut: Ctrl/Cmd+Z
  * Restores the previous state from history.
  */
-export const UndoCommand: Command = {
+export const UndoCommand: ExecutableCommand = {
 	id: "undo",
 	label: "Undo",
 	category: "edit",

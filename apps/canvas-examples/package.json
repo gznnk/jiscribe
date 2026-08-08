@@ -1,0 +1,34 @@
+{
+	"name": "canvas-examples",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc -b && vite build",
+		"lint": "eslint .",
+		"preview": "vite preview",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@workspace/canvas": "workspace:*",
+		"@workspace/plugin-annotation-shapes": "workspace:*",
+		"@workspace/plugin-container-shapes": "workspace:*",
+		"@workspace/plugin-flowchart-shapes": "workspace:*",
+		"@workspace/plugin-general-shapes": "workspace:*",
+		"@workspace/plugin-markdown-shape": "workspace:*",
+		"@workspace/plugin-sticky-shape": "workspace:*",
+		"@workspace/plugin-uml-shapes": "workspace:*",
+		"katex": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react-swc": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:"
+	}
+}

@@ -1,7 +1,12 @@
 import { isNumber } from "./isNumber";
 
 /**
- * Check if value is a number within a specified range.
+ * Builds a type guard for a number inside a closed range.
+ *
+ * @param min - Lower bound, itself accepted as valid
+ * @param max - Upper bound, itself accepted as valid; a `max` below `min` yields a guard that
+ *   accepts nothing
+ * @returns Type guard rejecting non-numbers and `NaN` (see {@link isNumber})
  */
 export const isNumberInRange =
 	(min: number, max: number) =>

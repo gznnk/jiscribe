@@ -1,4 +1,5 @@
 import type {
+	FlipScale,
 	FrameKeyPoints,
 	KeyPointId,
 	TransformedFrame,
@@ -6,7 +7,7 @@ import type {
 import {
 	calcInverseAffineTransformedPoint,
 	calcNonZeroSign,
-	calcProjectionOntoLine,
+	calcProjectedPointOnLine,
 	nanToZero,
 } from "@workspace/geometry";
 
@@ -24,8 +25,8 @@ export type AnchorResizeResult = {
 	height: number;
 	inversedCenterX: number;
 	inversedCenterY: number;
-	scaleX: number;
-	scaleY: number;
+	scaleX: FlipScale;
+	scaleY: FlipScale;
 };
 
 /**
@@ -124,10 +125,10 @@ export function calcAnchorResize(
 	// are constrained onto the diagonal only while keeping proportion.
 	const shouldConstrainCursor = isCornerAnchor ? doKeepProportion : true;
 	const constrained = shouldConstrainCursor
-		? calcProjectionOntoLine(
+		? calcProjectedPointOnLine(
+				{ x: cursorX, y: cursorY },
 				startFrameKeyPoints[oppositeKeyPointId],
 				startFrameKeyPoints[anchorKeyPointId],
-				{ x: cursorX, y: cursorY },
 			)
 		: { x: cursorX, y: cursorY };
 

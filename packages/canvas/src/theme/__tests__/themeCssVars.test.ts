@@ -61,6 +61,30 @@ describe("theme presets", () => {
 		);
 	});
 
+	it("shape auto-color tokens are injected under their own CSS variables", () => {
+		expect(THEME_TOKEN_CSS_VARS.objectInk).toBe("--jiscribe-object-ink");
+		expect(THEME_TOKEN_CSS_VARS.objectSurface).toBe(
+			"--jiscribe-object-surface",
+		);
+
+		const cssVars = buildThemeCssVars(lightCanvasTheme.tokens);
+		expect(cssVars["--jiscribe-object-ink"]).toBe(
+			lightCanvasTheme.tokens.objectInk,
+		);
+		expect(cssVars["--jiscribe-object-surface"]).toBe(
+			lightCanvasTheme.tokens.objectSurface,
+		);
+	});
+
+	it("shape ink is independent of the UI chrome foreground", () => {
+		expect(darkCanvasTheme.tokens.objectInk).not.toBe(
+			darkCanvasTheme.tokens.foreground,
+		);
+		expect(lightCanvasTheme.tokens.objectInk).not.toBe(
+			lightCanvasTheme.tokens.foreground,
+		);
+	});
+
 	it("fontFamily is a concrete font (no var()), usable for canvas text measurement", () => {
 		expect(darkCanvasTheme.fontFamily).not.toContain("var(");
 		expect(lightCanvasTheme.fontFamily).not.toContain("var(");

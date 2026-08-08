@@ -15,14 +15,15 @@ type SelectionControlPillProps = {
 	rotation: number;
 	zoom: number;
 	objectId: string;
-	/** data-part value (from SelectionControlHandler.part). */
+	/** data-part value (the control's derived `selection:<objectType>:<name>`). */
 	part: string;
 	cursor: string;
 };
 
 /**
- * Shared pill-shaped handle for selection controls (container header height,
- * callout tail tip, …). Carries the control data attributes; the caller
+ * Shared pill-shaped handle for selection controls (the container's header
+ * height, the callout's tail tip, …; every one of them lives in a plugin today).
+ * Carries the control data attributes; the caller
  * provides the world position, orientation, and cursor.
  */
 const SelectionControlPillComponent: React.FC<SelectionControlPillProps> = ({

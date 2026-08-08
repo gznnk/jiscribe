@@ -4,8 +4,9 @@ export const SVG_SOURCE_NS = "https://jiscribe.dev/ns/canvas";
 /** Local name of the embedded source element (serialized as `jiscribe:source`). */
 export const SVG_SOURCE_LOCAL_NAME = "source";
 
-// embedCanvasSource（canvasSourceMetadata.ts）が生成する要素のシリアライズ済みタグ。
-// 手書き等でプレフィックスが異なる SVG は対象外（jiscribe のエクスポートのみ扱う）。
+// Serialized tag of the element embedCanvasSource (canvasSourceMetadata.ts) produces.
+// SVG using a different prefix, hand-written or otherwise, is out of scope — only
+// jiscribe's own exports are handled.
 const SOURCE_TAG = `jiscribe:${SVG_SOURCE_LOCAL_NAME}`;
 
 const SOURCE_ELEMENT_PATTERN = new RegExp(
@@ -40,8 +41,12 @@ const unescapeXmlText = (text: string): string =>
 	);
 
 /**
- * `.jis.svg` テキストから埋め込みソース JSON を取り出す（DOM 不要、Node でも動く）。
- * 埋め込みが無い・空の場合は null。JSON としての妥当性は検証しない。
+ * Extract the embedded source JSON from `.jis.svg` text. Needs no DOM, so it runs in Node.
+ *
+ * @param svgText - Whole SVG document text; only a `jiscribe:source` element is recognized, so
+ *   SVG written with a different prefix yields null. XML entities in the element are unescaped
+ * @returns The raw JSON, never validated as JSON; null when the element is absent, or present
+ *   but empty once trimmed
  */
 export const extractCanvasSourceFromSvgText = (
 	svgText: string,
@@ -55,8 +60,13 @@ export const extractCanvasSourceFromSvgText = (
 };
 
 /**
- * SVG テキストの埋め込みソースを sourceJson へ差し替えたテキストを返す
- * （DOM 不要、Node でも動く）。埋め込み要素が無い場合は null。
+ * Replace the embedded source of SVG text with `sourceJson`. Needs no DOM, so it runs in Node.
+ *
+ * @param svgText - Whole SVG document text; the `jiscribe:source` element must already exist,
+ *   since this rewrites the element's content and never inserts one
+ * @param sourceJson - Written out XML-escaped (`&`, `<`, `>`) and never validated as JSON; the
+ *   surrounding open and close tags are preserved verbatim
+ * @returns The rewritten text, or null when there is no embedded element to replace
  */
 export const replaceCanvasSourceInSvgText = (
 	svgText: string,

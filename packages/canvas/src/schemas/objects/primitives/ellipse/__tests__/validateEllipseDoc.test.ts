@@ -14,7 +14,6 @@ const validEllipse = {
 	strokeWidth: 1,
 	fill: "transparent",
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: "#000",
@@ -51,12 +50,12 @@ describe("validateEllipseDoc", () => {
 		expect(errors.some((e) => e.path === "root.ry")).toBe(true);
 	});
 
-	it("is an error when textType has an invalid value", () => {
+	it("ignores unknown keys, including the removed textType", () => {
 		const errors = validateEllipseDoc(
-			{ ...validEllipse, textType: "html" },
+			{ ...validEllipse, textType: "markdown" },
 			"root",
 		);
-		expect(errors.some((e) => e.path === "root.textType")).toBe(true);
+		expect(errors).toEqual([]);
 	});
 
 	it("yields no error when optional fields are absent", () => {

@@ -6,6 +6,7 @@ import type { AnchorSpec } from "../EndpointRef";
 const center: AnchorSpec = { kind: "center" };
 const edge: AnchorSpec = { kind: "connectPoint", id: "rightCenter" };
 const free: AnchorSpec = { kind: "free", point: { x: 0, y: 0 } };
+const edgeRatio: AnchorSpec = { kind: "edge", side: "right", t: 0.2 };
 
 describe("defaultRoutingForAnchors", () => {
 	it("returns straight when either endpoint is a center anchor", () => {
@@ -20,5 +21,13 @@ describe("defaultRoutingForAnchors", () => {
 		expect(defaultRoutingForAnchors(edge, edge)).toBeUndefined();
 		// A connectPoint dragging out to a free point keeps its exit direction.
 		expect(defaultRoutingForAnchors(edge, free)).toBeUndefined();
+		// An edge anchor exits along its side's normal, so it routes like a connectPoint.
+		expect(defaultRoutingForAnchors(edgeRatio, edgeRatio)).toBeUndefined();
+		expect(defaultRoutingForAnchors(edgeRatio, edge)).toBeUndefined();
+		expect(defaultRoutingForAnchors(edgeRatio, free)).toBeUndefined();
+	});
+
+	it("still prefers straight when an edge anchor meets a center", () => {
+		expect(defaultRoutingForAnchors(edgeRatio, center)).toBe("straight");
 	});
 });

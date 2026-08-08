@@ -2,6 +2,7 @@ import type React from "react";
 import { type Dispatch, useEffect, useMemo, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
+import { isViewportPanDrag } from "../gestures/handlers/canvas/utils/isViewportPanDrag";
 import { GestureRecognizer } from "../gestures/recognizer/GestureRecognizer";
 import type {
 	GestureCallback,
@@ -25,7 +26,13 @@ export type UseGestureRecognizerReturn = {
 /**
  * Creates and owns a single {@link GestureRecognizer} instance, wiring recognized
  * gestures to the reducer via `dispatch` and returning stable pointer/wheel handlers.
- * The instance is created once and disposed on unmount.
+ *
+ * Lifecycle invariant: one component lifetime = one instance. The ref is set once
+ * on the first render and never reset to null, so the handlers memoized below stay
+ * valid for the whole lifetime. Effect cleanup only cancels pending work
+ * (cancelPendingGesture is non-terminal), which keeps StrictMode's
+ * setup→cleanup→setup sequence working with the same instance (#78) while still
+ * stopping the RAF callback after a real unmount (#14).
  */
 export const useGestureRecognizer = ({
 	dispatch,
@@ -41,8 +48,9 @@ export const useGestureRecognizer = ({
 	canvasStateRef.current = canvasState; // Set the latest value on every render
 
 	// Lazily initialize the instance into the ref to guarantee "created only once".
-	// (useMemo may discard its memoized value and recompute, breaking the create/dispose
-	//  pairing and risking a leaked instance; a ref is never discarded.)
+	// (useMemo may discard its memoized value and recompute, creating a second
+	//  instance; a ref is never discarded. The constructor is side-effect-free, so
+	//  render-time creation is safe.)
 	// dispatch has stable identity since it comes from useReducer, so it can be safely
 	// bound in the initial closure.
 	if (recognizerRef.current === null) {
@@ -56,17 +64,23 @@ export const useGestureRecognizer = ({
 			containerRef,
 			svgRef,
 			canvasStateRef,
+			// Canvas pan drags may convert to a pinch on a second touch (the "which
+			// drags are pans" knowledge stays beside the routing, not the recognizer).
+			// The state the policy needs is read here through the ref, so the
+			// recognizer passes only the target kind.
+			shouldPinchFromDrag: (targetKind) =>
+				isViewportPanDrag(targetKind, canvasStateRef.current),
 		});
 	}
 
-	// On unmount, cancel any pending RAF so the gesture callback does not fire after
-	// unmount. After disposal, reset the ref to null so it is reliably recreated on
-	// remount (keeping create/dispose paired even across StrictMode's
-	// mount→unmount→mount).
+	// Cleanup cancels pending work only — it must NOT reset the ref to null.
+	// StrictMode runs setup→cleanup→setup without re-rendering, so a nulled ref
+	// would never be recreated and the memoized handlers would keep pointing at a
+	// zombie instance (#78). cancelPendingGesture also covers #14: on a real
+	// unmount it cancels the pending RAF so the gesture callback cannot fire.
 	useEffect(() => {
 		return () => {
-			recognizerRef.current?.dispose();
-			recognizerRef.current = null;
+			recognizerRef.current?.cancelPendingGesture();
 		};
 	}, []);
 
@@ -75,7 +89,7 @@ export const useGestureRecognizer = ({
 		() => ({
 			pointerHandlers: recognizerRef.current!.getHandlers(),
 			wheelHandler: recognizerRef.current!.getWheelHandler(),
-			resetGestureState: () => recognizerRef.current?.resetGestureState(),
+			resetGestureState: () => recognizerRef.current?.cancelPendingGesture(),
 		}),
 		[],
 	);

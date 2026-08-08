@@ -16,11 +16,11 @@ class ObjectDocValidatorRegistry {
 	private readonly entries = new Map<ObjectType, ValidatorEntry>();
 
 	register(
-		type: ObjectType,
+		type: string,
 		validate: ObjectDocValidateFn,
 		features: ObjectFeatures,
 	): void {
-		this.entries.set(type, { validate, features });
+		this.entries.set(type as ObjectType, { validate, features });
 	}
 
 	validate(
@@ -50,4 +50,7 @@ class ObjectDocValidatorRegistry {
 	}
 }
 
-export const objectDocValidatorRegistry = new ObjectDocValidatorRegistry();
+export const createObjectDocValidatorRegistry =
+	(): ObjectDocValidatorRegistry => new ObjectDocValidatorRegistry();
+
+export const objectDocValidatorRegistry = createObjectDocValidatorRegistry();
