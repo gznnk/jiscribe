@@ -106,7 +106,7 @@ export const fileDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const packageDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: PackageFeatures,
 	defaults: PACKAGE_DOC_DEFAULTS,
-	description: `Isometric box shape, typically used for libraries, build artifacts and deployment units. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A square aspect ratio (e.g. 110x110) looks best. Prefer "server" for something that runs rather than something that is deployed.`,
+	description: `Isometric box shape, typically used for libraries, build artifacts and deployment units. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} The hexagon is a cube in isometric projection, so it reads as a cube only when the box is slightly taller than wide (e.g. 95x110); a square box widens it. Prefer "server" for something that runs rather than something that is deployed.`,
 	summary: "library, artifact, deployment unit",
 });
 

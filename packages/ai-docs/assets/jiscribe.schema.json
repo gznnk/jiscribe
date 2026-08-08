@@ -1893,7 +1893,7 @@
 			}
 		},
 		"PackageDoc": {
-			"description": "Isometric box shape, typically used for libraries, build artifacts and deployment units. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A square aspect ratio (e.g. 110x110) looks best. Prefer \"server\" for something that runs rather than something that is deployed.",
+			"description": "Isometric box shape, typically used for libraries, build artifacts and deployment units. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. The hexagon is a cube in isometric projection, so it reads as a cube only when the box is slightly taller than wide (e.g. 95x110); a square box widens it. Prefer \"server\" for something that runs rather than something that is deployed.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -1919,7 +1919,7 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 110",
+					"description": "Bounding-box width in pixels. Default when created from the palette: 95",
 					"type": "number",
 					"minimum": 0
 				},
