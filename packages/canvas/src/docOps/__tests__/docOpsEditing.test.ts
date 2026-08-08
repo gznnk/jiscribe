@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { parseCanvasText } from "../../schemas/canvas/validators";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
+import { createFrameObjectFactory } from "../../schemas/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
 import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
@@ -383,6 +384,41 @@ describe("setText on a slotted type", () => {
 		expect(readObject(doc, "card-1").text).toMatchObject({
 			name: { fontSize: 18 },
 			attributes: { fontSize: 18 },
+		});
+	});
+
+	it("keeps two objects created from the same defaults independent", () => {
+		const factoryOps = createDocOps({
+			plugins: [
+				{
+					id: "slot-factory-plugin",
+					objects: {
+						"slot-card": {
+							...cardDefinition,
+							factory: createFrameObjectFactory({
+								type: "slot-card",
+								width: 180,
+								height: 90,
+								text: {
+									name: { text: "" },
+									attributes: { text: [] as string[] },
+								},
+							}),
+						},
+					},
+				},
+			],
+		});
+		const doc = emptyDoc();
+		const firstId = factoryOps.addObject(doc, "slot-card", { x: 0, y: 0 });
+		const secondId = factoryOps.addObject(doc, "slot-card", { x: 300, y: 0 });
+
+		factoryOps.setText(doc, firstId, "User", "name");
+		factoryOps.setStyle(doc, [firstId], { fontSize: 18 });
+
+		expect(readObject(doc, secondId).text).toEqual({
+			name: { text: "" },
+			attributes: { text: [] },
 		});
 	});
 });
