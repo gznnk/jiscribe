@@ -37,6 +37,10 @@ export type TextOverlayFrameProps = {
 	fontFamily?: string;
 	/** CSS font-weight. Default: `"normal"`. */
 	fontWeight?: string;
+	/** CSS font-style ("normal" / "italic"). Default: `"normal"`. */
+	fontStyle?: string;
+	/** CSS text-decoration-line ("underline" / "line-through", space-separated). Default: `"none"`. */
+	textDecoration?: string;
 	/** Content drawn inside the box — a text node, or an element that renders its own markup. */
 	children: ReactNode;
 };
@@ -53,6 +57,8 @@ const TextOverlayFrameComponent: React.FC<TextOverlayFrameProps> = ({
 	fontSize = 16,
 	fontFamily,
 	fontWeight = "normal",
+	fontStyle = "normal",
+	textDecoration = "none",
 	children,
 }) => {
 	// Docs of text-bearing shapes always carry fontFamily; the theme font is a
@@ -89,6 +95,8 @@ const TextOverlayFrameComponent: React.FC<TextOverlayFrameProps> = ({
 						fontSize,
 						fontFamily: resolvedFontFamily,
 						fontWeight,
+						fontStyle,
+						textDecoration,
 					}}
 				>
 					{children}

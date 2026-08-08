@@ -93,6 +93,12 @@
 			"fontWeight": {
 				"$ref": "#/$defs/TextStyle/properties/fontWeight"
 			},
+			"fontStyle": {
+				"$ref": "#/$defs/TextStyle/properties/fontStyle"
+			},
+			"textDecoration": {
+				"$ref": "#/$defs/TextStyle/properties/textDecoration"
+			},
 			"rotation": {
 				"$ref": "#/$defs/TransformStyle/properties/rotation"
 			},
@@ -205,6 +211,12 @@
 							},
 							"fontWeight": {
 								"$ref": "#/$defs/TextStyle/properties/fontWeight"
+							},
+							"fontStyle": {
+								"$ref": "#/$defs/TextStyle/properties/fontStyle"
+							},
+							"textDecoration": {
+								"$ref": "#/$defs/TextStyle/properties/textDecoration"
 							}
 						}
 					},
@@ -253,6 +265,12 @@
 								"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (a record's title is bold unless you override it)",
 								"type": "string",
 								"default": "bold"
+							},
+							"fontStyle": {
+								"$ref": "#/$defs/TextStyle/properties/fontStyle"
+							},
+							"textDecoration": {
+								"$ref": "#/$defs/TextStyle/properties/textDecoration"
 							}
 						}
 					},
@@ -302,6 +320,12 @@
 							},
 							"fontWeight": {
 								"$ref": "#/$defs/TextStyle/properties/fontWeight"
+							},
+							"fontStyle": {
+								"$ref": "#/$defs/TextStyle/properties/fontStyle"
+							},
+							"textDecoration": {
+								"$ref": "#/$defs/TextStyle/properties/textDecoration"
 							}
 						}
 					},
@@ -351,6 +375,12 @@
 							},
 							"fontWeight": {
 								"$ref": "#/$defs/TextStyle/properties/fontWeight"
+							},
+							"fontStyle": {
+								"$ref": "#/$defs/TextStyle/properties/fontStyle"
+							},
+							"textDecoration": {
+								"$ref": "#/$defs/TextStyle/properties/textDecoration"
 							}
 						}
 					}
@@ -911,6 +941,16 @@
 				"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"normal\"",
 				"type": "string",
 				"default": "normal"
+			},
+			"fontStyle": {
+				"description": "Font style: \"normal\" or \"italic\". Default: \"normal\"",
+				"type": "string",
+				"default": "normal"
+			},
+			"textDecoration": {
+				"description": "Text decoration lines: \"underline\", \"line-through\", or \"underline line-through\" for both. \"none\" or omitted means no decoration. Default: \"none\"",
+				"type": "string",
+				"default": "none"
 			}
 		}
 	},

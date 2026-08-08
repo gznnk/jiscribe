@@ -17,6 +17,8 @@ describe("isTextSlot", () => {
 				fontSize: 14,
 				fontFamily: "serif",
 				fontWeight: "bold",
+				fontStyle: "italic",
+				textDecoration: "underline line-through",
 			}),
 		).toBe(true);
 	});
@@ -37,6 +39,8 @@ describe("isTextSlot", () => {
 		expect(isTextSlot({ text: "x", fontColor: 0 })).toBe(false);
 		expect(isTextSlot({ text: "x", fontFamily: 0 })).toBe(false);
 		expect(isTextSlot({ text: "x", fontWeight: 700 })).toBe(false);
+		expect(isTextSlot({ text: "x", fontStyle: 0 })).toBe(false);
+		expect(isTextSlot({ text: "x", textDecoration: 0 })).toBe(false);
 	});
 
 	it("accepts an explicitly undefined style field, an absent one being valid", () => {
@@ -53,6 +57,8 @@ describe("TEXT_SLOT_STYLE_KEYS", () => {
 			"fontSize",
 			"fontFamily",
 			"fontWeight",
+			"fontStyle",
+			"textDecoration",
 		]);
 	});
 });

@@ -109,14 +109,24 @@ export const isValidFillStyleState = (o: StateRecord): boolean =>
 
 /**
  * Validates one slot's styling beyond its declared types: CSS-injection safety for
- * fontFamily / fontWeight / fontColor (which `isTextSlot` only checks via `isString`),
- * strict color validity for fontColor, and the schema's fontSize minimum.
+ * fontFamily / fontWeight / fontStyle / textDecoration / fontColor (which `isTextSlot`
+ * only checks via `isString`), strict color validity for fontColor, and the schema's
+ * fontSize minimum.
  */
 const isValidTextSlotStyle = (slot: TextSlot): boolean => {
 	if (slot.fontFamily !== undefined && !isCssSafeValue(slot.fontFamily)) {
 		return false;
 	}
 	if (slot.fontWeight !== undefined && !isCssSafeValue(slot.fontWeight)) {
+		return false;
+	}
+	if (slot.fontStyle !== undefined && !isCssSafeValue(slot.fontStyle)) {
+		return false;
+	}
+	if (
+		slot.textDecoration !== undefined &&
+		!isCssSafeValue(slot.textDecoration)
+	) {
 		return false;
 	}
 	// The sentinel "auto" (theme-following, issue #38) is checked first so the

@@ -42,10 +42,18 @@ export type TextSlot<TContent extends TextSlotContent = TextSlotContent> = {
 	fontFamily?: string;
 	/** Font weight */
 	fontWeight?: string;
+	/** Font style ("normal" | "italic"; CSS font-style value) */
+	fontStyle?: string;
+	/**
+	 * Text decoration lines: "underline" / "line-through", space-separated when
+	 * both apply (canonical order: underline first). "none" or absent means no
+	 * decoration.
+	 */
+	textDecoration?: string;
 };
 
 /**
- * Field names of a slot's typography (everything but the content). The same six
+ * Field names of a slot's typography (everything but the content). The same
  * names the root TextStyleDoc uses, which is what lets a single-body doc expand
  * into a slot and fold back (TextSlotsMapper).
  */
@@ -56,6 +64,8 @@ export const TEXT_SLOT_STYLE_KEYS = exhaustiveKeysOf<Omit<TextSlot, "text">>()([
 	"fontSize",
 	"fontFamily",
 	"fontWeight",
+	"fontStyle",
+	"textDecoration",
 ] as const);
 
 /**
@@ -97,6 +107,12 @@ export const isTextSlot = (value: unknown): value is TextSlot => {
 		return false;
 	}
 	if (value.fontWeight !== undefined && !isString(value.fontWeight)) {
+		return false;
+	}
+	if (value.fontStyle !== undefined && !isString(value.fontStyle)) {
+		return false;
+	}
+	if (value.textDecoration !== undefined && !isString(value.textDecoration)) {
 		return false;
 	}
 	return true;

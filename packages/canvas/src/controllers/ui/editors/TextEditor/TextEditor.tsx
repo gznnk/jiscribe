@@ -37,6 +37,8 @@ type TextEditorProps = {
 	fontSize?: number;
 	fontFamily?: string;
 	fontWeight?: string;
+	fontStyle?: string;
+	textDecoration?: string;
 	onChange: (text: string) => void;
 	onEscape?: () => void;
 };
@@ -60,6 +62,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	fontSize = 16,
 	fontFamily,
 	fontWeight = "normal",
+	fontStyle = "normal",
+	textDecoration = "none",
 	onChange,
 	onEscape,
 }) => {
@@ -90,7 +94,15 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			return;
 		}
 		fitTextAreaHeight(el, fontSize);
-	}, [text, width, height, fontSize, resolvedFontFamily, fontWeight]);
+	}, [
+		text,
+		width,
+		height,
+		fontSize,
+		resolvedFontFamily,
+		fontWeight,
+		fontStyle,
+	]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
@@ -153,6 +165,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 					fontSize,
 					fontFamily: resolvedFontFamily,
 					fontWeight,
+					fontStyle,
+					textDecoration,
 				}}
 				ref={textAreaRef}
 				onChange={handleChange}

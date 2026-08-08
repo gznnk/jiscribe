@@ -1065,15 +1065,17 @@ Applies to every box shape, plus `polygon`. For `actor`, the fill paints the hea
 
 Applies to every box shape. A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
 
-| Field           | Type            | Default          | Description                                                                       |
-| --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
-| `text`          | `string`        | `""`             | Text content.                                                                     |
-| `textAlign`     | `TextAlign`     | `"center"`       | Horizontal alignment.                                                             |
-| `verticalAlign` | `VerticalAlign` | `"middle"`       | Vertical alignment.                                                               |
-| `fontColor`     | `string`        | `"auto"`         | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`). |
-| `fontSize`      | `number`        | `16`             | Font size (px).                                                                   |
-| `fontFamily`    | `string`        | `"Noto Sans JP"` | Font family.                                                                      |
-| `fontWeight`    | `string`        | `"normal"`       | Font weight.                                                                      |
+| Field            | Type            | Default          | Description                                                                       |
+| ---------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
+| `text`           | `string`        | `""`             | Text content.                                                                     |
+| `textAlign`      | `TextAlign`     | `"center"`       | Horizontal alignment.                                                             |
+| `verticalAlign`  | `VerticalAlign` | `"middle"`       | Vertical alignment.                                                               |
+| `fontColor`      | `string`        | `"auto"`         | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`). |
+| `fontSize`       | `number`        | `16`             | Font size (px).                                                                   |
+| `fontFamily`     | `string`        | `"Noto Sans JP"` | Font family.                                                                      |
+| `fontWeight`     | `string`        | `"normal"`       | Font weight.                                                                      |
+| `fontStyle`      | `string`        | `"normal"`       | Font style: `"normal"` or `"italic"`.                                             |
+| `textDecoration` | `string`        | `"none"`         | Decoration lines: `"underline"`, `"line-through"`, or `"underline line-through"`. |
 
 `TextAlign`: `"left"` / `"center"` / `"right"`
 

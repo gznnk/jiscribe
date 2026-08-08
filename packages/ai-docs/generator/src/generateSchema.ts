@@ -47,6 +47,8 @@ const STYLE_PROP_SOURCES: ReadonlyArray<{
 			"fontSize",
 			"fontFamily",
 			"fontWeight",
+			"fontStyle",
+			"textDecoration",
 		],
 	},
 	{

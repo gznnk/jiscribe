@@ -91,6 +91,8 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 				fontSize={bodySlot?.fontSize}
 				fontFamily={bodySlot?.fontFamily}
 				fontWeight={bodySlot?.fontWeight}
+				fontStyle={bodySlot?.fontStyle}
+				textDecoration={bodySlot?.textDecoration}
 				isEditing={isEditing}
 			/>
 		</g>

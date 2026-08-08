@@ -31,6 +31,8 @@ type TextOverlayProps = {
 	fontSize?: number;
 	fontFamily?: string;
 	fontWeight?: string;
+	fontStyle?: string;
+	textDecoration?: string;
 	// Editing state
 	isEditing?: boolean;
 };
@@ -48,6 +50,8 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	fontSize,
 	fontFamily,
 	fontWeight,
+	fontStyle,
+	textDecoration,
 	isEditing = false,
 }) => {
 	// Don't render anything if editing or text is empty
@@ -68,6 +72,8 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 			fontSize={fontSize}
 			fontFamily={fontFamily}
 			fontWeight={fontWeight}
+			fontStyle={fontStyle}
+			textDecoration={textDecoration}
 		>
 			{text}
 		</TextOverlayFrame>

@@ -1,6 +1,5 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
-import { selectors } from "../../support/selectors";
 
 /**
  * Guards that copy-paste and duplicate carry over the text style: font size,
@@ -32,7 +31,7 @@ async function drawStyledRect(canvas: CanvasDriver): Promise<string> {
 	await canvas.openObjectMenu("font-size");
 	await canvas.setNumberInput("fontSize", FONT_SIZE);
 	await canvas.setColor("font-color", FONT_COLOR);
-	await canvas.page.click(selectors.objectMenuSet("fontWeight", "bold"));
+	await canvas.setTextFormat("fontWeight", "bold");
 
 	// Wait until the settings have reached the rendering.
 	await expect

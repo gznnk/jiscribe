@@ -19,6 +19,8 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 	fontSize,
 	fontFamily,
 	fontWeight,
+	fontStyle,
+	textDecoration,
 	isEditing,
 }) => {
 	const bodyRef = useRef<HTMLDivElement>(null);
@@ -58,6 +60,8 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 			fontSize={fontSize}
 			fontFamily={fontFamily}
 			fontWeight={fontWeight}
+			fontStyle={fontStyle}
+			textDecoration={textDecoration}
 		>
 			<MarkdownBody ref={bodyRef} />
 		</TextOverlayFrame>

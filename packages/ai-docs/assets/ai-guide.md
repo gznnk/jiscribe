@@ -187,7 +187,8 @@ keeps the compartment and draws it empty, which is how you say "this class has n
 operations" rather than "this box has no operations compartment".
 
 Each slot carries **its own** typography (`textAlign` / `verticalAlign` /
-`fontColor` / `fontSize` / `fontFamily` / `fontWeight`, all optional and written
+`fontColor` / `fontSize` / `fontFamily` / `fontWeight` / `fontStyle` /
+`textDecoration`, all optional and written
 beside `text`); a `record` has **no shape-wide** text fields, so writing them at
 the top level is an error. Slot defaults follow what the slot is for — the
 `stereotype` and `name` bands are centered (and `name` is bold), the row

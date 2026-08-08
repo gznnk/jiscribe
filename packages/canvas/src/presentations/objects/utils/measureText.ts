@@ -1,4 +1,4 @@
-/** The font a measurement is taken with; the three values a CSS `font` shorthand needs. */
+/** The font a measurement is taken with; the values a CSS `font` shorthand needs. */
 export type TextMeasureFont = {
 	/** Type size in local pixels (the same unit the drawn box is measured in). */
 	fontSize: number;
@@ -6,6 +6,8 @@ export type TextMeasureFont = {
 	fontFamily: string;
 	/** CSS font-weight keyword or numeric string ("normal" / "bold" / "600"). */
 	fontWeight: string;
+	/** CSS font-style ("normal" / "italic"); omitted measures as "normal". */
+	fontStyle?: string;
 };
 
 /**
@@ -49,7 +51,10 @@ const createTextWidthMeasurer = (font: TextMeasureFont): TextWidthMeasurer => {
 		// When measurement is unavailable (non-browser environment), fall back to a rough estimate from character count.
 		return (text) => text.length * font.fontSize * FALLBACK_CHAR_WIDTH_RATIO;
 	}
-	ctx.font = `${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
+	// The CSS font shorthand fixes the order style → weight → size → family; a
+	// style after the weight makes the whole declaration invalid and ctx.font
+	// keeps its previous value.
+	ctx.font = `${font.fontStyle ?? "normal"} ${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
 	return (text) => ctx.measureText(text).width;
 };
 

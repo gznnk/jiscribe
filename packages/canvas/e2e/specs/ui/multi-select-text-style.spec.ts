@@ -1,6 +1,5 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
-import { selectors } from "../../support/selectors";
 
 /**
  * Text style applied in bulk to a multi-selection.
@@ -62,7 +61,7 @@ test.describe("bulk text style application to a multi-selection", () => {
 		const { left, right } = await drawTwoLabeledRects(canvas);
 		await marqueeSelectBoth(canvas);
 
-		await canvas.page.click(selectors.objectMenuSet("fontWeight", "bold"));
+		await canvas.setTextFormat("fontWeight", "bold");
 
 		await expect
 			.poll(async () => (await canvas.textStyleOf(left))?.fontWeight)

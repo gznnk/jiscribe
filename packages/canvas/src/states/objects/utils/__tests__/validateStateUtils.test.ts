@@ -126,6 +126,31 @@ describe("validateStateUtils", () => {
 				false,
 			);
 		});
+		it("valid fontStyle / textDecoration is true", () => {
+			expect(
+				isValidTextStyleState(
+					withSlot({
+						fontStyle: "italic",
+						textDecoration: "underline line-through",
+					}),
+					"body",
+				),
+			).toBe(true);
+		});
+		it("injection in fontStyle / textDecoration is false", () => {
+			expect(
+				isValidTextStyleState(
+					withSlot({ fontStyle: "italic } html {" }),
+					"body",
+				),
+			).toBe(false);
+			expect(
+				isValidTextStyleState(
+					withSlot({ textDecoration: "underline } html {" }),
+					"body",
+				),
+			).toBe(false);
+		});
 		it("injection in fontFamily / fontWeight is false", () => {
 			expect(
 				isValidTextStyleState(

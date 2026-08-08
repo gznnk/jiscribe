@@ -12,7 +12,7 @@ import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
  * Handlers are stateless, so the instances are shared across bundles.
  *
  * The text group lives in `state.text` as keyed slots, so a dot-path write would
- * flatten it; "text" (the content, written into the default slot) and the six
+ * flatten it; "text" (the content, written into the default slot) and the
  * styling properties (written into the selected slot, or every slot when none is
  * selected) have their own handlers instead of the flag gate.
  */
@@ -29,6 +29,8 @@ export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
 	fontSize: new TextSlotStyleProperty("number"),
 	fontFamily: new TextSlotStyleProperty("string"),
 	fontWeight: new TextSlotStyleProperty("string"),
+	fontStyle: new TextSlotStyleProperty("string"),
+	textDecoration: new TextSlotStyleProperty("string"),
 	startArrow: new FeatureGatedStyleProperty("arrow", "string"),
 	endArrow: new FeatureGatedStyleProperty("arrow", "string"),
 	lockAspectRatio: new LockAspectRatioProperty(),

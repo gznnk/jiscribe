@@ -5,7 +5,6 @@ import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import { AlignmentMenu } from "./items/AlignmentMenu";
 import { ArrowHeadMenu } from "./items/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./items/BackgroundColorMenu";
-import { BoldMenu } from "./items/BoldMenu";
 import { BorderStyleMenu } from "./items/BorderStyleMenu";
 import { FontColorMenu } from "./items/FontColorMenu";
 import { FontSizeMenu } from "./items/FontSizeMenu";
@@ -15,6 +14,7 @@ import { LineColorMenu } from "./items/LineColorMenu";
 import { LineStyleMenu } from "./items/LineStyleMenu";
 import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
+import { TextFormatMenu } from "./items/TextFormatMenu";
 import {
 	ObjectMenuContainer,
 	ObjectMenuSectionRow,
@@ -94,7 +94,7 @@ const renderItem = (
 						canvasState={canvasState}
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-					<BoldMenu canvasState={canvasState} />
+					<TextFormatMenu canvasState={canvasState} />
 				</React.Fragment>
 			);
 		case "textAlignment":
