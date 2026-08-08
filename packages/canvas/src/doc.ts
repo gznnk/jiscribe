@@ -15,8 +15,8 @@
 // plugin types uniformly, following each type's `features`.
 // They take already-typed params (no zod; tool-input validation is the
 // adapter's responsibility) and reuse the same ObjectFactory as the canvas, producing
-// correct ObjectDocs down to the style defaults. Every op mutates the doc in place and
-// checks its arguments first, so a call that throws leaves the doc untouched.
+// correct ObjectDocs down to the style defaults. Every editing op mutates the doc in place
+// and checks its arguments first, so a call that throws leaves the doc untouched.
 //
 // e.g. `import { parseCanvasText, createDocOps } from "@workspace/canvas/doc";`
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
@@ -61,8 +61,11 @@ export {
 	type AnchorHandleId,
 	type DeleteObjectsResult,
 	type DistributeAxis,
+	type EdgeAnchorHandle,
+	type EdgeAnchorSide,
 	type RemoveFromGroupResult,
 	type MoveObjectParams,
+	type Rect,
 	type ResizeObjectParams,
 	type SetStyleResult,
 	type StyleParams,

@@ -51,7 +51,8 @@ export type ConnectParams = {
  * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
  * @returns The id assigned to the new connector, `connector-N` unique across the root tree
  * @throws {@link DocOperationError} with a user-facing message when either endpoint is missing
- *   from the root tree or is not connectable
+ *   from the root tree, is not connectable, or carries an unusable edge anchor
+ *   (see {@link AnchorHandleId})
  */
 export function connect(
 	doc: CanvasDoc,

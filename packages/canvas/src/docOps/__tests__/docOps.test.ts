@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { parseCanvasText } from "../../schemas/canvas/validators";
+import type { EdgeAnchorSide } from "../../schemas/objects/types/EndpointRef";
 import { createFrameObjectFactory } from "../../schemas/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
 import { createDocOps } from "../createDocOps";
@@ -132,6 +133,88 @@ describe("connect", () => {
 		expect(connector.target).toMatchObject({ anchor: { kind: "center" } });
 		expect(connector.routing).toBe("straight");
 		expectValid(doc);
+	});
+
+	it("stores an edge midpoint id as a connectPoint anchor", () => {
+		const doc = emptyDoc();
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+
+		docOps.connect(doc, {
+			sourceId: source,
+			targetId: target,
+			sourceAnchor: "bottomCenter",
+			targetAnchor: "leftCenter",
+		});
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.source).toMatchObject({
+			anchor: { kind: "connectPoint", id: "bottomCenter" },
+		});
+		expect(connector.target).toMatchObject({
+			anchor: { kind: "connectPoint", id: "leftCenter" },
+		});
+		expectValid(doc);
+	});
+
+	it("stores an edge handle as an edge anchor and keeps routing omitted", () => {
+		const doc = emptyDoc();
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+
+		docOps.connect(doc, {
+			sourceId: source,
+			targetId: target,
+			sourceAnchor: { side: "bottom", t: 0.25 },
+			targetAnchor: { side: "left", t: 0 },
+		});
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.source).toMatchObject({
+			anchor: { kind: "edge", side: "bottom", t: 0.25 },
+		});
+		expect(connector.target).toMatchObject({
+			anchor: { kind: "edge", side: "left", t: 0 },
+		});
+		// An edge anchor carries an exit direction, so the orthogonal default stands.
+		expect(connector.routing).toBeUndefined();
+		expectValid(doc);
+	});
+
+	it.each([-0.01, 1.4, Number.NaN, Number.POSITIVE_INFINITY])(
+		"throws DocOperationError and leaves the doc untouched for the edge handle t %p",
+		(t) => {
+			const doc = emptyDoc();
+			const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+			const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+			const before = JSON.stringify(doc);
+
+			expect(() =>
+				docOps.connect(doc, {
+					sourceId: source,
+					targetId: target,
+					sourceAnchor: { side: "bottom", t },
+				}),
+			).toThrow(DocOperationError);
+			expect(JSON.stringify(doc)).toBe(before);
+		},
+	);
+
+	it("throws DocOperationError for an edge handle side that is not an edge", () => {
+		const doc = emptyDoc();
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.connect(doc, {
+				sourceId: source,
+				targetId: target,
+				// The doc model has no such side; only top / right / bottom / left exist.
+				sourceAnchor: { side: "middle" as EdgeAnchorSide, t: 0.5 },
+			}),
+		).toThrow(DocOperationError);
+		expect(JSON.stringify(doc)).toBe(before);
 	});
 
 	it("omits routing (orthogonal default) when both ends pin to an edge midpoint", () => {

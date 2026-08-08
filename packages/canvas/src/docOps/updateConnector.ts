@@ -116,8 +116,9 @@ const setLabelPlacement = (
  *   turns a straight line into a right-angled one
  * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
  * @throws {@link DocOperationError} when the id is missing or is not a connector, when a new
- *   endpoint is missing or not connectable, or when a label placement is given for a
- *   connector that has no label
+ *   endpoint is missing, not connectable or carries an unusable edge anchor (see
+ *   {@link AnchorHandleId}), or when a label placement is given for a connector that
+ *   has no label
  */
 export const updateConnector = (
 	doc: CanvasDoc,

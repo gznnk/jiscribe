@@ -1,3 +1,5 @@
+import type { Rect } from "@workspace/geometry";
+
 import { addObject, type AddObjectParams } from "./addObject";
 import {
 	type AlignEdge,
@@ -14,6 +16,7 @@ import {
 	type RemoveFromGroupResult,
 	ungroupObject,
 } from "./groupObjects";
+import { getObjectsBounds } from "./objectGeometry";
 import {
 	moveObject,
 	type MoveObjectParams,
@@ -32,11 +35,12 @@ import { resolveDocDefinitions } from "../schemas/plugin/resolveDocDefinitions";
 /**
  * The whole set of programmatic edits to a CanvasDoc: building it up (`addObject` /
  * `connect`) and reworking what is already there (delete / move / resize / style / retext /
- * re-route / align / group). Built-in and plugin types alike are handled uniformly,
- * following the factory / features passed to `createDocOps`.
+ * re-route / align / group), plus reading back where it all sits (`getObjectsBounds`).
+ * Built-in and plugin types alike are handled uniformly, following the factory / features
+ * passed to `createDocOps`.
  *
- * Every op mutates `doc` in place and checks its arguments before it writes, so a call that
- * throws `DocOperationError` leaves the document exactly as it was.
+ * Every editing op mutates `doc` in place and checks its arguments before it writes, so a
+ * call that throws `DocOperationError` leaves the document exactly as it was.
  */
 export type DocOps = {
 	/**
@@ -142,6 +146,12 @@ export type DocOps = {
 		doc: CanvasDoc,
 		ids: readonly string[],
 	): RemoveFromGroupResult;
+	/**
+	 * Read the combined bounding box of the given objects, or of the whole doc when `ids` is
+	 * omitted; null when nothing measurable was found. Throws `DocOperationError` naming every
+	 * id that was not found.
+	 */
+	getObjectsBounds(doc: CanvasDoc, ids?: readonly string[]): Rect | null;
 };
 
 /**
@@ -174,5 +184,6 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		addObjectsToGroup: (doc, groupId, ids) =>
 			addObjectsToGroup(doc, groupId, ids),
 		removeObjectsFromGroup: (doc, ids) => removeObjectsFromGroup(doc, ids),
+		getObjectsBounds: (doc, ids) => getObjectsBounds(doc, ids, definitions),
 	};
 };
