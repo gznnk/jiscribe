@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { TextMeasureFont } from "../../../../../utils/text/measureText";
+import type { TextMeasureFont } from "../../../../../states/objects/utils/measureText";
 import { calcCaretContentOffset } from "../calcCaretContentOffset";
 
 /**

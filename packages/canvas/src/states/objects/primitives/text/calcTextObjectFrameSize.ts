@@ -2,7 +2,7 @@ import type { Dimensions } from "@workspace/geometry";
 
 import type { TextObjectTypography } from "./resolveTextObjectFont";
 import { resolveTextObjectFont } from "./resolveTextObjectFont";
-import { calcTextBlockSize } from "../../../../utils/text/calcTextBlockSize";
+import { calcTextBlockSize } from "../../utils/calcTextBlockSize";
 
 /**
  * Size of the box a `text` object occupies. The doc of a point-geometry shape

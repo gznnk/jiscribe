@@ -1,5 +1,5 @@
-import type { TextMeasureFont } from "../../../../utils/text/measureText";
-import type { TextSlot } from "../../types/TextSlot";
+import type { TextSlot } from "../../../../schemas/objects/types/TextSlot";
+import type { TextMeasureFont } from "../../utils/measureText";
 
 /** Type size measured with when the object sets none; TextOverlayFrame's own default. */
 const FALLBACK_FONT_SIZE = 16;

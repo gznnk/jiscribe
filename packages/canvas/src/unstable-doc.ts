@@ -12,8 +12,8 @@
 
 export { createFrameObjectFactory } from "./schemas/objects/utils/createFrameObjectFactory";
 
-// The point-geometry counterpart: a doc storing a position only, whose box comes
-// from the same measurement its `contentResizer` re-runs on every edit.
+// The point-geometry counterpart: a doc storing a drawn top-left position only, the
+// box being derived from the content by the type's `contentResizer` in the state layer.
 export { createPointObjectFactory } from "./schemas/objects/utils/createPointObjectFactory";
 
 // The bounds+minSize guard every `createDocFromBounds` needs, for shapes that

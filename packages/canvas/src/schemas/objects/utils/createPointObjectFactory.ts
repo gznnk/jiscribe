@@ -1,7 +1,3 @@
-import type { Dimensions } from "@workspace/geometry";
-import { roundToDecimal } from "@workspace/geometry";
-
-import { PRECISION } from "../../../constants/precision";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectFactory } from "../types/ObjectFactory";
 import { pickSupportedDocDefaults } from "../types/ObjectFactory";
@@ -9,7 +5,7 @@ import { pickSupportedDocDefaults } from "../types/ObjectFactory";
 /**
  * Minimal shape that DOC_DEFAULTS of point-geometry shapes must satisfy. No
  * width/height, unlike the Frame family: a point shape's doc stores its position
- * only, and the size comes from `calcSize`.
+ * only, and the box is materialized in the states layer from the content.
  */
 type PointDefaults = Omit<ObjectDoc, "id"> & Record<string, unknown>;
 
@@ -33,21 +29,18 @@ const omitDimensionOverrides = (
 };
 
 /**
- * Builds an `ObjectFactory` for point-geometry shapes (doc: a position only,
- * size derived from the content).
+ * Builds an `ObjectFactory` for point-geometry shapes — those whose doc stores a
+ * position and nothing else, the box being derived from the content by the
+ * states layer (the type's `contentResizer`) once the object enters a canvas.
  *
  * No `createDocFromBounds` is produced: a shape that does not own its box cannot
- * be drag-drawn, so it is click-placed like the other bounds-less shapes. The
- * measured box is centered on the given position, which is what makes dropping
- * one look the same as dropping any other stencil.
+ * be drag-drawn, so it is click-placed like the other bounds-less shapes.
  *
  * @param defaults - The type's DOC_DEFAULTS; every field of the created doc but `id` and the position comes from here, `docDefaults`, and `overrides` in that order
- * @param calcSize - Measures the box of an assembled doc. Called with defaults + overrides already merged, so it sees the same text and typography the created object will carry
- * @returns A factory whose `createDoc` centers the measured box on `position` and whose `calcDimensions` reports that box's half-extents for the drag ghost. Both ignore `width` / `height` in `overrides`, which this geometry cannot store
+ * @returns A factory whose `createDoc` stores `position` verbatim as the box's drawn top-left — not its center, the way the frame family reads it, since no box is known at this layer — and whose `calcDimensions` reports zero. Both drop `width` / `height` from `overrides`, this geometry having nowhere to keep them
  */
 export const createPointObjectFactory = <TDefaults extends PointDefaults>(
 	defaults: TDefaults,
-	calcSize: (doc: TDefaults) => Dimensions,
 ): ObjectFactory => {
 	const mergeDefaults = (
 		overrides?: Record<string, unknown>,
@@ -61,22 +54,22 @@ export const createPointObjectFactory = <TDefaults extends PointDefaults>(
 
 	return {
 		createDoc(position, overrides, docDefaults) {
-			const doc = mergeDefaults(overrides, docDefaults);
-			const { width, height } = calcSize(doc);
-			// Rounded for the same reason resizeTextStateToContent rounds: a caller
-			// that hands in a center built from a fractional half-extent gets the
-			// corner it asked for back, instead of one carrying float residue.
 			return {
-				...doc,
+				...mergeDefaults(overrides, docDefaults),
 				id: crypto.randomUUID(),
-				x: roundToDecimal(position.x - width / 2, PRECISION.COORDINATE),
-				y: roundToDecimal(position.y - height / 2, PRECISION.COORDINATE),
+				x: position.x,
+				y: position.y,
 			};
 		},
 
-		calcDimensions(overrides) {
-			const { width, height } = calcSize(mergeDefaults(overrides));
-			return { halfWidth: width / 2, halfHeight: height / 2 };
+		/**
+		 * Zero half-extents: the doc holds no box, so this layer has nothing to
+		 * report. Callers use it for the drag ghost's snap bounds and for the size
+		 * a programmatic placement offsets by, and both degrade to the position
+		 * itself — the box only exists once the states layer materializes it.
+		 */
+		calcDimensions() {
+			return { halfWidth: 0, halfHeight: 0 };
 		},
 	};
 };

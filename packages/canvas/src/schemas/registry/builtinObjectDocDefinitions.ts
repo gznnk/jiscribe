@@ -67,7 +67,7 @@ export const builtinObjectDocDefinitions = {
 		validateDoc: validateTextDoc,
 		factory: TextObjectFactory,
 		description:
-			"Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down.",
+			'Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, "right and down" means the shape\'s own axes, `x` / `y` staying put.',
 		summary: "bare text label / annotation",
 		defaults: TEXT_DOC_DEFAULTS,
 	},

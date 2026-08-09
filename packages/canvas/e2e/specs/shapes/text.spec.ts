@@ -6,9 +6,9 @@ import {
 import { selectors } from "../../support/selectors";
 
 /**
- * Guards the core bargain of the `text` shape: the doc stores a top-left corner
- * and nothing else, and the box is measured back from the text every time it
- * changes. So the checks here are all about the box — that it reaches the drawn
+ * Guards the core bargain of the `text` shape: the doc stores the drawn top-left
+ * corner and nothing else, and the box is measured back from the text every time
+ * it changes. So the checks here are all about the box — that it reaches the drawn
  * width of a long line, that it gains a line height per newline, that it tracks
  * the uncommitted text and font size, and that it grows right and down only.
  *

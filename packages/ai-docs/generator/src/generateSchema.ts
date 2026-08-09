@@ -136,12 +136,12 @@ function buildPointGeometryProps(): Record<string, JsonSchemaNode> {
 	return {
 		x: {
 			description:
-				"Left-edge X coordinate. There is no width field: the box is measured from the content and grows to the right.",
+				"Left-edge X coordinate. There is no width field: the box is measured from the content and grows to the right (along the shape's own axis when rotated or flipped, so this coordinate never moves).",
 			type: "number",
 		},
 		y: {
 			description:
-				"Top-edge Y coordinate. There is no height field: the box is measured from the content and grows downward.",
+				"Top-edge Y coordinate. There is no height field: the box is measured from the content and grows downward (along the shape's own axis when rotated or flipped, so this coordinate never moves).",
 			type: "number",
 		},
 	};

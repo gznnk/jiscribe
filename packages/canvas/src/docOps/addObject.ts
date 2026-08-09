@@ -29,7 +29,9 @@ export type AddObjectParams = {
  * Position is the top-left of the bounding box, sized by the effective width/height.
  * A factory with `createDocFromBounds` uses it — the one uniform entry that maps bounds
  * correctly for both rect-like and ellipse-like shapes — otherwise this falls back to the
- * center-based `createDoc`. The factory's UUID is replaced by a `${type}-N` sequence.
+ * center-based `createDoc`. Point-geometry types skip the sizing entirely: their
+ * `createDoc` already takes the drawn top-left. The factory's UUID is replaced by a
+ * `${type}-N` sequence.
  *
  * @param doc - Mutated in place: the created object is pushed onto `doc.root`
  * @param type - Object type name, which must be a key of `definitions` and carry a factory
@@ -75,41 +77,45 @@ export const addObject = (
 	}
 
 	const textOverride = params.text !== undefined ? { text: params.text } : {};
-	const sizeOverride = {
-		...(params.width !== undefined ? { width: params.width } : {}),
-		...(params.height !== undefined ? { height: params.height } : {}),
-	};
-	// Measured with the same overrides the doc is built from: a point-geometry factory
-	// derives its box from the text, so the default text would report the wrong size and
-	// the centering below would land the object away from the given x/y.
-	const dimensions = factory.calcDimensions({
-		...sizeOverride,
-		...textOverride,
-	});
-	const width = params.width ?? dimensions.halfWidth * 2;
-	const height = params.height ?? dimensions.halfHeight * 2;
 
-	let created: ObjectDoc | null;
-	if (factory.createDocFromBounds !== undefined) {
-		// minSize 0: programmatic creation has no misdrag to reject the way a drag does.
-		created = factory.createDocFromBounds(
-			params.x,
-			params.y,
-			params.x + width,
-			params.y + height,
-			textOverride,
-			0,
-		);
+	let created: ObjectDoc;
+	if (definition.features.geometry === "point") {
+		// The position goes in as the drawn top-left it already is: this geometry
+		// reports no dimensions to offset a center by, and stores no box to offset.
+		created = factory.createDoc({ x: params.x, y: params.y }, textOverride);
 	} else {
-		created = factory.createDoc(
-			{ x: params.x + width / 2, y: params.y + height / 2 },
-			{ width, height, ...textOverride },
-		);
-	}
-	if (created === null) {
-		throw new DocOperationError(
-			`object type "${type}" could not be created at size ${width}x${height}`,
-		);
+		const sizeOverride = {
+			...(params.width !== undefined ? { width: params.width } : {}),
+			...(params.height !== undefined ? { height: params.height } : {}),
+		};
+		const dimensions = factory.calcDimensions({
+			...sizeOverride,
+			...textOverride,
+		});
+		const width = params.width ?? dimensions.halfWidth * 2;
+		const height = params.height ?? dimensions.halfHeight * 2;
+
+		const sized =
+			factory.createDocFromBounds !== undefined
+				? // minSize 0: programmatic creation has no misdrag to reject the way a drag does.
+					factory.createDocFromBounds(
+						params.x,
+						params.y,
+						params.x + width,
+						params.y + height,
+						textOverride,
+						0,
+					)
+				: factory.createDoc(
+						{ x: params.x + width / 2, y: params.y + height / 2 },
+						{ width, height, ...textOverride },
+					);
+		if (sized === null) {
+			throw new DocOperationError(
+				`object type "${type}" could not be created at size ${width}x${height}`,
+			);
+		}
+		created = sized;
 	}
 
 	created.id = generateUniqueId(doc, type);

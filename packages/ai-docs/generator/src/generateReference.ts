@@ -247,7 +247,7 @@ function buildFieldTable(
 	} else if (definition.features.geometry === "point") {
 		rows.push(
 			`| \`x\` | \`number\` | ${formatDefaultCell(defaults.x)} | X of the text's top-left. |`,
-			`| \`y\` | \`number\` | ${formatDefaultCell(defaults.y)} | Y of the text's top-left. There is no \`width\` / \`height\` field: the box is measured from the text itself. |`,
+			`| \`y\` | \`number\` | ${formatDefaultCell(defaults.y)} | Y of the text's top-left. There is no \`width\` / \`height\` field: the box is measured from the text itself. Under \`rotation\` or a flip the corner is the shape's own top-left, so \`x\` / \`y\` stay put as the text grows. |`,
 		);
 	} else {
 		rows.push(

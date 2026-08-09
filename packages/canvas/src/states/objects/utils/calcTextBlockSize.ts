@@ -6,8 +6,8 @@ import { TEXT_BLOCK_WIDTH_SLACK } from "./textBlockWidthSlack";
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
-} from "../../constants/textBoxPadding";
-import { TEXT_LINE_HEIGHT } from "../../constants/textLineHeight";
+} from "../../../constants/textBoxPadding";
+import { TEXT_LINE_HEIGHT } from "../../../constants/textLineHeight";
 
 /** Width of a box holding no text, so an empty one still has something to hit. */
 const TEXT_BLOCK_MIN_WIDTH = 16;

@@ -1,11 +1,11 @@
 import type { Point } from "@workspace/geometry";
 
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { TextMeasureFont } from "../../../../utils/text/measureText";
+import type { TextMeasureFont } from "../../../../states/objects/utils/measureText";
 import {
 	calcVisualLineCount,
 	measureTextWidth,
-} from "../../../../utils/text/measureText";
+} from "../../../../states/objects/utils/measureText";
 
 /** What the caret's place in the text is read from; see calcCaretContentOffset. */
 export type CaretContentOffsetParams = {

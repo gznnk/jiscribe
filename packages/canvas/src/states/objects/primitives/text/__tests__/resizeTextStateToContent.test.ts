@@ -6,7 +6,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { PRECISION } from "../../../../../constants/precision";
-import { calcTextObjectFrameSize } from "../../../../../schemas/objects/primitives/text/calcTextObjectFrameSize";
+import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
 import { resizeTextStateToContent } from "../resizeTextStateToContent";
 import { textToDoc, textToState } from "../TextMapper";
 import type { TextState } from "../TextState";
@@ -38,10 +38,12 @@ const stateOf = (text: string, overrides: Record<string, unknown> = {}) => {
 const ANCHOR = { x: 100, y: 60 };
 
 /**
- * The corner the doc would store, rounded the way resizeTextStateToContent
- * rounds it — a bare `cx - width / 2` carries float noise the box itself does not.
+ * The box's axis-aligned top-left, rounded the way resizeTextStateToContent
+ * rounds its anchor — a bare `cx - width / 2` carries float noise the box itself
+ * does not. It coincides with the corner the doc stores only while the object is
+ * neither rotated nor flipped.
  */
-const topLeftOf = (state: TextState) => ({
+const axisAlignedTopLeftOf = (state: TextState) => ({
 	x: roundToDecimal(state.cx - state.width / 2, PRECISION.COORDINATE),
 	y: roundToDecimal(state.cy - state.height / 2, PRECISION.COORDINATE),
 });
@@ -89,7 +91,7 @@ describe("resizeTextStateToContent", () => {
 		const resized = resizeTextStateToContent(typed, FONT_FAMILY);
 
 		expect(resized.width).toBeGreaterThan(state.width);
-		expect(topLeftOf(resized)).toEqual(ANCHOR);
+		expect(axisAlignedTopLeftOf(resized)).toEqual(ANCHOR);
 	});
 
 	it("keeps the top-left where it was when the text shrinks", () => {
@@ -102,7 +104,7 @@ describe("resizeTextStateToContent", () => {
 		const resized = resizeTextStateToContent(typed, FONT_FAMILY);
 
 		expect(resized.width).toBeLessThan(state.width);
-		expect(topLeftOf(resized)).toEqual(ANCHOR);
+		expect(axisAlignedTopLeftOf(resized)).toEqual(ANCHOR);
 	});
 
 	it("grows the height by a line for each authored newline", () => {
@@ -116,7 +118,7 @@ describe("resizeTextStateToContent", () => {
 		);
 
 		expect(twoLines.height).toBeGreaterThan(oneLine.height);
-		expect(topLeftOf(twoLines).y).toBe(ANCHOR.y);
+		expect(axisAlignedTopLeftOf(twoLines).y).toBe(ANCHOR.y);
 	});
 
 	it("keeps the drawn top-left where it was when a rotated text grows", () => {
@@ -125,11 +127,13 @@ describe("resizeTextStateToContent", () => {
 		const after = drawnTopLeftOf(resized);
 
 		expect(resized.width).toBeGreaterThan(state.width);
-		// A quarter turn sends the growth straight down, so the unrotated corner the
-		// doc stores has to move for the drawn one to stay put.
+		// A quarter turn sends the growth straight down, so the axis-aligned
+		// `cx - width / 2` corner has to move for the drawn one to stay put.
 		expect(after.x).toBeCloseTo(before.x, 3);
 		expect(after.y).toBeCloseTo(before.y, 3);
-		expect(topLeftOf(resized)).not.toEqual(topLeftOf(state));
+		expect(axisAlignedTopLeftOf(resized)).not.toEqual(
+			axisAlignedTopLeftOf(state),
+		);
 	});
 
 	it("keeps the drawn top-left where it was when a flipped text grows", () => {
@@ -143,8 +147,8 @@ describe("resizeTextStateToContent", () => {
 
 	it("survives the doc round trip after a rotated resize", () => {
 		const { resized } = typedLonger({ rotation: 37 });
-		// The doc stores the unrotated corner, so the mapper has to land back on the
-		// same box from the coordinate this resize left behind.
+		// The doc stores the very corner this resize anchored on, so the mapper has
+		// to land back on the same box from the coordinate it left behind.
 		const roundTripped = textToState(textToDoc(resized));
 
 		expect(roundTripped.cx).toBeCloseTo(resized.cx, 3);

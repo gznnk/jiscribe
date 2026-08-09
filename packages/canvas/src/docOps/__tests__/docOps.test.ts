@@ -83,8 +83,8 @@ describe("addObject", () => {
 		expectValid(doc);
 	});
 
-	// A point-geometry factory sizes itself from its text, so the top-left only
-	// survives the center-based createDoc when the measurement sees that text.
+	// A point-geometry doc stores the top-left and no box, so the position reaches
+	// the doc untouched — no measurement, and nothing to offset a center by.
 	it("keeps the given top-left for a point-geometry type", () => {
 		const doc = emptyDoc();
 		const id = docOps.addObject(doc, "text", {
@@ -96,11 +96,18 @@ describe("addObject", () => {
 		expect(id).toBe("text-1");
 		const text = doc.root[0] as Record<string, unknown>;
 		expect(text.type).toBe("text");
-		// Exact: the factory rounds the corner it derives from the center, so the
-		// caller gets the position it asked for rather than float residue.
 		expect(text.x).toBe(100);
 		expect(text.y).toBe(100);
 		expectValid(doc);
+	});
+
+	it("keeps a fractional top-left exact for a point-geometry type", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "text", { x: 12.5, y: -7.25, text: "Hello World" });
+
+		const text = doc.root[0] as Record<string, unknown>;
+		expect(text.x).toBe(12.5);
+		expect(text.y).toBe(-7.25);
 	});
 
 	it("keeps box fields out of a point-geometry doc", () => {

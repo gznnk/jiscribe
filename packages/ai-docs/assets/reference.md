@@ -187,7 +187,7 @@ Ellipse (oval) shape. It is **connectable** like `rect`.
 
 ### `text`
 
-Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. It is **connectable** like `rect`.
+Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, "right and down" means the shape's own axes, `x` / `y` staying put. It is **connectable** like `rect`.
 
 ```json
 {
@@ -199,10 +199,10 @@ Standalone text with no box drawn around it. `x` / `y` are the top-left of the t
 }
 ```
 
-| Field | Type     | Default | Description                                                                                               |
-| ----- | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
-| `x`   | `number` | `0`     | X of the text's top-left.                                                                                 |
-| `y`   | `number` | `0`     | Y of the text's top-left. There is no `width` / `height` field: the box is measured from the text itself. |
+| Field | Type     | Default | Description                                                                                                                                                                                                           |
+| ----- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`   | `number` | `0`     | X of the text's top-left.                                                                                                                                                                                             |
+| `y`   | `number` | `0`     | Y of the text's top-left. There is no `width` / `height` field: the box is measured from the text itself. Under `rotation` or a flip the corner is the shape's own top-left, so `x` / `y` stay put as the text grows. |
 
 ---
 

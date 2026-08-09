@@ -638,7 +638,7 @@
 			}
 		},
 		"TextDoc": {
-			"description": "Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down.",
+			"description": "Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, \"right and down\" means the shape's own axes, `x` / `y` staying put.",
 			"type": "object",
 			"required": ["id", "type", "x", "y"],
 			"additionalProperties": false,
@@ -656,11 +656,11 @@
 					"$ref": "#/$defs/MetaDoc"
 				},
 				"x": {
-					"description": "Left-edge X coordinate. There is no width field: the box is measured from the content and grows to the right.",
+					"description": "Left-edge X coordinate. There is no width field: the box is measured from the content and grows to the right (along the shape's own axis when rotated or flipped, so this coordinate never moves).",
 					"type": "number"
 				},
 				"y": {
-					"description": "Top-edge Y coordinate. There is no height field: the box is measured from the content and grows downward.",
+					"description": "Top-edge Y coordinate. There is no height field: the box is measured from the content and grows downward (along the shape's own axis when rotated or flipped, so this coordinate never moves).",
 					"type": "number"
 				},
 				"text": {

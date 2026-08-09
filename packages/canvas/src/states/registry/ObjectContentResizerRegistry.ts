@@ -17,9 +17,10 @@ export type ObjectContentResizeContext = {
 
 /**
  * Re-derives an object's box from the content it holds, for the types whose doc
- * stores no size (`geometry: "point"`). The doc coordinate is the box's top-left
- * corner, so an implementation grows the box right and down and leaves that
- * corner where it was (see GeometryType).
+ * stores no size (`geometry: "point"`). The doc coordinate is the box's drawn
+ * top-left corner, so an implementation grows the box along the object's own
+ * axes — right and down before any rotation or flip — and leaves that corner,
+ * and hence the doc coordinate, where it was (see GeometryType).
  *
  * Implementations declare the state they accept via `TState`, which
  * `ObjectTypeDefinition` ties to the type's own state; the registry stores the

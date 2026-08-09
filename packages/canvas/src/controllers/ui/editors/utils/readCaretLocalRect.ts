@@ -1,7 +1,7 @@
 import { calcCaretContentOffset } from "./calcCaretContentOffset";
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { TextMeasureFont } from "../../../../utils/text/measureText";
+import type { TextMeasureFont } from "../../../../states/objects/utils/measureText";
 
 /** The caret as a zero-width vertical segment; see readCaretLocalRect. */
 export type CaretLocalRect = {

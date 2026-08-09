@@ -7,8 +7,9 @@ import { AUTO_COLOR } from "../../utils/autoColor";
  * Text standing on its own, with no box drawn around it.
  *
  * `geometry: "point"` because the box is the text's own extent: the doc stores
- * the top-left corner and nothing else, and width/height are measured from the
- * content (see calcTextObjectFrameSize). `transform` stays on so the shape is
+ * the drawn top-left corner — the local (-w/2, -h/2) corner with the object's
+ * rotation and flips applied — and nothing else, and width/height are measured
+ * from the content (see calcTextObjectFrameSize). `transform` stays on so the shape is
  * still a TransformedFrame for selection, snapping and bboxes; the resize
  * handles are what gets turned off, in the type's `transformHandles`.
  */

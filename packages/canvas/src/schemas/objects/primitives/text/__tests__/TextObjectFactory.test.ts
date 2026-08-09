@@ -1,16 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
-import { TEXT_DOC_DEFAULTS } from "../TextDoc";
 import { TextObjectFactory } from "../TextObjectFactory";
-
-const sizeOf = (text: string) =>
-	calcTextObjectFrameSize(text, TEXT_DOC_DEFAULTS, "Noto Sans JP");
 
 describe("TextObjectFactory", () => {
 	describe("createDoc", () => {
-		it("centers the measured box on the position, like every other stencil drop", () => {
-			const { width, height } = sizeOf("Text");
+		it("stores the position as the box's top-left, without measuring", () => {
 			const doc = TextObjectFactory.createDoc(
 				{ x: 100, y: 100 },
 				{ text: "Text" },
@@ -18,8 +12,21 @@ describe("TextObjectFactory", () => {
 
 			expect(doc.type).toBe("text");
 			expect(doc.id).toEqual(expect.any(String));
-			expect(doc.x).toBe(100 - width / 2);
-			expect(doc.y).toBe(100 - height / 2);
+			expect(doc.x).toBe(100);
+			expect(doc.y).toBe(100);
+		});
+
+		it("places a long text where a short one goes: the text no longer moves the corner", () => {
+			const short = TextObjectFactory.createDoc(
+				{ x: 0, y: 0 },
+				{ text: "T" },
+			) as unknown as { x: number };
+			const long = TextObjectFactory.createDoc(
+				{ x: 0, y: 0 },
+				{ text: "Long enough to matter" },
+			) as unknown as { x: number };
+
+			expect(long.x).toBe(short.x);
 		});
 
 		it("stores no width / height on the doc", () => {
@@ -32,17 +39,14 @@ describe("TextObjectFactory", () => {
 			expect(doc).not.toHaveProperty("height");
 		});
 
-		it("measures the overridden text, so a longer default lands wider", () => {
-			const short = TextObjectFactory.createDoc(
+		it("drops width / height handed in as overrides", () => {
+			const doc = TextObjectFactory.createDoc(
 				{ x: 0, y: 0 },
-				{ text: "T" },
-			) as unknown as { x: number };
-			const long = TextObjectFactory.createDoc(
-				{ x: 0, y: 0 },
-				{ text: "Long enough to matter" },
-			) as unknown as { x: number };
+				{ width: 200, height: 40 },
+			) as Record<string, unknown>;
 
-			expect(long.x).toBeLessThan(short.x);
+			expect(doc).not.toHaveProperty("width");
+			expect(doc).not.toHaveProperty("height");
 		});
 
 		it("assigns a different id on each creation", () => {
@@ -53,12 +57,10 @@ describe("TextObjectFactory", () => {
 	});
 
 	describe("calcDimensions", () => {
-		it("reports the half-extents of the measured box", () => {
-			const { width, height } = sizeOf("Text");
-
+		it("reports no extent: the doc holds no box for this layer to size", () => {
 			expect(TextObjectFactory.calcDimensions({ text: "Text" })).toEqual({
-				halfWidth: width / 2,
-				halfHeight: height / 2,
+				halfWidth: 0,
+				halfHeight: 0,
 			});
 		});
 	});

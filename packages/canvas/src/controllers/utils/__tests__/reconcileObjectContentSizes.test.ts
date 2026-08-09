@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { calcTextObjectFrameSize } from "../../../schemas/objects/primitives/text/calcTextObjectFrameSize";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text/calcTextObjectFrameSize";
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";

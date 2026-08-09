@@ -6,9 +6,9 @@ import {
 } from "../../../../constants/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import { calcTextLineWidths } from "../../../../utils/text/calcTextLineWidths";
-import type { TextMeasureFont } from "../../../../utils/text/measureText";
-import { TEXT_BLOCK_WIDTH_SLACK } from "../../../../utils/text/textBlockWidthSlack";
+import { calcTextLineWidths } from "../../../../states/objects/utils/calcTextLineWidths";
+import type { TextMeasureFont } from "../../../../states/objects/utils/measureText";
+import { TEXT_BLOCK_WIDTH_SLACK } from "../../../../states/objects/utils/textBlockWidthSlack";
 
 /**
  * The bands a frameless text can be picked by: one per line, each covering only

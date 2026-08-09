@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 import { calcTextLineHitRects } from "./calcTextLineHitRects";
 import { TextHitGroup, TextHitRect } from "./TextStyled";
 import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
-import { resolveTextObjectFont } from "../../../../schemas/objects/primitives/text/resolveTextObjectFont";
+import { resolveTextObjectFont } from "../../../../states/objects/primitives/text/resolveTextObjectFont";
 import type { TextState } from "../../../../states/objects/primitives/text/TextState";
 import { readTextSlot } from "../../../../states/objects/types/TextSlots";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";

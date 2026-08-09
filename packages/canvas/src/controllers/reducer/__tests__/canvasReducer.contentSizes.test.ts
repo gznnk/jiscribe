@@ -1,16 +1,16 @@
 import { roundToDecimal } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
+import { createTestState } from "./support/createTestState";
 import { DEFAULT_FONT_FAMILY } from "../../../constants/defaultFontFamily";
 import { PRECISION } from "../../../constants/precision";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import { calcTextObjectFrameSize } from "../../../schemas/objects/primitives/text/calcTextObjectFrameSize";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text/calcTextObjectFrameSize";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createCanvasReducer } from "../canvasReducer";
-import { createTestState } from "./support/createTestState";
 
 /**
  * The reducer paths that have to keep a derived box current. A `text` doc stores
