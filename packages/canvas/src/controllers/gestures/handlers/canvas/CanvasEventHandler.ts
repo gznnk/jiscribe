@@ -65,7 +65,7 @@ export const CanvasEventHandler: GestureHandler = {
 			};
 		}
 
-		// Scroll handling (wheel scroll + edge scroll)
+		// Scroll handling (wheel scroll + edge scroll + the glide after a released pan)
 		// As with zoom, update only the viewport without interrupting text editing.
 		if (event.type === "scroll" && event.scrollDelta) {
 			const { deltaX, deltaY } = event.scrollDelta;
@@ -115,7 +115,8 @@ export const CanvasEventHandler: GestureHandler = {
 
 		// Middle-/right-button drag for viewport panning (GrabScroll).
 		// Middle button (1) pans only; right button (2) also opens the context
-		// menu on click. (#159)
+		// menu on click. (#159) Releasing either mid-motion leaves a glide behind,
+		// which arrives here as inertialScroll-derived scroll events.
 		if (event.button === 1 || event.button === 2) {
 			if (event.button === 2 && event.type === "click") {
 				nextState = {

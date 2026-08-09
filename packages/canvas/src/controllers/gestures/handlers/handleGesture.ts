@@ -47,11 +47,19 @@ export const handleGesture = (
 	gesture: Gesture,
 	registries: CanvasRegistries,
 ): CanvasControllerState => {
+	// The end of a glide is a pure state transition — nothing to route, and no
+	// handler could tell it apart from a frame that merely moved zero pixels.
+	if (gesture.type === "inertialScrollEnd") {
+		return state.inertialScrolling
+			? { ...state, inertialScrolling: false }
+			: state;
+	}
+
 	let nextState = state;
 
 	// Convert Gesture to CanvasEvent
-	// wheel is converted to scroll/zoom, pinch to zoom (+ a derived scroll below),
-	// others are passed through
+	// wheel is converted to scroll/zoom, inertialScroll to scroll, pinch to zoom
+	// (+ a derived scroll below), others are passed through
 	let canvasEvent: CanvasEvent;
 	if (gesture.type === "wheel") {
 		if (gesture.mods.ctrl) {
@@ -68,6 +76,11 @@ export const handleGesture = (
 		} else {
 			canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
 		}
+	} else if (gesture.type === "inertialScroll") {
+		// The glide after a released pan moves the view exactly as a wheel scroll
+		// does, with no modifier branch: it comes from no device event, so nothing
+		// about it may mean zoom.
+		canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
 	} else if (gesture.type === "pinch") {
 		// zoomScale rides on the gesture; last (the finger midpoint) is the anchor
 		canvasEvent = {
@@ -163,6 +176,12 @@ export const handleGesture = (
 			// which is what keeps "a drag is under way" true for all of them.
 			activeDragKind: "other",
 		};
+	}
+
+	// Raised by every glide frame (idempotent) and lowered by the end gesture
+	// above, so it spans the whole glide however many frames it takes.
+	if (gesture.type === "inertialScroll" && !nextState.inertialScrolling) {
+		nextState = { ...nextState, inertialScrolling: true };
 	}
 
 	// Collect events to process (original + derived)

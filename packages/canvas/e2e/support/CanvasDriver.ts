@@ -25,6 +25,15 @@ export type ObjectSnapshot = {
  */
 export const AUTO_SCROLL_MARGIN = 25;
 
+/**
+ * Time a pan drag rests before lifting the button (milliseconds), so the release
+ * carries no velocity and the view stops where the drag stopped
+ * (FLING_RELEASE_IDLE_MS is 50). Not a synchronization wait: it is part of the
+ * input being performed — steps dispatched back to back and released mid-motion
+ * are a flick, and the view would glide past the target.
+ */
+const PAN_SETTLE_MS = 120;
+
 /** Empty spot in content coordinates, clicked to deselect or commit text. */
 const EMPTY_SPOT = { x: 70, y: 820 };
 
@@ -33,7 +42,8 @@ const EMPTY_SPOT = { x: 70, y: 820 };
  *
  * No retries that would hide a failure: synchronization waits on state (an element appearing,
  * a count changing) rather than on time (waitForTimeout), so an operation that did not take
- * effect fails the test and surfaces as a product problem.
+ * effect fails the test and surfaces as a product problem. Timed waits appear only where the
+ * timing is part of the input itself, not a way to wait for a result (see PAN_SETTLE_MS).
  */
 export class CanvasDriver {
 	/**
@@ -248,35 +258,56 @@ export class CanvasDriver {
 		}, axis);
 	}
 
-	/** Right-button drag, used to pan the viewport. */
+	/**
+	 * Right-button drag, used to pan the viewport. The pointer rests before lifting
+	 * (see {@link PAN_SETTLE_MS}), so the pan ends exactly where the drag did.
+	 *
+	 * @param options.fling - Skip the rest, letting the release keep its velocity so
+	 *   the view glides on (inertial scrolling). The steps are dispatched back to
+	 *   back, so the resulting speed is not a controlled quantity — a spec that
+	 *   measures the glide should drive the mouse itself.
+	 */
 	async rightDrag(
 		from: { x: number; y: number },
 		to: { x: number; y: number },
 		steps = 8,
+		options: { fling?: boolean } = {},
 	) {
-		const fromScreen = this.toScreen(from);
-		const toScreen = this.toScreen(to);
-		await this.page.mouse.move(fromScreen.x, fromScreen.y);
-		await this.page.mouse.down({ button: "right" });
-		await this.page.mouse.move(toScreen.x, toScreen.y, { steps });
-		await this.page.mouse.up({ button: "right" });
+		await this.buttonDrag("right", from, to, steps, options);
 	}
 
 	/**
 	 * Middle-button drag, used to pan the viewport (#159). Like the right button it routes to
 	 * CanvasEventHandler, so it pans even when started over a shape.
+	 *
+	 * @param options.fling - As for {@link rightDrag}.
 	 */
 	async middleDrag(
 		from: { x: number; y: number },
 		to: { x: number; y: number },
 		steps = 8,
+		options: { fling?: boolean } = {},
+	) {
+		await this.buttonDrag("middle", from, to, steps, options);
+	}
+
+	/** Shared body of the auxiliary-button pan drags. */
+	private async buttonDrag(
+		button: "right" | "middle",
+		from: { x: number; y: number },
+		to: { x: number; y: number },
+		steps: number,
+		{ fling = false }: { fling?: boolean },
 	) {
 		const fromScreen = this.toScreen(from);
 		const toScreen = this.toScreen(to);
 		await this.page.mouse.move(fromScreen.x, fromScreen.y);
-		await this.page.mouse.down({ button: "middle" });
+		await this.page.mouse.down({ button });
 		await this.page.mouse.move(toScreen.x, toScreen.y, { steps });
-		await this.page.mouse.up({ button: "middle" });
+		if (!fling) {
+			await this.page.waitForTimeout(PAN_SETTLE_MS);
+		}
+		await this.page.mouse.up({ button });
 	}
 
 	/** Middle-click a content coordinate (#159); asserts nothing about the selection. */
