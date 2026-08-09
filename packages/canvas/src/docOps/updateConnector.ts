@@ -3,7 +3,11 @@ import type { Point } from "@workspace/geometry";
 import {
 	type AnchorHandleId,
 	buildAnchor,
+	buildFreeEndpoint,
+	type ConnectorEnd,
 	requireConnectable,
+	requireOwnedEnd,
+	requireSingleEndpointTarget,
 } from "./connectorEndpoints";
 import { DocOperationError } from "./errors";
 import { type ObjectRecord, requireObject } from "./objectAccess";
@@ -14,16 +18,23 @@ import {
 	type ConnectorRouting,
 	defaultRoutingForAnchors,
 } from "../schemas/objects/types/ConnectorRouting";
-import type {
-	EndpointRef,
-	OwnedEndpointRef,
-} from "../schemas/objects/types/EndpointRef";
+import type { EndpointRef } from "../schemas/objects/types/EndpointRef";
 
 export type UpdateConnectorParams = {
 	/** Re-attach the source end to this object; omitted keeps the object it is on. */
 	sourceId?: string;
 	/** Re-attach the target end to this object; omitted keeps the object it is on. */
 	targetId?: string;
+	/**
+	 * Detach the source end and stand it at this world coordinate; exclusive with `sourceId`
+	 * and `sourceAnchor`, and refused when it would leave both ends unattached.
+	 */
+	sourcePoint?: Point;
+	/**
+	 * Detach the target end and stand it at this world coordinate; exclusive with `targetId`
+	 * and `targetAnchor`, and refused when it would leave both ends unattached.
+	 */
+	targetPoint?: Point;
 	/** Move the source end to this anchor; omitted keeps the current anchor. */
 	sourceAnchor?: AnchorHandleId;
 	/** Move the target end to this anchor; omitted keeps the current anchor. */
@@ -45,15 +56,20 @@ export type UpdateConnectorParams = {
 	labelOffset?: number;
 };
 
-/** Rebuild one end, keeping whatever the params leave out. */
+/** Rebuild one end, keeping whatever the params leave out; undefined leaves the end alone. */
 const nextEndpoint = (
 	doc: CanvasDoc,
-	end: "source" | "target",
+	end: ConnectorEnd,
 	current: EndpointRef | undefined,
 	ownerId: string | undefined,
+	point: Point | undefined,
 	anchorId: AnchorHandleId | undefined,
 	definitions: DocDefinitions,
-): OwnedEndpointRef | undefined => {
+): EndpointRef | undefined => {
+	requireSingleEndpointTarget(end, ownerId, point, anchorId);
+	if (point !== undefined) {
+		return buildFreeEndpoint(point, end);
+	}
 	if (ownerId === undefined && anchorId === undefined) {
 		return undefined;
 	}
@@ -115,10 +131,10 @@ const setLabelPlacement = (
  *   that never stored a `routing` re-derives the default, so pinning both ends to edges
  *   turns a straight line into a right-angled one
  * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
- * @throws {@link DocOperationError} when the id is missing or is not a connector, when a new
- *   endpoint is missing, not connectable or carries an unusable edge anchor (see
- *   {@link AnchorHandleId}), or when a label placement is given for a connector that
- *   has no label
+ * @throws {@link DocOperationError} when the id is missing or is not a connector, when an end
+ *   names both an object and a point, when a new endpoint is missing, not connectable or
+ *   carries an unusable edge anchor (see {@link AnchorHandleId}), when detaching would leave
+ *   both ends free, or when a label placement is given for a connector that has no label
  */
 export const updateConnector = (
 	doc: CanvasDoc,
@@ -131,22 +147,29 @@ export const updateConnector = (
 		throw new DocOperationError(`${id} is "${object.type}", not a connector`);
 	}
 
+	const currentSource = object.source as EndpointRef;
+	const currentTarget = object.target as EndpointRef;
 	const source = nextEndpoint(
 		doc,
 		"source",
-		object.source as EndpointRef | undefined,
+		currentSource,
 		params.sourceId,
+		params.sourcePoint,
 		params.sourceAnchor,
 		definitions,
 	);
 	const target = nextEndpoint(
 		doc,
 		"target",
-		object.target as EndpointRef | undefined,
+		currentTarget,
 		params.targetId,
+		params.targetPoint,
 		params.targetAnchor,
 		definitions,
 	);
+	if (source !== undefined || target !== undefined) {
+		requireOwnedEnd(source ?? currentSource, target ?? currentTarget);
+	}
 	// Placement is validated before anything is written, so a rejected call changes nothing.
 	setLabelPlacement(object, params);
 
@@ -166,8 +189,8 @@ export const updateConnector = (
 		// No stored routing means the connector never chose one, so the anchors decide it
 		// exactly as they do at creation (defaultRoutingForAnchors 参照).
 		const derived = defaultRoutingForAnchors(
-			(object.source as OwnedEndpointRef).anchor,
-			(object.target as OwnedEndpointRef).anchor,
+			(object.source as EndpointRef).anchor,
+			(object.target as EndpointRef).anchor,
 		);
 		if (derived !== undefined) {
 			object.routing = derived;

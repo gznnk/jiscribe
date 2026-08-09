@@ -1,4 +1,4 @@
-import type { Rect } from "@workspace/geometry";
+import type { Point, Rect } from "@workspace/geometry";
 
 import { addObject, type AddObjectParams } from "./addObject";
 import {
@@ -24,6 +24,9 @@ import {
 	type ResizeObjectParams,
 	translateObjects,
 } from "./placeObjects";
+import { reorderObjects, type ZOrderPlacement } from "./reorderObjects";
+import { setPoints } from "./setPoints";
+import { setRotation, type SetRotationResult } from "./setRotation";
 import { setStyle, type SetStyleResult } from "./setStyle";
 import { setText } from "./setText";
 import type { StyleParams } from "./styleFields";
@@ -34,8 +37,9 @@ import { resolveDocDefinitions } from "../schemas/plugin/resolveDocDefinitions";
 
 /**
  * The whole set of programmatic edits to a CanvasDoc: building it up (`addObject` /
- * `connect`) and reworking what is already there (delete / move / resize / style / retext /
- * re-route / align / group), plus reading back where it all sits (`getObjectsBounds`).
+ * `connect`) and reworking what is already there (delete / move / resize / rotate / reshape /
+ * restack / style / retext / re-route / align / group), plus reading back where it all sits
+ * (`getObjectsBounds`).
  * Built-in and plugin types alike are handled uniformly, following the factory / features
  * passed to `createDocOps`.
  *
@@ -87,6 +91,31 @@ export type DocOps = {
 		ids: readonly string[],
 		style: StyleParams,
 	): SetStyleResult;
+	/**
+	 * Turn several objects to the same angle, in clockwise degrees about each one's own centre,
+	 * skipping and reporting the types that have no rotation.
+	 * Throws `DocOperationError` for an angle that is not finite, or for a missing id.
+	 */
+	setRotation(
+		doc: CanvasDoc,
+		ids: readonly string[],
+		rotation: number,
+	): SetRotationResult;
+	/**
+	 * Replace the vertices of one polygon or polyline, which moves and resizes it with them.
+	 * Throws `DocOperationError` for a missing id, a type not built from vertices, or vertices
+	 * that are too few or not finite.
+	 */
+	setPoints(doc: CanvasDoc, id: string, points: readonly Point[]): void;
+	/**
+	 * Restack objects within the parent holding them, keeping their order relative to each other.
+	 * Throws `DocOperationError` naming every id that was not found.
+	 */
+	reorderObjects(
+		doc: CanvasDoc,
+		ids: readonly string[],
+		placement: ZOrderPlacement,
+	): void;
 	/**
 	 * Rewrite one object's text: a shape's body, one named slot, or a connector's label.
 	 * Throws `DocOperationError` for a missing id, a type holding no text, or an unknown slot.
@@ -173,6 +202,11 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		resizeObject: (doc, id, params) =>
 			resizeObject(doc, id, params, definitions),
 		setStyle: (doc, ids, style) => setStyle(doc, ids, style, definitions),
+		setRotation: (doc, ids, rotation) =>
+			setRotation(doc, ids, rotation, definitions),
+		setPoints: (doc, id, points) => setPoints(doc, id, points, definitions),
+		reorderObjects: (doc, ids, placement) =>
+			reorderObjects(doc, ids, placement),
 		setText: (doc, id, text, slot) => setText(doc, id, text, definitions, slot),
 		updateConnector: (doc, id, params) =>
 			updateConnector(doc, id, params, definitions),

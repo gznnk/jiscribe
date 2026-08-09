@@ -11,8 +11,9 @@
 // resolves the same ObjectDocDefinition set as the parser. `create` is the factory prefix
 // (as in createCanvasParser) — the DocOps it returns covers the whole edit vocabulary, not
 // only creation: building (`addObject` / `connect`) and reworking what is already there
-// (delete / move / resize / style / retext / re-route / align / group) handle built-in and
-// plugin types uniformly, following each type's `features`.
+// (delete / move / resize / rotate / reshape / restack / style / retext / re-route /
+// align / group) handle built-in and plugin types uniformly, following each type's
+// `features`.
 // They take already-typed params (no zod; tool-input validation is the
 // adapter's responsibility) and reuse the same ObjectFactory as the canvas, producing
 // correct ObjectDocs down to the style defaults. Every editing op mutates the doc in place
@@ -65,10 +66,13 @@ export {
 	type EdgeAnchorSide,
 	type RemoveFromGroupResult,
 	type MoveObjectParams,
+	type Point,
 	type Rect,
 	type ResizeObjectParams,
+	type SetRotationResult,
 	type SetStyleResult,
 	type StyleParams,
 	type UpdateConnectorParams,
+	type ZOrderPlacement,
 	DocOperationError,
 } from "./docOps";

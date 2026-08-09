@@ -527,6 +527,92 @@ describe("updateConnector", () => {
 	});
 });
 
+describe("updateConnector with a free end", () => {
+	it("detaches an end onto a coordinate", () => {
+		const doc = twoConnectedRects();
+
+		docOps.updateConnector(doc, "connector-1", {
+			targetPoint: { x: 260, y: 180 },
+		});
+
+		expect(readObject(doc, "connector-1").target).toEqual({
+			anchor: { kind: "free", point: { x: 260, y: 180 } },
+		});
+		expectValid(doc);
+	});
+
+	it("moves an end that is already free", () => {
+		const doc = twoConnectedRects();
+		docOps.updateConnector(doc, "connector-1", {
+			targetPoint: { x: 260, y: 180 },
+		});
+
+		docOps.updateConnector(doc, "connector-1", {
+			targetPoint: { x: 300, y: 200 },
+		});
+
+		expect(readObject(doc, "connector-1").target).toEqual({
+			anchor: { kind: "free", point: { x: 300, y: 200 } },
+		});
+		expectValid(doc);
+	});
+
+	// The free anchor holds a coordinate that means nothing once the end is owned again.
+	it("re-attaches a free end and drops its coordinate", () => {
+		const doc = twoConnectedRects();
+		docOps.updateConnector(doc, "connector-1", {
+			targetPoint: { x: 260, y: 180 },
+		});
+
+		docOps.updateConnector(doc, "connector-1", { targetId: "rect-2" });
+
+		expect(readObject(doc, "connector-1").target).toEqual({
+			owner: { id: "rect-2" },
+			anchor: { kind: "center" },
+		});
+		expectValid(doc);
+	});
+
+	it("refuses an anchor on an end that is free", () => {
+		const doc = twoConnectedRects();
+		docOps.updateConnector(doc, "connector-1", {
+			targetPoint: { x: 260, y: 180 },
+		});
+
+		expect(() =>
+			docOps.updateConnector(doc, "connector-1", {
+				targetAnchor: "leftCenter",
+			}),
+		).toThrow(/target end is not attached to an object/);
+	});
+
+	it("refuses to detach the only remaining attached end", () => {
+		const doc = twoConnectedRects();
+		docOps.updateConnector(doc, "connector-1", {
+			targetPoint: { x: 260, y: 180 },
+		});
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.updateConnector(doc, "connector-1", {
+				sourcePoint: { x: -50, y: -50 },
+			}),
+		).toThrow(/at least one end attached to an object/);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("refuses an end that names both an object and a point", () => {
+		const doc = twoConnectedRects();
+
+		expect(() =>
+			docOps.updateConnector(doc, "connector-1", {
+				targetId: "rect-2",
+				targetPoint: { x: 0, y: 0 },
+			}),
+		).toThrow(DocOperationError);
+	});
+});
+
 describe("alignObjects / distributeObjects", () => {
 	const threeRects = (): CanvasDoc => {
 		const doc = emptyDoc();
@@ -968,5 +1054,364 @@ describe("objects measured from their children", () => {
 		expect(() => docOps.moveObject(doc, "gadget-1", { x: 10 })).toThrow(
 			/"gadget"\) has no position that can be changed/,
 		);
+	});
+});
+
+describe("setRotation", () => {
+	it("turns the types that have a rotation and skips the ones that do not", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		docOps.addObject(doc, "polyline", { x: 0, y: 200 });
+
+		const result = docOps.setRotation(doc, ["rect-1", "polyline-1"], 45);
+
+		expect(result).toEqual({
+			rotatedIds: ["rect-1"],
+			ignoredIds: ["polyline-1"],
+		});
+		expect(readObject(doc, "rect-1").rotation).toBe(45);
+		expect(readObject(doc, "polyline-1")).not.toHaveProperty("rotation");
+		expectValid(doc);
+	});
+
+	it("normalizes the angle into 0-360, so -90 and 270 are the same turn", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+
+		docOps.setRotation(doc, ["rect-1"], -90);
+
+		expect(readObject(doc, "rect-1").rotation).toBe(270);
+		expectValid(doc);
+	});
+
+	it("drops the property at 0, an absent rotation being the identity", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, rotation: 30 });
+
+		docOps.setRotation(doc, ["rect-1"], 720);
+
+		expect(readObject(doc, "rect-1")).not.toHaveProperty("rotation");
+		expectValid(doc);
+	});
+
+	it("turns a group as a whole, its children left where they are", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		docOps.addObject(doc, "rect", { x: 200, y: 0 });
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+
+		docOps.setRotation(doc, ["group-1"], 90);
+
+		expect(readObject(doc, "group-1").rotation).toBe(90);
+		expect(readObject(doc, "rect-1").x).toBe(0);
+		expectValid(doc);
+	});
+
+	it("leaves every object untouched when any id is missing", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+
+		expect(() => docOps.setRotation(doc, ["rect-1", "missing"], 45)).toThrow(
+			DocOperationError,
+		);
+		expect(readObject(doc, "rect-1")).not.toHaveProperty("rotation");
+	});
+
+	it("refuses an angle that is not a finite number of degrees", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+
+		expect(() => docOps.setRotation(doc, ["rect-1"], Number.NaN)).toThrow(
+			/finite number of degrees/,
+		);
+		expect(() =>
+			docOps.setRotation(doc, ["rect-1"], Number.POSITIVE_INFINITY),
+		).toThrow(DocOperationError);
+		expect(readObject(doc, "rect-1")).not.toHaveProperty("rotation");
+	});
+});
+
+describe("addObject with points", () => {
+	it("takes the vertices verbatim and keeps the factory's style defaults", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "polygon", {
+			x: 0,
+			y: 0,
+			points: [
+				{ x: 10, y: 20 },
+				{ x: 110, y: 20 },
+				{ x: 60, y: 80 },
+			],
+		});
+
+		const polygon = readObject(doc, "polygon-1");
+		expect(polygon.points).toEqual([
+			{ x: 10, y: 20 },
+			{ x: 110, y: 20 },
+			{ x: 60, y: 80 },
+		]);
+		expect(polygon).toMatchObject({ fill: "transparent", strokeWidth: 2 });
+		expectValid(doc);
+	});
+
+	it("ignores x/y/width/height, the vertices deciding where the shape sits", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "polyline", {
+			x: 900,
+			y: 900,
+			width: 10,
+			height: 10,
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			],
+		});
+
+		expect(readObject(doc, "polyline-1").points).toEqual([
+			{ x: 0, y: 0 },
+			{ x: 100, y: 0 },
+		]);
+		expect(docOps.getObjectsBounds(doc, ["polyline-1"])).toEqual({
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 0,
+		});
+		expectValid(doc);
+	});
+
+	it("takes a rotation alongside, applied after the factory's own defaults", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, rotation: -45 });
+
+		expect(readObject(doc, "rect-1").rotation).toBe(315);
+		expectValid(doc);
+	});
+
+	it("refuses vertices on a type that is not built from them", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "rect", {
+				x: 0,
+				y: 0,
+				points: [
+					{ x: 0, y: 0 },
+					{ x: 10, y: 10 },
+				],
+			}),
+		).toThrow(/is not built from vertices/);
+		expect(doc.root).toEqual([]);
+	});
+
+	it("refuses fewer vertices than the type can make a shape from", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "polyline", {
+				x: 0,
+				y: 0,
+				points: [{ x: 0, y: 0 }],
+			}),
+		).toThrow(/at least 2 points/);
+		// A polygon is closed, so its own validator asks for one more than a polyline.
+		expect(() =>
+			docOps.addObject(doc, "polygon", {
+				x: 0,
+				y: 0,
+				points: [
+					{ x: 0, y: 0 },
+					{ x: 10, y: 10 },
+				],
+			}),
+		).toThrow(/at least 3 points/);
+		expect(doc.root).toEqual([]);
+	});
+
+	it("refuses a coordinate that is not finite", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "polyline", {
+				x: 0,
+				y: 0,
+				points: [
+					{ x: 0, y: 0 },
+					{ x: Number.NaN, y: 10 },
+				],
+			}),
+		).toThrow(/points\[1\] is not a finite coordinate pair/);
+		expect(doc.root).toEqual([]);
+	});
+});
+
+describe("setPoints", () => {
+	it("replaces the whole outline, which moves and resizes the shape with it", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "polygon", { x: 0, y: 0 });
+
+		docOps.setPoints(doc, "polygon-1", [
+			{ x: 0, y: 0 },
+			{ x: 40, y: 0 },
+			{ x: 40, y: 30 },
+			{ x: 0, y: 30 },
+		]);
+
+		expect(readObject(doc, "polygon-1").points).toHaveLength(4);
+		expect(docOps.getObjectsBounds(doc, ["polygon-1"])).toEqual({
+			x: 0,
+			y: 0,
+			width: 40,
+			height: 30,
+		});
+		expectValid(doc);
+	});
+
+	it("copies the vertices, so the caller's array is not aliased into the doc", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "polyline", { x: 0, y: 0 });
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 50, y: 50 },
+		];
+
+		docOps.setPoints(doc, "polyline-1", points);
+		points[1].x = 999;
+
+		expect(readObject(doc, "polyline-1").points).toEqual([
+			{ x: 0, y: 0 },
+			{ x: 50, y: 50 },
+		]);
+	});
+
+	it("refuses a connector, whose points are the route's waypoints", () => {
+		const doc = twoConnectedRects();
+
+		expect(() =>
+			docOps.setPoints(doc, "connector-1", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 },
+			]),
+		).toThrow(/updateConnector/);
+	});
+
+	it("refuses a type that is not built from vertices, and a shape left too small", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		docOps.addObject(doc, "polygon", { x: 0, y: 200 });
+
+		expect(() =>
+			docOps.setPoints(doc, "rect-1", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 },
+			]),
+		).toThrow(/is not built from vertices/);
+		expect(() =>
+			docOps.setPoints(doc, "polygon-1", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 },
+			]),
+		).toThrow(/at least 3 points/);
+		expect(readObject(doc, "polygon-1").points).toHaveLength(5);
+	});
+});
+
+describe("reorderObjects", () => {
+	/** Four rects at the root, drawn in the order they were added. */
+	const fourRects = (): CanvasDoc => {
+		const doc = emptyDoc();
+		for (let index = 0; index < 4; index += 1) {
+			docOps.addObject(doc, "rect", { x: index * 200, y: 0 });
+		}
+		return doc;
+	};
+
+	it("brings objects to the end of the array, which is the front of the drawing", () => {
+		const doc = fourRects();
+
+		docOps.reorderObjects(doc, ["rect-1"], "front");
+
+		expect(rootIds(doc)).toEqual(["rect-2", "rect-3", "rect-4", "rect-1"]);
+		expectValid(doc);
+	});
+
+	it("sends objects to the start of the array", () => {
+		const doc = fourRects();
+
+		docOps.reorderObjects(doc, ["rect-3"], "back");
+
+		expect(rootIds(doc)).toEqual(["rect-3", "rect-1", "rect-2", "rect-4"]);
+	});
+
+	it("steps one place forward, and does nothing once at the front", () => {
+		const doc = fourRects();
+
+		docOps.reorderObjects(doc, ["rect-1"], "forward");
+		expect(rootIds(doc)).toEqual(["rect-2", "rect-1", "rect-3", "rect-4"]);
+
+		docOps.reorderObjects(doc, ["rect-4"], "forward");
+		expect(rootIds(doc)).toEqual(["rect-2", "rect-1", "rect-3", "rect-4"]);
+	});
+
+	it("steps one place backward, and does nothing once at the back", () => {
+		const doc = fourRects();
+
+		docOps.reorderObjects(doc, ["rect-4"], "backward");
+		expect(rootIds(doc)).toEqual(["rect-1", "rect-2", "rect-4", "rect-3"]);
+
+		docOps.reorderObjects(doc, ["rect-1"], "backward");
+		expect(rootIds(doc)).toEqual(["rect-1", "rect-2", "rect-4", "rect-3"]);
+	});
+
+	it("keeps the order objects already had among themselves", () => {
+		const doc = fourRects();
+
+		docOps.reorderObjects(doc, ["rect-3", "rect-1"], "front");
+
+		expect(rootIds(doc)).toEqual(["rect-2", "rect-4", "rect-1", "rect-3"]);
+	});
+
+	it("moves a run of neighbours as one block when stepping", () => {
+		const doc = fourRects();
+
+		docOps.reorderObjects(doc, ["rect-1", "rect-2"], "forward");
+
+		expect(rootIds(doc)).toEqual(["rect-3", "rect-1", "rect-2", "rect-4"]);
+	});
+
+	it("reorders inside the group holding the object, never out of it", () => {
+		const doc = fourRects();
+		docOps.groupObjects(doc, ["rect-1", "rect-2", "rect-3"]);
+
+		docOps.reorderObjects(doc, ["rect-1"], "front");
+
+		const children = readObject(doc, "group-1").children as { id: string }[];
+		expect(children.map((child) => child.id)).toEqual([
+			"rect-2",
+			"rect-3",
+			"rect-1",
+		]);
+		expect(rootIds(doc)).toEqual(["group-1", "rect-4"]);
+		expectValid(doc);
+	});
+
+	it("reorders ids spread over several parents within their own parent", () => {
+		const doc = fourRects();
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+
+		docOps.reorderObjects(doc, ["rect-1", "rect-3"], "front");
+
+		const children = readObject(doc, "group-1").children as { id: string }[];
+		expect(children.map((child) => child.id)).toEqual(["rect-2", "rect-1"]);
+		expect(rootIds(doc)).toEqual(["group-1", "rect-4", "rect-3"]);
+	});
+
+	it("leaves the order untouched when any id is missing", () => {
+		const doc = fourRects();
+
+		expect(() =>
+			docOps.reorderObjects(doc, ["rect-1", "missing"], "front"),
+		).toThrow(DocOperationError);
+		expect(rootIds(doc)).toEqual(["rect-1", "rect-2", "rect-3", "rect-4"]);
 	});
 });

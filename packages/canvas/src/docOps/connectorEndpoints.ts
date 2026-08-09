@@ -1,3 +1,5 @@
+import type { Point } from "@workspace/geometry";
+
 import { DocOperationError } from "./errors";
 import { findObject } from "./objectAccess";
 import type { DocDefinitions } from "./objectGeometry";
@@ -6,12 +8,18 @@ import type {
 	ConnectPointId,
 	EdgeAnchorSide,
 	EdgeAnchorSpec,
+	EndpointRef,
+	FreeEndpointRef,
 	OwnedEndpointRef,
 } from "../schemas/objects/types/EndpointRef";
 import {
 	EdgeAnchorSides,
 	isEdgeAnchorSide,
+	isOwnedEndpointRef,
 } from "../schemas/objects/types/EndpointRef";
+
+/** Which end of a connector an operation is working on; names the parameters in errors. */
+export type ConnectorEnd = "source" | "target";
 
 /** A free position along one edge, for what the named edge midpoints cannot express. */
 export type EdgeAnchorHandle = {
@@ -111,3 +119,74 @@ export const buildEndpoint = (
 	owner: { id: ownerId },
 	anchor: buildAnchor(anchorId),
 });
+
+/**
+ * Endpoint standing at a coordinate, attached to no object.
+ *
+ * @param point - Where the end sits, in world coordinates; copied, so a later change to the
+ *   caller's object does not reach the doc. Both components must be finite: NaN and Infinity
+ *   are rejected rather than written out, since JSON turns them into null
+ * @param end - Which end is being built; only names the offending parameter in the error
+ * @returns The endpoint to store, which carries no `owner` key at all
+ * @throws {@link DocOperationError} when either component is not a finite number
+ */
+export const buildFreeEndpoint = (
+	point: Point,
+	end: ConnectorEnd,
+): FreeEndpointRef => {
+	if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+		throw new DocOperationError(
+			`${end}Point must have finite x and y, got x=${point.x}, y=${point.y}`,
+		);
+	}
+	return { anchor: { kind: "free", point: { x: point.x, y: point.y } } };
+};
+
+/**
+ * Check that one end asks for a single destination: an object, or a coordinate, never both.
+ *
+ * @param end - Which end is being checked; names the parameters in the message
+ * @param ownerId - The object the end should attach to, undefined when not asked for
+ * @param point - The coordinate the end should stand at, undefined when not asked for
+ * @param anchorId - The anchor asked for alongside; an anchor is a position on an object,
+ *   so pairing it with `point` is rejected rather than ignored
+ * @throws {@link DocOperationError} when the end names both an object and a coordinate, or
+ *   pairs a coordinate with an anchor
+ */
+export const requireSingleEndpointTarget = (
+	end: ConnectorEnd,
+	ownerId: string | undefined,
+	point: Point | undefined,
+	anchorId: AnchorHandleId | undefined,
+): void => {
+	if (ownerId !== undefined && point !== undefined) {
+		throw new DocOperationError(
+			`the ${end} end got both ${end}Id and ${end}Point; give just one (${end}Id to attach it to an object, ${end}Point to leave it standing at a coordinate)`,
+		);
+	}
+	if (point !== undefined && anchorId !== undefined) {
+		throw new DocOperationError(
+			`the ${end} end got both ${end}Point and ${end}Anchor, but an anchor is a position on an object; drop ${end}Anchor, or replace ${end}Point with ${end}Id`,
+		);
+	}
+};
+
+/**
+ * Check the connector invariant that at least one end is attached to an object.
+ *
+ * @param source - The endpoint the connector leaves, as it is about to be stored
+ * @param target - The endpoint the connector enters, as it is about to be stored
+ * @throws {@link DocOperationError} when both ends are free; the doc model rejects such a
+ *   connector (validateConnectorDoc 参照), so it must never be written
+ */
+export const requireOwnedEnd = (
+	source: EndpointRef,
+	target: EndpointRef,
+): void => {
+	if (isOwnedEndpointRef(source) || isOwnedEndpointRef(target)) {
+		return;
+	}
+	throw new DocOperationError(
+		`a connector must keep at least one end attached to an object; attach one with sourceId or targetId, or add a "polyline" object for a line that hangs on nothing`,
+	);
+};

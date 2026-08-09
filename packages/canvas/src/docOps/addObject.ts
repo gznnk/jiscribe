@@ -1,8 +1,12 @@
+import { calcPolyBoundingBox, type Point } from "@workspace/geometry";
+
 import { DocOperationError } from "./errors";
 import { generateUniqueId } from "./ids";
 import type { ObjectRecord } from "./objectAccess";
 import type { DocDefinitions } from "./objectGeometry";
+import { requirePolyPoints } from "./polyFields";
 import { applyStyle, type StyleParams } from "./styleFields";
+import { applyRotation, requireRotationDegrees } from "./transformFields";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 
@@ -22,6 +26,19 @@ export type AddObjectParams = StyleParams & {
 	height?: number;
 	/** Body text; omitted leaves whatever text the factory defaults to. */
 	text?: string;
+	/**
+	 * Vertices in world coordinates, replacing the outline the factory would decide (a regular
+	 * pentagon for a polygon, a horizontal segment for a polyline). **`x`, `y`, `width` and
+	 * `height` are ignored when this is given** — the shape sits and spans where the vertices
+	 * put it. Accepted only by a type built from vertices, and at least 2 of them (3 for a
+	 * polygon).
+	 */
+	points?: readonly Point[];
+	/**
+	 * Clockwise rotation in degrees about the shape's own centre, normalized to [0, 360).
+	 * Ignored by a type that has no rotation of its own, the way styling it cannot hold is.
+	 */
+	rotation?: number;
 };
 
 /**
@@ -34,12 +51,15 @@ export type AddObjectParams = StyleParams & {
  *
  * @param doc - Mutated in place: the created object is pushed onto `doc.root`
  * @param type - Object type name, which must be a key of `definitions` and carry a factory
- * @param params - Top-left position and optional size/text/styling; omitted width/height fall
- *   back to `calcDimensions`' default size, and styling the type cannot hold is ignored
+ * @param params - Top-left position and optional size/text/styling/rotation; omitted
+ *   width/height fall back to `calcDimensions`' default size, and styling the type cannot hold
+ *   is ignored. `points` supersedes the position and size outright
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
  * @throws {@link DocOperationError} for an unknown type, for one without a factory
- *   (group / connector / svg and the like), or when the factory rejects the given size
+ *   (group / connector / svg and the like), when the factory rejects the given size, when
+ *   `points` are given to a type not built from vertices or are too few, or for a rotation
+ *   that is not finite
  */
 export const addObject = (
 	doc: CanvasDoc,
@@ -63,25 +83,44 @@ export const addObject = (
 		);
 	}
 
+	const points =
+		params.points === undefined
+			? undefined
+			: requirePolyPoints(type, params.points, definition);
+	const rotation =
+		params.rotation === undefined
+			? undefined
+			: requireRotationDegrees(params.rotation);
+
 	const dimensions = factory.calcDimensions();
-	const width = params.width ?? dimensions.halfWidth * 2;
-	const height = params.height ?? dimensions.halfHeight * 2;
+	// Vertices decide the outline, so they also decide the bounds the factory starts from.
+	const outline = points === undefined ? null : calcPolyBoundingBox(points);
+	const left = outline?.left ?? params.x;
+	const top = outline?.top ?? params.y;
+	const width =
+		outline === null
+			? (params.width ?? dimensions.halfWidth * 2)
+			: outline.right - outline.left;
+	const height =
+		outline === null
+			? (params.height ?? dimensions.halfHeight * 2)
+			: outline.bottom - outline.top;
 	const textOverride = params.text !== undefined ? { text: params.text } : {};
 
 	let created: ObjectDoc | null;
 	if (factory.createDocFromBounds !== undefined) {
 		// minSize 0: programmatic creation has no misdrag to reject the way a drag does.
 		created = factory.createDocFromBounds(
-			params.x,
-			params.y,
-			params.x + width,
-			params.y + height,
+			left,
+			top,
+			left + width,
+			top + height,
 			textOverride,
 			0,
 		);
 	} else {
 		created = factory.createDoc(
-			{ x: params.x + width / 2, y: params.y + height / 2 },
+			{ x: left + width / 2, y: top + height / 2 },
 			{ width, height, ...textOverride },
 		);
 	}
@@ -92,8 +131,14 @@ export const addObject = (
 	}
 
 	created.id = generateUniqueId(doc, type);
+	if (points !== undefined) {
+		(created as ObjectRecord).points = points;
+	}
 	// After the factory, so an explicit colour wins over the type's own defaults.
 	applyStyle(created as ObjectRecord, params, definition);
+	if (rotation !== undefined) {
+		applyRotation(created as ObjectRecord, rotation, definition);
+	}
 	doc.root.push(created);
 	return created.id;
 };
