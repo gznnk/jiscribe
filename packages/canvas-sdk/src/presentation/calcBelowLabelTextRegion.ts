@@ -4,21 +4,17 @@ import {
 	calcVisualLineCount,
 	measureTextWidth,
 } from "@workspace/canvas/unstable";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+	TEXT_LINE_HEIGHT,
+} from "@workspace/canvas/unstable-doc";
 import type { Dimensions } from "@workspace/geometry";
 
 import { BELOW_LABEL_STYLE_DEFAULTS } from "../schema/belowLabelStyleDefaults";
 
 /** Empty band between the bottom edge of the box and the top of the label. */
 export const BELOW_LABEL_GAP = 4;
-
-/**
- * Inner padding of the label box. Must stay equal to the `padding: 2px 6px` of
- * TextOverlayFrameStyled's TextContent, or the measured box and the drawn one
- * wrap at different widths.
- */
-const BELOW_LABEL_PADDING_X = 6;
-const BELOW_LABEL_PADDING_Y = 2;
 
 /** Label box width limits (content width + padding, in local px). */
 const BELOW_LABEL_MIN_WIDTH = 16;
@@ -73,10 +69,7 @@ export const calcBelowLabelTextRegion: ObjectTextRegionCalculator<
 
 	const width = Math.min(
 		BELOW_LABEL_MAX_WIDTH,
-		Math.max(
-			BELOW_LABEL_MIN_WIDTH,
-			longestLineWidth + BELOW_LABEL_PADDING_X * 2,
-		),
+		Math.max(BELOW_LABEL_MIN_WIDTH, longestLineWidth + TEXT_BOX_PADDING_X * 2),
 	);
 
 	// Count the displayed lines the way the box lays them out, so a line that
@@ -84,11 +77,10 @@ export const calcBelowLabelTextRegion: ObjectTextRegionCalculator<
 	const visualLineCount = calcVisualLineCount(
 		text,
 		font,
-		width - BELOW_LABEL_PADDING_X * 2,
+		width - TEXT_BOX_PADDING_X * 2,
 	);
 	const height =
-		visualLineCount * font.fontSize * TEXT_LINE_HEIGHT +
-		BELOW_LABEL_PADDING_Y * 2;
+		visualLineCount * font.fontSize * TEXT_LINE_HEIGHT + TEXT_BOX_PADDING_Y * 2;
 
 	return {
 		x: -width / 2,

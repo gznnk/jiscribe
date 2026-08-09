@@ -4,6 +4,10 @@ import {
 	SCROLLBAR_WIDTH,
 	scrollbarStyles,
 } from "../../../../constants/scrollbarStyles";
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "../../../../constants/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 
 /**
@@ -68,7 +72,7 @@ export const TextArea = styled.textarea`
 	${scrollbarStyles}
 	resize: none;
 	box-sizing: border-box;
-	padding: 2px 6px;
+	padding: ${TEXT_BOX_PADDING_Y}px ${TEXT_BOX_PADDING_X}px;
 	pointer-events: auto;
 	border-radius: 2px;
 `;

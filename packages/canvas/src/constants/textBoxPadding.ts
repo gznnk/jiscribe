@@ -1,9 +1,12 @@
 /**
- * Horizontal inner padding of a text box, in px. The same number is interpolated
- * into the CSS that draws the box (TextOverlayFrameStyled's TextContent,
- * ConnectorLabelStyled's LabelBox) and added to the offscreen measurement that
- * sizes it, so it has to stay one value: a box sized with less padding than the
- * browser then applies clips the end of every line.
+ * Horizontal inner padding of a text box, in px. One value shared by the CSS that
+ * draws the box (TextOverlayFrameStyled, ConnectorLabelStyled), the CSS of the
+ * textareas that edit it (TextEditorStyled, ConnectorLabelEditorStyled), and the
+ * offscreen measurement that sizes and hit-tests it (calcTextBlockSize,
+ * connectorLabelLayout, calcTextLineHitRects). Splitting it breaks two ways: a box
+ * sized with less padding than the browser then applies clips the end of every
+ * line, and an editor padded unlike the display shifts the text the moment editing
+ * starts.
  */
 export const TEXT_BOX_PADDING_X = 6;
 

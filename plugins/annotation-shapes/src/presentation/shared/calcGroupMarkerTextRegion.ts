@@ -3,6 +3,8 @@ import type { TextSlot } from "@workspace/canvas/doc";
 import { calcVisualLineCount, measureTextWidth } from "@workspace/canvas-sdk";
 import {
 	BELOW_LABEL_STYLE_DEFAULTS,
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
 	TEXT_LINE_HEIGHT,
 } from "@workspace/canvas-sdk/doc";
 import type { Dimensions, Rect } from "@workspace/geometry";
@@ -14,14 +16,6 @@ import {
 } from "./groupMarkerGeometry";
 import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
 import { GROUP_MARKER_LABEL_GAP } from "../../schema/shared/GroupMarkerFields";
-
-/**
- * Inner padding of the label box. Must stay equal to the `padding: 2px 6px` of
- * the core text overlay, or the measured box and the drawn one wrap at
- * different widths.
- */
-const GROUP_MARKER_LABEL_PADDING_X = 6;
-const GROUP_MARKER_LABEL_PADDING_Y = 2;
 
 /** Label box width limits (content width + padding, in local px). */
 const GROUP_MARKER_LABEL_MIN_WIDTH = 16;
@@ -62,7 +56,7 @@ const measureLabelBox = (slot: TextSlot | undefined): Dimensions => {
 		GROUP_MARKER_LABEL_MAX_WIDTH,
 		Math.max(
 			GROUP_MARKER_LABEL_MIN_WIDTH,
-			longestLineWidth + GROUP_MARKER_LABEL_PADDING_X * 2,
+			longestLineWidth + TEXT_BOX_PADDING_X * 2,
 		),
 	);
 
@@ -71,13 +65,13 @@ const measureLabelBox = (slot: TextSlot | undefined): Dimensions => {
 	const visualLineCount = calcVisualLineCount(
 		text,
 		font,
-		width - GROUP_MARKER_LABEL_PADDING_X * 2,
+		width - TEXT_BOX_PADDING_X * 2,
 	);
 	return {
 		width,
 		height:
 			visualLineCount * font.fontSize * TEXT_LINE_HEIGHT +
-			GROUP_MARKER_LABEL_PADDING_Y * 2,
+			TEXT_BOX_PADDING_Y * 2,
 	};
 };
 
