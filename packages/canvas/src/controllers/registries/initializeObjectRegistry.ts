@@ -145,21 +145,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			// contradict it. Rotation stays: it is stored in the doc.
 			transformHandles: { resize: false },
 			stencils: TextStencils,
-			// The features-derived default would add the aspect-ratio lock, which
-			// governs a resize this type does not offer. The vertical alignment row
-			// is dropped for the same reason the resize handles are: the height is
-			// measured from the text, leaving no slack for a vertical value to move
-			// through. Horizontal stays — a short line does shift inside a box the
-			// longest line widened.
-			menu: [
-				{
-					id: "text",
-					items: [
-						{ type: "fontStyle" },
-						{ type: "textAlignment", vertical: false },
-					],
-				},
-			],
 		}),
 
 		group: defineObject({
