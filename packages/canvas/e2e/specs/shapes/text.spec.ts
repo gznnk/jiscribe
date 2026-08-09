@@ -1,5 +1,8 @@
 import { test, expect } from "../../fixtures";
-import type { CanvasDriver } from "../../support/CanvasDriver";
+import {
+	AUTO_SCROLL_MARGIN,
+	type CanvasDriver,
+} from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
@@ -99,6 +102,35 @@ async function drawnLineCount(
 		range.selectNodeContents(content);
 		return range.getClientRects().length;
 	}, TEXT_CONTENT_FROM_HIT_GROUP(id));
+}
+
+/**
+ * The box the object's state holds, read off the foreignObject the text is drawn
+ * in (`TextOverlay` takes its width/height straight from the state). Needed
+ * wherever the box may disagree with the text: a hit band caps its width at the
+ * line it covers, so a box stretched past its own content is invisible to
+ * {@link textBoxOf}.
+ */
+async function overlayBoxOf(
+	canvas: CanvasDriver,
+	id: string,
+): Promise<{ width: number; height: number }> {
+	return canvas.page.evaluate((objectId) => {
+		const group = document.querySelector(
+			`[data-kind="object"][data-id="${objectId}"]`,
+		);
+		let sibling = group?.nextElementSibling ?? null;
+		while (sibling && sibling.tagName !== "foreignObject") {
+			sibling = sibling.nextElementSibling;
+		}
+		if (!sibling) {
+			throw new Error(`no text overlay beside the object ${objectId}`);
+		}
+		return {
+			width: Number(sibling.getAttribute("width")),
+			height: Number(sibling.getAttribute("height")),
+		};
+	}, id);
 }
 
 /** Center of a box, for aiming a double click at the object. */
@@ -271,6 +303,126 @@ test.describe("text", () => {
 		const resized = await textBoxOf(canvas, id);
 		expect(resized.height).toBeCloseTo(expectedBoxHeight(1, 40));
 		expect(resized.width).toBeGreaterThan(placed.width);
+		expect(await drawnLineCount(canvas, id)).toBe(1);
+	});
+
+	/**
+	 * Weight and style are the part of the font that only a browser can check:
+	 * node's estimate is characters x fontSize x 0.6 and reads neither. What a
+	 * mismeasured box does is wrap rather than overflow — the overlay is
+	 * `white-space: pre-wrap` — so the extra line falls outside a box still holding
+	 * one line's height, which is what the line count and the height assert.
+	 *
+	 * The two are not equally observable. Bold really does widen the glyphs, so the
+	 * box has to widen with them. Italic does not: the harness draws in a fallback
+	 * face whose italic is synthesized at the same advance widths, so no assertion
+	 * here can tell an italic-aware measurement from an italic-blind one. It is
+	 * carried through the styles anyway, since the weight has to survive being
+	 * declared alongside it.
+	 */
+	test("widens the box for a bold body and keeps it to one line with italic on top", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Text");
+		await canvas.deselect();
+
+		const longLine =
+			"a single line long enough that a mismeasured box would have to wrap it";
+		const normal = await rewriteText(canvas, id, longLine);
+		expect(await drawnLineCount(canvas, id)).toBe(1);
+
+		await canvas.selectAt(centerOf(normal));
+		await canvas.setTextFormat("fontWeight", "bold");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
+			.toBe("700");
+
+		const bold = await textBoxOf(canvas, id);
+		expect(bold.width).toBeGreaterThan(normal.width);
+		expect(await drawnLineCount(canvas, id)).toBe(1);
+		expect(bold.height).toBeCloseTo(expectedBoxHeight(1, DEFAULT_FONT_SIZE));
+
+		// Italic on top: both are written into one font declaration, so a declaration
+		// the style makes unusable would take the weight down with it.
+		await canvas.setTextFormat("fontStyle", "italic");
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontStyle)
+			.toBe("italic");
+
+		const boldItalic = await textBoxOf(canvas, id);
+		expect(boldItalic.width).toBeGreaterThan(normal.width);
+		expect(await drawnLineCount(canvas, id)).toBe(1);
+		expect(boldItalic.height).toBeCloseTo(
+			expectedBoxHeight(1, DEFAULT_FONT_SIZE),
+		);
+	});
+
+	test("keeps its measured box when the group holding it is resized", async ({
+		canvas,
+	}) => {
+		// Scaling the box with the group would leave it disagreeing with the glyphs
+		// drawn inside it, and the disagreement would stick: the reconcile pass skips
+		// an object still holding the slots it held, so re-opening the doc does not
+		// repair it.
+		const id = await canvas.placeShape("Text");
+		const placed = await textBoxOf(canvas, id);
+		const placedOverlay = await overlayBoxOf(canvas, id);
+		await canvas.deselect();
+
+		// A rect up and to the left of the placed text, so growing the group from its
+		// top-left corner carries the text along diagonally.
+		const rectId = await canvas.drawShape(
+			"Rectangle",
+			{ x: 120, y: 100 },
+			{ x: 260, y: 190 },
+		);
+		await canvas.deselect();
+		expect(placed.left).toBeGreaterThan(260);
+
+		await canvas.selectAt(centerOf(placed));
+		await canvas.ctrlClickAt({ x: 190, y: 145 });
+		await canvas.group();
+
+		const area = await canvas.page
+			.locator('[data-kind="canvas"]')
+			.boundingBox();
+		if (!area) {
+			throw new Error("the canvas area has no box on screen");
+		}
+		// Stay clear of the edge: a drag ending within AUTO_SCROLL_MARGIN of it
+		// starts the canvas auto-scrolling and the drop lands somewhere else.
+		const target = {
+			x: Math.min(
+				placed.left + placed.width + 200,
+				area.width - AUTO_SCROLL_MARGIN,
+			),
+			y: Math.min(
+				placed.top + placed.height + 150,
+				area.height - AUTO_SCROLL_MARGIN,
+			),
+		};
+		expect(target.x).toBeGreaterThan(placed.left + placed.width);
+		expect(target.y).toBeGreaterThan(placed.top + placed.height);
+
+		const rect = canvas.objectById(rectId);
+		const rectWidthBefore = Number(await rect.getAttribute("width"));
+		await canvas.dragTransformHandle("bottomRight", target);
+
+		// The group really grew, so the text was not simply left out of a no-op.
+		await expect
+			.poll(() => rect.getAttribute("width").then(Number), {
+				message: "the group resize scales the rect inside it",
+			})
+			.toBeGreaterThan(rectWidthBefore);
+
+		expect(await overlayBoxOf(canvas, id)).toEqual(placedOverlay);
+
+		// The position still follows the group, which is what makes the held size a
+		// deliberate exception rather than the shape ignoring the transform.
+		const after = await textBoxOf(canvas, id);
+		expect(after.left).toBeGreaterThan(placed.left);
+		expect(after.width).toBeCloseTo(placed.width, 1);
+		expect(after.height).toBeCloseTo(placed.height, 1);
 		expect(await drawnLineCount(canvas, id)).toBe(1);
 	});
 

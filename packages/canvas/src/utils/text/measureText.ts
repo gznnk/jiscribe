@@ -51,9 +51,11 @@ const createTextWidthMeasurer = (font: TextMeasureFont): TextWidthMeasurer => {
 		// When measurement is unavailable (non-browser environment), fall back to a rough estimate from character count.
 		return (text) => text.length * font.fontSize * FALLBACK_CHAR_WIDTH_RATIO;
 	}
-	// The CSS font shorthand fixes the order style → weight → size → family; a
-	// style after the weight makes the whole declaration invalid and ctx.font
-	// keeps its previous value.
+	// Size and family are the only required parts of the CSS font shorthand, and
+	// they must come last in that order; style and weight may precede them in any
+	// order. An assignment that does not parse is dropped and ctx.font silently
+	// keeps its previous value, so a missing font.fontFamily would measure with
+	// whatever was set last rather than raising.
 	ctx.font = `${font.fontStyle ?? "normal"} ${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
 	return (text) => ctx.measureText(text).width;
 };

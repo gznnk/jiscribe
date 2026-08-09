@@ -1,5 +1,6 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { selectors } from "../../support/selectors";
 
 /**
  * e2e for revealing the text-edit caret: the camera pans so the caret being
@@ -16,6 +17,34 @@ const GROWTH_WORD_COUNT = 40;
 
 /** Zoom steps allowed while growing a shape past the canvas area (1.25x each). */
 const ZOOM_STEP_LIMIT = 8;
+
+/**
+ * Words put in a connector label to push it past the bottom edge. The label
+ * wraps at its own maximum width and each of these takes more than half of it,
+ * so the count is also the line count.
+ */
+const LABEL_WORD_COUNT = 20;
+
+/** Midpoint of a connector's first segment, which is always a point on the line. */
+async function firstSegmentMidpoint(
+	canvas: CanvasDriver,
+	connectorId: string,
+): Promise<{ x: number; y: number }> {
+	const points = (
+		await canvas.objectById(connectorId).getAttribute("points")
+	)?.trim();
+	if (!points) {
+		throw new Error(`connector ${connectorId} carries no points attribute`);
+	}
+	const [first, second] = points.split(/\s+/).map((pair) => {
+		const [x, y] = pair.split(",").map(Number);
+		return { x, y };
+	});
+	if (!second) {
+		throw new Error(`connector ${connectorId} has fewer than two points`);
+	}
+	return { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+}
 
 /** Screen box of the canvas area itself. */
 async function canvasArea(canvas: CanvasDriver) {
@@ -215,6 +244,55 @@ test.describe("text edit reveal", () => {
 		const objectBox = await canvas.objectById(id).boundingBox();
 		const area = await canvasArea(canvas);
 		expect(objectBox?.x ?? 0).toBeGreaterThanOrEqual(area.x);
+	});
+
+	test("pans down as the edited connector label grows past the bottom edge", async ({
+		canvas,
+	}) => {
+		// A connector label suppresses the browser's focus scrolling the same way a
+		// shape's editor does, so the caret report is the only thing that can bring
+		// it back on screen. The label wraps at its own maximum width, so it grows
+		// downward rather than sideways.
+		await canvas.drawShape("Rectangle", { x: 200, y: 620 }, { x: 360, y: 700 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 620 }, { x: 860, y: 700 });
+		await canvas.deselect();
+		await canvas.selectAt({ x: 280, y: 660 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 715,
+			y: 660,
+		});
+		await canvas.deselect();
+
+		const beforeMinY = await viewBoxMinY(canvas);
+		const onLine = await firstSegmentMidpoint(canvas, connectorId);
+
+		// Each word takes more than half the label's maximum width, so it occupies a
+		// line of its own and the box grows a line height per word. The label is
+		// centred on the double-clicked point, so half of that growth goes downward.
+		await canvas.typeTextAt(onLine, "");
+		await canvas
+			.textArea()
+			.fill(new Array(LABEL_WORD_COUNT).fill("Telecommunications").join(" "));
+
+		await expect
+			.poll(() => viewBoxMinY(canvas), {
+				message: "the camera follows the growing label downward",
+			})
+			.toBeGreaterThan(beforeMinY);
+
+		// The caret sits on the last line, so following it brings the bottom of the
+		// editor back inside the canvas area.
+		const editorBox = await canvas.page
+			.locator(selectors.textEditor)
+			.boundingBox();
+		const area = await canvasArea(canvas);
+		expect(editorBox).not.toBeNull();
+		expect((editorBox?.y ?? 0) + (editorBox?.height ?? 0)).toBeLessThanOrEqual(
+			area.y + area.height,
+		);
+
+		await canvas.cancelText();
 	});
 
 	test("leaves the camera alone when editing a shape larger than the viewport", async ({

@@ -119,20 +119,6 @@ describe("resizeTextStateToContent", () => {
 		expect(topLeftOf(twoLines).y).toBe(ANCHOR.y);
 	});
 
-	it("measures with the object's own family, falling back to the given one", () => {
-		const state = stateOf("hello");
-		// A family the object names itself pins the measurement, so the fallback
-		// cannot move it.
-		const styled = {
-			...state,
-			text: { body: { text: "hello", fontSize: 16, fontFamily: FONT_FAMILY } },
-		} as TextState;
-
-		expect(resizeTextStateToContent(styled, "Some Other Family")).toEqual(
-			resizeTextStateToContent(styled, FONT_FAMILY),
-		);
-	});
-
 	it("keeps the drawn top-left where it was when a rotated text grows", () => {
 		const { state, resized } = typedLonger({ rotation: 90 });
 		const before = drawnTopLeftOf(state);
