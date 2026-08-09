@@ -11,6 +11,25 @@ export type RasterizeSvgOptions = BuildExportSvgOptions & {
 	 * The output pixels are the SVG's logical size × scale.
 	 */
 	scale?: number;
+	/**
+	 * Cap on the longest output edge in px, for callers that must bound the
+	 * encoded size (e.g. an image handed to an AI agent). Lowers `scale` when
+	 * it would exceed the cap; a smaller image is never scaled up to reach it.
+	 */
+	maxPixelSize?: number;
+};
+
+/** Applies {@link RasterizeSvgOptions.maxPixelSize} to the requested scale. */
+const resolveScale = (
+	{ scale = 2, maxPixelSize }: RasterizeSvgOptions,
+	width: number,
+	height: number,
+): number => {
+	const longestEdge = Math.max(width, height);
+	if (maxPixelSize === undefined || longestEdge <= 0) {
+		return scale;
+	}
+	return Math.min(scale, maxPixelSize / longestEdge);
 };
 
 /**
@@ -46,8 +65,8 @@ export const rasterizeSvgToPngBlob = async (
 	svg: SVGSVGElement,
 	options: RasterizeSvgOptions = {},
 ): Promise<Blob> => {
-	const scale = options.scale ?? 2;
 	const { svgXml, width, height } = buildSizedExportSvgString(svg, options);
+	const scale = resolveScale(options, width, height);
 	const image = await loadSvgImage(svgXml);
 
 	const canvas = document.createElement("canvas");

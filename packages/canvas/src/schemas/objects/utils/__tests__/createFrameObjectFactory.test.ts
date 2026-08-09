@@ -15,6 +15,12 @@ const DEFAULTS = {
 /** DOC_DEFAULTS that declares fontFamily, so theme docDefaults apply to it. */
 const TEXT_DEFAULTS = { ...DEFAULTS, fontFamily: "Noto Sans JP" } as const;
 
+/** DOC_DEFAULTS with slotted text, the shape of a uml record's defaults. */
+const SLOTTED_DEFAULTS = {
+	...DEFAULTS,
+	text: { name: { text: "" }, attributes: { text: [] as string[] } },
+};
+
 const asRecord = (doc: unknown): Record<string, unknown> =>
 	doc as Record<string, unknown>;
 
@@ -59,6 +65,31 @@ describe("createFrameObjectFactory createDoc", () => {
 		expect(first.fill).toBe("#fff");
 		expect(first.id).toEqual(expect.any(String));
 		expect(first.id).not.toBe(second.id);
+	});
+
+	it("gives each object its own copy of nested defaults", () => {
+		const factory = createFrameObjectFactory(SLOTTED_DEFAULTS);
+		const first = asRecord(factory.createDoc({ x: 0, y: 0 }));
+		const second = asRecord(factory.createDoc({ x: 0, y: 0 }));
+
+		(first.text as { name: { text: string } }).name.text = "edited";
+
+		expect((second.text as { name: { text: string } }).name.text).toBe("");
+		expect(SLOTTED_DEFAULTS.text.name.text).toBe("");
+	});
+
+	it("copies nested overrides instead of sharing the caller's object", () => {
+		const factory = createFrameObjectFactory(SLOTTED_DEFAULTS);
+		const stencilOverrides = { text: { name: { text: "Class" } } };
+		const first = asRecord(factory.createDoc({ x: 0, y: 0 }, stencilOverrides));
+		const second = asRecord(
+			factory.createDoc({ x: 0, y: 0 }, stencilOverrides),
+		);
+
+		(first.text as { name: { text: string } }).name.text = "edited";
+
+		expect((second.text as { name: { text: string } }).name.text).toBe("Class");
+		expect(stencilOverrides.text.name.text).toBe("Class");
 	});
 
 	it("lets overrides win over the theme docDefaults", () => {
@@ -141,6 +172,16 @@ describe("createFrameObjectFactory createDocFromBounds", () => {
 			}),
 		);
 		expect(doc).toMatchObject({ width: 80, height: 60 });
+	});
+
+	it("gives each drawn object its own copy of nested defaults", () => {
+		const factory = createFrameObjectFactory(SLOTTED_DEFAULTS);
+		const first = asRecord(factory.createDocFromBounds?.(0, 0, 80, 60));
+		const second = asRecord(factory.createDocFromBounds?.(0, 0, 80, 60));
+
+		(first.text as { name: { text: string } }).name.text = "edited";
+
+		expect((second.text as { name: { text: string } }).name.text).toBe("");
 	});
 
 	it("is absent when the shape opts out of drag-drawing", () => {

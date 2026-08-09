@@ -14,7 +14,7 @@ import {
 	exportCanvasToSvg,
 	rasterizeSvgToPngBlob,
 } from "../../export";
-import type { BuildExportSvgOptions } from "../../export";
+import type { BuildExportSvgOptions, RasterizeSvgOptions } from "../../export";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../states/canvas/CanvasState";
@@ -58,6 +58,13 @@ export type CanvasExportOptions = {
 };
 
 /**
+ * PNG-only additions to {@link CanvasExportOptions}: how many pixels the
+ * rasterizer produces per logical px, and a cap on the result.
+ */
+export type CanvasPngExportOptions = CanvasExportOptions &
+	Pick<RasterizeSvgOptions, "scale" | "maxPixelSize">;
+
+/**
  * Imperative export API exposed on the `export` namespace of the Canvas handle
  * (`ref.current.export`). Hosts that need image bytes programmatically (e.g. the
  * VSCode extension re-rendering a `.jis.png` / `.jis.svg` on save) use this to
@@ -75,7 +82,7 @@ export type CanvasExportHandle = {
 	 * embedded as an iTXt chunk. Returns null when the canvas is not
 	 * mounted yet.
 	 */
-	toPngBlob(options?: CanvasExportOptions): Promise<Blob | null>;
+	toPngBlob(options?: CanvasPngExportOptions): Promise<Blob | null>;
 };
 
 /**
@@ -265,11 +272,15 @@ export const useCanvasExport = ({
 						)
 					: null;
 			},
-			toPngBlob: async (options?: CanvasExportOptions) => {
+			toPngBlob: async (options?: CanvasPngExportOptions) => {
 				const svg = svgRef.current;
 				return svg
 					? withCullingSuspended(() =>
-							rasterizeSvgToPngBlob(svg, buildExportOptions(options)),
+							rasterizeSvgToPngBlob(svg, {
+								...buildExportOptions(options),
+								scale: options?.scale,
+								maxPixelSize: options?.maxPixelSize,
+							}),
 						)
 					: null;
 			},

@@ -33,6 +33,11 @@ type FrameObjectFactoryOptions = {
  *
  * Center-based ellipses (cx/cy/rx/ry) are out of scope because their placement
  * calculation differs.
+ *
+ * @param defaults - The shape's DOC_DEFAULTS minus `id`; every created doc is a deep copy
+ *   of it, so nested values (a record's text slots) are never shared between objects
+ * @param options - Only `supportsBounds`, which decides whether the factory carries
+ *   `createDocFromBounds` (default true)
  */
 export const createFrameObjectFactory = (
 	defaults: FrameDefaults,
@@ -44,14 +49,17 @@ export const createFrameObjectFactory = (
 		createDoc(position, overrides, docDefaults) {
 			const width = numberOverride(overrides?.width, defaults.width);
 			const height = numberOverride(overrides?.height, defaults.height);
-			return {
+			// Cloned because defaults and overrides are module-level constants: a nested
+			// value shared between two created objects (a record's text slots) would let
+			// an in-place edit of one rewrite the other.
+			return structuredClone({
 				...defaults,
 				...pickSupportedDocDefaults(defaults, docDefaults),
 				...overrides,
 				id: crypto.randomUUID(),
 				x: position.x - width / 2,
 				y: position.y - height / 2,
-			};
+			});
 		},
 
 		calcDimensions(overrides) {
@@ -76,7 +84,8 @@ export const createFrameObjectFactory = (
 			if (bounds === null) {
 				return null;
 			}
-			return {
+			// Cloned for the same reason as in createDoc.
+			return structuredClone({
 				...defaults,
 				...pickSupportedDocDefaults(defaults, docDefaults),
 				...overrides,
@@ -85,7 +94,7 @@ export const createFrameObjectFactory = (
 				y: bounds.top,
 				width: bounds.width,
 				height: bounds.height,
-			};
+			});
 		};
 	}
 

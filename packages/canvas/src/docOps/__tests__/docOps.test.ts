@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { parseCanvasText } from "../../schemas/canvas/validators";
+import type { EdgeAnchorSide } from "../../schemas/objects/types/EndpointRef";
 import { createFrameObjectFactory } from "../../schemas/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
 import { createDocOps } from "../createDocOps";
@@ -182,6 +183,88 @@ describe("connect", () => {
 		expectValid(doc);
 	});
 
+	it("stores an edge midpoint id as a connectPoint anchor", () => {
+		const doc = emptyDoc();
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+
+		docOps.connect(doc, {
+			sourceId: source,
+			targetId: target,
+			sourceAnchor: "bottomCenter",
+			targetAnchor: "leftCenter",
+		});
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.source).toMatchObject({
+			anchor: { kind: "connectPoint", id: "bottomCenter" },
+		});
+		expect(connector.target).toMatchObject({
+			anchor: { kind: "connectPoint", id: "leftCenter" },
+		});
+		expectValid(doc);
+	});
+
+	it("stores an edge handle as an edge anchor and keeps routing omitted", () => {
+		const doc = emptyDoc();
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+
+		docOps.connect(doc, {
+			sourceId: source,
+			targetId: target,
+			sourceAnchor: { side: "bottom", t: 0.25 },
+			targetAnchor: { side: "left", t: 0 },
+		});
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.source).toMatchObject({
+			anchor: { kind: "edge", side: "bottom", t: 0.25 },
+		});
+		expect(connector.target).toMatchObject({
+			anchor: { kind: "edge", side: "left", t: 0 },
+		});
+		// An edge anchor carries an exit direction, so the orthogonal default stands.
+		expect(connector.routing).toBeUndefined();
+		expectValid(doc);
+	});
+
+	it.each([-0.01, 1.4, Number.NaN, Number.POSITIVE_INFINITY])(
+		"throws DocOperationError and leaves the doc untouched for the edge handle t %p",
+		(t) => {
+			const doc = emptyDoc();
+			const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+			const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+			const before = JSON.stringify(doc);
+
+			expect(() =>
+				docOps.connect(doc, {
+					sourceId: source,
+					targetId: target,
+					sourceAnchor: { side: "bottom", t },
+				}),
+			).toThrow(DocOperationError);
+			expect(JSON.stringify(doc)).toBe(before);
+		},
+	);
+
+	it("throws DocOperationError for an edge handle side that is not an edge", () => {
+		const doc = emptyDoc();
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.connect(doc, {
+				sourceId: source,
+				targetId: target,
+				// The doc model has no such side; only top / right / bottom / left exist.
+				sourceAnchor: { side: "middle" as EdgeAnchorSide, t: 0.5 },
+			}),
+		).toThrow(DocOperationError);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
 	it("omits routing (orthogonal default) when both ends pin to an edge midpoint", () => {
 		const doc = emptyDoc();
 		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
@@ -262,6 +345,154 @@ describe("connect", () => {
 		expect(() =>
 			docOps.connect(doc, { sourceId: first, targetId: connectorId }),
 		).toThrow(DocOperationError);
+	});
+});
+
+describe("connect with a free end", () => {
+	/** Two rects at (0,0) and (400,0), ready to hang a connector off. */
+	const twoRects = () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		docOps.addObject(doc, "rect", { x: 400, y: 0 });
+		return doc;
+	};
+
+	it("stores a target point as a free endpoint carrying no owner", () => {
+		const doc = twoRects();
+
+		docOps.connect(doc, {
+			sourceId: "rect-1",
+			targetPoint: { x: 260, y: 180 },
+		});
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.target).toEqual({
+			anchor: { kind: "free", point: { x: 260, y: 180 } },
+		});
+		expect(connector.target).not.toHaveProperty("owner");
+		expectValid(doc);
+	});
+
+	it("stores a source point while the target stays attached", () => {
+		const doc = twoRects();
+
+		docOps.connect(doc, {
+			sourcePoint: { x: -80, y: -40 },
+			targetId: "rect-2",
+			targetAnchor: "leftCenter",
+		});
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.source).toEqual({
+			anchor: { kind: "free", point: { x: -80, y: -40 } },
+		});
+		expect(connector.target).toMatchObject({ owner: { id: "rect-2" } });
+		expectValid(doc);
+	});
+
+	it("copies the point, so mutating the caller's object leaves the doc alone", () => {
+		const doc = twoRects();
+		const point = { x: 10, y: 20 };
+
+		docOps.connect(doc, { sourceId: "rect-1", targetPoint: point });
+		point.x = 999;
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.target).toMatchObject({
+			anchor: { point: { x: 10, y: 20 } },
+		});
+	});
+
+	it("keeps the orthogonal default when the attached end has a direction", () => {
+		const doc = twoRects();
+
+		docOps.connect(doc, {
+			sourceId: "rect-1",
+			sourceAnchor: "rightCenter",
+			targetPoint: { x: 260, y: 180 },
+		});
+
+		// defaultRoutingForAnchors only turns straight for a center, and a free end is not one.
+		expect((doc.root[2] as Record<string, unknown>).routing).toBeUndefined();
+	});
+
+	it("turns straight when the attached end is a center", () => {
+		const doc = twoRects();
+
+		docOps.connect(doc, {
+			sourceId: "rect-1",
+			targetPoint: { x: 260, y: 180 },
+		});
+
+		expect((doc.root[2] as Record<string, unknown>).routing).toBe("straight");
+	});
+
+	it.each(["source", "target"] as const)(
+		"throws DocOperationError when the %s end names both an object and a point",
+		(end) => {
+			const doc = twoRects();
+			const before = JSON.stringify(doc);
+
+			expect(() =>
+				docOps.connect(doc, {
+					sourceId: "rect-1",
+					targetId: "rect-2",
+					[`${end}Point`]: { x: 0, y: 0 },
+				}),
+			).toThrow(new RegExp(`${end} end got both ${end}Id and ${end}Point`));
+			expect(JSON.stringify(doc)).toBe(before);
+		},
+	);
+
+	it.each(["source", "target"] as const)(
+		"throws DocOperationError when the %s end names neither an object nor a point",
+		(end) => {
+			const doc = twoRects();
+			const otherEnd = end === "source" ? "target" : "source";
+
+			expect(() =>
+				docOps.connect(doc, { [`${otherEnd}Id`]: "rect-1" }),
+			).toThrow(new RegExp(`${end} end got neither ${end}Id nor ${end}Point`));
+		},
+	);
+
+	it("throws DocOperationError when a point is paired with an anchor", () => {
+		const doc = twoRects();
+
+		expect(() =>
+			docOps.connect(doc, {
+				sourceId: "rect-1",
+				targetPoint: { x: 0, y: 0 },
+				targetAnchor: "leftCenter",
+			}),
+		).toThrow(/anchor is a position on an object/);
+	});
+
+	it.each([
+		{ x: Number.NaN, y: 0 },
+		{ x: 0, y: Number.POSITIVE_INFINITY },
+	])("throws DocOperationError for the non-finite point %p", (point) => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.connect(doc, { sourceId: "rect-1", targetPoint: point }),
+		).toThrow(DocOperationError);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	// The doc model reserves a line owned by nothing for polyline (validateConnectorDoc 参照).
+	it("throws DocOperationError when both ends are points", () => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.connect(doc, {
+				sourcePoint: { x: 0, y: 0 },
+				targetPoint: { x: 100, y: 100 },
+			}),
+		).toThrow(/at least one end attached to an object/);
+		expect(JSON.stringify(doc)).toBe(before);
 	});
 });
 

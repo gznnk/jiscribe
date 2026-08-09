@@ -5,7 +5,8 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  * Builds a Set containing the selected IDs plus all of their descendant IDs.
  *
  * Computed once at dragStart and cached in eventStartState to avoid recomputing
- * it on every frame during the drag.
+ * it on every frame during the drag; also the id set the selection's extent
+ * (`calcSelectionBounds`) is measured over.
  *
  * @param selectedIds - List of currently selected object IDs
  * @param objects - Flat object map

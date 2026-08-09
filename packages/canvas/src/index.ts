@@ -4,8 +4,14 @@ export type {
 	CanvasExportHandle,
 	CanvasExportImagePayload,
 	CanvasExportOptions,
+	CanvasPngExportOptions,
 } from "./controllers/hooks/useCanvasExport";
-export type { CanvasViewportHandle } from "./controllers/hooks/useViewportHandle";
+export type {
+	CanvasFitOptions,
+	CanvasViewportHandle,
+} from "./controllers/hooks/useViewportHandle";
+export type { CanvasSelectionHandle } from "./controllers/hooks/useSelectionHandle";
+export type { ResolvedSelection } from "./controllers/utils/resolveRequestedSelection";
 export { CanvasThumbnail } from "./controllers/CanvasThumbnail";
 export {
 	exportCanvasToPng,
@@ -52,7 +58,7 @@ export {
 	lightCanvasTheme,
 	brandLightCanvasTheme,
 } from "./theme/themePresets";
-export type { Camera } from "./states/canvas/Viewport";
+export type { Camera, Viewport } from "./states/canvas/Viewport";
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 // Headless parse/build API. `createCanvasParser` and the doc-ops live on the
 // `./doc` entry (UI-free); this root re-exports only `parseCanvasText` plus the

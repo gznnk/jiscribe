@@ -8,12 +8,14 @@ import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
+import { createMultiSelectGroup } from "../utils/createMultiSelectGroup";
 import {
 	reconcileConnectorVertices,
 	reconcileConnectorVerticesIfCommitted,
 } from "../utils/reconcileConnectorVertices";
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
+import { resolveRequestedSelection } from "../utils/resolveRequestedSelection";
 
 /**
  * Builds the root reducer for the canvas controller, closing over the canvas's
@@ -106,6 +108,30 @@ export const createCanvasReducer =
 				return {
 					...state,
 					viewport: { ...state.viewport, minX, minY, zoom },
+				};
+			}
+
+			case "SET_SELECTION": {
+				const { selectedIds, selectedConnectorId } = resolveRequestedSelection(
+					action.ids,
+					state.objects,
+				);
+				return {
+					...state,
+					selectedIds,
+					selectedConnectorId,
+					multiSelectGroup: createMultiSelectGroup(
+						selectedIds,
+						state.objects,
+						state.multiSelectGroup,
+					),
+					// The channels are mutually exclusive, and the UI hanging off the
+					// previous selection means nothing for the new one (same clears as
+					// SelectAllCommand).
+					selectedVertex: null,
+					selectedTextSlot: null,
+					objectMenuOpenId: null,
+					stencilLibraryOpenCategory: null,
 				};
 			}
 
