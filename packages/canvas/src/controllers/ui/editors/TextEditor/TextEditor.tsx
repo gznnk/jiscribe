@@ -5,7 +5,7 @@ import {
 	degreesToRadians,
 } from "@workspace/geometry";
 import type React from "react";
-import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { memo, useCallback, useLayoutEffect } from "react";
 
 import { TextArea, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
@@ -14,9 +14,10 @@ import { verticalAlignToAlignItems } from "../../../../presentations/objects/uti
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
-import { readCaretLocalRect } from "../utils/readCaretLocalRect";
+import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
 type TextEditorProps = {
 	objectId: string;
@@ -77,7 +78,6 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	onEscape,
 	onCaretMove,
 }) => {
-	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	// Docs of text-bearing shapes always carry fontFamily; the theme font is a
 	// safety net for callers that omit it.
 	const { fontFamily: themeFontFamily } = useCanvasTheme();
@@ -87,20 +87,33 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	// resolver as the rendering-side TextOverlay so the color matches (issue #38).
 	const resolvedColor = resolveAutoColor(fontColor, "ink");
 
-	// Initial focus
-	useEffect(() => {
-		const el = textAreaRef.current;
-		if (!el) {
-			return;
-		}
-		// The caret is placed before the focus so the reveal that rides on the focus
-		// event (onCaretMove) already sees the end of the text.
-		el.setSelectionRange(el.value.length, el.value.length);
-		// preventScroll: the browser would otherwise reveal the textarea by
-		// scrolling the overflow-hidden ancestors, an offset the canvas camera
-		// knows nothing about. Revealing is useRevealTextEditCaret's job.
-		el.focus({ preventScroll: true });
-	}, []);
+	// The caret rides the same transform as the wrapper, one region offset further
+	// in, so its world box is the local segment put through the shape's matrix.
+	const calcCaretWorldBox = useCallback(
+		(caret: CaretLocalRect) => {
+			const rotationRad = degreesToRadians(rotation);
+			const toWorld = (localY: number) =>
+				calcAffineTransformedPoint(
+					x + caret.x,
+					y + localY,
+					scaleX,
+					scaleY,
+					rotationRad,
+					cx,
+					cy,
+				);
+			return calcPolyBoundingBox([
+				toWorld(caret.y),
+				toWorld(caret.y + caret.height),
+			]);
+		},
+		[x, y, scaleX, scaleY, rotation, cx, cy],
+	);
+
+	const { textAreaRef, wrapperRef, reportCaret } = useCaretReporter({
+		onCaretMove,
+		calcCaretWorldBox,
+	});
 
 	// Update the height to match the text amount (vertical alignment is applied via the wrapper's flex)
 	useLayoutEffect(() => {
@@ -117,46 +130,22 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		resolvedFontFamily,
 		fontWeight,
 		fontStyle,
+		textAreaRef,
 	]);
-
-	// The caret rides the same transform as the wrapper, one region offset further
-	// in, so its world box is the local segment put through the shape's matrix.
-	const reportCaret = useCallback(() => {
-		const el = textAreaRef.current;
-		// Only the focused editor has a caret to report; at mount the selection is
-		// still at 0, which would reveal the wrong end of the text.
-		if (!el || !onCaretMove || el !== document.activeElement) {
-			return;
-		}
-		const caret = readCaretLocalRect(el);
-		if (!caret) {
-			return;
-		}
-		const rotationRad = degreesToRadians(rotation);
-		const toWorld = (localY: number) =>
-			calcAffineTransformedPoint(
-				x + caret.x,
-				y + localY,
-				scaleX,
-				scaleY,
-				rotationRad,
-				cx,
-				cy,
-			);
-		const caretWorldBox = calcPolyBoundingBox([
-			toWorld(caret.y),
-			toWorld(caret.y + caret.height),
-		]);
-		if (caretWorldBox) {
-			onCaretMove(caretWorldBox);
-		}
-	}, [onCaretMove, x, y, scaleX, scaleY, rotation, cx, cy]);
 
 	// After the height fit above, so the caret is measured against the laid-out box.
 	useLayoutEffect(reportCaret);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (e.key === "Escape" && onEscape) {
+			e.preventDefault();
+			e.stopPropagation();
+			onEscape();
+		}
 	};
 
 	// Prevent losing focus when clicking the margin outside the text.
@@ -168,16 +157,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				textAreaRef.current?.focus({ preventScroll: true });
 			}
 		},
-		[],
+		[textAreaRef],
 	);
-
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === "Escape" && onEscape) {
-			e.preventDefault();
-			e.stopPropagation();
-			onEscape();
-		}
-	};
 
 	// The region offset (x/y) rides inside the transform, after the shape
 	// matrix, mirroring TextOverlayFrame: left/top would be applied outside the
@@ -187,6 +168,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 
 	return (
 		<TextEditorWrapper
+			ref={wrapperRef}
 			data-testid="text-editor"
 			data-gesture="none"
 			style={{

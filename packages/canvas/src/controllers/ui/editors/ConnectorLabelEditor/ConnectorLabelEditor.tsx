@@ -1,6 +1,6 @@
 import type { BoundingBox, Point } from "@workspace/geometry";
 import type React from "react";
-import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { memo, useCallback, useLayoutEffect } from "react";
 
 import {
 	ConnectorLabelEditorWrapper,
@@ -13,8 +13,9 @@ import {
 } from "../../../../presentations/objects/connections/ConnectorLabel";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { useCaretReporter } from "../hooks/useCaretReporter";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
-import { readCaretLocalRect } from "../utils/readCaretLocalRect";
+import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
 type ConnectorLabelEditorProps = {
 	/** Label anchor (world coordinates on the route). The editor is centered here. */
@@ -47,8 +48,6 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	onEscape,
 	onCaretMove,
 }) => {
-	const wrapperRef = useRef<HTMLDivElement>(null);
-	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	// Labels have no per-doc fontFamily; follow the host theme so the editor
 	// measures and renders with the same font as ConnectorLabel.
 	const { fontFamily } = useCanvasTheme();
@@ -64,20 +63,21 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		strokeWidth,
 	);
 
-	// Focus initially and place the caret at the end.
-	useEffect(() => {
-		const el = textAreaRef.current;
-		if (!el) {
-			return;
-		}
-		// The caret is placed before the focus so the reveal that rides on the focus
-		// event (onCaretMove) already sees the end of the text.
-		el.setSelectionRange(el.value.length, el.value.length);
-		// preventScroll: the browser would otherwise reveal the textarea by
-		// scrolling the overflow-hidden ancestors, an offset the canvas camera
-		// knows nothing about. Revealing is useRevealTextEditCaret's job.
-		el.focus({ preventScroll: true });
-	}, []);
+	// The wrapper is centered on the anchor, which is already a world coordinate,
+	// so the caret's local offset only has to start from the wrapper's corner.
+	const calcCaretWorldBox = useCallback(
+		(caret: CaretLocalRect, wrapper: HTMLDivElement) => {
+			const left = anchor.x - wrapper.offsetWidth / 2 + caret.x;
+			const top = anchor.y - wrapper.offsetHeight / 2 + caret.y;
+			return { left, right: left, top, bottom: top + caret.height };
+		},
+		[anchor.x, anchor.y],
+	);
+
+	const { textAreaRef, wrapperRef, reportCaret } = useCaretReporter({
+		onCaretMove,
+		calcCaretWorldBox,
+	});
 
 	// Update the height to match the text amount (the width is given to the wrapper via measurement).
 	useLayoutEffect(() => {
@@ -86,26 +86,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 			return;
 		}
 		fitTextAreaHeight(el, fontSize);
-	}, [text, width, fontSize, fontWeight]);
-
-	// The wrapper is centered on the anchor, which is already a world coordinate,
-	// so the caret's local offset only has to start from the wrapper's corner.
-	const reportCaret = useCallback(() => {
-		const el = textAreaRef.current;
-		const wrapper = wrapperRef.current;
-		// Only the focused editor has a caret to report; at mount the selection is
-		// still at 0, which would reveal the wrong end of the text.
-		if (!el || !wrapper || !onCaretMove || el !== document.activeElement) {
-			return;
-		}
-		const caret = readCaretLocalRect(el);
-		if (!caret) {
-			return;
-		}
-		const left = anchor.x - wrapper.offsetWidth / 2 + caret.x;
-		const top = anchor.y - wrapper.offsetHeight / 2 + caret.y;
-		onCaretMove({ left, right: left, top, bottom: top + caret.height });
-	}, [onCaretMove, anchor.x, anchor.y]);
+	}, [text, width, fontSize, fontWeight, textAreaRef]);
 
 	// After the height fit above, so the caret is measured against the laid-out box.
 	useLayoutEffect(reportCaret);
@@ -130,7 +111,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 				textAreaRef.current?.focus({ preventScroll: true });
 			}
 		},
-		[],
+		[textAreaRef],
 	);
 
 	return (
