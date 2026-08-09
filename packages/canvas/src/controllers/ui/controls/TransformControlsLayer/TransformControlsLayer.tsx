@@ -1,4 +1,4 @@
-import { isTransformedFrame } from "@workspace/geometry";
+import { isTransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";

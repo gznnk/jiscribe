@@ -2,11 +2,11 @@ import {
 	insertPngTextChunk,
 	PNG_SOURCE_KEYWORD,
 	readPngTextChunk,
-} from "@workspace/canvas/png-source";
+} from "@jiscribe/canvas/png-source";
 import {
 	extractCanvasSourceFromSvgText,
 	replaceCanvasSourceInSvgText,
-} from "@workspace/canvas/svg-source";
+} from "@jiscribe/canvas/svg-source";
 
 /**
  * Save-time orchestration for `.jis.png` / `.jis.svg` documents, extracted from

@@ -1,5 +1,5 @@
-import type { ParseCheckDoc } from "@workspace/canvas-sdk/testing";
-import { createParseCheckSuite } from "@workspace/canvas-sdk/testing";
+import type { ParseCheckDoc } from "@jiscribe/canvas-sdk/testing";
+import { createParseCheckSuite } from "@jiscribe/canvas-sdk/testing";
 
 import { flowchartDocPlugin } from "../doc";
 

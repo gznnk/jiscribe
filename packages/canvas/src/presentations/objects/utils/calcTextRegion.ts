@@ -1,4 +1,4 @@
-import type { Dimensions, Rect } from "@workspace/geometry";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ObjectTextRegionCalculator } from "../registry/ObjectTextRegionRegistry";

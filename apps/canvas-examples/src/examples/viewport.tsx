@@ -1,5 +1,5 @@
-import { Canvas, parseCanvasText } from "@workspace/canvas";
-import type { Camera, CanvasDoc, CanvasHandle } from "@workspace/canvas";
+import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import type { Camera, CanvasDoc, CanvasHandle } from "@jiscribe/canvas";
 import { useRef, useState } from "react";
 
 // 目印になる図形を散らした doc（Canvas の契約どおり parseCanvasText を通す）

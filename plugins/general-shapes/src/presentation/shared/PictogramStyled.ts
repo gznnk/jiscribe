@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { ShapeBodyPath } from "@workspace/canvas-sdk";
+import { ShapeBodyPath } from "@jiscribe/canvas-sdk";
 
 type PictogramStrokeProps = {
 	/** Resolved stroke color (auto is resolved to the theme foreground). */

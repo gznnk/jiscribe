@@ -9,7 +9,7 @@
 // browsers.
 //
 // Import example:
-//   `import { extractCanvasSourceFromSvgText } from "@workspace/canvas/svg-source";`
+//   `import { extractCanvasSourceFromSvgText } from "@jiscribe/canvas/svg-source";`
 export {
 	extractCanvasSourceFromSvgText,
 	replaceCanvasSourceInSvgText,

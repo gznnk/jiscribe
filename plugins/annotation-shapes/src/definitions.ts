@@ -1,8 +1,8 @@
-import type { ObjectTypeDefinition } from "@workspace/canvas";
+import type { ObjectTypeDefinition } from "@jiscribe/canvas";
 import {
 	createFrameObjectDefinition,
 	createTypeStencils,
-} from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas-sdk";
 
 import {
 	CalloutTailTipControl,

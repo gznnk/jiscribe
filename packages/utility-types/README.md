@@ -1,4 +1,4 @@
-# @workspace/utility-types
+# @jiscribe/utility-types
 
 Type-level helpers shared across jiscribe. Types only — the package has no
 dependencies and emits no runtime code.
@@ -11,7 +11,7 @@ dependencies and emits no runtime code.
 ## Usage
 
 ```typescript
-import type { Brand, Prettify } from "@workspace/utility-types";
+import type { Brand, Prettify } from "@jiscribe/utility-types";
 
 declare const MetaDocBrand: unique symbol;
 
@@ -21,7 +21,7 @@ type MetaDoc = Prettify<
 ```
 
 Both types are re-exported from the package root, so import from
-`@workspace/utility-types` rather than reaching into `src/`.
+`@jiscribe/utility-types` rather than reaching into `src/`.
 
 One contract is worth knowing before writing against this package: a `Brand`ed
 value cannot be written as a literal, because the brand key has type `never`.
@@ -30,6 +30,6 @@ Construct one with an assertion at the boundary that validates it.
 ## Development
 
 ```bash
-pnpm --filter @workspace/utility-types typecheck
-pnpm --filter @workspace/utility-types lint
+pnpm --filter @jiscribe/utility-types typecheck
+pnpm --filter @jiscribe/utility-types lint
 ```

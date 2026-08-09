@@ -1,4 +1,4 @@
-import type { BoundingBox, TransformedFrame } from "@workspace/geometry";
+import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import {

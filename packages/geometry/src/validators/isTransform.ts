@@ -1,4 +1,4 @@
-import { isNumber, isObject } from "@workspace/basic-validators";
+import { isNumber, isObject } from "@jiscribe/basic-validators";
 
 import { isFlipScale } from "./isFlipScale";
 import type { Transform } from "../types/Transform";

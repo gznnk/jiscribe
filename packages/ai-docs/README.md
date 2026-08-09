@@ -1,4 +1,4 @@
-# @workspace/ai-docs
+# @jiscribe/ai-docs
 
 出荷図形セット（canvas built-in ＋ 収載プラグイン）の JSON スキーマと AI ドキュメントの
 正本パッケージ（#170）。`assets/` 配下の 3 ファイルが配布物で、図形マニフェスト
@@ -14,14 +14,14 @@
 マーカー外の散文は手書き。型の列挙は書かず「box shape（= polyline / polygon / group /
 svg / connector 以外の全型）」のような能力ベースの言い回しを使うこと。
 
-消費者は exports（`@workspace/ai-docs/schema` / `/guide` / `/reference`）か、ビルド
+消費者は exports（`@jiscribe/ai-docs/schema` / `/guide` / `/reference`）か、ビルド
 スクリプトからは `assets/` への相対パスで参照する（vscode-extension の `build.mjs`、
-apps/schema の `sync` など）。
+配信側の同期など）。
 
 ## 使い方
 
 ```bash
-pnpm generate:ai   # 再生成 + apps/schema/public/v1 への同期
+pnpm generate:ai   # 再生成
 pnpm check:ai      # ドリフト検知（CI で実行）
 ```
 

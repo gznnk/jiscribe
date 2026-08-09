@@ -1,4 +1,4 @@
-import type { ObjectDocDefinition } from "@workspace/canvas/doc";
+import type { ObjectDocDefinition } from "@jiscribe/canvas/doc";
 
 /**
  * Table cells for the special types whose cells cannot be derived from features

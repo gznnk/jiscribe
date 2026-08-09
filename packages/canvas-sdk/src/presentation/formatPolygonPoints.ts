@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 /**
  * Formats an outline point list as an SVG `points` attribute string

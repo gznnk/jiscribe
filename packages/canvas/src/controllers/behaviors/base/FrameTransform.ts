@@ -1,9 +1,9 @@
-import type { TransformedFrame } from "@workspace/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
 import {
 	calcRotatedPoint,
 	degreesToRadians,
 	roundToDecimal,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { PRECISION } from "../../../constants/precision";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";

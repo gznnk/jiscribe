@@ -1,4 +1,4 @@
-import type { Dimensions } from "@workspace/geometry";
+import type { Dimensions } from "@jiscribe/geometry";
 import { type Dispatch, type RefObject, useEffect, useRef } from "react";
 
 import type { CanvasAction } from "../reducer/CanvasActions";

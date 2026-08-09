@@ -2,12 +2,12 @@ import {
 	calcFrameKeyPoints,
 	calcKeyPointsBoundingBox,
 	isTransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 import type {
 	FrameKeyPoints,
 	Point,
 	TransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";

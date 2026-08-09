@@ -7,7 +7,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * - free-dragging that handle changes side / position and the path follows
  *
  * The callout is drawn out of the annotation category flyout, which is where it
- * lives since it moved to @workspace/plugin-annotation-shapes.
+ * lives since it moved to @jiscribe/plugin-annotation-shapes.
  */
 
 const TAIL_HANDLE =

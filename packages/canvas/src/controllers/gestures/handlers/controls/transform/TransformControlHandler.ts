@@ -1,11 +1,11 @@
-import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
+import type { FrameKeyPoints, TransformedFrame } from "@jiscribe/geometry";
 import {
 	calcAffineTransformedPoint,
 	calcFrameKeyPoints,
 	degreesToRadians,
 	isTransformedFrame,
 	roundToDecimal,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import type { TransformAnchorType } from "./TransformAnchorType";
 import { applyResizeSnap } from "./utils/applyResizeSnap";

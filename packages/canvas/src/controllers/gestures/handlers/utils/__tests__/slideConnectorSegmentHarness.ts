@@ -2,7 +2,7 @@ import {
 	calcFrameBoxFeatures,
 	type Point,
 	type TransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { alignVertexPath } from "../../../../../presentations/layers/content/utils/routing";
 import type { OrthogonalConnectorEndpoint } from "../../../../../presentations/layers/content/utils/routing";

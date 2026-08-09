@@ -1,4 +1,4 @@
-import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildHexagonPoints } from "./buildHexagonPoints";
 import type { HexagonState } from "../../state/hexagon/HexagonState";

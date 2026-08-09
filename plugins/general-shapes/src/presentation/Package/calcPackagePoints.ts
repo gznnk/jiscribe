@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import { PACKAGE_SHOULDER_RATIO } from "../../schema/package/PackageDoc";
 

@@ -1,6 +1,6 @@
 > 🌐 English version: [README.md](./README.md)
 
-# @workspace/basic-validators
+# @jiscribe/basic-validators
 
 jiscribe 全体で共有する実行時の型ガード。依存なしの述語だけを収録し、信頼境界
 （パース済みの `.jis.json`、クリップボードの内容、プラグインからの入力など）で
@@ -10,7 +10,7 @@ jiscribe 全体で共有する実行時の型ガード。依存なしの述語�
 ## 使い方
 
 ```typescript
-import { isNumber, isObject, isEnum } from "@workspace/basic-validators";
+import { isNumber, isObject, isEnum } from "@jiscribe/basic-validators";
 
 const isAlign = isEnum(["start", "center", "end"] as const);
 
@@ -19,7 +19,7 @@ const isLabel = (value: unknown): value is Label =>
 ```
 
 すべてパッケージルートから再エクスポートしているため、`src/` を直接参照せず
-`@workspace/basic-validators` から import する。
+`@jiscribe/basic-validators` から import する。
 
 ## 収録内容
 
@@ -53,7 +53,7 @@ const isLabel = (value: unknown): value is Label =>
 - **`isCssSafeValue` が見るのは安全性であって妥当性ではない。** CSS 宣言からの抜け出しに
   使える文字列（`;` `{` `}` `<` `>` `\`、`url(`、`expression(`、コメント区切り）を弾く
   だけで、安全な文字列が意味のある CSS であるとは限らない。厳密な色の妥当性判定は
-  ブラウザの CSS パーサーを必要とするため、ここではなく `@workspace/canvas` の
+  ブラウザの CSS パーサーを必要とするため、ここではなく `@jiscribe/canvas` の
   `states/objects/utils/isCssColor` に置いている。
 - **`isUrl` はパースできるかの判定であって安全性の判定ではない。** `javascript:` を
   含めどのスキームも通り、相対パスや `example.com` のようなホスト名だけの文字列は
@@ -62,9 +62,9 @@ const isLabel = (value: unknown): value is Label =>
 ## 開発
 
 ```bash
-pnpm --filter @workspace/basic-validators typecheck
-pnpm --filter @workspace/basic-validators lint
-pnpm --filter @workspace/basic-validators test
+pnpm --filter @jiscribe/basic-validators typecheck
+pnpm --filter @jiscribe/basic-validators lint
+pnpm --filter @jiscribe/basic-validators test
 ```
 
 テストは DOM の無い Node で動くが、ここのガードはそれで困らないことが前提。

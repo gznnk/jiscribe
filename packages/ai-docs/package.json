@@ -1,5 +1,5 @@
 {
-	"name": "@workspace/ai-docs",
+	"name": "@jiscribe/ai-docs",
 	"version": "1.0.0",
 	"private": true,
 	"description": "Generated JSON schema and AI authoring docs for the shipped jiscribe shape set",
@@ -17,15 +17,15 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/plugin-flowchart-shapes": "workspace:*",
-		"@workspace/plugin-annotation-shapes": "workspace:*",
-		"@workspace/plugin-container-shapes": "workspace:*",
-		"@workspace/plugin-general-shapes": "workspace:*",
-		"@workspace/plugin-markdown-shape": "workspace:*",
-		"@workspace/plugin-sticky-shape": "workspace:*",
-		"@workspace/plugin-uml-shapes": "workspace:*",
-		"prettier": "^3.7.4",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
+		"@jiscribe/plugin-annotation-shapes": "workspace:*",
+		"@jiscribe/plugin-container-shapes": "workspace:*",
+		"@jiscribe/plugin-general-shapes": "workspace:*",
+		"@jiscribe/plugin-markdown-shape": "workspace:*",
+		"@jiscribe/plugin-sticky-shape": "workspace:*",
+		"@jiscribe/plugin-uml-shapes": "workspace:*",
+		"prettier": "3.7.4",
 		"tsx": "^4.22.4",
 		"typescript": "catalog:"
 	}

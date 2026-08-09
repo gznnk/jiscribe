@@ -1,4 +1,4 @@
-import { negativeToZero } from "@workspace/geometry";
+import { negativeToZero } from "@jiscribe/geometry";
 import type React from "react";
 import type { ReactNode } from "react";
 import { memo } from "react";

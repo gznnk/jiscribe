@@ -1,4 +1,4 @@
-import type { Dimensions } from "@workspace/geometry";
+import type { Dimensions } from "@jiscribe/geometry";
 
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import type { CanvasState } from "../../states/canvas/CanvasState";

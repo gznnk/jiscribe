@@ -1,4 +1,4 @@
-import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildLoopLimitPoints } from "./buildLoopLimitPoints";
 import type { LoopLimitState } from "../../state/loopLimit/LoopLimitState";

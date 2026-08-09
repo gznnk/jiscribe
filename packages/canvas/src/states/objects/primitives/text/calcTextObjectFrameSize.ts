@@ -1,4 +1,4 @@
-import type { Dimensions } from "@workspace/geometry";
+import type { Dimensions } from "@jiscribe/geometry";
 
 import type { TextObjectTypography } from "./resolveTextObjectFont";
 import { resolveTextObjectFont } from "./resolveTextObjectFont";

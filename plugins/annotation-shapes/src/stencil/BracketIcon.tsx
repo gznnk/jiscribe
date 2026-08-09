@@ -1,4 +1,4 @@
-import { createStencilIcon } from "@workspace/canvas-sdk";
+import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
 /**
  * The default `left` bracket at the stencil size. Hand-written rather than built

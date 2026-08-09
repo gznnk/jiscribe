@@ -1,4 +1,4 @@
-import { calcFrameBoxFeatures, type BoxFeatures } from "@workspace/geometry";
+import { calcFrameBoxFeatures, type BoxFeatures } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { stubPoint } from "../stub";

@@ -1,5 +1,5 @@
-import { isTransformedFrame } from "@workspace/geometry";
-import type { Point, Rect } from "@workspace/geometry";
+import { isTransformedFrame } from "@jiscribe/geometry";
+import type { Point, Rect } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 
 import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";

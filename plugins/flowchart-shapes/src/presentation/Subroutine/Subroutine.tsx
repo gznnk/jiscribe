@@ -1,4 +1,4 @@
-import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildSubroutinePath } from "./buildSubroutinePath";
 import type { SubroutineState } from "../../state/subroutine/SubroutineState";

@@ -1,4 +1,4 @@
-import { isNumber, isObject, isString } from "@workspace/basic-validators";
+import { isNumber, isObject, isString } from "@jiscribe/basic-validators";
 
 import type { TextAlign } from "./TextAlign";
 import { isTextAlign } from "./TextAlign";

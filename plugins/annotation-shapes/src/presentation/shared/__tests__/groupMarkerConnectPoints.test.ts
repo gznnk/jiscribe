@@ -1,4 +1,4 @@
-import type { ObjectState } from "@workspace/canvas";
+import type { ObjectState } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
 import type { GroupMarkerTipFields } from "../../../schema/shared/GroupMarkerFields";

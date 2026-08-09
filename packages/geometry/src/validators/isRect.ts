@@ -2,7 +2,7 @@ import {
 	isNonNegativeNumber,
 	isNumber,
 	isObject,
-} from "@workspace/basic-validators";
+} from "@jiscribe/basic-validators";
 
 import type { Rect } from "../types/Rect";
 

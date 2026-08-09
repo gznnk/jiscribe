@@ -1,5 +1,5 @@
-import type { ObjectState } from "@workspace/canvas";
-import type { TransformedFrame } from "@workspace/geometry";
+import type { ObjectState } from "@jiscribe/canvas";
+import type { TransformedFrame } from "@jiscribe/geometry";
 
 import type {
 	GroupMarkerDirectionField,

@@ -1,4 +1,4 @@
-import { isString } from "@workspace/basic-validators";
+import { isString } from "@jiscribe/basic-validators";
 
 /**
  * Determines whether a string is valid SVG (parseable and rooted at <svg>).

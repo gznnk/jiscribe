@@ -2,7 +2,7 @@ import {
 	isTransformedFrame,
 	snapToDirection,
 	type Point,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { resolveEndpoint } from "../../../../../../presentations/layers/content/utils/endpoints/resolveEndpoint";
 import type { ExtraConnectPoint } from "../../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";

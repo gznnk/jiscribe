@@ -1,4 +1,4 @@
-import { createFrameObject, resolveAutoColor } from "@workspace/canvas-sdk";
+import { createFrameObject, resolveAutoColor } from "@jiscribe/canvas-sdk";
 
 import { calcContainerHeaderHeight } from "./calcContainerHeaderHeight";
 import {

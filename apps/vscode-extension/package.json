@@ -7,6 +7,14 @@
 		"name": "gznnk"
 	},
 	"homepage": "https://beta.jiscribe.dev",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/gznnk/jiscribe.git",
+		"directory": "apps/vscode-extension"
+	},
+	"bugs": {
+		"url": "https://github.com/gznnk/jiscribe/issues"
+	},
 	"icon": "icon.png",
 	"version": "0.7.0",
 	"private": true,
@@ -118,22 +126,22 @@
 		"test": "vitest run"
 	},
 	"dependencies": {},
-	"license": "SEE LICENSE IN LICENSE.txt",
+	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^3.4.2",
-		"@workspace/ai-docs": "workspace:*",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/plugin-annotation-shapes": "workspace:*",
-		"@workspace/plugin-container-shapes": "workspace:*",
-		"@workspace/plugin-flowchart-shapes": "workspace:*",
-		"@workspace/plugin-general-shapes": "workspace:*",
-		"@workspace/plugin-markdown-shape": "workspace:*",
-		"@workspace/plugin-sticky-shape": "workspace:*",
-		"@workspace/plugin-uml-shapes": "workspace:*",
+		"@jiscribe/ai-docs": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/plugin-annotation-shapes": "workspace:*",
+		"@jiscribe/plugin-container-shapes": "workspace:*",
+		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
+		"@jiscribe/plugin-general-shapes": "workspace:*",
+		"@jiscribe/plugin-markdown-shape": "workspace:*",
+		"@jiscribe/plugin-sticky-shape": "workspace:*",
+		"@jiscribe/plugin-uml-shapes": "workspace:*",
 		"esbuild": "catalog:",
 		"katex": "catalog:",
 		"react": "catalog:",

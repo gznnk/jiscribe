@@ -1,4 +1,4 @@
-import type { LocaleMessages } from "@workspace/canvas-sdk";
+import type { LocaleMessages } from "@jiscribe/canvas-sdk";
 
 /** UI strings owned by the container plugin, resolved via the canvas locale. */
 type ContainerMessages = {

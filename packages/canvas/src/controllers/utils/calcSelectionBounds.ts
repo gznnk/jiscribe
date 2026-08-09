@@ -1,4 +1,4 @@
-import type { BoundingBox } from "@workspace/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 
 import { buildSelectedIdsWithDescendants } from "./buildSelectedIdsWithDescendants";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";

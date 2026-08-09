@@ -1,5 +1,5 @@
-import type { Point } from "@workspace/geometry";
-import { sampleEllipseArc } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
+import { sampleEllipseArc } from "@jiscribe/geometry";
 
 import { OUTLINE_CURVE_SEGMENTS } from "./outlineHelpers";
 

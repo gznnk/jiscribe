@@ -1,4 +1,4 @@
-import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildParallelogramPoints } from "./buildParallelogramPoints";
 import type { ParallelogramState } from "../../state/parallelogram/ParallelogramState";

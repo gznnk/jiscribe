@@ -2,7 +2,7 @@
 
 # canvas Design Documentation
 
-A set of documents that organize the design of `@workspace/canvas` into 11 pillars.
+A set of documents that organize the design of `@jiscribe/canvas` into 11 pillars.
 For a high-level overview, we recommend reading [Design Philosophy](./01-design-philosophy.md) and
 [Architecture](./02-architecture.md) first.
 

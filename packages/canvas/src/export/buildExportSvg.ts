@@ -1,4 +1,4 @@
-import type { Rect } from "@workspace/geometry";
+import type { Rect } from "@jiscribe/geometry";
 
 import { embedCanvasSource } from "./canvasSourceMetadata";
 import {

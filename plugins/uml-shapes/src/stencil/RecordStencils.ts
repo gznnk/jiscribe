@@ -1,4 +1,4 @@
-import type { Stencil } from "@workspace/canvas";
+import type { Stencil } from "@jiscribe/canvas";
 
 import { AbstractClassIcon } from "./AbstractClassIcon";
 import { ClassIcon } from "./ClassIcon";

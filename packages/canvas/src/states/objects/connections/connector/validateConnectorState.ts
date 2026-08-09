@@ -3,7 +3,7 @@ import {
 	isNumber,
 	isObject,
 	isString,
-} from "@workspace/basic-validators";
+} from "@jiscribe/basic-validators";
 
 import { isConnectorRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import { isStrokeDashType } from "../../../../schemas/objects/types/StrokeDashType";

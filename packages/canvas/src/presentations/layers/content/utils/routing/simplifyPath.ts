@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 /**
  * Collapse duplicate points and collinear "pass-through" intermediate points.

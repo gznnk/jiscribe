@@ -1,5 +1,5 @@
 {
-	"name": "@workspace/geometry",
+	"name": "@jiscribe/geometry",
 	"version": "0.0.0",
 	"private": true,
 	"main": "src/index.ts",
@@ -12,8 +12,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@workspace/utility-types": "workspace:*",
-		"@workspace/basic-validators": "workspace:*"
+		"@jiscribe/utility-types": "workspace:*",
+		"@jiscribe/basic-validators": "workspace:*"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "catalog:",

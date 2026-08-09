@@ -1,4 +1,4 @@
-import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildStoredDataPath } from "./buildStoredDataPath";
 import type { StoredDataState } from "../../state/storedData/StoredDataState";

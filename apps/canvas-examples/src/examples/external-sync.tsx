@@ -1,5 +1,5 @@
-import { Canvas, parseCanvasText } from "@workspace/canvas";
-import type { CanvasDoc } from "@workspace/canvas";
+import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import type { CanvasDoc } from "@jiscribe/canvas";
 import { useCallback, useRef, useState } from "react";
 
 const initialSourceText = JSON.stringify(

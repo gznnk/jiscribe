@@ -2,7 +2,7 @@ import {
 	BelowLabelHitArea,
 	ShapeBodyPolygon,
 	createFrameObject,
-} from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas-sdk";
 
 import { buildExtractPoints } from "./buildExtractPoints";
 import type { ExtractState } from "../../state/extract/ExtractState";

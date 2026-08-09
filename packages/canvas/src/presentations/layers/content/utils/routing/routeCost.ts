@@ -5,7 +5,7 @@ import {
 	type BoxFeatures,
 	type OrthogonalDirection,
 	type Point,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 /**
  * Whether an axis-aligned segment passes through the interior of a box.

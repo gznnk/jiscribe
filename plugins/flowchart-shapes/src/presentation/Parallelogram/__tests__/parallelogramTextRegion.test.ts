@@ -1,4 +1,4 @@
-import { createInsetTextRegion } from "@workspace/canvas-sdk";
+import { createInsetTextRegion } from "@jiscribe/canvas-sdk";
 import { describe, it, expect } from "vitest";
 
 import { PARALLELOGRAM_SKEW_RATIO } from "../../../schema/parallelogram/ParallelogramDoc";

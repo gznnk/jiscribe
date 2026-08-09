@@ -1,8 +1,8 @@
-import type { BoundingBox, TransformedFrame } from "@workspace/geometry";
+import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 import {
 	calcAffineTransformedPoint,
 	calcBoundingBox,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import type { TransformState } from "../../../../../../states/objects/base/TransformState";
 import type { TransformAnchorType } from "../TransformAnchorType";

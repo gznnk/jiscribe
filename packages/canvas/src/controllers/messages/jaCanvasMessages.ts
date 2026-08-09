@@ -121,7 +121,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	stencilCategoryLabels: {},
 
 	// PRESET_COLORS の英語名を網羅する。プラグインが独自パレットを持つ場合も
-	// （@workspace/plugin-sticky-shape の付箋色など）名前をここのキーに合わせれば
+	// （@jiscribe/plugin-sticky-shape の付箋色など）名前をここのキーに合わせれば
 	// 辞書を自前で持たずに済む
 	colorNames: {
 		Red: "赤",

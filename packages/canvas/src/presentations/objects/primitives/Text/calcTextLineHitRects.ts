@@ -1,4 +1,4 @@
-import type { Dimensions, Rect } from "@workspace/geometry";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import {
 	TEXT_BOX_PADDING_X,

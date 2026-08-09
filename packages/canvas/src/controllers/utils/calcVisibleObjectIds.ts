@@ -1,4 +1,4 @@
-import type { BoundingBox } from "@workspace/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";

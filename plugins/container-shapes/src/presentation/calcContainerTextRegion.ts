@@ -1,5 +1,5 @@
-import type { ObjectTextRegionCalculator } from "@workspace/canvas";
-import type { Dimensions } from "@workspace/geometry";
+import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
+import type { Dimensions } from "@jiscribe/geometry";
 
 import { calcContainerHeaderHeight } from "./calcContainerHeaderHeight";
 import type { ContainerState } from "../state/ContainerState";

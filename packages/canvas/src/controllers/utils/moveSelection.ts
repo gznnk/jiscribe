@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import { createCowObjects } from "./cowObjects";
 import type { ObjectState } from "../../states/objects/base/ObjectState";

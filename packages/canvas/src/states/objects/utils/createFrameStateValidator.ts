@@ -1,4 +1,4 @@
-import { isObject } from "@workspace/basic-validators";
+import { isObject } from "@jiscribe/basic-validators";
 
 import {
 	hasValidIdAndType,

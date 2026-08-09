@@ -1,8 +1,8 @@
 import type {
 	ObjectTextEditOverflowResolver,
 	ObjectTypeDefinition,
-} from "@workspace/canvas";
-import { createFrameBehavior } from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas";
+import { createFrameBehavior } from "@jiscribe/canvas-sdk";
 
 import { recordDocDefinition } from "./doc";
 import { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";

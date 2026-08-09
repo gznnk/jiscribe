@@ -1,5 +1,5 @@
-import type { CreateObjectState } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
+import type { CreateObjectState } from "@jiscribe/canvas";
+import type { TextSlot } from "@jiscribe/canvas/doc";
 
 import type { RecordFeatures } from "../schema/RecordDoc";
 

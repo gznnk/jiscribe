@@ -1,4 +1,4 @@
-import type { SelectionControlEvent } from "@workspace/canvas";
+import type { SelectionControlEvent } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
 import type { BraceState } from "../../state/brace/BraceState";

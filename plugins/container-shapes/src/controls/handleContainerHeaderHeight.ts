@@ -1,13 +1,13 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
-} from "@workspace/canvas";
-import { PRECISION } from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas";
+import { PRECISION } from "@jiscribe/canvas-sdk";
 import {
 	calcInverseAffineTransformedPoint,
 	degreesToRadians,
 	roundToDecimal,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { CONTAINER_MIN_HEADER_HEIGHT } from "../schema/ContainerDoc";
 import type { ContainerState } from "../state/ContainerState";

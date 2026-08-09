@@ -1,9 +1,9 @@
 /**
  * Headless (UI-independent) counterpart of `.`: the whole of
- * `@workspace/canvas/unstable-doc` plus the doc-side parts only plugins use.
+ * `@jiscribe/canvas/unstable-doc` plus the doc-side parts only plugins use.
  */
 
-export * from "@workspace/canvas/unstable-doc";
+export * from "@jiscribe/canvas/unstable-doc";
 
 // One call per Frame-family shape in place of its factory / doc-validator files.
 // The UI-side counterpart is createFrameObjectDefinition in `.`, which takes the

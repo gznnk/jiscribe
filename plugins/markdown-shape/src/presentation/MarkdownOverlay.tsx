@@ -1,6 +1,6 @@
-import type { FrameTextOverlayProps } from "@workspace/canvas-sdk";
-import { TextOverlayFrame } from "@workspace/canvas-sdk";
-import { renderMarkdown } from "@workspace/markdown";
+import type { FrameTextOverlayProps } from "@jiscribe/canvas-sdk";
+import { TextOverlayFrame } from "@jiscribe/canvas-sdk";
+import { renderMarkdown } from "@jiscribe/markdown";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef } from "react";
 
@@ -25,7 +25,7 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 }) => {
 	const bodyRef = useRef<HTMLDivElement>(null);
 
-	// XSS sanitization is guaranteed by DOMPurify inside @workspace/markdown's
+	// XSS sanitization is guaranteed by DOMPurify inside @jiscribe/markdown's
 	// renderMarkdown. Responsibility for maintaining sanitization lies there.
 	const renderedHtml = useMemo(
 		() => (text ? renderMarkdown(text) : ""),

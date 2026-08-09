@@ -4,7 +4,7 @@ import {
 	type BoxFeatures,
 	type Point,
 	type TransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { routeOrthogonalConnector } from "..";
 import type { ConnectPointId } from "../../../../../../schemas/objects/types/EndpointRef";

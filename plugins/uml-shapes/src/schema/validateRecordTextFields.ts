@@ -1,8 +1,8 @@
-import { isObject, isString } from "@workspace/basic-validators";
-import type { SemanticDiagnostic } from "@workspace/canvas/doc";
-import { TEXT_SLOT_STYLE_KEYS } from "@workspace/canvas/doc";
-import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
-import { validateTextSlotStyleFields } from "@workspace/canvas-sdk/doc";
+import { isObject, isString } from "@jiscribe/basic-validators";
+import type { SemanticDiagnostic } from "@jiscribe/canvas/doc";
+import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/canvas/doc";
+import type { ObjectDocValidateFn } from "@jiscribe/canvas-sdk/doc";
+import { validateTextSlotStyleFields } from "@jiscribe/canvas-sdk/doc";
 
 import {
 	isRecordListSlotId,

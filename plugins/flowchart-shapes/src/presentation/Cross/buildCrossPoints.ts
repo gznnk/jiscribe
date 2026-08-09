@@ -1,8 +1,8 @@
 import {
 	formatPolygonPoints,
 	centeredPolygonOutline,
-} from "@workspace/canvas-sdk";
-import type { Point } from "@workspace/geometry";
+} from "@jiscribe/canvas-sdk";
+import type { Point } from "@jiscribe/geometry";
 
 /**
  * Cross (plus) outline vertices, with arms one third of the width/height, for a

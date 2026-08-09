@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildTerminalWindowFigure } from "./buildTerminalWindowFigure";
 import type { TerminalWindowState } from "../../state/terminalWindow/TerminalWindowState";

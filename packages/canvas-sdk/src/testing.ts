@@ -1,5 +1,5 @@
 /**
- * Test-only entry (`@workspace/canvas-sdk/testing`): suites shared by the shape
+ * Test-only entry (`@jiscribe/canvas-sdk/testing`): suites shared by the shape
  * plugins' unit tests. Kept out of `.` / `./doc` so no runtime bundle can reach it.
  *
  * vitest is imported directly here (devDependency); publishing this package to npm

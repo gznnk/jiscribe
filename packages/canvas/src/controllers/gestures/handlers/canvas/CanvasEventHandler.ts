@@ -1,4 +1,4 @@
-﻿import { roundToDecimal } from "@workspace/geometry";
+﻿import { roundToDecimal } from "@jiscribe/geometry";
 
 import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";

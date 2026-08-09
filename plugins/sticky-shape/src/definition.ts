@@ -1,5 +1,5 @@
-import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { createFrameObjectDefinition } from "@workspace/canvas-sdk";
+import type { ObjectTypeDefinition } from "@jiscribe/canvas";
+import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
 
 import { stickyDocDefinition } from "./doc";
 import { StickyColorMenu } from "./menu/StickyColorMenu";

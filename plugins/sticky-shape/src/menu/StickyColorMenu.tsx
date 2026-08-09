@@ -1,4 +1,4 @@
-import type { ObjectMenuItemProps } from "@workspace/canvas";
+import type { ObjectMenuItemProps } from "@jiscribe/canvas";
 import {
 	ColorPreviewIcon,
 	ObjectMenuButton,
@@ -7,7 +7,7 @@ import {
 	getFirstSelectedWithProp,
 	useCanvasMessages,
 	useSubmenuPosition,
-} from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
 import { STICKY_PRESET_COLORS } from "./StickyColorConstants";

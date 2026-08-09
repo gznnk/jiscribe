@@ -1,4 +1,4 @@
-import type { Dimensions, Rect } from "@workspace/geometry";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";

@@ -1,4 +1,4 @@
-import type { CreateObjectState } from "@workspace/canvas";
+import type { CreateObjectState } from "@jiscribe/canvas";
 
 import type { SmartphoneFeatures } from "../../schema/smartphone/SmartphoneDoc";
 

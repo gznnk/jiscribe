@@ -1,6 +1,6 @@
-import type { ObjectTextRegionCalculator } from "@workspace/canvas";
-import type { Dimensions } from "@workspace/geometry";
-import { calcInsetRect } from "@workspace/geometry";
+import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
+import type { Dimensions } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
 
 /**
  * Insets the right by the cap radius (height / 2) so the full-height region

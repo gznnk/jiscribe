@@ -2,7 +2,7 @@ import {
 	calcFrameBoxFeatures,
 	isTransformedFrame,
 	type Point,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { calcEndpointDirection } from "./endpointDirection";
 import { routeOrthogonalConnector } from "./routeOrthogonalConnector";

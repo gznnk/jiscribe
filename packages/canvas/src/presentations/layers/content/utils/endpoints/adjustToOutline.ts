@@ -6,7 +6,7 @@ import {
 	type Point,
 	type TransformedEllipse,
 	type TransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import type { GeometryType } from "../../../../../schemas/objects/types/GeometryType";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";

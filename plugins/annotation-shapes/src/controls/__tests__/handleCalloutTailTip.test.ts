@@ -1,8 +1,8 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
-} from "@workspace/canvas";
-import type { Point } from "@workspace/geometry";
+} from "@jiscribe/canvas";
+import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { CalloutState } from "../../state/callout/CalloutState";

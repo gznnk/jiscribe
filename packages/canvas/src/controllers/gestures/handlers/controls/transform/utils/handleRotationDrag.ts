@@ -1,11 +1,11 @@
-import type { TransformedFrame } from "@workspace/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
 import {
 	calcVectorAngleRad,
 	isTransformedFrame,
 	normalizeAngleDeg,
 	radiansToDegrees,
 	roundToDecimal,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { updateSingleGroupBounds } from "./updateSingleGroupBounds";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";

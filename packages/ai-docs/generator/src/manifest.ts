@@ -1,14 +1,14 @@
 import {
 	builtinObjectDocDefinitions,
 	type ObjectDocDefinition,
-} from "@workspace/canvas/doc";
-import { annotationDocPlugin } from "@workspace/plugin-annotation-shapes/doc";
-import { containerDocPlugin } from "@workspace/plugin-container-shapes/doc";
-import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
-import { generalDocPlugin } from "@workspace/plugin-general-shapes/doc";
-import { markdownDocPlugin } from "@workspace/plugin-markdown-shape/doc";
-import { stickyDocPlugin } from "@workspace/plugin-sticky-shape/doc";
-import { umlDocPlugin } from "@workspace/plugin-uml-shapes/doc";
+} from "@jiscribe/canvas/doc";
+import { annotationDocPlugin } from "@jiscribe/plugin-annotation-shapes/doc";
+import { containerDocPlugin } from "@jiscribe/plugin-container-shapes/doc";
+import { flowchartDocPlugin } from "@jiscribe/plugin-flowchart-shapes/doc";
+import { generalDocPlugin } from "@jiscribe/plugin-general-shapes/doc";
+import { markdownDocPlugin } from "@jiscribe/plugin-markdown-shape/doc";
+import { stickyDocPlugin } from "@jiscribe/plugin-sticky-shape/doc";
+import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
 
 /**
  * Total order of the types shipped in the official schema and AI docs. The

@@ -1,4 +1,4 @@
-import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
+import type { FrameKeyPoints, TransformedFrame } from "@jiscribe/geometry";
 
 import type { AnchorResizeResult } from "./calcAnchorResize";
 import { calcAnchorResize } from "./calcAnchorResize";

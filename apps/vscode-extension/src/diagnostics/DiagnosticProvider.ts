@@ -3,7 +3,7 @@
 // (extension.js) so activation stays light.
 //
 // The flowchart / container / markdown / sticky / general / annotation plugins are wired in through their own headless
-// `./doc` entries: those import only `@workspace/canvas/doc` / `@workspace/canvas/unstable-doc`
+// `./doc` entries: those import only `@jiscribe/canvas/doc` / `@jiscribe/canvas/unstable-doc`
 // (no React, and for markdown no markdown-it / KaTeX either — rendering lives in its
 // presentation), so esbuild keeps the Node bundle small even though it now validates
 // plugin shapes too (docs/05_extensibility/plugin-architecture-requirements.md
@@ -11,14 +11,14 @@
 import {
 	createCanvasParser,
 	type SemanticDiagnostic,
-} from "@workspace/canvas/doc";
-import { annotationDocPlugin } from "@workspace/plugin-annotation-shapes/doc";
-import { containerDocPlugin } from "@workspace/plugin-container-shapes/doc";
-import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
-import { generalDocPlugin } from "@workspace/plugin-general-shapes/doc";
-import { markdownDocPlugin } from "@workspace/plugin-markdown-shape/doc";
-import { stickyDocPlugin } from "@workspace/plugin-sticky-shape/doc";
-import { umlDocPlugin } from "@workspace/plugin-uml-shapes/doc";
+} from "@jiscribe/canvas/doc";
+import { annotationDocPlugin } from "@jiscribe/plugin-annotation-shapes/doc";
+import { containerDocPlugin } from "@jiscribe/plugin-container-shapes/doc";
+import { flowchartDocPlugin } from "@jiscribe/plugin-flowchart-shapes/doc";
+import { generalDocPlugin } from "@jiscribe/plugin-general-shapes/doc";
+import { markdownDocPlugin } from "@jiscribe/plugin-markdown-shape/doc";
+import { stickyDocPlugin } from "@jiscribe/plugin-sticky-shape/doc";
+import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
 import * as vscode from "vscode";
 
 // Plugin-aware parser: built-in types plus the flowchart / container / markdown / sticky /

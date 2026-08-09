@@ -1,4 +1,4 @@
-import { degreesToRadians } from "@workspace/geometry";
+import { degreesToRadians } from "@jiscribe/geometry";
 
 export const createSvgTransform = (
 	sx: number,

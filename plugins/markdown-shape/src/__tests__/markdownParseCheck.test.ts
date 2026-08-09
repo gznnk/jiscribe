@@ -1,4 +1,4 @@
-import { createParseCheckSuite } from "@workspace/canvas-sdk/testing";
+import { createParseCheckSuite } from "@jiscribe/canvas-sdk/testing";
 
 import { markdownDocPlugin } from "../doc";
 

@@ -1,4 +1,4 @@
-import { calcPolyBoundingBox, type Point } from "@workspace/geometry";
+import { calcPolyBoundingBox, type Point } from "@jiscribe/geometry";
 
 import { DocOperationError } from "./errors";
 import { generateUniqueId } from "./ids";

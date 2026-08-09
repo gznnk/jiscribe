@@ -1,4 +1,4 @@
-import type { Transform } from "@workspace/geometry";
+import type { Transform } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { MIN_GROUP_DIMENSION } from "../../../constants/groupDimensions";

@@ -1,4 +1,4 @@
-import type { BoundingBox } from "@workspace/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef } from "react";
 

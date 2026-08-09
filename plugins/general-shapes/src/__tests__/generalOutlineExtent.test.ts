@@ -1,5 +1,5 @@
-import type { ObjectOutlineCalculator } from "@workspace/canvas";
-import type { Dimensions, Point } from "@workspace/geometry";
+import type { ObjectOutlineCalculator } from "@jiscribe/canvas";
+import type { Dimensions, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { generalPlugin } from "../plugin";

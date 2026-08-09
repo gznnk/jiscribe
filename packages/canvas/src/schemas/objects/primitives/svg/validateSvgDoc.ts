@@ -1,4 +1,4 @@
-import { isString } from "@workspace/basic-validators";
+import { isString } from "@jiscribe/basic-validators";
 
 import { SvgFeatures } from "./SvgDoc";
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";

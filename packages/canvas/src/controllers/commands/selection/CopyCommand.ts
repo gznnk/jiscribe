@@ -1,4 +1,4 @@
-import { isTransformedFrame } from "@workspace/geometry";
+import { isTransformedFrame } from "@jiscribe/geometry";
 
 import type { ClipboardData } from "./ClipboardData";
 import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";

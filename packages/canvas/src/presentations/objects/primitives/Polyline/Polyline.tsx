@@ -1,4 +1,4 @@
-import { calcVectorAngleRad } from "@workspace/geometry";
+import { calcVectorAngleRad } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 

@@ -1,5 +1,5 @@
-import type { Dimensions, Rect } from "@workspace/geometry";
-import { calcInsetRect } from "@workspace/geometry";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
 
 import { DOCUMENT_WAVE_RATIO } from "../../schema/document/DocumentDoc";
 import { MULTI_DOCUMENT_OFFSET_RATIO } from "../../schema/multiDocument/MultiDocumentDoc";

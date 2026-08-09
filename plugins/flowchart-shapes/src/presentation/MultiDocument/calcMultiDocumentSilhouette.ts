@@ -1,5 +1,5 @@
-import type { Point, QuadraticBezier, Rect } from "@workspace/geometry";
-import { sliceQuadraticBezier } from "@workspace/geometry";
+import type { Point, QuadraticBezier, Rect } from "@jiscribe/geometry";
+import { sliceQuadraticBezier } from "@jiscribe/geometry";
 
 import { calcMultiDocumentSheets } from "./calcMultiDocumentSheets";
 import { DOCUMENT_WAVE_RATIO } from "../../schema/document/DocumentDoc";

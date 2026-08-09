@@ -1,4 +1,4 @@
-import type { BoundingBox, FrameKeyPoints, Point } from "@workspace/geometry";
+import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";

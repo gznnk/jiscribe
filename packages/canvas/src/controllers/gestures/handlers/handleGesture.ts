@@ -2,8 +2,8 @@ import {
 	calcFrameKeyPoints,
 	calcPolyKeyPoints,
 	isTransformedFrame,
-} from "@workspace/geometry";
-import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
+} from "@jiscribe/geometry";
+import type { FrameKeyPoints, TransformedFrame } from "@jiscribe/geometry";
 
 import { isPoly } from "../../../schemas/objects/types/Poly";
 import type {

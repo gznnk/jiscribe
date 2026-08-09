@@ -1,6 +1,6 @@
-import { isArray, isObject, isString } from "@workspace/basic-validators";
-import type { Point } from "@workspace/geometry";
-import { isPoint } from "@workspace/geometry";
+import { isArray, isObject, isString } from "@jiscribe/basic-validators";
+import type { Point } from "@jiscribe/geometry";
+import { isPoint } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ObjectStateValidatorRegistry } from "../../../states/registry/ObjectStateValidatorRegistry";

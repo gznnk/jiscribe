@@ -1,12 +1,12 @@
-import type { SelectionControlProps } from "@workspace/canvas";
+import type { SelectionControlProps } from "@jiscribe/canvas";
 import {
 	getResizeCursorForRotation,
 	SelectionControlPill,
-} from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas-sdk";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { calcContainerHeaderHeight } from "../presentation/calcContainerHeaderHeight";

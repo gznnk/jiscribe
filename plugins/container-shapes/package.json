@@ -1,5 +1,5 @@
 {
-	"name": "@workspace/plugin-container-shapes",
+	"name": "@jiscribe/plugin-container-shapes",
 	"version": "0.0.0",
 	"private": true,
 	"description": "UC1 dogfood: container 図形を canvas 公開 API のみで外部パッケージとして提供する実験（docs/05_extensibility/plugin-architecture-requirements.md）",
@@ -15,22 +15,22 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@workspace/basic-validators": "workspace:*",
-		"@workspace/geometry": "workspace:*"
+		"@jiscribe/basic-validators": "workspace:*",
+		"@jiscribe/geometry": "workspace:*"
 	},
 	"peerDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/canvas-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:"
 	},
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
 		"@types/react": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/canvas-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

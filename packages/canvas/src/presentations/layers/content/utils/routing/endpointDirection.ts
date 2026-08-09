@@ -3,7 +3,7 @@ import {
 	snapToDirection,
 	type OrthogonalDirection,
 	type Point,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import type { AnchorSpec } from "../../../../../schemas/objects/types/EndpointRef";
 import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";

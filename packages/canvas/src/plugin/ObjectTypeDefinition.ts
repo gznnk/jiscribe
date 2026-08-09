@@ -103,7 +103,7 @@ export type ObjectTypeDefinition<
 	 * (cx / cy / width / height / rotation / scaleX / scaleY), for the consumers
 	 * that memoize connector endpoint resolution on those fields. Required for a
 	 * type whose silhouette can change while the frame stands still (the callout's
-	 * tail, in `@workspace/plugin-annotation-shapes`) — without it, connectors
+	 * tail, in `@jiscribe/plugin-annotation-shapes`) — without it, connectors
 	 * attached to the shape keep the
 	 * endpoints resolved against the previous silhouette. Omitted = the frame
 	 * fields fully determine the resolved geometry (see ObjectGeometryKeyRegistry).

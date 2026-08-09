@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import { DEFAULT_FONT_FAMILY } from "@workspace/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
 
 /**
  * A paper sticky note: rect geometry with no stroke and no corner radius, drawn

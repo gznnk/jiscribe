@@ -1,10 +1,10 @@
-import type { Ellipse, Frame, Rect } from "@workspace/geometry";
+import type { Ellipse, Frame, Rect } from "@jiscribe/geometry";
 import {
 	convertEllipseToFrame,
 	convertFrameToEllipse,
 	convertFrameToRect,
 	convertRectToFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import type { ObjectMapperType } from "./MapperTypes";
 import { ObjectMapper } from "./ObjectMapper";

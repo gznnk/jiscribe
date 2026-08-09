@@ -2,7 +2,7 @@ import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
 	roundToDecimal,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { PRECISION } from "../../../../../constants/precision";

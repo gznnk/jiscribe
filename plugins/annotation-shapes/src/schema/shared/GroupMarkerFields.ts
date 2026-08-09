@@ -1,5 +1,5 @@
-import { isEnum, isNumber } from "@workspace/basic-validators";
-import type { ExtraStylePropertyDescriptor } from "@workspace/canvas/doc";
+import { isEnum, isNumber } from "@jiscribe/basic-validators";
+import type { ExtraStylePropertyDescriptor } from "@jiscribe/canvas/doc";
 
 /**
  * Directions a group marker can face. It faces *away* from what it groups, so

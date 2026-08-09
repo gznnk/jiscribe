@@ -6,7 +6,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * fields (cx / cy / width / height / rotation / scaleX / scaleY) into one
  * comparable value, for consumers that memoize connector endpoint resolution on
  * those frame fields (`useResolvedConnectorPoints`). The callout's tail
- * (`@workspace/plugin-annotation-shapes`) is the motivating case: it reshapes the
+ * (`@jiscribe/plugin-annotation-shapes`) is the motivating case: it reshapes the
  * outline while every frame field stays put, so without a key the resolved
  * endpoints go stale mid-drag.
  *

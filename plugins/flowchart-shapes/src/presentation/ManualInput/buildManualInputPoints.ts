@@ -1,8 +1,8 @@
 import {
 	formatPolygonPoints,
 	centeredPolygonOutline,
-} from "@workspace/canvas-sdk";
-import type { Point } from "@workspace/geometry";
+} from "@jiscribe/canvas-sdk";
+import type { Point } from "@jiscribe/geometry";
 
 import { MANUAL_INPUT_SLOPE_RATIO } from "../../schema/manualInput/ManualInputDoc";
 

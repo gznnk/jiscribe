@@ -1,4 +1,4 @@
-import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildDiamondPoints } from "./buildDiamondPoints";
 import type { DiamondState } from "../../state/diamond/DiamondState";

@@ -1,4 +1,4 @@
-import type { BoundingBox, Point } from "@workspace/geometry";
+import type { BoundingBox, Point } from "@jiscribe/geometry";
 import type React from "react";
 import { memo, useCallback, useLayoutEffect } from "react";
 

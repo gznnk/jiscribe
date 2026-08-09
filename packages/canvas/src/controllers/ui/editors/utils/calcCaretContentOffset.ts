@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextMeasureFont } from "../../../../states/objects/utils/measureText";

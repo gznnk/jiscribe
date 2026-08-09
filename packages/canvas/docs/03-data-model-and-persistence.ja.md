@@ -141,7 +141,7 @@ type CanvasParseResult =
 利用者（VSCode 拡張の Node 側 DiagnosticProvider・MCP サーバーなど）向け。
 
 ```ts
-import { parseCanvasText } from "@workspace/canvas/doc";
+import { parseCanvasText } from "@jiscribe/canvas/doc";
 ```
 
 この境界を通った Doc は正当であることを前提に、内部関数は防御的チェックを省く

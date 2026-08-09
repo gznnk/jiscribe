@@ -1,13 +1,13 @@
-import { Canvas, parseCanvasText } from "@workspace/canvas";
-import type { CanvasDoc } from "@workspace/canvas";
+import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import type { CanvasDoc } from "@jiscribe/canvas";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-// 実物 .jis.json の正本は landing の配信ディレクトリ（重複を作らずそこから読む）。
-// #173 の OSS 切り出しで置き場所を再検討する。
-const diagramLoaders = import.meta.glob<string>(
-	"../../../landing/public/demo/diagrams/*.jis.json",
-	{ query: "?raw", import: "default" },
-);
+// 作例 .jis.json の正本はここ（apps/canvas-examples/diagrams/）。配信側は
+// ここから同期する。
+const diagramLoaders = import.meta.glob<string>("../../diagrams/*.jis.json", {
+	query: "?raw",
+	import: "default",
+});
 
 const diagramEntries = Object.entries(diagramLoaders)
 	.map(([path, load]) => ({

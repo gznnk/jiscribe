@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 /**
  * Walks an absolute SVG path into its points, control points included, so a

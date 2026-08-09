@@ -1,4 +1,4 @@
-import type { BoundingBox } from "@workspace/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { Viewport } from "../../../states/canvas/Viewport";

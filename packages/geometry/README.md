@@ -1,6 +1,6 @@
 > 🌐 日本語版: [README.ja.md](./README.ja.md)
 
-# @workspace/geometry
+# @jiscribe/geometry
 
 Geometry types and calculations shared across jiscribe. Dependency-free, pure
 functions only — no rendering, no framework, no state.
@@ -8,8 +8,8 @@ functions only — no rendering, no framework, no state.
 ## Usage
 
 ```typescript
-import type { Point, TransformedFrame } from "@workspace/geometry";
-import { calcFrameKeyPoints, isPoint } from "@workspace/geometry";
+import type { Point, TransformedFrame } from "@jiscribe/geometry";
+import { calcFrameKeyPoints, isPoint } from "@jiscribe/geometry";
 
 const frame: TransformedFrame = {
 	cx: 50,
@@ -25,7 +25,7 @@ const keyPoints = calcFrameKeyPoints(frame);
 ```
 
 Everything is re-exported from the package root, so import from
-`@workspace/geometry` rather than reaching into `src/`.
+`@jiscribe/geometry` rather than reaching into `src/`.
 
 ## What is in here
 
@@ -49,9 +49,9 @@ Two contracts are worth knowing before writing against this package:
 ## Development
 
 ```bash
-pnpm --filter @workspace/geometry typecheck
-pnpm --filter @workspace/geometry lint
-pnpm --filter @workspace/geometry test
+pnpm --filter @jiscribe/geometry typecheck
+pnpm --filter @jiscribe/geometry lint
+pnpm --filter @jiscribe/geometry test
 ```
 
 ## Documentation

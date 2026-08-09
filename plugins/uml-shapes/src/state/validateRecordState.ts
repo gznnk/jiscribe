@@ -1,7 +1,7 @@
-import { isObject, isString } from "@workspace/basic-validators";
-import type { ObjectStateValidator } from "@workspace/canvas";
-import { createFrameStateValidator } from "@workspace/canvas-sdk";
-import type { StateRecord } from "@workspace/canvas-sdk";
+import { isObject, isString } from "@jiscribe/basic-validators";
+import type { ObjectStateValidator } from "@jiscribe/canvas";
+import { createFrameStateValidator } from "@jiscribe/canvas-sdk";
+import type { StateRecord } from "@jiscribe/canvas-sdk";
 
 import {
 	isRecordSlotId,

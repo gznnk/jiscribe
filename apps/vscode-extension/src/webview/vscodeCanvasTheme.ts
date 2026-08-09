@@ -1,5 +1,5 @@
-import { darkCanvasTheme } from "@workspace/canvas";
-import type { CanvasTheme } from "@workspace/canvas";
+import { darkCanvasTheme } from "@jiscribe/canvas";
+import type { CanvasTheme } from "@jiscribe/canvas";
 
 /**
  * Maps the `--vscode-*` CSS variables that the VSCode webview auto-injects

@@ -1,12 +1,12 @@
-# @workspace/canvas
+# @jiscribe/canvas
 
 jiscribe の SVG キャンバス実装です。
 
 ## 使い方
 
 ```tsx
-import { Canvas } from "@workspace/canvas";
-import type { CanvasDoc } from "@workspace/canvas";
+import { Canvas } from "@jiscribe/canvas";
+import type { CanvasDoc } from "@jiscribe/canvas";
 
 const initialDoc: CanvasDoc = { version: 1, root: [], connectors: [] };
 
@@ -19,10 +19,10 @@ function App() {
 
 ```bash
 # 型チェック
-pnpm --filter @workspace/canvas typecheck
+pnpm --filter @jiscribe/canvas typecheck
 
 # Lint
-pnpm --filter @workspace/canvas lint
+pnpm --filter @jiscribe/canvas lint
 ```
 
 ## ドキュメント

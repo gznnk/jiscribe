@@ -128,7 +128,7 @@ initializes it idempotently if it is uninitialized. This structurally lets calle
 It is aimed at consumers who "just want to parse text into a `CanvasDoc`" or build one programmatically (such as the DiagnosticProvider on the Node side of the VSCode extension, or the MCP server).
 
 ```ts
-import { parseCanvasText } from "@workspace/canvas/doc";
+import { parseCanvasText } from "@jiscribe/canvas/doc";
 ```
 
 Assuming that any Doc that has passed this boundary is valid, internal functions omit defensive checks

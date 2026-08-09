@@ -1,4 +1,4 @@
-import type { Rect } from "@workspace/geometry";
+import type { Rect } from "@jiscribe/geometry";
 import { expect } from "vitest";
 
 /**

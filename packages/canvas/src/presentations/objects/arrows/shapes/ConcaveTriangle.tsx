@@ -1,4 +1,4 @@
-import { radiansToDegrees } from "@workspace/geometry";
+import { radiansToDegrees } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
 

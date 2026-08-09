@@ -1,4 +1,4 @@
-import { calcOrientedFrameFromPoints } from "@workspace/geometry";
+import { calcOrientedFrameFromPoints } from "@jiscribe/geometry";
 
 import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";

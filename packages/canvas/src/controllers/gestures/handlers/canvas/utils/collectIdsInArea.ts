@@ -1,4 +1,4 @@
-import type { BoundingBox } from "@workspace/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 
 /**
  * Collects the IDs of objects fully contained within the area-selection rectangle.

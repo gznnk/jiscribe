@@ -1,4 +1,4 @@
-import { createStencilIcon } from "@workspace/canvas-sdk";
+import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
 /**
  * The radii follow the shape's own ratios: SMARTPHONE_CORNER_RATIO (0.13) of the

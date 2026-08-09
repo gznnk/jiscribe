@@ -1,30 +1,30 @@
-import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@workspace/canvas";
-import { Canvas } from "@workspace/canvas";
-import { createCanvasParser } from "@workspace/canvas/doc";
+import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@jiscribe/canvas";
+import { Canvas } from "@jiscribe/canvas";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 import {
 	annotationPlugin,
 	annotationToolbarEntry,
-} from "@workspace/plugin-annotation-shapes";
+} from "@jiscribe/plugin-annotation-shapes";
 import {
 	containerPlugin,
 	containerToolbarEntry,
-} from "@workspace/plugin-container-shapes";
+} from "@jiscribe/plugin-container-shapes";
 import {
 	flowchartPlugin,
 	flowchartToolbarEntry,
-} from "@workspace/plugin-flowchart-shapes";
+} from "@jiscribe/plugin-flowchart-shapes";
 import {
 	generalPlugin,
 	generalToolbarEntry,
-} from "@workspace/plugin-general-shapes";
-import { markdownPlugin } from "@workspace/plugin-markdown-shape";
-import { stickyPlugin } from "@workspace/plugin-sticky-shape";
-import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
+} from "@jiscribe/plugin-general-shapes";
+import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
+import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
+import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
 
 // flowchart / container / markdown / sticky / general / annotation 図形は core から削除され、
-// それぞれ @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
-// @workspace/plugin-general-shapes / @workspace/plugin-annotation-shapes が唯一の供給元
+// それぞれ @jiscribe/plugin-flowchart-shapes / @jiscribe/plugin-container-shapes /
+// @jiscribe/plugin-markdown-shape / @jiscribe/plugin-sticky-shape /
+// @jiscribe/plugin-general-shapes / @jiscribe/plugin-annotation-shapes が唯一の供給元
 // （docs/05_extensibility/plugin-architecture-requirements.md）。この example は
 // 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言を createCanvasParser と
 // Canvas の initialConfig の両方に渡すだけで、doc の検証と図形一式の登録が揃う。

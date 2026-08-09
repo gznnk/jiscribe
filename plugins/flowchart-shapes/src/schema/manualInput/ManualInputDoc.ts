@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
+import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 
 /** Height of the sloping top edge as a fraction of the height (shared by renderer and text region). */
 export const MANUAL_INPUT_SLOPE_RATIO = 0.25;

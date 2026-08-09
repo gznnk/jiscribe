@@ -2,8 +2,8 @@ import {
 	calcFrameCornerPoints,
 	calcOrientedFrameFromPoints,
 	isTransformedFrame,
-} from "@workspace/geometry";
-import type { Point, Transform, TransformedFrame } from "@workspace/geometry";
+} from "@jiscribe/geometry";
+import type { Point, Transform, TransformedFrame } from "@jiscribe/geometry";
 
 import { MIN_GROUP_DIMENSION } from "../../constants/groupDimensions";
 import { isPoly } from "../../schemas/objects/types/Poly";

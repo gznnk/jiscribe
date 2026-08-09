@@ -1,5 +1,5 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
-import type { Rect } from "@workspace/geometry";
+import { createFrameObject } from "@jiscribe/canvas-sdk";
+import type { Rect } from "@jiscribe/geometry";
 
 import { calcRecordSlotRegions } from "./calcRecordSlotRegions";
 import {

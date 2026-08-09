@@ -1,5 +1,5 @@
-import type { Dimensions } from "@workspace/geometry";
-import { calcInsetRect } from "@workspace/geometry";
+import type { Dimensions } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
 
 import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 

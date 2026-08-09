@@ -1,4 +1,4 @@
-import { centeredPolygonOutline } from "@workspace/canvas-sdk";
+import { centeredPolygonOutline } from "@jiscribe/canvas-sdk";
 
 import { calcLaptopPoints } from "./calcLaptopPoints";
 

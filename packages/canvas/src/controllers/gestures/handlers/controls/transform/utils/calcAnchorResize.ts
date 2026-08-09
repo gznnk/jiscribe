@@ -3,13 +3,13 @@ import type {
 	FrameKeyPoints,
 	KeyPointId,
 	TransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 import {
 	calcInverseAffineTransformedPoint,
 	calcNonZeroSign,
 	calcProjectedPointOnLine,
 	nanToZero,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import {
 	calcHeightWithAspectRatio,

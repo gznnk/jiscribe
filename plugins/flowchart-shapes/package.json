@@ -1,5 +1,5 @@
 {
-	"name": "@workspace/plugin-flowchart-shapes",
+	"name": "@jiscribe/plugin-flowchart-shapes",
 	"version": "0.0.0",
 	"private": true,
 	"description": "flowchart 18 図形を canvas 公開 API のみで外部パッケージとして提供する（docs/05_extensibility/plugin-architecture-requirements.md）",
@@ -15,21 +15,21 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@workspace/geometry": "workspace:*"
+		"@jiscribe/geometry": "workspace:*"
 	},
 	"peerDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/canvas-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:"
 	},
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
 		"@types/react": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/canvas-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

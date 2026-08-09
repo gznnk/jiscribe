@@ -1,5 +1,5 @@
-import type { Stencil } from "@workspace/canvas";
-import { createTypeStencils } from "@workspace/canvas-sdk";
+import type { Stencil } from "@jiscribe/canvas";
+import { createTypeStencils } from "@jiscribe/canvas-sdk";
 
 import { MarkdownIcon } from "./MarkdownIcon";
 

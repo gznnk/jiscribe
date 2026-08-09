@@ -1,6 +1,6 @@
-import type { ObjectTextRegionCalculator } from "@workspace/canvas";
-import type { Dimensions } from "@workspace/geometry";
-import { calcInsetRect } from "@workspace/geometry";
+import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
+import type { Dimensions } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
 
 import { CARD_CUT_RATIO } from "../../schema/card/CardDoc";
 

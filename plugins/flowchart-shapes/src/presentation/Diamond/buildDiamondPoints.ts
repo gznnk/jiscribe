@@ -1,8 +1,8 @@
 import {
 	formatPolygonPoints,
 	centeredPolygonOutline,
-} from "@workspace/canvas-sdk";
-import type { Point } from "@workspace/geometry";
+} from "@jiscribe/canvas-sdk";
+import type { Point } from "@jiscribe/geometry";
 
 /**
  * Diamond outline vertices (top / right / bottom / left) for a bounding box

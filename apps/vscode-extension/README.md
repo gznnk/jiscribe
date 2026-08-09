@@ -101,10 +101,8 @@ _(More detailed references will be available on our doc site soon!)_
 
 ## License
 
-Copyright © 2026 gznnk. All rights reserved.
-
-Jiscribe is proprietary software; its source code is not publicly available.
-Use of this extension is governed by the bundled `LICENSE.txt`.
+MIT © 2026 gznnk. The source lives at
+[github.com/gznnk/jiscribe](https://github.com/gznnk/jiscribe).
 
 This extension bundles third-party open-source software.
 See the bundled `THIRD-PARTY-NOTICES.txt` for their license texts.

@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import {
 	FOLDER_TAB_HEIGHT_RATIO,

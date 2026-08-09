@@ -6,12 +6,12 @@ import {
 	type CanvasExportImagePayload,
 	type CanvasHandle,
 	type ToolbarEntry,
-} from "@workspace/canvas";
-import { annotationToolbarEntry } from "@workspace/plugin-annotation-shapes";
-import { containerToolbarEntry } from "@workspace/plugin-container-shapes";
-import { flowchartToolbarEntry } from "@workspace/plugin-flowchart-shapes";
-import { generalToolbarEntry } from "@workspace/plugin-general-shapes";
-import { umlToolbarEntry } from "@workspace/plugin-uml-shapes";
+} from "@jiscribe/canvas";
+import { annotationToolbarEntry } from "@jiscribe/plugin-annotation-shapes";
+import { containerToolbarEntry } from "@jiscribe/plugin-container-shapes";
+import { flowchartToolbarEntry } from "@jiscribe/plugin-flowchart-shapes";
+import { generalToolbarEntry } from "@jiscribe/plugin-general-shapes";
+import { umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "katex/dist/katex.min.css";
@@ -24,7 +24,7 @@ import type {
 	WebviewToExtensionMessage,
 } from "../types/messages";
 
-// container 図形は @workspace/plugin-container-shapes から供給する
+// container 図形は @jiscribe/plugin-container-shapes から供給する
 // (docs/05_extensibility/plugin-architecture-requirements.md)。
 const initialConfig: CanvasConfig = { plugins };
 

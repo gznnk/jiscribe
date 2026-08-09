@@ -1,4 +1,4 @@
-import { createCanvasRegistries } from "@workspace/canvas";
+import { createCanvasRegistries } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
 import { generalPlugin } from "../plugin";

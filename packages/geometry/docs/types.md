@@ -2,7 +2,7 @@
 
 # Geometry Types
 
-The type system used by `@workspace/geometry`. Types fall into five groups:
+The type system used by `@jiscribe/geometry`. Types fall into five groups:
 basic values, primitive shapes, transformation, transformed shapes, and computed
 results.
 

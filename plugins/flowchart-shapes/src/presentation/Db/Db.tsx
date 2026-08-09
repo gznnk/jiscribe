@@ -1,4 +1,4 @@
-import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { DB_CAP_RATIO } from "../../schema/db/DbDoc";
 import type { DbState } from "../../state/db/DbState";

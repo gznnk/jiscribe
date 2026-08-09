@@ -1,6 +1,6 @@
-import { isCssSafeValue } from "@workspace/basic-validators";
-import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
-import { validateOptionalNumber } from "@workspace/canvas-sdk/doc";
+import { isCssSafeValue } from "@jiscribe/basic-validators";
+import type { ObjectDocValidateFn } from "@jiscribe/canvas-sdk/doc";
+import { validateOptionalNumber } from "@jiscribe/canvas-sdk/doc";
 
 /**
  * Validates the container-specific header fields (both optional). `headerFill`

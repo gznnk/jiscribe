@@ -1,4 +1,4 @@
-import type { SemanticDiagnostic } from "@workspace/canvas/doc";
+import type { SemanticDiagnostic } from "@jiscribe/canvas/doc";
 import { describe, it, expect } from "vitest";
 
 import { calloutDocDefinition } from "../../../doc";

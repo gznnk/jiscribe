@@ -1,5 +1,5 @@
 /**
- * Headless (UI-independent) implementation-detail layer of `@workspace/canvas`,
+ * Headless (UI-independent) implementation-detail layer of `@jiscribe/canvas`,
  * exposed for plugin authors building frame-family object types (#144 tier 2).
  *
  * The counterpart to `./unstable`, split off so the schema-side helpers a plugin's

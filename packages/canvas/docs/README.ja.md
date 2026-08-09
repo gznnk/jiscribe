@@ -2,7 +2,7 @@
 
 # canvas 設計ドキュメント
 
-`@workspace/canvas` の設計を 11 本の柱で整理したドキュメント群です。
+`@jiscribe/canvas` の設計を 11 本の柱で整理したドキュメント群です。
 全体像を俯瞰したい場合は、まず [設計思想](./01-design-philosophy.ja.md) と
 [アーキテクチャ](./02-architecture.ja.md) を読むことをおすすめします。
 

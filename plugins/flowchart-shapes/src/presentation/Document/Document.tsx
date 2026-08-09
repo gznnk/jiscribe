@@ -1,4 +1,4 @@
-import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildDocumentPath } from "./buildDocumentPath";
 import type { DocumentState } from "../../state/document/DocumentState";

@@ -1,5 +1,5 @@
 {
-	"name": "@workspace/plugin-uml-shapes",
+	"name": "@jiscribe/plugin-uml-shapes",
 	"version": "0.0.0",
 	"private": true,
 	"description": "UML 系図形（record = タイトル帯 + 任意個の区画を持つボックス）を canvas 公開 API のみで外部パッケージとして提供する（docs/05_extensibility/plugin-architecture-requirements.md）",
@@ -15,22 +15,22 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@workspace/basic-validators": "workspace:*",
-		"@workspace/geometry": "workspace:*"
+		"@jiscribe/basic-validators": "workspace:*",
+		"@jiscribe/geometry": "workspace:*"
 	},
 	"peerDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/canvas-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:"
 	},
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
 		"@types/react": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/canvas-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

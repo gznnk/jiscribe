@@ -1,5 +1,5 @@
-import { Canvas } from "@workspace/canvas";
-import type { CanvasDoc } from "@workspace/canvas";
+import { Canvas } from "@jiscribe/canvas";
+import type { CanvasDoc } from "@jiscribe/canvas";
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 

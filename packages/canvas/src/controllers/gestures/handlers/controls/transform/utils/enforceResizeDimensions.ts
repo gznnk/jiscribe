@@ -1,5 +1,5 @@
-import type { TransformedFrame } from "@workspace/geometry";
-import { calcNonZeroSign, nanToZero } from "@workspace/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
+import { calcNonZeroSign, nanToZero } from "@jiscribe/geometry";
 
 import type { TransformState } from "../../../../../../states/objects/base/TransformState";
 

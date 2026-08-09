@@ -1,5 +1,5 @@
-import { roundToDecimal } from "@workspace/geometry";
-import type { BoundingBox } from "@workspace/geometry";
+import { roundToDecimal } from "@jiscribe/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 
 import { PRECISION } from "../../constants/precision";
 import type { Camera, Viewport } from "../../states/canvas/Viewport";

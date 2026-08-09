@@ -1,6 +1,6 @@
-import type { ObjectAnchorRegionCalculator } from "@workspace/canvas";
-import type { Dimensions } from "@workspace/geometry";
-import { calcInsetRect } from "@workspace/geometry";
+import type { ObjectAnchorRegionCalculator } from "@jiscribe/canvas";
+import type { Dimensions } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
 
 import { LOOP_LIMIT_CUT_RATIO } from "../../schema/loopLimit/LoopLimitDoc";
 

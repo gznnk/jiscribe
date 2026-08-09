@@ -1,4 +1,4 @@
-import type { BoxFeatures, Point } from "@workspace/geometry";
+import type { BoxFeatures, Point } from "@jiscribe/geometry";
 
 const uniqueNumbers = (ns: number[]): number[] => [...new Set(ns)];
 

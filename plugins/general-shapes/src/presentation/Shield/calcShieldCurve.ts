@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import {
 	SHIELD_FLANK_CONTROL_Y_RATIO,
@@ -9,7 +9,7 @@ import {
 
 /**
  * A cubic segment as the four points an SVG `C` command and
- * {@link import("@workspace/geometry").sampleCubicBezier} both take: start, two
+ * {@link import("@jiscribe/geometry").sampleCubicBezier} both take: start, two
  * controls, end.
  */
 export type ShieldCurveSegment = [Point, Point, Point, Point];

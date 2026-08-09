@@ -1,4 +1,4 @@
-﻿import type { Point } from "@workspace/geometry";
+﻿import type { Point } from "@jiscribe/geometry";
 
 import { DEFAULT_FONT_FAMILY } from "../../constants/defaultFontFamily";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";

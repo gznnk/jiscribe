@@ -1,5 +1,5 @@
-import { Canvas, parseCanvasText } from "@workspace/canvas";
-import type { CanvasDoc } from "@workspace/canvas";
+import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import type { CanvasDoc } from "@jiscribe/canvas";
 
 // 図形 ID はページ内で一意にしてセレクタ・参照の衝突を避ける
 const parseSeedDoc = (rectId: string): CanvasDoc => {

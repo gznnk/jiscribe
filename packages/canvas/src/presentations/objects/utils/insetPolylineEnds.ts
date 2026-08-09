@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 /**
  * Shrink both ends of a polyline/line segment inward to meet the base of the arrowhead.

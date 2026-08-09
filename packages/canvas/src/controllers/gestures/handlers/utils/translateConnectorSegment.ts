@@ -1,5 +1,5 @@
-import { roundToDecimal } from "@workspace/geometry";
-import type { Point } from "@workspace/geometry";
+import { roundToDecimal } from "@jiscribe/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import { PRECISION } from "../../../../constants/precision";
 import {

@@ -1,13 +1,13 @@
-import type { ObjectTextRegionCalculator } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
-import { calcVisualLineCount, measureTextWidth } from "@workspace/canvas-sdk";
+import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
+import type { TextSlot } from "@jiscribe/canvas/doc";
+import { calcVisualLineCount, measureTextWidth } from "@jiscribe/canvas-sdk";
 import {
 	BELOW_LABEL_STYLE_DEFAULTS,
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
 	TEXT_LINE_HEIGHT,
-} from "@workspace/canvas-sdk/doc";
-import type { Dimensions, Rect } from "@workspace/geometry";
+} from "@jiscribe/canvas-sdk/doc";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import {
 	calcGroupMarkerTip,

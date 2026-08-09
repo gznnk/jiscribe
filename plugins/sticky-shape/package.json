@@ -1,5 +1,5 @@
 {
-	"name": "@workspace/plugin-sticky-shape",
+	"name": "@jiscribe/plugin-sticky-shape",
 	"version": "0.0.0",
 	"private": true,
 	"description": "sticky 図形を canvas 公開 API のみで外部パッケージとして提供する（docs/05_extensibility/plugin-architecture-requirements.md）",
@@ -17,16 +17,16 @@
 	"peerDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/canvas-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:"
 	},
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
 		"@types/react": "catalog:",
-		"@workspace/canvas": "workspace:*",
-		"@workspace/canvas-sdk": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

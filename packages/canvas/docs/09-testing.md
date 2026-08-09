@@ -32,7 +32,7 @@ and sociable behavior tests are placed right next to the files they target
 - Targets are the `schemas` / `states` / `controllers` / `presentations` layers
   (Mapper round-trip conversions, `validateXxxDoc`, a Command's `execute`, transformation logic, behavior via `canvasReducer`, etc.)
 - `vitest.config.ts` uses `environment: "node"`. Without going through the DOM, it verifies input state → output state directly
-- Run: `pnpm --filter @workspace/canvas test` (`vitest run`).
+- Run: `pnpm --filter @jiscribe/canvas test` (`vitest run`).
   `test:coverage` / `test:ui` are also provided (coverage excludes `index.ts` and `vitest.config.ts`)
 
 ```
@@ -77,7 +77,7 @@ Non-regression tests using a real browser and real UI operations. Placed under `
   `support/selectors.ts` … `data-kind` / `data-id` selector constants. `fixtures.ts` injects the CanvasDriver
 - `specs/` is the test body (the CI gate). Categories: `arrange` / `driver` / `editing` / `keyboard` /
   `scenario` / `shapes` / `ui` (+ `smoke.spec.ts`)
-- Run: `pnpm --filter @workspace/canvas test:e2e` (`:headed` / `:ui` available)
+- Run: `pnpm --filter @jiscribe/canvas test:e2e` (`:headed` / `:ui` available)
 
 Design policy: **do not add retries that hide failures**. The CanvasDriver stabilizes by waiting on state (`expect.poll`, etc.) rather than on time, so it does not mask genuine defects.
 
@@ -89,7 +89,7 @@ Non-regression for the gesture spec corresponds to the [Gesture System](./04-ges
 To mechanically guarantee the one-way dependency between layers ([Architecture](./02-architecture.md)),
 madge is used to detect circular dependencies.
 
-- Run: `pnpm dep:check` (whole workspace) / `pnpm --filter @workspace/canvas dep:check` (canvas only)
+- Run: `pnpm dep:check` (whole workspace) / `pnpm --filter @jiscribe/canvas dep:check` (canvas only)
 - The CI `checks` job runs `pnpm dep:check` as well
 
 ## Running everything at once (checks on task completion)
@@ -103,5 +103,5 @@ pnpm build:examples
 pnpm typecheck
 pnpm dep:check
 pnpm lint
-pnpm --filter @workspace/canvas test
+pnpm --filter @jiscribe/canvas test
 ```

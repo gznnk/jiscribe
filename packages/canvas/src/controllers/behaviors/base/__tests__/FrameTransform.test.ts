@@ -1,4 +1,4 @@
-import type { TransformedFrame } from "@workspace/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";

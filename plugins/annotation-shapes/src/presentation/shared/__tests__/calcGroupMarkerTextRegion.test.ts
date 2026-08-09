@@ -1,4 +1,4 @@
-import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
 import type { GroupMarkerDirection } from "../../../schema/shared/GroupMarkerFields";

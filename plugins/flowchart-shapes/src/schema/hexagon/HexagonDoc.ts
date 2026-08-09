@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
+import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 
 /**
  * Width of each pointed side cap as a fraction of the width.

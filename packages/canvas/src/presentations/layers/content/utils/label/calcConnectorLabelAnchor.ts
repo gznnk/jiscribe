@@ -1,4 +1,4 @@
-import { calcEuclideanDistance, type Point } from "@workspace/geometry";
+import { calcEuclideanDistance, type Point } from "@jiscribe/geometry";
 
 /**
  * Computes the label anchor coordinates along a polyline (resolved connector

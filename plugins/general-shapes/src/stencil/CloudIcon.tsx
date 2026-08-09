@@ -1,4 +1,4 @@
-import { createStencilIcon } from "@workspace/canvas-sdk";
+import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
 /** Glyph shared by the `cloud` stencil and the `general` category button. */
 export const CloudIcon = createStencilIcon(

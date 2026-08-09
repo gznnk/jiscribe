@@ -1,5 +1,5 @@
-import { isArray, isObject } from "@workspace/basic-validators";
-import { isPoint, type Point } from "@workspace/geometry";
+import { isArray, isObject } from "@jiscribe/basic-validators";
+import { isPoint, type Point } from "@jiscribe/geometry";
 
 /**
  * Poly shape defined by an array of points.

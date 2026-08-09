@@ -1,11 +1,11 @@
-import type { ObjectTypeDefinition } from "@workspace/canvas";
+import type { ObjectTypeDefinition } from "@jiscribe/canvas";
 import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
 	createFrameObjectDefinition,
 	createInsetTextRegion,
 	createTypeStencils,
-} from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas-sdk";
 
 import {
 	cardDocDefinition,

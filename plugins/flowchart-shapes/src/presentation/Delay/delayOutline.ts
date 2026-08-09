@@ -1,7 +1,7 @@
-import type { ObjectOutlineCalculator } from "@workspace/canvas";
-import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas-sdk";
-import { sampleEllipseArc } from "@workspace/geometry";
-import type { Dimensions } from "@workspace/geometry";
+import type { ObjectOutlineCalculator } from "@jiscribe/canvas";
+import { OUTLINE_CURVE_SEGMENTS } from "@jiscribe/canvas-sdk";
+import { sampleEllipseArc } from "@jiscribe/geometry";
+import type { Dimensions } from "@jiscribe/geometry";
 
 /**
  * Delay outline (centered): rectangle with a right-side semicircular bulge

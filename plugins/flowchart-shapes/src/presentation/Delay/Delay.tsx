@@ -1,4 +1,4 @@
-import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildDelayPath } from "./buildDelayPath";
 import type { DelayState } from "../../state/delay/DelayState";

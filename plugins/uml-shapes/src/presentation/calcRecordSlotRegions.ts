@@ -1,8 +1,8 @@
-import { isString } from "@workspace/basic-validators";
-import type { TextSlot } from "@workspace/canvas/doc";
-import { calcVisualLineCount } from "@workspace/canvas-sdk";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas-sdk/doc";
-import type { Dimensions, Rect } from "@workspace/geometry";
+import { isString } from "@jiscribe/basic-validators";
+import type { TextSlot } from "@jiscribe/canvas/doc";
+import { calcVisualLineCount } from "@jiscribe/canvas-sdk";
+import { TEXT_LINE_HEIGHT } from "@jiscribe/canvas-sdk/doc";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import {
 	calcRecordListHeight,

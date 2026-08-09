@@ -5,7 +5,7 @@ import {
 	type Point,
 	type Transform,
 	type TransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 /**
  * Where a text object's box has its top-left corner drawn: the local

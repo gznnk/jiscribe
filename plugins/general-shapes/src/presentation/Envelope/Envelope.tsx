@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildEnvelopeFigure } from "./buildEnvelopeFigure";
 import type { EnvelopeState } from "../../state/envelope/EnvelopeState";

@@ -1,5 +1,5 @@
-import type { Ellipse, Point, Rect } from "@workspace/geometry";
-import type { Brand, Prettify } from "@workspace/utility-types";
+import type { Ellipse, Point, Rect } from "@jiscribe/geometry";
+import type { Brand, Prettify } from "@jiscribe/utility-types";
 
 import type { FillStyleDoc } from "../base/FillStyleDoc";
 import type { ObjectDoc } from "../base/ObjectDoc";

@@ -3,7 +3,7 @@ import {
 	isCssSafeValue,
 	isNumber,
 	isString,
-} from "@workspace/basic-validators";
+} from "@jiscribe/basic-validators";
 
 import { isCssColor } from "./isCssColor";
 import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";

@@ -1,4 +1,4 @@
-import { BelowLabelHitArea, createFrameObject } from "@workspace/canvas-sdk";
+import { BelowLabelHitArea, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { ActorHead, ActorLimbs } from "./ActorStyled";
 import { buildActorFigure } from "./buildActorFigure";

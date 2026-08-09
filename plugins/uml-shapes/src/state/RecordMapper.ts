@@ -1,9 +1,9 @@
-import { isObject, isString } from "@workspace/basic-validators";
-import type { ObjectMapperType } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
-import { isTextSlot } from "@workspace/canvas/doc";
-import { createFrameMapper } from "@workspace/canvas-sdk";
-import { AUTO_COLOR } from "@workspace/canvas-sdk/doc";
+import { isObject, isString } from "@jiscribe/basic-validators";
+import type { ObjectMapperType } from "@jiscribe/canvas";
+import type { TextSlot } from "@jiscribe/canvas/doc";
+import { isTextSlot } from "@jiscribe/canvas/doc";
+import { createFrameMapper } from "@jiscribe/canvas-sdk";
+import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 
 import type { RecordState, RecordTextState } from "./RecordState";
 import {

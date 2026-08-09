@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
+import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 
 /**
  * Height ratio of the cylinder cap ellipse (ry / height).

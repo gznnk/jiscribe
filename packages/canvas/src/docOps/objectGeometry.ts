@@ -1,8 +1,4 @@
-import {
-	calcPolyBoundingBox,
-	type Point,
-	type Rect,
-} from "@workspace/geometry";
+import { calcPolyBoundingBox, type Point, type Rect } from "@jiscribe/geometry";
 
 import { DocOperationError } from "./errors";
 import { type ObjectRecord, requireObjects } from "./objectAccess";

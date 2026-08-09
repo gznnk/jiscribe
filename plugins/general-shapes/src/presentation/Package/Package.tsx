@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildPackageFigure } from "./buildPackageFigure";
 import type { PackageState } from "../../state/package/PackageState";

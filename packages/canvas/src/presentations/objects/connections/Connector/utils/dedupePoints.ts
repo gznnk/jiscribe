@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 /** Consecutive points closer than this distance (px) are treated as identical and collapsed. */
 const COINCIDENT_EPSILON = 0.5;

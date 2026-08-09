@@ -1,9 +1,9 @@
 /**
- * Shape-authoring kit for canvas plugins: the whole of `@workspace/canvas/unstable`
+ * Shape-authoring kit for canvas plugins: the whole of `@jiscribe/canvas/unstable`
  * plus the parts only plugins use. Headless counterpart is `./doc`.
  */
 
-export * from "@workspace/canvas/unstable";
+export * from "@jiscribe/canvas/unstable";
 
 // One call per Frame-family shape in place of its mapper / state-validator files.
 // Takes the ObjectDocDefinition built by createFrameObjectDoc in `./doc`.

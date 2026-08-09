@@ -7,7 +7,7 @@ import {
 	type Point,
 	type Rect,
 	type TransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { PRECISION } from "../../../../../../constants/precision";
 import type { ExtraConnectPoint } from "../../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";

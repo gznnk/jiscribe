@@ -1,8 +1,8 @@
-import type { ObjectVisualBoundsCalculator } from "@workspace/canvas";
-import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
-import { readTextSlot } from "@workspace/canvas-sdk";
-import type { Dimensions } from "@workspace/geometry";
+import type { ObjectVisualBoundsCalculator } from "@jiscribe/canvas";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
+import type { TextSlot } from "@jiscribe/canvas/doc";
+import { readTextSlot } from "@jiscribe/canvas-sdk";
+import type { Dimensions } from "@jiscribe/geometry";
 
 import { calcGroupMarkerTextRegion } from "./calcGroupMarkerTextRegion";
 import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";

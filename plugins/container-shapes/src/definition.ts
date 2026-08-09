@@ -1,6 +1,6 @@
-import { isNumber } from "@workspace/basic-validators";
-import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { createFrameObjectDefinition } from "@workspace/canvas-sdk";
+import { isNumber } from "@jiscribe/basic-validators";
+import type { ObjectTypeDefinition } from "@jiscribe/canvas";
+import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
 
 import { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
 import { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";
@@ -20,7 +20,7 @@ import { ContainerStencils } from "./stencil/ContainerStencils";
  * (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1).
  *
  * The `header-color` custom menu item (HeaderColorMenu) is the last piece that
- * was missing (ObjectMenu UI kit, published via `@workspace/canvas-sdk`);
+ * was missing (ObjectMenu UI kit, published via `@jiscribe/canvas-sdk`);
  * it is now restored below.
  */
 export const containerDefinition: ObjectTypeDefinition<

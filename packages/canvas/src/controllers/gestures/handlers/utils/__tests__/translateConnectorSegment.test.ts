@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";

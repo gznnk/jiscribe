@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import { elbowCandidates } from "./elbowCandidates";
 import { calcPathSignature } from "./pathSignature";

@@ -1,4 +1,4 @@
-import type { OrthogonalDirection, Point } from "@workspace/geometry";
+import type { OrthogonalDirection, Point } from "@jiscribe/geometry";
 
 /**
  * Whether the segment from an end vertex to its endpoint has to be horizontal.

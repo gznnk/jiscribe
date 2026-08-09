@@ -3,8 +3,8 @@ import {
 	brandLightCanvasTheme,
 	darkCanvasTheme,
 	lightCanvasTheme,
-} from "@workspace/canvas";
-import type { CanvasDoc, CanvasTheme } from "@workspace/canvas";
+} from "@jiscribe/canvas";
+import type { CanvasDoc, CanvasTheme } from "@jiscribe/canvas";
 import { useEffect, useState } from "react";
 
 // 巡回できるテーマ一覧。テーマを増やしたらここに追加すればトグルボタンが

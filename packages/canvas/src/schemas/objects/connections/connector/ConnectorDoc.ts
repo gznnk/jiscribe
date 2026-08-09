@@ -1,5 +1,5 @@
-import type { Point } from "@workspace/geometry";
-import type { Prettify } from "@workspace/utility-types";
+import type { Point } from "@jiscribe/geometry";
+import type { Prettify } from "@jiscribe/utility-types";
 
 import type { FillStyleDoc } from "../../base/FillStyleDoc";
 import type { StrokeStyleDoc } from "../../base/StrokeStyleDoc";

@@ -1,4 +1,4 @@
-import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildTrapezoidPoints } from "./buildTrapezoidPoints";
 import type { TrapezoidState } from "../../state/trapezoid/TrapezoidState";

@@ -1,5 +1,5 @@
-import { calcPolyBoundingBox } from "@workspace/geometry";
-import type { BoundingBox, Point } from "@workspace/geometry";
+import { calcPolyBoundingBox } from "@jiscribe/geometry";
+import type { BoundingBox, Point } from "@jiscribe/geometry";
 
 import {
 	resolveConnectorPoints,

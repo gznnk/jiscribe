@@ -1,5 +1,5 @@
+import type * as CanvasModule from "@jiscribe/canvas";
 import type { Page } from "@playwright/test";
-import type * as CanvasModule from "@workspace/canvas";
 
 import { expect, test } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
@@ -182,7 +182,7 @@ test("exports SVG without foreignObject and restorable from its metadata", async
 	const parsed = await page.evaluate(async (text) => {
 		// The Vite dev server resolves bare ids through /@id/.
 		const mod = (await import(
-			"/@id/@workspace/canvas" as string
+			"/@id/@jiscribe/canvas" as string
 		)) as typeof CanvasModule;
 		const svgDoc = new DOMParser().parseFromString(text, "image/svg+xml");
 		const source = mod.extractCanvasSource(

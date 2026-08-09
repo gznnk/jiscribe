@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../constants/connectorHitArea";

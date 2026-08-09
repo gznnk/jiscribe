@@ -1,4 +1,4 @@
-import type { ObjectMenuItemProps } from "@workspace/canvas";
+import type { ObjectMenuItemProps } from "@jiscribe/canvas";
 import {
 	ObjectMenuColorPickerGrid,
 	ObjectMenuDropdownPanel,
@@ -9,7 +9,7 @@ import {
 	resolveLocaleMessages,
 	useCanvasLocale,
 	useSubmenuPosition,
-} from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
 import { HeaderColorPreviewIcon } from "./HeaderColorPreviewIcon";

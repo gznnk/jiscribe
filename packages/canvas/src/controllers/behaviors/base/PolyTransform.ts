@@ -1,9 +1,9 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 import {
 	calcRotatedPoint,
 	degreesToRadians,
 	roundToDecimal,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { PRECISION } from "../../../constants/precision";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";

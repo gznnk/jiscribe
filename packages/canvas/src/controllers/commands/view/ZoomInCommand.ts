@@ -1,4 +1,4 @@
-import { roundToDecimal } from "@workspace/geometry";
+import { roundToDecimal } from "@jiscribe/geometry";
 
 import { PRECISION } from "../../../constants/precision";
 import { ZOOM, stepZoomIn } from "../../../constants/zoom";

@@ -1,4 +1,4 @@
-import { isTransformedFrame, type Point } from "@workspace/geometry";
+import { isTransformedFrame, type Point } from "@jiscribe/geometry";
 
 import type { AnchorSnapContext } from "./utils/calcNearestAnchor";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";

@@ -3,11 +3,11 @@
 // 装飾系（star / heart / バナー等。図に意味を足さない）とも分ける。core 残留はゼロ
 // （generalToolbarEntry も全図形をここから供給する）。
 // 各図形の ObjectDocDefinition / ObjectTypeDefinition は createFrameObjectDoc /
-// createFrameObjectDefinition (`@workspace/canvas-sdk/doc` / `@workspace/canvas-sdk`)
+// createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`)
 // が features/defaults から丸ごと導出するため、per-shape の ObjectFactory /
 // validate*Doc / Mapper / validate*State は持たない。presentation 部品
 // (createFrameObject / measureTextWidth / calcVisualLineCount / readTextSlot /
-// OUTLINE_CURVE_SEGMENTS / centeredPolygonOutline) は `@workspace/canvas-sdk` 経由。
+// OUTLINE_CURVE_SEGMENTS / centeredPolygonOutline) は `@jiscribe/canvas-sdk` 経由。
 // headless な parse 入口は ./doc (generalDocPlugin)。
 // 図形は 1 図形 1 フォルダ（schema/<id>/ ・ state/<id>/ ・ presentation/<Pascal>/）で、
 // 複数図形が共有する部品は各層の shared/ に置く。

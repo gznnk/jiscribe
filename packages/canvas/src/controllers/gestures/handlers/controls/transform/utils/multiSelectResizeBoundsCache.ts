@@ -2,7 +2,7 @@ import {
 	calcFrameCornerPoints,
 	degreesToRadians,
 	isTransformedFrame,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions";
 import { isPoly } from "../../../../../../schemas/objects/types/Poly";

@@ -1,4 +1,4 @@
-import { isNumber, isObject } from "@workspace/basic-validators";
+import { isNumber, isObject } from "@jiscribe/basic-validators";
 
 import type { Point } from "../types/Point";
 

@@ -1,9 +1,9 @@
-import type { SelectionControlProps } from "@workspace/canvas";
-import { SelectionControlPill } from "@workspace/canvas-sdk";
+import type { SelectionControlProps } from "@jiscribe/canvas";
+import { SelectionControlPill } from "@jiscribe/canvas-sdk";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 import { memo } from "react";
 
 import {

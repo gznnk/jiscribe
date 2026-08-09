@@ -1,4 +1,4 @@
-import type { Prettify } from "@workspace/utility-types";
+import type { Prettify } from "@jiscribe/utility-types";
 
 import type { Ellipse } from "./Ellipse";
 import type { Transform } from "./Transform";

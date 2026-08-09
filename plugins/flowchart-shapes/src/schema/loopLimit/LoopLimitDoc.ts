@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
+import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 
 /** Length of the cut top corners as a fraction of the shorter side. */
 export const LOOP_LIMIT_CUT_RATIO = 0.25;

@@ -1,5 +1,5 @@
-import { calcNonZeroSign, degreesToRadians } from "@workspace/geometry";
-import type { Point, Rect, TransformedFrame } from "@workspace/geometry";
+import { calcNonZeroSign, degreesToRadians } from "@jiscribe/geometry";
+import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";

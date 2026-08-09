@@ -1,8 +1,8 @@
 import type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsCalculator,
-} from "@workspace/canvas";
-import type { Dimensions, Point } from "@workspace/geometry";
+} from "@jiscribe/canvas";
+import type { Dimensions, Point } from "@jiscribe/geometry";
 
 import {
 	calcGroupMarkerTip,

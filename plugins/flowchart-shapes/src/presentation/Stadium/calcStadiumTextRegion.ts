@@ -1,5 +1,5 @@
-import type { ObjectTextRegionCalculator } from "@workspace/canvas";
-import type { Dimensions } from "@workspace/geometry";
+import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
+import type { Dimensions } from "@jiscribe/geometry";
 
 /**
  * Insets by a full cap radius (half the short side) on the capped axis so the

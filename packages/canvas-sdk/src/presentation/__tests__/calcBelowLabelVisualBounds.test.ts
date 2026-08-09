@@ -1,5 +1,5 @@
-import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
+import type { TextSlot } from "@jiscribe/canvas/doc";
 import { describe, it, expect } from "vitest";
 
 import {

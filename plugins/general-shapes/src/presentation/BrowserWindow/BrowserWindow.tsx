@@ -1,4 +1,4 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildBrowserWindowFigure } from "./buildBrowserWindowFigure";
 import type { BrowserWindowState } from "../../state/browserWindow/BrowserWindowState";

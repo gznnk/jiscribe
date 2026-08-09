@@ -1,4 +1,4 @@
-import { isTransformedFrame, type Point, type Rect } from "@workspace/geometry";
+import { isTransformedFrame, type Point, type Rect } from "@jiscribe/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";

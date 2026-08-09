@@ -1,5 +1,5 @@
-import type { TransformedFrame } from "@workspace/geometry";
-import { calcFrameKeyPoints, degreesToRadians } from "@workspace/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
+import { calcFrameKeyPoints, degreesToRadians } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import type { TransformState } from "../../../../../../../states/objects/base/TransformState";

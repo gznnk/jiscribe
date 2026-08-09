@@ -1,4 +1,4 @@
-import { normalizeAngleDeg, roundToDecimal } from "@workspace/geometry";
+import { normalizeAngleDeg, roundToDecimal } from "@jiscribe/geometry";
 
 import { PRECISION } from "../../constants/precision";
 

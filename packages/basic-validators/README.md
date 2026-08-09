@@ -1,6 +1,6 @@
 > 🌐 日本語版: [README.ja.md](./README.ja.md)
 
-# @workspace/basic-validators
+# @jiscribe/basic-validators
 
 Runtime type guards shared across jiscribe. Dependency-free predicates that narrow
 `unknown` at trust boundaries — parsed `.jis.json` documents, clipboard payloads, plugin
@@ -10,7 +10,7 @@ every guard behaves the same in Node and the browser.
 ## Usage
 
 ```typescript
-import { isNumber, isObject, isEnum } from "@workspace/basic-validators";
+import { isNumber, isObject, isEnum } from "@jiscribe/basic-validators";
 
 const isAlign = isEnum(["start", "center", "end"] as const);
 
@@ -19,7 +19,7 @@ const isLabel = (value: unknown): value is Label =>
 ```
 
 Everything is re-exported from the package root, so import from
-`@workspace/basic-validators` rather than reaching into `src/`.
+`@jiscribe/basic-validators` rather than reaching into `src/`.
 
 ## What is in here
 
@@ -53,7 +53,7 @@ Three contracts are worth knowing before writing against this package:
 - **`isCssSafeValue` checks safety, not validity.** It rejects the sequences that break out
   of a CSS declaration (`;` `{` `}` `<` `>` `\`, `url(`, `expression(`, comment delimiters),
   but a safe string need not be meaningful CSS. Strict color validity needs the browser's
-  CSS parser and therefore lives in `@workspace/canvas` (`states/objects/utils/isCssColor`),
+  CSS parser and therefore lives in `@jiscribe/canvas` (`states/objects/utils/isCssColor`),
   not here.
 - **`isUrl` is a parse check, not a safety check.** Any scheme parses, including
   `javascript:`; relative paths and bare hosts like `example.com` do not.
@@ -61,9 +61,9 @@ Three contracts are worth knowing before writing against this package:
 ## Development
 
 ```bash
-pnpm --filter @workspace/basic-validators typecheck
-pnpm --filter @workspace/basic-validators lint
-pnpm --filter @workspace/basic-validators test
+pnpm --filter @jiscribe/basic-validators typecheck
+pnpm --filter @jiscribe/basic-validators lint
+pnpm --filter @jiscribe/basic-validators test
 ```
 
 Tests run under Node with no DOM, which the guards here are expected to tolerate: anything

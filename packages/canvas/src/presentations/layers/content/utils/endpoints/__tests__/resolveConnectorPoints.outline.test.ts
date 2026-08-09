@@ -1,4 +1,4 @@
-import type { Dimensions, Point } from "@workspace/geometry";
+import type { Dimensions, Point } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import { outlinedPlugin } from "../../../../../../controllers/__tests__/support/outlinedPlugin";

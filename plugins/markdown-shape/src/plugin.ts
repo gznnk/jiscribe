@@ -1,4 +1,4 @@
-import type { CanvasPlugin } from "@workspace/canvas";
+import type { CanvasPlugin } from "@jiscribe/canvas";
 
 import { markdownDefinition } from "./definition";
 

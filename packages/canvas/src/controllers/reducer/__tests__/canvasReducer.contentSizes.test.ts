@@ -1,4 +1,4 @@
-import { roundToDecimal } from "@workspace/geometry";
+import { roundToDecimal } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";

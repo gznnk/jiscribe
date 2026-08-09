@@ -50,7 +50,7 @@ const starDocDefinition: ObjectDocDefinition = {
 };
 
 // A plugin exposing the "star" type through its `objects` map (the structural
-// subset createCanvasParser reads; no `@workspace/canvas` controllers-layer import).
+// subset createCanvasParser reads; no `@jiscribe/canvas` controllers-layer import).
 const starPlugin = { id: "star-plugin", objects: { star: starDocDefinition } };
 
 const star = (id: string, over: Record<string, unknown> = {}) => ({

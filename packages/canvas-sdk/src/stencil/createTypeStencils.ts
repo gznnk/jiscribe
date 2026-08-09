@@ -1,4 +1,4 @@
-import type { Stencil } from "@workspace/canvas";
+import type { Stencil } from "@jiscribe/canvas";
 
 /**
  * Builds the palette contribution of an object type that offers a single preset,

@@ -1,4 +1,4 @@
-import { createStencilIcon } from "@workspace/canvas-sdk";
+import { createStencilIcon } from "@jiscribe/canvas-sdk";
 
 import { UmlIconFrame, UmlIconTitleDivider } from "./UmlIconParts";
 

@@ -1,4 +1,4 @@
-import type { FlipScale } from "@workspace/geometry";
+import type { FlipScale } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";

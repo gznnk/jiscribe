@@ -1,4 +1,4 @@
-import { normalizeAngleDeg } from "@workspace/geometry";
+import { normalizeAngleDeg } from "@jiscribe/geometry";
 
 import { DocOperationError } from "./errors";
 import type { ObjectRecord } from "./objectAccess";

@@ -60,7 +60,7 @@ const EXAMPLES: ReadonlyArray<{
 	{
 		id: "gallery",
 		title: "Gallery",
-		description: "実物 .jis.json の閲覧（landing の作例を読み込む）",
+		description: "実物 .jis.json の閲覧（diagrams/ の作例を読み込む）",
 		Component: GalleryExample,
 	},
 	{

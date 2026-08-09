@@ -1,4 +1,4 @@
-import type { Unbranded } from "@workspace/utility-types";
+import type { Unbranded } from "@jiscribe/utility-types";
 
 /**
  * Stamps the brand onto a structurally complete value, so building a branded

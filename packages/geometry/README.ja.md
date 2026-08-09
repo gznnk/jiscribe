@@ -1,6 +1,6 @@
 > 🌐 English version: [README.md](./README.md)
 
-# @workspace/geometry
+# @jiscribe/geometry
 
 jiscribe 全体で共有する幾何型と幾何計算。依存なし・純関数のみで、描画も
 フレームワークも状態も持たない。
@@ -8,8 +8,8 @@ jiscribe 全体で共有する幾何型と幾何計算。依存なし・純関�
 ## 使い方
 
 ```typescript
-import type { Point, TransformedFrame } from "@workspace/geometry";
-import { calcFrameKeyPoints, isPoint } from "@workspace/geometry";
+import type { Point, TransformedFrame } from "@jiscribe/geometry";
+import { calcFrameKeyPoints, isPoint } from "@jiscribe/geometry";
 
 const frame: TransformedFrame = {
 	cx: 50,
@@ -25,7 +25,7 @@ const keyPoints = calcFrameKeyPoints(frame);
 ```
 
 すべてパッケージルートから再エクスポートしているため、`src/` を直接参照せず
-`@workspace/geometry` から import する。
+`@jiscribe/geometry` から import する。
 
 ## 収録内容
 
@@ -49,9 +49,9 @@ const keyPoints = calcFrameKeyPoints(frame);
 ## 開発
 
 ```bash
-pnpm --filter @workspace/geometry typecheck
-pnpm --filter @workspace/geometry lint
-pnpm --filter @workspace/geometry test
+pnpm --filter @jiscribe/geometry typecheck
+pnpm --filter @jiscribe/geometry lint
+pnpm --filter @jiscribe/geometry test
 ```
 
 ## ドキュメント

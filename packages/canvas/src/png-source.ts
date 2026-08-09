@@ -8,7 +8,7 @@
 // on Blob/Uint8Array only and runs in Node 18+ as well as browsers.
 //
 // Import example:
-//   `import { extractCanvasSourceFromPng } from "@workspace/canvas/png-source";`
+//   `import { extractCanvasSourceFromPng } from "@jiscribe/canvas/png-source";`
 export {
 	embedCanvasSourceInPng,
 	extractCanvasSourceFromPng,

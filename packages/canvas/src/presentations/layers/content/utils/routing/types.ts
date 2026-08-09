@@ -2,7 +2,7 @@ import type {
 	BoxFeatures,
 	OrthogonalDirection,
 	Point,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 /**
  * An endpoint for the orthogonal router.

@@ -1,7 +1,7 @@
-import type { TextSlot } from "@workspace/canvas/doc";
-import type { FrameShapeProps } from "@workspace/canvas-sdk";
-import { BelowLabelHitArea } from "@workspace/canvas-sdk";
-import type { Dimensions } from "@workspace/geometry";
+import type { TextSlot } from "@jiscribe/canvas/doc";
+import type { FrameShapeProps } from "@jiscribe/canvas-sdk";
+import { BelowLabelHitArea } from "@jiscribe/canvas-sdk";
+import type { Dimensions } from "@jiscribe/geometry";
 
 import { Pictogram } from "./Pictogram";
 import type { PictogramFigure } from "./PictogramFigure";

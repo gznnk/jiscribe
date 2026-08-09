@@ -1,12 +1,12 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
-} from "@workspace/canvas";
+} from "@jiscribe/canvas";
 import {
 	calcInverseAffineTransformedPoint,
 	degreesToRadians,
 	roundToDecimal,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import type { GroupMarkerDirection } from "../schema/shared/GroupMarkerFields";
 import type { GroupMarkerControlState } from "../state/shared/GroupMarkerControlState";

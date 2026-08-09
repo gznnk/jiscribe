@@ -1,5 +1,5 @@
-import { isBoolean, isNumber } from "@workspace/basic-validators";
-import { isTransform, type Transform } from "@workspace/geometry";
+import { isBoolean, isNumber } from "@jiscribe/basic-validators";
+import { isTransform, type Transform } from "@jiscribe/geometry";
 
 /**
  * Transform properties for objects in State layer.

@@ -1,6 +1,6 @@
-import type { FrameShapeProps } from "@workspace/canvas-sdk";
-import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
-import type { Rect } from "@workspace/geometry";
+import type { FrameShapeProps } from "@jiscribe/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
+import type { Rect } from "@jiscribe/geometry";
 
 import { buildOutsideSheetClipPath } from "./buildOutsideSheetClipPath";
 import { calcMultiDocumentSheets } from "./calcMultiDocumentSheets";

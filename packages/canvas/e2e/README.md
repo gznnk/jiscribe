@@ -23,10 +23,10 @@ packages/canvas/
 Running:
 
 ```bash
-pnpm --filter @workspace/canvas test:e2e         # from the root, pnpm test:e2e
-pnpm --filter @workspace/canvas test:e2e:headed  # with the browser shown
-pnpm --filter @workspace/canvas test:e2e:ui      # Playwright UI mode
-pnpm --filter @workspace/canvas dev:harness      # start the harness manually (for visual debugging)
+pnpm --filter @jiscribe/canvas test:e2e         # from the root, pnpm test:e2e
+pnpm --filter @jiscribe/canvas test:e2e:headed  # with the browser shown
+pnpm --filter @jiscribe/canvas test:e2e:ui      # Playwright UI mode
+pnpm --filter @jiscribe/canvas dev:harness      # start the harness manually (for visual debugging)
 ```
 
 Design policy: **no retries that hide failures**. CanvasDriver synchronizes by waiting on
@@ -45,7 +45,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 await page.goto("http://localhost:5173/", { waitUntil: "networkidle" });
 ```
 
-- The dev server is `pnpm --filter @workspace/canvas dev:harness` (see the startup log for the port)
+- The dev server is `pnpm --filter @jiscribe/canvas dev:harness` (see the startup log for the port)
 - On WSL2, WSLg (`DISPLAY=:0`) is available, so a headed run can show a real window
 - Use `headless: false` + `slowMo` when you want to watch the motion; use headless (faster) when you only need verification
 - **headless packs the operations closer together, so race conditions surface more easily**. Passing in headless implies passing in headed, but the converse may not hold

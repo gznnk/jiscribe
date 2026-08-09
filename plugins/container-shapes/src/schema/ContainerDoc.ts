@@ -2,8 +2,8 @@ import type {
 	CreateObjectType,
 	ExtraStylePropertyDescriptor,
 	ObjectFeatures,
-} from "@workspace/canvas/doc";
-import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@workspace/canvas-sdk/doc";
+} from "@jiscribe/canvas/doc";
+import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
 
 /** Default height of the title header band, in local (pre-transform) pixels. */
 export const CONTAINER_HEADER_HEIGHT = 28;

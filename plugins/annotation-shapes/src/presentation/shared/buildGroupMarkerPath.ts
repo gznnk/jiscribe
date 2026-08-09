@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import { mapCanonicalGroupMarkerPoint } from "./groupMarkerGeometry";
 import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";

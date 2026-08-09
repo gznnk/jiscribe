@@ -1,9 +1,9 @@
-import type { BoundingBox } from "@workspace/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 import {
 	calcAffineTransformedPoint,
 	calcPolyBoundingBox,
 	degreesToRadians,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 import type React from "react";
 import { memo, useCallback, useLayoutEffect } from "react";
 

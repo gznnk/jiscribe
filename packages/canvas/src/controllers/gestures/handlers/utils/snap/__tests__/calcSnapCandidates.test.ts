@@ -1,4 +1,4 @@
-import type { FrameKeyPoints } from "@workspace/geometry";
+import type { FrameKeyPoints } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";

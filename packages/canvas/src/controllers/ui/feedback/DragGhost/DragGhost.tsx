@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 import React, { memo } from "react";
 
 import type { DocCreationDefaults } from "../../../../schemas/objects/types/DocCreationDefaults";

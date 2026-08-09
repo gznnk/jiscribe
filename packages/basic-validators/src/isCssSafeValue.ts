@@ -11,7 +11,7 @@ const CSS_BREAKOUT = /[;{}<>\\]|url\(|expression\(|\/\*|\*\//i;
  *
  * @param value - Value to narrow; safety is all that is checked, so meaningless CSS such as
  *   `"not-a-color"` still passes — strict validity needs a CSS parser and lives in
- *   `@workspace/canvas` (`states/objects/utils/isCssColor`)
+ *   `@jiscribe/canvas` (`states/objects/utils/isCssColor`)
  */
 export const isCssSafeValue = (value: unknown): value is string =>
 	isString(value) && !CSS_BREAKOUT.test(value);

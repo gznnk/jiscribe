@@ -3,7 +3,7 @@ import {
 	isTransformedFrame,
 	type Point,
 	type Rect,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
 import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";

@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import { DocOperationError } from "./errors";
 import { findObject } from "./objectAccess";

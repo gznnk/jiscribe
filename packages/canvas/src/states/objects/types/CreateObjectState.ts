@@ -1,5 +1,5 @@
-import type { Frame } from "@workspace/geometry";
-import type { Brand, Prettify } from "@workspace/utility-types";
+import type { Frame } from "@jiscribe/geometry";
+import type { Brand, Prettify } from "@jiscribe/utility-types";
 
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { Poly } from "../../../schemas/objects/types/Poly";

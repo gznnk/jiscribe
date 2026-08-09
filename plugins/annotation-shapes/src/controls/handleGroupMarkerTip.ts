@@ -1,7 +1,7 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
-} from "@workspace/canvas";
+} from "@jiscribe/canvas";
 
 import { resolveGroupMarkerTipDrag } from "./resolveGroupMarkerTipDrag";
 import type { GroupMarkerControlState } from "../state/shared/GroupMarkerControlState";

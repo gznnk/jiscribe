@@ -1,5 +1,5 @@
-import { calcKeyPointsBoundingBox } from "@workspace/geometry";
-import type { BoundingBox, FrameKeyPoints } from "@workspace/geometry";
+import { calcKeyPointsBoundingBox } from "@jiscribe/geometry";
+import type { BoundingBox, FrameKeyPoints } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connections/connector/ConnectorState";

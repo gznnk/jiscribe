@@ -1,4 +1,4 @@
-import type { BoxFeatures, Point } from "@workspace/geometry";
+import type { BoxFeatures, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { elbowCandidates } from "../elbowCandidates";

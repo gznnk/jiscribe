@@ -1,6 +1,6 @@
-import type { ObjectOutlineCalculator } from "@workspace/canvas";
-import { calcRoundedRectOutline } from "@workspace/canvas-sdk";
-import type { Dimensions } from "@workspace/geometry";
+import type { ObjectOutlineCalculator } from "@jiscribe/canvas";
+import { calcRoundedRectOutline } from "@jiscribe/canvas-sdk";
+import type { Dimensions } from "@jiscribe/geometry";
 
 /**
  * Stadium outline (centered): fully rounded rectangle (corner radius = half the

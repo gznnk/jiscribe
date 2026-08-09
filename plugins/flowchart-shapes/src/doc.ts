@@ -1,14 +1,14 @@
 // Headless (UI 非依存) 入口。canvas 本体の ./doc と相似形: MCP や VSCode 拡張の
 // Node 側診断など、definitions.ts（React コンポーネントを含む）を経由せずに parse-time
-// 検証へ参加したい消費者のための入口。import は ./schema/** と @workspace/canvas/doc /
-// @workspace/canvas-sdk/doc のみで、presentation / state / stencil を引き込まない。
+// 検証へ参加したい消費者のための入口。import は ./schema/** と @jiscribe/canvas/doc /
+// @jiscribe/canvas-sdk/doc のみで、presentation / state / stencil を引き込まない。
 // description / summary / outlineDescription / defaults are the single source of
 // the generated JSON schema and AI docs (pnpm generate:ai).
 import type {
 	CanvasDocPlugin,
 	ObjectDocDefinition,
-} from "@workspace/canvas/doc";
-import { createFrameObjectDoc } from "@workspace/canvas-sdk/doc";
+} from "@jiscribe/canvas/doc";
+import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 
 import { CARD_DOC_DEFAULTS, CardFeatures } from "./schema/card/CardDoc";
 import { CROSS_DOC_DEFAULTS, CrossFeatures } from "./schema/cross/CrossDoc";

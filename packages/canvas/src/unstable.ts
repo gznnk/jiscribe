@@ -1,5 +1,5 @@
 /**
- * Implementation-detail layer of `@workspace/canvas`, exposed for plugin authors
+ * Implementation-detail layer of `@jiscribe/canvas`, exposed for plugin authors
  * (#144 tier 2: frame-based implementations). Unlike the stable API (`.`), this is NOT
  * covered by semver compatibility guarantees and may change without notice.
  *

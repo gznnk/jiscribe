@@ -4,14 +4,14 @@ import type {
 	ObjectFeatures,
 	ObjectState,
 	ObjectTypeDefinition,
-} from "@workspace/canvas";
-import type { StateRecord } from "@workspace/canvas/unstable";
+} from "@jiscribe/canvas";
+import type { StateRecord } from "@jiscribe/canvas/unstable";
 import {
 	createFrameBehavior,
 	createFrameMapper,
 	createFrameStateValidator,
-} from "@workspace/canvas/unstable";
-import type { TransformedFrame } from "@workspace/geometry";
+} from "@jiscribe/canvas/unstable";
+import type { TransformedFrame } from "@jiscribe/geometry";
 
 /** Arguments of {@link createFrameObjectDefinition}. */
 export type FrameObjectDefinitionParams<
@@ -23,7 +23,7 @@ export type FrameObjectDefinitionParams<
 > & {
 	/**
 	 * The shape's headless definition, usually from `createFrameObjectDoc` in
-	 * `@workspace/canvas-sdk/doc`. Spread into the result, and its `features` is
+	 * `@jiscribe/canvas-sdk/doc`. Spread into the result, and its `features` is
 	 * what the mapper and the state validator are derived from.
 	 */
 	doc: ObjectDocDefinition;

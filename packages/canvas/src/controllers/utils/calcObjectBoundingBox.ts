@@ -4,8 +4,8 @@ import {
 	calcPolyBoundingBox,
 	degreesToRadians,
 	isTransformedFrame,
-} from "@workspace/geometry";
-import type { BoundingBox, TransformedFrame } from "@workspace/geometry";
+} from "@jiscribe/geometry";
+import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 
 import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";

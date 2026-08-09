@@ -1,12 +1,12 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
-} from "@workspace/canvas";
+} from "@jiscribe/canvas";
 import {
 	calcInverseAffineTransformedPoint,
 	degreesToRadians,
 	roundToDecimal,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 import type { CalloutTailSide } from "../schema/callout/CalloutDoc";
 import type { CalloutState } from "../state/callout/CalloutState";

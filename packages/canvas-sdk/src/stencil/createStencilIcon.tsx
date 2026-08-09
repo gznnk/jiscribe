@@ -1,4 +1,4 @@
-import type { StencilIconProps } from "@workspace/canvas";
+import type { StencilIconProps } from "@jiscribe/canvas";
 import type { NamedExoticComponent, ReactNode } from "react";
 import { memo } from "react";
 

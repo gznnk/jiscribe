@@ -2,7 +2,7 @@ import {
 	BelowLabelHitArea,
 	ShapeBodyPolygon,
 	createFrameObject,
-} from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas-sdk";
 
 import { buildCrossPoints } from "./buildCrossPoints";
 import type { CrossState } from "../../state/cross/CrossState";

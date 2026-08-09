@@ -1,4 +1,4 @@
-import type { Point, TransformedFrame } from "@workspace/geometry";
+import type { Point, TransformedFrame } from "@jiscribe/geometry";
 import { useMemo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";

@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import type { DocCreationDefaults } from "./DocCreationDefaults";
 import type { ObjectDoc } from "../base/ObjectDoc";

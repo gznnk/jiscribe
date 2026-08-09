@@ -1,6 +1,6 @@
-import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
+import type { TextSlot } from "@jiscribe/canvas/doc";
+import { TEXT_LINE_HEIGHT } from "@jiscribe/canvas/unstable-doc";
 import { describe, it, expect } from "vitest";
 
 import { BELOW_LABEL_STYLE_DEFAULTS } from "../../schema/belowLabelStyleDefaults";

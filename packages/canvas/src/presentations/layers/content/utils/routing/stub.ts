@@ -2,7 +2,7 @@ import type {
 	BoxFeatures,
 	OrthogonalDirection,
 	Point,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 
 /**
  * Returns the endpoint's stub point. Along the exit-direction axis it pushes out to the

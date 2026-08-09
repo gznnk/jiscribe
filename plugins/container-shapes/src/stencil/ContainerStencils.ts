@@ -1,4 +1,4 @@
-import type { Stencil } from "@workspace/canvas";
+import type { Stencil } from "@jiscribe/canvas";
 
 import { BoundaryIcon } from "./BoundaryIcon";
 import { FrameIcon } from "./FrameIcon";

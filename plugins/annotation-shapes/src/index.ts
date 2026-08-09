@@ -2,14 +2,14 @@
 // のような特定記法の語彙（それぞれ専用パッケージ）とも、実物・人・場を表すピクトグラム
 // （general-shapes）とも分ける（docs/05_extensibility/annotation-plugin-plan.md 参照）。
 // 各図形の ObjectDocDefinition / ObjectTypeDefinition は createFrameObjectDoc /
-// createFrameObjectDefinition (`@workspace/canvas-sdk/doc` / `@workspace/canvas-sdk`)
+// createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`)
 // が features/defaults から丸ごと導出するため、per-shape の ObjectFactory /
 // validate*Doc / Mapper / validate*State は持たない（group marker の factory だけは
 // schema/shared/createGroupMarkerObjectFactory を渡して差し替える）。schema/** の
 // headless 部品 (AUTO_COLOR / BELOW_LABEL_STYLE_DEFAULTS / TEXT_LINE_HEIGHT) は
-// `@workspace/canvas-sdk/doc`、presentation / controls 部品 (createFrameObject /
+// `@jiscribe/canvas-sdk/doc`、presentation / controls 部品 (createFrameObject /
 // measureTextWidth / calcVisualLineCount / readTextSlot / centeredPolygonOutline /
-// SelectionControlPill) は `@workspace/canvas-sdk` 経由。
+// SelectionControlPill) は `@jiscribe/canvas-sdk` 経由。
 // headless な parse 入口は ./doc (annotationDocPlugin)。
 // 図形は 1 図形 1 フォルダ（schema/<id>/ ・ state/<id>/ ・ presentation/<Pascal>/）で、
 // 複数図形が共有する部品は各層の shared/ に置く。brace / bracket / bracketWithStem は

@@ -2,7 +2,7 @@ import {
 	calcFrameBoxFeatures,
 	type BoxFeatures,
 	type Point,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import { routeSelfLoop } from "../selfLoop";

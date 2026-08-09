@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@workspace/geometry";
+import type { Point, Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { DOCUMENT_WAVE_RATIO } from "../../../schema/document/DocumentDoc";

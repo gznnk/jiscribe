@@ -34,7 +34,7 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
 - 対象は `schemas` / `states` / `controllers` / `presentations` 各層
   （Mapper の往復変換、`validateXxxDoc`、Command の `execute`、変形ロジック、`canvasReducer` 経由の振る舞いなど）
 - `vitest.config.ts` は `environment: "node"`。DOM を介さず入力 state → 出力 state を直接検証する
-- 実行: `pnpm --filter @workspace/canvas test`（`vitest run`）。
+- 実行: `pnpm --filter @jiscribe/canvas test`（`vitest run`）。
   `test:coverage` / `test:ui` も用意（カバレッジは `index.ts` と `vitest.config.ts` を除外）
 
 ```
@@ -80,7 +80,7 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
   `support/selectors.ts` … `data-kind` / `data-id` セレクタ定数。`fixtures.ts` が CanvasDriver を注入
 - `specs/` がテスト本体（CI ゲート）。カテゴリ: `arrange` / `driver` / `editing` / `keyboard` /
   `scenario` / `shapes` / `ui`（+ `smoke.spec.ts`）
-- 実行: `pnpm --filter @workspace/canvas test:e2e`（`:headed` / `:ui` あり）
+- 実行: `pnpm --filter @jiscribe/canvas test:e2e`（`:headed` / `:ui` あり）
 
 設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
 （`expect.poll` 等）で安定させ、本当の不具合を隠さない。
@@ -93,7 +93,7 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 レイヤーの一方向依存（[アーキテクチャ](./02-architecture.ja.md)）を機械的に担保するため、
 madge で循環依存を検出する。
 
-- 実行: `pnpm dep:check`（ワークスペース全体）/ `pnpm --filter @workspace/canvas dep:check`（canvas のみ）
+- 実行: `pnpm dep:check`（ワークスペース全体）/ `pnpm --filter @jiscribe/canvas dep:check`（canvas のみ）
 - CI の checks ジョブでも `pnpm dep:check` が走る
 
 ## 一括実行（タスク完了時のチェック）
@@ -107,7 +107,7 @@ pnpm build:examples
 pnpm typecheck
 pnpm dep:check
 pnpm lint
-pnpm --filter @workspace/canvas test
+pnpm --filter @jiscribe/canvas test
 ```
 
 </content>

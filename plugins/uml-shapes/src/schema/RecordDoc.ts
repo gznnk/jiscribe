@@ -2,12 +2,12 @@ import type {
 	CreateObjectType,
 	ObjectFeatures,
 	TextSlot,
-} from "@workspace/canvas/doc";
+} from "@jiscribe/canvas/doc";
 import {
 	AUTO_COLOR,
 	DEFAULT_FONT_FAMILY,
 	TEXT_LINE_HEIGHT,
-} from "@workspace/canvas-sdk/doc";
+} from "@jiscribe/canvas-sdk/doc";
 
 /** Slot holding the box stereotype (<<interface>> / <<abstract>>). */
 export const RECORD_STEREOTYPE_SLOT_ID = "stereotype";

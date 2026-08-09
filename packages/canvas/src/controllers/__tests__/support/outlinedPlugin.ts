@@ -1,4 +1,4 @@
-import type { Dimensions, Point } from "@workspace/geometry";
+import type { Dimensions, Point } from "@jiscribe/geometry";
 
 import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
@@ -24,7 +24,7 @@ const outlinedOutline = ({ width, height }: Dimensions): Point[] => {
 /**
  * A shape whose drawn silhouette is smaller than its bounding box, i.e. one that
  * registers an `outline`. No built-in has one any more — the callout, the last,
- * moved to `@workspace/plugin-annotation-shapes` — so tests covering connector
+ * moved to `@jiscribe/plugin-annotation-shapes` — so tests covering connector
  * attachment to an outline supply it themselves. Attachment keys off the
  * registered calculator, not off any particular type, so a stand-in is faithful.
  *

@@ -1,4 +1,4 @@
-import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildCloudPath } from "./buildCloudPath";
 import type { CloudState } from "../../state/cloud/CloudState";

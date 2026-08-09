@@ -1,4 +1,4 @@
-import type { Point, Rect, TransformedFrame } from "@workspace/geometry";
+import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsRegistry";

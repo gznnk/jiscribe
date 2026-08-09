@@ -1,5 +1,5 @@
-import type { ObjectTextRegionCalculator } from "@workspace/canvas";
-import type { Rect } from "@workspace/geometry";
+import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
+import type { Rect } from "@jiscribe/geometry";
 
 import { calcRecordSlotRegions } from "./calcRecordSlotRegions";
 import type { RecordSlotRegionsState } from "./calcRecordSlotRegions";

@@ -1,4 +1,4 @@
-import { createFrameObject, ShapeBodyPath } from "@workspace/canvas-sdk";
+import { createFrameObject, ShapeBodyPath } from "@jiscribe/canvas-sdk";
 
 import { buildCalloutPath } from "./buildCalloutPath";
 import { resolveCalloutTail } from "./calloutTailGeometry";

@@ -1,8 +1,8 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import {
 	AUTO_COLOR,
 	BELOW_LABEL_STYLE_DEFAULTS,
-} from "@workspace/canvas-sdk/doc";
+} from "@jiscribe/canvas-sdk/doc";
 
 /**
  * An actor (stick figure) used for users / roles in use-case diagrams and for

@@ -1,4 +1,4 @@
-import type { ToolbarEntry } from "@workspace/canvas";
+import type { ToolbarEntry } from "@jiscribe/canvas";
 
 import { FrameIcon } from "./FrameIcon";
 

@@ -2,7 +2,7 @@ import {
 	calcFrameBoxFeatures,
 	isLineIntersectingBox,
 	type BoxFeatures,
-} from "@workspace/geometry";
+} from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import { routeOrthogonalConnector, type OrthogonalConnectorEndpoint } from "..";

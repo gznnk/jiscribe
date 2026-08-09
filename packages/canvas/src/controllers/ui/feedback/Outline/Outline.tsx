@@ -1,4 +1,4 @@
-import type { TransformedFrame } from "@workspace/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import {

@@ -17,7 +17,7 @@ import { resolveConnectorPoints } from "../resolveConnectorPoints";
  * router leaves along its declared direction. The points come from a synthetic
  * registry, so this exercises resolveConnectorPoints in isolation from any
  * particular shape (the brace's own tip geometry is covered by
- * `@workspace/plugin-annotation-shapes`).
+ * `@jiscribe/plugin-annotation-shapes`).
  */
 
 const freeEndpoint = (x: number, y: number): EndpointRef =>

@@ -1,4 +1,4 @@
-import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildOffPageConnectorPoints } from "./buildOffPageConnectorPoints";
 import type { OffPageConnectorState } from "../../state/offPageConnector/OffPageConnectorState";

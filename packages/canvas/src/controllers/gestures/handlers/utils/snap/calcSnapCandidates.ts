@@ -1,5 +1,5 @@
-import { calcKeyPointsBoundingBox } from "@workspace/geometry";
-import type { FrameKeyPoints } from "@workspace/geometry";
+import { calcKeyPointsBoundingBox } from "@jiscribe/geometry";
+import type { FrameKeyPoints } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { SnapCandidate, SnapCandidates } from "../../../../CanvasTypes";

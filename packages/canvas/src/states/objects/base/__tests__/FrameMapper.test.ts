@@ -21,7 +21,7 @@ import { createPolyMapper } from "../PolyMapper";
 /**
  * A stroke-less frame type, declared here rather than borrowed from a real shape:
  * every built-in has `stroke: true` since sticky moved to
- * `@workspace/plugin-sticky-shape`, and the mapper's behavior is a property of the
+ * `@jiscribe/plugin-sticky-shape`, and the mapper's behavior is a property of the
  * descriptor, not of any one shape.
  */
 const NoStrokeFeatures = {

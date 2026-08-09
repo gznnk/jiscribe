@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@workspace/geometry";
+import type { Point, Rect } from "@jiscribe/geometry";
 
 import { addObject, type AddObjectParams } from "./addObject";
 import {

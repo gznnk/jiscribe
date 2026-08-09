@@ -1,6 +1,6 @@
-import type { ObjectAnchorRegionCalculator } from "@workspace/canvas";
-import type { Dimensions } from "@workspace/geometry";
-import { calcInsetRect } from "@workspace/geometry";
+import type { ObjectAnchorRegionCalculator } from "@jiscribe/canvas";
+import type { Dimensions } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
 
 import { OFF_PAGE_CONNECTOR_TIP_RATIO } from "../../schema/offPageConnector/OffPageConnectorDoc";
 

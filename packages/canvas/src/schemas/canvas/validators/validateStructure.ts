@@ -1,4 +1,4 @@
-import { isArray, isObject, isString } from "@workspace/basic-validators";
+import { isArray, isObject, isString } from "@jiscribe/basic-validators";
 
 import type { SemanticDiagnostic } from "./types";
 import type { createObjectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";

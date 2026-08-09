@@ -1,4 +1,4 @@
-import type { TransformedFrame } from "@workspace/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
 import { Fragment, memo } from "react";
 import type React from "react";
 import type { ReactNode } from "react";
@@ -108,7 +108,7 @@ export type FrameTextOverlayRenderer = (
  * into `TextOverlayFrame` so display keeps matching the editing textarea.
  *
  * Out of scope for types whose draw structure differs: a shadowed shape drawing a
- * group of its own (the sticky in `@workspace/plugin-sticky-shape`), and svg
+ * group of its own (the sticky in `@jiscribe/plugin-sticky-shape`), and svg
  * wrapped by DOMPurify. Those hand-write the component and reach for
  * `calcTextRegion` / `createSvgTransform` directly.
  */

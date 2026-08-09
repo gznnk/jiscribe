@@ -1,7 +1,7 @@
 import type {
 	ObjectGeometryKeyCalculator,
 	ObjectState,
-} from "@workspace/canvas";
+} from "@jiscribe/canvas";
 
 import { resolveCalloutTail } from "./calloutTailGeometry";
 import type { CalloutState } from "../../state/callout/CalloutState";

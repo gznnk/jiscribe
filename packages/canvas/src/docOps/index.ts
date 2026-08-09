@@ -21,5 +21,5 @@ export type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 // the schemas layer.
 export type { EdgeAnchorSide } from "../schemas/objects/types/EndpointRef";
 // Re-exported so a consumer can name what getObjectsBounds returns, and the vertices
-// setPoints takes, without taking a dependency on @workspace/geometry.
-export type { Point, Rect } from "@workspace/geometry";
+// setPoints takes, without taking a dependency on @jiscribe/geometry.
+export type { Point, Rect } from "@jiscribe/geometry";

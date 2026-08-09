@@ -1,6 +1,6 @@
-import type { ObjectTextRegionCalculator } from "@workspace/canvas";
-import type { Dimensions, RatioInsets } from "@workspace/geometry";
-import { calcInsetRect } from "@workspace/geometry";
+import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
+import type { Dimensions, RatioInsets } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
 
 /**
  * Builds a `textRegion` calculator for shapes whose text region is a fixed

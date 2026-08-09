@@ -2,8 +2,8 @@ import {
 	Canvas,
 	extractCanvasSourceFromPng,
 	parseCanvasText,
-} from "@workspace/canvas";
-import type { CanvasDoc } from "@workspace/canvas";
+} from "@jiscribe/canvas";
+import type { CanvasDoc } from "@jiscribe/canvas";
 import { useCallback, useRef, useState } from "react";
 import "./file-io.css";
 

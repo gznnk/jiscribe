@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import type { ObjectFactoryRegistry } from "../../registry/ObjectFactoryRegistry";
 import type { ObjectDoc } from "../base/ObjectDoc";

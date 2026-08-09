@@ -1,4 +1,4 @@
-import type { Dimensions } from "@workspace/geometry";
+import type { Dimensions } from "@jiscribe/geometry";
 
 import { calcTextLineWidths } from "./calcTextLineWidths";
 import type { TextMeasureFont } from "./measureText";

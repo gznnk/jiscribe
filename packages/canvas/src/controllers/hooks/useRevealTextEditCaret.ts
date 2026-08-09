@@ -1,4 +1,4 @@
-import type { BoundingBox } from "@workspace/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 import { type Dispatch, useCallback, useLayoutEffect, useRef } from "react";
 
 import type { Viewport } from "../../states/canvas/Viewport";

@@ -1,4 +1,4 @@
-import type { BoundingBox } from "@workspace/geometry";
+import type { BoundingBox } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import { collectIdsInArea } from "../collectIdsInArea";

@@ -1,4 +1,4 @@
-import { roundToDecimal, type Point } from "@workspace/geometry";
+import { roundToDecimal, type Point } from "@jiscribe/geometry";
 
 import {
 	calcNearestAnchor,

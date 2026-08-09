@@ -1,4 +1,4 @@
-import { roundToDecimal, type Point } from "@workspace/geometry";
+import { roundToDecimal, type Point } from "@jiscribe/geometry";
 import { type Dispatch, useLayoutEffect, useMemo, useRef } from "react";
 
 import { PRECISION } from "../../constants/precision";

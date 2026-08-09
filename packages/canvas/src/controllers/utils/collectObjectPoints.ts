@@ -1,5 +1,5 @@
-import { calcFrameCornerPoints, isTransformedFrame } from "@workspace/geometry";
-import type { Point } from "@workspace/geometry";
+import { calcFrameCornerPoints, isTransformedFrame } from "@jiscribe/geometry";
+import type { Point } from "@jiscribe/geometry";
 
 import { collectConnectorPoints } from "./calcConnectorBoundingBox";
 import { isPoly } from "../../schemas/objects/types/Poly";

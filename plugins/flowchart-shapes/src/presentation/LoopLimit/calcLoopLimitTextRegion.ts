@@ -1,5 +1,5 @@
-import type { Dimensions, Rect } from "@workspace/geometry";
-import { calcInsetRect } from "@workspace/geometry";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
+import { calcInsetRect } from "@jiscribe/geometry";
 
 import { LOOP_LIMIT_CUT_RATIO } from "../../schema/loopLimit/LoopLimitDoc";
 

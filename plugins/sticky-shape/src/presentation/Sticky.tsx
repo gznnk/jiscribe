@@ -1,11 +1,11 @@
-import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import type { TextEditable } from "@workspace/canvas-sdk";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
+import type { TextEditable } from "@jiscribe/canvas-sdk";
 import {
 	TextOverlay,
 	calcTextRegion,
 	createSvgTransform,
 	readTextSlot,
-} from "@workspace/canvas-sdk";
+} from "@jiscribe/canvas-sdk";
 import type React from "react";
 import { memo } from "react";
 

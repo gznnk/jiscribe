@@ -1,6 +1,6 @@
 # canvas-examples
 
-`@workspace/canvas` の統合例集。1 example = 1 ファイル（`src/examples/*.tsx`）で、
+`@jiscribe/canvas` の統合例集。1 example = 1 ファイル（`src/examples/*.tsx`）で、
 各ファイルは単体でコピペ可能な統合例として読めるように書く（シェルに依存しない。
 親要素いっぱいに描画する、が唯一の契約）。
 
@@ -19,7 +19,7 @@ pnpm build:examples   # ビルド（CI で examples の腐敗防止を兼ねる�
 | `viewport`      | imperative viewport API（initialConfig.viewport / onViewportChange / ref.current.viewport） |
 | `external-sync` | 外部（エディタ・AI）が doc の正本を持ち、doc 差し替えで push する                           |
 | `multi-canvas`  | 複数 Canvas の埋め込み（キーボードはフォーカスされた Canvas にスコープ）                    |
-| `gallery`       | 実物 .jis.json の閲覧（正本は `apps/landing/public/demo/diagrams/`）                        |
+| `gallery`       | 実物 .jis.json の閲覧（正本は `diagrams/`）                                                 |
 
 ## example を追加するとき
 

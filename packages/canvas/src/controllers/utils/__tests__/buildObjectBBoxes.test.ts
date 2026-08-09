@@ -1,5 +1,5 @@
-import { calcFrameKeyPoints, calcPolyKeyPoints } from "@workspace/geometry";
-import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
+import { calcFrameKeyPoints, calcPolyKeyPoints } from "@jiscribe/geometry";
+import type { FrameKeyPoints, TransformedFrame } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";

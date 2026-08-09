@@ -1,19 +1,19 @@
 // flowchart / container / markdown / sticky / uml / general / annotation 図形は
-// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape / @workspace/plugin-sticky-shape /
-// @workspace/plugin-uml-shapes / @workspace/plugin-general-shapes /
-// @workspace/plugin-annotation-shapes から供給する
+// @jiscribe/plugin-flowchart-shapes / @jiscribe/plugin-container-shapes /
+// @jiscribe/plugin-markdown-shape / @jiscribe/plugin-sticky-shape /
+// @jiscribe/plugin-uml-shapes / @jiscribe/plugin-general-shapes /
+// @jiscribe/plugin-annotation-shapes から供給する
 // (docs/05_extensibility/plugin-architecture-requirements.md)。この Webview 側は React を
 // 含む Canvas 一式を既に読み込んでいるので、プラグインの通常エントリ (./index)
 // を使ってよい。`plugins` は index.tsx の `initialConfig` とも共有する。
-import { createCanvasParser } from "@workspace/canvas/doc";
-import { annotationPlugin } from "@workspace/plugin-annotation-shapes";
-import { containerPlugin } from "@workspace/plugin-container-shapes";
-import { flowchartPlugin } from "@workspace/plugin-flowchart-shapes";
-import { generalPlugin } from "@workspace/plugin-general-shapes";
-import { markdownPlugin } from "@workspace/plugin-markdown-shape";
-import { stickyPlugin } from "@workspace/plugin-sticky-shape";
-import { umlPlugin } from "@workspace/plugin-uml-shapes";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
+import { annotationPlugin } from "@jiscribe/plugin-annotation-shapes";
+import { containerPlugin } from "@jiscribe/plugin-container-shapes";
+import { flowchartPlugin } from "@jiscribe/plugin-flowchart-shapes";
+import { generalPlugin } from "@jiscribe/plugin-general-shapes";
+import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
+import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
+import { umlPlugin } from "@jiscribe/plugin-uml-shapes";
 
 export const plugins = [
 	flowchartPlugin,

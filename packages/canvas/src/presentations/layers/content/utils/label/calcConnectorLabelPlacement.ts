@@ -1,4 +1,4 @@
-import { calcEuclideanDistance, type Point } from "@workspace/geometry";
+import { calcEuclideanDistance, type Point } from "@jiscribe/geometry";
 
 /** Label placement along a connector path, in the units `calcConnectorLabelAnchor` consumes. */
 export type ConnectorLabelPlacement = {

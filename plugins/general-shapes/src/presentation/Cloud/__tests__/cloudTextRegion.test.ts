@@ -1,4 +1,4 @@
-import { createInsetTextRegion } from "@workspace/canvas-sdk";
+import { createInsetTextRegion } from "@jiscribe/canvas-sdk";
 import { describe, it, expect } from "vitest";
 
 import { CLOUD_TEXT_INSETS } from "../../../schema/cloud/CloudDoc";

@@ -1,4 +1,4 @@
-import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@jiscribe/canvas-sdk";
 
 import { buildManualInputPoints } from "./buildManualInputPoints";
 import type { ManualInputState } from "../../state/manualInput/ManualInputState";

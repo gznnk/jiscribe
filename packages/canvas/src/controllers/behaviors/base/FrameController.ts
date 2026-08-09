@@ -1,4 +1,4 @@
-import { roundToDecimal, type TransformedFrame } from "@workspace/geometry";
+import { roundToDecimal, type TransformedFrame } from "@jiscribe/geometry";
 
 import { rotateFrameByGroup, transformFrameByGroup } from "./FrameTransform";
 import { PRECISION } from "../../../constants/precision";

@@ -1,18 +1,18 @@
-# @workspace/canvas-sdk
+# @jiscribe/canvas-sdk
 
 canvas プラグイン（図形パッケージ）作者向けの量産キット。canvas 本体の公開 API だけで
-書けるヘルパーと、`@workspace/canvas/unstable` / `/unstable-doc` 面の再エクスポートを
+書けるヘルパーと、`@jiscribe/canvas/unstable` / `/unstable-doc` 面の再エクスポートを
 提供する。プラグインは canvas の unstable 系を直接 import しない（eslint ガードで強制）。
 
 経緯と全体設計は [docs/05_extensibility/canvas-sdk-plan.md](../../docs/05_extensibility/canvas-sdk-plan.md) 参照。
 
 ## エントリ
 
-| エントリ                        | 用途                                                                                         |
-| ------------------------------- | -------------------------------------------------------------------------------------------- |
-| `@workspace/canvas-sdk`         | UI 部材（React 依存）。unstable 面の再エクスポート + sdk 固有ヘルパー                        |
-| `@workspace/canvas-sdk/doc`     | headless 部材。unstable-doc 面の再エクスポート + doc 系ヘルパー。React / @emotion を引かない |
-| `@workspace/canvas-sdk/testing` | テスト専用（vitest 前提）。ランタイム barrel には混ぜない                                    |
+| エントリ                       | 用途                                                                                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas-sdk`         | UI 部材（React 依存）。unstable 面の再エクスポート + sdk 固有ヘルパー                        |
+| `@jiscribe/canvas-sdk/doc`     | headless 部材。unstable-doc 面の再エクスポート + doc 系ヘルパー。React / @emotion を引かない |
+| `@jiscribe/canvas-sdk/testing` | テスト専用（vitest 前提）。ランタイム barrel には混ぜない                                    |
 
 ## 置き場所の3層ルール
 
