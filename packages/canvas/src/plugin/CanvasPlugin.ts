@@ -4,7 +4,7 @@ import type { ObjectType } from "../schemas/objects/types/ObjectType";
 /**
  * Declarative bundle of object-type contributions a host wires into a `<Canvas>`
  * via `CanvasConfig.plugins`
- * (docs/05_extensibility/plugin-architecture-requirements.md §3).
+ * (packages/canvas/docs/12-plugin-architecture.md).
  *
  * Structurally assignable to
  * {@link import("../schemas/plugin/CanvasDocPlugin").CanvasDocPlugin}: each

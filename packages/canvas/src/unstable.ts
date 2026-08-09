@@ -66,7 +66,7 @@ export type { TextMeasureFont } from "./states/objects/utils/measureText";
 export { PRECISION } from "./constants/precision";
 
 // ---------------------------------------------------------------------------
-// Phase A: type-specific selection control parts (docs/05_extensibility/plugin-architecture-requirements.md §4)
+// Phase A: type-specific selection control parts (packages/canvas/docs/12-plugin-architecture.md)
 // ---------------------------------------------------------------------------
 
 export { ControlStrategy } from "./controllers/gestures/registry/ControlStrategy";
@@ -75,7 +75,7 @@ export { SelectionControlPill } from "./controllers/ui/controls/SelectionControl
 export { getResizeCursorForRotation } from "./controllers/ui/utils";
 
 // ---------------------------------------------------------------------------
-// ObjectMenu UI kit (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1)
+// ObjectMenu UI kit (packages/canvas/docs/12-plugin-architecture.md)
 // ---------------------------------------------------------------------------
 // Grammar ObjectMenuHandler resolves for `data-part` under `data-kind="menu"`:
 //   - `toggle:{sectionId}`     open/close a section

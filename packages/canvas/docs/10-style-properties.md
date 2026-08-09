@@ -90,7 +90,7 @@ export const containerDefinition = defineObject({
 The declaration's existence **is** the gate: no separate flag, and a property nobody
 declares applies to nothing (fail-closed). Because registration flows through
 `applyObjectDefinition`, plugin/custom shapes added via `CanvasConfig.plugins`
-(see docs/05_extensibility/plugin-architecture-requirements.md) get the same capability, and
+(see [Plugin Architecture](./12-plugin-architecture.md)) get the same capability, and
 `initializeObjectRegistry`'s clear cycle clears only the per-type extras
 (`clearExtras`) — system handlers are canvas-wide, like gesture handlers and
 commands.

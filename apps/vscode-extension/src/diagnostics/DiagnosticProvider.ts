@@ -6,8 +6,7 @@
 // `./doc` entries: those import only `@jiscribe/canvas/doc` / `@jiscribe/canvas/unstable-doc`
 // (no React, and for markdown no markdown-it / KaTeX either — rendering lives in its
 // presentation), so esbuild keeps the Node bundle small even though it now validates
-// plugin shapes too (docs/05_extensibility/plugin-architecture-requirements.md
-// §7「unstable 層の Node/UI 分割」)。
+// plugin shapes too (packages/canvas/docs/12-plugin-architecture.md)。
 import {
 	createCanvasParser,
 	type SemanticDiagnostic,

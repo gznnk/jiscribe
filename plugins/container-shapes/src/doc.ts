@@ -28,7 +28,7 @@ export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 /**
  * Headless `CanvasDocPlugin` for the container shape: the doc-layer view of
  * `containerPlugin`, teaching `createCanvasParser` the type without loading any
- * React / presentation code (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1).
+ * React / presentation code (packages/canvas/docs/12-plugin-architecture.md).
  */
 export const containerDocPlugin: CanvasDocPlugin = {
 	id: "container-shapes",

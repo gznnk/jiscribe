@@ -7,7 +7,7 @@
 // (flowchartDocPlugin)。各 definition は core の対応エントリ(initializeObjectRegistry.ts)と
 // 同一構成(意図的除外ゼロ)。process / onPageConnector プリセットは core 所有のまま
 // (flowchartToolbarEntry から presetId で参照)。
-// (docs/05_extensibility/plugin-architecture-requirements.md 参照)。
+// (packages/canvas/docs/13-authoring-plugins.md 参照)。
 export * from "./definitions";
 export { flowchartDocPlugin } from "./doc";
 export { flowchartToolbarEntry } from "./stencil/FlowchartToolbarEntry";

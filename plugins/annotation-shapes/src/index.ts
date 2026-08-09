@@ -1,6 +1,6 @@
 // 注釈図形の外部パッケージ。収載の線引きは「記法に属さない汎用注釈」で、flowchart / UML
 // のような特定記法の語彙（それぞれ専用パッケージ）とも、実物・人・場を表すピクトグラム
-// （general-shapes）とも分ける（docs/05_extensibility/annotation-plugin-plan.md 参照）。
+// （general-shapes）とも分ける。
 // 各図形の ObjectDocDefinition / ObjectTypeDefinition は createFrameObjectDoc /
 // createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`)
 // が features/defaults から丸ごと導出するため、per-shape の ObjectFactory /

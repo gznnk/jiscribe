@@ -192,7 +192,7 @@ export default tseslint.config(
 		},
 	},
 	{
-		// canvas-sdk は canvas の疑似外部（docs/05_extensibility/canvas-sdk-plan.md §2）:
+		// canvas-sdk は canvas の疑似外部（packages/canvas/docs/13-authoring-plugins.md）:
 		// プラグインと同じく canvas の公開エントリだけを見る。
 		files: ["packages/canvas-sdk/src/**"],
 		rules: {

@@ -25,7 +25,7 @@ import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
 // それぞれ @jiscribe/plugin-flowchart-shapes / @jiscribe/plugin-container-shapes /
 // @jiscribe/plugin-markdown-shape / @jiscribe/plugin-sticky-shape /
 // @jiscribe/plugin-general-shapes / @jiscribe/plugin-annotation-shapes が唯一の供給元
-// （docs/05_extensibility/plugin-architecture-requirements.md）。この example は
+// （packages/canvas/docs/13-authoring-plugins.md）。この example は
 // 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言を createCanvasParser と
 // Canvas の initialConfig の両方に渡すだけで、doc の検証と図形一式の登録が揃う。
 const plugins = [

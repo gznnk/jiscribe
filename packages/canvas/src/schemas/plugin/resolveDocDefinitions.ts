@@ -7,7 +7,7 @@ import { builtinObjectDocDefinitions } from "../registry/builtinObjectDocDefinit
  * schema layer doesn't depend on the controllers layer's `CanvasPlugin` type; a
  * full `CanvasPlugin` (or `CanvasDocPlugin`) is assignable because its `objects`
  * values are the UI definitions that extend {@link ObjectDocDefinition}
- * (docs/05_extensibility/plugin-architecture-requirements.md §3).
+ * (packages/canvas/docs/12-plugin-architecture.md).
  */
 export type CanvasDocPluginLike = {
 	id: string;

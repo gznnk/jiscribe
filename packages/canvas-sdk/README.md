@@ -4,7 +4,8 @@ canvas プラグイン（図形パッケージ）作者向けの量産キット�
 書けるヘルパーと、`@jiscribe/canvas/unstable` / `/unstable-doc` 面の再エクスポートを
 提供する。プラグインは canvas の unstable 系を直接 import しない（eslint ガードで強制）。
 
-経緯と全体設計は [docs/05_extensibility/canvas-sdk-plan.md](../../docs/05_extensibility/canvas-sdk-plan.md) 参照。
+置き場所の 3 層ルールと、プラグイン作成の手順は
+[プラグインの作り方](../canvas/docs/13-authoring-plugins.ja.md) 参照。
 
 ## エントリ
 

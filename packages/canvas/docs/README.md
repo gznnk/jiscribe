@@ -2,7 +2,7 @@
 
 # canvas Design Documentation
 
-A set of documents that organize the design of `@jiscribe/canvas` into 11 pillars.
+A set of documents that organize the design of `@jiscribe/canvas` into 13 pillars.
 For a high-level overview, we recommend reading [Design Philosophy](./01-design-philosophy.md) and
 [Architecture](./02-architecture.md) first.
 
@@ -24,6 +24,8 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 | 9   | [Testing](./09-testing.md)                                       | Unit / integration (vitest), E2E (Playwright), and circular dependency checks (madge)                                  |
 | 10  | [Style Property System](./10-style-properties.md)                | StylePropertyRegistry, feature-gated / shape-declared property declarations, and dot-notation nested writes            |
 | 11  | [Shape Design Decisions](./11-shape-design.md)                   | The criteria for adding or extending a shape (e.g., splitting geometry into user-specified vs. engine-derived)         |
+| 12  | [Plugin Architecture](./12-plugin-architecture.md)               | `CanvasPlugin` contributions, the UI / headless split, the public API tiers, and state ownership                       |
+| 13  | [Authoring Plugins](./13-authoring-plugins.md)                   | Shape package layout, the `@jiscribe/canvas-sdk` kit, the enforced boundaries, and the wiring checklist                |
 
 ## AI Reference
 

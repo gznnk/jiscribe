@@ -31,7 +31,7 @@ import "./harness.css";
 // core, leaving @jiscribe/plugin-flowchart-shapes / @jiscribe/plugin-container-shapes /
 // @jiscribe/plugin-markdown-shape / @jiscribe/plugin-sticky-shape /
 // @jiscribe/plugin-general-shapes / @jiscribe/plugin-annotation-shapes as their only source
-// (docs/05_extensibility/plugin-architecture-requirements.md). They are registered in
+// (packages/canvas/docs/13-authoring-plugins.md). They are registered in
 // devDependencies as a dev-only circular dependency for e2e, keeping the related specs alive.
 const plugins = [
 	flowchartPlugin,

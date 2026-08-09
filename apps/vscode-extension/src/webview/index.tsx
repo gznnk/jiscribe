@@ -25,7 +25,7 @@ import type {
 } from "../types/messages";
 
 // container 図形は @jiscribe/plugin-container-shapes から供給する
-// (docs/05_extensibility/plugin-architecture-requirements.md)。
+// (packages/canvas/docs/13-authoring-plugins.md)。
 const initialConfig: CanvasConfig = { plugins };
 
 // annotation / flowchart / container / general カテゴリと markdown プリセットは core の既定

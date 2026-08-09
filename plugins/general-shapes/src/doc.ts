@@ -163,7 +163,7 @@ export const laptopDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 /**
  * Headless `CanvasDocPlugin` for the general shapes: the doc-layer view of
  * `generalPlugin`, teaching `createCanvasParser` the types without loading any
- * React / presentation code (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1).
+ * React / presentation code (packages/canvas/docs/12-plugin-architecture.md).
  */
 export const generalDocPlugin: CanvasDocPlugin = {
 	id: "general-shapes",

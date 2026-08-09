@@ -10,7 +10,7 @@
 // (createFrameObject / TextOverlay / createFrameBehavior / createFrameMapper /
 // createFrameStateValidator) は `@jiscribe/canvas-sdk` 経由。
 // headless な parse 入口は ./doc (umlDocPlugin)。
-// (docs/05_extensibility/plugin-architecture-requirements.md 参照)。
+// (packages/canvas/docs/13-authoring-plugins.md 参照)。
 export * from "./schema/RecordDoc";
 export * from "./state/RecordState";
 export { recordToDoc, recordToState } from "./state/RecordMapper";

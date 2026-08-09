@@ -11,7 +11,7 @@
 // (containerDocPlugin)。containerDefinition は core の container 定義と同一構成
 // (意図的除外ゼロ)。i18n はプラグイン所有辞書(src/messages/containerMessages.ts)を canvas の
 // locale から resolveLocaleMessages で解決する(menuHeaderColor は core から撤去済み)。
-// (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1 参照)。
+// (packages/canvas/docs/13-authoring-plugins.md 参照)。
 export * from "./schema/ContainerDoc";
 export * from "./state/ContainerState";
 

@@ -240,7 +240,7 @@ export const trapezoidDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 /**
  * Headless `CanvasDocPlugin` for the flowchart shapes: the doc-layer view of
  * `flowchartPlugin`, teaching `createCanvasParser` the 18 types without loading
- * any React / presentation code (docs/05_extensibility/plugin-architecture-requirements.md).
+ * any React / presentation code (packages/canvas/docs/12-plugin-architecture.md).
  */
 export const flowchartDocPlugin: CanvasDocPlugin = {
 	id: "flowchart-shapes",

@@ -20,7 +20,7 @@ import {
 
 /**
  * `CanvasPlugin` declaration for the general shapes
- * (docs/05_extensibility/plugin-architecture-requirements.md §3). Hosts wire this
+ * (packages/canvas/docs/12-plugin-architecture.md). Hosts wire this
  * into `<Canvas initialConfig>` via `plugins`; `objects` also feeds
  * `createCanvasParser` since the definition extends `ObjectDocDefinition`. The
  * headless (Node-side) parse entry is `generalDocPlugin` in `./doc`.

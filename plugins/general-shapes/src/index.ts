@@ -11,7 +11,7 @@
 // headless な parse 入口は ./doc (generalDocPlugin)。
 // 図形は 1 図形 1 フォルダ（schema/<id>/ ・ state/<id>/ ・ presentation/<Pascal>/）で、
 // 複数図形が共有する部品は各層の shared/ に置く。
-// (docs/05_extensibility/plugin-architecture-requirements.md 参照)。
+// (packages/canvas/docs/13-authoring-plugins.md 参照)。
 export * from "./schema/actor/ActorDoc";
 export * from "./schema/browserWindow/BrowserWindowDoc";
 export * from "./schema/cloud/CloudDoc";

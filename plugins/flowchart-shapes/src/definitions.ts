@@ -140,7 +140,7 @@ import { TrapezoidIcon } from "./stencil/TrapezoidIcon";
  * `createFrameObjectDefinition`（mapper / stateValidator / behavior を features から
  * 導出）で足して合成する。core の登録エントリ (initializeObjectRegistry.ts の
  * ALL_OBJECT_DEFINITIONS) と 1:1 で、意図的除外はない。menu は未宣言なので features から
- * 既定メニューが導出される (docs/05_extensibility/plugin-architecture-requirements.md)。
+ * 既定メニューが導出される (packages/canvas/docs/12-plugin-architecture.md)。
  */
 export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
 	createFrameObjectDefinition<CardDoc, CardState>({

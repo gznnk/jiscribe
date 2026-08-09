@@ -3,7 +3,7 @@
 // @jiscribe/plugin-markdown-shape / @jiscribe/plugin-sticky-shape /
 // @jiscribe/plugin-uml-shapes / @jiscribe/plugin-general-shapes /
 // @jiscribe/plugin-annotation-shapes から供給する
-// (docs/05_extensibility/plugin-architecture-requirements.md)。この Webview 側は React を
+// (packages/canvas/docs/13-authoring-plugins.md)。この Webview 側は React を
 // 含む Canvas 一式を既に読み込んでいるので、プラグインの通常エントリ (./index)
 // を使ってよい。`plugins` は index.tsx の `initialConfig` とも共有する。
 import { createCanvasParser } from "@jiscribe/canvas/doc";

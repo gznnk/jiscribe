@@ -2,7 +2,7 @@
 	"name": "@jiscribe/plugin-general-shapes",
 	"version": "0.0.0",
 	"private": true,
-	"description": "記法（flowchart / UML 等）に属さない、実物・人・場を表す汎用ピクトグラム（actor / cloud / server / browserWindow など 15 種）を canvas 公開 API のみで外部パッケージとして提供する。装飾系（star / heart / バナー等）は入れない（docs/05_extensibility/plugin-architecture-requirements.md）",
+	"description": "記法（flowchart / UML 等）に属さない、実物・人・場を表す汎用ピクトグラム（actor / cloud / server / browserWindow など 15 種）を canvas 公開 API のみで外部パッケージとして提供する。装飾系（star / heart / バナー等）は入れない（packages/canvas/docs/13-authoring-plugins.md）",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {

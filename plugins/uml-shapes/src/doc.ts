@@ -23,7 +23,7 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 /**
  * Headless `CanvasDocPlugin` for the UML shapes: the doc-layer view of
  * `umlPlugin`, teaching `createCanvasParser` the types without loading any
- * React / presentation code (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1).
+ * React / presentation code (packages/canvas/docs/12-plugin-architecture.md).
  */
 export const umlDocPlugin: CanvasDocPlugin = {
 	id: "uml-shapes",
