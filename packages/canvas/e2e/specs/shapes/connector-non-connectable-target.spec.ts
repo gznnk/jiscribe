@@ -5,9 +5,10 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * Spec for dropping a connector endpoint onto a shape that cannot be connected
  * (connectable=false): no connection is made.
  *
- * Only connectable types are drop candidates for an endpoint (findConnectableHoverTarget filters
- * by features.connectable). rect/ellipse/sticky are connectable; polyline/polygon/group/connector
- * are connectable=false. Existing specs only used connectable targets, so this filter was untested.
+ * Only connectable types are drop candidates for an endpoint (findConnectableHoverTarget asks
+ * isConnectableObject, which reads the type's registered features). rect/ellipse/sticky/text are
+ * connectable; polyline/polygon/group/svg/connector are connectable=false. Existing specs only
+ * used connectable targets, so this filter was untested.
  *
  * To tell the two apart, the drop lands on a point *away from the center* of the Polyline:
  *   - staying free correctly leaves the endpoint at the drop coordinate

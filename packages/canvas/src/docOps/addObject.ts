@@ -9,9 +9,15 @@ export type AddObjectParams = {
 	x: number;
 	/** Top edge in px. */
 	y: number;
-	/** Bounding-box width in px; omitted falls back to the type's default dimensions. */
+	/**
+	 * Bounding-box width in px; omitted falls back to the type's default dimensions.
+	 * Rejected for point-geometry types (`text`), whose box comes from the content.
+	 */
 	width?: number;
-	/** Bounding-box height in px; omitted falls back to the type's default dimensions. */
+	/**
+	 * Bounding-box height in px; omitted falls back to the type's default dimensions.
+	 * Rejected for point-geometry types (`text`), whose box comes from the content.
+	 */
 	height?: number;
 	/** Body text; omitted leaves whatever text the factory defaults to. */
 	text?: string;
@@ -32,7 +38,8 @@ export type AddObjectParams = {
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
  * @throws {@link DocOperationError} for an unknown type, for one without a factory
- *   (group / connector / svg and the like), or when the factory rejects the given size
+ *   (group / connector / svg and the like), when width/height are given for a
+ *   point-geometry type that cannot store them, or when the factory rejects the given size
  */
 export const addObject = (
 	doc: CanvasDoc,
@@ -56,10 +63,31 @@ export const addObject = (
 		);
 	}
 
-	const dimensions = factory.calcDimensions();
+	// A point-geometry doc has no width/height field, so honoring one is impossible;
+	// silently dropping it would hand the caller an object of a size it never asked for.
+	if (
+		definition.features.geometry === "point" &&
+		(params.width !== undefined || params.height !== undefined)
+	) {
+		throw new DocOperationError(
+			`object type "${type}" sizes itself from its content and takes no width/height`,
+		);
+	}
+
+	const textOverride = params.text !== undefined ? { text: params.text } : {};
+	const sizeOverride = {
+		...(params.width !== undefined ? { width: params.width } : {}),
+		...(params.height !== undefined ? { height: params.height } : {}),
+	};
+	// Measured with the same overrides the doc is built from: a point-geometry factory
+	// derives its box from the text, so the default text would report the wrong size and
+	// the centering below would land the object away from the given x/y.
+	const dimensions = factory.calcDimensions({
+		...sizeOverride,
+		...textOverride,
+	});
 	const width = params.width ?? dimensions.halfWidth * 2;
 	const height = params.height ?? dimensions.halfHeight * 2;
-	const textOverride = params.text !== undefined ? { text: params.text } : {};
 
 	let created: ObjectDoc | null;
 	if (factory.createDocFromBounds !== undefined) {

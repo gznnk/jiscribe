@@ -1,5 +1,7 @@
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
+import { resizeTextStateToContent } from "../../states/objects/primitives/text/resizeTextStateToContent";
+import { isTextState } from "../../states/objects/primitives/text/TextState";
 import {
 	readTextSlot,
 	writeTextSlot,
@@ -21,12 +23,17 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * @param objects - The committed objects map
  * @param textEditState - The active editing session; null (or a connector label,
  *   whose editor is already live off its own measurement) grafts nothing
+ * @param fontFamily - Family the host draws unstyled text in
+ *   (`docDefaults.fontFamily`). Only read for objects whose box is measured from
+ *   their text, which are re-measured against the draft so the box follows every
+ *   keystroke instead of jumping at commit
  * @returns A map with only the edited object replaced, or `objects` itself when
  *   there is nothing to graft (unchanged reference, so downstream memos hold)
  */
 export const graftTextEditDraft = (
 	objects: Record<string, ObjectState>,
 	textEditState: CanvasControllerState["textEditState"],
+	fontFamily: string,
 ): Record<string, ObjectState> => {
 	if (textEditState?.kind !== "shape") {
 		return objects;
@@ -48,15 +55,15 @@ export const graftTextEditDraft = (
 		return objects;
 	}
 
+	const grafted = {
+		...target,
+		text: writeTextSlot(target.text, textEditState.slotId, textEditState.text),
+	} as ObjectState;
+
 	return {
 		...objects,
-		[textEditState.objectId]: {
-			...target,
-			text: writeTextSlot(
-				target.text,
-				textEditState.slotId,
-				textEditState.text,
-			),
-		} as ObjectState,
+		[textEditState.objectId]: isTextState(grafted)
+			? resizeTextStateToContent(grafted, fontFamily)
+			: grafted,
 	};
 };

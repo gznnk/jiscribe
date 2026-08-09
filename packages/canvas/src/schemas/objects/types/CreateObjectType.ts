@@ -1,4 +1,4 @@
-import type { Ellipse, Rect } from "@workspace/geometry";
+import type { Ellipse, Point, Rect } from "@workspace/geometry";
 import type { Brand, Prettify } from "@workspace/utility-types";
 
 import type { FillStyleDoc } from "../base/FillStyleDoc";
@@ -11,18 +11,21 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { Poly } from "../types/Poly";
 
 /**
- * Conditional geometry type based on specified geometry feature.
+ * The doc-side coordinate fields each geometry contributes. Written as a lookup
+ * keyed by GeometryType rather than a conditional chain: a geometry added to
+ * GeometryType and not here makes the indexed access below fail to compile,
+ * where a chain would have let it fall through to the no-geometry case.
  */
-type GeometryDoc<T extends ObjectFeatures> = //
-	T["geometry"] extends "none"
-		? object
-		: T["geometry"] extends "rect"
-			? Rect
-			: T["geometry"] extends "ellipse"
-				? Ellipse
-				: T["geometry"] extends "poly"
-					? Poly
-					: object;
+type GeometryDocByType = {
+	none: object;
+	rect: Rect;
+	ellipse: Ellipse;
+	poly: Poly;
+	point: Point;
+};
+
+/** Geometry fields of a doc, picked by the type's declared geometry feature. */
+type GeometryDoc<T extends ObjectFeatures> = GeometryDocByType[T["geometry"]];
 
 /**
  * Generic type creator for object document types.

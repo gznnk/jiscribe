@@ -41,8 +41,13 @@ packages/canvas/src/
 ├── presentations/          # pure rendering components (layers / objects / defs)
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
+├── utils/                  # pure helpers any layer may use, grouped by domain (text/ = measurement)
 └── constants/              # theme.ts / precision.ts, etc.
 ```
+
+`utils/` and `constants/` are leaves: every layer may import them, and they import
+no layer in return. A helper needed by more than one layer belongs here rather
+than in the `utils/` of whichever layer happened to need it first.
 
 For each shape (rect / ellipse / diamond / group / polygon / polyline / connector / sticky / svg), there is a corresponding
 `states/objects/.../<shape>/`, `controllers/behaviors/...`, and

@@ -58,6 +58,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `rect`             | General-purpose node / label box                      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
 | `markdown`         | Markdown-rendered document card                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
 | `ellipse`          | Ellipse / oval node (center-based geometry)           | `cx`, `cy`, `rx`, `ry`                  | Stroke, Fill, Text, Transform         |
+| `text`             | Bare text label / annotation                          | `x`, `y` (no `width` / `height`)        | Text, Transform (no Stroke)           |
 | `diamond`          | Decision / branch node                                | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `stadium`          | Start / end terminator                                | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `parallelogram`    | Input / output                                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
@@ -107,9 +108,10 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 
 <!-- AUTOGEN:END object-types -->
 
-**Box shape** below means every object type except `polyline`, `polygon`, `group`,
-`svg`, and `connector` — the types that take a bounding box and can own connector
-endpoints (the box shapes are exactly the connectable types).
+**Box shape** below means every object type except `text`, `polyline`, `polygon`,
+`group`, `svg`, and `connector` — the types that take a bounding box. `text` is
+excluded because it stores no box at all: only `x`, `y`. It is connectable all the
+same, so the connectable types are the box shapes plus `text`.
 
 ---
 
@@ -180,6 +182,27 @@ Ellipse (oval) shape. It is **connectable** like `rect`.
 | `cy`  | `number` | `0`     | Y of the center.        |
 | `rx`  | `number` | `50`    | Horizontal radius (px). |
 | `ry`  | `number` | `50`    | Vertical radius (px).   |
+
+---
+
+### `text`
+
+Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. It is **connectable** like `rect`.
+
+```json
+{
+	"id": "text-1",
+	"type": "text",
+	"x": 200,
+	"y": 150,
+	"text": "Retries are capped at 3"
+}
+```
+
+| Field | Type     | Default | Description                                                                                               |
+| ----- | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `x`   | `number` | `0`     | X of the text's top-left.                                                                                 |
+| `y`   | `number` | `0`     | Y of the text's top-left. There is no `width` / `height` field: the box is measured from the text itself. |
 
 ---
 
@@ -1006,9 +1029,9 @@ of them belongs — the cusp, the middle of the spine, or the stem's end, i.e. t
 from. An id the target shape's type does not name — `"tip"` on a `rect`, say — is not an error: the
 endpoint falls back to that shape's center. For the center, use `{ "kind": "center" }` (not a `connectPoint`).
 
-The object referenced by `owner.id` may be **only a box shape** — every object type
-except `polyline`, `polygon`, `group`, `svg`, and `connector` is connectable. Those
-five **cannot** be an endpoint owner; the document is rejected if one is referenced.
+The object referenced by `owner.id` may be **only a box shape or `text`** — every object
+type except `polyline`, `polygon`, `group`, `svg`, and `connector` is connectable.
+Those five **cannot** be an endpoint owner; the document is rejected if one is referenced.
 To anchor a connector near such a shape, use a `FreeEndpointRef` instead.
 
 #### FreeEndpointRef (free point)
@@ -1063,7 +1086,7 @@ Applies to every box shape, plus `polygon`. For `actor`, the fill paints the hea
 
 ### Text style
 
-Applies to every box shape. A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
+Applies to every box shape, plus `text` (see its section: it has these fields and no box). A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
 
 | Field            | Type            | Default          | Description                                                                       |
 | ---------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
@@ -1083,7 +1106,7 @@ Applies to every box shape. A `record` holds text too, but has none of these sha
 
 ### Transform style
 
-Applies to every box shape and `group`. All optional.
+Applies to every box shape, plus `text` and `group`. All optional.
 
 | Field             | Type      | Default | Description                        |
 | ----------------- | --------- | ------- | ---------------------------------- |

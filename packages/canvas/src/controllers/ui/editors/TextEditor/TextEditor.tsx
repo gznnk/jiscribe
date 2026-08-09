@@ -83,7 +83,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		if (!el) {
 			return;
 		}
-		el.focus();
+		// preventScroll: the browser would otherwise reveal the textarea by
+		// scrolling the overflow-hidden ancestors, an offset the canvas camera
+		// knows nothing about. Revealing is useRevealTextEditTarget's job.
+		el.focus({ preventScroll: true });
 		el.setSelectionRange(el.value.length, el.value.length);
 	}, []);
 
@@ -114,7 +117,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		(e: React.PointerEvent<HTMLDivElement>) => {
 			if (e.target === e.currentTarget) {
 				e.preventDefault();
-				textAreaRef.current?.focus();
+				textAreaRef.current?.focus({ preventScroll: true });
 			}
 		},
 		[],

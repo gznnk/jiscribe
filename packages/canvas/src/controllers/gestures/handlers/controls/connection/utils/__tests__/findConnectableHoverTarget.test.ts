@@ -2,27 +2,26 @@ import { describe, expect, it } from "vitest";
 
 import { ConnectorFeatures } from "../../../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import { RectFeatures } from "../../../../../../../schemas/objects/primitives/rect/RectDoc";
+import type { ObjectFeatures } from "../../../../../../../schemas/objects/types/ObjectFeatures";
+import type { ObjectType } from "../../../../../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import { findConnectableHoverTarget } from "../findConnectableHoverTarget";
 
-// The stamped features descriptor decides connectability
+// Connectability comes from the registered features of the type
 // (RectFeatures.connectable = true, ConnectorFeatures.connectable = false).
-const rectObj = (id: string): ObjectState => ({
-	id,
-	type: "rect",
-	features: RectFeatures,
-});
+const featuresByType = new Map<ObjectType, ObjectFeatures>([
+	["rect", RectFeatures],
+	["connector", ConnectorFeatures],
+]);
 
-const connectorObj = (id: string): ObjectState => ({
-	id,
-	type: "connector",
-	features: ConnectorFeatures,
-});
+const objectMapperRegistry = {
+	getFeatures: (type: ObjectType) => featuresByType.get(type),
+};
 
 const objects: Record<string, ObjectState> = {
-	"rect-1": rectObj("rect-1"),
-	"rect-2": rectObj("rect-2"),
-	"connector-1": connectorObj("connector-1"),
+	"rect-1": { id: "rect-1", type: "rect" },
+	"rect-2": { id: "rect-2", type: "rect" },
+	"connector-1": { id: "connector-1", type: "connector" },
 };
 
 describe("findConnectableHoverTarget", () => {
@@ -30,6 +29,7 @@ describe("findConnectableHoverTarget", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [{ id: "rect-1", kind: "object" }],
 			objects,
+			objectMapperRegistry,
 		});
 		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
 	});
@@ -38,6 +38,7 @@ describe("findConnectableHoverTarget", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [{ id: "rect-1", kind: "object" }],
 			objects,
+			objectMapperRegistry,
 		});
 		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
 	});
@@ -49,6 +50,7 @@ describe("findConnectableHoverTarget", () => {
 				{ id: "rect-2", kind: "object" },
 			],
 			objects,
+			objectMapperRegistry,
 		});
 		expect(result).toEqual({ id: "rect-2", object: objects["rect-2"] });
 	});
@@ -60,6 +62,7 @@ describe("findConnectableHoverTarget", () => {
 				{ id: "rect-1", kind: "object" },
 			],
 			objects,
+			objectMapperRegistry,
 		});
 		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
 	});
@@ -68,14 +71,18 @@ describe("findConnectableHoverTarget", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [{ id: "connector-1", kind: "object" }],
 			objects,
+			objectMapperRegistry,
 		});
 		expect(result).toBeNull();
 	});
 
-	it("synthetic states without features are not connectable", () => {
+	it("treats a type the registry does not know as not connectable", () => {
 		const result = findConnectableHoverTarget({
-			hovered: [{ id: "no-features", kind: "object" }],
-			objects: { "no-features": { id: "no-features", type: "rect" } },
+			hovered: [{ id: "unknown-1", kind: "object" }],
+			objects: {
+				"unknown-1": { id: "unknown-1", type: "unregistered" as ObjectType },
+			},
+			objectMapperRegistry,
 		});
 		expect(result).toBeNull();
 	});

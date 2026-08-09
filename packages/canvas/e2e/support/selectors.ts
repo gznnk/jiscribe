@@ -9,6 +9,7 @@ export type ToolTitle =
 	| "Ellipse"
 	| "Polyline"
 	| "Polygon"
+	| "Text"
 	| "Sticky"
 	| "Markdown";
 

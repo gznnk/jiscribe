@@ -1,11 +1,14 @@
 ﻿import type { Point } from "@workspace/geometry";
 
+import { DEFAULT_FONT_FAMILY } from "../../constants/defaultFontFamily";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
+import { resizeTextStateToContent } from "../objects/primitives/text/resizeTextStateToContent";
+import { isTextState } from "../objects/primitives/text/TextState";
 import type { ObjectMapperRegistry } from "../registry/ObjectMapperRegistry";
 import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
 
@@ -23,10 +26,18 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * `mapper` is the per-canvas object mapper registry (not the full bundle) so the
  * states layer stays decoupled from the controller-layer registries — the only
  * registry states depends on is `ObjectMapperRegistry` (docs/02-architecture.md).
+ *
+ * @param doc - A doc that has passed `parseCanvasText` (see above); its tree order becomes the z-order
+ * @param mapper - The per-canvas object mapper registry; a doc naming a type it does not carry throws
+ * @param themeFontFamily - Family the host draws unstyled text in (`CanvasTheme.fontFamily`).
+ *   Objects whose box is measured rather than stored are re-measured with it, correcting the
+ *   provisional size their mapper had to guess at. Defaults to the built-in family, which is
+ *   right for headless callers and wrong by a few percent for a host on another font
  */
 export const canvasToState = (
 	doc: CanvasDoc,
 	mapper: ObjectMapperRegistry,
+	themeFontFamily: string = DEFAULT_FONT_FAMILY,
 ): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
 	const rootIds: string[] = [];
@@ -41,7 +52,13 @@ export const canvasToState = (
 	// parent/child cycle, so no recursion guard is needed; ID uniqueness and
 	// reference integrity are the validator's responsibility. Returns the ID.
 	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
-		const objState = mapper.toState(objDoc);
+		const mappedState = mapper.toState(objDoc);
+		// Read / undo / redo / external sync all funnel through here, which makes
+		// it the one place where the theme's family and a freshly mapped text
+		// object meet.
+		const objState = isTextState(mappedState)
+			? resizeTextStateToContent(mappedState, themeFontFamily)
+			: mappedState;
 		objState.parentId = parentId;
 		objects[objState.id] = objState;
 

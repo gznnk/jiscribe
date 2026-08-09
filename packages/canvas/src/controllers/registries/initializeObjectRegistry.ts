@@ -13,6 +13,7 @@ import { Polygon } from "../../presentations/objects/primitives/Polygon";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { Svg } from "../../presentations/objects/primitives/Svg";
+import { Text } from "../../presentations/objects/primitives/Text";
 import { ConnectorExtraStyleProperties } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
@@ -54,6 +55,11 @@ import {
 } from "../../states/objects/primitives/svg/SvgMapper";
 import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
+import {
+	textToDoc,
+	textToState,
+} from "../../states/objects/primitives/text/TextMapper";
+import { isValidTextState } from "../../states/objects/primitives/text/validateTextState";
 import { createFrameBehavior } from "../behaviors/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
@@ -76,6 +82,11 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../behaviors/primitives/PolylineController";
 import {
+	moveByDelta as textMoveByDelta,
+	rotateByGroup as textRotateByGroup,
+	transformByGroup as textTransformByGroup,
+} from "../behaviors/primitives/TextController";
+import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
 	LabelBorderColorMenu,
@@ -89,6 +100,7 @@ import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
 import { RectStencils } from "../ui/objects/primitives/RectStencils";
+import { TextStencils } from "../ui/objects/primitives/TextStencils";
 
 /**
  * Data-only description of every object type. `createCanvasRegistries` applies a
@@ -114,6 +126,37 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			stencils: EllipseStencils,
+		}),
+
+		text: defineObject({
+			...builtinObjectDocDefinitions.text,
+			mapper: { toDoc: textToDoc, toState: textToState },
+			stateValidator: isValidTextState,
+			component: Text,
+			behavior: {
+				moveByDelta: textMoveByDelta,
+				transformByGroup: textTransformByGroup,
+				rotateByGroup: textRotateByGroup,
+			},
+			// The box is measured from the text, so a resize handle could only
+			// contradict it. Rotation stays: it is stored in the doc.
+			transformHandles: { resize: false },
+			stencils: TextStencils,
+			// The features-derived default would add the aspect-ratio lock, which
+			// governs a resize this type does not offer. The vertical alignment row
+			// is dropped for the same reason the resize handles are: the height is
+			// measured from the text, leaving no slack for a vertical value to move
+			// through. Horizontal stays — a short line does shift inside a box the
+			// longest line widened.
+			menu: [
+				{
+					id: "text",
+					items: [
+						{ type: "fontStyle" },
+						{ type: "textAlignment", vertical: false },
+					],
+				},
+			],
 		}),
 
 		group: defineObject({
@@ -281,6 +324,12 @@ export const applyObjectDefinition = (
 	if (definition.visualBounds) {
 		registries.objectVisualBounds.register(type, definition.visualBounds);
 	}
+	if (definition.transformHandles) {
+		registries.objectTransformHandles.register(
+			type,
+			definition.transformHandles,
+		);
+	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
 	registries.objectMenu.register(
@@ -332,6 +381,7 @@ export const initializeObjectRegistry = (
 	registries.objectExtraConnectPoints.clear();
 	registries.objectGeometryKey.clear();
 	registries.objectVisualBounds.clear();
+	registries.objectTransformHandles.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

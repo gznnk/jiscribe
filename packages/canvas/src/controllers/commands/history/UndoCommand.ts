@@ -43,6 +43,7 @@ export const UndoCommand: ExecutableCommand = {
 		const restoredState = canvasToState(
 			resolveDocSnapshot(snapshotToRestore, mapper),
 			mapper,
+			state.docDefaults.fontFamily,
 		);
 
 		return {

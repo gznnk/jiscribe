@@ -11,7 +11,7 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 
 /**
  * Snaps a center-anchored endpoint onto a point on the outline of a
- * rect / ellipse shape. Call only when the anchor is center. Takes a single
+ * rect / point / ellipse shape. Call only when the anchor is center. Takes a single
  * target shape rather than the whole objects map so memoization can depend on
  * that shape alone.
  *
@@ -19,8 +19,8 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
  * @param toward - The point used as the direction the line "heads toward" when computing the intersection with the outline
  * @param obj - State of the shape the endpoint references. null/undefined if unreferenced (in which case point is returned as-is)
  * @param outline - The shape's local outline polygon (from ObjectOutlineRegistry).
- *   When present, the endpoint snaps onto that true outline; omitted = rect/ellipse handling
- * @returns The point snapped onto the outline. null if there is no intersection, e.g. toward is inside the shape. For shapes with neither an outline nor rect/ellipse geometry, the original point without adjustment
+ *   When present, the endpoint snaps onto that true outline; omitted = rect/point/ellipse handling
+ * @returns The point snapped onto the outline. null if there is no intersection, e.g. toward is inside the shape. For shapes with neither an outline nor rect/point/ellipse geometry, the original point without adjustment
  */
 export const adjustToOutline = (
 	point: Point,
@@ -46,8 +46,9 @@ export const adjustToOutline = (
 	// The features descriptor is stamped onto the state at construction
 	// (ObjectMapperRegistry), so the outline geometry is read from the object
 	// directly — no registry lookup.
-	// Adjust for objects with rect geometry
-	if (obj.features?.geometry === "rect") {
+	// Adjust for objects with rect geometry. `point` shares it: its box is derived
+	// from content rather than stored, but the drawn extent is the same rectangle.
+	if (obj.features?.geometry === "rect" || obj.features?.geometry === "point") {
 		return calcOutlinePointTowardForRotatedFrame(obj, toward);
 	}
 

@@ -42,6 +42,21 @@ describe("createFrameDocValidator geometry", () => {
 		]);
 	});
 
+	it("requires x/y alone for point geometry, whose size is derived", () => {
+		const validate = createFrameDocValidator(
+			features({ type: "text", geometry: "point" }),
+		);
+		expect(paths(validate({}, "root"))).toEqual(["root.x", "root.y"]);
+		expect(validate({ x: -10, y: -20 }, "root")).toEqual([]);
+	});
+
+	it("requires a points array for poly geometry", () => {
+		const validate = createFrameDocValidator(
+			features({ type: "polyline", geometry: "poly" }),
+		);
+		expect(paths(validate({}, "root"))).toEqual(["root.points"]);
+	});
+
 	it("rejects negative width/height but allows negative x/y", () => {
 		const validate = createFrameDocValidator(features());
 		const errors = validate({ x: -10, y: -20, width: -1, height: -1 }, "root");

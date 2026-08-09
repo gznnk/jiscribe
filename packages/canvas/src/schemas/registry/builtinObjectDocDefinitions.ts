@@ -22,6 +22,12 @@ import { RectObjectFactory } from "../objects/primitives/rect/RectObjectFactory"
 import { validateRectDoc } from "../objects/primitives/rect/validateRectDoc";
 import { SvgFeatures } from "../objects/primitives/svg/SvgDoc";
 import { validateSvgDoc } from "../objects/primitives/svg/validateSvgDoc";
+import {
+	TEXT_DOC_DEFAULTS,
+	TextFeatures,
+} from "../objects/primitives/text/TextDoc";
+import { TextObjectFactory } from "../objects/primitives/text/TextObjectFactory";
+import { validateTextDoc } from "../objects/primitives/text/validateTextDoc";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 
 /**
@@ -55,6 +61,15 @@ export const builtinObjectDocDefinitions = {
 		description: "Ellipse (oval) shape.",
 		summary: "ellipse / oval node (center-based geometry)",
 		defaults: ELLIPSE_DOC_DEFAULTS,
+	},
+	text: {
+		features: TextFeatures,
+		validateDoc: validateTextDoc,
+		factory: TextObjectFactory,
+		description:
+			"Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down.",
+		summary: "bare text label / annotation",
+		defaults: TEXT_DOC_DEFAULTS,
 	},
 	group: {
 		features: GroupFeatures,

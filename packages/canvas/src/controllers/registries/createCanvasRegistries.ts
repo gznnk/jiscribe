@@ -21,6 +21,7 @@ import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
@@ -57,6 +58,7 @@ export const createCanvasRegistries = (
 		objectVisualBounds: createObjectVisualBoundsRegistry(),
 		objectSvgDefs: createObjectSvgDefsRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
+		objectTransformHandles: createObjectTransformHandlesRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),

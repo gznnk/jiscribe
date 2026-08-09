@@ -43,6 +43,9 @@
 					"$ref": "#/$defs/EllipseDoc"
 				},
 				{
+					"$ref": "#/$defs/TextDoc"
+				},
+				{
 					"$ref": "#/$defs/DiamondDoc"
 				},
 				{
@@ -194,6 +197,9 @@
 				},
 				{
 					"$ref": "#/$defs/EllipseDoc"
+				},
+				{
+					"$ref": "#/$defs/TextDoc"
 				},
 				{
 					"$ref": "#/$defs/DiamondDoc"
@@ -598,6 +604,85 @@
 				},
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"TextDoc": {
+			"description": "Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down.",
+			"type": "object",
+			"required": ["id", "type", "x", "y"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"text\".",
+					"type": "string",
+					"const": "text"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate. There is no width field: the box is measured from the content and grows to the right.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate. There is no height field: the box is measured from the content and grows downward.",
+					"type": "number"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"description": "Horizontal text alignment. Default: \"left\" (overrides the shared default \"center\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/TextAlign"
+						}
+					],
+					"default": "left"
+				},
+				"verticalAlign": {
+					"description": "Vertical text alignment. Default: \"top\" (overrides the shared default \"middle\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/VerticalAlign"
+						}
+					],
+					"default": "top"
 				},
 				"fontColor": {
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
@@ -4938,7 +5023,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / container / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / container / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

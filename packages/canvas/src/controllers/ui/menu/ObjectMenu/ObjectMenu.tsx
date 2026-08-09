@@ -98,7 +98,13 @@ const renderItem = (
 				</React.Fragment>
 			);
 		case "textAlignment":
-			return <AlignmentMenu key="textAlignment" canvasState={canvasState} />;
+			return (
+				<AlignmentMenu
+					key="textAlignment"
+					canvasState={canvasState}
+					vertical={item.vertical}
+				/>
+			);
 		case "aspectRatio":
 			return (
 				<KeepAspectRatioMenu key="aspectRatio" canvasState={canvasState} />

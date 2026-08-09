@@ -1,11 +1,11 @@
 import { DEFAULT_FONT_FAMILY } from "../../../../../constants/defaultFontFamily";
 import { TEXT_LINE_HEIGHT } from "../../../../../constants/textLineHeight";
 import type { ConnectorLabel } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
-import type { TextMeasureFont } from "../../../utils/measureText";
+import type { TextMeasureFont } from "../../../../../utils/text/measureText";
 import {
 	calcVisualLineCount,
 	measureTextWidth,
-} from "../../../utils/measureText";
+} from "../../../../../utils/text/measureText";
 
 /** Default label style (fallback when the ConnectorLabel has no value). */
 export const CONNECTOR_LABEL_DEFAULTS = {

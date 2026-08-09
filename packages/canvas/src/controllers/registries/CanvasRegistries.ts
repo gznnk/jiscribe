@@ -16,6 +16,7 @@ import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
@@ -47,6 +48,7 @@ export type CanvasRegistries = {
 	objectVisualBounds: ObjectVisualBoundsRegistry;
 	objectSvgDefs: ObjectSvgDefsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
+	objectTransformHandles: ObjectTransformHandlesRegistry;
 	selectionControl: SelectionControlRegistry;
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;

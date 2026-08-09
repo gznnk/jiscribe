@@ -37,6 +37,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
+import { useRevealTextEditTarget } from "./hooks/useRevealTextEditTarget";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
@@ -421,9 +422,22 @@ const CanvasComponent = ({
 	// feedback and editor placement only — hit testing, snapping and bboxes still read
 	// committed state.objects.
 	const draftObjects = useMemo(
-		() => graftTextEditDraft(state.objects, state.textEditState),
-		[state.objects, state.textEditState],
+		() =>
+			graftTextEditDraft(
+				state.objects,
+				state.textEditState,
+				state.docDefaults.fontFamily,
+			),
+		[state.objects, state.textEditState, state.docDefaults.fontFamily],
 	);
+
+	useRevealTextEditTarget({
+		textEditState: state.textEditState,
+		draftObjects,
+		fontFamily: state.docDefaults.fontFamily,
+		viewport: state.viewport,
+		dispatch,
+	});
 
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
 	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.

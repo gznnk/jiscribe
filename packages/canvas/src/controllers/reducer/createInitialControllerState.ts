@@ -24,7 +24,11 @@ export const createInitialControllerState = (
 	docDefaults: DocCreationDefaults = { fontFamily: DEFAULT_FONT_FAMILY },
 	initialCamera?: Camera,
 ): CanvasControllerState => {
-	const baseState = canvasToState(initialDoc, registries.objectMapper);
+	const baseState = canvasToState(
+		initialDoc,
+		registries.objectMapper,
+		docDefaults.fontFamily,
+	);
 	const viewport =
 		initialCamera === undefined
 			? baseState.viewport

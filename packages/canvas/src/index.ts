@@ -155,6 +155,7 @@ export type {
 } from "./presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 export type { ObjectGeometryKeyCalculator } from "./presentations/objects/registry/ObjectGeometryKeyRegistry";
 export type { ObjectVisualBoundsCalculator } from "./presentations/objects/registry/ObjectVisualBoundsRegistry";
+export type { ObjectTransformHandles } from "./controllers/ui/controls/ObjectTransformHandlesRegistry";
 export type {
 	Stencil,
 	StencilIconProps,

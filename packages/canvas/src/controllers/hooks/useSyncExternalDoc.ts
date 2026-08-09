@@ -82,7 +82,11 @@ export const useSyncExternalDoc = ({
 		) {
 			return;
 		}
-		const newState = canvasToState(canvasDoc, objectMapper);
+		const newState = canvasToState(
+			canvasDoc,
+			objectMapper,
+			stateRef.current.docDefaults.fontFamily,
+		);
 		resetGestureState();
 		dispatch({
 			type: "SYNC_EXTERNAL",

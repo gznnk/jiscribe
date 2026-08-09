@@ -83,9 +83,9 @@ For the three-axis grammar of kind / id / part, see
 Shape library buttons use part: `item:<presetId>` (for example `item:rect`).
 
 Toolbar buttons can also be identified by the `title` attribute, as in
-`button[title="Rectangle"]` (Rectangle / Ellipse / Polyline / Polygon / Callout /
-Sticky / Markdown — the harness pins all of them, including the plugin-supplied
-Sticky and Markdown).
+`button[title="Rectangle"]` (Rectangle / Ellipse / Polyline / Polygon / Text /
+Callout / Sticky / Markdown — the harness pins all of them, including the
+plugin-supplied Sticky and Markdown).
 
 ### data-id / data-part of control
 

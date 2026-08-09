@@ -55,6 +55,43 @@ export const SPECIAL_TABLE_CELLS: Readonly<
 	},
 };
 
+/**
+ * Geometry cell per geometry, in the ai-guide spelling (no spaces after the
+ * commas) and the reference spelling. The geometries missing here (poly / none)
+ * belong only to types listed in SPECIAL_TABLE_CELLS, which never reach this
+ * table; rect therefore doubles as the fallback.
+ */
+const GEOMETRY_CELLS: Readonly<
+	Record<string, { guide: string; reference: string }>
+> = {
+	rect: {
+		guide: "`x`,`y`,`width`,`height`",
+		reference: "`x`, `y`, `width`, `height`",
+	},
+	ellipse: {
+		guide: "`cx`,`cy`,`rx`,`ry`",
+		reference: "`cx`, `cy`, `rx`, `ry`",
+	},
+	point: {
+		guide: "`x`,`y` (no `width`/`height`)",
+		reference: "`x`, `y` (no `width` / `height`)",
+	},
+};
+
+/** Derive the ai-guide "Required geometry" cell from features (special types excluded). */
+export function deriveGuideGeometry(definition: ObjectDocDefinition): string {
+	const cells = GEOMETRY_CELLS[definition.features.geometry];
+	return (cells ?? GEOMETRY_CELLS.rect).guide;
+}
+
+/** Derive the reference "Geometry" cell from features (special types excluded). */
+export function deriveReferenceGeometry(
+	definition: ObjectDocDefinition,
+): string {
+	const cells = GEOMETRY_CELLS[definition.features.geometry];
+	return (cells ?? GEOMETRY_CELLS.rect).reference;
+}
+
 /** Derive the ai-guide "Main styles" cell from features (special types excluded). */
 export function deriveGuideStyles(definition: ObjectDocDefinition): string {
 	const { features } = definition;
