@@ -1,14 +1,14 @@
 import type { Dimensions, Rect } from "@workspace/geometry";
 
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "../../../../constants/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import { calcTextLineWidths } from "../../../../utils/text/calcTextLineWidths";
 import type { TextMeasureFont } from "../../../../utils/text/measureText";
-import {
-	TEXT_BLOCK_PADDING_X,
-	TEXT_BLOCK_PADDING_Y,
-	TEXT_BLOCK_WIDTH_SLACK,
-} from "../../../../utils/text/textBlockMetrics";
+import { TEXT_BLOCK_WIDTH_SLACK } from "../../../../utils/text/textBlockWidthSlack";
 
 /**
  * The bands a frameless text can be picked by: one per line, each covering only
@@ -59,18 +59,18 @@ export const calcTextLineHitRects = (
 		// box stay grabbable; the 2px are too few to be worth aiming past.
 		const isFirstLine = lineIndex === 0;
 		const isLastLine = lineIndex === lastLineIndex;
-		const topPadding = isFirstLine ? TEXT_BLOCK_PADDING_Y : 0;
-		const bottomPadding = isLastLine ? TEXT_BLOCK_PADDING_Y : 0;
+		const topPadding = isFirstLine ? TEXT_BOX_PADDING_Y : 0;
+		const bottomPadding = isLastLine ? TEXT_BOX_PADDING_Y : 0;
 
 		const bandWidth = Math.min(
 			boxSize.width,
-			lineWidth + TEXT_BLOCK_PADDING_X * 2 + TEXT_BLOCK_WIDTH_SLACK,
+			lineWidth + TEXT_BOX_PADDING_X * 2 + TEXT_BLOCK_WIDTH_SLACK,
 		);
 
 		return [
 			{
 				x: bandLeft(bandWidth),
-				y: boxTop + TEXT_BLOCK_PADDING_Y + lineIndex * lineHeight - topPadding,
+				y: boxTop + TEXT_BOX_PADDING_Y + lineIndex * lineHeight - topPadding,
 				width: bandWidth,
 				height: lineHeight + topPadding + bottomPadding,
 			},

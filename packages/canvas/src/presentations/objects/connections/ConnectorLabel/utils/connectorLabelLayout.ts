@@ -1,4 +1,8 @@
 import { DEFAULT_FONT_FAMILY } from "../../../../../constants/defaultFontFamily";
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "../../../../../constants/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "../../../../../constants/textLineHeight";
 import type { ConnectorLabel } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import type { TextMeasureFont } from "../../../../../utils/text/measureText";
@@ -14,10 +18,6 @@ export const CONNECTOR_LABEL_DEFAULTS = {
 	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "normal",
 } as const;
-
-/** Inner padding around the text (padding of the box including the background knockout). */
-export const CONNECTOR_LABEL_PADDING_X = 6;
-export const CONNECTOR_LABEL_PADDING_Y = 2;
 
 /** Minimum and maximum label box width (content width + padding, in world units). */
 export const CONNECTOR_LABEL_MIN_WIDTH = 16;
@@ -57,18 +57,18 @@ export const calcConnectorLabelBox = (
 			CONNECTOR_LABEL_MAX_WIDTH,
 			Math.max(
 				CONNECTOR_LABEL_MIN_WIDTH,
-				maxLineWidth + CONNECTOR_LABEL_PADDING_X * 2,
+				maxLineWidth + TEXT_BOX_PADDING_X * 2,
 			),
 		) + border;
 
 	// Count the displayed lines the same way the box lays them out, so a line that
 	// wraps at a word boundary reserves the same height while editing and after.
-	const availableWidth = width - CONNECTOR_LABEL_PADDING_X * 2 - border;
+	const availableWidth = width - TEXT_BOX_PADDING_X * 2 - border;
 	const visualLineCount = calcVisualLineCount(text, font, availableWidth);
 
 	const height =
 		visualLineCount * font.fontSize * TEXT_LINE_HEIGHT +
-		CONNECTOR_LABEL_PADDING_Y * 2 +
+		TEXT_BOX_PADDING_Y * 2 +
 		border;
 
 	return { width, height };

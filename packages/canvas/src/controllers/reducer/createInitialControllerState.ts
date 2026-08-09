@@ -27,6 +27,7 @@ export const createInitialControllerState = (
 	const baseState = canvasToState(
 		initialDoc,
 		registries.objectMapper,
+		registries.objectContentResizer,
 		docDefaults.fontFamily,
 	);
 	const viewport =

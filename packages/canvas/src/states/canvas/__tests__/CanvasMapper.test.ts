@@ -23,10 +23,13 @@ import {
 	rectToState,
 	rectToDoc,
 } from "../../../states/objects/primitives/rect/RectMapper";
+import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import { createObjectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 
 describe("CanvasMapper", () => {
 	const objectMapperRegistry = createObjectMapperRegistry();
+	// None of the types below derive their box, so this stays empty on purpose.
+	const contentResizerRegistry = createObjectContentResizerRegistry();
 
 	// Register mappers before tests
 	beforeEach(() => {
@@ -106,7 +109,11 @@ describe("CanvasMapper", () => {
 				],
 			} as unknown as CanvasDoc;
 
-			const state = canvasToState(doc, objectMapperRegistry);
+			const state = canvasToState(
+				doc,
+				objectMapperRegistry,
+				contentResizerRegistry,
+			);
 			expect(state.rootIds).toEqual(["rect-1", "conn-1", "rect-2"]);
 			expect(state.objects["conn-1"].type).toBe("connector");
 		});
@@ -122,7 +129,7 @@ describe("CanvasMapper", () => {
 			} as unknown as CanvasDoc;
 
 			const roundTripped = canvasToDoc(
-				canvasToState(doc, objectMapperRegistry),
+				canvasToState(doc, objectMapperRegistry, contentResizerRegistry),
 				objectMapperRegistry,
 			);
 			expect(roundTripped.root.map((o) => o.id)).toEqual([
@@ -140,7 +147,11 @@ describe("CanvasMapper", () => {
 				root: [createRectDoc("rect-1")],
 			} as unknown as CanvasDoc;
 
-			const state = canvasToState(doc, objectMapperRegistry);
+			const state = canvasToState(
+				doc,
+				objectMapperRegistry,
+				contentResizerRegistry,
+			);
 			expect(state.background).toBe("#0f172a");
 
 			const roundTripped = canvasToDoc(state, objectMapperRegistry);
@@ -154,7 +165,7 @@ describe("CanvasMapper", () => {
 			} as unknown as CanvasDoc;
 
 			const roundTripped = canvasToDoc(
-				canvasToState(doc, objectMapperRegistry),
+				canvasToState(doc, objectMapperRegistry, contentResizerRegistry),
 				objectMapperRegistry,
 			);
 			expect("background" in roundTripped).toBe(false);
@@ -182,7 +193,11 @@ describe("CanvasMapper", () => {
 				root: [rect1, group1],
 			};
 
-			const state = canvasToState(canvasDoc, objectMapperRegistry);
+			const state = canvasToState(
+				canvasDoc,
+				objectMapperRegistry,
+				contentResizerRegistry,
+			);
 
 			// Check initial viewport
 			expect(state.viewport).toEqual({

@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { BoundingBox, Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
@@ -14,6 +14,7 @@ import {
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
+import { readCaretLocalRect } from "../utils/readCaretLocalRect";
 
 type ConnectorLabelEditorProps = {
 	/** Label anchor (world coordinates on the route). The editor is centered here. */
@@ -28,6 +29,8 @@ type ConnectorLabelEditorProps = {
 	strokeDashType?: string;
 	onChange: (text: string) => void;
 	onEscape?: () => void;
+	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
+	onCaretMove?: (caretWorldBox: BoundingBox) => void;
 };
 
 const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
@@ -42,7 +45,9 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	strokeDashType = "solid",
 	onChange,
 	onEscape,
+	onCaretMove,
 }) => {
+	const wrapperRef = useRef<HTMLDivElement>(null);
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	// Labels have no per-doc fontFamily; follow the host theme so the editor
 	// measures and renders with the same font as ConnectorLabel.
@@ -65,11 +70,13 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		if (!el) {
 			return;
 		}
+		// The caret is placed before the focus so the reveal that rides on the focus
+		// event (onCaretMove) already sees the end of the text.
+		el.setSelectionRange(el.value.length, el.value.length);
 		// preventScroll: the browser would otherwise reveal the textarea by
 		// scrolling the overflow-hidden ancestors, an offset the canvas camera
-		// knows nothing about. Revealing is useRevealTextEditTarget's job.
+		// knows nothing about. Revealing is useRevealTextEditCaret's job.
 		el.focus({ preventScroll: true });
-		el.setSelectionRange(el.value.length, el.value.length);
 	}, []);
 
 	// Update the height to match the text amount (the width is given to the wrapper via measurement).
@@ -80,6 +87,28 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		}
 		fitTextAreaHeight(el, fontSize);
 	}, [text, width, fontSize, fontWeight]);
+
+	// The wrapper is centered on the anchor, which is already a world coordinate,
+	// so the caret's local offset only has to start from the wrapper's corner.
+	const reportCaret = useCallback(() => {
+		const el = textAreaRef.current;
+		const wrapper = wrapperRef.current;
+		// Only the focused editor has a caret to report; at mount the selection is
+		// still at 0, which would reveal the wrong end of the text.
+		if (!el || !wrapper || !onCaretMove || el !== document.activeElement) {
+			return;
+		}
+		const caret = readCaretLocalRect(el);
+		if (!caret) {
+			return;
+		}
+		const left = anchor.x - wrapper.offsetWidth / 2 + caret.x;
+		const top = anchor.y - wrapper.offsetHeight / 2 + caret.y;
+		onCaretMove({ left, right: left, top, bottom: top + caret.height });
+	}, [onCaretMove, anchor.x, anchor.y]);
+
+	// After the height fit above, so the caret is measured against the laid-out box.
+	useLayoutEffect(reportCaret);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
@@ -106,6 +135,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 
 	return (
 		<ConnectorLabelEditorWrapper
+			ref={wrapperRef}
 			data-testid="text-editor"
 			data-gesture="none"
 			style={{
@@ -127,6 +157,10 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 				ref={textAreaRef}
 				onChange={handleChange}
 				onKeyDown={handleKeyDown}
+				// A caret move that changes nothing else (Home, an arrow key, a click
+				// into the text) renders nothing, so it has to report on its own.
+				onSelect={reportCaret}
+				onFocus={reportCaret}
 			/>
 		</ConnectorLabelEditorWrapper>
 	);

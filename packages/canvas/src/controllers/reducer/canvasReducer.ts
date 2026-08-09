@@ -12,7 +12,7 @@ import {
 	reconcileConnectorVertices,
 	reconcileConnectorVerticesIfCommitted,
 } from "../utils/reconcileConnectorVertices";
-import { reconcileTextObjectSizes } from "../utils/reconcileTextObjectSizes";
+import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
 
 /**
@@ -35,7 +35,11 @@ export const createCanvasReducer =
 				// the shape outlines, which a re-measured box moves. The box pass has
 				// no commit gate — a slider drag must not clip its own text — while the
 				// vertex pass keeps one, since settling vertices is a commit-time step.
-				const resizedResult = reconcileTextObjectSizes(gestureResult, state);
+				const resizedResult = reconcileObjectContentSizes(
+					gestureResult,
+					state,
+					registries.objectContentResizer,
+				);
 				const reconciledResult = reconcileConnectorVerticesIfCommitted(
 					resizedResult,
 					state,
@@ -50,7 +54,11 @@ export const createCanvasReducer =
 					action.commandId,
 					registries,
 				);
-				const resizedResult = reconcileTextObjectSizes(commandResult, state);
+				const resizedResult = reconcileObjectContentSizes(
+					commandResult,
+					state,
+					registries.objectContentResizer,
+				);
 				const reconciledResult = reconcileConnectorVerticesIfCommitted(
 					resizedResult,
 					state,
@@ -69,7 +77,11 @@ export const createCanvasReducer =
 				// stale the moment the host swaps themes. Not a commit: the doc stores
 				// no size, so nothing about it changed.
 				const themedState = { ...state, docDefaults: action.docDefaults };
-				return reconcileTextObjectSizes(themedState, state);
+				return reconcileObjectContentSizes(
+					themedState,
+					state,
+					registries.objectContentResizer,
+				);
 			}
 
 			case "CONTAINER_RESIZE": {
@@ -118,7 +130,11 @@ export const createCanvasReducer =
 				if (!action.commit) {
 					// A live preview draws at the new typography, so its box has to be
 					// measured at the new typography too.
-					return reconcileTextObjectSizes(updatedWithVertexCleared, state);
+					return reconcileObjectContentSizes(
+						updatedWithVertexCleared,
+						state,
+						registries.objectContentResizer,
+					);
 				}
 				// This case decides the commit itself (action.commit above), so the
 				// unconditional reconcile applies — no commitVersion gate to re-check.
@@ -132,7 +148,11 @@ export const createCanvasReducer =
 							}
 						: updatedWithVertexCleared.historyCoalesce,
 				};
-				const resizedResult = reconcileTextObjectSizes(committedResult, state);
+				const resizedResult = reconcileObjectContentSizes(
+					committedResult,
+					state,
+					registries.objectContentResizer,
+				);
 				const reconciledResult = reconcileConnectorVertices(
 					resizedResult,
 					registries,
@@ -187,7 +207,11 @@ export const createCanvasReducer =
 
 				if (action.commit) {
 					const commitResult = commitTextEditIfNeeded(state);
-					const resizedResult = reconcileTextObjectSizes(commitResult, state);
+					const resizedResult = reconcileObjectContentSizes(
+						commitResult,
+						state,
+						registries.objectContentResizer,
+					);
 					const reconciledResult = reconcileConnectorVerticesIfCommitted(
 						resizedResult,
 						state,
@@ -205,7 +229,11 @@ export const createCanvasReducer =
 
 			case "PASTE": {
 				const pasteResult = handlePaste(state, action.data, registries);
-				const resizedResult = reconcileTextObjectSizes(pasteResult, state);
+				const resizedResult = reconcileObjectContentSizes(
+					pasteResult,
+					state,
+					registries.objectContentResizer,
+				);
 				const reconciledResult = reconcileConnectorVerticesIfCommitted(
 					resizedResult,
 					state,

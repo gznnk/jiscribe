@@ -2,11 +2,11 @@ import type { Dimensions } from "@workspace/geometry";
 
 import { calcTextLineWidths } from "./calcTextLineWidths";
 import type { TextMeasureFont } from "./measureText";
+import { TEXT_BLOCK_WIDTH_SLACK } from "./textBlockWidthSlack";
 import {
-	TEXT_BLOCK_PADDING_X,
-	TEXT_BLOCK_PADDING_Y,
-	TEXT_BLOCK_WIDTH_SLACK,
-} from "./textBlockMetrics";
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "../../constants/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "../../constants/textLineHeight";
 
 /** Width of a box holding no text, so an empty one still has something to hit. */
@@ -36,10 +36,10 @@ export const calcTextBlockSize = (
 	return {
 		width: Math.max(
 			TEXT_BLOCK_MIN_WIDTH,
-			longestLineWidth + TEXT_BLOCK_PADDING_X * 2 + TEXT_BLOCK_WIDTH_SLACK,
+			longestLineWidth + TEXT_BOX_PADDING_X * 2 + TEXT_BLOCK_WIDTH_SLACK,
 		),
 		height:
 			lineWidths.length * font.fontSize * TEXT_LINE_HEIGHT +
-			TEXT_BLOCK_PADDING_Y * 2,
+			TEXT_BOX_PADDING_Y * 2,
 	};
 };

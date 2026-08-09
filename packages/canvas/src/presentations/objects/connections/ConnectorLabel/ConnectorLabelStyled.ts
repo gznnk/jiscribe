@@ -1,9 +1,9 @@
 import styled from "@emotion/styled";
 
 import {
-	CONNECTOR_LABEL_PADDING_X,
-	CONNECTOR_LABEL_PADDING_Y,
-} from "./utils/connectorLabelLayout";
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "../../../../constants/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 
 /**
@@ -21,7 +21,7 @@ export const LabelBox = styled.div`
 	align-items: center;
 	justify-content: center;
 	box-sizing: border-box;
-	padding: ${CONNECTOR_LABEL_PADDING_Y}px ${CONNECTOR_LABEL_PADDING_X}px;
+	padding: ${TEXT_BOX_PADDING_Y}px ${TEXT_BOX_PADDING_X}px;
 	border-radius: 2px;
 	line-height: ${TEXT_LINE_HEIGHT};
 	text-align: center;

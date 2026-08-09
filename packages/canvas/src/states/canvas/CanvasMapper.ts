@@ -7,8 +7,7 @@ import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
-import { resizeTextStateToContent } from "../objects/primitives/text/resizeTextStateToContent";
-import { isTextState } from "../objects/primitives/text/TextState";
+import type { ObjectContentResizerRegistry } from "../registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../registry/ObjectMapperRegistry";
 import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
 
@@ -23,20 +22,23 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * docs/01-design-philosophy.md principle 4). Validation is guaranteed at the
  * external-input boundary (host / the `SYNC_EXTERNAL` entry point).
  *
- * `mapper` is the per-canvas object mapper registry (not the full bundle) so the
- * states layer stays decoupled from the controller-layer registries — the only
- * registry states depends on is `ObjectMapperRegistry` (docs/02-architecture.md).
+ * The registries are passed one by one (not as the full bundle) so the states
+ * layer stays decoupled from the controller-layer registries; both of these are
+ * states-layer registries (docs/02-architecture.md).
  *
  * @param doc - A doc that has passed `parseCanvasText` (see above); its tree order becomes the z-order
  * @param mapper - The per-canvas object mapper registry; a doc naming a type it does not carry throws
- * @param themeFontFamily - Family the host draws unstyled text in (`CanvasTheme.fontFamily`).
- *   Objects whose box is measured rather than stored are re-measured with it, correcting the
- *   provisional size their mapper had to guess at. Defaults to the built-in family, which is
+ * @param contentResizer - The per-canvas content-resizer registry; a type registered there has its
+ *   box re-derived here, which is the one place where a freshly mapped object and the host's theme
+ *   meet. A registry holding nothing leaves every box exactly as the doc stored it
+ * @param themeFontFamily - Family the host draws unstyled text in (`CanvasTheme.fontFamily`),
+ *   handed to the resizers as their context. Defaults to the built-in family, which is
  *   right for headless callers and wrong by a few percent for a host on another font
  */
 export const canvasToState = (
 	doc: CanvasDoc,
 	mapper: ObjectMapperRegistry,
+	contentResizer: ObjectContentResizerRegistry,
 	themeFontFamily: string = DEFAULT_FONT_FAMILY,
 ): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
@@ -54,10 +56,11 @@ export const canvasToState = (
 	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
 		const mappedState = mapper.toState(objDoc);
 		// Read / undo / redo / external sync all funnel through here, which makes
-		// it the one place where the theme's family and a freshly mapped text
-		// object meet.
-		const objState = isTextState(mappedState)
-			? resizeTextStateToContent(mappedState, themeFontFamily)
+		// it the one place where the theme's family and a freshly mapped object
+		// whose box is derived meet.
+		const resizeToContent = contentResizer.get(mappedState.type);
+		const objState = resizeToContent
+			? resizeToContent(mappedState, { fontFamily: themeFontFamily })
 			: mappedState;
 		objState.parentId = parentId;
 		objects[objState.id] = objState;

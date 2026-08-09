@@ -34,7 +34,11 @@ const movedDoc: CanvasDoc = {
 // genuine external change.
 const syncExternal = (): CanvasAction => ({
 	type: "SYNC_EXTERNAL",
-	payload: canvasToState(movedDoc, registries.objectMapper),
+	payload: canvasToState(
+		movedDoc,
+		registries.objectMapper,
+		registries.objectContentResizer,
+	),
 });
 
 const cxOf = (state: CanvasControllerState) =>

@@ -1,11 +1,10 @@
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
-import { resizeTextStateToContent } from "../../states/objects/primitives/text/resizeTextStateToContent";
-import { isTextState } from "../../states/objects/primitives/text/TextState";
 import {
 	readTextSlot,
 	writeTextSlot,
 } from "../../states/objects/types/TextSlots";
+import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -27,6 +26,9 @@ import type { CanvasControllerState } from "../CanvasTypes";
  *   (`docDefaults.fontFamily`). Only read for objects whose box is measured from
  *   their text, which are re-measured against the draft so the box follows every
  *   keystroke instead of jumping at commit
+ * @param contentResizer - The per-canvas content-resizer registry; the edited
+ *   object's type is looked up there, and one absent from it is grafted with its
+ *   stored box untouched
  * @returns A map with only the edited object replaced, or `objects` itself when
  *   there is nothing to graft (unchanged reference, so downstream memos hold)
  */
@@ -34,6 +36,7 @@ export const graftTextEditDraft = (
 	objects: Record<string, ObjectState>,
 	textEditState: CanvasControllerState["textEditState"],
 	fontFamily: string,
+	contentResizer: ObjectContentResizerRegistry,
 ): Record<string, ObjectState> => {
 	if (textEditState?.kind !== "shape") {
 		return objects;
@@ -60,10 +63,11 @@ export const graftTextEditDraft = (
 		text: writeTextSlot(target.text, textEditState.slotId, textEditState.text),
 	} as ObjectState;
 
+	const resizeToContent = contentResizer.get(grafted.type);
 	return {
 		...objects,
-		[textEditState.objectId]: isTextState(grafted)
-			? resizeTextStateToContent(grafted, fontFamily)
+		[textEditState.objectId]: resizeToContent
+			? resizeToContent(grafted, { fontFamily })
 			: grafted,
 	};
 };

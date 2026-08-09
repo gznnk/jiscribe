@@ -1,10 +1,10 @@
 import styled from "@emotion/styled";
 
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 import {
-	CONNECTOR_LABEL_PADDING_X,
-	CONNECTOR_LABEL_PADDING_Y,
-} from "../../../../presentations/objects/connections/ConnectorLabel/utils/connectorLabelLayout";
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "../../../../constants/textBoxPadding";
+import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 
 /**
  * Wrapper centered on the anchor (the label position along the route).
@@ -36,7 +36,7 @@ export const ConnectorLabelTextArea = styled.textarea`
 	display: block;
 	width: 100%;
 	box-sizing: border-box;
-	padding: ${CONNECTOR_LABEL_PADDING_Y}px ${CONNECTOR_LABEL_PADDING_X}px;
+	padding: ${TEXT_BOX_PADDING_Y}px ${TEXT_BOX_PADDING_X}px;
 	line-height: ${TEXT_LINE_HEIGHT};
 	text-align: center;
 	white-space: pre-wrap;

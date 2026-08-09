@@ -59,7 +59,13 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	);
 
 	const { objects, rootIds, background } = useMemo(
-		() => canvasToState(canvasDoc, registries.objectMapper, theme.fontFamily),
+		() =>
+			canvasToState(
+				canvasDoc,
+				registries.objectMapper,
+				registries.objectContentResizer,
+				theme.fontFamily,
+			),
 		[canvasDoc, registries, theme.fontFamily],
 	);
 

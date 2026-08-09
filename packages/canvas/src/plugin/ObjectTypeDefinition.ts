@@ -17,6 +17,7 @@ import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/Extr
 import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
+import type { ObjectContentResizer } from "../states/registry/ObjectContentResizerRegistry";
 import type { ObjectStateValidator } from "../states/registry/ObjectStateValidatorRegistry";
 
 /**
@@ -45,6 +46,15 @@ export type ObjectTypeDefinition<
 
 	/** Type-guard that rejects untrusted State entering the canvas from outside (e.g. pasted clipboard data). */
 	stateValidator: ObjectStateValidator;
+
+	/**
+	 * Re-derives the box from the content, for a type whose doc stores no size
+	 * (`geometry: "point"`). Runs wherever content and box can drift apart: load,
+	 * undo/redo, external sync, every committed and uncommitted edit. Omitted =
+	 * no derivation, so the doc's own width/height stand as-is — which is what
+	 * every stored-box geometry wants (see ObjectContentResizerRegistry).
+	 */
+	contentResizer?: ObjectContentResizer<TState>;
 
 	// --- Render (presentation) ---
 

@@ -37,7 +37,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
-import { useRevealTextEditTarget } from "./hooks/useRevealTextEditTarget";
+import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
@@ -427,14 +427,17 @@ const CanvasComponent = ({
 				state.objects,
 				state.textEditState,
 				state.docDefaults.fontFamily,
+				registries.objectContentResizer,
 			),
-		[state.objects, state.textEditState, state.docDefaults.fontFamily],
+		[
+			state.objects,
+			state.textEditState,
+			state.docDefaults.fontFamily,
+			registries,
+		],
 	);
 
-	useRevealTextEditTarget({
-		textEditState: state.textEditState,
-		draftObjects,
-		fontFamily: state.docDefaults.fontFamily,
+	const revealCaret = useRevealTextEditCaret({
 		viewport: state.viewport,
 		dispatch,
 	});
@@ -621,6 +624,7 @@ const CanvasComponent = ({
 								onEscape={() =>
 									dispatch({ type: "END_TEXT_EDIT", commit: false })
 								}
+								onCaretMove={revealCaret}
 							/>
 						</ZoomScaledOverlay>
 						{/* HTML whose position follows zoom but whose size does not */}

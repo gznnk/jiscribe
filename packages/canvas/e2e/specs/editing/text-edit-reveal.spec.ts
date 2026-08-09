@@ -2,14 +2,17 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * e2e for revealing the text-edit target: the camera pans so the box being
- * edited stays on screen, and stays put while it already is. The browser's own
+ * e2e for revealing the text-edit caret: the camera pans so the caret being
+ * typed at stays on screen, and stays put while it already is. The browser's own
  * focus scrolling is suppressed (focus({ preventScroll: true })), so any
  * movement seen here is the canvas camera, not a scrolled ancestor.
  */
 
 /** Lines typed to push a text object's box past the bottom edge of the canvas. */
 const GROWTH_LINE_COUNT = 20;
+
+/** Words typed to push a text object's single line past the right edge of the canvas. */
+const GROWTH_WORD_COUNT = 40;
 
 /** Zoom steps allowed while growing a shape past the canvas area (1.25x each). */
 const ZOOM_STEP_LIMIT = 8;
@@ -56,6 +59,15 @@ async function centerOf(
 	});
 }
 
+/** The viewBox's minX, which is what a horizontal pan moves. */
+async function viewBoxMinX(canvas: CanvasDriver): Promise<number> {
+	const viewBox = await canvas.getViewBox();
+	if (!viewBox) {
+		throw new Error("the canvas svg carries no viewBox");
+	}
+	return Number(viewBox.trim().split(/\s+/)[0]);
+}
+
 /** The viewBox's minY, which is what a vertical pan moves. */
 async function viewBoxMinY(canvas: CanvasDriver): Promise<number> {
 	const viewBox = await canvas.getViewBox();
@@ -63,6 +75,19 @@ async function viewBoxMinY(canvas: CanvasDriver): Promise<number> {
 		throw new Error("the canvas svg carries no viewBox");
 	}
 	return Number(viewBox.trim().split(/\s+/)[1]);
+}
+
+/** Right edge of an element and of the canvas area, both in screen px. */
+async function rightEdges(canvas: CanvasDriver, id: string) {
+	const objectBox = await canvas.objectById(id).boundingBox();
+	const canvasBox = await canvasArea(canvas);
+	if (!objectBox) {
+		throw new Error("cannot measure the object against the canvas area");
+	}
+	return {
+		object: objectBox.x + objectBox.width,
+		canvas: canvasBox.x + canvasBox.width,
+	};
 }
 
 /** Bottom edge of an element and of the canvas area, both in screen px. */
@@ -130,6 +155,66 @@ test.describe("text edit reveal", () => {
 		// Following it means it is on screen again, not merely that something moved.
 		const afterEdges = await bottomEdges(canvas, id);
 		expect(afterEdges.object).toBeLessThanOrEqual(afterEdges.canvas);
+	});
+
+	test("keeps following the caret typed at the end of a line wider than the canvas", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Text");
+		await canvas.deselect();
+
+		// One line with no newline in it: the box grows only sideways, so it ends up
+		// wider than the visible area and can hold the whole of it.
+		await canvas.typeTextAt(
+			await centerOf(canvas, id),
+			" wide".repeat(GROWTH_WORD_COUNT),
+		);
+		const area = await canvasArea(canvas);
+		const grownWidth = (await canvas.objectById(id).boundingBox())?.width ?? 0;
+		expect(grownWidth).toBeGreaterThan(area.width);
+
+		// Following the box would have stopped here, the visible area now sitting
+		// inside it; following the caret keeps panning with what is being typed.
+		const beforeMinX = await viewBoxMinX(canvas);
+		await canvas.page.keyboard.type(" and more");
+
+		await expect
+			.poll(() => viewBoxMinX(canvas), {
+				message: "the camera follows the caret rightward",
+			})
+			.toBeGreaterThan(beforeMinX);
+
+		// The caret sits at the end of the line, so the box's right edge trails it
+		// onto the screen.
+		const afterEdges = await rightEdges(canvas, id);
+		expect(afterEdges.object).toBeLessThanOrEqual(afterEdges.canvas);
+	});
+
+	test("pans back when the caret jumps to the start of such a line", async ({
+		canvas,
+	}) => {
+		const id = await canvas.placeShape("Text");
+		await canvas.deselect();
+
+		await canvas.typeTextAt(
+			await centerOf(canvas, id),
+			" wide".repeat(GROWTH_WORD_COUNT),
+		);
+		const beforeMinX = await viewBoxMinX(canvas);
+
+		// Home moves the caret without changing the text, so nothing but the caret
+		// report itself can bring the start of the line back on screen.
+		await canvas.page.keyboard.press("Home");
+
+		await expect
+			.poll(() => viewBoxMinX(canvas), {
+				message: "the camera follows the caret back to the line start",
+			})
+			.toBeLessThan(beforeMinX);
+
+		const objectBox = await canvas.objectById(id).boundingBox();
+		const area = await canvasArea(canvas);
+		expect(objectBox?.x ?? 0).toBeGreaterThanOrEqual(area.x);
 	});
 
 	test("leaves the camera alone when editing a shape larger than the viewport", async ({

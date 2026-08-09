@@ -14,18 +14,6 @@ const calcRevealedAxisMin = (
 	boxMin: number,
 	boxMax: number,
 ): number => {
-	// A box longer than the visible span cannot be shown whole, so "reveal" degrades
-	// to "keep some of it in view". Staying put whenever the span is already inside
-	// the box is what stops a shape larger than the viewport from yanking the camera
-	// to its far corner the moment its label is edited. The cost is that a line
-	// longer than the span stops being followed once the view sits inside it; only
-	// tracking the caret rather than the box would fix that.
-	if (boxMax - boxMin >= visibleSize) {
-		if (visibleMin >= boxMin && visibleMin + visibleSize <= boxMax) {
-			return visibleMin;
-		}
-		return visibleMin < boxMin ? boxMin : boxMax - visibleSize;
-	}
 	if (boxMin < visibleMin) {
 		return boxMin;
 	}
@@ -39,16 +27,15 @@ const calcRevealedAxisMin = (
  * Smallest pan that brings a world-coordinate box inside the viewport's visible
  * rect, expressed as the camera to move to.
  *
- * Pan only: `zoom` is carried over untouched. Each axis is handled on its own: a
- * box that fits gets the smallest pan that brings it inside, and a box longer
- * than the visible span is left alone while the span sits within it, otherwise
- * pulled to its nearer end.
+ * Pan only: `zoom` is carried over untouched. Each axis is handled on its own,
+ * taking the smallest pan that brings the box inside.
  *
  * @param viewport - Current viewport. `width` / `height` are screen px, so the
  *   visible world rect is `width / zoom` × `height / zoom`; a viewport not yet
  *   measured (either side 0 or less) yields null
  * @param worldBox - Box to reveal, in world coordinates (already axis aligned,
- *   so a rotated shape must be passed as its AABB)
+ *   so a rotated shape must be passed as its AABB). One longer than the visible
+ *   span cannot be shown whole: its leading edge wins, and the far end stays out
  * @param screenPadding - Empty margin kept between the box and each viewport
  *   edge, in screen px (converted to world units by dividing by `zoom`, so it
  *   stays the same size on screen at any zoom). Defaults to 0

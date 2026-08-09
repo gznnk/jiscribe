@@ -55,6 +55,7 @@ import {
 } from "../../states/objects/primitives/svg/SvgMapper";
 import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
+import { resizeTextStateToContent } from "../../states/objects/primitives/text/resizeTextStateToContent";
 import {
 	textToDoc,
 	textToState,
@@ -132,6 +133,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			...builtinObjectDocDefinitions.text,
 			mapper: { toDoc: textToDoc, toState: textToState },
 			stateValidator: isValidTextState,
+			contentResizer: (state, context) =>
+				resizeTextStateToContent(state, context.fontFamily),
 			component: Text,
 			behavior: {
 				moveByDelta: textMoveByDelta,
@@ -294,6 +297,9 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
+	if (definition.contentResizer) {
+		registries.objectContentResizer.register(type, definition.contentResizer);
+	}
 	if (definition.svgDefs) {
 		registries.objectSvgDefs.register(type, definition.svgDefs);
 	}
@@ -372,6 +378,7 @@ export const initializeObjectRegistry = (
 	registries: CanvasRegistries,
 ): void => {
 	registries.objectMapper.clear();
+	registries.objectContentResizer.clear();
 	registries.objectComponent.clear();
 	registries.objectSvgDefs.clear();
 	registries.objectTextRegion.clear();

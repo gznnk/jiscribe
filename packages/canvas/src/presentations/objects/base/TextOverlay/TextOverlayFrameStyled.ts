@@ -1,5 +1,9 @@
 import styled from "@emotion/styled";
 
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "../../../../constants/textBoxPadding";
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 
 /**
@@ -34,7 +38,7 @@ export const TextContent = styled.div`
 	pointer-events: none;
 	user-select: none;
 	overflow: hidden;
-	padding: 2px 6px;
+	padding: ${TEXT_BOX_PADDING_Y}px ${TEXT_BOX_PADDING_X}px;
 	box-sizing: border-box;
 	white-space: pre-wrap;
 	word-break: break-word;

@@ -1,3 +1,9 @@
+import type { BoundingBox } from "@workspace/geometry";
+import {
+	calcAffineTransformedPoint,
+	calcPolyBoundingBox,
+	degreesToRadians,
+} from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
@@ -10,6 +16,7 @@ import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAl
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
+import { readCaretLocalRect } from "../utils/readCaretLocalRect";
 
 type TextEditorProps = {
 	objectId: string;
@@ -41,6 +48,8 @@ type TextEditorProps = {
 	textDecoration?: string;
 	onChange: (text: string) => void;
 	onEscape?: () => void;
+	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
+	onCaretMove?: (caretWorldBox: BoundingBox) => void;
 };
 
 const TextEditorComponent: React.FC<TextEditorProps> = ({
@@ -66,6 +75,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	textDecoration = "none",
 	onChange,
 	onEscape,
+	onCaretMove,
 }) => {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	// Docs of text-bearing shapes always carry fontFamily; the theme font is a
@@ -83,11 +93,13 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		if (!el) {
 			return;
 		}
+		// The caret is placed before the focus so the reveal that rides on the focus
+		// event (onCaretMove) already sees the end of the text.
+		el.setSelectionRange(el.value.length, el.value.length);
 		// preventScroll: the browser would otherwise reveal the textarea by
 		// scrolling the overflow-hidden ancestors, an offset the canvas camera
-		// knows nothing about. Revealing is useRevealTextEditTarget's job.
+		// knows nothing about. Revealing is useRevealTextEditCaret's job.
 		el.focus({ preventScroll: true });
-		el.setSelectionRange(el.value.length, el.value.length);
 	}, []);
 
 	// Update the height to match the text amount (vertical alignment is applied via the wrapper's flex)
@@ -106,6 +118,42 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		fontWeight,
 		fontStyle,
 	]);
+
+	// The caret rides the same transform as the wrapper, one region offset further
+	// in, so its world box is the local segment put through the shape's matrix.
+	const reportCaret = useCallback(() => {
+		const el = textAreaRef.current;
+		// Only the focused editor has a caret to report; at mount the selection is
+		// still at 0, which would reveal the wrong end of the text.
+		if (!el || !onCaretMove || el !== document.activeElement) {
+			return;
+		}
+		const caret = readCaretLocalRect(el);
+		if (!caret) {
+			return;
+		}
+		const rotationRad = degreesToRadians(rotation);
+		const toWorld = (localY: number) =>
+			calcAffineTransformedPoint(
+				x + caret.x,
+				y + localY,
+				scaleX,
+				scaleY,
+				rotationRad,
+				cx,
+				cy,
+			);
+		const caretWorldBox = calcPolyBoundingBox([
+			toWorld(caret.y),
+			toWorld(caret.y + caret.height),
+		]);
+		if (caretWorldBox) {
+			onCaretMove(caretWorldBox);
+		}
+	}, [onCaretMove, x, y, scaleX, scaleY, rotation, cx, cy]);
+
+	// After the height fit above, so the caret is measured against the laid-out box.
+	useLayoutEffect(reportCaret);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
@@ -174,6 +222,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				ref={textAreaRef}
 				onChange={handleChange}
 				onKeyDown={handleKeyDown}
+				// A caret move that changes nothing else (Home, an arrow key, a click
+				// into the text) renders nothing, so it has to report on its own.
+				onSelect={reportCaret}
+				onFocus={reportCaret}
 			/>
 		</TextEditorWrapper>
 	);

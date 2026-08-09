@@ -2,10 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { calcTextObjectFrameSize } from "../../../schemas/objects/primitives/text/calcTextObjectFrameSize";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { reconcileTextObjectSizes } from "../reconcileTextObjectSizes";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { reconcileObjectContentSizes } from "../reconcileObjectContentSizes";
 
 const FONT_FAMILY = "Noto Sans JP";
+
+/** The real per-type wiring, so only `text` is re-measured here. */
+const contentResizer = createTestRegistries().objectContentResizer;
 
 const textObject = (id: string, text: string): ObjectState => {
 	const { width, height } = calcTextObjectFrameSize(
@@ -68,18 +73,20 @@ const stateOf = (
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
-describe("reconcileTextObjectSizes", () => {
+describe("reconcileObjectContentSizes", () => {
 	it("returns the same reference when every box already matches", () => {
 		const state = stateOf([textObject("t1", "hello"), rectObject("r1")]);
 
-		expect(reconcileTextObjectSizes(state, state)).toBe(state);
+		expect(reconcileObjectContentSizes(state, state, contentResizer)).toBe(
+			state,
+		);
 	});
 
 	it("re-measures a text object whose text changed", () => {
 		const previous = stateOf([textObject("t1", "hello")]);
 		const state = stateOf([withStaleBox(textObject("t1", "hello world"))]);
 
-		const next = reconcileTextObjectSizes(state, previous);
+		const next = reconcileObjectContentSizes(state, previous, contentResizer);
 
 		expect(next.objects.t1).toEqual(textObject("t1", "hello world"));
 	});
@@ -89,7 +96,7 @@ describe("reconcileTextObjectSizes", () => {
 		const previous = stateOf([]);
 		const state = stateOf([withStaleBox(textObject("t1", "hello"))]);
 
-		const next = reconcileTextObjectSizes(state, previous);
+		const next = reconcileObjectContentSizes(state, previous, contentResizer);
 
 		expect(next.objects.t1).toEqual(textObject("t1", "hello"));
 	});
@@ -106,14 +113,53 @@ describe("reconcileTextObjectSizes", () => {
 		};
 		const state = stateOf([moved as ObjectState]);
 
-		expect(reconcileTextObjectSizes(state, previous)).toBe(state);
+		expect(reconcileObjectContentSizes(state, previous, contentResizer)).toBe(
+			state,
+		);
 	});
 
 	it("leaves every non-text object alone, however wrong its box looks", () => {
 		const previous = stateOf([]);
 		const state = stateOf([rectObject("r1")]);
 
-		expect(reconcileTextObjectSizes(state, previous)).toBe(state);
+		expect(reconcileObjectContentSizes(state, previous, contentResizer)).toBe(
+			state,
+		);
+	});
+
+	it("never calls a resizer for a type that has none registered", () => {
+		// The skip is decided by the registry lookup alone: a type absent from it is
+		// not merely left unchanged, it is never handed to a resizer at all.
+		const registry = createObjectContentResizerRegistry();
+		const seenTypes: string[] = [];
+		registry.register("text", (state) => {
+			seenTypes.push(state.type);
+			return state;
+		});
+		const previous = stateOf([]);
+		const state = stateOf([
+			rectObject("r1"),
+			withStaleBox(textObject("t1", "hello")),
+		]);
+
+		reconcileObjectContentSizes(state, previous, registry);
+
+		expect(seenTypes).toEqual(["text"]);
+	});
+
+	it("re-measures nothing at all when the registry holds no resizer", () => {
+		// The state of a canvas configured without a single derived-box type: the
+		// pass must be a no-op even for the objects that would otherwise qualify.
+		const previous = stateOf([]);
+		const state = stateOf([withStaleBox(textObject("t1", "hello"))]);
+
+		expect(
+			reconcileObjectContentSizes(
+				state,
+				previous,
+				createObjectContentResizerRegistry(),
+			),
+		).toBe(state);
 	});
 
 	it("costs nothing on a document holding no text object", () => {
@@ -122,7 +168,9 @@ describe("reconcileTextObjectSizes", () => {
 		const previous = stateOf([rectObject("r1")]);
 		const state = stateOf([rectObject("r1"), rectObject("r2")]);
 
-		expect(reconcileTextObjectSizes(state, previous)).toBe(state);
+		expect(reconcileObjectContentSizes(state, previous, contentResizer)).toBe(
+			state,
+		);
 	});
 
 	it("re-measures every text object when the theme's family changed", () => {
@@ -134,7 +182,7 @@ describe("reconcileTextObjectSizes", () => {
 		});
 		const state = stateOf([stale]);
 
-		const next = reconcileTextObjectSizes(state, previous);
+		const next = reconcileObjectContentSizes(state, previous, contentResizer);
 
 		expect(next.objects.t1).not.toBe(stale);
 		expect(next.objects.t1).toEqual(textObject("t1", "hello"));
@@ -145,7 +193,7 @@ describe("reconcileTextObjectSizes", () => {
 		const untouched = rectObject("r1");
 		const state = stateOf([withStaleBox(textObject("t1", "hello")), untouched]);
 
-		const next = reconcileTextObjectSizes(state, previous);
+		const next = reconcileObjectContentSizes(state, previous, contentResizer);
 
 		expect(next).not.toBe(state);
 		expect(next.objects.r1).toBe(untouched);
@@ -177,7 +225,7 @@ describe("reconcileTextObjectSizes", () => {
 			} as unknown as ObjectState,
 		]);
 
-		const next = reconcileTextObjectSizes(state, previous);
+		const next = reconcileObjectContentSizes(state, previous, contentResizer);
 
 		const group = next.objects.g1 as unknown as {
 			width: number;

@@ -1,4 +1,8 @@
-import { roundToDecimal } from "@workspace/geometry";
+import {
+	calcAffineTransformedPoint,
+	degreesToRadians,
+	roundToDecimal,
+} from "@workspace/geometry";
 
 import type { TextState } from "./TextState";
 import { PRECISION } from "../../../../constants/precision";
@@ -8,11 +12,16 @@ import { readTextSlot } from "../../types/TextSlots";
 
 /**
  * Re-measures a text object's box from the text it currently holds, keeping the
- * box's top-left corner where it was. That corner is what the doc stores, so
- * anchoring it there is what makes text grow to the right and down instead of
- * drifting.
+ * drawn top-left corner — the local `(-width / 2, -height / 2)` corner put
+ * through the object's own rotation and flips — where it was. That is where the
+ * first glyph sits, so anchoring it there is what makes text grow away from the
+ * start of the line instead of dragging what is already typed sideways.
  *
- * @param state - The text object to re-measure; its slot content and typography are the only inputs read
+ * The doc's `(x, y)` (the unrotated top-left, `cx - width / 2`) therefore moves
+ * whenever the object is rotated or flipped; only at rotation 0 with no flip do
+ * the two corners coincide.
+ *
+ * @param state - The text object to re-measure; its slot content, typography and transform are the only inputs read
  * @param fallbackFontFamily - Family used when the object sets none. Pass the family it is actually drawn in (the host theme's), or the box comes out a few percent narrow
  * @returns `state` itself when the measurement matches the box it already has, so callers can use reference equality to skip further work
  */
@@ -30,15 +39,39 @@ export const resizeTextStateToContent = (
 		return state;
 	}
 
+	const rotationRad = degreesToRadians(state.rotation ?? 0);
+	const scaleX = state.scaleX ?? 1;
+	const scaleY = state.scaleY ?? 1;
+	const drawnTopLeft = calcAffineTransformedPoint(
+		-state.width / 2,
+		-state.height / 2,
+		scaleX,
+		scaleY,
+		rotationRad,
+		state.cx,
+		state.cy,
+	);
 	// The corner is rounded before the new center is built around it, so repeated
 	// re-measurements land on the same value instead of drifting a float epsilon
-	// per keystroke — and the doc keeps a coordinate a person can read.
-	const x = roundToDecimal(state.cx - state.width / 2, PRECISION.COORDINATE);
-	const y = roundToDecimal(state.cy - state.height / 2, PRECISION.COORDINATE);
+	// per keystroke — and at rotation 0 the doc keeps a coordinate a person can read.
+	const anchorX = roundToDecimal(drawnTopLeft.x, PRECISION.COORDINATE);
+	const anchorY = roundToDecimal(drawnTopLeft.y, PRECISION.COORDINATE);
+	// Putting the new box's own top-left corner back onto that anchor is the same
+	// transform read the other way: the center is the anchor plus the transformed
+	// half-diagonal.
+	const center = calcAffineTransformedPoint(
+		width / 2,
+		height / 2,
+		scaleX,
+		scaleY,
+		rotationRad,
+		anchorX,
+		anchorY,
+	);
 	return {
 		...state,
-		cx: x + width / 2,
-		cy: y + height / 2,
+		cx: center.x,
+		cy: center.y,
 		width,
 		height,
 	};

@@ -1,4 +1,4 @@
-import type { TransformedFrame } from "@workspace/geometry";
+import type { BoundingBox, TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
 import {
@@ -25,10 +25,12 @@ import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
 import type { ObjectTextEditOverflowResolver } from "../ObjectTextEditOverflowTypes";
 import { TextEditor } from "../TextEditor";
 
-/** Handlers that report editor input and exit to the parent (Canvas). Common across all types. */
+/** Handlers that report editor input, caret and exit to the parent (Canvas). Common across all types. */
 type EditorHandlers = {
 	onChange: (text: string) => void;
 	onEscape: () => void;
+	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
+	onCaretMove: (caretWorldBox: BoundingBox) => void;
 };
 
 /**
@@ -99,6 +101,7 @@ function renderConnectorLabelEditor(
 			strokeDashType={connector.label?.strokeDashType}
 			onChange={handlers.onChange}
 			onEscape={handlers.onEscape}
+			onCaretMove={handlers.onCaretMove}
 		/>
 	);
 }
@@ -157,6 +160,7 @@ function renderTextEditor(
 			textDecoration={slot?.textDecoration}
 			onChange={handlers.onChange}
 			onEscape={handlers.onEscape}
+			onCaretMove={handlers.onCaretMove}
 		/>
 	);
 }
@@ -166,6 +170,8 @@ type TextEditorLayerProps = {
 	objects: CanvasControllerState["objects"];
 	onTextChange: (text: string) => void;
 	onEscape: () => void;
+	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
+	onCaretMove: (caretWorldBox: BoundingBox) => void;
 };
 
 /**
@@ -177,6 +183,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	objects,
 	onTextChange,
 	onEscape,
+	onCaretMove,
 }) => {
 	const registries = useCanvasRegistries();
 
@@ -189,7 +196,11 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		return null;
 	}
 
-	const handlers: EditorHandlers = { onChange: onTextChange, onEscape };
+	const handlers: EditorHandlers = {
+		onChange: onTextChange,
+		onEscape,
+		onCaretMove,
+	};
 
 	if (textEditState.kind === "connectorLabel") {
 		if (targetObject.type !== "connector") {

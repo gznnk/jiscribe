@@ -49,7 +49,7 @@ export const useSyncExternalDoc = ({
 	registries,
 }: UseSyncExternalDocParams): void => {
 	const hasMountedRef = useRef(false);
-	const { objectMapper } = registries;
+	const { objectMapper, objectContentResizer } = registries;
 
 	// Always-fresh mirror of state so the sync effect below does not need to
 	// depend on (and re-run for) every state change.
@@ -85,6 +85,7 @@ export const useSyncExternalDoc = ({
 		const newState = canvasToState(
 			canvasDoc,
 			objectMapper,
+			objectContentResizer,
 			stateRef.current.docDefaults.fontFamily,
 		);
 		resetGestureState();
@@ -99,5 +100,6 @@ export const useSyncExternalDoc = ({
 		syncNonce,
 		selfSaveNonceTracker,
 		objectMapper,
+		objectContentResizer,
 	]);
 };

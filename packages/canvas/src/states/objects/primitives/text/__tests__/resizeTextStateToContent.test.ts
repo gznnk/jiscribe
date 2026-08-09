@@ -1,9 +1,14 @@
-import { roundToDecimal } from "@workspace/geometry";
+import {
+	calcAffineTransformedPoint,
+	degreesToRadians,
+	roundToDecimal,
+} from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
 import { PRECISION } from "../../../../../constants/precision";
 import { calcTextObjectFrameSize } from "../../../../../schemas/objects/primitives/text/calcTextObjectFrameSize";
 import { resizeTextStateToContent } from "../resizeTextStateToContent";
+import { textToDoc, textToState } from "../TextMapper";
 import type { TextState } from "../TextState";
 
 const FONT_FAMILY = "Noto Sans JP";
@@ -40,6 +45,33 @@ const topLeftOf = (state: TextState) => ({
 	x: roundToDecimal(state.cx - state.width / 2, PRECISION.COORDINATE),
 	y: roundToDecimal(state.cy - state.height / 2, PRECISION.COORDINATE),
 });
+
+/** Where the box's own top-left corner is drawn, rotation and flips applied. */
+const drawnTopLeftOf = (state: TextState) =>
+	calcAffineTransformedPoint(
+		-state.width / 2,
+		-state.height / 2,
+		state.scaleX ?? 1,
+		state.scaleY ?? 1,
+		degreesToRadians(state.rotation ?? 0),
+		state.cx,
+		state.cy,
+	);
+
+/**
+ * The same text under a transform, typed one word longer. The family is pinned
+ * in the slot so a measurement taken elsewhere (the doc mapper's) matches.
+ */
+const typedLonger = (transform: Record<string, unknown>) => {
+	const state = stateOf("hello", transform);
+	const typed = {
+		...state,
+		text: {
+			body: { text: "hello world", fontSize: 16, fontFamily: FONT_FAMILY },
+		},
+	} as TextState;
+	return { state, resized: resizeTextStateToContent(typed, FONT_FAMILY) };
+};
 
 describe("resizeTextStateToContent", () => {
 	it("returns the same reference when the box already matches the text", () => {
@@ -99,6 +131,40 @@ describe("resizeTextStateToContent", () => {
 		expect(resizeTextStateToContent(styled, "Some Other Family")).toEqual(
 			resizeTextStateToContent(styled, FONT_FAMILY),
 		);
+	});
+
+	it("keeps the drawn top-left where it was when a rotated text grows", () => {
+		const { state, resized } = typedLonger({ rotation: 90 });
+		const before = drawnTopLeftOf(state);
+		const after = drawnTopLeftOf(resized);
+
+		expect(resized.width).toBeGreaterThan(state.width);
+		// A quarter turn sends the growth straight down, so the unrotated corner the
+		// doc stores has to move for the drawn one to stay put.
+		expect(after.x).toBeCloseTo(before.x, 3);
+		expect(after.y).toBeCloseTo(before.y, 3);
+		expect(topLeftOf(resized)).not.toEqual(topLeftOf(state));
+	});
+
+	it("keeps the drawn top-left where it was when a flipped text grows", () => {
+		const { state, resized } = typedLonger({ scaleX: -1 });
+		const before = drawnTopLeftOf(state);
+		const after = drawnTopLeftOf(resized);
+
+		expect(after.x).toBeCloseTo(before.x, 3);
+		expect(after.y).toBeCloseTo(before.y, 3);
+	});
+
+	it("survives the doc round trip after a rotated resize", () => {
+		const { resized } = typedLonger({ rotation: 37 });
+		// The doc stores the unrotated corner, so the mapper has to land back on the
+		// same box from the coordinate this resize left behind.
+		const roundTripped = textToState(textToDoc(resized));
+
+		expect(roundTripped.cx).toBeCloseTo(resized.cx, 3);
+		expect(roundTripped.cy).toBeCloseTo(resized.cy, 3);
+		expect(roundTripped.width).toBe(resized.width);
+		expect(roundTripped.height).toBe(resized.height);
 	});
 
 	it("sizes an object with no slot at all to the empty box", () => {

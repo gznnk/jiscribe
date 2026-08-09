@@ -70,40 +70,12 @@ describe("calcCameraToRevealBox", () => {
 		});
 	});
 
-	it("stays put on an axis whose visible span lies inside a larger box", () => {
-		// 600x500 box holding the whole visible rect: the target is already being
-		// looked at, so a shape bigger than the viewport must not drag the camera.
-		expect(
-			calcCameraToRevealBox(viewport, box(-100, -100, 500, 400)),
-		).toBeNull();
-	});
-
-	it("pulls to the near end of a box larger than the visible rect", () => {
-		// The visible rect sits past the box on both axes, so each axis moves the
-		// least it can: onto the box's right edge and its bottom edge.
-		const panned: Viewport = { ...viewport, minX: 700, minY: 600 };
-
-		expect(calcCameraToRevealBox(panned, box(0, 0, 600, 500))).toEqual({
-			minX: 200,
-			minY: 200,
-			zoom: 1,
-		});
-	});
-
-	it("pulls to the leading end when the box starts past the visible rect", () => {
-		expect(calcCameraToRevealBox(viewport, box(100, 80, 800, 700))).toEqual({
-			minX: 100,
-			minY: 80,
-			zoom: 1,
-		});
-	});
-
-	it("stays put on the axis that fits inside the box and pans on the other", () => {
-		// X: the 600-wide box holds the visible span, so it is left alone.
-		// Y: the 90-tall box fits and is off the bottom edge, so it is revealed.
-		expect(calcCameraToRevealBox(viewport, box(-100, 250, 500, 340))).toEqual({
-			minX: 0,
-			minY: 40,
+	it("shows the leading edge of a box longer than the visible rect", () => {
+		// 600x500 box holding the whole visible rect: it cannot be shown whole, so
+		// the pan lands on the edge it is reached from and the far end stays out.
+		expect(calcCameraToRevealBox(viewport, box(-100, -100, 500, 400))).toEqual({
+			minX: -100,
+			minY: -100,
 			zoom: 1,
 		});
 	});
