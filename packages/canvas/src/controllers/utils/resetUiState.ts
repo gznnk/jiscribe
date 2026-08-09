@@ -15,6 +15,7 @@ export type UiStateReset = Pick<
 	| "selectedIds"
 	| "eventStartSnapshot"
 	| "activeDragKind"
+	| "inertialScrolling"
 	| "keyPointsCache"
 	| "snapCandidatesCache"
 	| "edgeScrollEnabled"
@@ -53,6 +54,9 @@ export const resetUiState = (): UiStateReset => ({
 	// cancelPendingGesture() drops an in-flight drag without firing dragEnd, so this
 	// reset is what keeps the kind from outliving the gesture on an external swap.
 	activeDragKind: null,
+	// Same reason as activeDragKind: cancelPendingGesture() may kill a glide during
+	// the swap, and the flag must not outlive it.
+	inertialScrolling: false,
 	keyPointsCache: {},
 	snapCandidatesCache: null,
 	edgeScrollEnabled: false,

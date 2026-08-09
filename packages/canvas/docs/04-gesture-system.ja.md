@@ -10,10 +10,11 @@
 生の pointer / wheel イベントはキャンバスのルート（`Viewport`）に集約され、
 `GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
 
-`GestureType` は次の 9 種:
+`GestureType` は次の 11 種:
 
 ```
 pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
+inertialScroll | inertialScrollEnd
 ```
 
 `Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
@@ -39,6 +40,17 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | lon
   発火し、ジェスチャーを消費する（離しても click は出ない）。着地点を問わず CanvasEventHandler に
   ルーティングされ（per-target ハンドラは中/右ボタン同様 `isPerTargetInteraction` で拒否）、
   右クリック相当としてコンテキストメニューを開く。
+- **慣性スクロール**: 中／右ボタンのパンを動かしたまま離すと、view が滑り続ける。recognizer は
+  生のポインタ座標を `enqueue` で記録し（`feed` は1フレーム1移動しか見ないのでフリックの計測には粗い）、
+  `FLING_VELOCITY_WINDOW_MS` 分の区間から離した瞬間の速度を求め（`calcFlingVelocity`）、
+  専用の RAF で毎フレーム `inertialScroll` を発火する。速度は指数減衰し、`FLING_STOP_SPEED` を
+  下回ったら停止。どのドラッグが滑るかは利用側の知識として `shouldFlingFromDrag`
+  （中／右ボタン）で注入する（`shouldPinchFromDrag` と同じ分担）。離す前に静止していた場合
+  （`FLING_RELEASE_IDLE_MS`）はその場で止まり、新しい pointerdown やホイールは滑走を即座に打ち切る。
+  どの止まり方でも最後に `inertialScrollEnd` が1回だけ出る（出口はすべて `stopFling` を通る）。
+  最終フレームは他のフレームと見分けが付かないので、終了を state に伝えるのはこのジェスチャーの役目。
+  `handleGesture` が滑走中は `inertialScrolling` を立て、ここで倒す。これにより ObjectMenu は
+  `dragEnd` で復活して選択図形と一緒に飛んでいくことなく、停止まで隠れたままになる。
 - **タッチのパン**: `Gesture` は `pointerType` を持ち、CanvasEventHandler がタッチの1本指
   背景ドラッグをエリア選択ではなくビューポートのパン（GrabScroll パス）へルーティングする。
   タッチでのエリア選択は当面利用不可。またタッチでは背景の選択解除を `pressed` でなく
@@ -51,7 +63,8 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | lon
 
 `handleGesture`（`controllers/gestures/handlers/handleGesture.ts`）がルーター。
 `Gesture` を `CanvasEvent` に変換し（`wheel` は `ctrl` の有無で `zoom` / `scroll` に分岐、
-`pinch` は `zoom` → `scroll` の順に分解）、
+`inertialScroll` は常に `scroll`、`pinch` は `zoom` → `scroll` の順に分解、
+`inertialScrollEnd` は状態遷移として消費しどこにも渡さない）、
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
 自分が処理すべきイベントかを判定する。registry には `targetKind` ごとに 1 ハンドラだけを
 登録する。さらに細かい分岐（`targetId` / `data-part` / イベント種）が要る kind では、
@@ -73,6 +86,13 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 「ドラッグ中」を意味する。区別が必要なハンドラは自分の `dragStart` で上書きする
 （`ObjectEventHandler` が `"move"`、`TransformControlHandler` が `"transform"`）。UI はこれを見て、
 移動中は変形フレームと接続アンカーを、変形中は接続アンカーを隠し、ObjectMenu はドラッグ中すべてで隠す。
+
+滑走側の対になるのが `inertialScrolling` で、あえて別フィールドにしている。滑走中はポインタが下りて
+おらず `eventStartSnapshot` も開いていないため、`activeDragKind` に混ぜるとこの2つが対で設定・解除
+されるという性質が崩れる。読んでいるのは ObjectMenu だけで、直前のパンと同じように滑走中も隠す。
+別々の状態である以上、パン→滑走・滑走→次のパンの受け渡しにはどちらも false になる隙間が1フレーム
+以上できる。そこでメニューの条件は `useLingeringFlag` を通し、隠すのは即時、戻すのはビューが
+`REAPPEAR_DELAY_MS` 静止してからにしている。これが受け渡しでのちらつきを防いでいる。
 
 ## 連携属性 `data-gesture` / `data-kind` / `data-id` / `data-part`
 

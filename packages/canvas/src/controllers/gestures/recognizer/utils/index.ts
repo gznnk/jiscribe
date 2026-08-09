@@ -1,3 +1,4 @@
+export { calcFlingVelocity, type FlingSample } from "./calcFlingVelocity";
 export { calcPinchDist } from "./calcPinchDist";
 export { calcPinchMid } from "./calcPinchMid";
 export { calculateScrollDelta } from "./calculateScrollDelta";

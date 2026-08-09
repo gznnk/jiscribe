@@ -202,6 +202,15 @@ export type CanvasControllerState = CanvasState & {
 	activeDragKind: DragKind | null;
 
 	/**
+	 * Whether the view is still coasting from a released pan (inertial scrolling).
+	 * Deliberately not folded into activeDragKind: no pointer is down and no
+	 * eventStartSnapshot is open, so the two would stop being set as a pair.
+	 * handleGesture owns the lifecycle — up on every glide frame, down on the
+	 * recognizer's inertialScrollEnd.
+	 */
+	inertialScrolling: boolean;
+
+	/**
 	 * Persistent across gestures; each dragStart recomputes only the diff by reference
 	 * comparison. Not part of CanvasDoc and not subject to history management.
 	 */

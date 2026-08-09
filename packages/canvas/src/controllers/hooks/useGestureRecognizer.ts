@@ -70,6 +70,10 @@ export const useGestureRecognizer = ({
 			// recognizer passes only the target kind.
 			shouldPinchFromDrag: (targetKind) =>
 				isViewportPanDrag(targetKind, canvasStateRef.current),
+			// A released middle-/right-button pan glides to a stop instead of stopping
+			// dead: those are exactly the drags CanvasEventHandler pans with, wherever
+			// they land. The same test excludes touch pans, which arrive as button 0.
+			shouldFlingFromDrag: (button) => button === 1 || button === 2,
 		});
 	}
 
