@@ -10,11 +10,15 @@ import type {
 /**
  * Canvas event type.
  * Excludes "wheel", "pinch" and "inertialScroll" from GestureType (all three are
- * converted to scroll/zoom).
+ * converted to scroll/zoom), and "inertialScrollEnd", which handleGesture consumes
+ * as a state transition without routing it anywhere.
  * Adds canvas-specific events like dragOver, dragLeave, scroll, and zoom.
  */
 export type EventType =
-	| Exclude<GestureType, "wheel" | "pinch" | "inertialScroll">
+	| Exclude<
+			GestureType,
+			"wheel" | "pinch" | "inertialScroll" | "inertialScrollEnd"
+	  >
 	| "dragOver"
 	| "dragLeave"
 	| "scroll"

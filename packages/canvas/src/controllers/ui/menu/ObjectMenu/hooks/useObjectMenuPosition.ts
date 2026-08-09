@@ -1,11 +1,23 @@
 import { type RefObject, useLayoutEffect, useMemo, useState } from "react";
 
+import { useLingeringFlag } from "./useLingeringFlag";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
 
 /** Distance between the ObjectMenu and the object (px) */
 const DISTANCE_FROM_OBJECT = 40;
+
+/**
+ * How long the menu stays away after the view stops moving (ms).
+ *
+ * A pan and the glide it leaves behind are separate states, and so are a glide
+ * and the next pan: each pair has a gap of a frame or more where neither is set,
+ * which without this would flash the menu back for that gap. Long enough to
+ * bridge a press that is about to become a drag, short enough to read as the
+ * menu simply settling.
+ */
+const REAPPEAR_DELAY_MS = 200;
 
 type ObjectMenuPosition = {
 	/** Whether the menu should be rendered */
@@ -39,6 +51,7 @@ export function useObjectMenuPosition(
 		contextMenuPosition,
 		areaSelection,
 		activeDragKind,
+		inertialScrolling,
 		objectMenuOpenId,
 		textEditState,
 	} = state;
@@ -60,6 +73,15 @@ export function useObjectMenuPosition(
 		selectedTextSlot === null
 			? null
 			: `${selectedTextSlot.objectId}:${selectedTextSlot.slotId}`;
+
+	// Every way the view moves under the selection, as one state: dragging (except
+	// while an ObjectMenu dropdown is open, so its sliders stay usable) and the
+	// glide a released pan leaves behind. The linger is what keeps the handover
+	// between the two from flashing the menu (see REAPPEAR_DELAY_MS).
+	const isViewMoving =
+		(activeDragKind !== null && objectMenuOpenId === null) || inertialScrolling;
+	const isViewUnsettled = useLingeringFlag(isViewMoving, REAPPEAR_DELAY_MS);
+
 	const shouldRender = useMemo(() => {
 		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
 		if (!hasSelection) {
@@ -74,9 +96,10 @@ export function useObjectMenuPosition(
 		if (textEditState !== null) {
 			return false;
 		}
-		// Hidden for every kind of drag, except while an ObjectMenu dropdown is open
-		// (so the menu stays visible while dragging one of its sliders)
-		if (activeDragKind !== null && objectMenuOpenId === null) {
+		// Away while the view moves under the selection — a drag of any kind, and
+		// the glide that continues a released pan, which would otherwise fly the
+		// menu across the screen.
+		if (isViewUnsettled) {
 			return false;
 		}
 		if (areaSelection !== null) {
@@ -87,9 +110,8 @@ export function useObjectMenuPosition(
 		selectedIds,
 		selectedConnectorId,
 		contextMenuPosition,
-		activeDragKind,
+		isViewUnsettled,
 		areaSelection,
-		objectMenuOpenId,
 		textEditState,
 	]);
 

@@ -47,6 +47,14 @@ export const handleGesture = (
 	gesture: Gesture,
 	registries: CanvasRegistries,
 ): CanvasControllerState => {
+	// The end of a glide is a pure state transition — nothing to route, and no
+	// handler could tell it apart from a frame that merely moved zero pixels.
+	if (gesture.type === "inertialScrollEnd") {
+		return state.inertialScrolling
+			? { ...state, inertialScrolling: false }
+			: state;
+	}
+
 	let nextState = state;
 
 	// Convert Gesture to CanvasEvent
@@ -168,6 +176,12 @@ export const handleGesture = (
 			// which is what keeps "a drag is under way" true for all of them.
 			activeDragKind: "other",
 		};
+	}
+
+	// Raised by every glide frame (idempotent) and lowered by the end gesture
+	// above, so it spans the whole glide however many frames it takes.
+	if (gesture.type === "inertialScroll" && !nextState.inertialScrolling) {
+		nextState = { ...nextState, inertialScrolling: true };
 	}
 
 	// Collect events to process (original + derived)

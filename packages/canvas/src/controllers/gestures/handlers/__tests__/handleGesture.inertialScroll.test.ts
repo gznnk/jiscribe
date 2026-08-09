@@ -43,6 +43,22 @@ const inertialScroll = (deltaX: number, deltaY: number): Gesture =>
 		scrollDelta: { deltaX, deltaY },
 	}) as unknown as Gesture;
 
+/** The recognizer's one-shot "the glide is over"; moves nothing. */
+const inertialScrollEnd = (): Gesture =>
+	({
+		type: "inertialScrollEnd",
+		button: 0,
+		targetKind: "canvas",
+		targetId: "canvas",
+		start: { x: 0, y: 0 },
+		last: { x: 0, y: 0 },
+		delta: { x: 0, y: 0 },
+		clientStart: { x: 0, y: 0 },
+		clientLast: { x: 0, y: 0 },
+		clientDelta: { x: 0, y: 0 },
+		mods: { shift: false, alt: false, ctrl: false, meta: false },
+	}) as unknown as Gesture;
+
 describe("handleGesture - inertialScroll moves the view like a wheel scroll", () => {
 	it("moves the viewport origin by the scroll delta", () => {
 		const next = handleGesture(
@@ -75,5 +91,44 @@ describe("handleGesture - inertialScroll moves the view like a wheel scroll", ()
 		expect(next.activeDragKind).toBeNull();
 		expect(next.areaSelection).toBeNull();
 		expect(next.commitVersion).toBe(state.commitVersion);
+	});
+});
+
+describe("handleGesture - the glide raises and lowers inertialScrolling", () => {
+	it("raises it on a glide frame and keeps it up across frames", () => {
+		const first = handleGesture(
+			baseState(),
+			inertialScroll(-40, 0),
+			registries,
+		);
+		expect(first.inertialScrolling).toBe(true);
+
+		const second = handleGesture(first, inertialScroll(-30, 0), registries);
+		expect(second.inertialScrolling).toBe(true);
+	});
+
+	it("lowers it on the end gesture", () => {
+		const gliding = handleGesture(
+			baseState(),
+			inertialScroll(-40, 0),
+			registries,
+		);
+		const next = handleGesture(gliding, inertialScrollEnd(), registries);
+
+		expect(next.inertialScrolling).toBe(false);
+	});
+
+	it("moves nothing on the end gesture, and leaves an idle state untouched", () => {
+		const gliding = handleGesture(
+			baseState(),
+			inertialScroll(-40, 0),
+			registries,
+		);
+		const ended = handleGesture(gliding, inertialScrollEnd(), registries);
+		expect(ended.viewport).toEqual(gliding.viewport);
+
+		// A stray end with no glide under way is not even a new state object.
+		const idle = baseState();
+		expect(handleGesture(idle, inertialScrollEnd(), registries)).toBe(idle);
 	});
 });

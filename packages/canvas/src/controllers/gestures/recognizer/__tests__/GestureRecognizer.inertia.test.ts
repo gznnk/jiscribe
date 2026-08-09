@@ -145,9 +145,12 @@ const setup = () => {
 	};
 	const glides = (): Gesture[] =>
 		events.filter((e) => e.type === "inertialScroll");
+	const ends = (): Gesture[] =>
+		events.filter((e) => e.type === "inertialScrollEnd");
 	return {
 		events,
 		glides,
+		ends,
 		dispatch,
 		wheelHandler: recognizer.getWheelHandler(),
 		cancelPendingGesture: () => recognizer.cancelPendingGesture(),
@@ -243,6 +246,23 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 		expect(harness.glides()).toHaveLength(settled);
 	});
 
+	it("announces the end once, after the final frame and carrying no movement", () => {
+		const harness = setup();
+		const { releaseTime } = flickAndRelease(harness);
+
+		let time = releaseTime;
+		for (let frame = 0; frame < 400; frame++) {
+			time += FRAME_MS;
+			flushRaf(time);
+		}
+
+		expect(harness.ends()).toHaveLength(1);
+		expect(harness.ends()[0].scrollDelta).toBeUndefined();
+		// It is the last thing the glide says: no frame follows it.
+		const types = harness.events.map((e) => e.type);
+		expect(types[types.length - 1]).toBe("inertialScrollEnd");
+	});
+
 	it("does not glide when the release was too slow", () => {
 		const harness = setup();
 		// 6px over 48ms = 0.125 px/ms, under FLING_MIN_SPEED but past the drag threshold.
@@ -250,6 +270,7 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 
 		flushRaf(releaseTime + FRAME_MS);
 		expect(harness.glides()).toHaveLength(0);
+		expect(harness.ends()).toHaveLength(0);
 	});
 
 	it("does not glide when the pointer came to rest before lifting", () => {
@@ -260,6 +281,7 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 
 		flushRaf(releaseTime + FRAME_MS);
 		expect(harness.glides()).toHaveLength(0);
+		expect(harness.ends()).toHaveLength(0);
 	});
 
 	it("does not glide for a drag the policy rejects", () => {
@@ -268,6 +290,7 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 
 		flushRaf(releaseTime + FRAME_MS);
 		expect(harness.glides()).toHaveLength(0);
+		expect(harness.ends()).toHaveLength(0);
 	});
 
 	it("measures only the final motion, so a flick after a pause still glides", () => {
@@ -315,6 +338,7 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 			flushRaf(time + FRAME_MS);
 			flushRaf(time + 2 * FRAME_MS);
 			expect(harness.glides()).toHaveLength(1);
+			expect(harness.ends()).toHaveLength(1);
 		});
 
 		it("stops on a wheel", () => {
@@ -335,6 +359,7 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 			flushRaf(time + FRAME_MS);
 			flushRaf(time + 2 * FRAME_MS);
 			expect(harness.glides()).toHaveLength(1);
+			expect(harness.ends()).toHaveLength(1);
 		});
 
 		it("stops on cancelPendingGesture (external sync / unmount)", () => {
@@ -344,6 +369,7 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 			flushRaf(time + FRAME_MS);
 			flushRaf(time + 2 * FRAME_MS);
 			expect(harness.glides()).toHaveLength(1);
+			expect(harness.ends()).toHaveLength(1);
 		});
 	});
 });

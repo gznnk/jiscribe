@@ -216,8 +216,9 @@ const NO_MODS: Mods = { shift: false, alt: false, ctrl: false, meta: false };
 /**
  * Converts raw DOM pointer / wheel events into gestures (pressed / dragStart / drag /
  * dragEnd / click / doubleClick / wheel / pinch / longPress), delivered one at a time
- * via gestureCallback. One gesture outlives its input: inertialScroll keeps firing
- * frame by frame after a flingable pan drag is released (see startFlingIfNeeded).
+ * via gestureCallback. Two of them outlive their input: after a flingable pan drag is
+ * released, inertialScroll fires frame by frame until the glide decays away, closed by
+ * a single inertialScrollEnd (see startFlingIfNeeded / stopFling).
  *
  * Events are queued by `enqueue` and handled once per frame by `processBatch` (a RAF
  * scheduled in `schedule`): every event is fed in chronological order, then per-frame
@@ -973,33 +974,11 @@ export class GestureRecognizer {
 		fling.lastTime = time;
 
 		if (elapsed > 0) {
-			const clientPos = fling.clientPos;
-			const worldPos = getSvgPoint(
-				this.svgRef.current,
-				clientPos.x,
-				clientPos.y,
-			);
-			this.gestureCallback({
-				type: "inertialScroll",
-				target: null,
-				targetId: "canvas",
-				targetKind: "canvas",
-				start: worldPos,
-				last: worldPos,
-				delta: { x: 0, y: 0 },
-				clientStart: clientPos,
-				clientLast: clientPos,
-				clientDelta: { x: 0, y: 0 },
-				mods: NO_MODS,
-				getHovered: () => [],
-				time,
-				button: 0,
+			this.fireGlideGesture("inertialScroll", fling, time, {
 				// Negated: the content keeps travelling the way the drag was going,
 				// which moves the viewport the opposite way (as a wheel scroll does).
-				scrollDelta: {
-					deltaX: -fling.velocity.x * elapsed,
-					deltaY: -fling.velocity.y * elapsed,
-				},
+				deltaX: -fling.velocity.x * elapsed,
+				deltaY: -fling.velocity.y * elapsed,
 			});
 
 			// The callback runs the consumer's reducer synchronously, and that may
@@ -1018,19 +997,68 @@ export class GestureRecognizer {
 		}
 
 		if (Math.hypot(fling.velocity.x, fling.velocity.y) < FLING_STOP_SPEED) {
-			this.fling = null;
+			this.stopFling();
 			return;
 		}
 		this.scheduleFlingFrame();
 	}
 
-	/** Bring any glide to an immediate stop, cancelling its pending frame. */
+	/**
+	 * Fire one gesture of a glide in progress. The coordinates are the release
+	 * position for every frame — the pan is driven by scrollDelta alone, and no
+	 * pointer is there to track.
+	 *
+	 * @param type - Which of the glide's two gestures to fire; only inertialScroll
+	 *   carries a scrollDelta.
+	 * @param fling - The glide being reported, supplying the client position.
+	 * @param time - Value for the gesture's `time`, on the performance.now() base.
+	 * @param scrollDelta - Screen-px distance covered since the previous frame;
+	 *   omitted for the end gesture, which moves nothing.
+	 */
+	private fireGlideGesture(
+		type: "inertialScroll" | "inertialScrollEnd",
+		fling: Fling,
+		time: number,
+		scrollDelta?: ScrollDelta,
+	): void {
+		const clientPos = fling.clientPos;
+		const worldPos = getSvgPoint(this.svgRef.current, clientPos.x, clientPos.y);
+		this.gestureCallback({
+			type,
+			target: null,
+			targetId: "canvas",
+			targetKind: "canvas",
+			start: worldPos,
+			last: worldPos,
+			delta: { x: 0, y: 0 },
+			clientStart: clientPos,
+			clientLast: clientPos,
+			clientDelta: { x: 0, y: 0 },
+			mods: NO_MODS,
+			getHovered: () => [],
+			time,
+			button: 0,
+			scrollDelta,
+		});
+	}
+
+	/**
+	 * Bring any glide to an immediate stop, cancelling its pending frame and
+	 * announcing the end. Every way a glide can end routes through here — decayed
+	 * away, interrupted by fresh input, aborted — so inertialScrollEnd fires
+	 * exactly once per glide.
+	 */
 	private stopFling(): void {
 		if (this.flingRafId !== null) {
 			cancelAnimationFrame(this.flingRafId);
 			this.flingRafId = null;
 		}
+		const fling = this.fling;
+		if (fling === null) {
+			return;
+		}
 		this.fling = null;
+		this.fireGlideGesture("inertialScrollEnd", fling, performance.now());
 	}
 
 	/**

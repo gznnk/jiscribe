@@ -10,10 +10,11 @@ For how the state changes triggered by gestures are reflected, see [State Update
 Raw pointer/wheel events are aggregated at the canvas root (`Viewport`), and
 the `GestureRecognizer` (`controllers/gestures/recognizer/`) converts them into a `Gesture`.
 
-There are ten `GestureType`s:
+There are eleven `GestureType`s:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress | inertialScroll
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
+inertialScroll | inertialScrollEnd
 ```
 
 A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
@@ -49,6 +50,11 @@ Key points:
   `shouldFlingFromDrag` (middle/right buttons) the way `shouldPinchFromDrag` is. A pointer coming to rest
   before it lifts (`FLING_RELEASE_IDLE_MS`) means "stop here", and any new pointerdown or wheel stops a
   glide in progress at once.
+  However it ends, the glide closes with a single `inertialScrollEnd` (every exit routes through
+  `stopFling`). No frame reveals that it was the last one, so that gesture is what lets the state know:
+  `handleGesture` keeps `inertialScrolling` up across the frames and takes it down there, and the
+  ObjectMenu stays hidden for the whole glide instead of reappearing at `dragEnd` and flying across the
+  screen with the selection.
 - **Touch panning**: Gestures carry `pointerType`, and CanvasEventHandler routes a one-finger touch drag on
   the canvas background to viewport panning (the GrabScroll path) instead of area selection. Area selection
   is unavailable on touch for now. On touch, background deselection waits for the tap to resolve (`click`)
@@ -60,7 +66,8 @@ Key points:
 
 `handleGesture` (`controllers/gestures/handlers/handleGesture.ts`) is the router.
 It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `scroll` depending on whether `ctrl` is held;
-`inertialScroll` always becomes `scroll`; `pinch` decomposes into `zoom` followed by `scroll`)
+`inertialScroll` always becomes `scroll`; `pinch` decomposes into `zoom` followed by `scroll`;
+`inertialScrollEnd` is consumed there as a state transition and routed nowhere)
 and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
 determine whether it should process the event. The registry holds exactly one handler per
 `targetKind`; where a kind needs finer splitting (by `targetId`, `data-part`, or event type), that
@@ -84,6 +91,14 @@ told apart overwrites the kind in its own `dragStart` — `ObjectEventHandler` s
 `TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame and the
 connection anchors while a selection is moved, the anchors while it is transformed, and the
 ObjectMenu for every kind of drag.
+
+`inertialScrolling` is the glide's counterpart and deliberately a separate field: no pointer is down
+and no `eventStartSnapshot` is open during a glide, so folding it into `activeDragKind` would break
+the pair those two form. Only the ObjectMenu reads it, hiding for the glide the way it hides for the
+pan that preceded it. Being two states, they hand over with a gap of a frame or more where neither is
+set — as do a glide and the pan that interrupts it — so the menu's own condition is run through
+`useLingeringFlag`: it hides at once and only comes back once the view has been still for
+`REAPPEAR_DELAY_MS`, which is what keeps those handovers from flashing it.
 
 ## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part`
 

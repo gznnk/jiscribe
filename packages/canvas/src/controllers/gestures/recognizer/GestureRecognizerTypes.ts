@@ -25,7 +25,11 @@ export type GestureType =
 	// One per frame while a released pan drag glides to a stop (shouldFlingFromDrag).
 	// No pointer is down: it carries scrollDelta only, and handleGesture converts
 	// it to a scroll canvas event.
-	| "inertialScroll";
+	| "inertialScroll"
+	// Fired once when the glide ends, however it ends (decayed away, interrupted by
+	// fresh input, aborted). Moves nothing — it exists so consumers can tell the
+	// glide is over, which no single frame reveals. Never becomes a CanvasEvent.
+	| "inertialScrollEnd";
 
 export type HoveredElement = {
 	id: string;
