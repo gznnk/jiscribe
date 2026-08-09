@@ -43,6 +43,27 @@ const ellipseObj = (
 		scaleY: 1,
 	}) as unknown as ObjectState;
 
+const framedObj = (
+	type: string,
+	geometry: string,
+	cx: number,
+	cy: number,
+	width: number,
+	height: number,
+): ObjectState =>
+	({
+		id: `${type}-1`,
+		type,
+		features: { type, geometry },
+		cx,
+		cy,
+		width,
+		height,
+		rotation: 0,
+		scaleX: 1,
+		scaleY: 1,
+	}) as unknown as ObjectState;
+
 const point = (x: number, y: number) => ({ x, y });
 
 describe("adjustToOutline", () => {
@@ -92,6 +113,22 @@ describe("adjustToOutline", () => {
 		// heading toward the bottom edge, so y ≈ 40
 		expect(result!.y).toBeCloseTo(40, 0);
 		expect(result!.x).toBeCloseTo(0, 0);
+	});
+
+	it("point geometry → snaps onto the box the content derived, like a rect", () => {
+		const obj = framedObj("text", "point", 0, 0, 100, 100);
+		const result = adjustToOutline(point(0, 0), point(200, 0), obj);
+		expect(result).not.toBeNull();
+		expect(result!.x).toBeCloseTo(50, 0);
+		expect(result!.y).toBeCloseTo(0, 0);
+	});
+
+	it("poly geometry without an outline → returns point as-is", () => {
+		// A poly shape is only ever adjusted through the real polygon its registry
+		// supplies; its bounding box is not an outline to snap to.
+		const obj = framedObj("polygon", "poly", 0, 0, 100, 100);
+		const p = point(0, 0);
+		expect(adjustToOutline(p, point(200, 0), obj)).toEqual(p);
 	});
 
 	it("toward is inside the shape → returns null (no intersection)", () => {
