@@ -1,0 +1,54 @@
+{
+	"name": "jiscribe-workspace",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Monorepo root for the Jiscribe SVG canvas engine",
+	"license": "MIT",
+	"author": "gznnk",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gznnk/jiscribe.git"
+	},
+	"homepage": "https://beta.jiscribe.dev",
+	"scripts": {
+		"dev:examples": "pnpm --filter canvas-examples dev",
+		"build:examples": "pnpm --filter canvas-examples build",
+		"build:vscode": "pnpm --filter jiscribe build",
+		"watch:vscode": "pnpm --filter jiscribe watch",
+		"lint": "pnpm -r --parallel lint",
+		"lint:canvas": "pnpm --filter @jiscribe/canvas lint",
+		"lint:examples": "pnpm --filter canvas-examples lint",
+		"lint:vscode": "pnpm --filter jiscribe lint",
+		"dep:check": "madge --extensions ts,tsx,js,jsx --circular packages/*/src apps/*/src plugins/*/src",
+		"generate:ai": "pnpm --filter @jiscribe/ai-docs generate",
+		"check:ai": "pnpm --filter @jiscribe/ai-docs check",
+		"typecheck": "pnpm -r --parallel typecheck",
+		"typecheck:packages": "pnpm -r --parallel --filter './packages/*' --filter './plugins/*' typecheck",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"test": "pnpm -r --if-present test",
+		"test:coverage": "pnpm -r --if-present test:coverage",
+		"test:e2e": "pnpm --filter @jiscribe/canvas test:e2e"
+	},
+	"packageManager": "pnpm@10.34.5",
+	"comments": {
+		"devDependencies": "The lint/format toolchain is pinned to exact versions on purpose: the same sources are linted from another workspace root as well, and a version drift makes the two disagree. Bump both roots together."
+	},
+	"devDependencies": {
+		"@eslint/js": "9.39.2",
+		"@typescript-eslint/eslint-plugin": "8.50.0",
+		"@typescript-eslint/parser": "8.50.0",
+		"eslint": "9.39.2",
+		"eslint-config-prettier": "10.1.8",
+		"eslint-plugin-import": "2.32.0",
+		"eslint-plugin-react": "7.37.5",
+		"eslint-plugin-react-hooks": "7.0.1",
+		"globals": "16.5.0",
+		"madge": "catalog:",
+		"prettier": "3.7.4",
+		"rimraf": "catalog:",
+		"typescript": "~5.9.3",
+		"typescript-eslint": "8.50.0"
+	}
+}

@@ -1,0 +1,30 @@
+packages:
+  - apps/*
+  - packages/*
+  # 疑似外部プラグイン（canvas / canvas-sdk の公開 API のみ利用可）
+  - plugins/*
+  - "!**/dist/**"
+  - "!**/build/**"
+
+catalog:
+  "@emotion/react": 11.14.0
+  "@emotion/styled": 11.14.1
+  "@types/node": ^22.10.5
+  "@types/react": ^19.2.7
+  "@types/react-dom": ^19.2.3
+  "@vitejs/plugin-react-swc": ^4.2.2
+  "@vitest/coverage-v8": ^2.1.8
+  dompurify: ^3.3.1
+  esbuild: ^0.24.2
+  jsdom: ^29.1.1
+  katex: ^0.16.27
+  madge: ^8.0.0
+  react: ^19.2.3
+  react-dom: ^19.2.3
+  rimraf: ^6.1.2
+  typescript: ~5.9.3
+  vite: ^7.3.0
+  vitest: ^2.1.8
+
+ignoredBuiltDependencies:
+  - esbuild

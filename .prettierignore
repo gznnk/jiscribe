@@ -1,0 +1,26 @@
+# Build outputs
+dist/
+
+# Dependencies
+node_modules/
+
+# Cache
+.dependency-graph/
+.vscode/
+.git/
+.serena/
+
+# Test output
+coverage/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Package-lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs
+*.log

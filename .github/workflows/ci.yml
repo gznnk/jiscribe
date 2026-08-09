@@ -1,0 +1,60 @@
+name: CI
+
+# - push: 全ブランチで軽量チェック（checks）のみ。tag では走らせない。
+# - pull_request: main 向きのみ。checks のみ（フル e2e は e2e.yml が PR で別途回す）。
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ["**"]
+
+# 同一 ref の古い実行を自動キャンセルして分数を節約する。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: lint / typecheck / build / unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Circular dependency check
+        run: pnpm dep:check
+
+      - name: Build (examples + vscode)
+        run: |
+          pnpm build:examples
+          pnpm build:vscode
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: AI schema/docs drift check
+        run: pnpm check:ai
