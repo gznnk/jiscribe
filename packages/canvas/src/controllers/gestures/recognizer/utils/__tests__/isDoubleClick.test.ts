@@ -15,6 +15,7 @@ const DISTANCE_TOUCH = Math.sqrt(DOUBLE_CLICK_DISTANCE_THRESHOLD_TOUCH);
 const snapshot = (overrides: Partial<ClickSnapshot> = {}): ClickSnapshot => ({
 	time: 1000,
 	clientPos: { x: 0, y: 0 },
+	button: 0,
 	...overrides,
 });
 
@@ -36,6 +37,32 @@ describe("isDoubleClick", () => {
 			const previous = snapshot({ time: 1000 });
 			const current = snapshot({ time: 1000 });
 			expect(isDoubleClick(previous, current)).toBe(true);
+		});
+	});
+
+	describe("button (only the primary button pairs)", () => {
+		it("a left click followed by a right click on the same spot is not a pair (select, then open the context menu)", () => {
+			const previous = snapshot({ time: 1000, button: 0 });
+			const current = snapshot({ time: 1050, button: 2 });
+			expect(isDoubleClick(previous, current)).toBe(false);
+		});
+
+		it("a right click followed by a left click on the same spot is not a pair either", () => {
+			const previous = snapshot({ time: 1000, button: 2 });
+			const current = snapshot({ time: 1050, button: 0 });
+			expect(isDoubleClick(previous, current)).toBe(false);
+		});
+
+		it("two right clicks within both thresholds are not a pair (each one opens the context menu)", () => {
+			const previous = snapshot({ time: 1000, button: 2 });
+			const current = snapshot({ time: 1050, button: 2 });
+			expect(isDoubleClick(previous, current)).toBe(false);
+		});
+
+		it("two middle clicks within both thresholds are not a pair", () => {
+			const previous = snapshot({ time: 1000, button: 1 });
+			const current = snapshot({ time: 1050, button: 1 });
+			expect(isDoubleClick(previous, current)).toBe(false);
 		});
 	});
 

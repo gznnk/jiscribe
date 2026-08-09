@@ -1,9 +1,18 @@
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text/calcTextObjectFrameSize";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
+import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { graftTextEditDraft } from "../graftTextEditDraft";
+
+/** Family the derived-box path would measure with; irrelevant to every rect below. */
+const FONT_FAMILY = "Noto Sans JP";
+
+/** The real per-type wiring, so only `text` is re-measured here. */
+const contentResizer = createTestRegistries().objectContentResizer;
 
 const textObj = (id: string, text: TextSlots): ObjectState =>
 	({ id, type: "rect", text }) as unknown as ObjectState;
@@ -25,35 +34,57 @@ const shapeEdit = (
 describe("graftTextEditDraft", () => {
 	it("returns the same reference when nothing is being edited", () => {
 		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
-		expect(graftTextEditDraft(objects, null)).toBe(objects);
+		expect(graftTextEditDraft(objects, null, FONT_FAMILY, contentResizer)).toBe(
+			objects,
+		);
 	});
 
 	it("returns the same reference while a connector label is being edited", () => {
 		const objects = { c1: { id: "c1", type: "connector" } as ObjectState };
 		expect(
-			graftTextEditDraft(objects, {
-				kind: "connectorLabel",
-				objectId: "c1",
-				text: "calls",
-			}),
+			graftTextEditDraft(
+				objects,
+				{
+					kind: "connectorLabel",
+					objectId: "c1",
+					text: "calls",
+				},
+				FONT_FAMILY,
+				contentResizer,
+			),
 		).toBe(objects);
 	});
 
 	it("returns the same reference while the draft still equals the committed text", () => {
 		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
-		expect(graftTextEditDraft(objects, shapeEdit("r1", "name", "User"))).toBe(
-			objects,
-		);
+		expect(
+			graftTextEditDraft(
+				objects,
+				shapeEdit("r1", "name", "User"),
+				FONT_FAMILY,
+				contentResizer,
+			),
+		).toBe(objects);
 	});
 
 	it("returns the same reference for a missing object or an unknown slot", () => {
 		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
-		expect(graftTextEditDraft(objects, shapeEdit("gone", "name", "X"))).toBe(
-			objects,
-		);
-		expect(graftTextEditDraft(objects, shapeEdit("r1", "rows", "X"))).toBe(
-			objects,
-		);
+		expect(
+			graftTextEditDraft(
+				objects,
+				shapeEdit("gone", "name", "X"),
+				FONT_FAMILY,
+				contentResizer,
+			),
+		).toBe(objects);
+		expect(
+			graftTextEditDraft(
+				objects,
+				shapeEdit("r1", "rows", "X"),
+				FONT_FAMILY,
+				contentResizer,
+			),
+		).toBe(objects);
 	});
 
 	it("replaces only the edited slot's text on the edited object", () => {
@@ -68,6 +99,8 @@ describe("graftTextEditDraft", () => {
 		const grafted = graftTextEditDraft(
 			objects,
 			shapeEdit("r1", "name", "User\nAccount"),
+			FONT_FAMILY,
+			contentResizer,
 		);
 
 		expect(grafted).not.toBe(objects);
@@ -90,18 +123,80 @@ describe("graftTextEditDraft", () => {
 		const grafted = graftTextEditDraft(
 			objects,
 			shapeEdit("r1", "rows", "id\nname"),
+			FONT_FAMILY,
+			contentResizer,
 		);
 
 		expect(slotsOf(grafted, "r1").rows.text).toEqual(["id", "name"]);
 		expect(slotsOf(grafted, "r1").name).toBe(slotsOf(objects, "r1").name);
 	});
 
+	it("re-measures the box of an object whose size is derived from its text", () => {
+		const { width, height } = calcTextObjectFrameSize(
+			"a",
+			{ fontSize: 16 },
+			FONT_FAMILY,
+		);
+		const objects = {
+			t1: {
+				id: "t1",
+				type: "text",
+				cx: 100 + width / 2,
+				cy: 60 + height / 2,
+				width,
+				height,
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+				text: { body: { text: "a", fontSize: 16 } },
+			} as unknown as ObjectState,
+		};
+
+		const grafted = graftTextEditDraft(
+			objects,
+			shapeEdit("t1", "body", "a much longer draft"),
+			FONT_FAMILY,
+			contentResizer,
+		) as unknown as Record<string, { cx: number; width: number }>;
+
+		expect(grafted.t1.width).toBeGreaterThan(width);
+		// The top-left is what the doc stores, so the draft may only extend right.
+		expect(grafted.t1.cx - grafted.t1.width / 2).toBeCloseTo(100, 6);
+	});
+
+	it("never calls a resizer for a type that has none registered", () => {
+		// The rect is grafted, but the registry holds nothing for its type, so the
+		// resizer is not consulted and the stored box passes through.
+		const registry = createObjectContentResizerRegistry();
+		const seenTypes: string[] = [];
+		registry.register("text", (state) => {
+			seenTypes.push(state.type);
+			return state;
+		});
+		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
+
+		const grafted = graftTextEditDraft(
+			objects,
+			shapeEdit("r1", "name", "Account"),
+			FONT_FAMILY,
+			registry,
+		);
+
+		expect(seenTypes).toEqual([]);
+		expect(slotsOf(grafted, "r1").name.text).toBe("Account");
+	});
+
 	it("leaves an object whose text is not the keyed normal form untouched", () => {
 		const objects = {
 			r1: { id: "r1", type: "rect", text: 123 } as unknown as ObjectState,
 		};
-		expect(graftTextEditDraft(objects, shapeEdit("r1", "name", "User"))).toBe(
-			objects,
-		);
+		expect(
+			graftTextEditDraft(
+				objects,
+				shapeEdit("r1", "name", "User"),
+				FONT_FAMILY,
+				contentResizer,
+			),
+		).toBe(objects);
 	});
 });

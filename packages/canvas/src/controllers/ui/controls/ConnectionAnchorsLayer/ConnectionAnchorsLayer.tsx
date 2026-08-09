@@ -15,6 +15,8 @@ import { calcEdgeAnchorPoint } from "../../../../presentations/objects/utils/cal
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { DragKind } from "../../../CanvasTypes";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { isConnectableObject } from "../../../utils/isConnectableObject";
 import { ConnectionAnchors } from "../ConnectionAnchors";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";
 
@@ -75,7 +77,8 @@ const resolveAnchorGeometry = (
 };
 
 /**
- * Renders ConnectionAnchors for frame-based objects when exactly one is selected.
+ * Renders ConnectionAnchors for connectable frame-based objects when exactly one
+ * is selected.
  * Shows the four edge connection anchors, placed on the shape's outline and
  * anchor region rather than the bounding box, plus whatever extra ones its type
  * declares.
@@ -95,11 +98,12 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	isTextEditing,
 	activeDragKind,
 }) => {
+	const registries = useCanvasRegistries();
 	const outlineRegistry = useObjectOutlineRegistry();
 	const anchorRegionRegistry = useObjectAnchorRegionRegistry();
 	const extraConnectPointsRegistry = useObjectExtraConnectPointsRegistry();
 
-	// --- Source anchors (shown on single-selected, frame-based, non-group objects) ---
+	// --- Source anchors (shown on a single-selected, connectable frame object) ---
 	const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
 	const selectedObject = selectedId ? objects[selectedId] : null;
 
@@ -176,12 +180,12 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	const showSourceAnchors =
 		!isShapeBeingMovedOrTransformed &&
 		selectedObject != null &&
-		selectedObject.type !== "group" &&
+		isConnectableObject(selectedObject, registries.objectMapper) &&
 		isTransformedFrame(selectedObject);
 
 	const showTargetAnchors =
 		targetObject != null &&
-		targetObject.type !== "connector" &&
+		isConnectableObject(targetObject, registries.objectMapper) &&
 		isTransformedFrame(targetObject);
 
 	// Determine the active anchor on the hover target. An edge anchor has no dot of

@@ -43,6 +43,9 @@ export type ScrollDelta = {
 export type ClickSnapshot = {
 	time: number;
 	clientPos: Point;
+	// DOM button number of the press that produced the click (0 left / 1 middle /
+	// 2 right). Only primary-button clicks pair into a double click.
+	button: number;
 	// "mouse" | "pen" | "touch"; from the press that produced the click. Selects
 	// the double-click distance threshold (touch gets the wider one).
 	pointerType?: string;

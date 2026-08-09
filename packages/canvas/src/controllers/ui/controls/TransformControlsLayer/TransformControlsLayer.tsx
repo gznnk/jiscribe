@@ -4,6 +4,8 @@ import { memo } from "react";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { DragKind } from "../../../CanvasTypes";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { resolveTransformHandles } from "../ObjectTransformHandlesRegistry";
 import { TransformControls } from "../TransformControls";
 
 type TransformControlsLayerProps = {
@@ -23,7 +25,8 @@ type TransformControlsLayerProps = {
 
 /**
  * Renders TransformControls for objects with transform properties (Frame-based objects).
- * For single selection: shows controls if the object has transform properties.
+ * For single selection: shows the handles the object's type declares, provided it has
+ * transform properties.
  * For multiple selections: shows controls for the multiSelectGroup.
  */
 const TransformControlsLayerComponent: React.FC<
@@ -37,6 +40,8 @@ const TransformControlsLayerComponent: React.FC<
 	isTextSlotSelected,
 	activeDragKind,
 }) => {
+	const registries = useCanvasRegistries();
+
 	// Do not render controls while text editing
 	if (isTextEditing) {
 		return null;
@@ -73,10 +78,19 @@ const TransformControlsLayerComponent: React.FC<
 			return null;
 		}
 
-		return <TransformControls frame={selectedObject} zoom={zoom} />;
+		const handles = registries.objectTransformHandles.get(selectedObject.type);
+		const { resize, rotate } = resolveTransformHandles(handles);
+		if (!resize && !rotate) {
+			return null;
+		}
+
+		return (
+			<TransformControls frame={selectedObject} zoom={zoom} handles={handles} />
+		);
 	}
 
-	// Multiple selection: render TransformControls with multiSelectGroup if available (optional, can be skipped if not needed)
+	// A mixed selection has no single declaration to follow, so the group frame keeps
+	// every handle; the per-type declaration applies to single selections only.
 	if (multiSelectGroup) {
 		return <TransformControls frame={multiSelectGroup} zoom={zoom} />;
 	}

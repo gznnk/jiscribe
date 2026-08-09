@@ -124,6 +124,10 @@ export type {
 } from "./states/objects/base/MapperTypes";
 export type { ObjectStateValidator } from "./states/registry/ObjectStateValidatorRegistry";
 export type {
+	ObjectContentResizer,
+	ObjectContentResizeContext,
+} from "./states/registry/ObjectContentResizerRegistry";
+export type {
 	ObjectBehaviorEntry,
 	MoveByDeltaFunction,
 	TransformByGroupFunction,
@@ -161,6 +165,7 @@ export type {
 } from "./presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 export type { ObjectGeometryKeyCalculator } from "./presentations/objects/registry/ObjectGeometryKeyRegistry";
 export type { ObjectVisualBoundsCalculator } from "./presentations/objects/registry/ObjectVisualBoundsRegistry";
+export type { ObjectTransformHandles } from "./controllers/ui/controls/ObjectTransformHandlesRegistry";
 export type {
 	Stencil,
 	StencilIconProps,

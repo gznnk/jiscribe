@@ -11,6 +11,7 @@ import { replaceAutogenRegion } from "./markdownRegions";
 import {
 	SPECIAL_TABLE_CELLS,
 	capitalizeSummary,
+	deriveReferenceGeometry,
 	deriveReferenceStyles,
 } from "./tableCells";
 
@@ -153,6 +154,13 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 		height: 240,
 		text: "Auth service",
 	},
+	text: {
+		id: "text-1",
+		type: "text",
+		x: 200,
+		y: 150,
+		text: "Retries are capped at 3",
+	},
 };
 
 /** JSON example for the grouped catalog section (one representative type). */
@@ -236,6 +244,11 @@ function buildFieldTable(
 			`| \`rx\` | \`number\` | ${formatDefaultCell(defaults.rx)} | Horizontal radius (px). |`,
 			`| \`ry\` | \`number\` | ${formatDefaultCell(defaults.ry)} | Vertical radius (px). |`,
 		);
+	} else if (definition.features.geometry === "point") {
+		rows.push(
+			`| \`x\` | \`number\` | ${formatDefaultCell(defaults.x)} | X of the text's top-left. |`,
+			`| \`y\` | \`number\` | ${formatDefaultCell(defaults.y)} | Y of the text's top-left. There is no \`width\` / \`height\` field: the box is measured from the text itself. Under \`rotation\` or a flip the corner is the shape's own top-left, so \`x\` / \`y\` stay put as the text grows. |`,
+		);
 	} else {
 		rows.push(
 			`| \`x\` | \`number\` | ${formatDefaultCell(defaults.x)} | X of the bounding box's top-left. |`,
@@ -266,6 +279,8 @@ function synthesizeExample(
 			rx: defaults.rx,
 			ry: defaults.ry,
 		});
+	} else if (definition.features.geometry === "point") {
+		Object.assign(example, { x: 200, y: 150 });
 	} else {
 		Object.assign(example, {
 			x: 200,
@@ -351,10 +366,7 @@ function buildObjectTypesTable(
 		const definition = manifest.get(type)!;
 		const special = SPECIAL_TABLE_CELLS[type];
 		const geometry =
-			special?.referenceGeometry ??
-			(definition.features.geometry === "ellipse"
-				? "`cx`, `cy`, `rx`, `ry`"
-				: "`x`, `y`, `width`, `height`");
+			special?.referenceGeometry ?? deriveReferenceGeometry(definition);
 		const styles =
 			special?.referenceStyles ?? deriveReferenceStyles(definition);
 		return `| \`${type}\` | ${capitalizeSummary(definition.summary!)} | ${geometry} | ${styles} |`;

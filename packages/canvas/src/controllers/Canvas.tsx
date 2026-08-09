@@ -37,6 +37,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
+import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
 import type { CanvasSelectionHandle } from "./hooks/useSelectionHandle";
 import { useSelectionHandle } from "./hooks/useSelectionHandle";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
@@ -427,9 +428,25 @@ const CanvasComponent = ({
 	// feedback and editor placement only — hit testing, snapping and bboxes still read
 	// committed state.objects.
 	const draftObjects = useMemo(
-		() => graftTextEditDraft(state.objects, state.textEditState),
-		[state.objects, state.textEditState],
+		() =>
+			graftTextEditDraft(
+				state.objects,
+				state.textEditState,
+				state.docDefaults.fontFamily,
+				registries.objectContentResizer,
+			),
+		[
+			state.objects,
+			state.textEditState,
+			state.docDefaults.fontFamily,
+			registries,
+		],
 	);
+
+	const revealCaret = useRevealTextEditCaret({
+		viewport: state.viewport,
+		dispatch,
+	});
 
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
 	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.
@@ -617,6 +634,7 @@ const CanvasComponent = ({
 								onEscape={() =>
 									dispatch({ type: "END_TEXT_EDIT", commit: false })
 								}
+								onCaretMove={revealCaret}
 							/>
 						</ZoomScaledOverlay>
 						{/* HTML whose position follows zoom but whose size does not */}

@@ -21,6 +21,7 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
 import { createCowObjects } from "../../../../utils/cowObjects";
+import { isConnectableObject } from "../../../../utils/isConnectableObject";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
@@ -126,7 +127,10 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		const anchorPosition = event.targetPart?.slice("anchor:".length) ?? "";
 		const sourceObject = state.objects[sourceObjectId];
 
-		if (!sourceObject) {
+		// A non-connectable source shows no anchors, so reaching here means a stale
+		// DOM node: starting the drag would build a connector the doc validator
+		// rejects on the next load.
+		if (!isConnectableObject(sourceObject, registries.objectMapper)) {
 			return state;
 		}
 
@@ -242,6 +246,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		const hoveredTarget = findConnectableHoverTarget({
 			hovered: event.getHovered(),
 			objects: state.objects,
+			objectMapperRegistry: registries.objectMapper,
 		});
 
 		// When the edited end lands free (no hover target), snap it onto the fixed end's exit

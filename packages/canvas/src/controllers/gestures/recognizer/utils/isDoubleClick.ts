@@ -10,10 +10,19 @@ import type { ClickSnapshot } from "../GestureRecognizerTypes";
  *
  * Conditions:
  *   1. A prior single click is recorded (previous !== null)
- *   2. Within the time threshold (DOUBLE_CLICK_THRESHOLD)
- *   3. Within the screen distance threshold — per pointer type of the current
+ *   2. Both clicks came from the primary button (0); touch and pen taps report
+ *      0 as well, so double-tap keeps working
+ *   3. Within the time threshold (DOUBLE_CLICK_THRESHOLD)
+ *   4. Within the screen distance threshold — per pointer type of the current
  *      click: DOUBLE_CLICK_DISTANCE_THRESHOLD_TOUCH for touch (tap jitter, cf.
  *      DRAG_THRESHOLD_TOUCH), DOUBLE_CLICK_DISTANCE_THRESHOLD otherwise
+ *
+ * Every gesture a doubleClick stands for (text editing, connector label,
+ * waypoint insert) is a primary-button interaction, so the other buttons never
+ * pair. Without that restriction the ordinary "select a shape, then right-click
+ * it" sequence lands inside both thresholds and fires doubleClick for the right
+ * press: the context menu, which only opens on `click`, silently never appears,
+ * and the pair also reaches the primary-button doubleClick handlers.
  *
  * Target identity is deliberately NOT compared, matching the OS/browser
  * convention (time + position only). Two clicks a human lands within the
@@ -48,6 +57,8 @@ export const isDoubleClick = (
 			: DOUBLE_CLICK_DISTANCE_THRESHOLD;
 
 	return (
+		previous.button === 0 &&
+		current.button === 0 &&
 		current.time - previous.time < DOUBLE_CLICK_THRESHOLD &&
 		clientDistanceSquared < distanceThreshold
 	);

@@ -131,6 +131,51 @@ function buildEllipseGeometryProps(
 	};
 }
 
+/** Properties of the point geometry (x/y only — no width/height exists to emit). */
+function buildPointGeometryProps(): Record<string, JsonSchemaNode> {
+	return {
+		x: {
+			description:
+				"Left-edge X coordinate. There is no width field: the box is measured from the content and grows to the right (along the shape's own axis when rotated or flipped, so this coordinate never moves).",
+			type: "number",
+		},
+		y: {
+			description:
+				"Top-edge Y coordinate. There is no height field: the box is measured from the content and grows downward (along the shape's own axis when rotated or flipped, so this coordinate never moves).",
+			type: "number",
+		},
+	};
+}
+
+/** Geometries whose $def the generator can assemble, and the `required` list each produces. */
+const GEOMETRY_REQUIRED_PROPS = {
+	rect: ["id", "type", "x", "y", "width", "height"],
+	ellipse: ["id", "type", "cx", "cy", "rx", "ry"],
+	point: ["id", "type", "x", "y"],
+} as const satisfies Readonly<Record<string, readonly string[]>>;
+
+type GeneratableGeometry = keyof typeof GEOMETRY_REQUIRED_PROPS;
+
+function isGeneratableGeometry(
+	geometry: string,
+): geometry is GeneratableGeometry {
+	return geometry in GEOMETRY_REQUIRED_PROPS;
+}
+
+function buildGeometryProps(
+	geometry: GeneratableGeometry,
+	defaults: Readonly<Record<string, unknown>>,
+): Record<string, JsonSchemaNode> {
+	switch (geometry) {
+		case "rect":
+			return buildRectGeometryProps(defaults);
+		case "ellipse":
+			return buildEllipseGeometryProps(defaults);
+		case "point":
+			return buildPointGeometryProps();
+	}
+}
+
 /** Assemble one type's $def from its features / description / defaults. */
 function buildShapeDef(
 	type: string,
@@ -142,7 +187,7 @@ function buildShapeDef(
 			`型 "${type}" の $def 生成に description / defaults が必要です`,
 		);
 	}
-	if (features.geometry !== "rect" && features.geometry !== "ellipse") {
+	if (!isGeneratableGeometry(features.geometry)) {
 		throw new Error(
 			`型 "${type}" の geometry "${features.geometry}" は $def を機械生成できません（テンプレに移してください）`,
 		);
@@ -193,10 +238,7 @@ function buildShapeDef(
 		}
 	}
 
-	const geometryProps =
-		features.geometry === "rect"
-			? buildRectGeometryProps(defaults)
-			: buildEllipseGeometryProps(defaults);
+	const geometryProps = buildGeometryProps(features.geometry, defaults);
 	for (const [name, node] of Object.entries(geometryProps)) {
 		properties[name] = withOverride(name, node);
 	}
@@ -238,15 +280,10 @@ function buildShapeDef(
 		);
 	}
 
-	const required =
-		features.geometry === "rect"
-			? ["id", "type", "x", "y", "width", "height"]
-			: ["id", "type", "cx", "cy", "rx", "ry"];
-
 	return {
 		description,
 		type: "object",
-		required,
+		required: [...GEOMETRY_REQUIRED_PROPS[features.geometry]],
 		additionalProperties: false,
 		properties,
 	};

@@ -12,6 +12,10 @@
 
 export { createFrameObjectFactory } from "./schemas/objects/utils/createFrameObjectFactory";
 
+// The point-geometry counterpart: a doc storing a drawn top-left position only, the
+// box being derived from the content by the type's `contentResizer` in the state layer.
+export { createPointObjectFactory } from "./schemas/objects/utils/createPointObjectFactory";
+
 // The bounds+minSize guard every `createDocFromBounds` needs, for shapes that
 // cannot use createFrameObjectFactory (center origin, vertex lists).
 export {
@@ -37,3 +41,11 @@ export { DEFAULT_FONT_FAMILY } from "./constants/defaultFontFamily";
 // carry their own per-row dimensions must derive row height from this value, or their rows
 // drift from the rendered line height.
 export { TEXT_LINE_HEIGHT } from "./constants/textLineHeight";
+
+// Inner padding of the box the canvas draws text in. Shapes that size a text box
+// themselves must reserve this much, or the padding the CSS applies eats into the
+// text and clips it.
+export {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "./constants/textBoxPadding";

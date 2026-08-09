@@ -3,6 +3,7 @@ import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objec
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
+import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
@@ -28,6 +29,12 @@ import type { StencilRegistry } from "../ui/objects/StencilRegistry";
  */
 export interface ICanvasRegistries {
 	objectMapper: ObjectMapperRegistry;
+	/**
+	 * Per-type content resizers, needed by the commands that rebuild a whole state
+	 * from a doc (undo / redo): a type whose doc stores no size gets its box back
+	 * from here, and without it a restored object would come back collapsed.
+	 */
+	objectContentResizer: ObjectContentResizerRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	stencil: StencilRegistry;

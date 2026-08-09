@@ -46,13 +46,13 @@ export const basicToolbarEntry: ToolbarEntry = {
 	id: "basic",
 	label: { en: "Basic", ja: "基本" },
 	icon: RectIcon,
-	presetIds: ["rect", "ellipse", "polyline", "polygon"],
+	presetIds: ["rect", "ellipse", "polyline", "polygon", "text"],
 };
 
 /**
  * Default toolbar layout: every core preset pinned directly (the classic
  * direct-placement UX), no category flyout. Core owns the basic primitives and
- * nothing else, so the four of them are the whole bar. Anything a plugin
+ * nothing else, so those are the whole bar. Anything a plugin
  * supplies (the annotation / flowchart / container / general categories, the
  * `markdown` / `sticky` presets) is shown only when the host adds it via
  * `toolbar.layout`.
@@ -62,4 +62,5 @@ export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "text" },
 ];

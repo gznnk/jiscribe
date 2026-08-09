@@ -33,7 +33,11 @@ const createStateWithRect = () => {
 		version: 1,
 		root: [createRectDoc("rect-1")],
 	} as unknown as CanvasDoc;
-	return canvasToState(doc, registries.objectMapper);
+	return canvasToState(
+		doc,
+		registries.objectMapper,
+		registries.objectContentResizer,
+	);
 };
 
 const emptyState = { objects: {}, rootIds: [] };

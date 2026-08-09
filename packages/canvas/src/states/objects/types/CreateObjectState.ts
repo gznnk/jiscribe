@@ -11,22 +11,28 @@ import type { TextStyleState } from "../base/TextStyleState";
 import type { TransformState } from "../base/TransformState";
 
 /**
- * Conditional geometry type based on specified geometry feature (runtime state).
+ * The runtime geometry each geometry type takes.
  *
  * - `none`: No geometry properties
  * - `rect`/`ellipse`: Frame (keyPoints are stored in EventStartSnapshot.keyPoints)
  * - `poly`: Poly (points array)
+ * - `point`: Frame, its size derived from the content the doc does not store
+ *
+ * Written as a lookup keyed by GeometryType rather than a conditional chain: a
+ * geometry added to GeometryType and not here makes the indexed access below
+ * fail to compile, where a chain would have let it fall through to `none`.
  */
-type GeometryState<T extends ObjectFeatures> = //
-	T["geometry"] extends "none"
-		? object
-		: T["geometry"] extends "rect"
-			? Frame
-			: T["geometry"] extends "ellipse"
-				? Frame
-				: T["geometry"] extends "poly"
-					? Poly
-					: object;
+type GeometryStateByType = {
+	none: object;
+	rect: Frame;
+	ellipse: Frame;
+	poly: Poly;
+	point: Frame;
+};
+
+/** Geometry fields of a state, picked by the type's declared geometry feature. */
+type GeometryState<T extends ObjectFeatures> =
+	GeometryStateByType[T["geometry"]];
 
 /**
  * Generic type creator for object state types (runtime in-memory data).

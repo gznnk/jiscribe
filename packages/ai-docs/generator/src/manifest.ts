@@ -20,6 +20,7 @@ export const CANONICAL_TYPE_ORDER = [
 	"rect",
 	"markdown",
 	"ellipse",
+	"text",
 	"diamond",
 	"stadium",
 	"parallelogram",
@@ -112,6 +113,7 @@ export const GROUPED_REFERENCE_TYPES = [
 export const DETAIL_SECTION_TYPES = [
 	"rect",
 	"ellipse",
+	"text",
 	"diamond",
 	"stadium",
 	"parallelogram",

@@ -15,12 +15,14 @@ import { createObjectSvgDefsRegistry } from "../../presentations/objects/registr
 import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { createObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
+import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
@@ -47,6 +49,7 @@ export const createCanvasRegistries = (
 	const registries: CanvasRegistries = {
 		objectMapper: createObjectMapperRegistry(),
 		objectStateValidator: createObjectStateValidatorRegistry(),
+		objectContentResizer: createObjectContentResizerRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		objectTextRegion: createObjectTextRegionRegistry(),
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
@@ -57,6 +60,7 @@ export const createCanvasRegistries = (
 		objectVisualBounds: createObjectVisualBoundsRegistry(),
 		objectSvgDefs: createObjectSvgDefsRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
+		objectTransformHandles: createObjectTransformHandlesRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),

@@ -11,6 +11,7 @@ import {
 
 const registries = createTestRegistries();
 const mapper = registries.objectMapper;
+const contentResizer = registries.objectContentResizer;
 
 const rectDoc: CanvasDoc = {
 	version: 1,
@@ -28,7 +29,7 @@ const rectDoc: CanvasDoc = {
 
 describe("DocSnapshot", () => {
 	it("a from-state snapshot converts lazily: no doc until the first resolve", () => {
-		const state = canvasToState(rectDoc, mapper);
+		const state = canvasToState(rectDoc, mapper, contentResizer);
 		const snapshot = createDocSnapshotFromState(state);
 
 		expect(snapshot.doc).toBeNull();
@@ -40,7 +41,7 @@ describe("DocSnapshot", () => {
 	});
 
 	it("resolve is memoized: the second call returns the same doc without reconverting", () => {
-		const state = canvasToState(rectDoc, mapper);
+		const state = canvasToState(rectDoc, mapper, contentResizer);
 		const snapshot = createDocSnapshotFromState(state);
 
 		const firstDoc = resolveDocSnapshot(snapshot, mapper);

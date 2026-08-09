@@ -53,11 +53,11 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 		const pinned = DEFAULT_TOOLBAR_LAYOUT.filter(
 			(entry) => entry.kind === "preset",
 		).map((entry) => entry.presetId);
-		expect(pinned).toEqual(["rect", "ellipse", "polyline", "polygon"]);
+		expect(pinned).toEqual(["rect", "ellipse", "polyline", "polygon", "text"]);
 	});
 
 	/**
-	 * Core owns nothing but the basic primitives, and all four are pinned, so no
+	 * Core owns nothing but the basic primitives, and every one is pinned, so no
 	 * flyout is left to open.
 	 */
 	it("opens no category flyout at all", () => {

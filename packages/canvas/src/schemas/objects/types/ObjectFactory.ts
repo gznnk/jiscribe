@@ -17,6 +17,8 @@ export type ObjectFactory = {
 	/**
 	 * Create an ObjectDoc from a center-based position.
 	 * Used for click-based center placement and drag-and-drop placement.
+	 * Point-geometry shapes read `position` as the box's drawn top-left instead:
+	 * they know no box to center, so there is nothing to offset by.
 	 * `docDefaults` are theme-derived defaults, applied between the shape's
 	 * DOC_DEFAULTS and `overrides` (only for fields the shape declares).
 	 */
@@ -28,6 +30,8 @@ export type ObjectFactory = {
 
 	/**
 	 * Return the half-size for ghost display (after overrides are applied).
+	 * Point-geometry shapes report zero: their box is not known until the states
+	 * layer derives it from the content.
 	 */
 	calcDimensions(overrides?: Record<string, unknown>): ObjectDimensions;
 

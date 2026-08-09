@@ -46,8 +46,17 @@ export type ObjectMenuItemProps = {
 };
 
 export type BuiltinItem =
-	| { type: Exclude<BuiltinItemKey, "borderStyle"> }
-	| { type: "borderStyle"; radius?: boolean };
+	| { type: Exclude<BuiltinItemKey, "borderStyle" | "textAlignment"> }
+	| { type: "borderStyle"; radius?: boolean }
+	| {
+			type: "textAlignment";
+			/**
+			 * Whether the vertical row is offered. Omitted = offered. A type whose
+			 * height is measured from its own text has no slack to distribute, so
+			 * every vertical value would draw the same thing.
+			 */
+			vertical?: boolean;
+	  };
 
 export type CustomItem = {
 	type: "custom";

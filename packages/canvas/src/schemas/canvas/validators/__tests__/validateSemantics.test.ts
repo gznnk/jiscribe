@@ -390,9 +390,12 @@ describe("validateSemantics (connectable via the real registry)", () => {
 		],
 	});
 
-	it.each(["rect", "ellipse"])("%s is connectable (no error)", (type) => {
-		expect(validateSemantics(targetDoc(type))).toEqual([]);
-	});
+	it.each(["rect", "ellipse", "text"])(
+		"%s is connectable (no error)",
+		(type) => {
+			expect(validateSemantics(targetDoc(type))).toEqual([]);
+		},
+	);
 
 	it.each(["polyline", "polygon", "svg", "group"])(
 		"%s is not connectable (not connectable)",

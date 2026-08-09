@@ -59,6 +59,26 @@ describe("createDefaultMenu", () => {
 		]);
 	});
 
+	it("text-like (point geometry) -> text only, with the vertical row dropped", () => {
+		const sections = createDefaultMenu(
+			features({
+				type: "text",
+				geometry: "point",
+				transform: true,
+				text: "body",
+			}),
+		);
+		expect(sections).toEqual([
+			{
+				id: "text",
+				items: [
+					{ type: "fontStyle" },
+					{ type: "textAlignment", vertical: false },
+				],
+			},
+		]);
+	});
+
 	it("no flags -> empty", () => {
 		expect(createDefaultMenu(features({}))).toEqual([]);
 	});

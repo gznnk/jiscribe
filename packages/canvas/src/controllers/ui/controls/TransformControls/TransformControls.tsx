@@ -10,6 +10,8 @@ import { theme } from "../../../../constants/theme";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { RotateRight } from "../../icons/RotateRight";
 import { getResizeCursorForRotation } from "../../utils/getResizeCursorForRotation";
+import type { ObjectTransformHandles } from "../ObjectTransformHandlesRegistry";
+import { resolveTransformHandles } from "../ObjectTransformHandlesRegistry";
 
 type TransformControlsProps = {
 	/**
@@ -21,6 +23,12 @@ type TransformControlsProps = {
 	 * @default 1
 	 */
 	zoom?: number;
+	/**
+	 * Which handles to draw, as the selected type declares them. Omitted = all.
+	 * Pass the registry's own object rather than a freshly built one, so memo
+	 * keeps holding.
+	 */
+	handles?: ObjectTransformHandles;
 };
 
 /**
@@ -36,8 +44,11 @@ type TransformControlsProps = {
 const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	frame,
 	zoom = 1,
+	handles,
 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
+	const { resize: drawsResizeHandles, rotate: drawsRotationHandle } =
+		resolveTransformHandles(handles);
 	const { handleDimensions } = useCanvasTheme();
 	const rotationIconSize = handleDimensions.rotationIconSize;
 
@@ -100,138 +111,146 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 		<g>
 			{/* Handle colors may hold var(--jiscribe-*), so they are applied via style
 			    (fill/stroke) rather than SVG presentation attributes. */}
-			{/* Corner anchors */}
-			<circle
-				cx={points.topLeft.x}
-				cy={points.topLeft.y}
-				r={adjustedAnchorRadius}
-				strokeWidth={adjustedStrokeWidth}
-				data-kind="control"
-				data-id="transform"
-				data-part="resize:topLeft"
-				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
-					cursor: cursors.topLeft,
-				}}
-			/>
-			<circle
-				cx={points.topRight.x}
-				cy={points.topRight.y}
-				r={adjustedAnchorRadius}
-				strokeWidth={adjustedStrokeWidth}
-				data-kind="control"
-				data-id="transform"
-				data-part="resize:topRight"
-				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
-					cursor: cursors.topRight,
-				}}
-			/>
-			<circle
-				cx={points.bottomLeft.x}
-				cy={points.bottomLeft.y}
-				r={adjustedAnchorRadius}
-				strokeWidth={adjustedStrokeWidth}
-				data-kind="control"
-				data-id="transform"
-				data-part="resize:bottomLeft"
-				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
-					cursor: cursors.bottomLeft,
-				}}
-			/>
-			<circle
-				cx={points.bottomRight.x}
-				cy={points.bottomRight.y}
-				r={adjustedAnchorRadius}
-				strokeWidth={adjustedStrokeWidth}
-				data-kind="control"
-				data-id="transform"
-				data-part="resize:bottomRight"
-				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
-					cursor: cursors.bottomRight,
-				}}
-			/>
+			{drawsResizeHandles && (
+				<>
+					{/* Corner anchors */}
+					<circle
+						cx={points.topLeft.x}
+						cy={points.topLeft.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:topLeft"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.topLeft,
+						}}
+					/>
+					<circle
+						cx={points.topRight.x}
+						cy={points.topRight.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:topRight"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.topRight,
+						}}
+					/>
+					<circle
+						cx={points.bottomLeft.x}
+						cy={points.bottomLeft.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:bottomLeft"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.bottomLeft,
+						}}
+					/>
+					<circle
+						cx={points.bottomRight.x}
+						cy={points.bottomRight.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:bottomRight"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.bottomRight,
+						}}
+					/>
 
-			{/* Edge midpoint anchors */}
-			<circle
-				cx={points.topCenter.x}
-				cy={points.topCenter.y}
-				r={adjustedAnchorRadius}
-				strokeWidth={adjustedStrokeWidth}
-				data-kind="control"
-				data-id="transform"
-				data-part="resize:topCenter"
-				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
-					cursor: cursors.topCenter,
-				}}
-			/>
-			<circle
-				cx={points.rightCenter.x}
-				cy={points.rightCenter.y}
-				r={adjustedAnchorRadius}
-				strokeWidth={adjustedStrokeWidth}
-				data-kind="control"
-				data-id="transform"
-				data-part="resize:rightCenter"
-				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
-					cursor: cursors.rightCenter,
-				}}
-			/>
-			<circle
-				cx={points.bottomCenter.x}
-				cy={points.bottomCenter.y}
-				r={adjustedAnchorRadius}
-				strokeWidth={adjustedStrokeWidth}
-				data-kind="control"
-				data-id="transform"
-				data-part="resize:bottomCenter"
-				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
-					cursor: cursors.bottomCenter,
-				}}
-			/>
-			<circle
-				cx={points.leftCenter.x}
-				cy={points.leftCenter.y}
-				r={adjustedAnchorRadius}
-				strokeWidth={adjustedStrokeWidth}
-				data-kind="control"
-				data-id="transform"
-				data-part="resize:leftCenter"
-				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
-					cursor: cursors.leftCenter,
-				}}
-			/>
+					{/* Edge midpoint anchors */}
+					<circle
+						cx={points.topCenter.x}
+						cy={points.topCenter.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:topCenter"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.topCenter,
+						}}
+					/>
+					<circle
+						cx={points.rightCenter.x}
+						cy={points.rightCenter.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:rightCenter"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.rightCenter,
+						}}
+					/>
+					<circle
+						cx={points.bottomCenter.x}
+						cy={points.bottomCenter.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:bottomCenter"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.bottomCenter,
+						}}
+					/>
+					<circle
+						cx={points.leftCenter.x}
+						cy={points.leftCenter.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:leftCenter"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.leftCenter,
+						}}
+					/>
+				</>
+			)}
 
 			{/* Rotation handle */}
-			<g
-				transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) scale(${scale}) translate(${-rotationIconSize / 2} ${-rotationIconSize / 2})`}
-			>
-				<RotateRight width={rotationIconSize} height={rotationIconSize} />
-			</g>
-			<circle
-				cx={rotationPoint.x}
-				cy={rotationPoint.y}
-				r={adjustedRotationHitRadius}
-				fill="transparent"
-				data-kind="control"
-				data-id="transform"
-				data-part="rotation"
-				style={{ cursor: "grab" }}
-			/>
+			{drawsRotationHandle && (
+				<>
+					<g
+						transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) scale(${scale}) translate(${-rotationIconSize / 2} ${-rotationIconSize / 2})`}
+					>
+						<RotateRight width={rotationIconSize} height={rotationIconSize} />
+					</g>
+					<circle
+						cx={rotationPoint.x}
+						cy={rotationPoint.y}
+						r={adjustedRotationHitRadius}
+						fill="transparent"
+						data-kind="control"
+						data-id="transform"
+						data-part="rotation"
+						style={{ cursor: "grab" }}
+					/>
+				</>
+			)}
 		</g>
 	);
 };

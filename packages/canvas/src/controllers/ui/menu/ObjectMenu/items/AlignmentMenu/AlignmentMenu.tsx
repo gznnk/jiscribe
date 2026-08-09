@@ -22,6 +22,8 @@ const SECTION_ID = "alignment";
 
 type AlignmentMenuProps = {
 	canvasState: CanvasControllerState;
+	/** Whether the vertical row is drawn. Omitted = drawn (see BuiltinItem). */
+	vertical?: boolean;
 };
 
 const horizontalAlignments = [
@@ -46,11 +48,12 @@ const verticalAlignments = [
 
 /**
  * Text alignment menu.
- * Changes textAlign and verticalAlign of the selected text object.
+ * Changes textAlign, and verticalAlign unless the type opted the row out.
  * Each button coordinates with the gesture system via data attributes.
  */
 const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	canvasState,
+	vertical = true,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -96,20 +99,22 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 								</ObjectMenuButton>
 							))}
 						</AlignmentRow>
-						<AlignmentRow>
-							{verticalAlignments.map(({ value, Icon, messageKey }) => (
-								<ObjectMenuButton
-									key={value}
-									isActive={verticalAlign === value}
-									data-kind="menu"
-									data-id="object-menu"
-									data-part={`set:verticalAlign:${value}`}
-									title={messages[messageKey]}
-								>
-									<Icon />
-								</ObjectMenuButton>
-							))}
-						</AlignmentRow>
+						{vertical && (
+							<AlignmentRow>
+								{verticalAlignments.map(({ value, Icon, messageKey }) => (
+									<ObjectMenuButton
+										key={value}
+										isActive={verticalAlign === value}
+										data-kind="menu"
+										data-id="object-menu"
+										data-part={`set:verticalAlign:${value}`}
+										title={messages[messageKey]}
+									>
+										<Icon />
+									</ObjectMenuButton>
+								))}
+							</AlignmentRow>
+						)}
 					</AlignmentMenuContent>
 				</ObjectMenuDropdownPanel>
 			)}

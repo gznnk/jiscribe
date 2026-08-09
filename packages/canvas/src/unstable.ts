@@ -60,8 +60,8 @@ export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoCol
 export {
 	calcVisualLineCount,
 	measureTextWidth,
-} from "./presentations/objects/utils/measureText";
-export type { TextMeasureFont } from "./presentations/objects/utils/measureText";
+} from "./states/objects/utils/measureText";
+export type { TextMeasureFont } from "./states/objects/utils/measureText";
 
 export { PRECISION } from "./constants/precision";
 

@@ -100,7 +100,7 @@ test.describe("flowchart palette", () => {
 	test("creates multiDocument / storedData / loopLimit from the flyout", async ({
 		canvas,
 	}) => {
-		// multiDocument draws three stacked sheets as several elements (data-kind sits on the g only)
+		// multiDocument draws three clipped sheets as several elements (data-kind sits on the g only)
 		expect(
 			await createFromFlyout(
 				canvas,

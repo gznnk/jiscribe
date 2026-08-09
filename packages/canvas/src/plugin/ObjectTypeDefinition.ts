@@ -1,6 +1,7 @@
 import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
+import type { ObjectTransformHandles } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
@@ -16,6 +17,7 @@ import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/Extr
 import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
+import type { ObjectContentResizer } from "../states/registry/ObjectContentResizerRegistry";
 import type { ObjectStateValidator } from "../states/registry/ObjectStateValidatorRegistry";
 
 /**
@@ -44,6 +46,15 @@ export type ObjectTypeDefinition<
 
 	/** Type-guard that rejects untrusted State entering the canvas from outside (e.g. pasted clipboard data). */
 	stateValidator: ObjectStateValidator;
+
+	/**
+	 * Re-derives the box from the content, for a type whose doc stores no size
+	 * (`geometry: "point"`). Runs wherever content and box can drift apart: load,
+	 * undo/redo, external sync, every committed and uncommitted edit. Omitted =
+	 * no derivation, so the doc's own width/height stand as-is — which is what
+	 * every stored-box geometry wants (see ObjectContentResizerRegistry).
+	 */
+	contentResizer?: ObjectContentResizer<TState>;
 
 	// --- Render (presentation) ---
 
@@ -114,6 +125,15 @@ export type ObjectTypeDefinition<
 
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
 	selectionControls?: SelectionControlDefinition<TState>[];
+
+	/**
+	 * Which handles the transform frame offers on a single selection. Omitted =
+	 * every handle (eight resize handles + rotation knob), so leaving it out
+	 * keeps the historical behavior. Affects the handles only — the selection
+	 * outline, snapping and the bounding box are unchanged
+	 * (see ObjectTransformHandlesRegistry).
+	 */
+	transformHandles?: ObjectTransformHandles;
 
 	// --- Style ---
 

@@ -20,9 +20,15 @@ export type AddObjectParams = StyleParams & {
 	x: number;
 	/** Top edge in px. */
 	y: number;
-	/** Bounding-box width in px; omitted falls back to the type's default dimensions. */
+	/**
+	 * Bounding-box width in px; omitted falls back to the type's default dimensions.
+	 * Rejected for point-geometry types (`text`), whose box comes from the content.
+	 */
 	width?: number;
-	/** Bounding-box height in px; omitted falls back to the type's default dimensions. */
+	/**
+	 * Bounding-box height in px; omitted falls back to the type's default dimensions.
+	 * Rejected for point-geometry types (`text`), whose box comes from the content.
+	 */
 	height?: number;
 	/** Body text; omitted leaves whatever text the factory defaults to. */
 	text?: string;
@@ -47,7 +53,9 @@ export type AddObjectParams = StyleParams & {
  * Position is the top-left of the bounding box, sized by the effective width/height.
  * A factory with `createDocFromBounds` uses it — the one uniform entry that maps bounds
  * correctly for both rect-like and ellipse-like shapes — otherwise this falls back to the
- * center-based `createDoc`. The factory's UUID is replaced by a `${type}-N` sequence.
+ * center-based `createDoc`. Point-geometry types skip the sizing entirely: their
+ * `createDoc` already takes the drawn top-left. The factory's UUID is replaced by a
+ * `${type}-N` sequence.
  *
  * @param doc - Mutated in place: the created object is pushed onto `doc.root`
  * @param type - Object type name, which must be a key of `definitions` and carry a factory
@@ -57,9 +65,10 @@ export type AddObjectParams = StyleParams & {
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
  * @throws {@link DocOperationError} for an unknown type, for one without a factory
- *   (group / connector / svg and the like), when the factory rejects the given size, when
- *   `points` are given to a type not built from vertices or are too few, or for a rotation
- *   that is not finite
+ *   (group / connector / svg and the like), when width/height are given for a
+ *   point-geometry type that cannot store them, when the factory rejects the given size,
+ *   when `points` are given to a type not built from vertices or are too few, or for a
+ *   rotation that is not finite
  */
 export const addObject = (
 	doc: CanvasDoc,
@@ -92,42 +101,67 @@ export const addObject = (
 			? undefined
 			: requireRotationDegrees(params.rotation);
 
-	const dimensions = factory.calcDimensions();
-	// Vertices decide the outline, so they also decide the bounds the factory starts from.
-	const outline = points === undefined ? null : calcPolyBoundingBox(points);
-	const left = outline?.left ?? params.x;
-	const top = outline?.top ?? params.y;
-	const width =
-		outline === null
-			? (params.width ?? dimensions.halfWidth * 2)
-			: outline.right - outline.left;
-	const height =
-		outline === null
-			? (params.height ?? dimensions.halfHeight * 2)
-			: outline.bottom - outline.top;
-	const textOverride = params.text !== undefined ? { text: params.text } : {};
-
-	let created: ObjectDoc | null;
-	if (factory.createDocFromBounds !== undefined) {
-		// minSize 0: programmatic creation has no misdrag to reject the way a drag does.
-		created = factory.createDocFromBounds(
-			left,
-			top,
-			left + width,
-			top + height,
-			textOverride,
-			0,
-		);
-	} else {
-		created = factory.createDoc(
-			{ x: left + width / 2, y: top + height / 2 },
-			{ width, height, ...textOverride },
+	// A point-geometry doc has no width/height field, so honoring one is impossible;
+	// silently dropping it would hand the caller an object of a size it never asked for.
+	if (
+		definition.features.geometry === "point" &&
+		(params.width !== undefined || params.height !== undefined)
+	) {
+		throw new DocOperationError(
+			`object type "${type}" sizes itself from its content and takes no width/height`,
 		);
 	}
-	if (created === null) {
-		throw new DocOperationError(
-			`object type "${type}" could not be created at size ${width}x${height}`,
-		);
+
+	const textOverride = params.text !== undefined ? { text: params.text } : {};
+
+	let created: ObjectDoc;
+	if (definition.features.geometry === "point") {
+		// The position goes in as the drawn top-left it already is: this geometry
+		// reports no dimensions to offset a center by, and stores no box to offset.
+		created = factory.createDoc({ x: params.x, y: params.y }, textOverride);
+	} else {
+		const sizeOverride = {
+			...(params.width !== undefined ? { width: params.width } : {}),
+			...(params.height !== undefined ? { height: params.height } : {}),
+		};
+		const dimensions = factory.calcDimensions({
+			...sizeOverride,
+			...textOverride,
+		});
+		// Vertices decide the outline, so they also decide the bounds the factory starts from.
+		const outline = points === undefined ? null : calcPolyBoundingBox(points);
+		const left = outline?.left ?? params.x;
+		const top = outline?.top ?? params.y;
+		const width =
+			outline === null
+				? (params.width ?? dimensions.halfWidth * 2)
+				: outline.right - outline.left;
+		const height =
+			outline === null
+				? (params.height ?? dimensions.halfHeight * 2)
+				: outline.bottom - outline.top;
+
+		const sized =
+			factory.createDocFromBounds !== undefined
+				? // minSize 0: programmatic creation has no misdrag to reject the way a drag does.
+					factory.createDocFromBounds(
+						left,
+						top,
+						left + width,
+						top + height,
+						textOverride,
+						0,
+					)
+				: factory.createDoc(
+						{ x: left + width / 2, y: top + height / 2 },
+						{ width, height, ...textOverride },
+					);
+		if (sized === null) {
+			throw new DocOperationError(
+				`object type "${type}" could not be created at size ${width}x${height}`,
+			);
+		}
+		created = sized;
 	}
 
 	created.id = generateUniqueId(doc, type);

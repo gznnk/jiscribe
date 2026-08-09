@@ -10,12 +10,14 @@ import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/reg
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { Camera } from "../../states/canvas/Viewport";
+import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
@@ -37,6 +39,7 @@ import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 export type CanvasRegistries = {
 	objectMapper: ObjectMapperRegistry;
 	objectStateValidator: ObjectStateValidatorRegistry;
+	objectContentResizer: ObjectContentResizerRegistry;
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
@@ -47,6 +50,7 @@ export type CanvasRegistries = {
 	objectVisualBounds: ObjectVisualBoundsRegistry;
 	objectSvgDefs: ObjectSvgDefsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
+	objectTransformHandles: ObjectTransformHandlesRegistry;
 	selectionControl: SelectionControlRegistry;
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;

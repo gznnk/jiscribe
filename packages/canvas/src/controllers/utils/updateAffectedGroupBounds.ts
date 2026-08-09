@@ -2,22 +2,23 @@ import { updateGroupBounds } from "./updateGroupBounds";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * Updates the bounding frames of all parent groups affected by moving the selected objects.
+ * Updates the bounding frames of all parent groups affected by objects whose
+ * geometry changed — moved, transformed, or re-measured from their own content.
  * Processes groups from bottom-up (children first, then parents) to ensure correct bounds.
  *
- * @param state - Current canvas controller state with updated object positions
- * @param selectedIds - IDs of objects that were moved
+ * @param state - Current canvas controller state, already holding the changed objects
+ * @param changedIds - IDs of the objects whose geometry changed; ids with no parent contribute nothing
  * @returns Updated canvas controller state with recalculated group bounds
  */
 export function updateAffectedGroupBounds(
 	state: CanvasControllerState,
-	selectedIds: string[],
+	changedIds: string[],
 ): CanvasControllerState {
 	const affectedGroupIds = new Set<string>();
 
-	// Collect all parent groups (and their ancestors) of selected objects
-	for (const selectedId of selectedIds) {
-		const obj = state.objects[selectedId];
+	// Collect all parent groups (and their ancestors) of the changed objects
+	for (const changedId of changedIds) {
+		const obj = state.objects[changedId];
 		if (!obj) {
 			continue;
 		}

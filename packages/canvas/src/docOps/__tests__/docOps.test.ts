@@ -84,6 +84,54 @@ describe("addObject", () => {
 		expectValid(doc);
 	});
 
+	// A point-geometry doc stores the top-left and no box, so the position reaches
+	// the doc untouched — no measurement, and nothing to offset a center by.
+	it("keeps the given top-left for a point-geometry type", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", {
+			x: 100,
+			y: 100,
+			text: "Hello World",
+		});
+
+		expect(id).toBe("text-1");
+		const text = doc.root[0] as Record<string, unknown>;
+		expect(text.type).toBe("text");
+		expect(text.x).toBe(100);
+		expect(text.y).toBe(100);
+		expectValid(doc);
+	});
+
+	it("keeps a fractional top-left exact for a point-geometry type", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "text", { x: 12.5, y: -7.25, text: "Hello World" });
+
+		const text = doc.root[0] as Record<string, unknown>;
+		expect(text.x).toBe(12.5);
+		expect(text.y).toBe(-7.25);
+	});
+
+	it("keeps box fields out of a point-geometry doc", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "text", { x: 0, y: 0, text: "sized by content" });
+
+		const text = doc.root[0] as Record<string, unknown>;
+		expect(text).not.toHaveProperty("width");
+		expect(text).not.toHaveProperty("height");
+	});
+
+	it("throws DocOperationError when a point-geometry type is given a size", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "text", { x: 0, y: 0, width: 200 }),
+		).toThrow(DocOperationError);
+		expect(() =>
+			docOps.addObject(doc, "text", { x: 0, y: 0, height: 40 }),
+		).toThrow(DocOperationError);
+		expect(doc.root).toHaveLength(0);
+	});
+
 	it("throws DocOperationError for an unknown type", () => {
 		const doc = emptyDoc();
 		expect(() => docOps.addObject(doc, "nope", { x: 0, y: 0 })).toThrow(

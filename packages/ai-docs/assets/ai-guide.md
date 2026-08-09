@@ -9,7 +9,7 @@ It focuses on the essentials. For the full field-level specification, see [`refe
 
 - The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
 - Coordinate values are arbitrary (**negatives are allowed**). The origin `(0, 0)` is **not** pinned to the top-left of the screen (the view pans and zooms).
-- Each shape has its own reference point: **every box shape except `ellipse` uses its top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (per-type geometry is in "Object quick reference"). "Box shape" here and below means every object type except `polyline` / `polygon` / `group` / `svg` / `connector`.
+- Each shape has its own reference point: **every box shape except `ellipse` uses its top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (per-type geometry is in "Object quick reference"). "Box shape" here and below means every object type except `text` / `polyline` / `polygon` / `group` / `svg` / `connector`. `text` also anchors at its top-left `(x, y)`, but it is not a box shape: it has no `width` / `height` at all.
 - Stacking order (z-order) follows the **order of the `root` array** — later entries are drawn on top. Overlapping is allowed.
 - There is no auto-layout. You compute coordinates yourself (see "Layout conventions").
 
@@ -33,7 +33,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - Include **`version: 1`** at the top level (required, fixed value).
 - Give every object a **unique `id`** and a **`type`**.
-- `rect` and every other box shape use `x`,`y` (top-left) + `width`,`height`. `ellipse` is the one exception: `cx`,`cy` (center) + `rx`,`ry` (radii).
+- `rect` and every other box shape use `x`,`y` (top-left) + `width`,`height`. Two types differ: `ellipse` takes `cx`,`cy` (center) + `rx`,`ry` (radii), and `text` takes `x`,`y` alone.
 - Put `connector` in `root` (top level, mixed with the objects), and express its endpoints with `source` / `target` (EndpointRef).
 - A connector must have **at least one owned endpoint** (`source` or `target` referencing an object). Both endpoints `free` is invalid.
 - Leave `points` as an **empty array** `[]` unless a specific route matters. Empty lets the engine route the whole path, which is almost always what you want.
@@ -44,8 +44,9 @@ The top level must always have `version` / `root` (the array may be empty).
 **MUST NOT**
 
 - Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only the intermediate vertices (usually empty).
-- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Every box shape is connectable; for those five non-connectable types, use a `free` endpoint to point near them.
+- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Every box shape is connectable, and so is `text`; for those five non-connectable types, use a `free` endpoint to point near them.
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
+- Do not give a `text` `width`,`height` — it has no such fields. Its box is measured from the text itself; `fontSize` is what makes it bigger.
 - Do not reuse the same `id`.
 - Do not put a `connector` inside a group's `children` (connectors live at the top level of `root` only).
 
@@ -58,6 +59,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | `rect`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / `rx` / rotation           | general-purpose node / label box                      |
 | `markdown`              | `x`,`y`,`width`,`height`             | stroke / fill / text / `rx` / rotation           | Markdown-rendered document card                       |
 | `ellipse`               | `cx`,`cy`,`rx`,`ry`                  | stroke / fill / text / rotation                  | ellipse / oval node (center-based geometry)           |
+| `text`                  | `x`,`y` (no `width`/`height`)        | text / rotation                                  | bare text label / annotation                          |
 | `diamond`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | decision / branch node                                |
 | `stadium`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | start / end terminator                                |
 | `parallelogram`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | input / output                                        |
@@ -112,7 +114,8 @@ The top level must always have `version` / `root` (the array may be empty).
 - Colors (`stroke` / `fontColor` / `fill`): a CSS color string, or `"auto"` to follow the editor theme. `"auto"` is the default for `stroke` / `fontColor` (resolved to the theme foreground) and adapts to light/dark; `fill` defaults to `"transparent"`. Prefer `"auto"` (or omit the field) unless a specific color is needed.
 - Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
 - Fill: `fill` (default `"transparent"`)
-- Text (every box shape): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). For `diamond` and `stadium`, text is placed within the full bounding box (not clipped to the shape interior). For `db`, text is placed in the body region below the top cap ellipse. For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height. For `document` and `callout`, text sits above the bottom wave/tail band. For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size. For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract` and `cross`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting `text` leaves a bare figure. **`record` is the exception: its `text` is a keyed object, and the typography lives inside each slot rather than on the shape** (see the record entry below).
+- Text (every box shape, and `text`): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). For `diamond` and `stadium`, text is placed within the full bounding box (not clipped to the shape interior). For `db`, text is placed in the body region below the top cap ellipse. For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height. For `document` and `callout`, text sits above the bottom wave/tail band. For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size. For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract` and `cross`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting `text` leaves a bare figure. **`record` is the exception: its `text` is a keyed object, and the typography lives inside each slot rather than on the shape** (see the record entry below).
+- Bare text (`text` only): a label with no box, outline or fill around it — titles, captions, free annotations. It takes `x`,`y` (top-left of the text) plus the Text and Transform fields and **nothing else**: no `width` / `height`, because the box is measured from the content and grows right and down as the text gets longer, so `fontSize` (and `fontWeight`) is how you size it. With `rotation` or a flip set, "right and down" means the shape's own axes, so `x`,`y` stay put whatever the text does. Since the box hugs the text, `textAlign` shows up only across the lines of a multi-line `text`, and `verticalAlign` has nothing to move within. It is **connectable**: its four edge midpoints sit on the measured box, so a connector attached to it follows the text as it grows.
 - Markdown body (`markdown` only): `text` holds **Markdown source** and is rendered as HTML — headings, lists, tables, code fences, links, and math (`$...$` inline, `$$...$$` block). Every other shape draws `text` as plain text, so reach for `markdown` whenever the content needs structure (notes, specs, summaries), and keep `rect` for one-line labels. Defaults suit a document: 300x200, `textAlign` `"left"`, `verticalAlign` `"top"`, `fill` `"auto"`. Content taller than `height` is clipped, so leave headroom. Image export flattens it to plain text.
 - Connector label (edge label, e.g. `"Yes"`/`"No"`): a connector has **no** top-level `text`. Put the annotation in a nested `label` object: `"label": { "text": "Yes" }`. Optional fields: `position` (0–1 along the path, default 0.5 = midpoint), `offset` (perpendicular shift, default 0), `fontColor` (default `"auto"`), `fontSize` (default 16), `fontWeight`, plus background/border — `fill` (default canvas background = masks the line; `"transparent"` to show the line), `stroke` (border color), `strokeWidth` (border width, default 0 = no border), `strokeDashType` (border line style: `"solid"`/`"dashed"`/`"dotted"`). Plain text only; the label is drawn horizontally at the midpoint by default. Omit `label` for no label.
 - Arrows `startArrow`/`endArrow`: `"None"` / `"FilledTriangle"` (standard arrow) / `"OpenArrow"` / `"HollowTriangle"` / `"FilledDiamond"` / `"HollowDiamond"` / `"ConcaveTriangle"` / `"Circle"` / `"HollowCircle"` / `"Cross"`
@@ -131,7 +134,7 @@ The top level must always have `version` / `root` (the array may be empty).
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"edge"` (+ `side`, `t`) / `"free"` (+ `point`)
 - `connectPoint` `id`: `"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"` (for the center, use `"kind": "center"` instead — it is not a `connectPoint` id). On `brace` / `bracket` / `bracketWithStem` also `"tip"`, the marker's cusp / spine middle / stem end — use it whenever a connector points at a group marker
 - `edge`: a free position along one local edge, `{ "kind": "edge", "side": "top", "t": 0.25 }`. Only when a named anchor cannot express where the line has to land (several parallel lines into one edge); `t` runs left→right on top/bottom, top→bottom on left/right, and `0.5` is the edge midpoint — write that as a `connectPoint` instead
-- `owner` may reference **only a box shape** (any type except `polyline` / `polygon` / `group` / `svg` / `connector`). You **cannot** attach an endpoint to those five. To point an arrow at/from one of them, use a `free` endpoint placed near it instead.
+- `owner` may reference **any box shape, and `text`** — that is, every type except `polyline` / `polygon` / `group` / `svg` / `connector`. You **cannot** attach an endpoint to those five. To point an arrow at/from one of them, use a `free` endpoint placed near it instead.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
 
 ### Record (`record`) — the one shape whose `text` is an object
@@ -421,11 +424,12 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 
 - ❌ Putting a connector inside a group's `children` → ✅ keep connectors at the top level of `root`.
 - ❌ A connector with both endpoints `free` (no owner) → ✅ at least one endpoint must reference an object.
-- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ only box shapes are connectable; use a `free` endpoint placed near the target instead.
+- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ only box shapes and `text` are connectable; use a `free` endpoint placed near the target instead.
 - ❌ Reaching for `svg` for ordinary boxes/nodes/arrows → ✅ use the built-in shapes; keep `svg` for visuals they cannot express.
 - ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
 - ❌ Putting a connector's edge label in a top-level `text` field → ✅ use a nested `label`: `"label": { "text": "Yes" }`.
 - ❌ Giving a `group` `x`/`y`/`width`/`height` → ✅ position it via the `children` coordinates.
 - ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.
+- ❌ Giving a `text` `width`/`height`, or drawing a caption as a `rect` with an invisible stroke and fill → ✅ use `text` with `x`/`y` only, and size it with `fontSize`.
 - ❌ Emitting coordinates that unintentionally overlap → ✅ space them per the layout conventions (overlap itself is allowed).
 - ❌ Duplicate `id`s → ✅ make them all unique.
