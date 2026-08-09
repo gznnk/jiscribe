@@ -1,3 +1,5 @@
+> 🌐 日本語版: [CONTRIBUTING.ja.md](./CONTRIBUTING.ja.md)
+
 # Contributing
 
 Thanks for your interest in Jiscribe. This document covers what you need to get

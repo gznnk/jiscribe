@@ -1,3 +1,5 @@
+> 🌐 日本語版: [README.ja.md](./README.ja.md)
+
 # Jiscribe
 
 An SVG diagram canvas engine for React — the editing core behind
@@ -96,10 +98,11 @@ pnpm test:e2e          # full Playwright e2e suite
 Requirements: Node.js 22 (18+ works) and pnpm 10.
 
 Design documentation for the engine lives in
-[`packages/canvas/docs/`](./packages/canvas/docs/README.md) — eleven documents
+[`packages/canvas/docs/`](./packages/canvas/docs/README.md) — 13 documents
 covering the design philosophy, architecture, data model, gesture system,
 command system, state update flow, external sync, theming, testing, style
-properties and shape design. Japanese versions are alongside as `*.ja.md`.
+properties, shape design, plugin architecture and plugin authoring. Japanese
+versions are alongside as `*.ja.md`.
 
 ## Contributing
 
