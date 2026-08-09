@@ -31,6 +31,60 @@ export const LONG_PRESS_DURATION_MS = 500;
  */
 export const PINCH_MIN_DISTANCE = 1;
 
+/**
+ * Age of the oldest pointer sample the release velocity is estimated over
+ * (milliseconds). Long enough to average out per-frame jitter, short enough that
+ * only the final motion of the drag decides the glide.
+ */
+export const FLING_VELOCITY_WINDOW_MS = 100;
+
+/**
+ * Shortest sample span the release velocity may be divided by (milliseconds).
+ * A burst of pointer events delivered within a millisecond or two would
+ * otherwise produce an absurd speed from a normal-sized movement.
+ */
+export const FLING_VELOCITY_MIN_SPAN_MS = 8;
+
+/**
+ * How stale the newest sample may be at the release for a glide to start
+ * (milliseconds). Coming to rest before letting go means "stop here", however
+ * fast the drag was a moment earlier.
+ */
+export const FLING_RELEASE_IDLE_MS = 50;
+
+/**
+ * Release speed below which no glide starts (screen px per millisecond).
+ * Keeps an ordinary slow pan from drifting past where it was released.
+ */
+export const FLING_MIN_SPEED = 0.15;
+
+/**
+ * Upper bound on the estimated release speed (screen px per millisecond).
+ * ~4000 px/s, roughly the fastest deliberate flick; anything above is a
+ * measurement artifact rather than intent.
+ */
+export const FLING_MAX_SPEED = 4;
+
+/** Speed at which the glide is considered finished (screen px per millisecond). */
+export const FLING_STOP_SPEED = 0.02;
+
+/**
+ * Fraction of the speed a glide keeps per FLING_REFERENCE_FRAME_MS. Applied as
+ * an exponent of the elapsed time so the deceleration curve is the same on any
+ * refresh rate.
+ */
+export const FLING_DECAY_PER_FRAME = 0.95;
+
+/** Frame duration FLING_DECAY_PER_FRAME is quoted against (milliseconds, 60fps). */
+export const FLING_REFERENCE_FRAME_MS = 1000 / 60;
+
+/**
+ * Longest frame delta a glide integrates over (milliseconds). A backgrounded tab
+ * delivers no frames, and without the clamp the first frame after it returns
+ * would jump the view by the whole absence.
+ */
+export const FLING_MAX_FRAME_MS = 64;
+
 /** Time threshold for treating clicks as a double click (milliseconds) */
 export const DOUBLE_CLICK_THRESHOLD = 300;
 

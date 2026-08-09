@@ -21,7 +21,11 @@ export type GestureType =
 	| "pinch"
 	// Touch only: a press held for LONG_PRESS_DURATION_MS within the drag slop.
 	// Ends the gesture — the pointerup that follows fires nothing (no click).
-	| "longPress";
+	| "longPress"
+	// One per frame while a released pan drag glides to a stop (shouldFlingFromDrag).
+	// No pointer is down: it carries scrollDelta only, and handleGesture converts
+	// it to a scroll canvas event.
+	| "inertialScroll";
 
 export type HoveredElement = {
 	id: string;
@@ -119,4 +123,16 @@ export type GestureRecognizerConfig = {
 	 * @param targetKind - The drag's target kind fixed at pointerdown.
 	 */
 	shouldPinchFromDrag?: (targetKind: string | undefined) => boolean;
+	/**
+	 * Policy consulted when a confirmed drag is released: return true when it was
+	 * a viewport pan that should keep gliding (inertialScroll gestures until the
+	 * speed decays away), false to stop where it was released. Omitted = never
+	 * glide. Keeps "which drags are pans" with the consumer's routing, like
+	 * shouldPinchFromDrag (the canvas injects its middle-/right-button test in
+	 * useGestureRecognizer).
+	 *
+	 * @param button - DOM button number fixed at pointerdown (0 left / 1 middle /
+	 *   2 right).
+	 */
+	shouldFlingFromDrag?: (button: number) => boolean;
 };

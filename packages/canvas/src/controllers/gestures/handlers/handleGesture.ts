@@ -50,8 +50,8 @@ export const handleGesture = (
 	let nextState = state;
 
 	// Convert Gesture to CanvasEvent
-	// wheel is converted to scroll/zoom, pinch to zoom (+ a derived scroll below),
-	// others are passed through
+	// wheel is converted to scroll/zoom, inertialScroll to scroll, pinch to zoom
+	// (+ a derived scroll below), others are passed through
 	let canvasEvent: CanvasEvent;
 	if (gesture.type === "wheel") {
 		if (gesture.mods.ctrl) {
@@ -68,6 +68,11 @@ export const handleGesture = (
 		} else {
 			canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
 		}
+	} else if (gesture.type === "inertialScroll") {
+		// The glide after a released pan moves the view exactly as a wheel scroll
+		// does, with no modifier branch: it comes from no device event, so nothing
+		// about it may mean zoom.
+		canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
 	} else if (gesture.type === "pinch") {
 		// zoomScale rides on the gesture; last (the finger midpoint) is the anchor
 		canvasEvent = {

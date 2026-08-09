@@ -10,10 +10,10 @@ For how the state changes triggered by gestures are reflected, see [State Update
 Raw pointer/wheel events are aggregated at the canvas root (`Viewport`), and
 the `GestureRecognizer` (`controllers/gestures/recognizer/`) converts them into a `Gesture`.
 
-There are nine `GestureType`s:
+There are ten `GestureType`s:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress | inertialScroll
 ```
 
 A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
@@ -41,6 +41,14 @@ Key points:
   fires `longPress` and consumes the gesture (the lift fires no click). It routes to CanvasEventHandler
   wherever it lands — per-target handlers reject it via `isPerTargetInteraction`, like middle/right
   buttons — and opens the context menu, mirroring the right-button click.
+- **Inertial scrolling**: A middle-/right-button pan released while still moving keeps gliding. The
+  recognizer records raw pointer samples in `enqueue` (`feed` sees at most one move per frame, too coarse
+  to measure a flick), estimates the release velocity over `FLING_VELOCITY_WINDOW_MS` (`calcFlingVelocity`),
+  and then emits one `inertialScroll` per frame from its own RAF until the exponentially decayed speed
+  falls below `FLING_STOP_SPEED`. Which drags glide is the consumer's knowledge, injected as
+  `shouldFlingFromDrag` (middle/right buttons) the way `shouldPinchFromDrag` is. A pointer coming to rest
+  before it lifts (`FLING_RELEASE_IDLE_MS`) means "stop here", and any new pointerdown or wheel stops a
+  glide in progress at once.
 - **Touch panning**: Gestures carry `pointerType`, and CanvasEventHandler routes a one-finger touch drag on
   the canvas background to viewport panning (the GrabScroll path) instead of area selection. Area selection
   is unavailable on touch for now. On touch, background deselection waits for the tap to resolve (`click`)
@@ -52,7 +60,7 @@ Key points:
 
 `handleGesture` (`controllers/gestures/handlers/handleGesture.ts`) is the router.
 It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `scroll` depending on whether `ctrl` is held;
-`pinch` decomposes into `zoom` followed by `scroll`)
+`inertialScroll` always becomes `scroll`; `pinch` decomposes into `zoom` followed by `scroll`)
 and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
 determine whether it should process the event. The registry holds exactly one handler per
 `targetKind`; where a kind needs finer splitting (by `targetId`, `data-part`, or event type), that

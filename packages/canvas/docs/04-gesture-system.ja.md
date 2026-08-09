@@ -10,10 +10,10 @@
 生の pointer / wheel イベントはキャンバスのルート（`Viewport`）に集約され、
 `GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
 
-`GestureType` は次の 9 種:
+`GestureType` は次の 10 種:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress | inertialScroll
 ```
 
 `Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
@@ -39,6 +39,13 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | lon
   発火し、ジェスチャーを消費する（離しても click は出ない）。着地点を問わず CanvasEventHandler に
   ルーティングされ（per-target ハンドラは中/右ボタン同様 `isPerTargetInteraction` で拒否）、
   右クリック相当としてコンテキストメニューを開く。
+- **慣性スクロール**: 中／右ボタンのパンを動かしたまま離すと、view が滑り続ける。recognizer は
+  生のポインタ座標を `enqueue` で記録し（`feed` は1フレーム1移動しか見ないのでフリックの計測には粗い）、
+  `FLING_VELOCITY_WINDOW_MS` 分の区間から離した瞬間の速度を求め（`calcFlingVelocity`）、
+  専用の RAF で毎フレーム `inertialScroll` を発火する。速度は指数減衰し、`FLING_STOP_SPEED` を
+  下回ったら停止。どのドラッグが滑るかは利用側の知識として `shouldFlingFromDrag`
+  （中／右ボタン）で注入する（`shouldPinchFromDrag` と同じ分担）。離す前に静止していた場合
+  （`FLING_RELEASE_IDLE_MS`）はその場で止まり、新しい pointerdown やホイールは滑走を即座に打ち切る。
 - **タッチのパン**: `Gesture` は `pointerType` を持ち、CanvasEventHandler がタッチの1本指
   背景ドラッグをエリア選択ではなくビューポートのパン（GrabScroll パス）へルーティングする。
   タッチでのエリア選択は当面利用不可。またタッチでは背景の選択解除を `pressed` でなく
@@ -51,7 +58,7 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | lon
 
 `handleGesture`（`controllers/gestures/handlers/handleGesture.ts`）がルーター。
 `Gesture` を `CanvasEvent` に変換し（`wheel` は `ctrl` の有無で `zoom` / `scroll` に分岐、
-`pinch` は `zoom` → `scroll` の順に分解）、
+`inertialScroll` は常に `scroll`、`pinch` は `zoom` → `scroll` の順に分解）、
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
 自分が処理すべきイベントかを判定する。registry には `targetKind` ごとに 1 ハンドラだけを
 登録する。さらに細かい分岐（`targetId` / `data-part` / イベント種）が要る kind では、
