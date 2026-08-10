@@ -1,11 +1,8 @@
 import DOMPurify from "dompurify";
 import katex from "katex";
-import MarkdownIt from "markdown-it";
-// Types come from @types/markdown-it-link-attributes (3.0.5, the latest on
-// DefinitelyTyped). The v4 runtime ships no types and DefinitelyTyped has not published
-// v4 either, but the attrs configuration this code uses is compatible with the v3 stub,
-// so 3.0.5 is kept.
-import linkAttr from "markdown-it-link-attributes";
+// The default export is a callable wrapper around the class; the class itself is
+// only reachable as a named type export.
+import MarkdownIt, { type MarkdownIt as MarkdownItInstance } from "markdown-it";
 
 /**
  * Normalizes mathematical notation in markdown text.
@@ -33,7 +30,7 @@ const normalizeMath = (text: string): string => {
  *
  * @param md - The markdown-it instance to extend
  */
-const katexLite = (md: MarkdownIt): void => {
+const katexLite = (md: MarkdownItInstance): void => {
 	/**
 	 * Inline math handler ($...$)
 	 * Processes inline math expressions surrounded by single dollar signs
@@ -138,6 +135,32 @@ const katexLite = (md: MarkdownIt): void => {
 };
 
 /**
+ * Stamps a fixed set of attributes onto every rendered link.
+ *
+ * This is what markdown-it-link-attributes did, inlined: that package ships no types
+ * of its own and DefinitelyTyped never published a v4 stub, so its only typing was a
+ * v3 stub written against markdown-it 14's type shape.
+ *
+ * @param md - The markdown-it instance to extend
+ * @param attrs - Attribute name/value pairs applied to every `<a>`; an attribute already
+ *   present on the link is overwritten
+ */
+const linkAttributes = (
+	md: MarkdownItInstance,
+	attrs: Record<string, string>,
+): void => {
+	const defaultRender = md.renderer.rules.link_open;
+	md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+		for (const [name, value] of Object.entries(attrs)) {
+			tokens[idx].attrSet(name, value);
+		}
+		return defaultRender
+			? defaultRender(tokens, idx, options, env, self)
+			: self.renderToken(tokens, idx, options);
+	};
+};
+
+/**
  * Create and configure the markdown-it instance with plugins and options.
  * Includes math rendering and link attribute handling.
  *
@@ -159,12 +182,9 @@ const md = new MarkdownIt({
 	// Apply the custom KaTeX plugin
 	.use(katexLite)
 	// Configure all links to open in new tab with security attributes
-	.use(linkAttr, {
-		// No matcher specified - applies to all links
-		attrs: {
-			target: "_blank",
-			rel: "noopener noreferrer",
-		},
+	.use(linkAttributes, {
+		target: "_blank",
+		rel: "noopener noreferrer",
 	});
 
 /**
