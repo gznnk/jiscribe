@@ -23,14 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # pnpm 11 以降は action-setup ではなく後継の pnpm/setup を使う。
+      # Node のインストールと store キャッシュもこれ 1 つで賄う。
       - name: Setup pnpm
-        uses: pnpm/action-setup@v5
-
-      - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: pnpm/setup@v2
         with:
-          node-version: 22
-          cache: pnpm
+          runtime: node@22
+          cache: true
+          install: false
 
       - name: Install
         run: pnpm install --frozen-lockfile

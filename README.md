@@ -105,7 +105,7 @@ pnpm test              # unit tests (vitest)
 pnpm test:e2e          # every Playwright suite (core, each plugin, coexistence)
 ```
 
-Requirements: Node.js 22 (18+ works) and pnpm 10.
+Requirements: Node.js 22+ and pnpm 11.
 
 Design documentation for the engine lives in
 [`packages/canvas/docs/`](./packages/canvas/docs/README.md) — 13 documents

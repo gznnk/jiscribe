@@ -32,7 +32,7 @@
 		"test:e2e": "pnpm -r --if-present test:e2e",
 		"test:e2e:canvas": "pnpm --filter @jiscribe/canvas test:e2e"
 	},
-	"packageManager": "pnpm@10.34.5",
+	"packageManager": "pnpm@11.21.0",
 	"comments": {
 		"devDependencies": "The lint/format toolchain is pinned to exact versions on purpose: the same sources are linted from another workspace root as well, and a version drift makes the two disagree. Bump both roots together."
 	},

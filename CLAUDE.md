@@ -9,7 +9,7 @@ workspace. `packages/canvas` is the engine; `plugins/*` are the shipped shape
 sets, written against the engine's public API only; `apps/canvas-examples` and
 `apps/vscode-extension` are the consumers that keep the API honest.
 
-Stack: pnpm 10 workspaces, React 19, TypeScript 5.9, Vite 7, Vitest, Playwright,
+Stack: pnpm 11 workspaces, React 19, TypeScript 5.9, Vite 7, Vitest, Playwright,
 ESLint 9, Prettier. React Compiler is not used.
 
 ## Layout

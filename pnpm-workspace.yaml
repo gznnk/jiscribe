@@ -26,5 +26,11 @@ catalog:
   vite: ^7.3.0
   vitest: ^2.1.8
 
-ignoredBuiltDependencies:
-  - esbuild
+# pnpm 11 の allowBuilds（旧 ignoredBuiltDependencies）。列挙外のビルドスクリプトが
+# 現れると strictDepBuilds 既定 ON で install が落ちる。
+# private ルートの allowBuilds と同じ内容を保つ（electron は private 側のみ）。
+allowBuilds:
+  "@swc/core": false
+  "@vscode/vsce-sign": false
+  esbuild: false
+  keytar: false
