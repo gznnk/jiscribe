@@ -5,6 +5,23 @@
 Thanks for your interest in Jiscribe. This document covers what you need to get
 a change merged.
 
+## How contributions work
+
+**Issues are welcome with no prior arrangement.** Bug reports, questions,
+feature ideas, "this API is awkward to use" — these are the most useful thing
+you can send, and there is no bar to clear before opening one.
+
+**Pull requests are accepted by prior agreement only.** Open an issue first and
+wait for a reply saying the change is wanted. A pull request that arrives
+without that agreement will be closed with a link to this section, however good
+the code is.
+
+This is not a judgement on your patch. Jiscribe has a single maintainer, the
+engine's design is still moving, and reviewing someone else's code — then
+maintaining it afterwards — costs more than writing it. Settling the change in
+an issue first means neither of us spends time on something that was never
+going to be merged.
+
 ## Getting set up
 
 ```bash
@@ -17,7 +34,8 @@ is a pnpm workspace and packages depend on each other through `workspace:*`.
 
 ## Before you open a pull request
 
-Run these and make sure they all pass:
+The rest of this document assumes the change has already been agreed on in an
+issue. Run these and make sure they all pass:
 
 ```bash
 pnpm lint --fix
@@ -104,4 +122,5 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 with an optional scope: `fix(canvas): ...`, `feat(vscode): ...`,
 `refactor(geometry): ...`. Japanese and English subjects are both fine.
 
-Target `main`. Describe what changed and why, and say which checks you ran.
+Target `main`. Link the issue the change was agreed on in, describe what changed
+and why, and say which checks you ran.

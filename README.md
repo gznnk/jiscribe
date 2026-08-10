@@ -106,7 +106,11 @@ versions are alongside as `*.ja.md`.
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Issues and pull requests are welcome.
+**Issues are welcome; pull requests are accepted by prior agreement only** — open
+an issue first and wait for a reply saying the change is wanted. See
+[CONTRIBUTING.md](./CONTRIBUTING.md#how-contributions-work) for why, and for
+everything else you need to get a change merged.
+
 Note that most in-code comments and some design documents are written in
 Japanese; English is fine for issues and pull requests.
 

@@ -102,7 +102,10 @@ pnpm test:e2e          # Playwright の e2e スイート全体
 
 ## コントリビュート
 
-[CONTRIBUTING.ja.md](./CONTRIBUTING.ja.md) を参照のこと。Issue と Pull Request を歓迎する。
+**Issue は歓迎する。Pull Request は事前に合意したものだけ受け付ける** — まず Issue を
+立て、その変更を入れたいという返答を待ってほしい。理由と、それ以外にマージまでに必要な
+ことは [CONTRIBUTING.ja.md](./CONTRIBUTING.ja.md#コントリビュートの受け付け方) にある。
+
 コード内コメントの多くと一部の設計ドキュメントは日本語で書かれているが、Issue と
 Pull Request は英語でも構わない。
 
