@@ -5,7 +5,7 @@ import { FileIoExample } from "./examples/file-io";
 import { GalleryExample } from "./examples/gallery";
 import { MinimalExample } from "./examples/minimal";
 import { MultiCanvasExample } from "./examples/multi-canvas";
-import { PluginContainerExample } from "./examples/plugin-container";
+import { PluginsExample } from "./examples/plugins";
 import { ThemingExample } from "./examples/theming";
 import { ViewportExample } from "./examples/viewport";
 
@@ -61,15 +61,16 @@ const EXAMPLES: ReadonlyArray<{
 	{
 		id: "gallery",
 		title: "Gallery",
-		description: "Viewing real .jis.json files (loads the samples in diagrams/)",
+		description:
+			"Viewing real .jis.json files (loads the samples in diagrams/)",
 		Component: GalleryExample,
 	},
 	{
-		id: "plugin-container",
-		title: "Plugin Container",
+		id: "plugins",
+		title: "Plugins",
 		description:
-			"Registers the container definition from an external plugin package (UC1 dogfood), excludes the core version, and demonstrates that it works",
-		Component: PluginContainerExample,
+			"Registering the shipped shape plugins: the plugin array goes to both Canvas and createCanvasParser, and the host lays out their toolbar entries",
+		Component: PluginsExample,
 	},
 ];
 
@@ -95,21 +96,36 @@ export function GalleryShell() {
 	return (
 		<div className="gallery">
 			<nav className="gallery-sidebar">
-				<h1 className="gallery-heading">canvas examples</h1>
+				<div className="gallery-brand">
+					<span className="gallery-brand-mark" aria-hidden="true" />
+					<h1 className="gallery-heading">canvas examples</h1>
+				</div>
 				<ul className="gallery-nav">
-					{EXAMPLES.map((example) => (
-						<li key={example.id}>
-							<a
-								href={`#${example.id}`}
-								className={example.id === selected.id ? "active" : undefined}
+					{EXAMPLES.map((example) => {
+						const isSelected = example.id === selected.id;
+						return (
+							<li
+								key={example.id}
+								className={isSelected ? "gallery-item active" : "gallery-item"}
 							>
-								{example.title}
-							</a>
-						</li>
-					))}
+								<a
+									href={`#${example.id}`}
+									aria-current={isSelected ? "page" : undefined}
+								>
+									{example.title}
+								</a>
+								{isSelected && (
+									<div className="gallery-detail">
+										<p className="gallery-description">{example.description}</p>
+										<p className="gallery-source">
+											src/examples/{example.id}.tsx
+										</p>
+									</div>
+								)}
+							</li>
+						);
+					})}
 				</ul>
-				<p className="gallery-description">{selected.description}</p>
-				<p className="gallery-source">src/examples/{selected.id}.tsx</p>
 			</nav>
 			<main className="gallery-content">
 				{/* key forces a remount when the example changes, so no state carries over from the previous one */}

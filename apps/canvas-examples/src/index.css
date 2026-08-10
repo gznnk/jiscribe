@@ -26,61 +26,123 @@ body {
 	height: 100%;
 }
 
+/* Darker than the canvas background (#1e1e1e) so the canvas reads as the stage and the sidebar as chrome */
 .gallery-sidebar {
-	flex: 0 0 200px;
+	flex: 0 0 248px;
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
-	padding: 16px 12px;
 	box-sizing: border-box;
-	background: #1e1e22;
+	overflow: hidden;
+	background: #161618;
 	color: #d4d4d8;
-	border-right: 1px solid #333;
+	border-right: 1px solid #2b2b2b;
+	color-scheme: dark;
+}
+
+.gallery-brand {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 18px 16px 14px;
+	border-bottom: 1px solid #232326;
+}
+
+.gallery-brand-mark {
+	flex: 0 0 auto;
+	width: 10px;
+	height: 10px;
+	border-radius: 3px;
+	background: linear-gradient(135deg, #0f9e8f, #075e56);
 }
 
 .gallery-heading {
 	margin: 0;
-	font-size: 1rem;
+	font-size: 0.875rem;
 	font-weight: 600;
+	letter-spacing: 0.01em;
+	color: #f4f4f5;
 }
 
 .gallery-nav {
+	flex: 1;
+	overflow-y: auto;
 	list-style: none;
 	margin: 0;
-	padding: 0;
+	padding: 8px;
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 1px;
+}
+
+.gallery-item {
+	border-radius: 6px;
+}
+
+/* The inset bar marks the selection without the layout shift a real left border would cause */
+.gallery-item.active {
+	background: linear-gradient(
+		90deg,
+		rgba(15, 158, 143, 0.16),
+		rgba(15, 158, 143, 0.04)
+	);
+	box-shadow: inset 2px 0 0 #14b8a6;
+	padding-bottom: 8px;
+}
+
+.gallery-item + .gallery-item.active,
+.gallery-item.active + .gallery-item {
+	margin-top: 6px;
 }
 
 .gallery-nav a {
 	display: block;
-	padding: 6px 8px;
-	border-radius: 4px;
-	color: inherit;
+	padding: 7px 10px 7px 14px;
+	border-radius: 6px;
+	font-size: 0.8125rem;
+	line-height: 1.35;
+	color: #a1a1aa;
 	text-decoration: none;
+	transition:
+		background-color 0.12s ease,
+		color 0.12s ease;
 }
 
 .gallery-nav a:hover {
-	background: rgba(128, 128, 128, 0.2);
+	background: rgba(255, 255, 255, 0.05);
+	color: #e4e4e7;
 }
 
-.gallery-nav a.active {
-	background: rgba(128, 128, 128, 0.3);
+.gallery-nav a:focus-visible {
+	outline: 1px solid #14b8a6;
+	outline-offset: -1px;
+}
+
+.gallery-item.active a {
+	background: none;
+	color: #fafafa;
 	font-weight: 600;
+}
+
+/* Description and source path belong to the selected item, so they sit inside it */
+.gallery-detail {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	padding: 0 12px 0 14px;
 }
 
 .gallery-description {
 	margin: 0;
-	font-size: 0.8rem;
+	font-size: 0.72rem;
+	line-height: 1.5;
 	color: #a1a1aa;
 }
 
 .gallery-source {
-	margin: auto 0 0;
-	font-size: 0.7rem;
+	margin: 0;
+	font-size: 0.66rem;
 	font-family: ui-monospace, monospace;
-	color: #71717a;
+	color: #6f7078;
 	word-break: break-all;
 }
 
