@@ -50,7 +50,7 @@
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react-swc": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
-		"@vitest/ui": "^2.1.9",
+		"@vitest/ui": "^4.1.10",
 		"madge": "catalog:",
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
