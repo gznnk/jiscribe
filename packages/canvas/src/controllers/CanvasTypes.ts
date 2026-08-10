@@ -50,12 +50,7 @@ export type KeyPointsCache = Record<string, KeyPointsCacheEntry>;
 // ---------------------------------------------------------------------------
 
 export type SnapEdge =
-	| "left"
-	| "right"
-	| "top"
-	| "bottom"
-	| "hCenter"
-	| "vCenter";
+	"left" | "right" | "top" | "bottom" | "hCenter" | "vCenter";
 
 /**
  * A snap candidate point.

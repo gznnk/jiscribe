@@ -20,8 +20,7 @@ export const SwapArrowsCommand: ExecutableCommand = {
 		// When a connector is selected (takes priority over selectedIds — same precedence as getEffectiveSelectedIds)
 		if (state.selectedConnectorId !== null) {
 			const connector = state.objects[state.selectedConnectorId] as
-				| ConnectorState
-				| undefined;
+				ConnectorState | undefined;
 			if (!connector || connector.type !== "connector") {
 				return state;
 			}

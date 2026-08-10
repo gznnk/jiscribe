@@ -25,7 +25,7 @@
 		"@jiscribe/plugin-sticky-shape": "workspace:*",
 		"@jiscribe/plugin-uml-shapes": "workspace:*",
 		"@types/node": "catalog:",
-		"prettier": "3.7.4",
+		"prettier": "3.9.6",
 		"tsx": "^4.23.11",
 		"typescript": "catalog:"
 	}

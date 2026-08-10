@@ -82,11 +82,7 @@ export type PointerInternalEvent = InternalEventBase & {
 	 * instead, filled from the pressed state at fire time.
 	 */
 	type:
-		| "pointerdown"
-		| "pointermove"
-		| "pointerup"
-		| "pointercancel"
-		| "longpress";
+		"pointerdown" | "pointermove" | "pointerup" | "pointercancel" | "longpress";
 	/**
 	 * Pointer the event belongs to; events of any other pointer are dropped while a press
 	 * is held. Synthesized "longpress" and wheel-converted pointermove reuse the pressed id.

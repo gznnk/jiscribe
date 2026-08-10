@@ -53,10 +53,7 @@ export type FreeAnchorSpec = {
 };
 
 export type AnchorSpec =
-	| CenterAnchorSpec
-	| ConnectPointAnchorSpec
-	| EdgeAnchorSpec
-	| FreeAnchorSpec;
+	CenterAnchorSpec | ConnectPointAnchorSpec | EdgeAnchorSpec | FreeAnchorSpec;
 
 export type AnchorKind = AnchorSpec["kind"];
 

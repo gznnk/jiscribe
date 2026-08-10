@@ -10,19 +10,11 @@
  * accepted.
  */
 export type ToolTitle =
-	| "Rectangle"
-	| "Ellipse"
-	| "Polyline"
-	| "Polygon"
-	| "Text"
-	| (string & {});
+	"Rectangle" | "Ellipse" | "Polyline" | "Polygon" | "Text" | (string & {});
 
 /** Edge midpoint anchor, the four every connectable shape has. */
 export type EdgeAnchorId =
-	| "topCenter"
-	| "bottomCenter"
-	| "leftCenter"
-	| "rightCenter";
+	"topCenter" | "bottomCenter" | "leftCenter" | "rightCenter";
 
 /**
  * Id of a connector attachment anchor: one of the edge midpoints core gives every
@@ -37,11 +29,7 @@ export type AnchorId = EdgeAnchorId | (string & {});
  * section a plugin's own menu declares ("header-color" say) is equally accepted.
  */
 export type ColorSectionId =
-	| "bg-color"
-	| "stroke-color"
-	| "line-color"
-	| "font-color"
-	| (string & {});
+	"bg-color" | "stroke-color" | "line-color" | "font-color" | (string & {});
 
 export const selectors = {
 	/** Toolbar tool button. */

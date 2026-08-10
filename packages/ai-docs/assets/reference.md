@@ -11,9 +11,7 @@ Use it as a reference when an AI generates data, or when an external tool produc
 ```json
 {
 	"version": 1,
-	"root": [
-		/* array of ObjectDoc and connectors, in z-order (back to front) */
-	]
+	"root": [/* array of ObjectDoc and connectors, in z-order (back to front) */]
 }
 ```
 

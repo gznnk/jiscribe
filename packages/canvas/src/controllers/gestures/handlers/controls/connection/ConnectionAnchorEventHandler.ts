@@ -200,8 +200,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		// targetId = connectorId, targetPart = "endpoint:<source|target>"
 		const connectorId = event.targetId ?? "";
 		const endpoint = event.targetPart?.slice("endpoint:".length) as
-			| "source"
-			| "target";
+			"source" | "target";
 
 		if (endpoint !== "source" && endpoint !== "target") {
 			return state;

@@ -135,8 +135,7 @@ const definitionSources: ReadonlyArray<
 	[
 		sourceName: string,
 		definitions:
-			| Readonly<Partial<Record<string, ObjectDocDefinition>>>
-			| undefined,
+			Readonly<Partial<Record<string, ObjectDocDefinition>>> | undefined,
 	]
 > = [
 	["canvas built-in", builtinObjectDocDefinitions],

@@ -76,9 +76,7 @@ export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 		component: Sticky,
 		svgDefs: StickyDefs,
 		stencils: StickyStencils,
-		menu: [
-			/* … */
-		],
+		menu: [/* … */],
 	});
 ```
 

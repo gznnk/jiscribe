@@ -319,12 +319,10 @@ const recordHistoryIfNeeded = (
 	state: CanvasControllerState,
 	previousState: CanvasControllerState,
 ): CanvasControllerState => {
-	if (
-		!(
-			state.commitVersion > 0 &&
-			state.commitVersion !== previousState.commitVersion
-		)
-	) {
+	if (!(
+		state.commitVersion > 0 &&
+		state.commitVersion !== previousState.commitVersion
+	)) {
 		return state;
 	}
 
