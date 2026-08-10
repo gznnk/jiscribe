@@ -8,11 +8,23 @@ canvas from Playwright.
 
 ```
 packages/canvas/
-├── playwright.config.mts   # webServer auto-starts the vite dev server for e2e/harness. testDir: e2e/specs (.mts because of top-level await)
+├── playwright.config.ts   # createCanvasPlaywrightConfig call. webServer auto-starts the vite dev server for e2e/harness. testDir: e2e/specs
 ├── e2e/
 │   ├── harness/           # test-only harness (a minimal Vite app that mounts Canvas)
-│   │   ├── main.tsx       # a single Canvas with an empty document (dark theme fixed). ?multi gives a 2-canvas setup
-│   │   └── MultiCanvasApp.tsx  # a 2-canvas page for verifying keyboard scope
+│   │   ├── main.tsx       # loads specShapesPlugin into mountPluginHarness (no shipped plugin)
+│   │   └── vite.config.ts # createPluginHarnessViteConfig call
+│   ├── plugins/           # test-only plugins this package registers in its own harness
+│   │   └── specShapesPlugin.tsx  # tile (drag-drawn) / pin (click-placed) / card (<g>-rooted, text, connectable)
+│   ├── kit/               # the shared implementation behind the testing entries
+│   │   ├── createCanvasPlaywrightConfig.ts  # ephemeral-port webServer, viewport, headed ergonomics
+│   │   ├── createPluginHarnessViteConfig.ts # dev-server-only vite config
+│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi gives a 2-canvas setup
+│   │   ├── MultiCanvasApp.tsx      # a 2-canvas page for verifying keyboard scope
+│   │   └── harness.css
+│   ├── testing.ts         # @jiscribe/canvas/testing — fixtures + driver + selectors, for spec files
+│   ├── testing-playwright-config.ts  # @jiscribe/canvas/testing/playwright-config
+│   ├── testing-vite-config.ts        # @jiscribe/canvas/testing/vite-config
+│   ├── testing-harness.ts            # @jiscribe/canvas/testing/harness
 │   ├── fixtures.ts        # the canvas fixture (injects CanvasDriver)
 │   ├── support/
 │   │   ├── selectors.ts   # data-kind / data-id selector constants
@@ -20,10 +32,18 @@ packages/canvas/
 │   └── specs/             # the tests themselves (run by test:e2e)
 ```
 
+The four `testing*` files are the package's e2e kit, exported so a shape plugin can
+own its own suite. They are split one per consumer file — spec, Playwright config,
+vite config, harness entry — because each is loaded by a different runtime, and none
+of them tolerates the others' imports. Plugins take the same kit through
+`@jiscribe/canvas-sdk/testing/*`; canvas itself must import it relatively, or the
+`canvas → canvas-sdk → canvas` cycle comes back.
+
 Running:
 
 ```bash
-pnpm --filter @jiscribe/canvas test:e2e         # from the root, pnpm test:e2e
+pnpm --filter @jiscribe/canvas test:e2e         # from the root, pnpm test:e2e:canvas
+                                                # (pnpm test:e2e runs all nine suites)
 pnpm --filter @jiscribe/canvas test:e2e:headed  # with the browser shown
 pnpm --filter @jiscribe/canvas test:e2e:ui      # Playwright UI mode
 pnpm --filter @jiscribe/canvas dev:harness      # start the harness manually (for visual debugging)
@@ -58,7 +78,7 @@ tests is the reliable choice.
 How to pick between the attributes:
 
 - **`data-kind` / `data-id`** … the product's **functional contract** (read by the gesture system). Tests use it "as a side benefit"
-- **`data-testid`** … a **test-only hook**. Put it on elements that cannot be identified functionally (number inputs that do not go through gestures, decorative elements with `pointerEvents: none`, and so on). It is already enabled through `testIdAttribute: "data-testid"` in `playwright.config.mts`, and is used like `page.getByTestId("menu-number-input:strokeWidth")`. Keeping it out of the functional contract (`data-id`) separates test-driven identifiers from functional ones
+- **`data-testid`** … a **test-only hook**. Put it on elements that cannot be identified functionally (number inputs that do not go through gestures, decorative elements with `pointerEvents: none`, and so on). It is already enabled through `testIdAttribute: "data-testid"` in `playwright.config.ts`, and is used like `page.getByTestId("menu-number-input:strokeWidth")`. Keeping it out of the functional contract (`data-id`) separates test-driven identifiers from functional ones
 
 ### data-testid list
 
@@ -83,9 +103,10 @@ For the three-axis grammar of kind / id / part, see
 Shape library buttons use part: `item:<presetId>` (for example `item:rect`).
 
 Toolbar buttons can also be identified by the `title` attribute, as in
-`button[title="Rectangle"]` (Rectangle / Ellipse / Polyline / Polygon / Text /
-Callout / Sticky / Markdown — the harness pins all of them, including the
-plugin-supplied Sticky and Markdown).
+`button[title="Rectangle"]` (Rectangle / Ellipse / Polyline / Polygon / Text
+from core, plus Pin / Card from `e2e/plugins/specShapesPlugin` — the harness
+pins all of them). No shipped plugin is mounted here; a spec that needs one
+belongs in that plugin's own suite.
 
 ### data-id / data-part of control
 

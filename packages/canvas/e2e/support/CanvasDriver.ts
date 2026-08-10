@@ -441,7 +441,7 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Add a click-placed shape (Sticky) at the canvas center from its tool button and return the
+	 * Add a click-placed shape at the canvas center from its tool button and return the
 	 * new data-id. StencilLibraryItemHandler places these outright rather than by diagonal drag,
 	 * so they need this instead of drawShape's crosshair-wait-then-drag.
 	 */
@@ -1059,7 +1059,7 @@ export class CanvasDriver {
 	 * foreignObject > div(wrapper) > div(text).
 	 *
 	 * For rect and ellipse the shape element and the foreignObject are siblings within a
-	 * fragment, while a Sticky holds the foreignObject as a child of its `<g data-id>`. To cover
+	 * fragment, while a <g>-rooted shape holds the foreignObject as a child of its `<g data-id>`. To cover
 	 * both, this looks among the data-id element's descendants first and falls back to its
 	 * following siblings. font-size / color / font-weight / font-style / text-decoration /
 	 * text-align live on the text element and vertical alignment (align-items) on the wrapper,
@@ -1083,7 +1083,7 @@ export class CanvasDriver {
 			if (!shape) {
 				return null;
 			}
-			// Descendants first (under a Sticky's `<g>`), then following siblings (the
+			// Descendants first (under a <g>-rooted shape), then following siblings (the
 			// rect/ellipse fragment).
 			let foreignObject: Element | null = shape.querySelector("foreignObject");
 			if (!foreignObject) {

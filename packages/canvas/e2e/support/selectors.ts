@@ -3,15 +3,19 @@
  * data-testid for test-only hooks). See "DOM structure and selectors" in e2e/README.md.
  */
 
-/** Tool name in the left toolbar, matching the button's title attribute. */
+/**
+ * Tool name in the left toolbar, matching the button's title attribute. The
+ * listed ones are core's own presets, spelled out as known values for
+ * completion; a plugin's tool name (its stencil label, "Sticky" say) is equally
+ * accepted.
+ */
 export type ToolTitle =
 	| "Rectangle"
 	| "Ellipse"
 	| "Polyline"
 	| "Polygon"
 	| "Text"
-	| "Sticky"
-	| "Markdown";
+	| (string & {});
 
 /** Edge midpoint anchor, the four every connectable shape has. */
 export type EdgeAnchorId =
@@ -21,18 +25,23 @@ export type EdgeAnchorId =
 	| "rightCenter";
 
 /**
- * Id of a connector attachment anchor: an edge midpoint, or a point a shape type
- * declares for itself ("tip" on the group markers).
+ * Id of a connector attachment anchor: one of the edge midpoints core gives every
+ * connectable shape, or a point a shape type declares for itself
+ * (`extraConnectPoints`, such as the brace's "tip"), whose id only that type knows.
  */
-export type AnchorId = EdgeAnchorId | "tip";
+export type AnchorId = EdgeAnchorId | (string & {});
 
-/** Section id that opens a color picker in the ObjectMenu. */
+/**
+ * Section id that opens a color picker in the ObjectMenu. The listed ones are
+ * core's built-in menu items, spelled out as known values for completion; a
+ * section a plugin's own menu declares ("header-color" say) is equally accepted.
+ */
 export type ColorSectionId =
 	| "bg-color"
-	| "header-color"
 	| "stroke-color"
 	| "line-color"
-	| "font-color";
+	| "font-color"
+	| (string & {});
 
 export const selectors = {
 	/** Toolbar tool button. */

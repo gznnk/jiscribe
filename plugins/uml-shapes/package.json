@@ -11,7 +11,9 @@
 	},
 	"scripts": {
 		"lint": "eslint .",
+		"dev:harness": "vite e2e/harness --configLoader runner",
 		"test": "vitest run",
+		"test:e2e": "playwright test",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -28,11 +30,14 @@
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
+		"@playwright/test": "^1.60.0",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/canvas-sdk": "workspace:*",
 		"react": "catalog:",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	}
 }

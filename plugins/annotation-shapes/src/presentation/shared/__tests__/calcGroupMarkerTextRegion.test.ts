@@ -99,7 +99,10 @@ describe("calcGroupMarkerTextRegion", () => {
 		expect(
 			calcGroupMarkerTextRegion(withoutTipPosition, BODY_TEXT_SLOT_ID),
 		).toEqual(
-			calcGroupMarkerTextRegion(stateOf("left", "doc layer"), BODY_TEXT_SLOT_ID),
+			calcGroupMarkerTextRegion(
+				stateOf("left", "doc layer"),
+				BODY_TEXT_SLOT_ID,
+			),
 		);
 	});
 });

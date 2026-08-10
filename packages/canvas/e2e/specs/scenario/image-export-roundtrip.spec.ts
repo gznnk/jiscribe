@@ -21,9 +21,11 @@ import { selectors } from "../../support/selectors";
  *   file has no <metadata>
  * - Transparent background: no background rect is laid down (the default does
  *   lay one down)
- * - Multi-slot shapes (record, #167): every slot's text is emitted as <text>
  * - Connector labels: written as <text> plus a <rect> box rather than a
  *   foreignObject (B1), and rasterized in PNG too
+ *
+ * The multi-slot case (record, #167) belongs to the shape that has the slots, so it
+ * lives in the uml plugin's own suite (plugins/uml-shapes/e2e/specs/record-image-export).
  */
 
 /**
@@ -222,46 +224,6 @@ test("exports a plain .svg with no metadata when data embedding is off", async (
 	expect(svgText).not.toContain("<metadata");
 	expect(svgText).not.toContain("jiscribe.dev/ns/canvas");
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
-});
-
-test("emits every slot of a record (multi-slot) shape as <text> in the SVG export", async ({
-	canvas,
-	page,
-}) => {
-	await canvas.drawShapeFromFlyout(
-		"uml",
-		"object",
-		{ x: 300, y: 200 },
-		{ x: 520, y: 280 },
-	);
-	await canvas.deselect();
-
-	// The title band (within the top 28px) is the name slot; below it is the
-	// attributes slot. The stencil drops the box in with sample text, so both are
-	// filled in place of it rather than typed into.
-	await canvas.replaceTextAt({ x: 410, y: 212 }, "Users");
-	await canvas.commitText();
-	await canvas.replaceTextAt({ x: 410, y: 255 }, "id: string\nname: string");
-	await canvas.commitText();
-	await canvas.deselect();
-
-	// Turn data embedding off so a body match can only come from the rendered <text>.
-	const svg = await downloadViaExportDialog(
-		page,
-		canvas,
-		{ x: 750, y: 550 },
-		"svg",
-		{ includeSource: false },
-	);
-	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
-
-	expect(svgText).not.toContain("<foreignObject");
-	const textElements = [...svgText.matchAll(/<text[\s\S]*?<\/text>/g)].join(
-		" ",
-	);
-	expect(textElements).toContain("Users");
-	expect(textElements).toContain("id: string");
-	expect(textElements).toContain("name: string");
 });
 
 /**

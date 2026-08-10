@@ -29,7 +29,8 @@
 		"format:check": "prettier --check .",
 		"test": "pnpm -r --if-present test",
 		"test:coverage": "pnpm -r --if-present test:coverage",
-		"test:e2e": "pnpm --filter @jiscribe/canvas test:e2e"
+		"test:e2e": "pnpm -r --if-present test:e2e",
+		"test:e2e:canvas": "pnpm --filter @jiscribe/canvas test:e2e"
 	},
 	"packageManager": "pnpm@10.34.5",
 	"comments": {

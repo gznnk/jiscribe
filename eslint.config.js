@@ -221,10 +221,16 @@ export default tseslint.config(
 								"!@jiscribe/canvas/doc",
 								"!@jiscribe/canvas/unstable",
 								"!@jiscribe/canvas/unstable-doc",
+								// The ./testing/* entries are re-exported as @jiscribe/canvas-sdk/testing/*,
+								// which is the surface a plugin author writes an e2e suite against.
+								"!@jiscribe/canvas/testing",
+								"!@jiscribe/canvas/testing/harness",
+								"!@jiscribe/canvas/testing/playwright-config",
+								"!@jiscribe/canvas/testing/vite-config",
 								"**/canvas/src/**",
 							],
 							message:
-								"The internals of canvas are out of reach. Only @jiscribe/canvas and ./doc, ./unstable, ./unstable-doc are available.",
+								"The internals of canvas are out of reach. Only @jiscribe/canvas and ./doc, ./unstable, ./unstable-doc, ./testing/* are available.",
 						},
 						{
 							group: ["@jiscribe/*/src/*"],

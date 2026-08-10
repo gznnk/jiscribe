@@ -16,20 +16,25 @@ ESLint 9, Prettier. React Compiler is not used.
 
 ```
 packages/
-  canvas/            engine (rendering, gestures, commands, state, schema) + e2e suite
+  canvas/            engine (rendering, gestures, commands, state, schema) + its e2e suite and the shared e2e kit
   canvas-sdk/        shape-authoring kit for plugin authors
   geometry/          geometry types and calculations
   markdown/          markdown rendering
   basic-validators/  primitive runtime validators
   utility-types/     shared TypeScript utility types
   ai-docs/           generated JSON Schema / AI reference for the shipped shapes
-plugins/             flowchart, uml, container, general, annotation, sticky, markdown
+plugins/             flowchart, uml, container, general, annotation, sticky, markdown — each with its own e2e suite
 apps/
-  canvas-examples/   integration examples (one example = one file)
+  canvas-examples/   integration examples (one example = one file) + the plugin-coexistence e2e suite
   vscode-extension/  the VSCode extension
 ```
 
-The Playwright e2e suite lives in `packages/canvas/e2e/`, not in the example app.
+Playwright e2e is spread over nine suites, one per package that owns shapes:
+`packages/canvas/e2e/` (core, on a harness registering no shipped plugin),
+`plugins/<name>/e2e/` (that plugin alone), and `apps/canvas-examples/e2e/` (one spec:
+all seven plugins on a single canvas). Each has its own `playwright.config.ts` and runs
+as `pnpm --filter <package> test:e2e`. They share canvas's kit, which plugins reach
+through `@jiscribe/canvas-sdk/testing/*` — see `packages/canvas/docs/09-testing.md`.
 
 ## After making a change
 
@@ -46,11 +51,19 @@ pnpm lint
 Then, by impact:
 
 - **Unit tests for what you touched**: `pnpm --filter @jiscribe/canvas test`
-- **Behaviour or rendering** (`packages/canvas/src/{gestures,controllers,presentations,states}`):
-  run only the related e2e specs, selected by keyword — e.g.
-  `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`. Do not run
-  the full suite (140+ specs); CI does that on pull requests to `main`. If no
-  spec matches, cover it with a unit test instead.
+- **Behaviour or rendering**: run e2e from the suite that owns what you touched, and
+  only the related specs.
+  - `packages/canvas/src/{gestures,controllers,presentations,states}`: select by
+    keyword, e.g. `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`.
+    Do not run that suite in full (160+ spec files); CI does it on pull requests to
+    `main`.
+  - a plugin's shapes: run its whole suite, which is a handful of specs, e.g.
+    `pnpm --filter @jiscribe/plugin-uml-shapes test:e2e`.
+  - plugin registration, toolbar composition or `svgDefs`:
+    `pnpm --filter canvas-examples test:e2e`.
+
+  If no spec matches, cover it with a unit test instead.
+
 - **Shapes or AI-facing metadata** (new shape, `ObjectFeatures`, `description`,
   `defaults`): run `pnpm generate:ai` and commit the regenerated
   `packages/ai-docs/assets/`, or CI's `check:ai` fails on the drift.

@@ -1,8 +1,4 @@
-import react from "@vitejs/plugin-react-swc";
-import { defineConfig } from "vite";
+// Relative, never through @jiscribe/canvas-sdk: canvas may not depend on the kit it ships.
+import { createPluginHarnessViteConfig } from "../testing-vite-config";
 
-// Vite config for the e2e-only harness, started with an explicit root as `vite e2e/harness`
-// from playwright.config.ts's webServer. Dev server only; never built.
-export default defineConfig({
-	plugins: [react()],
-});
+export default createPluginHarnessViteConfig();

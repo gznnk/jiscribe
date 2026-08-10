@@ -13,9 +13,13 @@ import { selectors } from "../../support/selectors";
  *
  * Drawing mode being on is observed through the Canvas cursor: crosshair (flyout items
  * unmount on pointerup, so the canvas is watched rather than the tool button cursor).
+ *
+ * The subject is the flyout mechanism, not any one shape set, so the category comes
+ * from the harness's test-only plugin (e2e/plugins/specShapesPlugin).
  */
 
-const FLOWCHART = "flowchart";
+/** The test-only plugin's category, holding the single `tile` preset. */
+const SPEC_CATEGORY = "spec";
 
 /** Computed cursor of the canvas (data-kind="canvas"). crosshair = drawing mode on. */
 async function canvasCursor(canvas: CanvasDriver): Promise<string> {
@@ -54,28 +58,28 @@ test.describe("StencilLibrary category flyout", () => {
 	}) => {
 		// The flyout starts closed
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toHaveCount(0);
 
-		// Pressing the category button opens the flyout and reveals the diamond item
-		await canvas.page.click(selectors.categoryButton(FLOWCHART));
+		// Pressing the category button opens the flyout and reveals the tile item
+		await canvas.page.click(selectors.categoryButton(SPEC_CATEGORY));
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toBeVisible();
-		const diamondItem = canvas.page.locator(selectors.shapeItem("diamond"));
-		await expect(diamondItem).toBeVisible();
+		const tileItem = canvas.page.locator(selectors.shapeItem("tile"));
+		await expect(tileItem).toBeVisible();
 
 		// Clicking an item enters drawing mode (the Canvas turns crosshair) and the
 		// flyout closes on pointerup
 		const before = (await canvas.captureObjects()).length;
-		await diamondItem.click();
+		await tileItem.click();
 		await expect
 			.poll(() => canvasCursor(canvas), {
 				message: "clicking a shape in the flyout enters drawing mode",
 			})
 			.toBe("crosshair");
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toHaveCount(0);
 
 		// Drag onto the canvas to actually create it (inside, clear of the top edge zone)
@@ -91,40 +95,40 @@ test.describe("StencilLibrary category flyout", () => {
 		canvas,
 	}) => {
 		// Close with Escape
-		await canvas.page.click(selectors.categoryButton(FLOWCHART));
+		await canvas.page.click(selectors.categoryButton(SPEC_CATEGORY));
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toBeVisible();
 		await canvas.page.keyboard.press("Escape");
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toHaveCount(0);
 
 		// Reopen, then close with a click on empty canvas (outside)
-		await canvas.page.click(selectors.categoryButton(FLOWCHART));
+		await canvas.page.click(selectors.categoryButton(SPEC_CATEGORY));
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toBeVisible();
 		const empty = canvas.toScreen({ x: 700, y: 600 });
 		await canvas.page.mouse.click(empty.x, empty.y);
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toHaveCount(0);
 	});
 
 	test("closes the flyout on a press over the toolbar's empty area", async ({
 		canvas,
 	}) => {
-		await canvas.page.click(selectors.categoryButton(FLOWCHART));
+		await canvas.page.click(selectors.categoryButton(SPEC_CATEGORY));
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toBeVisible();
 
 		const empty = await toolbarEmptyPoint(canvas);
 		await canvas.page.mouse.move(empty.x, empty.y);
 		await canvas.page.mouse.down();
 		await expect(
-			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
+			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toHaveCount(0);
 		await canvas.page.mouse.up();
 	});

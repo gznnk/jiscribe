@@ -9,11 +9,20 @@ canvas プラグイン（図形パッケージ）作者向けの量産キット�
 
 ## エントリ
 
-| エントリ                       | 用途                                                                                         |
-| ------------------------------ | -------------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas-sdk`         | UI 部材（React 依存）。unstable 面の再エクスポート + sdk 固有ヘルパー                        |
-| `@jiscribe/canvas-sdk/doc`     | headless 部材。unstable-doc 面の再エクスポート + doc 系ヘルパー。React / @emotion を引かない |
-| `@jiscribe/canvas-sdk/testing` | テスト専用（vitest 前提）。ランタイム barrel には混ぜない                                    |
+| エントリ                                         | 用途                                                                                         |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas-sdk`                           | UI 部材（React 依存）。unstable 面の再エクスポート + sdk 固有ヘルパー                        |
+| `@jiscribe/canvas-sdk/doc`                       | headless 部材。unstable-doc 面の再エクスポート + doc 系ヘルパー。React / @emotion を引かない |
+| `@jiscribe/canvas-sdk/testing`                   | ユニットテスト専用（vitest 前提）。ランタイム barrel には混ぜない                            |
+| `@jiscribe/canvas-sdk/testing/e2e`               | e2e の spec ファイル用。fixtures・CanvasDriver・selectors                                    |
+| `@jiscribe/canvas-sdk/testing/playwright-config` | `playwright.config.ts` 用                                                                    |
+| `@jiscribe/canvas-sdk/testing/vite-config`       | ハーネスの `vite.config.ts` 用                                                               |
+| `@jiscribe/canvas-sdk/testing/harness`           | ハーネスのエントリモジュール用（ブラウザコード）                                             |
+
+e2e 用が 4 つに分かれているのは、spec / playwright config / vite config / ブラウザ
+コードがそれぞれ別のローダーに読まれ、互いの import を許さないためである
+（fixtures を登録するモジュールに触れた config を Playwright が拒否する、vite が
+ESM 専用、など）。1 ファイル 1 エントリで対応させること。
 
 ## 置き場所の3層ルール
 
@@ -57,3 +66,17 @@ canvas プラグイン（図形パッケージ）作者向けの量産キット�
 
 - `createParseCheckSuite({ plugin, sampleDoc, ... })` — パース受理と
   「doc プラグイン未配線時に図形が黙って落ちる」ことの検知を全プラグイン共通形で固定する
+
+### e2e 部材（`/testing/*`）
+
+プラグインが自分の e2e スイートを持つための一式。出荷プラグインの
+`plugins/*/e2e/` が実例。
+
+- `createCanvasPlaywrightConfig({ testDir, harnessCommand })`（`/testing/playwright-config`）
+  — 毎回 ephemeral ポートでハーネスを起こす Playwright 設定。スイート固有はこの 2 つだけ
+- `createPluginHarnessViteConfig()`（`/testing/vite-config`）— ハーネスの vite 設定。
+  起動は `vite e2e/harness --configLoader runner`
+- `mountPluginHarness({ plugins, toolbarLayout })`（`/testing/harness`）— spec が叩く
+  ハーネスページ。`toolbarLayout` は自分の図形が要る分だけに絞る（単独ロードで
+  動くこと自体が、他プラグインへの暗黙依存が無いことの検証になる）
+- `test` / `expect` / `CanvasDriver` / `selectors`（`/testing/e2e`）— spec 側の部材

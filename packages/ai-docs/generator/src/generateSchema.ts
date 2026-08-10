@@ -245,9 +245,7 @@ function buildShapeDef(
 
 	if (features.radius) {
 		if (defaults.rx === undefined) {
-			throw new Error(
-				`Type "${type}" declares radius but has no defaults.rx`,
-			);
+			throw new Error(`Type "${type}" declares radius but has no defaults.rx`);
 		}
 		properties.rx = withOverride("rx", {
 			description: `Corner radius (SVG rx). Default: ${formatDefaultValue(defaults.rx)}`,

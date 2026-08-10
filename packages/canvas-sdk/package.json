@@ -8,7 +8,11 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./doc": "./src/doc.ts",
-		"./testing": "./src/testing.ts"
+		"./testing": "./src/testing.ts",
+		"./testing/e2e": "./src/testing-e2e.ts",
+		"./testing/playwright-config": "./src/testing-playwright-config.ts",
+		"./testing/vite-config": "./src/testing-vite-config.ts",
+		"./testing/harness": "./src/testing-harness.ts"
 	},
 	"scripts": {
 		"lint": "eslint .",
@@ -27,6 +31,7 @@
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@jiscribe/canvas": "workspace:*",
 		"react": "catalog:",

@@ -102,7 +102,7 @@ pnpm typecheck         # TypeScript across the workspace
 pnpm dep:check         # circular dependency check (madge)
 pnpm format            # Prettier
 pnpm test              # unit tests (vitest)
-pnpm test:e2e          # full Playwright e2e suite
+pnpm test:e2e          # every Playwright suite (core, each plugin, coexistence)
 ```
 
 Requirements: Node.js 22 (18+ works) and pnpm 10.

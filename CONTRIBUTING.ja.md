@@ -46,9 +46,16 @@ pnpm lint
 
 - **どのパッケージでも** — そのパッケージのユニットテストを流す:
   `pnpm --filter @jiscribe/canvas test`
-- **挙動または描画**（`packages/canvas/src/{gestures,controllers,presentations,states}`）
-  — スイート全体ではなく関連する e2e スペックだけを流す:
-  `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
+- **挙動または描画** — 触った対象を所有するスイートの e2e を流す。Playwright は
+  9 スイートに分かれている: `packages/canvas/e2e/`（コア）、`plugins/<name>/e2e/`
+  （そのプラグイン単体）、`apps/canvas-examples/e2e/`（7 プラグイン同居）。
+  - `packages/canvas/src/{gestures,controllers,presentations,states}` — スイート全体
+    ではなくキーワードで関連スペックだけを絞る:
+    `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
+  - プラグインの図形 — そのスイート全体を流す（数本しかない）:
+    `pnpm --filter @jiscribe/plugin-uml-shapes test:e2e`
+  - プラグインの登録・ツールバーの合成・`svgDefs` —
+    `pnpm --filter canvas-examples test:e2e`
 - **図形または AI 向けメタデータ**（新しい図形、`ObjectFeatures`、`description`、
   `defaults`） — `pnpm generate:ai` で AI 向けアセットを再生成してコミットする。
   さもないと差分によって CI の `check:ai` が落ちる

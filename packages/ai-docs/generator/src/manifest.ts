@@ -198,7 +198,9 @@ export function loadManifest(): ReadonlyMap<
 	for (const type of CANONICAL_TYPE_ORDER) {
 		const definition = aggregated[type];
 		if (!definition) {
-			errors.push(`No definition found for type "${type}" listed in CANONICAL_TYPE_ORDER`);
+			errors.push(
+				`No definition found for type "${type}" listed in CANONICAL_TYPE_ORDER`,
+			);
 			continue;
 		}
 		if (!definition.summary) {
@@ -211,7 +213,9 @@ export function loadManifest(): ReadonlyMap<
 				);
 			}
 			if (!definition.defaults) {
-				errors.push(`Type "${type}" has no defaults (required to generate its $def)`);
+				errors.push(
+					`Type "${type}" has no defaults (required to generate its $def)`,
+				);
 			}
 		}
 		if (
@@ -226,7 +230,9 @@ export function loadManifest(): ReadonlyMap<
 	}
 
 	if (errors.length > 0) {
-		throw new Error(`Shape manifest validation failed:\n- ${errors.join("\n- ")}`);
+		throw new Error(
+			`Shape manifest validation failed:\n- ${errors.join("\n- ")}`,
+		);
 	}
 	return manifest;
 }

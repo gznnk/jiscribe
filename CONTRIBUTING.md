@@ -48,9 +48,17 @@ pnpm lint
 Then, depending on what you touched:
 
 - **Any package** — run its unit tests: `pnpm --filter @jiscribe/canvas test`
-- **Behaviour or rendering** (`packages/canvas/src/{gestures,controllers,presentations,states}`)
-  — run the related e2e specs, not the full suite:
-  `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
+- **Behaviour or rendering** — run e2e from the suite that owns what you touched.
+  Playwright is spread over nine suites: `packages/canvas/e2e/` (core),
+  `plugins/<name>/e2e/` (that plugin alone) and `apps/canvas-examples/e2e/`
+  (all seven plugins on one canvas).
+  - `packages/canvas/src/{gestures,controllers,presentations,states}` — select the
+    related specs by keyword rather than running the suite in full:
+    `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
+  - a plugin's shapes — run its whole suite, which is a handful of specs:
+    `pnpm --filter @jiscribe/plugin-uml-shapes test:e2e`
+  - plugin registration, toolbar composition or `svgDefs` —
+    `pnpm --filter canvas-examples test:e2e`
 - **Shapes or AI-facing metadata** (a new shape, `ObjectFeatures`, `description`,
   `defaults`) — regenerate the AI assets with `pnpm generate:ai` and commit the
   result, or CI's `check:ai` will fail on the drift

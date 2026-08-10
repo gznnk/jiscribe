@@ -100,7 +100,7 @@ pnpm typecheck         # ワークスペース全体の TypeScript
 pnpm dep:check         # 循環依存チェック（madge）
 pnpm format            # Prettier
 pnpm test              # ユニットテスト（vitest）
-pnpm test:e2e          # Playwright の e2e スイート全体
+pnpm test:e2e          # Playwright の全スイート（コア・各プラグイン・同居検証）
 ```
 
 必要環境: Node.js 22（18 以上で動作）と pnpm 10。

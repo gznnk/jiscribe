@@ -5,7 +5,7 @@ import { selectors, type ToolTitle } from "../../support/selectors";
 /**
  * The StencilLibrary drawing mode is cleared by the following two operations.
  *
- * 1. Pressing a shape that does not support drawing (Sticky and other shapes without
+ * 1. Pressing a shape that does not support drawing (Pin and other shapes without
  *    bounds drawing). Those are placed immediately on press and never enter drawing
  *    mode, so shapeDrawing is set to null on click to keep a previous drawing mode from
  *    lingering.
@@ -15,6 +15,9 @@ import { selectors, type ToolTitle } from "../../support/selectors";
  * Drawing mode on/off is observed through each tool button's cursor: only the button of
  * the preset being drawn gets cursor: crosshair (isActive), inactive ones fall back to
  * grab (the style contract of StencilLibraryStyled).
+ *
+ * Core supplies no click-placed shape of its own, so Pin comes from the harness's
+ * test-only plugin (e2e/plugins/specShapesPlugin).
  */
 
 /** Computed cursor of a tool button. crosshair = drawing mode on / grab = off. */
@@ -52,18 +55,18 @@ async function enterDrawingMode(canvas: CanvasDriver, tool: ToolTitle) {
 }
 
 test.describe("StencilLibrary drawing mode clearing", () => {
-	test("clears drawing mode when a shape without drawing support (Sticky) is pressed while drawing", async ({
+	test("clears drawing mode when a shape without drawing support (Pin) is pressed while drawing", async ({
 		canvas,
 	}) => {
 		await enterDrawingMode(canvas, "Rectangle");
 
-		// Pressing Sticky places it at the center immediately and should clear drawing mode
-		const stickyId = await canvas.placeShape("Sticky");
-		expect(stickyId).toBeTruthy();
+		// Pressing Pin places it at the center immediately and should clear drawing mode
+		const pinId = await canvas.placeShape("Pin");
+		expect(pinId).toBeTruthy();
 
 		await expect
 			.poll(() => toolCursor(canvas, "Rectangle"), {
-				message: "pressing Sticky clears Rectangle's drawing mode",
+				message: "pressing Pin clears Rectangle's drawing mode",
 			})
 			.toBe("grab");
 	});
