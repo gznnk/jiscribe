@@ -29,10 +29,10 @@
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
-		"@playwright/test": "^1.60.0",
-		"@types/react": "catalog:",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/canvas-sdk": "workspace:*",
+		"@playwright/test": "^1.62.1",
+		"@types/react": "catalog:",
 		"react": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",

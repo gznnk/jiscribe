@@ -16,17 +16,17 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@types/node": "catalog:",
 		"@jiscribe/canvas": "workspace:*",
-		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
 		"@jiscribe/plugin-annotation-shapes": "workspace:*",
 		"@jiscribe/plugin-container-shapes": "workspace:*",
+		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
 		"@jiscribe/plugin-general-shapes": "workspace:*",
 		"@jiscribe/plugin-markdown-shape": "workspace:*",
 		"@jiscribe/plugin-sticky-shape": "workspace:*",
 		"@jiscribe/plugin-uml-shapes": "workspace:*",
+		"@types/node": "catalog:",
 		"prettier": "3.7.4",
-		"tsx": "^4.22.4",
+		"tsx": "^4.23.11",
 		"typescript": "catalog:"
 	}
 }
