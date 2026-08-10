@@ -2,17 +2,28 @@
 
 # Jiscribe
 
-React 向けの SVG ダイアグラムキャンバスエンジン。[jiscribe](https://beta.jiscribe.dev)
-の編集コアを、単体のライブラリとして切り出したもの。
+React 向けの SVG ダイアグラムキャンバスエンジン。
 
 Jiscribe はドキュメントファーストで設計されている。ダイアグラムは利用側が所有する
 ただの JSON 値（`.jis.json`）であり、キャンバスはそれを描画・編集する制御された
-React コンポーネントにすぎない。図形はコアにハードコードされておらず、フローチャート、
-UML、付箋、Markdown なども含めてすべてプラグインとして提供される。それらが使う
-公開 API は、独自の図形を書くときに使うものとまったく同じである。
+React コンポーネントにすぎない。JSON Schema と AI 向けリファレンスを同梱しているので、
+LLM がそのまま読み書きできる形式でもある。
+
+作図に必要なものは一式そろっている。コアが 7 つの基本型（`rect` / `ellipse` /
+`polyline` / `polygon` / `group` / `connector` / `svg`）を受け持ち、フローチャート・
+UML・付箋・Markdown・コンテナ・注釈・汎用ピクトグラムといった図形セットはプラグインと
+して同梱される。プラグインが使う公開 API は、独自の図形を書くときに使うものと
+まったく同じである。
+
+jiscribe の製品群は、いずれもこのコアの上に載っている。
+
+- **[Jiscribe Web](https://app.jiscribe.dev/)** — ブラウザで動くエディタ
+- **[Jiscribe for VSCode](https://marketplace.visualstudio.com/items?itemName=gznnk.jiscribe)**
+  — `.jis.json` を VSCode 上で開いて編集する拡張
 
 > **ステータス: プレリリース。** 各パッケージはまだ npm に公開されておらず、公開 API も
-> 変更される可能性がある。`0.1.0` のタグ付けを知りたい場合はリポジトリを Watch すること。
+> 変更される可能性がある。初回の npm 公開は GitHub Release として出すので、知りたい場合は
+> このリポジトリを Watch（Custom → Releases）しておくこと。
 
 ## まず動かす
 

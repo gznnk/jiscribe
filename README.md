@@ -2,18 +2,28 @@
 
 # Jiscribe
 
-An SVG diagram canvas engine for React — the editing core behind
-[jiscribe](https://beta.jiscribe.dev), extracted as a standalone library.
+An SVG diagram canvas engine for React.
 
 Jiscribe is document-first: a diagram is a plain JSON value (`.jis.json`) that
 you own, and the canvas is a controlled React component that renders and edits
-it. Shapes are not hardcoded into the core — flowchart, UML, sticky, markdown
-and the rest all ship as plugins built on the same public API you would use for
-your own.
+it. A JSON Schema and an AI reference ship alongside it, so the format is one
+an LLM can read and write directly.
+
+Everything you need to draw is in the box. The core carries seven primitive
+types (`rect` / `ellipse` / `polyline` / `polygon` / `group` / `connector` /
+`svg`), and the richer shape sets — flowchart, UML, sticky, markdown,
+container, annotation, general pictograms — ship as plugins. The public API
+those plugins are built on is exactly the one you would use for your own.
+
+The jiscribe products are all built on this core.
+
+- **[Jiscribe Web](https://app.jiscribe.dev/)** — the editor, in your browser
+- **[Jiscribe for VSCode](https://marketplace.visualstudio.com/items?itemName=gznnk.jiscribe)**
+  — opens and edits `.jis.json` inside VSCode
 
 > **Status: pre-release.** The packages are not on npm yet and the public API
-> may still change. Follow the repository if you want to know when `0.1.0` is
-> tagged.
+> may still change. The first npm release will go out as a GitHub Release; watch
+> this repository under Custom → Releases to hear about it.
 
 ## Quick look
 
