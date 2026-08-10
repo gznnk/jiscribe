@@ -13,10 +13,10 @@ export function replaceAutogenRegion(
 	const beginIndex = source.indexOf(begin);
 	const endIndex = source.indexOf(end);
 	if (beginIndex < 0 || endIndex < 0 || endIndex < beginIndex) {
-		throw new Error(`AUTOGEN 区間 "${regionName}" が見つかりません`);
+		throw new Error(`AUTOGEN region "${regionName}" not found`);
 	}
 	if (source.indexOf(begin, beginIndex + 1) >= 0) {
-		throw new Error(`AUTOGEN 区間 "${regionName}" が重複しています`);
+		throw new Error(`AUTOGEN region "${regionName}" appears more than once`);
 	}
 	return `${source.slice(
 		0,

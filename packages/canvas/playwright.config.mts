@@ -2,18 +2,20 @@ import { createServer } from "node:net";
 
 import { defineConfig } from "@playwright/test";
 
-// headed 実行（--headed / --ui）の時だけ、目視しやすいように
-// 直列実行（workers: 1）＋ slowMo を有効にする。
-// （テスト後の待機はワーカー側で testInfo.project.use.headless を見て判定する。
-//  process.argv はこのメインプロセスでしか --headed を持たないため。）
+// Only for headed runs (--headed / --ui), switch to serial execution (workers: 1) plus
+// slowMo so the run is easy to follow by eye.
+// (Whether to pause after a test is decided in the worker from
+//  testInfo.project.use.headless, because process.argv only carries --headed in this
+//  main process.)
 const isHeaded =
 	process.argv.includes("--headed") || process.argv.includes("--ui");
 
-// e2e 専用サーバーのポートを実行ごとに OS の空きポート（エフェメラル領域）から取得する。
-// 固定ポートだと dev サーバー（dev:examples / dev:web 等）と競合し、複数 e2e の同時起動もできない。
-// この config はワーカー各プロセスでも再評価されるため、最初に決めたポートを
-// PLAYWRIGHT_PORT に焼き付けて全プロセスで共有する（さもないと baseURL と
-// webServer の起動ポートがワーカーごとにズレて ERR_CONNECTION_REFUSED になる）。
+// Take the port for the e2e-only server from a free OS port (the ephemeral range) on
+// every run. A fixed port would collide with a dev server (dev:examples / dev:web, ...)
+// and would also rule out running several e2e suites at once.
+// This config is re-evaluated in each worker process, so the port picked first is burned
+// into PLAYWRIGHT_PORT and shared with every process (otherwise baseURL and the port the
+// webServer starts on would drift apart per worker, giving ERR_CONNECTION_REFUSED).
 const port = process.env.PLAYWRIGHT_PORT
 	? Number(process.env.PLAYWRIGHT_PORT)
 	: await new Promise<number>((resolve, reject) => {
@@ -40,19 +42,20 @@ export default defineConfig({
 		viewport: { width: 1440, height: 900 },
 		trace: "on-first-retry",
 		screenshot: "only-on-failure",
-		// テスト専用フックは data-testid で統一する（data-kind/data-id は機能契約のため使い分ける）
+		// Test-only hooks go through data-testid (data-kind / data-id are kept separate, as they are functional contracts)
 		testIdAttribute: "data-testid",
-		// headed Chromium ではクリップボード読み取りで権限ポップアップが出てテストが止まる。
-		// 権限を付与してポップアップを抑止する（ヘッドレスでも害はない）。
+		// In headed Chromium, reading the clipboard raises a permission popup that stalls the
+		// test. Granting the permission suppresses it (harmless in headless too).
 		permissions: ["clipboard-read", "clipboard-write"],
 		launchOptions: isHeaded ? { slowMo: 500 } : {},
 	},
 	webServer: {
-		// 掴んだ空きポートに strictPort で固定。ズレて別ポートに逃げると
-		// baseURL と食い違って全テストが接続失敗するため、逃がさず即エラーにする。
+		// Pin the free port we grabbed with strictPort. If it escaped to another port it
+		// would no longer match baseURL and every test would fail to connect, so fail fast
+		// instead of letting it drift.
 		command: `pnpm dev:harness --port ${port} --strictPort`,
 		port,
-		// ポートは実行ごとに変わるので reuse しない（毎回専用サーバーを起動・破棄）。
+		// The port changes per run, so do not reuse (a dedicated server is started and torn down each time).
 		reuseExistingServer: false,
 	},
 });

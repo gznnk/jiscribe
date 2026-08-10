@@ -31,7 +31,7 @@ export const ContainerFeatures = {
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
-/** Container-specific styleable properties beyond the ObjectFeatures flags (ExtraStylePropertyRegistry 参照). */
+/** Container-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyRegistry). */
 export const ContainerExtraStyleProperties = {
 	headerFill: { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;

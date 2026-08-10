@@ -2,7 +2,7 @@
 	"name": "@jiscribe/canvas-sdk",
 	"version": "0.0.0",
 	"private": true,
-	"description": "canvas 公開 API だけで書ける図形量産キット。プラグインはここと @jiscribe/canvas を見る（packages/canvas/docs/13-authoring-plugins.md）",
+	"description": "Shape-authoring kit that can be written against the public canvas API alone. Plugins look at this and @jiscribe/canvas (packages/canvas/docs/13-authoring-plugins.md)",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {

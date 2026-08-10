@@ -19,7 +19,7 @@ import type { RecordSlotId } from "../schema/RecordDoc";
  * slots, whose key set decides which compartments the box has and whose content
  * sizes them. Typed as the open slot map every text-bearing state carries rather
  * than the record's own set, so the registry's calculator type still accepts it
- * (ObjectTextRegionCalculator 参照).
+ * (see ObjectTextRegionCalculator).
  */
 export type RecordSlotRegionsState = Dimensions & {
 	/** The shape's text slots, keyed by slot id; absent is read as a title-only box. */

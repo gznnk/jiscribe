@@ -3,12 +3,12 @@ import { describe, it, expect } from "vitest";
 import { isString } from "../isString";
 
 describe("isString", () => {
-	it("文字列はtrueを返す", () => {
+	it("returns true for a string", () => {
 		expect(isString("")).toBe(true);
 		expect(isString("hello")).toBe(true);
 	});
 
-	it("文字列以外はfalseを返す", () => {
+	it("returns false for a non-string", () => {
 		expect(isString(42)).toBe(false);
 		expect(isString(true)).toBe(false);
 		expect(isString(null)).toBe(false);

@@ -37,7 +37,7 @@ const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
  *
  * `createFrameObjectDefinition` is not used here: it derives the mapper from
  * features, and the record's is the derived one wrapped in the slot normal form
- * (RecordMapper 参照).
+ * (see RecordMapper).
  */
 export const recordDefinition: ObjectTypeDefinition<RecordDoc, RecordState> = {
 	...recordDocDefinition,

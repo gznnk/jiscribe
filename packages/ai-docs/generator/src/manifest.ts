@@ -29,7 +29,7 @@ export const CANONICAL_TYPE_ORDER = [
 	"document",
 	"multiDocument",
 	"actor",
-	// general-shapes の汎用ピクトグラム（記法に属さない実物・人・場）
+	// The general-purpose pictograms of general-shapes (things, people and places, belonging to no notation)
 	"browserWindow",
 	"terminalWindow",
 	"smartphone",
@@ -43,7 +43,7 @@ export const CANONICAL_TYPE_ORDER = [
 	"queue",
 	"lock",
 	"shield",
-	// annotation-shapes の汎用注釈（記法に属さない、図に説明を足す図形）
+	// The general-purpose annotations of annotation-shapes (shapes that explain a diagram, belonging to no notation)
 	"callout",
 	"note",
 	"brace",
@@ -163,7 +163,7 @@ function aggregateDefinitions(
 			const existingSource = sourceByType.get(type);
 			if (existingSource) {
 				errors.push(
-					`型 "${type}" が ${existingSource} と ${sourceName} で重複定義されています`,
+					`Type "${type}" is defined twice, in ${existingSource} and ${sourceName}`,
 				);
 				continue;
 			}
@@ -189,7 +189,7 @@ export function loadManifest(): ReadonlyMap<
 	for (const type of Object.keys(aggregated)) {
 		if (!(CANONICAL_TYPE_ORDER as readonly string[]).includes(type)) {
 			errors.push(
-				`型 "${type}" が定義されていますが CANONICAL_TYPE_ORDER に載っていません（収載するなら追記、しないなら集約から外す）`,
+				`Type "${type}" is defined but missing from CANONICAL_TYPE_ORDER (add it to include the type, or drop it from the aggregation)`,
 			);
 		}
 	}
@@ -198,20 +198,20 @@ export function loadManifest(): ReadonlyMap<
 	for (const type of CANONICAL_TYPE_ORDER) {
 		const definition = aggregated[type];
 		if (!definition) {
-			errors.push(`CANONICAL_TYPE_ORDER の型 "${type}" の定義が見つかりません`);
+			errors.push(`No definition found for type "${type}" listed in CANONICAL_TYPE_ORDER`);
 			continue;
 		}
 		if (!definition.summary) {
-			errors.push(`型 "${type}" に summary がありません`);
+			errors.push(`Type "${type}" has no summary`);
 		}
 		if (!TEMPLATE_DEF_TYPES.has(type)) {
 			if (!definition.description) {
 				errors.push(
-					`型 "${type}" に description がありません（$def 生成に必須）`,
+					`Type "${type}" has no description (required to generate its $def)`,
 				);
 			}
 			if (!definition.defaults) {
-				errors.push(`型 "${type}" に defaults がありません（$def 生成に必須）`);
+				errors.push(`Type "${type}" has no defaults (required to generate its $def)`);
 			}
 		}
 		if (
@@ -219,14 +219,14 @@ export function loadManifest(): ReadonlyMap<
 			!definition.outlineDescription
 		) {
 			errors.push(
-				`型 "${type}" に outlineDescription がありません（集約表の行に必須）`,
+				`Type "${type}" has no outlineDescription (required for its row in the aggregate table)`,
 			);
 		}
 		manifest.set(type, definition);
 	}
 
 	if (errors.length > 0) {
-		throw new Error(`図形マニフェストの検証エラー:\n- ${errors.join("\n- ")}`);
+		throw new Error(`Shape manifest validation failed:\n- ${errors.join("\n- ")}`);
 	}
 	return manifest;
 }

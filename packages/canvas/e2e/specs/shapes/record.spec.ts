@@ -23,7 +23,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *   its own
  *
  * Every stencil drops the box in with sample text already in its slots
- * (RecordStencils 参照), so a slot is edited by replacing what is there rather
+ * (see RecordStencils), so a slot is edited by replacing what is there rather
  * than typing into an empty one.
  *
  * Coordinate note: created at 220x80, a title band holding the stencil's

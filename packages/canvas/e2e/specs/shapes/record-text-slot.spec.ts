@@ -304,7 +304,7 @@ test.describe("record: selecting one text slot", () => {
 		await canvas.selectAt(ATTRIBUTES_SPOT);
 
 		// Tab follows the state's key order, which the mapper keeps equal to the
-		// stacking order (RecordMapper 参照).
+		// stacking order (see RecordMapper).
 		for (const expectedPart of ["name", "attributes", "name"]) {
 			await canvas.page.keyboard.press("Tab");
 			await expect

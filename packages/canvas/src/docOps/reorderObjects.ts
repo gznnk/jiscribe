@@ -81,7 +81,7 @@ const stepBackward = (
  * in. A group moves as the single object it is, taking its children with it.
  *
  * Objects moved together keep their order relative to one another, matching the arrange
- * commands (BringToFrontCommand 参照): sending two objects to the front does not put the
+ * commands (see BringToFrontCommand): sending two objects to the front does not put the
  * one named second on top.
  *
  * @param doc - Mutated in place

@@ -328,7 +328,7 @@ function buildGroupedSection(
 			features.radius
 		) {
 			throw new Error(
-				`集約セクションの前提（rect ジオメトリ・connectable・radius なし）を "${type}" が満たしていません`,
+				`Type "${type}" does not meet the assumptions of the aggregate section (rect geometry, connectable, no radius)`,
 			);
 		}
 	}

@@ -75,7 +75,7 @@ export default tseslint.config(
 						{
 							group: ["@jiscribe/*/src/*"],
 							message:
-								"パッケージルート（例: @jiscribe/geometry）経由でインポートしてください。src/ 内部への直接到達は禁止です。",
+								"Import through the package root (for example @jiscribe/geometry). Reaching into src/ is not allowed.",
 						},
 					],
 				},
@@ -108,23 +108,25 @@ export default tseslint.config(
 		},
 	},
 	{
-		// Node.js ビルドスクリプト（esbuild）: ブラウザではなく Node 環境で実行される
+		// Node.js build scripts (esbuild): they run in Node, not in a browser
 		files: ["**/*.mjs", "**/*.cjs"],
 		languageOptions: {
 			globals: globals.node,
 		},
 	},
 	{
-		// Playwright e2e: fixture の use() を React Hook と誤認するため除外
+		// Playwright e2e: excluded because a fixture's use() is mistaken for a React Hook
 		files: ["**/e2e/**", "**/playwright*.config.ts"],
 		rules: {
 			"react-hooks/rules-of-hooks": "off",
 		},
 	},
 	{
-		// canvas の headless（doc）層: react / @emotion や presentation・controller・state
-		// 層への相対到達を禁止し、UI 非依存を構造的に守る（./doc・./unstable-doc から使う）。
-		// __tests__ は登録テストで controllers/registries の test ヘルパーを使うため除外。
+		// The canvas headless (doc) layer: ban react / @emotion and relative reach into
+		// the presentation, controller and state layers, so UI independence is enforced
+		// structurally (consumed through ./doc and ./unstable-doc).
+		// __tests__ is excluded because registration tests use the test helpers from
+		// controllers/registries.
 		files: [
 			"packages/canvas/src/doc.ts",
 			"packages/canvas/src/unstable-doc.ts",
@@ -140,17 +142,17 @@ export default tseslint.config(
 						{
 							group: ["@jiscribe/*/src/*"],
 							message:
-								"パッケージルート経由でインポートしてください。src/ 内部への直接到達は禁止です。",
+								"Import through the package root. Reaching into src/ is not allowed.",
 						},
 						{
 							group: ["react", "react/*", "react-dom", "react-dom/*"],
 							message:
-								"headless（doc 層）を守るため react / react-dom を引き込まないでください。",
+								"Do not pull in react / react-dom; it would break the headless (doc) layer.",
 						},
 						{
 							group: ["@emotion/*"],
 							message:
-								"headless（doc 層）を守るため @emotion を引き込まないでください。",
+								"Do not pull in @emotion; it would break the headless (doc) layer.",
 						},
 						{
 							group: [
@@ -159,7 +161,7 @@ export default tseslint.config(
 								"**/states/**",
 							],
 							message:
-								"headless（doc 層）は presentation / controller / state 層に依存できません。",
+								"The headless (doc) layer cannot depend on the presentation / controller / state layers.",
 						},
 					],
 				},
@@ -167,12 +169,13 @@ export default tseslint.config(
 		},
 	},
 	{
-		// canvas の Doc↔State 境界: 二重キャスト（as unknown as）を禁止する（#207）。
-		// ブランド越えは states/objects/utils/rebrand.ts に集約済みで、フィールドの
-		// 型検査を捨てずに書ける。ignores に挙がっている2ファイルだけが例外で、
-		// features ジェネリックな mapper 本体は TypeScript が原理的に検査できない
-		// （型引数が未解決の間は条件型が簡約されない）ため各ファイルの JSDoc で明示する。
-		// 例外を増やすときは、なぜ検査不能なのかをその場に書くこと。
+		// The canvas Doc<->State boundary: double casts (as unknown as) are banned (#207).
+		// Brand crossings are collected in states/objects/utils/rebrand.ts, which keeps
+		// field type checking intact. Only the two files listed in ignores are exempt:
+		// the features-generic mapper bodies are beyond what TypeScript can check in
+		// principle (conditional types are not reduced while the type argument is
+		// unresolved), which each file states in its JSDoc.
+		// When adding an exemption, write down on the spot why it cannot be checked.
 		files: ["packages/canvas/src/states/**", "packages/canvas/src/schemas/**"],
 		ignores: [
 			"**/__tests__/**",
@@ -186,14 +189,15 @@ export default tseslint.config(
 					selector:
 						'TSAsExpression > TSAsExpression[typeAnnotation.type="TSUnknownKeyword"]',
 					message:
-						"二重キャスト（as unknown as）は禁止です。ブランドを付けるだけなら rebrand<T>() を使ってください（#207）。",
+						"Double casts (as unknown as) are not allowed. Use rebrand<T>() when all you need is to attach a brand (#207).",
 				},
 			],
 		},
 	},
 	{
-		// canvas-sdk は canvas の疑似外部（packages/canvas/docs/13-authoring-plugins.md）:
-		// プラグインと同じく canvas の公開エントリだけを見る。
+		// canvas-sdk is a pseudo-external consumer of canvas
+		// (packages/canvas/docs/13-authoring-plugins.md): like a plugin, it only sees
+		// the public canvas entry points.
 		files: ["packages/canvas-sdk/src/**"],
 		rules: {
 			"no-restricted-imports": [
@@ -209,12 +213,12 @@ export default tseslint.config(
 								"**/canvas/src/**",
 							],
 							message:
-								"canvas の内部へは到達できません。@jiscribe/canvas と ./doc・./unstable・./unstable-doc のみ使えます。",
+								"The internals of canvas are out of reach. Only @jiscribe/canvas and ./doc, ./unstable, ./unstable-doc are available.",
 						},
 						{
 							group: ["@jiscribe/*/src/*"],
 							message:
-								"パッケージルート経由でインポートしてください。src/ 内部への直接到達は禁止です。",
+								"Import through the package root. Reaching into src/ is not allowed.",
 						},
 					],
 				},
@@ -222,8 +226,9 @@ export default tseslint.config(
 		},
 	},
 	{
-		// canvas-sdk の headless（doc）層: canvas の UI 入口（root / unstable）と
-		// react / @emotion、自パッケージ内 presentation 層への到達を禁止する。
+		// The canvas-sdk headless (doc) layer: ban the canvas UI entry points
+		// (root / unstable), react / @emotion, and reach into this package's own
+		// presentation layer.
 		files: [
 			"packages/canvas-sdk/src/doc.ts",
 			"packages/canvas-sdk/src/schema/**",
@@ -236,33 +241,34 @@ export default tseslint.config(
 						{
 							name: "@jiscribe/canvas",
 							message:
-								"headless（doc 層）を守るため。型・値は @jiscribe/canvas/doc を使ってください。",
+								"This would break the headless (doc) layer. Take types and values from @jiscribe/canvas/doc.",
 						},
 						{
 							name: "@jiscribe/canvas/unstable",
 							message:
-								"headless（doc 層）を守るため。@jiscribe/canvas/unstable-doc を使ってください。",
+								"This would break the headless (doc) layer. Use @jiscribe/canvas/unstable-doc.",
 						},
 					],
 					patterns: [
 						{
 							group: ["@jiscribe/*/src/*", "**/canvas/src/**"],
 							message:
-								"パッケージルート経由でインポートしてください。src/ 内部への直接到達は禁止です。",
+								"Import through the package root. Reaching into src/ is not allowed.",
 						},
 						{
 							group: ["react", "react/*", "react-dom", "react-dom/*"],
 							message:
-								"headless（doc 層）を守るため react / react-dom を引き込まないでください。",
+								"Do not pull in react / react-dom; it would break the headless (doc) layer.",
 						},
 						{
 							group: ["@emotion/*"],
 							message:
-								"headless（doc 層）を守るため @emotion を引き込まないでください。",
+								"Do not pull in @emotion; it would break the headless (doc) layer.",
 						},
 						{
 							group: ["**/presentation/**"],
-							message: "headless（doc 層）は presentation 層に依存できません。",
+							message:
+								"The headless (doc) layer cannot depend on the presentation layer.",
 						},
 					],
 				},
@@ -270,8 +276,9 @@ export default tseslint.config(
 		},
 	},
 	{
-		// プラグインは canvas の unstable 系を直接見ない: 量産キット
-		// （@jiscribe/canvas-sdk）が canvas 公開面との唯一の接点になる。
+		// Plugins do not look at the canvas unstable entry points directly: the
+		// shape-authoring kit (@jiscribe/canvas-sdk) is their only contact with the
+		// public canvas surface.
 		files: ["plugins/*/src/**"],
 		rules: {
 			"no-restricted-imports": [
@@ -281,18 +288,18 @@ export default tseslint.config(
 						{
 							name: "@jiscribe/canvas/unstable",
 							message:
-								"@jiscribe/canvas-sdk を使ってください（headless は @jiscribe/canvas-sdk/doc）。",
+								"Use @jiscribe/canvas-sdk instead (@jiscribe/canvas-sdk/doc for headless).",
 						},
 						{
 							name: "@jiscribe/canvas/unstable-doc",
-							message: "@jiscribe/canvas-sdk/doc を使ってください。",
+							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
 					],
 					patterns: [
 						{
 							group: ["@jiscribe/*/src/*"],
 							message:
-								"パッケージルート経由でインポートしてください。src/ 内部への直接到達は禁止です。",
+								"Import through the package root. Reaching into src/ is not allowed.",
 						},
 					],
 				},
@@ -300,9 +307,9 @@ export default tseslint.config(
 		},
 	},
 	{
-		// プラグインの headless（schema / doc）層: canvas / canvas-sdk の UI 入口と
-		// react / @emotion、自パッケージ内 UI 層への相対到達を禁止し、
-		// @jiscribe/canvas/doc・@jiscribe/canvas-sdk/doc のみ許可する。
+		// The plugin headless (schema / doc) layer: ban the canvas / canvas-sdk UI entry
+		// points, react / @emotion, and relative reach into this package's own UI layer;
+		// only @jiscribe/canvas/doc and @jiscribe/canvas-sdk/doc are allowed.
 		files: ["plugins/*/src/schema/**", "plugins/*/src/doc.ts"],
 		rules: {
 			"no-restricted-imports": [
@@ -312,38 +319,38 @@ export default tseslint.config(
 						{
 							name: "@jiscribe/canvas",
 							message:
-								"headless（doc 層）を守るため。型・値は @jiscribe/canvas/doc を使ってください。",
+								"This would break the headless (doc) layer. Take types and values from @jiscribe/canvas/doc.",
 						},
 						{
 							name: "@jiscribe/canvas/unstable",
 							message:
-								"headless（doc 層）を守るため。@jiscribe/canvas-sdk/doc を使ってください。",
+								"This would break the headless (doc) layer. Use @jiscribe/canvas-sdk/doc.",
 						},
 						{
 							name: "@jiscribe/canvas/unstable-doc",
-							message: "@jiscribe/canvas-sdk/doc を使ってください。",
+							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
 						{
 							name: "@jiscribe/canvas-sdk",
 							message:
-								"headless（doc 層）を守るため。@jiscribe/canvas-sdk/doc を使ってください。",
+								"This would break the headless (doc) layer. Use @jiscribe/canvas-sdk/doc.",
 						},
 					],
 					patterns: [
 						{
 							group: ["@jiscribe/*/src/*"],
 							message:
-								"パッケージルート経由でインポートしてください。src/ 内部への直接到達は禁止です。",
+								"Import through the package root. Reaching into src/ is not allowed.",
 						},
 						{
 							group: ["react", "react/*", "react-dom", "react-dom/*"],
 							message:
-								"headless（doc 層）を守るため react / react-dom を引き込まないでください。",
+								"Do not pull in react / react-dom; it would break the headless (doc) layer.",
 						},
 						{
 							group: ["@emotion/*"],
 							message:
-								"headless（doc 層）を守るため @emotion を引き込まないでください。",
+								"Do not pull in @emotion; it would break the headless (doc) layer.",
 						},
 						{
 							group: [
@@ -354,7 +361,7 @@ export default tseslint.config(
 								"**/menu/**",
 							],
 							message:
-								"headless（doc 層）は presentation / state / stencil / controls / menu 層に依存できません。",
+								"The headless (doc) layer cannot depend on the presentation / state / stencil / controls / menu layers.",
 						},
 					],
 				},

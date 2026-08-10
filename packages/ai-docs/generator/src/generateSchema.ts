@@ -184,12 +184,12 @@ function buildShapeDef(
 	const { features, description, defaults } = definition;
 	if (!description || !defaults) {
 		throw new Error(
-			`型 "${type}" の $def 生成に description / defaults が必要です`,
+			`Generating the $def for type "${type}" requires description and defaults`,
 		);
 	}
 	if (!isGeneratableGeometry(features.geometry)) {
 		throw new Error(
-			`型 "${type}" の geometry "${features.geometry}" は $def を機械生成できません（テンプレに移してください）`,
+			`The $def for geometry "${features.geometry}" of type "${type}" cannot be generated mechanically (move it into a template)`,
 		);
 	}
 
@@ -246,7 +246,7 @@ function buildShapeDef(
 	if (features.radius) {
 		if (defaults.rx === undefined) {
 			throw new Error(
-				`型 "${type}" は radius を宣言していますが defaults.rx がありません`,
+				`Type "${type}" declares radius but has no defaults.rx`,
 			);
 		}
 		properties.rx = withOverride("rx", {
@@ -276,7 +276,7 @@ function buildShapeDef(
 
 	if (unappliedOverrideNames.size > 0) {
 		throw new Error(
-			`型 "${type}" の propertyOverrides に適用先の無いプロパティがあります: ${[...unappliedOverrideNames].join(", ")}`,
+			`The propertyOverrides of type "${type}" contain properties with nothing to apply to: ${[...unappliedOverrideNames].join(", ")}`,
 		);
 	}
 

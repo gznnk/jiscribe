@@ -80,8 +80,9 @@ describe("FrameMapper pass-through: does not leak runtime-only fields into the D
 	});
 
 	it("drops unknown doc keys through a doc→state→doc round-trip", () => {
-		// 未知プロパティは「表示では無視・保存時に消える」仕様。その保存側の実体が
-		// この allow-list による脱落なので、往復で消えることを仕様として固定する。
+		// Unknown properties are specified as "ignored when displaying, dropped when
+		// saving". The saving half of that is exactly this allow-list letting them fall
+		// away, so pin the round trip dropping them as the specification.
 		const doc = {
 			id: "rect-1",
 			type: "rect",

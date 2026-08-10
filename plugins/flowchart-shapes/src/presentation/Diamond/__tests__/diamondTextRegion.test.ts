@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import { DIAMOND_INSET } from "../../../schema/diamond/DiamondDoc";
 
 describe("diamond textRegion", () => {
-	it("角が辺に接する幅・高さ半分の領域を返す", () => {
+	it("returns a region half the width and height, its corners touching the edges", () => {
 		const textRegion = createInsetTextRegion({
 			top: DIAMOND_INSET,
 			right: DIAMOND_INSET,

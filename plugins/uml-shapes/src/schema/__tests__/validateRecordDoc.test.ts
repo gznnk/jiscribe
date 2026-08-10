@@ -50,7 +50,7 @@ describe("validateRecordDoc", () => {
 	});
 
 	it("accepts a box that leaves compartments out", () => {
-		// 区画の欠落はエラーではなく「その区画を持たない箱」。
+		// A missing compartment is not an error; it is "a box without that compartment".
 		expect(validate({ ...baseDoc, text: { name: { text: "User" } } })).toEqual(
 			[],
 		);
@@ -88,7 +88,7 @@ describe("validateRecordDoc", () => {
 	});
 
 	it("rejects an unknown slot id", () => {
-		// 打ち間違いを黙って捨てると、区画が 1 つ足りない図が出来上がる。
+		// Dropping a typo silently would produce a diagram one compartment short.
 		const errors = validate({
 			...baseDoc,
 			text: { name: { text: "User" }, rows: { text: ["oops"] } },

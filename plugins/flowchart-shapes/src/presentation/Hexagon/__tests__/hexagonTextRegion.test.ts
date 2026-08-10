@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import { HEXAGON_CAP_RATIO } from "../../../schema/hexagon/HexagonDoc";
 
 describe("hexagon textRegion", () => {
-	it("両側をキャップ1つ分インセットした領域を返す", () => {
+	it("returns a region inset by one cap on both sides", () => {
 		const textRegion = createInsetTextRegion({
 			left: HEXAGON_CAP_RATIO,
 			right: HEXAGON_CAP_RATIO,

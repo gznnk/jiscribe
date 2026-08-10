@@ -2,8 +2,8 @@ import { Canvas, parseCanvasText } from "@jiscribe/canvas";
 import type { CanvasDoc } from "@jiscribe/canvas";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-// 作例 .jis.json の正本はここ（apps/canvas-examples/diagrams/）。配信側は
-// ここから同期する。
+// The canonical sample .jis.json files live here (apps/canvas-examples/diagrams/).
+// The distribution side syncs from here.
 const diagramLoaders = import.meta.glob<string>("../../diagrams/*.jis.json", {
 	query: "?raw",
 	import: "default",
@@ -20,8 +20,8 @@ const diagramEntries = Object.entries(diagramLoaders)
 	.sort((a, b) => a.name.localeCompare(b.name));
 
 /**
- * 実物 .jis.json を読み込んで表示するギャラリー。外部入力なので
- * parseCanvasText の 2 段階バリデーションを通してから Canvas へ渡す。
+ * Gallery that loads and displays real .jis.json files. They are external input, so they
+ * go through the two-stage validation of parseCanvasText before reaching Canvas.
  */
 export function GalleryExample() {
 	const [selectedName, setSelectedName] = useState(diagramEntries[0]?.name);
@@ -95,7 +95,7 @@ export function GalleryExample() {
 				{loadError ? (
 					<p style={{ padding: 16, color: "#f87171" }}>{loadError}</p>
 				) : loadedDoc ? (
-					// 図の切り替えは key でリマウントし、前の図の選択・履歴を持ち越さない
+					// key remounts on diagram change, so no selection or history carries over
 					<Canvas key={selectedName} doc={loadedDoc} autoFocus={false} />
 				) : null}
 			</div>

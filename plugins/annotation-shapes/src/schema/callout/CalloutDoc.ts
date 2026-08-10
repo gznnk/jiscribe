@@ -19,7 +19,7 @@ export const CALLOUT_TAIL_BASE_RATIO = 0.2;
  * edge (position < 0.5) and in the end slot otherwise, so the tail leans like a
  * classic speech bubble over most of the edge. At exactly 0.3 and 0.7 the tip
  * meets its own slot and the tail drops straight out instead — which reads fine,
- * so the slots stay as they are (calloutOutline 参照 for what the offset costs).
+ * so the slots stay as they are (see calloutOutline for what the offset costs).
  */
 export const CALLOUT_TAIL_BASE_SLOTS = { start: 0.3, end: 0.7 } as const;
 

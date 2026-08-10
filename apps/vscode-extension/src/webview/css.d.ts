@@ -1,4 +1,4 @@
-// Webview のバンドル（esbuild）は CSS の import を dist/webview.css へまとめるが、
-// tsc は CSS の import を解決できないため副作用 import として宣言する。
-// 対象は KaTeX のスタイル（src/webview/index.tsx）。
+// The webview bundle (esbuild) collects CSS imports into dist/webview.css, but tsc cannot
+// resolve a CSS import, so they are declared as side-effect imports here.
+// This covers the KaTeX styles (src/webview/index.tsx).
 declare module "*.css";

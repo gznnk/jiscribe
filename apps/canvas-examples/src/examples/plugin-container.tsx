@@ -21,13 +21,15 @@ import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
 import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
 
-// flowchart / container / markdown / sticky / general / annotation 図形は core から削除され、
-// それぞれ @jiscribe/plugin-flowchart-shapes / @jiscribe/plugin-container-shapes /
+// The flowchart / container / markdown / sticky / general / annotation shapes have been
+// removed from core, and
+// @jiscribe/plugin-flowchart-shapes / @jiscribe/plugin-container-shapes /
 // @jiscribe/plugin-markdown-shape / @jiscribe/plugin-sticky-shape /
-// @jiscribe/plugin-general-shapes / @jiscribe/plugin-annotation-shapes が唯一の供給元
-// （packages/canvas/docs/13-authoring-plugins.md）。この example は
-// 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言を createCanvasParser と
-// Canvas の initialConfig の両方に渡すだけで、doc の検証と図形一式の登録が揃う。
+// @jiscribe/plugin-general-shapes / @jiscribe/plugin-annotation-shapes are now their only
+// source (packages/canvas/docs/13-authoring-plugins.md). This example demonstrates
+// "adding shapes from an external plugin": passing the `CanvasPlugin` declaration to both
+// createCanvasParser and the Canvas initialConfig is all it takes to get doc validation
+// and the registration of the whole shape set.
 const plugins = [
 	flowchartPlugin,
 	containerPlugin,
@@ -40,8 +42,9 @@ const plugins = [
 
 const initialConfig: CanvasConfig = { plugins };
 
-// annotation / flowchart / container / general カテゴリと markdown / sticky プリセットは core の
-// 既定 layout に含まれない（プラグイン供給）。ホスト側で並び順を決めて差し込む。
+// The annotation / flowchart / container / general categories and the markdown / sticky
+// presets are not part of core's default layout (they come from plugins). The host decides
+// their order and inserts them.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
@@ -161,9 +164,9 @@ const buildPluginContainerDoc = (): CanvasDoc => {
 const pluginContainerDoc = buildPluginContainerDoc();
 
 /**
- * プラグイン経路の実証例: container ヘッダーをドラッグして中の rect / ellipse が
- * 一緒に動く（move-together）ことを確認できる。動けば mapper・component・behavior・
- * factory / stencils の登録一式がプラグイン経由で成立している証拠になる。
+ * Demonstration of the plugin path: drag the container header and watch the rect /
+ * ellipse inside move with it (move-together). If they do, the whole registration set —
+ * mapper, component, behavior, factory and stencils — is working through the plugin.
  */
 export function PluginContainerExample() {
 	return (

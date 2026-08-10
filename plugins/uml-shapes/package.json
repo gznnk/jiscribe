@@ -2,7 +2,7 @@
 	"name": "@jiscribe/plugin-uml-shapes",
 	"version": "0.0.0",
 	"private": true,
-	"description": "UML 系図形（record = タイトル帯 + 任意個の区画を持つボックス）を canvas 公開 API のみで外部パッケージとして提供する（packages/canvas/docs/13-authoring-plugins.md）",
+	"description": "Provides UML-family shapes (record = a box with a title band and any number of compartments) as an external package built on the public canvas API alone (packages/canvas/docs/13-authoring-plugins.md)",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {

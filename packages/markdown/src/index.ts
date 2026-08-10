@@ -1,9 +1,10 @@
 import DOMPurify from "dompurify";
 import katex from "katex";
 import MarkdownIt from "markdown-it";
-// 型は @types/markdown-it-link-attributes（DefinitelyTyped の最新 3.0.5）を使う。
-// ランタイム v4 は型を同梱せず DT も v4 未公開だが、本コードが使う attrs 設定は
-// v3 スタブと互換のため 3.0.5 を維持する。
+// Types come from @types/markdown-it-link-attributes (3.0.5, the latest on
+// DefinitelyTyped). The v4 runtime ships no types and DefinitelyTyped has not published
+// v4 either, but the attrs configuration this code uses is compatible with the v3 stub,
+// so 3.0.5 is kept.
 import linkAttr from "markdown-it-link-attributes";
 
 /**

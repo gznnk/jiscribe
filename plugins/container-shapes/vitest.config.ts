@@ -5,8 +5,8 @@ export default defineConfig({
 		globals: true,
 		environment: "node",
 		include: [
-			// ユニットテストはすべて __tests__ に co-located（solitary / sociable を問わない）。
-			// canvas の分類方針（docs/09-testing.md）に合わせる。
+			// Every unit test is co-located in __tests__, solitary and sociable alike.
+			// This follows the canvas classification policy (docs/09-testing.md).
 			"src/**/__tests__/**/*.{test,spec}.{ts,tsx}",
 		],
 		coverage: {

@@ -1,7 +1,7 @@
-// VSCode拡張機能のビルドスクリプト
-// esbuild を使って TypeScript/TSX ソースを dist/ にまとめる
-// 通常ビルド: node build.mjs
-// 監視モード: node build.mjs --watch
+// Build script for the VSCode extension.
+// Bundles the TypeScript/TSX sources into dist/ with esbuild.
+// Normal build: node build.mjs
+// Watch mode:   node build.mjs --watch
 
 import { copyFileSync, mkdirSync, rmSync } from "fs";
 import { dirname, join } from "path";
@@ -9,67 +9,67 @@ import { fileURLToPath } from "url";
 
 import * as esbuild from "esbuild";
 
-// ESモジュール内では __dirname が使えないため、import.meta.url から求める
+// __dirname is unavailable in ES modules, so derive it from import.meta.url
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// コマンド引数に --watch が含まれていれば監視モードで起動する
+// Start in watch mode when --watch is passed on the command line
 const isWatch = process.argv.includes("--watch");
 
-// ── 拡張機能本体のビルド設定（Node.js 環境で動く）────────────────────────
-// VSCode 拡張機能のメインプロセスは VSCode 組み込みの Node.js 上で動作する。
-// src/extension.ts を単一ファイル dist/extension.js にバンドルする。
+// ── Extension host build (runs in Node.js) ───────────────────────────────
+// The extension's main process runs on the Node.js bundled with VSCode.
+// src/extension.ts is bundled into the single file dist/extension.js.
 const extensionConfig = {
-	// バンドルの起点となるファイル
+	// Bundle entry point
 	entryPoints: [join(__dirname, "src", "extension.ts")],
-	// import している他ファイルやライブラリを1ファイルにまとめる
+	// Pull imported files and libraries into one file
 	bundle: true,
-	// 出力先
+	// Output path
 	outfile: join(__dirname, "dist", "extension.js"),
-	// バンドルに含めず実行時に require() で解決するモジュール
-	// vscode: VSCode が実行環境として提供するため同梱不要
+	// Modules left out of the bundle and resolved with require() at runtime.
+	// vscode: provided by the host, so it must not be bundled
 	external: ["vscode"],
-	// CommonJS 形式で出力（VSCode 拡張機能が require() で読み込むため）
+	// Emit CommonJS, since VSCode loads extensions with require()
 	format: "cjs",
-	// Node.js 向けのビルド（グローバル変数 process や __dirname などが使える）
+	// Node.js target (process, __dirname and friends are available)
 	platform: "node",
-	// 対象 Node.js バージョン（VSCode 1.85 が搭載している Node.js に合わせる）
+	// Node.js version to target (matches the one shipped with VSCode 1.85)
 	target: "node18",
-	// ソースマップを生成（エラー発生時にどの TypeScript ファイルの何行目かを示す）
+	// Emit source maps so errors point at the original TypeScript line
 	sourcemap: true,
-	// 監視モード以外（=本番ビルド）のときだけ minify（ファイルサイズ削減）を有効化
+	// Minify only for production builds, never in watch mode
 	minify: !isWatch,
 };
 
-// ── Webview のビルド設定（ブラウザ環境で動く）────────────────────────────
-// VSCode のパネル内に表示される UI（SVGキャンバス）は Webview という仕組みで動く。
-// Webview はブラウザと同じ環境なので、ブラウザ向けにバンドルする必要がある。
-// src/webview/index.tsx を dist/webview.js にバンドルする
-// （import された CSS は dist/webview.css、フォントは dist/fonts/ に分離出力される）。
+// ── Webview build (runs in a browser environment) ────────────────────────
+// The UI shown inside the VSCode panel (the SVG canvas) runs in a webview.
+// A webview is a browser environment, so it needs a browser-targeted bundle.
+// src/webview/index.tsx is bundled into dist/webview.js
+// (imported CSS is emitted separately as dist/webview.css, fonts into dist/fonts/).
 const webviewConfig = {
-	// バンドルの起点となるファイル（React コンポーネントのルート）
+	// Bundle entry point (the root React component)
 	entryPoints: [join(__dirname, "src", "webview", "index.tsx")],
 	bundle: true,
-	// 出力先
+	// Output path
 	outfile: join(__dirname, "dist", "webview.js"),
-	// IIFE（即時実行関数）形式で出力（グローバル変数を汚染せず Webview に読み込める）
+	// Emit an IIFE, so the bundle loads into the webview without polluting globals
 	format: "iife",
-	// ブラウザ向けのビルド（window や document などが使える）
+	// Browser target (window, document and friends are available)
 	platform: "browser",
-	// 対応ブラウザの最小バージョン（VSCode の Webview は Chromium ベースのため余裕がある）
+	// Minimum browser version (the VSCode webview is Chromium-based, so this is generous)
 	target: "es2020",
 	sourcemap: true,
 	minify: !isWatch,
-	// React の新しい JSX 変換（automatic）を使用する
-	// これにより各ファイルで "import React from 'react'" を書かずに JSX が使える
+	// Use React's automatic JSX transform,
+	// which lets each file use JSX without "import React from 'react'"
 	jsx: "automatic",
-	// 拡張子ごとのファイルの扱い方
-	// css: KaTeX のスタイル（数式は KaTeX の HTML + CSS で組まれるため必須）。
-	//      esbuild は JS から import された CSS を outfile と同名の dist/webview.css
-	//      にまとめて出力する。読み込みは webviewHtml.ts の <link> が担う。
-	// woff2/woff/ttf: katex.min.css の @font-face が参照するフォント実体。
-	//      file ローダーで dist/fonts/ にコピーし、CSS 内の url() を相対パスに書き換える
-	//      （Webview の CSP は font-src に cspSource を許可済み）。
+	// How each file extension is handled.
+	// css: KaTeX styles (required, since math is laid out as KaTeX HTML + CSS).
+	//      esbuild collects CSS imported from JS into dist/webview.css, named
+	//      after outfile. The <link> in webviewHtml.ts loads it.
+	// woff2/woff/ttf: the font files referenced by @font-face in katex.min.css.
+	//      The file loader copies them into dist/fonts/ and rewrites url() in the
+	//      CSS to a relative path (the webview CSP already allows cspSource for font-src).
 	loader: {
 		".tsx": "tsx",
 		".ts": "ts",
@@ -81,12 +81,16 @@ const webviewConfig = {
 	assetNames: "fonts/[name]-[hash]",
 };
 
-// ── AI アセットのコピー ──────────────────────────────────────────────────
-// ai-docs パッケージの配布アセット（assets/）を dist/ に配置する。
-// - jiscribe.schema.json: VSCode の jsonValidation が参照し、.jis.json の補完・検証を提供する。
-// - ai-guide.md: 「Set up AI」がワークスペースへ配置する AI オーサリングガイド（入口）。
-// - reference.md: ai-guide が参照する詳細リファレンス（同じ .jiscribe/ に置くためリンクが解決する）。
-// 配布元は packages/ai-docs/assets/（配布アセット正本。pnpm generate:ai の生成物）。
+// ── Copying the AI assets ────────────────────────────────────────────────
+// Place the ai-docs package's distributable assets (assets/) into dist/.
+// - jiscribe.schema.json: referenced by VSCode's jsonValidation to provide
+//   completion and validation for .jis.json.
+// - ai-guide.md: the AI authoring guide (entry point) that "Set up AI" writes
+//   into the workspace.
+// - reference.md: the detailed reference that ai-guide links to (it lands in the
+//   same .jiscribe/ directory, so the link resolves).
+// The source is packages/ai-docs/assets/ (the canonical distributable assets,
+// generated by pnpm generate:ai).
 function copyAiAssets() {
 	const aiDir = join(__dirname, "../../packages/ai-docs/assets");
 	const distDir = join(__dirname, "dist");
@@ -102,11 +106,11 @@ function copyAiAssets() {
 	}
 }
 
-// ── メインのビルド処理 ───────────────────────────────────────────────────
+// ── Main build routine ───────────────────────────────────────────────────
 async function build() {
 	try {
-		// 過去のビルドの残骸（古い成果物や実験時のファイル）が vsix に混入しないよう、
-		// 監視モード以外では dist を空にしてからビルドする
+		// Empty dist before building outside watch mode, so leftovers from earlier
+		// builds (stale output, experiment files) cannot leak into the vsix
 		if (!isWatch) {
 			rmSync(join(__dirname, "dist"), { recursive: true, force: true });
 		}
@@ -114,9 +118,9 @@ async function build() {
 		copyAiAssets();
 
 		if (isWatch) {
-			// 監視モード: ファイル変更を検知して自動的に再ビルドする
-			// esbuild.context() でビルド設定を登録し、watch() で監視を開始する
-			// 拡張機能本体と Webview を並列で監視する
+			// Watch mode: detect file changes and rebuild automatically.
+			// esbuild.context() registers a build config, watch() starts watching.
+			// The extension host and the webview are watched in parallel.
 			const extensionCtx = await esbuild.context(extensionConfig);
 			const webviewCtx = await esbuild.context(webviewConfig);
 
@@ -124,8 +128,8 @@ async function build() {
 
 			console.log("Watching for changes...");
 		} else {
-			// 通常ビルド: 一度だけビルドして終了する
-			// 拡張機能本体と Webview を順番にビルドする
+			// Normal build: build once and exit.
+			// The extension host and the webview are built in sequence.
 			await esbuild.build(extensionConfig);
 			await esbuild.build(webviewConfig);
 
@@ -133,7 +137,7 @@ async function build() {
 		}
 	} catch (error) {
 		console.error("Build failed:", error);
-		// ビルド失敗時は終了コード 1 で終了（CI や vscode:prepublish でエラーとして検知させる）
+		// Exit with code 1 on failure, so CI and vscode:prepublish detect the error
 		process.exit(1);
 	}
 }

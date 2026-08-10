@@ -481,7 +481,7 @@ describe("connect with a free end", () => {
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
-	// The doc model reserves a line owned by nothing for polyline (validateConnectorDoc 参照).
+	// The doc model reserves a line owned by nothing for polyline (see validateConnectorDoc).
 	it("throws DocOperationError when both ends are points", () => {
 		const doc = twoRects();
 		const before = JSON.stringify(doc);

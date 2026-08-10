@@ -1,7 +1,7 @@
 packages:
   - apps/*
   - packages/*
-  # 疑似外部プラグイン（canvas / canvas-sdk の公開 API のみ利用可）
+  # Pseudo-external plugins (they may use only the public API of canvas / canvas-sdk)
   - plugins/*
   - "!**/dist/**"
   - "!**/build/**"

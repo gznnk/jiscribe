@@ -68,7 +68,7 @@ const normalizeListSlot = (
  * has to be established once, here.
  *
  * The key order is the order the compartments stack in, which is what makes Tab
- * walk the slots down the box (TextSlots 参照). It costs the title the first key:
+ * walk the slots down the box (see TextSlots). It costs the title the first key:
  * on a stereotyped record `stereotype` holds it, so editing that designates no
  * slot (Enter with nothing but the object selected) opens the stereotype band.
  */

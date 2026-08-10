@@ -2,7 +2,7 @@
 	"name": "@jiscribe/plugin-general-shapes",
 	"version": "0.0.0",
 	"private": true,
-	"description": "記法（flowchart / UML 等）に属さない、実物・人・場を表す汎用ピクトグラム（actor / cloud / server / browserWindow など 15 種）を canvas 公開 API のみで外部パッケージとして提供する。装飾系（star / heart / バナー等）は入れない（packages/canvas/docs/13-authoring-plugins.md）",
+	"description": "Provides, as an external package built on the public canvas API alone, general-purpose pictograms that belong to no notation and stand for things, people and places (15 of them: actor / cloud / server / browserWindow and so on). Decorative shapes (star / heart / banners and the like) are out of scope (packages/canvas/docs/13-authoring-plugins.md)",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {

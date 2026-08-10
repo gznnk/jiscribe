@@ -51,7 +51,7 @@ test.describe("Markdown rendering", () => {
 			{ x: 700, y: 400 },
 		);
 
-		// "# Title" → <h1>Title</h1>、"**markdown**" → <strong>markdown</strong>
+		// "# Title" -> <h1>Title</h1>, "**markdown**" -> <strong>markdown</strong>
 		await expect.poll(() => renderedText(canvas, id, "h1")).toEqual(["Title"]);
 		expect(await renderedText(canvas, id, "strong")).toEqual(["markdown"]);
 	});

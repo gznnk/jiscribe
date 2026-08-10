@@ -49,7 +49,7 @@ const unionBounds = (boxes: readonly Rect[]): Rect | null => {
  * around its own centre, and every placement op here works on the untransformed box.
  *
  * @param object - Any doc object; a group is measured from its children, which is where
- *   its frame comes from (GroupDoc 参照)
+ *   its frame comes from (see GroupDoc)
  * @param definitions - Type table `features.geometry` is read from
  * @returns The box, or null for a connector, an empty group, and a type this instance
  *   does not know

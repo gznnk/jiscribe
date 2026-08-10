@@ -11,7 +11,7 @@ const initialDoc: CanvasDoc = { version: 1, root: [] };
 
 const DEFAULT_FILE_NAME = "untitled.jis.json";
 
-/** parseCanvasText の失敗結果をアラート用の文字列にまとめる */
+/** Turn a parseCanvasText failure result into a string suitable for an alert */
 const formatParseError = (
 	result: Exclude<ReturnType<typeof parseCanvasText>, { kind: "ok" }>,
 ): string => {
@@ -27,7 +27,7 @@ const formatParseError = (
 	}
 };
 
-/** toolbar.leading スロットに挿すファイル操作ボタン。 */
+/** File operation buttons inserted into the toolbar.leading slot. */
 function FileToolbarButtons({
 	onOpen,
 	onSave,
@@ -84,14 +84,17 @@ function FileToolbarButtons({
 }
 
 /**
- * ファイル入出力の例:
- * - .jis.json の読み込み（toolbar.leading の Open ボタン → parseCanvasText で 2 段階バリデーション）
- * - 編集中ドキュメントの保存（onCommit で最新 doc を ref に写し、Save でダウンロード）
- * - jiscribe エクスポート PNG（iTXt に .jis.json 入り）のドロップ復元（round-trip 確認用）
+ * File I/O example:
+ * - Loading a .jis.json (the Open button in toolbar.leading, then two-stage validation
+ *   through parseCanvasText)
+ * - Saving the document being edited (onCommit copies the latest doc into a ref, and Save
+ *   downloads it)
+ * - Restoring a PNG exported by jiscribe (its iTXt carries the .jis.json) by dropping it,
+ *   which doubles as a round-trip check
  */
 export function FileIoExample() {
-	// doc はファイル読み込み時だけ差し替える。編集中の最新 doc は
-	// onCommit で ref に写し、保存時に読む。
+	// The doc is only replaced when a file is loaded. The latest doc being edited is copied
+	// into a ref by onCommit and read back when saving.
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(initialDoc);
 	const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
 	const latestDocRef = useRef<CanvasDoc>(initialDoc);
@@ -133,7 +136,7 @@ export function FileIoExample() {
 	const handleFileChange = useCallback(
 		async (event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.target.files?.[0];
-			// 同じファイルをもう一度選んでも change が発火するようリセットする
+			// Reset, so that picking the same file again still fires change
 			event.target.value = "";
 			if (!file) {
 				return;

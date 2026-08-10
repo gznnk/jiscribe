@@ -9,8 +9,9 @@ import { PluginContainerExample } from "./examples/plugin-container";
 import { ThemingExample } from "./examples/theming";
 import { ViewportExample } from "./examples/viewport";
 
-// 各 example は「単体でコピペ可能な統合例」として src/examples/ に 1 ファイルで置く。
-// シェルへの依存を持たせない（親要素いっぱいに描画する、が唯一の契約）。
+// Each example lives in one file under src/examples/, as an integration example that can
+// be copy-pasted on its own. None of them depends on the shell (their only contract is to
+// fill the parent element).
 const EXAMPLES: ReadonlyArray<{
 	id: string;
 	title: string;
@@ -20,20 +21,20 @@ const EXAMPLES: ReadonlyArray<{
 	{
 		id: "minimal",
 		title: "Minimal",
-		description: "空ドキュメントで Canvas をマウントする最小構成",
+		description: "The smallest setup: mount Canvas with an empty document",
 		Component: MinimalExample,
 	},
 	{
 		id: "file-io",
 		title: "File I/O",
 		description:
-			".jis.json の読み込み・保存と、エクスポート PNG のドロップ復元",
+			"Loading and saving .jis.json, and restoring an exported PNG by dropping it",
 		Component: FileIoExample,
 	},
 	{
 		id: "theming",
 		title: "Theming",
-		description: "theme prop によるテーマ切り替え（プリセット3種の巡回）",
+		description: "Switching themes with the theme prop (cycling three presets)",
 		Component: ThemingExample,
 	},
 	{
@@ -47,34 +48,34 @@ const EXAMPLES: ReadonlyArray<{
 		id: "external-sync",
 		title: "External Sync",
 		description:
-			"外部（エディタ・AI）が doc の正本を持ち、doc 差し替えで push する",
+			"The outside (an editor, an AI) owns the canonical doc and pushes it by replacing the doc",
 		Component: ExternalSyncExample,
 	},
 	{
 		id: "multi-canvas",
 		title: "Multi Canvas",
 		description:
-			"複数 Canvas の埋め込み（キーボードはフォーカスされた Canvas にスコープ）",
+			"Embedding several Canvases (the keyboard is scoped to the focused Canvas)",
 		Component: MultiCanvasExample,
 	},
 	{
 		id: "gallery",
 		title: "Gallery",
-		description: "実物 .jis.json の閲覧（diagrams/ の作例を読み込む）",
+		description: "Viewing real .jis.json files (loads the samples in diagrams/)",
 		Component: GalleryExample,
 	},
 	{
 		id: "plugin-container",
 		title: "Plugin Container",
 		description:
-			"外部プラグインパッケージ（UC1 dogfood）から container 定義を登録し、core 版を除外して動作を実証する",
+			"Registers the container definition from an external plugin package (UC1 dogfood), excludes the core version, and demonstrates that it works",
 		Component: PluginContainerExample,
 	},
 ];
 
 const readExampleIdFromHash = () => window.location.hash.replace(/^#/, "");
 
-/** サイドバーで example を選ぶギャラリー。選択状態は URL ハッシュで持つ（依存を増やさない）。 */
+/** Gallery that picks an example from the sidebar. The selection is kept in the URL hash (no extra dependency). */
 export function GalleryShell() {
 	const [selectedId, setSelectedId] = useState(readExampleIdFromHash);
 
@@ -111,7 +112,7 @@ export function GalleryShell() {
 				<p className="gallery-source">src/examples/{selected.id}.tsx</p>
 			</nav>
 			<main className="gallery-content">
-				{/* example 切り替え時は key で強制リマウントし、前の example の状態を持ち越さない */}
+				{/* key forces a remount when the example changes, so no state carries over from the previous one */}
 				<selected.Component key={selected.id} />
 			</main>
 		</div>

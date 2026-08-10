@@ -8,14 +8,14 @@ const initialSourceText = JSON.stringify(
 		root: [
 			{
 				id: "hello",
-				// core 図形を使う（sticky はプラグイン供給になったので、外部同期の
-				// 例にプラグイン配線を持ち込まないための選択）。
+				// Use a core shape (sticky now ships from a plugin, and this example
+				// should not drag plugin wiring into an external-sync demo).
 				type: "rect",
 				x: 120,
 				y: 120,
 				width: 180,
 				height: 120,
-				text: "外から編集できる",
+				text: "Editable from outside",
 			},
 		],
 	},
@@ -32,42 +32,44 @@ const parseOrThrow = (sourceText: string): CanvasDoc => {
 };
 
 /**
- * 外部同期の例: ホスト（エディタ・AI・ストレージ）が doc の正本を持ち、
- * doc の差し替えでキャンバスへ push する。逆方向は onCommit で受ける。
- * 実ホストで保存の折り返しを外部変更と誤認しないための saveNonce / syncNonce の
- * 契約は packages/canvas/docs/07-external-sync.md を参照（この例では折り返しが
- * 無いので省略している）。
+ * External sync example: the host (an editor, an AI, storage) owns the canonical doc
+ * and pushes it to the canvas by replacing the doc. The other direction arrives via
+ * onCommit.
+ * For the saveNonce / syncNonce contract that keeps a real host from mistaking its own
+ * save echo for an external change, see packages/canvas/docs/07-external-sync.md (this
+ * example has no echo, so it leaves them out).
  */
 export function ExternalSyncExample() {
 	const [pushedDoc, setPushedDoc] = useState<CanvasDoc>(() =>
 		parseOrThrow(initialSourceText),
 	);
 	const [sourceText, setSourceText] = useState(initialSourceText);
-	const [status, setStatus] = useState("初期 doc を表示中");
+	const [status, setStatus] = useState("Showing the initial doc");
 	const addedCountRef = useRef(0);
 
-	// キャンバス側の編集はテキストへミラーするだけで、doc は差し替えない
-	// （差し替えは「外部からの変更」を表すこの例の押し込み操作に限る）
+	// Edits made on the canvas are only mirrored into the text; the doc is not replaced
+	// (replacement is reserved for this example's push action, which stands for an
+	// external change)
 	const handleCommit = useCallback((committedDoc: CanvasDoc) => {
 		setSourceText(JSON.stringify(committedDoc, null, 2));
-		setStatus("キャンバスの編集を JSON へミラーした");
+		setStatus("Mirrored the canvas edit into JSON");
 	}, []);
 
 	const handleApply = useCallback(() => {
 		const result = parseCanvasText(sourceText);
 		if (result.kind !== "ok") {
-			setStatus(`適用失敗: ${result.kind}`);
+			setStatus(`Failed to apply: ${result.kind}`);
 			return;
 		}
 		setPushedDoc(result.doc);
-		setStatus("JSON をキャンバスへ push した");
+		setStatus("Pushed the JSON to the canvas");
 	}, [sourceText]);
 
-	// 「外部エージェント（AI 等）による編集」を模す: JSON を機械的に書き換えて push
+	// Simulate "an edit by an external agent (an AI, say)": rewrite the JSON mechanically and push
 	const handleAgentEdit = useCallback(() => {
 		const result = parseCanvasText(sourceText);
 		if (result.kind !== "ok") {
-			setStatus(`適用失敗: ${result.kind}`);
+			setStatus(`Failed to apply: ${result.kind}`);
 			return;
 		}
 		addedCountRef.current += 1;
@@ -90,12 +92,12 @@ export function ExternalSyncExample() {
 			}),
 		);
 		if (agentDocResult.kind !== "ok") {
-			setStatus(`適用失敗: ${agentDocResult.kind}`);
+			setStatus(`Failed to apply: ${agentDocResult.kind}`);
 			return;
 		}
 		setPushedDoc(agentDocResult.doc);
 		setSourceText(JSON.stringify(agentDocResult.doc, null, 2));
-		setStatus(`外部エージェントが rect を追加して push した（#${count}）`);
+		setStatus(`An external agent added a rect and pushed it (#${count})`);
 	}, [sourceText]);
 
 	return (
@@ -139,14 +141,14 @@ export function ExternalSyncExample() {
 					onClick={handleApply}
 					style={{ padding: "6px 10px", cursor: "pointer" }}
 				>
-					JSON をキャンバスへ push
+					Push the JSON to the canvas
 				</button>
 				<button
 					type="button"
 					onClick={handleAgentEdit}
 					style={{ padding: "6px 10px", cursor: "pointer" }}
 				>
-					外部エージェントの編集を模す（rect 追加）
+					Simulate an external agent edit (add a rect)
 				</button>
 			</div>
 		</div>

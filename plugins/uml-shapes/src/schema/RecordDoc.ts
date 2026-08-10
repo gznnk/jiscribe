@@ -35,7 +35,7 @@ export const RECORD_SLOT_IDS = [
 	RECORD_OPERATIONS_SLOT_ID,
 ] as const;
 
-/** One of the record's slot ids (RECORD_SLOT_IDS 参照). */
+/** One of the record's slot ids (see RECORD_SLOT_IDS). */
 export type RecordSlotId = (typeof RECORD_SLOT_IDS)[number];
 
 /**
@@ -48,7 +48,7 @@ export const RECORD_LIST_SLOT_IDS = [
 	RECORD_OPERATIONS_SLOT_ID,
 ] as const;
 
-/** One of the row-holding slot ids (RECORD_LIST_SLOT_IDS 参照). */
+/** One of the row-holding slot ids (see RECORD_LIST_SLOT_IDS). */
 export type RecordListSlotId = (typeof RECORD_LIST_SLOT_IDS)[number];
 
 /**
@@ -75,7 +75,7 @@ export const RECORD_FONT_SIZE = 14;
 /**
  * Height one drawn row occupies at the default type size, in local pixels.
  * Derived from the shared line-height; a compartment whose slot raises
- * `fontSize` is measured from that size instead (calcRecordListHeight 参照).
+ * `fontSize` is measured from that size instead (see calcRecordListHeight).
  */
 export const RECORD_ROW_HEIGHT = RECORD_FONT_SIZE * TEXT_LINE_HEIGHT;
 
@@ -89,7 +89,7 @@ const RECORD_LIST_PADDING_Y = 2;
 /**
  * Horizontal padding the shared text box adds on each side of a band's text, i.e.
  * the width the text has to wrap in is the box width minus twice this
- * (TextOverlayFrame's content element 参照).
+ * (see TextOverlayFrame's content element).
  */
 export const RECORD_BAND_PADDING_X = 6;
 
@@ -102,7 +102,7 @@ export const RECORD_BAND_PADDING_Y_TOTAL = 7;
 /**
  * Height of one text band (the stereotype, the title) holding one line at the
  * default type size. A band follows its slot — a larger `fontSize`, a newline, or
- * text too long for the width grows it (calcRecordSlotRegions 参照) — so this is
+ * text too long for the width grows it (see calcRecordSlotRegions) — so this is
  * the height a freshly created record shows, and the unit a stencil's height sums
  * one term of per band it starts with.
  */
@@ -174,8 +174,8 @@ export const RECORD_SLOT_STYLE_DEFAULTS_BY_ID = {
  * A record: a titled box, optionally captioned with a stereotype, over one or two
  * compartments of rows (a UML class or interface, an ER entity, an ontology
  * concept with its properties). Its text is a set of slots keyed by slot id
- * (RECORD_SLOT_IDS 参照) rather than the single body other shapes take; the string
- * form is not valid here (validateRecordDoc 参照).
+ * (see RECORD_SLOT_IDS) rather than the single body other shapes take; the string
+ * form is not valid here (see validateRecordDoc).
  *
  * Adopts rect geometry (x/y/width/height) so it reuses Frame-based transforms and
  * outline connector attachment exactly like Rect / Card. The box is sized freely:
@@ -229,7 +229,7 @@ export type RecordDoc = CreateObjectType<
  * Theme-derived doc defaults for a newly created record (tier 2: AUTO_COLOR /
  * DEFAULT_FONT_FAMILY). A title over one compartment — the shape most records
  * take — with the operations compartment and the stereotype band reached through
- * the stencils (RecordStencils 参照). The typography is spelled out per slot
+ * the stencils (see RecordStencils). The typography is spelled out per slot
  * because a slot is where it is stored: the drawing has no styling of its own
  * (RecordBox).
  */

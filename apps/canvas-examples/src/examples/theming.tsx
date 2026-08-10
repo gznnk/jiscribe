@@ -7,9 +7,9 @@ import {
 import type { CanvasDoc, CanvasTheme } from "@jiscribe/canvas";
 import { useEffect, useState } from "react";
 
-// 巡回できるテーマ一覧。テーマを増やしたらここに追加すればトグルボタンが
-// 自動で次のテーマへ切り替わる。colorScheme は暗いテーマだけ "dark" 扱いにし、
-// ページ余白色は各テーマの canvasBg に追従させる。
+// The themes that can be cycled through. Adding a theme here is enough for the toggle
+// button to advance to it. colorScheme is treated as "dark" only for the dark themes, and
+// the page margin colour follows each theme's canvasBg.
 const THEMES: ReadonlyArray<{
 	label: string;
 	colorScheme: "dark" | "light";
@@ -23,15 +23,15 @@ const THEMES: ReadonlyArray<{
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
 /**
- * テーマ切り替えの例: theme prop にプリセット（または自作の CanvasTheme）を渡す。
- * ホスト側 UI の配色は theme.tokens から取れる。
+ * Theming example: pass a preset (or your own CanvasTheme) to the theme prop.
+ * The colours for the host's own UI can be read from theme.tokens.
  */
 export function ThemingExample() {
 	const [themeIndex, setThemeIndex] = useState(0);
 	const current = THEMES[themeIndex];
 	const next = THEMES[(themeIndex + 1) % THEMES.length];
 
-	// ページ側（キャンバス外の余白）もテーマに追従させる。例を離れたら元に戻す
+	// Make the page itself (the margin outside the canvas) follow the theme too, and restore it on leaving the example
 	useEffect(() => {
 		document.documentElement.style.colorScheme = current.colorScheme;
 		document.body.style.backgroundColor = current.theme.tokens.canvasBg;

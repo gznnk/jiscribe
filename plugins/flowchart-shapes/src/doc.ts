@@ -1,7 +1,9 @@
-// Headless (UI 非依存) 入口。canvas 本体の ./doc と相似形: MCP や VSCode 拡張の
-// Node 側診断など、definitions.ts（React コンポーネントを含む）を経由せずに parse-time
-// 検証へ参加したい消費者のための入口。import は ./schema/** と @jiscribe/canvas/doc /
-// @jiscribe/canvas-sdk/doc のみで、presentation / state / stencil を引き込まない。
+// Headless (UI-independent) entry point. It mirrors the canvas package's own ./doc: an
+// entry point for consumers that want to take part in parse-time validation without going
+// through definitions.ts (which pulls in React components) — the MCP server, the Node-side
+// diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
+// @jiscribe/canvas/doc / @jiscribe/canvas-sdk/doc, and never pulls in
+// presentation / state / stencil.
 // description / summary / outlineDescription / defaults are the single source of
 // the generated JSON schema and AI docs (pnpm generate:ai).
 import type {

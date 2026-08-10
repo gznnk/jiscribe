@@ -1,14 +1,15 @@
 name: CI
 
-# - push: 全ブランチで軽量チェック（checks）のみ。tag では走らせない。
-# - pull_request: main 向きのみ。checks のみ（フル e2e は e2e.yml が PR で別途回す）。
+# - push: lightweight checks only, on every branch. Not run for tags.
+# - pull_request: only for pull requests targeting main, and only checks (the full e2e
+#   suite is run separately by e2e.yml on those pull requests).
 on:
   pull_request:
     branches: [main]
   push:
     branches: ["**"]
 
-# 同一 ref の古い実行を自動キャンセルして分数を節約する。
+# Cancel superseded runs for the same ref automatically, to save CI minutes.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true

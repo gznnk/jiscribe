@@ -2,7 +2,7 @@
 	"name": "@jiscribe/plugin-sticky-shape",
 	"version": "0.0.0",
 	"private": true,
-	"description": "sticky 図形を canvas 公開 API のみで外部パッケージとして提供する（packages/canvas/docs/13-authoring-plugins.md）",
+	"description": "Provides the sticky shape as an external package built on the public canvas API alone (packages/canvas/docs/13-authoring-plugins.md)",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {

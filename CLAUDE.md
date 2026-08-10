@@ -88,8 +88,8 @@ version: names carry their meaning without context; comments explain what the
 code cannot; every parameter of a public API gets a `@param` that adds a fact
 the name does not already give.
 
-In-code comments are written in Japanese. Match the surrounding language,
-comment density and idiom of the file you are editing.
+In-code comments are written in English. Match the comment density and idiom of
+the file you are editing.
 
 ## Committing
 

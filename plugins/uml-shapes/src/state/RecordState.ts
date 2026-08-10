@@ -8,8 +8,8 @@ import type { RecordFeatures } from "../schema/RecordDoc";
  * slot the doc left out stays out — the key set is what gives the box its
  * compartments (createFrameObject enumerates it). The keys are in the order the
  * compartments stack, the stereotype ahead of the title
- * (calcRecordSlotRegions 参照), which also makes the stereotype the first key —
- * and so the default slot — on a box that has one (normalizeRecordText 参照).
+ * (see calcRecordSlotRegions), which also makes the stereotype the first key —
+ * and so the default slot — on a box that has one (see normalizeRecordText).
  *
  * Structurally the same as RecordTextDoc: a keyed doc and its state hold the same
  * slot shape, the mapper only filling omitted styling from

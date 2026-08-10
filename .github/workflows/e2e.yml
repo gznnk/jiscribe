@@ -1,6 +1,6 @@
 name: E2E (full)
 
-# フル e2e は main 向き PR・main への push・手動でのみ実行する。
+# The full e2e suite runs only for pull requests targeting main, pushes to main, and manual dispatch.
 on:
   pull_request:
     branches: [main]
