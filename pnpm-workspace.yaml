@@ -16,7 +16,7 @@ catalog:
   "@vitest/coverage-v8": ^4.1.10
   dompurify: ^3.4.13
   esbuild: ^0.28.2
-  jsdom: ^29.1.1
+  jsdom: ^30.0.1
   katex: ^0.18.2
   madge: ^8.0.0
   react: ^19.2.8
