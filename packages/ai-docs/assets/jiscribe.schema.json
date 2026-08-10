@@ -1400,10 +1400,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -1854,10 +1851,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -1946,10 +1940,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -2038,10 +2029,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -2308,10 +2296,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -2400,10 +2385,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -2492,10 +2474,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -2893,10 +2872,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -2993,10 +2969,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -3087,10 +3060,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -3980,10 +3950,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -4072,10 +4039,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"

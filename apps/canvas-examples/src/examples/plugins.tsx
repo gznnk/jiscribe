@@ -94,9 +94,6 @@ const buildPluginsDoc = (): CanvasDoc => {
 					text: "order-service",
 					fontWeight: "bold",
 				},
-				// actor / server / queue / gear / brace hang their label under the box, and the
-				// label box is laid out at the caption size 14. Pin fontSize to it: left to the
-				// default the label is drawn at 16 and wraps out of its box.
 				{
 					id: "customer",
 					type: "actor",
@@ -105,7 +102,6 @@ const buildPluginsDoc = (): CanvasDoc => {
 					width: 80,
 					height: 100,
 					text: "Customer",
-					fontSize: 14,
 				},
 				{
 					id: "api",
@@ -115,7 +111,6 @@ const buildPluginsDoc = (): CanvasDoc => {
 					width: 85,
 					height: 105,
 					text: "api",
-					fontSize: 14,
 				},
 				{
 					id: "events",
@@ -125,7 +120,6 @@ const buildPluginsDoc = (): CanvasDoc => {
 					width: 145,
 					height: 68,
 					text: "events",
-					fontSize: 14,
 				},
 				{
 					id: "worker",
@@ -135,7 +129,6 @@ const buildPluginsDoc = (): CanvasDoc => {
 					width: 95,
 					height: 95,
 					text: "worker",
-					fontSize: 14,
 				},
 				{
 					id: "orders-store",
@@ -174,7 +167,6 @@ const buildPluginsDoc = (): CanvasDoc => {
 					height: 22,
 					direction: "down",
 					text: "persistence",
-					fontSize: 14,
 				},
 				{
 					id: "legend",

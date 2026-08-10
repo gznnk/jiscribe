@@ -122,6 +122,8 @@ describe("calcGroupMarkerVisualBounds", () => {
 		const bounds = calcGroupMarkerVisualBounds(state);
 		const region = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID);
 		expect(bounds.x).toBe(region.x);
-		expect(bounds.x + bounds.width).toBe(state.width / 2);
+		// Summed from a measured label width, so the right edge lands on the marker's
+		// own edge only to within float error.
+		expect(bounds.x + bounds.width).toBeCloseTo(state.width / 2);
 	});
 });
