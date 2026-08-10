@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import js from "@eslint/js";
 import prettierConfig from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
@@ -5,6 +7,14 @@ import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+
+// Reading tseslint.configs.* registers the accessing config file's directory as a
+// candidate tsconfigRootDir in a module-global set; with two or more candidates the
+// root cannot be inferred and parsing throws. A CLI run loads only one config so it
+// never happens there, but the VSCode ESLint extension loads this config and the
+// private repository's in one process. Setting it explicitly skips the inference
+// (both configs need to do so).
+const tsconfigRootDir = fileURLToPath(new URL(".", import.meta.url));
 
 export default tseslint.config(
 	{
@@ -24,6 +34,7 @@ export default tseslint.config(
 				ecmaFeatures: {
 					jsx: true,
 				},
+				tsconfigRootDir,
 			},
 		},
 		plugins: {
