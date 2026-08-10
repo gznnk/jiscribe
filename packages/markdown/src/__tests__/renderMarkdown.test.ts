@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { renderMarkdown } from "../index";
+import { createMarkdownRenderer, renderMarkdown } from "../index";
 
 // renderMarkdown prevents XSS in two layers: parse with markdown-it (html:false),
 // then sanitize with DOMPurify. These tests pin the public contract (sanitizer
@@ -96,5 +96,61 @@ describe("renderMarkdown - basic formatting", () => {
 	it("renders a code fence without a language as plain pre/code", () => {
 		const html = renderMarkdown("```\nplain\n```");
 		expect(html).toContain("<pre><code>");
+	});
+});
+
+describe("createMarkdownRenderer - injected highlighter", () => {
+	it("puts the highlighter output inside pre/code and keeps the language class", () => {
+		const render = createMarkdownRenderer({
+			highlight: (code, language) =>
+				`<span class="tok-${language}">${code.trim()}</span>`,
+		});
+		const html = render("```js\nconst a = 1;\n```");
+		expect(html).toContain(
+			'<pre><code class="language-js"><span class="tok-js">const a = 1;</span></code></pre>',
+		);
+	});
+
+	it("receives the fence body unescaped and an empty language for a bare fence", () => {
+		const calls: [string, string][] = [];
+		const render = createMarkdownRenderer({
+			highlight: (code, language) => {
+				calls.push([code, language]);
+				return "";
+			},
+		});
+		render("```\n<b>x</b>\n```");
+		expect(calls).toEqual([["<b>x</b>\n", ""]]);
+	});
+
+	it("falls back to escaped text when the highlighter returns an empty string", () => {
+		const render = createMarkdownRenderer({ highlight: () => "" });
+		const html = render("```js\n<b>x</b>\n```");
+		expect(html).toContain("&lt;b&gt;");
+	});
+
+	it("falls back to escaped text when the highlighter throws", () => {
+		const render = createMarkdownRenderer({
+			highlight: () => {
+				throw new Error("unknown language");
+			},
+		});
+		const html = render("```js\nconst a = 1;\n```");
+		expect(html).toContain('class="language-js"');
+		expect(html).toContain("const a = 1;");
+	});
+
+	it("sanitizes the highlighter output like the rest of the document", () => {
+		const render = createMarkdownRenderer({
+			highlight: () => `<span onclick="alert(1)">x</span><script>alert(1)</script>`,
+		});
+		const html = render("```js\na\n```");
+		expect(html).not.toContain("onclick");
+		expect(html).not.toContain("<script");
+	});
+
+	it("leaves fences plain when no highlighter is given", () => {
+		const html = createMarkdownRenderer()("```js\nconst a = 1;\n```");
+		expect(html).toContain('<pre><code class="language-js">const a = 1;');
 	});
 });
