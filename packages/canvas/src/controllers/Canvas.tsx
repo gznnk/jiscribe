@@ -189,14 +189,24 @@ type CanvasProps = {
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
 
-	// ── Toolbar (host UI slots) ──
+	// ── Toolbar (visibility & host UI slots) ──
 	/**
-	 * Host-provided toolbar customization: UI slots at the edges (`leading` /
-	 * `trailing`) and an override of the shape-tool arrangement (`layout`). Grouped
-	 * for cohesion; since the JSX slots already break `<Canvas>`'s memo, a host
-	 * rendering this inline can `useMemo` the object to avoid extra re-renders.
+	 * Host-provided toolbar customization: visibility (`show`), UI slots at the
+	 * edges (`leading` / `trailing`) and an override of the shape-tool arrangement
+	 * (`layout`). Grouped for cohesion; since the JSX slots already break
+	 * `<Canvas>`'s memo, a host rendering this inline can `useMemo` the object to
+	 * avoid extra re-renders.
 	 */
 	toolbar?: {
+		/**
+		 * Whether to render the toolbar (default `true`). `false` removes the whole
+		 * bar — shape tools, zoom controls, the help button and the `leading` /
+		 * `trailing` slots — and the canvas area takes the full height. Keyboard
+		 * shortcuts still work (`?` opens the shortcut help, rendered outside the
+		 * bar), but the default UI is left with no entry point for drawing new
+		 * shapes, so this suits read-mostly hosts (previews, embedded viewers).
+		 */
+		show?: boolean;
 		/**
 		 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
 		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
@@ -520,16 +530,18 @@ const CanvasComponent = ({
 				onContextMenu={handleContextMenu}
 				{...pointerHandlers}
 			>
-				<Toolbar
-					activePresetId={state.shapeDrawing?.preset.id ?? null}
-					openCategoryId={state.stencilLibraryOpenCategory}
-					zoom={state.viewport.zoom}
-					canZoomIn={canZoomIn}
-					canZoomOut={canZoomOut}
-					layout={toolbar?.layout}
-					leading={toolbar?.leading}
-					trailing={toolbar?.trailing}
-				/>
+				{toolbar?.show !== false && (
+					<Toolbar
+						activePresetId={state.shapeDrawing?.preset.id ?? null}
+						openCategoryId={state.stencilLibraryOpenCategory}
+						zoom={state.viewport.zoom}
+						canZoomIn={canZoomIn}
+						canZoomOut={canZoomOut}
+						layout={toolbar?.layout}
+						leading={toolbar?.leading}
+						trailing={toolbar?.trailing}
+					/>
+				)}
 				<Viewport
 					data-id="canvas"
 					data-kind="canvas"
