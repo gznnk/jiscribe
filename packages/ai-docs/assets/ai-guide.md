@@ -100,6 +100,8 @@ The top level must always have `version` / `root` (the array may be empty).
 | `cross`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | junction / emphasis marker                            |
 | `offPageConnector`      | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | off-page connector (jump to another page)             |
 | `record`                | `x`,`y`,`width`,`height`             | stroke / fill / **keyed** text / rotation        | titled box + row compartments (UML class / ER entity) |
+| `umlPackage`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | namespace, module, layer                              |
+| `umlComponent`          | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | component, replaceable part                           |
 | `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                   | open line                                             |
 | `polygon`               | `points` (auto-closed)               | stroke / fill                                    | closed shape from points                              |
 | `group`                 | `children`                           | rotation / flipX / flipY                         | container of child objects                            |

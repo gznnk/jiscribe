@@ -163,6 +163,12 @@
 					"$ref": "#/$defs/RecordDoc"
 				},
 				{
+					"$ref": "#/$defs/UmlPackageDoc"
+				},
+				{
+					"$ref": "#/$defs/UmlComponentDoc"
+				},
+				{
 					"$ref": "#/$defs/PolylineDoc"
 				},
 				{
@@ -317,6 +323,12 @@
 				},
 				{
 					"$ref": "#/$defs/RecordDoc"
+				},
+				{
+					"$ref": "#/$defs/UmlPackageDoc"
+				},
+				{
+					"$ref": "#/$defs/UmlComponentDoc"
 				},
 				{
 					"$ref": "#/$defs/PolylineDoc"
@@ -2253,6 +2265,198 @@
 				}
 			}
 		},
+		"UmlPackageDoc": {
+			"description": "UML package shape (a rectangle with a tab on its top-left corner), typically used for namespaces, modules and layers in UML package diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The rect is the outer bounds of the whole silhouette, tab included, and the text is laid out in the body below the tab. Distinct from \"package\", which is an isometric box for a build artifact or deployment unit, and from \"container\", which actually holds the objects placed inside it — this one is a plain shape with no children.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"umlPackage\".",
+					"type": "string",
+					"const": "umlPackage"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 108",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"auto\" (overrides the shared default \"transparent\").",
+					"type": "string",
+					"default": "auto"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (overrides the shared default \"normal\").",
+					"type": "string",
+					"default": "bold"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"UmlComponentDoc": {
+			"description": "UML 2 component shape (a rectangle carrying the component symbol in its top-right corner), typically used for replaceable parts of a system in UML component diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out over the whole box, so keep the name short enough to clear the symbol, or widen the box. Prefer \"record\" with a <<component>> stereotype when the part needs compartments of its own.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"umlComponent\".",
+					"type": "string",
+					"const": "umlComponent"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 90",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"auto\" (overrides the shared default \"transparent\").",
+					"type": "string",
+					"default": "auto"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (overrides the shared default \"normal\").",
+					"type": "string",
+					"default": "bold"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
 		"PolylineDoc": {
 			"description": "Open polyline (non-closed path).",
 			"type": "object",
@@ -2797,7 +3001,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / container / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / container / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

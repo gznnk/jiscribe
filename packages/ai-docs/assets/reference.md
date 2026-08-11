@@ -97,6 +97,8 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `cross`            | Junction / emphasis marker                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `offPageConnector` | Off-page connector (jump to another page)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `record`           | Titled box + row compartments (UML class / ER entity) | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
+| `umlPackage`       | Namespace, module, layer                              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `umlComponent`     | Component, replaceable part                           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `polyline`         | Open line                                             | `points`                                | Stroke                                |
 | `polygon`          | Closed shape from points                              | `points`                                | Stroke, Fill                          |
 | `group`            | Container of child objects                            | none                                    | Transform                             |

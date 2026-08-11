@@ -62,6 +62,9 @@ export const CANONICAL_TYPE_ORDER = [
 	"cross",
 	"offPageConnector",
 	"record",
+	// The rest of uml-shapes: notation shapes that are one box each, unlike record
+	"umlPackage",
+	"umlComponent",
 	"polyline",
 	"polygon",
 	"group",

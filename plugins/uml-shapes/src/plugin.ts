@@ -1,6 +1,10 @@
 import type { CanvasPlugin } from "@jiscribe/canvas";
 
-import { recordDefinition } from "./definition";
+import {
+	recordDefinition,
+	umlComponentDefinition,
+	umlPackageDefinition,
+} from "./definition";
 
 /**
  * `CanvasPlugin` declaration for the UML shapes
@@ -11,5 +15,9 @@ import { recordDefinition } from "./definition";
  */
 export const umlPlugin: CanvasPlugin = {
 	id: "uml-shapes",
-	objects: { record: recordDefinition },
+	objects: {
+		record: recordDefinition,
+		umlPackage: umlPackageDefinition,
+		umlComponent: umlComponentDefinition,
+	},
 };

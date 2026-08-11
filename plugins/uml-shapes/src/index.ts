@@ -11,10 +11,17 @@
 // `@jiscribe/canvas-sdk/doc`; the presentation / state parts (createFrameObject /
 // TextOverlay / createFrameBehavior / createFrameMapper / createFrameStateValidator)
 // come through `@jiscribe/canvas-sdk`.
+// umlPackage and umlComponent are plain Frame-family box shapes beside it, built
+// through createFrameObjectDoc / createFrameObjectDefinition with nothing written
+// out by hand.
 // The headless parse entry point is ./doc (umlDocPlugin).
 // (See packages/canvas/docs/13-authoring-plugins.md.)
 export * from "./schema/RecordDoc";
+export * from "./schema/UmlPackageDoc";
+export * from "./schema/UmlComponentDoc";
 export * from "./state/RecordState";
+export * from "./state/UmlPackageState";
+export * from "./state/UmlComponentState";
 export { recordToDoc, recordToState } from "./state/RecordMapper";
 export { isValidRecordState } from "./state/validateRecordState";
 
@@ -26,9 +33,31 @@ export type {
 } from "./presentation/calcRecordSlotRegions";
 export { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
 
+export { UmlPackageBox } from "./presentation/UmlPackageBox";
+export { calcUmlPackagePoints } from "./presentation/calcUmlPackagePoints";
+export { calcUmlPackageTextRegion } from "./presentation/calcUmlPackageTextRegion";
+export { umlPackageOutline } from "./presentation/umlPackageOutline";
+
+export { UmlComponentBox } from "./presentation/UmlComponentBox";
+export {
+	buildUmlComponentBodyPath,
+	buildUmlComponentIconPaths,
+} from "./presentation/buildUmlComponentPaths";
+
 export { RecordStencils } from "./stencil/RecordStencils";
+export { UmlPackageIcon } from "./stencil/UmlPackageIcon";
+export { UmlComponentIcon } from "./stencil/UmlComponentIcon";
 export { umlToolbarEntry } from "./stencil/UmlToolbarEntry";
 
-export { recordDefinition } from "./definition";
-export { recordDocDefinition, umlDocPlugin } from "./doc";
+export {
+	recordDefinition,
+	umlComponentDefinition,
+	umlPackageDefinition,
+} from "./definition";
+export {
+	recordDocDefinition,
+	umlComponentDocDefinition,
+	umlPackageDocDefinition,
+	umlDocPlugin,
+} from "./doc";
 export { umlPlugin } from "./plugin";

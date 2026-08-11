@@ -12,5 +12,15 @@ export const umlToolbarEntry: ToolbarEntry = {
 	id: "uml",
 	label: { en: "UML", ja: "UML" },
 	icon: RecordIcon,
-	presetIds: ["object", "class", "interface", "abstractClass", "enum"],
+	presetIds: [
+		"object",
+		"class",
+		"interface",
+		"abstractClass",
+		"enum",
+		// The two single-preset types, after the record presets: they are whole
+		// shapes rather than variants of one box (see createTypeStencils).
+		"umlPackage",
+		"umlComponent",
+	],
 };
