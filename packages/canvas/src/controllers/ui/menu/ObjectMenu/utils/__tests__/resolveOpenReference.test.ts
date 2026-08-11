@@ -38,7 +38,9 @@ describe("resolveOpenReference", () => {
 	it("returns null for a multiple selection, even when every object has one", () => {
 		const r1 = rect("r1", { reference: "./a.md" });
 		const r2 = rect("r2", { reference: "./b.md" });
-		expect(resolveOpenReference(makeState(["r1", "r2"], { r1, r2 }))).toBeNull();
+		expect(
+			resolveOpenReference(makeState(["r1", "r2"], { r1, r2 })),
+		).toBeNull();
 	});
 
 	it("returns null when only a connector is selected", () => {

@@ -9,7 +9,9 @@ import { ExportCommand } from "../ExportCommand";
 
 const registries = createTestRegistries();
 
-const makeState = (activeModal: CanvasModalKind | null): CanvasControllerState =>
+const makeState = (
+	activeModal: CanvasModalKind | null,
+): CanvasControllerState =>
 	({ activeModal }) as unknown as CanvasControllerState;
 
 describe("ExportCommand", () => {

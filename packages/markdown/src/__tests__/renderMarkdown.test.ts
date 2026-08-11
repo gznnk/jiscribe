@@ -142,7 +142,8 @@ describe("createMarkdownRenderer - injected highlighter", () => {
 
 	it("sanitizes the highlighter output like the rest of the document", () => {
 		const render = createMarkdownRenderer({
-			highlight: () => `<span onclick="alert(1)">x</span><script>alert(1)</script>`,
+			highlight: () =>
+				`<span onclick="alert(1)">x</span><script>alert(1)</script>`,
 		});
 		const html = render("```js\na\n```");
 		expect(html).not.toContain("onclick");
