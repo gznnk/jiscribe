@@ -10,7 +10,7 @@ import { createStencilIcon } from "@jiscribe/canvas-sdk";
  */
 export const UmlComponentIcon = createStencilIcon(
 	<path
-		d="M 6 3 H 19 V 19 H 6 V 17 H 2 V 13 H 6 V 10 H 2 V 6 H 6 Z"
+		d="M 7 3 H 21 V 21 H 7 V 18 H 3 V 14 H 7 V 10 H 3 V 6 H 7 Z"
 		fill="none"
 		stroke="currentColor"
 		strokeWidth="2"

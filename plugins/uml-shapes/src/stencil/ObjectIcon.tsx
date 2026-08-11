@@ -10,7 +10,7 @@ import { UmlIconBodyRows, UmlIconFrame } from "./UmlIconParts";
 export const ObjectIcon = createStencilIcon(
 	<>
 		<UmlIconFrame />
-		<path d="M4 5 H20 V9 H4 Z" fill="currentColor" stroke="none" />
+		<path d="M4 4 H20 V9 H4 Z" fill="currentColor" stroke="none" />
 		<UmlIconBodyRows />
 	</>,
 );
