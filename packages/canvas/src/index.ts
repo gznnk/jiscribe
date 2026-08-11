@@ -59,6 +59,7 @@ export {
 	brandLightCanvasTheme,
 } from "./theme/themePresets";
 export type { Camera, Viewport } from "./states/canvas/Viewport";
+export type { ScrollBoundsConfig } from "./states/canvas/ScrollBounds";
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 // Headless parse/build API. `createCanvasParser` and the doc-ops live on the
 // `./doc` entry (UI-free); this root re-exports only `parseCanvasText` plus the
@@ -71,7 +72,7 @@ export type {
 } from "./schemas/canvas/validators";
 
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
-// Pass a `CanvasConfig` (capability set + initial view) to `<Canvas initialConfig={...}>`;
+// Pass a `CanvasConfig` (capability set + view setup) to `<Canvas initialConfig={...}>`;
 // its capability subset `CanvasCapabilities` is what the lower-level factory consumes.
 // The factory and the full object-type descriptor table are exported for advanced/custom
 // setups. Plugin declarations (packages/canvas/docs/12-plugin-architecture.md)

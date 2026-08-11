@@ -250,10 +250,11 @@ type CanvasProps = {
 	// ── Mount-time setup (read once; remount with a new key to change) ──
 	/**
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
-	 * capability set (available object types, commands, plugins) plus the initial
-	 * view (`viewport`). Restricts what this canvas can create/handle (plugin-style
-	 * extensibility and feature-gating), independently of any other `<Canvas>` on
-	 * the page. Omit for the full default set.
+	 * capability set (available object types, commands, plugins) plus the view
+	 * setup — the initial camera (`viewport`) and how far it may be scrolled
+	 * (`scrollBounds`, infinite unless set). Restricts what this canvas can
+	 * create/handle (plugin-style extensibility and feature-gating), independently
+	 * of any other `<Canvas>` on the page. Omit for the full default set.
 	 *
 	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
 	 * whose object types remain enabled — otherwise state construction throws
@@ -345,6 +346,7 @@ const CanvasComponent = ({
 		registries,
 		docDefaults,
 		initialConfig?.viewport,
+		initialConfig?.scrollBounds,
 	);
 
 	// Keeps docDefaults current when the host swaps themes at runtime; the reducer no-ops

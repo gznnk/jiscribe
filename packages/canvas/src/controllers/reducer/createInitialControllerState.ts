@@ -3,6 +3,7 @@ import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import { createDocSnapshotFromDoc } from "../../states/canvas/DocSnapshot";
+import type { ScrollBoundsConfig } from "../../states/canvas/ScrollBounds";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
@@ -17,12 +18,17 @@ import { resetUiState } from "../utils/resetUiState";
  * `initialCamera` seeds the viewport's pan/zoom at construction so the first
  * paint lands at the host's camera instead of the doc default (0,0). Width/height
  * stay at the mapper default and are corrected by the ResizeObserver.
+ *
+ * The seeded camera is left as given even when `scrollBoundsConfig` limits
+ * scrolling: only a view scroll of the user's own is limited, so wherever the
+ * host starts the view is where it starts.
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
 	registries: CanvasRegistries,
 	docDefaults: DocCreationDefaults = { fontFamily: DEFAULT_FONT_FAMILY },
 	initialCamera?: Camera,
+	scrollBoundsConfig?: ScrollBoundsConfig,
 ): CanvasControllerState => {
 	const baseState = canvasToState(
 		initialDoc,
@@ -42,6 +48,12 @@ export const createInitialControllerState = (
 	return {
 		...baseState,
 		viewport,
+		// The rect is left unmeasured: nothing needs it until the first view
+		// scroll, and limitViewScroll measures it there.
+		scrollLimit:
+			scrollBoundsConfig === undefined
+				? null
+				: { config: scrollBoundsConfig, rect: null, measuredFrom: null },
 		...resetUiState(),
 		activeModal: null,
 		docDefaults,

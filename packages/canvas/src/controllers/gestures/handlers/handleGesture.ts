@@ -17,6 +17,7 @@ import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWit
 import { materializeObjects } from "../../utils/cowObjects";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
+import { limitViewScroll } from "./utils/limitViewScroll";
 import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
 import { ZOOM } from "../../../constants/zoom";
 
@@ -234,6 +235,7 @@ export const handleGesture = (
 		};
 	}
 
-	// Return final state (history recording is handled by canvasReducer)
-	return nextState;
+	// Last, so it sees the camera every handler of this gesture has settled on
+	// (history recording is handled by canvasReducer).
+	return limitViewScroll(nextState, state, gesture, registries);
 };
