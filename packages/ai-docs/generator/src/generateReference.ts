@@ -277,11 +277,12 @@ function buildGroupedSection(
 		}They are all **connectable** like \`rect\` ` +
 		`and have **no Radius** (\`rx\`). Set \`type\` to the value below and give a bounding box.`;
 	const table = [
-		"| `type` | Outline | Typical use |",
-		"| ------ | ------- | ----------- |",
+		"| `type` | Outline | Default size | Typical use |",
+		"| ------ | ------- | ------------ | ----------- |",
 		...types.map((type) => {
 			const definition = manifest.get(type)!;
-			return `| \`${type}\` | ${definition.outlineDescription} | ${capitalizeSummary(definition.summary!)} |`;
+			const { width, height } = definition.defaults!;
+			return `| \`${type}\` | ${definition.outlineDescription} | ${width}×${height} | ${capitalizeSummary(definition.summary!)} |`;
 		}),
 	].join("\n");
 	return [heading, intro, table, toJsonBlock(GROUPED_EXAMPLE)].join("\n\n");

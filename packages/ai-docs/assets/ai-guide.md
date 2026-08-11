@@ -26,6 +26,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `version`: **required, always `1`** (fixed value for this format version).
 - `root`: array of shapes (every `type` in "Object quick reference") **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
+- `background`: **optional** canvas surface color, a literal CSS color string (e.g. `"#f5f5f5"` — a concrete color, not a `var(...)`). Omit it to follow the theme background; set it and it becomes the surface for both display and image export, with the grid line color derived from it.
 
 ## 3. MUST / MUST NOT (violations break the file)
 

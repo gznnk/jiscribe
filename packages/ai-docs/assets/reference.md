@@ -15,10 +15,11 @@ Use it as a reference when an AI generates data, or when an external tool produc
 }
 ```
 
-| Field     | Type          | Required | Description                                                                                                                                          |
-| --------- | ------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version` | `1`           | ✅       | Schema version. Always `1` (fixed value).                                                                                                            |
-| `root`    | `ObjectDoc[]` | ✅       | All objects and connectors in z-order (back→front); array order is the stacking order. Includes nested groups; connectors sit at the top level only. |
+| Field        | Type          | Required | Description                                                                                                                                                                                                                                                            |
+| ------------ | ------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`    | `1`           | ✅       | Schema version. Always `1` (fixed value).                                                                                                                                                                                                                              |
+| `background` | `string`      | -        | Canvas surface color as a literal CSS color string (a concrete color, not a `var(...)`, so the file stays portable). Omitted = follows the theme background. When set it is the surface for both display and image export, and the grid line color is derived from it. |
+| `root`       | `ObjectDoc[]` | ✅       | All objects and connectors in z-order (back→front); array order is the stacking order. Includes nested groups; connectors sit at the top level only.                                                                                                                   |
 
 ---
 
@@ -366,28 +367,28 @@ Container ("frame") shape: a titled rectangle that marks off a region of the dia
 
 All 20 use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`) and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. They all take Text like `rect`. They are all **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value below and give a bounding box.
 
-| `type`             | Outline                                                             | Typical use                               |
-| ------------------ | ------------------------------------------------------------------- | ----------------------------------------- |
-| `diamond`          | Rhombus with vertices at the edge midpoints                         | Decision / branch node                    |
-| `stadium`          | Rectangle with fully rounded (semicircular) ends                    | Start / end terminator                    |
-| `parallelogram`    | Parallelogram, top edge shifted right                               | Input / output                            |
-| `hexagon`          | Hexagon with pointed left/right caps                                | Preparation                               |
-| `cloud`            | Cloud of rounded bumps (inner text area is small — size generously) | External system, fuzzy concept            |
-| `document`         | Sheet with a wavy bottom edge                                       | Report, file                              |
-| `multiDocument`    | Three stacked wavy-bottom sheets                                    | Report batch / file set                   |
-| `actor`            | Stick figure                                                        | User, role, stakeholder                   |
-| `db`               | Cylinder with an elliptical top                                     | Data store                                |
-| `storedData`       | Rectangle with both side edges bowed left                           | Generic stored data (file / cache)        |
-| `subroutine`       | Rectangle with a vertical bar near each side                        | Predefined process / call                 |
-| `trapezoid`        | Wide top, narrow bottom                                             | Manual operation                          |
-| `manualInput`      | Top edge slopes up toward the right                                 | Manual / keyed input                      |
-| `card`             | Rectangle with the top-left corner cut off                          | Punched-card style data                   |
-| `delay`            | Rectangle whose right edge is a semicircle                          | Wait / delay                              |
-| `loopLimit`        | Rectangle with both top corners cut off                             | Loop start (`"flipY": true` for the end)  |
-| `display`          | Pointed left edge, rounded right cap                                | Output to a display                       |
-| `extract`          | Upward triangle, apex at the top, label below                       | Extract / merge marker                    |
-| `cross`            | Plus sign, label below                                              | Junction / emphasis marker                |
-| `offPageConnector` | Home-plate pentagon pointing down                                   | Off-page connector (jump to another page) |
+| `type`             | Outline                                                             | Default size | Typical use                               |
+| ------------------ | ------------------------------------------------------------------- | ------------ | ----------------------------------------- |
+| `diamond`          | Rhombus with vertices at the edge midpoints                         | 120×80       | Decision / branch node                    |
+| `stadium`          | Rectangle with fully rounded (semicircular) ends                    | 140×60       | Start / end terminator                    |
+| `parallelogram`    | Parallelogram, top edge shifted right                               | 140×80       | Input / output                            |
+| `hexagon`          | Hexagon with pointed left/right caps                                | 140×80       | Preparation                               |
+| `cloud`            | Cloud of rounded bumps (inner text area is small — size generously) | 160×100      | External system, fuzzy concept            |
+| `document`         | Sheet with a wavy bottom edge                                       | 140×100      | Report, file                              |
+| `multiDocument`    | Three stacked wavy-bottom sheets                                    | 140×100      | Report batch / file set                   |
+| `actor`            | Stick figure                                                        | 80×100       | User, role, stakeholder                   |
+| `db`               | Cylinder with an elliptical top                                     | 120×100      | Data store                                |
+| `storedData`       | Rectangle with both side edges bowed left                           | 140×80       | Generic stored data (file / cache)        |
+| `subroutine`       | Rectangle with a vertical bar near each side                        | 140×80       | Predefined process / call                 |
+| `trapezoid`        | Wide top, narrow bottom                                             | 140×80       | Manual operation                          |
+| `manualInput`      | Top edge slopes up toward the right                                 | 140×80       | Manual / keyed input                      |
+| `card`             | Rectangle with the top-left corner cut off                          | 120×80       | Punched-card style data                   |
+| `delay`            | Rectangle whose right edge is a semicircle                          | 140×80       | Wait / delay                              |
+| `loopLimit`        | Rectangle with both top corners cut off                             | 140×80       | Loop start (`"flipY": true` for the end)  |
+| `display`          | Pointed left edge, rounded right cap                                | 140×80       | Output to a display                       |
+| `extract`          | Upward triangle, apex at the top, label below                       | 120×100      | Extract / merge marker                    |
+| `cross`            | Plus sign, label below                                              | 100×100      | Junction / emphasis marker                |
+| `offPageConnector` | Home-plate pentagon pointing down                                   | 120×90       | Off-page connector (jump to another page) |
 
 ```json
 {
