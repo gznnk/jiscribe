@@ -20,8 +20,10 @@ import { stickyDocPlugin } from "@jiscribe/plugin-sticky-shape/doc";
 import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
 import * as vscode from "vscode";
 
+import { isCanvasFileName } from "../canvasFileExtensions";
+
 // Plugin-aware parser: built-in types plus the flowchart / container / markdown / sticky /
-// general / annotation plugin shapes, so .jis.json files using those shapes validate instead of reporting them
+// general / annotation plugin shapes, so canvas files using those shapes validate instead of reporting them
 // unknown.
 const canvasParser = createCanvasParser({
 	plugins: [
@@ -36,7 +38,7 @@ const canvasParser = createCanvasParser({
 });
 
 /**
- * Surfaces .jis.json semantic errors in VSCode's Problems panel.
+ * Surfaces canvas file semantic errors in VSCode's Problems panel.
  *
  * JSON syntax errors and schema-expressible structure errors (types, required
  * fields, enums, etc.) are already reported by the JSON schema registered via
@@ -78,8 +80,7 @@ export class DiagnosticProvider {
 
 	private validateDocument(document: vscode.TextDocument) {
 		// Skip unrelated files.
-		const validExts = [".jis.json", ".jiscribe.json"];
-		if (!validExts.some((ext) => document.fileName.endsWith(ext))) {
+		if (!isCanvasFileName(document.fileName)) {
 			return;
 		}
 

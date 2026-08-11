@@ -1,6 +1,6 @@
 # Jiscribe AI Authoring Guide
 
-A practical guide for an AI to correctly generate and edit Jiscribe `.jis.json` (diagram data).
+A practical guide for an AI to correctly generate and edit Jiscribe `.jis` (also `.jiscribe`; the legacy `.jis.json` / `.jiscribe.json` are still read) diagram data.
 It focuses on the essentials. For the full field-level specification, see [`reference.md`](./reference.md).
 
 ---

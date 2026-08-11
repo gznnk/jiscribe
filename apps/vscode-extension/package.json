@@ -54,6 +54,12 @@
 				"displayName": "Jiscribe Canvas Editor",
 				"selector": [
 					{
+						"filenamePattern": "*.jis"
+					},
+					{
+						"filenamePattern": "*.jiscribe"
+					},
+					{
 						"filenamePattern": "*.jis.json"
 					},
 					{
@@ -76,9 +82,20 @@
 				"priority": "default"
 			}
 		],
+		"languages": [
+			{
+				"id": "json",
+				"extensions": [
+					".jis",
+					".jiscribe"
+				]
+			}
+		],
 		"jsonValidation": [
 			{
 				"fileMatch": [
+					"*.jis",
+					"*.jiscribe",
 					"*.jis.json",
 					"*.jiscribe.json"
 				],

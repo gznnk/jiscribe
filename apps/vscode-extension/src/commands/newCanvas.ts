@@ -1,5 +1,12 @@
 import * as vscode from "vscode";
 
+import {
+	CANVAS_FILE_EXTENSIONS,
+	DEFAULT_CANVAS_FILE_EXTENSION,
+	isCanvasFileName,
+	stripCanvasFileExtension,
+} from "../canvasFileExtensions";
+
 const EMPTY_CONTENT = JSON.stringify(
 	{
 		version: 1,
@@ -9,22 +16,11 @@ const EMPTY_CONTENT = JSON.stringify(
 	2,
 );
 
-const VALID_EXTENSIONS = [".jis.json", ".jiscribe.json"];
-
-function stripJisExtension(name: string): string {
-	for (const ext of VALID_EXTENSIONS) {
-		if (name.endsWith(ext)) {
-			return name.slice(0, -ext.length);
-		}
-	}
-	return name;
-}
-
 async function findAvailableFileName(
 	folder: vscode.Uri,
 	base: string,
 ): Promise<string> {
-	const stem = stripJisExtension(base);
+	const stem = stripCanvasFileExtension(base);
 	const ext = base.slice(stem.length);
 	let candidate = base;
 	let n = 2;
@@ -74,7 +70,7 @@ async function createCanvas(folderUri: vscode.Uri | undefined): Promise<void> {
 
 	const defaultName = await findAvailableFileName(
 		targetFolder,
-		"untitled.jis.json",
+		`untitled${DEFAULT_CANVAS_FILE_EXTENSION}`,
 	);
 
 	const fileName = await vscode.window.showInputBox({
@@ -84,8 +80,8 @@ async function createCanvas(folderUri: vscode.Uri | undefined): Promise<void> {
 			if (!value.trim()) {
 				return "File name is required";
 			}
-			if (!VALID_EXTENSIONS.some((ext) => value.endsWith(ext))) {
-				return `File name must end with one of: ${VALID_EXTENSIONS.join(", ")}`;
+			if (!isCanvasFileName(value)) {
+				return `File name must end with one of: ${CANVAS_FILE_EXTENSIONS.join(", ")}`;
 			}
 			return null;
 		},

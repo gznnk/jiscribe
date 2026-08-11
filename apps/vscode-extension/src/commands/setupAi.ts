@@ -24,23 +24,23 @@ const GENERATED_NOTICE =
 
 // Shared adapter body (excluding frontmatter). `.jiscribe/ai-guide.md` is the
 // single entry point, so we don't duplicate references here.
-const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis.json\` / \`.jiscribe.json\`), read \`.jiscribe/ai-guide.md\` at the workspace root and follow it. It links to the full reference and schema.
+const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis\` / \`.jiscribe\` / \`.jis.json\` / \`.jiscribe.json\`), read \`.jiscribe/ai-guide.md\` at the workspace root and follow it. It links to the full reference and schema.
 `;
 
 /** Claude Code Skill: .claude/skills/jiscribe/SKILL.md */
 const CLAUDE_SKILL = `---
 name: jiscribe
-description: Use when creating or editing Jiscribe .jis.json canvas diagrams (flowcharts, architecture diagrams, sticky notes, etc.).
+description: Use when creating or editing Jiscribe .jis canvas diagrams (flowcharts, architecture diagrams, sticky notes, etc.).
 ---
 
 ${GENERATED_NOTICE}
 
 ${ADAPTER_INSTRUCTION}`;
 
-/** Cursor rule: .cursor/rules/jiscribe.mdc (globs auto-attach it when editing .jis.json). */
+/** Cursor rule: .cursor/rules/jiscribe.mdc (globs auto-attach it when editing a canvas file). */
 const CURSOR_RULE = `---
-description: Jiscribe .jis.json canvas diagrams
-globs: *.jis.json,*.jiscribe.json
+description: Jiscribe .jis canvas diagrams
+globs: *.jis,*.jiscribe,*.jis.json,*.jiscribe.json
 alwaysApply: false
 ---
 
@@ -50,7 +50,7 @@ ${ADAPTER_INSTRUCTION}`;
 
 /** GitHub Copilot: .github/instructions/jiscribe.instructions.md (applyTo scopes when it fires). */
 const COPILOT_INSTRUCTIONS = `---
-applyTo: "**/*.jis.json,**/*.jiscribe.json"
+applyTo: "**/*.jis,**/*.jiscribe,**/*.jis.json,**/*.jiscribe.json"
 ---
 
 ${GENERATED_NOTICE}

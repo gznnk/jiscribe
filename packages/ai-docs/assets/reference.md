@@ -1,7 +1,7 @@
-# Jiscribe Document Format Reference (`.jis.json`)
+# Jiscribe Document Format Reference (`.jis`)
 
-Specification for **Jiscribe**'s `.jis.json` document format.
-Use it as a reference when an AI generates data, or when an external tool produces `.jis.json` files.
+Specification for **Jiscribe**'s document format, saved as `.jis` (also `.jiscribe`; the legacy `.jis.json` / `.jiscribe.json` are still read).
+Use it as a reference when an AI generates data, or when an external tool produces canvas files.
 (For a concise, practical guide, see [`ai-guide.md`](./ai-guide.md).)
 
 ---
