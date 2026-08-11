@@ -2903,6 +2903,10 @@
 				"description": {
 					"description": "Arbitrary description.",
 					"type": "string"
+				},
+				"reference": {
+					"description": "Relative path to another file this object refers to. Opened by the host application; jiscribe itself does not resolve it.",
+					"type": "string"
 				}
 			},
 			"additionalProperties": true

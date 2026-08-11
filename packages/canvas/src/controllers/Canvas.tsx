@@ -71,7 +71,11 @@ import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
-import type { ObjectMenuPropertyUpdater } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
+import type {
+	ObjectMenuPropertyUpdater,
+	OpenReferenceHandler,
+	OpenReferencePayload,
+} from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
@@ -188,6 +192,13 @@ type CanvasProps = {
 	 * (e.g. the VSCode extension writing into the workspace).
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
+	/**
+	 * Called when "open reference" is pressed for an object carrying
+	 * `meta.reference`. Omit it and the menu item is never offered — opening a
+	 * file is the host's business. The canvas passes the reference through
+	 * untouched: it neither resolves nor validates the path.
+	 */
+	onOpenReference?: (payload: OpenReferencePayload) => void;
 
 	// ── Toolbar (visibility & host UI slots) ──
 	/**
@@ -293,6 +304,7 @@ const CanvasComponent = ({
 	onUndo,
 	onRedo,
 	onExportImage,
+	onOpenReference,
 	toolbar,
 	autoFocus = true,
 	initialConfig,
@@ -420,6 +432,22 @@ const CanvasComponent = ({
 			});
 		},
 		[dispatch],
+	);
+
+	// The host callback is read through a ref, so passing a new function each
+	// render does not defeat ObjectMenu's memo. Only adding or removing the prop
+	// changes the identity, which is also what decides whether the item shows.
+	const onOpenReferenceRef = useRef(onOpenReference);
+	useEffect(() => {
+		onOpenReferenceRef.current = onOpenReference;
+	});
+	const hasOpenReferenceHandler = onOpenReference !== undefined;
+	const handleOpenReference = useMemo<OpenReferenceHandler | undefined>(
+		() =>
+			hasOpenReferenceHandler
+				? (payload) => onOpenReferenceRef.current?.(payload)
+				: undefined,
+		[hasOpenReferenceHandler],
 	);
 
 	// Shared by every modal: only one can be open, so closing needs no kind.
@@ -656,6 +684,7 @@ const CanvasComponent = ({
 							<ObjectMenu
 								canvasState={state}
 								onPropertyUpdate={handleMenuPropertyUpdate}
+								onOpenReference={handleOpenReference}
 							/>
 						</ScrollSyncedOverlay>
 					</Container>
