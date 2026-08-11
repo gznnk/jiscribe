@@ -52,72 +52,6 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 		stroke: "#1565C0",
 		strokeWidth: 2,
 	},
-	diamond: {
-		id: "decision-1",
-		type: "diamond",
-		x: 200,
-		y: 150,
-		width: 160,
-		height: 100,
-		fill: "#FFF3E0",
-		stroke: "#EF6C00",
-		strokeWidth: 2,
-		text: "OK?",
-	},
-	stadium: {
-		id: "start-1",
-		type: "stadium",
-		x: 40,
-		y: 120,
-		width: 140,
-		height: 60,
-		text: "Start",
-	},
-	parallelogram: {
-		id: "input-1",
-		type: "parallelogram",
-		x: 200,
-		y: 150,
-		width: 140,
-		height: 80,
-		text: "Input",
-	},
-	hexagon: {
-		id: "prepare-1",
-		type: "hexagon",
-		x: 200,
-		y: 150,
-		width: 140,
-		height: 80,
-		text: "Prepare",
-	},
-	cloud: {
-		id: "internet-1",
-		type: "cloud",
-		x: 200,
-		y: 150,
-		width: 160,
-		height: 100,
-		text: "Internet",
-	},
-	document: {
-		id: "report-1",
-		type: "document",
-		x: 200,
-		y: 150,
-		width: 140,
-		height: 100,
-		text: "Report",
-	},
-	actor: {
-		id: "user-1",
-		type: "actor",
-		x: 200,
-		y: 150,
-		width: 80,
-		height: 100,
-		text: "User",
-	},
 	callout: {
 		id: "callout-1",
 		type: "callout",
@@ -135,15 +69,6 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 		width: 180,
 		height: 110,
 		text: "Retries are capped at 3",
-	},
-	db: {
-		id: "db-1",
-		type: "db",
-		x: 200,
-		y: 150,
-		width: 120,
-		height: 100,
-		text: "users",
 	},
 	container: {
 		id: "container-1",
@@ -165,13 +90,16 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 
 /** JSON example for the grouped catalog section (one representative type). */
 const GROUPED_EXAMPLE = {
-	id: "call-1",
-	type: "subroutine",
+	id: "decision-1",
+	type: "diamond",
 	x: 200,
 	y: 150,
-	width: 140,
-	height: 80,
-	text: "loadUser()",
+	width: 160,
+	height: 100,
+	fill: "#FFF3E0",
+	stroke: "#EF6C00",
+	strokeWidth: 2,
+	text: "OK?",
 };
 
 /** Extra field-table rows appended per type (e.g. callout's `tail`). */
@@ -333,7 +261,7 @@ function buildGroupedSection(
 		}
 	}
 	const textless = types.filter((type) => !manifest.get(type)!.features.text);
-	const heading = `### Flowchart box shapes (${types.map((type) => `\`${type}\``).join(" / ")})`;
+	const heading = `### Box-shape catalog (${types.map((type) => `\`${type}\``).join(" / ")})`;
 	// The exception clause is dropped entirely once every type takes text, rather
 	// than left to render as an empty list.
 	const textNote =

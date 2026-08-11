@@ -90,12 +90,20 @@ export const TEMPLATE_DEF_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Types collapsed into one row of the "Flowchart box shapes" catalog table in
- * reference.md instead of getting an individual section. Types listed here must
- * declare `outlineDescription`.
+ * Types collapsed into one row of the "Box-shape catalog" table in reference.md
+ * instead of getting an individual section. Types listed here must declare
+ * `outlineDescription`.
  */
 export const GROUPED_REFERENCE_TYPES = [
+	"diamond",
+	"stadium",
+	"parallelogram",
+	"hexagon",
+	"cloud",
+	"document",
 	"multiDocument",
+	"actor",
+	"db",
 	"storedData",
 	"subroutine",
 	"trapezoid",
@@ -114,19 +122,11 @@ export const DETAIL_SECTION_TYPES = [
 	"rect",
 	"ellipse",
 	"text",
-	"diamond",
-	"stadium",
-	"parallelogram",
-	"hexagon",
-	"cloud",
-	"document",
-	"actor",
 	"callout",
 	"note",
 	"brace",
 	"bracketWithStem",
 	"bracket",
-	"db",
 	"container",
 ] as const;
 

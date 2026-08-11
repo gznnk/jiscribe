@@ -97,6 +97,7 @@ export const dbDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Database cylinder shape, typically used for data stores in architecture or ER diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cylinder. Text is laid out in the body region below the top cap ellipse (not the full bounding box).",
 	summary: "data store",
+	outlineDescription: "Cylinder with an elliptical top",
 });
 
 export const delayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -114,6 +115,7 @@ export const diamondDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond. Text is laid out within the full bounding box (not clipped to the diamond interior).",
 	summary: "decision / branch node",
+	outlineDescription: "Rhombus with vertices at the edge midpoints",
 });
 
 export const displayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -131,6 +133,7 @@ export const documentDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Document shape (rect with a wavy bottom edge), typically used for reports/files in flowcharts or deliverables in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a document. Text is laid out above the bottom wave band.",
 	summary: "report, file",
+	outlineDescription: "Sheet with a wavy bottom edge",
 });
 
 export const extractDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -148,6 +151,7 @@ export const hexagonDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Hexagon shape with pointed left/right caps, typically used for preparation steps in flowcharts or emphasis nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a hexagon. Text is laid out with a small horizontal inset to stay inside the caps.",
 	summary: "preparation",
+	outlineDescription: "Hexagon with pointed left/right caps",
 });
 
 export const loopLimitDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
@@ -198,6 +202,7 @@ export const parallelogramDocDefinition: ObjectDocDefinition =
 		description:
 			"Parallelogram shape (top edge shifted right), typically used for input/output steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a parallelogram. Text is laid out with a small horizontal inset to stay inside the slanted sides.",
 		summary: "input / output",
+		outlineDescription: "Parallelogram, top edge shifted right",
 	});
 
 export const stadiumDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -206,6 +211,7 @@ export const stadiumDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Stadium (pill) shape with fully rounded ends, typically used for start/end terminators in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a stadium. Text is laid out within the full bounding box.",
 	summary: "start / end terminator",
+	outlineDescription: "Rectangle with fully rounded (semicircular) ends",
 });
 
 export const storedDataDocDefinition: ObjectDocDefinition =
