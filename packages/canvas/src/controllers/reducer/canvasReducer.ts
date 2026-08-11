@@ -275,6 +275,13 @@ export const createCanvasReducer =
 				return { ...state, contextMenuPosition: null };
 			}
 
+			case "CLOSE_MODAL": {
+				if (state.activeModal === null) {
+					return state;
+				}
+				return { ...state, activeModal: null };
+			}
+
 			default:
 				return state;
 		}

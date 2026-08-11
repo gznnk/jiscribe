@@ -43,6 +43,7 @@ export const createInitialControllerState = (
 		...baseState,
 		viewport,
 		...resetUiState(),
+		activeModal: null,
 		docDefaults,
 		commitVersion: 0,
 		saveVersion: 0,

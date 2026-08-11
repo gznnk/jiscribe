@@ -162,6 +162,9 @@ export type EventStartSnapshot = {
 	multiSelectResizeBoundsCache?: MultiSelectResizeBoundsCache | null;
 };
 
+/** Modal surfaces the canvas owns. Only one can be open at a time. */
+export type CanvasModalKind = "export" | "shortcutHelp";
+
 /**
  * What an in-progress drag is doing. Only the distinctions the UI gates on are named;
  * a handler that does not name its drag leaves it at the "other" every drag starts from.
@@ -243,6 +246,13 @@ export type CanvasControllerState = CanvasState & {
 
 	/** Client coordinates; null when no context menu should be displayed */
 	contextMenuPosition: { clientX: number; clientY: number } | null;
+
+	/**
+	 * Modal currently open; null when none is. Deliberately left out of UiStateReset:
+	 * undo/redo and external sync must not close an open modal (the behaviour the
+	 * component-local open state had).
+	 */
+	activeModal: CanvasModalKind | null;
 
 	/**
 	 * In-progress drag from the StencilLibrary. Non-null means a drag is under way; cleared

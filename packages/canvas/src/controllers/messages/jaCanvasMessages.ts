@@ -99,6 +99,7 @@ export const jaCanvasMessages: CanvasMessages = {
 		resetZoom: "ズームをリセット",
 		zoomToFit: "全体を表示",
 		zoomToSelection: "選択範囲にズーム",
+		shortcutHelp: "キーボードショートカット",
 		swapArrows: "矢印を入れ替え",
 		setRoutingStraight: "直線経路",
 		setRoutingOrthogonal: "直角経路",

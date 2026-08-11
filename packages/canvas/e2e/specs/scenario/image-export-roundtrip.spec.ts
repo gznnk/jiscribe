@@ -45,7 +45,7 @@ const downloadViaExportDialog = async (
 	} = {},
 ): Promise<{ name: string; base64: string }> => {
 	await canvas.openContextMenu(menuPoint);
-	await canvas.clickContextMenuItem("export");
+	await canvas.clickContextMenuCommand("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 
 	await page.getByTestId(`export-dialog:format-${format}`).check();
@@ -554,7 +554,7 @@ test("closes the dialog on Escape without clearing the selection", async ({
 
 	// The context menu opens only on a right-click in empty space, which keeps the selection.
 	await canvas.openContextMenu({ x: 700, y: 500 });
-	await canvas.clickContextMenuItem("export");
+	await canvas.clickContextMenuCommand("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 
 	// Press Escape with focus still on the Canvas container rather than an input

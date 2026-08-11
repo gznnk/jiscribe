@@ -118,6 +118,15 @@ export type CloseContextMenuAction = {
 };
 
 /**
+ * Close modal action - clears the open modal (export dialog / shortcut help).
+ * An action rather than a command because ShortcutHelpModal lists the command
+ * registry: a "close the modal" command would show up in that list.
+ */
+export type CloseModalAction = {
+	type: "CLOSE_MODAL";
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -132,4 +141,5 @@ export type CanvasAction =
 	| MenuPropertyUpdateAction
 	| PasteAction
 	| SetDocDefaultsAction
-	| CloseContextMenuAction;
+	| CloseContextMenuAction
+	| CloseModalAction;

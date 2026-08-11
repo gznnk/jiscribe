@@ -23,7 +23,7 @@ const downloadSvgWithoutSource = async (
 	menuPoint: { x: number; y: number },
 ): Promise<string> => {
 	await canvas.openContextMenu(menuPoint);
-	await canvas.clickContextMenuItem("export");
+	await canvas.clickContextMenuCommand("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 
 	await page.getByTestId("export-dialog:format-svg").check();

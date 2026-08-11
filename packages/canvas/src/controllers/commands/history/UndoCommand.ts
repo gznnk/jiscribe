@@ -57,6 +57,7 @@ export const UndoCommand: ExecutableCommand = {
 			historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 			docDefaults: state.docDefaults,
 			internalClipboard: state.internalClipboard,
+			activeModal: state.activeModal, // History navigation must not close an open modal
 			history: {
 				past: state.history.past.slice(0, -1),
 				present: snapshotToRestore,

@@ -74,6 +74,7 @@ import type { Camera } from "../states/canvas/Viewport";
 import type { ObjectMenuPropertyUpdater } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
+import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
@@ -411,6 +412,11 @@ const CanvasComponent = ({
 		[dispatch],
 	);
 
+	// Shared by every modal: only one can be open, so closing needs no kind.
+	const closeModal = useCallback(() => {
+		dispatch({ type: "CLOSE_MODAL" });
+	}, [dispatch]);
+
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			// data-gesture="none" elements (e.g. the text-editing textarea) keep the
@@ -458,13 +464,7 @@ const CanvasComponent = ({
 		registries.objectVisualBounds,
 	);
 
-	const {
-		exportHandle,
-		isExportDialogOpen,
-		openExportDialog,
-		closeExportDialog,
-		handleExportSubmit,
-	} = useCanvasExport({
+	const { exportHandle, handleExportSubmit } = useCanvasExport({
 		svgRef,
 		canvasState: state,
 		registries,
@@ -652,21 +652,21 @@ const CanvasComponent = ({
 						<ContextMenu
 							position={state.contextMenuPosition}
 							canvasState={state}
-							callbacks={{
-								paste: handlePaste,
-								export: openExportDialog,
-							}}
+							callbacks={{ paste: handlePaste }}
 						/>
 					</ViewportOverlay>
 				</Viewport>
-				{/* Sibling of the toolbar/viewport (like ShortcutHelpModal) so the
-				    backdrop covers the whole canvas including the toolbar */}
-				{isExportDialogOpen && (
+				{/* Every modal is rendered here, as a sibling of the toolbar/viewport, so
+				    its backdrop covers the whole canvas including the toolbar */}
+				{state.activeModal === "export" && (
 					<ExportDialog
 						defaultMargin={EXPORT_FIT_PADDING}
-						onClose={closeExportDialog}
+						onClose={closeModal}
 						onSubmit={handleExportSubmit}
 					/>
+				)}
+				{state.activeModal === "shortcutHelp" && (
+					<ShortcutHelpModal onClose={closeModal} />
 				)}
 			</CanvasRoot>
 		</CanvasProviders>
