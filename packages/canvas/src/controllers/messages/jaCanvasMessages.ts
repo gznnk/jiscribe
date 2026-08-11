@@ -73,6 +73,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuLabelBackgroundColor: "ラベルの背景色",
 	menuLabelBorderColor: "ラベルの枠線色",
 	menuLabelBorderStyle: "ラベルの枠線スタイル",
+	menuOpenReference: "参照を開く",
 
 	commandLabels: {
 		undo: "元に戻す",

@@ -6,5 +6,7 @@ declare const MetaStateBrand: unique symbol;
 export type MetaState = {
 	name?: string;
 	description?: string;
+	/** Mirrors `MetaDoc.reference` (see its JSDoc for the contract). */
+	reference?: string;
 } & Record<string, unknown> &
 	Brand<typeof MetaStateBrand>;

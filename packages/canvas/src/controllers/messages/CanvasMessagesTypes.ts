@@ -83,6 +83,7 @@ export type CanvasMessageStrings = {
 	menuLabelBackgroundColor: string;
 	menuLabelBorderColor: string;
 	menuLabelBorderStyle: string;
+	menuOpenReference: string;
 };
 
 /**

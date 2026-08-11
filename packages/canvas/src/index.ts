@@ -141,6 +141,8 @@ export type {
 	BuiltinItemKey,
 	ObjectMenuItemProps,
 	ObjectMenuPropertyUpdater,
+	OpenReferencePayload,
+	OpenReferenceHandler,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 export type {
 	SelectionControlContext,
