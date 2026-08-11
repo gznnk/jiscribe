@@ -29,7 +29,7 @@ pnpm install
 pnpm dev:examples   # http://localhost:5174/
 ```
 
-Node.js 22 and pnpm 10 are what CI uses. `npm` and `yarn` will not work — this
+Node.js 22 and pnpm 11 are what CI uses. `npm` and `yarn` will not work — this
 is a pnpm workspace and packages depend on each other through `workspace:*`.
 
 ## Before you open a pull request

@@ -103,7 +103,7 @@ pnpm test              # ユニットテスト（vitest）
 pnpm test:e2e          # Playwright の全スイート（コア・各プラグイン・同居検証）
 ```
 
-必要環境: Node.js 22（18 以上で動作）と pnpm 10。
+必要環境: Node.js 22+ と pnpm 11。
 
 エンジンの設計ドキュメントは
 [`packages/canvas/docs/`](./packages/canvas/docs/README.ja.md) にある。設計思想、

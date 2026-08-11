@@ -26,7 +26,7 @@ pnpm install
 pnpm dev:examples   # http://localhost:5174/
 ```
 
-CI が使うのは Node.js 22 と pnpm 10。`npm` と `yarn` では動かない。これは pnpm
+CI が使うのは Node.js 22 と pnpm 11。`npm` と `yarn` では動かない。これは pnpm
 ワークスペースであり、パッケージ間は `workspace:*` で依存しているためである。
 
 ## Pull Request を出す前に
