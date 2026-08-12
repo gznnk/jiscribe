@@ -55,4 +55,57 @@ describe("validateContainerDoc", () => {
 		);
 		expect(errors.some((e) => e.path === "root.headerFill")).toBe(true);
 	});
+
+	it("accepts a headerHeight, which overrides the default band height", () => {
+		expect(
+			validateContainerDoc({ ...validContainer, headerHeight: 48 }, "root"),
+		).toEqual([]);
+	});
+
+	it("omitting headerHeight is valid (optional field)", () => {
+		expect(
+			validateContainerDoc(
+				{ ...validContainer, headerHeight: undefined },
+				"root",
+			),
+		).toEqual([]);
+	});
+
+	it("is an error when headerHeight is not a number", () => {
+		const errors = validateContainerDoc(
+			{ ...validContainer, headerHeight: "48" },
+			"root",
+		);
+		expect(errors.some((e) => e.path === "root.headerHeight")).toBe(true);
+	});
+
+	it("is an error when headerHeight is below the lower bound of 1", () => {
+		// A band of 0 or less has no height to draw the title in.
+		for (const headerHeight of [0, -10]) {
+			const errors = validateContainerDoc(
+				{ ...validContainer, headerHeight },
+				"root",
+			);
+			expect(
+				errors.some((e) => e.path === "root.headerHeight"),
+				`headerHeight = ${headerHeight}`,
+			).toBe(true);
+		}
+	});
+
+	it("accepts the lower bound itself", () => {
+		expect(
+			validateContainerDoc({ ...validContainer, headerHeight: 1 }, "root"),
+		).toEqual([]);
+	});
+
+	it("reports headerFill and headerHeight independently", () => {
+		const errors = validateContainerDoc(
+			{ ...validContainer, headerFill: 123, headerHeight: 0 },
+			"root",
+		);
+		expect(errors.map((e) => e.path)).toEqual(
+			expect.arrayContaining(["root.headerFill", "root.headerHeight"]),
+		);
+	});
 });
