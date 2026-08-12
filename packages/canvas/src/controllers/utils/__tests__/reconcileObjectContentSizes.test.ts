@@ -5,6 +5,7 @@ import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { createCowObjects, materializeObjects } from "../cowObjects";
 import { reconcileObjectContentSizes } from "../reconcileObjectContentSizes";
 
 const FONT_FAMILY = "Noto Sans JP";
@@ -238,5 +239,72 @@ describe("reconcileObjectContentSizes", () => {
 		expect(text.width).toBeCloseTo(measured.width);
 		expect(group.width).toBeCloseTo(measured.width);
 		expect(group.height).toBeCloseTo(measured.height);
+	});
+
+	describe("over a copy-on-write view", () => {
+		it("re-measures the object the frame wrote", () => {
+			// The narrowed pass must reach a write that changed the text, which is
+			// what a font-size drag's uncommitted frames look like.
+			const previous = stateOf([textObject("t1", "hello"), rectObject("r1")]);
+			const objects = createCowObjects(previous.objects);
+			objects.t1 = withStaleBox(textObject("t1", "hello world"));
+			const state = { ...previous, objects };
+
+			const next = reconcileObjectContentSizes(state, previous, contentResizer);
+
+			expect(next.objects.t1).toEqual(textObject("t1", "hello world"));
+		});
+
+		it("touches no resizer for a frame that only moved objects", () => {
+			// The drag hot path: the overlay holds the moved object, whose slots are
+			// untouched, so not a single measurement runs.
+			const registry = createObjectContentResizerRegistry();
+			const seenTypes: string[] = [];
+			registry.register("text", (object) => {
+				seenTypes.push(object.type);
+				return object;
+			});
+			const previous = stateOf([textObject("t1", "hello"), rectObject("r1")]);
+			const objects = createCowObjects(previous.objects);
+			objects.r1 = { ...rectObject("r1"), cx: 50 } as ObjectState;
+			const state = { ...previous, objects };
+
+			expect(reconcileObjectContentSizes(state, previous, registry)).toBe(
+				state,
+			);
+			expect(seenTypes).toEqual([]);
+		});
+
+		it("still re-measures everything when the theme's family changed", () => {
+			// The narrowed pass is bypassed here: the objects the frame never wrote
+			// are stale too, because the family they measure against moved.
+			const stale = withStaleBox(textObject("t1", "hello"));
+			const previous = stateOf([stale], {
+				docDefaults: { fontFamily: "Some Other Family" },
+			});
+			const objects = createCowObjects(previous.objects);
+			const state = {
+				...previous,
+				objects,
+				docDefaults: { fontFamily: FONT_FAMILY },
+			};
+
+			const next = reconcileObjectContentSizes(state, previous, contentResizer);
+
+			expect(next.objects.t1).toEqual(textObject("t1", "hello"));
+		});
+
+		it("hands back a plain record, so nothing downstream reads through the view", () => {
+			const previous = stateOf([textObject("t1", "hello")]);
+			const objects = createCowObjects(previous.objects);
+			objects.t1 = withStaleBox(textObject("t1", "hello world"));
+			const state = { ...previous, objects };
+
+			const next = reconcileObjectContentSizes(state, previous, contentResizer);
+
+			// materializeObjects passes a plain record through by reference, so this
+			// is the test for "the view did not survive the pass".
+			expect(materializeObjects(next.objects)).toBe(next.objects);
+		});
 	});
 });
