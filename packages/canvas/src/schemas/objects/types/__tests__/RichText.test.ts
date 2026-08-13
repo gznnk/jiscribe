@@ -4,6 +4,7 @@ import {
 	isRichText,
 	isTextRun,
 	normalizeRichText,
+	readRichTextRangeStyle,
 	remapRichText,
 	richTextLength,
 	richTextToPlain,
@@ -165,6 +166,40 @@ describe("styleRichTextRange", () => {
 			{ text: "😀", fontWeight: "bold" },
 			{ text: "b" },
 		]);
+	});
+});
+
+describe("readRichTextRangeStyle", () => {
+	const styled = [{ text: "abc", fontWeight: "bold" }, { text: "def" }];
+
+	it("reads a value the whole range shares", () => {
+		expect(readRichTextRangeStyle(styled, 0, 3, {})).toEqual({
+			fontWeight: "bold",
+		});
+	});
+
+	it("reads nothing for a field the range mixes", () => {
+		expect(readRichTextRangeStyle(styled, 0, 6, {})).toEqual({});
+	});
+
+	it("falls back to the slot's own styling for what a run does not set", () => {
+		expect(readRichTextRangeStyle(styled, 3, 6, { fontSize: 20 })).toEqual({
+			fontSize: 20,
+		});
+		// The run's "bold" and the slot's "bold" are the same value, so the range is
+		// uniform even though only one of them carries it.
+		expect(
+			readRichTextRangeStyle(styled, 0, 6, { fontWeight: "bold" }),
+		).toEqual({ fontWeight: "bold" });
+	});
+
+	it("reads the slot's own styling for an unstyled text or an empty range", () => {
+		expect(readRichTextRangeStyle("hello", 0, 5, { fontSize: 12 })).toEqual({
+			fontSize: 12,
+		});
+		expect(readRichTextRangeStyle(styled, 2, 2, { fontSize: 12 })).toEqual({
+			fontSize: 12,
+		});
 	});
 });
 

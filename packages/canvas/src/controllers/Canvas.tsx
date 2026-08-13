@@ -635,6 +635,12 @@ const CanvasComponent = ({
 									dispatch({ type: "END_TEXT_EDIT", commit: false })
 								}
 								onCaretMove={revealCaret}
+								onSelectionChange={(selection) =>
+									dispatch({ type: "UPDATE_TEXT_EDIT_SELECTION", selection })
+								}
+								onToggleFormat={(format) =>
+									dispatch({ type: "TOGGLE_TEXT_FORMAT", format })
+								}
 							/>
 						</ZoomScaledOverlay>
 						{/* HTML whose position follows zoom but whose size does not */}

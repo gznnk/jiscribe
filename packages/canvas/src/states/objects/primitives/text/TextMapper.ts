@@ -10,7 +10,6 @@ import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
 import { PRECISION } from "../../../../constants/precision";
 import type { TextStyleDoc } from "../../../../schemas/objects/base/TextStyleDoc";
 import type { TextDoc } from "../../../../schemas/objects/primitives/text/TextDoc";
-import { richTextToPlain } from "../../../../schemas/objects/types/RichText";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
@@ -37,11 +36,8 @@ import { rebrand } from "../../utils/rebrand";
  * that is coherent on its own terms.
  */
 export const textToState: DocToStateMapper<TextDoc, TextState> = (doc) => {
-	// Measured from the characters alone: a body styled per range is still sized
-	// with the slot's own font, so a run that raises fontSize is not accounted for
-	// (measurement is per-slot, see calcTextObjectFrameSize).
 	const size = calcTextObjectFrameSize(
-		richTextToPlain(doc.text ?? ""),
+		doc.text ?? "",
 		doc,
 		DEFAULT_FONT_FAMILY,
 	);

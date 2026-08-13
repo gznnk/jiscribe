@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 import type { TextMeasureFont } from "../measureText";
-import { calcVisualLineCount, measureTextWidth } from "../measureText";
+import {
+	calcVisualLineCount,
+	calcVisualTextHeight,
+	layoutVisualLines,
+	measureTextWidth,
+} from "../measureText";
 
 /**
  * These run in the node environment, where there is no `document` and therefore
@@ -27,6 +33,80 @@ describe("measureTextWidth", () => {
 
 	it("an empty string has no width", () => {
 		expect(measureTextWidth("", font)).toBe(0);
+	});
+
+	it("measures each run of a styled body under its own type size", () => {
+		// "ab" at 10px (12px) plus "cd" at 20px (24px).
+		expect(
+			measureTextWidth([{ text: "ab" }, { text: "cd", fontSize: 20 }], font),
+		).toBe(2 * CHAR_WIDTH + 2 * CHAR_WIDTH * 2);
+	});
+});
+
+describe("layoutVisualLines", () => {
+	it("lays the text out as authored when no width is given", () => {
+		expect(
+			layoutVisualLines("a\nbbb\nbb", font).map((line) => line.width),
+		).toEqual([CHAR_WIDTH, 3 * CHAR_WIDTH, 2 * CHAR_WIDTH]);
+	});
+
+	it("an empty string is one line of no width, and so is each empty line", () => {
+		expect(layoutVisualLines("", font)).toEqual([
+			{ width: 0, height: font.fontSize * TEXT_LINE_HEIGHT },
+		]);
+		expect(layoutVisualLines("a\n\nb", font).map((line) => line.width)).toEqual(
+			[CHAR_WIDTH, 0, CHAR_WIDTH],
+		);
+		expect(layoutVisualLines("a\n", font).map((line) => line.width)).toEqual([
+			CHAR_WIDTH,
+			0,
+		]);
+	});
+
+	it("gives a line the height of the tallest type size drawn on it", () => {
+		expect(
+			layoutVisualLines(
+				[{ text: "a\nb" }, { text: "c", fontSize: 30 }],
+				font,
+			).map((line) => line.height),
+		).toEqual([10 * TEXT_LINE_HEIGHT, 30 * TEXT_LINE_HEIGHT]);
+	});
+
+	it("never draws a line shorter than the slot's own type size", () => {
+		expect(
+			layoutVisualLines([{ text: "a", fontSize: 4 }], font)[0].height,
+		).toBe(10 * TEXT_LINE_HEIGHT);
+	});
+
+	it("does not break a word at a run boundary", () => {
+		// "aaaaaa" is one word of 36px however much of it is styled, so a 40px box
+		// keeps it on one line while the following word moves down.
+		expect(
+			layoutVisualLines(
+				[{ text: "aaa" }, { text: "aaa bbb", fontWeight: "bold" }],
+				font,
+				40,
+			),
+		).toHaveLength(2);
+	});
+});
+
+describe("calcVisualTextHeight", () => {
+	it("adds up the line boxes, the taller runs included", () => {
+		expect(
+			calcVisualTextHeight(
+				[{ text: "a\n" }, { text: "b", fontSize: 20 }],
+				font,
+			),
+		).toBe(10 * TEXT_LINE_HEIGHT + 20 * TEXT_LINE_HEIGHT);
+	});
+
+	it("matches the line count times the line height when nothing is styled", () => {
+		expect(calcVisualTextHeight("a\nb\nc", font, 100)).toBe(
+			calcVisualLineCount("a\nb\nc", font, 100) *
+				font.fontSize *
+				TEXT_LINE_HEIGHT,
+		);
 	});
 });
 

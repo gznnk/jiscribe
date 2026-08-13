@@ -16,6 +16,7 @@ import {
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
 import { resolveRequestedSelection } from "../utils/resolveRequestedSelection";
+import { toggleTextEditFormat } from "../utils/toggleTextEditFormat";
 
 /**
  * Builds the root reducer for the canvas controller, closing over the canvas's
@@ -224,6 +225,35 @@ export const createCanvasReducer =
 						text: action.text,
 					},
 				};
+			}
+
+			case "UPDATE_TEXT_EDIT_SELECTION": {
+				if (state.textEditState?.kind !== "shape") {
+					return state;
+				}
+				return {
+					...state,
+					textEditState: {
+						...state.textEditState,
+						selection: action.selection,
+					},
+				};
+			}
+
+			case "TOGGLE_TEXT_FORMAT": {
+				const styled = toggleTextEditFormat(state, action.format);
+				if (styled === state) {
+					return state;
+				}
+				// The styling is written into the object right away (the session stays
+				// open), so the box it is measured into has to follow, and the change is
+				// its own undo entry rather than riding on the commit that ends the edit.
+				const resizedResult = reconcileObjectContentSizes(
+					styled,
+					state,
+					registries.objectContentResizer,
+				);
+				return recordHistoryIfNeeded(resizedResult, state);
 			}
 
 			case "END_TEXT_EDIT": {

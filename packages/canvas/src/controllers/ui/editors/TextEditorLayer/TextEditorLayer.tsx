@@ -12,6 +12,7 @@ import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
+import { isStyledRichText } from "../../../../schemas/objects/types/RichText";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
@@ -20,6 +21,7 @@ import {
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
 import type { ObjectTextEditOverflowResolver } from "../ObjectTextEditOverflowTypes";
@@ -31,6 +33,10 @@ type EditorHandlers = {
 	onEscape: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
+	/** What the editor has selected, for the styling that addresses a stretch of the text. */
+	onSelectionChange: (selection: { start: number; end: number }) => void;
+	/** A bold / italic / underline keystroke over that selection. */
+	onToggleFormat: (format: TextEditFormat) => void;
 };
 
 /**
@@ -158,7 +164,12 @@ function renderTextEditor(
 			fontWeight={slot?.fontWeight}
 			fontStyle={slot?.fontStyle}
 			textDecoration={slot?.textDecoration}
+			// A body styled per range keeps being drawn by its overlay while edited,
+			// since a textarea has one style for the whole of it.
+			textDrawnBehind={isStyledRichText(slot?.text)}
 			onChange={handlers.onChange}
+			onSelectionChange={handlers.onSelectionChange}
+			onToggleFormat={handlers.onToggleFormat}
 			onEscape={handlers.onEscape}
 			onCaretMove={handlers.onCaretMove}
 		/>
@@ -172,6 +183,10 @@ type TextEditorLayerProps = {
 	onEscape: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
+	/** What the editor has selected, for the styling that addresses a stretch of the text. */
+	onSelectionChange: (selection: { start: number; end: number }) => void;
+	/** A bold / italic / underline keystroke over that selection. */
+	onToggleFormat: (format: TextEditFormat) => void;
 };
 
 /**
@@ -184,6 +199,8 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	onTextChange,
 	onEscape,
 	onCaretMove,
+	onSelectionChange,
+	onToggleFormat,
 }) => {
 	const registries = useCanvasRegistries();
 
@@ -200,6 +217,8 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		onChange: onTextChange,
 		onEscape,
 		onCaretMove,
+		onSelectionChange,
+		onToggleFormat,
 	};
 
 	if (textEditState.kind === "connectorLabel") {

@@ -1,7 +1,13 @@
 import type React from "react";
 import { memo } from "react";
 
+import { RichTextContent } from "./RichTextContent";
 import { TextOverlayFrame } from "./TextOverlayFrame";
+import type { RichText } from "../../../../schemas/objects/types/RichText";
+import {
+	isStyledRichText,
+	richTextToPlain,
+} from "../../../../schemas/objects/types/RichText";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
@@ -24,7 +30,8 @@ type TextOverlayProps = {
 	// Transform (same as parent shape)
 	transform: string;
 	// Text style properties
-	text?: string;
+	/** The slot's text; the run form when parts of it are styled on their own. */
+	text?: RichText;
 	textAlign?: TextAlign;
 	verticalAlign?: VerticalAlign;
 	fontColor?: string;
@@ -54,8 +61,16 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	textDecoration,
 	isEditing = false,
 }) => {
-	// Don't render anything if editing or text is empty
-	if (isEditing || !text) {
+	if (text === undefined || richTextToPlain(text) === "") {
+		return null;
+	}
+	// The editor draws its own glyphs, so drawing here too would double them up —
+	// except for a body styled per range, which a textarea cannot draw: there the
+	// editor turns its own glyphs transparent and keeps only the caret, and this
+	// overlay stays up as the visible text (see TextEditor's `textDrawnBehind`).
+	// The draft is grafted into the state being drawn (graftTextEditDraft), so
+	// what is drawn here follows every keystroke.
+	if (isEditing && !isStyledRichText(text)) {
 		return null;
 	}
 
@@ -75,15 +90,16 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 			fontStyle={fontStyle}
 			textDecoration={textDecoration}
 		>
-			{text}
+			<RichTextContent text={text} />
 		</TextOverlayFrame>
 	);
 };
 
 /**
- * Draws a shape's text as plain text, honoring authored newlines. Rendering a
- * body that is not plain text (Markdown, for one) is the job of the type that
- * owns that body: it passes its own renderer to `createFrameObject` and draws
- * into the same `TextOverlayFrame`.
+ * Draws a shape's text as plain text, honoring authored newlines and the
+ * typography any part of it overrides (RichTextContent). Rendering a body that is
+ * not plain text (Markdown, for one) is the job of the type that owns that body:
+ * it passes its own renderer to `createFrameObject` and draws into the same
+ * `TextOverlayFrame`.
  */
 export const TextOverlay = memo(TextOverlayComponent);

@@ -5,6 +5,7 @@ import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
+import type { TextEditFormat } from "../utils/toggleTextEditFormat";
 
 /**
  * Gesture action - handles user gestures
@@ -64,6 +65,25 @@ export type CommandAction = {
 export type UpdateTextEditAction = {
 	type: "UPDATE_TEXT_EDIT";
 	text: string;
+};
+
+/**
+ * Update text edit selection action - records what the open editor has selected,
+ * so styling can address that stretch of the text (toggleTextEditFormat).
+ */
+export type UpdateTextEditSelectionAction = {
+	type: "UPDATE_TEXT_EDIT_SELECTION";
+	/** UTF-16 offsets into the text being edited; collapsed (start === end) for a plain caret. */
+	selection: { start: number; end: number };
+};
+
+/**
+ * Toggle text format action - turns bold / italic / underline on or off over the
+ * text the open editor has selected, leaving the rest of the slot as it is.
+ */
+export type ToggleTextFormatAction = {
+	type: "TOGGLE_TEXT_FORMAT";
+	format: TextEditFormat;
 };
 
 /**
@@ -128,6 +148,8 @@ export type CanvasAction =
 	| SetSelectionAction
 	| CommandAction
 	| UpdateTextEditAction
+	| UpdateTextEditSelectionAction
+	| ToggleTextFormatAction
 	| EndTextEditAction
 	| MenuPropertyUpdateAction
 	| PasteAction

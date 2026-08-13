@@ -5,7 +5,7 @@ import {
 	degreesToRadians,
 } from "@jiscribe/geometry";
 import type React from "react";
-import { memo, useCallback, useLayoutEffect } from "react";
+import { memo, useCallback, useLayoutEffect, useRef } from "react";
 
 import { TextArea, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
@@ -14,10 +14,18 @@ import { verticalAlignToAlignItems } from "../../../../presentations/objects/uti
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
 import type { CaretLocalRect } from "../utils/readCaretLocalRect";
+
+/** Keys that toggle a format while held with the platform's command modifier. */
+const FORMAT_KEYS: Record<string, TextEditFormat | undefined> = {
+	b: "bold",
+	i: "italic",
+	u: "underline",
+};
 
 type TextEditorProps = {
 	objectId: string;
@@ -47,7 +55,19 @@ type TextEditorProps = {
 	fontWeight?: string;
 	fontStyle?: string;
 	textDecoration?: string;
+	/**
+	 * True when the text is already drawn behind this editor, by the overlay that
+	 * normally goes blank while editing (a body styled per range, which a textarea
+	 * cannot draw). The textarea then contributes the caret and the selection only,
+	 * its own glyphs turned transparent — they would otherwise double up with the
+	 * ones behind, which sit on the very same box.
+	 */
+	textDrawnBehind?: boolean;
 	onChange: (text: string) => void;
+	/** What the textarea has selected, reported on every edit and caret move. */
+	onSelectionChange?: (selection: { start: number; end: number }) => void;
+	/** A bold / italic / underline keystroke, to apply over the current selection. */
+	onToggleFormat?: (format: TextEditFormat) => void;
 	onEscape?: () => void;
 	/** Where the caret moved to, in world coordinates; reported on every edit and caret move. */
 	onCaretMove?: (caretWorldBox: BoundingBox) => void;
@@ -74,7 +94,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	fontWeight = "normal",
 	fontStyle = "normal",
 	textDecoration = "none",
+	textDrawnBehind = false,
 	onChange,
+	onSelectionChange,
+	onToggleFormat,
 	onEscape,
 	onCaretMove,
 }) => {
@@ -136,6 +159,29 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	// After the height fit above, so the caret is measured against the laid-out box.
 	useLayoutEffect(reportCaret);
 
+	// Reported rather than read on demand, because the styling that applies to it
+	// runs in the reducer, which cannot reach the DOM. Only changes are sent: this
+	// also runs on every render, and a dispatch per render would not settle.
+	const reportedSelection = useRef<{ start: number; end: number } | null>(null);
+	const reportSelection = useCallback(() => {
+		const el = textAreaRef.current;
+		if (!el || !onSelectionChange) {
+			return;
+		}
+		const selection = { start: el.selectionStart, end: el.selectionEnd };
+		const previous = reportedSelection.current;
+		if (
+			previous !== null &&
+			previous.start === selection.start &&
+			previous.end === selection.end
+		) {
+			return;
+		}
+		reportedSelection.current = selection;
+		onSelectionChange(selection);
+	}, [onSelectionChange, textAreaRef]);
+	useLayoutEffect(reportSelection);
+
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
 	};
@@ -145,6 +191,19 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			e.preventDefault();
 			e.stopPropagation();
 			onEscape();
+			return;
+		}
+		// The textarea has the focus, so these never reach the canvas-wide keyboard
+		// handling; they are also the browser's own defaults on a rich-text field,
+		// which does nothing here and has to be prevented.
+		const format =
+			(e.metaKey || e.ctrlKey) && !e.altKey
+				? FORMAT_KEYS[e.key.toLowerCase()]
+				: undefined;
+		if (format !== undefined && onToggleFormat) {
+			e.preventDefault();
+			e.stopPropagation();
+			onToggleFormat(format);
 		}
 	};
 
@@ -194,7 +253,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 					// scrollability).
 					maxHeight: overflow === "scroll" ? "100%" : growLimit,
 					textAlign,
-					color: resolvedColor,
+					// Transparent glyphs still lay out, so the caret, the selection and
+					// the wrapping all stay where the drawn text is.
+					color: textDrawnBehind ? "transparent" : resolvedColor,
+					caretColor: resolvedColor,
 					fontSize,
 					fontFamily: resolvedFontFamily,
 					fontWeight,
@@ -206,8 +268,14 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				onKeyDown={handleKeyDown}
 				// A caret move that changes nothing else (Home, an arrow key, a click
 				// into the text) renders nothing, so it has to report on its own.
-				onSelect={reportCaret}
-				onFocus={reportCaret}
+				onSelect={() => {
+					reportCaret();
+					reportSelection();
+				}}
+				onFocus={() => {
+					reportCaret();
+					reportSelection();
+				}}
 			/>
 		</TextEditorWrapper>
 	);

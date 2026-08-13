@@ -1,3 +1,4 @@
+import { richTextToPlain } from "@jiscribe/canvas/doc";
 import type { FrameTextOverlayProps } from "@jiscribe/canvas-sdk";
 import { TextOverlayFrame } from "@jiscribe/canvas-sdk";
 import { renderMarkdown } from "@jiscribe/markdown";
@@ -25,11 +26,15 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 }) => {
 	const bodyRef = useRef<HTMLDivElement>(null);
 
+	// The source is Markdown, whose own syntax carries the styling, so a body
+	// styled per range is flattened to its characters rather than drawn as runs.
+	const source = text === undefined ? "" : richTextToPlain(text);
+
 	// XSS sanitization is guaranteed by DOMPurify inside @jiscribe/markdown's
 	// renderMarkdown. Responsibility for maintaining sanitization lies there.
 	const renderedHtml = useMemo(
-		() => (text ? renderMarkdown(text) : ""),
-		[text],
+		() => (source ? renderMarkdown(source) : ""),
+		[source],
 	);
 
 	// isEditing stays in deps: while editing this component renders null, so the
@@ -43,7 +48,7 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 	}, [renderedHtml, isEditing]);
 
 	// While editing, the source is shown in the textarea; drawing here too would double it up.
-	if (isEditing || !text) {
+	if (isEditing || source === "") {
 		return null;
 	}
 

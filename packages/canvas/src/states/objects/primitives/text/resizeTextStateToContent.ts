@@ -8,7 +8,7 @@ import {
 import type { TextState } from "./TextState";
 import { PRECISION } from "../../../../constants/precision";
 import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
-import { readTextSlot } from "../../types/TextSlots";
+import { readRichTextSlot } from "../../types/TextSlots";
 
 /**
  * Re-measures a text object's box from the text it currently holds, keeping the
@@ -30,7 +30,7 @@ export const resizeTextStateToContent = (
 ): TextState => {
 	const slot = state.text?.[BODY_TEXT_SLOT_ID];
 	const size = calcTextObjectFrameSize(
-		readTextSlot(state.text, BODY_TEXT_SLOT_ID),
+		readRichTextSlot(state.text, BODY_TEXT_SLOT_ID),
 		slot ?? {},
 		fallbackFontFamily,
 	);

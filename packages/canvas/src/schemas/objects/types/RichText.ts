@@ -115,6 +115,18 @@ export const isTextRun = (value: unknown): value is TextRun =>
 export const isRichText = (value: unknown): value is RichText =>
 	isString(value) || (Array.isArray(value) && value.every(isTextRun));
 
+/**
+ * Whether a body is styled per range, i.e. whether it is drawn as runs rather
+ * than as one uniformly styled string. Answers it for any slot content, so it
+ * also tells a body apart from a row list (whose entries are strings).
+ *
+ * @param value - Any slot content; `[]` is not a styled body (normalization never
+ *   leaves one, and an empty array is the empty row list)
+ * @returns True for a non-empty array of runs
+ */
+export const isStyledRichText = (value: unknown): value is TextRun[] =>
+	Array.isArray(value) && value.length > 0 && value.every(isTextRun);
+
 /** Whether any inline style field is set, i.e. whether the run differs from the slot at all. */
 export const hasInlineTextStyle = (style: InlineTextStyle): boolean =>
 	TEXT_INLINE_STYLE_KEYS.some((key) => style[key] !== undefined);
@@ -296,6 +308,42 @@ export const styleRichTextRange = (
 		...sliceRuns(runs, from, to).map((run) => ({ ...run, ...applied })),
 		...sliceRuns(runs, to, plain.length),
 	]);
+};
+
+/**
+ * The styling every character of a range shares: a field carries a value only
+ * when all of them are drawn with the same one, and is `undefined` when the range
+ * mixes two — which is what a format toggle reads to decide whether pressing it
+ * turns the styling on or off, and what a "mixed" indicator shows.
+ *
+ * Each character's value is its run's, falling back to `base`, so a range of
+ * unstyled text reads back as the slot's own styling rather than as nothing.
+ *
+ * @param rich - The body to read
+ * @param start - First offset read, in UTF-16 code units; clamped to the text
+ * @param end - First offset past the range; an empty range reads the slot's own styling
+ * @param base - The slot's styling, which a run that sets no value is drawn with
+ * @returns One value per field, or `undefined` for a field the range is not uniform in
+ */
+export const readRichTextRangeStyle = (
+	rich: RichText,
+	start: number,
+	end: number,
+	base: InlineTextStyle,
+): InlineTextStyle => {
+	const covered = sliceRuns(toRuns(rich), start, end);
+	if (covered.length === 0) {
+		return pickDefinedInlineTextStyle(base);
+	}
+	const shared: Record<string, unknown> = {};
+	for (const key of TEXT_INLINE_STYLE_KEYS) {
+		const first = covered[0][key] ?? base[key];
+		const isUniform = covered.every((run) => (run[key] ?? base[key]) === first);
+		if (isUniform && first !== undefined) {
+			shared[key] = first;
+		}
+	}
+	return shared;
 };
 
 /**

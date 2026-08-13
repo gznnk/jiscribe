@@ -4,18 +4,19 @@ import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
 } from "../../../../constants/textBoxPadding";
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
+import type { RichText } from "../../../../schemas/objects/types/RichText";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import { calcTextLineWidths } from "../../../../states/objects/utils/calcTextLineWidths";
 import type { TextMeasureFont } from "../../../../states/objects/utils/measureText";
+import { layoutVisualLines } from "../../../../states/objects/utils/measureText";
 import { TEXT_BLOCK_WIDTH_SLACK } from "../../../../states/objects/utils/textBlockWidthSlack";
 
 /**
  * The bands a frameless text can be picked by: one per line, each covering only
  * that line's own glyphs and sitting where the alignment puts them, so the blank
  * side of a short line lets the pointer through to whatever is underneath. A band
- * spans the full line height (fontSize × TEXT_LINE_HEIGHT), leading included,
- * since a gap the height of the leading would be too fine to aim at either way.
+ * spans the full line height (the line's tallest type size × TEXT_LINE_HEIGHT),
+ * leading included, since a gap the height of the leading would be too fine to
+ * aim at either way.
  *
  * An empty line yields no band at all — there is nothing there to pick — with
  * one exception: a text whose lines are all empty falls back to a single band
@@ -23,22 +24,21 @@ import { TEXT_BLOCK_WIDTH_SLACK } from "../../../../states/objects/utils/textBlo
  * selected or deleted.
  *
  * @param text - The whole text, authored newlines included; lines are taken as authored and never wrapped
- * @param font - Font the text is drawn with; a family other than the drawn one shifts every band's width and height
+ * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one shifts every band's width and height
  * @param boxSize - Size of the box the text was measured into (calcTextBlockSize); bands never exceed its width, and the first and last lines take its vertical padding
  * @param textAlign - Side the drawn lines are pulled to inside the box; omitted takes TextOverlayFrame's own default, so a band always sits under the glyphs rather than where they would be if left-aligned
  * @returns Bands top to bottom in the shape's local coordinates, the box centered on the origin (x = -width/2 is the box's left edge), never empty
  */
 export const calcTextLineHitRects = (
-	text: string,
+	text: RichText,
 	font: TextMeasureFont,
 	boxSize: Dimensions,
 	textAlign: TextAlign = "center",
 ): Rect[] => {
-	const lineWidths = calcTextLineWidths(text, font);
-	const lineHeight = font.fontSize * TEXT_LINE_HEIGHT;
+	const lines = layoutVisualLines(text, font);
 	const boxLeft = -boxSize.width / 2;
 	const boxTop = -boxSize.height / 2;
-	const lastLineIndex = lineWidths.length - 1;
+	const lastLineIndex = lines.length - 1;
 
 	/** Left edge of a band of `bandWidth`, placed under the glyphs its line draws. */
 	const bandLeft = (bandWidth: number): number => {
@@ -51,30 +51,32 @@ export const calcTextLineHitRects = (
 		return boxLeft;
 	};
 
-	const lineRects = lineWidths.flatMap<Rect>((lineWidth, lineIndex) => {
-		if (lineWidth <= 0) {
-			return [];
+	const lineRects: Rect[] = [];
+	// Lines advance by their own box height, so a line drawn larger pushes the
+	// ones under it down exactly as the drawing does.
+	let lineTop = boxTop + TEXT_BOX_PADDING_Y;
+	lines.forEach((line, lineIndex) => {
+		const bandTop = lineTop;
+		lineTop += line.height;
+		if (line.width <= 0) {
+			return;
 		}
 		// The box's own padding belongs to the outermost lines, so the edges of the
 		// box stay grabbable; the 2px are too few to be worth aiming past.
-		const isFirstLine = lineIndex === 0;
-		const isLastLine = lineIndex === lastLineIndex;
-		const topPadding = isFirstLine ? TEXT_BOX_PADDING_Y : 0;
-		const bottomPadding = isLastLine ? TEXT_BOX_PADDING_Y : 0;
+		const topPadding = lineIndex === 0 ? TEXT_BOX_PADDING_Y : 0;
+		const bottomPadding = lineIndex === lastLineIndex ? TEXT_BOX_PADDING_Y : 0;
 
 		const bandWidth = Math.min(
 			boxSize.width,
-			lineWidth + TEXT_BOX_PADDING_X * 2 + TEXT_BLOCK_WIDTH_SLACK,
+			line.width + TEXT_BOX_PADDING_X * 2 + TEXT_BLOCK_WIDTH_SLACK,
 		);
 
-		return [
-			{
-				x: bandLeft(bandWidth),
-				y: boxTop + TEXT_BOX_PADDING_Y + lineIndex * lineHeight - topPadding,
-				width: bandWidth,
-				height: lineHeight + topPadding + bottomPadding,
-			},
-		];
+		lineRects.push({
+			x: bandLeft(bandWidth),
+			y: bandTop - topPadding,
+			width: bandWidth,
+			height: line.height + topPadding + bottomPadding,
+		});
 	});
 
 	if (lineRects.length === 0) {

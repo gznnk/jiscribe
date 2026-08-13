@@ -1,13 +1,13 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
-import { calcTextLineWidths } from "./calcTextLineWidths";
 import type { TextMeasureFont } from "./measureText";
+import { layoutVisualLines } from "./measureText";
 import { TEXT_BLOCK_WIDTH_SLACK } from "./textBlockWidthSlack";
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
 } from "../../../constants/textBoxPadding";
-import { TEXT_LINE_HEIGHT } from "../../../constants/textLineHeight";
+import type { RichText } from "../../../schemas/objects/types/RichText";
 
 /** Width of a box holding no text, so an empty one still has something to hit. */
 const TEXT_BLOCK_MIN_WIDTH = 16;
@@ -17,29 +17,29 @@ const TEXT_BLOCK_MIN_WIDTH = 16;
  * The text is laid out as authored: lines break at `\n` and nowhere else, so
  * width grows with the longest line and there is deliberately no maximum
  * (unlike calcBelowLabelTextRegion, whose label is bounded to stay under its
- * shape). The caller keeps the box's top-left fixed when this grows.
+ * shape). A part of the text drawn larger widens its line and heightens its line
+ * box, so the box grows around it. The caller keeps the box's top-left fixed when
+ * this grows.
  *
  * @param text - The whole text, authored newlines included; an empty string sizes one empty line, as does each empty line
- * @param font - Font the text is drawn with; a family other than the drawn one skews the width
+ * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one skews the width
  * @returns The box size including padding. Outside a browser the width comes from the estimate measureTextWidth falls back to, so only the height is faithful
  */
 export const calcTextBlockSize = (
-	text: string,
+	text: RichText,
 	font: TextMeasureFont,
 ): Dimensions => {
-	const lineWidths = calcTextLineWidths(text, font);
-	const longestLineWidth = lineWidths.reduce(
-		(widest, lineWidth) => Math.max(widest, lineWidth),
-		0,
-	);
+	const lines = layoutVisualLines(text, font);
 
 	return {
 		width: Math.max(
 			TEXT_BLOCK_MIN_WIDTH,
-			longestLineWidth + TEXT_BOX_PADDING_X * 2 + TEXT_BLOCK_WIDTH_SLACK,
+			lines.reduce((widest, line) => Math.max(widest, line.width), 0) +
+				TEXT_BOX_PADDING_X * 2 +
+				TEXT_BLOCK_WIDTH_SLACK,
 		),
 		height:
-			lineWidths.length * font.fontSize * TEXT_LINE_HEIGHT +
+			lines.reduce((total, line) => total + line.height, 0) +
 			TEXT_BOX_PADDING_Y * 2,
 	};
 };
