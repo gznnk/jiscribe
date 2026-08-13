@@ -165,6 +165,36 @@ describe("validateStateUtils", () => {
 				),
 			).toBe(false);
 		});
+		it("checks the styling of every run, which is inlined into the same CSS", () => {
+			expect(
+				isValidTextStyleState(
+					{ text: { body: { text: [{ text: "hi", fontWeight: "bold" }] } } },
+					"body",
+				),
+			).toBe(true);
+			expect(
+				isValidTextStyleState(
+					{
+						text: {
+							body: {
+								text: [
+									{ text: "safe" },
+									{ text: "hi", fontFamily: "Arial; } body {" },
+								],
+							},
+						},
+					},
+					"body",
+				),
+			).toBe(false);
+			expect(
+				isValidTextStyleState(
+					{ text: { body: { text: [{ text: "hi", fontSize: 0 }] } } },
+					"body",
+				),
+			).toBe(false);
+		});
+
 		it("checks every slot, not only the first", () => {
 			expect(
 				isValidTextStyleState(
