@@ -1,3 +1,4 @@
+import { copyObjectsRecord } from "./cowObjects";
 import { updateGroupBounds } from "./updateGroupBounds";
 import type { CanvasControllerState } from "../CanvasTypes";
 
@@ -45,8 +46,11 @@ export function updateAffectedGroupBounds(
 	withDepth.sort((a, b) => b.depth - a.depth); // Descending order (deepest first)
 	const sortedGroupIds = withDepth.map((x) => x.id);
 
-	// Update bounds for each affected group
-	const updatedObjects = { ...state.objects };
+	// Update bounds for each affected group.
+	// Copied through copyObjectsRecord rather than spread: a drag ends with the
+	// map still held as a copy-on-write view, and spreading one pays a Proxy trap
+	// per key for the identical result.
+	const updatedObjects = copyObjectsRecord(state.objects);
 	for (const groupId of sortedGroupIds) {
 		const updatedGroup = updateGroupBounds(updatedObjects, groupId);
 		if (updatedGroup) {
