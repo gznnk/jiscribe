@@ -1,11 +1,14 @@
 import type { CanvasDoc } from "../../src";
-import { Canvas, parseCanvasText } from "../../src";
+import { Canvas } from "../../src";
+import { createCanvasParser } from "../../src/doc";
 
 // Two-canvas setup for verifying keyboard scoping, where only the focused Canvas handles
 // shortcuts. Shape IDs are unique across the page so selectors cannot collide, and the doc goes
-// through parseCanvasText as the Canvas contract requires.
+// through the parser as the Canvas contract requires.
+const canvasParser = createCanvasParser();
+
 const parseMultiDoc = (rectId: string): CanvasDoc => {
-	const result = parseCanvasText(
+	const result = canvasParser.parse(
 		JSON.stringify({
 			version: 1,
 			root: [

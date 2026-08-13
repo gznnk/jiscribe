@@ -32,10 +32,10 @@ import type { StencilRegistry } from "../ui/objects/StencilRegistry";
  * `createCanvasRegistries`), which is the foundation for per-canvas configuration
  * (`<Canvas initialConfig={...}>`).
  *
- * `objectDocValidatorRegistry` is intentionally NOT part of this bundle: it is
- * used only during parse-time validation at the input boundary (before a
- * `<Canvas>` exists). Scoped alternatives are parser-scoped, not canvas-scoped
- * (see `createCanvasParser`); the global stays as the default-config fallback.
+ * The doc validators are intentionally NOT part of this bundle: they are used only
+ * during parse-time validation at the input boundary (before a `<Canvas>` exists),
+ * so their registry is parser-scoped rather than canvas-scoped and is built by
+ * `createCanvasParser`.
  */
 export type CanvasRegistries = {
 	objectMapper: ObjectMapperRegistry;

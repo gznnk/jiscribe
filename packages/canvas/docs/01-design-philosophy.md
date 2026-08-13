@@ -64,7 +64,7 @@ For details, see [State Update Flow (Reducer)](./06-state-update-flow.md).
 **is rejected at the boundary that receives external input**. Data that has passed the
 boundary is assumed to be valid, so internal functions omit defensive checks.
 
-The boundary is the parser (the two-stage validation of `parseCanvasText`), and it is
+The boundary is the parser (the two-stage validation of a `createCanvasParser` parser), and it is
 the host's responsibility (VSCode extension, web app, etc.) to route external input
 through it before passing it to `Canvas`. `SYNC_EXTERNAL` / `canvasToState`
 (initial mount, external sync, and Undo/Redo restoration) assume they receive an
@@ -84,12 +84,12 @@ internals can be written cheaply on the assumption that "only valid state ever a
 > are written on the assumption that "only valid state ever arrives."
 >
 > **Where the boundary lives**: The validation boundary is centralized in the parser
-> (`parseCanvasText`), and `Canvas` does not re-validate. Routing the `CanvasDoc` passed
-> to `Canvas` through `parseCanvasText` is **the host's responsibility**
+> (`createCanvasParser`), and `Canvas` does not re-validate. Routing the `CanvasDoc` passed
+> to `Canvas` through the parser is **the host's responsibility**
 > (→ see the comment on the `doc` prop in `Canvas.tsx`), and not re-validating at
 > the entry point of `SYNC_EXTERNAL` / `canvasToState` is an **intentional design decision**
 > to avoid redundant validation. Because `Canvas` relies on the contract that it is handed
-> a validated doc, the host must always route input through `parseCanvasText`.
+> a validated doc, the host must always route input through its parser.
 >
 > **CSS injection** (stroke / fill / fontColor / fontFamily / fontWeight) is handled at the
 > boundary under the same policy. The doc path is rejected by `isCssSafeValue` in

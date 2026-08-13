@@ -54,7 +54,7 @@ execute: (state: CanvasState) => CanvasState; // 副作用なし
 循環参照・壊れた参照・型不整合といった**不正な状態は、外部入力を受け取る境界で弾く**。
 境界を通過したデータは正当であることを前提に、内部の関数は防御的チェックを省く。
 
-境界にあたるのは parser（`parseCanvasText` の二段検証）であり、外部入力を `Canvas` へ
+境界にあたるのは parser（`createCanvasParser` が返すパーサーの二段検証）であり、外部入力を `Canvas` へ
 渡す前に host（VSCode 拡張・Web アプリ等）がここを通す責務を負う。`SYNC_EXTERNAL` /
 `canvasToState`（初期マウント・外部同期・Undo/Redo の復元）は検証済みの `CanvasDoc` を
 受け取る前提で**再検証せず**、`canvasToState` で軽量に state へ写すだけにする
@@ -69,11 +69,11 @@ execute: (state: CanvasState) => CanvasState; // 副作用なし
 > 再検証、欠落 ID の握り潰しなど）は撤去済みで、内部関数は「正当な state しか来ない」
 > 前提で書かれている。
 >
-> **境界の所在**: 検証の境界は parser（`parseCanvasText`）に一元化し、`Canvas` は
-> 再検証しない。`Canvas` へ渡す `CanvasDoc` を `parseCanvasText` に通すのは **host の責務**
+> **境界の所在**: 検証の境界は parser（`createCanvasParser`）に一元化し、`Canvas` は
+> 再検証しない。`Canvas` へ渡す `CanvasDoc` を parser に通すのは **host の責務**
 > であり（→ `Canvas.tsx` の `doc` prop コメント）、`SYNC_EXTERNAL` / `canvasToState`
 > の入口で再検証しないのは重複検証を避けるための**意図的な設計判断**。`Canvas` は検証済み
-> doc を渡す契約に依存するため、host 側で `parseCanvasText` を必ず通すこと。
+> doc を渡す契約に依存するため、host 側で parser を必ず通すこと。
 >
 > **CSS インジェクション**（stroke / fill / fontColor / fontFamily / fontWeight）も同じ
 > 方針で境界に寄せる。doc 経路は `validateDocUtils` の `isCssSafeValue`、クリップボード経路は

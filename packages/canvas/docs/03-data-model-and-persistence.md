@@ -92,7 +92,7 @@ action is rejected because it would duplicate these commit subtleties.
 
 ## The Parser's Two-Stage Validation (Defense at the Boundary)
 
-For JSON strings coming from outside, `parseCanvasText` (`schemas/canvas/validators/`)
+For JSON strings coming from outside, a parser from `createCanvasParser` (`schemas/canvas/validators/`)
 returns its result as a **discriminated union without throwing exceptions**. This lets the
 extension side and the Webview side share the same logic and prevents errors from slipping through.
 
@@ -119,8 +119,9 @@ Validation happens in two stages. If the structure does not hold, semantic valid
      Because `CanvasDoc` is a nested tree, a "parent-child cycle" cannot occur structurally; any case that looks like a cycle is effectively "different objects sharing the same ID" — that is, nothing more than an ID duplication.
    - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (group / polyline / polygon / connector are not allowed). A self-loop where source and target point to the same object is permitted and, while its `points` are empty, is drawn as a rectangular loop via a dedicated orthogonal route (see `resolveConnectorPoints` / `routeSelfLoop`); vertices replace that fixed ring with the authored path.
 
-The `objectDocValidatorRegistry` used for validation is needed only at parse time, so `parseCanvasText`
-initializes it idempotently if it is uninitialized. This structurally lets callers avoid false positives caused by picking the wrong entry point.
+The doc-validator registry used for validation is needed only at parse time, so each parser builds its
+own from the definition set it is given. Nothing global is mutated, so two parsers with different plugin
+sets can coexist in one process.
 
 ### A Parser-Only Entry Point
 
@@ -128,7 +129,7 @@ initializes it idempotently if it is uninitialized. This structurally lets calle
 It is aimed at consumers who "just want to parse text into a `CanvasDoc`" or build one programmatically (such as the DiagnosticProvider on the Node side of the VSCode extension, or the MCP server).
 
 ```ts
-import { parseCanvasText } from "@jiscribe/canvas/doc";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 ```
 
 Assuming that any Doc that has passed this boundary is valid, internal functions omit defensive checks

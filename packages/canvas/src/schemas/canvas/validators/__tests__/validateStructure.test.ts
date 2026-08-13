@@ -12,7 +12,7 @@ const validateStructure = (doc: unknown): SemanticDiagnostic[] =>
 	validateStructureWithRegistry(doc, objectDocValidatorRegistry);
 
 // validateStructure delegates per-type validation and known-type checks to the registry.
-// In production parseCanvasText guarantees initialization, so we set up the same precondition in unit tests.
+// In production the parser builds a populated one, so set up the same precondition here.
 beforeAll(() => {
 	initializeObjectDocValidatorRegistry();
 });

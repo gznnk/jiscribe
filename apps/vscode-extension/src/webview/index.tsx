@@ -231,9 +231,8 @@ function App() {
 					setMissingEmbeddedSource(false);
 
 					// Delegate JSON syntax → CanvasDoc semantic checks to the shared
-					// helper. parseCanvasText() returns a discriminated union without
-					// throwing, so the same logic as the Extension (DiagnosticProvider)
-					// covers every case.
+					// parser. It returns a discriminated union without throwing, so the
+					// same logic as the Extension (DiagnosticProvider) covers every case.
 					const result = canvasParser.parse(jsonText);
 					switch (result.kind) {
 						case "ok":

@@ -4,7 +4,6 @@ import type { ObjectDocDefinition } from "../../../plugin/ObjectDocDefinition";
 import { builtinObjectDocDefinitions } from "../../../registry/builtinObjectDocDefinitions";
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
 import { createCanvasParser } from "../createCanvasParser";
-import { parseCanvasText } from "../parseCanvasText";
 import type { SemanticDiagnostic } from "../types";
 
 // createCanvasParser builds a dedicated (non-global) registry from a preset/plugin
@@ -214,23 +213,32 @@ describe("createCanvasParser", () => {
 		});
 	});
 
+	// Omitting config falls back to every built-in type and nothing else, which is what
+	// a host that ships no plugin gets.
 	describe("default configuration (config omitted)", () => {
-		it("returns the same result as parseCanvasText for a valid doc", () => {
+		it("accepts a doc built from built-in types only", () => {
 			const doc = { version: 1, root: [rect("r1")] };
-			const parser = createCanvasParser();
-			expect(parser.parse(text(doc))).toEqual(parseCanvasText(text(doc)));
+			const result = createCanvasParser().parse(text(doc));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc).toEqual(doc);
+			}
 		});
 
-		it("returns the same result as parseCanvasText for a structurally invalid doc", () => {
+		it("strips a type no built-in supplies and reports it as an ok warning", () => {
 			const doc = { version: 1, root: [{ id: "x", type: "rectangle" }] };
-			const parser = createCanvasParser();
-			expect(parser.parse(text(doc))).toEqual(parseCanvasText(text(doc)));
+			const result = createCanvasParser().parse(text(doc));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root).toEqual([]);
+				expect(result.warnings).toHaveLength(1);
+			}
 		});
 
-		it("returns the same result as parseCanvasText for a semantically invalid doc (duplicate id)", () => {
+		it("still runs the semantic rules (duplicate id)", () => {
 			const doc = { version: 1, root: [rect("dup"), rect("dup")] };
-			const parser = createCanvasParser();
-			expect(parser.parse(text(doc))).toEqual(parseCanvasText(text(doc)));
+			const result = createCanvasParser().parse(text(doc));
+			expect(result.kind).toBe("semantic-error");
 		});
 	});
 });

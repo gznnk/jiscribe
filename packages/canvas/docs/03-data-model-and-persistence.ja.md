@@ -107,7 +107,7 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 
 ## parser の二段検証（境界での防御）
 
-外部から渡る JSON 文字列は、`parseCanvasText`（`schemas/canvas/validators/`）が
+外部から渡る JSON 文字列は、`createCanvasParser` が返すパーサー（`schemas/canvas/validators/`）が
 **例外を投げずに判別可能なユニオン**で結果を返す。これにより拡張側・Webview 側が
 同一ロジックを共有し、エラーの取りこぼしを防ぐ。
 
@@ -131,8 +131,8 @@ type CanvasParseResult =
      `CanvasDoc` はネストしたツリーなので「親子の循環」は構造的に起こり得ず、循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。
    - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（group / polyline / polygon / connector は不可）。source と target が同一オブジェクトを指す自己ループは許可され、専用の直交ルートで矩形ループとして描画される（`resolveConnectorPoints` / `routeSelfLoop` を参照）。
 
-検証に使う `objectDocValidatorRegistry` は parse 時にだけ必要なため、`parseCanvasText` が
-未初期化なら冪等に初期化する。これにより呼び出し側はエントリ取り違えによる誤検知を構造的に避けられる。
+検証に使う doc バリデータのレジストリは parse 時にだけ必要なため、パーサーが自前で構築する。
+グローバルを書き換えないので、プラグイン構成の異なるパーサーが同一プロセスに同居できる。
 
 ### パーサー専用エントリ
 
@@ -141,7 +141,7 @@ type CanvasParseResult =
 利用者（VSCode 拡張の Node 側 DiagnosticProvider・MCP サーバーなど）向け。
 
 ```ts
-import { parseCanvasText } from "@jiscribe/canvas/doc";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 ```
 
 この境界を通った Doc は正当であることを前提に、内部関数は防御的チェックを省く

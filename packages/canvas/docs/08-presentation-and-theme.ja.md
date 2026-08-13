@@ -78,7 +78,7 @@ SVG presentation 属性では解決されないため、stroke / fill / arrow �
 
 - 図形要素は emotion `styled`（`RectElement` 等）なので、解決済みの色を **`strokeColor` / `fillColor`
   props で渡し、styled 定義側で CSS として補間**する。emotion はテンプレートに文字列補間するが、
-  補間する色・フォント値の CSS 安全性（インジェクション防御）は**外部入力の境界**（`parseCanvasText`
+  補間する色・フォント値の CSS 安全性（インジェクション防御）は**外部入力の境界**（parser
   の二段検証 / クリップボードの state 検証）で担保済みのため、sink 側での無害化は行わない（原則 4）。
 - styled を持たない素の SVG 要素（描画プレビュー等の `<rect>` / アイコン）では inline `style` で当てる。
 

@@ -16,12 +16,12 @@ The internal structure and layer separation of `canvas`. For the rationale behin
 
 ```
 packages/canvas/src/
-├── index.ts                # package entry (re-exports Canvas / CanvasDoc / parseCanvasText)
+├── index.ts                # package entry (re-exports Canvas / CanvasDoc / the parse result types)
 ├── parser.ts               # parser-only entry (no UI dependency; for the Node side of the VSCode extension)
 ├── schemas/                # persistence data type definitions (Doc model) + structural/semantic validation
 │   ├── canvas/
 │   │   ├── CanvasDoc.ts
-│   │   └── validators/     # parseCanvasText / validateStructure / validateSemantics
+│   │   └── validators/     # createCanvasParser / validateStructure / validateSemantics
 │   ├── objects/            # base / primitives / connections / annotations / types + per-type validateXxxDoc
 │   └── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry (+ initialization)
 ├── states/                 # runtime state types (State model) + Mapper
@@ -104,7 +104,7 @@ The bundle reaches consumers by two paths (#165, Option B):
 - **React tree** (components / hooks) → `CanvasRegistriesContext` + `useCanvasRegistries()`. The presentation-layer `ObjectComponentRegistryContext` distributes just the component registry to renderers (presentation must not import the controllers-layer bundle type).
 - **Pure reducer/handler/util tree** (cannot read React context) → the bundle is **not** stored on `CanvasControllerState` (it is a dependency, not state). `createCanvasReducer(registries)` closes over it and threads it to each handler/command as an explicit `registries` argument (`handleGesture(state, gesture, registries)`, `command.execute(state, registries)`, …). Leaf utils without `state` receive the specific sub-registry as an argument.
 
-`controllers/registries/initializeObjectRegistry(registries)` / `initializeGestureHandlerRegistry(registries)` / `initializeCommands(registries, commandIds?)` populate a **given** bundle; `createCanvasRegistries` wires them together (all object types by default, or the `config` subset). The **exception** is `objectDocValidatorRegistry`, which stays a schema-layer **global** singleton: it is used only during parse-time validation at the input boundary (before a `<Canvas>` exists), so `parseCanvasText` initializes it lazily and the parser-only entry pulls in no UI dependency — see [Data Model](./03-data-model-and-persistence.md).
+`controllers/registries/initializeObjectRegistry(registries)` / `initializeGestureHandlerRegistry(registries)` / `initializeCommands(registries, commandIds?)` populate a **given** bundle; `createCanvasRegistries` wires them together (all object types by default, or the `config` subset). The doc-validator registry is the **exception**: it lives entirely in the schema layer, built per parser by `createCanvasParser` from the definition set it is given, because it is used only during parse-time validation at the input boundary (before a `<Canvas>` exists) and the parser-only entry must pull in no UI dependency — see [Data Model](./03-data-model-and-persistence.md).
 
 > **Semantic caveat**: when `config.objectTypes` restricts the enabled types, the caller must only pass docs whose object types remain enabled. A doc containing a disabled type makes `canvasToState` throw `"Mapper not found"` — consistent with the "caller passes a valid, consistent doc" contract ([design philosophy](./01-design-philosophy.md) principle 4). The default config (all types) is backward compatible.
 
@@ -185,7 +185,7 @@ Thanks to the Registry pattern, adding a shape is completed in "6 steps + regist
 5. **Component**: `presentations/objects/primitives/<Shape>/<Shape>.tsx`
 6. **Registration**: Register it in **both** registration paths, because they populate different registry sets:
    - `controllers/registries/initializeObjectRegistry.ts` — mapper / component / behavior / state validator / menu (the UI-side registries)
-   - `schemas/registry/initializeObjectDocValidatorRegistry.ts` — the Doc validator. **Do not forget this one**: it is a separate, schema-layer registry populated lazily by `parseCanvasText`, so a shape missing here is rejected by the parser as an unknown type even though the UI works.
+   - `schemas/registry/builtinObjectDocDefinitions.ts` — the Doc validator. **Do not forget this one**: it feeds a separate, schema-layer registry that `createCanvasParser` builds, so a shape missing here is stripped by the parser as an unknown type even though the UI works.
 
 Without adding branches to existing logic, the shape joins cross-shape processing (transform, snap, rendering) simply by being registered.
 

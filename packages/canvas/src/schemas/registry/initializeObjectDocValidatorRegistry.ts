@@ -11,17 +11,10 @@ import { objectDocValidatorRegistry } from "./ObjectDocValidatorRegistry";
  * React / @emotion, so it can be safely called from the Node side of the VSCode
  * extension (the headless entry `./doc`).
  *
- * Defaults to the global {@link objectDocValidatorRegistry} and is populated lazily
- * at parse time: the only production caller of the no-arg form is
- * {@link import("../canvas/validators/parseCanvasText").parseCanvasText}, which
- * calls this idempotently (guarded by `objectDocValidatorRegistry.isEmpty()`) when
- * it needs to validate. The UI-side
- * {@link import("../../controllers/registries/initializeObjectRegistry").initializeObjectRegistry}
- * intentionally does NOT initialize this registry (see the comment there); doc
- * validators are a schema-layer concern needed only during parse-time validation.
- *
- * `createCanvasParser` does not use this function: it builds its own registry from a
- * caller-chosen definition set (which may filter out or replace built-in types).
+ * Parsing does not go through here: `createCanvasParser` builds its own registry from a
+ * caller-chosen definition set (which may filter out or replace built-in types). What is
+ * left for this function is populating a registry with the built-in set as-is, which the
+ * schema-layer unit tests do against the global {@link objectDocValidatorRegistry}.
  */
 export const initializeObjectDocValidatorRegistry = (
 	registry: ReturnType<

@@ -89,7 +89,7 @@ type CanvasProps = {
 	 * The CanvasDoc to display.
 	 *
 	 * **Caller responsibility**: always pass a valid doc that has gone through
-	 * `parseCanvasText` (two-stage validation). Canvas does not re-validate
+	 * `createCanvasParser` (two-stage validation). Canvas does not re-validate
 	 * internally and assumes unique IDs, referential integrity, and acyclicity.
 	 * Passing an unvalidated doc (with broken references or cycles) can hang
 	 * internal traversals. Validation is done at the external-input boundary (host)

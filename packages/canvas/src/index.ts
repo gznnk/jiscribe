@@ -62,9 +62,8 @@ export type { Camera, Viewport } from "./states/canvas/Viewport";
 export type { ScrollBoundsConfig } from "./states/canvas/ScrollBounds";
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 // Headless parse/build API. `createCanvasParser` and the doc-ops live on the
-// `./doc` entry (UI-free); this root re-exports only `parseCanvasText` plus the
-// result types for UI consumers that already load the full canvas.
-export { parseCanvasText } from "./schemas/canvas/validators";
+// `./doc` entry (UI-free); the root carries only the result types, so a UI consumer
+// can type a parse result without importing the parser factory itself.
 export type {
 	SemanticDiagnostic,
 	CanvasParseResult,

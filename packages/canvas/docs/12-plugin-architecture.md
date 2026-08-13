@@ -78,8 +78,8 @@ const result = parser.parse(text);
 
 `presetDefinitions` defaults to `builtinObjectDocDefinitions`, the record of every
 built-in type. To replace a built-in with your own, pass a `presetDefinitions` with
-that type filtered out and add yours through `plugins`. `parseCanvasText` remains as
-the compatibility shell over the default configuration.
+that type filtered out and add yours through `plugins`. Calling `createCanvasParser()`
+with no config gives the default configuration: every built-in type and nothing else.
 
 ## Lifecycle and conflict rules
 

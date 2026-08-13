@@ -1,4 +1,5 @@
 import type * as CanvasModule from "@jiscribe/canvas";
+import type * as CanvasDocModule from "@jiscribe/canvas/doc";
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../../fixtures";
@@ -16,7 +17,7 @@ import { selectors } from "../../support/selectors";
  *   back
  * - SVG: exported with the margin changed to 32, contains no <foreignObject>
  *   (for GitHub, and to avoid canvas taint), has a viewBox reflecting the given
- *   margin, and its <metadata> .jis.json passes parseCanvasText
+ *   margin, and its <metadata> .jis.json parses cleanly
  * - Without embedded data: the name is a plain .svg with no .jis marker and the
  *   file has no <metadata>
  * - Transparent background: no background rect is laid down (the default does
@@ -180,12 +181,15 @@ test("exports SVG without foreignObject and restorable from its metadata", async
 	expect(Math.abs(vbWidth - (250 + 64))).toBeLessThanOrEqual(4);
 	expect(Math.abs(vbHeight - (140 + 64))).toBeLessThanOrEqual(4);
 
-	// The .jis.json in metadata satisfies Canvas's input contract (parseCanvasText).
+	// The .jis.json in metadata satisfies Canvas's input contract (a parsed doc).
 	const parsed = await page.evaluate(async (text) => {
 		// The Vite dev server resolves bare ids through /@id/.
 		const mod = (await import(
 			"/@id/@jiscribe/canvas" as string
 		)) as typeof CanvasModule;
+		const docMod = (await import(
+			"/@id/@jiscribe/canvas/doc" as string
+		)) as typeof CanvasDocModule;
 		const svgDoc = new DOMParser().parseFromString(text, "image/svg+xml");
 		const source = mod.extractCanvasSource(
 			svgDoc.documentElement as unknown as SVGSVGElement,
@@ -193,7 +197,7 @@ test("exports SVG without foreignObject and restorable from its metadata", async
 		if (!source) {
 			return null;
 		}
-		return mod.parseCanvasText(JSON.stringify(source));
+		return docMod.createCanvasParser().parse(JSON.stringify(source));
 	}, svgText);
 
 	expect(parsed?.kind).toBe("ok");

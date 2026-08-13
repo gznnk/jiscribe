@@ -352,10 +352,9 @@ export const applyObjectDefinition = (
 /**
  * Clears every object registry in the bundle and re-registers all object types.
  *
- * The doc validators (objectDocValidatorRegistry) are not initialized here.
- * Their registrations are used only during parse-time validation, and
- * parseCanvasText lazily initializes them when needed
- * (schemas/registry/initializeObjectDocValidatorRegistry).
+ * The doc validators are not initialized here. They are used only during parse-time
+ * validation, where `createCanvasParser` builds its own registry from the definition
+ * set it is given (schemas/canvas/validators/createCanvasParser).
  *
  * @param registries Target bundle to populate.
  */
