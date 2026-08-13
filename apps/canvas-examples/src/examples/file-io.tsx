@@ -1,19 +1,19 @@
-import {
-	Canvas,
-	extractCanvasSourceFromPng,
-	parseCanvasText,
-} from "@jiscribe/canvas";
-import type { CanvasDoc } from "@jiscribe/canvas";
+import { Canvas, extractCanvasSourceFromPng } from "@jiscribe/canvas";
+import type { CanvasParseResult, CanvasDoc } from "@jiscribe/canvas";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 import { useCallback, useRef, useState } from "react";
 import "./file-io.css";
+
+// This example ships no plugin, so the default parser (every built-in type) is enough.
+const canvasParser = createCanvasParser();
 
 const initialDoc: CanvasDoc = { version: 1, root: [] };
 
 const DEFAULT_FILE_NAME = "untitled.jis.json";
 
-/** Turn a parseCanvasText failure result into a string suitable for an alert */
+/** Turn a parse failure result into a string suitable for an alert */
 const formatParseError = (
-	result: Exclude<ReturnType<typeof parseCanvasText>, { kind: "ok" }>,
+	result: Exclude<CanvasParseResult, { kind: "ok" }>,
 ): string => {
 	switch (result.kind) {
 		case "syntax-error":
@@ -86,7 +86,7 @@ function FileToolbarButtons({
 /**
  * File I/O example:
  * - Loading a .jis.json (the Open button in toolbar.leading, then two-stage validation
- *   through parseCanvasText)
+ *   through the parser)
  * - Saving the document being edited (onCommit copies the latest doc into a ref, and Save
  *   downloads it)
  * - Restoring a PNG exported by jiscribe (its iTXt carries the .jis.json) by dropping it,
@@ -115,7 +115,7 @@ export function FileIoExample() {
 			console.warn("Dropped PNG has no embedded jiscribe source");
 			return;
 		}
-		const result = parseCanvasText(sourceText);
+		const result = canvasParser.parse(sourceText);
 		if (result.kind !== "ok") {
 			console.warn("Embedded jiscribe source is invalid", result);
 			return;
@@ -142,7 +142,7 @@ export function FileIoExample() {
 				return;
 			}
 			const text = await file.text();
-			const result = parseCanvasText(text);
+			const result = canvasParser.parse(text);
 			if (result.kind !== "ok") {
 				window.alert(
 					`Failed to load ${file.name}:\n${formatParseError(result)}`,

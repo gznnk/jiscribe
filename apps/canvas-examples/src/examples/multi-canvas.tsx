@@ -1,9 +1,13 @@
-import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import { Canvas } from "@jiscribe/canvas";
 import type { CanvasDoc } from "@jiscribe/canvas";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
+
+// This example ships no plugin, so the default parser (every built-in type) is enough.
+const canvasParser = createCanvasParser();
 
 // Keep shape IDs unique across the page, so selectors and references cannot collide
 const parseSeedDoc = (rectId: string): CanvasDoc => {
-	const result = parseCanvasText(
+	const result = canvasParser.parse(
 		JSON.stringify({
 			version: 1,
 			root: [

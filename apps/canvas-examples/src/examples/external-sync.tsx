@@ -1,6 +1,10 @@
-import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import { Canvas } from "@jiscribe/canvas";
 import type { CanvasDoc } from "@jiscribe/canvas";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 import { useCallback, useRef, useState } from "react";
+
+// This example ships no plugin, so the default parser (every built-in type) is enough.
+const canvasParser = createCanvasParser();
 
 const initialSourceText = JSON.stringify(
 	{
@@ -24,7 +28,7 @@ const initialSourceText = JSON.stringify(
 );
 
 const parseOrThrow = (sourceText: string): CanvasDoc => {
-	const result = parseCanvasText(sourceText);
+	const result = canvasParser.parse(sourceText);
 	if (result.kind !== "ok") {
 		throw new Error(`invalid doc: ${result.kind}`);
 	}
@@ -56,7 +60,7 @@ export function ExternalSyncExample() {
 	}, []);
 
 	const handleApply = useCallback(() => {
-		const result = parseCanvasText(sourceText);
+		const result = canvasParser.parse(sourceText);
 		if (result.kind !== "ok") {
 			setStatus(`Failed to apply: ${result.kind}`);
 			return;
@@ -67,14 +71,14 @@ export function ExternalSyncExample() {
 
 	// Simulate "an edit by an external agent (an AI, say)": rewrite the JSON mechanically and push
 	const handleAgentEdit = useCallback(() => {
-		const result = parseCanvasText(sourceText);
+		const result = canvasParser.parse(sourceText);
 		if (result.kind !== "ok") {
 			setStatus(`Failed to apply: ${result.kind}`);
 			return;
 		}
 		addedCountRef.current += 1;
 		const count = addedCountRef.current;
-		const agentDocResult = parseCanvasText(
+		const agentDocResult = canvasParser.parse(
 			JSON.stringify({
 				...result.doc,
 				root: [

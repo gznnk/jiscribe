@@ -1,10 +1,14 @@
-import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import { Canvas } from "@jiscribe/canvas";
 import type { Camera, CanvasDoc, CanvasHandle } from "@jiscribe/canvas";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 import { useRef, useState } from "react";
 
-// A doc with landmark shapes scattered around (run through parseCanvasText, as the Canvas contract requires)
+// This example ships no plugin, so the default parser (every built-in type) is enough.
+const canvasParser = createCanvasParser();
+
+// A doc with landmark shapes scattered around (run through the parser, as the Canvas contract requires)
 const buildLandmarkDoc = (): CanvasDoc => {
-	const result = parseCanvasText(
+	const result = canvasParser.parse(
 		JSON.stringify({
 			version: 1,
 			root: [

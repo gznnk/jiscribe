@@ -20,14 +20,14 @@ body {
 	min-width: 320px;
 }
 
-.gallery {
+.examples {
 	display: flex;
 	width: 100%;
 	height: 100%;
 }
 
 /* Darker than the canvas background (#1e1e1e) so the canvas reads as the stage and the sidebar as chrome */
-.gallery-sidebar {
+.examples-sidebar {
 	flex: 0 0 248px;
 	display: flex;
 	flex-direction: column;
@@ -39,7 +39,7 @@ body {
 	color-scheme: dark;
 }
 
-.gallery-brand {
+.examples-brand {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -47,7 +47,7 @@ body {
 	border-bottom: 1px solid #232326;
 }
 
-.gallery-brand-mark {
+.examples-brand-mark {
 	flex: 0 0 auto;
 	width: 10px;
 	height: 10px;
@@ -55,7 +55,7 @@ body {
 	background: linear-gradient(135deg, #0f9e8f, #075e56);
 }
 
-.gallery-heading {
+.examples-heading {
 	margin: 0;
 	font-size: 0.875rem;
 	font-weight: 600;
@@ -63,23 +63,40 @@ body {
 	color: #f4f4f5;
 }
 
-.gallery-nav {
+.examples-nav {
 	flex: 1;
 	overflow-y: auto;
+	padding: 8px;
+}
+
+.examples-section-title {
+	margin: 16px 10px 6px;
+	font-size: 0.66rem;
+	font-weight: 600;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: #6f7078;
+}
+
+.examples-section:first-child .examples-section-title {
+	margin-top: 6px;
+}
+
+.examples-list {
 	list-style: none;
 	margin: 0;
-	padding: 8px;
+	padding: 0;
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
 }
 
-.gallery-item {
+.examples-item {
 	border-radius: 6px;
 }
 
 /* The inset bar marks the selection without the layout shift a real left border would cause */
-.gallery-item.active {
+.examples-item.active {
 	background: linear-gradient(
 		90deg,
 		rgba(15, 158, 143, 0.16),
@@ -89,12 +106,12 @@ body {
 	padding-bottom: 8px;
 }
 
-.gallery-item + .gallery-item.active,
-.gallery-item.active + .gallery-item {
+.examples-item + .examples-item.active,
+.examples-item.active + .examples-item {
 	margin-top: 6px;
 }
 
-.gallery-nav a {
+.examples-nav a {
 	display: block;
 	padding: 7px 10px 7px 14px;
 	border-radius: 6px;
@@ -107,38 +124,38 @@ body {
 		color 0.12s ease;
 }
 
-.gallery-nav a:hover {
+.examples-nav a:hover {
 	background: rgba(255, 255, 255, 0.05);
 	color: #e4e4e7;
 }
 
-.gallery-nav a:focus-visible {
+.examples-nav a:focus-visible {
 	outline: 1px solid #14b8a6;
 	outline-offset: -1px;
 }
 
-.gallery-item.active a {
+.examples-item.active a {
 	background: none;
 	color: #fafafa;
 	font-weight: 600;
 }
 
 /* Description and source path belong to the selected item, so they sit inside it */
-.gallery-detail {
+.examples-detail {
 	display: flex;
 	flex-direction: column;
 	gap: 5px;
 	padding: 0 12px 0 14px;
 }
 
-.gallery-description {
+.examples-description {
 	margin: 0;
 	font-size: 0.72rem;
 	line-height: 1.5;
 	color: #a1a1aa;
 }
 
-.gallery-source {
+.examples-source {
 	margin: 0;
 	font-size: 0.66rem;
 	font-family: ui-monospace, monospace;
@@ -146,7 +163,7 @@ body {
 	word-break: break-all;
 }
 
-.gallery-content {
+.examples-content {
 	flex: 1;
 	min-width: 0;
 	position: relative;
