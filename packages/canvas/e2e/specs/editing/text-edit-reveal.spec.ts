@@ -272,7 +272,7 @@ test.describe("text edit reveal", () => {
 		// centred on the double-clicked point, so half of that growth goes downward.
 		await canvas.typeTextAt(onLine, "");
 		await canvas
-			.textArea()
+			.textEditorSurface()
 			.fill(new Array(LABEL_WORD_COUNT).fill("Telecommunications").join(" "));
 
 		await expect
@@ -323,7 +323,7 @@ test.describe("text edit reveal", () => {
 		const before = await canvas.getViewBox();
 		await canvas.typeTextAt(center, "label");
 		await expect
-			.poll(() => canvas.textArea().inputValue(), {
+			.poll(() => canvas.textEditorText(), {
 				message: "the typed label reaches the editor",
 			})
 			.toBe("label");

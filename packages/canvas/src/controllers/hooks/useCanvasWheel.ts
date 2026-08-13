@@ -12,8 +12,8 @@ import { shouldUseNativeWheel } from "../gestures/recognizer/utils/shouldUseNati
  *   events within its own area (no need to separately track an "active Canvas").
  *
  * Over scrollable elements marked with data-gesture="native-wheel" (the shortcut
- * help modal's body, or an editing textarea whose text outgrew the room it has),
- * native scrolling is left in place and preventDefault is not called. A textarea
+ * help modal's body, or an editing surface whose text outgrew the room it has),
+ * native scrolling is left in place and preventDefault is not called. A surface
  * with room left over is not scrollable, so the wheel falls through to the canvas.
  * When Ctrl is held, the event is always handled by the canvas as a zoom operation.
  *
@@ -32,7 +32,7 @@ export function useCanvasWheel(
 
 		const onContainerWheel = (e: WheelEvent) => {
 			// Over a scrollable data-gesture="native-wheel" element (the shortcut help
-			// modal's body, a textarea overflowing its slot), leave native scrolling in
+			// modal's body, an editing surface overflowing its slot), leave native scrolling in
 			// place and skip canvas scrolling
 			if (shouldUseNativeWheel(e.target, e.ctrlKey)) {
 				return;

@@ -1200,7 +1200,7 @@ export class GestureRecognizer {
 	public getHandlers(): PointerEventHandlers {
 		return {
 			onPointerDown: (e) => {
-				// e.g. a textarea during text editing, or an input inside a menu.
+				// e.g. the editing surface during text editing, or an input inside a menu.
 				if (isGestureOptedOut(e.target)) {
 					return;
 				}

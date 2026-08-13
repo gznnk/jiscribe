@@ -459,7 +459,7 @@ const CanvasComponent = ({
 
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
-			// data-gesture="none" elements (e.g. the text-editing textarea) keep the
+			// data-gesture="none" elements (e.g. the text-editing surface) keep the
 			// browser's native context menu.
 			if (isGestureOptedOut(e.target)) {
 				return;

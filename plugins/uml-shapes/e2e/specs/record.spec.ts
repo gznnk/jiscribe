@@ -177,23 +177,25 @@ test.describe("record (a box with compartments)", () => {
 
 		// Double-clicking the title band opens the name slot on the stencil's title.
 		await canvas.typeTextAt(NAME_SPOT, "");
-		await expect(canvas.textArea()).toHaveValue(OBJECT_STENCIL_NAME);
-		await canvas.textArea().fill("User");
+		await expect.poll(() => canvas.textEditorText()).toBe(OBJECT_STENCIL_NAME);
+		await canvas.textEditorSurface().fill("User");
 		await canvas.commitText();
 		await expect(canvas.page.locator("body")).toContainText("User");
 
 		// Double-clicking the row compartment opens the attributes slot, with its own
 		// rows rather than the name's content.
 		await canvas.typeTextAt(ATTRIBUTES_SPOT, "");
-		await expect(canvas.textArea()).toHaveValue(OBJECT_STENCIL_ATTRIBUTES);
-		await canvas.textArea().fill("id: string");
+		await expect
+			.poll(() => canvas.textEditorText())
+			.toBe(OBJECT_STENCIL_ATTRIBUTES);
+		await canvas.textEditorSurface().fill("id: string");
 		// The text of the slot that is not being edited (name) stays visible.
 		await expect(canvas.page.locator("body")).toContainText("User");
 		await canvas.commitText();
 
 		// Reopening the row compartment brings the committed rows back, joined by "\n".
 		await canvas.typeTextAt(ATTRIBUTES_SPOT, "");
-		await expect(canvas.textArea()).toHaveValue("id: string");
+		await expect.poll(() => canvas.textEditorText()).toBe("id: string");
 		await canvas.cancelText();
 	});
 
@@ -230,7 +232,7 @@ test.describe("record (a box with compartments)", () => {
 		// Double-click the rotated row compartment directly to open the attributes editor.
 		const attributes = group.locator('[data-part="attributes"]');
 		await attributes.dblclick();
-		await expect(canvas.textArea()).toBeVisible();
+		await expect(canvas.textEditorSurface()).toBeVisible();
 
 		// The editor frame shares the compartment's local rect and transform, so their screen boxes match.
 		const editorBox = await canvas.page
@@ -267,9 +269,9 @@ test.describe("record (a box with compartments)", () => {
 
 		// The commit itself went through: reopening returns the 3 rows joined by "\n".
 		await canvas.typeTextAt(ATTRIBUTES_SPOT, "");
-		await expect(canvas.textArea()).toHaveValue(
-			"id: string\nname: string\nemail: string",
-		);
+		await expect
+			.poll(() => canvas.textEditorText())
+			.toBe("id: string\nname: string\nemail: string");
 		await canvas.cancelText();
 	});
 
@@ -283,13 +285,13 @@ test.describe("record (a box with compartments)", () => {
 
 		// Hold more rows than the 52px compartment fits, still in edit mode.
 		await canvas.replaceTextAt(ATTRIBUTES_SPOT, "a\nb\nc\nd\ne\nf");
-		await expect(canvas.textArea()).toHaveValue("a\nb\nc\nd\ne\nf");
+		await expect.poll(() => canvas.textEditorText()).toBe("a\nb\nc\nd\ne\nf");
 
 		// attributes takes what the band leaves, so it does not follow the draft. A
 		// growing editor would spill below the compartment, so it has to stay at the
 		// compartment height and scroll instead.
 		const overflow = await canvas
-			.textArea()
+			.textEditorSurface()
 			.evaluate((el) => el.scrollHeight - el.clientHeight);
 		expect(overflow).toBeGreaterThan(0);
 
@@ -356,7 +358,7 @@ test.describe("record (a box with compartments)", () => {
 		// from the editing draft rather than the committed state, so it has to have
 		// grown by now.
 		await canvas.replaceTextAt(NAME_SPOT, "User\nAccount");
-		await expect(canvas.textArea()).toHaveValue("User\nAccount");
+		await expect.poll(() => canvas.textEditorText()).toBe("User\nAccount");
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
 				message: "the band grows by one row before the commit",
@@ -406,7 +408,7 @@ test.describe("record (a box with compartments)", () => {
 
 		// 5 rows = 21 * 5 + 7 = 112px, past the box height of 80px.
 		await canvas.replaceTextAt(NAME_SPOT, "A\nB\nC\nD\nE");
-		await expect(canvas.textArea()).toHaveValue("A\nB\nC\nD\nE");
+		await expect.poll(() => canvas.textEditorText()).toBe("A\nB\nC\nD\nE");
 
 		// The band stops at the box's bottom edge (the clamp in calcRecordSlotRegions).
 		await expect
@@ -433,7 +435,7 @@ test.describe("record (a box with compartments)", () => {
 
 		// What is left over is reached by scrolling, which also decides wheel delegation.
 		const overflow = await canvas
-			.textArea()
+			.textEditorSurface()
 			.evaluate((el) => el.scrollHeight - el.clientHeight);
 		expect(overflow).toBeGreaterThan(0);
 		await canvas.cancelText();
@@ -489,7 +491,7 @@ test.describe("record (a box with compartments)", () => {
 
 		// The band resolves to the stereotype slot rather than the title below it.
 		await canvas.typeTextAt({ x: 410, y: 212 }, "");
-		await expect(canvas.textArea()).toHaveValue("<<interface>>");
+		await expect.poll(() => canvas.textEditorText()).toBe("<<interface>>");
 		await canvas.cancelText();
 	});
 });

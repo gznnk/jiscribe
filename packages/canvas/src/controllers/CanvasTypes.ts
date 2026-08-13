@@ -347,7 +347,7 @@ export type CanvasControllerState = CanvasState & {
 				text: string;
 				/**
 				 * What the editor currently has selected, in UTF-16 offsets of `text`.
-				 * Reported by the textarea on every caret and selection change, and read
+				 * Reported by the editor on every caret and selection change, and read
 				 * by the styling that applies to a stretch of the text rather than to the
 				 * whole slot (toggleTextEditFormat). Collapsed (start === end) for a
 				 * plain caret, and absent until the editor has reported once.

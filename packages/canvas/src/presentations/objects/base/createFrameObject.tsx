@@ -78,7 +78,7 @@ export type FrameTextOverlayProps = {
 	textDecoration?: string;
 	/**
 	 * True while the in-place editor is open **on this slot**: draw nothing, or it
-	 * doubles up with the textarea. The shape's other slots stay drawn.
+	 * doubles up with the editor. The shape's other slots stay drawn.
 	 */
 	isEditing: boolean;
 };
@@ -110,7 +110,7 @@ export type FrameTextOverlayRenderer = (
  * `renderTextOverlay` swaps out how the text is drawn while keeping every shared
  * derivation (transform, resolved colors, dashes, region, memo) here. A type
  * whose body is not plain text passes one; it receives the placed box and draws
- * into `TextOverlayFrame` so display keeps matching the editing textarea.
+ * into `TextOverlayFrame` so display keeps matching the editing surface.
  *
  * Out of scope for types whose draw structure differs: a shadowed shape drawing a
  * group of its own (the sticky in `@jiscribe/plugin-sticky-shape`), and svg

@@ -1,6 +1,5 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
-import { selectors } from "../../support/selectors";
 
 /**
  * Content-box top and height of an element, in viewport px. The two text boxes
@@ -62,9 +61,8 @@ test.describe("text editing", () => {
 	});
 
 	// A line box is fontSize × 1.5 tall, so an odd size makes the drawn box end on
-	// a half pixel. The editor used to take its height from scrollHeight, which is
-	// a whole number, and the extra half pixel moved vertically centered text as
-	// soon as editing started (see fitTextAreaHeight).
+	// a half pixel. The editing surface has to end on the same one: a box rounded
+	// to whole pixels moves vertically centered text the moment editing starts.
 	for (const fontSize of [15, 21]) {
 		test(`opens the editor on the text at font size ${fontSize}`, async ({
 			canvas,
@@ -85,9 +83,7 @@ test.describe("text editing", () => {
 
 			const display = await contentBoxOf(displayTextOf(canvas));
 			await canvas.typeTextAt({ x: 520, y: 260 }, "");
-			const editor = await contentBoxOf(
-				canvas.page.locator(`${selectors.textEditor} textarea`),
-			);
+			const editor = await contentBoxOf(canvas.textEditorSurface());
 
 			expect(editor).toEqual(display);
 		});

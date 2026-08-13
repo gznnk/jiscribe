@@ -5,20 +5,32 @@ import {
 	degreesToRadians,
 } from "@jiscribe/geometry";
 import type React from "react";
-import { memo, useCallback, useLayoutEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
-import { TextArea, TextEditorWrapper } from "./TextEditorStyled";
+import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../presentations/objects/utils/verticalAlignToAlignItems";
+import type { RichText } from "../../../../schemas/objects/types/RichText";
+import {
+	isSameRichText,
+	remapRichText,
+} from "../../../../schemas/objects/types/RichText";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
-import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
-import type { CaretLocalRect } from "../utils/readCaretLocalRect";
+import {
+	focusEditableAtEnd,
+	hasUnexpectedMarkup,
+	readEditableSelection,
+	readEditableText,
+	renderEditableRichText,
+	setEditableSelection,
+} from "../utils/editableTextDom";
+import type { CaretLocalRect, CaretTarget } from "../utils/readCaretLocalRect";
 
 /** Keys that toggle a format while held with the platform's command modifier. */
 const FORMAT_KEYS: Record<string, TextEditFormat | undefined> = {
@@ -27,9 +39,24 @@ const FORMAT_KEYS: Record<string, TextEditFormat | undefined> = {
 	u: "underline",
 };
 
+/**
+ * The browser's own rich-text edits, which reach an editable surface from the
+ * context menu and the mobile text toolbar. They would write markup of their own,
+ * so each is answered with the editor's own formatting instead.
+ */
+const FORMAT_INPUT_TYPES: Record<string, TextEditFormat | undefined> = {
+	formatBold: "bold",
+	formatItalic: "italic",
+	formatUnderline: "underline",
+};
+
+/** A stretch of the edited text, in UTF-16 offsets; what the editor reports and restores. */
+type TextSelection = { start: number; end: number };
+
 type TextEditorProps = {
 	objectId: string;
-	text: string;
+	/** The body being edited, draft included: drawn as its runs, and the styling the editor carries over as it is typed into */
+	richText: RichText;
 	cx: number;
 	cy: number;
 	/** Text region top-left X in the object's local coordinates (from calcTextRegion) */
@@ -55,17 +82,9 @@ type TextEditorProps = {
 	fontWeight?: string;
 	fontStyle?: string;
 	textDecoration?: string;
-	/**
-	 * True when the text is already drawn behind this editor, by the overlay that
-	 * normally goes blank while editing (a body styled per range, which a textarea
-	 * cannot draw). The textarea then contributes the caret and the selection only,
-	 * its own glyphs turned transparent — they would otherwise double up with the
-	 * ones behind, which sit on the very same box.
-	 */
-	textDrawnBehind?: boolean;
 	onChange: (text: string) => void;
-	/** What the textarea has selected, reported on every edit and caret move. */
-	onSelectionChange?: (selection: { start: number; end: number }) => void;
+	/** What the editor has selected, reported on every edit and caret move. */
+	onSelectionChange?: (selection: TextSelection) => void;
 	/** A bold / italic / underline keystroke, to apply over the current selection. */
 	onToggleFormat?: (format: TextEditFormat) => void;
 	onEscape?: () => void;
@@ -74,7 +93,7 @@ type TextEditorProps = {
 };
 
 const TextEditorComponent: React.FC<TextEditorProps> = ({
-	text,
+	richText,
 	cx,
 	cy,
 	x,
@@ -94,7 +113,6 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	fontWeight = "normal",
 	fontStyle = "normal",
 	textDecoration = "none",
-	textDrawnBehind = false,
 	onChange,
 	onSelectionChange,
 	onToggleFormat,
@@ -133,42 +151,56 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		[x, y, scaleX, scaleY, rotation, cx, cy],
 	);
 
-	const { textAreaRef, wrapperRef, reportCaret } = useCaretReporter({
-		onCaretMove,
-		calcCaretWorldBox,
-	});
-
-	// Update the height to match the text amount (vertical alignment is applied via the wrapper's flex)
-	useLayoutEffect(() => {
-		const el = textAreaRef.current;
-		if (!el) {
-			return;
-		}
-		fitTextAreaHeight(el, fontSize);
-	}, [
-		text,
-		width,
-		height,
-		fontSize,
-		resolvedFontFamily,
-		fontWeight,
-		fontStyle,
-		textAreaRef,
-	]);
-
-	// After the height fit above, so the caret is measured against the laid-out box.
-	useLayoutEffect(reportCaret);
-
+	// The body the surface is drawing. Null until the first layout effect fills it;
+	// from then on it is this editor's prediction of what the editing state holds,
+	// which is what tells the echo of a keystroke from a change made elsewhere.
+	const shownRichText = useRef<RichText | null>(null);
+	// The newest body, for the sync a composition postpones.
+	const incomingRichText = useRef(richText);
+	const isComposing = useRef(false);
+	const isSyncDeferred = useRef(false);
 	// Reported rather than read on demand, because the styling that applies to it
 	// runs in the reducer, which cannot reach the DOM. Only changes are sent: this
 	// also runs on every render, and a dispatch per render would not settle.
-	const reportedSelection = useRef<{ start: number; end: number } | null>(null);
+	const reportedSelection = useRef<TextSelection | null>(null);
+
+	const readCaretTarget = useCallback(
+		(surface: HTMLDivElement): CaretTarget | null => {
+			const selection = readEditableSelection(surface);
+			if (!selection) {
+				return null;
+			}
+			// The drawn body, not the incoming one: the caret has to be measured
+			// against the runs the surface is laying out right now.
+			return {
+				caretIndex: selection.caretIndex,
+				text: shownRichText.current ?? "",
+			};
+		},
+		[],
+	);
+
+	const { surfaceRef, wrapperRef, reportCaret } =
+		useCaretReporter<HTMLDivElement>({
+			onCaretMove,
+			calcCaretWorldBox,
+			focusAtEnd: focusEditableAtEnd,
+			readCaretTarget,
+		});
+
 	const reportSelection = useCallback(() => {
-		const el = textAreaRef.current;
-		if (!el || !onSelectionChange) {
+		const surface = surfaceRef.current;
+		if (
+			!surface ||
+			!onSelectionChange ||
+			surface !== surface.ownerDocument.activeElement
+		) {
 			return;
 		}
-		const selection = { start: el.selectionStart, end: el.selectionEnd };
+		const selection = readEditableSelection(surface);
+		if (!selection) {
+			return;
+		}
 		const previous = reportedSelection.current;
 		if (
 			previous !== null &&
@@ -177,25 +209,205 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		) {
 			return;
 		}
-		reportedSelection.current = selection;
-		onSelectionChange(selection);
-	}, [onSelectionChange, textAreaRef]);
+		const reported = { start: selection.start, end: selection.end };
+		reportedSelection.current = reported;
+		onSelectionChange(reported);
+	}, [onSelectionChange, surfaceRef]);
+
+	/** Draws a body on the surface and puts the selection back, since rebuilding drops it. */
+	const drawOnSurface = useCallback(
+		(
+			surface: HTMLDivElement,
+			text: RichText,
+			selection: TextSelection | null,
+		) => {
+			renderEditableRichText(surface, text);
+			shownRichText.current = text;
+			if (selection && surface === surface.ownerDocument.activeElement) {
+				setEditableSelection(surface, selection.start, selection.end);
+			}
+		},
+		[],
+	);
+
+	// Uncontrolled while typing: the browser owns the surface, and it is redrawn
+	// only when the arriving body differs from the one it shows. The echo of a
+	// keystroke must not redraw it — that would drop the caret and cut an IME
+	// composition short — while a change made elsewhere (a format toggle, the text
+	// menus, an undo) has to land, and takes the reported selection with it.
+	useLayoutEffect(() => {
+		incomingRichText.current = richText;
+		const surface = surfaceRef.current;
+		if (!surface) {
+			return;
+		}
+		if (isComposing.current) {
+			isSyncDeferred.current = true;
+			return;
+		}
+		const shown = shownRichText.current;
+		if (shown !== null && isSameRichText(shown, richText)) {
+			return;
+		}
+		drawOnSurface(surface, richText, reportedSelection.current);
+	}, [richText, drawOnSurface, surfaceRef]);
+
+	// After the content above, so the caret is measured against the laid-out box.
+	useLayoutEffect(reportCaret);
 	useLayoutEffect(reportSelection);
 
-	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		onChange(e.target.value);
-	};
+	const handleInput = useCallback(() => {
+		const surface = surfaceRef.current;
+		if (!surface) {
+			return;
+		}
+		const plain = readEditableText(surface);
+		// The carry-over the reducer applies to the committed body, applied here to
+		// the drawn one: the prediction it leaves behind is what the body coming back
+		// is compared against.
+		const edited = remapRichText(shownRichText.current ?? "", plain);
+		shownRichText.current = edited;
+		// Chrome answers some edits with markup of its own — a <b> reviving the
+		// typing style of a run that was deleted whole, a <div> per line of a
+		// multi-line insert. The characters still read back, but the drawn styling is
+		// no longer the one the runs describe, so the surface is redrawn from them.
+		if (!isComposing.current && hasUnexpectedMarkup(surface)) {
+			drawOnSurface(surface, edited, readEditableSelection(surface));
+		}
+		onChange(plain);
+	}, [onChange, drawOnSurface, surfaceRef]);
 
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+	const handleBeforeInput = useCallback(
+		(event: InputEvent) => {
+			const format = FORMAT_INPUT_TYPES[event.inputType];
+			if (format !== undefined && onToggleFormat) {
+				event.preventDefault();
+				// As in handleKeyDown: the stretch being styled is whatever is selected
+				// now, which the queued selectionchange may not have reported yet.
+				reportSelection();
+				onToggleFormat(format);
+				return;
+			}
+			if (event.inputType === "insertParagraph") {
+				// Enter has to put a "\n" in the text rather than split the surface into
+				// blocks. Under `white-space: pre-wrap` insertLineBreak inserts the
+				// newline as a character, and going through the browser keeps the edit
+				// on its own undo stack.
+				event.preventDefault();
+				(event.target as HTMLElement).ownerDocument.execCommand(
+					"insertLineBreak",
+				);
+				return;
+			}
+			if (event.inputType === "insertFromDrop") {
+				// A drop lands where it was dropped rather than in the selection the
+				// editing state tracks, and brings the dragged markup with it.
+				event.preventDefault();
+			}
+		},
+		[onToggleFormat, reportSelection],
+	);
+
+	const handlePaste = useCallback((event: ClipboardEvent) => {
+		// Plain text only: what a body is styled in are its runs, not pasted markup.
+		// execCommand keeps the insertion on the browser's undo stack.
+		event.preventDefault();
+		const text = event.clipboardData?.getData("text/plain") ?? "";
+		if (text !== "") {
+			(event.target as HTMLElement).ownerDocument.execCommand(
+				"insertText",
+				false,
+				text,
+			);
+		}
+	}, []);
+
+	const handleCompositionStart = useCallback(() => {
+		isComposing.current = true;
+	}, []);
+
+	const handleCompositionEnd = useCallback(() => {
+		isComposing.current = false;
+		const surface = surfaceRef.current;
+		if (!surface || !isSyncDeferred.current) {
+			return;
+		}
+		isSyncDeferred.current = false;
+		const incoming = incomingRichText.current;
+		const shown = shownRichText.current;
+		if (shown !== null && isSameRichText(shown, incoming)) {
+			return;
+		}
+		drawOnSurface(surface, incoming, reportedSelection.current);
+	}, [drawOnSurface, surfaceRef]);
+
+	// Attached natively: React's onBeforeInput is a synthetic event that does not
+	// carry the inputType every decision above is made on, and the rest of the
+	// editing path is kept beside it rather than split between the two models.
+	useEffect(() => {
+		const surface = surfaceRef.current;
+		if (!surface) {
+			return;
+		}
+		surface.addEventListener("beforeinput", handleBeforeInput);
+		surface.addEventListener("input", handleInput);
+		surface.addEventListener("paste", handlePaste);
+		surface.addEventListener("compositionstart", handleCompositionStart);
+		surface.addEventListener("compositionend", handleCompositionEnd);
+		return () => {
+			surface.removeEventListener("beforeinput", handleBeforeInput);
+			surface.removeEventListener("input", handleInput);
+			surface.removeEventListener("paste", handlePaste);
+			surface.removeEventListener("compositionstart", handleCompositionStart);
+			surface.removeEventListener("compositionend", handleCompositionEnd);
+		};
+	}, [
+		surfaceRef,
+		handleBeforeInput,
+		handleInput,
+		handlePaste,
+		handleCompositionStart,
+		handleCompositionEnd,
+	]);
+
+	// A caret move that changes nothing else (Home, an arrow key, a click into the
+	// text) renders nothing, and an editable div has no onSelect of its own: the
+	// document-wide event is where those surface.
+	useEffect(() => {
+		const surface = surfaceRef.current;
+		if (!surface) {
+			return;
+		}
+		const ownerDocument = surface.ownerDocument;
+		const handleSelectionChange = () => {
+			if (surface !== ownerDocument.activeElement) {
+				return;
+			}
+			reportSelection();
+			reportCaret();
+		};
+		ownerDocument.addEventListener("selectionchange", handleSelectionChange);
+		return () => {
+			ownerDocument.removeEventListener(
+				"selectionchange",
+				handleSelectionChange,
+			);
+		};
+	}, [surfaceRef, reportSelection, reportCaret]);
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
 		if (e.key === "Escape" && onEscape) {
 			e.preventDefault();
 			e.stopPropagation();
 			onEscape();
 			return;
 		}
-		// The textarea has the focus, so these never reach the canvas-wide keyboard
-		// handling; they are also the browser's own defaults on a rich-text field,
-		// which does nothing here and has to be prevented.
+		// The surface has the focus, so these never reach the canvas-wide keyboard
+		// handling; they are also the browser's own defaults on an editable element,
+		// which writes markup of its own and has to be prevented. The selection is
+		// reported first because the document's selectionchange is queued rather than
+		// dispatched as the selection moves: a keystroke arriving before that task
+		// runs would otherwise style the stretch selected one keystroke ago.
 		const format =
 			(e.metaKey || e.ctrlKey) && !e.altKey
 				? FORMAT_KEYS[e.key.toLowerCase()]
@@ -203,6 +415,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		if (format !== undefined && onToggleFormat) {
 			e.preventDefault();
 			e.stopPropagation();
+			reportSelection();
 			onToggleFormat(format);
 		}
 	};
@@ -213,10 +426,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		(e: React.PointerEvent<HTMLDivElement>) => {
 			if (e.target === e.currentTarget) {
 				e.preventDefault();
-				textAreaRef.current?.focus({ preventScroll: true });
+				surfaceRef.current?.focus({ preventScroll: true });
 			}
 		},
-		[textAreaRef],
+		[surfaceRef],
 	);
 
 	// The region offset (x/y) rides inside the transform, after the shape
@@ -232,7 +445,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			data-gesture="none"
 			style={{
 				width,
-				// "scroll" pins the box to the region and lets the textarea's own
+				// "scroll" pins the box to the region and lets the surface's own
 				// max-height clip it; "grow" takes the region as a floor and extends
 				// downward from its top edge until `growLimit` (growth direction
 				// independent of verticalAlign).
@@ -243,19 +456,24 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			}}
 			onPointerDown={handleWrapperPointerDown}
 		>
-			<TextArea
+			<EditableTextSurface
 				data-gesture="native-wheel"
-				value={text}
+				ref={surfaceRef}
+				// The content is built and read back imperatively (editableTextDom), so
+				// React renders the element empty and never reconciles what the browser
+				// edits inside it.
+				contentEditable
+				suppressContentEditableWarning
+				role="textbox"
+				aria-multiline
 				style={{
-					// Both modes cap the textarea, at the region ("scroll") or at the
+					// Both modes cap the surface, at the region ("scroll") or at the
 					// shape's bottom edge ("grow"); past the cap the text scrolls, which
 					// is also what hands the wheel over (shouldUseNativeWheel tests
 					// scrollability).
 					maxHeight: overflow === "scroll" ? "100%" : growLimit,
 					textAlign,
-					// Transparent glyphs still lay out, so the caret, the selection and
-					// the wrapping all stay where the drawn text is.
-					color: textDrawnBehind ? "transparent" : resolvedColor,
+					color: resolvedColor,
 					caretColor: resolvedColor,
 					fontSize,
 					fontFamily: resolvedFontFamily,
@@ -263,15 +481,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 					fontStyle,
 					textDecoration,
 				}}
-				ref={textAreaRef}
-				onChange={handleChange}
 				onKeyDown={handleKeyDown}
-				// A caret move that changes nothing else (Home, an arrow key, a click
-				// into the text) renders nothing, so it has to report on its own.
-				onSelect={() => {
-					reportCaret();
-					reportSelection();
-				}}
 				onFocus={() => {
 					reportCaret();
 					reportSelection();
@@ -281,5 +491,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	);
 };
 
-/** In-place textarea overlay for editing an object's text, positioned and transformed to match the object. */
+/**
+ * In-place overlay for editing an object's text, positioned and transformed to
+ * match the object. The text is edited on a contenteditable div that draws the
+ * body's runs itself, so the caret, the selection and the wrapping sit where the
+ * styled text is drawn (issue #7).
+ */
 export const TextEditor = memo(TextEditorComponent);

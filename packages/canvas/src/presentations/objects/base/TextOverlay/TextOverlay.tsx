@@ -4,10 +4,7 @@ import { memo } from "react";
 import { RichTextContent } from "./RichTextContent";
 import { TextOverlayFrame } from "./TextOverlayFrame";
 import type { RichText } from "../../../../schemas/objects/types/RichText";
-import {
-	isStyledRichText,
-	richTextToPlain,
-} from "../../../../schemas/objects/types/RichText";
+import { richTextToPlain } from "../../../../schemas/objects/types/RichText";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
@@ -64,13 +61,9 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	if (text === undefined || richTextToPlain(text) === "") {
 		return null;
 	}
-	// The editor draws its own glyphs, so drawing here too would double them up —
-	// except for a body styled per range, which a textarea cannot draw: there the
-	// editor turns its own glyphs transparent and keeps only the caret, and this
-	// overlay stays up as the visible text (see TextEditor's `textDrawnBehind`).
-	// The draft is grafted into the state being drawn (graftTextEditDraft), so
-	// what is drawn here follows every keystroke.
-	if (isEditing && !isStyledRichText(text)) {
+	// The editor draws the text itself while it is open, runs included (TextEditor),
+	// so drawing here too would double it up.
+	if (isEditing) {
 		return null;
 	}
 

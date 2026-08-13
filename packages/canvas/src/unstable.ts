@@ -19,7 +19,7 @@ export type {
 export type { TextEditable } from "./presentations/objects/base/TextOverlay/TextOverlay";
 
 // Container for shapes whose body is not plain text (Markdown and the like). The display
-// side and the core editing textarea must share one visual contract (line-height / padding /
+// side and the core editing surface must share one visual contract (line-height / padding /
 // placement / color and font resolution), so the container stays in core and only its
 // contents are swapped. Use together with createFrameObject's renderTextOverlay.
 export { TextOverlayFrame } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";

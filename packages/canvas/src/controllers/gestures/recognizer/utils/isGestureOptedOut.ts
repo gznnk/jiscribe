@@ -6,8 +6,8 @@ import { findGestureElement } from "./findGestureElement";
  *
  * When true, pointerdown does not start a gesture and contextmenu is left to
  * native behavior. Applied to elements that are self-contained within React
- * event handlers, such as a textarea during text editing or input fields inside
- * a menu.
+ * event handlers, such as the editing surface during text editing or input
+ * fields inside a menu.
  *
  * @param target - The event target
  * @returns true if opted out of the gesture system

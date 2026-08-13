@@ -12,13 +12,13 @@ import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
-import { isStyledRichText } from "../../../../schemas/objects/types/RichText";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
 	type TextStyleState,
 } from "../../../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
@@ -115,12 +115,13 @@ function renderConnectorLabelEditor(
 /**
  * Renders the text editor for one slot of a shape that has text (such as rect), overlaid on that
  * slot's region (derived via calcTextRegion, the seam shared with the rendering-side TextOverlay).
- * The typography comes from the edited slot, so the textarea matches the overlay it replaces.
+ * The typography comes from the edited slot, so the editor matches the overlay it replaces.
  *
- * @param target - The shape being edited (carries geometry)
+ * @param target - The shape being edited (carries geometry, and the slot content
+ *   with the draft already grafted in, so the editor is handed the text as it now
+ *   stands rather than as it was committed)
  * @param objectId - ID of the target shape
  * @param slotId - The slot being edited; a key of `target.text`
- * @param text - The text being edited
  * @param handlers - Input and exit handlers
  * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
  * @param textEditOverflowResolver - Per-type resolver from ObjectTextEditOverflowRegistry. Omitted = the slot scrolls
@@ -130,7 +131,6 @@ function renderTextEditor(
 	target: ObjectState & TextStyleState & TransformedFrame,
 	objectId: string,
 	slotId: string,
-	text: string,
 	handlers: EditorHandlers,
 	textRegionCalculator?: ObjectTextRegionCalculator,
 	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
@@ -144,7 +144,7 @@ function renderTextEditor(
 	return (
 		<TextEditor
 			objectId={objectId}
-			text={text}
+			richText={readRichTextSlot(target.text, slotId)}
 			cx={target.cx}
 			cy={target.cy}
 			x={textRegion.x}
@@ -164,9 +164,6 @@ function renderTextEditor(
 			fontWeight={slot?.fontWeight}
 			fontStyle={slot?.fontStyle}
 			textDecoration={slot?.textDecoration}
-			// A body styled per range keeps being drawn by its overlay while edited,
-			// since a textarea has one style for the whole of it.
-			textDrawnBehind={isStyledRichText(slot?.text)}
 			onChange={handlers.onChange}
 			onSelectionChange={handlers.onSelectionChange}
 			onToggleFormat={handlers.onToggleFormat}
@@ -251,7 +248,6 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			geometryObject,
 			textEditState.objectId,
 			textEditState.slotId,
-			textEditState.text,
 			handlers,
 			registries.objectTextRegion.get(targetObject.type),
 			registries.objectTextEditOverflow.get(targetObject.type),

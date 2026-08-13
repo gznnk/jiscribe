@@ -99,7 +99,7 @@ export function useObjectMenuPosition(
 		// the text being edited is styled (TextSlotStyleProperty), and the menu is
 		// the only place the color and the size of one live. The menu itself never
 		// commits the edit — ObjectMenuHandler runs no commit, and the press does
-		// not even move the focus off the textarea (ObjectMenu) — so the session
+		// not even move the focus off the editing surface (ObjectMenu) — so the session
 		// survives a menu interaction instead of being left dangling (U6).
 		// A connector label is still hidden: it is one text with one styling, so
 		// there is nothing the menu could do mid-edit that it cannot do after.

@@ -304,6 +304,33 @@ export const normalizeRichText = (rich: RichText): RichText => {
 };
 
 /**
+ * Whether two bodies are the same text drawn the same way, whichever form each is
+ * held in: they are compared in canonical form, so `"ab"` and `[{ text: "ab" }]`
+ * are the same body. What an editor drawing a body compares the incoming one
+ * against, to tell the echo of its own edit from a change made elsewhere.
+ *
+ * @param a - One body
+ * @param b - The other; the order does not matter
+ * @returns True when the canonical forms hold the same characters cut into the
+ *   same runs, each with the same inline styling
+ */
+export const isSameRichText = (a: RichText, b: RichText): boolean => {
+	const canonicalA = normalizeRichText(a);
+	const canonicalB = normalizeRichText(b);
+	if (isString(canonicalA) || isString(canonicalB)) {
+		return canonicalA === canonicalB;
+	}
+	return (
+		canonicalA.length === canonicalB.length &&
+		canonicalA.every(
+			(run, index) =>
+				run.text === canonicalB[index].text &&
+				isSameInlineTextStyle(run, canonicalB[index]),
+		)
+	);
+};
+
+/**
  * The part of a body of text between two offsets, styling included.
  *
  * @param rich - The body to cut
@@ -411,8 +438,8 @@ export const readRichTextRangeStyle = (
 
 /**
  * Carries the styling of an edited text over to its new content. The editing
- * side hands back the whole text as one plain string (a textarea has no place to
- * keep runs), so what changed is recovered by matching the unchanged head and
+ * side hands back the whole text as one plain string (an edit reads back as
+ * characters, not as runs), so what changed is recovered by matching the unchanged head and
  * tail: everything outside the changed part keeps the styling it had, and the
  * inserted characters take the styling of the character before them — the
  * behavior of typing at the end of a bold word.

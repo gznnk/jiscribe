@@ -198,7 +198,7 @@ const buildSystemSections = (
  */
 /**
  * Keeps the press from taking the focus off an open text editor: the selection
- * the text items style lives in that textarea, and a blur would also drop the
+ * the text items style lives in that editor, and a blur would also drop the
  * caret the user types back into. The controls that need the focus themselves —
  * the font-size input, the sliders — keep the default.
  */

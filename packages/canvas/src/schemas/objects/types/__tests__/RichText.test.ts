@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
 	isRichText,
+	isSameRichText,
 	isTextRun,
 	normalizeRichText,
 	readRichTextRangeStyle,
@@ -94,6 +95,46 @@ describe("normalizeRichText", () => {
 
 	it("leaves a plain string alone", () => {
 		expect(normalizeRichText("hello")).toBe("hello");
+	});
+});
+
+describe("isSameRichText", () => {
+	it("compares the canonical forms, so the two forms of one text match", () => {
+		expect(isSameRichText("hello", [{ text: "hello" }])).toBe(true);
+		expect(isSameRichText([{ text: "he" }, { text: "llo" }], "hello")).toBe(
+			true,
+		);
+		expect(isSameRichText("", [])).toBe(true);
+	});
+
+	it("tells texts apart by their characters", () => {
+		expect(isSameRichText("hello", "hell")).toBe(false);
+		expect(
+			isSameRichText(
+				[{ text: "a", fontWeight: "bold" }, { text: "b" }],
+				[{ text: "a", fontWeight: "bold" }, { text: "c" }],
+			),
+		).toBe(false);
+	});
+
+	it("tells texts apart by the styling of their runs", () => {
+		expect(
+			isSameRichText([{ text: "hello", fontWeight: "bold" }], "hello"),
+		).toBe(false);
+		expect(
+			isSameRichText(
+				[{ text: "ab", fontWeight: "bold" }],
+				[{ text: "ab", fontStyle: "italic" }],
+			),
+		).toBe(false);
+		// Same characters, cut at a different place: one run is drawn bold and the
+		// other is not, so the two bodies are not drawn alike.
+		expect(
+			isSameRichText(
+				[{ text: "ab", fontWeight: "bold" }, { text: "cd" }],
+				[{ text: "a", fontWeight: "bold" }, { text: "bcd" }],
+			),
+		).toBe(false);
 	});
 });
 

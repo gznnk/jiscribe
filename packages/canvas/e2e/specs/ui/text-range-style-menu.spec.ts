@@ -9,8 +9,8 @@ import { selectors } from "../../support/selectors";
  * cover bold / italic / underline (see text-range-style.spec.ts).
  *
  * What has to hold for that to work: the menu press neither commits the edit nor
- * takes the focus off the textarea, so the selection it styles is still there
- * afterwards.
+ * takes the focus off the editing surface, so the selection it styles is still
+ * there afterwards.
  */
 test.describe("styling a stretch of text from the ObjectMenu", () => {
 	const SHAPE_CENTER = { x: 520, y: 270 };
@@ -32,40 +32,6 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 			await canvas.page.keyboard.press("Shift+ArrowRight");
 		}
 		return id;
-	}
-
-	/** The drawn text, one entry per element it is split into (an unstyled body is one). */
-	async function drawnRuns(
-		canvas: CanvasDriver,
-		id: string,
-	): Promise<{ text: string; color: string; fontSize: string }[]> {
-		return canvas.page.evaluate((targetId) => {
-			const shape = document.querySelector(`[data-id="${targetId}"]`);
-			let foreignObject: Element | null =
-				shape?.querySelector("foreignObject") ?? null;
-			if (!foreignObject) {
-				let sibling = shape?.nextElementSibling ?? null;
-				while (sibling && sibling.tagName.toLowerCase() !== "foreignobject") {
-					sibling = sibling.nextElementSibling;
-				}
-				foreignObject = sibling;
-			}
-			const content = foreignObject?.firstElementChild
-				?.firstElementChild as HTMLElement | null;
-			if (!content) {
-				return [];
-			}
-			const parts =
-				content.children.length > 0 ? Array.from(content.children) : [content];
-			return parts.map((part) => {
-				const style = getComputedStyle(part);
-				return {
-					text: part.textContent ?? "",
-					color: style.color,
-					fontSize: style.fontSize,
-				};
-			});
-		}, id);
 	}
 
 	test("shows the menu while a shape's text is edited, narrowed to the text items", async ({
@@ -93,12 +59,12 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 
 		const expectedColor = await canvas.normalizeColor("#e11d48");
 		await expect
-			.poll(async () => await drawnRuns(canvas, id))
+			.poll(async () => await canvas.drawnTextRuns(id))
 			.toEqual([
 				expect.objectContaining({ text: "Payment", color: expectedColor }),
 				expect.objectContaining({ text: " failed" }),
 			]);
-		expect((await drawnRuns(canvas, id))[1].color).not.toBe(expectedColor);
+		expect((await canvas.drawnTextRuns(id))[1].color).not.toBe(expectedColor);
 		// The session survived the menu interaction.
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
 	});
@@ -110,9 +76,9 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 		await canvas.setNumberInput("fontSize", 40);
 
 		await expect
-			.poll(async () => (await drawnRuns(canvas, id))[0]?.fontSize)
+			.poll(async () => (await canvas.drawnTextRuns(id))[0]?.fontSize)
 			.toBe("40px");
-		expect((await drawnRuns(canvas, id))[1].fontSize).not.toBe("40px");
+		expect((await canvas.drawnTextRuns(id))[1].fontSize).not.toBe("40px");
 	});
 
 	test("reads the selection back, so the Bold toggle turns it off again", async ({
@@ -121,7 +87,9 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 		const id = await editAndSelect(canvas, "Payment failed", 7);
 
 		await canvas.setTextFormat("fontWeight", "bold");
-		await expect.poll(async () => (await drawnRuns(canvas, id)).length).toBe(2);
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id)).length)
+			.toBe(2);
 
 		// The button now offers the cleared value, which it can only know from the
 		// selection's own styling rather than the slot's.
