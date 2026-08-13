@@ -1,7 +1,9 @@
-// Headless (UI 非依存) 入口。canvas 本体の ./doc と相似形: MCP や VSCode 拡張の Node 側
-// 診断など、definition.ts（React コンポーネントを含む）を経由せずに parse-time 検証へ
-// 参加したい消費者のための入口。import は ./schema/** と @jiscribe/canvas/doc /
-// @jiscribe/canvas-sdk/doc のみで、presentation / state / stencil を引き込まない。
+// Headless (UI-independent) entry point. It mirrors the canvas package's own ./doc: an
+// entry point for consumers that want to take part in parse-time validation without going
+// through definition.ts (which pulls in React components) — the MCP server, the Node-side
+// diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
+// @jiscribe/canvas/doc / @jiscribe/canvas-sdk/doc, and never pulls in
+// presentation / state / stencil.
 import type {
 	CanvasDocPlugin,
 	ObjectDocDefinition,
@@ -56,6 +58,7 @@ export const actorDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	defaults: ACTOR_DOC_DEFAULTS,
 	description: `Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. ${RECT_GEOMETRY_NOTE} The stick figure fills the whole box. ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best.`,
 	summary: "user, role, stakeholder",
+	outlineDescription: "Stick figure",
 });
 
 export const cloudDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -64,6 +67,8 @@ export const cloudDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Cloud shape, typically used for external systems/networks in architecture diagrams or fuzzy concepts in brainstorming. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cloud. Text is laid out in a reduced central region inside the bumps, so give it generous width/height for longer text.",
 	summary: "external system, fuzzy concept",
+	outlineDescription:
+		"Cloud of rounded bumps (inner text area is small — size generously)",
 });
 
 export const serverDocDefinition: ObjectDocDefinition = createFrameObjectDoc({

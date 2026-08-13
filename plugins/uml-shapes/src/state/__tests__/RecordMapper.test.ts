@@ -32,8 +32,8 @@ describe("recordToState", () => {
 	});
 
 	it("styles a slot the doc left unstyled the way that slot is drawn", () => {
-		// AI が書いた `{"name":{"text":"User"}}` が、ツールバーから置いた record と
-		// 同じ見た目になること。
+		// `{"name":{"text":"User"}}` written by an AI must look the same as a record placed
+		// from the toolbar.
 		const state = recordToState(
 			makeDoc({
 				stereotype: { text: "<<interface>>" },
@@ -119,8 +119,9 @@ describe("recordToState", () => {
 	});
 
 	it("keys the slots in stacking order whatever order the doc wrote them in", () => {
-		// キー順は Tab の巡回順なので、コンパートメントの重なり順に一致させる。
-		// その結果 stereotype を持つ record では先頭キーが stereotype になる。
+		// Key order is the Tab cycling order, so it has to match the stacking order of the
+		// compartments. As a result, the first key of a record with a stereotype is the
+		// stereotype.
 		const stereotyped = recordToState(
 			makeDoc({
 				operations: { text: ["save()"] },

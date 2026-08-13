@@ -29,26 +29,27 @@
 		"format:check": "prettier --check .",
 		"test": "pnpm -r --if-present test",
 		"test:coverage": "pnpm -r --if-present test:coverage",
-		"test:e2e": "pnpm --filter @jiscribe/canvas test:e2e"
+		"test:e2e": "pnpm -r --if-present test:e2e",
+		"test:e2e:canvas": "pnpm --filter @jiscribe/canvas test:e2e"
 	},
-	"packageManager": "pnpm@10.34.5",
+	"packageManager": "pnpm@11.21.0",
 	"comments": {
 		"devDependencies": "The lint/format toolchain is pinned to exact versions on purpose: the same sources are linted from another workspace root as well, and a version drift makes the two disagree. Bump both roots together."
 	},
 	"devDependencies": {
 		"@eslint/js": "9.39.2",
-		"@typescript-eslint/eslint-plugin": "8.50.0",
-		"@typescript-eslint/parser": "8.50.0",
+		"@typescript-eslint/eslint-plugin": "8.66.0",
+		"@typescript-eslint/parser": "8.66.0",
 		"eslint": "9.39.2",
 		"eslint-config-prettier": "10.1.8",
 		"eslint-plugin-import": "2.32.0",
 		"eslint-plugin-react": "7.37.5",
-		"eslint-plugin-react-hooks": "7.0.1",
-		"globals": "16.5.0",
+		"eslint-plugin-react-hooks": "7.1.1",
+		"globals": "17.9.0",
 		"madge": "catalog:",
-		"prettier": "3.7.4",
+		"prettier": "3.9.6",
 		"rimraf": "catalog:",
 		"typescript": "~5.9.3",
-		"typescript-eslint": "8.50.0"
+		"typescript-eslint": "8.66.0"
 	}
 }

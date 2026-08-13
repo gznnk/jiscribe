@@ -14,13 +14,10 @@
 	"dependencies": {
 		"dompurify": "catalog:",
 		"katex": "catalog:",
-		"markdown-it": "^14.1.0",
-		"markdown-it-link-attributes": "^4.0.1"
+		"markdown-it": "^15.0.0"
 	},
 	"devDependencies": {
-		"@types/katex": "^0.16.7",
-		"@types/markdown-it": "^14.1.2",
-		"@types/markdown-it-link-attributes": "^3.0.5",
+		"@types/katex": "^0.16.8",
 		"@vitest/coverage-v8": "catalog:",
 		"jsdom": "catalog:",
 		"typescript": "catalog:",

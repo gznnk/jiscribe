@@ -40,7 +40,7 @@ class ObjectDocValidatorRegistry {
 		return this.entries.get(type as ObjectType)?.features.connectable === true;
 	}
 
-	/** Whether the registry is empty. Used to decide whether parseCanvasText needs lazy initialization. */
+	/** Whether the registry is empty (no type registered yet). */
 	isEmpty(): boolean {
 		return this.entries.size === 0;
 	}

@@ -95,7 +95,7 @@ const validateSlot = (
  * box's compartment structure, so an unknown key is reported rather than ignored:
  * a typo would otherwise silently cost the document a compartment. An absent
  * `text`, and an absent optional slot, are allowed — the box simply has that
- * compartment left off (RecordMapper 参照).
+ * compartment left off (see RecordMapper).
  */
 const validateRecordText: ObjectDocValidateFn = (o, path) => {
 	if (!("text" in o) || o.text === undefined) {

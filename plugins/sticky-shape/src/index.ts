@@ -1,13 +1,14 @@
-// sticky 図形の外部パッケージ。tier 2 の frame 系ベース実装を利用する。
-// ObjectDocDefinition / ObjectTypeDefinition は createFrameObjectDoc /
-// createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`)
-// が features/defaults から丸ごと導出するため、StickyObjectFactory /
-// validateStickyDoc / StickyMapper / validateStickyState は持たない。schema/** の
-// headless 部品 (DEFAULT_FONT_FAMILY) は `@jiscribe/canvas-sdk/doc`、
-// presentation / menu 部品 (TextOverlay / calcTextRegion / createSvgTransform /
-// ObjectMenu UI キット) は `@jiscribe/canvas-sdk` 経由。付箋の影に使うぼかしフィルタは
-// `ObjectTypeDefinition.svgDefs` でキャンバスの <defs> へ提供する。
-// headless な parse 入口は ./doc (stickyDocPlugin)。
+// External package of the sticky shape. It builds on the tier 2 frame-family base
+// implementation.
+// ObjectDocDefinition / ObjectTypeDefinition are derived wholesale from features/defaults
+// by createFrameObjectDoc / createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` /
+// `@jiscribe/canvas-sdk`), so there is no StickyObjectFactory / validateStickyDoc /
+// StickyMapper / validateStickyState. The headless part of schema/**
+// (DEFAULT_FONT_FAMILY) comes from `@jiscribe/canvas-sdk/doc`; the presentation / menu
+// parts (TextOverlay / calcTextRegion / createSvgTransform / the ObjectMenu UI kit) come
+// through `@jiscribe/canvas-sdk`. The blur filter behind the note's shadow is supplied to
+// the canvas <defs> via `ObjectTypeDefinition.svgDefs`.
+// The headless parse entry point is ./doc (stickyDocPlugin).
 export * from "./schema/StickyDoc";
 export * from "./state/StickyState";
 

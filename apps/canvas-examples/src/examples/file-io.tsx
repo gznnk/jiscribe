@@ -1,19 +1,19 @@
-import {
-	Canvas,
-	extractCanvasSourceFromPng,
-	parseCanvasText,
-} from "@jiscribe/canvas";
-import type { CanvasDoc } from "@jiscribe/canvas";
+import { Canvas, extractCanvasSourceFromPng } from "@jiscribe/canvas";
+import type { CanvasParseResult, CanvasDoc } from "@jiscribe/canvas";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 import { useCallback, useRef, useState } from "react";
 import "./file-io.css";
+
+// This example ships no plugin, so the default parser (every built-in type) is enough.
+const canvasParser = createCanvasParser();
 
 const initialDoc: CanvasDoc = { version: 1, root: [] };
 
 const DEFAULT_FILE_NAME = "untitled.jis.json";
 
-/** parseCanvasText の失敗結果をアラート用の文字列にまとめる */
+/** Turn a parse failure result into a string suitable for an alert */
 const formatParseError = (
-	result: Exclude<ReturnType<typeof parseCanvasText>, { kind: "ok" }>,
+	result: Exclude<CanvasParseResult, { kind: "ok" }>,
 ): string => {
 	switch (result.kind) {
 		case "syntax-error":
@@ -27,7 +27,7 @@ const formatParseError = (
 	}
 };
 
-/** toolbar.leading スロットに挿すファイル操作ボタン。 */
+/** File operation buttons inserted into the toolbar.leading slot. */
 function FileToolbarButtons({
 	onOpen,
 	onSave,
@@ -84,14 +84,17 @@ function FileToolbarButtons({
 }
 
 /**
- * ファイル入出力の例:
- * - .jis.json の読み込み（toolbar.leading の Open ボタン → parseCanvasText で 2 段階バリデーション）
- * - 編集中ドキュメントの保存（onCommit で最新 doc を ref に写し、Save でダウンロード）
- * - jiscribe エクスポート PNG（iTXt に .jis.json 入り）のドロップ復元（round-trip 確認用）
+ * File I/O example:
+ * - Loading a .jis.json (the Open button in toolbar.leading, then two-stage validation
+ *   through the parser)
+ * - Saving the document being edited (onCommit copies the latest doc into a ref, and Save
+ *   downloads it)
+ * - Restoring a PNG exported by jiscribe (its iTXt carries the .jis.json) by dropping it,
+ *   which doubles as a round-trip check
  */
 export function FileIoExample() {
-	// doc はファイル読み込み時だけ差し替える。編集中の最新 doc は
-	// onCommit で ref に写し、保存時に読む。
+	// The doc is only replaced when a file is loaded. The latest doc being edited is copied
+	// into a ref by onCommit and read back when saving.
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(initialDoc);
 	const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
 	const latestDocRef = useRef<CanvasDoc>(initialDoc);
@@ -112,7 +115,7 @@ export function FileIoExample() {
 			console.warn("Dropped PNG has no embedded jiscribe source");
 			return;
 		}
-		const result = parseCanvasText(sourceText);
+		const result = canvasParser.parse(sourceText);
 		if (result.kind !== "ok") {
 			console.warn("Embedded jiscribe source is invalid", result);
 			return;
@@ -133,13 +136,13 @@ export function FileIoExample() {
 	const handleFileChange = useCallback(
 		async (event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.target.files?.[0];
-			// 同じファイルをもう一度選んでも change が発火するようリセットする
+			// Reset, so that picking the same file again still fires change
 			event.target.value = "";
 			if (!file) {
 				return;
 			}
 			const text = await file.text();
-			const result = parseCanvasText(text);
+			const result = canvasParser.parse(text);
 			if (result.kind !== "ok") {
 				window.alert(
 					`Failed to load ${file.name}:\n${formatParseError(result)}`,

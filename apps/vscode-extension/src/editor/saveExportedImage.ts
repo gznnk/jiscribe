@@ -35,11 +35,12 @@ const buildDefaultUri = (
 	}
 	const documentFileName =
 		documentUri.path.split("/").pop() ?? documentUri.path;
-	// Handles *.jis.json / *.jiscribe.json / *.jis.svg / *.jis.png (see
-	// package.json's filenamePattern). Strips the full `.jiscribe` too
-	// (foo.jiscribe.json → foo.jis.png).
+	// Handles *.jis / *.jiscribe / *.jis.json / *.jiscribe.json / *.jis.svg /
+	// *.jis.png (see package.json's filenamePattern). Strips the full `.jiscribe`
+	// too (foo.jiscribe.json → foo.jis.png). The second alternative covers the
+	// single-segment extensions, which have no trailing `.json`.
 	const baseName = documentFileName.replace(
-		/(\.jis|\.jiscribe)?\.(json|svg|png)$/i,
+		/(?:\.jis|\.jiscribe)?\.(?:json|svg|png)$|\.(?:jis|jiscribe)$/i,
 		"",
 	);
 	let exportFileName = `${baseName || buildTimestampedName()}${extension}`;

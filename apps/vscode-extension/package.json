@@ -54,6 +54,12 @@
 				"displayName": "Jiscribe Canvas Editor",
 				"selector": [
 					{
+						"filenamePattern": "*.jis"
+					},
+					{
+						"filenamePattern": "*.jiscribe"
+					},
+					{
 						"filenamePattern": "*.jis.json"
 					},
 					{
@@ -76,9 +82,20 @@
 				"priority": "default"
 			}
 		],
+		"languages": [
+			{
+				"id": "json",
+				"extensions": [
+					".jis",
+					".jiscribe"
+				]
+			}
+		],
 		"jsonValidation": [
 			{
 				"fileMatch": [
+					"*.jis",
+					"*.jiscribe",
 					"*.jis.json",
 					"*.jiscribe.json"
 				],
@@ -125,14 +142,8 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run"
 	},
-	"dependencies": {},
 	"license": "MIT",
 	"devDependencies": {
-		"@types/node": "catalog:",
-		"@types/react": "catalog:",
-		"@types/react-dom": "catalog:",
-		"@types/vscode": "^1.85.0",
-		"@vscode/vsce": "^3.4.2",
 		"@jiscribe/ai-docs": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/plugin-annotation-shapes": "workspace:*",
@@ -142,6 +153,11 @@
 		"@jiscribe/plugin-markdown-shape": "workspace:*",
 		"@jiscribe/plugin-sticky-shape": "workspace:*",
 		"@jiscribe/plugin-uml-shapes": "workspace:*",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@types/vscode": "^1.85.0",
+		"@vscode/vsce": "^3.9.2",
 		"esbuild": "catalog:",
 		"katex": "catalog:",
 		"react": "catalog:",

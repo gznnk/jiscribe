@@ -1,6 +1,6 @@
 # Jiscribe AI Authoring Guide
 
-A practical guide for an AI to correctly generate and edit Jiscribe `.jis.json` (diagram data).
+A practical guide for an AI to correctly generate and edit Jiscribe `.jis` (also `.jiscribe`; the legacy `.jis.json` / `.jiscribe.json` are still read) diagram data.
 It focuses on the essentials. For the full field-level specification, see [`reference.md`](./reference.md).
 
 ---
@@ -26,6 +26,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `version`: **required, always `1`** (fixed value for this format version).
 - `root`: array of shapes (every `type` in "Object quick reference") **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
+- `background`: **optional** canvas surface color, a literal CSS color string (e.g. `"#f5f5f5"` — a concrete color, not a `var(...)`). Omit it to follow the theme background; set it and it becomes the surface for both display and image export, with the grid line color derived from it.
 
 ## 3. MUST / MUST NOT (violations break the file)
 
@@ -99,6 +100,8 @@ The top level must always have `version` / `root` (the array may be empty).
 | `cross`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | junction / emphasis marker                            |
 | `offPageConnector`      | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | off-page connector (jump to another page)             |
 | `record`                | `x`,`y`,`width`,`height`             | stroke / fill / **keyed** text / rotation        | titled box + row compartments (UML class / ER entity) |
+| `umlPackage`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | namespace, module, layer                              |
+| `umlComponent`          | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | component, replaceable part                           |
 | `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                   | open line                                             |
 | `polygon`               | `points` (auto-closed)               | stroke / fill                                    | closed shape from points                              |
 | `group`                 | `children`                           | rotation / flipX / flipY                         | container of child objects                            |

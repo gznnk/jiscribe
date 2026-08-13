@@ -64,7 +64,7 @@ test("includes culled off-screen shapes in the export", async ({
 		.toBe(true);
 
 	await canvas.openContextMenu({ x: 700, y: 500 });
-	await canvas.clickContextMenuItem("export");
+	await canvas.clickContextMenuCommand("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 	await page.getByTestId("export-dialog:format-svg").check();
 

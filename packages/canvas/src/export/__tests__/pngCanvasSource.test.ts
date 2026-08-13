@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import { parseCanvasText } from "../../schemas/canvas/validators";
+import { createCanvasParser } from "../../schemas/canvas/validators";
 import {
 	embedCanvasSourceInPng,
 	extractCanvasSourceFromPng,
@@ -16,7 +16,7 @@ const tinyPngBlob = (): Blob =>
 
 /** Builds a valid CanvasDoc through the same two-stage validation as the input boundary */
 const sampleDoc = (): CanvasDoc => {
-	const result = parseCanvasText(
+	const result = createCanvasParser().parse(
 		JSON.stringify({
 			version: 1,
 			root: [
@@ -39,14 +39,14 @@ const sampleDoc = (): CanvasDoc => {
 };
 
 describe("embedCanvasSourceInPng / extractCanvasSourceFromPng", () => {
-	it("embeds a CanvasDoc into a PNG and restores it via parseCanvasText", async () => {
+	it("embeds a CanvasDoc into a PNG and restores it via the parser", async () => {
 		const doc = sampleDoc();
 		const embedded = await embedCanvasSourceInPng(tinyPngBlob(), doc);
 		const text = await extractCanvasSourceFromPng(embedded);
 		expect(text).not.toBeNull();
 
 		// run it through the host boundary's two-stage validation as-is
-		const parsed = parseCanvasText(text as string);
+		const parsed = createCanvasParser().parse(text as string);
 		expect(parsed.kind).toBe("ok");
 		if (parsed.kind === "ok") {
 			expect(parsed.doc).toEqual(doc);

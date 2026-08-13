@@ -4,6 +4,7 @@ import type { ConnectorLabelPlacement } from "../presentations/layers/content/ut
 import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { DocSnapshot } from "../states/canvas/DocSnapshot";
+import type { ScrollBoundsConfig } from "../states/canvas/ScrollBounds";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { Stencil } from "./ui/objects/Stencil";
@@ -50,12 +51,7 @@ export type KeyPointsCache = Record<string, KeyPointsCacheEntry>;
 // ---------------------------------------------------------------------------
 
 export type SnapEdge =
-	| "left"
-	| "right"
-	| "top"
-	| "bottom"
-	| "hCenter"
-	| "vCenter";
+	"left" | "right" | "top" | "bottom" | "hCenter" | "vCenter";
 
 /**
  * A snap candidate point.
@@ -167,6 +163,9 @@ export type EventStartSnapshot = {
 	multiSelectResizeBoundsCache?: MultiSelectResizeBoundsCache | null;
 };
 
+/** Modal surfaces the canvas owns. Only one can be open at a time. */
+export type CanvasModalKind = "export" | "shortcutHelp";
+
 /**
  * What an in-progress drag is doing. Only the distinctions the UI gates on are named;
  * a handler that does not name its drag leaves it at the "other" every drag starts from.
@@ -226,6 +225,28 @@ export type CanvasControllerState = CanvasState & {
 	edgeScrollEnabled: boolean;
 
 	/**
+	 * How far the view may be scrolled, or null on the default infinite canvas.
+	 * Set once at mount and applied by `limitViewScroll` at the end of every
+	 * gesture (nothing else limits the view).
+	 */
+	scrollLimit: {
+		/** The host's setting, kept because the rect is re-measured from it */
+		config: ScrollBoundsConfig;
+		/**
+		 * The rect the view is kept inside, measured from `measuredFrom`; null when
+		 * the doc holds no content to bound it to.
+		 */
+		rect: BoundingBox | null;
+		/**
+		 * The object map `rect` was measured from — a different reference means it
+		 * is stale. Measuring walks every object, so it is redone lazily, on the
+		 * first scroll after the objects change rather than on the change itself.
+		 * null before the first measurement.
+		 */
+		measuredFrom: Record<string, ObjectState> | null;
+	} | null;
+
+	/**
 	 * Incremented when a new edit is confirmed (dragEnd, command execution, etc.).
 	 * Internal signal read exclusively by recordHistoryIfNeeded.
 	 */
@@ -248,6 +269,13 @@ export type CanvasControllerState = CanvasState & {
 
 	/** Client coordinates; null when no context menu should be displayed */
 	contextMenuPosition: { clientX: number; clientY: number } | null;
+
+	/**
+	 * Modal currently open; null when none is. Deliberately left out of UiStateReset:
+	 * undo/redo and external sync must not close an open modal (the behaviour the
+	 * component-local open state had).
+	 */
+	activeModal: CanvasModalKind | null;
 
 	/**
 	 * In-progress drag from the StencilLibrary. Non-null means a drag is under way; cleared

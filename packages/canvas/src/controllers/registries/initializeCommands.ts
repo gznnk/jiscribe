@@ -28,6 +28,7 @@ import { SelectNextTextSlotCommand } from "../commands/selection/SelectNextTextS
 import { SelectPreviousTextSlotCommand } from "../commands/selection/SelectPreviousTextSlotCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
+import { ShortcutHelpCommand } from "../commands/view/ShortcutHelpCommand";
 import { ZoomInCommand } from "../commands/view/ZoomInCommand";
 import { ZoomOutCommand } from "../commands/view/ZoomOutCommand";
 import { ZoomToFitCommand } from "../commands/view/ZoomToFitCommand";
@@ -78,7 +79,8 @@ export const ALL_COMMANDS: Command[] = [
 	ResetZoomCommand,
 	ZoomToFitCommand,
 	ZoomToSelectionCommand,
-	// Export command (definition-only; executed via callback)
+	ShortcutHelpCommand,
+	// Export command (opens the dialog; the export itself runs via callback)
 	ExportCommand,
 ];
 

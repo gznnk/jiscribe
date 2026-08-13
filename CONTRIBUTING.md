@@ -1,7 +1,26 @@
+> 🌐 日本語版: [CONTRIBUTING.ja.md](./CONTRIBUTING.ja.md)
+
 # Contributing
 
 Thanks for your interest in Jiscribe. This document covers what you need to get
 a change merged.
+
+## How contributions work
+
+**Issues are welcome with no prior arrangement.** Bug reports, questions,
+feature ideas, "this API is awkward to use" — these are the most useful thing
+you can send, and there is no bar to clear before opening one.
+
+**Pull requests are accepted by prior agreement only.** Open an issue first and
+wait for a reply saying the change is wanted. A pull request that arrives
+without that agreement will be closed with a link to this section, however good
+the code is.
+
+This is not a judgement on your patch. Jiscribe has a single maintainer, the
+engine's design is still moving, and reviewing someone else's code — then
+maintaining it afterwards — costs more than writing it. Settling the change in
+an issue first means neither of us spends time on something that was never
+going to be merged.
 
 ## Getting set up
 
@@ -10,12 +29,13 @@ pnpm install
 pnpm dev:examples   # http://localhost:5174/
 ```
 
-Node.js 22 and pnpm 10 are what CI uses. `npm` and `yarn` will not work — this
+Node.js 22 and pnpm 11 are what CI uses. `npm` and `yarn` will not work — this
 is a pnpm workspace and packages depend on each other through `workspace:*`.
 
 ## Before you open a pull request
 
-Run these and make sure they all pass:
+The rest of this document assumes the change has already been agreed on in an
+issue. Run these and make sure they all pass:
 
 ```bash
 pnpm lint --fix
@@ -28,9 +48,17 @@ pnpm lint
 Then, depending on what you touched:
 
 - **Any package** — run its unit tests: `pnpm --filter @jiscribe/canvas test`
-- **Behaviour or rendering** (`packages/canvas/src/{gestures,controllers,presentations,states}`)
-  — run the related e2e specs, not the full suite:
-  `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
+- **Behaviour or rendering** — run e2e from the suite that owns what you touched.
+  Playwright is spread over nine suites: `packages/canvas/e2e/` (core),
+  `plugins/<name>/e2e/` (that plugin alone) and `apps/canvas-examples/e2e/`
+  (all seven plugins on one canvas).
+  - `packages/canvas/src/{gestures,controllers,presentations,states}` — select the
+    related specs by keyword rather than running the suite in full:
+    `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
+  - a plugin's shapes — run its whole suite, which is a handful of specs:
+    `pnpm --filter @jiscribe/plugin-uml-shapes test:e2e`
+  - plugin registration, toolbar composition or `svgDefs` —
+    `pnpm --filter canvas-examples test:e2e`
 - **Shapes or AI-facing metadata** (a new shape, `ObjectFeatures`, `description`,
   `defaults`) — regenerate the AI assets with `pnpm generate:ai` and commit the
   result, or CI's `check:ai` will fail on the drift
@@ -102,4 +130,5 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 with an optional scope: `fix(canvas): ...`, `feat(vscode): ...`,
 `refactor(geometry): ...`. Japanese and English subjects are both fine.
 
-Target `main`. Describe what changed and why, and say which checks you ran.
+Target `main`. Link the issue the change was agreed on in, describe what changed
+and why, and say which checks you ran.

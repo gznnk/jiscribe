@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { createCowObjects, materializeObjects } from "../cowObjects";
+import {
+	collectCowChangedKeys,
+	copyObjectsRecord,
+	createCowObjects,
+	materializeObjects,
+} from "../cowObjects";
 
 type Item = { id: string; value: number };
 
@@ -135,5 +140,103 @@ describe("materializeObjects", () => {
 		expect(materializeObjects(materialized)).toBe(materialized);
 		// Unchanged values keep their identity (structural sharing)
 		expect(materialized.a).toBe(base.a);
+	});
+});
+
+describe("copyObjectsRecord", () => {
+	it("copies a plain record into a new writable record", () => {
+		const base = buildBase();
+		const copied = copyObjectsRecord(base);
+
+		copied.a = { id: "a", value: 10 };
+
+		expect(copied).not.toBe(base);
+		expect(base.a).toEqual({ id: "a", value: 1 });
+		expect(copied.b).toBe(base.b);
+	});
+
+	it("copies a view into the plain record the spread would have produced", () => {
+		const base = buildBase();
+		const view = createCowObjects(base);
+		view.b = { id: "b", value: 20 };
+		view.d = { id: "d", value: 4 };
+
+		const copied = copyObjectsRecord(view);
+
+		expect(copied).toEqual({ ...view });
+		// Plain, so nothing downstream keeps reading through the Proxy
+		expect(materializeObjects(copied)).toBe(copied);
+	});
+});
+
+describe("collectCowChangedKeys", () => {
+	it("returns null for two plain records (nothing shared to reason about)", () => {
+		const base = buildBase();
+
+		expect(collectCowChangedKeys({ ...base }, base)).toBeNull();
+	});
+
+	it("returns null when the newer map is a view over an unrelated base", () => {
+		const view = createCowObjects(buildBase());
+
+		expect(collectCowChangedKeys(view, buildBase())).toBeNull();
+	});
+
+	it("reports the written keys of a view over the previous record", () => {
+		const base = buildBase();
+		const view = createCowObjects(base);
+		view.b = { id: "b", value: 20 };
+		view.d = { id: "d", value: 4 };
+
+		expect(collectCowChangedKeys(view, base)).toEqual(new Set(["b", "d"]));
+	});
+
+	it("is empty when a view wrote nothing", () => {
+		const base = buildBase();
+
+		expect(collectCowChangedKeys(createCowObjects(base), base)).toEqual(
+			new Set(),
+		);
+	});
+
+	it("covers both frames' writes when diffing two views over one base", () => {
+		const base = buildBase();
+		const firstFrame = createCowObjects(base);
+		firstFrame.a = { id: "a", value: 10 };
+		const secondFrame = createCowObjects(firstFrame);
+		secondFrame.b = { id: "b", value: 20 };
+
+		expect(collectCowChangedKeys(secondFrame, firstFrame)).toEqual(
+			new Set(["a", "b"]),
+		);
+	});
+
+	it("covers a key only the older view wrote, so no divergence is missed", () => {
+		const base = buildBase();
+		const older = createCowObjects(base);
+		older.a = { id: "a", value: 10 };
+		// Built from the base rather than from `older`, so it does not carry a's write
+		const newer = createCowObjects(base);
+		newer.b = { id: "b", value: 20 };
+
+		const changedKeys = collectCowChangedKeys(newer, older);
+
+		expect(changedKeys).toEqual(new Set(["a", "b"]));
+		// a genuinely differs between the two, and the set does report it
+		expect(newer.a).not.toBe(older.a);
+	});
+
+	it("every key it omits holds the same reference in both maps", () => {
+		const base = buildBase();
+		const view = createCowObjects(base);
+		view.b = { id: "b", value: 20 };
+
+		const changedKeys = collectCowChangedKeys(view, base);
+
+		for (const key of Object.keys(view)) {
+			if (!changedKeys?.has(key)) {
+				expect(view[key]).toBe(base[key]);
+			}
+		}
 	});
 });

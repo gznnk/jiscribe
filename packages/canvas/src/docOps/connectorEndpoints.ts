@@ -177,7 +177,7 @@ export const requireSingleEndpointTarget = (
  * @param source - The endpoint the connector leaves, as it is about to be stored
  * @param target - The endpoint the connector enters, as it is about to be stored
  * @throws {@link DocOperationError} when both ends are free; the doc model rejects such a
- *   connector (validateConnectorDoc 参照), so it must never be written
+ *   connector (see validateConnectorDoc), so it must never be written
  */
 export const requireOwnedEnd = (
 	source: EndpointRef,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import { parseCanvasText } from "../../schemas/canvas/validators";
+import { createCanvasParser } from "../../schemas/canvas/validators";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { createFrameObjectFactory } from "../../schemas/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
@@ -13,7 +13,9 @@ const emptyDoc = (): CanvasDoc => ({ version: 1, root: [] });
 
 /** Serialize the doc, run it through validation, and assert it is valid. */
 const expectValid = (doc: CanvasDoc) => {
-	const result = parseCanvasText(`${JSON.stringify(doc, null, "\t")}\n`);
+	const result = createCanvasParser().parse(
+		`${JSON.stringify(doc, null, "\t")}\n`,
+	);
 	expect(result.kind).toBe("ok");
 };
 

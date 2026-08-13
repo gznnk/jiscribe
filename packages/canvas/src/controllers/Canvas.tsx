@@ -71,9 +71,14 @@ import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
-import type { ObjectMenuPropertyUpdater } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
+import type {
+	ObjectMenuPropertyUpdater,
+	OpenReferenceHandler,
+	OpenReferencePayload,
+} from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
+import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
@@ -84,7 +89,7 @@ type CanvasProps = {
 	 * The CanvasDoc to display.
 	 *
 	 * **Caller responsibility**: always pass a valid doc that has gone through
-	 * `parseCanvasText` (two-stage validation). Canvas does not re-validate
+	 * `createCanvasParser` (two-stage validation). Canvas does not re-validate
 	 * internally and assumes unique IDs, referential integrity, and acyclicity.
 	 * Passing an unvalidated doc (with broken references or cycles) can hang
 	 * internal traversals. Validation is done at the external-input boundary (host)
@@ -187,15 +192,32 @@ type CanvasProps = {
 	 * (e.g. the VSCode extension writing into the workspace).
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
-
-	// ── Toolbar (host UI slots) ──
 	/**
-	 * Host-provided toolbar customization: UI slots at the edges (`leading` /
-	 * `trailing`) and an override of the shape-tool arrangement (`layout`). Grouped
-	 * for cohesion; since the JSX slots already break `<Canvas>`'s memo, a host
-	 * rendering this inline can `useMemo` the object to avoid extra re-renders.
+	 * Called when "open reference" is pressed for an object carrying
+	 * `meta.reference`. Omit it and the menu item is never offered — opening a
+	 * file is the host's business. The canvas passes the reference through
+	 * untouched: it neither resolves nor validates the path.
+	 */
+	onOpenReference?: (payload: OpenReferencePayload) => void;
+
+	// ── Toolbar (visibility & host UI slots) ──
+	/**
+	 * Host-provided toolbar customization: visibility (`show`), UI slots at the
+	 * edges (`leading` / `trailing`) and an override of the shape-tool arrangement
+	 * (`layout`). Grouped for cohesion; since the JSX slots already break
+	 * `<Canvas>`'s memo, a host rendering this inline can `useMemo` the object to
+	 * avoid extra re-renders.
 	 */
 	toolbar?: {
+		/**
+		 * Whether to render the toolbar (default `true`). `false` removes the whole
+		 * bar — shape tools, zoom controls, the help button and the `leading` /
+		 * `trailing` slots — and the canvas area takes the full height. Keyboard
+		 * shortcuts still work (`?` opens the shortcut help, rendered outside the
+		 * bar), but the default UI is left with no entry point for drawing new
+		 * shapes, so this suits read-mostly hosts (previews, embedded viewers).
+		 */
+		show?: boolean;
 		/**
 		 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
 		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
@@ -228,10 +250,11 @@ type CanvasProps = {
 	// ── Mount-time setup (read once; remount with a new key to change) ──
 	/**
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
-	 * capability set (available object types, commands, plugins) plus the initial
-	 * view (`viewport`). Restricts what this canvas can create/handle (plugin-style
-	 * extensibility and feature-gating), independently of any other `<Canvas>` on
-	 * the page. Omit for the full default set.
+	 * capability set (available object types, commands, plugins) plus the view
+	 * setup — the initial camera (`viewport`) and how far it may be scrolled
+	 * (`scrollBounds`, infinite unless set). Restricts what this canvas can
+	 * create/handle (plugin-style extensibility and feature-gating), independently
+	 * of any other `<Canvas>` on the page. Omit for the full default set.
 	 *
 	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
 	 * whose object types remain enabled — otherwise state construction throws
@@ -282,6 +305,7 @@ const CanvasComponent = ({
 	onUndo,
 	onRedo,
 	onExportImage,
+	onOpenReference,
 	toolbar,
 	autoFocus = true,
 	initialConfig,
@@ -322,6 +346,7 @@ const CanvasComponent = ({
 		registries,
 		docDefaults,
 		initialConfig?.viewport,
+		initialConfig?.scrollBounds,
 	);
 
 	// Keeps docDefaults current when the host swaps themes at runtime; the reducer no-ops
@@ -411,6 +436,27 @@ const CanvasComponent = ({
 		[dispatch],
 	);
 
+	// The host callback is read through a ref, so passing a new function each
+	// render does not defeat ObjectMenu's memo. Only adding or removing the prop
+	// changes the identity, which is also what decides whether the item shows.
+	const onOpenReferenceRef = useRef(onOpenReference);
+	useEffect(() => {
+		onOpenReferenceRef.current = onOpenReference;
+	});
+	const hasOpenReferenceHandler = onOpenReference !== undefined;
+	const handleOpenReference = useMemo<OpenReferenceHandler | undefined>(
+		() =>
+			hasOpenReferenceHandler
+				? (payload) => onOpenReferenceRef.current?.(payload)
+				: undefined,
+		[hasOpenReferenceHandler],
+	);
+
+	// Shared by every modal: only one can be open, so closing needs no kind.
+	const closeModal = useCallback(() => {
+		dispatch({ type: "CLOSE_MODAL" });
+	}, [dispatch]);
+
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			// data-gesture="none" elements (e.g. the text-editing textarea) keep the
@@ -458,13 +504,7 @@ const CanvasComponent = ({
 		registries.objectVisualBounds,
 	);
 
-	const {
-		exportHandle,
-		isExportDialogOpen,
-		openExportDialog,
-		closeExportDialog,
-		handleExportSubmit,
-	} = useCanvasExport({
+	const { exportHandle, handleExportSubmit } = useCanvasExport({
 		svgRef,
 		canvasState: state,
 		registries,
@@ -520,16 +560,18 @@ const CanvasComponent = ({
 				onContextMenu={handleContextMenu}
 				{...pointerHandlers}
 			>
-				<Toolbar
-					activePresetId={state.shapeDrawing?.preset.id ?? null}
-					openCategoryId={state.stencilLibraryOpenCategory}
-					zoom={state.viewport.zoom}
-					canZoomIn={canZoomIn}
-					canZoomOut={canZoomOut}
-					layout={toolbar?.layout}
-					leading={toolbar?.leading}
-					trailing={toolbar?.trailing}
-				/>
+				{toolbar?.show !== false && (
+					<Toolbar
+						activePresetId={state.shapeDrawing?.preset.id ?? null}
+						openCategoryId={state.stencilLibraryOpenCategory}
+						zoom={state.viewport.zoom}
+						canZoomIn={canZoomIn}
+						canZoomOut={canZoomOut}
+						layout={toolbar?.layout}
+						leading={toolbar?.leading}
+						trailing={toolbar?.trailing}
+					/>
+				)}
 				<Viewport
 					data-id="canvas"
 					data-kind="canvas"
@@ -650,6 +692,7 @@ const CanvasComponent = ({
 							<ObjectMenu
 								canvasState={state}
 								onPropertyUpdate={handleMenuPropertyUpdate}
+								onOpenReference={handleOpenReference}
 							/>
 						</ScrollSyncedOverlay>
 					</Container>
@@ -658,21 +701,21 @@ const CanvasComponent = ({
 						<ContextMenu
 							position={state.contextMenuPosition}
 							canvasState={state}
-							callbacks={{
-								paste: handlePaste,
-								export: openExportDialog,
-							}}
+							callbacks={{ paste: handlePaste }}
 						/>
 					</ViewportOverlay>
 				</Viewport>
-				{/* Sibling of the toolbar/viewport (like ShortcutHelpModal) so the
-				    backdrop covers the whole canvas including the toolbar */}
-				{isExportDialogOpen && (
+				{/* Every modal is rendered here, as a sibling of the toolbar/viewport, so
+				    its backdrop covers the whole canvas including the toolbar */}
+				{state.activeModal === "export" && (
 					<ExportDialog
 						defaultMargin={EXPORT_FIT_PADDING}
-						onClose={closeExportDialog}
+						onClose={closeModal}
 						onSubmit={handleExportSubmit}
 					/>
+				)}
+				{state.activeModal === "shortcutHelp" && (
+					<ShortcutHelpModal onClose={closeModal} />
 				)}
 			</CanvasRoot>
 		</CanvasProviders>

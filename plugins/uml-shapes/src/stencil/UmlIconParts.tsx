@@ -12,9 +12,9 @@ export const UmlIconFrame = ({
 }) => (
 	<rect
 		x="3"
-		y="4"
+		y="3"
 		width="18"
-		height="16"
+		height="18"
 		rx="1"
 		fill="none"
 		stroke="currentColor"
@@ -41,9 +41,9 @@ export const UmlIconBodyRows = () => (
 		/>
 		<line
 			x1="6"
-			y1="16.5"
+			y1="17"
 			x2="14"
-			y2="16.5"
+			y2="17"
 			stroke="currentColor"
 			strokeWidth="1.5"
 		/>

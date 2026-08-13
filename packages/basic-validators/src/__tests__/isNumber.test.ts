@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { isNumber } from "../isNumber";
 
 describe("isNumber", () => {
-	it("数値はtrueを返す", () => {
+	it("returns true for a number", () => {
 		expect(isNumber(0)).toBe(true);
 		expect(isNumber(42)).toBe(true);
 		expect(isNumber(-1)).toBe(true);
@@ -11,11 +11,11 @@ describe("isNumber", () => {
 		expect(isNumber(Infinity)).toBe(true);
 	});
 
-	it("NaNはfalseを返す", () => {
+	it("returns false for NaN", () => {
 		expect(isNumber(NaN)).toBe(false);
 	});
 
-	it("数値以外はfalseを返す", () => {
+	it("returns false for a non-number", () => {
 		expect(isNumber("42")).toBe(false);
 		expect(isNumber(null)).toBe(false);
 		expect(isNumber(undefined)).toBe(false);

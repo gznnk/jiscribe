@@ -28,7 +28,7 @@ export const calcFolderPoints = (
 	const tabHeight = height * FOLDER_TAB_HEIGHT_RATIO;
 	const tabWidth = width * FOLDER_TAB_WIDTH_RATIO;
 	// Off the shorter side, so the slant cannot run past the right edge of a tall
-	// box (FOLDER_TAB_SLOPE_RATIO 参照). Bounded by 0.126 * width, which leaves it
+	// box (see FOLDER_TAB_SLOPE_RATIO). Bounded by 0.126 * width, which leaves it
 	// clear of the tab's own left edge at 0.4 * width whatever the box.
 	const tabSlantRun =
 		Math.min(width, height) * FOLDER_TAB_HEIGHT_RATIO * FOLDER_TAB_SLOPE_RATIO;

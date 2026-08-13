@@ -2,12 +2,13 @@
 	"name": "canvas-examples",
 	"private": true,
 	"version": "0.0.0",
-	"type": "module",
 	"scripts": {
 		"dev": "vite",
+		"dev:harness": "vite e2e/harness --configLoader runner",
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
+		"test:e2e": "playwright test",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -24,6 +25,7 @@
 		"react-dom": "catalog:"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.62.1",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",

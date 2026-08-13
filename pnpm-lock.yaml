@@ -380,6 +380,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../canvas
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -476,6 +479,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@playwright/test':
+        specifier: ^1.60.0
+        version: 1.62.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -485,6 +491,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@22.20.1)(tsx@4.23.11)
       vitest:
         specifier: 'catalog:'
         version: 2.1.9(@types/node@22.20.1)(@vitest/ui@2.1.9)(jsdom@29.1.1)
@@ -510,6 +519,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@playwright/test':
+        specifier: ^1.60.0
+        version: 1.62.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -519,6 +531,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@22.20.1)(tsx@4.23.11)
       vitest:
         specifier: 'catalog:'
         version: 2.1.9(@types/node@22.20.1)(@vitest/ui@2.1.9)(jsdom@29.1.1)
@@ -541,6 +556,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@playwright/test':
+        specifier: ^1.60.0
+        version: 1.62.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -550,6 +568,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@22.20.1)(tsx@4.23.11)
       vitest:
         specifier: 'catalog:'
         version: 2.1.9(@types/node@22.20.1)(@vitest/ui@2.1.9)(jsdom@29.1.1)
@@ -572,6 +593,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@playwright/test':
+        specifier: ^1.60.0
+        version: 1.62.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -581,6 +605,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@22.20.1)(tsx@4.23.11)
       vitest:
         specifier: 'catalog:'
         version: 2.1.9(@types/node@22.20.1)(@vitest/ui@2.1.9)(jsdom@29.1.1)
@@ -603,6 +630,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@playwright/test':
+        specifier: ^1.60.0
+        version: 1.62.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -612,6 +642,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@22.20.1)(tsx@4.23.11)
       vitest:
         specifier: 'catalog:'
         version: 2.1.9(@types/node@22.20.1)(@vitest/ui@2.1.9)(jsdom@29.1.1)
@@ -664,6 +697,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@playwright/test':
+        specifier: ^1.60.0
+        version: 1.62.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -673,6 +709,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@22.20.1)(tsx@4.23.11)
       vitest:
         specifier: 'catalog:'
         version: 2.1.9(@types/node@22.20.1)(@vitest/ui@2.1.9)(jsdom@29.1.1)

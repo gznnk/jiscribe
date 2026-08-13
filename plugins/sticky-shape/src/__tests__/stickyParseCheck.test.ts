@@ -19,7 +19,7 @@ createParseCheckSuite({
 				width: 200,
 				height: 150,
 				fill: "#fef9c3",
-				text: "外から編集できる",
+				text: "Editable from outside",
 			},
 			{
 				id: "task-1",

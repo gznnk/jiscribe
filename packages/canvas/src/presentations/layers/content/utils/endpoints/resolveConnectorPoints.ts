@@ -44,9 +44,7 @@ const resolveOutline = (
 const resolveAnchorRegion = (
 	obj: ObjectState | null | undefined,
 	anchorRegionRegistry:
-		| Pick<ObjectAnchorRegionRegistry, "get">
-		| null
-		| undefined,
+		Pick<ObjectAnchorRegionRegistry, "get"> | null | undefined,
 ): Rect | null => {
 	if (!obj || !anchorRegionRegistry) {
 		return null;
@@ -66,9 +64,7 @@ const resolveAnchorRegion = (
 const resolveExtraConnectPoints = (
 	obj: ObjectState | null | undefined,
 	extraConnectPointsRegistry:
-		| Pick<ObjectExtraConnectPointsRegistry, "get">
-		| null
-		| undefined,
+		Pick<ObjectExtraConnectPointsRegistry, "get"> | null | undefined,
 ): readonly ExtraConnectPoint[] | null => {
 	if (!obj || !extraConnectPointsRegistry) {
 		return null;

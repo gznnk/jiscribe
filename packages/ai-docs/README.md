@@ -14,6 +14,13 @@
 マーカー外の散文は手書き。型の列挙は書かず「box shape（= polyline / polygon / group /
 svg / connector 以外の全型）」のような能力ベースの言い回しを使うこと。
 
+図形 `$def` のうち、rect ジオメトリ＋4 スタイル（stroke / fill / text / transform）を
+共有既定値のまま持ち、断片も corner radius も持たない型は、共有 `$def`
+`BoxShapeDoc` を `allOf` で参照して `type` の const だけを載せた薄い `$def` になる
+（判定は `generateSchema.ts` の `isBoxShapeCompatible`）。既定値の inline 上書きや
+`propertyOverrides` のエントリがあれば自動的に対象外となり、従来どおり全プロパティを
+展開した `$def` が生成される。
+
 消費者は exports（`@jiscribe/ai-docs/schema` / `/guide` / `/reference`）か、ビルド
 スクリプトからは `assets/` への相対パスで参照する（vscode-extension の `build.mjs`、
 配信側の同期など）。

@@ -8,14 +8,14 @@ import { JiscribeImageEditorProvider } from "./editor/JiscribeImageEditorProvide
 
 /**
  * Extension entry point, called by VSCode on activation. Per package.json's
- * activationEvents (currently []), this fires when the first .jis.json opens.
+ * activationEvents (currently []), this fires when the first canvas file opens.
  * Disposables pushed to context.subscriptions are released on deactivation.
  */
 export function activate(context: vscode.ExtensionContext) {
-	// Surface .jis.json validation errors in the Problems panel.
+	// Surface canvas file validation errors in the Problems panel.
 	new DiagnosticProvider(context);
 
-	// Custom editor that shows the Canvas UI (Webview) for .jis.json files.
+	// Custom editor that shows the Canvas UI (Webview) for canvas files.
 	const provider = new JiscribeEditorProvider(context);
 	const registration = vscode.window.registerCustomEditorProvider(
 		"jiscribe.editor", // must match contributes.customEditors[].viewType

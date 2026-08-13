@@ -1,10 +1,14 @@
-import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import { Canvas } from "@jiscribe/canvas";
 import type { Camera, CanvasDoc, CanvasHandle } from "@jiscribe/canvas";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 import { useRef, useState } from "react";
 
-// 目印になる図形を散らした doc（Canvas の契約どおり parseCanvasText を通す）
+// This example ships no plugin, so the default parser (every built-in type) is enough.
+const canvasParser = createCanvasParser();
+
+// A doc with landmark shapes scattered around (run through the parser, as the Canvas contract requires)
 const buildLandmarkDoc = (): CanvasDoc => {
-	const result = parseCanvasText(
+	const result = canvasParser.parse(
 		JSON.stringify({
 			version: 1,
 			root: [
@@ -40,10 +44,11 @@ const landmarkDoc = buildLandmarkDoc();
 const initialCamera: Camera = { minX: 0, minY: 0, zoom: 1 };
 
 /**
- * viewport（pan/zoom）の imperative API の例:
- * - initialConfig.viewport … マウント時 1 回だけ適用される初期カメラ
- * - onViewportChange … カメラ変化の読み取り専用通知（永続化・ミラー用。値を戻さない）
- * - ref.current.viewport.setViewport … プログラムからカメラを押し込む唯一の経路
+ * Example of the imperative viewport (pan/zoom) API:
+ * - initialConfig.viewport ... the initial camera, applied exactly once on mount
+ * - onViewportChange ... read-only notification of camera changes (for persisting or
+ *   mirroring; it never feeds a value back)
+ * - ref.current.viewport.setViewport ... the only way to drive the camera from code
  */
 export function ViewportExample() {
 	const canvasRef = useRef<CanvasHandle>(null);
@@ -87,9 +92,9 @@ export function ViewportExample() {
 					minX: {Math.round(camera.minX)} / minY: {Math.round(camera.minY)} /
 					zoom: {camera.zoom.toFixed(2)}
 				</span>
-				{panelButton("原点へ（zoom 1）", { minX: 0, minY: 0, zoom: 1 })}
-				{panelButton("far へジャンプ", { minX: 1200, minY: 700, zoom: 1 })}
-				{panelButton("原点を 2x で", { minX: 0, minY: 0, zoom: 2 })}
+				{panelButton("To the origin (zoom 1)", { minX: 0, minY: 0, zoom: 1 })}
+				{panelButton("Jump to far", { minX: 1200, minY: 700, zoom: 1 })}
+				{panelButton("The origin at 2x", { minX: 0, minY: 0, zoom: 2 })}
 			</div>
 		</div>
 	);

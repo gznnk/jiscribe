@@ -1,9 +1,13 @@
-import { Canvas, parseCanvasText } from "@jiscribe/canvas";
+import { Canvas } from "@jiscribe/canvas";
 import type { CanvasDoc } from "@jiscribe/canvas";
+import { createCanvasParser } from "@jiscribe/canvas/doc";
 
-// 図形 ID はページ内で一意にしてセレクタ・参照の衝突を避ける
+// This example ships no plugin, so the default parser (every built-in type) is enough.
+const canvasParser = createCanvasParser();
+
+// Keep shape IDs unique across the page, so selectors and references cannot collide
 const parseSeedDoc = (rectId: string): CanvasDoc => {
-	const result = parseCanvasText(
+	const result = canvasParser.parse(
 		JSON.stringify({
 			version: 1,
 			root: [
@@ -21,9 +25,9 @@ const leftDoc = parseSeedDoc("rect-left");
 const rightDoc = parseSeedDoc("rect-right");
 
 /**
- * 複数 Canvas 埋め込みの例。キーボードショートカットはフォーカスされた Canvas に
- * スコープされる。マウント時のフォーカス奪取を避けるため autoFocus は切り、
- * フォーカス管理はホスト（クリック）に委ねる。
+ * Example of embedding several Canvases. Keyboard shortcuts are scoped to the focused
+ * Canvas. autoFocus is turned off so nothing steals focus on mount, leaving focus
+ * management to the host (a click).
  */
 export function MultiCanvasExample() {
 	return (

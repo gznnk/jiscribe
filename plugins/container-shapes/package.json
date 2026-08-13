@@ -2,7 +2,7 @@
 	"name": "@jiscribe/plugin-container-shapes",
 	"version": "0.0.0",
 	"private": true,
-	"description": "UC1 dogfood: container 図形を canvas 公開 API のみで外部パッケージとして提供する実験（packages/canvas/docs/13-authoring-plugins.md）",
+	"description": "UC1 dogfood: an experiment in providing the container shape as an external package built on the public canvas API alone (packages/canvas/docs/13-authoring-plugins.md)",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {
@@ -11,7 +11,9 @@
 	},
 	"scripts": {
 		"lint": "eslint .",
+		"dev:harness": "vite e2e/harness --configLoader runner",
 		"test": "vitest run",
+		"test:e2e": "playwright test",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -28,11 +30,13 @@
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
-		"@types/react": "catalog:",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/canvas-sdk": "workspace:*",
+		"@playwright/test": "^1.62.1",
+		"@types/react": "catalog:",
 		"react": "catalog:",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	}
 }

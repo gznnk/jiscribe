@@ -12,6 +12,7 @@ import { GroupMenu } from "./items/GroupMenu";
 import { KeepAspectRatioMenu } from "./items/KeepAspectRatioMenu";
 import { LineColorMenu } from "./items/LineColorMenu";
 import { LineStyleMenu } from "./items/LineStyleMenu";
+import { OpenReferenceMenu } from "./items/OpenReferenceMenu";
 import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import { TextFormatMenu } from "./items/TextFormatMenu";
@@ -24,7 +25,9 @@ import type {
 	ObjectMenuItem,
 	ObjectMenuPropertyUpdater,
 	ObjectMenuSection,
+	OpenReferenceHandler,
 } from "./ObjectMenuTypes";
+import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
@@ -32,12 +35,14 @@ import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot"
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
 	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onOpenReference?: OpenReferenceHandler;
 };
 
 const renderItem = (
 	item: ObjectMenuItem,
 	canvasState: CanvasControllerState,
 	onPropertyUpdate: ObjectMenuPropertyUpdater,
+	onOpenReference: OpenReferenceHandler | undefined,
 ): React.ReactNode => {
 	switch (item.type) {
 		case "arrowHead":
@@ -113,6 +118,19 @@ const renderItem = (
 			return <StackOrderMenu key="stackOrder" canvasState={canvasState} />;
 		case "group":
 			return <GroupMenu key="group" canvasState={canvasState} />;
+		case "openReference":
+			// The section is only built when the host supplies a handler, but a custom
+			// menu definition can name the item without one.
+			if (!onOpenReference) {
+				return null;
+			}
+			return (
+				<OpenReferenceMenu
+					key="openReference"
+					canvasState={canvasState}
+					onOpenReference={onOpenReference}
+				/>
+			);
 		case "custom":
 			return (
 				<item.component
@@ -129,6 +147,7 @@ const renderItem = (
 
 const buildSystemSections = (
 	canvasState: CanvasControllerState,
+	onOpenReference: OpenReferenceHandler | undefined,
 ): ObjectMenuSection[] => {
 	const systemSections: ObjectMenuSection[] = [];
 
@@ -163,6 +182,13 @@ const buildSystemSections = (
 		});
 	}
 
+	if (onOpenReference && resolveOpenReference(canvasState) !== null) {
+		systemSections.push({
+			id: "system-reference",
+			items: [{ type: "openReference" }],
+		});
+	}
+
 	return systemSections;
 };
 
@@ -187,6 +213,7 @@ const keepTextEditorFocus = (event: React.PointerEvent<HTMLElement>): void => {
 const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
+	onOpenReference,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const { shouldRender, x, y } = useObjectMenuPosition(canvasState, menuRef);
@@ -201,7 +228,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 		resolveSelectedTextSlot(canvasState) === null &&
 		canvasState.textEditState?.kind !== "shape";
 	const systemSections = showSystemSections
-		? buildSystemSections(canvasState)
+		? buildSystemSections(canvasState, onOpenReference)
 		: [];
 	const allSections = [...objectSections, ...systemSections];
 
@@ -224,7 +251,9 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				return;
 			}
 			renderedItemKeys.add(key);
-			sectionItems.push(renderItem(item, canvasState, onPropertyUpdate));
+			sectionItems.push(
+				renderItem(item, canvasState, onPropertyUpdate, onOpenReference),
+			);
 		});
 		return (
 			<ObjectMenuSectionRow key={section.id}>

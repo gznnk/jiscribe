@@ -1,13 +1,15 @@
-// flowchart 18 図形の外部パッケージ。core から完全移設し、tier 2 の frame 系ベース実装を利用する。
-// schema/** の headless 部品 (createFrameObjectFactory / createFrameDocValidator /
-// validateOptionalNumber / AUTO_COLOR / DEFAULT_FONT_FAMILY) は `@jiscribe/canvas-sdk/doc`、
-// presentation / state / stencil 部品 (createFrameObject / createFrameBehavior / createFrameMapper /
-// createFrameStateValidator / formatPolygonPoints / centeredPolygonOutline /
-// OUTLINE_CURVE_SEGMENTS) は `@jiscribe/canvas-sdk` 経由。headless な parse 入口は ./doc
-// (flowchartDocPlugin)。各 definition は core の対応エントリ(initializeObjectRegistry.ts)と
-// 同一構成(意図的除外ゼロ)。process / onPageConnector プリセットは core 所有のまま
-// (flowchartToolbarEntry から presetId で参照)。
-// (packages/canvas/docs/13-authoring-plugins.md 参照)。
+// External package of the 18 flowchart shapes. Fully moved out of core, building on the
+// tier 2 frame-family base implementation.
+// The headless parts of schema/** (createFrameObjectFactory / createFrameDocValidator /
+// validateOptionalNumber / AUTO_COLOR / DEFAULT_FONT_FAMILY) come from
+// `@jiscribe/canvas-sdk/doc`; the presentation / state / stencil parts (createFrameObject /
+// createFrameBehavior / createFrameMapper / createFrameStateValidator /
+// formatPolygonPoints / centeredPolygonOutline / OUTLINE_CURVE_SEGMENTS) come through
+// `@jiscribe/canvas-sdk`. The headless parse entry point is ./doc (flowchartDocPlugin).
+// Every definition matches its counterpart in core (initializeObjectRegistry.ts) exactly
+// (nothing is left out on purpose). The process / onPageConnector presets stay owned by
+// core (flowchartToolbarEntry references them by presetId).
+// (See packages/canvas/docs/13-authoring-plugins.md.)
 export * from "./definitions";
 export { flowchartDocPlugin } from "./doc";
 export { flowchartToolbarEntry } from "./stencil/FlowchartToolbarEntry";

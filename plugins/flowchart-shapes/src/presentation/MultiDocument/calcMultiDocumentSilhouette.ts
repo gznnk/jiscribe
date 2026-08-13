@@ -6,8 +6,7 @@ import { DOCUMENT_WAVE_RATIO } from "../../schema/document/DocumentDoc";
 
 /** One step of a traced outline; it starts where the previous step ended. */
 export type SilhouetteSegment =
-	| { kind: "line"; to: Point }
-	| { kind: "quad"; control: Point; to: Point };
+	{ kind: "line"; to: Point } | { kind: "quad"; control: Point; to: Point };
 
 /** A closed outline traced clockwise; the last segment's end joins back to `start`. */
 export type MultiDocumentSilhouette = {

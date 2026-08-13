@@ -51,8 +51,7 @@ export const getSelectedOrFirstTextSlot = (
 
 	const text = (
 		getFirstSelectedWithProp(state.selectedIds, state.objects, "text") as
-			| TextStyleState
-			| undefined
+			TextStyleState | undefined
 	)?.text;
 	const slotId = getFirstTextSlotId(text);
 	return slotId === undefined ? undefined : text?.[slotId];

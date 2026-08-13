@@ -51,14 +51,14 @@ async function main(): Promise<void> {
 		);
 		if (stale.length > 0) {
 			console.error(
-				"❌ 生成物が図形マニフェストと乖離しています。pnpm generate:ai を実行してコミットしてください:",
+				"❌ The generated files have drifted from the shape manifest. Run pnpm generate:ai and commit the result:",
 			);
 			for (const output of stale) {
 				console.error(`  - ${output.path}`);
 			}
 			process.exit(1);
 		}
-		console.log("✅ schema / AI ドキュメントはマニフェストと一致しています");
+		console.log("✅ The schema and AI documentation match the manifest");
 		return;
 	}
 

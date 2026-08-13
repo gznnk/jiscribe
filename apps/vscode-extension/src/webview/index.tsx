@@ -24,12 +24,13 @@ import type {
 	WebviewToExtensionMessage,
 } from "../types/messages";
 
-// container 図形は @jiscribe/plugin-container-shapes から供給する
-// (packages/canvas/docs/13-authoring-plugins.md)。
+// The container shape is supplied by @jiscribe/plugin-container-shapes
+// (packages/canvas/docs/13-authoring-plugins.md).
 const initialConfig: CanvasConfig = { plugins };
 
-// annotation / flowchart / container / general カテゴリと markdown プリセットは core の既定
-// layout に含まれない（プラグイン供給）。ホスト側で並び順を決めて差し込む。
+// The annotation / flowchart / container / general categories and the markdown preset are
+// not part of core's default layout (they come from plugins). The host decides their order
+// and inserts them.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
@@ -230,9 +231,8 @@ function App() {
 					setMissingEmbeddedSource(false);
 
 					// Delegate JSON syntax → CanvasDoc semantic checks to the shared
-					// helper. parseCanvasText() returns a discriminated union without
-					// throwing, so the same logic as the Extension (DiagnosticProvider)
-					// covers every case.
+					// parser. It returns a discriminated union without throwing, so the
+					// same logic as the Extension (DiagnosticProvider) covers every case.
 					const result = canvasParser.parse(jsonText);
 					switch (result.kind) {
 						case "ok":

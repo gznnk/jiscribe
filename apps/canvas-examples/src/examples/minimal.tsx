@@ -4,8 +4,9 @@ import type { CanvasDoc } from "@jiscribe/canvas";
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
 /**
- * 最小構成: 空ドキュメントで Canvas をマウントするだけの例。
- * テーマ・コールバック等はすべて省略可能で、既定は dark テーマ・非制御動作。
+ * The smallest setup: an example that only mounts Canvas with an empty document.
+ * Theme, callbacks and the rest are all optional; the defaults are the dark theme and
+ * uncontrolled behaviour.
  */
 export function MinimalExample() {
 	return <Canvas doc={emptyDoc} />;

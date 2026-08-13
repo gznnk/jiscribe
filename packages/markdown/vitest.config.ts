@@ -3,8 +3,9 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
 	test: {
 		globals: true,
-		// renderMarkdown は DOMPurify.sanitize を通すため window/DOM が必要。
-		// node 環境だと DOMPurify が no-op（素通し）になりサニタイズ検証にならない。
+		// renderMarkdown runs its output through DOMPurify.sanitize, so it needs window/DOM.
+		// In a node environment DOMPurify becomes a no-op (it passes input straight
+		// through), which would make the sanitizing tests meaningless.
 		environment: "jsdom",
 		include: ["src/**/__tests__/**/*.{test,spec}.{ts,tsx}"],
 		coverage: {

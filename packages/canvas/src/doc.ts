@@ -19,7 +19,7 @@
 // correct ObjectDocs down to the style defaults. Every editing op mutates the doc in place
 // and checks its arguments first, so a call that throws leaves the doc untouched.
 //
-// e.g. `import { parseCanvasText, createDocOps } from "@jiscribe/canvas/doc";`
+// e.g. `import { createCanvasParser, createDocOps } from "@jiscribe/canvas/doc";`
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
@@ -67,10 +67,7 @@ export type {
 	CanvasParseResult,
 	SemanticDiagnostic,
 } from "./schemas/canvas/validators";
-export {
-	createCanvasParser,
-	parseCanvasText,
-} from "./schemas/canvas/validators";
+export { createCanvasParser } from "./schemas/canvas/validators";
 export { builtinObjectDocDefinitions } from "./schemas/registry/builtinObjectDocDefinitions";
 export {
 	createDocOps,

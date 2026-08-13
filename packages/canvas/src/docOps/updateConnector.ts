@@ -187,7 +187,7 @@ export const updateConnector = (
 		object.routing === undefined
 	) {
 		// No stored routing means the connector never chose one, so the anchors decide it
-		// exactly as they do at creation (defaultRoutingForAnchors 参照).
+		// exactly as they do at creation (see defaultRoutingForAnchors).
 		const derived = defaultRoutingForAnchors(
 			(object.source as EndpointRef).anchor,
 			(object.target as EndpointRef).anchor,

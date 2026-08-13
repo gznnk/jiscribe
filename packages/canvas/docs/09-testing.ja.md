@@ -72,21 +72,83 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 ## E2E（Playwright）
 
-実ブラウザ・実 UI 操作での非回帰テスト。`packages/canvas/e2e/` に置く。
+実ブラウザ・実 UI 操作での非回帰テスト。図形を持つパッケージがその spec を持つため、
+**9 つのスイート**に分散している。
 
-- `playwright.config.mts` がテスト専用ハーネス（`e2e/harness/`、`Canvas` をマウントする最小 Vite アプリ）を
-  `webServer` で自動起動。`testDir: e2e/specs`
+| スイート         | 置き場所                    | 守備範囲                                                                                         |
+| ---------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
+| canvas           | `packages/canvas/e2e/`      | コアの振る舞い（ジェスチャー・選択・変形・テキスト編集・コネクター・整列・ツールバーとメニュー） |
+| 各図形プラグイン | `plugins/<name>/e2e/`       | そのパッケージの図形だけ                                                                         |
+| プラグイン同居   | `apps/canvas-examples/e2e/` | spec 1 本。出荷 7 プラグインを 1 つのキャンバスに同居させる                                      |
+
+どのスイートも構成は同じで、後述の共有キットに乗っている。
+
+```
+<package>/
+├── playwright.config.ts     # createCanvasPlaywrightConfig({ testDir, harnessCommand }) の呼び出し
+└── e2e/
+    ├── harness/             # index.html + main.tsx（mountPluginHarness）+ vite.config.ts
+    └── specs/
+```
+
+- `playwright.config.ts` がハーネス（`Canvas` をマウントする最小 Vite アプリ）を
+  `webServer` で自動起動する。ポートは実行ごとに OS の ephemeral 範囲から取るので、
+  複数スイートを同時に走らせられる。拡張子が `.mts` でないのは、Playwright が config を
+  CommonJS へトランスパイルするため。ESM の config ではキットの名前付き export を受け取れない
+- **canvas のハーネスは出荷プラグインを 1 つも登録しない。**載せるのは
+  `e2e/plugins/specShapesPlugin.tsx` だけで、これはコアが自前では持たなくなった性質を
+  供給するテスト専用の代役である（`tile` = カテゴリフライアウトに出るドラッグ描画型、
+  `pin` = クリック配置型、`card` = `<g>` ルートでテキストスロットを持つ型）。
+  出荷図形を題材にしていたコアの spec はこちらを叩く
+- **プラグインのハーネスはそのプラグインだけを載せる。**単独ロードで通ること自体が、
+  他プラグインへの暗黙依存が無いことの検証になる
+- **canvas-examples のハーネスは 7 つ全部を載せる。**spec は「全部載せたときに初めて
+  壊れるもの」（ObjectType の登録衝突・ツールバーの重複・`<defs>` の id 衝突）だけを見る。
+  ここに置いて循環が生まれないのは、canvas と 7 プラグインすべてに依存していて、かつ
+  どこからも依存されていない（依存グラフの頂点）から
 - `support/CanvasDriver.ts` … 描画・選択・テキスト・色・コネクター操作の API。
-  `support/selectors.ts` … `data-kind` / `data-id` セレクタ定数。`fixtures.ts` が CanvasDriver を注入
-- `specs/` がテスト本体（CI ゲート）。カテゴリ: `arrange` / `driver` / `editing` / `keyboard` /
+  `support/selectors.ts` … `data-kind` / `data-id` セレクタ定数。`fixtures.ts` が CanvasDriver を注入。
+  3 つとも canvas にあり、他スイートへはキット経由で届く
+- canvas の `specs/` のカテゴリ: `arrange` / `driver` / `editing` / `keyboard` /
   `scenario` / `shapes` / `ui`（+ `smoke.spec.ts`）
-- 実行: `pnpm --filter @jiscribe/canvas test:e2e`（`:headed` / `:ui` あり）
+- 実行: `pnpm --filter @jiscribe/canvas test:e2e`（`:headed` / `:ui` あり）/
+  `pnpm --filter @jiscribe/plugin-sticky-shape test:e2e` / `pnpm --filter canvas-examples test:e2e`
 
 設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
 （`expect.poll` 等）で安定させ、本当の不具合を隠さない。
 
 ジェスチャー仕様の非回帰は [ジェスチャシステム](./04-gesture-system.ja.md) と対応する
 （`specs/shapes/basic-gestures.spec.ts` / `specs/editing/text-edit-gestures.spec.ts` 等）。
+
+### 共有キット
+
+実装は canvas の `e2e/kit/` にあり、**スイートの 1 ファイルにつき 1 エントリ**の計 4 つで
+公開している。プラグインは同じキットを `@jiscribe/canvas-sdk` 経由で取る。
+
+| スイート内のファイル         | canvas のエントリ                            | プラグインのエントリ                             |
+| ---------------------------- | -------------------------------------------- | ------------------------------------------------ |
+| spec ファイル                | `@jiscribe/canvas/testing`                   | `@jiscribe/canvas-sdk/testing/e2e`               |
+| `playwright.config.ts`       | `@jiscribe/canvas/testing/playwright-config` | `@jiscribe/canvas-sdk/testing/playwright-config` |
+| `e2e/harness/vite.config.ts` | `@jiscribe/canvas/testing/vite-config`       | `@jiscribe/canvas-sdk/testing/vite-config`       |
+| `e2e/harness/main.tsx`       | `@jiscribe/canvas/testing/harness`           | `@jiscribe/canvas-sdk/testing/harness`           |
+
+分けてあるのは、これらのファイルがそれぞれ別のランタイムに読まれ、互いの import を
+許さないからである。
+
+- spec 用エントリを import すると Playwright の fixture が登録される。これは他のローダーの
+  下では例外になる（`playwright.config.ts` を含む）
+- vite 設定用エントリを Playwright 設定用エントリから分けてあるのは、Playwright が
+  CommonJS へトランスパイルする config の読み込みが、ESM のみで配布される vite を
+  `require()` せずに済むようにするため
+- ハーネス用エントリはブラウザコードである。残る 3 つは `@playwright/test`・
+  `node:child_process`・vite に手を伸ばしており、いずれもページにはバンドルできない
+
+API は `createCanvasPlaywrightConfig({ testDir, harnessCommand })` /
+`createPluginHarnessViteConfig()` / `mountPluginHarness({ plugins, toolbarLayout })` と、
+spec 側の `test` / `expect` / `CanvasDriver` / `selectors`。canvas 自身はキットを相対 import で
+取る（`./e2e/testing-playwright-config`）。SDK 経由にはしない — `canvas → canvas-sdk → canvas`
+の循環こそ、この分離で解消したものだからである。プラグインのスイートを立ち上げる手順は
+[プラグインの作り方](./13-authoring-plugins.ja.md) にある。
 
 ## 循環依存チェック（madge）
 

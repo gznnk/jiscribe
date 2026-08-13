@@ -29,7 +29,7 @@ const isBandSlot = (value: unknown): boolean =>
  * and edited yet mean nothing.
  *
  * The optional slots are checked only when present: which of them a box has is
- * the document's choice, not an invariant (RecordMapper 参照).
+ * the document's choice, not an invariant (see RecordMapper).
  */
 const hasRecordTextSlots = (o: StateRecord): boolean => {
 	const text = o.text;

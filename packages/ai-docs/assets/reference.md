@@ -1,7 +1,7 @@
-# Jiscribe Document Format Reference (`.jis.json`)
+# Jiscribe Document Format Reference (`.jis`)
 
-Specification for **Jiscribe**'s `.jis.json` document format.
-Use it as a reference when an AI generates data, or when an external tool produces `.jis.json` files.
+Specification for **Jiscribe**'s document format, saved as `.jis` (also `.jiscribe`; the legacy `.jis.json` / `.jiscribe.json` are still read).
+Use it as a reference when an AI generates data, or when an external tool produces canvas files.
 (For a concise, practical guide, see [`ai-guide.md`](./ai-guide.md).)
 
 ---
@@ -11,16 +11,15 @@ Use it as a reference when an AI generates data, or when an external tool produc
 ```json
 {
 	"version": 1,
-	"root": [
-		/* array of ObjectDoc and connectors, in z-order (back to front) */
-	]
+	"root": [/* array of ObjectDoc and connectors, in z-order (back to front) */]
 }
 ```
 
-| Field     | Type          | Required | Description                                                                                                                                          |
-| --------- | ------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version` | `1`           | ✅       | Schema version. Always `1` (fixed value).                                                                                                            |
-| `root`    | `ObjectDoc[]` | ✅       | All objects and connectors in z-order (back→front); array order is the stacking order. Includes nested groups; connectors sit at the top level only. |
+| Field        | Type          | Required | Description                                                                                                                                                                                                                                                            |
+| ------------ | ------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`    | `1`           | ✅       | Schema version. Always `1` (fixed value).                                                                                                                                                                                                                              |
+| `background` | `string`      | -        | Canvas surface color as a literal CSS color string (a concrete color, not a `var(...)`, so the file stays portable). Omitted = follows the theme background. When set it is the surface for both display and image export, and the grid line color is derived from it. |
+| `root`       | `ObjectDoc[]` | ✅       | All objects and connectors in z-order (back→front); array order is the stacking order. Includes nested groups; connectors sit at the top level only.                                                                                                                   |
 
 ---
 
@@ -98,6 +97,8 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `cross`            | Junction / emphasis marker                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `offPageConnector` | Off-page connector (jump to another page)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `record`           | Titled box + row compartments (UML class / ER entity) | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
+| `umlPackage`       | Namespace, module, layer                              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `umlComponent`     | Component, replaceable part                           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `polyline`         | Open line                                             | `points`                                | Stroke                                |
 | `polygon`          | Closed shape from points                              | `points`                                | Stroke, Fill                          |
 | `group`            | Container of child objects                            | none                                    | Transform                             |
@@ -203,184 +204,6 @@ Standalone text with no box drawn around it. `x` / `y` are the top-left of the t
 | ----- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `x`   | `number` | `0`     | X of the text's top-left.                                                                                                                                                                                             |
 | `y`   | `number` | `0`     | Y of the text's top-left. There is no `width` / `height` field: the box is measured from the text itself. Under `rotation` or a flip the corner is the shape's own top-left, so `x` / `y` stay put as the text grows. |
-
----
-
-### `diamond`
-
-Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a diamond. Text is laid out within the full bounding box (not clipped to the diamond interior). It is **connectable** like `rect`. It has **no Radius** (`rx`).
-
-```json
-{
-	"id": "decision-1",
-	"type": "diamond",
-	"x": 200,
-	"y": 150,
-	"width": 160,
-	"height": 100,
-	"fill": "#FFF3E0",
-	"stroke": "#EF6C00",
-	"strokeWidth": 2,
-	"text": "OK?"
-}
-```
-
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `120`   | Bounding-box width (px).          |
-| `height` | `number` | `80`    | Bounding-box height (px).         |
-
----
-
-### `stadium`
-
-Stadium (pill) shape with fully rounded ends, typically used for start/end terminators in flowcharts. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a stadium. Text is laid out within the full bounding box. It is **connectable** like `rect`. It has **no Radius** (`rx`).
-
-```json
-{
-	"id": "start-1",
-	"type": "stadium",
-	"x": 40,
-	"y": 120,
-	"width": 140,
-	"height": 60,
-	"text": "Start"
-}
-```
-
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `140`   | Bounding-box width (px).          |
-| `height` | `number` | `60`    | Bounding-box height (px).         |
-
----
-
-### `parallelogram`
-
-Parallelogram shape (top edge shifted right), typically used for input/output steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a parallelogram. Text is laid out with a small horizontal inset to stay inside the slanted sides. It is **connectable** like `rect`. It has **no Radius** (`rx`).
-
-```json
-{
-	"id": "input-1",
-	"type": "parallelogram",
-	"x": 200,
-	"y": 150,
-	"width": 140,
-	"height": 80,
-	"text": "Input"
-}
-```
-
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `140`   | Bounding-box width (px).          |
-| `height` | `number` | `80`    | Bounding-box height (px).         |
-
----
-
-### `hexagon`
-
-Hexagon shape with pointed left/right caps, typically used for preparation steps in flowcharts or emphasis nodes. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a hexagon. Text is laid out with a small horizontal inset to stay inside the caps. It is **connectable** like `rect`. It has **no Radius** (`rx`).
-
-```json
-{
-	"id": "prepare-1",
-	"type": "hexagon",
-	"x": 200,
-	"y": 150,
-	"width": 140,
-	"height": 80,
-	"text": "Prepare"
-}
-```
-
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `140`   | Bounding-box width (px).          |
-| `height` | `number` | `80`    | Bounding-box height (px).         |
-
----
-
-### `cloud`
-
-Cloud shape, typically used for external systems/networks in architecture diagrams or fuzzy concepts in brainstorming. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a cloud. Text is laid out in a reduced central region inside the bumps, so give it generous width/height for longer text. It is **connectable** like `rect`. It has **no Radius** (`rx`).
-
-```json
-{
-	"id": "internet-1",
-	"type": "cloud",
-	"x": 200,
-	"y": 150,
-	"width": 160,
-	"height": 100,
-	"text": "Internet"
-}
-```
-
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `160`   | Bounding-box width (px).          |
-| `height` | `number` | `100`   | Bounding-box height (px).         |
-
----
-
-### `document`
-
-Document shape (rect with a wavy bottom edge), typically used for reports/files in flowcharts or deliverables in business diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a document. Text is laid out above the bottom wave band. It is **connectable** like `rect`. It has **no Radius** (`rx`).
-
-```json
-{
-	"id": "report-1",
-	"type": "document",
-	"x": 200,
-	"y": 150,
-	"width": 140,
-	"height": 100,
-	"text": "Report"
-}
-```
-
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `140`   | Bounding-box width (px).          |
-| `height` | `number` | `100`   | Bounding-box height (px).         |
-
----
-
-### `actor`
-
-Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering differs. The stick figure fills the whole box. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best. It is **connectable** like `rect`. It has **no Radius** (`rx`).
-
-```json
-{
-	"id": "user-1",
-	"type": "actor",
-	"x": 200,
-	"y": 150,
-	"width": 80,
-	"height": 100,
-	"text": "User"
-}
-```
-
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `80`    | Bounding-box width (px).          |
-| `height` | `number` | `100`   | Bounding-box height (px).         |
 
 ---
 
@@ -515,31 +338,6 @@ Square bracket shape, used to mark a run of shapes as one group and name it. Sam
 
 ---
 
-### `db`
-
-Database cylinder shape, typically used for data stores in architecture or ER diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a cylinder. Text is laid out in the body region below the top cap ellipse (not the full bounding box). It is **connectable** like `rect`. It has **no Radius** (`rx`).
-
-```json
-{
-	"id": "db-1",
-	"type": "db",
-	"x": 200,
-	"y": 150,
-	"width": 120,
-	"height": 100,
-	"text": "users"
-}
-```
-
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `120`   | Bounding-box width (px).          |
-| `height` | `number` | `100`   | Bounding-box height (px).         |
-
----
-
 ### `container`
 
 Container ("frame") shape: a titled rectangle that marks off a region of the diagram, typically a module, subsystem or bounded context. Uses the same rect-based geometry (x/y/width/height) as `rect`. `text` is the title and is drawn in the top header band, never in the body; the body is click-through, so objects lying over it stay directly selectable. Objects are put inside it by geometry alone: give them coordinates within the box and place them after the container in `root` so they paint on top. A container has no `children` and does not carry its contents when it moves — wrap them in a `group` when they must move together. The palette entries Frame / Boundary / Zone are all this type: Boundary is a container with `strokeDashType: "dashed"`, Zone one with a tinted `fill`. It is **connectable** like `rect`. It has **no Radius** (`rx`).
@@ -567,34 +365,45 @@ Container ("frame") shape: a titled rectangle that marks off a region of the dia
 
 ---
 
-### Flowchart box shapes (`multiDocument` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector`)
+### Box-shape catalog (`diamond` / `stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `db` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector`)
 
-All 12 use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`) and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. They all take Text like `rect`. They are all **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value below and give a bounding box.
+All 20 use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`) and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. They all take Text like `rect`. They are all **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value below and give a bounding box.
 
-| `type`             | Outline                                       | Typical use                               |
-| ------------------ | --------------------------------------------- | ----------------------------------------- |
-| `multiDocument`    | Three stacked wavy-bottom sheets              | Report batch / file set                   |
-| `storedData`       | Rectangle with both side edges bowed left     | Generic stored data (file / cache)        |
-| `subroutine`       | Rectangle with a vertical bar near each side  | Predefined process / call                 |
-| `trapezoid`        | Wide top, narrow bottom                       | Manual operation                          |
-| `manualInput`      | Top edge slopes up toward the right           | Manual / keyed input                      |
-| `card`             | Rectangle with the top-left corner cut off    | Punched-card style data                   |
-| `delay`            | Rectangle whose right edge is a semicircle    | Wait / delay                              |
-| `loopLimit`        | Rectangle with both top corners cut off       | Loop start (`"flipY": true` for the end)  |
-| `display`          | Pointed left edge, rounded right cap          | Output to a display                       |
-| `extract`          | Upward triangle, apex at the top, label below | Extract / merge marker                    |
-| `cross`            | Plus sign, label below                        | Junction / emphasis marker                |
-| `offPageConnector` | Home-plate pentagon pointing down             | Off-page connector (jump to another page) |
+| `type`             | Outline                                                             | Default size | Typical use                               |
+| ------------------ | ------------------------------------------------------------------- | ------------ | ----------------------------------------- |
+| `diamond`          | Rhombus with vertices at the edge midpoints                         | 120×80       | Decision / branch node                    |
+| `stadium`          | Rectangle with fully rounded (semicircular) ends                    | 140×60       | Start / end terminator                    |
+| `parallelogram`    | Parallelogram, top edge shifted right                               | 140×80       | Input / output                            |
+| `hexagon`          | Hexagon with pointed left/right caps                                | 140×80       | Preparation                               |
+| `cloud`            | Cloud of rounded bumps (inner text area is small — size generously) | 160×100      | External system, fuzzy concept            |
+| `document`         | Sheet with a wavy bottom edge                                       | 140×100      | Report, file                              |
+| `multiDocument`    | Three stacked wavy-bottom sheets                                    | 140×100      | Report batch / file set                   |
+| `actor`            | Stick figure                                                        | 80×100       | User, role, stakeholder                   |
+| `db`               | Cylinder with an elliptical top                                     | 120×100      | Data store                                |
+| `storedData`       | Rectangle with both side edges bowed left                           | 140×80       | Generic stored data (file / cache)        |
+| `subroutine`       | Rectangle with a vertical bar near each side                        | 140×80       | Predefined process / call                 |
+| `trapezoid`        | Wide top, narrow bottom                                             | 140×80       | Manual operation                          |
+| `manualInput`      | Top edge slopes up toward the right                                 | 140×80       | Manual / keyed input                      |
+| `card`             | Rectangle with the top-left corner cut off                          | 120×80       | Punched-card style data                   |
+| `delay`            | Rectangle whose right edge is a semicircle                          | 140×80       | Wait / delay                              |
+| `loopLimit`        | Rectangle with both top corners cut off                             | 140×80       | Loop start (`"flipY": true` for the end)  |
+| `display`          | Pointed left edge, rounded right cap                                | 140×80       | Output to a display                       |
+| `extract`          | Upward triangle, apex at the top, label below                       | 120×100      | Extract / merge marker                    |
+| `cross`            | Plus sign, label below                                              | 100×100      | Junction / emphasis marker                |
+| `offPageConnector` | Home-plate pentagon pointing down                                   | 120×90       | Off-page connector (jump to another page) |
 
 ```json
 {
-	"id": "call-1",
-	"type": "subroutine",
+	"id": "decision-1",
+	"type": "diamond",
 	"x": 200,
 	"y": 150,
-	"width": 140,
-	"height": 80,
-	"text": "loadUser()"
+	"width": 160,
+	"height": 100,
+	"fill": "#FFF3E0",
+	"stroke": "#EF6C00",
+	"strokeWidth": 2,
+	"text": "OK?"
 }
 ```
 

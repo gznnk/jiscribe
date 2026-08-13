@@ -73,6 +73,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuLabelBackgroundColor: "ラベルの背景色",
 	menuLabelBorderColor: "ラベルの枠線色",
 	menuLabelBorderStyle: "ラベルの枠線スタイル",
+	menuOpenReference: "参照を開く",
 
 	commandLabels: {
 		undo: "元に戻す",
@@ -99,6 +100,7 @@ export const jaCanvasMessages: CanvasMessages = {
 		resetZoom: "ズームをリセット",
 		zoomToFit: "全体を表示",
 		zoomToSelection: "選択範囲にズーム",
+		shortcutHelp: "キーボードショートカット",
 		swapArrows: "矢印を入れ替え",
 		setRoutingStraight: "直線経路",
 		setRoutingOrthogonal: "直角経路",

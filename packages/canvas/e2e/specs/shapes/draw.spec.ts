@@ -54,37 +54,6 @@ test.describe("shape drawing", () => {
 		expect(created?.tag).toBe("polygon");
 	});
 
-	test("places Sticky with a click and creates a g element", async ({
-		canvas,
-	}) => {
-		// Sticky is a place-on-click type
-		const id = await canvas.placeShape("Sticky");
-		const created = (await canvas.captureObjects()).find(
-			(obj) => obj.id === id,
-		);
-		// The Sticky root is <g data-kind="object">
-		expect(created?.tag).toBe("g");
-	});
-
-	test("creates a rect element carrying the default Markdown body for Markdown", async ({
-		canvas,
-	}) => {
-		const id = await canvas.drawShape(
-			"Markdown",
-			{ x: 400, y: 200 },
-			{ x: 700, y: 400 },
-		);
-		const created = (await canvas.captureObjects()).find(
-			(obj) => obj.id === id,
-		);
-		// The markdown shape draws its card body as a rect; only the body text is Markdown-rendered
-		expect(created?.tag).toBe("rect");
-		// The default text renders (checked through textContent because innerHTML is escaped)
-		await expect
-			.poll(() => canvas.page.evaluate(() => document.body.textContent ?? ""))
-			.toContain("Title");
-	});
-
 	test("moves a shape by dragging it", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",

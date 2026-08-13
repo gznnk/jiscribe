@@ -3,18 +3,18 @@ import { describe, it, expect } from "vitest";
 import { isPositiveNumber } from "../isPositiveNumber";
 
 describe("isPositiveNumber", () => {
-	it("0より大きい数値はtrueを返す", () => {
+	it("returns true for a number greater than 0", () => {
 		expect(isPositiveNumber(1)).toBe(true);
 		expect(isPositiveNumber(0.001)).toBe(true);
 		expect(isPositiveNumber(Infinity)).toBe(true);
 	});
 
-	it("0および負の数値はfalseを返す", () => {
+	it("returns false for 0 and negative numbers", () => {
 		expect(isPositiveNumber(0)).toBe(false);
 		expect(isPositiveNumber(-1)).toBe(false);
 	});
 
-	it("数値以外はfalseを返す", () => {
+	it("returns false for a non-number", () => {
 		expect(isPositiveNumber(NaN)).toBe(false);
 		expect(isPositiveNumber("1")).toBe(false);
 		expect(isPositiveNumber(null)).toBe(false);

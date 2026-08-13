@@ -305,6 +305,13 @@ export const createCanvasReducer =
 				return { ...state, contextMenuPosition: null };
 			}
 
+			case "CLOSE_MODAL": {
+				if (state.activeModal === null) {
+					return state;
+				}
+				return { ...state, activeModal: null };
+			}
+
 			default:
 				return state;
 		}
@@ -349,12 +356,10 @@ const recordHistoryIfNeeded = (
 	state: CanvasControllerState,
 	previousState: CanvasControllerState,
 ): CanvasControllerState => {
-	if (
-		!(
-			state.commitVersion > 0 &&
-			state.commitVersion !== previousState.commitVersion
-		)
-	) {
+	if (!(
+		state.commitVersion > 0 &&
+		state.commitVersion !== previousState.commitVersion
+	)) {
 		return state;
 	}
 

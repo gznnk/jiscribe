@@ -7,8 +7,7 @@ const findNameSlot = (stencilId: string): Record<string, unknown> => {
 	const stencil = RecordStencils.find(({ id }) => id === stencilId);
 	expect(stencil, `no stencil with id "${stencilId}"`).toBeDefined();
 	const text = stencil?.defaultOverrides?.text as
-		| Record<string, Record<string, unknown>>
-		| undefined;
+		Record<string, Record<string, unknown>> | undefined;
 	expect(
 		text?.name,
 		`stencil "${stencilId}" writes no name slot`,

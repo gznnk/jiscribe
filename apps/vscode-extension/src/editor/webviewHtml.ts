@@ -16,8 +16,8 @@ export const getCanvasWebviewHtml = (
 	const scriptUri = webview.asWebviewUri(
 		vscode.Uri.joinPath(extensionUri, "dist", "webview.js"),
 	);
-	// Webview のバンドルが import した CSS（KaTeX のスタイル）。esbuild が
-	// dist/webview.css に出力する。数式はこの CSS 無しでは組版が崩れる。
+	// The CSS imported by the webview bundle (the KaTeX styles), which esbuild emits as
+	// dist/webview.css. Without it, math is typeset incorrectly.
 	const styleUri = webview.asWebviewUri(
 		vscode.Uri.joinPath(extensionUri, "dist", "webview.css"),
 	);

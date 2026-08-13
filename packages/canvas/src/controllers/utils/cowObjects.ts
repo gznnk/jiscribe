@@ -115,14 +115,80 @@ export function createCowObjects<V>(
 export function materializeObjects<V>(
 	objects: Record<string, V>,
 ): Record<string, V> {
+	return getCowMeta(objects) ? copyObjectsRecord(objects) : objects;
+}
+
+/**
+ * Returns a fresh, writable plain Record holding the same entries — the
+ * drop-in replacement for `{ ...objects }` on a path that may be handed a
+ * copy-on-write view.
+ *
+ * Spreading a view goes through the Proxy's `ownKeys` plus one
+ * `getOwnPropertyDescriptor` trap per key, which costs several times what the
+ * same spread costs on a plain Record. Reading the backing map and the overlay
+ * directly produces the identical Record without touching a single trap.
+ *
+ * Unlike {@link materializeObjects}, a plain Record is copied rather than passed
+ * through: callers of this one want a copy they may write to.
+ */
+export function copyObjectsRecord<V>(
+	objects: Record<string, V>,
+): Record<string, V> {
 	const meta = getCowMeta(objects);
 	if (!meta) {
-		return objects;
+		return { ...objects };
 	}
 
-	const materialized = { ...meta.base };
+	const copied = { ...meta.base };
 	for (const [key, value] of meta.overlay) {
-		materialized[key] = value;
+		copied[key] = value;
 	}
-	return materialized;
+	return copied;
+}
+
+/**
+ * The IDs whose value may differ between two object maps, or null when that
+ * cannot be decided without comparing every entry.
+ *
+ * A non-null result is exact in the strong sense: every ID **absent** from it is
+ * guaranteed to hold the very same object reference in both maps. That is what
+ * lets a per-frame pass skip the whole map and look only at what the transition
+ * touched — during a drag the overlay holds the dragged objects alone, so an
+ * O(all objects) scan collapses to O(moved objects).
+ *
+ * The guarantee holds because both maps then read every untouched ID from the
+ * same backing Record, and a view can never delete a key (`deleteProperty`
+ * throws). Taking the union of both overlays — rather than assuming the newer
+ * view derives from the older one — keeps that true even for two views built
+ * independently from the same base.
+ *
+ * @param objects - The newer map, typically the transition's result
+ * @param previousObjects - The map to diff against, typically the state the
+ *   transition started from
+ * @returns The IDs to inspect, or null when the two maps share no backing
+ *   Record and the caller must fall back to a full scan
+ */
+export function collectCowChangedKeys<V>(
+	objects: Record<string, V>,
+	previousObjects: Record<string, V>,
+): Set<string> | null {
+	const meta = getCowMeta(objects);
+	if (!meta) {
+		return null;
+	}
+	const previousMeta = getCowMeta(previousObjects);
+	const sharesBase = previousMeta
+		? previousMeta.base === meta.base
+		: previousObjects === meta.base;
+	if (!sharesBase) {
+		return null;
+	}
+
+	const changedKeys = new Set(meta.overlay.keys());
+	if (previousMeta) {
+		for (const key of previousMeta.overlay.keys()) {
+			changedKeys.add(key);
+		}
+	}
+	return changedKeys;
 }

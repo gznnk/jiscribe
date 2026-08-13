@@ -60,12 +60,16 @@ export const RedoCommand: ExecutableCommand = {
 			...restoredState,
 			...resetUiState(),
 			viewport: state.viewport, // Preserve viewport
+			// Restoring different objects moves the wall; limitViewScroll notices the
+			// swapped objects and re-measures on the next view scroll.
+			scrollLimit: state.scrollLimit,
 			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 			saveVersion: state.saveVersion + 1,
 			saveNonce: crypto.randomUUID(),
 			historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 			docDefaults: state.docDefaults,
 			internalClipboard: state.internalClipboard,
+			activeModal: state.activeModal, // History navigation must not close an open modal
 			history: {
 				past: [...state.history.past, state.history.present],
 				present: snapshotToRestore,

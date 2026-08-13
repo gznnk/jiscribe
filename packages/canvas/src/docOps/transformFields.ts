@@ -32,7 +32,7 @@ export const requireRotationDegrees = (rotation: number): number => {
  *
  * @param object - Mutated in place
  * @param rotation - Degrees within [0, 360), as {@link requireRotationDegrees} returns; 0
- *   removes the property, since an absent rotation is the identity (TransformDoc 参照)
+ *   removes the property, since an absent rotation is the identity (see TransformDoc)
  * @param definition - The object's own definition, whose `features.transform` decides
  *   whether the angle applies
  * @returns Whether the angle was written
