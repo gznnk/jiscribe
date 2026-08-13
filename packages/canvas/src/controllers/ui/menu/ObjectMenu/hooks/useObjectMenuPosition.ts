@@ -67,12 +67,17 @@ export function useObjectMenuPosition(
 
 	// Measure menu dimensions from DOM when it renders or selection changes.
 	// Slot selection changes the item set (see filterTextSlotMenuSections), so the
-	// width must be re-measured then too or the centering uses the stale width.
+	// width must be re-measured then too or the centering uses the stale width;
+	// opening and closing a text editor narrows it the same way.
 	const selectedIdsString = selectedIds.slice().sort().join(",");
 	const selectedTextSlotKey =
 		selectedTextSlot === null
 			? null
 			: `${selectedTextSlot.objectId}:${selectedTextSlot.slotId}`;
+	const textEditKey =
+		textEditState === null
+			? null
+			: `${textEditState.kind}:${textEditState.objectId}`;
 
 	// Every way the view moves under the selection, as one state: dragging (except
 	// while an ObjectMenu dropdown is open, so its sliders stay usable) and the
@@ -90,10 +95,15 @@ export function useObjectMenuPosition(
 		if (contextMenuPosition !== null) {
 			return false;
 		}
-		// Hide during text editing: every click outside the editor then lands on
-		// canvas/object/control, all of which run commitTextEditIfNeeded, so the
-		// edit cannot be left dangling by a menu interaction (U6)
-		if (textEditState !== null) {
+		// A shape's text editor keeps the menu: its text items are how a stretch of
+		// the text being edited is styled (TextSlotStyleProperty), and the menu is
+		// the only place the color and the size of one live. The menu itself never
+		// commits the edit — ObjectMenuHandler runs no commit, and the press does
+		// not even move the focus off the textarea (ObjectMenu) — so the session
+		// survives a menu interaction instead of being left dangling (U6).
+		// A connector label is still hidden: it is one text with one styling, so
+		// there is nothing the menu could do mid-edit that it cannot do after.
+		if (textEditState !== null && textEditState.kind !== "shape") {
 			return false;
 		}
 		// Away while the view moves under the selection — a drag of any kind, and
@@ -126,6 +136,7 @@ export function useObjectMenuPosition(
 		selectedIdsString,
 		selectedConnectorId,
 		selectedTextSlotKey,
+		textEditKey,
 	]);
 
 	return useMemo(() => {

@@ -131,13 +131,20 @@ const collectSelectionSections = (
  * While a text slot is selected the sections are narrowed to the text items, so the
  * menu never offers an action that the slot cannot receive. Doing it here keeps every
  * `features.text === "slots"` type covered without each definition opting in.
+ *
+ * An open text editor narrows them the same way, for the same reason read the other
+ * way round: what the menu offers there has to be something a stretch of the text
+ * being edited can take, and reshaping or restacking the shape mid-edit is not it.
  */
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
-	if (resolveSelectedTextSlot(state) === null) {
+	if (
+		resolveSelectedTextSlot(state) === null &&
+		state.textEditState?.kind !== "shape"
+	) {
 		return sections;
 	}
 	return filterTextSlotMenuSections(sections);
@@ -153,6 +160,9 @@ export const useMenuSections = (
 	enabled: boolean,
 ): ObjectMenuSection[] => {
 	const { selectedIds, selectedConnectorId, selectedTextSlot, objects } = state;
+	// The editing session itself is not read, only whether one is open on a shape:
+	// the item set is narrowed while it is (getMenuSections).
+	const isEditingShapeText = state.textEditState?.kind === "shape";
 	const { objectMenu } = useCanvasRegistries();
 
 	return useMemo(
@@ -163,6 +173,7 @@ export const useMenuSections = (
 			selectedIds,
 			selectedConnectorId,
 			selectedTextSlot,
+			isEditingShapeText,
 			objects,
 			objectMenu,
 		],

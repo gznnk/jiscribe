@@ -12,10 +12,10 @@ import {
 	STROKE_STYLE_KEYS,
 	type StrokeStyleDoc,
 } from "../schemas/objects/base/StrokeStyleDoc";
+import type { InlineTextStyle } from "../schemas/objects/types/RichText";
 import {
+	clearInlineStyleFromRuns,
 	isRichText,
-	isTextRun,
-	normalizeRichText,
 	TEXT_INLINE_STYLE_KEYS,
 } from "../schemas/objects/types/RichText";
 import {
@@ -93,16 +93,9 @@ const dropAppliedRunStyle = (
 	if (inlineKeys.length === 0) {
 		return;
 	}
-	target.text = normalizeRichText(
-		content
-			.map((run) => {
-				const stripped: Record<string, unknown> = { ...run };
-				for (const key of inlineKeys) {
-					delete stripped[key];
-				}
-				return stripped;
-			})
-			.filter(isTextRun),
+	target.text = clearInlineStyleFromRuns(
+		content,
+		inlineKeys as (keyof InlineTextStyle)[],
 	);
 };
 

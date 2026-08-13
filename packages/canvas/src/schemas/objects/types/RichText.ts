@@ -202,6 +202,34 @@ const sliceRuns = (runs: TextRun[], start: number, end: number): TextRun[] => {
 };
 
 /**
+ * The body with the given fields dropped from every run that overrode them, so a
+ * value set on the whole text actually shows: a property set on the shape wins
+ * over the ranges it was set on part of the text, rather than leaving them
+ * untouched and the shape looking unchanged.
+ *
+ * @param rich - The body to strip; a plain string has no override to drop
+ * @param keys - The fields to drop; the rest of a run's styling stays
+ * @returns The stripped body, in canonical form
+ */
+export const clearInlineStyleFromRuns = (
+	rich: RichText,
+	keys: readonly (keyof InlineTextStyle)[],
+): RichText => {
+	if (isString(rich) || keys.length === 0) {
+		return rich;
+	}
+	return normalizeRichText(
+		rich.map((run) => {
+			const stripped: TextRun = { ...run };
+			for (const key of keys) {
+				delete stripped[key];
+			}
+			return stripped;
+		}),
+	);
+};
+
+/**
  * The lines of a body, split at its authored newlines, each keeping the styling
  * of its own characters. The inverse of {@link joinRichTextLines}, and what turns
  * one edited body back into the rows a row-partitioned slot holds.

@@ -50,6 +50,8 @@ type MinState = Pick<
 	| "objects"
 	| "multiSelectGroup"
 	| "selectedTextSlot"
+	| "textEditState"
+	| "commitVersion"
 >;
 
 const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
@@ -59,6 +61,8 @@ const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 		objects: {},
 		multiSelectGroup: null,
 		selectedTextSlot: null,
+		textEditState: null,
+		commitVersion: 0,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -507,6 +511,95 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			expect(slotsOf(decorated, "r1").body).toEqual({
 				text: "hello",
 				textDecoration: "underline line-through",
+			});
+		});
+
+		it("drops the property from the runs that overrode it, so the slot's value shows", () => {
+			const r1 = {
+				...rectObj("r1"),
+				text: {
+					body: {
+						text: [
+							{ text: "he", fontWeight: "bold", fontColor: "#d33" },
+							{ text: "llo" },
+						],
+					},
+				},
+			} as unknown as ObjectState;
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+
+			const result = applyStyleProperty(state, "fontWeight", "normal");
+
+			// The run keeps its color, and the text collapses back to a plain string
+			// once nothing is styled on its own.
+			expect(slotsOf(result, "r1").body).toEqual({
+				text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }],
+				fontWeight: "normal",
+			});
+		});
+
+		it("lands on the selected characters while an editor is open", () => {
+			const r1 = bodyRect("r1");
+			const state = makeState({
+				selectedIds: ["r1"],
+				objects: { r1 },
+				textEditState: {
+					kind: "shape",
+					objectId: "r1",
+					slotId: "body",
+					text: "hello",
+					selection: { start: 0, end: 2 },
+				},
+			});
+
+			const result = applyStyleProperty(state, "fontColor", "#d33");
+
+			expect(slotsOf(result, "r1").body).toEqual({
+				text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }],
+			});
+		});
+
+		it("styles the whole slot when the editor has nothing selected", () => {
+			const r1 = bodyRect("r1");
+			const state = makeState({
+				selectedIds: ["r1"],
+				objects: { r1 },
+				textEditState: {
+					kind: "shape",
+					objectId: "r1",
+					slotId: "body",
+					text: "hello",
+					selection: { start: 2, end: 2 },
+				},
+			});
+
+			const result = applyStyleProperty(state, "fontColor", "#d33");
+
+			expect(slotsOf(result, "r1").body).toEqual({
+				text: "hello",
+				fontColor: "#d33",
+			});
+		});
+
+		it("styles the whole slot for a property no stretch of text can carry", () => {
+			const r1 = bodyRect("r1");
+			const state = makeState({
+				selectedIds: ["r1"],
+				objects: { r1 },
+				textEditState: {
+					kind: "shape",
+					objectId: "r1",
+					slotId: "body",
+					text: "hello",
+					selection: { start: 0, end: 2 },
+				},
+			});
+
+			const result = applyStyleProperty(state, "textAlign", "right");
+
+			expect(slotsOf(result, "r1").body).toEqual({
+				text: "hello",
+				textAlign: "right",
 			});
 		});
 
