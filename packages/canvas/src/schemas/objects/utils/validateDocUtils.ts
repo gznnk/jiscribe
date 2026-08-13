@@ -1,4 +1,9 @@
-import { isCssSafeValue, isNumber, isString } from "@jiscribe/basic-validators";
+import {
+	isCssSafeValue,
+	isNumber,
+	isObject,
+	isString,
+} from "@jiscribe/basic-validators";
 
 import type { SemanticDiagnostic } from "../../canvas/validators/types";
 import { isArrowType } from "../types/ArrowType";
@@ -328,6 +333,24 @@ export function validateTextSlotStyleFields(
 			message: "must be one of: top, middle, bottom",
 		});
 	}
+	errors.push(...validateInlineTextStyleFields(o, path));
+	return errors;
+}
+
+/**
+ * Validate the styling fields that a stretch of characters can carry on its own —
+ * everything a slot's typography has except the alignment, which places the whole
+ * block. Both a slot and one of its runs (RichText) validate them through here.
+ *
+ * @param o - The object carrying the styling: a text slot, a single-body doc, or one run
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @returns One diagnostic per malformed field; empty when every field is absent or valid
+ */
+export function validateInlineTextStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
 	if ("fontColor" in o && !isCssSafeValue(o.fontColor)) {
 		errors.push({
 			path: `${path}.fontColor`,
@@ -369,8 +392,48 @@ export function validateTextSlotStyleFields(
 }
 
 /**
+ * Validate one body of text (RichText): the plain string it usually is, or the
+ * runs it is written as when parts of it are styled on their own. A run's own
+ * styling is validated like a slot's, minus the alignment it cannot carry.
+ *
+ * @param content - The value written as the text; anything but a string or an array is rejected
+ * @param path - Diagnostic path of the text field, which the run index is appended to
+ * @returns One diagnostic per malformed run or field; empty when the text is valid
+ */
+export function validateRichTextContent(
+	content: unknown,
+	path: string,
+): SemanticDiagnostic[] {
+	if (isString(content)) {
+		return [];
+	}
+	if (!Array.isArray(content)) {
+		return [
+			{
+				path,
+				message: "must be a string, or an array of runs to style parts of it",
+			},
+		];
+	}
+	return content.flatMap((run, index) => {
+		const runPath = `${path}[${index}]`;
+		if (!isObject(run)) {
+			return [
+				{ path: runPath, message: "must be an object with a text field" },
+			];
+		}
+		return [
+			...(isString(run.text)
+				? []
+				: [{ path: `${runPath}.text`, message: "must be a string" }]),
+			...validateInlineTextStyleFields(run, runPath),
+		];
+	});
+}
+
+/**
  * Validate the text group of a single-body doc (features.text: "body"): `text`
- * as a plain string plus the flat styling fields. A keyed object is rejected
+ * as one body of text plus the flat styling fields. A keyed object is rejected
  * here — a type whose text is keyed declares `text: "slots"` and validates its
  * own closed slot set (see the record shape).
  *
@@ -383,8 +446,8 @@ export function validateTextStyleFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("text" in o && !isString(o.text)) {
-		errors.push({ path: `${path}.text`, message: "must be a string" });
+	if ("text" in o) {
+		errors.push(...validateRichTextContent(o.text, `${path}.text`));
 	}
 	errors.push(...validateTextSlotStyleFields(o, path));
 	return errors;

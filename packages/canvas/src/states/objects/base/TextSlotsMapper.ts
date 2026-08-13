@@ -1,16 +1,26 @@
 import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
 import type { TextStyleDoc } from "../../../schemas/objects/base/TextStyleDoc";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
+import type { RichText } from "../../../schemas/objects/types/RichText";
+import {
+	isRichText,
+	normalizeRichText,
+	richTextToPlain,
+} from "../../../schemas/objects/types/RichText";
 import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
 import { TEXT_SLOT_STYLE_KEYS } from "../../../schemas/objects/types/TextSlot";
-import { isTextSlots, readTextSlot, type TextSlots } from "../types/TextSlots";
+import {
+	isTextSlots,
+	readRichTextSlot,
+	type TextSlots,
+} from "../types/TextSlots";
 
 /**
  * The doc fields the text group occupies, in either shape: the flat TextStyleDoc
  * for a single-body type, the keyed slots for a type that spells them out.
  */
 export type TextDocFields = Omit<TextStyleDoc, "text"> & {
-	text?: string | TextSlots;
+	text?: RichText | TextSlots;
 };
 
 /** Copies the styling fields that are actually set, so a slot gains no `undefined`-valued keys. */
@@ -57,7 +67,9 @@ export const mapTextDocToState = (
 	doc: TextDocFields,
 ): { text?: TextSlots } => {
 	if (textShape === "body") {
-		const content = typeof doc.text === "string" ? doc.text : "";
+		// Normalized on the way in, so the slots the canvas works with are always in
+		// the canonical form and an unstyled body stays the plain string it was.
+		const content = isRichText(doc.text) ? normalizeRichText(doc.text) : "";
 		return {
 			text: {
 				[BODY_TEXT_SLOT_ID]: { text: content, ...pickDefinedStyle(doc) },
@@ -96,10 +108,14 @@ export const mapTextStateToDoc = (
 	text: TextSlots | undefined,
 ): TextDocFields => {
 	if (textShape === "body") {
-		const content = readTextSlot(text, BODY_TEXT_SLOT_ID);
+		const content = normalizeRichText(
+			readRichTextSlot(text, BODY_TEXT_SLOT_ID),
+		);
 		const slot = text?.[BODY_TEXT_SLOT_ID];
 		return {
-			...(content === "" ? {} : { text: content }),
+			// A text with no characters left carries no styling either, whichever form
+			// it is in, so it drops out exactly like an absent doc field.
+			...(richTextToPlain(content) === "" ? {} : { text: content }),
 			...(slot ? pickDefinedStyle(slot) : {}),
 		};
 	}

@@ -23,6 +23,24 @@ describe("isTextSlot", () => {
 		).toBe(true);
 	});
 
+	it("accepts a body styled per range", () => {
+		expect(isTextSlot({ text: [{ text: "he" }] })).toBe(true);
+		expect(
+			isTextSlot({
+				text: [{ text: "he" }, { text: "llo", fontWeight: "bold" }],
+				textAlign: "center",
+			}),
+		).toBe(true);
+	});
+
+	it("rejects a run whose text or styling is wrongly typed", () => {
+		expect(isTextSlot({ text: [{ text: 1 }] })).toBe(false);
+		expect(isTextSlot({ text: [{ fontWeight: "bold" }] })).toBe(false);
+		expect(isTextSlot({ text: [{ text: "a", fontSize: "14" }] })).toBe(false);
+		// A run cannot be mixed with rows: the two content kinds are not one array.
+		expect(isTextSlot({ text: ["a", { text: "b" }] })).toBe(false);
+	});
+
 	it("rejects a missing or wrongly typed content", () => {
 		expect(isTextSlot(undefined)).toBe(false);
 		expect(isTextSlot("hello")).toBe(false);

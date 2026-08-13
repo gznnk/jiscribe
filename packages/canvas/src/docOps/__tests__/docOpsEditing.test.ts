@@ -236,6 +236,25 @@ describe("setStyle", () => {
 		expectValid(doc);
 	});
 
+	it("wins over the ranges a property was set on part of the text", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const rect = readObject(doc, "rect-1");
+		rect.text = [
+			{ text: "yes" },
+			{ text: " (2FA)", fontColor: "#d32f2f", fontWeight: "bold" },
+		];
+
+		docOps.setStyle(doc, ["rect-1"], { fontColor: "#0d47a1" });
+
+		// Only the styled property is dropped from the run; the rest of it stays.
+		expect(readObject(doc, "rect-1")).toMatchObject({
+			fontColor: "#0d47a1",
+			text: [{ text: "yes" }, { text: " (2FA)", fontWeight: "bold" }],
+		});
+		expectValid(doc);
+	});
+
 	it("styles the line of a connector and reports the rest as ignored", () => {
 		const doc = twoConnectedRects();
 
@@ -317,6 +336,21 @@ describe("setText", () => {
 		expect(() => docOps.setText(doc, groupId, "nope")).toThrow(
 			DocOperationError,
 		);
+	});
+
+	it("keeps the styling of the characters a rewrite leaves in place", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const rect = readObject(doc, "rect-1");
+		rect.text = [{ text: "yes" }, { text: " (2FA)", fontWeight: "bold" }];
+
+		docOps.setText(doc, "rect-1", "yes (2FA off)");
+
+		expect(readObject(doc, "rect-1").text).toEqual([
+			{ text: "yes" },
+			{ text: " (2FA off)", fontWeight: "bold" },
+		]);
+		expectValid(doc);
 	});
 });
 

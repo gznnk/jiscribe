@@ -33,9 +33,28 @@ export type {
 	TextSlotContent,
 } from "./schemas/objects/types/TextSlot";
 export {
+	isTextRows,
 	isTextSlot,
+	TEXT_BLOCK_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
 } from "./schemas/objects/types/TextSlot";
+// One body of a slot's text: the plain string it is until part of it is styled on
+// its own, and the runs it is written as once it is.
+export type {
+	InlineTextStyle,
+	RichText,
+	TextRun,
+} from "./schemas/objects/types/RichText";
+export {
+	isRichText,
+	isTextRun,
+	normalizeRichText,
+	remapRichText,
+	richTextToPlain,
+	sliceRichText,
+	styleRichTextRange,
+	TEXT_INLINE_STYLE_KEYS,
+} from "./schemas/objects/types/RichText";
 export type {
 	ExtraStylePropertyDescriptor,
 	StyleValueType,

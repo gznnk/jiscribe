@@ -12,8 +12,10 @@ import { isOwnedEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import { isPoly } from "../../../schemas/objects/types/Poly";
+import type { InlineTextStyle } from "../../../schemas/objects/types/RichText";
 import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
 import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
+import { isTextRows } from "../../../schemas/objects/types/TextSlot";
 import { isAutoColor } from "../../../schemas/objects/utils/autoColor";
 import { validateEndpointRef } from "../../../schemas/objects/utils/validateDocUtils";
 import { isTextStyleState } from "../base/TextStyleState";
@@ -108,39 +110,47 @@ export const isValidFillStyleState = (o: StateRecord): boolean =>
 	!("fill" in o) || o.fill === undefined || isCssSafeValue(o.fill);
 
 /**
- * Validates one slot's styling beyond its declared types: CSS-injection safety for
+ * Validates one styling group beyond its declared types: CSS-injection safety for
  * fontFamily / fontWeight / fontStyle / textDecoration / fontColor (which `isTextSlot`
  * only checks via `isString`), strict color validity for fontColor, and the schema's
- * fontSize minimum.
+ * fontSize minimum. Applied to a slot and to every run of its text alike — a run
+ * is inlined into the same CSS, so it is the same boundary.
  */
-const isValidTextSlotStyle = (slot: TextSlot): boolean => {
-	if (slot.fontFamily !== undefined && !isCssSafeValue(slot.fontFamily)) {
+const isValidInlineTextStyle = (style: InlineTextStyle): boolean => {
+	if (style.fontFamily !== undefined && !isCssSafeValue(style.fontFamily)) {
 		return false;
 	}
-	if (slot.fontWeight !== undefined && !isCssSafeValue(slot.fontWeight)) {
+	if (style.fontWeight !== undefined && !isCssSafeValue(style.fontWeight)) {
 		return false;
 	}
-	if (slot.fontStyle !== undefined && !isCssSafeValue(slot.fontStyle)) {
+	if (style.fontStyle !== undefined && !isCssSafeValue(style.fontStyle)) {
 		return false;
 	}
 	if (
-		slot.textDecoration !== undefined &&
-		!isCssSafeValue(slot.textDecoration)
+		style.textDecoration !== undefined &&
+		!isCssSafeValue(style.textDecoration)
 	) {
 		return false;
 	}
 	// The sentinel "auto" (theme-following, issue #38) is checked first so the
 	// browser-only isCssColor (CSS.supports) is skipped for it.
 	if (
-		slot.fontColor !== undefined &&
-		!isAutoColor(slot.fontColor) &&
-		!isCssColor(slot.fontColor)
+		style.fontColor !== undefined &&
+		!isAutoColor(style.fontColor) &&
+		!isCssColor(style.fontColor)
 	) {
 		return false;
 	}
 	// fontSize has minimum: 1 in the schema (isTextSlot only checks up to number)
-	return isValidOptionalNumber(slot.fontSize, 1);
+	return isValidOptionalNumber(style.fontSize, 1);
 };
+
+/** Validates a slot's own styling and that of every run its text is styled in. */
+const isValidTextSlotStyle = (slot: TextSlot): boolean =>
+	isValidInlineTextStyle(slot) &&
+	(isTextRows(slot.text) ||
+		isString(slot.text) ||
+		slot.text.every(isValidInlineTextStyle));
 
 /**
  * Whether the slot keys are the set `textShape` declares. A `"body"` type holds

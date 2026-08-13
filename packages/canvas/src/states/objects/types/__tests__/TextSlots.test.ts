@@ -4,6 +4,7 @@ import {
 	blankTextSlots,
 	getFirstTextSlotId,
 	isTextSlots,
+	readRichTextSlot,
 	readTextSlot,
 	resolveTextSlotId,
 	writeTextSlot,
@@ -75,6 +76,31 @@ describe("readTextSlot", () => {
 		expect(readTextSlot({ body: { text: "x" } }, "rows")).toBe("");
 		expect(readTextSlot(undefined, "body")).toBe("");
 	});
+
+	it("flattens a slot styled per range to its characters", () => {
+		expect(
+			readTextSlot(
+				{
+					body: { text: [{ text: "he" }, { text: "llo", fontWeight: "bold" }] },
+				},
+				"body",
+			),
+		).toBe("hello");
+	});
+});
+
+describe("readRichTextSlot", () => {
+	it("keeps the runs a slot is styled in", () => {
+		const runs = [{ text: "he" }, { text: "llo", fontWeight: "bold" }];
+		expect(readRichTextSlot({ body: { text: runs } }, "body")).toEqual(runs);
+	});
+
+	it("joins a row slot with newlines, like the plain reader", () => {
+		expect(readRichTextSlot({ rows: { text: ["id", "name"] } }, "rows")).toBe(
+			"id\nname",
+		);
+		expect(readRichTextSlot(undefined, "body")).toBe("");
+	});
 });
 
 describe("writeTextSlot", () => {
@@ -135,6 +161,32 @@ describe("writeTextSlot", () => {
 			rows: { text: [] },
 		});
 	});
+
+	it("keeps the per-range styling of the characters the edit left alone", () => {
+		expect(
+			writeTextSlot(
+				{
+					body: { text: [{ text: "he" }, { text: "llo", fontWeight: "bold" }] },
+				},
+				"body",
+				"hello!",
+			),
+		).toEqual({
+			body: { text: [{ text: "he" }, { text: "llo!", fontWeight: "bold" }] },
+		});
+	});
+
+	it("does not split a styled body into rows", () => {
+		expect(
+			writeTextSlot(
+				{ body: { text: [{ text: "a", fontWeight: "bold" }] } },
+				"body",
+				"a\nb",
+			),
+		).toEqual({
+			body: { text: [{ text: "a\nb", fontWeight: "bold" }] },
+		});
+	});
 });
 
 describe("blankTextSlots", () => {
@@ -148,5 +200,11 @@ describe("blankTextSlots", () => {
 			name: { text: "", fontWeight: "bold" },
 			rows: { text: [] },
 		});
+	});
+
+	it('empties a styled body to "", not to an empty run list', () => {
+		expect(
+			blankTextSlots({ body: { text: [{ text: "hi", fontWeight: "bold" }] } }),
+		).toEqual({ body: { text: "" } });
 	});
 });

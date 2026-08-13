@@ -2,6 +2,18 @@ import { DocOperationError } from "./errors";
 import { type ObjectRecord, requireObject } from "./objectAccess";
 import { type DocDefinitions, isConnectorObject } from "./objectGeometry";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { RichText } from "../schemas/objects/types/RichText";
+import { isRichText, remapRichText } from "../schemas/objects/types/RichText";
+import { isTextRows } from "../schemas/objects/types/TextSlot";
+
+/**
+ * The new text for a body that may be styled per range: the characters the
+ * rewrite left in place keep the styling they had (remapRichText), the way an
+ * edit in the canvas does. A body that was never styled stays the plain string
+ * it is.
+ */
+const rewriteBody = (previous: unknown, text: string): RichText =>
+	isRichText(previous) ? remapRichText(previous, text) : text;
 
 /** Set a connector's label text; an empty string drops the label entirely. */
 const setConnectorLabelText = (object: ObjectRecord, text: string): void => {
@@ -35,7 +47,8 @@ const readSlots = (object: ObjectRecord): Record<string, unknown> | null => {
  * @param doc - Mutated in place
  * @param id - Id of the object to retext; must exist in the root tree
  * @param text - The new text. Newlines are kept for a single body and split into one row
- *   each for a slot that holds rows
+ *   each for a slot that holds rows. Styling applied to parts of the old text survives on
+ *   the characters the rewrite kept (see {@link rewriteBody})
  * @param definitions - Type table `features.text` is read from
  * @param slot - Which slot to write, for a slotted type only. Omitted is allowed when the
  *   object has exactly one slot; the slot must already exist, since its content shape
@@ -59,7 +72,7 @@ export const setText = (
 
 	const textFeature = definitions.get(object.type)?.features.text;
 	if (textFeature === "body") {
-		object.text = text;
+		object.text = rewriteBody(object.text, text);
 		return;
 	}
 	if (textFeature !== "slots") {
@@ -81,6 +94,9 @@ export const setText = (
 	}
 
 	const targetSlot = slots[targetSlotId] as Record<string, unknown>;
-	// The slot's own content decides the shape: a rows slot rejects a plain string.
-	targetSlot.text = Array.isArray(targetSlot.text) ? text.split("\n") : text;
+	// The slot's own content decides the shape: a rows slot rejects a plain string,
+	// while an array of runs is one styled body and must not be split into rows.
+	targetSlot.text = isTextRows(targetSlot.text)
+		? text.split("\n")
+		: rewriteBody(targetSlot.text, text);
 };
