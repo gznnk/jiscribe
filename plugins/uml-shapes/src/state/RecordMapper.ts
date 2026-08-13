@@ -1,7 +1,7 @@
-import { isObject, isString } from "@jiscribe/basic-validators";
+import { isObject } from "@jiscribe/basic-validators";
 import type { ObjectMapperType } from "@jiscribe/canvas";
-import type { TextSlot } from "@jiscribe/canvas/doc";
-import { isTextSlot } from "@jiscribe/canvas/doc";
+import type { RichText, TextSlot } from "@jiscribe/canvas/doc";
+import { isRichText, isTextSlot } from "@jiscribe/canvas/doc";
 import { createFrameMapper } from "@jiscribe/canvas-sdk";
 import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 
@@ -22,7 +22,7 @@ import type { RecordDoc, RecordSlotId } from "../schema/RecordDoc";
 const normalizeBandSlot = (
 	value: unknown,
 	slotId: RecordSlotId,
-): TextSlot<string> => {
+): TextSlot<RichText> => {
 	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
 	if (!isTextSlot(value)) {
 		return { ...styleDefaults, text: "" };
@@ -30,7 +30,7 @@ const normalizeBandSlot = (
 	return {
 		...styleDefaults,
 		...value,
-		text: isString(value.text) ? value.text : "",
+		text: isRichText(value.text) ? value.text : "",
 	};
 };
 
@@ -42,7 +42,7 @@ const normalizeBandSlot = (
 const normalizeListSlot = (
 	value: unknown,
 	slotId: RecordSlotId,
-): TextSlot<string[]> => {
+): TextSlot<RichText[]> => {
 	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
 	if (!isTextSlot(value)) {
 		return { ...styleDefaults, text: [] };
@@ -51,7 +51,7 @@ const normalizeListSlot = (
 	return {
 		...styleDefaults,
 		...value,
-		text: Array.isArray(content) ? content.filter(isString) : [],
+		text: Array.isArray(content) ? content.filter(isRichText) : [],
 	};
 };
 
@@ -74,8 +74,9 @@ const normalizeListSlot = (
  */
 const normalizeRecordText = (text: unknown): RecordTextState => {
 	const slots = isObject(text) ? text : {};
-	const normalized: Partial<Record<RecordSlotId, TextSlot<string | string[]>>> =
-		{};
+	const normalized: Partial<
+		Record<RecordSlotId, TextSlot<RichText | RichText[]>>
+	> = {};
 	for (const slotId of RECORD_SLOT_IDS) {
 		const value = slots[slotId];
 		if (value === undefined && slotId !== RECORD_NAME_SLOT_ID) {

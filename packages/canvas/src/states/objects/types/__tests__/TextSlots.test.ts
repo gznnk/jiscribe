@@ -101,6 +101,15 @@ describe("readRichTextSlot", () => {
 		);
 		expect(readRichTextSlot(undefined, "body")).toBe("");
 	});
+
+	it("keeps the styling of a row that carries some", () => {
+		expect(
+			readRichTextSlot(
+				{ rows: { text: ["id", [{ text: "name", fontWeight: "bold" }]] } },
+				"rows",
+			),
+		).toEqual([{ text: "id\n" }, { text: "name", fontWeight: "bold" }]);
+	});
 });
 
 describe("writeTextSlot", () => {
@@ -173,6 +182,20 @@ describe("writeTextSlot", () => {
 			),
 		).toEqual({
 			body: { text: [{ text: "he" }, { text: "llo!", fontWeight: "bold" }] },
+		});
+	});
+
+	it("carries a styled row's styling through an edit, row by row", () => {
+		expect(
+			writeTextSlot(
+				{ rows: { text: ["id", [{ text: "name", fontWeight: "bold" }]] } },
+				"rows",
+				"id\nname: string",
+			),
+		).toEqual({
+			rows: {
+				text: ["id", [{ text: "name: string", fontWeight: "bold" }]],
+			},
 		});
 	});
 

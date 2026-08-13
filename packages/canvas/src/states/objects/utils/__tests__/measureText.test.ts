@@ -52,7 +52,7 @@ describe("layoutVisualLines", () => {
 
 	it("an empty string is one line of no width, and so is each empty line", () => {
 		expect(layoutVisualLines("", font)).toEqual([
-			{ width: 0, height: font.fontSize * TEXT_LINE_HEIGHT },
+			{ start: 0, end: 0, width: 0, height: font.fontSize * TEXT_LINE_HEIGHT },
 		]);
 		expect(layoutVisualLines("a\n\nb", font).map((line) => line.width)).toEqual(
 			[CHAR_WIDTH, 0, CHAR_WIDTH],

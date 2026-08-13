@@ -46,7 +46,8 @@ test.describe("styling a stretch of a shape's text", () => {
 	): Promise<{ text: string; fontWeight: string; fontStyle: string }[]> {
 		return canvas.page.evaluate((targetId) => {
 			const shape = document.querySelector(`[data-id="${targetId}"]`);
-			let foreignObject = shape?.querySelector("foreignObject") ?? null;
+			let foreignObject: Element | null =
+				shape?.querySelector("foreignObject") ?? null;
 			if (!foreignObject) {
 				let sibling = shape?.nextElementSibling ?? null;
 				while (sibling && sibling.tagName.toLowerCase() !== "foreignobject") {
@@ -60,9 +61,7 @@ test.describe("styling a stretch of a shape's text", () => {
 				return [];
 			}
 			const parts =
-				content.children.length > 0
-					? Array.from(content.children)
-					: [content];
+				content.children.length > 0 ? Array.from(content.children) : [content];
 			return parts.map((part) => {
 				const style = getComputedStyle(part);
 				return {
@@ -121,9 +120,7 @@ test.describe("styling a stretch of a shape's text", () => {
 		const id = await drawAndEdit(canvas, "Payment failed");
 		await selectFromStart(canvas, 7);
 		await canvas.page.keyboard.press("ControlOrMeta+b");
-		await expect
-			.poll(async () => (await drawnRuns(canvas, id)).length)
-			.toBe(2);
+		await expect.poll(async () => (await drawnRuns(canvas, id)).length).toBe(2);
 
 		// Typing at the end of the text must not disturb the styled part.
 		await canvas.page.keyboard.press("End");

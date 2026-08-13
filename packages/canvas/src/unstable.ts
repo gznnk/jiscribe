@@ -56,12 +56,19 @@ export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoCol
 
 // For shapes deriving a text box's size from its content: measureTextWidth gives the
 // width of one line, calcVisualLineCount the number of lines by reproducing the
-// wrapping of the display-side CSS (pre-wrap + break-word).
+// wrapping of the display-side CSS (pre-wrap + break-word), and calcVisualTextHeight
+// what those lines add up to — which is not the count times the type size once part
+// of the text is drawn larger (RichText).
 export {
 	calcVisualLineCount,
+	calcVisualTextHeight,
+	layoutVisualLines,
 	measureTextWidth,
 } from "./states/objects/utils/measureText";
-export type { TextMeasureFont } from "./states/objects/utils/measureText";
+export type {
+	TextMeasureFont,
+	VisualLine,
+} from "./states/objects/utils/measureText";
 
 export { PRECISION } from "./constants/precision";
 

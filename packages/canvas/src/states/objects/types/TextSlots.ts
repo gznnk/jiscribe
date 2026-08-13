@@ -2,8 +2,10 @@ import { isObject } from "@jiscribe/basic-validators";
 
 import type { RichText } from "../../../schemas/objects/types/RichText";
 import {
+	joinRichTextLines,
 	remapRichText,
 	richTextToPlain,
+	splitRichTextLines,
 } from "../../../schemas/objects/types/RichText";
 import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
 import {
@@ -95,7 +97,7 @@ export const readRichTextSlot = (
 	if (content === undefined) {
 		return "";
 	}
-	return isTextRows(content) ? content.join("\n") : content;
+	return isTextRows(content) ? joinRichTextLines(content) : content;
 };
 
 /**
@@ -135,10 +137,13 @@ export const writeTextSlot = (
 	if (slot === undefined) {
 		return { ...text, [slotId]: { text: value } };
 	}
+	// Rows go through the same carry-over as a single body: the edited text is one
+	// string either way, so the styling is remapped onto it before it is split back
+	// into the rows the slot holds.
 	const content = isTextRows(slot.text)
 		? value === ""
 			? []
-			: value.split("\n")
+			: splitRichTextLines(remapRichText(joinRichTextLines(slot.text), value))
 		: remapRichText(slot.text, value);
 	return {
 		...text,

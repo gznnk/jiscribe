@@ -202,6 +202,41 @@ const sliceRuns = (runs: TextRun[], start: number, end: number): TextRun[] => {
 };
 
 /**
+ * The lines of a body, split at its authored newlines, each keeping the styling
+ * of its own characters. The inverse of {@link joinRichTextLines}, and what turns
+ * one edited body back into the rows a row-partitioned slot holds.
+ *
+ * @param rich - The body to split; the newlines themselves are dropped
+ * @returns One entry per line, never empty (an empty body is one empty line)
+ */
+export const splitRichTextLines = (rich: RichText): RichText[] => {
+	const plain = richTextToPlain(rich);
+	const lines: RichText[] = [];
+	let start = 0;
+	for (let offset = 0; offset <= plain.length; offset += 1) {
+		if (offset === plain.length || plain[offset] === "\n") {
+			lines.push(sliceRichText(rich, start, offset));
+			start = offset + 1;
+		}
+	}
+	return lines;
+};
+
+/**
+ * One body from several, joined by newlines: how a row-partitioned slot reads as
+ * the single text the editor and the drawing work with.
+ *
+ * @param lines - The lines to join, in order; an empty list yields ""
+ * @returns The joined body, in canonical form
+ */
+export const joinRichTextLines = (lines: readonly RichText[]): RichText =>
+	normalizeRichText(
+		lines.flatMap((line, index) =>
+			index === 0 ? toRuns(line) : [{ text: "\n" }, ...toRuns(line)],
+		),
+	);
+
+/**
  * The canonical form of a body of text: empty runs dropped, adjacent runs drawn
  * alike merged, and the whole thing collapsed back to a plain string as soon as
  * nothing is styled. Applied on every write, so one styled text has exactly one

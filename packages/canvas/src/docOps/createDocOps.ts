@@ -30,6 +30,7 @@ import { setRotation, type SetRotationResult } from "./setRotation";
 import { setStyle, type SetStyleResult } from "./setStyle";
 import { setText } from "./setText";
 import type { StyleParams } from "./styleFields";
+import { styleText, type StyleTextParams } from "./styleText";
 import { updateConnector, type UpdateConnectorParams } from "./updateConnector";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { DocDefinitionsConfig } from "../schemas/plugin/resolveDocDefinitions";
@@ -122,6 +123,13 @@ export type DocOps = {
 	 */
 	setText(doc: CanvasDoc, id: string, text: string, slot?: string): void;
 	/**
+	 * Style a stretch of one object's text, named by the text it holds, leaving the
+	 * rest of it as it is.
+	 * Throws `DocOperationError` for a missing id, a type or slot whose text is styled
+	 * only as a whole, an unknown slot, or a stretch that does not occur.
+	 */
+	styleText(doc: CanvasDoc, id: string, params: StyleTextParams): void;
+	/**
 	 * Re-attach, re-route, or re-label an existing connector.
 	 * Throws `DocOperationError` when the id is not a connector or a new endpoint is illegal.
 	 */
@@ -202,6 +210,7 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		resizeObject: (doc, id, params) =>
 			resizeObject(doc, id, params, definitions),
 		setStyle: (doc, ids, style) => setStyle(doc, ids, style, definitions),
+		styleText: (doc, id, params) => styleText(doc, id, params, definitions),
 		setRotation: (doc, ids, rotation) =>
 			setRotation(doc, ids, rotation, definitions),
 		setPoints: (doc, id, points) => setPoints(doc, id, points, definitions),

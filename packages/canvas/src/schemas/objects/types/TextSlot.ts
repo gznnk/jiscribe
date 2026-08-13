@@ -1,4 +1,4 @@
-import { isObject, isString } from "@jiscribe/basic-validators";
+import { isObject } from "@jiscribe/basic-validators";
 
 import type { InlineTextStyle, RichText } from "./RichText";
 import {
@@ -15,16 +15,12 @@ import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 /**
  * The content of one text slot. A `RichText` is one body of text (authored
  * newlines included) — a plain string, or the runs it is styled in when parts of
- * it are drawn differently; a `string[]` is a row-partitioned slot whose entries
- * are the individual rows — the editor joins them with "\n" and the commit splits
- * them back, so the value's shape alone decides which of the two applies
- * ({@link isTextRows}).
- *
- * Rows are plain strings: a row-partitioned slot is not styled per range yet, and
- * widening its entries to `RichText` later is a pure addition — an existing
- * document stays valid either way.
+ * it are drawn differently; a `RichText[]` is a row-partitioned slot whose entries
+ * are the individual rows, each a body of its own — the editor joins them with
+ * "\n" and the commit splits them back, so the value's shape alone decides which
+ * of the two applies ({@link isTextRows}).
  */
-export type TextSlotContent = RichText | string[];
+export type TextSlotContent = RichText | RichText[];
 
 /**
  * One named text region of a shape: its content plus the typography it is drawn
@@ -40,7 +36,7 @@ export type TextSlotContent = RichText | string[];
  * whose doc holds a single body (TextSlotsMapper).
  *
  * @template TContent - Narrows the content a slot accepts, for types that fix it
- *   per slot (a record's `name` is a `RichText`, its `rows` a `string[]`)
+ *   per slot (a record's `name` is one body, its `rows` a list of them)
  */
 export type TextSlot<TContent extends TextSlotContent = TextSlotContent> =
 	InlineTextStyle & {
@@ -70,17 +66,17 @@ export const TEXT_SLOT_STYLE_KEYS = exhaustiveKeysOf<Omit<TextSlot, "text">>()([
 
 /**
  * Whether a slot's content is the row-partitioned form rather than one body of
- * text. The one place the two array forms are told apart: rows hold strings,
- * a styled body holds runs (objects), and an empty array reads as empty rows —
- * the form an emptied row list is written back as (writeTextSlot), an empty body
- * being `""`.
+ * text. The one place the two array forms are told apart: a row is a whole body
+ * (a string, or the runs it is styled in), while a styled body's entries are runs
+ * (objects carrying `text`), and an empty array reads as empty rows — the form an
+ * emptied row list is written back as (writeTextSlot), an empty body being `""`.
  *
  * @param content - Any slot content; takes `unknown` so an untrusted value can be
  *   told apart before it is known to be content at all
- * @returns True for an array of strings, `[]` included
+ * @returns True for an array of bodies, `[]` included
  */
-export const isTextRows = (content: unknown): content is string[] =>
-	Array.isArray(content) && content.every((row) => isString(row));
+export const isTextRows = (content: unknown): content is RichText[] =>
+	Array.isArray(content) && content.every((row) => isRichText(row));
 
 /**
  * Type guard for one text slot. Structural only: `fontColor` / `fontFamily` /

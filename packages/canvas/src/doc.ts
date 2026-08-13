@@ -91,6 +91,7 @@ export {
 	type SetRotationResult,
 	type SetStyleResult,
 	type StyleParams,
+	type StyleTextParams,
 	type UpdateConnectorParams,
 	type ZOrderPlacement,
 	DocOperationError,

@@ -3,7 +3,12 @@ import { type ObjectRecord, requireObject } from "./objectAccess";
 import { type DocDefinitions, isConnectorObject } from "./objectGeometry";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { RichText } from "../schemas/objects/types/RichText";
-import { isRichText, remapRichText } from "../schemas/objects/types/RichText";
+import {
+	isRichText,
+	joinRichTextLines,
+	remapRichText,
+	splitRichTextLines,
+} from "../schemas/objects/types/RichText";
 import { isTextRows } from "../schemas/objects/types/TextSlot";
 
 /**
@@ -97,6 +102,8 @@ export const setText = (
 	// The slot's own content decides the shape: a rows slot rejects a plain string,
 	// while an array of runs is one styled body and must not be split into rows.
 	targetSlot.text = isTextRows(targetSlot.text)
-		? text.split("\n")
+		? splitRichTextLines(
+				remapRichText(joinRichTextLines(targetSlot.text), text),
+			)
 		: rewriteBody(targetSlot.text, text);
 };

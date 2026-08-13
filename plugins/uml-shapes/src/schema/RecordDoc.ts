@@ -1,6 +1,7 @@
 import type {
 	CreateObjectType,
 	ObjectFeatures,
+	RichText,
 	TextSlot,
 } from "@jiscribe/canvas/doc";
 import {
@@ -84,7 +85,7 @@ export const RECORD_ROW_HEIGHT = RECORD_FONT_SIZE * TEXT_LINE_HEIGHT;
  * above and below a list compartment's rows. Counted in below so a compartment
  * sized for its rows shows them without clipping.
  */
-const RECORD_LIST_PADDING_Y = 2;
+export const RECORD_LIST_PADDING_Y = 2;
 
 /**
  * Horizontal padding the shared text box adds on each side of a band's text, i.e.
@@ -200,13 +201,13 @@ export const RecordFeatures = {
  */
 export type RecordTextDoc = {
 	/** Stereotype line above the title (`<<interface>>`, `<<enum>>`). Omitted means the box shows none; written, it gets a band of its own, undivided from the title's. */
-	stereotype?: TextSlot<string>;
+	stereotype?: TextSlot<RichText>;
 	/** Title shown in the top band. Always present; may be empty. */
-	name: TextSlot<string>;
+	name: TextSlot<RichText>;
 	/** Attribute rows, one entry per line. Omitted means the box has no attribute compartment. */
-	attributes?: TextSlot<string[]>;
+	attributes?: TextSlot<RichText[]>;
 	/** Operation rows, one entry per line. Omitted means the box has no operation compartment. */
-	operations?: TextSlot<string[]>;
+	operations?: TextSlot<RichText[]>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -245,10 +246,10 @@ export const RECORD_DOC_DEFAULTS: Omit<RecordDoc, "id"> = {
 	strokeWidth: 2,
 	text: {
 		name: { text: "", ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name },
-		// `as string[]` keeps `as const` from typing the empty rows as a readonly
+		// `as RichText[]` keeps `as const` from typing the empty rows as a readonly
 		// tuple, which no longer overlaps RecordTextDoc.
 		attributes: {
-			text: [] as string[],
+			text: [] as RichText[],
 			...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.attributes,
 		},
 	},

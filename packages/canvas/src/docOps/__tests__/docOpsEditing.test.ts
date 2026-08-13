@@ -338,6 +338,77 @@ describe("setText", () => {
 		);
 	});
 
+	it("styles the stretch of text named by what it holds", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "Payment failed" });
+
+		docOps.styleText(doc, "rect-1", {
+			match: "failed",
+			fontColor: "#d32f2f",
+			fontWeight: "bold",
+		});
+
+		expect(readObject(doc, "rect-1").text).toEqual([
+			{ text: "Payment " },
+			{ text: "failed", fontColor: "#d32f2f", fontWeight: "bold" },
+		]);
+		expectValid(doc);
+	});
+
+	it("styles every occurrence, or the one asked for", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "a b a" });
+
+		docOps.styleText(doc, "rect-1", { match: "a", fontWeight: "bold" });
+		expect(readObject(doc, "rect-1").text).toEqual([
+			{ text: "a", fontWeight: "bold" },
+			{ text: " b " },
+			{ text: "a", fontWeight: "bold" },
+		]);
+
+		const single = emptyDoc();
+		docOps.addObject(single, "rect", { x: 0, y: 0, text: "a b a" });
+		docOps.styleText(single, "rect-1", {
+			match: "a",
+			occurrence: 2,
+			fontWeight: "bold",
+		});
+		expect(readObject(single, "rect-1").text).toEqual([
+			{ text: "a b " },
+			{ text: "a", fontWeight: "bold" },
+		]);
+	});
+
+	it("refuses a stretch that does not occur, or an occurrence past the last", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "Payment failed" });
+
+		expect(() =>
+			docOps.styleText(doc, "rect-1", { match: "missing", fontWeight: "bold" }),
+		).toThrow(DocOperationError);
+		expect(() =>
+			docOps.styleText(doc, "rect-1", {
+				match: "failed",
+				occurrence: 2,
+				fontWeight: "bold",
+			}),
+		).toThrow(DocOperationError);
+		// The failed calls left the text exactly as it was.
+		expect(readObject(doc, "rect-1").text).toBe("Payment failed");
+	});
+
+	it("refuses a connector, whose label is styled as a whole", () => {
+		const doc = twoConnectedRects();
+		docOps.setText(doc, "connector-1", "on failure");
+
+		expect(() =>
+			docOps.styleText(doc, "connector-1", {
+				match: "failure",
+				fontWeight: "bold",
+			}),
+		).toThrow(DocOperationError);
+	});
+
 	it("keeps the styling of the characters a rewrite leaves in place", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0 });

@@ -286,8 +286,12 @@ const wrapLine = (
 	return wrapped;
 };
 
-/** One drawn line of text: what it takes horizontally, and the line box it sits in. */
+/** One drawn line of text: which characters it holds, and the box they take. */
 export type VisualLine = {
+	/** First offset of the line in the flattened text, in UTF-16 code units. */
+	start: number;
+	/** First offset past the line; the newline a break falls on is not part of either side. */
+	end: number;
 	/** Rendered width in local pixels, trailing spaces included. */
 	width: number;
 	/** Line box height: the tallest type size on the line × the shared line-height. */
@@ -335,6 +339,8 @@ export const layoutVisualLines = (
 				: wrapLine(plain, line, measurer, wrapWidth),
 		)
 		.map((line) => ({
+			start: line.start,
+			end: line.end,
 			width: measurer.width(line.start, line.end),
 			height: measurer.maxFontSize(line.start, line.end) * TEXT_LINE_HEIGHT,
 		}));
