@@ -123,7 +123,7 @@ Where they are read:
 
 - `none` → `isGestureOptedOut` (onPointerDown in `GestureRecognizer.getHandlers()`, handleContextMenu in `Canvas.tsx`)
 - `native-pointer` → `isNativePointerTarget` (suppresses capture and enables `inputValue` harvesting; decided once at pointerdown and held on `Pressed`)
-- `native-wheel` → `shouldUseNativeWheel` (`useDocumentWheel`)
+- `native-wheel` → `shouldUseNativeWheel` (`useCanvasWheel`)
 
 All of these decision utilities are built on `findGestureElement(target, token)` and
 are located in `controllers/gestures/recognizer/utils/`.
@@ -182,6 +182,28 @@ space-separated token list plus `closest` search.
 1. An element that is fully served by standard browser interaction → `data-gesture="none"`
 2. Needs to convey a value via gestures while also requiring native pointer behavior → `data-gesture="native-pointer"` + `data-kind` / `data-id`
 3. Scrollable and you want to prioritize internal scrolling → `data-gesture="native-wheel"`
+
+## Sharing gestures with the host page (`gestureHandling`)
+
+A canvas that fills the window should keep every scroll gesture; one embedded in a document that
+scrolls (a landing hero, an article figure) must not, or the reader who scrolls onto it is stranded.
+The `<Canvas gestureHandling>` prop (`"greedy"` by default, `"cooperative"` to defer — after the
+same-named option of embedded maps) picks between the two.
+
+The line it draws is **scroll versus zoom**, not wheel versus everything else. Under `"cooperative"`:
+
+- A plain wheel returns from `useCanvasWheel` before `preventDefault`, so the browser scrolls the
+  host document and the recognizer never sees the event.
+- Ctrl+wheel is a zoom, so it takes the normal path and zooms the canvas. A trackpad pinch arrives
+  as a Ctrl-held wheel, which lands in the same branch.
+- `CanvasRoot` relaxes `touch-action` from `none` to `pan-y`, handing the browser the vertical axis
+  a page scrolls along. `pan-y` still withholds pinch, so a two-finger pinch keeps zooming the canvas.
+
+The touch half has a cost, and it is the one the value asks for: a one-finger drag the browser
+resolves as a page scroll is taken away mid-gesture and arrives as `pointercancel`, so a mostly
+vertical drag scrolls the page instead of moving a shape. Horizontal drags are unaffected.
+
+Covered by `e2e/specs/scenario/embedded-page-scroll.spec.ts`, against the `?pageScroll` harness page.
 
 ## Repeat buttons treat click and doubleClick equivalently
 

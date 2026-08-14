@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
+import { PageScrollApp } from "./PageScrollApp";
 import type {
 	CanvasConfig,
 	CanvasDoc,
@@ -44,7 +45,8 @@ type HarnessAppProps = {
 
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
- * two-canvas setup. Restoring a dropped jiscribe export PNG (with .jis.json in its iTXt) is a
+ * two-canvas setup and ?pageScroll to the canvas embedded in a scrolling document.
+ * Restoring a dropped jiscribe export PNG (with .jis.json in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
 function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
@@ -92,8 +94,12 @@ function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
 		e.preventDefault();
 	}, []);
 
-	if (new URLSearchParams(window.location.search).has("multi")) {
+	const query = new URLSearchParams(window.location.search);
+	if (query.has("multi")) {
 		return <MultiCanvasApp />;
+	}
+	if (query.has("pageScroll")) {
+		return <PageScrollApp />;
 	}
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>

@@ -1,5 +1,6 @@
 import { type RefObject, useEffect } from "react";
 
+import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import { shouldUseNativeWheel } from "../gestures/recognizer/utils/shouldUseNativeWheel";
 
 /**
@@ -19,10 +20,15 @@ import { shouldUseNativeWheel } from "../gestures/recognizer/utils/shouldUseNati
  *
  * @param containerRef - Reference to the canvas container element
  * @param onWheel - Callback invoked when a wheel event occurs
+ * @param gestureHandling - Whether a plain wheel belongs to the canvas
+ *   ({@link CanvasGestureHandling}). `"cooperative"` leaves it to the browser,
+ *   which keeps the host page scrolling past an embedded canvas; a Ctrl-held
+ *   wheel is a zoom rather than a scroll and reaches the canvas either way.
  */
 export function useCanvasWheel(
 	containerRef: RefObject<HTMLElement | null>,
 	onWheel: (e: WheelEvent) => void,
+	gestureHandling: CanvasGestureHandling,
 ): void {
 	useEffect(() => {
 		const container = containerRef.current;
@@ -31,6 +37,11 @@ export function useCanvasWheel(
 		}
 
 		const onContainerWheel = (e: WheelEvent) => {
+			// Cooperative mode hands plain scrolling back to the browser. Ctrl is
+			// excluded because it makes the wheel a zoom, which stays with the canvas.
+			if (gestureHandling === "cooperative" && !e.ctrlKey) {
+				return;
+			}
 			// Over a scrollable data-gesture="native-wheel" element (the shortcut help
 			// modal's body, an editing surface overflowing its slot), leave native scrolling in
 			// place and skip canvas scrolling
@@ -53,5 +64,5 @@ export function useCanvasWheel(
 				capture: true,
 			});
 		};
-	}, [containerRef, onWheel]);
+	}, [containerRef, onWheel, gestureHandling]);
 }

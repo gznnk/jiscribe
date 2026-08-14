@@ -1,5 +1,6 @@
 export { Canvas } from "./controllers/Canvas";
 export type { CanvasHandle } from "./controllers/Canvas";
+export type { CanvasGestureHandling } from "./controllers/CanvasGestureHandling";
 export type {
 	CanvasExportHandle,
 	CanvasExportImagePayload,

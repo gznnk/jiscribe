@@ -18,8 +18,9 @@ packages/canvas/
 │   ├── kit/               # the shared implementation behind the testing entries
 │   │   ├── createCanvasPlaywrightConfig.ts  # ephemeral-port webServer, viewport, headed ergonomics
 │   │   ├── createPluginHarnessViteConfig.ts # dev-server-only vite config
-│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi gives a 2-canvas setup
+│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi and ?pageScroll switch pages
 │   │   ├── MultiCanvasApp.tsx      # a 2-canvas page for verifying keyboard scope
+│   │   ├── PageScrollApp.tsx       # a canvas embedded in a scrolling document, for verifying gestureHandling="cooperative"
 │   │   └── harness.css
 │   ├── testing.ts         # @jiscribe/canvas/testing — fixtures + driver + selectors, for spec files
 │   ├── testing-playwright-config.ts  # @jiscribe/canvas/testing/playwright-config

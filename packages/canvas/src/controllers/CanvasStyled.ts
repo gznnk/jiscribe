@@ -1,6 +1,11 @@
 import styled from "@emotion/styled";
 
+import type { CanvasGestureHandling } from "./CanvasGestureHandling";
 import { theme } from "../constants/theme";
+
+type CanvasRootProps = {
+	gestureHandling: CanvasGestureHandling;
+};
 
 type ViewportProps = {
 	cursor?: string;
@@ -20,7 +25,7 @@ type ViewportProps = {
  * share a page. The focus ring is suppressed since focus is a routing concern
  * here, not a visual one.
  */
-export const CanvasRoot = styled.div`
+export const CanvasRoot = styled.div<CanvasRootProps>`
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -34,8 +39,15 @@ export const CanvasRoot = styled.div`
 	   descendants (textarea, help modal body) still pan natively — touch-action is
 	   consulted only up to the scrolling element itself. user-select / touch-callout
 	   suppress long-press text selection and the OS callout; both inherit, so
-	   editable fields opt back in below. */
-	touch-action: none;
+	   editable fields opt back in below.
+
+	   Cooperative gesture handling gives the vertical axis back to the browser so
+	   a host document scrolls past an embedded canvas. The cost is the one it asks
+	   for: a drag the browser resolves as a page scroll ends in pointercancel, so
+	   a mostly vertical one-finger drag scrolls the page rather than moving a
+	   shape. pan-y withholds pinch, which keeps zooming the canvas. */
+	touch-action: ${(props) =>
+		props.gestureHandling === "cooperative" ? "pan-y" : "none"};
 	user-select: none;
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;

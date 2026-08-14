@@ -8,6 +8,7 @@
 	useState,
 } from "react";
 
+import type { CanvasGestureHandling } from "./CanvasGestureHandling";
 import { CanvasProviders } from "./CanvasProviders";
 import {
 	CanvasRoot,
@@ -69,6 +70,7 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 import type {
@@ -80,7 +82,6 @@ import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
-import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 
 type CanvasProps = {
@@ -247,6 +248,18 @@ type CanvasProps = {
 	 */
 	autoFocus?: boolean;
 
+	// ── Host page coexistence ──
+	/**
+	 * How the canvas shares gestures with the page embedding it
+	 * ({@link CanvasGestureHandling}), default `"greedy"`. Set `"cooperative"` when
+	 * embedding the canvas in a document that scrolls, so the wheel (and a vertical
+	 * one-finger drag) moves the page past it instead of being trapped by the view.
+	 * Zooming is untouched: Ctrl+wheel, pinch and the toolbar's zoom controls keep
+	 * working under either value. Reactive, so a host can hand the canvas the
+	 * gestures on an explicit opt-in (a click, an "interact" button).
+	 */
+	gestureHandling?: CanvasGestureHandling;
+
 	// ── Mount-time setup (read once; remount with a new key to change) ──
 	/**
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
@@ -308,6 +321,7 @@ const CanvasComponent = ({
 	onOpenReference,
 	toolbar,
 	autoFocus = true,
+	gestureHandling = "greedy",
 	initialConfig,
 	ref,
 }: CanvasProps) => {
@@ -399,7 +413,7 @@ const CanvasComponent = ({
 	});
 
 	// Scoped to canvasRef so wheel events outside the canvas are not captured.
-	useCanvasWheel(canvasRef, wheelHandler);
+	useCanvasWheel(canvasRef, wheelHandler, gestureHandling);
 
 	useContainerResize(canvasRef, dispatch);
 
@@ -555,6 +569,7 @@ const CanvasComponent = ({
 		>
 			<CanvasRoot
 				ref={rootRef}
+				gestureHandling={gestureHandling}
 				tabIndex={0}
 				style={themeCssVars}
 				onContextMenu={handleContextMenu}
