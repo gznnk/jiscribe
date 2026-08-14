@@ -9,6 +9,7 @@ import type { ObjectTextRegionRegistry } from "../../presentations/objects/regis
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ScrollBoundsConfig } from "../../states/canvas/ScrollBounds";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
@@ -43,6 +44,12 @@ export type CanvasRegistries = {
 	objectContentResizer: ObjectContentResizerRegistry;
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
+	/**
+	 * Per-type text-style defaults, read by every side that draws, edits,
+	 * measures or reports a text style so a field the author left unset resolves
+	 * to the type's own default rather than a type-agnostic one.
+	 */
+	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;

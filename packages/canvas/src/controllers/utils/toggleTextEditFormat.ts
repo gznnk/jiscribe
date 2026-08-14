@@ -5,6 +5,7 @@ import {
 import { toggleTextDecorationToken } from "./toggleTextDecorationToken";
 import type { InlineTextStyle } from "../../schemas/objects/types/RichText";
 import { readRichTextRangeStyle } from "../../schemas/objects/types/RichText";
+import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /** The formats a keystroke can turn on and off over the selected text. */
@@ -42,12 +43,17 @@ const toggledStyle = (
  *
  * @param state - The current canvas controller state
  * @param format - The format the keystroke carries
+ * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry; the run
+ *   styling is read against the slot resolved through it, so a slot that sets
+ *   nothing still toggles against what its type draws it with (a body already
+ *   bold by type default turns normal on the first press, not bold again)
  * @returns A new state, or `state` itself when nothing applies (see
  *   {@link resolveTextEditSelection})
  */
 export const toggleTextEditFormat = (
 	state: CanvasControllerState,
 	format: TextEditFormat,
+	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
 ): CanvasControllerState => {
 	const selection = resolveTextEditSelection(state);
 	if (selection === null) {
@@ -61,7 +67,7 @@ export const toggleTextEditFormat = (
 				selection.content,
 				selection.start,
 				selection.end,
-				selection.slot,
+				textStyleDefaults.resolveSlotStyle(selection.type, selection.slot),
 			),
 		),
 	);

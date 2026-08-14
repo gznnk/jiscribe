@@ -31,10 +31,12 @@ export type { CreateObjectType } from "./schemas/objects/types/CreateObjectType"
 export type {
 	TextSlot,
 	TextSlotContent,
+	TextSlotStyle,
 } from "./schemas/objects/types/TextSlot";
 export {
 	isTextRows,
 	isTextSlot,
+	resolveTextSlotStyle,
 	TEXT_BLOCK_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
 } from "./schemas/objects/types/TextSlot";

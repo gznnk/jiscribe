@@ -14,10 +14,13 @@ import type { ObjectSvgDefsRegistry } from "./ObjectSvgDefsRegistry";
 import { ObjectSvgDefsRegistryContext } from "./ObjectSvgDefsRegistryContext";
 import type { ObjectTextRegionRegistry } from "./ObjectTextRegionRegistry";
 import { ObjectTextRegionRegistryContext } from "./ObjectTextRegionRegistryContext";
+import { ObjectTextStyleDefaultsRegistryContext } from "./ObjectTextStyleDefaultsRegistryContext";
+import type { ObjectTextStyleDefaultsRegistry } from "../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 
 type PresentationRegistriesProviderProps = {
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
+	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
@@ -35,6 +38,7 @@ type PresentationRegistriesProviderProps = {
 export function PresentationRegistriesProvider({
 	objectComponent,
 	objectTextRegion,
+	objectTextStyleDefaults,
 	objectOutline,
 	objectAnchorRegion,
 	objectExtraConnectPoints,
@@ -45,19 +49,21 @@ export function PresentationRegistriesProvider({
 	return (
 		<ObjectComponentRegistryContext value={objectComponent}>
 			<ObjectTextRegionRegistryContext value={objectTextRegion}>
-				<ObjectOutlineRegistryContext value={objectOutline}>
-					<ObjectAnchorRegionRegistryContext value={objectAnchorRegion}>
-						<ObjectExtraConnectPointsRegistryContext
-							value={objectExtraConnectPoints}
-						>
-							<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
-								<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
-									{children}
-								</ObjectSvgDefsRegistryContext>
-							</ObjectGeometryKeyRegistryContext>
-						</ObjectExtraConnectPointsRegistryContext>
-					</ObjectAnchorRegionRegistryContext>
-				</ObjectOutlineRegistryContext>
+				<ObjectTextStyleDefaultsRegistryContext value={objectTextStyleDefaults}>
+					<ObjectOutlineRegistryContext value={objectOutline}>
+						<ObjectAnchorRegionRegistryContext value={objectAnchorRegion}>
+							<ObjectExtraConnectPointsRegistryContext
+								value={objectExtraConnectPoints}
+							>
+								<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
+									<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
+										{children}
+									</ObjectSvgDefsRegistryContext>
+								</ObjectGeometryKeyRegistryContext>
+							</ObjectExtraConnectPointsRegistryContext>
+						</ObjectAnchorRegionRegistryContext>
+					</ObjectOutlineRegistryContext>
+				</ObjectTextStyleDefaultsRegistryContext>
 			</ObjectTextRegionRegistryContext>
 		</ObjectComponentRegistryContext>
 	);

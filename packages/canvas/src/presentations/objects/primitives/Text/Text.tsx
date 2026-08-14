@@ -10,10 +10,12 @@ import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
+import { useObjectTextStyleDefaultsRegistry } from "../../registry/ObjectTextStyleDefaultsRegistryContext";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
 const TextComponent: React.FC<TextState & TextEditable> = ({
 	id,
+	type,
 	cx,
 	cy,
 	width,
@@ -28,16 +30,23 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 	const bodySlot = text?.[BODY_TEXT_SLOT_ID];
 	const body = readRichTextSlot(text, BODY_TEXT_SLOT_ID);
 	const { fontFamily: themeFontFamily } = useCanvasTheme();
+	// The type's own defaults stand in for whatever the slot leaves unset, the
+	// same resolution the editing surface and the reducer's re-measure make.
+	const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
+	const style = useMemo(
+		() => textStyleDefaults.resolveSlotStyle(type, bodySlot),
+		[textStyleDefaults, type, bodySlot],
+	);
 
 	const hitRects = useMemo(
 		() =>
 			calcTextLineHitRects(
 				body,
-				resolveTextObjectFont(bodySlot ?? {}, themeFontFamily),
+				resolveTextObjectFont(style, themeFontFamily),
 				{ width, height },
-				bodySlot?.textAlign,
+				style.textAlign,
 			),
-		[body, bodySlot, themeFontFamily, width, height],
+		[body, style, themeFontFamily, width, height],
 	);
 
 	return (
@@ -68,14 +77,14 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 					height={height}
 					transform={transformAttr}
 					text={body}
-					textAlign={bodySlot.textAlign}
-					verticalAlign={bodySlot.verticalAlign}
-					fontColor={bodySlot.fontColor}
-					fontSize={bodySlot.fontSize}
-					fontFamily={bodySlot.fontFamily}
-					fontWeight={bodySlot.fontWeight}
-					fontStyle={bodySlot.fontStyle}
-					textDecoration={bodySlot.textDecoration}
+					textAlign={style.textAlign}
+					verticalAlign={style.verticalAlign}
+					fontColor={style.fontColor}
+					fontSize={style.fontSize}
+					fontFamily={style.fontFamily}
+					fontWeight={style.fontWeight}
+					fontStyle={style.fontStyle}
+					textDecoration={style.textDecoration}
 					isEditing={isEditing}
 				/>
 			)}

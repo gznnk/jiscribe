@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 import { TextFormatMenuContent } from "./TextFormatMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import {
 	hasTextDecorationToken,
 	toggleTextDecorationToken,
@@ -42,7 +43,8 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		isOpen,
 	);
 
-	const slot = getSelectedOrFirstTextSlot(canvasState);
+	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
 	const isBold = slot?.fontWeight === "bold";
 	const isItalic = slot?.fontStyle === "italic";
 	const isUnderline = hasTextDecorationToken(slot?.textDecoration, "underline");

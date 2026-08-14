@@ -241,7 +241,11 @@ export const createCanvasReducer =
 			}
 
 			case "TOGGLE_TEXT_FORMAT": {
-				const styled = toggleTextEditFormat(state, action.format);
+				const styled = toggleTextEditFormat(
+					state,
+					action.format,
+					registries.objectTextStyleDefaults,
+				);
 				if (styled === state) {
 					return state;
 				}

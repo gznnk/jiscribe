@@ -8,6 +8,7 @@ import type React from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
+import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../presentations/objects/utils/verticalAlignToAlignItems";
@@ -74,6 +75,7 @@ type TextEditorProps = {
 	overflow: TextEditOverflow;
 	/** How far a "grow" editor may extend, in local px from the region's top edge (the shape's bottom edge); never negative, ignored when `overflow` is "scroll" */
 	growLimit: number;
+	/** Horizontal alignment; resolved against the shape type's defaults by the caller, else TEXT_STYLE_FALLBACK. */
 	textAlign?: TextAlign;
 	verticalAlign?: VerticalAlign;
 	fontColor?: string;
@@ -105,14 +107,14 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	rotation,
 	overflow,
 	growLimit,
-	textAlign = "center",
-	verticalAlign = "middle",
-	fontColor = "#000000",
-	fontSize = 16,
+	textAlign = TEXT_STYLE_FALLBACK.textAlign,
+	verticalAlign = TEXT_STYLE_FALLBACK.verticalAlign,
+	fontColor = TEXT_STYLE_FALLBACK.fontColor,
+	fontSize = TEXT_STYLE_FALLBACK.fontSize,
 	fontFamily,
-	fontWeight = "normal",
-	fontStyle = "normal",
-	textDecoration = "none",
+	fontWeight = TEXT_STYLE_FALLBACK.fontWeight,
+	fontStyle = TEXT_STYLE_FALLBACK.fontStyle,
+	textDecoration = TEXT_STYLE_FALLBACK.textDecoration,
 	onChange,
 	onSelectionChange,
 	onToggleFormat,

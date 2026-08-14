@@ -155,6 +155,11 @@ export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTy
 // key its `state.text` carries. A shape with several slots names its own instead.
 export { BODY_TEXT_SLOT_ID } from "./constants/textSlotId";
 export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
+// Per-type text-style defaults: the registry a canvas resolves an unset text
+// style through, reachable as `CanvasRegistries["objectTextStyleDefaults"]`.
+export type { TextSlotStyle } from "./schemas/objects/types/TextSlot";
+export { resolveTextSlotStyle } from "./schemas/objects/types/TextSlot";
+export type { ObjectTextStyleDefaultsRegistry } from "./schemas/registry/ObjectTextStyleDefaultsRegistry";
 export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,

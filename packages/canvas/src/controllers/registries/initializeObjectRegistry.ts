@@ -17,6 +17,7 @@ import { Text } from "../../presentations/objects/primitives/Text";
 import { ConnectorExtraStyleProperties } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
+import { extractTextSlotStyleDefaults } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import {
 	connectorToDoc,
 	connectorToState,
@@ -134,7 +135,11 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: textToDoc, toState: textToState },
 			stateValidator: isValidTextState,
 			contentResizer: (state, context) =>
-				resizeTextStateToContent(state, context.fontFamily),
+				resizeTextStateToContent(
+					state,
+					context.fontFamily,
+					context.textStyleDefaults,
+				),
 			component: Text,
 			behavior: {
 				moveByDelta: textMoveByDelta,
@@ -282,8 +287,26 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
+	const textStyleDefaults = extractTextSlotStyleDefaults(
+		definition.features,
+		definition.defaults,
+	);
+	if (textStyleDefaults) {
+		registries.objectTextStyleDefaults.register(type, textStyleDefaults);
+	}
 	if (definition.contentResizer) {
-		registries.objectContentResizer.register(type, definition.contentResizer);
+		// The resizer measures the text with the style it is drawn with, so the
+		// type's own defaults ride in on the context rather than each resizer
+		// reaching for a registry the states layer cannot see. A type with no
+		// defaults to add is registered as it is, so nothing is wrapped for nothing.
+		const resizeToContent = definition.contentResizer;
+		registries.objectContentResizer.register(
+			type,
+			textStyleDefaults === undefined
+				? resizeToContent
+				: (state, context) =>
+						resizeToContent(state, { ...context, textStyleDefaults }),
+		);
 	}
 	if (definition.svgDefs) {
 		registries.objectSvgDefs.register(type, definition.svgDefs);
@@ -362,6 +385,7 @@ export const initializeObjectRegistry = (
 	registries: CanvasRegistries,
 ): void => {
 	registries.objectMapper.clear();
+	registries.objectTextStyleDefaults.clear();
 	registries.objectContentResizer.clear();
 	registries.objectComponent.clear();
 	registries.objectSvgDefs.clear();

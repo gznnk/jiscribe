@@ -49,6 +49,14 @@ export type TextSlot<TContent extends TextSlotContent = TextSlotContent> =
 	};
 
 /**
+ * The style half of a text slot: everything it carries but the content. The
+ * shape a type's text-style defaults take, and what the draw / edit / measure
+ * sides resolve a slot into before reading a field off it
+ * (see resolveTextSlotStyle).
+ */
+export type TextSlotStyle = Omit<TextSlot, "text">;
+
+/**
  * Field names of a slot's typography that place the whole block, and so have no
  * per-run counterpart.
  */
@@ -63,6 +71,49 @@ export const TEXT_SLOT_STYLE_KEYS = exhaustiveKeysOf<Omit<TextSlot, "text">>()([
 	...TEXT_BLOCK_STYLE_KEYS,
 	...TEXT_INLINE_STYLE_KEYS,
 ] as const);
+
+/**
+ * Copies the style fields that are actually set, so a merge target gains no
+ * `undefined`-valued keys that would shadow what it falls back to.
+ *
+ * @param source - Any slot or slot style; its content field is dropped either way
+ * @returns A style object holding only the fields `source` sets, `{}` for none
+ */
+export const pickDefinedTextSlotStyle = (
+	source: TextSlot | TextSlotStyle,
+): TextSlotStyle => {
+	const style: Record<string, unknown> = {};
+	for (const key of TEXT_SLOT_STYLE_KEYS) {
+		const value = source[key];
+		if (value !== undefined) {
+			style[key] = value;
+		}
+	}
+	return style;
+};
+
+/**
+ * The styling one slot is actually drawn with: what the slot itself sets, over
+ * the defaults its object type declares. Every side that reads a style field off
+ * a slot — the overlay, the editor, text measurement, the menus — resolves it
+ * through here, so a field the author left unset reads the same everywhere
+ * (ObjectTextStyleDefaultsRegistry).
+ *
+ * Neither input is materialized into the doc or the state: the result is built
+ * per read, which is what keeps "unset" distinguishable from "set to the default"
+ * in a saved document.
+ *
+ * @param defaults - The type's text-style defaults; undefined for a type that declares none, which yields the slot's own fields alone
+ * @param slot - The slot, or its style half; undefined yields `defaults` as they are
+ * @returns A style object; a field neither side sets stays absent, for the caller's own last resort (TEXT_STYLE_FALLBACK)
+ */
+export const resolveTextSlotStyle = (
+	defaults: TextSlotStyle | undefined,
+	slot: TextSlot | TextSlotStyle | undefined,
+): TextSlotStyle => ({
+	...defaults,
+	...(slot === undefined ? undefined : pickDefinedTextSlotStyle(slot)),
+});
 
 /**
  * Whether a slot's content is the row-partitioned form rather than one body of
