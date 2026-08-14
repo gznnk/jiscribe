@@ -43,7 +43,8 @@ const EXAMPLE_ENTRIES: ReadonlyArray<ShellEntry> = [
 	{
 		id: "theming",
 		title: "Theming",
-		description: "Switching themes with the theme prop (cycling three presets)",
+		description:
+			"Switching themes with the theme prop (cycling the two presets)",
 		source: "src/examples/theming.tsx",
 		Component: ThemingExample,
 	},

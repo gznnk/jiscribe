@@ -1,9 +1,4 @@
-import {
-	Canvas,
-	brandLightCanvasTheme,
-	darkCanvasTheme,
-	lightCanvasTheme,
-} from "@jiscribe/canvas";
+import { Canvas, darkCanvasTheme, lightCanvasTheme } from "@jiscribe/canvas";
 import type { CanvasDoc, CanvasTheme } from "@jiscribe/canvas";
 import { useEffect, useState } from "react";
 
@@ -17,7 +12,6 @@ const THEMES: ReadonlyArray<{
 }> = [
 	{ label: "Dark", colorScheme: "dark", theme: darkCanvasTheme },
 	{ label: "Light", colorScheme: "light", theme: lightCanvasTheme },
-	{ label: "Brand Light", colorScheme: "light", theme: brandLightCanvasTheme },
 ];
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };

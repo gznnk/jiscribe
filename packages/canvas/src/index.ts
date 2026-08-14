@@ -53,11 +53,7 @@ export type {
 	CanvasThemeTokens,
 	CanvasHandleDimensions,
 } from "./theme/CanvasTheme";
-export {
-	darkCanvasTheme,
-	lightCanvasTheme,
-	brandLightCanvasTheme,
-} from "./theme/themePresets";
+export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
 export type { Camera, Viewport } from "./states/canvas/Viewport";
 export type { ScrollBoundsConfig } from "./states/canvas/ScrollBounds";
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
