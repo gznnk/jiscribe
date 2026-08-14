@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { RichText } from "../../../schemas/objects/types/RichText";
+import { richTextToPlain } from "../../../schemas/objects/types/RichText";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { toggleTextEditFormat } from "../toggleTextEditFormat";
@@ -126,16 +128,71 @@ describe("toggleTextEditFormat", () => {
 		expect(toggleTextEditFormat(unreported, "bold")).toBe(unreported);
 	});
 
-	it("leaves a slot holding rows untouched", () => {
-		const rows = editingState({ body: { text: ["a", "b"] } }, "a\nb", {
-			start: 0,
-			end: 3,
-		});
-		expect(toggleTextEditFormat(rows, "bold")).toBe(rows);
-	});
-
 	it("leaves the state untouched when there is no open shape editor", () => {
 		const idle = makeState();
 		expect(toggleTextEditFormat(idle, "bold")).toBe(idle);
+	});
+});
+
+/**
+ * A row-partitioned slot (a record's compartment) is edited as its rows joined by
+ * "\n", so the offsets address that joined text and the styled result has to land
+ * back in the rows it came from.
+ */
+describe("toggleTextEditFormat on a slot holding rows", () => {
+	const rowsOf = (state: CanvasControllerState): RichText[] =>
+		(state.objects.r1 as unknown as { text: TextSlots }).text.body
+			.text as RichText[];
+
+	/** Two rows, edited as "ab\ncd", with the given offsets into that joined text. */
+	const editingRows = (start: number, end: number): CanvasControllerState =>
+		editingState({ body: { text: ["ab", "cd"] } }, "ab\ncd", { start, end });
+
+	it("styles the selected characters of one row, leaving the other row alone", () => {
+		expect(rowsOf(toggleTextEditFormat(editingRows(0, 1), "bold"))).toEqual([
+			[{ text: "a", fontWeight: "bold" }, { text: "b" }],
+			"cd",
+		]);
+	});
+
+	it("styles each row's share of a selection spanning the row boundary", () => {
+		// Offsets 1..4 cover "b", the "\n" between the rows, and "c".
+		expect(rowsOf(toggleTextEditFormat(editingRows(1, 4), "bold"))).toEqual([
+			[{ text: "a" }, { text: "b", fontWeight: "bold" }],
+			[{ text: "c", fontWeight: "bold" }, { text: "d" }],
+		]);
+	});
+
+	it("keeps the characters of the rows as they were when the selection spans them", () => {
+		const rows = rowsOf(toggleTextEditFormat(editingRows(1, 4), "bold"));
+		// The styled "\n" is dropped by the split, so the round trip adds no row and
+		// loses no character.
+		expect(rows.map(richTextToPlain).join("\n")).toBe("ab\ncd");
+	});
+
+	it("reads the styling back off the rows, so a second press turns it off", () => {
+		const state = editingRows(0, 1);
+		const bold = toggleTextEditFormat(state, "bold");
+		const again = toggleTextEditFormat(
+			{ ...bold, textEditState: state.textEditState },
+			"bold",
+		);
+		expect(rowsOf(again)).toEqual([
+			[{ text: "a", fontWeight: "normal" }, { text: "b" }],
+			"cd",
+		]);
+	});
+
+	it("styles the edited rows, not the last committed ones", () => {
+		const state = editingState(
+			{ body: { text: ["ab"] } },
+			"ab\ncd",
+			// The second row exists only in the draft.
+			{ start: 3, end: 5 },
+		);
+		expect(rowsOf(toggleTextEditFormat(state, "italic"))).toEqual([
+			"ab",
+			[{ text: "cd", fontStyle: "italic" }],
+		]);
 	});
 });
