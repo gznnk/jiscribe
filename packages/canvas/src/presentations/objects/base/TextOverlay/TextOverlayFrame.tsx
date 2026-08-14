@@ -111,8 +111,8 @@ const TextOverlayFrameComponent: React.FC<TextOverlayFrameProps> = ({
  * with the parent shape, holding one content element that carries the shared
  * typography contract (line-height, padding, alignment, resolved color/font).
  *
- * The same contract has to hold on the editing side (TextEditor renders a
- * textarea over the identical region), so display and edit must not drift apart
+ * The same contract has to hold on the editing side (TextEditor lays its
+ * editable surface over the identical region), so display and edit must not drift apart
  * — which is why this box lives here rather than in each shape. Shapes that draw
  * something other than plain text (Markdown, for one) render their own element
  * as `children` instead of duplicating the box.

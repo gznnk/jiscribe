@@ -25,33 +25,33 @@ export type ResolvedConnectorPoints = {
 };
 
 /**
- * Fixed-length dependency tuple of the fields the route resolution actually
- * reads from an endpoint owner. Non-geometry edits (fill / text / ...) clone
- * the owner but keep these values, so keying the memo on them skips the
- * re-route (#214).
+ * The fields the route resolution actually reads from an endpoint owner, as one
+ * value per field for the memo's dependency list. Non-geometry edits (fill /
+ * text / ...) clone the owner but keep these values, so keying the memo on them
+ * skips the re-route (#214).
  * Connectable types are all frame-based today; if poly shapes ever become
  * connectable, `points` must be added here. Per-type state beyond the frame
- * (a callout's tail) arrives as the trailing geometry key, so a type whose
- * silhouette moves on its own stays live by registering a `geometryKey`.
+ * (a callout's tail) arrives as `geometryKey`, so a type whose silhouette moves
+ * on its own stays live by registering one.
  */
 const getOwnerGeometryDeps = (
 	obj: ObjectState | null,
 	geometryKeyRegistry: ObjectGeometryKeyRegistry,
 ) => {
 	const frame = obj as (ObjectState & Partial<TransformedFrame>) | null;
-	return [
-		obj?.id,
-		obj?.type,
-		obj?.features,
-		frame?.cx,
-		frame?.cy,
-		frame?.width,
-		frame?.height,
-		frame?.rotation,
-		frame?.scaleX,
-		frame?.scaleY,
-		obj ? geometryKeyRegistry.get(obj.type)?.(obj) : undefined,
-	] as const;
+	return {
+		id: obj?.id,
+		type: obj?.type,
+		features: obj?.features,
+		cx: frame?.cx,
+		cy: frame?.cy,
+		width: frame?.width,
+		height: frame?.height,
+		rotation: frame?.rotation,
+		scaleX: frame?.scaleX,
+		scaleY: frame?.scaleY,
+		geometryKey: obj ? geometryKeyRegistry.get(obj.type)?.(obj) : undefined,
+	};
 };
 
 /**
@@ -84,7 +84,11 @@ export const useResolvedConnectorPoints = (
 
 	// Keyed on the values the resolution reads (connector endpoints / routing and
 	// the owners' geometry) instead of the object references: property edits clone
-	// the connector and the owners without changing geometry (#214).
+	// the connector and the owners without changing geometry (#214). The owners'
+	// values are listed field by field — the dependency list must stay an array
+	// literal for the react-hooks rules to check it.
+	const source = getOwnerGeometryDeps(sourceObj, geometryKeyRegistry);
+	const target = getOwnerGeometryDeps(targetObj, geometryKeyRegistry);
 	return useMemo(() => {
 		const resolved = resolveConnectorPoints(
 			connectorState,
@@ -108,8 +112,28 @@ export const useResolvedConnectorPoints = (
 		connectorState.target,
 		connectorState.points,
 		connectorState.routing,
-		...getOwnerGeometryDeps(sourceObj, geometryKeyRegistry),
-		...getOwnerGeometryDeps(targetObj, geometryKeyRegistry),
+		source.id,
+		source.type,
+		source.features,
+		source.cx,
+		source.cy,
+		source.width,
+		source.height,
+		source.rotation,
+		source.scaleX,
+		source.scaleY,
+		source.geometryKey,
+		target.id,
+		target.type,
+		target.features,
+		target.cx,
+		target.cy,
+		target.width,
+		target.height,
+		target.rotation,
+		target.scaleX,
+		target.scaleY,
+		target.geometryKey,
 		outlineRegistry,
 		anchorRegionRegistry,
 		extraConnectPointsRegistry,

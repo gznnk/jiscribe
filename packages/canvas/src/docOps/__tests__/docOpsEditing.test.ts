@@ -238,6 +238,25 @@ describe("setStyle", () => {
 		expectValid(doc);
 	});
 
+	it("wins over the ranges a property was set on part of the text", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const rect = readObject(doc, "rect-1");
+		rect.text = [
+			{ text: "yes" },
+			{ text: " (2FA)", fontColor: "#d32f2f", fontWeight: "bold" },
+		];
+
+		docOps.setStyle(doc, ["rect-1"], { fontColor: "#0d47a1" });
+
+		// Only the styled property is dropped from the run; the rest of it stays.
+		expect(readObject(doc, "rect-1")).toMatchObject({
+			fontColor: "#0d47a1",
+			text: [{ text: "yes" }, { text: " (2FA)", fontWeight: "bold" }],
+		});
+		expectValid(doc);
+	});
+
 	it("styles the line of a connector and reports the rest as ignored", () => {
 		const doc = twoConnectedRects();
 
@@ -320,6 +339,92 @@ describe("setText", () => {
 			DocOperationError,
 		);
 	});
+
+	it("styles the stretch of text named by what it holds", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "Payment failed" });
+
+		docOps.styleText(doc, "rect-1", {
+			match: "failed",
+			fontColor: "#d32f2f",
+			fontWeight: "bold",
+		});
+
+		expect(readObject(doc, "rect-1").text).toEqual([
+			{ text: "Payment " },
+			{ text: "failed", fontColor: "#d32f2f", fontWeight: "bold" },
+		]);
+		expectValid(doc);
+	});
+
+	it("styles every occurrence, or the one asked for", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "a b a" });
+
+		docOps.styleText(doc, "rect-1", { match: "a", fontWeight: "bold" });
+		expect(readObject(doc, "rect-1").text).toEqual([
+			{ text: "a", fontWeight: "bold" },
+			{ text: " b " },
+			{ text: "a", fontWeight: "bold" },
+		]);
+
+		const single = emptyDoc();
+		docOps.addObject(single, "rect", { x: 0, y: 0, text: "a b a" });
+		docOps.styleText(single, "rect-1", {
+			match: "a",
+			occurrence: 2,
+			fontWeight: "bold",
+		});
+		expect(readObject(single, "rect-1").text).toEqual([
+			{ text: "a b " },
+			{ text: "a", fontWeight: "bold" },
+		]);
+	});
+
+	it("refuses a stretch that does not occur, or an occurrence past the last", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "Payment failed" });
+
+		expect(() =>
+			docOps.styleText(doc, "rect-1", { match: "missing", fontWeight: "bold" }),
+		).toThrow(DocOperationError);
+		expect(() =>
+			docOps.styleText(doc, "rect-1", {
+				match: "failed",
+				occurrence: 2,
+				fontWeight: "bold",
+			}),
+		).toThrow(DocOperationError);
+		// The failed calls left the text exactly as it was.
+		expect(readObject(doc, "rect-1").text).toBe("Payment failed");
+	});
+
+	it("refuses a connector, whose label is styled as a whole", () => {
+		const doc = twoConnectedRects();
+		docOps.setText(doc, "connector-1", "on failure");
+
+		expect(() =>
+			docOps.styleText(doc, "connector-1", {
+				match: "failure",
+				fontWeight: "bold",
+			}),
+		).toThrow(DocOperationError);
+	});
+
+	it("keeps the styling of the characters a rewrite leaves in place", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const rect = readObject(doc, "rect-1");
+		rect.text = [{ text: "yes" }, { text: " (2FA)", fontWeight: "bold" }];
+
+		docOps.setText(doc, "rect-1", "yes (2FA off)");
+
+		expect(readObject(doc, "rect-1").text).toEqual([
+			{ text: "yes" },
+			{ text: " (2FA off)", fontWeight: "bold" },
+		]);
+		expectValid(doc);
+	});
 });
 
 describe("setText on a slotted type", () => {
@@ -386,6 +491,24 @@ describe("setText on a slotted type", () => {
 		expect(readObject(doc, "card-1").text).toMatchObject({
 			name: { fontSize: 18 },
 			attributes: { fontSize: 18 },
+		});
+	});
+
+	it("wins over the ranges a property was set on inside a row", () => {
+		const doc = slottedDoc();
+		const slots = readObject(doc, "card-1").text as Record<
+			string,
+			Record<string, unknown>
+		>;
+		slots.attributes.text = ["id", [{ text: "email", fontWeight: "bold" }]];
+
+		slotOps.setStyle(doc, ["card-1"], { fontWeight: "normal" });
+
+		// The row's override is gone, so the slot's value shows on it; the row
+		// collapses back to a plain string once nothing is styled on its own.
+		expect(readObject(doc, "card-1").text).toEqual({
+			name: { text: "User", fontWeight: "normal" },
+			attributes: { text: ["id", "email"], fontWeight: "normal" },
 		});
 	});
 

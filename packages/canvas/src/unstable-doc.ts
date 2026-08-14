@@ -30,6 +30,10 @@ export {
 	// A `text: "slots"` type validates its own slots, and their styling is the
 	// same six fields the single-body form has, checked by the same rules.
 	validateTextSlotStyleFields,
+	// A slot whose content is one body of text validates it with these: the runs
+	// it may be styled in, and the styling one run can carry.
+	validateInlineTextStyleFields,
+	validateRichTextContent,
 } from "./schemas/objects/utils/validateDocUtils";
 export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorRegistry";
 

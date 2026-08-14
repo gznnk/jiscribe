@@ -1,7 +1,11 @@
-import { isObject, isString } from "@jiscribe/basic-validators";
+import { isObject } from "@jiscribe/basic-validators";
 import type { ObjectMapperType } from "@jiscribe/canvas";
-import type { TextSlot } from "@jiscribe/canvas/doc";
-import { isTextSlot } from "@jiscribe/canvas/doc";
+import type { RichText, TextSlot } from "@jiscribe/canvas/doc";
+import {
+	isRichText,
+	isTextSlot,
+	normalizeRichText,
+} from "@jiscribe/canvas/doc";
 import { createFrameMapper } from "@jiscribe/canvas-sdk";
 import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 
@@ -16,13 +20,17 @@ import {
 import type { RecordDoc, RecordSlotId } from "../schema/RecordDoc";
 
 /**
- * Forces a text band's content to a string, filling omitted styling from the
- * slot's own defaults.
+ * Forces a text band's content to one body of text, canonicalized the way a
+ * `"body"` type's doc is (mapTextDocToState), and fills omitted styling from the
+ * slot's own defaults. Canonicalizing is what keeps `[]` out of a band: it passes
+ * as an empty run list, yet every reader of a slot's content takes an array for
+ * the row-partitioned form (isTextRows), so an edit would write the band back as
+ * rows and the record's own validator would reject the document it had loaded.
  */
 const normalizeBandSlot = (
 	value: unknown,
 	slotId: RecordSlotId,
-): TextSlot<string> => {
+): TextSlot<RichText> => {
 	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
 	if (!isTextSlot(value)) {
 		return { ...styleDefaults, text: "" };
@@ -30,7 +38,7 @@ const normalizeBandSlot = (
 	return {
 		...styleDefaults,
 		...value,
-		text: isString(value.text) ? value.text : "",
+		text: isRichText(value.text) ? normalizeRichText(value.text) : "",
 	};
 };
 
@@ -42,7 +50,7 @@ const normalizeBandSlot = (
 const normalizeListSlot = (
 	value: unknown,
 	slotId: RecordSlotId,
-): TextSlot<string[]> => {
+): TextSlot<RichText[]> => {
 	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
 	if (!isTextSlot(value)) {
 		return { ...styleDefaults, text: [] };
@@ -51,7 +59,7 @@ const normalizeListSlot = (
 	return {
 		...styleDefaults,
 		...value,
-		text: Array.isArray(content) ? content.filter(isString) : [],
+		text: Array.isArray(content) ? content.filter(isRichText) : [],
 	};
 };
 
@@ -74,8 +82,9 @@ const normalizeListSlot = (
  */
 const normalizeRecordText = (text: unknown): RecordTextState => {
 	const slots = isObject(text) ? text : {};
-	const normalized: Partial<Record<RecordSlotId, TextSlot<string | string[]>>> =
-		{};
+	const normalized: Partial<
+		Record<RecordSlotId, TextSlot<RichText | RichText[]>>
+	> = {};
 	for (const slotId of RECORD_SLOT_IDS) {
 		const value = slots[slotId];
 		if (value === undefined && slotId !== RECORD_NAME_SLOT_ID) {

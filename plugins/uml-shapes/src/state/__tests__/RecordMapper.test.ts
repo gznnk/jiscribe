@@ -1,9 +1,12 @@
+import type { RichText, TextSlotContent } from "@jiscribe/canvas/doc";
+import { isTextRows } from "@jiscribe/canvas/doc";
 import { describe, it, expect } from "vitest";
 
 import {
 	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
 	type RecordDoc,
 } from "../../schema/RecordDoc";
+import { validateRecordTextFields } from "../../schema/validateRecordTextFields";
 import { recordToDoc, recordToState } from "../RecordMapper";
 
 const makeDoc = (text?: RecordDoc["text"]): RecordDoc =>
@@ -16,6 +19,17 @@ const makeDoc = (text?: RecordDoc["text"]): RecordDoc =>
 		height: 100,
 		...(text === undefined ? {} : { text }),
 	}) as unknown as RecordDoc;
+
+/**
+ * How the canvas commits an edit into a slot (writeTextSlot): the shape of the
+ * content alone decides whether the edited text is written back as rows or as one
+ * body, so a band left holding an array would be rewritten as rows.
+ */
+const commitEdit = (
+	content: TextSlotContent,
+	value: string,
+): TextSlotContent =>
+	isTextRows(content) ? (value.split("\n") as RichText[]) : value;
 
 describe("recordToState", () => {
 	it("keeps the slot contents, filling omitted styling with the record defaults", () => {
@@ -164,6 +178,36 @@ describe("recordToState", () => {
 			name: { ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name, text: "" },
 			attributes: { ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.attributes, text: [] },
 		});
+	});
+
+	it("empties a band the doc wrote as an empty array", () => {
+		const state = recordToState(
+			makeDoc({ name: { text: [] } } as unknown as RecordDoc["text"]),
+		);
+		expect(state.text.name.text).toBe("");
+	});
+
+	it("collapses a band's unstyled runs to the plain string they hold", () => {
+		const state = recordToState(
+			makeDoc({
+				name: { text: [{ text: "User" }] },
+			} as unknown as RecordDoc["text"]),
+		);
+		expect(state.text.name.text).toBe("User");
+	});
+
+	it("keeps a band edited after an empty array one body, not rows", () => {
+		// Editing a band left holding `[]` used to write `["NewTitle"]` back, which
+		// the record's own validator rejects on the next load — an edit corrupting a
+		// document that had loaded clean.
+		const state = recordToState(
+			makeDoc({ name: { text: [] } } as unknown as RecordDoc["text"]),
+		);
+		const edited = commitEdit(state.text.name.text, "NewTitle");
+		expect(edited).toBe("NewTitle");
+		expect(
+			validateRecordTextFields({ text: { name: { text: edited } } }, "$"),
+		).toEqual([]);
 	});
 
 	it("reads an omitted fill as the documented auto default", () => {

@@ -75,21 +75,31 @@ test.describe("styling through the ObjectMenu", () => {
 		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
 	});
 
-	test("hides the ObjectMenu while text is being edited", async ({
+	test("narrows the ObjectMenu to its text items while text is being edited", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
-		const objectMenu = canvas.page.locator('[data-id="object-menu"]');
-		await expect(objectMenu.first()).toBeVisible();
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
+		const backgroundColor = canvas.page.locator(
+			selectors.objectMenuToggle("bg-color"),
+		);
+		const fontSize = canvas.page.locator(
+			selectors.objectMenuToggle("font-size"),
+		);
+		await expect(objectMenu).toBeVisible();
+		await expect(backgroundColor).toBeVisible();
 
-		// The menu disappears when editing starts and comes back when it ends (the
-		// selection is kept)
+		// The menu stays through the edit — it is how a stretch of the text being
+		// edited is styled — but only its text items, since the rest acts on the
+		// shape rather than on the text.
 		await canvas.typeTextAt({ x: 500, y: 260 }, "Editing");
-		await expect(objectMenu).toHaveCount(0);
+		await expect(objectMenu).toBeVisible();
+		await expect(fontSize).toBeVisible();
+		await expect(backgroundColor).toHaveCount(0);
 
 		await canvas.cancelText();
-		await expect(objectMenu.first()).toBeVisible();
+		await expect(backgroundColor).toBeVisible();
 	});
 
 	test("keeps the color setting after text editing", async ({ canvas }) => {

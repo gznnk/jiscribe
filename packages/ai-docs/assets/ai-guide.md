@@ -140,6 +140,39 @@ The top level must always have `version` / `root` (the array may be empty).
 - `owner` may reference **any box shape, and `text`** — that is, every type except `polyline` / `polygon` / `group` / `svg` / `connector`. You **cannot** attach an endpoint to those five. To point an arrow at/from one of them, use a `free` endpoint placed near it instead.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
 
+### Styling part of a text
+
+A shape's typography (`fontSize`, `fontColor`, `fontWeight`, …) applies to its
+whole text. To draw **part** of it differently — one bold word, one phrase in red
+— write that `text` as an array of runs instead of a string: each run is
+`{ "text": "..." }` plus the fields it overrides, and the runs are concatenated in
+order to form the text.
+
+```json
+{
+	"id": "n1",
+	"type": "rect",
+	"x": 100,
+	"y": 100,
+	"width": 200,
+	"height": 80,
+	"text": [
+		{ "text": "Payment " },
+		{ "text": "failed", "fontColor": "#d32f2f", "fontWeight": "bold" }
+	]
+}
+```
+
+- Use it **only** for text that is not styled uniformly. A text drawn in one style
+  is a plain string — that is the form every reader expects, and the array is
+  noise on it.
+- A run carries only the difference: what it leaves out is drawn with the shape's
+  own typography.
+- `textAlign` / `verticalAlign` place the whole text, so they stay on the shape
+  (or on the record slot) and are not run fields.
+- The same applies inside a `record`: a band's `text` and each entry of a
+  compartment's rows take either form.
+
 ### Record (`record`) — the one shape whose `text` is an object
 
 Use `record` for a **titled box with compartments of rows**: a UML class, an ER
@@ -435,4 +468,5 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 - ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.
 - ❌ Giving a `text` `width`/`height`, or drawing a caption as a `rect` with an invisible stroke and fill → ✅ use `text` with `x`/`y` only, and size it with `fontSize`.
 - ❌ Emitting coordinates that unintentionally overlap → ✅ space them per the layout conventions (overlap itself is allowed).
+- ❌ Writing a uniformly styled text as an array of runs → ✅ a plain string; runs are only for a text whose parts differ.
 - ❌ Duplicate `id`s → ✅ make them all unique.

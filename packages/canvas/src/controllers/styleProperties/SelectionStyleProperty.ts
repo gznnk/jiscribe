@@ -7,7 +7,7 @@ import { createCowObjects } from "../utils/cowObjects";
 import { resolveSelectedTextSlot } from "../utils/resolveSelectedTextSlot";
 
 /** Coerces the menu's string value to the declared type. Returns null when a number fails to parse. */
-const coerceStyleValue = (
+export const coerceStyleValue = (
 	valueType: StyleValueType,
 	value: string,
 ): string | number | boolean | null => {

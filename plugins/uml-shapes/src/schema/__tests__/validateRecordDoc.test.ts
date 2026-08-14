@@ -125,7 +125,10 @@ describe("validateRecordDoc", () => {
 				},
 			}),
 		).toEqual([
-			{ path: "root[0].text.stereotype.text", message: "must be a string" },
+			{
+				path: "root[0].text.stereotype.text",
+				message: "must be one body of text, not rows",
+			},
 		]);
 	});
 
@@ -136,23 +139,29 @@ describe("validateRecordDoc", () => {
 				text: { name: { text: 1 }, attributes: { text: [] } },
 			}),
 		).toEqual([
-			{ path: "root[0].text.name.text", message: "must be a string" },
+			{
+				path: "root[0].text.name.text",
+				message: "must be a string, or an array of runs to style parts of it",
+			},
 		]);
 	});
 
-	it("rejects rows that are not an array of strings", () => {
+	it("rejects rows that are not a list of bodies", () => {
 		expect(
 			validate({ ...baseDoc, text: { attributes: { text: "a\nb" } } }),
 		).toEqual([
 			{
 				path: "root[0].text.attributes.text",
-				message: "must be an array of strings",
+				message: "must be an array of rows",
 			},
 		]);
 		expect(
 			validate({ ...baseDoc, text: { operations: { text: ["a", 2] } } }),
 		).toEqual([
-			{ path: "root[0].text.operations.text[1]", message: "must be a string" },
+			{
+				path: "root[0].text.operations.text[1]",
+				message: "must be a string, or an array of runs to style parts of it",
+			},
 		]);
 	});
 

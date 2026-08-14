@@ -1,12 +1,12 @@
 import { memo, useRef } from "react";
 
 import { TextFormatMenuContent } from "./TextFormatMenuStyled";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import {
 	hasTextDecorationToken,
 	toggleTextDecorationToken,
-} from "./utils/toggleTextDecorationToken";
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+} from "../../../../../utils/toggleTextDecorationToken";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";

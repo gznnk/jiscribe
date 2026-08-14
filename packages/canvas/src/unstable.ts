@@ -19,7 +19,7 @@ export type {
 export type { TextEditable } from "./presentations/objects/base/TextOverlay/TextOverlay";
 
 // Container for shapes whose body is not plain text (Markdown and the like). The display
-// side and the core editing textarea must share one visual contract (line-height / padding /
+// side and the core editing surface must share one visual contract (line-height / padding /
 // placement / color and font resolution), so the container stays in core and only its
 // contents are swapped. Use together with createFrameObject's renderTextOverlay.
 export { TextOverlayFrame } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
@@ -40,7 +40,12 @@ export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 // Reading a shape's own text off its state, for a renderer or a bounds calculator
 // that has to branch on whether a slot is empty. The keys of `TextSlots` are the
 // authority on the slots a shape has (there is no separate declaration).
-export { readTextSlot } from "./states/objects/types/TextSlots";
+// A renderer that draws the text takes readRichTextSlot instead: readTextSlot
+// flattens per-range styling away, so drawing from it silently drops the runs.
+export {
+	readRichTextSlot,
+	readTextSlot,
+} from "./states/objects/types/TextSlots";
 export type { TextSlots } from "./states/objects/types/TextSlots";
 
 // For a type that draws its own group instead of going through createFrameObject
@@ -56,12 +61,19 @@ export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoCol
 
 // For shapes deriving a text box's size from its content: measureTextWidth gives the
 // width of one line, calcVisualLineCount the number of lines by reproducing the
-// wrapping of the display-side CSS (pre-wrap + break-word).
+// wrapping of the display-side CSS (pre-wrap + break-word), and calcVisualTextHeight
+// what those lines add up to — which is not the count times the type size once part
+// of the text is drawn larger (RichText).
 export {
 	calcVisualLineCount,
+	calcVisualTextHeight,
+	layoutVisualLines,
 	measureTextWidth,
 } from "./states/objects/utils/measureText";
-export type { TextMeasureFont } from "./states/objects/utils/measureText";
+export type {
+	TextMeasureFont,
+	VisualLine,
+} from "./states/objects/utils/measureText";
 
 export { PRECISION } from "./constants/precision";
 

@@ -1,6 +1,5 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
-import { selectors } from "../../support/selectors";
 
 /**
  * Content-box top and height of an element, in viewport px. The two text boxes
@@ -61,10 +60,39 @@ test.describe("text editing", () => {
 		await expect(body).toContainText("Line Two");
 	});
 
+	// Chrome lays a pasted multi-line text out as one block per line, an empty line
+	// being a block holding nothing but a placeholder <br>. Both the block boundary
+	// and that <br> stand at the same line end, and counting them both read one
+	// blank line as two.
+	test("keeps a pasted blank line to one blank line", async ({ canvas }) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 180 }, { x: 660, y: 400 });
+		await canvas.deselect();
+		await canvas.typeTextAt({ x: 530, y: 290 }, "");
+
+		// A real paste: the editor takes the text off the event and inserts it as
+		// plain text, which is the multi-line insert Chrome builds the blocks for.
+		await canvas.textEditorSurface().evaluate((surface, pasted) => {
+			const clipboardData = new DataTransfer();
+			clipboardData.setData("text/plain", pasted);
+			surface.dispatchEvent(
+				new ClipboardEvent("paste", {
+					clipboardData,
+					bubbles: true,
+					cancelable: true,
+				}),
+			);
+		}, "first\n\nlast");
+
+		expect(await canvas.textEditorText()).toBe("first\n\nlast");
+		await canvas.commitText();
+
+		await canvas.typeTextAt({ x: 530, y: 290 }, "");
+		expect(await canvas.textEditorText()).toBe("first\n\nlast");
+	});
+
 	// A line box is fontSize × 1.5 tall, so an odd size makes the drawn box end on
-	// a half pixel. The editor used to take its height from scrollHeight, which is
-	// a whole number, and the extra half pixel moved vertically centered text as
-	// soon as editing started (see fitTextAreaHeight).
+	// a half pixel. The editing surface has to end on the same one: a box rounded
+	// to whole pixels moves vertically centered text the moment editing starts.
 	for (const fontSize of [15, 21]) {
 		test(`opens the editor on the text at font size ${fontSize}`, async ({
 			canvas,
@@ -85,9 +113,7 @@ test.describe("text editing", () => {
 
 			const display = await contentBoxOf(displayTextOf(canvas));
 			await canvas.typeTextAt({ x: 520, y: 260 }, "");
-			const editor = await contentBoxOf(
-				canvas.page.locator(`${selectors.textEditor} textarea`),
-			);
+			const editor = await contentBoxOf(canvas.textEditorSurface());
 
 			expect(editor).toEqual(display);
 		});

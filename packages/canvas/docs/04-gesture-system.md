@@ -103,7 +103,7 @@ set — as do a glide and the pan that interrupts it — so the menu's own condi
 ## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 DOM elements on the canvas interoperate with the gesture system through `data-*` attributes.
-This convention allows **elements that should retain native browser behavior**—such as the `textarea` used during
+This convention allows **elements that should retain native browser behavior**—such as the editing surface used during
 text editing or the input fields inside menus—to be handled declaratively.
 
 ### `data-gesture`
@@ -113,9 +113,9 @@ Declares how an element relates to gestures. It takes a **space-separated token 
 
 | Token            | Meaning                                                                                                                                | Primary targets                                                                                                |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `none`           | Does not become the origin of a gesture. Ignores pointerdown and leaves contextmenu to the native handler                              | The `textarea` wrapper for text editing, numeric/color inputs inside menus, callback items in the context menu |
+| `none`           | Does not become the origin of a gesture. Ignores pointerdown and leaves contextmenu to the native handler                              | The wrapper of the text editing surface, numeric/color inputs inside menus, callback items in the context menu |
 | `native-pointer` | Participates in gestures but **does not perform pointer capture**. Also becomes a target for `inputValue` harvesting                   | Sliders (range input)                                                                                          |
-| `native-wheel`   | If the element is scrollable (`scrollHeight > clientHeight`), leaves wheel to native scrolling (excluded while Ctrl is held, for zoom) | The `textarea` for text editing                                                                                |
+| `native-wheel`   | If the element is scrollable (`scrollHeight > clientHeight`), leaves wheel to native scrolling (excluded while Ctrl is held, for zoom) | The text editing surface                                                                                       |
 
 Combined example: `data-gesture="none native-wheel"` (excluded from gestures and uses native scrolling).
 

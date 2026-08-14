@@ -196,6 +196,20 @@ const buildSystemSections = (
  * Floating menu displayed below the selected object.
  * Placed inside ScrollSyncedOverlay and follows canvas scrolling.
  */
+/**
+ * Keeps the press from taking the focus off an open text editor: the selection
+ * the text items style lives in that editor, and a blur would also drop the
+ * caret the user types back into. The controls that need the focus themselves —
+ * the font-size input, the sliders — keep the default.
+ */
+const keepTextEditorFocus = (event: React.PointerEvent<HTMLElement>): void => {
+	if (
+		(event.target as HTMLElement).closest("input, textarea, select") === null
+	) {
+		event.preventDefault();
+	}
+};
+
 const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
@@ -206,9 +220,13 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
-	// None of the system sections acts on a text slot, so they all go while one is selected.
+	// None of the system sections acts on a text slot, so they all go while one is
+	// selected — and likewise while an editor is open, where the menu is there to
+	// style the text being edited.
 	const showSystemSections =
-		shouldRender && resolveSelectedTextSlot(canvasState) === null;
+		shouldRender &&
+		resolveSelectedTextSlot(canvasState) === null &&
+		canvasState.textEditState?.kind !== "shape";
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)
 		: [];
@@ -246,7 +264,16 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 
 	return (
 		<ObjectMenuWrapper style={{ left: x, top: y }}>
-			<ObjectMenuContainer ref={menuRef} data-kind="menu" data-id="object-menu">
+			<ObjectMenuContainer
+				ref={menuRef}
+				data-kind="menu"
+				data-id="object-menu"
+				// Only while an editor is open, so a press outside one keeps behaving
+				// exactly as it did (a menu button taking the focus on click included).
+				onPointerDown={
+					canvasState.textEditState === null ? undefined : keepTextEditorFocus
+				}
+			>
 				{sections}
 			</ObjectMenuContainer>
 		</ObjectMenuWrapper>

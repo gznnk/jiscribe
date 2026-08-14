@@ -351,7 +351,7 @@ test.describe("record: selecting one text slot", () => {
 
 		await canvas.page.keyboard.press("Enter");
 		await canvas.waitForTextEditor();
-		await expect(canvas.textArea()).toHaveValue(NAME_TEXT);
+		await expect.poll(() => canvas.textEditorText()).toBe(NAME_TEXT);
 		await canvas.cancelText();
 	});
 });

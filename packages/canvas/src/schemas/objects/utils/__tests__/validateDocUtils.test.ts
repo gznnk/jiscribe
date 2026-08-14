@@ -408,6 +408,31 @@ describe("validateTextStyleFields", () => {
 		expect(errors[0].path).toBe("root.textAlign");
 	});
 
+	it("accepts a text written as the runs it is styled in", () => {
+		expect(
+			validateTextStyleFields(
+				{ text: [{ text: "he" }, { text: "llo", fontWeight: "bold" }] },
+				"root",
+			),
+		).toEqual([]);
+	});
+
+	it("errors on a malformed run, pointing at the run", () => {
+		expect(
+			validateTextStyleFields({ text: [{ text: 1 }] }, "root")[0].path,
+		).toBe("root.text[0].text");
+		expect(
+			validateTextStyleFields({ text: [{ text: "a", fontSize: 0 }] }, "root")[0]
+				.path,
+		).toBe("root.text[0].fontSize");
+		expect(validateTextStyleFields({ text: ["a"] }, "root")[0].path).toBe(
+			"root.text[0]",
+		);
+		expect(validateTextStyleFields({ text: 1 }, "root")[0].path).toBe(
+			"root.text",
+		);
+	});
+
 	it("textAlign: left / right has no errors", () => {
 		expect(validateTextStyleFields({ textAlign: "left" }, "root")).toEqual([]);
 		expect(validateTextStyleFields({ textAlign: "right" }, "root")).toEqual([]);

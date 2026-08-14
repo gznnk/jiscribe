@@ -1,8 +1,11 @@
 import { isObject, isString } from "@jiscribe/basic-validators";
-import type { SemanticDiagnostic } from "@jiscribe/canvas/doc";
-import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/canvas/doc";
+import type { RichText, SemanticDiagnostic } from "@jiscribe/canvas/doc";
+import { richTextToPlain, TEXT_SLOT_STYLE_KEYS } from "@jiscribe/canvas/doc";
 import type { ObjectDocValidateFn } from "@jiscribe/canvas-sdk/doc";
-import { validateTextSlotStyleFields } from "@jiscribe/canvas-sdk/doc";
+import {
+	validateRichTextContent,
+	validateTextSlotStyleFields,
+} from "@jiscribe/canvas-sdk/doc";
 
 import {
 	isRecordListSlotId,
@@ -14,26 +17,38 @@ import type { RecordSlotId } from "./RecordDoc";
 /** The slot ids spelled out for a diagnostic: `"stereotype" / "name" / …`, in RECORD_SLOT_IDS order. */
 const RECORD_SLOT_ID_LIST = RECORD_SLOT_IDS.map((id) => `"${id}"`).join(" / ");
 
-/** Validates a text band's content: one string, newlines and all. */
+/** Validates a text band's content: one body of text, newlines and all. */
 const validateBandText = (
 	content: unknown,
 	path: string,
-): SemanticDiagnostic[] =>
-	isString(content) ? [] : [{ path, message: "must be a string" }];
+): SemanticDiagnostic[] => {
+	// A list of strings is the row-partitioned form, which reads as a malformed
+	// list of runs without this — the mistake is writing a compartment's rows into
+	// a band, so say that rather than pointing at the first entry.
+	if (Array.isArray(content) && content.every(isString)) {
+		return [{ path, message: "must be one body of text, not rows" }];
+	}
+	return validateRichTextContent(content, path);
+};
 
-/** Validates a compartment's rows: every entry is one row, so an embedded newline would silently split it. */
+/**
+ * Validates a compartment's rows: every entry is one row — a plain string, or the
+ * runs it is styled in — so an embedded newline would silently split it.
+ */
 const validateRows = (content: unknown, path: string): SemanticDiagnostic[] => {
 	if (!Array.isArray(content)) {
-		return [{ path, message: "must be an array of strings" }];
+		return [{ path, message: "must be an array of rows" }];
 	}
 	return content.flatMap((row, index) => {
-		if (!isString(row)) {
-			return [{ path: `${path}[${index}]`, message: "must be a string" }];
+		const rowPath = `${path}[${index}]`;
+		const errors = validateRichTextContent(row, rowPath);
+		if (errors.length > 0) {
+			return errors;
 		}
-		if (row.includes("\n")) {
+		if (richTextToPlain(row as RichText).includes("\n")) {
 			return [
 				{
-					path: `${path}[${index}]`,
+					path: rowPath,
 					message: "must not contain a newline: use one array entry per row",
 					// The JSON schema cannot express this rule, so the VSCode
 					// extension shows it only when the validator flags it itself.

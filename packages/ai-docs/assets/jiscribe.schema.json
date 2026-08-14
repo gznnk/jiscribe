@@ -2040,8 +2040,19 @@
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Stereotype string, conventionally written between guillemets (\"<<interface>>\"). Default: \"\"",
-									"type": "string",
+									"description": "Stereotype string, conventionally written between guillemets (\"<<interface>>\"). Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "array",
+											"items": {
+												"$ref": "#/$defs/TextRun"
+											},
+											"minItems": 1
+										}
+									],
 									"default": ""
 								},
 								"textAlign": {
@@ -2092,8 +2103,19 @@
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Title string. Default: \"\"",
-									"type": "string",
+									"description": "Title string. Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "array",
+											"items": {
+												"$ref": "#/$defs/TextRun"
+											},
+											"minItems": 1
+										}
+									],
 									"default": ""
 								},
 								"textAlign": {
@@ -2146,10 +2168,21 @@
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Attribute rows, one array entry per line (no newlines inside an entry). Default: []",
+									"description": "Attribute rows, one array entry per line (no newlines inside an entry). Write a plain string unless part of the row has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the row. Default: []",
 									"type": "array",
 									"items": {
-										"type": "string"
+										"anyOf": [
+											{
+												"type": "string"
+											},
+											{
+												"type": "array",
+												"items": {
+													"$ref": "#/$defs/TextRun"
+												},
+												"minItems": 1
+											}
+										]
 									},
 									"default": []
 								},
@@ -2201,10 +2234,21 @@
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Operation rows, one array entry per line (no newlines inside an entry). Default: []",
+									"description": "Operation rows, one array entry per line (no newlines inside an entry). Write a plain string unless part of the row has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the row. Default: []",
 									"type": "array",
 									"items": {
-										"type": "string"
+										"anyOf": [
+											{
+												"type": "string"
+											},
+											{
+												"type": "array",
+												"items": {
+													"$ref": "#/$defs/TextRun"
+												},
+												"minItems": 1
+											}
+										]
 									},
 									"default": []
 								},
@@ -3157,8 +3201,19 @@
 			"type": "object",
 			"properties": {
 				"text": {
-					"description": "Text content to display. Default: \"\"",
-					"type": "string",
+					"description": "Text content to display. Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "array",
+							"items": {
+								"$ref": "#/$defs/TextRun"
+							},
+							"minItems": 1
+						}
+					],
 					"default": ""
 				},
 				"textAlign": {

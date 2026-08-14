@@ -6,12 +6,13 @@ import type { ReactNode } from "react";
 import { TextOverlay } from "./TextOverlay";
 import type { TextEditable } from "./TextOverlay";
 import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
+import type { RichText } from "../../../schemas/objects/types/RichText";
 import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
 import type { FillStyleState } from "../../../states/objects/base/FillStyleState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
-import { readTextSlot } from "../../../states/objects/types/TextSlots";
+import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
 import { useObjectTextRegionRegistry } from "../registry/ObjectTextRegionRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
 import { createSvgTransform } from "../utils/createSvgTransform";
@@ -60,8 +61,12 @@ export type FrameTextOverlayProps = {
 	height: number;
 	/** The shape's SVG transform matrix; apply it so text follows the shape. */
 	transform: string;
-	/** The slot's raw text — Markdown source, or whatever the type stores (rows are "\n"-joined). */
-	text?: string;
+	/**
+	 * The slot's raw text — Markdown source, or whatever the type stores (rows are
+	 * "\n"-joined). The run form when parts of it are styled on their own; a
+	 * renderer that only wants the characters flattens it with `richTextToPlain`.
+	 */
+	text?: RichText;
 	textAlign?: TextSlot["textAlign"];
 	verticalAlign?: TextSlot["verticalAlign"];
 	/** May be `"auto"`; resolve with resolveAutoColor (TextOverlayFrame already does). */
@@ -73,7 +78,7 @@ export type FrameTextOverlayProps = {
 	textDecoration?: string;
 	/**
 	 * True while the in-place editor is open **on this slot**: draw nothing, or it
-	 * doubles up with the textarea. The shape's other slots stay drawn.
+	 * doubles up with the editor. The shape's other slots stay drawn.
 	 */
 	isEditing: boolean;
 };
@@ -105,7 +110,7 @@ export type FrameTextOverlayRenderer = (
  * `renderTextOverlay` swaps out how the text is drawn while keeping every shared
  * derivation (transform, resolved colors, dashes, region, memo) here. A type
  * whose body is not plain text passes one; it receives the placed box and draws
- * into `TextOverlayFrame` so display keeps matching the editing textarea.
+ * into `TextOverlayFrame` so display keeps matching the editing surface.
  *
  * Out of scope for types whose draw structure differs: a shadowed shape drawing a
  * group of its own (the sticky in `@jiscribe/plugin-sticky-shape`), and svg
@@ -160,7 +165,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 				width: textRegion.width,
 				height: textRegion.height,
 				transform: transformAttr,
-				text: readTextSlot(text, slotId),
+				text: readRichTextSlot(text, slotId),
 				textAlign: slot.textAlign,
 				verticalAlign: slot.verticalAlign,
 				fontColor: slot.fontColor,

@@ -1,3 +1,4 @@
+import type { RichText } from "../types/RichText";
 import type { TextSlot } from "../types/TextSlot";
 
 /**
@@ -8,6 +9,6 @@ import type { TextSlot } from "../types/TextSlot";
  * save (TextSlotsMapper).
  */
 export type TextStyleDoc = Omit<TextSlot, "text"> & {
-	/** Text content to display */
-	text?: string;
+	/** Text content to display; the run form only when part of it is styled on its own (RichText). */
+	text?: RichText;
 };

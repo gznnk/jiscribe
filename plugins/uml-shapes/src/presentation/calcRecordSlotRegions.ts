@@ -1,13 +1,14 @@
-import { isString } from "@jiscribe/basic-validators";
-import type { TextSlot } from "@jiscribe/canvas/doc";
-import { calcVisualLineCount } from "@jiscribe/canvas-sdk";
+import type { RichText, TextSlot } from "@jiscribe/canvas/doc";
+import { isRichText, isTextRows } from "@jiscribe/canvas/doc";
+import type { TextMeasureFont } from "@jiscribe/canvas-sdk";
+import { calcVisualTextHeight } from "@jiscribe/canvas-sdk";
 import { TEXT_LINE_HEIGHT } from "@jiscribe/canvas-sdk/doc";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import {
-	calcRecordListHeight,
 	RECORD_BAND_PADDING_X,
 	RECORD_BAND_PADDING_Y_TOTAL,
+	RECORD_LIST_PADDING_Y,
 	RECORD_NAME_SLOT_ID,
 	RECORD_SLOT_IDS,
 	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
@@ -38,6 +39,20 @@ export type RecordSlotRegions = {
 	operations?: Rect;
 };
 
+/** The font a slot is drawn with: its own, falling back to that slot id's defaults. */
+const slotFont = (
+	slotId: RecordSlotId,
+	slot: TextSlot | undefined,
+): TextMeasureFont => {
+	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
+	return {
+		fontSize: slot?.fontSize ?? styleDefaults.fontSize,
+		fontFamily: slot?.fontFamily ?? styleDefaults.fontFamily,
+		fontWeight: slot?.fontWeight ?? styleDefaults.fontWeight,
+		fontStyle: slot?.fontStyle,
+	};
+};
+
 /**
  * Height a text band (the stereotype, the title) needs for its slot: every line
  * the text occupies once wrapped in the box width, plus the padding around it.
@@ -50,19 +65,37 @@ const calcBandHeight = (
 	slotId: RecordSlotId,
 	slot: TextSlot | undefined,
 ): number => {
-	const styleDefaults = RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId];
-	const text = isString(slot?.text) ? slot.text : "";
-	const fontSize = slot?.fontSize ?? styleDefaults.fontSize;
-	const lineCount = calcVisualLineCount(
-		text,
-		{
-			fontSize,
-			fontFamily: slot?.fontFamily ?? styleDefaults.fontFamily,
-			fontWeight: slot?.fontWeight ?? styleDefaults.fontWeight,
-		},
-		width - RECORD_BAND_PADDING_X * 2,
+	const text = isRichText(slot?.text) ? slot.text : "";
+	return (
+		calcVisualTextHeight(
+			text,
+			slotFont(slotId, slot),
+			width - RECORD_BAND_PADDING_X * 2,
+		) + RECORD_BAND_PADDING_Y_TOTAL
 	);
-	return lineCount * fontSize * TEXT_LINE_HEIGHT + RECORD_BAND_PADDING_Y_TOTAL;
+};
+
+/**
+ * Height a compartment needs for its rows: each row's own line box, so a row
+ * holding a part drawn larger takes the room it draws in. Rows are measured as
+ * authored — a row too long for the width wraps and overflows rather than
+ * widening the compartment's share — and an empty compartment still keeps one
+ * row's worth.
+ */
+const calcListHeight = (
+	slotId: RecordSlotId,
+	rows: readonly RichText[],
+	slot: TextSlot | undefined,
+): number => {
+	const font = slotFont(slotId, slot);
+	const rowsHeight = rows.reduce(
+		(total, row) => total + calcVisualTextHeight(row, font),
+		0,
+	);
+	return (
+		Math.max(rowsHeight, font.fontSize * TEXT_LINE_HEIGHT) +
+		RECORD_LIST_PADDING_Y * 2
+	);
 };
 
 /**
@@ -77,11 +110,8 @@ const calcSlotHeight = (
 	slot: TextSlot | undefined,
 ): number => {
 	const content = slot?.text;
-	return Array.isArray(content)
-		? calcRecordListHeight(
-				content.length,
-				slot?.fontSize ?? RECORD_SLOT_STYLE_DEFAULTS_BY_ID[slotId].fontSize,
-			)
+	return isTextRows(content)
+		? calcListHeight(slotId, content, slot)
 		: calcBandHeight(width, slotId, slot);
 };
 

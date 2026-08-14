@@ -1,3 +1,10 @@
+import { TEXT_LINE_HEIGHT } from "../../../constants/textLineHeight";
+import type {
+	RichText,
+	TextRun,
+} from "../../../schemas/objects/types/RichText";
+import { richTextToPlain } from "../../../schemas/objects/types/RichText";
+
 /** The font a measurement is taken with; the values a CSS `font` shorthand needs. */
 export type TextMeasureFont = {
 	/** Type size in local pixels (the same unit the drawn box is measured in). */
@@ -23,7 +30,7 @@ const FALLBACK_CHAR_WIDTH_RATIO = 0.6;
  * applied, so a line ending in such a character can be counted as breaking one
  * character earlier than a browser lays it out.
  */
-const CJK_BREAKABLE_PATTERN = /[⺀-〿ぁ-㏿㐀-䶿一-鿿가-힣豈-﫿︰-﹏＀-｠￠-￦]/;
+const CJK_BREAKABLE_PATTERN = /[⺀-〿ぁ-㏿㐀-䶿一-鿿가-힣豈-﫿︰-﹏＀-｠￠-￦]/;
 
 /** Characters that are horizontal whitespace inside a line (a newline never reaches here). */
 const isSpaceCharacter = (char: string): boolean =>
@@ -32,17 +39,27 @@ const isSpaceCharacter = (char: string): boolean =>
 // Offscreen canvas dedicated to measurement (measures width without triggering DOM layout).
 let measureCanvas: HTMLCanvasElement | null = null;
 
+/**
+ * Shorthand last assigned to the shared context's `font`, or null when nothing
+ * has been assigned yet. Tracked beside the canvas because every measurer draws
+ * on that one context, so a measurer can tell whether its font is still the one
+ * in effect. Nothing ever resizes the canvas, which would reset the context's
+ * state and leave this stale.
+ */
+let assignedFontShorthand: string | null = null;
+
 const getMeasureContext = (): CanvasRenderingContext2D | null => {
 	if (typeof document === "undefined") {
 		return null;
 	}
 	if (!measureCanvas) {
 		measureCanvas = document.createElement("canvas");
+		assignedFontShorthand = null;
 	}
 	return measureCanvas.getContext("2d");
 };
 
-/** Measures single strings under one font; created once per wrapping pass so `ctx.font` is set once. */
+/** Measures single strings under one font, assigning `ctx.font` only when another font was measured since. */
 type TextWidthMeasurer = (text: string) => number;
 
 const createTextWidthMeasurer = (font: TextMeasureFont): TextWidthMeasurer => {
@@ -56,8 +73,316 @@ const createTextWidthMeasurer = (font: TextMeasureFont): TextWidthMeasurer => {
 	// order. An assignment that does not parse is dropped and ctx.font silently
 	// keeps its previous value, so a missing font.fontFamily would measure with
 	// whatever was set last rather than raising.
-	ctx.font = `${font.fontStyle ?? "normal"} ${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
-	return (text) => ctx.measureText(text).width;
+	const fontShorthand = `${font.fontStyle ?? "normal"} ${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
+	return (text) => {
+		// Each assignment re-parses the shorthand, which costs more than the
+		// measurement itself where a word is measured character by character.
+		if (assignedFontShorthand !== fontShorthand) {
+			ctx.font = fontShorthand;
+			assignedFontShorthand = fontShorthand;
+		}
+		return ctx.measureText(text).width;
+	};
+};
+
+/** The font a run is drawn with: the slot's, with the run's own overrides on top. */
+const resolveRunFont = (
+	run: TextRun,
+	base: TextMeasureFont,
+): TextMeasureFont => ({
+	fontSize: run.fontSize ?? base.fontSize,
+	fontFamily: run.fontFamily ?? base.fontFamily,
+	fontWeight: run.fontWeight ?? base.fontWeight,
+	fontStyle: run.fontStyle ?? base.fontStyle,
+});
+
+/** A stretch of the flattened text and the font it is drawn with, in the text's own offsets. */
+type StyledRange = {
+	start: number;
+	end: number;
+	font: TextMeasureFont;
+};
+
+const toStyledRanges = (
+	text: RichText,
+	base: TextMeasureFont,
+): StyledRange[] => {
+	if (typeof text === "string") {
+		return [{ start: 0, end: text.length, font: base }];
+	}
+	const ranges: StyledRange[] = [];
+	let start = 0;
+	for (const run of text) {
+		ranges.push({
+			start,
+			end: start + run.text.length,
+			font: resolveRunFont(run, base),
+		});
+		start += run.text.length;
+	}
+	return ranges;
+};
+
+/**
+ * The largest type size drawn on `[start, end)`, never below the base font's own:
+ * the block's font sets the line box's floor (the CSS strut), so a line holding
+ * only smaller runs is still as tall as an unstyled one. A range no run overlaps
+ * — an empty line, or one whose runs are all zero-length — measures as the base
+ * size for the same reason.
+ */
+const calcMaxFontSize = (
+	ranges: StyledRange[],
+	base: TextMeasureFont,
+	start: number,
+	end: number,
+): number => {
+	let largest = base.fontSize;
+	for (const range of ranges) {
+		if (
+			Math.max(start, range.start) < Math.min(end, range.end) &&
+			range.font.fontSize > largest
+		) {
+			largest = range.font.fontSize;
+		}
+	}
+	return largest;
+};
+
+/** A styled range with the measurer for its font, built once per layout pass. */
+type StyledSegment = StyledRange & { measureWidth: TextWidthMeasurer };
+
+const toStyledSegments = (
+	text: RichText,
+	base: TextMeasureFont,
+): StyledSegment[] =>
+	toStyledRanges(text, base).map((range) => ({
+		...range,
+		measureWidth: createTextWidthMeasurer(range.font),
+	}));
+
+/**
+ * Measures pieces of one text by offset, each piece under the font of the run it
+ * falls in. Built once per layout pass, and the shared context remembers the font
+ * it was given, so a piece re-parses the shorthand only where it crosses into a
+ * run drawn with another font — an unstyled text parses it once however many
+ * pieces are measured.
+ */
+type OffsetMeasurer = {
+	/** Rendered width of `[start, end)`, summed over the runs it spans. */
+	width: (start: number, end: number) => number;
+	/** The largest type size on `[start, end)`, never below the slot's own. */
+	maxFontSize: (start: number, end: number) => number;
+};
+
+const createOffsetMeasurer = (
+	text: RichText,
+	base: TextMeasureFont,
+): { plain: string; measurer: OffsetMeasurer } => {
+	const plain = richTextToPlain(text);
+	const segments = toStyledSegments(text, base);
+	return {
+		plain,
+		measurer: {
+			width: (start, end) => {
+				let total = 0;
+				for (const segment of segments) {
+					const from = Math.max(start, segment.start);
+					const to = Math.min(end, segment.end);
+					if (from < to) {
+						total += segment.measureWidth(plain.slice(from, to));
+					}
+				}
+				return total;
+			},
+			maxFontSize: (start, end) => calcMaxFontSize(segments, base, start, end),
+		},
+	};
+};
+
+/** A stretch of the text, in its own offsets. */
+type TextRange = { start: number; end: number };
+
+/**
+ * The lines the text was authored as, split on newlines. The newline itself
+ * belongs to neither side, so an empty line is an empty range; an empty text is
+ * one such line, as is the line a trailing newline opens.
+ */
+const splitAuthoredLines = (plain: string): TextRange[] => {
+	const lines: TextRange[] = [];
+	let lineStart = 0;
+	for (let offset = 0; offset <= plain.length; offset += 1) {
+		if (offset === plain.length || plain[offset] === "\n") {
+			lines.push({ start: lineStart, end: offset });
+			lineStart = offset + 1;
+		}
+	}
+	return lines;
+};
+
+/**
+ * The smallest pieces a line may not be broken inside: a run of non-space
+ * characters with its trailing spaces attached (a break is allowed after them),
+ * or a single CJK character. Run boundaries do not split a unit — a word stays
+ * one word however much of it is styled.
+ */
+const splitIntoWrapUnits = (plain: string, line: TextRange): TextRange[] => {
+	const units: TextRange[] = [];
+	let unitStart = line.start;
+	let offset = line.start;
+	let previousWasSpace = false;
+
+	const flush = (): void => {
+		if (offset > unitStart) {
+			units.push({ start: unitStart, end: offset });
+		}
+		unitStart = offset;
+	};
+
+	for (const char of plain.slice(line.start, line.end)) {
+		const charEnd = offset + char.length;
+		if (isSpaceCharacter(char)) {
+			offset = charEnd;
+			previousWasSpace = true;
+			continue;
+		}
+		if (CJK_BREAKABLE_PATTERN.test(char)) {
+			flush();
+			units.push({ start: offset, end: charEnd });
+			offset = charEnd;
+			unitStart = charEnd;
+			previousWasSpace = false;
+			continue;
+		}
+		// The spaces that ended the previous unit are also where it may break.
+		if (previousWasSpace) {
+			flush();
+		}
+		offset = charEnd;
+		previousWasSpace = false;
+	}
+	flush();
+
+	return units;
+};
+
+/** Offset the trailing spaces of a unit start at: where a break measures the unit up to. */
+const unitBreakEnd = (plain: string, unit: TextRange): number => {
+	let end = unit.end;
+	while (end > unit.start && isSpaceCharacter(plain[end - 1])) {
+		end -= 1;
+	}
+	return end;
+};
+
+/**
+ * Breaks one authored line into the visual lines it occupies: units are packed
+ * greedily, and a unit too long for an empty line is split between characters
+ * (break-word).
+ */
+const wrapLine = (
+	plain: string,
+	line: TextRange,
+	measurer: OffsetMeasurer,
+	availableWidth: number,
+): TextRange[] => {
+	const wrapped: TextRange[] = [];
+	let lineStart = line.start;
+	let filledWidth = 0;
+
+	const breakAt = (offset: number): void => {
+		wrapped.push({ start: lineStart, end: offset });
+		lineStart = offset;
+		filledWidth = 0;
+	};
+
+	const placeCharacters = (unit: TextRange): void => {
+		let offset = unit.start;
+		for (const char of plain.slice(unit.start, unit.end)) {
+			const charEnd = offset + char.length;
+			const charWidth = measurer.width(offset, charEnd);
+			if (
+				!isSpaceCharacter(char) &&
+				filledWidth > 0 &&
+				filledWidth + charWidth > availableWidth
+			) {
+				breakAt(offset);
+			}
+			filledWidth += charWidth;
+			offset = charEnd;
+		}
+	};
+
+	for (const unit of splitIntoWrapUnits(plain, line)) {
+		const unitWidth = measurer.width(unit.start, unit.end);
+		// Trailing spaces hang past the edge under pre-wrap, so they never decide a break.
+		const breakWidth = measurer.width(unit.start, unitBreakEnd(plain, unit));
+		if (filledWidth + breakWidth <= availableWidth) {
+			filledWidth += unitWidth;
+			continue;
+		}
+		if (filledWidth > 0) {
+			breakAt(unit.start);
+			if (breakWidth <= availableWidth) {
+				filledWidth = unitWidth;
+				continue;
+			}
+		}
+		placeCharacters(unit);
+	}
+	wrapped.push({ start: lineStart, end: line.end });
+
+	return wrapped;
+};
+
+/** One drawn line of text: which characters it holds, and the box they take. */
+export type VisualLine = {
+	/** First offset of the line in the flattened text, in UTF-16 code units. */
+	start: number;
+	/** First offset past the line; the newline a break falls on is not part of either side. */
+	end: number;
+	/** Rendered width in local pixels, trailing spaces included. */
+	width: number;
+	/** Line box height: the tallest type size on the line × the shared line-height. */
+	height: number;
+};
+
+/**
+ * The lines a text is drawn as, each with the size it takes. Simulates the
+ * `white-space: pre-wrap; word-break: break-word` the text boxes are drawn with
+ * (TextOverlayFrameStyled / see ConnectorLabelStyled): lines break at spaces, a
+ * word longer than the line breaks between characters, and CJK breaks between
+ * characters. A body styled per range is measured run by run, so a part drawn
+ * larger both widens its line and makes that line's box taller.
+ *
+ * Measurement runs on an offscreen canvas, so this can be called every frame;
+ * the result matches the drawing only while the drawn font matches `font`.
+ *
+ * @param text - The whole text, authored newlines included; an empty string yields one line, as does each empty line
+ * @param font - Font the slot is drawn with, which each run overrides only where it sets a field; a family other than the drawn one moves where lines break
+ * @param availableWidth - Content width the text wraps in (box width minus its horizontal padding and border), in local pixels; anything below 1 is treated as 1, and `undefined` lays the text out as authored, breaking only at newlines
+ * @returns One entry per drawn line, top to bottom, never empty. Outside a browser the widths are estimated (see measureTextWidth), so they are proportional rather than faithful
+ */
+export const layoutVisualLines = (
+	text: RichText,
+	font: TextMeasureFont,
+	availableWidth?: number,
+): VisualLine[] => {
+	const { plain, measurer } = createOffsetMeasurer(text, font);
+
+	const wrapWidth =
+		availableWidth === undefined ? undefined : Math.max(1, availableWidth);
+	return splitAuthoredLines(plain)
+		.flatMap((line) =>
+			wrapWidth === undefined
+				? [line]
+				: wrapLine(plain, line, measurer, wrapWidth),
+		)
+		.map((line) => ({
+			start: line.start,
+			end: line.end,
+			width: measurer.width(line.start, line.end),
+			height: measurer.maxFontSize(line.start, line.end) * TEXT_LINE_HEIGHT,
+		}));
 };
 
 /**
@@ -69,122 +394,63 @@ const createTextWidthMeasurer = (font: TextMeasureFont): TextWidthMeasurer => {
  * @param font - Font the text is drawn with; a family other than the drawn one skews the result
  * @returns The width, or a `characters × fontSize × 0.6` estimate outside a browser
  */
-export const measureTextWidth = (text: string, font: TextMeasureFont): number =>
-	createTextWidthMeasurer(font)(text);
-
-/**
- * The smallest pieces a line may not be broken inside: a run of non-space
- * characters with its trailing spaces attached (a break is allowed after them),
- * or a single CJK character.
- */
-const splitIntoWrapUnits = (line: string): string[] => {
-	const units: string[] = [];
-	let unit = "";
-	const flush = (): void => {
-		if (unit !== "") {
-			units.push(unit);
-			unit = "";
-		}
-	};
-
-	for (const char of line) {
-		if (isSpaceCharacter(char)) {
-			unit += char;
-			continue;
-		}
-		if (CJK_BREAKABLE_PATTERN.test(char)) {
-			flush();
-			units.push(char);
-			continue;
-		}
-		// The spaces that ended the previous unit are also where it may break.
-		if (isSpaceCharacter(unit.slice(-1))) {
-			flush();
-		}
-		unit += char;
-	}
-	flush();
-
-	return units;
-};
-
-/**
- * Counts the lines one logical line occupies: units are packed greedily, and a
- * unit too long for an empty line is split between characters (break-word).
- */
-const countWrappedLines = (
-	line: string,
-	availableWidth: number,
-	measureWidth: TextWidthMeasurer,
+export const measureTextWidth = (
+	text: RichText,
+	font: TextMeasureFont,
 ): number => {
-	let lineCount = 1;
-	let filledWidth = 0;
-
-	const placeCharacters = (unit: string): void => {
-		for (const char of unit) {
-			const charWidth = measureWidth(char);
-			if (
-				!isSpaceCharacter(char) &&
-				filledWidth > 0 &&
-				filledWidth + charWidth > availableWidth
-			) {
-				lineCount += 1;
-				filledWidth = 0;
-			}
-			filledWidth += charWidth;
-		}
-	};
-
-	for (const unit of splitIntoWrapUnits(line)) {
-		const unitWidth = measureWidth(unit);
-		// Trailing spaces hang past the edge under pre-wrap, so they never decide a break.
-		const breakWidth = measureWidth(unit.trimEnd());
-		if (filledWidth + breakWidth <= availableWidth) {
-			filledWidth += unitWidth;
-			continue;
-		}
-		if (filledWidth > 0) {
-			lineCount += 1;
-			filledWidth = 0;
-			if (breakWidth <= availableWidth) {
-				filledWidth = unitWidth;
-				continue;
-			}
-		}
-		placeCharacters(unit);
-	}
-
-	return lineCount;
+	const { plain, measurer } = createOffsetMeasurer(text, font);
+	return measurer.width(0, plain.length);
 };
 
 /**
  * Number of lines the text occupies once wrapped into a box of the given width,
- * counting authored newlines and automatic wrapping alike. Simulates the
- * `white-space: pre-wrap; word-break: break-word` the text boxes are drawn with
- * (TextOverlayFrameStyled / see ConnectorLabelStyled): lines break at spaces, a
- * word longer than the line breaks between characters, and CJK breaks between
- * characters. Multiply by `fontSize × line-height` for a box height that does
- * not clip the text.
- *
- * Measurement runs on an offscreen canvas, so this can be called every frame;
- * the count matches the drawing only while the drawn font matches `font`.
+ * counting authored newlines and automatic wrapping alike (see
+ * {@link layoutVisualLines}). Multiply by `fontSize × line-height` for a box
+ * height that does not clip the text — or, for a text whose runs are not all one
+ * size, take {@link calcVisualTextHeight} instead.
  *
  * @param text - The whole text, authored newlines included; an empty string counts as one line, as does each empty line
  * @param font - Font the text is drawn with; a family other than the drawn one moves where lines break
- * @param availableWidth - Content width the text wraps in (box width minus its horizontal padding and border), in local pixels; anything below 1 is treated as 1
- * @returns The line count, always at least 1. Outside a browser the widths are estimated (see measureTextWidth), so the count is proportional rather than faithful
+ * @param availableWidth - Content width the text wraps in, in local pixels; anything below 1 is treated as 1
+ * @returns The line count, always at least 1
  */
 export const calcVisualLineCount = (
-	text: string,
+	text: RichText,
 	font: TextMeasureFont,
 	availableWidth: number,
+): number => layoutVisualLines(text, font, availableWidth).length;
+
+/**
+ * Height the drawn lines of a text add up to, the line boxes of parts drawn
+ * larger included. The height counterpart of {@link calcVisualLineCount}, and
+ * equal to `lineCount × fontSize × line-height` whenever nothing overrides the
+ * type size.
+ *
+ * @param text - The whole text, authored newlines included
+ * @param font - Font the slot is drawn with
+ * @param availableWidth - Content width the text wraps in; `undefined` lays it out as authored, breaking only at newlines, and takes the height without measuring any width
+ * @returns The total height in local pixels, never below one line box
+ */
+export const calcVisualTextHeight = (
+	text: RichText,
+	font: TextMeasureFont,
+	availableWidth?: number,
 ): number => {
-	const measureWidth = createTextWidthMeasurer(font);
-	const wrapWidth = Math.max(1, availableWidth);
-	return text
-		.split("\n")
-		.reduce(
-			(count, line) => count + countWrappedLines(line, wrapWidth, measureWidth),
+	if (availableWidth !== undefined) {
+		return layoutVisualLines(text, font, availableWidth).reduce(
+			(total, line) => total + line.height,
 			0,
 		);
+	}
+	// Without a width to wrap in, the drawn lines are the authored ones and their
+	// heights follow from the type sizes alone. Going through layoutVisualLines
+	// would canvas-measure every line for a width this caller discards, and the
+	// callers that pass no width ask for a height per line on every render.
+	const ranges = toStyledRanges(text, font);
+	return splitAuthoredLines(richTextToPlain(text)).reduce(
+		(total, line) =>
+			total +
+			calcMaxFontSize(ranges, font, line.start, line.end) * TEXT_LINE_HEIGHT,
+		0,
+	);
 };

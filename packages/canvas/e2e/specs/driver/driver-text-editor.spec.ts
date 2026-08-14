@@ -4,7 +4,7 @@ import { test, expect } from "../../fixtures";
  * Driver self-test for CanvasDriver's text editor introspection methods.
  */
 test.describe("driver: text editor introspection", () => {
-	test("focuses the textarea right after editing starts", async ({
+	test("focuses the editing surface right after editing starts", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });

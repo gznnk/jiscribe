@@ -230,6 +230,43 @@ test("exports a plain .svg with no metadata when data embedding is off", async (
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
 });
 
+test("writes a body styled per range as one <tspan> per run", async ({
+	canvas,
+	page,
+}) => {
+	await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 540, y: 300 });
+	await canvas.typeTextAt({ x: 420, y: 250 }, "Payment failed");
+	// Bold the first word only, so the line has to be written as two runs.
+	await page.keyboard.press("Home");
+	for (let i = 0; i < 7; i++) {
+		await page.keyboard.press("Shift+ArrowRight");
+	}
+	await page.keyboard.press("ControlOrMeta+b");
+	await canvas.commitText();
+	await canvas.deselect();
+
+	// Data embedding off, so a match can only come from the rendered <text>.
+	const svg = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 750, y: 550 },
+		"svg",
+		{ includeSource: false },
+	);
+	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
+
+	const textBlock = (svgText.match(/<text\b[\s\S]*?<\/text>/g) ?? []).find(
+		(block) => block.includes("Payment"),
+	);
+	expect(textBlock, "the styled body is emitted as <text>").toBeDefined();
+	// The line is one <tspan> holding a nested one per run: the bold word carries
+	// the weight it does not inherit, the rest carries none.
+	expect(textBlock).toMatch(
+		/<tspan[^>]*font-weight="(bold|700)"[^>]*>Payment<\/tspan>/,
+	);
+	expect(textBlock).toContain(" failed</tspan>");
+});
+
 /**
  * Whether a background rect is present: the rect buildExportSvg lays down to
  * cover the whole viewBox via a fill attribute. Shape rects are transform/style

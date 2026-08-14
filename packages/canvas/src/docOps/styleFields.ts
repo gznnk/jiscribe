@@ -12,7 +12,14 @@ import {
 	STROKE_STYLE_KEYS,
 	type StrokeStyleDoc,
 } from "../schemas/objects/base/StrokeStyleDoc";
+import type { InlineTextStyle } from "../schemas/objects/types/RichText";
 import {
+	clearInlineStyleFromRuns,
+	isStyledRichText,
+	TEXT_INLINE_STYLE_KEYS,
+} from "../schemas/objects/types/RichText";
+import {
+	isTextRows,
 	TEXT_SLOT_STYLE_KEYS,
 	type TextSlot,
 } from "../schemas/objects/types/TextSlot";
@@ -62,6 +69,37 @@ const applyKeys = (
 		target[key] = value;
 		return [key];
 	});
+
+/**
+ * Drops the styling just applied to a whole text from the runs it was overridden
+ * in, so the new value actually shows: a property set on the shape wins over the
+ * ranges it was set on part of the text, rather than leaving them untouched and
+ * the shape looking unchanged. Only the applied properties are dropped — the rest
+ * of a run's styling stays.
+ *
+ * @param target - The slot (or single-body object) whose text is rewritten in place
+ * @param appliedKeys - The style keys just written; the ones that cannot appear on a run are ignored
+ */
+const dropAppliedRunStyle = (
+	target: Record<string, unknown>,
+	appliedKeys: readonly string[],
+): void => {
+	const inlineKeys = appliedKeys.filter((key) =>
+		(TEXT_INLINE_STYLE_KEYS as readonly string[]).includes(key),
+	) as (keyof InlineTextStyle)[];
+	if (inlineKeys.length === 0) {
+		return;
+	}
+	const content = target.text;
+	// A row-partitioned slot is stripped row by row, each row being a body of its own.
+	if (isTextRows(content)) {
+		target.text = content.map((row) =>
+			clearInlineStyleFromRuns(row, inlineKeys),
+		);
+	} else if (isStyledRichText(content)) {
+		target.text = clearInlineStyleFromRuns(content, inlineKeys);
+	}
+};
 
 /** The slot objects of a `text: "slots"` doc, whose typography lives per slot. */
 const readTextSlots = (object: ObjectRecord): Record<string, unknown>[] => {
@@ -120,15 +158,15 @@ export const applyStyle = (
 		applyKeys(object, style, shapeKeys).forEach((key) => appliedKeys.add(key));
 
 		if (features?.text === "body") {
-			applyKeys(object, style, TEXT_SLOT_STYLE_KEYS).forEach((key) =>
-				appliedKeys.add(key),
-			);
+			const written = applyKeys(object, style, TEXT_SLOT_STYLE_KEYS);
+			written.forEach((key) => appliedKeys.add(key));
+			dropAppliedRunStyle(object, written);
 		} else if (features?.text === "slots") {
 			// Typography is stored per slot, so styling the shape means styling all of them.
 			for (const slot of readTextSlots(object)) {
-				applyKeys(slot, style, TEXT_SLOT_STYLE_KEYS).forEach((key) =>
-					appliedKeys.add(key),
-				);
+				const written = applyKeys(slot, style, TEXT_SLOT_STYLE_KEYS);
+				written.forEach((key) => appliedKeys.add(key));
+				dropAppliedRunStyle(slot, written);
 			}
 		}
 	}
