@@ -34,7 +34,7 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 	// same resolution the editing surface and the reducer's re-measure make.
 	const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
 	const style = useMemo(
-		() => textStyleDefaults.resolveSlotStyle(type, bodySlot),
+		() => textStyleDefaults.resolveSlotStyle(type, BODY_TEXT_SLOT_ID, bodySlot),
 		[textStyleDefaults, type, bodySlot],
 	);
 

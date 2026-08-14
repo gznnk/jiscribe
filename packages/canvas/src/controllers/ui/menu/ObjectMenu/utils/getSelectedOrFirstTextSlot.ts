@@ -12,18 +12,19 @@ import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSl
 import { resolveTextEditSelection } from "../../../../utils/styleTextEditSelection";
 
 /**
- * One found slot with its type's defaults resolved in, keeping its content as it
- * is. Undefined passes through, so a caller can hand over whatever its lookup
- * found.
+ * One found slot with the defaults its type declares for that slot id resolved
+ * in, keeping its content as it is. Undefined passes through, so a caller can
+ * hand over whatever its lookup found.
  */
 const withTypeStyleDefaults = (
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
 	type: ObjectType,
+	slotId: string,
 	slot: TextSlot | undefined,
 ): TextSlot | undefined =>
 	slot === undefined
 		? undefined
-		: { ...slot, ...textStyleDefaults.resolveSlotStyle(type, slot) };
+		: { ...slot, ...textStyleDefaults.resolveSlotStyle(type, slotId, slot) };
 
 /**
  * The slot the text menus show the current styling of: the slot selected one
@@ -57,8 +58,8 @@ export const getSelectedOrFirstTextSlot = (
 ): TextSlot | undefined => {
 	const textEditSelection = resolveTextEditSelection(state);
 	if (textEditSelection !== null) {
-		const { type, slot, content, start, end } = textEditSelection;
-		const style = textStyleDefaults.resolveSlotStyle(type, slot);
+		const { type, slotId, slot, content, start, end } = textEditSelection;
+		const style = textStyleDefaults.resolveSlotStyle(type, slotId, slot);
 		return {
 			text: "",
 			textAlign: style.textAlign,
@@ -74,6 +75,7 @@ export const getSelectedOrFirstTextSlot = (
 			return withTypeStyleDefaults(
 				textStyleDefaults,
 				target.type,
+				selectedTextSlot.slotId,
 				target.text?.[selectedTextSlot.slotId],
 			);
 		}
@@ -88,9 +90,13 @@ export const getSelectedOrFirstTextSlot = (
 		return undefined;
 	}
 	const slotId = getFirstTextSlotId(firstWithText.text);
+	if (slotId === undefined) {
+		return undefined;
+	}
 	return withTypeStyleDefaults(
 		textStyleDefaults,
 		firstWithText.type,
-		slotId === undefined ? undefined : firstWithText.text?.[slotId],
+		slotId,
+		firstWithText.text?.[slotId],
 	);
 };

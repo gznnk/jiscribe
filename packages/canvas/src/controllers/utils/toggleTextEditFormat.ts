@@ -67,7 +67,11 @@ export const toggleTextEditFormat = (
 				selection.content,
 				selection.start,
 				selection.end,
-				textStyleDefaults.resolveSlotStyle(selection.type, selection.slot),
+				textStyleDefaults.resolveSlotStyle(
+					selection.type,
+					selection.slotId,
+					selection.slot,
+				),
 			),
 		),
 	);

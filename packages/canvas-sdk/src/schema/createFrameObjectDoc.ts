@@ -3,6 +3,7 @@ import type {
 	ObjectDocDefinition,
 	ObjectDocValidateFn,
 	ObjectFeatures,
+	ObjectTextSlotStyleDefaults,
 } from "@jiscribe/canvas/doc";
 import {
 	createFrameDocValidator,
@@ -46,6 +47,13 @@ type FrameObjectDocCommonParams = {
 	 * an empty array means valid.
 	 */
 	validateExtra?: ObjectDocValidateFn;
+
+	/**
+	 * Draw-time text-style defaults keyed by slot id, for a `text: "slots"` shape
+	 * (see `ObjectDocDefinition.textSlotStyleDefaults`). A `"body"` shape omits it:
+	 * its single slot's defaults are read off {@link defaults}.
+	 */
+	textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;
 };
 
 /**
@@ -102,6 +110,7 @@ export const createFrameObjectDoc = ({
 	validateExtra,
 	factory,
 	supportsBounds,
+	textSlotStyleDefaults,
 }: FrameObjectDocParams): ObjectDocDefinition => ({
 	features,
 	validateDoc: createFrameDocValidator(features, validateExtra),
@@ -110,4 +119,5 @@ export const createFrameObjectDoc = ({
 	summary,
 	outlineDescription,
 	defaults,
+	textSlotStyleDefaults,
 });

@@ -12,8 +12,9 @@ import type { RecordFeatures } from "../schema/RecordDoc";
  * and so the default slot — on a box that has one (see normalizeRecordText).
  *
  * Structurally the same as RecordTextDoc: a keyed doc and its state hold the same
- * slot shape, the mapper only filling omitted styling from
- * RECORD_SLOT_STYLE_DEFAULTS_BY_ID.
+ * slot shape, the mapper only forcing the content kind each slot id fixes.
+ * Omitted typography stays omitted here too, and is resolved per read against
+ * RECORD_SLOT_STYLE_DEFAULTS_BY_ID (ObjectTextStyleDefaultsRegistry).
  */
 export type RecordTextState = {
 	/** Stereotype line drawn above the title; absent when the box has no stereotype band. */
@@ -38,6 +39,6 @@ export type RecordState = Omit<
 	CreateObjectState<typeof RecordFeatures, typeof RecordStateBrand>,
 	"text"
 > & {
-	/** The text slots; typed, styled, and ordered by RecordMapper, with `name` guaranteed. */
+	/** The text slots; typed and ordered by RecordMapper, with `name` guaranteed. */
 	text: RecordTextState;
 };

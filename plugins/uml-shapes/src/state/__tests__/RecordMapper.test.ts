@@ -2,10 +2,7 @@ import type { RichText, TextSlotContent } from "@jiscribe/canvas/doc";
 import { isTextRows } from "@jiscribe/canvas/doc";
 import { describe, it, expect } from "vitest";
 
-import {
-	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
-	type RecordDoc,
-} from "../../schema/RecordDoc";
+import { type RecordDoc } from "../../schema/RecordDoc";
 import { validateRecordTextFields } from "../../schema/validateRecordTextFields";
 import { recordToDoc, recordToState } from "../RecordMapper";
 
@@ -32,22 +29,20 @@ const commitEdit = (
 	isTextRows(content) ? (value.split("\n") as RichText[]) : value;
 
 describe("recordToState", () => {
-	it("keeps the slot contents, filling omitted styling with the record defaults", () => {
+	it("keeps the slot contents as they are", () => {
 		const state = recordToState(
 			makeDoc({ name: { text: "User" }, attributes: { text: ["id", "name"] } }),
 		);
 		expect(state.text).toEqual({
-			name: { ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name, text: "User" },
-			attributes: {
-				...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.attributes,
-				text: ["id", "name"],
-			},
+			name: { text: "User" },
+			attributes: { text: ["id", "name"] },
 		});
 	});
 
-	it("styles a slot the doc left unstyled the way that slot is drawn", () => {
-		// `{"name":{"text":"User"}}` written by an AI must look the same as a record placed
-		// from the toolbar.
+	it("leaves the typography a slot omits unset, for the draw side to resolve", () => {
+		// The per-slot look is registered as the type's draw-time defaults
+		// (RECORD_SLOT_STYLE_DEFAULTS_BY_ID), so materializing it here would put
+		// six fields per slot into a document that never wrote them.
 		const state = recordToState(
 			makeDoc({
 				stereotype: { text: "<<interface>>" },
@@ -55,24 +50,12 @@ describe("recordToState", () => {
 				attributes: { text: ["id"] },
 			}),
 		);
-		expect(state.text.stereotype).toMatchObject({
-			textAlign: "center",
-			verticalAlign: "middle",
-			fontWeight: "normal",
-		});
-		expect(state.text.name).toMatchObject({
-			textAlign: "center",
-			verticalAlign: "middle",
-			fontWeight: "bold",
-		});
-		expect(state.text.attributes).toMatchObject({
-			textAlign: "left",
-			verticalAlign: "top",
-			fontWeight: "normal",
-		});
+		expect(state.text.stereotype).toEqual({ text: "<<interface>>" });
+		expect(state.text.name).toEqual({ text: "User" });
+		expect(state.text.attributes).toEqual({ text: ["id"] });
 	});
 
-	it("lets each slot's own styling win over the defaults", () => {
+	it("keeps each slot's own styling", () => {
 		const state = recordToState(
 			makeDoc({
 				name: { text: "User", fontWeight: "normal" },
@@ -80,36 +63,22 @@ describe("recordToState", () => {
 			}),
 		);
 		expect(state.text).toEqual({
-			name: {
-				...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name,
-				text: "User",
-				fontWeight: "normal",
-			},
-			attributes: {
-				...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.attributes,
-				text: ["id"],
-				fontSize: 12,
-				textAlign: "center",
-			},
+			name: { text: "User", fontWeight: "normal" },
+			attributes: { text: ["id"], fontSize: 12, textAlign: "center" },
 		});
 	});
 
 	it("materializes the title alone when the doc spells out no slot", () => {
 		// An absent compartment is an absent compartment, so only the title —
 		// which every record has — is filled in.
-		expect(recordToState(makeDoc()).text).toEqual({
-			name: { ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name, text: "" },
-		});
+		expect(recordToState(makeDoc()).text).toEqual({ name: { text: "" } });
 	});
 
 	it("keeps a written stereotype and leaves an unwritten one out", () => {
 		const state = recordToState(
 			makeDoc({ stereotype: { text: "<<enum>>" }, name: { text: "Status" } }),
 		);
-		expect(state.text.stereotype).toEqual({
-			...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.stereotype,
-			text: "<<enum>>",
-		});
+		expect(state.text.stereotype).toEqual({ text: "<<enum>>" });
 		expect(
 			recordToState(makeDoc({ name: { text: "Status" } })).text,
 		).not.toHaveProperty("stereotype");
@@ -126,10 +95,7 @@ describe("recordToState", () => {
 		const state = recordToState(
 			makeDoc({ attributes: { text: ["id"] } } as RecordDoc["text"]),
 		);
-		expect(state.text.name).toEqual({
-			...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name,
-			text: "",
-		});
+		expect(state.text.name).toEqual({ text: "" });
 	});
 
 	it("keys the slots in stacking order whatever order the doc wrote them in", () => {
@@ -175,8 +141,8 @@ describe("recordToState", () => {
 			} as unknown as RecordDoc["text"]),
 		);
 		expect(state.text).toEqual({
-			name: { ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name, text: "" },
-			attributes: { ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.attributes, text: [] },
+			name: { text: "" },
+			attributes: { text: [] },
 		});
 	});
 
@@ -221,27 +187,22 @@ describe("recordToState", () => {
 });
 
 describe("recordToDoc", () => {
-	it("emits the keyed text unconverted, the materialized defaults included", () => {
+	it("emits the keyed text unconverted", () => {
 		const state = recordToState(
 			makeDoc({ name: { text: "User" }, attributes: { text: ["id"] } }),
 		);
 		expect(recordToDoc(state).text).toEqual({
-			name: { ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name, text: "User" },
-			attributes: {
-				...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.attributes,
-				text: ["id"],
-			},
+			name: { text: "User" },
+			attributes: { text: ["id"] },
 		});
 	});
 
 	it("keeps the title-only text instead of dropping it", () => {
 		const state = recordToState(makeDoc());
-		expect(recordToDoc(state).text).toEqual({
-			name: { ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name, text: "" },
-		});
+		expect(recordToDoc(state).text).toEqual({ name: { text: "" } });
 	});
 
-	it("round-trips all four slots, materializing the omitted defaults", () => {
+	it("round-trips all four slots without materializing the omitted styling", () => {
 		const doc = makeDoc({
 			stereotype: { text: "<<interface>>" },
 			name: { text: "User", fontWeight: "normal" },
@@ -257,26 +218,7 @@ describe("recordToDoc", () => {
 			width: 180,
 			height: 100,
 		});
-		expect(roundTripped.text).toEqual({
-			stereotype: {
-				...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.stereotype,
-				text: "<<interface>>",
-			},
-			name: {
-				...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name,
-				text: "User",
-				fontWeight: "normal",
-			},
-			attributes: {
-				...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.attributes,
-				text: ["id: string", "name: string"],
-				fontSize: 12,
-			},
-			operations: {
-				...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.operations,
-				text: ["save()"],
-			},
-		});
+		expect(roundTripped.text).toEqual(doc.text);
 	});
 
 	it("round-trips a two-compartment box without inventing the third", () => {

@@ -12,8 +12,8 @@ import { calcRecordListHeight, RECORD_BAND_HEIGHT } from "../schema/RecordDoc";
  * box starts with, which is what the slot keys say (see RecordDoc). Each preset
  * spells its slots out in full because the override replaces the defaults' `text`
  * wholesale rather than merging into it, and writes nothing but the text unless
- * the preset's notation demands otherwise: the typography is the mapper's to fill
- * (see RECORD_SLOT_STYLE_DEFAULTS_BY_ID).
+ * the preset's notation demands otherwise: unwritten typography is resolved at
+ * draw time (see RECORD_SLOT_STYLE_DEFAULTS_BY_ID).
  *
  * The heights sum one term per band and one per compartment: every compartment
  * carries padding of its own (see calcRecordListHeight), so measuring the rows

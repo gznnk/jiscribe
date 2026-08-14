@@ -149,6 +149,7 @@ function renderTextEditor(
 	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
 	const style = textStyleDefaults.resolveSlotStyle(
 		target.type,
+		slotId,
 		target.text?.[slotId],
 	);
 	// How far a growing editor may extend: from the region's top edge down to the

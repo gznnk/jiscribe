@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
 import type { RichText } from "../../../schemas/objects/types/RichText";
 import { richTextToPlain } from "../../../schemas/objects/types/RichText";
 import { createObjectTextStyleDefaultsRegistry } from "../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
@@ -218,7 +219,9 @@ describe("toggleTextEditFormat on a slot holding rows", () => {
 describe("toggleTextEditFormat against the type's own defaults", () => {
 	/** A registry standing in for a type whose bodies are bold unless said otherwise. */
 	const boldByDefault = createObjectTextStyleDefaultsRegistry();
-	boldByDefault.register("rect", { fontWeight: "bold" });
+	boldByDefault.register("rect", {
+		[BODY_TEXT_SLOT_ID]: { fontWeight: "bold" },
+	});
 
 	const selected = (): CanvasControllerState =>
 		editingState({ body: { text: "hello" } }, "hello", { start: 0, end: 2 });

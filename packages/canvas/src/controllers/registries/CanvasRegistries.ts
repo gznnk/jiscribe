@@ -45,9 +45,10 @@ export type CanvasRegistries = {
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	/**
-	 * Per-type text-style defaults, read by every side that draws, edits,
-	 * measures or reports a text style so a field the author left unset resolves
-	 * to the type's own default rather than a type-agnostic one.
+	 * Per-type, per-slot text-style defaults, read by every side that draws,
+	 * edits, measures or reports a text style so a field the author left unset
+	 * resolves to what that slot of that type is drawn with rather than a
+	 * type-agnostic default.
 	 */
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;

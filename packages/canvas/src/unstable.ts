@@ -32,7 +32,8 @@ export { TextOverlay } from "./presentations/objects/base/TextOverlay/TextOverla
 
 // Only for a type that draws its own component instead of going through
 // createFrameObject (which resolves this already): the per-canvas registry of
-// text-style defaults. Resolve the slot through it before handing its fields to
+// text-style defaults, keyed by type and slot id. Resolve the slot through it
+// before handing its fields to
 // TextOverlay, or the drawn text and the editing surface — which always resolves —
 // disagree wherever the type's defaults differ from TEXT_STYLE_FALLBACK.
 export { useObjectTextStyleDefaultsRegistry } from "./presentations/objects/registry/ObjectTextStyleDefaultsRegistryContext";

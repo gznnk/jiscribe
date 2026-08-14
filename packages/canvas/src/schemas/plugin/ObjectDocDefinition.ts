@@ -2,6 +2,7 @@ import type { ObjectDoc } from "../objects/base/ObjectDoc";
 import type { ObjectFactory } from "../objects/types/ObjectFactory";
 import type { ObjectFeatures } from "../objects/types/ObjectFeatures";
 import type { ObjectDocValidateFn } from "../registry/ObjectDocValidatorRegistry";
+import type { ObjectTextSlotStyleDefaults } from "../registry/ObjectTextStyleDefaultsRegistry";
 
 /**
  * Headless (UI-independent) description of a single object type: everything the
@@ -51,4 +52,17 @@ export type ObjectDocDefinition = {
 	 * shared style defaults are called out in the generated schema.
 	 */
 	defaults?: Omit<ObjectDoc, "id"> & Readonly<Record<string, unknown>>;
+
+	/**
+	 * Draw-time text-style defaults of a `features.text: "slots"` type, keyed by
+	 * slot id: what each slot's typography falls back to where the document sets
+	 * none (ObjectTextStyleDefaultsRegistry). Declared here because a keyed type's
+	 * styling has no flat doc field for {@link defaults} to carry it in; a
+	 * `"body"` type needs none, its single slot's defaults being read off
+	 * {@link defaults} instead.
+	 *
+	 * Resolved per read and never written back, so a field the author omitted
+	 * stays omitted in the saved document.
+	 */
+	textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;
 };

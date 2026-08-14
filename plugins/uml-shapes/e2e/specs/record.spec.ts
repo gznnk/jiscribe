@@ -118,6 +118,35 @@ async function outlineHeight(
 	}, id);
 }
 
+/**
+ * The typography one text overlay draws with, picked by the whole text it holds:
+ * a record has one overlay per slot, so the slot is named by its content.
+ *
+ * @param text - The slot's text as the overlay draws it (rows "\n"-joined)
+ * @returns The computed values, browser-normalized (fontWeight as a number);
+ *   empty strings when no overlay holds that text
+ */
+async function overlayTypography(
+	canvas: CanvasDriver,
+	text: string,
+): Promise<{ fontWeight: string; textAlign: string }> {
+	return canvas.page.evaluate((expected) => {
+		// foreignObject > wrapper > content is the text overlay's DOM contract.
+		for (const frame of document.querySelectorAll("foreignObject")) {
+			const content = frame.firstElementChild?.firstElementChild;
+			if (
+				!(content instanceof HTMLElement) ||
+				content.textContent !== expected
+			) {
+				continue;
+			}
+			const style = getComputedStyle(content);
+			return { fontWeight: style.fontWeight, textAlign: style.textAlign };
+		}
+		return { fontWeight: "", textAlign: "" };
+	}, text);
+}
+
 test.describe("record (a box with compartments)", () => {
 	test("creates it from the uml flyout with a data-part on every compartment", async ({
 		canvas,
@@ -493,5 +522,26 @@ test.describe("record (a box with compartments)", () => {
 		await canvas.typeTextAt({ x: 410, y: 212 }, "");
 		await expect.poll(() => canvas.textEditorText()).toBe("<<interface>>");
 		await canvas.cancelText();
+	});
+
+	test("draws each slot with the per-slot typography no stencil writes into it", async ({
+		canvas,
+	}) => {
+		// The stencils write nothing but the text (see RecordStencils) and the mapper
+		// fills nothing in, so what makes the title bold and centered over left-aligned
+		// rows is the draw-time resolution alone (RECORD_SLOT_STYLE_DEFAULTS_BY_ID
+		// through ObjectTextStyleDefaultsRegistry). A record an AI wrote as
+		// `{"name":{"text":"Object"}}` is the same case.
+		await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		await canvas.deselect();
+
+		expect(await overlayTypography(canvas, OBJECT_STENCIL_NAME)).toEqual({
+			fontWeight: "700",
+			textAlign: "center",
+		});
+		expect(await overlayTypography(canvas, OBJECT_STENCIL_ATTRIBUTES)).toEqual({
+			fontWeight: "400",
+			textAlign: "left",
+		});
 	});
 });

@@ -62,6 +62,9 @@ export type {
 	StyleValueType,
 } from "./schemas/objects/types/ExtraStyleProperty";
 export type { ObjectDocDefinition } from "./schemas/plugin/ObjectDocDefinition";
+// The per-slot text-style defaults a `text: "slots"` type declares on its doc
+// definition (`ObjectDocDefinition.textSlotStyleDefaults`).
+export type { ObjectTextSlotStyleDefaults } from "./schemas/registry/ObjectTextStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./schemas/plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorRegistry";
 export type {

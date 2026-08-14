@@ -1,4 +1,5 @@
 import type { CanvasRegistries } from "./CanvasRegistries";
+import { BODY_TEXT_SLOT_ID } from "../../constants/textSlotId";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
 import type {
 	AnyObjectTypeDefinition,
@@ -287,19 +288,22 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
-	const textStyleDefaults = extractTextSlotStyleDefaults(
+	const slotStyleDefaults = extractTextSlotStyleDefaults(
 		definition.features,
 		definition.defaults,
+		definition.textSlotStyleDefaults,
 	);
-	if (textStyleDefaults) {
-		registries.objectTextStyleDefaults.register(type, textStyleDefaults);
+	if (slotStyleDefaults) {
+		registries.objectTextStyleDefaults.register(type, slotStyleDefaults);
 	}
 	if (definition.contentResizer) {
 		// The resizer measures the text with the style it is drawn with, so the
 		// type's own defaults ride in on the context rather than each resizer
-		// reaching for a registry the states layer cannot see. A type with no
-		// defaults to add is registered as it is, so nothing is wrapped for nothing.
+		// reaching for a registry the states layer cannot see. Only the body slot's
+		// are passed: a content-resized type sizes its box to one text. A type with
+		// no defaults to add is registered as it is, so nothing is wrapped for nothing.
 		const resizeToContent = definition.contentResizer;
+		const textStyleDefaults = slotStyleDefaults?.[BODY_TEXT_SLOT_ID];
 		registries.objectContentResizer.register(
 			type,
 			textStyleDefaults === undefined

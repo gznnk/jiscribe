@@ -15,7 +15,7 @@ export type ObjectContentResizeContext = {
 	 */
 	fontFamily: string;
 	/**
-	 * The resized type's own text-style defaults, filled in by the registration
+	 * The resized type's own defaults for its body slot, filled in by the registration
 	 * (`applyObjectDefinition`) rather than by the caller: measuring against a
 	 * style other than the drawn one is the same few-percent error as the wrong
 	 * family. Undefined for a type that declares none.

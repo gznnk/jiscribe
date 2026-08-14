@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 
+import { BODY_TEXT_SLOT_ID } from "../../../../../../constants/textSlotId";
 import { createObjectTextStyleDefaultsRegistry } from "../../../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
@@ -146,7 +147,9 @@ describe("getSelectedOrFirstTextSlot", () => {
 describe("getSelectedOrFirstTextSlot with the type's own defaults", () => {
 	/** A registry standing in for a type whose bodies are left/top unless said otherwise. */
 	const leftTop = createObjectTextStyleDefaultsRegistry();
-	leftTop.register("rect", { textAlign: "left", verticalAlign: "top" });
+	leftTop.register("rect", {
+		[BODY_TEXT_SLOT_ID]: { textAlign: "left", verticalAlign: "top" },
+	});
 
 	it("reports the type's default for a field the slot leaves unset", () => {
 		const r = rect("r1", { body: { text: "hello" } });

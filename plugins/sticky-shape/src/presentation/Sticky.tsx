@@ -45,6 +45,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 	// the editing surface does it either way (issue #8).
 	const style = useObjectTextStyleDefaultsRegistry().resolveSlotStyle(
 		type,
+		BODY_TEXT_SLOT_ID,
 		bodySlot,
 	);
 

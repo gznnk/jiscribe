@@ -163,9 +163,10 @@ export const createFrameObject = <TState extends FrameRenderState>(
 
 		const drawSlotOverlay = (slotId: string, slot: TextSlot): ReactNode => {
 			const textRegion = calcTextRegion(props, slotId, textRegionCalculator);
-			// The type's own defaults stand in for whatever the slot leaves unset,
-			// the same resolution the editing surface and text measurement make.
-			const style = textStyleDefaults.resolveSlotStyle(type, slot);
+			// The type's own defaults for this slot stand in for whatever the slot
+			// leaves unset, the same resolution the editing surface and text
+			// measurement make.
+			const style = textStyleDefaults.resolveSlotStyle(type, slotId, slot);
 			const overlayProps: FrameTextOverlayProps = {
 				slotId,
 				x: textRegion.x,

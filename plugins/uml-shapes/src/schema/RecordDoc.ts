@@ -145,11 +145,12 @@ export const RECORD_SLOT_STYLE_DEFAULTS = {
 } as const satisfies Omit<TextSlot, "text">;
 
 /**
- * What each slot's omitted typography is filled from, keyed by slot id. The one
- * place the per-slot look is decided — the mapper fills a parsed doc from it, the
- * doc defaults spell a fresh record out with it, and the region split measures a
- * band with it — so a record written as `{"name":{"text":"User"}}` renders like
- * one dropped from the toolbar.
+ * What each slot's omitted typography resolves to, keyed by slot id. The one
+ * place the per-slot look is decided — the doc definition registers it as the
+ * type's draw-time defaults (ObjectTextStyleDefaultsRegistry), the doc defaults
+ * spell a fresh record out with it, and the region split measures a band with
+ * it — so a record written as `{"name":{"text":"User"}}` renders like one dropped
+ * from the toolbar without gaining the fields it never wrote.
  */
 export const RECORD_SLOT_STYLE_DEFAULTS_BY_ID = {
 	/** Centered over the title, and left at the body weight so the `<<interface>>` line reads as the title's caption rather than a second title. */

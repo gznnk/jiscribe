@@ -10,7 +10,11 @@ import type {
 } from "@jiscribe/canvas/doc";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 
-import { RECORD_DOC_DEFAULTS, RecordFeatures } from "./schema/RecordDoc";
+import {
+	RECORD_DOC_DEFAULTS,
+	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
+	RecordFeatures,
+} from "./schema/RecordDoc";
 import {
 	UML_COMPONENT_DOC_DEFAULTS,
 	UmlComponentFeatures,
@@ -36,6 +40,9 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	// only summary is consumed — it fills the generated doc tables.
 	summary: "titled box + row compartments (UML class / ER entity)",
 	validateExtra: validateRecordTextFields,
+	// Resolved per read, so a document keeps whichever of these it wrote itself
+	// and nothing more (ObjectTextStyleDefaultsRegistry).
+	textSlotStyleDefaults: RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
 });
 
 export const umlPackageDocDefinition: ObjectDocDefinition =

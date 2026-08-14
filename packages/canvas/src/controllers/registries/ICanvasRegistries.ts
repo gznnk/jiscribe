@@ -37,7 +37,8 @@ export interface ICanvasRegistries {
 	 */
 	objectContentResizer: ObjectContentResizerRegistry;
 	/**
-	 * Per-type text-style defaults, needed by the pure tree wherever it reads a
+	 * Per-type, per-slot text-style defaults, needed by the pure tree wherever it
+	 * reads a
 	 * text style back: the format toggles resolve the styling a keystroke flips
 	 * against them, so a slot that sets nothing still toggles against what it is
 	 * actually drawn with.
