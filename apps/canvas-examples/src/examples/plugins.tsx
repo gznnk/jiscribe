@@ -116,7 +116,8 @@ const buildPluginsDoc = (): CanvasDoc => {
 					id: "events",
 					type: "queue",
 					x: 365,
-					y: 155,
+					// Centred on 187.5 so the api / worker connectors stay straight
+					y: 153.5,
 					width: 145,
 					height: 68,
 					text: "events",
@@ -143,7 +144,8 @@ const buildPluginsDoc = (): CanvasDoc => {
 					id: "order-entity",
 					type: "record",
 					x: 545,
-					y: 345,
+					// Centred on 400 so the orders connector stays straight
+					y: 342,
 					width: 200,
 					height: 116,
 					text: {
