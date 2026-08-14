@@ -42,17 +42,16 @@ body {
 .examples-brand {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 12px;
 	padding: 18px 16px 14px;
 	border-bottom: 1px solid #232326;
 }
 
 .examples-brand-mark {
 	flex: 0 0 auto;
-	width: 10px;
-	height: 10px;
-	border-radius: 3px;
-	background: linear-gradient(135deg, #0f9e8f, #075e56);
+	width: 32px;
+	height: 32px;
+	display: block;
 }
 
 .examples-heading {
@@ -72,7 +71,7 @@ body {
 .examples-section-title {
 	margin: 16px 10px 6px;
 	font-size: 0.66rem;
-	font-weight: 600;
+	font-weight: 700;
 	letter-spacing: 0.09em;
 	text-transform: uppercase;
 	color: #6f7078;

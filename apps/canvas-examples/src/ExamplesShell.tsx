@@ -9,6 +9,7 @@ import { ThemingExample } from "./examples/theming";
 import { ViewportExample } from "./examples/viewport";
 import { GALLERY_DIAGRAMS } from "./gallery/diagrams";
 import { DiagramView } from "./gallery/DiagramView";
+import { JiscribeMark } from "./JiscribeMark";
 
 type ShellEntry = {
 	/** Stable slug used as the URL hash. */
@@ -124,8 +125,8 @@ export function ExamplesShell() {
 		<div className="examples">
 			<nav className="examples-sidebar">
 				<div className="examples-brand">
-					<span className="examples-brand-mark" aria-hidden="true" />
-					<h1 className="examples-heading">canvas examples</h1>
+					<JiscribeMark />
+					<h1 className="examples-heading">Canvas Examples</h1>
 				</div>
 				<div className="examples-nav">
 					{SECTIONS.map((section) => (
