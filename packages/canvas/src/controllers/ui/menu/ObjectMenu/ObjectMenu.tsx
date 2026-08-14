@@ -1,4 +1,4 @@
-import React, { memo, useRef } from "react";
+import React, { memo, useCallback, useRef, useState } from "react";
 
 import { useMenuSections } from "./hooks/useMenuSections";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
@@ -216,7 +216,19 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	onOpenReference,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
-	const { shouldRender, x, y } = useObjectMenuPosition(canvasState, menuRef);
+	// Reported to the positioning hook, which holds the menu still while it is
+	// under the pointer — the flat format buttons resize an auto-sized text on
+	// every toggle, and the menu must not walk away between two presses.
+	// The dropdown panels are DOM children of the container, so moving onto one
+	// is not a leave.
+	const [isPointerOverMenu, setIsPointerOverMenu] = useState(false);
+	const handlePointerEnter = useCallback(() => setIsPointerOverMenu(true), []);
+	const handlePointerLeave = useCallback(() => setIsPointerOverMenu(false), []);
+	const { shouldRender, x, y } = useObjectMenuPosition(
+		canvasState,
+		menuRef,
+		isPointerOverMenu,
+	);
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
@@ -273,6 +285,8 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				onPointerDown={
 					canvasState.textEditState === null ? undefined : keepTextEditorFocus
 				}
+				onPointerEnter={handlePointerEnter}
+				onPointerLeave={handlePointerLeave}
 			>
 				{sections}
 			</ObjectMenuContainer>

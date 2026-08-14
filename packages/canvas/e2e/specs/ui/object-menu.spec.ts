@@ -156,4 +156,33 @@ test.describe("styling through the ObjectMenu", () => {
 		);
 		await expect(canvas.page.locator("body")).toContainText("Styled");
 	});
+
+	test("stays put while a font size change regrows the text it is anchored to", async ({
+		canvas,
+	}) => {
+		// A `text` re-measures its box from its own content, so a larger font grows it
+		// down and to the right — and the menu is anchored to the bottom center of that
+		// box. Following the growth would walk the control out from under the pointer
+		// still using it, one step per change.
+		const id = await canvas.placeShape("Text");
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
+		await expect(objectMenu).toBeVisible();
+		const anchored = await objectMenu.boundingBox();
+
+		await canvas.openObjectMenu("font-size");
+		await canvas.setNumberInput("fontSize", 48);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontSize)
+			.toBe("48px");
+
+		expect(await objectMenu.boundingBox()).toEqual(anchored);
+
+		// Closing the panel and taking the pointer off the menu ends the interaction,
+		// and the anchor is re-taken below the box as it is now.
+		await canvas.openObjectMenu("font-size");
+		await canvas.page.mouse.move(0, 0);
+		await expect
+			.poll(async () => (await objectMenu.boundingBox())?.y)
+			.toBeGreaterThan(anchored?.y ?? 0);
+	});
 });
