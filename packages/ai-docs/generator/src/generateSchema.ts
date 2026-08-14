@@ -464,6 +464,7 @@ export function generateSchema(
 		"StrokeStyle",
 		"FillStyle",
 		"TextStyle",
+		"TextRun",
 		"TransformStyle",
 	];
 	for (const defName of sharedStructureDefNames) {
