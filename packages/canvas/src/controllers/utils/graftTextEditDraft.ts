@@ -10,13 +10,13 @@ import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
  * Grafts the in-progress editor text onto the object being edited, producing the
- * objects map the rendering and editor-placement layers read. Geometry derived
- * from text (the record's title band, and every region split that follows it)
- * is computed from the slots, so without this graft it would only move once the
- * edit is committed and would jump at that moment.
+ * objects map the rendering, editor-placement and menu-anchoring layers read.
+ * Geometry derived from text (the record's title band, and every region split
+ * that follows it) is computed from the slots, so without this graft it would
+ * only move once the edit is committed and would jump at that moment.
  *
  * Draft only: the result never reaches the committed state (the reducer, hit
- * testing, snapping, bboxes all stay on `state.objects`), and the write goes
+ * testing and snapping all stay on `state.objects`), and the write goes
  * through the same {@link writeRichTextSlot} the commit uses, so a rows-holding
  * slot takes the split form rather than the joined body.
  *

@@ -485,8 +485,8 @@ const CanvasComponent = ({
 
 	// The slot being edited carries the uncommitted editor text, so geometry derived from
 	// it follows every keystroke instead of jumping on commit. Rendering, selection
-	// feedback and editor placement only — hit testing, snapping and bboxes still read
-	// committed state.objects.
+	// feedback, editor placement and the menu anchor only — hit testing and snapping
+	// still read committed state.objects.
 	const draftObjects = useMemo(
 		() =>
 			graftTextEditDraft(
@@ -501,6 +501,17 @@ const CanvasComponent = ({
 			state.docDefaults.fontFamily,
 			registries,
 		],
+	);
+
+	// The menu is anchored below the drawn extent, which during a text edit is the
+	// draft-grafted box (a keystroke regrows an auto-sized text before commit), so
+	// the menu reads the same objects the rendering layers draw.
+	const menuCanvasState = useMemo(
+		() =>
+			draftObjects === state.objects
+				? state
+				: { ...state, objects: draftObjects },
+		[state, draftObjects],
 	);
 
 	const revealCaret = useRevealTextEditCaret({
@@ -705,7 +716,7 @@ const CanvasComponent = ({
 							style={{ left: -minX * zoom, top: -minY * zoom }}
 						>
 							<ObjectMenu
-								canvasState={state}
+								canvasState={menuCanvasState}
 								onPropertyUpdate={handleMenuPropertyUpdate}
 								onOpenReference={handleOpenReference}
 							/>

@@ -157,6 +157,39 @@ test.describe("styling through the ObjectMenu", () => {
 		await expect(canvas.page.locator("body")).toContainText("Styled");
 	});
 
+	test("follows the box a keystroke regrows while the text is being edited", async ({
+		canvas,
+	}) => {
+		// A keystroke regrows an auto-sized text before any commit, and the pointer
+		// sits on the editing surface rather than the menu, so nothing holds the
+		// anchor: the menu tracks the draft box instead of waiting for the commit.
+		const id = await canvas.placeShape("Text");
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
+		await expect(objectMenu).toBeVisible();
+
+		// Open the editor before taking the baseline, so the move measured below is
+		// the growth alone and not the menu narrowing to its text items.
+		const box = await canvas.objectById(id).boundingBox();
+		await canvas.typeTextAt(
+			canvas.toContent({
+				x: (box?.x ?? 0) + (box?.width ?? 0) / 2,
+				y: (box?.y ?? 0) + (box?.height ?? 0) / 2,
+			}),
+			"",
+		);
+		await expect(objectMenu).toBeVisible();
+		const anchored = await objectMenu.boundingBox();
+
+		// Each Enter moves the box's bottom edge down, one keystroke at a time.
+		await canvas.page.keyboard.type("one\ntwo\nthree");
+
+		// Still editing: the movement happened on the draft, not on a commit.
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect
+			.poll(async () => (await objectMenu.boundingBox())?.y)
+			.toBeGreaterThan(anchored?.y ?? 0);
+	});
+
 	test("stays put while a font size change regrows the text it is anchored to", async ({
 		canvas,
 	}) => {
