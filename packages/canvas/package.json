@@ -55,6 +55,7 @@
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
+		"jsdom": "catalog:",
 		"vitest": "catalog:"
 	}
 }
