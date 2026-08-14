@@ -9,11 +9,12 @@ you own, and the canvas is a controlled React component that renders and edits
 it. A JSON Schema and an AI reference ship alongside it, so the format is one
 an LLM can read and write directly.
 
-Everything you need to draw is in the box. The core carries seven primitive
-types (`rect` / `ellipse` / `polyline` / `polygon` / `group` / `connector` /
-`svg`), and the richer shape sets — flowchart, UML, sticky, markdown,
-container, annotation, general pictograms — ship as plugins. The public API
-those plugins are built on is exactly the one you would use for your own.
+Everything you need to draw is in the box. The core carries eight primitive
+types (`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` /
+`connector` / `svg`), and the richer shape sets — flowchart, UML, sticky,
+markdown, container, annotation, general pictograms — ship as plugins. The
+public API those plugins are built on is exactly the one you would use for
+your own.
 
 The jiscribe products are all built on this core.
 

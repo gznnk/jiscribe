@@ -2,10 +2,10 @@
 
 # Plugin Architecture
 
-How a shape lives outside the engine. Every shape beyond the seven primitives
-(`rect` / `ellipse` / `polyline` / `polygon` / `group` / `connector` / `svg`) ships
-as a plugin under `plugins/`, written against the same public API a third party
-would use. If the shipped shapes can be written that way, so can yours.
+How a shape lives outside the engine. Every shape beyond the eight primitives
+(`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` / `connector` /
+`svg`) ships as a plugin under `plugins/`, written against the same public API a
+third party would use. If the shipped shapes can be written that way, so can yours.
 
 This document covers the contract. For the practical steps — package layout, the
 authoring kit, the wiring checklist — see

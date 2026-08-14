@@ -5,7 +5,7 @@ import {
 } from "../plugins/specShapesPlugin";
 import { mountPluginHarness } from "../testing-harness";
 
-// Core owns seven primitive types; everything richer lives in plugins, so the specs that
+// Core owns eight primitive types; everything richer lives in plugins, so the specs that
 // need a category, a click-placed type, a <g>-rooted render or a text slot get them from
 // specShapesPlugin — a test-only stand-in this package defines, not a shipped plugin.
 // No shipped plugin is registered here: each one owns its e2e suite, and the seven
