@@ -62,15 +62,22 @@ describe("toggleTextEditFormat", () => {
 			end: 2,
 		});
 		const bold = toggleTextEditFormat(state, "bold", textStyleDefaults);
-		const again = toggleTextEditFormat(
-			{ ...bold, textEditState: state.textEditState },
-			"bold",
-			textStyleDefaults,
-		);
+		const again = toggleTextEditFormat(bold, "bold", textStyleDefaults);
 		expect(bodyOf(again)).toEqual([
 			{ text: "he", fontWeight: "normal" },
 			{ text: "llo" },
 		]);
+	});
+
+	it("lands the styling on the draft as well, so the editor is handed it back", () => {
+		const state = editingState({ body: { text: "hello" } }, "hello", {
+			start: 0,
+			end: 2,
+		});
+		const bold = toggleTextEditFormat(state, "bold", textStyleDefaults);
+		expect(bold.textEditState).toMatchObject({
+			text: [{ text: "he", fontWeight: "bold" }, { text: "llo" }],
+		});
 	});
 
 	it("reads the slot's own styling, so a bold slot toggles off", () => {
@@ -185,14 +192,10 @@ describe("toggleTextEditFormat on a slot holding rows", () => {
 		expect(rows.map(richTextToPlain).join("\n")).toBe("ab\ncd");
 	});
 
-	it("reads the styling back off the rows, so a second press turns it off", () => {
+	it("reads the styling back off the draft, so a second press turns it off", () => {
 		const state = editingRows(0, 1);
 		const bold = toggleTextEditFormat(state, "bold", textStyleDefaults);
-		const again = toggleTextEditFormat(
-			{ ...bold, textEditState: state.textEditState },
-			"bold",
-			textStyleDefaults,
-		);
+		const again = toggleTextEditFormat(bold, "bold", textStyleDefaults);
 		expect(rowsOf(again)).toEqual([
 			[{ text: "a", fontWeight: "normal" }, { text: "b" }],
 			"cd",

@@ -12,6 +12,7 @@ import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
+import type { RichText } from "../../../../schemas/objects/types/RichText";
 import type { ObjectTextStyleDefaultsRegistry } from "../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
@@ -19,7 +20,6 @@ import {
 	type TextStyleState,
 } from "../../../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
-import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
@@ -121,10 +121,13 @@ function renderConnectorLabelEditor(
  * it replaces.
  *
  * @param target - The shape being edited (carries geometry, and the slot content
- *   with the draft already grafted in, so the editor is handed the text as it now
- *   stands rather than as it was committed)
+ *   with the draft already grafted in, so the editor is placed on the box as it
+ *   now stands rather than as it was committed)
  * @param objectId - ID of the target shape
  * @param slotId - The slot being edited; a key of `target.text`
+ * @param richText - The draft body the editor draws, handed back verbatim from
+ *   the editing session so the editor's own prediction of it always matches
+ *   (a slot read would drop what rows cannot hold and read back differently)
  * @param handlers - Input and exit handlers
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, so a field
  *   the slot leaves unset is drawn with the same value the overlay uses
@@ -136,6 +139,7 @@ function renderTextEditor(
 	target: ObjectState & TextStyleState & TransformedFrame,
 	objectId: string,
 	slotId: string,
+	richText: RichText,
 	handlers: EditorHandlers,
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
 	textRegionCalculator?: ObjectTextRegionCalculator,
@@ -153,7 +157,7 @@ function renderTextEditor(
 	return (
 		<TextEditor
 			objectId={objectId}
-			richText={readRichTextSlot(target.text, slotId)}
+			richText={richText}
 			cx={target.cx}
 			cy={target.cy}
 			x={textRegion.x}
@@ -257,6 +261,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			geometryObject,
 			textEditState.objectId,
 			textEditState.slotId,
+			textEditState.text,
 			handlers,
 			registries.objectTextStyleDefaults,
 			registries.objectTextRegion.get(targetObject.type),

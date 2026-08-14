@@ -12,17 +12,14 @@ import { isTextRows } from "../../schemas/objects/types/TextSlot";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../states/objects/types/TextSlots";
-import {
-	readRichTextSlot,
-	writeTextSlot,
-} from "../../states/objects/types/TextSlots";
+import { writeRichTextSlot } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
  * The stretch of text the open editor has selected, resolved against the object
- * it is editing. `content` already has the edited text written into the slot: the
- * editor holds the in-progress string, so the offsets the selection carries only
- * address the characters on screen once the draft is in place.
+ * it is editing. `content` is the session's draft body: the offsets the
+ * selection carries address the characters on screen, which the committed slot
+ * only matches once the draft is written into it (`slots`).
  */
 export type TextEditSelection = {
 	objectId: string;
@@ -34,9 +31,8 @@ export type TextEditSelection = {
 	/** Every slot of the object, with the draft already written into the edited one. */
 	slots: TextSlots;
 	/**
-	 * The edited slot's content, draft included, as the single body the editor
-	 * draws — a row-partitioned slot joined by "\n", which is the text its offsets
-	 * count in.
+	 * The draft body the editor draws — a row-partitioned slot edited as its rows
+	 * joined by "\n", which is the text the selection offsets count in.
 	 */
 	content: RichText;
 	/**
@@ -80,7 +76,7 @@ export const resolveTextEditSelection = (
 		return null;
 	}
 
-	const slots = writeTextSlot(
+	const slots = writeRichTextSlot(
 		target.text,
 		textEditState.slotId,
 		textEditState.text,
@@ -91,7 +87,7 @@ export const resolveTextEditSelection = (
 		slotId: textEditState.slotId,
 		slot,
 		slots,
-		content: readRichTextSlot(slots, textEditState.slotId),
+		content: textEditState.text,
 		isRowPartitioned: isTextRows(slot.text),
 		start: selection.start,
 		end: selection.end,
@@ -128,7 +124,7 @@ export const styleTextEditSelection = (
 	style: InlineTextStyle,
 ): CanvasControllerState => {
 	const selection = resolveTextEditSelection(state);
-	if (selection === null) {
+	if (selection === null || state.textEditState?.kind !== "shape") {
 		return state;
 	}
 	const target = state.objects[selection.objectId];
@@ -139,8 +135,8 @@ export const styleTextEditSelection = (
 		style,
 	);
 	// The newlines a stretch spanning rows also styles are dropped by the split,
-	// which is why a styled "\n" cannot survive into the rows (writeTextSlot splits
-	// the same way, `[]` included, so both writers leave the slot in one form).
+	// which is why a styled "\n" cannot survive into the rows (writeRichTextSlot
+	// splits the same way, `[]` included, so both writers leave the slot in one form).
 	const content = selection.isRowPartitioned
 		? styled === ""
 			? []
@@ -158,6 +154,12 @@ export const styleTextEditSelection = (
 					[selection.slotId]: { ...selection.slot, text: content },
 				},
 			} as ObjectState,
+		},
+		// The draft is what the editor is handed back, so the styling has to land
+		// on it too, or the next keystroke would carry the unstyled body over it.
+		textEditState: {
+			...state.textEditState,
+			text: styled,
 		},
 	};
 };

@@ -15,7 +15,7 @@ import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import {
-	readTextSlot,
+	readRichTextSlot,
 	resolveTextSlotId,
 } from "../../../../states/objects/types/TextSlots";
 import type {
@@ -490,7 +490,7 @@ export const ObjectEventHandler: GestureHandler = {
 						kind: "shape",
 						objectId: targetObject.id,
 						slotId,
-						text: readTextSlot(targetObject.text, slotId),
+						text: readRichTextSlot(targetObject.text, slotId),
 					},
 				};
 			}

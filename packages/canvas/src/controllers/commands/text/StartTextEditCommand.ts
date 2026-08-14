@@ -3,7 +3,7 @@ import type { TextStyleState } from "../../../states/objects/base/TextStyleState
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
 import {
 	getFirstTextSlotId,
-	readTextSlot,
+	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
 import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
@@ -103,7 +103,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 				kind: "shape",
 				objectId,
 				slotId,
-				text: readTextSlot(targetObject.text, slotId),
+				text: readRichTextSlot(targetObject.text, slotId),
 			},
 		};
 	},

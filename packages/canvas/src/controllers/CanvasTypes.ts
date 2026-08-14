@@ -2,6 +2,7 @@ import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
+import type { RichText } from "../schemas/objects/types/RichText";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { DocSnapshot } from "../states/canvas/DocSnapshot";
 import type { ScrollBoundsConfig } from "../states/canvas/ScrollBounds";
@@ -343,8 +344,14 @@ export type CanvasControllerState = CanvasState & {
 				objectId: string;
 				/** Key of the object's `state.text` */
 				slotId: string;
-				/** A slot holding rows is joined with "\n" while editing */
-				text: string;
+				/**
+				 * The draft body, styling included; a slot holding rows is joined with
+				 * "\n" while editing. Every keystroke advances it with the same
+				 * carry-over the editor predicts with (remapRichText), and the editor is
+				 * handed this value back, so what it draws, what the draft holds and
+				 * what the commit writes never diverge.
+				 */
+				text: RichText;
 				/**
 				 * What the editor currently has selected, in UTF-16 offsets of `text`.
 				 * Reported by the editor on every caret and selection change, and read

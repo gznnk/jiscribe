@@ -3,6 +3,7 @@ import { isObject } from "@jiscribe/basic-validators";
 import type { RichText } from "../../../schemas/objects/types/RichText";
 import {
 	joinRichTextLines,
+	normalizeRichText,
 	remapRichText,
 	richTextToPlain,
 	splitRichTextLines,
@@ -115,13 +116,45 @@ export const readTextSlot = (
 ): string => richTextToPlain(readRichTextSlot(text, slotId));
 
 /**
- * Writes edited text back into one slot, splitting on "\n" when that slot holds
- * rows (the inverse of {@link readTextSlot}; an emptied editor writes `[]`, not
- * `[""]`, so the empty rows form stays canonical). Per-range styling survives the
- * edit: the characters the edit left alone keep what they were drawn with
- * (remapRichText), since the editor hands back plain text and could not carry the
- * runs itself. The slot's own styling, the other slots, and the key order are all
- * preserved, so a commit never disturbs anything it did not edit.
+ * Writes one body of text back into one slot, splitting at its newlines when
+ * that slot holds rows (the inverse of {@link readRichTextSlot}; an emptied body
+ * writes `[]`, not `[""]`, so the empty rows form stays canonical). The slot's
+ * own styling, the other slots, and the key order are all preserved, so a write
+ * never disturbs anything it did not edit.
+ *
+ * @param text - The shape's current slots
+ * @param slotId - Key to write; a key absent from `text` is appended as an unstyled slot
+ * @param value - The body to write, runs included; stored in canonical form
+ * @returns A new slot map (the input is not mutated)
+ */
+export const writeRichTextSlot = (
+	text: TextSlots,
+	slotId: string,
+	value: RichText,
+): TextSlots => {
+	const body = normalizeRichText(value);
+	const slot = text[slotId];
+	if (slot === undefined) {
+		return { ...text, [slotId]: { text: body } };
+	}
+	// The newlines a body carries between rows are the split points, not
+	// characters of any row, so their styling (invisible either way) is dropped.
+	const content = isTextRows(slot.text)
+		? richTextToPlain(body) === ""
+			? []
+			: splitRichTextLines(body)
+		: body;
+	return {
+		...text,
+		[slotId]: { ...slot, text: content },
+	};
+};
+
+/**
+ * Writes edited plain text back into one slot (see {@link writeRichTextSlot}
+ * for the slot handling). Per-range styling survives the edit: the characters
+ * the edit left alone keep what they were drawn with (remapRichText), since the
+ * caller hands back plain text and could not carry the runs itself.
  *
  * @param text - The shape's current slots
  * @param slotId - Key to write; a key absent from `text` is appended as an unstyled slot
@@ -132,24 +165,12 @@ export const writeTextSlot = (
 	text: TextSlots,
 	slotId: string,
 	value: string,
-): TextSlots => {
-	const slot = text[slotId];
-	if (slot === undefined) {
-		return { ...text, [slotId]: { text: value } };
-	}
-	// Rows go through the same carry-over as a single body: the edited text is one
-	// string either way, so the styling is remapped onto it before it is split back
-	// into the rows the slot holds.
-	const content = isTextRows(slot.text)
-		? value === ""
-			? []
-			: splitRichTextLines(remapRichText(joinRichTextLines(slot.text), value))
-		: remapRichText(slot.text, value);
-	return {
-		...text,
-		[slotId]: { ...slot, text: content },
-	};
-};
+): TextSlots =>
+	writeRichTextSlot(
+		text,
+		slotId,
+		remapRichText(readRichTextSlot(text, slotId), value),
+	);
 
 /**
  * Empties every slot's content while keeping the keys, their content kinds, and

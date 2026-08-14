@@ -1,4 +1,5 @@
 import type { CanvasAction } from "./CanvasActions";
+import { remapRichText } from "../../schemas/objects/types/RichText";
 import { createDocSnapshotFromState } from "../../states/canvas/DocSnapshot";
 import { isSameCamera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -217,6 +218,18 @@ export const createCanvasReducer =
 			case "UPDATE_TEXT_EDIT": {
 				if (!state.textEditState) {
 					return state;
+				}
+				// The editor reports the edit as plain text; the styling of the draft
+				// is carried over here with the same remap the editor predicts with, so
+				// the body echoed back to it always matches its prediction.
+				if (state.textEditState.kind === "shape") {
+					return {
+						...state,
+						textEditState: {
+							...state.textEditState,
+							text: remapRichText(state.textEditState.text, action.text),
+						},
+					};
 				}
 				return {
 					...state,

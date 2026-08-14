@@ -285,9 +285,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			return;
 		}
 		const plain = readEditableText(surface);
-		// The carry-over the reducer applies to the committed body, applied here to
-		// the drawn one: the prediction it leaves behind is what the body coming back
-		// is compared against.
+		// The very carry-over the reducer applies to the draft, applied here to the
+		// drawn body: both advance the same body with the same function, so the echo
+		// coming back always compares equal and the surface is never redrawn under
+		// the caret by its own keystroke.
 		const edited = remapRichText(shownRichText.current ?? "", plain);
 		shownRichText.current = edited;
 		// Chrome answers some edits with markup of its own — a <b> reviving the

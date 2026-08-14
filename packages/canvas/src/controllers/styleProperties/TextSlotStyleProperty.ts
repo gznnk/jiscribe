@@ -43,7 +43,54 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		value: string,
 	): CanvasControllerState {
 		const ranged = this.applyToTextEditSelection(state, property, value);
-		return ranged ?? super.apply(state, property, value);
+		if (ranged !== null) {
+			return ranged;
+		}
+		return this.clearAppliedInlineStyleFromDraft(
+			super.apply(state, property, value),
+			state,
+			property,
+		);
+	}
+
+	/**
+	 * Drops a slot-wide written property from the open editor's draft as well.
+	 * The slot content was just stripped of its per-run overrides (writeSlotValue),
+	 * but the draft carries the same overrides and would write them back over the
+	 * slot on the next graft, leaving the slot-wide value invisible.
+	 */
+	private clearAppliedInlineStyleFromDraft(
+		applied: CanvasControllerState,
+		before: CanvasControllerState,
+		property: string,
+	): CanvasControllerState {
+		const { textEditState } = applied;
+		if (
+			textEditState?.kind !== "shape" ||
+			!(TEXT_INLINE_STYLE_KEYS as readonly string[]).includes(property)
+		) {
+			return applied;
+		}
+		// Only when the write landed on the edited slot: an untouched slot keeps its
+		// object reference, and clearing the draft for it would drop real styling.
+		const editedBefore = before.objects[textEditState.objectId] as
+			(ObjectState & TextStyleState) | undefined;
+		const editedAfter = applied.objects[textEditState.objectId] as
+			(ObjectState & TextStyleState) | undefined;
+		if (
+			editedAfter === undefined ||
+			editedBefore?.text?.[textEditState.slotId] ===
+				editedAfter.text?.[textEditState.slotId]
+		) {
+			return applied;
+		}
+		const cleared = clearInlineStyleFromRuns(textEditState.text, [
+			property as keyof InlineTextStyle,
+		]);
+		return {
+			...applied,
+			textEditState: { ...textEditState, text: cleared },
+		};
 	}
 
 	/**

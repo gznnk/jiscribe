@@ -120,7 +120,7 @@ export const resolveTextSlotStyle = (
  * text. The one place the two array forms are told apart: a row is a whole body
  * (a string, or the runs it is styled in), while a styled body's entries are runs
  * (objects carrying `text`), and an empty array reads as empty rows — the form an
- * emptied row list is written back as (writeTextSlot), an empty body being `""`.
+ * emptied row list is written back as (writeRichTextSlot), an empty body being `""`.
  *
  * @param content - Any slot content; takes `unknown` so an untrusted value can be
  *   told apart before it is known to be content at all

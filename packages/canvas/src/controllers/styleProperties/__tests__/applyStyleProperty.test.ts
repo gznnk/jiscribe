@@ -603,6 +603,40 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			});
 		});
 
+		it("drops a whole-slot write's property from the open editor's draft too", () => {
+			// The draft carries the same per-run overrides the slot content is being
+			// stripped of; left in place, the next graft would write them back over
+			// the slot and the slot-wide value would never show.
+			const r1 = {
+				...rectObj("r1"),
+				text: {
+					body: { text: [{ text: "he", fontColor: "#d33" }, { text: "llo" }] },
+				},
+			} as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["r1"],
+				objects: { r1 },
+				textEditState: {
+					kind: "shape",
+					objectId: "r1",
+					slotId: "body",
+					text: [
+						{ text: "he", fontColor: "#d33", fontWeight: "bold" },
+						{ text: "llo!" },
+					],
+					selection: { start: 2, end: 2 },
+				},
+			});
+
+			const result = applyStyleProperty(state, "fontColor", "#00f");
+
+			// The written property leaves the draft's runs; the rest of their styling
+			// and the edited characters stay.
+			expect(result.textEditState).toMatchObject({
+				text: [{ text: "he", fontWeight: "bold" }, { text: "llo!" }],
+			});
+		});
+
 		it("styles the whole slot for a property no stretch of text can carry", () => {
 			const r1 = bodyRect("r1");
 			const state = makeState({

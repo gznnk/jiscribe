@@ -60,7 +60,9 @@ export type CommandAction = {
 };
 
 /**
- * Update text edit action - updates text during editing
+ * Update text edit action - updates text during editing. The editor reports the
+ * whole edited text as a plain string; the reducer carries the draft's styling
+ * over onto it (remapRichText), the same prediction the editor itself makes.
  */
 export type UpdateTextEditAction = {
 	type: "UPDATE_TEXT_EDIT";
