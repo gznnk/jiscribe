@@ -12,7 +12,10 @@ import { isOwnedEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import { isPoly } from "../../../schemas/objects/types/Poly";
-import type { InlineTextStyle } from "../../../schemas/objects/types/RichText";
+import type {
+	InlineTextStyle,
+	RichText,
+} from "../../../schemas/objects/types/RichText";
 import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
 import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
 import { isTextRows } from "../../../schemas/objects/types/TextSlot";
@@ -145,12 +148,20 @@ const isValidInlineTextStyle = (style: InlineTextStyle): boolean => {
 	return isValidOptionalNumber(style.fontSize, 1);
 };
 
-/** Validates a slot's own styling and that of every run its text is styled in. */
+/** Validates the styling of every run one body of text is styled in; a plain string carries none. */
+const isValidRichTextStyle = (content: RichText): boolean =>
+	isString(content) || content.every(isValidInlineTextStyle);
+
+/**
+ * Validates a slot's own styling and that of every run its text is styled in,
+ * row-partitioned content included: a run is inlined into the same CSS wherever
+ * it sits, so a row is no less of a boundary than a single body.
+ */
 const isValidTextSlotStyle = (slot: TextSlot): boolean =>
 	isValidInlineTextStyle(slot) &&
-	(isTextRows(slot.text) ||
-		isString(slot.text) ||
-		slot.text.every(isValidInlineTextStyle));
+	(isTextRows(slot.text)
+		? slot.text.every(isValidRichTextStyle)
+		: isValidRichTextStyle(slot.text));
 
 /**
  * Whether the slot keys are the set `textShape` declares. A `"body"` type holds

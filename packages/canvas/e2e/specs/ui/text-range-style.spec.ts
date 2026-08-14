@@ -63,6 +63,29 @@ test.describe("styling a stretch of a shape's text", () => {
 		});
 	}
 
+	/**
+	 * The size the open editor draws the first character at, read off the element
+	 * that lays it out rather than off the surface: what is drawn diverges from the
+	 * runs exactly when the browser wraps the character in an element of its own.
+	 */
+	async function drawnFontSizeOfFirstCharacter(
+		canvas: CanvasDriver,
+	): Promise<string | null> {
+		return canvas.page.evaluate(() => {
+			const surface = document.querySelector(
+				'[data-testid="text-editor"] [contenteditable="true"]',
+			);
+			if (!surface) {
+				return null;
+			}
+			const firstText = document
+				.createTreeWalker(surface, NodeFilter.SHOW_TEXT)
+				.nextNode();
+			const holder = firstText?.parentElement;
+			return holder ? getComputedStyle(holder).fontSize : null;
+		});
+	}
+
 	test("reopens the editor on the styled text, caret and selection included", async ({
 		canvas,
 	}) => {
@@ -147,6 +170,37 @@ test.describe("styling a stretch of a shape's text", () => {
 		await expect
 			.poll(async () => (await canvas.drawnTextRuns(id))[0]?.fontStyle)
 			.toBe("normal");
+	});
+
+	// Deleting a run whole leaves Chrome typing in that run's style again, in an
+	// element of its own: for a size override a bare <span style="font-size: …">,
+	// which the editor has to tell from the spans it draws its own runs with. Left
+	// standing, it draws the typed text in a style the runs no longer carry.
+	test("drops the style Chrome revives when a run is deleted whole", async ({
+		canvas,
+	}) => {
+		const id = await drawAndEdit(canvas, "Payment failed");
+		await selectFromStart(canvas, 7);
+		await canvas.openObjectMenu("font-size");
+		await canvas.setNumberInput("fontSize", 40);
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id))[0]?.fontSize)
+			.toBe("40px");
+		await canvas.commitText();
+
+		// The whole 40px run, deleted and then typed over.
+		await canvas.typeTextAt(SHAPE_CENTER, "");
+		await selectFromStart(canvas, 7);
+		await canvas.page.keyboard.press("Backspace");
+		await canvas.page.keyboard.type("R");
+
+		// The typed character carries no size of its own, so the editor has to draw
+		// it in the slot's, as the committed text is drawn below.
+		await expect.poll(() => drawnFontSizeOfFirstCharacter(canvas)).toBe("16px");
+		await canvas.commitText();
+		expect(await canvas.drawnTextRuns(id)).toEqual([
+			expect.objectContaining({ text: "R failed", fontSize: "16px" }),
+		]);
 	});
 
 	test("keeps the styling on the characters an edit leaves in place", async ({

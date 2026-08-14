@@ -1,7 +1,11 @@
 import { isObject } from "@jiscribe/basic-validators";
 import type { ObjectMapperType } from "@jiscribe/canvas";
 import type { RichText, TextSlot } from "@jiscribe/canvas/doc";
-import { isRichText, isTextSlot } from "@jiscribe/canvas/doc";
+import {
+	isRichText,
+	isTextSlot,
+	normalizeRichText,
+} from "@jiscribe/canvas/doc";
 import { createFrameMapper } from "@jiscribe/canvas-sdk";
 import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 
@@ -16,8 +20,12 @@ import {
 import type { RecordDoc, RecordSlotId } from "../schema/RecordDoc";
 
 /**
- * Forces a text band's content to a string, filling omitted styling from the
- * slot's own defaults.
+ * Forces a text band's content to one body of text, canonicalized the way a
+ * `"body"` type's doc is (mapTextDocToState), and fills omitted styling from the
+ * slot's own defaults. Canonicalizing is what keeps `[]` out of a band: it passes
+ * as an empty run list, yet every reader of a slot's content takes an array for
+ * the row-partitioned form (isTextRows), so an edit would write the band back as
+ * rows and the record's own validator would reject the document it had loaded.
  */
 const normalizeBandSlot = (
 	value: unknown,
@@ -30,7 +38,7 @@ const normalizeBandSlot = (
 	return {
 		...styleDefaults,
 		...value,
-		text: isRichText(value.text) ? value.text : "",
+		text: isRichText(value.text) ? normalizeRichText(value.text) : "",
 	};
 };
 

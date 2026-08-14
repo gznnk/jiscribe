@@ -214,6 +214,27 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		onSelectionChange(reported);
 	}, [onSelectionChange, surfaceRef]);
 
+	// The frame the document's selectionchange queues its reports on, so a
+	// selection dragged with the mouse renders the controller tree once per frame
+	// rather than once per pointer move.
+	const queuedReportFrame = useRef<number | null>(null);
+
+	/**
+	 * Reports the selection now, running the queued frame's reports with it rather
+	 * than leaving them to land after the edit that follows this call.
+	 */
+	const reportSelectionNow = useCallback(() => {
+		const queuedFrame = queuedReportFrame.current;
+		if (queuedFrame === null) {
+			reportSelection();
+			return;
+		}
+		cancelAnimationFrame(queuedFrame);
+		queuedReportFrame.current = null;
+		reportSelection();
+		reportCaret();
+	}, [reportSelection, reportCaret]);
+
 	/** Draws a body on the surface and puts the selection back, since rebuilding drops it. */
 	const drawOnSurface = useCallback(
 		(
@@ -284,7 +305,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				event.preventDefault();
 				// As in handleKeyDown: the stretch being styled is whatever is selected
 				// now, which the queued selectionchange may not have reported yet.
-				reportSelection();
+				reportSelectionNow();
 				onToggleFormat(format);
 				return;
 			}
@@ -299,13 +320,19 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				);
 				return;
 			}
-			if (event.inputType === "insertFromDrop") {
+			if (
+				event.inputType === "deleteByDrag" ||
+				event.inputType === "insertFromDrop"
+			) {
 				// A drop lands where it was dropped rather than in the selection the
-				// editing state tracks, and brings the dragged markup with it.
+				// editing state tracks, and brings the dragged markup with it. The two
+				// are cancelled as a pair because Chrome splits a drag-move into them,
+				// deleteByDrag first: cancelling the insert alone leaves the delete to
+				// run, and the dragged text is gone without being put back.
 				event.preventDefault();
 			}
 		},
-		[onToggleFormat, reportSelection],
+		[onToggleFormat, reportSelectionNow],
 	);
 
 	const handlePaste = useCallback((event: ClipboardEvent) => {
@@ -372,7 +399,11 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 
 	// A caret move that changes nothing else (Home, an arrow key, a click into the
 	// text) renders nothing, and an editable div has no onSelect of its own: the
-	// document-wide event is where those surface.
+	// document-wide event is where those surface. It fires once per pointer move
+	// while a selection is dragged, so the reports ride one frame: what is reported
+	// is read in the frame's callback, which makes every event but the first one
+	// per frame redundant. A report queued when this effect is torn down is dropped
+	// rather than run: the render that tore it down reported both itself.
 	useEffect(() => {
 		const surface = surfaceRef.current;
 		if (!surface) {
@@ -380,11 +411,17 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		}
 		const ownerDocument = surface.ownerDocument;
 		const handleSelectionChange = () => {
-			if (surface !== ownerDocument.activeElement) {
+			if (
+				surface !== ownerDocument.activeElement ||
+				queuedReportFrame.current !== null
+			) {
 				return;
 			}
-			reportSelection();
-			reportCaret();
+			queuedReportFrame.current = requestAnimationFrame(() => {
+				queuedReportFrame.current = null;
+				reportSelection();
+				reportCaret();
+			});
 		};
 		ownerDocument.addEventListener("selectionchange", handleSelectionChange);
 		return () => {
@@ -392,6 +429,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				"selectionchange",
 				handleSelectionChange,
 			);
+			if (queuedReportFrame.current !== null) {
+				cancelAnimationFrame(queuedReportFrame.current);
+				queuedReportFrame.current = null;
+			}
 		};
 	}, [surfaceRef, reportSelection, reportCaret]);
 
@@ -406,8 +447,9 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		// handling; they are also the browser's own defaults on an editable element,
 		// which writes markup of its own and has to be prevented. The selection is
 		// reported first because the document's selectionchange is queued rather than
-		// dispatched as the selection moves: a keystroke arriving before that task
-		// runs would otherwise style the stretch selected one keystroke ago.
+		// dispatched as the selection moves, and the report it drives is queued once
+		// more onto a frame: a keystroke arriving before either runs would otherwise
+		// style the stretch selected one keystroke ago.
 		const format =
 			(e.metaKey || e.ctrlKey) && !e.altKey
 				? FORMAT_KEYS[e.key.toLowerCase()]
@@ -415,7 +457,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		if (format !== undefined && onToggleFormat) {
 			e.preventDefault();
 			e.stopPropagation();
-			reportSelection();
+			reportSelectionNow();
 			onToggleFormat(format);
 		}
 	};

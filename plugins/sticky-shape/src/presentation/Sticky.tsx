@@ -4,7 +4,7 @@ import {
 	TextOverlay,
 	calcTextRegion,
 	createSvgTransform,
-	readTextSlot,
+	readRichTextSlot,
 } from "@jiscribe/canvas-sdk";
 import type React from "react";
 import { memo } from "react";
@@ -84,7 +84,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 				width={textRegion.width}
 				height={textRegion.height}
 				transform={transformAttr}
-				text={readTextSlot(text, BODY_TEXT_SLOT_ID)}
+				text={readRichTextSlot(text, BODY_TEXT_SLOT_ID)}
 				textAlign={bodySlot?.textAlign}
 				verticalAlign={bodySlot?.verticalAlign}
 				fontColor={bodySlot?.fontColor}

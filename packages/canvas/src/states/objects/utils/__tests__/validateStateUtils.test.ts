@@ -195,6 +195,38 @@ describe("validateStateUtils", () => {
 			).toBe(false);
 		});
 
+		it("checks the runs of a row too, a row being a body of its own", () => {
+			/** Wraps rows in the keyed normal form, as a record's compartment holds them. */
+			const withRows = (rows: unknown[]) => ({
+				text: { attributes: { text: rows } },
+			});
+
+			expect(
+				isValidTextStyleState(
+					withRows(["id", [{ text: "name", fontWeight: "bold" }]]),
+					"slots",
+				),
+			).toBe(true);
+			expect(
+				isValidTextStyleState(
+					withRows(["id", [{ text: "name", fontFamily: "Arial; } body {" }]]),
+					"slots",
+				),
+			).toBe(false);
+			expect(
+				isValidTextStyleState(
+					withRows([[{ text: "name", fontStyle: "italic } html {" }]]),
+					"slots",
+				),
+			).toBe(false);
+			expect(
+				isValidTextStyleState(
+					withRows([[{ text: "name", fontSize: 0 }]]),
+					"slots",
+				),
+			).toBe(false);
+		});
+
 		it("checks every slot, not only the first", () => {
 			expect(
 				isValidTextStyleState(

@@ -14,8 +14,13 @@ import { richTextToPlain } from "../../../../schemas/objects/types/RichText";
  * what Chrome leaves behind rather than assume the shape this module builds.
  */
 
-/** Elements the editor builds itself; anything else in the surface came from the browser. */
-const BUILT_TAG_NAMES = new Set(["SPAN", "BR"]);
+/**
+ * Marks the spans this module draws a run with. Chrome revives the typing style of
+ * a run that was deleted whole as an element of its own, and for a size override
+ * that element is a bare `<span style="font-size: 24px">` — indistinguishable from
+ * an editor-built span by tag name alone, which is what the attribute settles.
+ */
+const RUN_ATTRIBUTE_NAME = "data-run";
 
 /**
  * Elements that lay out as a line of their own, so the text before them ends a
@@ -69,7 +74,7 @@ const applyRunStyle = (span: HTMLElement, run: TextRun): void => {
  * The plain form becomes a single text node (`white-space: pre-wrap` draws its
  * newlines), the run form one `<span>` per run carrying only what that run
  * overrides — the same DOM the display overlay builds, so the two draw one body
- * identically.
+ * identically, plus the marker {@link hasUnexpectedMarkup} tells these spans by.
  *
  * A body whose last line is empty gets a trailing `<br>`: the line break that ends
  * the text has no line box of its own, and without one the caret cannot be put on
@@ -94,6 +99,7 @@ export const renderEditableRichText = (
 	} else {
 		for (const run of text) {
 			const span = ownerDocument.createElement("span");
+			span.setAttribute(RUN_ATTRIBUTE_NAME, "");
 			applyRunStyle(span, run);
 			span.textContent = run.text;
 			children.push(span);
@@ -106,10 +112,43 @@ export const renderEditableRichText = (
 	surface.replaceChildren(...children);
 };
 
+/**
+ * Whether a `<br>` only gives its line a box instead of ending a line of its own.
+ * Chrome puts one in every empty line it lays out as a block (`<div><br></div>`
+ * per blank line of a multi-line insert), and there the next block's boundary is
+ * what ends the line — counting the `<br>` as well would read one blank line as
+ * two. Nothing follows the last line, so the `<br>` ending it is the padding break
+ * {@link readUnits} drops again and stays a break here.
+ */
+const isLinePlaceholderBreak = (surface: HTMLElement, br: Node): boolean => {
+	// The next node that starts a line, looked for past the end of every block the
+	// `<br>` sits at the end of.
+	let node: Node = br;
+	while (node !== surface) {
+		const next = node.nextSibling;
+		if (next !== null) {
+			return (
+				next.nodeType === Node.ELEMENT_NODE &&
+				LINE_BLOCK_TAG_NAMES.has((next as Element).tagName)
+			);
+		}
+		const parent = node.parentNode;
+		if (parent === null) {
+			return false;
+		}
+		node = parent;
+	}
+	return false;
+};
+
 /** Walks the surface into its text pieces, in the order they are drawn. */
 const collectUnits = (surface: HTMLElement): EditableTextUnit[] => {
 	const units: EditableTextUnit[] = [];
 	let offset = 0;
+	// Whether a line has already been walked, which a block that opens after it
+	// ends. Not `units.length > 0`: an empty first block contributes no piece at
+	// all, and the block after it would then be read as the first one.
+	let hasPrecedingLine = false;
 	// Indexed rather than iterated: the VSCode extension compiles this file without
 	// the DOM.Iterable lib, where a NodeList is array-like but not iterable.
 	const visit = (parent: Node): void => {
@@ -121,6 +160,7 @@ const collectUnits = (surface: HTMLElement): EditableTextUnit[] => {
 				// does leave the caret in one, and that position still has to map.
 				units.push({ node: child, kind: "text", start: offset, length });
 				offset += length;
+				hasPrecedingLine = true;
 				continue;
 			}
 			if (child.nodeType !== Node.ELEMENT_NODE) {
@@ -128,15 +168,22 @@ const collectUnits = (surface: HTMLElement): EditableTextUnit[] => {
 			}
 			const { tagName } = child as Element;
 			if (tagName === "BR") {
+				hasPrecedingLine = true;
+				if (isLinePlaceholderBreak(surface, child)) {
+					continue;
+				}
 				units.push({ node: child, kind: "break", start: offset, length: 1 });
 				offset += 1;
 				continue;
 			}
-			// A block that opens after something else was already drawn ends that
-			// line; the first block in the surface starts no new line.
-			if (LINE_BLOCK_TAG_NAMES.has(tagName) && units.length > 0) {
-				units.push({ node: child, kind: "break", start: offset, length: 1 });
-				offset += 1;
+			// A block that opens after a line was already drawn ends that line; the
+			// first line in the surface starts no new one.
+			if (LINE_BLOCK_TAG_NAMES.has(tagName)) {
+				if (hasPrecedingLine) {
+					units.push({ node: child, kind: "break", start: offset, length: 1 });
+					offset += 1;
+				}
+				hasPrecedingLine = true;
 			}
 			visit(child);
 		}
@@ -179,17 +226,25 @@ export const readEditableText = (surface: HTMLElement): string =>
 	readUnits(surface).plain;
 
 /**
- * Whether the surface holds an element the editor never builds — a `<b>` Chrome
- * revives a deleted run's typing style with, or the `<div>` per line it makes of a
- * multi-line insert. The characters still read back correctly, but the drawn
- * styling is no longer the one the runs describe, so the caller rebuilds.
+ * Whether the surface holds an element the editor never built — one of the
+ * `<b>` / `<font>` / `<span style>` Chrome revives a deleted run's typing style
+ * with, or the `<div>` per line it makes of a multi-line insert. The characters
+ * still read back correctly, but the drawn styling is no longer the one the runs
+ * describe, so the caller rebuilds.
+ *
+ * A span Chrome clones from an editor-built one (splitting a run across the block
+ * it makes of a line) keeps its attributes and so passes; what flags such an edit
+ * is the `<div>` the clone was moved into.
  *
  * @param surface - The editable div
- * @returns True when any descendant element is neither a `<span>` nor a `<br>`
+ * @returns True when any descendant element is neither a `<br>` nor a span this
+ *   module drew a run with
  */
 export const hasUnexpectedMarkup = (surface: HTMLElement): boolean =>
 	Array.from(surface.querySelectorAll("*")).some(
-		(element) => !BUILT_TAG_NAMES.has(element.tagName),
+		(element) =>
+			element.tagName !== "BR" &&
+			!(element.tagName === "SPAN" && element.hasAttribute(RUN_ATTRIBUTE_NAME)),
 	);
 
 /** What the surface has selected, in the offsets of {@link readEditableText}. */

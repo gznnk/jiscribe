@@ -40,7 +40,12 @@ export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 // Reading a shape's own text off its state, for a renderer or a bounds calculator
 // that has to branch on whether a slot is empty. The keys of `TextSlots` are the
 // authority on the slots a shape has (there is no separate declaration).
-export { readTextSlot } from "./states/objects/types/TextSlots";
+// A renderer that draws the text takes readRichTextSlot instead: readTextSlot
+// flattens per-range styling away, so drawing from it silently drops the runs.
+export {
+	readRichTextSlot,
+	readTextSlot,
+} from "./states/objects/types/TextSlots";
 export type { TextSlots } from "./states/objects/types/TextSlots";
 
 // For a type that draws its own group instead of going through createFrameObject

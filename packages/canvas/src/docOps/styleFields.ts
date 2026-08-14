@@ -15,10 +15,11 @@ import {
 import type { InlineTextStyle } from "../schemas/objects/types/RichText";
 import {
 	clearInlineStyleFromRuns,
-	isRichText,
+	isStyledRichText,
 	TEXT_INLINE_STYLE_KEYS,
 } from "../schemas/objects/types/RichText";
 import {
+	isTextRows,
 	TEXT_SLOT_STYLE_KEYS,
 	type TextSlot,
 } from "../schemas/objects/types/TextSlot";
@@ -83,20 +84,21 @@ const dropAppliedRunStyle = (
 	target: Record<string, unknown>,
 	appliedKeys: readonly string[],
 ): void => {
-	const content = target.text;
-	if (!isRichText(content) || typeof content === "string") {
-		return;
-	}
 	const inlineKeys = appliedKeys.filter((key) =>
 		(TEXT_INLINE_STYLE_KEYS as readonly string[]).includes(key),
-	);
+	) as (keyof InlineTextStyle)[];
 	if (inlineKeys.length === 0) {
 		return;
 	}
-	target.text = clearInlineStyleFromRuns(
-		content,
-		inlineKeys as (keyof InlineTextStyle)[],
-	);
+	const content = target.text;
+	// A row-partitioned slot is stripped row by row, each row being a body of its own.
+	if (isTextRows(content)) {
+		target.text = content.map((row) =>
+			clearInlineStyleFromRuns(row, inlineKeys),
+		);
+	} else if (isStyledRichText(content)) {
+		target.text = clearInlineStyleFromRuns(content, inlineKeys);
+	}
 };
 
 /** The slot objects of a `text: "slots"` doc, whose typography lives per slot. */

@@ -538,6 +538,28 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			});
 		});
 
+		it("drops the property from the runs of a row too", () => {
+			const r1 = {
+				...rectObj("r1"),
+				text: {
+					rows: {
+						text: [
+							"id",
+							[{ text: "email", fontWeight: "bold", fontColor: "#d33" }],
+						],
+					},
+				},
+			} as unknown as ObjectState;
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+
+			const result = applyStyleProperty(state, "fontWeight", "normal");
+
+			expect(slotsOf(result, "r1").rows).toEqual({
+				text: ["id", [{ text: "email", fontColor: "#d33" }]],
+				fontWeight: "normal",
+			});
+		});
+
 		it("lands on the selected characters while an editor is open", () => {
 			const r1 = bodyRect("r1");
 			const state = makeState({

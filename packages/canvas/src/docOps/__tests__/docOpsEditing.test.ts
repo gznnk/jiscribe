@@ -494,6 +494,24 @@ describe("setText on a slotted type", () => {
 		});
 	});
 
+	it("wins over the ranges a property was set on inside a row", () => {
+		const doc = slottedDoc();
+		const slots = readObject(doc, "card-1").text as Record<
+			string,
+			Record<string, unknown>
+		>;
+		slots.attributes.text = ["id", [{ text: "email", fontWeight: "bold" }]];
+
+		slotOps.setStyle(doc, ["card-1"], { fontWeight: "normal" });
+
+		// The row's override is gone, so the slot's value shows on it; the row
+		// collapses back to a plain string once nothing is styled on its own.
+		expect(readObject(doc, "card-1").text).toEqual({
+			name: { text: "User", fontWeight: "normal" },
+			attributes: { text: ["id", "email"], fontWeight: "normal" },
+		});
+	});
+
 	it("keeps two objects created from the same defaults independent", () => {
 		const factoryOps = createDocOps({
 			plugins: [

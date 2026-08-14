@@ -39,17 +39,27 @@ const isSpaceCharacter = (char: string): boolean =>
 // Offscreen canvas dedicated to measurement (measures width without triggering DOM layout).
 let measureCanvas: HTMLCanvasElement | null = null;
 
+/**
+ * Shorthand last assigned to the shared context's `font`, or null when nothing
+ * has been assigned yet. Tracked beside the canvas because every measurer draws
+ * on that one context, so a measurer can tell whether its font is still the one
+ * in effect. Nothing ever resizes the canvas, which would reset the context's
+ * state and leave this stale.
+ */
+let assignedFontShorthand: string | null = null;
+
 const getMeasureContext = (): CanvasRenderingContext2D | null => {
 	if (typeof document === "undefined") {
 		return null;
 	}
 	if (!measureCanvas) {
 		measureCanvas = document.createElement("canvas");
+		assignedFontShorthand = null;
 	}
 	return measureCanvas.getContext("2d");
 };
 
-/** Measures single strings under one font; created once per font so `ctx.font` is set once. */
+/** Measures single strings under one font, assigning `ctx.font` only when another font was measured since. */
 type TextWidthMeasurer = (text: string) => number;
 
 const createTextWidthMeasurer = (font: TextMeasureFont): TextWidthMeasurer => {
@@ -65,7 +75,12 @@ const createTextWidthMeasurer = (font: TextMeasureFont): TextWidthMeasurer => {
 	// whatever was set last rather than raising.
 	const fontShorthand = `${font.fontStyle ?? "normal"} ${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
 	return (text) => {
-		ctx.font = fontShorthand;
+		// Each assignment re-parses the shorthand, which costs more than the
+		// measurement itself where a word is measured character by character.
+		if (assignedFontShorthand !== fontShorthand) {
+			ctx.font = fontShorthand;
+			assignedFontShorthand = fontShorthand;
+		}
 		return ctx.measureText(text).width;
 	};
 };
@@ -82,46 +97,75 @@ const resolveRunFont = (
 });
 
 /** A stretch of the flattened text and the font it is drawn with, in the text's own offsets. */
-type StyledSegment = {
+type StyledRange = {
 	start: number;
 	end: number;
 	font: TextMeasureFont;
-	measureWidth: TextWidthMeasurer;
 };
+
+const toStyledRanges = (
+	text: RichText,
+	base: TextMeasureFont,
+): StyledRange[] => {
+	if (typeof text === "string") {
+		return [{ start: 0, end: text.length, font: base }];
+	}
+	const ranges: StyledRange[] = [];
+	let start = 0;
+	for (const run of text) {
+		ranges.push({
+			start,
+			end: start + run.text.length,
+			font: resolveRunFont(run, base),
+		});
+		start += run.text.length;
+	}
+	return ranges;
+};
+
+/**
+ * The largest type size drawn on `[start, end)`, never below the base font's own:
+ * the block's font sets the line box's floor (the CSS strut), so a line holding
+ * only smaller runs is still as tall as an unstyled one. A range no run overlaps
+ * — an empty line, or one whose runs are all zero-length — measures as the base
+ * size for the same reason.
+ */
+const calcMaxFontSize = (
+	ranges: StyledRange[],
+	base: TextMeasureFont,
+	start: number,
+	end: number,
+): number => {
+	let largest = base.fontSize;
+	for (const range of ranges) {
+		if (
+			Math.max(start, range.start) < Math.min(end, range.end) &&
+			range.font.fontSize > largest
+		) {
+			largest = range.font.fontSize;
+		}
+	}
+	return largest;
+};
+
+/** A styled range with the measurer for its font, built once per layout pass. */
+type StyledSegment = StyledRange & { measureWidth: TextWidthMeasurer };
 
 const toStyledSegments = (
 	text: RichText,
 	base: TextMeasureFont,
-): StyledSegment[] => {
-	if (typeof text === "string") {
-		return [
-			{
-				start: 0,
-				end: text.length,
-				font: base,
-				measureWidth: createTextWidthMeasurer(base),
-			},
-		];
-	}
-	const segments: StyledSegment[] = [];
-	let start = 0;
-	for (const run of text) {
-		const font = resolveRunFont(run, base);
-		segments.push({
-			start,
-			end: start + run.text.length,
-			font,
-			measureWidth: createTextWidthMeasurer(font),
-		});
-		start += run.text.length;
-	}
-	return segments;
-};
+): StyledSegment[] =>
+	toStyledRanges(text, base).map((range) => ({
+		...range,
+		measureWidth: createTextWidthMeasurer(range.font),
+	}));
 
 /**
  * Measures pieces of one text by offset, each piece under the font of the run it
- * falls in. Built once per layout pass, so a text of N runs sets `ctx.font` N
- * times rather than once per measured piece.
+ * falls in. Built once per layout pass, and the shared context remembers the font
+ * it was given, so a piece re-parses the shorthand only where it crosses into a
+ * run drawn with another font — an unstyled text parses it once however many
+ * pieces are measured.
  */
 type OffsetMeasurer = {
 	/** Rendered width of `[start, end)`, summed over the runs it spans. */
@@ -150,26 +194,30 @@ const createOffsetMeasurer = (
 				}
 				return total;
 			},
-			// The block's own font sets the line box's floor (the CSS strut), so a
-			// line holding only smaller runs is still as tall as an unstyled one.
-			maxFontSize: (start, end) => {
-				let largest = base.fontSize;
-				for (const segment of segments) {
-					if (
-						Math.max(start, segment.start) < Math.min(end, segment.end) &&
-						segment.font.fontSize > largest
-					) {
-						largest = segment.font.fontSize;
-					}
-				}
-				return largest;
-			},
+			maxFontSize: (start, end) => calcMaxFontSize(segments, base, start, end),
 		},
 	};
 };
 
 /** A stretch of the text, in its own offsets. */
 type TextRange = { start: number; end: number };
+
+/**
+ * The lines the text was authored as, split on newlines. The newline itself
+ * belongs to neither side, so an empty line is an empty range; an empty text is
+ * one such line, as is the line a trailing newline opens.
+ */
+const splitAuthoredLines = (plain: string): TextRange[] => {
+	const lines: TextRange[] = [];
+	let lineStart = 0;
+	for (let offset = 0; offset <= plain.length; offset += 1) {
+		if (offset === plain.length || plain[offset] === "\n") {
+			lines.push({ start: lineStart, end: offset });
+			lineStart = offset + 1;
+		}
+	}
+	return lines;
+};
 
 /**
  * The smallest pieces a line may not be broken inside: a run of non-space
@@ -321,18 +369,9 @@ export const layoutVisualLines = (
 ): VisualLine[] => {
 	const { plain, measurer } = createOffsetMeasurer(text, font);
 
-	const authoredLines: TextRange[] = [];
-	let lineStart = 0;
-	for (let offset = 0; offset <= plain.length; offset += 1) {
-		if (offset === plain.length || plain[offset] === "\n") {
-			authoredLines.push({ start: lineStart, end: offset });
-			lineStart = offset + 1;
-		}
-	}
-
 	const wrapWidth =
 		availableWidth === undefined ? undefined : Math.max(1, availableWidth);
-	return authoredLines
+	return splitAuthoredLines(plain)
 		.flatMap((line) =>
 			wrapWidth === undefined
 				? [line]
@@ -389,15 +428,29 @@ export const calcVisualLineCount = (
  *
  * @param text - The whole text, authored newlines included
  * @param font - Font the slot is drawn with
- * @param availableWidth - Content width the text wraps in; `undefined` lays it out as authored, breaking only at newlines
+ * @param availableWidth - Content width the text wraps in; `undefined` lays it out as authored, breaking only at newlines, and takes the height without measuring any width
  * @returns The total height in local pixels, never below one line box
  */
 export const calcVisualTextHeight = (
 	text: RichText,
 	font: TextMeasureFont,
 	availableWidth?: number,
-): number =>
-	layoutVisualLines(text, font, availableWidth).reduce(
-		(total, line) => total + line.height,
+): number => {
+	if (availableWidth !== undefined) {
+		return layoutVisualLines(text, font, availableWidth).reduce(
+			(total, line) => total + line.height,
+			0,
+		);
+	}
+	// Without a width to wrap in, the drawn lines are the authored ones and their
+	// heights follow from the type sizes alone. Going through layoutVisualLines
+	// would canvas-measure every line for a width this caller discards, and the
+	// callers that pass no width ask for a height per line on every render.
+	const ranges = toStyledRanges(text, font);
+	return splitAuthoredLines(richTextToPlain(text)).reduce(
+		(total, line) =>
+			total +
+			calcMaxFontSize(ranges, font, line.start, line.end) * TEXT_LINE_HEIGHT,
 		0,
 	);
+};

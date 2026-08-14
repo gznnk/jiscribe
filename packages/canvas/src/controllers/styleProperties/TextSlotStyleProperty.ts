@@ -110,23 +110,22 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 	 * Writes the property onto one whole slot, dropping it from the runs that
 	 * overrode it: a value set on the whole text has to win over the stretches it
 	 * was set on part of it, or the slot would change and nothing would look
-	 * different. The rest of a run's styling stays. The doc-ops apply the same rule
-	 * (applyStyle).
+	 * different. A row-partitioned slot is stripped row by row, each row being a
+	 * body of its own. The rest of a run's styling stays. The doc-ops apply the
+	 * same rule (applyStyle).
 	 */
 	private writeSlotValue(
 		slot: TextSlot,
 		property: string,
 		value: string | number | boolean,
 	): TextSlot {
-		const isInline = (TEXT_INLINE_STYLE_KEYS as readonly string[]).includes(
-			property,
-		);
-		const content =
-			isInline && !isTextRows(slot.text)
-				? clearInlineStyleFromRuns(slot.text, [
-						property as keyof InlineTextStyle,
-					])
-				: slot.text;
+		if (!(TEXT_INLINE_STYLE_KEYS as readonly string[]).includes(property)) {
+			return { ...slot, [property]: value };
+		}
+		const inlineKeys = [property as keyof InlineTextStyle];
+		const content = isTextRows(slot.text)
+			? slot.text.map((row) => clearInlineStyleFromRuns(row, inlineKeys))
+			: clearInlineStyleFromRuns(slot.text, inlineKeys);
 		return { ...slot, text: content, [property]: value };
 	}
 }
