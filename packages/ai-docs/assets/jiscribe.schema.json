@@ -3267,6 +3267,36 @@
 				}
 			}
 		},
+		"TextRun": {
+			"description": "One stretch of a text and the typography it alone is drawn with. Every field left out is drawn with the shape's (or the slot's) own typography, so a run carries the difference and not the whole style. There is no alignment here: it places the whole text, not part of it.",
+			"type": "object",
+			"required": ["text"],
+			"additionalProperties": false,
+			"properties": {
+				"text": {
+					"description": "The characters of this stretch of the text.",
+					"type": "string"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				}
+			}
+		},
 		"TransformStyle": {
 			"description": "Transformation properties (rotation, flip).",
 			"type": "object",

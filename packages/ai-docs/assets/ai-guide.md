@@ -163,15 +163,25 @@ order to form the text.
 }
 ```
 
-- Use it **only** for text that is not styled uniformly. A text drawn in one style
-  is a plain string — that is the form every reader expects, and the array is
-  noise on it.
-- A run carries only the difference: what it leaves out is drawn with the shape's
-  own typography.
-- `textAlign` / `verticalAlign` place the whole text, so they stay on the shape
+- A run is
+  `TextRun = { "text": "...", fontColor?, fontSize?, fontFamily?, fontWeight?, fontStyle?, textDecoration? }`
+  — the characters plus any of those six typography fields.
+  `textAlign` / `verticalAlign` place the whole text, so they stay on the shape
   (or on the record slot) and are not run fields.
+- The runs' `text` values, concatenated in order, **are** the body's characters.
+  There are no offsets or lengths to compute: cut the string where the styling
+  changes and write the pieces out in order.
+- A run carries only the difference: every field it leaves unset is drawn with
+  the shape's (or the slot's) own typography.
+- Write a plain string unless part of the text has to be drawn differently. A
+  text drawn in one style is a plain string — that is the form every reader
+  expects, and the array is noise on it.
+- Non-canonical runs are normalized on write: a run list in which nothing is
+  styled collapses back to a plain string, adjacent runs drawn alike merge, and
+  empty runs drop. Prefer writing clean runs, but the file is not rejected for
+  them.
 - The same applies inside a `record`: a band's `text` and each entry of a
-  compartment's rows take either form.
+  compartment's rows take either form (see below).
 
 ### Record (`record`) — the one shape whose `text` is an object
 
@@ -224,6 +234,29 @@ leaves it out and stays two-compartment:
 An empty array is not the same as an absent slot: `"operations": { "text": [] }`
 keeps the compartment and draws it empty, which is how you say "this class has no
 operations" rather than "this box has no operations compartment".
+
+**A row is itself one body of text**, so plain rows and styled rows mix in the
+one array. A styled row is **an array inside the array** — the row's runs, in
+their own brackets:
+
+```json
+"attributes": {
+  "text": [
+    "id: string",
+    [{ "text": "email: " }, { "text": "required", "fontWeight": "bold" }]
+  ]
+}
+```
+
+The classic mistake is putting a run object **directly** in the row list:
+`"text": [{ "text": "email: string" }]` is not a compartment holding one styled
+row — it reads as a single run-styled body, and a compartment rejects it
+(`must be a string, or an array of runs to style parts of it`). Give the row's
+runs their own array.
+
+`name` and `stereotype` are the other way round: each is **one body**, a string
+or an array of runs, never a list of rows and never `[]` (an empty title is
+`""`). Writing rows there is rejected with `must be one body of text, not rows`.
 
 Each slot carries **its own** typography (`textAlign` / `verticalAlign` /
 `fontColor` / `fontSize` / `fontFamily` / `fontWeight` / `fontStyle` /
@@ -468,5 +501,6 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 - ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.
 - ❌ Giving a `text` `width`/`height`, or drawing a caption as a `rect` with an invisible stroke and fill → ✅ use `text` with `x`/`y` only, and size it with `fontSize`.
 - ❌ Emitting coordinates that unintentionally overlap → ✅ space them per the layout conventions (overlap itself is allowed).
-- ❌ Writing a uniformly styled text as an array of runs → ✅ a plain string; runs are only for a text whose parts differ.
+- ❌ Writing a uniformly styled text as an array of runs → ✅ a plain string; runs are only for a stretch that has to be drawn differently.
+- ❌ Putting a run object straight into a `record` compartment's row list (`"text": [{ "text": "..." }]`) → ✅ wrap that row's runs in their own array: `"text": [[{ "text": "..." }]]`.
 - ❌ Duplicate `id`s → ✅ make them all unique.

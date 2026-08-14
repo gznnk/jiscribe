@@ -486,22 +486,27 @@ rows):
 }
 ```
 
-| Field                  | Type       | Default | Description                                                       |
-| ---------------------- | ---------- | ------- | ----------------------------------------------------------------- |
-| `x`                    | `number`   | `0`     | X of the bounding box's top-left.                                 |
-| `y`                    | `number`   | `0`     | Y of the bounding box's top-left.                                 |
-| `width`                | `number`   | `180`   | Bounding-box width (px).                                          |
-| `height`               | `number`   | `95`    | Bounding-box height (px). Not auto-fitted to the rows.            |
-| `text.stereotype.text` | `string`   | —       | Stereotype above the title. Slot absent = no band.                |
-| `text.name.text`       | `string`   | `""`    | Title in the top band; the band is always drawn.                  |
-| `text.attributes.text` | `string[]` | —       | Attribute rows, one entry per line. Slot absent = no compartment. |
-| `text.operations.text` | `string[]` | —       | Operation rows, one entry per line. Slot absent = no compartment. |
+| Field                  | Type         | Default | Description                                                       |
+| ---------------------- | ------------ | ------- | ----------------------------------------------------------------- |
+| `x`                    | `number`     | `0`     | X of the bounding box's top-left.                                 |
+| `y`                    | `number`     | `0`     | Y of the bounding box's top-left.                                 |
+| `width`                | `number`     | `180`   | Bounding-box width (px).                                          |
+| `height`               | `number`     | `95`    | Bounding-box height (px). Not auto-fitted to the rows.            |
+| `text.stereotype.text` | `RichText`   | —       | Stereotype above the title, one body. Slot absent = no band.      |
+| `text.name.text`       | `RichText`   | `""`    | Title in the top band, one body; the band is always drawn.        |
+| `text.attributes.text` | `RichText[]` | —       | Attribute rows, one entry per line. Slot absent = no compartment. |
+| `text.operations.text` | `RichText[]` | —       | Operation rows, one entry per line. Slot absent = no compartment. |
+
+`RichText` is a plain string, or the runs a body is styled in — so a row of a
+compartment may be either, and the bands take a body but never a list of rows
+(see [Rich text](#rich-text-text-as-runs)).
 
 Every slot also takes `textAlign` / `verticalAlign` / `fontColor` / `fontSize` /
-`fontFamily` / `fontWeight` beside its `text`, with the same meanings as the
-shape-wide fields of other shapes. The defaults follow what each slot is for: the
-two header bands are centered (`textAlign` `"center"`, `verticalAlign` `"middle"`)
-and `name` is `fontWeight` `"bold"` on top of that, while the row compartments are
+`fontFamily` / `fontWeight` / `fontStyle` / `textDecoration` beside its `text`,
+with the same meanings as the shape-wide fields of other shapes. The defaults
+follow what each slot is for: the two header bands are centered
+(`textAlign` `"center"`, `verticalAlign` `"middle"`) and `name` is `fontWeight`
+`"bold"` on top of that, while the row compartments are
 `textAlign` `"left"`, `verticalAlign` `"top"`. Every slot defaults to `fontSize`
 `14` (the 21px row pitch is sized for it); the rest are the shared defaults.
 `fill` defaults to `"auto"` (theme surface) rather than `"transparent"`.
@@ -899,7 +904,7 @@ Applies to every box shape, plus `text` (see its section: it has these fields an
 
 | Field            | Type            | Default          | Description                                                                       |
 | ---------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
-| `text`           | `string`        | `""`             | Text content.                                                                     |
+| `text`           | `RichText`      | `""`             | Text content: a plain string, or runs (see [Rich text](#rich-text-text-as-runs)). |
 | `textAlign`      | `TextAlign`     | `"center"`       | Horizontal alignment.                                                             |
 | `verticalAlign`  | `VerticalAlign` | `"middle"`       | Vertical alignment.                                                               |
 | `fontColor`      | `string`        | `"auto"`         | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`). |
@@ -912,6 +917,69 @@ Applies to every box shape, plus `text` (see its section: it has these fields an
 `TextAlign`: `"left"` / `"center"` / `"right"`
 
 `VerticalAlign`: `"top"` / `"middle"` / `"bottom"`
+
+### Rich text (`text` as runs)
+
+`RichText` is **one body of text**: a plain string, or an array of **runs** when
+parts of it are drawn differently. Every `text` in this document is one — a
+shape's, a `record` slot's, and each row of a `record` compartment. A run is one
+stretch of the body with its own typography, and the runs' `text` values
+concatenated in order are the body's characters, so no offsets are stored
+anywhere.
+
+```json
+"text": [
+  { "text": "Payment " },
+  { "text": "failed", "fontColor": "#d32f2f", "fontWeight": "bold" }
+]
+```
+
+`TextRun` — only `text` is required:
+
+| Field            | Type     | Description                                                                                                               |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `text`           | `string` | The run's characters. A `"\n"` in it is an authored newline like any other: runs cut the body by styling, not into lines. |
+| `fontColor`      | `string` | Text color (CSS color, or `"auto"` to follow the theme).                                                                  |
+| `fontSize`       | `number` | Font size (px).                                                                                                           |
+| `fontFamily`     | `string` | Font family.                                                                                                              |
+| `fontWeight`     | `string` | Font weight (`"bold"`, `"700"`, …).                                                                                       |
+| `fontStyle`      | `string` | `"normal"` or `"italic"`.                                                                                                 |
+| `textDecoration` | `string` | `"underline"`, `"line-through"`, or both space-separated — write `"underline line-through"`, the canonical order.         |
+
+A run holds only the **difference**: a field it leaves unset is drawn with the
+owning slot's value (the shape-wide `fontSize` / `fontColor` / … above, or the
+`record` slot's). There is no alignment field here — `textAlign` /
+`verticalAlign` place the whole body and have nothing smaller to apply to.
+
+Write a plain string unless part of the text has to be drawn differently. Runs
+are **canonicalized on every write**, so one styled body has exactly one stored
+form:
+
+- empty runs (`{ "text": "" }`) are dropped;
+- adjacent runs whose six style fields all match merge into one;
+- a run list in which no run carries any styling collapses back to the plain
+  string — so a body nobody styled stays a string forever, and `[]` reads as
+  `""`.
+
+**Rows of a `record` compartment.** A compartment's `text` is an array of rows,
+and a row is itself a body — so a styled row is an array nested one level deeper,
+and plain and styled rows mix in the one array:
+
+```json
+"attributes": {
+  "text": [
+    "id: string",
+    [{ "text": "email: " }, { "text": "required", "fontWeight": "bold" }]
+  ]
+}
+```
+
+That nesting level is what tells a compartment of one styled row from a single
+styled body, so a run object placed directly in the row list is rejected
+(`must be a string, or an array of runs to style parts of it`). The `name` and
+`stereotype` bands are the opposite case: each is one body, and an array of
+strings — `[]` included — is rejected there with
+`must be one body of text, not rows`.
 
 ### Transform style
 
