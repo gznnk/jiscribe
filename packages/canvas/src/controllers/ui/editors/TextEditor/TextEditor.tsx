@@ -508,6 +508,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				// edits inside it.
 				contentEditable
 				suppressContentEditableWarning
+				// Diagram labels are largely identifiers and abbreviations, which the
+				// browser's dictionary underlines as misspellings on an editable element
+				// (on by default there, unlike an ordinary element).
+				spellCheck={false}
 				role="textbox"
 				aria-multiline
 				style={{
