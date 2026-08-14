@@ -885,7 +885,8 @@ export class CanvasDriver {
 
 	/**
 	 * Toggle one text format (bold / italic / underline / strikethrough) of the selected shape.
-	 * The submenu stays open after a press, so it is only opened when its buttons are absent.
+	 * The buttons are already on the menu itself while text is edited inline, and the submenu
+	 * stays open after a press, so it is only opened when they are absent.
 	 *
 	 * @param property - Style property the button writes, as it appears in the `set:` data-part
 	 * @param value - Value the button writes; the buttons carry the value the *next* press lands
