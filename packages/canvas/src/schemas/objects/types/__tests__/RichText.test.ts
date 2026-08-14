@@ -293,4 +293,26 @@ describe("remapRichText", () => {
 		expect(remapRichText(styled, "abcghi")).toBe("abcghi");
 		expect(remapRichText(styled, "")).toBe("");
 	});
+
+	it("continues the replaced stretch's styling when typing over a selection", () => {
+		// The browser draws the replacement with the styling the selection began
+		// with, so the carry-over has to match it — even though the character
+		// before the selection is unstyled.
+		expect(remapRichText(styled, "abcXYghi")).toEqual([
+			{ text: "abc" },
+			{ text: "XY", fontWeight: "bold" },
+			{ text: "ghi" },
+		]);
+	});
+
+	it("takes the replaced stretch's first styling when the selection spans runs", () => {
+		// Replacement starting in the unstyled run stays unstyled, the bold part of
+		// the selection notwithstanding; starting in the bold run it stays bold.
+		expect(remapRichText(styled, "abXcdehi")).toBe("abXcdehi");
+		expect(remapRichText(styled, "abcdXhi")).toEqual([
+			{ text: "abc" },
+			{ text: "dX", fontWeight: "bold" },
+			{ text: "hi" },
+		]);
+	});
 });

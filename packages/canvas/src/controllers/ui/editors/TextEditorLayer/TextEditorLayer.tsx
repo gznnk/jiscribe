@@ -30,7 +30,8 @@ import { TextEditor } from "../TextEditor";
 
 /** Handlers that report editor input, caret and exit to the parent (Canvas). Common across all types. */
 type EditorHandlers = {
-	onChange: (text: string) => void;
+	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
+	onChange: (text: RichText) => void;
 	onEscape: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
@@ -189,7 +190,8 @@ function renderTextEditor(
 type TextEditorLayerProps = {
 	textEditState: CanvasControllerState["textEditState"];
 	objects: CanvasControllerState["objects"];
-	onTextChange: (text: string) => void;
+	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
+	onTextChange: (text: RichText) => void;
 	onEscape: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;

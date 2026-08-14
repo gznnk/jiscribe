@@ -225,6 +225,27 @@ test.describe("styling a stretch of a shape's text", () => {
 		]);
 	});
 
+	test("keeps the styling the browser draws when typing over a styled selection", async ({
+		canvas,
+	}) => {
+		const id = await drawAndEdit(canvas, "Payment failed");
+		await selectFromStart(canvas, 7);
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id)).length)
+			.toBe(2);
+
+		// Typing over the still-selected stretch: Chrome draws the replacement in
+		// the styling the stretch began with, and the commit has to keep it.
+		await canvas.page.keyboard.type("Refund");
+		await canvas.commitText();
+
+		expect(await canvas.drawnTextRuns(id)).toEqual([
+			expect.objectContaining({ text: "Refund", fontWeight: "700" }),
+			expect.objectContaining({ text: " failed", fontWeight: "400" }),
+		]);
+	});
+
 	test("keeps the styling on the characters an edit leaves in place", async ({
 		canvas,
 	}) => {

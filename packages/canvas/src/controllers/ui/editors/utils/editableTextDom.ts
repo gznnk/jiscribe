@@ -1,9 +1,17 @@
+import { isObject } from "@jiscribe/basic-validators";
+
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import type {
+	InlineTextStyle,
 	RichText,
 	TextRun,
 } from "../../../../schemas/objects/types/RichText";
-import { richTextToPlain } from "../../../../schemas/objects/types/RichText";
+import {
+	hasValidInlineTextStyle,
+	normalizeRichText,
+	pickDefinedInlineTextStyle,
+	richTextToPlain,
+} from "../../../../schemas/objects/types/RichText";
 
 /**
  * The DOM contract of the shape text editor's editable surface: how a body of
@@ -15,10 +23,12 @@ import { richTextToPlain } from "../../../../schemas/objects/types/RichText";
  */
 
 /**
- * Marks the spans this module draws a run with. Chrome revives the typing style of
- * a run that was deleted whole as an element of its own, and for a size override
- * that element is a bare `<span style="font-size: 24px">` — indistinguishable from
- * an editor-built span by tag name alone, which is what the attribute settles.
+ * Marks the spans this module draws a run with, and carries the run's own
+ * styling fields as JSON. The marker is what tells an editor-built span from the
+ * `<span style="font-size: 24px">` Chrome revives a deleted run's typing style
+ * with; the JSON is what {@link readEditableRichText} reads the styling back
+ * from, exactly as it was authored — the inline `style` cannot serve, because it
+ * holds resolved values (an "auto" color is drawn as the theme ink).
  */
 const RUN_ATTRIBUTE_NAME = "data-run";
 
@@ -99,7 +109,10 @@ export const renderEditableRichText = (
 	} else {
 		for (const run of text) {
 			const span = ownerDocument.createElement("span");
-			span.setAttribute(RUN_ATTRIBUTE_NAME, "");
+			span.setAttribute(
+				RUN_ATTRIBUTE_NAME,
+				JSON.stringify(pickDefinedInlineTextStyle(run)),
+			);
 			applyRunStyle(span, run);
 			span.textContent = run.text;
 			children.push(span);
@@ -224,6 +237,68 @@ const readUnits = (
  */
 export const readEditableText = (surface: HTMLElement): string =>
 	readUnits(surface).plain;
+
+/**
+ * The styling a piece of the surface's text is drawn with: the fields carried by
+ * the run span it sits inside, or nothing for text outside every span. An
+ * unreadable attribute (foreign markup renamed by an extension, a legacy empty
+ * marker) reads as unstyled rather than failing the read.
+ */
+const readRunStyle = (surface: HTMLElement, node: Node): InlineTextStyle => {
+	let element: Element | null =
+		node.nodeType === Node.ELEMENT_NODE
+			? (node as Element)
+			: node.parentElement;
+	while (element !== null && element !== surface) {
+		const serialized = element.getAttribute(RUN_ATTRIBUTE_NAME);
+		if (serialized !== null) {
+			try {
+				const parsed: unknown = JSON.parse(serialized);
+				if (isObject(parsed) && hasValidInlineTextStyle(parsed)) {
+					return pickDefinedInlineTextStyle(parsed);
+				}
+			} catch {
+				// Fall through to unstyled.
+			}
+			return {};
+		}
+		element = element.parentElement;
+	}
+	return {};
+};
+
+/**
+ * The body the surface currently holds, styling included: the characters of
+ * {@link readEditableText}, each carrying the fields of the run span it is drawn
+ * inside. This is what makes the browser's own edits the source of truth — a
+ * character Chrome put into a span reads back styled, one it put outside reads
+ * back unstyled, so what the editing state holds is exactly what is on screen,
+ * whichever way Chrome resolved the edit.
+ *
+ * @param surface - The editable div, in whatever shape the browser left it
+ * @returns The body in canonical form, a plain string when nothing is styled
+ */
+export const readEditableRichText = (surface: HTMLElement): RichText => {
+	const units = collectUnits(surface);
+	const runs: TextRun[] = [];
+	for (const unit of units) {
+		const text = unit.kind === "text" ? (unit.node as Text).data : "\n";
+		if (text === "") {
+			continue;
+		}
+		runs.push({ text, ...readRunStyle(surface, unit.node) });
+	}
+	// The trailing padding break is not a character of the text (see readUnits).
+	const last = runs[runs.length - 1];
+	if (last !== undefined && last.text.endsWith("\n")) {
+		if (last.text.length === 1) {
+			runs.pop();
+		} else {
+			runs[runs.length - 1] = { ...last, text: last.text.slice(0, -1) };
+		}
+	}
+	return normalizeRichText(runs);
+};
 
 /**
  * Whether the surface holds an element the editor never built — one of the

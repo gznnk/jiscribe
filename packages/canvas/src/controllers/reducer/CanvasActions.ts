@@ -1,6 +1,7 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
+import type { RichText } from "../../schemas/objects/types/RichText";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
@@ -61,12 +62,13 @@ export type CommandAction = {
 
 /**
  * Update text edit action - updates text during editing. The editor reports the
- * whole edited text as a plain string; the reducer carries the draft's styling
- * over onto it (remapRichText), the same prediction the editor itself makes.
+ * whole edited body as it reads back off its surface, styling included
+ * (readEditableRichText), so the draft holds exactly what is on screen; a
+ * connector label editor reports a plain string, the only form its label holds.
  */
 export type UpdateTextEditAction = {
 	type: "UPDATE_TEXT_EDIT";
-	text: string;
+	text: RichText;
 };
 
 /**

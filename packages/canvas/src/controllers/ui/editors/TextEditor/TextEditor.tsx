@@ -13,10 +13,7 @@ import { createSvgTransform } from "../../../../presentations/objects/utils/crea
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../presentations/objects/utils/verticalAlignToAlignItems";
 import type { RichText } from "../../../../schemas/objects/types/RichText";
-import {
-	isSameRichText,
-	remapRichText,
-} from "../../../../schemas/objects/types/RichText";
+import { isSameRichText } from "../../../../schemas/objects/types/RichText";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
@@ -26,8 +23,8 @@ import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 import {
 	focusEditableAtEnd,
 	hasUnexpectedMarkup,
+	readEditableRichText,
 	readEditableSelection,
-	readEditableText,
 	renderEditableRichText,
 	setEditableSelection,
 } from "../utils/editableTextDom";
@@ -84,7 +81,8 @@ type TextEditorProps = {
 	fontWeight?: string;
 	fontStyle?: string;
 	textDecoration?: string;
-	onChange: (text: string) => void;
+	/** The edited body, read back from the surface with its styling (readEditableRichText). */
+	onChange: (text: RichText) => void;
 	/** What the editor has selected, reported on every edit and caret move. */
 	onSelectionChange?: (selection: TextSelection) => void;
 	/** A bold / italic / underline keystroke, to apply over the current selection. */
@@ -284,21 +282,21 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		if (!surface) {
 			return;
 		}
-		const plain = readEditableText(surface);
-		// The very carry-over the reducer applies to the draft, applied here to the
-		// drawn body: both advance the same body with the same function, so the echo
-		// coming back always compares equal and the surface is never redrawn under
-		// the caret by its own keystroke.
-		const edited = remapRichText(shownRichText.current ?? "", plain);
+		// The surface is the source of truth for what the edit did to the styling:
+		// whichever span Chrome put the typed characters into is what they are
+		// drawn with, so that is what the editing state has to hold. Predicting the
+		// styling instead diverges wherever Chrome's rules differ from the
+		// prediction, and every divergence is a commit that changes the text's look.
+		const edited = readEditableRichText(surface);
 		shownRichText.current = edited;
 		// Chrome answers some edits with markup of its own — a <b> reviving the
 		// typing style of a run that was deleted whole, a <div> per line of a
-		// multi-line insert. The characters still read back, but the drawn styling is
-		// no longer the one the runs describe, so the surface is redrawn from them.
+		// multi-line insert. Those carry no run marker, so their characters read
+		// back unstyled, and the surface is redrawn to make it look that way too.
 		if (!isComposing.current && hasUnexpectedMarkup(surface)) {
 			drawOnSurface(surface, edited, readEditableSelection(surface));
 		}
-		onChange(plain);
+		onChange(edited);
 	}, [onChange, drawOnSurface, surfaceRef]);
 
 	const handleBeforeInput = useCallback(

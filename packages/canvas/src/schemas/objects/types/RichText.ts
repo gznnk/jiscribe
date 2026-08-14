@@ -441,8 +441,10 @@ export const readRichTextRangeStyle = (
  * side hands back the whole text as one plain string (an edit reads back as
  * characters, not as runs), so what changed is recovered by matching the unchanged head and
  * tail: everything outside the changed part keeps the styling it had, and the
- * inserted characters take the styling of the character before them — the
- * behavior of typing at the end of a bold word.
+ * inserted characters take the styling the browser draws them with — an edit
+ * that replaced a stretch (select-and-type) continues the styling that stretch
+ * began with, a pure insertion the character before it (the behavior of typing
+ * at the end of a bold word).
  *
  * This is deliberately a heuristic on the *result*, not a record of the edit:
  * two edits that produce the same string are remapped the same way. It is exact
@@ -488,9 +490,18 @@ export const remapRichText = (
 		previousPlain.length,
 	);
 	const inserted = nextPlain.slice(head, nextPlain.length - tail);
-	// Typed text continues the run it was typed into; at the very start of the
-	// text there is nothing before it, so it takes what follows instead.
-	const styleSource = keptHead[keptHead.length - 1] ?? keptTail[0] ?? {};
+	// Text typed over a selection is drawn by the browser with the styling the
+	// replaced stretch began with, so that styling is what carries over — without
+	// it, typing over a just-bolded selection would silently commit unstyled (the
+	// surface extends the bold span, which the markup check cannot tell apart).
+	// A pure insertion continues the run it was typed into; at the very start of
+	// the text there is nothing before it, so it takes what follows instead.
+	const replacedSource =
+		previousPlain.length - head - tail > 0
+			? sliceRuns(runs, head, head + 1)[0]
+			: undefined;
+	const styleSource =
+		replacedSource ?? keptHead[keptHead.length - 1] ?? keptTail[0] ?? {};
 	return normalizeRichText([
 		...keptHead,
 		...(inserted === ""

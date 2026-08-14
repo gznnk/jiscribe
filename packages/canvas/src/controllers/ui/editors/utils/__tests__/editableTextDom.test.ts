@@ -7,6 +7,7 @@ import type { RichText } from "../../../../../schemas/objects/types/RichText";
 import {
 	focusEditableAtEnd,
 	hasUnexpectedMarkup,
+	readEditableRichText,
 	readEditableSelection,
 	readEditableText,
 	renderEditableRichText,
@@ -214,6 +215,107 @@ describe("readEditableText on the markup Chrome leaves behind", () => {
 		surface.replaceChildren(document.createTextNode("a"), buildElement("br"));
 
 		expect(readEditableText(surface)).toBe("a");
+	});
+});
+
+describe("readEditableRichText", () => {
+	/** A span as the editor draws it, its run styling serialized on the marker. */
+	const runSpan = (
+		text: string,
+		style: Record<string, unknown> = {},
+	): HTMLElement => {
+		const span = buildElement("span", text);
+		span.setAttribute("data-run", JSON.stringify(style));
+		return span;
+	};
+
+	it("round-trips what it drew, plain string form included", () => {
+		const surface = createSurface();
+		const body: RichText = [
+			{ text: "ab", fontWeight: "bold" },
+			{ text: "cd\ne" },
+		];
+		renderEditableRichText(surface, body);
+		expect(readEditableRichText(surface)).toEqual(body);
+
+		renderEditableRichText(surface, "plain\ntext");
+		expect(readEditableRichText(surface)).toBe("plain\ntext");
+	});
+
+	it("reads the characters Chrome typed into a span as that span's run", () => {
+		const surface = createSurface();
+		// The browser extended the bold span with the typed "X".
+		surface.replaceChildren(
+			runSpan("abX", { fontWeight: "bold" }),
+			runSpan("cd"),
+		);
+
+		expect(readEditableRichText(surface)).toEqual([
+			{ text: "abX", fontWeight: "bold" },
+			{ text: "cd" },
+		]);
+	});
+
+	it("reads a character typed outside every span as unstyled", () => {
+		const surface = createSurface();
+		surface.replaceChildren(
+			runSpan("ab", { fontWeight: "bold" }),
+			document.createTextNode("X"),
+		);
+
+		expect(readEditableRichText(surface)).toEqual([
+			{ text: "ab", fontWeight: "bold" },
+			{ text: "X" },
+		]);
+	});
+
+	it("keeps the styling of a span Chrome cloned into a block per line", () => {
+		const surface = createSurface();
+		surface.replaceChildren(
+			buildElement("div", runSpan("a", { fontColor: "#d33" })),
+			buildElement("div", runSpan("b", { fontColor: "#d33" })),
+		);
+
+		expect(readEditableRichText(surface)).toEqual([
+			{ text: "a", fontColor: "#d33" },
+			{ text: "\n" },
+			{ text: "b", fontColor: "#d33" },
+		]);
+	});
+
+	it("reads text inside foreign markup as unstyled", () => {
+		const surface = createSurface();
+		// The <b> Chrome revives a deleted run's typing style with carries no run
+		// marker, so its styling is not the runs' and does not survive the read.
+		surface.replaceChildren(
+			document.createTextNode("a"),
+			buildElement("b", "X"),
+		);
+
+		expect(readEditableRichText(surface)).toBe("aX");
+	});
+
+	it("reads an unparseable run marker as unstyled instead of failing", () => {
+		const surface = createSurface();
+		const legacy = buildElement("span", "ab");
+		legacy.setAttribute("data-run", "");
+		surface.replaceChildren(legacy);
+
+		expect(readEditableRichText(surface)).toBe("ab");
+	});
+
+	it("drops the trailing padding, whichever form it took", () => {
+		const surface = createSurface();
+		surface.replaceChildren(
+			runSpan("ab\n", { fontWeight: "bold" }),
+			buildElement("br"),
+		);
+		expect(readEditableRichText(surface)).toEqual([
+			{ text: "ab\n", fontWeight: "bold" },
+		]);
+
+		surface.replaceChildren(document.createTextNode("a\n\n"));
+		expect(readEditableRichText(surface)).toBe("a\n");
 	});
 });
 
