@@ -16,8 +16,8 @@ import { selectors } from "../../support/selectors";
  * - A styled label keeps its style when emptied and is restored by typing again
  *   (only the style is kept; the position belonged to the removed label and is
  *   not carried over)
- * - A wrapping label has the same height before committing (the real textarea
- *   layout) and after committing (the measurement-based wrap simulation)
+ * - A multi-line label has the same height before committing (the real textarea
+ *   layout) and after committing (the measured line boxes)
  */
 
 type Vec = { x: number; y: number };
@@ -865,31 +865,27 @@ test.describe("connector label", () => {
 		).toBeVisible();
 	});
 
-	test("keeps the committed height equal to the editing height for a label that wraps on words", async ({
+	test("keeps the committed height equal to the editing height for a label of several lines", async ({
 		canvas,
 	}) => {
 		// While editing, the height comes from the real textarea layout
-		// (scrollHeight); after committing, from the measurement-based wrap
-		// simulation. If the two disagree, the label is clipped by one line the
-		// moment it is committed.
+		// (scrollHeight); after committing, from the measured line boxes. If the two
+		// disagree, the label is clipped by one line the moment it is committed.
 		const connectorId = await setupConnector(canvas);
 		const onLine = await pointOnConnector(canvas, connectorId);
 
-		// Three words, each taking more than half of the maximum width (240px = 228px
-		// of text width). Only one word fits per line, so the display is 3 lines,
-		// while a ratio estimate of total width / usable width only gives 2 lines
-		// (the line the ratio estimate misses).
+		// The label breaks only where the author typed a newline, so these are
+		// exactly 3 lines however wide the words are.
 		const word = "Telecommunications";
-		const text = `${word} ${word} ${word}`;
+		const text = `${word}\n${word}\n${word}`;
 		await canvas.typeTextAt(onLine, text);
 		await expect(canvas.textEditorSurface()).toHaveValue(text);
 
-		// Read the height once wrapping happened (= it became 3 lines).
 		// One line is 16 x 1.5 + padding 4 = 28px, so 3 lines exceed 70px.
 		const editorBox = canvas.page.locator(selectors.textEditor);
 		await expect
 			.poll(async () => (await editorBox.boundingBox())?.height ?? 0, {
-				message: "the label being edited should wrap into 3 lines",
+				message: "the label being edited should take 3 lines",
 			})
 			.toBeGreaterThan(70);
 		const editorHeight = (await editorBox.boundingBox())?.height ?? 0;

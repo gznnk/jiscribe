@@ -10,16 +10,20 @@ import {
 import type { RichText } from "../../../schemas/objects/types/RichText";
 
 /** Width of a box holding no text, so an empty one still has something to hit. */
-const TEXT_BLOCK_MIN_WIDTH = 16;
+export const TEXT_BLOCK_MIN_WIDTH = 16;
 
 /**
  * Size of the box a text of its own — one with no frame to wrap inside — takes.
  * The text is laid out as authored: lines break at `\n` and nowhere else, so
- * width grows with the longest line and there is deliberately no maximum
- * (unlike calcBelowLabelTextRegion, whose label is bounded to stay under its
- * shape). A part of the text drawn larger widens its line and heightens its line
- * box, so the box grows around it. The caller keeps the box's top-left fixed when
- * this grows.
+ * width grows with the longest line and there is deliberately no maximum. A part
+ * of the text drawn larger widens its line and heightens its line box, so the box
+ * grows around it. The caller keeps the box's top-left fixed when this grows.
+ *
+ * Shared by the `text` object and by every label sized from its own content (the
+ * connector's, and the ones canvas-sdk hangs off a shape): sizing them all from
+ * here is what keeps a box from having to reproduce the display-side wrapping to
+ * learn its own height, which is only ever needed where a maximum width forces a
+ * break.
  *
  * @param text - The whole text, authored newlines included; an empty string sizes one empty line, as does each empty line
  * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one skews the width

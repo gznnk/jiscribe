@@ -1,12 +1,6 @@
 import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
 import type { TextSlot } from "@jiscribe/canvas/doc";
-import { calcVisualLineCount, measureTextWidth } from "@jiscribe/canvas-sdk";
-import {
-	BELOW_LABEL_STYLE_DEFAULTS,
-	TEXT_BOX_PADDING_X,
-	TEXT_BOX_PADDING_Y,
-	TEXT_LINE_HEIGHT,
-} from "@jiscribe/canvas-sdk/doc";
+import { calcLabelBoxSize } from "@jiscribe/canvas-sdk";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import {
@@ -16,10 +10,6 @@ import {
 } from "./groupMarkerGeometry";
 import type { GroupMarkerDirection } from "../../schema/shared/GroupMarkerFields";
 import { GROUP_MARKER_LABEL_GAP } from "../../schema/shared/GroupMarkerFields";
-
-/** Label box width limits (content width + padding, in local px). */
-const GROUP_MARKER_LABEL_MIN_WIDTH = 16;
-const GROUP_MARKER_LABEL_MAX_WIDTH = 240;
 
 /**
  * What the label layout reads off the state: the box the marker fills, where its
@@ -36,50 +26,12 @@ type GroupMarkerLabelState = Dimensions & {
 	text?: Record<string, TextSlot>;
 };
 
-/** The label box's own size, before it is placed against the tip. */
-const measureLabelBox = (slot: TextSlot | undefined): Dimensions => {
-	const content = slot?.text;
-	const text = Array.isArray(content) ? content.join("\n") : (content ?? "");
-
-	const font = {
-		fontSize: slot?.fontSize ?? BELOW_LABEL_STYLE_DEFAULTS.fontSize,
-		fontFamily: slot?.fontFamily ?? BELOW_LABEL_STYLE_DEFAULTS.fontFamily,
-		fontWeight: slot?.fontWeight ?? BELOW_LABEL_STYLE_DEFAULTS.fontWeight,
-	};
-
-	const lines = text === "" ? [""] : text.split("\n");
-	const longestLineWidth = lines.reduce(
-		(widest, line) => Math.max(widest, measureTextWidth(line, font)),
-		0,
-	);
-	const width = Math.min(
-		GROUP_MARKER_LABEL_MAX_WIDTH,
-		Math.max(
-			GROUP_MARKER_LABEL_MIN_WIDTH,
-			longestLineWidth + TEXT_BOX_PADDING_X * 2,
-		),
-	);
-
-	// Count the displayed lines the way the box lays them out, so a line that
-	// wraps at the max width reserves the same height while editing and after.
-	const visualLineCount = calcVisualLineCount(
-		text,
-		font,
-		width - TEXT_BOX_PADDING_X * 2,
-	);
-	return {
-		width,
-		height:
-			visualLineCount * font.fontSize * TEXT_LINE_HEIGHT +
-			TEXT_BOX_PADDING_Y * 2,
-	};
-};
-
 /**
- * Places a group marker's label: a box sized from its own text, set just beyond
- * the tip and centered on it. Sizing the label from the text rather than from
- * the box is what lets the marker stay a thin band — the two never compete for
- * room, and the tip always points at the middle of the name it gives the group.
+ * Places a group marker's label: a box sized from its own text
+ * (calcLabelBoxSize), set just beyond the tip and centered on it. Sizing the
+ * label from the text rather than from the box is what lets the marker stay a
+ * thin band — the two never compete for room, and the tip always points at the
+ * middle of the name it gives the group.
  *
  * Register as the type's `textRegion`, so the drawn label and the in-place
  * editor resolve the same rectangle; while editing, the grafted draft text
@@ -95,7 +47,7 @@ export const calcGroupMarkerTextRegion: ObjectTextRegionCalculator<
 	GroupMarkerLabelState
 > = (state, slotId): Rect => {
 	const direction = resolveGroupMarkerDirection(state);
-	const { width, height } = measureLabelBox(state.text?.[slotId]);
+	const { width, height } = calcLabelBoxSize(state.text, slotId);
 	const tip = calcGroupMarkerTip(
 		-state.width / 2,
 		-state.height / 2,

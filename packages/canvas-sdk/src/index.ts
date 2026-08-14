@@ -26,6 +26,11 @@ export {
 export { calcBelowLabelVisualBounds } from "./presentation/calcBelowLabelVisualBounds";
 export { BelowLabelHitArea } from "./presentation/BelowLabelHitArea";
 
+// The measurement under those regions, for a shape that hangs its label somewhere
+// else than under the box (a group marker's, set beyond its tip) and so places the
+// box itself. Everything but where the box goes is already decided here.
+export { calcLabelBoxSize } from "./presentation/calcLabelBoxSize";
+
 // Polygon/outline helpers for drawing frame-based plugin shapes and their connector outline.
 export { formatPolygonPoints } from "./presentation/formatPolygonPoints";
 export {

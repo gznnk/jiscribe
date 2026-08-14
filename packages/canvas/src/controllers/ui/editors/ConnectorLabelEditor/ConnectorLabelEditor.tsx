@@ -80,7 +80,8 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	const background = resolveLabelFill(fill);
 	const borderColor = resolveAutoColor(stroke, "ink");
 
-	// Width is clamped by measurement (horizontal expansion). Height follows the textarea's scrollHeight.
+	// Width is the measured text's, so the box grows sideways as it is typed and
+	// the textarea never wraps. Height follows the textarea's scrollHeight.
 	const { width } = calcConnectorLabelBox(
 		text,
 		{ fontSize, fontFamily, fontWeight },

@@ -8,7 +8,7 @@
 // features/defaults by createFrameObjectDoc / createFrameObjectDefinition
 // (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`), so there is no per-shape
 // ObjectFactory / validate*Doc / Mapper / validate*State. The presentation parts
-// (createFrameObject / measureTextWidth / calcVisualLineCount / readTextSlot /
+// (createFrameObject / calcBelowLabelTextRegion / readTextSlot /
 // OUTLINE_CURVE_SEGMENTS / centeredPolygonOutline) come through `@jiscribe/canvas-sdk`.
 // The headless parse entry point is ./doc (generalDocPlugin).
 // Shapes get one folder each (schema/<id>/, state/<id>/, presentation/<Pascal>/), and

@@ -81,8 +81,8 @@ const outlinedCenteredConnector = (): ConnectorState =>
 	});
 
 // In a non-browser environment calcConnectorLabelBox falls back to a character
-// count estimate, so "Yes" (16px, no border) is a fixed 40.8 x 28 box.
-const LABEL_HALF_WIDTH = 20.4;
+// count estimate, so "Yes" (16px, no border) is a fixed 42.8 x 28 box.
+const LABEL_HALF_WIDTH = 21.4;
 const LABEL_HALF_HEIGHT = 14;
 
 describe("calcConnectorBoundingBox", () => {

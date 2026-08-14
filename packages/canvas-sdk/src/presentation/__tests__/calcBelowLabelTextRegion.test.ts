@@ -69,21 +69,29 @@ describe("calcBelowLabelTextRegion", () => {
 		expect(regionOf(80, 100)).toEqual(regionOf(80, 100, { text: "" }));
 	});
 
-	it("grows with the text until the maximum width, then stops", () => {
+	it("grows sideways with the text, with no maximum to stop at", () => {
 		const short = regionOf(80, 100, { text: "ab" });
 		const medium = regionOf(80, 100, { text: "abcdefghij" });
 		expect(medium.width).toBeGreaterThan(short.width);
 
 		const veryLong = regionOf(80, 100, { text: "a".repeat(500) });
 		const evenLonger = regionOf(80, 100, { text: "a".repeat(1000) });
-		expect(veryLong.width).toBe(240);
-		expect(evenLonger.width).toBe(240);
+		expect(evenLonger.width).toBeGreaterThan(veryLong.width);
 	});
 
-	it("wraps past the maximum width instead of growing, reserving more height", () => {
+	it("keeps a single line one line high however long it is", () => {
 		const oneLine = regionOf(80, 100, { text: "short" });
-		const wrapped = regionOf(80, 100, { text: "a".repeat(500) });
-		expect(wrapped.height).toBeGreaterThan(oneLine.height);
+		const veryLong = regionOf(80, 100, { text: "a".repeat(500) });
+		expect(veryLong.height).toBeCloseTo(oneLine.height);
+	});
+
+	it("sizes the box from the styling of each run, not from the slot's alone", () => {
+		const uniform = regionOf(80, 100, { text: "abcdef" });
+		const partlyLarger = regionOf(80, 100, {
+			text: [{ text: "abc" }, { text: "def", fontSize: 40 }],
+		});
+		expect(partlyLarger.width).toBeGreaterThan(uniform.width);
+		expect(partlyLarger.height).toBeGreaterThan(uniform.height);
 	});
 
 	it("reserves one more line per authored newline", () => {

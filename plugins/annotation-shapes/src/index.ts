@@ -7,10 +7,10 @@
 // (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`), so there is no per-shape
 // ObjectFactory / validate*Doc / Mapper / validate*State (only the group marker factory
 // is swapped in, by passing schema/shared/createGroupMarkerObjectFactory). The headless
-// parts of schema/** (AUTO_COLOR / BELOW_LABEL_STYLE_DEFAULTS / TEXT_LINE_HEIGHT) come
-// from `@jiscribe/canvas-sdk/doc`; the presentation / controls parts (createFrameObject /
-// measureTextWidth / calcVisualLineCount / readTextSlot / centeredPolygonOutline /
-// SelectionControlPill) come through `@jiscribe/canvas-sdk`.
+// parts of schema/** (AUTO_COLOR / BELOW_LABEL_STYLE_DEFAULTS) come from
+// `@jiscribe/canvas-sdk/doc`; the presentation / controls parts (createFrameObject /
+// calcLabelBoxSize / readTextSlot / centeredPolygonOutline / SelectionControlPill) come
+// through `@jiscribe/canvas-sdk`.
 // The headless parse entry point is ./doc (annotationDocPlugin).
 // Shapes get one folder each (schema/<id>/, state/<id>/, presentation/<Pascal>/), and
 // parts shared by several shapes live in each layer's shared/. brace / bracket /

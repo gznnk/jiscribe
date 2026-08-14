@@ -66,6 +66,13 @@ export { createSvgTransform } from "./presentations/objects/utils/createSvgTrans
 export { resolveAutoColor } from "./presentations/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoColor";
 
+// The box a text of its own takes — the `text` object's frame, and every label a
+// shape sizes from its content rather than from its box. Laid out as authored, so
+// the box grows sideways with the longest line and breaks only where the author
+// typed a newline; nothing here wraps, and no caller has to reproduce the
+// display-side wrapping to find its height.
+export { calcTextBlockSize } from "./states/objects/utils/calcTextBlockSize";
+
 // For shapes deriving a text box's size from its content: measureTextWidth gives the
 // width of one line, calcVisualLineCount the number of lines by reproducing the
 // wrapping of the display-side CSS (pre-wrap + break-word), and calcVisualTextHeight

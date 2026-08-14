@@ -74,15 +74,29 @@ describe("calcGroupMarkerTextRegion", () => {
 		expect(wideBox.width).toBe(short.width);
 	});
 
-	it("wraps instead of growing past the max width", () => {
-		const wrapped = calcGroupMarkerTextRegion(
+	it("runs sideways rather than wrapping, however long the label is", () => {
+		const oneLine = calcGroupMarkerTextRegion(
+			stateOf("left", "a"),
+			BODY_TEXT_SLOT_ID,
+		);
+		const long = calcGroupMarkerTextRegion(
 			stateOf("left", "a".repeat(400)),
 			BODY_TEXT_SLOT_ID,
 		);
-		expect(wrapped.width).toBe(240);
-		expect(wrapped.height).toBeGreaterThan(
-			calcGroupMarkerTextRegion(stateOf("left", "a"), BODY_TEXT_SLOT_ID).height,
+		expect(long.width).toBeGreaterThan(240);
+		expect(long.height).toBeCloseTo(oneLine.height);
+	});
+
+	it("reserves a line per authored newline instead", () => {
+		const oneLine = calcGroupMarkerTextRegion(
+			stateOf("left", "doc layer"),
+			BODY_TEXT_SLOT_ID,
 		);
+		const twoLines = calcGroupMarkerTextRegion(
+			stateOf("left", "doc\nlayer"),
+			BODY_TEXT_SLOT_ID,
+		);
+		expect(twoLines.height).toBeGreaterThan(oneLine.height);
 	});
 
 	/**
