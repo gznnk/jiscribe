@@ -27,11 +27,11 @@ export const GALLERY_DIAGRAMS: ReadonlyArray<GalleryDiagram> = [
 		title: "Day Trading Terminal",
 		description:
 			"A dense trading terminal mockup, every panel drawn on the canvas. Pan and zoom in.",
-		fileName: "2026-06-28-daytrade-terminal.jis.json",
+		fileName: "daytrade-terminal.jis.json",
 		// Drawing bounds: x 0..1520 / y 0..960
 		camera: { minX: -24, minY: -24, zoom: 0.75 },
 		load: () =>
-			import("../../diagrams/2026-06-28-daytrade-terminal.jis.json?raw").then(
+			import("../../diagrams/daytrade-terminal.jis.json?raw").then(
 				(module) => module.default,
 			),
 	},
@@ -40,24 +40,25 @@ export const GALLERY_DIAGRAMS: ReadonlyArray<GalleryDiagram> = [
 		title: "Rainy Crossing",
 		description:
 			"A rain-soaked city crossing with umbrellas and reflections. Pan and zoom in.",
-		fileName: "2026-07-02-rainy-crossing.jis.json",
+		fileName: "rainy-crossing.jis.json",
 		// Drawing bounds: x 20..1500 / y -62..970
 		camera: { minX: -4, minY: -86, zoom: 0.75 },
 		load: () =>
-			import("../../diagrams/2026-07-02-rainy-crossing.jis.json?raw").then(
+			import("../../diagrams/rainy-crossing.jis.json?raw").then(
 				(module) => module.default,
 			),
 	},
 	{
-		id: "koi-pond",
-		title: "Koi Pond",
+		id: "knowledge-graph",
+		title: "Knowledge Graph",
 		description:
-			"A tranquil koi pond with lily pads and ripples. Pan and zoom in.",
-		fileName: "2026-07-02-koi-pond.jis.json",
-		// Drawing bounds: x 20..1500 / y 20..960
-		camera: { minX: -4, minY: -4, zoom: 0.75 },
+			"228 nodes and 439 edges of software development knowledge, laid out on one canvas. Pan and zoom in.",
+		fileName: "knowledge-graph.jis.json",
+		// Drawing bounds: x -4102..4094 / y -3534..3563. The drawing is much wider than a
+		// window, so the zoom is picked to fit its height and minX centres it horizontally.
+		camera: { minX: -5400, minY: -3600, zoom: 0.115 },
 		load: () =>
-			import("../../diagrams/2026-07-02-koi-pond.jis.json?raw").then(
+			import("../../diagrams/knowledge-graph.jis.json?raw").then(
 				(module) => module.default,
 			),
 	},

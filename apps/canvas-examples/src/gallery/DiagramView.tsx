@@ -1,12 +1,17 @@
 import { Canvas } from "@jiscribe/canvas";
 import type { CanvasDoc } from "@jiscribe/canvas";
 import { createCanvasParser } from "@jiscribe/canvas/doc";
+import { flowchartPlugin } from "@jiscribe/plugin-flowchart-shapes";
+import { generalPlugin } from "@jiscribe/plugin-general-shapes";
 import { useEffect, useState } from "react";
 
 import type { GalleryDiagram } from "./diagrams";
 
-// The gallery ships no plugin, so the default parser (every built-in type) is enough.
-const canvasParser = createCanvasParser();
+// The shapes the gallery drawings use beyond the built-in types: flowchart (stadium,
+// hexagon, document, db) and general (actor, cloud). The same array has to reach both the
+// parser and Canvas — see the plugins example for what happens when it does not.
+const plugins = [flowchartPlugin, generalPlugin];
+const canvasParser = createCanvasParser({ plugins });
 
 /**
  * Renders one gallery diagram at the framing its entry declares. The `.jis.json` is
@@ -45,7 +50,7 @@ export function DiagramView({ diagram }: { diagram: GalleryDiagram }) {
 	return (
 		<Canvas
 			doc={loadedDoc}
-			initialConfig={{ viewport: diagram.camera }}
+			initialConfig={{ plugins, viewport: diagram.camera }}
 			autoFocus={false}
 		/>
 	);

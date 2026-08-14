@@ -19,7 +19,7 @@ pnpm build:examples   # ビルド（CI で examples の腐敗防止を兼ねる�
 | ------------------- | -------------------------------- |
 | `daytrade-terminal` | トレーディング端末のモックアップ |
 | `rainy-crossing`    | 雨のスクランブル交差点           |
-| `koi-pond`          | 錦鯉の池                         |
+| `knowledge-graph`   | システム開発のナレッジグラフ     |
 
 `diagrams/` にはここで見せる作例だけを置き、`src/gallery/diagrams.ts` で明示的に登録する。
 表示時の画角は各エントリの `camera`（`initialConfig.viewport`）で決め打ちする。ズームが
