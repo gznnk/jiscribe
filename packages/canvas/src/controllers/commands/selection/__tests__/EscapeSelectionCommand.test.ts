@@ -82,6 +82,12 @@ describe("EscapeSelectionCommand", () => {
 			expect(next.selectedIds).toEqual([]);
 		});
 
+		it("closes an open ObjectMenu submenu on the step out of the slot", () => {
+			const state = { ...slotSelectedState(), objectMenuOpenId: "alignment" };
+			const next = EscapeSelectionCommand.execute(state, registries);
+			expect(next.objectMenuOpenId).toBeNull();
+		});
+
 		it("clears everything at once when the slot selection is stale", () => {
 			// The object it names is no longer the selection, so there is no level to step out of.
 			const state = baseState({

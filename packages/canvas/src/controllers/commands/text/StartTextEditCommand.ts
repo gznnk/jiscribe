@@ -63,6 +63,9 @@ export const StartTextEditCommand: ExecutableCommand = {
 				(connector as { label?: { text?: string } }).label?.text ?? "";
 			return {
 				...state,
+				// An open submenu does not survive the edit session (the menu is hidden or
+				// re-laid out), so it would otherwise pop back on exit.
+				objectMenuOpenId: null,
 				textEditState: {
 					kind: "connectorLabel",
 					objectId: state.selectedConnectorId,
@@ -95,6 +98,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 
 		return {
 			...state,
+			objectMenuOpenId: null,
 			textEditState: {
 				kind: "shape",
 				objectId,

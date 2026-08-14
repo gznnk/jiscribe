@@ -41,8 +41,9 @@ export const getTextSlotCycleTarget = (
  *   counts as no slot selected (resolveSelectedTextSlot)
  * @param step - 1 for the next slot, -1 for the previous; with no slot selected
  *   yet these enter at the first and the last slot respectively
- * @returns A new state with `selectedTextSlot` moved, or the input state when
- *   the selection does not qualify or the object declares no slot at all
+ * @returns A new state with `selectedTextSlot` moved and any open ObjectMenu submenu
+ *   closed, or the input state when the selection does not qualify or the object
+ *   declares no slot at all
  */
 export const selectAdjacentTextSlot = (
 	state: CanvasControllerState,
@@ -70,5 +71,6 @@ export const selectAdjacentTextSlot = (
 	return {
 		...state,
 		selectedTextSlot: { objectId: target.id, slotId: slotIds[nextIndex] },
+		objectMenuOpenId: null,
 	};
 };

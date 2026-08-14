@@ -114,6 +114,11 @@ describe("selectAdjacentTextSlot", () => {
 		expect(selectedSlotId(selectAdjacentTextSlot(state, 1))).toBe("name");
 	});
 
+	it("closes an open ObjectMenu submenu, which no longer acts on the slot walked away from", () => {
+		const state = baseState({ objectMenuOpenId: "alignment" });
+		expect(selectAdjacentTextSlot(state, 1).objectMenuOpenId).toBeNull();
+	});
+
 	it("leaves a state whose selection does not qualify untouched", () => {
 		const state = baseState({ selectedIds: [] });
 		expect(selectAdjacentTextSlot(state, 1)).toBe(state);

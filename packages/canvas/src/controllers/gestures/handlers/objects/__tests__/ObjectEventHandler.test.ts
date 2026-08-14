@@ -361,6 +361,44 @@ describe("ObjectEventHandler - text slot selection", () => {
 		expect(next.selectedTextSlot).toBeNull();
 	});
 
+	it("closes an open ObjectMenu submenu when the slot changes or is dropped", () => {
+		const withSubmenu = {
+			...makeSlotState(["rec-1"], { objectId: "rec-1", slotId: "rows" }),
+			objectMenuOpenId: "alignment",
+		} as CanvasControllerState;
+		expect(
+			ObjectEventHandler.handle(
+				withSubmenu,
+				makeSlotClickEvent("rec-1", "name"),
+				registries,
+			).objectMenuOpenId,
+		).toBeNull();
+		expect(
+			ObjectEventHandler.handle(
+				withSubmenu,
+				makeSlotClickEvent("rec-1"),
+				registries,
+			).objectMenuOpenId,
+		).toBeNull();
+	});
+
+	it("closes an open ObjectMenu submenu when a double click opens the slot for editing", () => {
+		const withSubmenu = {
+			...makeSlotState(["rec-1"], { objectId: "rec-1", slotId: "rows" }),
+			objectMenuOpenId: "alignment",
+		} as CanvasControllerState;
+		const next = ObjectEventHandler.handle(
+			withSubmenu,
+			{
+				...makeSlotClickEvent("rec-1", "rows"),
+				type: "doubleClick",
+			} as CanvasEvent,
+			registries,
+		);
+		expect(next.textEditState?.kind).toBe("shape");
+		expect(next.objectMenuOpenId).toBeNull();
+	});
+
 	it("does not select a slot on a shape whose text is not slot-based", () => {
 		const state = {
 			...makeSlotState(["rect-3"], null),

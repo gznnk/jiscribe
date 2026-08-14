@@ -4,6 +4,7 @@ import { TextFormatMenuContent } from "./TextFormatMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { resolveSelectedTextSlot } from "../../../../../utils/resolveSelectedTextSlot";
 import {
 	hasTextDecorationToken,
 	toggleTextDecorationToken,
@@ -31,6 +32,11 @@ type TextFormatMenuProps = {
  * Toggles the fontWeight / fontStyle / textDecoration of the selected text slot.
  * Each button coordinates with the gesture system via data attributes, writing
  * the value the press should land on rather than a toggle command.
+ *
+ * While the focus is on text — a slot selected below the object, or an inline edit
+ * session — the four buttons are laid out flat in the menu itself: formatting is the
+ * main thing the menu is there for at that moment, and a dropdown would cost a press
+ * per toggle.
  */
 const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 	canvasState,
@@ -53,6 +59,63 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		"line-through",
 	);
 
+	const formatButtons = [
+		{
+			id: "bold",
+			isActive: isBold,
+			part: `set:fontWeight:${isBold ? "normal" : "bold"}`,
+			label: messages.menuBold,
+			icon: <BoldIcon title={messages.menuBold} />,
+		},
+		{
+			id: "italic",
+			isActive: isItalic,
+			part: `set:fontStyle:${isItalic ? "normal" : "italic"}`,
+			label: messages.menuItalic,
+			icon: <ItalicIcon title={messages.menuItalic} />,
+		},
+		{
+			id: "underline",
+			isActive: isUnderline,
+			part: `set:textDecoration:${toggleTextDecorationToken(
+				slot?.textDecoration,
+				"underline",
+			)}`,
+			label: messages.menuUnderline,
+			icon: <UnderlineIcon title={messages.menuUnderline} />,
+		},
+		{
+			id: "strikethrough",
+			isActive: isStrikethrough,
+			part: `set:textDecoration:${toggleTextDecorationToken(
+				slot?.textDecoration,
+				"line-through",
+			)}`,
+			label: messages.menuStrikethrough,
+			icon: <StrikethroughIcon title={messages.menuStrikethrough} />,
+		},
+	];
+
+	const renderFormatButton = (button: (typeof formatButtons)[number]) => (
+		<ObjectMenuButton
+			key={button.id}
+			isActive={button.isActive}
+			data-kind="menu"
+			data-id="object-menu"
+			data-part={button.part}
+			title={button.label}
+		>
+			{button.icon}
+		</ObjectMenuButton>
+	);
+
+	const isTextFocused =
+		canvasState.textEditState?.kind === "shape" ||
+		resolveSelectedTextSlot(canvasState) !== null;
+	if (isTextFocused) {
+		return <>{formatButtons.map(renderFormatButton)}</>;
+	}
+
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
@@ -71,48 +134,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 					offsetX={offsetX}
 				>
 					<TextFormatMenuContent>
-						<ObjectMenuButton
-							isActive={isBold}
-							data-kind="menu"
-							data-id="object-menu"
-							data-part={`set:fontWeight:${isBold ? "normal" : "bold"}`}
-							title={messages.menuBold}
-						>
-							<BoldIcon title={messages.menuBold} />
-						</ObjectMenuButton>
-						<ObjectMenuButton
-							isActive={isItalic}
-							data-kind="menu"
-							data-id="object-menu"
-							data-part={`set:fontStyle:${isItalic ? "normal" : "italic"}`}
-							title={messages.menuItalic}
-						>
-							<ItalicIcon title={messages.menuItalic} />
-						</ObjectMenuButton>
-						<ObjectMenuButton
-							isActive={isUnderline}
-							data-kind="menu"
-							data-id="object-menu"
-							data-part={`set:textDecoration:${toggleTextDecorationToken(
-								slot?.textDecoration,
-								"underline",
-							)}`}
-							title={messages.menuUnderline}
-						>
-							<UnderlineIcon title={messages.menuUnderline} />
-						</ObjectMenuButton>
-						<ObjectMenuButton
-							isActive={isStrikethrough}
-							data-kind="menu"
-							data-id="object-menu"
-							data-part={`set:textDecoration:${toggleTextDecorationToken(
-								slot?.textDecoration,
-								"line-through",
-							)}`}
-							title={messages.menuStrikethrough}
-						>
-							<StrikethroughIcon title={messages.menuStrikethrough} />
-						</ObjectMenuButton>
+						{formatButtons.map(renderFormatButton)}
 					</TextFormatMenuContent>
 				</ObjectMenuDropdownPanel>
 			)}

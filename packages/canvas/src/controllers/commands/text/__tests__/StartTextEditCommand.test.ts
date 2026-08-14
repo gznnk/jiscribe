@@ -152,6 +152,16 @@ describe("StartTextEditCommand", () => {
 			).toMatchObject({ objectId: "rec-1", slotId: "name" });
 		});
 
+		it("closes an open ObjectMenu submenu, which the edit session re-lays out", () => {
+			const state = deepFreezeState({
+				...stateWithSlotSelection({ objectId: "rec-1", slotId: "rows" }),
+				objectMenuOpenId: "alignment",
+			});
+			expect(
+				StartTextEditCommand.execute(state, registries).objectMenuOpenId,
+			).toBeNull();
+		});
+
 		it("edits the first slot when the slot selection is stale", () => {
 			const state = stateWithSlotSelection({
 				objectId: "rec-1",
