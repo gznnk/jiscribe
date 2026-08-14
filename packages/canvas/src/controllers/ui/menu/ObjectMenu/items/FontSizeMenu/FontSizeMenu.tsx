@@ -3,6 +3,7 @@
 import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
@@ -44,7 +45,8 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		isOpen,
 	);
 
-	const slot = getSelectedOrFirstTextSlot(canvasState);
+	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
 	const fontSize = slot?.fontSize ?? DEFAULT_FONT_SIZE;
 
 	return (

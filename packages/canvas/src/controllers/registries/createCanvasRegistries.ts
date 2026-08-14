@@ -15,6 +15,7 @@ import { createObjectSvgDefsRegistry } from "../../presentations/objects/registr
 import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { createObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
+import { createObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -52,6 +53,7 @@ export const createCanvasRegistries = (
 		objectContentResizer: createObjectContentResizerRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		objectTextRegion: createObjectTextRegionRegistry(),
+		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),

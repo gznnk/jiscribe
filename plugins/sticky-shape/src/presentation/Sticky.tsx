@@ -5,6 +5,7 @@ import {
 	calcTextRegion,
 	createSvgTransform,
 	readRichTextSlot,
+	useObjectTextStyleDefaultsRegistry,
 } from "@jiscribe/canvas-sdk";
 import type React from "react";
 import { memo } from "react";
@@ -21,6 +22,7 @@ type StickyProps = StickyState & TextEditable;
 const StickyComponent: React.FC<StickyProps> = (props) => {
 	const {
 		id,
+		type,
 		cx,
 		cy,
 		width,
@@ -38,6 +40,13 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 	// than enumerated, so a malformed multi-slot state cannot overlap-draw here.
 	const bodySlot = text?.[BODY_TEXT_SLOT_ID];
 	const textRegion = calcTextRegion(props, BODY_TEXT_SLOT_ID);
+	// Hand-drawn shapes have to resolve the type's own text-style defaults
+	// themselves; createFrameObject does it for the shapes that go through it, and
+	// the editing surface does it either way (issue #8).
+	const style = useObjectTextStyleDefaultsRegistry().resolveSlotStyle(
+		type,
+		bodySlot,
+	);
 
 	const left = -width / 2;
 	const right = width / 2;
@@ -85,14 +94,14 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 				height={textRegion.height}
 				transform={transformAttr}
 				text={readRichTextSlot(text, BODY_TEXT_SLOT_ID)}
-				textAlign={bodySlot?.textAlign}
-				verticalAlign={bodySlot?.verticalAlign}
-				fontColor={bodySlot?.fontColor}
-				fontSize={bodySlot?.fontSize}
-				fontFamily={bodySlot?.fontFamily}
-				fontWeight={bodySlot?.fontWeight}
-				fontStyle={bodySlot?.fontStyle}
-				textDecoration={bodySlot?.textDecoration}
+				textAlign={style.textAlign}
+				verticalAlign={style.verticalAlign}
+				fontColor={style.fontColor}
+				fontSize={style.fontSize}
+				fontFamily={style.fontFamily}
+				fontWeight={style.fontWeight}
+				fontStyle={style.fontStyle}
+				textDecoration={style.textDecoration}
 				isEditing={isEditing}
 			/>
 		</g>

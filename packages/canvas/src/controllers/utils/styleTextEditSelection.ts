@@ -1,3 +1,4 @@
+import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type {
 	InlineTextStyle,
 	RichText,
@@ -25,6 +26,8 @@ import type { CanvasControllerState } from "../CanvasTypes";
  */
 export type TextEditSelection = {
 	objectId: string;
+	/** The edited object's type, the key its text-style defaults are registered under. */
+	type: ObjectType;
 	slotId: string;
 	/** The edited slot, whose own styling is what a run falls back to. */
 	slot: TextSlot;
@@ -84,6 +87,7 @@ export const resolveTextEditSelection = (
 	);
 	return {
 		objectId: textEditState.objectId,
+		type: target.type,
 		slotId: textEditState.slotId,
 		slot,
 		slots,

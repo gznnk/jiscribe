@@ -3,6 +3,7 @@
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -40,7 +41,8 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 		isOpen,
 	);
 
-	const slot = getSelectedOrFirstTextSlot(canvasState);
+	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
 	const currentColor = slot?.fontColor ?? DEFAULT_FONT_COLOR;
 
 	return (

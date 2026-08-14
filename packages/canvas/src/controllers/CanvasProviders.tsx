@@ -41,6 +41,7 @@ export function CanvasProviders({
 						<PresentationRegistriesProvider
 							objectComponent={registries.objectComponent}
 							objectTextRegion={registries.objectTextRegion}
+							objectTextStyleDefaults={registries.objectTextStyleDefaults}
 							objectOutline={registries.objectOutline}
 							objectAnchorRegion={registries.objectAnchorRegion}
 							objectExtraConnectPoints={registries.objectExtraConnectPoints}

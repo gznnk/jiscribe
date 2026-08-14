@@ -12,6 +12,7 @@ import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
+import type { ObjectTextStyleDefaultsRegistry } from "../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
@@ -115,7 +116,9 @@ function renderConnectorLabelEditor(
 /**
  * Renders the text editor for one slot of a shape that has text (such as rect), overlaid on that
  * slot's region (derived via calcTextRegion, the seam shared with the rendering-side TextOverlay).
- * The typography comes from the edited slot, so the editor matches the overlay it replaces.
+ * The typography is the edited slot's, resolved against the shape type's own
+ * defaults exactly as the overlay resolves it, so the editor matches the overlay
+ * it replaces.
  *
  * @param target - The shape being edited (carries geometry, and the slot content
  *   with the draft already grafted in, so the editor is handed the text as it now
@@ -123,6 +126,8 @@ function renderConnectorLabelEditor(
  * @param objectId - ID of the target shape
  * @param slotId - The slot being edited; a key of `target.text`
  * @param handlers - Input and exit handlers
+ * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, so a field
+ *   the slot leaves unset is drawn with the same value the overlay uses
  * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
  * @param textEditOverflowResolver - Per-type resolver from ObjectTextEditOverflowRegistry. Omitted = the slot scrolls
  * @returns The text editor
@@ -132,11 +137,15 @@ function renderTextEditor(
 	objectId: string,
 	slotId: string,
 	handlers: EditorHandlers,
+	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
 	textRegionCalculator?: ObjectTextRegionCalculator,
 	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
 ): React.ReactElement {
 	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
-	const slot = target.text?.[slotId];
+	const style = textStyleDefaults.resolveSlotStyle(
+		target.type,
+		target.text?.[slotId],
+	);
 	// How far a growing editor may extend: from the region's top edge down to the
 	// shape's bottom edge (local coordinates, origin at the shape center). A region
 	// already at or below that edge yields 0 rather than a negative length.
@@ -156,14 +165,14 @@ function renderTextEditor(
 			rotation={target.rotation ?? 0}
 			overflow={resolveTextEditOverflow(slotId, textEditOverflowResolver)}
 			growLimit={growLimit}
-			textAlign={slot?.textAlign}
-			verticalAlign={slot?.verticalAlign}
-			fontColor={slot?.fontColor}
-			fontSize={slot?.fontSize}
-			fontFamily={slot?.fontFamily}
-			fontWeight={slot?.fontWeight}
-			fontStyle={slot?.fontStyle}
-			textDecoration={slot?.textDecoration}
+			textAlign={style.textAlign}
+			verticalAlign={style.verticalAlign}
+			fontColor={style.fontColor}
+			fontSize={style.fontSize}
+			fontFamily={style.fontFamily}
+			fontWeight={style.fontWeight}
+			fontStyle={style.fontStyle}
+			textDecoration={style.textDecoration}
 			onChange={handlers.onChange}
 			onSelectionChange={handlers.onSelectionChange}
 			onToggleFormat={handlers.onToggleFormat}
@@ -249,6 +258,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			textEditState.objectId,
 			textEditState.slotId,
 			handlers,
+			registries.objectTextStyleDefaults,
 			registries.objectTextRegion.get(targetObject.type),
 			registries.objectTextEditOverflow.get(targetObject.type),
 		);

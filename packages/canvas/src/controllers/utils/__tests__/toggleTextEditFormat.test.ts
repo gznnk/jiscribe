@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import type { RichText } from "../../../schemas/objects/types/RichText";
 import { richTextToPlain } from "../../../schemas/objects/types/RichText";
+import { createObjectTextStyleDefaultsRegistry } from "../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { toggleTextEditFormat } from "../toggleTextEditFormat";
+
+/** The edited type registers no defaults unless a case says otherwise. */
+const textStyleDefaults = createObjectTextStyleDefaultsRegistry();
 
 type MinState = Pick<
 	CanvasControllerState,
@@ -47,10 +51,9 @@ describe("toggleTextEditFormat", () => {
 			start: 0,
 			end: 2,
 		});
-		expect(bodyOf(toggleTextEditFormat(state, "bold"))).toEqual([
-			{ text: "he", fontWeight: "bold" },
-			{ text: "llo" },
-		]);
+		expect(
+			bodyOf(toggleTextEditFormat(state, "bold", textStyleDefaults)),
+		).toEqual([{ text: "he", fontWeight: "bold" }, { text: "llo" }]);
 	});
 
 	it("turns the format back off on a second press", () => {
@@ -58,10 +61,11 @@ describe("toggleTextEditFormat", () => {
 			start: 0,
 			end: 2,
 		});
-		const bold = toggleTextEditFormat(state, "bold");
+		const bold = toggleTextEditFormat(state, "bold", textStyleDefaults);
 		const again = toggleTextEditFormat(
 			{ ...bold, textEditState: state.textEditState },
 			"bold",
+			textStyleDefaults,
 		);
 		expect(bodyOf(again)).toEqual([
 			{ text: "he", fontWeight: "normal" },
@@ -76,10 +80,9 @@ describe("toggleTextEditFormat", () => {
 			{ start: 0, end: 2 },
 		);
 		// The untouched part keeps no override: it is drawn bold by the slot itself.
-		expect(bodyOf(toggleTextEditFormat(state, "bold"))).toEqual([
-			{ text: "he", fontWeight: "normal" },
-			{ text: "llo" },
-		]);
+		expect(
+			bodyOf(toggleTextEditFormat(state, "bold", textStyleDefaults)),
+		).toEqual([{ text: "he", fontWeight: "normal" }, { text: "llo" }]);
 	});
 
 	it("turns the format on for a selection that mixes both", () => {
@@ -90,9 +93,9 @@ describe("toggleTextEditFormat", () => {
 			"hello",
 			{ start: 0, end: 5 },
 		);
-		expect(bodyOf(toggleTextEditFormat(state, "italic"))).toEqual([
-			{ text: "hello", fontStyle: "italic" },
-		]);
+		expect(
+			bodyOf(toggleTextEditFormat(state, "italic", textStyleDefaults)),
+		).toEqual([{ text: "hello", fontStyle: "italic" }]);
 	});
 
 	it("keeps the other decoration line when underline is toggled", () => {
@@ -101,7 +104,9 @@ describe("toggleTextEditFormat", () => {
 			"hello",
 			{ start: 0, end: 2 },
 		);
-		expect(bodyOf(toggleTextEditFormat(state, "underline"))).toEqual([
+		expect(
+			bodyOf(toggleTextEditFormat(state, "underline", textStyleDefaults)),
+		).toEqual([
 			{ text: "he", textDecoration: "underline line-through" },
 			{ text: "llo" },
 		]);
@@ -112,10 +117,9 @@ describe("toggleTextEditFormat", () => {
 			start: 3,
 			end: 8,
 		});
-		expect(bodyOf(toggleTextEditFormat(state, "bold"))).toEqual([
-			{ text: "hi " },
-			{ text: "there", fontWeight: "bold" },
-		]);
+		expect(
+			bodyOf(toggleTextEditFormat(state, "bold", textStyleDefaults)),
+		).toEqual([{ text: "hi " }, { text: "there", fontWeight: "bold" }]);
 	});
 
 	it("leaves the state untouched when nothing is selected", () => {
@@ -123,14 +127,18 @@ describe("toggleTextEditFormat", () => {
 			start: 2,
 			end: 2,
 		});
-		expect(toggleTextEditFormat(collapsed, "bold")).toBe(collapsed);
+		expect(toggleTextEditFormat(collapsed, "bold", textStyleDefaults)).toBe(
+			collapsed,
+		);
 		const unreported = editingState({ body: { text: "hello" } }, "hello");
-		expect(toggleTextEditFormat(unreported, "bold")).toBe(unreported);
+		expect(toggleTextEditFormat(unreported, "bold", textStyleDefaults)).toBe(
+			unreported,
+		);
 	});
 
 	it("leaves the state untouched when there is no open shape editor", () => {
 		const idle = makeState();
-		expect(toggleTextEditFormat(idle, "bold")).toBe(idle);
+		expect(toggleTextEditFormat(idle, "bold", textStyleDefaults)).toBe(idle);
 	});
 });
 
@@ -149,22 +157,29 @@ describe("toggleTextEditFormat on a slot holding rows", () => {
 		editingState({ body: { text: ["ab", "cd"] } }, "ab\ncd", { start, end });
 
 	it("styles the selected characters of one row, leaving the other row alone", () => {
-		expect(rowsOf(toggleTextEditFormat(editingRows(0, 1), "bold"))).toEqual([
-			[{ text: "a", fontWeight: "bold" }, { text: "b" }],
-			"cd",
-		]);
+		expect(
+			rowsOf(
+				toggleTextEditFormat(editingRows(0, 1), "bold", textStyleDefaults),
+			),
+		).toEqual([[{ text: "a", fontWeight: "bold" }, { text: "b" }], "cd"]);
 	});
 
 	it("styles each row's share of a selection spanning the row boundary", () => {
 		// Offsets 1..4 cover "b", the "\n" between the rows, and "c".
-		expect(rowsOf(toggleTextEditFormat(editingRows(1, 4), "bold"))).toEqual([
+		expect(
+			rowsOf(
+				toggleTextEditFormat(editingRows(1, 4), "bold", textStyleDefaults),
+			),
+		).toEqual([
 			[{ text: "a" }, { text: "b", fontWeight: "bold" }],
 			[{ text: "c", fontWeight: "bold" }, { text: "d" }],
 		]);
 	});
 
 	it("keeps the characters of the rows as they were when the selection spans them", () => {
-		const rows = rowsOf(toggleTextEditFormat(editingRows(1, 4), "bold"));
+		const rows = rowsOf(
+			toggleTextEditFormat(editingRows(1, 4), "bold", textStyleDefaults),
+		);
 		// The styled "\n" is dropped by the split, so the round trip adds no row and
 		// loses no character.
 		expect(rows.map(richTextToPlain).join("\n")).toBe("ab\ncd");
@@ -172,10 +187,11 @@ describe("toggleTextEditFormat on a slot holding rows", () => {
 
 	it("reads the styling back off the rows, so a second press turns it off", () => {
 		const state = editingRows(0, 1);
-		const bold = toggleTextEditFormat(state, "bold");
+		const bold = toggleTextEditFormat(state, "bold", textStyleDefaults);
 		const again = toggleTextEditFormat(
 			{ ...bold, textEditState: state.textEditState },
 			"bold",
+			textStyleDefaults,
 		);
 		expect(rowsOf(again)).toEqual([
 			[{ text: "a", fontWeight: "normal" }, { text: "b" }],
@@ -190,9 +206,31 @@ describe("toggleTextEditFormat on a slot holding rows", () => {
 			// The second row exists only in the draft.
 			{ start: 3, end: 5 },
 		);
-		expect(rowsOf(toggleTextEditFormat(state, "italic"))).toEqual([
-			"ab",
-			[{ text: "cd", fontStyle: "italic" }],
-		]);
+		expect(
+			rowsOf(toggleTextEditFormat(state, "italic", textStyleDefaults)),
+		).toEqual(["ab", [{ text: "cd", fontStyle: "italic" }]]);
+	});
+});
+
+describe("toggleTextEditFormat against the type's own defaults", () => {
+	/** A registry standing in for a type whose bodies are bold unless said otherwise. */
+	const boldByDefault = createObjectTextStyleDefaultsRegistry();
+	boldByDefault.register("rect", { fontWeight: "bold" });
+
+	const selected = (): CanvasControllerState =>
+		editingState({ body: { text: "hello" } }, "hello", { start: 0, end: 2 });
+
+	it("turns the format on for a slot whose type declares nothing about it", () => {
+		expect(
+			bodyOf(toggleTextEditFormat(selected(), "bold", textStyleDefaults)),
+		).toEqual([{ text: "he", fontWeight: "bold" }, { text: "llo" }]);
+	});
+
+	it("turns the format off when the type's default is what the text is drawn with", () => {
+		// Nothing in the slot or the runs says "bold" — only the type does, and the
+		// toggle has to read the same value the overlay draws.
+		expect(
+			bodyOf(toggleTextEditFormat(selected(), "bold", boldByDefault)),
+		).toEqual([{ text: "he", fontWeight: "normal" }, { text: "llo" }]);
 	});
 });

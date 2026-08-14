@@ -97,6 +97,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 			<PresentationRegistriesProvider
 				objectComponent={registries.objectComponent}
 				objectTextRegion={registries.objectTextRegion}
+				objectTextStyleDefaults={registries.objectTextStyleDefaults}
 				objectOutline={registries.objectOutline}
 				objectAnchorRegion={registries.objectAnchorRegion}
 				objectExtraConnectPoints={registries.objectExtraConnectPoints}

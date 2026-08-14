@@ -14,6 +14,7 @@ import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleS
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
 import { useObjectTextRegionRegistry } from "../registry/ObjectTextRegionRegistryContext";
+import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
 import { createSvgTransform } from "../utils/createSvgTransform";
 import { getStrokeDasharray } from "../utils/getStrokeDasharray";
@@ -45,8 +46,11 @@ type FrameRenderState = ObjectState &
 /**
  * The placed, style-resolved text box handed to a custom overlay renderer:
  * the region from ObjectTextRegionRegistry, the shape's transform, and the
- * typography the slot carries. Most renderers pass these straight through to
- * {@link import("./TextOverlay").TextOverlayFrame} and only supply their own body.
+ * typography the slot is drawn with — the slot's own fields over the shape
+ * type's defaults (ObjectTextStyleDefaultsRegistry), so a renderer never sees an
+ * unset field the type had an answer for. Most renderers pass these straight
+ * through to {@link import("./TextOverlay").TextOverlayFrame} and only supply
+ * their own body.
  */
 export type FrameTextOverlayProps = {
 	/** Which slot is being drawn: a key of `state.text`. Single-slot shapes ignore it. */
@@ -140,6 +144,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		} = props;
 
 		const textRegionCalculator = useObjectTextRegionRegistry().get(type);
+		const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 		// The features.text gate matches the one used by the text-edit gesture and
 		// property-update side: unset draws no overlay, "body" draws its one named
@@ -158,6 +163,9 @@ export const createFrameObject = <TState extends FrameRenderState>(
 
 		const drawSlotOverlay = (slotId: string, slot: TextSlot): ReactNode => {
 			const textRegion = calcTextRegion(props, slotId, textRegionCalculator);
+			// The type's own defaults stand in for whatever the slot leaves unset,
+			// the same resolution the editing surface and text measurement make.
+			const style = textStyleDefaults.resolveSlotStyle(type, slot);
 			const overlayProps: FrameTextOverlayProps = {
 				slotId,
 				x: textRegion.x,
@@ -166,14 +174,14 @@ export const createFrameObject = <TState extends FrameRenderState>(
 				height: textRegion.height,
 				transform: transformAttr,
 				text: readRichTextSlot(text, slotId),
-				textAlign: slot.textAlign,
-				verticalAlign: slot.verticalAlign,
-				fontColor: slot.fontColor,
-				fontSize: slot.fontSize,
-				fontFamily: slot.fontFamily,
-				fontWeight: slot.fontWeight,
-				fontStyle: slot.fontStyle,
-				textDecoration: slot.textDecoration,
+				textAlign: style.textAlign,
+				verticalAlign: style.verticalAlign,
+				fontColor: style.fontColor,
+				fontSize: style.fontSize,
+				fontFamily: style.fontFamily,
+				fontWeight: style.fontWeight,
+				fontStyle: style.fontStyle,
+				textDecoration: style.textDecoration,
 				// Only the slot the editor is over must go blank; a caller that
 				// names no slot is editing the shape as a whole.
 				isEditing:
