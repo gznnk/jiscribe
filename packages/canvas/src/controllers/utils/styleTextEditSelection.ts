@@ -103,7 +103,7 @@ export const resolveTextEditSelection = (
  * it is: what the bold / italic / underline keystrokes and the text menus write
  * while an editor is open.
  *
- * The edited text is committed into the slot on the way (see
+ * The edited text is written into the slot on the way (see
  * {@link resolveTextEditSelection}). The session stays open — the caller keeps
  * typing into it — and the selection is untouched, so styling the same stretch
  * again lands on the same characters.
@@ -111,6 +111,12 @@ export const resolveTextEditSelection = (
  * A row-partitioned slot is styled as the one body its rows read as and split
  * back afterwards, so a stretch reaching over a row boundary styles each row's
  * share of it.
+ *
+ * Deliberately does not commit: the ObjectMenu drives this through the same
+ * property path it uses everywhere else, whose slider drag is a stream of
+ * uncommitted previews, and a commit here would turn each frame of one into its
+ * own undo entry. The callers that are a commit (the format keystrokes) raise
+ * commitVersion themselves.
  *
  * @param state - The current canvas controller state
  * @param style - The fields to override on the selected characters; an omitted
@@ -153,6 +159,5 @@ export const styleTextEditSelection = (
 				},
 			} as ObjectState,
 		},
-		commitVersion: state.commitVersion + 1,
 	};
 };

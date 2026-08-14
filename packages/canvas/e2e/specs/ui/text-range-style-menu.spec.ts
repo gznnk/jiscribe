@@ -106,4 +106,34 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 			)
 			.toBe("set:fontWeight:bold");
 	});
+
+	test("leaves one undo entry behind a slider drag, not one per frame", async ({
+		canvas,
+	}) => {
+		const id = await editAndSelect(canvas, "Payment failed", 7);
+		// The text lands in its own undo entry, so the one the drag leaves is the
+		// only thing between here and the committed text.
+		await canvas.commitText();
+		const plain = (await canvas.drawnTextRuns(id))[0]?.fontSize;
+
+		// Reopen on the same stretch. The per-range write goes through the same
+		// property path as every other menu change, whose drag frames are previews:
+		// a commit inside that write would record each frame, and undoing the drag
+		// would take one press per frame it happened to produce.
+		await canvas.typeTextAt(SHAPE_CENTER, "");
+		await canvas.page.keyboard.press("Home");
+		for (let i = 0; i < 7; i++) {
+			await canvas.page.keyboard.press("Shift+ArrowRight");
+		}
+		await canvas.openObjectMenu("font-size");
+		await canvas.dragSliderBy("fontSize", 60);
+		await canvas.commitText();
+		expect((await canvas.drawnTextRuns(id))[0]?.fontSize).not.toBe(plain);
+
+		await canvas.undo();
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id)).map((run) => run.text))
+			.toEqual(["Payment failed"]);
+		expect((await canvas.drawnTextRuns(id))[0]?.fontSize).toBe(plain);
+	});
 });

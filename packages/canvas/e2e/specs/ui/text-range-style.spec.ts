@@ -155,6 +155,28 @@ test.describe("styling a stretch of a shape's text", () => {
 		]);
 	});
 
+	test("makes the keystroke its own undo entry, taken back without the text", async ({
+		canvas,
+	}) => {
+		const id = await drawAndEdit(canvas, "Payment failed");
+		await canvas.commitText();
+
+		// One press is one commit — the styling does not ride on the commit that
+		// ends the edit, so it comes back off on its own.
+		await canvas.typeTextAt(SHAPE_CENTER, "");
+		await selectFromStart(canvas, 7);
+		await canvas.page.keyboard.press("ControlOrMeta+b");
+		await canvas.commitText();
+		expect((await canvas.drawnTextRuns(id))[0]?.fontWeight).toBe("700");
+
+		await canvas.undo();
+		await expect
+			.poll(async () => await canvas.drawnTextRuns(id))
+			.toEqual([
+				expect.objectContaining({ text: "Payment failed", fontWeight: "400" }),
+			]);
+	});
+
 	test("turns the styling back off on a second press, leaving one plain text", async ({
 		canvas,
 	}) => {

@@ -252,8 +252,10 @@ export const createCanvasReducer =
 				// The styling is written into the object right away (the session stays
 				// open), so the box it is measured into has to follow, and the change is
 				// its own undo entry rather than riding on the commit that ends the edit.
+				// One keystroke is one commit, which is why the commit is raised here and
+				// not in styleTextEditSelection, whose menu callers preview.
 				const resizedResult = reconcileObjectContentSizes(
-					styled,
+					{ ...styled, commitVersion: state.commitVersion + 1 },
 					state,
 					registries.objectContentResizer,
 				);
