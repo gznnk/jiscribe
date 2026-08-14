@@ -15,9 +15,15 @@ body,
 	height: 100%;
 }
 
+/*
+ * Dark like the canvas background (#1e1e1e), so nothing flashes white before the canvas
+ * paints — neither the first paint before React mounts, nor the gap while a gallery
+ * diagram's .jis.json is being fetched.
+ */
 body {
 	margin: 0;
 	min-width: 320px;
+	background: #1e1e1e;
 }
 
 .examples {
