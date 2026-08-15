@@ -1047,59 +1047,81 @@ export class CanvasDriver {
 		}
 	}
 
+	/**
+	 * Presses a keyboard command, after letting the browser render twice.
+	 *
+	 * A pointer action reaches the state a frame or two after Playwright's call has returned, while
+	 * a key press is dispatched the instant it is asked for. A command fired straight after a click
+	 * or a drag therefore runs against the state as it was before it: Delete takes the shape that
+	 * was selected first, Ctrl+Z undoes the entry before the one just committed. Those frames are
+	 * what a loaded CI machine loses and a local run wins, which is what made such failures
+	 * reproduce on CI only.
+	 *
+	 * @param keys - Key expression as Playwright takes it, e.g. "Control+z" or "ArrowUp"
+	 */
+	private async pressCommand(keys: string) {
+		await this.page.evaluate(
+			() =>
+				new Promise<void>((resolve) => {
+					requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+				}),
+		);
+		await this.page.keyboard.press(keys);
+	}
+
 	/** Delete the selection with the Delete key. */
 	async deleteSelection() {
-		await this.page.keyboard.press("Delete");
+		await this.pressCommand("Delete");
 	}
 
 	/** Undo (Ctrl+Z). */
 	async undo() {
-		await this.page.keyboard.press("Control+z");
+		await this.pressCommand("Control+z");
 	}
 
 	/** Redo (Ctrl+Shift+Z). */
 	async redo() {
-		await this.page.keyboard.press("Control+Shift+z");
+		await this.pressCommand("Control+Shift+z");
 	}
 
 	/** Copy the selection (Ctrl+C), which lands in the internal clipboard. */
 	async copy() {
-		await this.page.keyboard.press("Control+c");
+		await this.pressCommand("Control+c");
 	}
 
 	/** Cut the selection (Ctrl+X): copy plus delete. */
 	async cut() {
-		await this.page.keyboard.press("Control+x");
+		await this.pressCommand("Control+x");
 	}
 
 	/** Paste from the clipboard (Ctrl+V). */
 	async paste() {
-		await this.page.keyboard.press("Control+v");
+		await this.pressCommand("Control+v");
 	}
 
 	/** Duplicate the selection (Ctrl+D), bypassing the clipboard. */
 	async duplicate() {
-		await this.page.keyboard.press("Control+d");
+		await this.pressCommand("Control+d");
 	}
 
 	/** Select all (Ctrl+A). */
 	async selectAll() {
-		await this.page.keyboard.press("Control+a");
+		await this.pressCommand("Control+a");
 	}
 
 	/** Deselect with Escape; must not be called while editing text. */
 	async pressEscape() {
-		await this.page.keyboard.press("Escape");
+		await this.pressCommand("Escape");
 	}
 
 	/** Group the selection (Ctrl+G). */
 	async group() {
-		await this.page.keyboard.press("Control+g");
+		await this.pressCommand("Control+g");
 	}
 
 	/** Ungroup (Ctrl+Shift+G). */
 	async ungroup() {
-		await this.page.keyboard.press("Control+Shift+g");
+		await this.pressCommand("Control+Shift+g");
 	}
 
 	/**
@@ -1119,27 +1141,27 @@ export class CanvasDriver {
 			left: "ArrowLeft",
 			right: "ArrowRight",
 		}[direction];
-		await this.page.keyboard.press(large ? `Shift+${arrowKey}` : arrowKey);
+		await this.pressCommand(large ? `Shift+${arrowKey}` : arrowKey);
 	}
 
 	/** Fit everything to the view (Ctrl+0). */
 	async zoomToFit() {
-		await this.page.keyboard.press("Control+0");
+		await this.pressCommand("Control+0");
 	}
 
 	/** Fit the selection to the view (Ctrl+2). */
 	async zoomToSelection() {
-		await this.page.keyboard.press("Control+2");
+		await this.pressCommand("Control+2");
 	}
 
 	/** Zoom in from the keyboard (Ctrl+=), anchored at the viewport center. */
 	async zoomIn() {
-		await this.page.keyboard.press("Control+Equal");
+		await this.pressCommand("Control+Equal");
 	}
 
 	/** Zoom out from the keyboard (Ctrl+-), anchored at the viewport center. */
 	async zoomOut() {
-		await this.page.keyboard.press("Control+Minus");
+		await this.pressCommand("Control+Minus");
 	}
 
 	/** Open the ObjectMenu z-order section and run an arrange command. */
