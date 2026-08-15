@@ -50,6 +50,9 @@ jobs:
       - name: Run full e2e
         run: pnpm test:e2e
 
+      # test-results/ is what carries the traces and screenshots of the failures; the
+      # report alone only names them. Without it a failure that does not reproduce
+      # locally cannot be looked into at all.
       - name: Upload reports on failure
         if: failure()
         uses: actions/upload-artifact@v6
@@ -57,6 +60,9 @@ jobs:
           name: playwright-report
           path: |
             packages/canvas/playwright-report/
+            packages/canvas/test-results/
             plugins/*/playwright-report/
+            plugins/*/test-results/
             apps/canvas-examples/playwright-report/
+            apps/canvas-examples/test-results/
           retention-days: 7

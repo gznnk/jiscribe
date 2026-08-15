@@ -79,7 +79,12 @@ export function createCanvasPlaywrightConfig(
 		workers: isHeaded ? 1 : undefined,
 		forbidOnly: !!process.env.CI,
 		retries: process.env.CI ? 2 : 0,
-		reporter: process.env.CI ? "github" : "list",
+		// The github reporter annotates the run but writes no files, so on its own it leaves
+		// a CI-only failure with nothing to inspect afterwards. The html report is what the
+		// workflow uploads, and it is what links the traces in test-results/.
+		reporter: process.env.CI
+			? [["github"], ["html", { open: "never" }]]
+			: "list",
 		use: {
 			baseURL: `http://localhost:${port}`,
 			viewport: { width: 1440, height: 900 },
