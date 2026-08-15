@@ -356,6 +356,24 @@ describe("GestureRecognizer pointercancel", () => {
 		expect(types()).toEqual(["pressed", "dragStart", "dragEnd"]);
 	});
 
+	it("the dragEnd of a cancel ends at the last move, not at the cancel's coordinates", () => {
+		const { dispatch, events } = setup();
+
+		dispatch(makeEvent("pointerdown", 100, 100, 1000));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 160, 180, 1016));
+		flushRaf();
+		// Chromium fires pointercancel with client (0,0); trusting it teleported
+		// the dragged shape to whatever world point the screen origin mapped to.
+		dispatch(makeEvent("pointercancel", 0, 0, 1032));
+		flushRaf();
+
+		const dragEnd = events.find((gesture) => gesture.type === "dragEnd");
+		expect(dragEnd?.clientLast).toEqual({ x: 160, y: 180 });
+		expect(dragEnd?.clientDelta).toEqual({ x: 60, y: 80 });
+		expect(dragEnd?.last).toEqual({ x: 160, y: 180 });
+	});
+
 	it("pointercancel without a drag fires nothing (not even a click)", () => {
 		const { dispatch, types } = setup();
 
