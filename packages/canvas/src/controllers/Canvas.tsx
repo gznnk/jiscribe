@@ -31,6 +31,7 @@ import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
+import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
@@ -70,7 +71,6 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
-import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 import type {
@@ -82,6 +82,7 @@ import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 
 type CanvasProps = {
@@ -252,11 +253,12 @@ type CanvasProps = {
 	/**
 	 * How the canvas shares gestures with the page embedding it
 	 * ({@link CanvasGestureHandling}), default `"greedy"`. Set `"cooperative"` when
-	 * embedding the canvas in a document that scrolls, so the wheel (and a vertical
-	 * one-finger drag) moves the page past it instead of being trapped by the view.
-	 * Zooming is untouched: Ctrl+wheel, pinch and the toolbar's zoom controls keep
-	 * working under either value. Reactive, so a host can hand the canvas the
-	 * gestures on an explicit opt-in (a click, an "interact" button).
+	 * embedding the canvas in a document that scrolls: the wheel and a one-finger
+	 * background drag move the page past it, a one-finger drag on a shape still
+	 * drags the shape, and the view itself pans with two fingers. Zooming is
+	 * untouched: Ctrl+wheel, pinch and the toolbar's zoom controls keep working
+	 * under either value. Reactive, so a host can hand the canvas the gestures on
+	 * an explicit opt-in (a click, an "interact" button).
 	 */
 	gestureHandling?: CanvasGestureHandling;
 
@@ -381,6 +383,7 @@ const CanvasComponent = ({
 			containerRef: rootRef,
 			svgRef,
 			canvasState: state,
+			gestureHandling,
 		});
 
 	// Shared between the save-delivery and external-sync hooks so overlapping saves that
@@ -414,6 +417,10 @@ const CanvasComponent = ({
 
 	// Scoped to canvasRef so wheel events outside the canvas are not captured.
 	useCanvasWheel(canvasRef, wheelHandler, gestureHandling);
+
+	// Cooperative: a touch starting on a shape stays a shape drag instead of
+	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).
+	useCooperativeTouchClaim(rootRef, gestureHandling);
 
 	useContainerResize(canvasRef, dispatch);
 

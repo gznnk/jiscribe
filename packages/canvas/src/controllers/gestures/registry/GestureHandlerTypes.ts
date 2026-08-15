@@ -1,5 +1,6 @@
 import type { Prettify } from "@jiscribe/utility-types";
 
+import type { CanvasGestureHandling } from "../../CanvasGestureHandling";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import type {
@@ -32,6 +33,14 @@ export type EventType =
 export type CanvasEvent = Prettify<
 	{
 		type: EventType;
+		/**
+		 * The canvas's `gestureHandling` prop at the time the gesture fired
+		 * ({@link CanvasGestureHandling}). Absent means `"greedy"`. Handlers branch
+		 * on it where a gesture is shared with the host page — under
+		 * `"cooperative"` a one-finger touch drag on the background belongs to the
+		 * page's scroll, not the viewport.
+		 */
+		gestureHandling?: CanvasGestureHandling;
 	} & Omit<Gesture, "type">
 >;
 

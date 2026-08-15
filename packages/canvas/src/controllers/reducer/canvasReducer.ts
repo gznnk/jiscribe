@@ -37,7 +37,12 @@ export const createCanvasReducer =
 	): CanvasControllerState => {
 		switch (action.type) {
 			case "GESTURE": {
-				const gestureResult = handleGesture(state, action.gesture, registries);
+				const gestureResult = handleGesture(
+					state,
+					action.gesture,
+					registries,
+					action.gestureHandling,
+				);
 				// Boxes first, connector vertices second: a vertex is settled against
 				// the shape outlines, which a re-measured box moves. The box pass has
 				// no commit gate — a slider drag must not clip its own text — while the

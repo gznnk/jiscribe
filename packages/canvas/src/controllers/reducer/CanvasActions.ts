@@ -4,6 +4,7 @@ import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreatio
 import type { RichText } from "../../schemas/objects/types/RichText";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { Camera } from "../../states/canvas/Viewport";
+import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 import type { TextEditFormat } from "../utils/toggleTextEditFormat";
@@ -14,6 +15,11 @@ import type { TextEditFormat } from "../utils/toggleTextEditFormat";
 export type GestureAction = {
 	type: "GESTURE";
 	gesture: Gesture;
+	/**
+	 * The `gestureHandling` prop at dispatch time; stamped onto the CanvasEvent
+	 * so handlers can leave host-page gestures alone. Absent means "greedy".
+	 */
+	gestureHandling?: CanvasGestureHandling;
 };
 
 /**

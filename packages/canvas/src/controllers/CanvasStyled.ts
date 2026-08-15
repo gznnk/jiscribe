@@ -41,16 +41,32 @@ export const CanvasRoot = styled.div<CanvasRootProps>`
 	   suppress long-press text selection and the OS callout; both inherit, so
 	   editable fields opt back in below.
 
-	   Cooperative gesture handling gives the vertical axis back to the browser so
-	   a host document scrolls past an embedded canvas. The cost is the one it asks
-	   for: a drag the browser resolves as a page scroll ends in pointercancel, so
-	   a mostly vertical one-finger drag scrolls the page rather than moving a
-	   shape. pan-y withholds pinch, which keeps zooming the canvas. */
+	   Cooperative gesture handling splits touch by what the finger lands on: the
+	   background belongs to the host page (both pan axes, so a scrolling document
+	   moves past the canvas), while objects, controls and menus claim their own
+	   touches below — a drag that starts on a shape must run to the end, never be
+	   cancelled into a page scroll halfway. Moving the view itself takes two
+	   fingers (the pinch), matching the embedded-map convention; the one-finger
+	   background pan is suppressed on the handler side (CanvasEventHandler).
+	   Neither value includes pinch-zoom, so pinch keeps zooming the canvas. */
 	touch-action: ${(props) =>
-		props.gestureHandling === "cooperative" ? "pan-y" : "none"};
+		props.gestureHandling === "cooperative" ? "pan-x pan-y" : "none"};
 	user-select: none;
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;
+
+	/* The per-element claim. Effective as-is for the HTML pieces (menus); for the
+	   SVG shape elements Chromium and WebKit ignore touch-action, so the working
+	   claim for those is the touchstart guard in useCooperativeTouchClaim. */
+	${(props) =>
+		props.gestureHandling === "cooperative"
+			? `[data-kind="object"],
+	[data-kind="connector"],
+	[data-kind="control"],
+	[data-kind="menu"] {
+		touch-action: none;
+	}`
+			: ""}
 
 	/* Same as the Svg style (see CanvasViewStyled): hosts may set
 	   font-synthesis: none, which would leave the text editor overlays —
