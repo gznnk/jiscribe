@@ -1,0 +1,33 @@
+name: Bug report
+description: Something behaves wrong, renders wrong, or crashes
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report — issues are the most useful thing you can send.
+        English or Japanese, whichever is easier for you. 日本語でも構いません。
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: >
+        Steps, a code snippet, or a .jis.json that shows the problem.
+        If it only happens with a specific document, attaching it helps the most.
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Where you saw it — browser / OS / package version or commit.
+      placeholder: e.g. Chrome 143 on Windows 11, engine @ develop 01717f96
+    validations:
+      required: false

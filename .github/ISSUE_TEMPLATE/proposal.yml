@@ -1,0 +1,19 @@
+name: Proposal / question
+description: A feature idea, an awkward API, or anything you want to discuss
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No bar to clear here — ideas, questions and "this API is awkward" reports
+        are all welcome. Note that pull requests are accepted by prior agreement
+        only, and this issue is where that agreement happens (see CONTRIBUTING).
+        English or Japanese, whichever is easier for you. 日本語でも構いません。
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What, and why
+      description: >
+        What you want to do or know, and the situation behind it. For feature
+        ideas, the problem you are solving matters more than the solution.
+    validations:
+      required: true
