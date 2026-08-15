@@ -1,3 +1,5 @@
+import type { Point } from "@jiscribe/geometry";
+
 import type { ObjectMapperType } from "./MapperTypes";
 import { ObjectMapper } from "./ObjectMapper";
 import type { ObjectState } from "./ObjectState";
@@ -6,6 +8,7 @@ import { mapTextDocToState, mapTextStateToDoc } from "./TextSlotsMapper";
 import type { TextStyleState } from "./TextStyleState";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
+import { roundDocPoints } from "../utils/roundDocNumbers";
 import { collectStyleKeys, pick } from "../utils/stylePassthrough";
 
 /**
@@ -67,7 +70,11 @@ export const createPolyMapper = <
 				...ObjectMapper.toDoc(state),
 				...pick(state as unknown as Record<string, unknown>, passthroughKeys),
 				...mapTextStateToDoc(features.text, (state as TextStyleState).text),
-				points: (state as unknown as { points: unknown }).points,
+				// Rounded here so every waypoint reaching the Doc carries the persisted
+				// precision, whichever path moved it (roundDocNumbers).
+				points: roundDocPoints(
+					(state as unknown as { points: Point[] }).points,
+				),
 			}) as unknown as TDoc,
 	};
 };

@@ -3,6 +3,7 @@ import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objec
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -35,6 +36,14 @@ export interface ICanvasRegistries {
 	 * from here, and without it a restored object would come back collapsed.
 	 */
 	objectContentResizer: ObjectContentResizerRegistry;
+	/**
+	 * Per-type, per-slot text-style defaults, needed by the pure tree wherever it
+	 * reads a
+	 * text style back: the format toggles resolve the styling a keystroke flips
+	 * against them, so a slot that sets nothing still toggles against what it is
+	 * actually drawn with.
+	 */
+	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	stencil: StencilRegistry;

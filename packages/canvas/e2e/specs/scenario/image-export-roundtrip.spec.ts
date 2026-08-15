@@ -1,4 +1,5 @@
 import type * as CanvasModule from "@jiscribe/canvas";
+import type * as CanvasDocModule from "@jiscribe/canvas/doc";
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../../fixtures";
@@ -16,14 +17,16 @@ import { selectors } from "../../support/selectors";
  *   back
  * - SVG: exported with the margin changed to 32, contains no <foreignObject>
  *   (for GitHub, and to avoid canvas taint), has a viewBox reflecting the given
- *   margin, and its <metadata> .jis.json passes parseCanvasText
+ *   margin, and its <metadata> .jis.json parses cleanly
  * - Without embedded data: the name is a plain .svg with no .jis marker and the
  *   file has no <metadata>
  * - Transparent background: no background rect is laid down (the default does
  *   lay one down)
- * - Multi-slot shapes (record, #167): every slot's text is emitted as <text>
  * - Connector labels: written as <text> plus a <rect> box rather than a
  *   foreignObject (B1), and rasterized in PNG too
+ *
+ * The multi-slot case (record, #167) belongs to the shape that has the slots, so it
+ * lives in the uml plugin's own suite (plugins/uml-shapes/e2e/specs/record-image-export).
  */
 
 /**
@@ -43,7 +46,7 @@ const downloadViaExportDialog = async (
 	} = {},
 ): Promise<{ name: string; base64: string }> => {
 	await canvas.openContextMenu(menuPoint);
-	await canvas.clickContextMenuItem("export");
+	await canvas.clickContextMenuCommand("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 
 	await page.getByTestId(`export-dialog:format-${format}`).check();
@@ -178,12 +181,15 @@ test("exports SVG without foreignObject and restorable from its metadata", async
 	expect(Math.abs(vbWidth - (250 + 64))).toBeLessThanOrEqual(4);
 	expect(Math.abs(vbHeight - (140 + 64))).toBeLessThanOrEqual(4);
 
-	// The .jis.json in metadata satisfies Canvas's input contract (parseCanvasText).
+	// The .jis.json in metadata satisfies Canvas's input contract (a parsed doc).
 	const parsed = await page.evaluate(async (text) => {
 		// The Vite dev server resolves bare ids through /@id/.
 		const mod = (await import(
 			"/@id/@jiscribe/canvas" as string
 		)) as typeof CanvasModule;
+		const docMod = (await import(
+			"/@id/@jiscribe/canvas/doc" as string
+		)) as typeof CanvasDocModule;
 		const svgDoc = new DOMParser().parseFromString(text, "image/svg+xml");
 		const source = mod.extractCanvasSource(
 			svgDoc.documentElement as unknown as SVGSVGElement,
@@ -191,7 +197,7 @@ test("exports SVG without foreignObject and restorable from its metadata", async
 		if (!source) {
 			return null;
 		}
-		return mod.parseCanvasText(JSON.stringify(source));
+		return docMod.createCanvasParser().parse(JSON.stringify(source));
 	}, svgText);
 
 	expect(parsed?.kind).toBe("ok");
@@ -224,28 +230,22 @@ test("exports a plain .svg with no metadata when data embedding is off", async (
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
 });
 
-test("emits every slot of a record (multi-slot) shape as <text> in the SVG export", async ({
+test("writes a body styled per range as one <tspan> per run", async ({
 	canvas,
 	page,
 }) => {
-	await canvas.drawShapeFromFlyout(
-		"uml",
-		"object",
-		{ x: 300, y: 200 },
-		{ x: 520, y: 280 },
-	);
-	await canvas.deselect();
-
-	// The title band (within the top 28px) is the name slot; below it is the
-	// attributes slot. The stencil drops the box in with sample text, so both are
-	// filled in place of it rather than typed into.
-	await canvas.replaceTextAt({ x: 410, y: 212 }, "Users");
-	await canvas.commitText();
-	await canvas.replaceTextAt({ x: 410, y: 255 }, "id: string\nname: string");
+	await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 540, y: 300 });
+	await canvas.typeTextAt({ x: 420, y: 250 }, "Payment failed");
+	// Bold the first word only, so the line has to be written as two runs.
+	await page.keyboard.press("Home");
+	for (let i = 0; i < 7; i++) {
+		await page.keyboard.press("Shift+ArrowRight");
+	}
+	await page.keyboard.press("ControlOrMeta+b");
 	await canvas.commitText();
 	await canvas.deselect();
 
-	// Turn data embedding off so a body match can only come from the rendered <text>.
+	// Data embedding off, so a match can only come from the rendered <text>.
 	const svg = await downloadViaExportDialog(
 		page,
 		canvas,
@@ -255,13 +255,16 @@ test("emits every slot of a record (multi-slot) shape as <text> in the SVG expor
 	);
 	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
 
-	expect(svgText).not.toContain("<foreignObject");
-	const textElements = [...svgText.matchAll(/<text[\s\S]*?<\/text>/g)].join(
-		" ",
+	const textBlock = (svgText.match(/<text\b[\s\S]*?<\/text>/g) ?? []).find(
+		(block) => block.includes("Payment"),
 	);
-	expect(textElements).toContain("Users");
-	expect(textElements).toContain("id: string");
-	expect(textElements).toContain("name: string");
+	expect(textBlock, "the styled body is emitted as <text>").toBeDefined();
+	// The line is one <tspan> holding a nested one per run: the bold word carries
+	// the weight it does not inherit, the rest carries none.
+	expect(textBlock).toMatch(
+		/<tspan[^>]*font-weight="(bold|700)"[^>]*>Payment<\/tspan>/,
+	);
+	expect(textBlock).toContain(" failed</tspan>");
 });
 
 /**
@@ -592,7 +595,7 @@ test("closes the dialog on Escape without clearing the selection", async ({
 
 	// The context menu opens only on a right-click in empty space, which keeps the selection.
 	await canvas.openContextMenu({ x: 700, y: 500 });
-	await canvas.clickContextMenuItem("export");
+	await canvas.clickContextMenuCommand("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 
 	// Press Escape with focus still on the Canvas container rather than an input

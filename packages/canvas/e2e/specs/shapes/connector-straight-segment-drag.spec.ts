@@ -94,6 +94,29 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 }
 
 /**
+ * Switches the selected connector to straight routing, then puts the ObjectMenu away.
+ *
+ * Closing the flyout and taking the pointer off the menu is what lets the menu move again: while a
+ * dropdown is open or the pointer sits on it, useObjectMenuPosition holds the anchor box it had at
+ * the start of the interaction, so the menu would stay parked over the canvas while the connector
+ * is reshaped underneath — on top of the very segments these tests grab.
+ */
+async function switchToStraightRouting(
+	canvas: CanvasDriver,
+	connectorId: string,
+) {
+	await canvas.openObjectMenu("connector-routing");
+	await canvas.page.click('[data-part="command:setRoutingStraight"]');
+	await expect
+		.poll(async () => (await readPoints(canvas, connectorId)).length, {
+			message: "straight routing draws a single direct line",
+		})
+		.toBe(2);
+	await canvas.openObjectMenu("connector-routing");
+	await canvas.page.mouse.move(0, 0);
+}
+
+/**
  * Joins two rectangles placed diagonally apart, rightCenter to leftCenter, and switches the routing
  * to straight. Both ends stay owned by their shape, which is what makes the end segments
  * undraggable throughout this spec.
@@ -112,13 +135,7 @@ async function buildStraightConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.deselect();
 
 	await selectConnector(canvas, connectorId);
-	await canvas.openObjectMenu("connector-routing");
-	await canvas.page.click('[data-part="command:setRoutingStraight"]');
-	await expect
-		.poll(async () => (await readPoints(canvas, connectorId)).length, {
-			message: "straight routing draws a single direct line",
-		})
-		.toBe(2);
+	await switchToStraightRouting(canvas, connectorId);
 	return connectorId;
 }
 
@@ -177,13 +194,7 @@ async function buildFreeEndConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.deselect();
 
 	await selectConnector(canvas, connectorId);
-	await canvas.openObjectMenu("connector-routing");
-	await canvas.page.click('[data-part="command:setRoutingStraight"]');
-	await expect
-		.poll(async () => (await readPoints(canvas, connectorId)).length, {
-			message: "straight routing draws a single direct line",
-		})
-		.toBe(2);
+	await switchToStraightRouting(canvas, connectorId);
 
 	await insertVertex(canvas, connectorId, 0, { x: 560, y: 480 });
 	return connectorId;

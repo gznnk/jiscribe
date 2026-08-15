@@ -75,21 +75,68 @@ test.describe("styling through the ObjectMenu", () => {
 		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
 	});
 
-	test("hides the ObjectMenu while text is being edited", async ({
+	test("narrows the ObjectMenu to its text items while text is being edited", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
-		const objectMenu = canvas.page.locator('[data-id="object-menu"]');
-		await expect(objectMenu.first()).toBeVisible();
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
+		const backgroundColor = canvas.page.locator(
+			selectors.objectMenuToggle("bg-color"),
+		);
+		const fontSize = canvas.page.locator(
+			selectors.objectMenuToggle("font-size"),
+		);
+		await expect(objectMenu).toBeVisible();
+		await expect(backgroundColor).toBeVisible();
 
-		// The menu disappears when editing starts and comes back when it ends (the
-		// selection is kept)
+		// The menu stays through the edit — it is how a stretch of the text being
+		// edited is styled — but only its text items, since the rest acts on the
+		// shape rather than on the text.
 		await canvas.typeTextAt({ x: 500, y: 260 }, "Editing");
-		await expect(objectMenu).toHaveCount(0);
+		await expect(objectMenu).toBeVisible();
+		await expect(fontSize).toBeVisible();
+		await expect(backgroundColor).toHaveCount(0);
 
 		await canvas.cancelText();
-		await expect(objectMenu.first()).toBeVisible();
+		await expect(backgroundColor).toBeVisible();
+	});
+
+	test("lays the text format buttons out flat while text is being edited", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+
+		const textFormatToggle = canvas.page.locator(
+			selectors.objectMenuToggle("text-format"),
+		);
+		const bold = canvas.page.locator(
+			selectors.objectMenuSet("fontWeight", "bold"),
+		);
+		const italic = canvas.page.locator(
+			selectors.objectMenuSet("fontStyle", "italic"),
+		);
+		const underline = canvas.page.locator(
+			selectors.objectMenuSet("textDecoration", "underline"),
+		);
+		const strikethrough = canvas.page.locator(
+			selectors.objectMenuSet("textDecoration", "line-through"),
+		);
+
+		// Selected but not editing: the four sit behind the dropdown.
+		await expect(textFormatToggle).toBeVisible();
+		await expect(bold).toHaveCount(0);
+
+		await canvas.typeTextAt({ x: 500, y: 260 }, "Editing");
+		await expect(textFormatToggle).toHaveCount(0);
+		await expect(bold).toBeVisible();
+		await expect(italic).toBeVisible();
+		await expect(underline).toBeVisible();
+		await expect(strikethrough).toBeVisible();
+
+		await canvas.cancelText();
+		await expect(textFormatToggle).toBeVisible();
+		await expect(bold).toHaveCount(0);
 	});
 
 	test("keeps the color setting after text editing", async ({ canvas }) => {
@@ -108,5 +155,67 @@ test.describe("styling through the ObjectMenu", () => {
 			await canvas.normalizeColor("#dbeafe"),
 		);
 		await expect(canvas.page.locator("body")).toContainText("Styled");
+	});
+
+	test("follows the box a keystroke regrows while the text is being edited", async ({
+		canvas,
+	}) => {
+		// A keystroke regrows an auto-sized text before any commit, and the pointer
+		// sits on the editing surface rather than the menu, so nothing holds the
+		// anchor: the menu tracks the draft box instead of waiting for the commit.
+		const id = await canvas.placeShape("Text");
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
+		await expect(objectMenu).toBeVisible();
+
+		// Open the editor before taking the baseline, so the move measured below is
+		// the growth alone and not the menu narrowing to its text items.
+		const box = await canvas.objectById(id).boundingBox();
+		await canvas.typeTextAt(
+			canvas.toContent({
+				x: (box?.x ?? 0) + (box?.width ?? 0) / 2,
+				y: (box?.y ?? 0) + (box?.height ?? 0) / 2,
+			}),
+			"",
+		);
+		await expect(objectMenu).toBeVisible();
+		const anchored = await objectMenu.boundingBox();
+
+		// Each Enter moves the box's bottom edge down, one keystroke at a time.
+		await canvas.page.keyboard.type("one\ntwo\nthree");
+
+		// Still editing: the movement happened on the draft, not on a commit.
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect
+			.poll(async () => (await objectMenu.boundingBox())?.y)
+			.toBeGreaterThan(anchored?.y ?? 0);
+	});
+
+	test("stays put while a font size change regrows the text it is anchored to", async ({
+		canvas,
+	}) => {
+		// A `text` re-measures its box from its own content, so a larger font grows it
+		// down and to the right — and the menu is anchored to the bottom center of that
+		// box. Following the growth would walk the control out from under the pointer
+		// still using it, one step per change.
+		const id = await canvas.placeShape("Text");
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
+		await expect(objectMenu).toBeVisible();
+		const anchored = await objectMenu.boundingBox();
+
+		await canvas.openObjectMenu("font-size");
+		await canvas.setNumberInput("fontSize", 48);
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontSize)
+			.toBe("48px");
+
+		expect(await objectMenu.boundingBox()).toEqual(anchored);
+
+		// Closing the panel and taking the pointer off the menu ends the interaction,
+		// and the anchor is re-taken below the box as it is now.
+		await canvas.openObjectMenu("font-size");
+		await canvas.page.mouse.move(0, 0);
+		await expect
+			.poll(async () => (await objectMenu.boundingBox())?.y)
+			.toBeGreaterThan(anchored?.y ?? 0);
 	});
 });

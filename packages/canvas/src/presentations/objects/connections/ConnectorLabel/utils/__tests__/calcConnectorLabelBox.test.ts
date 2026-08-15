@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { TEXT_BLOCK_MIN_WIDTH } from "../../../../../../states/objects/utils/calcTextBlockSize";
 import {
 	calcConnectorLabelBox,
 	resolveConnectorLabelBox,
 	CONNECTOR_LABEL_DEFAULTS,
-	CONNECTOR_LABEL_MAX_WIDTH,
-	CONNECTOR_LABEL_MIN_WIDTH,
 	type ConnectorLabelFont,
 } from "../connectorLabelLayout";
 
@@ -18,13 +17,15 @@ const font: ConnectorLabelFont = {
 describe("calcConnectorLabelBox", () => {
 	it("an empty string yields the minimum width and a positive height", () => {
 		const box = calcConnectorLabelBox("", font);
-		expect(box.width).toBe(CONNECTOR_LABEL_MIN_WIDTH);
+		expect(box.width).toBe(TEXT_BLOCK_MIN_WIDTH);
 		expect(box.height).toBeGreaterThan(0);
 	});
 
-	it("a sufficiently long single line is clamped to the maximum width", () => {
-		const box = calcConnectorLabelBox("x".repeat(1000), font);
-		expect(box.width).toBe(CONNECTOR_LABEL_MAX_WIDTH);
+	it("grows sideways with the line however long it gets, rather than wrapping", () => {
+		const long = calcConnectorLabelBox("x".repeat(500), font);
+		const longer = calcConnectorLabelBox("x".repeat(1000), font);
+		expect(longer.width).toBeGreaterThan(long.width);
+		expect(longer.height).toBe(long.height);
 	});
 
 	it("height increases as the line count increases", () => {

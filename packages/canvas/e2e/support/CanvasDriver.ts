@@ -441,7 +441,7 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Add a click-placed shape (Sticky) at the canvas center from its tool button and return the
+	 * Add a click-placed shape at the canvas center from its tool button and return the
 	 * new data-id. StencilLibraryItemHandler places these outright rather than by diagonal drag,
 	 * so they need this instead of drawShape's crosshair-wait-then-drag.
 	 */
@@ -501,13 +501,13 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Wait until the text editor is open and the textarea can accept input. Keystrokes sent
+	 * Wait until the text editor is open and its surface can accept input. Keystrokes sent
 	 * before then fall through to the canvas, and a newline among them restarts editing, so the
 	 * value ends up confusingly partial rather than empty (#237). Always call this before typing.
 	 */
 	async waitForTextEditor() {
 		await expect(this.page.locator(selectors.textEditor)).toBeVisible();
-		await expect(this.textArea()).toBeFocused();
+		await expect(this.textEditorSurface()).toBeFocused();
 	}
 
 	/** Double-click to open the text editor and type; commit with commitText(). */
@@ -525,7 +525,7 @@ export class CanvasDriver {
 	 */
 	async replaceTextAt(point: { x: number; y: number }, text: string) {
 		await this.typeTextAt(point, "");
-		await this.textArea().fill(text);
+		await this.textEditorSurface().fill(text);
 	}
 
 	/** Commit a text edit by clicking outside; Escape cancels, so it is not used here. */
@@ -541,17 +541,129 @@ export class CanvasDriver {
 		await expect(this.page.locator(selectors.textEditor)).toHaveCount(0);
 	}
 
-	/** Locator for the textarea being edited, inside the data-kind wrapper. */
-	textArea() {
-		return this.page.locator(`${selectors.textEditor} textarea`);
+	/**
+	 * Locator for the surface being edited, inside the data-kind wrapper: the shape
+	 * editor's contenteditable div, or the connector label's textarea.
+	 */
+	textEditorSurface() {
+		return this.page.locator(
+			`${selectors.textEditor} :is(textarea, [contenteditable="true"])`,
+		);
 	}
 
-	/** Whether the textarea being edited has focus. */
-	async isTextEditorFocused(): Promise<boolean> {
+	/**
+	 * Everything the driver reads back off the open editor, gathered in one page
+	 * call so the two kinds of surface are told apart in one place.
+	 */
+	private async probeTextEditor(): Promise<{
+		focused: boolean;
+		text: string;
+		selection: { start: number; end: number } | null;
+		scrollTop: number;
+	} | null> {
 		return this.page.evaluate((sel) => {
-			const textarea = document.querySelector(`${sel} textarea`);
-			return textarea !== null && document.activeElement === textarea;
+			const surface = document.querySelector(
+				`${sel} :is(textarea, [contenteditable="true"])`,
+			);
+			if (!(surface instanceof HTMLElement)) {
+				return null;
+			}
+			const focused = document.activeElement === surface;
+			if (surface instanceof HTMLTextAreaElement) {
+				return {
+					focused,
+					text: surface.value,
+					selection: {
+						start: surface.selectionStart,
+						end: surface.selectionEnd,
+					},
+					scrollTop: surface.scrollTop,
+				};
+			}
+			// The contenteditable surface, walked the way the editor itself
+			// serializes it (editableTextDom): text nodes plus <br> and the block
+			// per line the browser may leave behind, with the trailing break dropped
+			// as the padding that gives an empty last line its line box.
+			const units: { node: Node; start: number }[] = [];
+			let raw = "";
+			const visit = (parent: Node): void => {
+				for (const child of parent.childNodes) {
+					if (child.nodeType === Node.TEXT_NODE) {
+						units.push({ node: child, start: raw.length });
+						raw += (child as Text).data;
+						continue;
+					}
+					if (child.nodeType !== Node.ELEMENT_NODE) {
+						continue;
+					}
+					if (child.nodeName === "BR") {
+						units.push({ node: child, start: raw.length });
+						raw += "\n";
+						continue;
+					}
+					if (
+						(child.nodeName === "DIV" || child.nodeName === "P") &&
+						units.length > 0
+					) {
+						units.push({ node: child, start: raw.length });
+						raw += "\n";
+					}
+					visit(child);
+				}
+			};
+			visit(surface);
+			const text = raw.endsWith("\n") ? raw.slice(0, -1) : raw;
+
+			const offsetOf = (node: Node, offset: number): number => {
+				if (node.nodeType === Node.TEXT_NODE) {
+					const unit = units.find((candidate) => candidate.node === node);
+					return unit
+						? Math.min(unit.start + offset, text.length)
+						: text.length;
+				}
+				const position = document.createRange();
+				position.setStart(node, offset);
+				for (const unit of units) {
+					if (position.comparePoint(unit.node, 0) >= 0) {
+						return Math.min(unit.start, text.length);
+					}
+				}
+				return text.length;
+			};
+
+			const selection = document.getSelection();
+			const anchorNode = selection?.anchorNode ?? null;
+			const focusNode = selection?.focusNode ?? null;
+			const range =
+				selection && anchorNode && focusNode && surface.contains(anchorNode)
+					? (() => {
+							const anchor = offsetOf(anchorNode, selection.anchorOffset);
+							const focus = offsetOf(focusNode, selection.focusOffset);
+							return {
+								start: Math.min(anchor, focus),
+								end: Math.max(anchor, focus),
+							};
+						})()
+					: null;
+
+			return { focused, text, selection: range, scrollTop: surface.scrollTop };
 		}, selectors.textEditor);
+	}
+
+	/** Whether the surface being edited has focus. */
+	async isTextEditorFocused(): Promise<boolean> {
+		return (await this.probeTextEditor())?.focused ?? false;
+	}
+
+	/**
+	 * The text the open editor holds. The counterpart of a textarea's `inputValue`
+	 * for an editor that may be a contenteditable div, so it is read rather than
+	 * asserted with `toHaveValue`.
+	 *
+	 * @returns The text, or null when no editor is open
+	 */
+	async textEditorText(): Promise<string | null> {
+		return (await this.probeTextEditor())?.text ?? null;
 	}
 
 	/**
@@ -578,23 +690,85 @@ export class CanvasDriver {
 		}, selectors.textEditor);
 	}
 
-	/** Scroll position of the textarea being edited. */
+	/** Scroll position of the surface being edited. */
 	async textEditorScrollTop(): Promise<number> {
-		return this.page.evaluate((sel) => {
-			const textarea = document.querySelector(`${sel} textarea`);
-			return textarea instanceof HTMLTextAreaElement ? textarea.scrollTop : 0;
-		}, selectors.textEditor);
+		return (await this.probeTextEditor())?.scrollTop ?? 0;
 	}
 
-	/** Selection range (selectionStart / selectionEnd) of the textarea being edited. */
+	/**
+	 * Selection range of the surface being edited, in the same UTF-16 offsets a
+	 * textarea's selectionStart / selectionEnd count in.
+	 */
 	async textEditorSelection(): Promise<{ start: number; end: number } | null> {
-		return this.page.evaluate((sel) => {
-			const textarea = document.querySelector(`${sel} textarea`);
-			if (!(textarea instanceof HTMLTextAreaElement)) {
-				return null;
-			}
-			return { start: textarea.selectionStart, end: textarea.selectionEnd };
-		}, selectors.textEditor);
+		return (await this.probeTextEditor())?.selection ?? null;
+	}
+
+	/**
+	 * The text a shape draws, one entry per element it is split into: an unstyled
+	 * body is one entry, a body styled per range is one entry per run.
+	 *
+	 * Reads whichever element is drawing the text: the editor's own surface while an
+	 * editor is open (the shape's overlay goes blank then), the overlay once the
+	 * edit is committed. An editor open on another shape would therefore be read
+	 * instead, so this is for the shape being worked on.
+	 *
+	 * @param objectId - data-id of the shape whose overlay is read when no editor is open
+	 * @returns One entry per drawn part in document order, with the typography it is
+	 *   drawn with (browser-normalized: fontWeight as a number, colors as rgb(...));
+	 *   empty when nothing draws the text
+	 */
+	async drawnTextRuns(objectId: string): Promise<
+		{
+			text: string;
+			color: string;
+			fontSize: string;
+			fontWeight: string;
+			fontStyle: string;
+		}[]
+	> {
+		return this.page.evaluate(
+			({ targetId, editorSelector }) => {
+				const editor = document.querySelector(
+					`${editorSelector} [contenteditable="true"]`,
+				);
+				let content = editor instanceof HTMLElement ? editor : null;
+				if (!content) {
+					const shape = document.querySelector(`[data-id="${targetId}"]`);
+					let foreignObject: Element | null =
+						shape?.querySelector("foreignObject") ?? null;
+					if (!foreignObject) {
+						let sibling = shape?.nextElementSibling ?? null;
+						while (
+							sibling &&
+							sibling.tagName.toLowerCase() !== "foreignobject"
+						) {
+							sibling = sibling.nextElementSibling;
+						}
+						foreignObject = sibling;
+					}
+					const box = foreignObject?.firstElementChild?.firstElementChild;
+					content = box instanceof HTMLElement ? box : null;
+				}
+				if (!content) {
+					return [];
+				}
+				// The editor pads an empty last line with a <br>, which draws no text.
+				const parts = Array.from(content.children).filter(
+					(element) => element.tagName !== "BR",
+				);
+				return (parts.length > 0 ? parts : [content]).map((part) => {
+					const style = getComputedStyle(part);
+					return {
+						text: part.textContent ?? "",
+						color: style.color,
+						fontSize: style.fontSize,
+						fontWeight: style.fontWeight,
+						fontStyle: style.fontStyle,
+					};
+				});
+			},
+			{ targetId: objectId, editorSelector: selectors.textEditor },
+		);
 	}
 
 	/** Toggle an ObjectMenu dropdown section open. */
@@ -711,7 +885,8 @@ export class CanvasDriver {
 
 	/**
 	 * Toggle one text format (bold / italic / underline / strikethrough) of the selected shape.
-	 * The submenu stays open after a press, so it is only opened when its buttons are absent.
+	 * The buttons are already on the menu itself while text is edited inline, and the submenu
+	 * stays open after a press, so it is only opened when they are absent.
 	 *
 	 * @param property - Style property the button writes, as it appears in the `set:` data-part
 	 * @param value - Value the button writes; the buttons carry the value the *next* press lands
@@ -1059,7 +1234,7 @@ export class CanvasDriver {
 	 * foreignObject > div(wrapper) > div(text).
 	 *
 	 * For rect and ellipse the shape element and the foreignObject are siblings within a
-	 * fragment, while a Sticky holds the foreignObject as a child of its `<g data-id>`. To cover
+	 * fragment, while a <g>-rooted shape holds the foreignObject as a child of its `<g data-id>`. To cover
 	 * both, this looks among the data-id element's descendants first and falls back to its
 	 * following siblings. font-size / color / font-weight / font-style / text-decoration /
 	 * text-align live on the text element and vertical alignment (align-items) on the wrapper,
@@ -1083,7 +1258,7 @@ export class CanvasDriver {
 			if (!shape) {
 				return null;
 			}
-			// Descendants first (under a Sticky's `<g>`), then following siblings (the
+			// Descendants first (under a <g>-rooted shape), then following siblings (the
 			// rect/ellipse fragment).
 			let foreignObject: Element | null = shape.querySelector("foreignObject");
 			if (!foreignObject) {

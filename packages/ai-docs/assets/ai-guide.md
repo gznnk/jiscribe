@@ -1,6 +1,6 @@
 # Jiscribe AI Authoring Guide
 
-A practical guide for an AI to correctly generate and edit Jiscribe `.jis.json` (diagram data).
+A practical guide for an AI to correctly generate and edit Jiscribe `.jis` (also `.jiscribe`; the legacy `.jis.json` / `.jiscribe.json` are still read) diagram data.
 It focuses on the essentials. For the full field-level specification, see [`reference.md`](./reference.md).
 
 ---
@@ -26,6 +26,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `version`: **required, always `1`** (fixed value for this format version).
 - `root`: array of shapes (every `type` in "Object quick reference") **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
+- `background`: **optional** canvas surface color, a literal CSS color string (e.g. `"#f5f5f5"` — a concrete color, not a `var(...)`). Omit it to follow the theme background; set it and it becomes the surface for both display and image export, with the grid line color derived from it.
 
 ## 3. MUST / MUST NOT (violations break the file)
 
@@ -99,6 +100,8 @@ The top level must always have `version` / `root` (the array may be empty).
 | `cross`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | junction / emphasis marker                            |
 | `offPageConnector`      | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | off-page connector (jump to another page)             |
 | `record`                | `x`,`y`,`width`,`height`             | stroke / fill / **keyed** text / rotation        | titled box + row compartments (UML class / ER entity) |
+| `umlPackage`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | namespace, module, layer                              |
+| `umlComponent`          | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | component, replaceable part                           |
 | `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                   | open line                                             |
 | `polygon`               | `points` (auto-closed)               | stroke / fill                                    | closed shape from points                              |
 | `group`                 | `children`                           | rotation / flipX / flipY                         | container of child objects                            |
@@ -136,6 +139,49 @@ The top level must always have `version` / `root` (the array may be empty).
 - `edge`: a free position along one local edge, `{ "kind": "edge", "side": "top", "t": 0.25 }`. Only when a named anchor cannot express where the line has to land (several parallel lines into one edge); `t` runs left→right on top/bottom, top→bottom on left/right, and `0.5` is the edge midpoint — write that as a `connectPoint` instead
 - `owner` may reference **any box shape, and `text`** — that is, every type except `polyline` / `polygon` / `group` / `svg` / `connector`. You **cannot** attach an endpoint to those five. To point an arrow at/from one of them, use a `free` endpoint placed near it instead.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
+
+### Styling part of a text
+
+A shape's typography (`fontSize`, `fontColor`, `fontWeight`, …) applies to its
+whole text. To draw **part** of it differently — one bold word, one phrase in red
+— write that `text` as an array of runs instead of a string: each run is
+`{ "text": "..." }` plus the fields it overrides, and the runs are concatenated in
+order to form the text.
+
+```json
+{
+	"id": "n1",
+	"type": "rect",
+	"x": 100,
+	"y": 100,
+	"width": 200,
+	"height": 80,
+	"text": [
+		{ "text": "Payment " },
+		{ "text": "failed", "fontColor": "#d32f2f", "fontWeight": "bold" }
+	]
+}
+```
+
+- A run is
+  `TextRun = { "text": "...", fontColor?, fontSize?, fontFamily?, fontWeight?, fontStyle?, textDecoration? }`
+  — the characters plus any of those six typography fields.
+  `textAlign` / `verticalAlign` place the whole text, so they stay on the shape
+  (or on the record slot) and are not run fields.
+- The runs' `text` values, concatenated in order, **are** the body's characters.
+  There are no offsets or lengths to compute: cut the string where the styling
+  changes and write the pieces out in order.
+- A run carries only the difference: every field it leaves unset is drawn with
+  the shape's (or the slot's) own typography.
+- Write a plain string unless part of the text has to be drawn differently. A
+  text drawn in one style is a plain string — that is the form every reader
+  expects, and the array is noise on it.
+- Non-canonical runs are normalized on write: a run list in which nothing is
+  styled collapses back to a plain string, adjacent runs drawn alike merge, and
+  empty runs drop. Prefer writing clean runs, but the file is not rejected for
+  them.
+- The same applies inside a `record`: a band's `text` and each entry of a
+  compartment's rows take either form (see below).
 
 ### Record (`record`) — the one shape whose `text` is an object
 
@@ -188,6 +234,29 @@ leaves it out and stays two-compartment:
 An empty array is not the same as an absent slot: `"operations": { "text": [] }`
 keeps the compartment and draws it empty, which is how you say "this class has no
 operations" rather than "this box has no operations compartment".
+
+**A row is itself one body of text**, so plain rows and styled rows mix in the
+one array. A styled row is **an array inside the array** — the row's runs, in
+their own brackets:
+
+```json
+"attributes": {
+  "text": [
+    "id: string",
+    [{ "text": "email: " }, { "text": "required", "fontWeight": "bold" }]
+  ]
+}
+```
+
+The classic mistake is putting a run object **directly** in the row list:
+`"text": [{ "text": "email: string" }]` is not a compartment holding one styled
+row — it reads as a single run-styled body, and a compartment rejects it
+(`must be a string, or an array of runs to style parts of it`). Give the row's
+runs their own array.
+
+`name` and `stereotype` are the other way round: each is **one body**, a string
+or an array of runs, never a list of rows and never `[]` (an empty title is
+`""`). Writing rows there is rejected with `must be one body of text, not rows`.
 
 Each slot carries **its own** typography (`textAlign` / `verticalAlign` /
 `fontColor` / `fontSize` / `fontFamily` / `fontWeight` / `fontStyle` /
@@ -432,4 +501,6 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 - ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.
 - ❌ Giving a `text` `width`/`height`, or drawing a caption as a `rect` with an invisible stroke and fill → ✅ use `text` with `x`/`y` only, and size it with `fontSize`.
 - ❌ Emitting coordinates that unintentionally overlap → ✅ space them per the layout conventions (overlap itself is allowed).
+- ❌ Writing a uniformly styled text as an array of runs → ✅ a plain string; runs are only for a stretch that has to be drawn differently.
+- ❌ Putting a run object straight into a `record` compartment's row list (`"text": [{ "text": "..." }]`) → ✅ wrap that row's runs in their own array: `"text": [[{ "text": "..." }]]`.
 - ❌ Duplicate `id`s → ✅ make them all unique.

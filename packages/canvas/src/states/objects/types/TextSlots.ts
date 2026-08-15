@@ -1,7 +1,18 @@
 import { isObject } from "@jiscribe/basic-validators";
 
+import type { RichText } from "../../../schemas/objects/types/RichText";
+import {
+	joinRichTextLines,
+	normalizeRichText,
+	remapRichText,
+	richTextToPlain,
+	splitRichTextLines,
+} from "../../../schemas/objects/types/RichText";
 import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
-import { isTextSlot } from "../../../schemas/objects/types/TextSlot";
+import {
+	isTextRows,
+	isTextSlot,
+} from "../../../schemas/objects/types/TextSlot";
 
 /**
  * A shape's text in its normal form: slot id → slot. These keys ARE the set of
@@ -69,9 +80,31 @@ export const resolveTextSlotId = (
 };
 
 /**
+ * Reads a slot's content as the single body of text it draws as: a
+ * row-partitioned slot is joined with "\n" (the commit splits it back), and a
+ * slot styled per range keeps its runs. The form the drawing and the measuring
+ * side take, both of which need the styling; {@link readTextSlot} is the plain
+ * counterpart.
+ *
+ * @param text - The shape's slots; undefined for a shape that holds no text
+ * @param slotId - Key to read; an absent key reads as ""
+ * @returns The slot content as one body of text ("" when absent)
+ */
+export const readRichTextSlot = (
+	text: TextSlots | undefined,
+	slotId: string,
+): RichText => {
+	const content = text?.[slotId]?.text;
+	if (content === undefined) {
+		return "";
+	}
+	return isTextRows(content) ? joinRichTextLines(content) : content;
+};
+
+/**
  * Reads a slot's content as the single string the editor and the plain-text
- * overlay work with: a row-partitioned slot is joined with "\n" (the commit
- * splits it back).
+ * readers work with: a row-partitioned slot is joined with "\n" (the commit
+ * splits it back), and a slot styled per range is flattened to its characters.
  *
  * @param text - The shape's slots; undefined for a shape that holds no text
  * @param slotId - Key to read; an absent key reads as ""
@@ -80,20 +113,48 @@ export const resolveTextSlotId = (
 export const readTextSlot = (
 	text: TextSlots | undefined,
 	slotId: string,
-): string => {
-	const content = text?.[slotId]?.text;
-	if (Array.isArray(content)) {
-		return content.join("\n");
+): string => richTextToPlain(readRichTextSlot(text, slotId));
+
+/**
+ * Writes one body of text back into one slot, splitting at its newlines when
+ * that slot holds rows (the inverse of {@link readRichTextSlot}; an emptied body
+ * writes `[]`, not `[""]`, so the empty rows form stays canonical). The slot's
+ * own styling, the other slots, and the key order are all preserved, so a write
+ * never disturbs anything it did not edit.
+ *
+ * @param text - The shape's current slots
+ * @param slotId - Key to write; a key absent from `text` is appended as an unstyled slot
+ * @param value - The body to write, runs included; stored in canonical form
+ * @returns A new slot map (the input is not mutated)
+ */
+export const writeRichTextSlot = (
+	text: TextSlots,
+	slotId: string,
+	value: RichText,
+): TextSlots => {
+	const body = normalizeRichText(value);
+	const slot = text[slotId];
+	if (slot === undefined) {
+		return { ...text, [slotId]: { text: body } };
 	}
-	return content ?? "";
+	// The newlines a body carries between rows are the split points, not
+	// characters of any row, so their styling (invisible either way) is dropped.
+	const content = isTextRows(slot.text)
+		? richTextToPlain(body) === ""
+			? []
+			: splitRichTextLines(body)
+		: body;
+	return {
+		...text,
+		[slotId]: { ...slot, text: content },
+	};
 };
 
 /**
- * Writes edited text back into one slot, splitting on "\n" when that slot holds
- * rows (the inverse of {@link readTextSlot}; an emptied editor writes `[]`, not
- * `[""]`, so the empty rows form stays canonical). The slot's styling, the other
- * slots, and the key order are all preserved, so a commit never disturbs
- * anything it did not edit.
+ * Writes edited plain text back into one slot (see {@link writeRichTextSlot}
+ * for the slot handling). Per-range styling survives the edit: the characters
+ * the edit left alone keep what they were drawn with (remapRichText), since the
+ * caller hands back plain text and could not carry the runs itself.
  *
  * @param text - The shape's current slots
  * @param slotId - Key to write; a key absent from `text` is appended as an unstyled slot
@@ -104,26 +165,18 @@ export const writeTextSlot = (
 	text: TextSlots,
 	slotId: string,
 	value: string,
-): TextSlots => {
-	const slot = text[slotId];
-	if (slot === undefined) {
-		return { ...text, [slotId]: { text: value } };
-	}
-	const content = Array.isArray(slot.text)
-		? value === ""
-			? []
-			: value.split("\n")
-		: value;
-	return {
-		...text,
-		[slotId]: { ...slot, text: content },
-	};
-};
+): TextSlots =>
+	writeRichTextSlot(
+		text,
+		slotId,
+		remapRichText(readRichTextSlot(text, slotId), value),
+	);
 
 /**
  * Empties every slot's content while keeping the keys, their content kinds, and
  * their styling, for render-only states that must draw no text (the drag-drawing
- * ghost).
+ * ghost). Per-range styling goes with the characters it styled: with no text
+ * left, there is nothing for a run to cover.
  *
  * @param text - The shape's slots
  * @returns A new slot map with "" / [] in place of each content
@@ -132,6 +185,6 @@ export const blankTextSlots = (text: TextSlots): TextSlots =>
 	Object.fromEntries(
 		Object.entries(text).map(([slotId, slot]) => [
 			slotId,
-			{ ...slot, text: Array.isArray(slot.text) ? [] : "" },
+			{ ...slot, text: isTextRows(slot.text) ? [] : "" },
 		]),
 	);

@@ -22,7 +22,7 @@ export const rectDoc = (
 
 /**
  * Document holding two rects.
- * rect-1 → cx=5,cy=5 / rect-2 → cx=105,cy=105。
+ * rect-1 -> cx=5,cy=5 / rect-2 -> cx=105,cy=105
  */
 export const twoRectsDoc: CanvasDoc = {
 	version: 1,

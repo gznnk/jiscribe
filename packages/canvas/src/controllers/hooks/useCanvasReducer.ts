@@ -2,6 +2,7 @@ import { type Dispatch, useMemo, useReducer } from "react";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
+import type { ScrollBoundsConfig } from "../../states/canvas/ScrollBounds";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
@@ -21,12 +22,16 @@ import type { CanvasRegistries } from "../registries/CanvasRegistries";
  * @param initialCamera - Seeds the initial viewport so the first paint lands at
  *   the host's pan/zoom instead of flashing the default (only read at mount time;
  *   later programmatic changes go through `ref.current.viewport.setViewport`).
+ * @param scrollBoundsConfig - How far the view may be scrolled; omitted leaves
+ *   the canvas infinite. Only read at mount time — it goes into the initial
+ *   state, which is what `limitViewScroll` reads it from.
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,
 	registries: CanvasRegistries,
 	docDefaults?: DocCreationDefaults,
 	initialCamera?: Camera,
+	scrollBoundsConfig?: ScrollBoundsConfig,
 ): [CanvasControllerState, Dispatch<CanvasAction>] => {
 	const reducer = useMemo(() => createCanvasReducer(registries), [registries]);
 	return useReducer(reducer, undefined, () =>
@@ -35,6 +40,7 @@ export const useCanvasReducer = (
 			registries,
 			docDefaults,
 			initialCamera,
+			scrollBoundsConfig,
 		),
 	);
 };

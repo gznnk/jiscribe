@@ -135,3 +135,25 @@ describe("textToDoc", () => {
 		expect(longDoc).toMatchObject({ x: 10, y: 20 });
 	});
 });
+
+describe("doc round trip", () => {
+	it("gives back a doc that gained none of the style fields its author omitted", () => {
+		// The type's defaults are resolved per read (ObjectTextStyleDefaultsRegistry)
+		// rather than filled into the doc, so a file keeps saying nothing about the
+		// fields it said nothing about.
+		const authored = {
+			id: "t1",
+			type: "text",
+			x: 10,
+			y: 20,
+			text: "hello",
+		} as unknown as TextDoc;
+
+		const roundTripped = textToDoc(textToState(authored));
+
+		// Serialized rather than compared field by field: what is written to the
+		// file is what the round trip has to leave alone, and the keys the mappers
+		// carry as `undefined` never reach it.
+		expect(JSON.parse(JSON.stringify(roundTripped))).toEqual(authored);
+	});
+});

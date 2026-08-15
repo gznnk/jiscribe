@@ -286,7 +286,7 @@ test.describe("dragging a connector label", () => {
 		await canvas.deselect();
 		await labelBoxOf(canvas, connectorId).dblclick();
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
-		await expect(canvas.textArea()).toHaveValue("Yes");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
 		await canvas.cancelText();
 	});
 
@@ -387,8 +387,8 @@ test.describe("dragging a connector label", () => {
 		await canvas.deselect();
 		const labelBox = labelBoxOf(canvas, connectorId);
 		await labelBox.dblclick();
-		await expect(canvas.textArea()).toHaveValue("Yes");
-		await canvas.textArea().fill("No");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
+		await canvas.textEditorSurface().fill("No");
 		await canvas.commitText();
 
 		await expect(labelBox).toContainText("No");

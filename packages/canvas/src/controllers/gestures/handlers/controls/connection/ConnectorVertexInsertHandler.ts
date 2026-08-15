@@ -1,7 +1,5 @@
-import { roundToDecimal } from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../../../constants/precision";
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type {
 	CanvasControllerState,
@@ -125,10 +123,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 			return state;
 		}
 
-		const newPosition: Point = {
-			x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
-			y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
-		};
+		const newPosition: Point = { x: event.last.x, y: event.last.y };
 
 		const newPoints = [...currentPoints];
 		newPoints.splice(segmentIndex, 0, newPosition);
@@ -211,10 +206,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 			);
 		}
 
-		const newPosition: Point = {
-			x: roundToDecimal(cursorX, PRECISION.COORDINATE),
-			y: roundToDecimal(cursorY, PRECISION.COORDINATE),
-		};
+		const newPosition: Point = { x: cursorX, y: cursorY };
 
 		const newPoints = [...startConnector.points];
 		newPoints[insertedIndex] = newPosition;

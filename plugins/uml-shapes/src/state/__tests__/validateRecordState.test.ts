@@ -54,7 +54,7 @@ describe("isValidRecordState", () => {
 	});
 
 	it("accepts a title-only record", () => {
-		// 区画の欠落は「その区画を持たない箱」であって壊れた state ではない。
+		// A missing compartment means "a box without that compartment", not a broken state.
 		expect(
 			isValidRecordState({ ...baseState, text: { name: { text: "User" } } }),
 		).toBe(true);

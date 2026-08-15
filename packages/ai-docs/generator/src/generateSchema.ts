@@ -85,26 +85,27 @@ function buildDefaultOverrideNode(
 	};
 }
 
+const RECT_GEOMETRY_DESCRIPTIONS = {
+	x: "Left-edge X coordinate of the bounding box.",
+	y: "Top-edge Y coordinate of the bounding box.",
+	width: "Bounding-box width in pixels.",
+	height: "Bounding-box height in pixels.",
+} as const;
+
 /** Properties of the rect geometry (x/y/width/height). */
 function buildRectGeometryProps(
 	defaults: Readonly<Record<string, unknown>>,
 ): Record<string, JsonSchemaNode> {
 	return {
-		x: {
-			description: "Left-edge X coordinate of the bounding box.",
-			type: "number",
-		},
-		y: {
-			description: "Top-edge Y coordinate of the bounding box.",
-			type: "number",
-		},
+		x: { description: RECT_GEOMETRY_DESCRIPTIONS.x, type: "number" },
+		y: { description: RECT_GEOMETRY_DESCRIPTIONS.y, type: "number" },
 		width: {
-			description: `Bounding-box width in pixels. Default when created from the palette: ${formatDefaultValue(defaults.width)}`,
+			description: `${RECT_GEOMETRY_DESCRIPTIONS.width} Default when created from the palette: ${formatDefaultValue(defaults.width)}`,
 			type: "number",
 			minimum: 0,
 		},
 		height: {
-			description: `Bounding-box height in pixels. Default when created from the palette: ${formatDefaultValue(defaults.height)}`,
+			description: `${RECT_GEOMETRY_DESCRIPTIONS.height} Default when created from the palette: ${formatDefaultValue(defaults.height)}`,
 			type: "number",
 			minimum: 0,
 		},
@@ -176,6 +177,107 @@ function buildGeometryProps(
 	}
 }
 
+/** $def name of the structure the plain box shapes share through allOf. */
+const BOX_SHAPE_DEF_NAME = "BoxShapeDoc";
+
+/** Shared style properties of a $def, as $refs into the style definitions. */
+function buildStyleRefProps(): Record<string, JsonSchemaNode> {
+	const properties: Record<string, JsonSchemaNode> = {};
+	for (const source of STYLE_PROP_SOURCES) {
+		for (const prop of source.props) {
+			properties[prop] = {
+				$ref: `#/$defs/${source.styleDef}/properties/${prop}`,
+			};
+		}
+	}
+	return properties;
+}
+
+/** Assemble the $def every plain box shape extends (see isBoxShapeCompatible). */
+function buildBoxShapeDef(): JsonSchemaNode {
+	return {
+		description:
+			"Shared structure of the plain box shapes: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins `type` with a const.",
+		type: "object",
+		required: [...GEOMETRY_REQUIRED_PROPS.rect],
+		additionalProperties: false,
+		properties: {
+			id: { description: "Unique identifier.", type: "string" },
+			// No description here: the JSON language service surfaces the first
+			// description it meets walking allOf, so one on the base would mask the
+			// per-shape `Must be "..."` hover of the thin defs.
+			type: { type: "string" },
+			meta: { $ref: "#/$defs/MetaDoc" },
+			x: { description: RECT_GEOMETRY_DESCRIPTIONS.x, type: "number" },
+			y: { description: RECT_GEOMETRY_DESCRIPTIONS.y, type: "number" },
+			width: {
+				description: RECT_GEOMETRY_DESCRIPTIONS.width,
+				type: "number",
+				minimum: 0,
+			},
+			height: {
+				description: RECT_GEOMETRY_DESCRIPTIONS.height,
+				type: "number",
+				minimum: 0,
+			},
+			...buildStyleRefProps(),
+		},
+	};
+}
+
+/**
+ * Does this type's $def reduce to BoxShapeDoc plus its own `type` const? True
+ * only when the full assembly would reproduce the shared structure exactly:
+ * plain rect geometry, all four style groups enabled on their shared defaults,
+ * and no handwritten property fragment.
+ */
+function isBoxShapeCompatible(
+	type: string,
+	features: ObjectDocDefinition["features"],
+	defaults: Readonly<Record<string, unknown>>,
+): boolean {
+	if (features.geometry !== "rect" || features.radius) {
+		return false;
+	}
+	if (Object.keys(propertyOverrides[type] ?? {}).length > 0) {
+		return false;
+	}
+	return STYLE_PROP_SOURCES.every((source) => {
+		if (!features[source.feature]) {
+			return false;
+		}
+		const sharedProps = handwrittenDefs[source.styleDef].properties as Record<
+			string,
+			JsonSchemaNode
+		>;
+		return source.props.every((prop) => {
+			const defaultValue = defaults[prop];
+			return (
+				defaultValue === undefined || defaultValue === sharedProps[prop].default
+			);
+		});
+	});
+}
+
+/** The thin $def of a box-compatible type: its description plus the `type` const. */
+function buildBoxShapeRefDef(
+	type: string,
+	description: string,
+): JsonSchemaNode {
+	return {
+		description,
+		type: "object",
+		allOf: [{ $ref: `#/$defs/${BOX_SHAPE_DEF_NAME}` }],
+		properties: {
+			type: {
+				description: `Must be "${type}".`,
+				type: "string",
+				const: type,
+			},
+		},
+	};
+}
+
 /** Assemble one type's $def from its features / description / defaults. */
 function buildShapeDef(
 	type: string,
@@ -184,13 +286,17 @@ function buildShapeDef(
 	const { features, description, defaults } = definition;
 	if (!description || !defaults) {
 		throw new Error(
-			`型 "${type}" の $def 生成に description / defaults が必要です`,
+			`Generating the $def for type "${type}" requires description and defaults`,
 		);
 	}
 	if (!isGeneratableGeometry(features.geometry)) {
 		throw new Error(
-			`型 "${type}" の geometry "${features.geometry}" は $def を機械生成できません（テンプレに移してください）`,
+			`The $def for geometry "${features.geometry}" of type "${type}" cannot be generated mechanically (move it into a template)`,
 		);
+	}
+
+	if (isBoxShapeCompatible(type, features, defaults)) {
+		return buildBoxShapeRefDef(type, description);
 	}
 
 	const properties: Record<string, JsonSchemaNode> = {
@@ -245,9 +351,7 @@ function buildShapeDef(
 
 	if (features.radius) {
 		if (defaults.rx === undefined) {
-			throw new Error(
-				`型 "${type}" は radius を宣言していますが defaults.rx がありません`,
-			);
+			throw new Error(`Type "${type}" declares radius but has no defaults.rx`);
 		}
 		properties.rx = withOverride("rx", {
 			description: `Corner radius (SVG rx). Default: ${formatDefaultValue(defaults.rx)}`,
@@ -276,7 +380,7 @@ function buildShapeDef(
 
 	if (unappliedOverrideNames.size > 0) {
 		throw new Error(
-			`型 "${type}" の propertyOverrides に適用先の無いプロパティがあります: ${[...unappliedOverrideNames].join(", ")}`,
+			`The propertyOverrides of type "${type}" contain properties with nothing to apply to: ${[...unappliedOverrideNames].join(", ")}`,
 		);
 	}
 
@@ -355,18 +459,26 @@ export function generateSchema(
 		description: `Reference to an object on the canvas by ID. The referenced object must be connectable: ${connectables.join(" / ")} (NOT ${nonConnectables.join(" / ")}).`,
 	};
 
-	const commonDefNames = [
+	const sharedStructureDefNames = [
 		"MetaDoc",
 		"StrokeStyle",
 		"FillStyle",
 		"TextStyle",
+		"TextRun",
 		"TransformStyle",
+	];
+	for (const defName of sharedStructureDefNames) {
+		defs[defName] = handwrittenDefs[defName];
+	}
+	defs[BOX_SHAPE_DEF_NAME] = buildBoxShapeDef();
+
+	const enumDefNames = [
 		"StrokeDashType",
 		"TextAlign",
 		"VerticalAlign",
 		"ArrowType",
 	];
-	for (const defName of commonDefNames) {
+	for (const defName of enumDefNames) {
 		defs[defName] = handwrittenDefs[defName];
 	}
 

@@ -1,4 +1,8 @@
 import type { CanvasAction } from "./CanvasActions";
+import {
+	normalizeRichText,
+	richTextToPlain,
+} from "../../schemas/objects/types/RichText";
 import { createDocSnapshotFromState } from "../../states/canvas/DocSnapshot";
 import { isSameCamera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -16,6 +20,7 @@ import {
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
 import { resolveRequestedSelection } from "../utils/resolveRequestedSelection";
+import { toggleTextEditFormat } from "../utils/toggleTextEditFormat";
 
 /**
  * Builds the root reducer for the canvas controller, closing over the canvas's
@@ -217,13 +222,60 @@ export const createCanvasReducer =
 				if (!state.textEditState) {
 					return state;
 				}
+				// The editor reports the body as it reads back off its surface, styling
+				// included, so the draft holds exactly what is on screen; a connector
+				// label holds only a plain string.
+				if (state.textEditState.kind === "shape") {
+					return {
+						...state,
+						textEditState: {
+							...state.textEditState,
+							text: normalizeRichText(action.text),
+						},
+					};
+				}
 				return {
 					...state,
 					textEditState: {
 						...state.textEditState,
-						text: action.text,
+						text: richTextToPlain(action.text),
 					},
 				};
+			}
+
+			case "UPDATE_TEXT_EDIT_SELECTION": {
+				if (state.textEditState?.kind !== "shape") {
+					return state;
+				}
+				return {
+					...state,
+					textEditState: {
+						...state.textEditState,
+						selection: action.selection,
+					},
+				};
+			}
+
+			case "TOGGLE_TEXT_FORMAT": {
+				const styled = toggleTextEditFormat(
+					state,
+					action.format,
+					registries.objectTextStyleDefaults,
+				);
+				if (styled === state) {
+					return state;
+				}
+				// The styling is written into the object right away (the session stays
+				// open), so the box it is measured into has to follow, and the change is
+				// its own undo entry rather than riding on the commit that ends the edit.
+				// One keystroke is one commit, which is why the commit is raised here and
+				// not in styleTextEditSelection, whose menu callers preview.
+				const resizedResult = reconcileObjectContentSizes(
+					{ ...styled, commitVersion: state.commitVersion + 1 },
+					state,
+					registries.objectContentResizer,
+				);
+				return recordHistoryIfNeeded(resizedResult, state);
 			}
 
 			case "END_TEXT_EDIT": {
@@ -275,6 +327,13 @@ export const createCanvasReducer =
 				return { ...state, contextMenuPosition: null };
 			}
 
+			case "CLOSE_MODAL": {
+				if (state.activeModal === null) {
+					return state;
+				}
+				return { ...state, activeModal: null };
+			}
+
 			default:
 				return state;
 		}
@@ -319,12 +378,10 @@ const recordHistoryIfNeeded = (
 	state: CanvasControllerState,
 	previousState: CanvasControllerState,
 ): CanvasControllerState => {
-	if (
-		!(
-			state.commitVersion > 0 &&
-			state.commitVersion !== previousState.commitVersion
-		)
-	) {
+	if (!(
+		state.commitVersion > 0 &&
+		state.commitVersion !== previousState.commitVersion
+	)) {
 		return state;
 	}
 

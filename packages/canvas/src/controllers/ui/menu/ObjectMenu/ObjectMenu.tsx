@@ -1,4 +1,4 @@
-import React, { memo, useRef } from "react";
+import React, { memo, useCallback, useRef, useState } from "react";
 
 import { useMenuSections } from "./hooks/useMenuSections";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
@@ -12,6 +12,7 @@ import { GroupMenu } from "./items/GroupMenu";
 import { KeepAspectRatioMenu } from "./items/KeepAspectRatioMenu";
 import { LineColorMenu } from "./items/LineColorMenu";
 import { LineStyleMenu } from "./items/LineStyleMenu";
+import { OpenReferenceMenu } from "./items/OpenReferenceMenu";
 import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import { TextFormatMenu } from "./items/TextFormatMenu";
@@ -24,7 +25,9 @@ import type {
 	ObjectMenuItem,
 	ObjectMenuPropertyUpdater,
 	ObjectMenuSection,
+	OpenReferenceHandler,
 } from "./ObjectMenuTypes";
+import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
@@ -32,12 +35,14 @@ import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot"
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
 	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onOpenReference?: OpenReferenceHandler;
 };
 
 const renderItem = (
 	item: ObjectMenuItem,
 	canvasState: CanvasControllerState,
 	onPropertyUpdate: ObjectMenuPropertyUpdater,
+	onOpenReference: OpenReferenceHandler | undefined,
 ): React.ReactNode => {
 	switch (item.type) {
 		case "arrowHead":
@@ -113,6 +118,19 @@ const renderItem = (
 			return <StackOrderMenu key="stackOrder" canvasState={canvasState} />;
 		case "group":
 			return <GroupMenu key="group" canvasState={canvasState} />;
+		case "openReference":
+			// The section is only built when the host supplies a handler, but a custom
+			// menu definition can name the item without one.
+			if (!onOpenReference) {
+				return null;
+			}
+			return (
+				<OpenReferenceMenu
+					key="openReference"
+					canvasState={canvasState}
+					onOpenReference={onOpenReference}
+				/>
+			);
 		case "custom":
 			return (
 				<item.component
@@ -129,6 +147,7 @@ const renderItem = (
 
 const buildSystemSections = (
 	canvasState: CanvasControllerState,
+	onOpenReference: OpenReferenceHandler | undefined,
 ): ObjectMenuSection[] => {
 	const systemSections: ObjectMenuSection[] = [];
 
@@ -163,6 +182,13 @@ const buildSystemSections = (
 		});
 	}
 
+	if (onOpenReference && resolveOpenReference(canvasState) !== null) {
+		systemSections.push({
+			id: "system-reference",
+			items: [{ type: "openReference" }],
+		});
+	}
+
 	return systemSections;
 };
 
@@ -170,20 +196,51 @@ const buildSystemSections = (
  * Floating menu displayed below the selected object.
  * Placed inside ScrollSyncedOverlay and follows canvas scrolling.
  */
+/**
+ * Keeps the press from taking the focus off an open text editor: the selection
+ * the text items style lives in that editor, and a blur would also drop the
+ * caret the user types back into. The controls that need the focus themselves —
+ * the font-size input, the sliders — keep the default.
+ */
+const keepTextEditorFocus = (event: React.PointerEvent<HTMLElement>): void => {
+	if (
+		(event.target as HTMLElement).closest("input, textarea, select") === null
+	) {
+		event.preventDefault();
+	}
+};
+
 const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
+	onOpenReference,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
-	const { shouldRender, x, y } = useObjectMenuPosition(canvasState, menuRef);
+	// Reported to the positioning hook, which holds the menu still while it is
+	// under the pointer — the flat format buttons resize an auto-sized text on
+	// every toggle, and the menu must not walk away between two presses.
+	// The dropdown panels are DOM children of the container, so moving onto one
+	// is not a leave.
+	const [isPointerOverMenu, setIsPointerOverMenu] = useState(false);
+	const handlePointerEnter = useCallback(() => setIsPointerOverMenu(true), []);
+	const handlePointerLeave = useCallback(() => setIsPointerOverMenu(false), []);
+	const { shouldRender, x, y } = useObjectMenuPosition(
+		canvasState,
+		menuRef,
+		isPointerOverMenu,
+	);
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
-	// None of the system sections acts on a text slot, so they all go while one is selected.
+	// None of the system sections acts on a text slot, so they all go while one is
+	// selected — and likewise while an editor is open, where the menu is there to
+	// style the text being edited.
 	const showSystemSections =
-		shouldRender && resolveSelectedTextSlot(canvasState) === null;
+		shouldRender &&
+		resolveSelectedTextSlot(canvasState) === null &&
+		canvasState.textEditState?.kind !== "shape";
 	const systemSections = showSystemSections
-		? buildSystemSections(canvasState)
+		? buildSystemSections(canvasState, onOpenReference)
 		: [];
 	const allSections = [...objectSections, ...systemSections];
 
@@ -206,7 +263,9 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				return;
 			}
 			renderedItemKeys.add(key);
-			sectionItems.push(renderItem(item, canvasState, onPropertyUpdate));
+			sectionItems.push(
+				renderItem(item, canvasState, onPropertyUpdate, onOpenReference),
+			);
 		});
 		return (
 			<ObjectMenuSectionRow key={section.id}>
@@ -217,7 +276,18 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 
 	return (
 		<ObjectMenuWrapper style={{ left: x, top: y }}>
-			<ObjectMenuContainer ref={menuRef} data-kind="menu" data-id="object-menu">
+			<ObjectMenuContainer
+				ref={menuRef}
+				data-kind="menu"
+				data-id="object-menu"
+				// Only while an editor is open, so a press outside one keeps behaving
+				// exactly as it did (a menu button taking the focus on click included).
+				onPointerDown={
+					canvasState.textEditState === null ? undefined : keepTextEditorFocus
+				}
+				onPointerEnter={handlePointerEnter}
+				onPointerLeave={handlePointerLeave}
+			>
 				{sections}
 			</ObjectMenuContainer>
 		</ObjectMenuWrapper>

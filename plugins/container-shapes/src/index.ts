@@ -1,17 +1,19 @@
-// UC1: container 図形の外部パッケージ。tier 2 の frame 系ベース実装を利用する。
-// ObjectDocDefinition / ObjectTypeDefinition は createFrameObjectDoc /
-// createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`)
-// が features/defaults から丸ごと導出するため、ObjectFactory / validateContainerDoc /
-// Mapper / validateContainerState は持たない。schema/** の headless 部品
-// (validateOptionalNumber / AUTO_COLOR / DEFAULT_FONT_FAMILY) は
-// `@jiscribe/canvas-sdk/doc`、presentation / controls / menu 部品
-// (createFrameObject / resolveAutoColor / PRECISION / ObjectMenuDropdownPanel /
-// useCanvasMessages 等) は `@jiscribe/canvas-sdk` 経由。selectionControls(ヘッダー高さコントロール、handle は
-// プレーン関数)と header-color メニューも移植済み。headless な parse 入口は ./doc
-// (containerDocPlugin)。containerDefinition は core の container 定義と同一構成
-// (意図的除外ゼロ)。i18n はプラグイン所有辞書(src/messages/containerMessages.ts)を canvas の
-// locale から resolveLocaleMessages で解決する(menuHeaderColor は core から撤去済み)。
-// (packages/canvas/docs/13-authoring-plugins.md 参照)。
+// UC1: external package of the container shape. It builds on the tier 2 frame-family
+// base implementation.
+// ObjectDocDefinition / ObjectTypeDefinition are derived wholesale from features/defaults
+// by createFrameObjectDoc / createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` /
+// `@jiscribe/canvas-sdk`), so there is no ObjectFactory / validateContainerDoc / Mapper /
+// validateContainerState. The headless parts of schema/** (validateOptionalNumber /
+// AUTO_COLOR / DEFAULT_FONT_FAMILY) come from `@jiscribe/canvas-sdk/doc`; the
+// presentation / controls / menu parts (createFrameObject / resolveAutoColor / PRECISION /
+// ObjectMenuDropdownPanel / useCanvasMessages and so on) come through
+// `@jiscribe/canvas-sdk`. selectionControls (the header-height control, whose handle is a
+// plain function) and the header-color menu have been ported too. The headless parse
+// entry point is ./doc (containerDocPlugin). containerDefinition matches the core
+// container definition exactly (nothing is left out on purpose). For i18n, the
+// plugin-owned dictionary (src/messages/containerMessages.ts) is resolved against the
+// canvas locale with resolveLocaleMessages (menuHeaderColor has been removed from core).
+// (See packages/canvas/docs/13-authoring-plugins.md.)
 export * from "./schema/ContainerDoc";
 export * from "./state/ContainerState";
 

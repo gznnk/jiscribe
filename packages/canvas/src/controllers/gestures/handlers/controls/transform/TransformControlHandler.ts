@@ -4,7 +4,6 @@ import {
 	calcFrameKeyPoints,
 	degreesToRadians,
 	isTransformedFrame,
-	roundToDecimal,
 } from "@jiscribe/geometry";
 
 import type { TransformAnchorType } from "./TransformAnchorType";
@@ -18,7 +17,6 @@ import {
 } from "./utils/multiSelectResizeBoundsCache";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import { MIN_GROUP_DIMENSION } from "../../../../../constants/groupDimensions";
-import { PRECISION } from "../../../../../constants/precision";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
@@ -270,10 +268,10 @@ export class TransformControlHandler extends ControlStrategy {
 		// Update the object/group with the new dimensions and center
 		const updatedFrame = {
 			...startFrame,
-			width: roundToDecimal(Math.abs(newWidth), PRECISION.SIZE),
-			height: roundToDecimal(Math.abs(newHeight), PRECISION.SIZE),
-			cx: roundToDecimal(newCenter.x, PRECISION.COORDINATE),
-			cy: roundToDecimal(newCenter.y, PRECISION.COORDINATE),
+			width: Math.abs(newWidth),
+			height: Math.abs(newHeight),
+			cx: newCenter.x,
+			cy: newCenter.y,
 			scaleX: newScaleX,
 			scaleY: newScaleY,
 		};

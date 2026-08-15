@@ -1,10 +1,12 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
+import type { RichText } from "../../schemas/objects/types/RichText";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
+import type { TextEditFormat } from "../utils/toggleTextEditFormat";
 
 /**
  * Gesture action - handles user gestures
@@ -59,11 +61,33 @@ export type CommandAction = {
 };
 
 /**
- * Update text edit action - updates text during editing
+ * Update text edit action - updates text during editing. The editor reports the
+ * whole edited body as it reads back off its surface, styling included
+ * (readEditableRichText), so the draft holds exactly what is on screen; a
+ * connector label editor reports a plain string, the only form its label holds.
  */
 export type UpdateTextEditAction = {
 	type: "UPDATE_TEXT_EDIT";
-	text: string;
+	text: RichText;
+};
+
+/**
+ * Update text edit selection action - records what the open editor has selected,
+ * so styling can address that stretch of the text (toggleTextEditFormat).
+ */
+export type UpdateTextEditSelectionAction = {
+	type: "UPDATE_TEXT_EDIT_SELECTION";
+	/** UTF-16 offsets into the text being edited; collapsed (start === end) for a plain caret. */
+	selection: { start: number; end: number };
+};
+
+/**
+ * Toggle text format action - turns bold / italic / underline on or off over the
+ * text the open editor has selected, leaving the rest of the slot as it is.
+ */
+export type ToggleTextFormatAction = {
+	type: "TOGGLE_TEXT_FORMAT";
+	format: TextEditFormat;
 };
 
 /**
@@ -118,6 +142,15 @@ export type CloseContextMenuAction = {
 };
 
 /**
+ * Close modal action - clears the open modal (export dialog / shortcut help).
+ * An action rather than a command because ShortcutHelpModal lists the command
+ * registry: a "close the modal" command would show up in that list.
+ */
+export type CloseModalAction = {
+	type: "CLOSE_MODAL";
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -128,8 +161,11 @@ export type CanvasAction =
 	| SetSelectionAction
 	| CommandAction
 	| UpdateTextEditAction
+	| UpdateTextEditSelectionAction
+	| ToggleTextFormatAction
 	| EndTextEditAction
 	| MenuPropertyUpdateAction
 	| PasteAction
 	| SetDocDefaultsAction
-	| CloseContextMenuAction;
+	| CloseContextMenuAction
+	| CloseModalAction;

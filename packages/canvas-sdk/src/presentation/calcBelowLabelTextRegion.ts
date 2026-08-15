@@ -1,24 +1,11 @@
 import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
 import type { TextSlot } from "@jiscribe/canvas/doc";
-import {
-	calcVisualLineCount,
-	measureTextWidth,
-} from "@jiscribe/canvas/unstable";
-import {
-	TEXT_BOX_PADDING_X,
-	TEXT_BOX_PADDING_Y,
-	TEXT_LINE_HEIGHT,
-} from "@jiscribe/canvas/unstable-doc";
 import type { Dimensions } from "@jiscribe/geometry";
 
-import { BELOW_LABEL_STYLE_DEFAULTS } from "../schema/belowLabelStyleDefaults";
+import { calcLabelBoxSize } from "./calcLabelBoxSize";
 
 /** Empty band between the bottom edge of the box and the top of the label. */
 export const BELOW_LABEL_GAP = 4;
-
-/** Label box width limits (content width + padding, in local px). */
-const BELOW_LABEL_MIN_WIDTH = 16;
-const BELOW_LABEL_MAX_WIDTH = 240;
 
 /**
  * What the label layout reads off the state: the untransformed box size plus the
@@ -33,10 +20,11 @@ type BelowLabelState = Dimensions & {
 
 /**
  * Places the label of a shape whose box is fully taken by its drawing: a box
- * sized from its own text, centered under the bounding box. Sizing the label from
- * the text instead of from the box is what keeps it legible when the drawing is
- * scaled down — the two are independent, exactly as a connector's label is
- * independent of its path.
+ * sized from its own text (calcLabelBoxSize), centered under the bounding box.
+ * Sizing the label from the text instead of from the box is what keeps it legible
+ * when the drawing is scaled down — the two are independent, exactly as a
+ * connector's label is independent of its path. The label has no maximum width:
+ * it runs sideways past the shape until the author breaks it themselves.
  *
  * Register as such a shape's `textRegion`, so the drawn label (TextOverlay) and
  * the in-place editor resolve the same rectangle; while editing, the grafted
@@ -51,36 +39,7 @@ type BelowLabelState = Dimensions & {
 export const calcBelowLabelTextRegion: ObjectTextRegionCalculator<
 	BelowLabelState
 > = (state, slotId) => {
-	const slot = state.text?.[slotId];
-	const content = slot?.text;
-	const text = Array.isArray(content) ? content.join("\n") : (content ?? "");
-
-	const font = {
-		fontSize: slot?.fontSize ?? BELOW_LABEL_STYLE_DEFAULTS.fontSize,
-		fontFamily: slot?.fontFamily ?? BELOW_LABEL_STYLE_DEFAULTS.fontFamily,
-		fontWeight: slot?.fontWeight ?? BELOW_LABEL_STYLE_DEFAULTS.fontWeight,
-	};
-
-	const lines = text === "" ? [""] : text.split("\n");
-	const longestLineWidth = lines.reduce(
-		(widest, line) => Math.max(widest, measureTextWidth(line, font)),
-		0,
-	);
-
-	const width = Math.min(
-		BELOW_LABEL_MAX_WIDTH,
-		Math.max(BELOW_LABEL_MIN_WIDTH, longestLineWidth + TEXT_BOX_PADDING_X * 2),
-	);
-
-	// Count the displayed lines the way the box lays them out, so a line that
-	// wraps at the max width reserves the same height while editing and after.
-	const visualLineCount = calcVisualLineCount(
-		text,
-		font,
-		width - TEXT_BOX_PADDING_X * 2,
-	);
-	const height =
-		visualLineCount * font.fontSize * TEXT_LINE_HEIGHT + TEXT_BOX_PADDING_Y * 2;
+	const { width, height } = calcLabelBoxSize(state.text, slotId);
 
 	return {
 		x: -width / 2,

@@ -1,6 +1,8 @@
 import { applyLabelPlacement } from "./applyLabelPlacement";
 import type { ConnectorLabelPlacement } from "../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import type { RichText } from "../../schemas/objects/types/RichText";
+import { isSameRichText } from "../../schemas/objects/types/RichText";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
@@ -8,8 +10,8 @@ import {
 } from "../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import {
-	readTextSlot,
-	writeTextSlot,
+	readRichTextSlot,
+	writeRichTextSlot,
 } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
 
@@ -92,33 +94,42 @@ function commitConnectorLabel(
 
 /**
  * Commits one text slot of a text-bearing shape (rect, etc.). The write-back is slot-generic:
- * a slot holding rows takes the edited text split on "\n" (writeTextSlot), and the other slots
- * as well as the slot order are left untouched.
+ * a slot holding rows takes the edited body split at its newlines (writeRichTextSlot), and the
+ * other slots as well as the slot order are left untouched.
  * If unchanged, it only closes the editing session and leaves commitVersion untouched.
  *
  * @param state - the current canvas controller state
  * @param target - the shape whose text is being updated
  * @param slotId - the slot being committed; a slot the shape does not have is discarded
- * @param text - the edited text to write back
+ * @param text - the edited body to write back, styling included
  * @returns a new state reflecting the text (if unchanged, only clears textEditState)
  */
 function commitTextSlot(
 	state: CanvasControllerState,
 	target: TextStyleState & ObjectState,
 	slotId: string,
-	text: string,
+	text: RichText,
 ): CanvasControllerState {
 	const slots = target.text;
 	if (slots === undefined || !(slotId in slots)) {
 		return clearTextEdit(state);
 	}
-	if (text === readTextSlot(slots, slotId)) {
+	const nextSlots = writeRichTextSlot(slots, slotId, text);
+	// Compared after the write rather than against the draft itself, so a
+	// difference the slot cannot hold (styling on the newline between two rows)
+	// does not commit a slot that reads back unchanged.
+	if (
+		isSameRichText(
+			readRichTextSlot(nextSlots, slotId),
+			readRichTextSlot(slots, slotId),
+		)
+	) {
 		return clearTextEdit(state);
 	}
 
 	const nextTarget = {
 		...target,
-		text: writeTextSlot(slots, slotId, text),
+		text: nextSlots,
 	};
 
 	return {

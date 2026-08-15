@@ -13,7 +13,7 @@ import { type RefObject, useEffect, useRef } from "react";
  *   (both bubble, so any focus move inside the canvas updates the flag).
  * - Reclaiming focus after it falls to body: when the focused element inside
  *   the canvas is removed from the DOM (a menu control re-rendered by
- *   undo/redo, the text-edit textarea closing, etc.), focus falls back to
+ *   undo/redo, the text-edit surface closing, etc.), focus falls back to
  *   body. The flag then still says "ours" while activeElement is body, and
  *   nothing else took focus — so it is safe to take it back. The reclaim is
  *   gated on document.hasFocus() so an embedded Canvas (VSCode webview iframe)

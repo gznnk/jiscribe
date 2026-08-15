@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
-import type { ObjectContentResizer } from "../../../states/registry/ObjectContentResizerRegistry";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type {
+	ObjectContentResizeContext,
+	ObjectContentResizer,
+} from "../../../states/registry/ObjectContentResizerRegistry";
 import { createTestRegistries } from "../createCanvasRegistries";
 import { applyObjectDefinition } from "../initializeObjectRegistry";
 
@@ -42,6 +46,39 @@ describe("applyObjectDefinition: contentResizer", () => {
 		expect(registries.objectContentResizer.get("measured")).toBe(
 			contentResizer,
 		);
+	});
+
+	it("hands the resizer of a type declaring text defaults those defaults on its context", () => {
+		const registries = createTestRegistries();
+		let seen: ObjectContentResizeContext | undefined;
+		applyObjectDefinition(
+			registries,
+			"measured",
+			defineObject({
+				...buildFakeDefinition("measured"),
+				features: { type: "measured", geometry: "rect", text: "body" },
+				defaults: {
+					type: "measured",
+					x: 0,
+					y: 0,
+					textAlign: "left",
+				} as ObjectTypeDefinition["defaults"],
+				contentResizer: (state, context) => {
+					seen = context;
+					return state;
+				},
+			}),
+		);
+
+		registries.objectContentResizer.get("measured")?.(
+			{ id: "m1", type: "measured" } as ObjectState,
+			{ fontFamily: "Noto Sans JP" },
+		);
+
+		expect(seen).toEqual({
+			fontFamily: "Noto Sans JP",
+			textStyleDefaults: { textAlign: "left" },
+		});
 	});
 
 	it("leaves types that declare nothing unregistered", () => {

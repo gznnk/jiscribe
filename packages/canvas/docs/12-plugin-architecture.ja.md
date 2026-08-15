@@ -2,9 +2,10 @@
 
 # プラグインアーキテクチャ
 
-図形をエンジンの外に置くための契約。7 つの基本型（`rect` / `ellipse` / `polyline` /
-`polygon` / `group` / `connector` / `svg`）以外の図形はすべて `plugins/` 配下の
-プラグインとして出荷しており、第三者が使うのと同じ公開 API だけで書いてある。
+図形をエンジンの外に置くための契約。8 つの基本型（`rect` / `ellipse` / `text` /
+`polyline` / `polygon` / `group` / `connector` / `svg`）以外の図形はすべて
+`plugins/` 配下のプラグインとして出荷しており、第三者が使うのと同じ公開 API だけで
+書いてある。
 出荷図形がそれで書けるなら、あなたの図形も書ける。
 
 ここでは契約を扱う。実際の手順（パッケージ構成・量産キット・配線チェックリスト）は
@@ -76,7 +77,7 @@ const result = parser.parse(text);
 
 `presetDefinitions` の既定は `builtinObjectDocDefinitions`（組み込み全型の Record）。
 組み込み型を自前の定義に差し替えたい場合は、その型を除いた `presetDefinitions` を
-渡し、`plugins` 側で足す。`parseCanvasText` は既定構成の互換皮として残っている。
+渡し、`plugins` 側で足す。`createCanvasParser()` を引数なしで呼べば既定構成（組み込み型のみ）になる。
 
 ## ライフサイクルと競合規則
 

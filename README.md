@@ -1,17 +1,30 @@
+> 🌐 日本語版: [README.ja.md](./README.ja.md)
+
 # Jiscribe
 
-An SVG diagram canvas engine for React — the editing core behind
-[jiscribe](https://beta.jiscribe.dev), extracted as a standalone library.
+An SVG diagram canvas engine for React.
 
 Jiscribe is document-first: a diagram is a plain JSON value (`.jis.json`) that
 you own, and the canvas is a controlled React component that renders and edits
-it. Shapes are not hardcoded into the core — flowchart, UML, sticky, markdown
-and the rest all ship as plugins built on the same public API you would use for
+it. A JSON Schema and an AI reference ship alongside it, so the format is one
+an LLM can read and write directly.
+
+Everything you need to draw is in the box. The core carries eight primitive
+types (`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` /
+`connector` / `svg`), and the richer shape sets — flowchart, UML, sticky,
+markdown, container, annotation, general pictograms — ship as plugins. The
+public API those plugins are built on is exactly the one you would use for
 your own.
 
+The jiscribe products are all built on this core.
+
+- **[Jiscribe Web](https://app.jiscribe.dev/)** — the editor, in your browser
+- **[Jiscribe for VSCode](https://marketplace.visualstudio.com/items?itemName=gznnk.jiscribe)**
+  — opens and edits `.jis.json` inside VSCode
+
 > **Status: pre-release.** The packages are not on npm yet and the public API
-> may still change. Follow the repository if you want to know when `0.1.0` is
-> tagged.
+> may still change. The first npm release will go out as a GitHub Release; watch
+> this repository under Custom → Releases to hear about it.
 
 ## Quick look
 
@@ -90,20 +103,25 @@ pnpm typecheck         # TypeScript across the workspace
 pnpm dep:check         # circular dependency check (madge)
 pnpm format            # Prettier
 pnpm test              # unit tests (vitest)
-pnpm test:e2e          # full Playwright e2e suite
+pnpm test:e2e          # every Playwright suite (core, each plugin, coexistence)
 ```
 
-Requirements: Node.js 22 (18+ works) and pnpm 10.
+Requirements: Node.js 22+ and pnpm 11.
 
 Design documentation for the engine lives in
-[`packages/canvas/docs/`](./packages/canvas/docs/README.md) — eleven documents
+[`packages/canvas/docs/`](./packages/canvas/docs/README.md) — 13 documents
 covering the design philosophy, architecture, data model, gesture system,
 command system, state update flow, external sync, theming, testing, style
-properties and shape design. Japanese versions are alongside as `*.ja.md`.
+properties, shape design, plugin architecture and plugin authoring. Japanese
+versions are alongside as `*.ja.md`.
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Issues and pull requests are welcome.
+**Issues are welcome; pull requests are accepted by prior agreement only** — open
+an issue first and wait for a reply saying the change is wanted. See
+[CONTRIBUTING.md](./CONTRIBUTING.md#how-contributions-work) for why, and for
+everything else you need to get a change merged.
+
 Note that most in-code comments and some design documents are written in
 Japanese; English is fine for issues and pull requests.
 

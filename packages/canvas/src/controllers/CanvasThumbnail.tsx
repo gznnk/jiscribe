@@ -15,7 +15,7 @@ import { darkCanvasTheme } from "../theme/themePresets";
 type CanvasThumbnailProps = {
 	/**
 	 * The CanvasDoc to display. As with `Canvas`, pass a valid doc that has gone
-	 * through `parseCanvasText` (two-stage validation); it is not re-validated
+	 * through `createCanvasParser` (two-stage validation); it is not re-validated
 	 * internally (see docs/01 principle 4).
 	 */
 	canvasDoc: CanvasDoc;
@@ -97,6 +97,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 			<PresentationRegistriesProvider
 				objectComponent={registries.objectComponent}
 				objectTextRegion={registries.objectTextRegion}
+				objectTextStyleDefaults={registries.objectTextStyleDefaults}
 				objectOutline={registries.objectOutline}
 				objectAnchorRegion={registries.objectAnchorRegion}
 				objectExtraConnectPoints={registries.objectExtraConnectPoints}

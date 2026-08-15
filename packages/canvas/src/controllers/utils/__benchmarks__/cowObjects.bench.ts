@@ -1,6 +1,10 @@
 import { bench, describe } from "vitest";
 
-import { createCowObjects, materializeObjects } from "../cowObjects";
+import {
+	copyObjectsRecord,
+	createCowObjects,
+	materializeObjects,
+} from "../cowObjects";
 
 type Item = { id: string; cx: number; cy: number };
 
@@ -85,5 +89,28 @@ describe(`materialize once per gesture (${OBJECT_COUNT} objects)`, () => {
 
 	bench("materializeObjects", () => {
 		materializeObjects(cowView);
+	});
+});
+
+// A path that needs a fresh writable Record (updateAffectedGroupBounds and the
+// re-measure pass both do) can be handed a view. Spreading one pays a Proxy trap
+// per key for the identical result.
+describe(`copy a view into a writable record (${OBJECT_COUNT} objects)`, () => {
+	const cowView = (() => {
+		const objects = createCowObjects(baseObjects);
+		for (const id of changedIds) {
+			objects[id] = { ...baseObjects[id], cx: baseObjects[id].cx + 1 };
+		}
+		return objects;
+	})();
+
+	bench("spread", () => {
+		const copied = { ...cowView };
+		copied[changedIds[0]] = baseObjects[changedIds[0]];
+	});
+
+	bench("copyObjectsRecord", () => {
+		const copied = copyObjectsRecord(cowView);
+		copied[changedIds[0]] = baseObjects[changedIds[0]];
 	});
 });

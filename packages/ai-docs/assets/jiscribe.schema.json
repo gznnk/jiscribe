@@ -2,7 +2,7 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"title": "CanvasDoc",
-	"description": "Root document format for a .jis.json file used by canvas.\n\nCoordinate system: every position and size (x/y, cx/cy, width/height, rx/ry, points, waypoints) is expressed in CSS pixels (px) within a single shared world-coordinate space. The origin (0,0) is the top-left corner; X increases to the right and Y increases downward (screen convention, NOT math convention). Angles (rotation) are in degrees and turn clockwise. There is no fixed canvas boundary and coordinates may be negative, but for a new document keep the primary content near the origin — roughly x in [0, 1600] and y in [0, 1200] — so it lands inside the initial viewport.",
+	"description": "Root document format for a .jis file used by canvas.\n\nCoordinate system: every position and size (x/y, cx/cy, width/height, rx/ry, points, waypoints) is expressed in CSS pixels (px) within a single shared world-coordinate space. The origin (0,0) is the top-left corner; X increases to the right and Y increases downward (screen convention, NOT math convention). Angles (rotation) are in degrees and turn clockwise. There is no fixed canvas boundary and coordinates may be negative, but for a new document keep the primary content near the origin — roughly x in [0, 1600] and y in [0, 1200] — so it lands inside the initial viewport.",
 	"type": "object",
 	"required": ["version", "root"],
 	"additionalProperties": false,
@@ -163,6 +163,12 @@
 					"$ref": "#/$defs/RecordDoc"
 				},
 				{
+					"$ref": "#/$defs/UmlPackageDoc"
+				},
+				{
+					"$ref": "#/$defs/UmlComponentDoc"
+				},
+				{
 					"$ref": "#/$defs/PolylineDoc"
 				},
 				{
@@ -317,6 +323,12 @@
 				},
 				{
 					"$ref": "#/$defs/RecordDoc"
+				},
+				{
+					"$ref": "#/$defs/UmlPackageDoc"
+				},
+				{
+					"$ref": "#/$defs/UmlComponentDoc"
 				},
 				{
 					"$ref": "#/$defs/PolylineDoc"
@@ -719,893 +731,160 @@
 		"DiamondDoc": {
 			"description": "Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond. Text is laid out within the full bounding box (not clipped to the diamond interior).",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"diamond\".",
 					"type": "string",
 					"const": "diamond"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 120",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"StadiumDoc": {
 			"description": "Stadium (pill) shape with fully rounded ends, typically used for start/end terminators in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a stadium. Text is laid out within the full bounding box.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"stadium\".",
 					"type": "string",
 					"const": "stadium"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 60",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"ParallelogramDoc": {
 			"description": "Parallelogram shape (top edge shifted right), typically used for input/output steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a parallelogram. Text is laid out with a small horizontal inset to stay inside the slanted sides.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"parallelogram\".",
 					"type": "string",
 					"const": "parallelogram"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"HexagonDoc": {
 			"description": "Hexagon shape with pointed left/right caps, typically used for preparation steps in flowcharts or emphasis nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a hexagon. Text is laid out with a small horizontal inset to stay inside the caps.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"hexagon\".",
 					"type": "string",
 					"const": "hexagon"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"CloudDoc": {
 			"description": "Cloud shape, typically used for external systems/networks in architecture diagrams or fuzzy concepts in brainstorming. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cloud. Text is laid out in a reduced central region inside the bumps, so give it generous width/height for longer text.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"cloud\".",
 					"type": "string",
 					"const": "cloud"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"DocumentDoc": {
 			"description": "Document shape (rect with a wavy bottom edge), typically used for reports/files in flowcharts or deliverables in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a document. Text is laid out above the bottom wave band.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"document\".",
 					"type": "string",
 					"const": "document"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"MultiDocumentDoc": {
 			"description": "Multi-document shape (three stacked document sheets), used for report batches / file sets in flowcharts. The front sheet sits at the bottom-left and the two back sheets step toward the top-right. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is confined to the front sheet, above its bottom wave band.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"multiDocument\".",
 					"type": "string",
 					"const": "multiDocument"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"ActorDoc": {
 			"description": "Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The stick figure fills the whole box. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"actor\".",
 					"type": "string",
 					"const": "actor"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"BrowserWindowDoc": {
 			"description": "Browser window shape (a frame with a title bar carrying three window buttons), typically used for web UIs and screens, e.g. to show which screen calls which service. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out in the content area below the title bar, so a landscape aspect ratio (e.g. 160x110) suits it.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"browserWindow\".",
 					"type": "string",
 					"const": "browserWindow"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 110",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"TerminalWindowDoc": {
 			"description": "Terminal window shape (the same frame as browserWindow, with a shell prompt in the title bar instead of the window buttons), typically used for CLIs, shell sessions and scripts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out in the content area below the title bar, so a landscape aspect ratio (e.g. 160x110) suits it.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"terminalWindow\".",
 					"type": "string",
 					"const": "terminalWindow"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 110",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
@@ -1796,730 +1075,128 @@
 		"ServerDoc": {
 			"description": "Server rack shape (a box divided into stacked units, each with a status light), typically used for hosts, nodes and long-running processes in architecture diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 90x110) looks best. Prefer \"package\" for something that is deployed rather than something that runs.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"server\".",
 					"type": "string",
 					"const": "server"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 90",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 110",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"GearDoc": {
 			"description": "Gear shape, typically used for services, batch jobs and daemons — work that runs on its own rather than being called through a UI. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A square aspect ratio (e.g. 100x100) looks best; a stretched box gives a stretched gear.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"gear\".",
 					"type": "string",
 					"const": "gear"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"PackageDoc": {
 			"description": "Isometric box shape, typically used for libraries, build artifacts and deployment units. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. The hexagon is a cube in isometric projection, so it reads as a cube only when the box is slightly taller than wide (e.g. 95x110); a square box widens it. Prefer \"server\" for something that runs rather than something that is deployed.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"package\".",
 					"type": "string",
 					"const": "package"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 95",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 110",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"FolderDoc": {
 			"description": "Folder shape (a tab on the top-left corner), typically used for directories and for grouping. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out below the tab. For a frame that other objects are placed inside, use a container shape instead — this one is a plain icon and does not hold children.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"folder\".",
 					"type": "string",
 					"const": "folder"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 130",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"FileDoc": {
 			"description": "File shape (a folded top-right corner), typically used for source files and configuration. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out below the fold, so a portrait aspect ratio (e.g. 100x120) looks best. Distinct from the flowchart \"document\" (wavy bottom edge, a flowchart step) and \"card\" (clipped top-left corner), and from \"note\", which folds the same corner but is a comment box about the diagram rather than a thing the diagram is about.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"file\".",
 					"type": "string",
 					"const": "file"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 120",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"EnvelopeDoc": {
 			"description": "Closed envelope shape, typically used for a single message or event. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A landscape aspect ratio (e.g. 120x84) looks best. Prefer \"queue\" for the buffer messages sit in rather than for one message.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"envelope\".",
 					"type": "string",
 					"const": "envelope"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 120",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 84",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"QueueDoc": {
 			"description": "Queue shape (a row of cells), typically used for job queues, message queues and topics. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. It carries no direction mark, so which end is the head is whatever the connectors say. A wide, short aspect ratio (e.g. 160x70) looks best.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"queue\".",
 					"type": "string",
 					"const": "queue"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 70",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"LockDoc": {
 			"description": "Padlock shape, typically used for authentication steps and protected resources. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best. Prefer \"shield\" for a boundary that other things sit behind.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"lock\".",
 					"type": "string",
 					"const": "lock"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
@@ -2893,10 +1570,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -2993,10 +1667,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -3087,10 +1758,7 @@
 					"$ref": "#/$defs/TextStyle/properties/fontColor"
 				},
 				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
 				},
 				"fontFamily": {
 					"$ref": "#/$defs/TextStyle/properties/fontFamily"
@@ -3121,1074 +1789,192 @@
 		"DbDoc": {
 			"description": "Database cylinder shape, typically used for data stores in architecture or ER diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cylinder. Text is laid out in the body region below the top cap ellipse (not the full bounding box).",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"db\".",
 					"type": "string",
 					"const": "db"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 120",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"StoredDataDoc": {
 			"description": "Stored-data shape (a rectangle whose left/right edges are arcs both bowing left, like a drum segment) — the generic storage symbol for files / caches that are not specifically a database (use DbDoc for databases). Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out between the two side arcs.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"storedData\".",
 					"type": "string",
 					"const": "storedData"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"SubroutineDoc": {
 			"description": "Predefined-process (subroutine) box: a rectangle with a vertical bar near each side, for calls to a defined sub-procedure. Uses the same rect-based geometry (x/y/width/height) as RectDoc; text is inset horizontally to stay between the bars.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"subroutine\".",
 					"type": "string",
 					"const": "subroutine"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"TrapezoidDoc": {
 			"description": "Trapezoid (wide top, narrow bottom), typically used for manual-operation steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a trapezoid.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"trapezoid\".",
 					"type": "string",
 					"const": "trapezoid"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"ManualInputDoc": {
 			"description": "Manual-input shape whose top edge slopes up toward the right, used for keyed/manual entry steps. Uses the same rect-based geometry (x/y/width/height) as RectDoc; text sits below the sloping top edge.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"manualInput\".",
 					"type": "string",
 					"const": "manualInput"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"CardDoc": {
 			"description": "Card: a rectangle with the top-left corner cut off, used for punched-card style data in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"card\".",
 					"type": "string",
 					"const": "card"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 120",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"DelayDoc": {
 			"description": "Delay shape: a rectangle whose right edge is a semicircular bulge, used for wait/delay steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"delay\".",
 					"type": "string",
 					"const": "delay"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"LoopLimitDoc": {
 			"description": "Loop-limit shape (a rectangle with both top corners cut off), marking the start of a loop in flowcharts; set \"flipY\": true to mark the loop end. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text sits below the top bevels.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"loopLimit\".",
 					"type": "string",
 					"const": "loopLimit"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"DisplayDoc": {
 			"description": "Display shape with a pointed left edge and a rounded right cap, used for output-to-display steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"display\".",
 					"type": "string",
 					"const": "display"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 80",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"ExtractDoc": {
 			"description": "The flowchart \"extract\" symbol — an upward triangle (apex at the top), used for extract/merge/marker nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc. The triangle fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and leaving the text out keeps a bare marker.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"extract\".",
 					"type": "string",
 					"const": "extract"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 120",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"CrossDoc": {
 			"description": "Cross (plus) marker, used to mark junctions and for emphasis. Uses the same rect-based geometry (x/y/width/height) as RectDoc. The arms fill the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long note, and leaving the text out keeps a bare marker.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"cross\".",
 					"type": "string",
 					"const": "cross"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
-					"type": "number",
-					"minimum": 1,
-					"default": 14
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
 		"OffPageConnectorDoc": {
 			"description": "Off-page connector: a home-plate pentagon (rectangle tapering to a downward point) marking a jump to another page/section of a flowchart, usually paired with an on-page connector by a short label. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a pentagon. Text sits in the rectangular band above the point.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
-			"additionalProperties": false,
+			"allOf": [
+				{
+					"$ref": "#/$defs/BoxShapeDoc"
+				}
+			],
 			"properties": {
-				"id": {
-					"description": "Unique identifier.",
-					"type": "string"
-				},
 				"type": {
 					"description": "Must be \"offPageConnector\".",
 					"type": "string",
 					"const": "offPageConnector"
-				},
-				"meta": {
-					"$ref": "#/$defs/MetaDoc"
-				},
-				"x": {
-					"description": "Left-edge X coordinate of the bounding box.",
-					"type": "number"
-				},
-				"y": {
-					"description": "Top-edge Y coordinate of the bounding box.",
-					"type": "number"
-				},
-				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 120",
-					"type": "number",
-					"minimum": 0
-				},
-				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 90",
-					"type": "number",
-					"minimum": 0
-				},
-				"stroke": {
-					"$ref": "#/$defs/StrokeStyle/properties/stroke"
-				},
-				"strokeWidth": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
-				},
-				"strokeDashType": {
-					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
-				},
-				"fill": {
-					"$ref": "#/$defs/FillStyle/properties/fill"
-				},
-				"text": {
-					"$ref": "#/$defs/TextStyle/properties/text"
-				},
-				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
-				},
-				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
-				},
-				"fontColor": {
-					"$ref": "#/$defs/TextStyle/properties/fontColor"
-				},
-				"fontSize": {
-					"$ref": "#/$defs/TextStyle/properties/fontSize"
-				},
-				"fontFamily": {
-					"$ref": "#/$defs/TextStyle/properties/fontFamily"
-				},
-				"fontWeight": {
-					"$ref": "#/$defs/TextStyle/properties/fontWeight"
-				},
-				"fontStyle": {
-					"$ref": "#/$defs/TextStyle/properties/fontStyle"
-				},
-				"textDecoration": {
-					"$ref": "#/$defs/TextStyle/properties/textDecoration"
-				},
-				"rotation": {
-					"$ref": "#/$defs/TransformStyle/properties/rotation"
-				},
-				"flipX": {
-					"$ref": "#/$defs/TransformStyle/properties/flipX"
-				},
-				"flipY": {
-					"$ref": "#/$defs/TransformStyle/properties/flipY"
-				},
-				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},
@@ -4254,8 +2040,19 @@
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Stereotype string, conventionally written between guillemets (\"<<interface>>\"). Default: \"\"",
-									"type": "string",
+									"description": "Stereotype string, conventionally written between guillemets (\"<<interface>>\"). Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "array",
+											"items": {
+												"$ref": "#/$defs/TextRun"
+											},
+											"minItems": 1
+										}
+									],
 									"default": ""
 								},
 								"textAlign": {
@@ -4306,8 +2103,19 @@
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Title string. Default: \"\"",
-									"type": "string",
+									"description": "Title string. Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "array",
+											"items": {
+												"$ref": "#/$defs/TextRun"
+											},
+											"minItems": 1
+										}
+									],
 									"default": ""
 								},
 								"textAlign": {
@@ -4360,10 +2168,21 @@
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Attribute rows, one array entry per line (no newlines inside an entry). Default: []",
+									"description": "Attribute rows, one array entry per line (no newlines inside an entry). Write a plain string unless part of the row has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the row. Default: []",
 									"type": "array",
 									"items": {
-										"type": "string"
+										"anyOf": [
+											{
+												"type": "string"
+											},
+											{
+												"type": "array",
+												"items": {
+													"$ref": "#/$defs/TextRun"
+												},
+												"minItems": 1
+											}
+										]
 									},
 									"default": []
 								},
@@ -4415,10 +2234,21 @@
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Operation rows, one array entry per line (no newlines inside an entry). Default: []",
+									"description": "Operation rows, one array entry per line (no newlines inside an entry). Write a plain string unless part of the row has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the row. Default: []",
 									"type": "array",
 									"items": {
-										"type": "string"
+										"anyOf": [
+											{
+												"type": "string"
+											},
+											{
+												"type": "array",
+												"items": {
+													"$ref": "#/$defs/TextRun"
+												},
+												"minItems": 1
+											}
+										]
 									},
 									"default": []
 								},
@@ -4464,6 +2294,198 @@
 							}
 						}
 					}
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"UmlPackageDoc": {
+			"description": "UML package shape (a rectangle with a tab on its top-left corner), typically used for namespaces, modules and layers in UML package diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The rect is the outer bounds of the whole silhouette, tab included, and the text is laid out in the body below the tab. Distinct from \"package\", which is an isometric box for a build artifact or deployment unit, and from \"container\", which actually holds the objects placed inside it — this one is a plain shape with no children.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"umlPackage\".",
+					"type": "string",
+					"const": "umlPackage"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 108",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"auto\" (overrides the shared default \"transparent\").",
+					"type": "string",
+					"default": "auto"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (overrides the shared default \"normal\").",
+					"type": "string",
+					"default": "bold"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"UmlComponentDoc": {
+			"description": "UML 2 component shape (a rectangle carrying the component symbol in its top-right corner), typically used for replaceable parts of a system in UML component diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out over the whole box, so keep the name short enough to clear the symbol, or widen the box. Prefer \"record\" with a <<component>> stereotype when the part needs compartments of its own.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"umlComponent\".",
+					"type": "string",
+					"const": "umlComponent"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 90",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"auto\" (overrides the shared default \"transparent\").",
+					"type": "string",
+					"default": "auto"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (overrides the shared default \"normal\").",
+					"type": "string",
+					"default": "bold"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -5023,7 +3045,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / container / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / container / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,
@@ -5129,6 +3151,10 @@
 				"description": {
 					"description": "Arbitrary description.",
 					"type": "string"
+				},
+				"reference": {
+					"description": "Relative path to another file this object refers to. Opened by the host application; jiscribe itself does not resolve it.",
+					"type": "string"
 				}
 			},
 			"additionalProperties": true
@@ -5175,8 +3201,19 @@
 			"type": "object",
 			"properties": {
 				"text": {
-					"description": "Text content to display. Default: \"\"",
-					"type": "string",
+					"description": "Text content to display. Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "array",
+							"items": {
+								"$ref": "#/$defs/TextRun"
+							},
+							"minItems": 1
+						}
+					],
 					"default": ""
 				},
 				"textAlign": {
@@ -5230,6 +3267,36 @@
 				}
 			}
 		},
+		"TextRun": {
+			"description": "One stretch of a text and the typography it alone is drawn with. Every field left out is drawn with the shape's (or the slot's) own typography, so a run carries the difference and not the whole style. There is no alignment here: it places the whole text, not part of it.",
+			"type": "object",
+			"required": ["text"],
+			"additionalProperties": false,
+			"properties": {
+				"text": {
+					"description": "The characters of this stretch of the text.",
+					"type": "string"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				}
+			}
+		},
 		"TransformStyle": {
 			"description": "Transformation properties (rotation, flip).",
 			"type": "object",
@@ -5253,6 +3320,93 @@
 					"description": "Lock aspect ratio during resize. Default: false",
 					"type": "boolean",
 					"default": false
+				}
+			}
+		},
+		"BoxShapeDoc": {
+			"description": "Shared structure of the plain box shapes: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins `type` with a const.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"type": "string"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
 				}
 			}
 		},

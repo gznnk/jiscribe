@@ -1,13 +1,18 @@
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
- * Definition-only command for image export: registers the label so menus
- * resolve it from the registry like any other command, while execution stays
- * a callback (the export dialog reads the live SVG DOM — see useCanvasExport).
- * No shortcuts / no category, so it does not appear in the shortcut help.
+ * Opens the image export dialog. `execute` only raises the dialog; the export
+ * itself stays a callback (it reads the live SVG DOM — see useCanvasExport's
+ * submit handler). No shortcuts / no category, so it does not appear in the
+ * shortcut help.
  */
-export const ExportCommand: Command = {
+export const ExportCommand: ExecutableCommand = {
 	id: "export",
 	label: "Export…",
 	canExecute: () => true,
+
+	execute: (state) =>
+		state.activeModal === "export"
+			? state
+			: { ...state, activeModal: "export" },
 };

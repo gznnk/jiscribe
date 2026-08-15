@@ -55,11 +55,15 @@ export const useKeyboardShortcuts = ({
 		}
 
 		const handleKeyDown = (event: KeyboardEvent) => {
-			// Disabled while focus is in input fields and similar elements
+			// Disabled while focus is in a field the keystroke belongs to: the form
+			// elements, and the editable surface a shape's text is edited on — which
+			// is a div, so it is recognized by being editable rather than by its tag
+			// (isContentEditable is true inside the editable host as well).
 			if (
 				event.target instanceof HTMLInputElement ||
 				event.target instanceof HTMLTextAreaElement ||
-				event.target instanceof HTMLSelectElement
+				event.target instanceof HTMLSelectElement ||
+				(event.target instanceof HTMLElement && event.target.isContentEditable)
 			) {
 				return;
 			}

@@ -19,11 +19,10 @@ const GROWTH_WORD_COUNT = 40;
 const ZOOM_STEP_LIMIT = 8;
 
 /**
- * Words put in a connector label to push it past the bottom edge. The label
- * wraps at its own maximum width and each of these takes more than half of it,
- * so the count is also the line count.
+ * Lines put in a connector label to push it past the bottom edge. The label
+ * breaks only where the author typed a newline, so the count is the line count.
  */
-const LABEL_WORD_COUNT = 20;
+const LABEL_LINE_COUNT = 20;
 
 /** Midpoint of a connector's first segment, which is always a point on the line. */
 async function firstSegmentMidpoint(
@@ -251,8 +250,8 @@ test.describe("text edit reveal", () => {
 	}) => {
 		// A connector label suppresses the browser's focus scrolling the same way a
 		// shape's editor does, so the caret report is the only thing that can bring
-		// it back on screen. The label wraps at its own maximum width, so it grows
-		// downward rather than sideways.
+		// it back on screen. The text typed below is broken into lines, so the label
+		// grows downward rather than sideways.
 		await canvas.drawShape("Rectangle", { x: 200, y: 620 }, { x: 360, y: 700 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 700, y: 620 }, { x: 860, y: 700 });
@@ -267,13 +266,13 @@ test.describe("text edit reveal", () => {
 		const beforeMinY = await viewBoxMinY(canvas);
 		const onLine = await firstSegmentMidpoint(canvas, connectorId);
 
-		// Each word takes more than half the label's maximum width, so it occupies a
-		// line of its own and the box grows a line height per word. The label is
-		// centred on the double-clicked point, so half of that growth goes downward.
+		// Each word is on a line of its own, so the box grows a line height per word.
+		// The label is centred on the double-clicked point, so half of that growth
+		// goes downward.
 		await canvas.typeTextAt(onLine, "");
 		await canvas
-			.textArea()
-			.fill(new Array(LABEL_WORD_COUNT).fill("Telecommunications").join(" "));
+			.textEditorSurface()
+			.fill(new Array(LABEL_LINE_COUNT).fill("Telecommunications").join("\n"));
 
 		await expect
 			.poll(() => viewBoxMinY(canvas), {
@@ -323,7 +322,7 @@ test.describe("text edit reveal", () => {
 		const before = await canvas.getViewBox();
 		await canvas.typeTextAt(center, "label");
 		await expect
-			.poll(() => canvas.textArea().inputValue(), {
+			.poll(() => canvas.textEditorText(), {
 				message: "the typed label reaches the editor",
 			})
 			.toBe("label");

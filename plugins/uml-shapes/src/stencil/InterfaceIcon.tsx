@@ -9,8 +9,8 @@ export const InterfaceIcon = createStencilIcon(
 		<UmlIconTitleDivider />
 		<circle
 			cx="12"
-			cy="14.6"
-			r="3.4"
+			cy="15"
+			r="3.6"
 			fill="none"
 			stroke="currentColor"
 			strokeWidth="1.8"

@@ -25,7 +25,7 @@ export const embedCanvasSourceInPng = async (
 /**
  * Extracts the `.jis.json` text embedded by {@link embedCanvasSourceInPng}.
  * Returns the raw JSON text (not a parsed doc): a PNG is external input, so
- * hosts must run it through `parseCanvasText` (two-stage validation at the
+ * hosts must run it through a `createCanvasParser` parser (two-stage validation at the
  * boundary) before handing it to Canvas. Returns null when the Blob is not a
  * PNG or carries no jiscribe source.
  */

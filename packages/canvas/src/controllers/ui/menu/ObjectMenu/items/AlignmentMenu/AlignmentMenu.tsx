@@ -4,6 +4,7 @@ import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
@@ -63,7 +64,8 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		isOpen,
 	);
 
-	const slot = getSelectedOrFirstTextSlot(canvasState);
+	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
 	const textAlign = slot?.textAlign ?? "left";
 	const verticalAlign = slot?.verticalAlign ?? "middle";
 

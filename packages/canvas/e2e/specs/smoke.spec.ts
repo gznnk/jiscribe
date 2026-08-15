@@ -2,14 +2,14 @@ import { test, expect } from "../fixtures";
 import { selectors } from "../support/selectors";
 
 test.describe("smoke", () => {
+	// Core presets only: what a plugin contributes is its own suite's business, and
+	// whether the harness pins it is the harness's.
 	test("shows the toolbar", async ({ canvas }) => {
 		for (const tool of [
 			"Rectangle",
 			"Ellipse",
 			"Polyline",
 			"Polygon",
-			"Sticky",
-			"Markdown",
 		] as const) {
 			await expect(
 				canvas.page.locator(selectors.toolButton(tool)),

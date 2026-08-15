@@ -21,7 +21,7 @@ import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
  * Both kinds resolve label / shortcut / enabled from the command registry;
  * they differ only in execution wiring: "command" dispatches via the gesture
  * system (data-part), "callback" invokes callbacks[commandId] directly
- * (definition-only commands such as paste / export).
+ * (definition-only commands such as paste).
  */
 type CommandMenuItem =
 	| { type: "command"; commandId: string }
@@ -70,7 +70,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{ type: "separator" },
 		{ type: "command", commandId: "resetConnectorRoute" },
 		{ type: "separator" },
-		{ type: "callback", commandId: "export" },
+		{ type: "command", commandId: "export" },
 	];
 
 	return (

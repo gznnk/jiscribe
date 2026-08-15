@@ -1,11 +1,11 @@
-// flowchart / container / markdown / sticky / uml / general / annotation 図形は
+// The flowchart / container / markdown / sticky / uml / general / annotation shapes are
 // @jiscribe/plugin-flowchart-shapes / @jiscribe/plugin-container-shapes /
 // @jiscribe/plugin-markdown-shape / @jiscribe/plugin-sticky-shape /
 // @jiscribe/plugin-uml-shapes / @jiscribe/plugin-general-shapes /
-// @jiscribe/plugin-annotation-shapes から供給する
-// (packages/canvas/docs/13-authoring-plugins.md)。この Webview 側は React を
-// 含む Canvas 一式を既に読み込んでいるので、プラグインの通常エントリ (./index)
-// を使ってよい。`plugins` は index.tsx の `initialConfig` とも共有する。
+// @jiscribe/plugin-annotation-shapes
+// (packages/canvas/docs/13-authoring-plugins.md). This webview already loads the whole
+// Canvas, React included, so it may use each plugin's regular entry point (./index).
+// `plugins` is shared with the `initialConfig` in index.tsx.
 import { createCanvasParser } from "@jiscribe/canvas/doc";
 import { annotationPlugin } from "@jiscribe/plugin-annotation-shapes";
 import { containerPlugin } from "@jiscribe/plugin-container-shapes";

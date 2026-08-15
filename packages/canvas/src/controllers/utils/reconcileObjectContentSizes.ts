@@ -1,3 +1,4 @@
+import { collectCowChangedKeys, copyObjectsRecord } from "./cowObjects";
 import { updateAffectedGroupBounds } from "./updateAffectedGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
@@ -28,12 +29,17 @@ const holdsSameTextSlots = (
  *
  * Deliberately ungated: a stale box clips the text it holds, so there is no
  * transition during which one is acceptable — including the uncommitted frames
- * of a font-size drag. Running it every frame costs a registry lookup and a
- * reference comparison per object, because objects holding the slots they
- * already held are skipped ({@link holdsSameTextSlots}) — unless the theme's family
- * changed, which invalidates every measurement at once regardless of what the
- * transition touched. A state where nothing needed re-measuring comes back
- * unchanged (same reference), so re-running is free.
+ * of a font-size drag. What keeps that affordable per frame is
+ * {@link collectCowChangedKeys}: while a drag holds the map as a copy-on-write
+ * view, every object the transition did not write is the same reference it
+ * already was, so only the written IDs are inspected and the pass costs
+ * O(moved objects) rather than O(all objects). Maps that share no backing
+ * Record fall back to the full scan, where objects holding the slots they
+ * already held are skipped by the same reference comparison
+ * ({@link holdsSameTextSlots}) — as does a changed theme family, which
+ * invalidates every measurement at once regardless of what the transition
+ * touched. A state where nothing needed re-measuring comes back unchanged (same
+ * reference), so re-running is free.
  *
  * @param state - The transition's resulting state; its `docDefaults.fontFamily` is the family measured with
  * @param previousState - The state the transition started from, supplying both the slots compared against and the previous theme family
@@ -48,29 +54,51 @@ export const reconcileObjectContentSizes = (
 	const fontFamily = state.docDefaults.fontFamily;
 	const isThemeFontUnchanged =
 		fontFamily === previousState.docDefaults.fontFamily;
+	// A new family re-measures every object at once, so the narrowed set says
+	// nothing about what needs re-measuring and the full scan is the only correct
+	// pass.
+	const changedIds = isThemeFontUnchanged
+		? collectCowChangedKeys(state.objects, previousState.objects)
+		: null;
+
 	let resizedObjects: Record<string, ObjectState> | null = null;
 	const resizedIds: string[] = [];
 
-	for (const object of Object.values(state.objects)) {
+	const reconcileObject = (object: ObjectState): void => {
 		const resizeToContent = contentResizer.get(object.type);
 		if (!resizeToContent) {
-			continue;
+			return;
 		}
 		if (
 			isThemeFontUnchanged &&
 			holdsSameTextSlots(previousState.objects[object.id], object)
 		) {
-			continue;
+			return;
 		}
 		const resized = resizeToContent(object, { fontFamily });
 		if (resized === object) {
-			continue;
+			return;
 		}
 		if (!resizedObjects) {
-			resizedObjects = { ...state.objects };
+			resizedObjects = copyObjectsRecord(state.objects);
 		}
 		resizedObjects[object.id] = resized;
 		resizedIds.push(object.id);
+	};
+
+	if (changedIds) {
+		for (const id of changedIds) {
+			// An ID the previous map added and this one never had resolves to
+			// nothing; there is no object to re-measure then.
+			const object = state.objects[id];
+			if (object) {
+				reconcileObject(object);
+			}
+		}
+	} else {
+		for (const object of Object.values(state.objects)) {
+			reconcileObject(object);
+		}
 	}
 
 	if (!resizedObjects) {

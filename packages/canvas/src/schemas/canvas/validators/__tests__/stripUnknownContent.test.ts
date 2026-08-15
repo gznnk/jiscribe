@@ -5,7 +5,7 @@ import { objectDocValidatorRegistry } from "../../../registry/ObjectDocValidator
 import { stripUnknownContent } from "../stripUnknownContent";
 
 // stripUnknownContent decides known/unknown via the registry, so set up the same
-// precondition as production (parseCanvasText guarantees initialization).
+// precondition as production (the parser hands it a populated one).
 beforeAll(() => {
 	initializeObjectDocValidatorRegistry();
 });

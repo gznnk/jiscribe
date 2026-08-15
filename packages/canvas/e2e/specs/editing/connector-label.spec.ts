@@ -16,8 +16,8 @@ import { selectors } from "../../support/selectors";
  * - A styled label keeps its style when emptied and is restored by typing again
  *   (only the style is kept; the position belonged to the removed label and is
  *   not carried over)
- * - A wrapping label has the same height before committing (the real textarea
- *   layout) and after committing (the measurement-based wrap simulation)
+ * - A multi-line label has the same height before committing (the real textarea
+ *   layout) and after committing (the measured line boxes)
  */
 
 type Vec = { x: number; y: number };
@@ -186,10 +186,10 @@ test.describe("connector label", () => {
 		// Re-edit: a double click on the label box prefills the existing text.
 		await labelBoxOf(canvas, connectorId).dblclick();
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
-		await expect(canvas.textArea()).toHaveValue("Yes");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
 
 		// Remove: committing an empty string drops the whole label.
-		await canvas.textArea().fill("");
+		await canvas.textEditorSurface().fill("");
 		await canvas.commitText();
 		await expect(labelLocator).toHaveCount(0);
 	});
@@ -272,8 +272,8 @@ test.describe("connector label", () => {
 
 		// Remove it by committing an empty string from the label box.
 		await labelBoxOf(canvas, connectorId).dblclick();
-		await expect(canvas.textArea()).toHaveValue("Yes");
-		await canvas.textArea().fill("");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
+		await canvas.textEditorSurface().fill("");
 		await canvas.commitText();
 		await expect(labelLocator).toHaveCount(0);
 
@@ -446,7 +446,7 @@ test.describe("connector label", () => {
 		const screen = canvas.toScreen(mid);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
-		await canvas.textArea().fill("Mid");
+		await canvas.textEditorSurface().fill("Mid");
 		await canvas.commitText();
 		await expect(labelBoxOf(canvas, connectorId)).toContainText("Mid");
 
@@ -500,11 +500,11 @@ test.describe("connector label", () => {
 		const screen = canvas.toScreen(mid);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
-		await expect(canvas.textArea()).toHaveValue("Yes");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
 
 		// It can be rewritten and committed on the spot (it did not turn into a
 		// creation or a removal).
-		await canvas.textArea().fill("No");
+		await canvas.textEditorSurface().fill("No");
 		await canvas.commitText();
 		await expect(labelBoxOf(canvas, connectorId)).toContainText("No");
 		expect(
@@ -531,10 +531,10 @@ test.describe("connector label", () => {
 		await canvas.page.keyboard.press("Enter");
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
 		// The existing label is prefilled.
-		await expect(canvas.textArea()).toHaveValue("Yes");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
 
 		// Escape cancels. Rewritten text is discarded and the original label stays.
-		await canvas.textArea().fill("Changed");
+		await canvas.textEditorSurface().fill("Changed");
 		await canvas.cancelText();
 		await expect(labelBoxOf(canvas, connectorId)).toContainText("Yes");
 	});
@@ -643,8 +643,8 @@ test.describe("connector label", () => {
 		// Re-edit from the label box and change only the text (not an empty string,
 		// so the label should be kept).
 		await labelBox.dblclick();
-		await expect(canvas.textArea()).toHaveValue("Yes");
-		await canvas.textArea().fill("No");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
+		await canvas.textEditorSurface().fill("No");
 		await canvas.commitText();
 
 		await expect(labelBox).toContainText("No");
@@ -742,8 +742,8 @@ test.describe("connector label", () => {
 		// Edit from the label box, empty the text and commit -> the label visually
 		// disappears (hidden when text="").
 		await labelBox.dblclick();
-		await expect(canvas.textArea()).toHaveValue("Yes");
-		await canvas.textArea().fill("");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
+		await canvas.textEditorSurface().fill("");
 		await canvas.commitText();
 		await expect(labelBox).toHaveCount(0);
 
@@ -758,7 +758,7 @@ test.describe("connector label", () => {
 		const screen = canvas.toScreen(rePoint);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
 		await canvas.waitForTextEditor();
-		await expect(canvas.textArea()).toHaveValue("");
+		await expect(canvas.textEditorSurface()).toHaveValue("");
 		await canvas.page.keyboard.type("Back");
 		await canvas.commitText();
 
@@ -806,8 +806,8 @@ test.describe("connector label", () => {
 		// Start editing from the label box and rewrite the text (not committed yet).
 		await labelBox.dblclick();
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
-		await expect(canvas.textArea()).toHaveValue("Yes");
-		await canvas.textArea().fill("No");
+		await expect(canvas.textEditorSurface()).toHaveValue("Yes");
+		await canvas.textEditorSurface().fill("No");
 
 		// Double click on the line without committing -> it is a tap outside the
 		// label, so "No" is committed and the editor does not reopen (a double click
@@ -865,31 +865,27 @@ test.describe("connector label", () => {
 		).toBeVisible();
 	});
 
-	test("keeps the committed height equal to the editing height for a label that wraps on words", async ({
+	test("keeps the committed height equal to the editing height for a label of several lines", async ({
 		canvas,
 	}) => {
 		// While editing, the height comes from the real textarea layout
-		// (scrollHeight); after committing, from the measurement-based wrap
-		// simulation. If the two disagree, the label is clipped by one line the
-		// moment it is committed.
+		// (scrollHeight); after committing, from the measured line boxes. If the two
+		// disagree, the label is clipped by one line the moment it is committed.
 		const connectorId = await setupConnector(canvas);
 		const onLine = await pointOnConnector(canvas, connectorId);
 
-		// Three words, each taking more than half of the maximum width (240px = 228px
-		// of text width). Only one word fits per line, so the display is 3 lines,
-		// while a ratio estimate of total width / usable width only gives 2 lines
-		// (the line the ratio estimate misses).
+		// The label breaks only where the author typed a newline, so these are
+		// exactly 3 lines however wide the words are.
 		const word = "Telecommunications";
-		const text = `${word} ${word} ${word}`;
+		const text = `${word}\n${word}\n${word}`;
 		await canvas.typeTextAt(onLine, text);
-		await expect(canvas.textArea()).toHaveValue(text);
+		await expect(canvas.textEditorSurface()).toHaveValue(text);
 
-		// Read the height once wrapping happened (= it became 3 lines).
 		// One line is 16 x 1.5 + padding 4 = 28px, so 3 lines exceed 70px.
 		const editorBox = canvas.page.locator(selectors.textEditor);
 		await expect
 			.poll(async () => (await editorBox.boundingBox())?.height ?? 0, {
-				message: "the label being edited should wrap into 3 lines",
+				message: "the label being edited should take 3 lines",
 			})
 			.toBeGreaterThan(70);
 		const editorHeight = (await editorBox.boundingBox())?.height ?? 0;

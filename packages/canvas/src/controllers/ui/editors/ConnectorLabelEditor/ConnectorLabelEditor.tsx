@@ -15,7 +15,31 @@ import { resolveAutoColor } from "../../../../presentations/objects/utils/resolv
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
-import type { CaretLocalRect } from "../utils/readCaretLocalRect";
+import type { CaretLocalRect, CaretTarget } from "../utils/readCaretLocalRect";
+
+/**
+ * Opens the label editor the way an in-place editor opens: focused, with the
+ * caret at the end of what is already there. The caret is placed before the focus
+ * so the reveal that rides on the focus event already sees the end of the text.
+ */
+const focusTextAreaAtEnd = (textArea: HTMLTextAreaElement): void => {
+	textArea.setSelectionRange(textArea.value.length, textArea.value.length);
+	// preventScroll: the browser would otherwise reveal the textarea by scrolling
+	// the overflow-hidden ancestors, an offset the canvas camera knows nothing
+	// about. Revealing is useRevealTextEditCaret's job.
+	textArea.focus({ preventScroll: true });
+};
+
+/** Where the textarea draws its caret: the moving end of its selection, in its own value. */
+const readTextAreaCaretTarget = (
+	textArea: HTMLTextAreaElement,
+): CaretTarget => ({
+	caretIndex:
+		textArea.selectionDirection === "backward"
+			? textArea.selectionStart
+			: textArea.selectionEnd,
+	text: textArea.value,
+});
 
 type ConnectorLabelEditorProps = {
 	/** Label anchor (world coordinates on the route). The editor is centered here. */
@@ -56,7 +80,8 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	const background = resolveLabelFill(fill);
 	const borderColor = resolveAutoColor(stroke, "ink");
 
-	// Width is clamped by measurement (horizontal expansion). Height follows the textarea's scrollHeight.
+	// Width is the measured text's, so the box grows sideways as it is typed and
+	// the textarea never wraps. Height follows the textarea's scrollHeight.
 	const { width } = calcConnectorLabelBox(
 		text,
 		{ fontSize, fontFamily, fontWeight },
@@ -74,19 +99,22 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		[anchor.x, anchor.y],
 	);
 
-	const { textAreaRef, wrapperRef, reportCaret } = useCaretReporter({
-		onCaretMove,
-		calcCaretWorldBox,
-	});
+	const { surfaceRef, wrapperRef, reportCaret } =
+		useCaretReporter<HTMLTextAreaElement>({
+			onCaretMove,
+			calcCaretWorldBox,
+			focusAtEnd: focusTextAreaAtEnd,
+			readCaretTarget: readTextAreaCaretTarget,
+		});
 
 	// Update the height to match the text amount (the width is given to the wrapper via measurement).
 	useLayoutEffect(() => {
-		const el = textAreaRef.current;
+		const el = surfaceRef.current;
 		if (!el) {
 			return;
 		}
 		fitTextAreaHeight(el, fontSize);
-	}, [text, width, fontSize, fontWeight, textAreaRef]);
+	}, [text, width, fontSize, fontWeight, surfaceRef]);
 
 	// After the height fit above, so the caret is measured against the laid-out box.
 	useLayoutEffect(reportCaret);
@@ -108,10 +136,10 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		(e: React.PointerEvent<HTMLDivElement>) => {
 			if (e.target === e.currentTarget) {
 				e.preventDefault();
-				textAreaRef.current?.focus({ preventScroll: true });
+				surfaceRef.current?.focus({ preventScroll: true });
 			}
 		},
-		[textAreaRef],
+		[surfaceRef],
 	);
 
 	return (
@@ -135,7 +163,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 				data-gesture="native-wheel"
 				value={text}
 				style={{ color, fontSize, fontFamily, fontWeight }}
-				ref={textAreaRef}
+				ref={surfaceRef}
 				onChange={handleChange}
 				onKeyDown={handleKeyDown}
 				// A caret move that changes nothing else (Home, an arrow key, a click

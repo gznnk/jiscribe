@@ -1,7 +1,9 @@
 import { describe, expect, it, beforeEach } from "vitest";
 
+import { PRECISION } from "../../../constants/precision";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
+import type { ConnectorDoc } from "../../../schemas/objects/connections/connector/ConnectorDoc";
 import type { GroupDoc } from "../../../schemas/objects/primitives/group/GroupDoc";
 import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import {
@@ -329,6 +331,58 @@ describe("CanvasMapper", () => {
 			expect(g2.children).toHaveLength(1);
 			const r3 = g2.children[0] as RectDoc;
 			expect(r3.id).toBe("rect-3");
+		});
+
+		it("writes no float tail, whatever the State's own decimals are", () => {
+			// A box whose Doc geometry is derived by halving: rounding cx / width in
+			// the State would not have survived `x = cx - width / 2`
+			// (100.1 - 33.3333 / 2 = 83.43334999999999).
+			const state: Pick<CanvasState, "objects" | "rootIds" | "background"> = {
+				rootIds: ["rect-1", "connector-1"],
+				objects: {
+					"rect-1": {
+						id: "rect-1",
+						type: "rect",
+						cx: 100.1,
+						cy: 0.1 + 0.2,
+						width: 33.3333,
+						height: 10 / 3,
+						rotation: 10 / 3,
+						scaleX: 1,
+						scaleY: 1,
+					} as unknown as ObjectState,
+					"connector-1": {
+						id: "connector-1",
+						type: "connector",
+						source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
+						target: {
+							anchor: { kind: "free", point: { x: 200, y: 200 } },
+						},
+						points: [{ x: 1 / 3, y: 2 / 3 }],
+					} as unknown as ObjectState,
+				},
+			};
+
+			const doc = canvasToDoc(state, objectMapperRegistry);
+			const rect = doc.root[0] as RectDoc;
+
+			expect(rect.x).toBe(83.4333);
+			expect(rect.y).toBe(-1.3667);
+			expect(rect.rotation).toBe(3.333);
+
+			const connector = doc.root[1] as ConnectorDoc;
+			expect(connector.points).toEqual([{ x: 0.3333, y: 0.6667 }]);
+
+			// Everything the file carries, not just the fields asserted above: no
+			// number in the JSON may hold more decimals than the coarsest precision.
+			const json = JSON.stringify(doc);
+			const decimalCounts = [...json.matchAll(/-?\d+\.(\d+)/g)].map(
+				([, decimals]) => decimals.length,
+			);
+			expect(decimalCounts.length).toBeGreaterThan(0);
+			expect(Math.max(...decimalCounts)).toBeLessThanOrEqual(
+				PRECISION.COORDINATE,
+			);
 		});
 	});
 });

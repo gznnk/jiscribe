@@ -103,7 +103,7 @@ set — as do a glide and the pan that interrupts it — so the menu's own condi
 ## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 DOM elements on the canvas interoperate with the gesture system through `data-*` attributes.
-This convention allows **elements that should retain native browser behavior**—such as the `textarea` used during
+This convention allows **elements that should retain native browser behavior**—such as the editing surface used during
 text editing or the input fields inside menus—to be handled declaratively.
 
 ### `data-gesture`
@@ -113,9 +113,9 @@ Declares how an element relates to gestures. It takes a **space-separated token 
 
 | Token            | Meaning                                                                                                                                | Primary targets                                                                                                |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `none`           | Does not become the origin of a gesture. Ignores pointerdown and leaves contextmenu to the native handler                              | The `textarea` wrapper for text editing, numeric/color inputs inside menus, callback items in the context menu |
+| `none`           | Does not become the origin of a gesture. Ignores pointerdown and leaves contextmenu to the native handler                              | The wrapper of the text editing surface, numeric/color inputs inside menus, callback items in the context menu |
 | `native-pointer` | Participates in gestures but **does not perform pointer capture**. Also becomes a target for `inputValue` harvesting                   | Sliders (range input)                                                                                          |
-| `native-wheel`   | If the element is scrollable (`scrollHeight > clientHeight`), leaves wheel to native scrolling (excluded while Ctrl is held, for zoom) | The `textarea` for text editing                                                                                |
+| `native-wheel`   | If the element is scrollable (`scrollHeight > clientHeight`), leaves wheel to native scrolling (excluded while Ctrl is held, for zoom) | The text editing surface                                                                                       |
 
 Combined example: `data-gesture="none native-wheel"` (excluded from gestures and uses native scrolling).
 
@@ -123,7 +123,7 @@ Where they are read:
 
 - `none` → `isGestureOptedOut` (onPointerDown in `GestureRecognizer.getHandlers()`, handleContextMenu in `Canvas.tsx`)
 - `native-pointer` → `isNativePointerTarget` (suppresses capture and enables `inputValue` harvesting; decided once at pointerdown and held on `Pressed`)
-- `native-wheel` → `shouldUseNativeWheel` (`useDocumentWheel`)
+- `native-wheel` → `shouldUseNativeWheel` (`useCanvasWheel`)
 
 All of these decision utilities are built on `findGestureElement(target, token)` and
 are located in `controllers/gestures/recognizer/utils/`.
@@ -182,6 +182,28 @@ space-separated token list plus `closest` search.
 1. An element that is fully served by standard browser interaction → `data-gesture="none"`
 2. Needs to convey a value via gestures while also requiring native pointer behavior → `data-gesture="native-pointer"` + `data-kind` / `data-id`
 3. Scrollable and you want to prioritize internal scrolling → `data-gesture="native-wheel"`
+
+## Sharing gestures with the host page (`gestureHandling`)
+
+A canvas that fills the window should keep every scroll gesture; one embedded in a document that
+scrolls (a landing hero, an article figure) must not, or the reader who scrolls onto it is stranded.
+The `<Canvas gestureHandling>` prop (`"greedy"` by default, `"cooperative"` to defer — after the
+same-named option of embedded maps) picks between the two.
+
+The line it draws is **scroll versus zoom**, not wheel versus everything else. Under `"cooperative"`:
+
+- A plain wheel returns from `useCanvasWheel` before `preventDefault`, so the browser scrolls the
+  host document and the recognizer never sees the event.
+- Ctrl+wheel is a zoom, so it takes the normal path and zooms the canvas. A trackpad pinch arrives
+  as a Ctrl-held wheel, which lands in the same branch.
+- `CanvasRoot` relaxes `touch-action` from `none` to `pan-y`, handing the browser the vertical axis
+  a page scrolls along. `pan-y` still withholds pinch, so a two-finger pinch keeps zooming the canvas.
+
+The touch half has a cost, and it is the one the value asks for: a one-finger drag the browser
+resolves as a page scroll is taken away mid-gesture and arrives as `pointercancel`, so a mostly
+vertical drag scrolls the page instead of moving a shape. Horizontal drags are unaffected.
+
+Covered by `e2e/specs/scenario/embedded-page-scroll.spec.ts`, against the `?pageScroll` harness page.
 
 ## Repeat buttons treat click and doubleClick equivalently
 

@@ -135,12 +135,13 @@ import { SubroutineIcon } from "./stencil/SubroutineIcon";
 import { TrapezoidIcon } from "./stencil/TrapezoidIcon";
 
 /**
- * flowchart 18 図形の `ObjectTypeDefinition` 群。各定義は `./doc` の headless doc 定義
- * (features / validateDoc / factory) に render / interaction / editor UI 部を
- * `createFrameObjectDefinition`（mapper / stateValidator / behavior を features から
- * 導出）で足して合成する。core の登録エントリ (initializeObjectRegistry.ts の
- * ALL_OBJECT_DEFINITIONS) と 1:1 で、意図的除外はない。menu は未宣言なので features から
- * 既定メニューが導出される (packages/canvas/docs/12-plugin-architecture.md)。
+ * The `ObjectTypeDefinition`s of the 18 flowchart shapes. Each one is composed by taking
+ * the headless doc definition from `./doc` (features / validateDoc / factory) and adding
+ * the render / interaction / editor UI parts with `createFrameObjectDefinition`, which
+ * derives mapper / stateValidator / behavior from features. They map one-to-one onto
+ * core's registration entries (ALL_OBJECT_DEFINITIONS in initializeObjectRegistry.ts),
+ * with nothing left out on purpose. No menu is declared, so the default menu is derived
+ * from features (packages/canvas/docs/12-plugin-architecture.md).
  */
 export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
 	createFrameObjectDefinition<CardDoc, CardState>({

@@ -2,17 +2,35 @@ import type {
 	ObjectTextEditOverflowResolver,
 	ObjectTypeDefinition,
 } from "@jiscribe/canvas";
-import { createFrameBehavior } from "@jiscribe/canvas-sdk";
+import {
+	createFrameBehavior,
+	createFrameObjectDefinition,
+	createTypeStencils,
+} from "@jiscribe/canvas-sdk";
 
-import { recordDocDefinition } from "./doc";
+import {
+	recordDocDefinition,
+	umlComponentDocDefinition,
+	umlPackageDocDefinition,
+} from "./doc";
 import { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
+import { calcUmlPackageTextRegion } from "./presentation/calcUmlPackageTextRegion";
 import { RecordBox } from "./presentation/RecordBox";
+import { UmlComponentBox } from "./presentation/UmlComponentBox";
+import { UmlPackageBox } from "./presentation/UmlPackageBox";
+import { umlPackageOutline } from "./presentation/umlPackageOutline";
 import { isRecordListSlotId } from "./schema/RecordDoc";
 import type { RecordDoc } from "./schema/RecordDoc";
+import type { UmlComponentDoc } from "./schema/UmlComponentDoc";
+import type { UmlPackageDoc } from "./schema/UmlPackageDoc";
 import { recordToDoc, recordToState } from "./state/RecordMapper";
 import type { RecordState } from "./state/RecordState";
+import type { UmlComponentState } from "./state/UmlComponentState";
+import type { UmlPackageState } from "./state/UmlPackageState";
 import { isValidRecordState } from "./state/validateRecordState";
 import { RecordStencils } from "./stencil/RecordStencils";
+import { UmlComponentIcon } from "./stencil/UmlComponentIcon";
+import { UmlPackageIcon } from "./stencil/UmlPackageIcon";
 
 /**
  * A text band (the title, the stereotype above it) is sized from its own text
@@ -37,7 +55,7 @@ const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
  *
  * `createFrameObjectDefinition` is not used here: it derives the mapper from
  * features, and the record's is the derived one wrapped in the slot normal form
- * (RecordMapper 参照).
+ * (see RecordMapper).
  */
 export const recordDefinition: ObjectTypeDefinition<RecordDoc, RecordState> = {
 	...recordDocDefinition,
@@ -67,3 +85,42 @@ export const recordDefinition: ObjectTypeDefinition<RecordDoc, RecordState> = {
 		},
 	],
 };
+
+/**
+ * `outline` is what puts a connector's center anchor on the notch beside the tab
+ * instead of on the bounding box, and `textRegion` keeps the name in the body, so
+ * a first line cannot run into the tab. `menu` stays undeclared, so it is derived
+ * from the features, unlike the record's.
+ */
+export const umlPackageDefinition: ObjectTypeDefinition<
+	UmlPackageDoc,
+	UmlPackageState
+> = createFrameObjectDefinition<UmlPackageDoc, UmlPackageState>({
+	doc: umlPackageDocDefinition,
+	component: UmlPackageBox,
+	textRegion: calcUmlPackageTextRegion,
+	outline: umlPackageOutline,
+	stencils: createTypeStencils({
+		objectType: "umlPackage",
+		label: { en: "Package", ja: "パッケージ" },
+		icon: UmlPackageIcon,
+	}),
+});
+
+/**
+ * No `outline` and no `textRegion`: the silhouette is the bounding box itself
+ * (the icon is drawn inside it), which is exactly what both default to, and the
+ * name is centered over the whole box.
+ */
+export const umlComponentDefinition: ObjectTypeDefinition<
+	UmlComponentDoc,
+	UmlComponentState
+> = createFrameObjectDefinition<UmlComponentDoc, UmlComponentState>({
+	doc: umlComponentDocDefinition,
+	component: UmlComponentBox,
+	stencils: createTypeStencils({
+		objectType: "umlComponent",
+		label: { en: "Component", ja: "コンポーネント" },
+		icon: UmlComponentIcon,
+	}),
+});

@@ -1,17 +1,19 @@
-// 汎用ピクトグラムの外部パッケージ。収載の線引きは「記法に属さない、実物・人・場を
-// 表す図形」で、flowchart / UML のような特定記法の語彙（それぞれ専用パッケージ）とも、
-// 装飾系（star / heart / バナー等。図に意味を足さない）とも分ける。core 残留はゼロ
-// （generalToolbarEntry も全図形をここから供給する）。
-// 各図形の ObjectDocDefinition / ObjectTypeDefinition は createFrameObjectDoc /
-// createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`)
-// が features/defaults から丸ごと導出するため、per-shape の ObjectFactory /
-// validate*Doc / Mapper / validate*State は持たない。presentation 部品
-// (createFrameObject / measureTextWidth / calcVisualLineCount / readTextSlot /
-// OUTLINE_CURVE_SEGMENTS / centeredPolygonOutline) は `@jiscribe/canvas-sdk` 経由。
-// headless な parse 入口は ./doc (generalDocPlugin)。
-// 図形は 1 図形 1 フォルダ（schema/<id>/ ・ state/<id>/ ・ presentation/<Pascal>/）で、
-// 複数図形が共有する部品は各層の shared/ に置く。
-// (packages/canvas/docs/13-authoring-plugins.md 参照)。
+// External package of general-purpose pictograms. The inclusion criterion is "shapes
+// that belong to no notation and stand for things, people and places", which keeps it
+// apart both from the vocabulary of a specific notation such as flowchart / UML (each its
+// own package) and from decorative shapes (star / heart / banners and the like, which add
+// no meaning to a diagram). Nothing is left behind in core (generalToolbarEntry ships all
+// of these shapes from here as well).
+// Each shape's ObjectDocDefinition / ObjectTypeDefinition is derived wholesale from
+// features/defaults by createFrameObjectDoc / createFrameObjectDefinition
+// (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`), so there is no per-shape
+// ObjectFactory / validate*Doc / Mapper / validate*State. The presentation parts
+// (createFrameObject / calcBelowLabelTextRegion / readTextSlot /
+// OUTLINE_CURVE_SEGMENTS / centeredPolygonOutline) come through `@jiscribe/canvas-sdk`.
+// The headless parse entry point is ./doc (generalDocPlugin).
+// Shapes get one folder each (schema/<id>/, state/<id>/, presentation/<Pascal>/), and
+// parts shared by several shapes live in each layer's shared/.
+// (See packages/canvas/docs/13-authoring-plugins.md.)
 export * from "./schema/actor/ActorDoc";
 export * from "./schema/browserWindow/BrowserWindowDoc";
 export * from "./schema/cloud/CloudDoc";

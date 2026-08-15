@@ -11,7 +11,8 @@ export type BuiltinItemKey =
 	| "textAlignment"
 	| "aspectRatio"
 	| "stackOrder"
-	| "group";
+	| "group"
+	| "openReference";
 
 /**
  * Applies a style property change from an ObjectMenu item to the current selection.
@@ -31,6 +32,25 @@ export type ObjectMenuPropertyUpdater = (
 	commit: boolean,
 	coalesceHistory?: boolean,
 ) => void;
+
+/** What the host receives when the "open reference" menu item is pressed. */
+export type OpenReferencePayload = {
+	/** ID of the object whose `meta.reference` is being opened. */
+	objectId: string;
+	/**
+	 * The `meta.reference` string as authored, guaranteed non-empty. The canvas
+	 * neither resolves nor validates it; the host does.
+	 */
+	reference: string;
+};
+
+/**
+ * Opens the reference of the selected object. Supplied by the host — the menu
+ * item is offered only while one is registered.
+ *
+ * @param payload - The selected object's ID and its raw `meta.reference`
+ */
+export type OpenReferenceHandler = (payload: OpenReferencePayload) => void;
 
 /**
  * Contract for custom menu item components. Exposes only the slices of canvas

@@ -19,7 +19,7 @@ export default defineConfig({
 	},
 	server: {
 		port: 5174,
-		// コンテナ内では 0.0.0.0 にバインドしないとホストへ publish しても届かない
+		// Inside a container the server must bind to 0.0.0.0, or publishing the port to the host still does not reach it
 		host: process.env.DEVCONTAINER === "true" || undefined,
 	},
 	build: {

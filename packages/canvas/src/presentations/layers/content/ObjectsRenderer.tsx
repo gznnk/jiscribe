@@ -11,7 +11,7 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	textEditObjectId?: string | null;
 	/**
 	 * Slot of `textEditObjectId` the editor is over. Passed on so a multi-slot
-	 * shape hides only that slot's text while the textarea covers it.
+	 * shape hides only that slot's text while the editor covers it.
 	 */
 	textEditSlotId?: string | null;
 	/**

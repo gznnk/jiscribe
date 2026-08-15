@@ -19,7 +19,7 @@
 // correct ObjectDocs down to the style defaults. Every editing op mutates the doc in place
 // and checks its arguments first, so a call that throws leaves the doc untouched.
 //
-// e.g. `import { parseCanvasText, createDocOps } from "@jiscribe/canvas/doc";`
+// e.g. `import { createCanvasParser, createDocOps } from "@jiscribe/canvas/doc";`
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
@@ -31,16 +31,40 @@ export type { CreateObjectType } from "./schemas/objects/types/CreateObjectType"
 export type {
 	TextSlot,
 	TextSlotContent,
+	TextSlotStyle,
 } from "./schemas/objects/types/TextSlot";
 export {
+	isTextRows,
 	isTextSlot,
+	resolveTextSlotStyle,
+	TEXT_BLOCK_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
 } from "./schemas/objects/types/TextSlot";
+// One body of a slot's text: the plain string it is until part of it is styled on
+// its own, and the runs it is written as once it is.
+export type {
+	InlineTextStyle,
+	RichText,
+	TextRun,
+} from "./schemas/objects/types/RichText";
+export {
+	isRichText,
+	isTextRun,
+	normalizeRichText,
+	remapRichText,
+	richTextToPlain,
+	sliceRichText,
+	styleRichTextRange,
+	TEXT_INLINE_STYLE_KEYS,
+} from "./schemas/objects/types/RichText";
 export type {
 	ExtraStylePropertyDescriptor,
 	StyleValueType,
 } from "./schemas/objects/types/ExtraStyleProperty";
 export type { ObjectDocDefinition } from "./schemas/plugin/ObjectDocDefinition";
+// The per-slot text-style defaults a `text: "slots"` type declares on its doc
+// definition (`ObjectDocDefinition.textSlotStyleDefaults`).
+export type { ObjectTextSlotStyleDefaults } from "./schemas/registry/ObjectTextStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./schemas/plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorRegistry";
 export type {
@@ -48,10 +72,7 @@ export type {
 	CanvasParseResult,
 	SemanticDiagnostic,
 } from "./schemas/canvas/validators";
-export {
-	createCanvasParser,
-	parseCanvasText,
-} from "./schemas/canvas/validators";
+export { createCanvasParser } from "./schemas/canvas/validators";
 export { builtinObjectDocDefinitions } from "./schemas/registry/builtinObjectDocDefinitions";
 export {
 	createDocOps,
@@ -72,6 +93,7 @@ export {
 	type SetRotationResult,
 	type SetStyleResult,
 	type StyleParams,
+	type StyleTextParams,
 	type UpdateConnectorParams,
 	type ZOrderPlacement,
 	DocOperationError,

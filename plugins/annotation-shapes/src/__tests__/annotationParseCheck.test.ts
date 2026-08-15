@@ -20,7 +20,7 @@ createParseCheckSuite({
 				height: 160,
 				direction: "left",
 				tipPosition: 0.5,
-				text: "doc 層",
+				text: "doc layer",
 			},
 			{
 				id: "bracket-1",
@@ -30,7 +30,7 @@ createParseCheckSuite({
 				width: 24,
 				height: 160,
 				direction: "left",
-				text: "state 層",
+				text: "state layer",
 			},
 			{
 				id: "bracket-with-stem-1",
@@ -41,7 +41,7 @@ createParseCheckSuite({
 				height: 160,
 				direction: "left",
 				tipPosition: 0.25,
-				text: "presentation 層",
+				text: "presentation layer",
 			},
 			{
 				id: "callout-1",
@@ -51,7 +51,7 @@ createParseCheckSuite({
 				width: 160,
 				height: 110,
 				tail: { side: "bottom", position: 0.2 },
-				text: "しっぽで指す",
+				text: "pointed at by the tail",
 			},
 			{
 				id: "note-1",
@@ -60,7 +60,7 @@ createParseCheckSuite({
 				y: 0,
 				width: 180,
 				height: 110,
-				text: "パースは黙って落ちる",
+				text: "parsing drops it silently",
 			},
 			{
 				id: "task-1",

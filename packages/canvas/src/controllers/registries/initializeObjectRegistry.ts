@@ -1,4 +1,5 @@
 import type { CanvasRegistries } from "./CanvasRegistries";
+import { BODY_TEXT_SLOT_ID } from "../../constants/textSlotId";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
 import type {
 	AnyObjectTypeDefinition,
@@ -17,6 +18,7 @@ import { Text } from "../../presentations/objects/primitives/Text";
 import { ConnectorExtraStyleProperties } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
+import { extractTextSlotStyleDefaults } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import {
 	connectorToDoc,
 	connectorToState,
@@ -134,7 +136,11 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: textToDoc, toState: textToState },
 			stateValidator: isValidTextState,
 			contentResizer: (state, context) =>
-				resizeTextStateToContent(state, context.fontFamily),
+				resizeTextStateToContent(
+					state,
+					context.fontFamily,
+					context.textStyleDefaults,
+				),
 			component: Text,
 			behavior: {
 				moveByDelta: textMoveByDelta,
@@ -282,8 +288,29 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
+	const slotStyleDefaults = extractTextSlotStyleDefaults(
+		definition.features,
+		definition.defaults,
+		definition.textSlotStyleDefaults,
+	);
+	if (slotStyleDefaults) {
+		registries.objectTextStyleDefaults.register(type, slotStyleDefaults);
+	}
 	if (definition.contentResizer) {
-		registries.objectContentResizer.register(type, definition.contentResizer);
+		// The resizer measures the text with the style it is drawn with, so the
+		// type's own defaults ride in on the context rather than each resizer
+		// reaching for a registry the states layer cannot see. Only the body slot's
+		// are passed: a content-resized type sizes its box to one text. A type with
+		// no defaults to add is registered as it is, so nothing is wrapped for nothing.
+		const resizeToContent = definition.contentResizer;
+		const textStyleDefaults = slotStyleDefaults?.[BODY_TEXT_SLOT_ID];
+		registries.objectContentResizer.register(
+			type,
+			textStyleDefaults === undefined
+				? resizeToContent
+				: (state, context) =>
+						resizeToContent(state, { ...context, textStyleDefaults }),
+		);
 	}
 	if (definition.svgDefs) {
 		registries.objectSvgDefs.register(type, definition.svgDefs);
@@ -352,10 +379,9 @@ export const applyObjectDefinition = (
 /**
  * Clears every object registry in the bundle and re-registers all object types.
  *
- * The doc validators (objectDocValidatorRegistry) are not initialized here.
- * Their registrations are used only during parse-time validation, and
- * parseCanvasText lazily initializes them when needed
- * (schemas/registry/initializeObjectDocValidatorRegistry).
+ * The doc validators are not initialized here. They are used only during parse-time
+ * validation, where `createCanvasParser` builds its own registry from the definition
+ * set it is given (schemas/canvas/validators/createCanvasParser).
  *
  * @param registries Target bundle to populate.
  */
@@ -363,6 +389,7 @@ export const initializeObjectRegistry = (
 	registries: CanvasRegistries,
 ): void => {
 	registries.objectMapper.clear();
+	registries.objectTextStyleDefaults.clear();
 	registries.objectContentResizer.clear();
 	registries.objectComponent.clear();
 	registries.objectSvgDefs.clear();

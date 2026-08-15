@@ -16,7 +16,7 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * This process normalizes the object tree into a flat map for O(1) access.
  *
  * **Caller's responsibility**: `doc` must be a valid doc that has passed
- * `parseCanvasText` (two-stage validation). This function assumes—without
+ * `createCanvasParser` (two-stage validation). This function assumes—without
  * re-checking—that IDs are unique, references are consistent, and the tree is
  * acyclic (the policy of not carrying defensive cost internally →
  * docs/01-design-philosophy.md principle 4). Validation is guaranteed at the
@@ -26,7 +26,7 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * layer stays decoupled from the controller-layer registries; both of these are
  * states-layer registries (docs/02-architecture.md).
  *
- * @param doc - A doc that has passed `parseCanvasText` (see above); its tree order becomes the z-order
+ * @param doc - A doc that has passed `createCanvasParser` (see above); its tree order becomes the z-order
  * @param mapper - The per-canvas object mapper registry; a doc naming a type it does not carry throws
  * @param contentResizer - The per-canvas content-resizer registry; a type registered there has its
  *   box re-derived here, which is the one place where a freshly mapped object and the host's theme

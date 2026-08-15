@@ -12,6 +12,8 @@ import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
+import type { RichText } from "../../../../schemas/objects/types/RichText";
+import type { ObjectTextStyleDefaultsRegistry } from "../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
@@ -20,6 +22,7 @@ import {
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
 import type { ObjectTextEditOverflowResolver } from "../ObjectTextEditOverflowTypes";
@@ -27,10 +30,15 @@ import { TextEditor } from "../TextEditor";
 
 /** Handlers that report editor input, caret and exit to the parent (Canvas). Common across all types. */
 type EditorHandlers = {
-	onChange: (text: string) => void;
+	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
+	onChange: (text: RichText) => void;
 	onEscape: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
+	/** What the editor has selected, for the styling that addresses a stretch of the text. */
+	onSelectionChange: (selection: { start: number; end: number }) => void;
+	/** A bold / italic / underline keystroke over that selection. */
+	onToggleFormat: (format: TextEditFormat) => void;
 };
 
 /**
@@ -109,13 +117,21 @@ function renderConnectorLabelEditor(
 /**
  * Renders the text editor for one slot of a shape that has text (such as rect), overlaid on that
  * slot's region (derived via calcTextRegion, the seam shared with the rendering-side TextOverlay).
- * The typography comes from the edited slot, so the textarea matches the overlay it replaces.
+ * The typography is the edited slot's, resolved against the shape type's own
+ * defaults exactly as the overlay resolves it, so the editor matches the overlay
+ * it replaces.
  *
- * @param target - The shape being edited (carries geometry)
+ * @param target - The shape being edited (carries geometry, and the slot content
+ *   with the draft already grafted in, so the editor is placed on the box as it
+ *   now stands rather than as it was committed)
  * @param objectId - ID of the target shape
  * @param slotId - The slot being edited; a key of `target.text`
- * @param text - The text being edited
+ * @param richText - The draft body the editor draws, handed back verbatim from
+ *   the editing session so the editor's own prediction of it always matches
+ *   (a slot read would drop what rows cannot hold and read back differently)
  * @param handlers - Input and exit handlers
+ * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, so a field
+ *   the slot leaves unset is drawn with the same value the overlay uses
  * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
  * @param textEditOverflowResolver - Per-type resolver from ObjectTextEditOverflowRegistry. Omitted = the slot scrolls
  * @returns The text editor
@@ -124,13 +140,18 @@ function renderTextEditor(
 	target: ObjectState & TextStyleState & TransformedFrame,
 	objectId: string,
 	slotId: string,
-	text: string,
+	richText: RichText,
 	handlers: EditorHandlers,
+	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
 	textRegionCalculator?: ObjectTextRegionCalculator,
 	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
 ): React.ReactElement {
 	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
-	const slot = target.text?.[slotId];
+	const style = textStyleDefaults.resolveSlotStyle(
+		target.type,
+		slotId,
+		target.text?.[slotId],
+	);
 	// How far a growing editor may extend: from the region's top edge down to the
 	// shape's bottom edge (local coordinates, origin at the shape center). A region
 	// already at or below that edge yields 0 rather than a negative length.
@@ -138,7 +159,7 @@ function renderTextEditor(
 	return (
 		<TextEditor
 			objectId={objectId}
-			text={text}
+			richText={richText}
 			cx={target.cx}
 			cy={target.cy}
 			x={textRegion.x}
@@ -150,15 +171,17 @@ function renderTextEditor(
 			rotation={target.rotation ?? 0}
 			overflow={resolveTextEditOverflow(slotId, textEditOverflowResolver)}
 			growLimit={growLimit}
-			textAlign={slot?.textAlign}
-			verticalAlign={slot?.verticalAlign}
-			fontColor={slot?.fontColor}
-			fontSize={slot?.fontSize}
-			fontFamily={slot?.fontFamily}
-			fontWeight={slot?.fontWeight}
-			fontStyle={slot?.fontStyle}
-			textDecoration={slot?.textDecoration}
+			textAlign={style.textAlign}
+			verticalAlign={style.verticalAlign}
+			fontColor={style.fontColor}
+			fontSize={style.fontSize}
+			fontFamily={style.fontFamily}
+			fontWeight={style.fontWeight}
+			fontStyle={style.fontStyle}
+			textDecoration={style.textDecoration}
 			onChange={handlers.onChange}
+			onSelectionChange={handlers.onSelectionChange}
+			onToggleFormat={handlers.onToggleFormat}
 			onEscape={handlers.onEscape}
 			onCaretMove={handlers.onCaretMove}
 		/>
@@ -168,10 +191,15 @@ function renderTextEditor(
 type TextEditorLayerProps = {
 	textEditState: CanvasControllerState["textEditState"];
 	objects: CanvasControllerState["objects"];
-	onTextChange: (text: string) => void;
+	/** The edited body; the shape editor reports it with styling, a label editor as a plain string. */
+	onTextChange: (text: RichText) => void;
 	onEscape: () => void;
 	/** Where the caret moved to, in world coordinates (see useRevealTextEditCaret). */
 	onCaretMove: (caretWorldBox: BoundingBox) => void;
+	/** What the editor has selected, for the styling that addresses a stretch of the text. */
+	onSelectionChange: (selection: { start: number; end: number }) => void;
+	/** A bold / italic / underline keystroke over that selection. */
+	onToggleFormat: (format: TextEditFormat) => void;
 };
 
 /**
@@ -184,6 +212,8 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	onTextChange,
 	onEscape,
 	onCaretMove,
+	onSelectionChange,
+	onToggleFormat,
 }) => {
 	const registries = useCanvasRegistries();
 
@@ -200,6 +230,8 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		onChange: onTextChange,
 		onEscape,
 		onCaretMove,
+		onSelectionChange,
+		onToggleFormat,
 	};
 
 	if (textEditState.kind === "connectorLabel") {
@@ -234,6 +266,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			textEditState.slotId,
 			textEditState.text,
 			handlers,
+			registries.objectTextStyleDefaults,
 			registries.objectTextRegion.get(targetObject.type),
 			registries.objectTextEditOverflow.get(targetObject.type),
 		);

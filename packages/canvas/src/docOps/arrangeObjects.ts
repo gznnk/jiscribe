@@ -11,12 +11,7 @@ import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 
 /** Which edge (or midline) of the selection every object is brought to. */
 export type AlignEdge =
-	| "left"
-	| "centerX"
-	| "right"
-	| "top"
-	| "centerY"
-	| "bottom";
+	"left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 
 /** Axis objects are spread along; the other axis is left alone. */
 export type DistributeAxis = "horizontal" | "vertical";

@@ -15,7 +15,7 @@ import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import {
-	readTextSlot,
+	readRichTextSlot,
 	resolveTextSlotId,
 } from "../../../../states/objects/types/TextSlots";
 import type {
@@ -113,11 +113,14 @@ function handleTextSlotClick(
 			? targetPart
 			: null;
 
+	// A slot change moves what the menu acts on, so it closes the open submenu just
+	// as an object selection change does. Re-clicking the same slot changes nothing
+	// and returns the state untouched, leaving the submenu as it was.
 	const currentSlot = canvasState.selectedTextSlot;
 	if (slotId === null) {
 		return currentSlot === null
 			? canvasState
-			: { ...canvasState, selectedTextSlot: null };
+			: { ...canvasState, selectedTextSlot: null, objectMenuOpenId: null };
 	}
 	if (
 		currentSlot?.objectId === targetObject.id &&
@@ -128,6 +131,7 @@ function handleTextSlotClick(
 	return {
 		...canvasState,
 		selectedTextSlot: { objectId: targetObject.id, slotId },
+		objectMenuOpenId: null,
 	};
 }
 
@@ -479,11 +483,14 @@ export const ObjectEventHandler: GestureHandler = {
 				}
 				return {
 					...nextState,
+					// The click that precedes the double-click leaves an already-selected
+					// slot untouched, so the submenu open over it is closed here.
+					objectMenuOpenId: null,
 					textEditState: {
 						kind: "shape",
 						objectId: targetObject.id,
 						slotId,
-						text: readTextSlot(targetObject.text, slotId),
+						text: readRichTextSlot(targetObject.text, slotId),
 					},
 				};
 			}

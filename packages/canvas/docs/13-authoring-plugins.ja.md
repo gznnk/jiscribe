@@ -14,6 +14,10 @@
 ```
 plugins/sticky-shape/
 ├── package.json
+├── playwright.config.ts  e2e スイートの Playwright 設定
+├── e2e/
+│   ├── harness/          spec が叩くページ（このプラグインだけを載せる）
+│   └── specs/            Playwright の spec
 └── src/
     ├── index.ts          公開 export（plugin・ツールバーエントリなどホストが要るもの）
     ├── plugin.ts         CanvasPlugin の宣言
@@ -43,7 +47,8 @@ plugins/sticky-shape/
 **`peerDependencies` と `devDependencies` の両建て**にする。peer は利用側が 1 部だけ
 供給するため、dev はパッケージ単体でビルド・テストできるようにするため。プラグインが
 実際に同梱するもの（`@jiscribe/geometry`・`@jiscribe/basic-validators`）は
-`dependencies` に入れる。
+`dependencies` に入れる。e2e スイートのぶんとして `@playwright/test` と `vite` が
+`devDependencies` に加わる。
 
 headless 半分から先に書く。UI 半分がそれを入力に取るからである。
 
@@ -71,9 +76,7 @@ export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 		component: Sticky,
 		svgDefs: StickyDefs,
 		stencils: StickyStencils,
-		menu: [
-			/* … */
-		],
+		menu: [/* … */],
 	});
 ```
 
@@ -124,6 +127,120 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 
 `./testing` を別入口にしてあるのは、vitest がランタイムバンドルに届かないようにするため。
 
+## e2e スイートを持たせる
+
+どのプラグインも、**自分だけを載せたハーネス**を叩く Playwright スイートを持つ。単独
+ロードで通ること自体が、他プラグインに寄りかかっていないことの証拠になる。出荷図形を
+まとめたときの挙動はこのスイートの仕事ではない — spec 1 本を
+`apps/canvas-examples/e2e/` が持っている。仕掛けは canvas の e2e キット
+（[テスト](./09-testing.ja.md)）で、`@jiscribe/canvas-sdk/testing/*` 経由で取る。以下の
+実例は `plugins/annotation-shapes/`。
+
+`package.json` に script 2 つと依存 2 つ。
+
+```json
+{
+	"scripts": {
+		"dev:harness": "vite e2e/harness --configLoader runner",
+		"test:e2e": "playwright test"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.60.0",
+		"vite": "catalog:"
+	}
+}
+```
+
+`--configLoader runner` は省略できない。vite 既定の `bundle` ローダーではハーネス設定の
+bare specifier が external のまま残るため、`@jiscribe/canvas-sdk/testing/vite-config` を
+node 自身が読むことになり、生の TypeScript を解釈する羽目になる。runner ローダーなら
+設定が vite 自身のパイプラインを通る。（canvas のハーネスはキットを相対 import しているので
+このフラグは要らない。）
+
+`tsconfig.json` — 増えた 2 つのルートも型チェックの対象にする。
+
+```json
+{
+	"include": ["src", "e2e", "playwright.config.ts"]
+}
+```
+
+`playwright.config.ts` はパッケージ直下。スイート固有なのは `testDir` とハーネス起動
+コマンドだけである。ポートは実行ごとにキットが空きを取って渡してくるので、コマンド側は
+そのポートを固定すること。
+
+```ts
+import { createCanvasPlaywrightConfig } from "@jiscribe/canvas-sdk/testing/playwright-config";
+
+export default createCanvasPlaywrightConfig({
+	testDir: "./e2e/specs",
+	harnessCommand: (port) => `pnpm dev:harness --port ${port} --strictPort`,
+});
+```
+
+`e2e/harness/vite.config.ts`:
+
+```ts
+import { createPluginHarnessViteConfig } from "@jiscribe/canvas-sdk/testing/vite-config";
+
+export default createPluginHarnessViteConfig();
+```
+
+`e2e/harness/index.html` — `mountPluginHarness` が要求するのは `#root` の要素と
+エントリモジュールだけ。
+
+```html
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Canvas E2E Harness</title>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/main.tsx"></script>
+	</body>
+</html>
+```
+
+`e2e/harness/main.tsx`:
+
+```tsx
+import { mountPluginHarness } from "@jiscribe/canvas-sdk/testing/harness";
+import {
+	annotationPlugin,
+	annotationToolbarEntry,
+} from "@jiscribe/plugin-annotation-shapes";
+
+// This package's shapes only, so a spec failing here is this package's own fault.
+mountPluginHarness({
+	plugins: [annotationPlugin],
+	toolbarLayout: [{ kind: "preset", presetId: "rect" }, annotationToolbarEntry],
+});
+```
+
+このファイルで外してはいけないのが 2 点。
+
+- **プラグインは自分のパッケージ名で読む。**`../../src` ではない。外部の作者が通る経路が
+  こちらであり、それに乗ることがパッケージの `exports` だけで足りていることの証明になる
+- **`toolbarLayout` は spec が描く分だけに絞る。**自分のピン留めプリセットかカテゴリ
+  エントリと、それに必ず `{ kind: "preset", presetId: "rect" }` を足す。後者は必須で、
+  `CanvasDriver.goto()` が "Rectangle" ツールボタンの出現を待ってからページを引き渡すため。
+  プラグインのプリセットとカテゴリは canvas の既定 layout に含まれないので、layout を
+  渡さなければ spec からそもそも触れない
+
+spec 側は spec 用エントリからすべて取る。
+
+```ts
+import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
+import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
+```
+
+実行は `pnpm --filter @jiscribe/plugin-annotation-shapes test:e2e`。目視で見たいときは
+`dev:harness` でハーネスだけ起動する。`vitest.config.ts` の include は
+`src/**/__tests__/` だけなので、Playwright の spec が `pnpm test` に混ざることはない。
+
 ## リンタが強制する境界
 
 `eslint.config.js` が以下をすべてビルドエラーにする。
@@ -155,9 +272,12 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 4. **エンジン側テストの副作用を処理する。**「輪郭を持つ図形」「クリック配置の図形」の
    代表としてその図形を使っていたテストが主語を失う。別の組み込みに乗り換えるのではなく、
    テスト側に最小の型を宣言する。前例は
-   `controllers/__tests__/support/clickPlacedPlugin.ts`
-5. **全ホストを配線する**（後述）
-6. **検証する**（後述）
+   `controllers/__tests__/support/clickPlacedPlugin.ts`。e2e spec でも同じことをしており、
+   代役は `e2e/plugins/specShapesPlugin.tsx`
+5. **その図形の e2e spec をプラグイン側のスイートへ移す**（前述）。エンジン側に残すのは、
+   コアの型と代役プラグインだけで駆動できるものに限る
+6. **全ホストを配線する**（後述）
+7. **検証する**（後述）
 
 ツールバーへの露出はパッケージングとは別の判断である。カテゴリフライアウトの
 エントリ（`containerToolbarEntry` / `annotationToolbarEntry`）はプラグインが所有し、
@@ -171,18 +291,19 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 
 UI プラグイン（`somePlugin`）:
 
-- [ ] `apps/canvas-examples/src/examples/plugin-container.tsx`
+- [ ] `apps/canvas-examples/src/examples/plugins.tsx`
 - [ ] `apps/vscode-extension/src/webview/canvasParser.ts`
 - [ ] `apps/vscode-extension/src/webview/index.tsx`（`toolbarLayout`）
-- [ ] `packages/canvas/e2e/harness/main.tsx`（`plugins` と `toolbarLayout`）
+- [ ] `apps/canvas-examples/e2e/harness/main.tsx`（`plugins` と `toolbarLayout`）
 
 headless doc プラグイン（`someDocPlugin`）:
 
 - [ ] `apps/vscode-extension/src/diagnostics/DiagnosticProvider.ts`
 - [ ] `packages/ai-docs/generator/src/manifest.ts`（`definitionSources`）
 
-上記各パッケージの `package.json` にも依存を足すこと。`packages/canvas` の
-`devDependencies` も要る（e2e harness が読むため）。
+上記各パッケージの `package.json` にも依存を足すこと。`packages/canvas` が意図的に
+入っていないのは、出荷プラグインに一切依存しないためである。足すと
+`canvas → plugins → canvas-sdk → canvas` の循環が戻ってくる。
 
 > **配線し忘れると何が起きるか**: パースはエラーにならない。結果は `kind: "ok"` の
 > ままで、その型のオブジェクトが `root` から**黙って落ちる**（警告は出る）。
@@ -199,12 +320,11 @@ pnpm lint --fix && pnpm format && pnpm typecheck && pnpm dep:check && pnpm lint
 pnpm test
 pnpm generate:ai   # packages/ai-docs/assets を再生成する。差分はコミットする
 pnpm build:examples && pnpm build:vscode
+pnpm --filter @jiscribe/plugin-<name> test:e2e             # その図形のスイートは全部回す
 pnpm --filter @jiscribe/canvas test:e2e specs/smoke specs/shapes/draw
+pnpm --filter canvas-examples test:e2e                     # プラグイン同居
 ```
 
 図形を**移設**したときは、`pnpm generate:ai` が**無変化**であることが doc 定義を
 忠実に移せた証拠になる。図形を**追加**したときは差分が新しいスキーマそのものなので、
 コミットする（CI の `check:ai` が乖離で落ちる）。
-
-プラグイン図形の e2e spec は組み込み図形と同じ `packages/canvas/e2e/specs/shapes/`
-に置く。プラグインパッケージ側に e2e のハーネスは無い。

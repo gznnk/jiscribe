@@ -5,13 +5,13 @@ build.mjs
 **/node_modules/**
 **/*.map
 tsconfig.json
-# 内部ドキュメント・開発用テストファイル
+# Internal documentation and development test files
 icon-source.png
 docs/**
 .gitignore
 **/*.jis.json
 *.vsix
-# 「Set up AI」がこのフォルダで実行された場合の生成物（混入防止）
+# What "Set up AI" generates if it is run in this folder (kept out of the package)
 .jiscribe/**
 .claude/**
 .cursor/**

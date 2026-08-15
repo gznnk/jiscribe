@@ -1,13 +1,13 @@
-// markdown 図形の外部パッケージ。tier 2 の frame 系ベース実装を利用する。
-// ObjectDocDefinition / ObjectTypeDefinition は createFrameObjectDoc /
-// createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` / `@jiscribe/canvas-sdk`)
-// が features/defaults から丸ごと導出するため、MarkdownObjectFactory /
-// validateMarkdownDoc / MarkdownMapper / validateMarkdownState は持たない。
-// schema/** の headless 部品 (AUTO_COLOR / DEFAULT_FONT_FAMILY) は
-// `@jiscribe/canvas-sdk/doc`、presentation 部品 (createFrameObject /
-// TextOverlayFrame) は `@jiscribe/canvas-sdk` 経由。本文の描画だけを差し替えるため、図形の見た目・
-// 当たり判定・メニューは rect と同じ既定に乗る。headless な parse 入口は ./doc
-// (markdownDocPlugin)。
+// External package of the markdown shape. It builds on the tier 2 frame-family base
+// implementation.
+// ObjectDocDefinition / ObjectTypeDefinition are derived wholesale from features/defaults
+// by createFrameObjectDoc / createFrameObjectDefinition (`@jiscribe/canvas-sdk/doc` /
+// `@jiscribe/canvas-sdk`), so there is no MarkdownObjectFactory / validateMarkdownDoc /
+// MarkdownMapper / validateMarkdownState. The headless parts of schema/** (AUTO_COLOR /
+// DEFAULT_FONT_FAMILY) come from `@jiscribe/canvas-sdk/doc`; the presentation parts
+// (createFrameObject / TextOverlayFrame) come through `@jiscribe/canvas-sdk`. Only the
+// rendering of the body is swapped out, so the shape's look, hit testing and menu ride on
+// the same defaults as rect. The headless parse entry point is ./doc (markdownDocPlugin).
 export * from "./schema/MarkdownDoc";
 export * from "./state/MarkdownState";
 

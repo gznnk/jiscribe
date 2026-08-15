@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import { PARALLELOGRAM_SKEW_RATIO } from "../../../schema/parallelogram/ParallelogramDoc";
 
 describe("parallelogram textRegion", () => {
-	it("両側をスキュー1つ分インセットした領域を返す", () => {
+	it("returns a region inset by one skew on both sides", () => {
 		const textRegion = createInsetTextRegion({
 			left: PARALLELOGRAM_SKEW_RATIO,
 			right: PARALLELOGRAM_SKEW_RATIO,

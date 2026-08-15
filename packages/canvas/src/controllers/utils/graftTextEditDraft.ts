@@ -1,23 +1,24 @@
+import { isSameRichText } from "../../schemas/objects/types/RichText";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import {
-	readTextSlot,
-	writeTextSlot,
+	readRichTextSlot,
+	writeRichTextSlot,
 } from "../../states/objects/types/TextSlots";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
  * Grafts the in-progress editor text onto the object being edited, producing the
- * objects map the rendering and editor-placement layers read. Geometry derived
- * from text (the record's title band, and every region split that follows it)
- * is computed from the slots, so without this graft it would only move once the
- * edit is committed and would jump at that moment.
+ * objects map the rendering, editor-placement and menu-anchoring layers read.
+ * Geometry derived from text (the record's title band, and every region split
+ * that follows it) is computed from the slots, so without this graft it would
+ * only move once the edit is committed and would jump at that moment.
  *
  * Draft only: the result never reaches the committed state (the reducer, hit
- * testing, snapping, bboxes all stay on `state.objects`), and the write goes
- * through the same {@link writeTextSlot} the commit uses, so a rows-holding slot
- * takes the split form rather than the joined string.
+ * testing and snapping all stay on `state.objects`), and the write goes
+ * through the same {@link writeRichTextSlot} the commit uses, so a rows-holding
+ * slot takes the split form rather than the joined body.
  *
  * @param objects - The committed objects map
  * @param textEditState - The active editing session; null (or a connector label,
@@ -52,15 +53,24 @@ export const graftTextEditDraft = (
 		return objects;
 	}
 
-	// The draft equals the committed text until the first keystroke (and again
+	// The draft equals the committed body until the first keystroke (and again
 	// whenever it is typed back), so the identity is kept through both.
-	if (readTextSlot(target.text, textEditState.slotId) === textEditState.text) {
+	if (
+		isSameRichText(
+			readRichTextSlot(target.text, textEditState.slotId),
+			textEditState.text,
+		)
+	) {
 		return objects;
 	}
 
 	const grafted = {
 		...target,
-		text: writeTextSlot(target.text, textEditState.slotId, textEditState.text),
+		text: writeRichTextSlot(
+			target.text,
+			textEditState.slotId,
+			textEditState.text,
+		),
 	} as ObjectState;
 
 	const resizeToContent = contentResizer.get(grafted.type);

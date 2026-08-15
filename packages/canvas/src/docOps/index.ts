@@ -14,6 +14,7 @@ export { type ZOrderPlacement } from "./reorderObjects";
 export { type SetRotationResult } from "./setRotation";
 export { type SetStyleResult } from "./setStyle";
 export { type StyleParams } from "./styleFields";
+export { type StyleTextParams } from "./styleText";
 export { type UpdateConnectorParams } from "./updateConnector";
 export { DocOperationError } from "./errors";
 export type { CanvasDoc } from "../schemas/canvas/CanvasDoc";

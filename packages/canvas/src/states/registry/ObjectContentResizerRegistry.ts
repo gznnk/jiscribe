@@ -1,4 +1,5 @@
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+import type { TextSlotStyle } from "../../schemas/objects/types/TextSlot";
 import type { ObjectState } from "../objects/base/ObjectState";
 
 /**
@@ -13,6 +14,13 @@ export type ObjectContentResizeContext = {
 	 * percent off, which shows up as a box clipping its own last characters.
 	 */
 	fontFamily: string;
+	/**
+	 * The resized type's own defaults for its body slot, filled in by the registration
+	 * (`applyObjectDefinition`) rather than by the caller: measuring against a
+	 * style other than the drawn one is the same few-percent error as the wrong
+	 * family. Undefined for a type that declares none.
+	 */
+	textStyleDefaults?: TextSlotStyle;
 };
 
 /**

@@ -82,11 +82,7 @@ export type PointerInternalEvent = InternalEventBase & {
 	 * instead, filled from the pressed state at fire time.
 	 */
 	type:
-		| "pointerdown"
-		| "pointermove"
-		| "pointerup"
-		| "pointercancel"
-		| "longpress";
+		"pointerdown" | "pointermove" | "pointerup" | "pointercancel" | "longpress";
 	/**
 	 * Pointer the event belongs to; events of any other pointer are dropped while a press
 	 * is held. Synthesized "longpress" and wheel-converted pointermove reuse the pressed id.
@@ -1204,7 +1200,7 @@ export class GestureRecognizer {
 	public getHandlers(): PointerEventHandlers {
 		return {
 			onPointerDown: (e) => {
-				// e.g. a textarea during text editing, or an input inside a menu.
+				// e.g. the editing surface during text editing, or an input inside a menu.
 				if (isGestureOptedOut(e.target)) {
 					return;
 				}

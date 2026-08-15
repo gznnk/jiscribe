@@ -5,8 +5,9 @@ export default defineConfig({
 		globals: true,
 		environment: "node",
 		include: [
-			// ユニットテストはすべて __tests__ に co-located（solitary / sociable を問わない）。
-			// プロセス境界を跨ぐ統合検証は E2E（Playwright）側に置く。詳細は docs/09-testing.md。
+			// Every unit test is co-located in __tests__, solitary and sociable alike.
+			// Integration checks that cross a process boundary live in the E2E suite
+			// (Playwright). See docs/09-testing.md for the details.
 			"src/**/__tests__/**/*.{test,spec}.{ts,tsx}",
 		],
 		coverage: {

@@ -183,7 +183,7 @@ test.describe("two-finger pinch (pan + zoom)", () => {
 
 		const client = await enableTouch(page);
 		const tp = (p: TouchPoint): TouchPoint => ({ ...p, ...canvas.toScreen(p) });
-		const editor = canvas.page.locator("textarea");
+		const editor = canvas.textEditorSurface();
 
 		// Double-tap the first shape to start text editing
 		for (let tap = 0; tap < 2; tap++) {

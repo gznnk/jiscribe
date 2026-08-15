@@ -70,19 +70,82 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 ## E2E (Playwright)
 
-Non-regression tests using a real browser and real UI operations. Placed under `packages/canvas/e2e/`.
+Non-regression tests using a real browser and real UI operations. They are spread over
+**nine suites**, because the package that owns a shape owns the specs for it.
 
-- `playwright.config.mts` auto-starts a dedicated test harness app (`e2e/harness/`, a minimal Vite app that mounts `Canvas`) via `webServer`. `testDir: e2e/specs`
+| Suite              | Location                    | Scope                                                                                                   |
+| ------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| canvas             | `packages/canvas/e2e/`      | Core behavior: gestures, selection, transform, text editing, connectors, arrangement, toolbar and menus |
+| each shape plugin  | `plugins/<name>/e2e/`       | That package's shapes only                                                                              |
+| plugin coexistence | `apps/canvas-examples/e2e/` | One spec: all seven shipped plugins on a single canvas                                                  |
+
+Every suite is laid out the same way and runs on the shared kit described below.
+
+```
+<package>/
+├── playwright.config.ts     # createCanvasPlaywrightConfig({ testDir, harnessCommand })
+└── e2e/
+    ├── harness/             # index.html + main.tsx (mountPluginHarness) + vite.config.ts
+    └── specs/
+```
+
+- `playwright.config.ts` auto-starts the harness — a minimal Vite app that mounts `Canvas` —
+  via `webServer`, on a port taken from the OS ephemeral range per run, so suites can run
+  side by side. The extension is not `.mts`: Playwright transpiles a config to CommonJS, and
+  an ESM config cannot then take the kit's named exports
+- **canvas's harness registers no shipped plugin.** It mounts `e2e/plugins/specShapesPlugin.tsx`,
+  a test-only stand-in supplying the traits core no longer owns itself: `tile` (drag-drawn,
+  in a category flyout), `pin` (click-placed) and `card` (`<g>`-rooted, with a text slot).
+  Core specs that used a shipped shape as their subject drive these instead
+- **A plugin's harness mounts that plugin alone.** Passing under a solo load is itself the
+  evidence that the package carries no implicit dependency on another plugin
+- **canvas-examples' harness mounts all seven**, and its one spec looks only at what breaks
+  when they share a canvas: ObjectType registration collisions, duplicated toolbar entries,
+  `<defs>` id collisions. It can hold that without a dependency cycle because it sits at the
+  top of the dependency graph — it depends on canvas and all seven plugins, and nothing
+  depends on it
 - `support/CanvasDriver.ts` … the API for drawing, selection, text, color, and connector operations.
-  `support/selectors.ts` … `data-kind` / `data-id` selector constants. `fixtures.ts` injects the CanvasDriver
-- `specs/` is the test body (the CI gate). Categories: `arrange` / `driver` / `editing` / `keyboard` /
+  `support/selectors.ts` … `data-kind` / `data-id` selector constants. `fixtures.ts` injects the CanvasDriver.
+  All three live in canvas and reach the other suites through the kit
+- canvas's `specs/` categories: `arrange` / `driver` / `editing` / `keyboard` /
   `scenario` / `shapes` / `ui` (+ `smoke.spec.ts`)
-- Run: `pnpm --filter @jiscribe/canvas test:e2e` (`:headed` / `:ui` available)
+- Run: `pnpm --filter @jiscribe/canvas test:e2e` (`:headed` / `:ui` available) /
+  `pnpm --filter @jiscribe/plugin-sticky-shape test:e2e` / `pnpm --filter canvas-examples test:e2e`
 
 Design policy: **do not add retries that hide failures**. The CanvasDriver stabilizes by waiting on state (`expect.poll`, etc.) rather than on time, so it does not mask genuine defects.
 
 Non-regression for the gesture spec corresponds to the [Gesture System](./04-gesture-system.md)
 (`specs/shapes/basic-gestures.spec.ts` / `specs/editing/text-edit-gestures.spec.ts`, etc.).
+
+### The shared kit
+
+The implementation lives in canvas under `e2e/kit/` and is exported as **four entries, one
+per file of a suite**. Plugins take the same kit through `@jiscribe/canvas-sdk`.
+
+| File in a suite              | canvas entry                                 | Plugin entry                                     |
+| ---------------------------- | -------------------------------------------- | ------------------------------------------------ |
+| spec files                   | `@jiscribe/canvas/testing`                   | `@jiscribe/canvas-sdk/testing/e2e`               |
+| `playwright.config.ts`       | `@jiscribe/canvas/testing/playwright-config` | `@jiscribe/canvas-sdk/testing/playwright-config` |
+| `e2e/harness/vite.config.ts` | `@jiscribe/canvas/testing/vite-config`       | `@jiscribe/canvas-sdk/testing/vite-config`       |
+| `e2e/harness/main.tsx`       | `@jiscribe/canvas/testing/harness`           | `@jiscribe/canvas-sdk/testing/harness`           |
+
+It is split that way because each of those files is loaded by a different runtime, and none
+of them tolerates the others' imports.
+
+- Importing the spec entry registers Playwright fixtures, which throws under any other
+  loader — `playwright.config.ts` included
+- The vite config entry is kept apart from the Playwright config entry so that loading a
+  config, which Playwright transpiles to CommonJS, never has to `require()` vite, which
+  ships ESM only
+- The harness entry is browser code, while the other three reach for `@playwright/test`,
+  `node:child_process` and vite, none of which can be bundled into a page
+
+The API is `createCanvasPlaywrightConfig({ testDir, harnessCommand })` /
+`createPluginHarnessViteConfig()` / `mountPluginHarness({ plugins, toolbarLayout })`, plus
+`test` / `expect` / `CanvasDriver` / `selectors` on the spec side. canvas itself imports the
+kit relatively (`./e2e/testing-playwright-config`), never through the SDK: the
+`canvas → canvas-sdk → canvas` cycle is what this split removed. Standing up a suite for a
+plugin is walked through in [Authoring Plugins](./13-authoring-plugins.md).
 
 ## Circular dependency check (madge)
 

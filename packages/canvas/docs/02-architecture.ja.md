@@ -16,12 +16,12 @@
 
 ```
 packages/canvas/src/
-├── index.ts                # パッケージエントリ（Canvas / CanvasDoc / parseCanvasText を re-export）
+├── index.ts                # パッケージエントリ（Canvas / CanvasDoc / パース結果型を re-export）
 ├── parser.ts               # パーサー専用エントリ（UI 依存なし。VSCode 拡張の Node 側向け）
 ├── schemas/                # 永続化データ型定義（Doc モデル）+ 構造/意味の検証
 │   ├── canvas/
 │   │   ├── CanvasDoc.ts
-│   │   └── validators/     # parseCanvasText / validateStructure / validateSemantics
+│   │   └── validators/     # createCanvasParser / validateStructure / validateSemantics
 │   ├── objects/            # base / primitives / connections / annotations / types + 型別 validateXxxDoc
 │   └── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry（+ 初期化）
 ├── states/                 # ランタイム状態型（State モデル）+ Mapper
@@ -104,7 +104,7 @@ State を Props として受け取り SVG を描画する純粋コンポーネ�
 - **React ツリー**（コンポーネント／フック）→ `CanvasRegistriesContext` ＋ `useCanvasRegistries()`。表示層は controllers 層のバンドル型を import できないため、コンポーネントレジストリだけは presentations 層の `ObjectComponentRegistryContext` で配る。
 - **純粋な reducer/handler/util ツリー**（React context を読めない）→ バンドルは `CanvasControllerState` には**載せない**（データではなく依存だから）。`createCanvasReducer(registries)` がクロージャで捕捉し、各 handler/command に明示的な `registries` 引数として渡す（`handleGesture(state, gesture, registries)`、`command.execute(state, registries)` など）。`state` を持たない leaf util は該当 sub-registry を引数で受ける。
 
-`initializeObjectRegistry(registries)` / `initializeGestureHandlerRegistry(registries)` / `initializeCommands(registries, commandIds?)` は**渡されたバンドル**を登録し、`createCanvasRegistries` がそれらを配線する（既定は全 object type、または `config` の部分集合）。唯一の例外は `objectDocValidatorRegistry` で、これは schema 層の**グローバル**シングルトンのまま：入力境界のパース時検証でのみ使われ（`<Canvas>` 生成前）、`parseCanvasText` が遅延初期化するのでパーサー専用エントリは UI 依存を引き込まない → [データモデル](./03-data-model-and-persistence.ja.md)。
+`initializeObjectRegistry(registries)` / `initializeGestureHandlerRegistry(registries)` / `initializeCommands(registries, commandIds?)` は**渡されたバンドル**を登録し、`createCanvasRegistries` がそれらを配線する（既定は全 object type、または `config` の部分集合）。唯一の例外は doc バリデータのレジストリで、これは schema 層に閉じ、`createCanvasParser` が渡された定義集合からパーサーごとに構築する：入力境界のパース時検証でのみ使われ（`<Canvas>` 生成前）、パーサー専用エントリが UI 依存を引き込まないようにするため → [データモデル](./03-data-model-and-persistence.ja.md)。
 
 > **意味論の注意**: `config.objectTypes` で型を絞った場合、呼び出し側は有効な型だけを含む doc を渡す責任を負う。無効な型を含む doc は `canvasToState` が `"Mapper not found"` を throw する（「呼び出し側が valid/consistent な doc を渡す」契約と一致 → [設計思想](./01-design-philosophy.ja.md) 原則4）。既定 config（全型）は後方互換。
 
@@ -185,7 +185,7 @@ Registry パターンにより、形状追加は「6 ステップ + 登録」で
 5. **Component**: `presentations/objects/primitives/<Shape>/<Shape>.tsx`
 6. **登録**: 登録先レジストリが分かれているため、**2 箇所**に登録する。
    - `controllers/registries/initializeObjectRegistry.ts` — Mapper / Component / behavior / State バリデータ / menu（UI 側レジストリ群）
-   - `schemas/registry/initializeObjectDocValidatorRegistry.ts` — Doc バリデータ。**ここを忘れない**こと。これは `parseCanvasText` が遅延初期化する独立した schema 層レジストリなので、ここに登録し忘れると UI では動くのにパーサーが未知の型として reject する。
+   - `schemas/registry/builtinObjectDocDefinitions.ts` — Doc バリデータ。**ここを忘れない**こと。これは `createCanvasParser` が構築する独立した schema 層レジストリの供給元なので、ここに登録し忘れると UI では動くのにパーサーが未知の型として除去する。
 
 既存ロジックの分岐を増やさず、登録だけで形状横断処理（変形・スナップ・描画）に乗る。
 

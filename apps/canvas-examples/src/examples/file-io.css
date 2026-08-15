@@ -5,6 +5,11 @@
 	gap: 4px;
 }
 
+/*
+ * Sized and coloured like the canvas's own toolbar buttons (32px box, 24px icon). The
+ * --jiscribe-* custom properties are injected on the Canvas root and inherit into the
+ * toolbar.leading slot, so host buttons follow the theme prop without knowing its values.
+ */
 .file-toolbar-button {
 	display: flex;
 	align-items: center;
@@ -13,17 +18,17 @@
 	height: 32px;
 	padding: 0;
 	border: 1px solid transparent;
-	border-radius: 4px;
+	border-radius: var(--jiscribe-radius);
 	background: transparent;
-	color: currentColor;
+	color: var(--jiscribe-icon-foreground);
 	cursor: pointer;
 	transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 .file-toolbar-button:hover {
-	background-color: rgba(128, 128, 128, 0.2);
+	background-color: var(--jiscribe-surface-hover);
 }
 
 .file-toolbar-button:active {
-	background-color: rgba(128, 128, 128, 0.3);
+	background-color: var(--jiscribe-surface-active);
 }

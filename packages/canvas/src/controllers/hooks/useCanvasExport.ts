@@ -4,7 +4,6 @@ import {
 	useLayoutEffect,
 	useMemo,
 	useRef,
-	useState,
 } from "react";
 import type { Dispatch } from "react";
 
@@ -211,18 +210,15 @@ type UseCanvasExportParams = {
 type UseCanvasExportResult = {
 	/** Export sub-handle assembled into the Canvas handle (`ref.current.export`) */
 	exportHandle: CanvasExportHandle;
-	isExportDialogOpen: boolean;
-	/** Opens the export dialog (and closes the context menu it was invoked from) */
-	openExportDialog: () => void;
-	closeExportDialog: () => void;
 	handleExportSubmit: (values: ExportSubmitValues) => void;
 };
 
 /**
- * Owns image export: the imperative export handle and the export dialog
- * (open state + submit). Export options are built from the state at export
- * time (not at render time), so the handle and all returned callbacks stay
- * referentially stable across state updates and unstable host callbacks.
+ * Owns image export: the imperative export handle and the export dialog's
+ * submit (the dialog's open state lives in the reducer as `activeModal`).
+ * Export options are built from the state at export time (not at render time),
+ * so the handle and all returned callbacks stay referentially stable across
+ * state updates and unstable host callbacks.
  */
 export const useCanvasExport = ({
 	svgRef,
@@ -288,17 +284,10 @@ export const useCanvasExport = ({
 		[svgRef, buildExportOptions, withCullingSuspended],
 	);
 
-	// Export dialog (opened from the context menu): pick format + margin, OK
-	const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-	const closeExportDialog = useCallback(() => setIsExportDialogOpen(false), []);
-	const openExportDialog = useCallback(() => {
-		dispatch({ type: "CLOSE_CONTEXT_MENU" });
-		setIsExportDialogOpen(true);
-	}, [dispatch]);
-
+	// Export dialog (opened by ExportCommand): pick format + margin, OK
 	const handleExportSubmit = useCallback(
 		(values: ExportSubmitValues) => {
-			setIsExportDialogOpen(false);
+			dispatch({ type: "CLOSE_MODAL" });
 			const svg = svgRef.current;
 			if (!svg) {
 				return;
@@ -313,14 +302,11 @@ export const useCanvasExport = ({
 				),
 			);
 		},
-		[svgRef, buildExportOptions, notifyError, withCullingSuspended],
+		[svgRef, buildExportOptions, dispatch, notifyError, withCullingSuspended],
 	);
 
 	return {
 		exportHandle,
-		isExportDialogOpen,
-		openExportDialog,
-		closeExportDialog,
 		handleExportSubmit,
 	};
 };

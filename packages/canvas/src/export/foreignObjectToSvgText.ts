@@ -17,6 +17,10 @@
  */
 
 import { borderStyleToDasharray } from "./borderStyleToDasharray";
+import type { TextRun } from "../schemas/objects/types/RichText";
+import { sliceRichText } from "../schemas/objects/types/RichText";
+import type { TextMeasureFont } from "../states/objects/utils/measureText";
+import { layoutVisualLines } from "../states/objects/utils/measureText";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -58,84 +62,6 @@ const isFullyTransparent = (color: string): boolean => {
 	return alpha !== null && Number.parseFloat(alpha[1]) === 0;
 };
 
-/**
- * Splits a token by adding one character at a time while it fits into
- * maxWidth (for long words and CJK break-word behavior).
- */
-const breakLongToken = (
-	token: string,
-	maxWidth: number,
-	measure: (text: string) => number,
-): string[] => {
-	const chunks: string[] = [];
-	let current = "";
-	for (const char of token) {
-		const candidate = current + char;
-		if (current !== "" && measure(candidate) > maxWidth) {
-			chunks.push(current);
-			current = char;
-		} else {
-			current = candidate;
-		}
-	}
-	if (current !== "") {
-		chunks.push(current);
-	}
-	return chunks;
-};
-
-/**
- * Word-wraps one paragraph into an array of lines. Prefers word (space)
- * boundaries and falls back to per-character breaking when a single word
- * exceeds the width.
- */
-const wrapParagraph = (
-	paragraph: string,
-	maxWidth: number,
-	measure: (text: string) => number,
-): string[] => {
-	if (paragraph === "") {
-		return [""];
-	}
-	const words = paragraph.split(/ +/);
-	const lines: string[] = [];
-	let line = "";
-
-	const pushBrokenWord = (word: string): void => {
-		const chunks = breakLongToken(word, maxWidth, measure);
-		for (let i = 0; i < chunks.length - 1; i++) {
-			lines.push(chunks[i]);
-		}
-		line = chunks[chunks.length - 1] ?? "";
-	};
-
-	for (const word of words) {
-		if (line === "") {
-			if (measure(word) > maxWidth) {
-				pushBrokenWord(word);
-			} else {
-				line = word;
-			}
-			continue;
-		}
-		const candidate = `${line} ${word}`;
-		if (measure(candidate) <= maxWidth) {
-			line = candidate;
-		} else {
-			lines.push(line);
-			if (measure(word) > maxWidth) {
-				pushBrokenWord(word);
-			} else {
-				line = word;
-			}
-		}
-	}
-	if (line !== "") {
-		lines.push(line);
-	}
-	return lines;
-};
-
 /** Geometry attributes of the cloned foreignObject (parent user units). */
 type ForeignObjectGeometry = {
 	x: number;
@@ -154,6 +80,39 @@ const readForeignObjectGeometry = (
 	height: parsePxOr(clonedForeignObject.getAttribute("height") ?? "0", 0),
 	transform: clonedForeignObject.getAttribute("transform"),
 });
+
+/**
+ * The runs the drawn text is split into: one per `<span>` the overlay emits for a
+ * body styled per range (RichTextContent), and a single unstyled run for a body
+ * that is not — which is the shape of every text this used to handle.
+ *
+ * @param contentElement - The element holding the text (the TextOverlayFrame content box)
+ * @returns The runs in drawing order, each carrying only what it overrides
+ */
+const readTextRuns = (contentElement: Element): TextRun[] => {
+	const runs: TextRun[] = [];
+	for (const node of Array.from(contentElement.childNodes)) {
+		const text = (node.textContent ?? "").replace(/\u00a0/g, " ");
+		if (text === "") {
+			continue;
+		}
+		if (node.nodeType !== Node.ELEMENT_NODE) {
+			runs.push({ text });
+			continue;
+		}
+		const style = getComputedStyle(node as Element);
+		runs.push({
+			text,
+			fontColor: style.color || undefined,
+			fontSize: parsePxOr(style.fontSize, 16),
+			fontFamily: style.fontFamily || undefined,
+			fontWeight: style.fontWeight || undefined,
+			fontStyle: style.fontStyle || undefined,
+			textDecoration: style.textDecorationLine || undefined,
+		});
+	}
+	return runs;
+};
 
 /** Rendered text of an element, with nbsp normalized. Null when blank. */
 const readRenderedText = (element: Element): string | null => {
@@ -219,8 +178,45 @@ type TextLayoutBox = {
 	insetY: number;
 };
 
+/** The pieces one line is drawn in, cut out of the whole text's runs. */
+const lineRuns = (runs: TextRun[], start: number, end: number): TextRun[] => {
+	const sliced = sliceRichText(runs, start, end);
+	return typeof sliced === "string" ? [{ text: sliced }] : sliced;
+};
+
+/** The CSS font shorthand, whose order (style → weight → size → family) is fixed: a mis-ordered value is dropped and leaves the context's previous font in place. */
+const fontShorthand = (font: TextMeasureFont): string =>
+	`${font.fontStyle ?? "normal"} ${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
+
+/** The typography a run is drawn with: the box's, with the run's own overrides on top. */
+const resolveRunStyle = (run: TextRun, base: SvgTextStyle): SvgTextStyle => ({
+	...base,
+	fontSize: run.fontSize ?? base.fontSize,
+	fontFamily: run.fontFamily ?? base.fontFamily,
+	fontWeight: run.fontWeight ?? base.fontWeight,
+	fontStyle: run.fontStyle ?? base.fontStyle,
+	textDecoration: run.textDecoration ?? base.textDecoration,
+	fill: run.fontColor ?? base.fill,
+});
+
+/** The attributes a run needs of its own: the ones it does not inherit from the `<text>`. */
+const RUN_ATTRIBUTES = [
+	["fill", (style: SvgTextStyle) => style.fill],
+	["font-family", (style: SvgTextStyle) => style.fontFamily],
+	["font-size", (style: SvgTextStyle) => String(style.fontSize)],
+	["font-weight", (style: SvgTextStyle) => style.fontWeight],
+	["font-style", (style: SvgTextStyle) => style.fontStyle],
+	["text-decoration", (style: SvgTextStyle) => style.textDecoration],
+] as const;
+
 /**
  * Builds the `<text>` reproducing the HTML text of a box.
+ *
+ * The lines come from the same layout the canvas draws with
+ * (layoutVisualLines), so an exported line breaks where the drawn one does, and
+ * a body styled per range is measured run by run. Each line is one `<tspan>`
+ * placed at its baseline; a line that mixes typography holds one nested
+ * `<tspan>` per run, carrying only what that run does not inherit.
  *
  * Baseline math follows the CSS inline layout model: each line box is
  * `line-height` tall, the font's content box (ascent + descent) is centered
@@ -230,32 +226,55 @@ type TextLayoutBox = {
  * the exported text vertically aligned with the on-screen rendering.
  */
 const createSvgText = (
-	content: string,
+	runs: TextRun[],
 	style: SvgTextStyle,
 	box: TextLayoutBox,
 	measureContext: CanvasRenderingContext2D,
 ): SVGTextElement => {
 	const innerWidth = Math.max(0, box.width - box.insetX * 2);
+	const baseFont: TextMeasureFont = {
+		fontSize: style.fontSize,
+		fontFamily: style.fontFamily,
+		fontWeight: style.fontWeight,
+		fontStyle: style.fontStyle,
+	};
+	const lines = layoutVisualLines(runs, baseFont, innerWidth);
 
-	// The CSS font shorthand fixes the order style → weight → size → family; a
-	// style after the weight makes the whole declaration invalid and the context
-	// keeps its previous font.
-	measureContext.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
-	const measure = (text: string): number =>
-		measureContext.measureText(text).width;
+	// The box's line-height is unitless (TEXT_LINE_HEIGHT), so a run drawn larger
+	// takes a proportionally taller line box. The ratio is taken off the computed
+	// style rather than the constant, so a box that sets its own line-height —
+	// the connector label — still exports as it is drawn.
+	const lineHeightRatio = style.lineHeight / style.fontSize;
 
-	// Real font metrics for the baseline. fontBoundingBox* is supported by all
-	// modern browsers; the fallback approximates a typical Latin font.
-	const sampleMetrics = measureContext.measureText("Mg");
-	const ascent = sampleMetrics.fontBoundingBoxAscent ?? style.fontSize * 0.8;
-	const descent = sampleMetrics.fontBoundingBoxDescent ?? style.fontSize * 0.2;
-	// CSS centers the font's content box inside the line box (half-leading)
-	const baselineInLine = (style.lineHeight - (ascent + descent)) / 2 + ascent;
+	/** Line box height and baseline offset, from the tallest font drawn on the line. */
+	const measureLineBox = (
+		pieces: TextRun[],
+	): { height: number; baseline: number } => {
+		const tallest = pieces.reduce(
+			(largest, piece) => Math.max(largest, piece.fontSize ?? style.fontSize),
+			style.fontSize,
+		);
+		const font = pieces.find((piece) => piece.fontSize === tallest) ?? {
+			text: "",
+		};
+		measureContext.font = fontShorthand({
+			...resolveRunStyle(font, style),
+			fontSize: tallest,
+		});
+		// Real font metrics for the baseline. fontBoundingBox* is supported by all
+		// modern browsers; the fallback approximates a typical Latin font.
+		const metrics = measureContext.measureText("Mg");
+		const ascent = metrics.fontBoundingBoxAscent ?? tallest * 0.8;
+		const descent = metrics.fontBoundingBoxDescent ?? tallest * 0.2;
+		const height = tallest * lineHeightRatio;
+		// CSS centers the font's content box inside the line box (half-leading)
+		return { height, baseline: (height - (ascent + descent)) / 2 + ascent };
+	};
 
-	// Split into paragraphs at \n, then word-wrap each paragraph
-	const lines = content
-		.split("\n")
-		.flatMap((paragraph) => wrapParagraph(paragraph, innerWidth, measure));
+	const lineBoxes = lines.map((line) => {
+		const pieces = lineRuns(runs, line.start, line.end);
+		return { pieces, ...measureLineBox(pieces) };
+	});
 
 	// x: anchor reference position (left / center / right)
 	const leftX = box.x + box.insetX;
@@ -271,7 +290,7 @@ const createSvgText = (
 	// y: top of the text block according to the vertical placement. Flex
 	// centers the overflowing block too (it spills equally on both sides),
 	// so the middle case is intentionally not clamped at the padding edge.
-	const blockHeight = lines.length * style.lineHeight;
+	const blockHeight = lineBoxes.reduce((total, line) => total + line.height, 0);
 	const blockTop =
 		style.placement === "top"
 			? box.y + box.insetY
@@ -288,17 +307,40 @@ const createSvgText = (
 	textElement.setAttribute("text-decoration", style.textDecoration);
 	textElement.setAttribute("text-anchor", style.anchor);
 
-	lines.forEach((line, index) => {
+	let lineTop = blockTop;
+	for (const line of lineBoxes) {
 		const tspan = document.createElementNS(SVG_NS, "tspan");
 		tspan.setAttribute("x", String(anchorX));
-		tspan.setAttribute(
-			"y",
-			String(blockTop + index * style.lineHeight + baselineInLine),
-		);
-		// Zero-width space (U+200B) keeps empty lines from collapsing
-		tspan.textContent = line === "" ? "\u200b" : line;
+		tspan.setAttribute("y", String(lineTop + line.baseline));
+		lineTop += line.height;
+
+		const styledPieces = line.pieces.filter((piece) => piece.text !== "");
+		if (styledPieces.length === 0) {
+			// Zero-width space (U+200B) keeps empty lines from collapsing
+			tspan.textContent = "\u200b";
+		} else if (styledPieces.length === 1 && styledPieces[0].text !== "") {
+			const runStyle = resolveRunStyle(styledPieces[0], style);
+			for (const [name, read] of RUN_ATTRIBUTES) {
+				if (read(runStyle) !== read(style)) {
+					tspan.setAttribute(name, read(runStyle));
+				}
+			}
+			tspan.textContent = styledPieces[0].text;
+		} else {
+			for (const piece of styledPieces) {
+				const runStyle = resolveRunStyle(piece, style);
+				const runSpan = document.createElementNS(SVG_NS, "tspan");
+				for (const [name, read] of RUN_ATTRIBUTES) {
+					if (read(runStyle) !== read(style)) {
+						runSpan.setAttribute(name, read(runStyle));
+					}
+				}
+				runSpan.textContent = piece.text;
+				tspan.appendChild(runSpan);
+			}
+		}
 		textElement.appendChild(tspan);
-	});
+	}
 
 	return textElement;
 };
@@ -354,7 +396,7 @@ export const foreignObjectToSvgText = (
 	const group = createReplacementGroup(geometry);
 	group.appendChild(
 		createSvgText(
-			content,
+			readTextRuns(textDiv),
 			style,
 			{
 				...geometry,
@@ -474,7 +516,9 @@ export const connectorLabelToSvgGroup = (
 	const borderWidth = parsePxOr(boxStyle.borderTopWidth, 0);
 	group.appendChild(
 		createSvgText(
-			content,
+			// A label carries one styling for the whole of it (it is not a text slot),
+			// so it needs no runs of its own.
+			[{ text: content }],
 			readSvgTextStyle(boxStyle, boxStyle.alignItems),
 			{
 				...geometry,

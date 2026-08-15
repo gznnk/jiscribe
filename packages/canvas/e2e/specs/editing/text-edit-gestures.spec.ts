@@ -14,7 +14,7 @@ test.describe("gesture behavior during text editing", () => {
 	const RECT_TO = { x: 600, y: 320 };
 	const CENTER = { x: 500, y: 260 };
 
-	test("1-1 focuses the textarea and puts the caret at the end when editing starts", async ({
+	test("1-1 focuses the editing surface and puts the caret at the end when editing starts", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -44,7 +44,7 @@ test.describe("gesture behavior during text editing", () => {
 		await canvas.cancelText();
 	});
 
-	test("1-3 selects text without moving the shape when dragging inside the textarea", async ({
+	test("1-3 selects text without moving the shape when dragging inside the editing surface", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -55,9 +55,9 @@ test.describe("gesture behavior during text editing", () => {
 			.objectById(id)
 			.getAttribute("transform");
 
-		const box = await canvas.textArea().boundingBox();
+		const box = await canvas.textEditorSurface().boundingBox();
 		if (!box) {
-			throw new Error("cannot read the position of the textarea");
+			throw new Error("cannot read the position of the editing surface");
 		}
 		// box is in screen coordinates; drag takes content coordinates, so convert
 		// with toContent.
@@ -97,7 +97,7 @@ test.describe("gesture behavior during text editing", () => {
 		await canvas.cancelText();
 	});
 
-	test("1-5 scrolls the textarea and not the canvas when wheeling over an overflowing textarea", async ({
+	test("1-5 scrolls the editing surface and not the canvas when wheeling over an overflowing one", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -115,7 +115,7 @@ test.describe("gesture behavior during text editing", () => {
 
 		await expect
 			.poll(() => canvas.textEditorScrollTop(), {
-				message: "the wheel should scroll the textarea",
+				message: "the wheel should scroll the editing surface",
 			})
 			.toBeLessThan(scrollBefore);
 		expect(await canvas.getViewBox()).toBe(viewBoxBefore);
@@ -163,7 +163,7 @@ test.describe("gesture behavior during text editing", () => {
 		await canvas.cancelText();
 	});
 
-	// The right click over the textarea is delegated to the native menu.
+	// The right click over the editing surface is delegated to the native menu.
 	test("1-8 does not open the built-in context menu on right click during an edit", async ({
 		canvas,
 	}) => {

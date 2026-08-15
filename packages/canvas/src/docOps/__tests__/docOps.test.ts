@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseCanvasText } from "../../schemas/canvas/validators";
+import { createCanvasParser } from "../../schemas/canvas/validators";
 import type { EdgeAnchorSide } from "../../schemas/objects/types/EndpointRef";
 import { createFrameObjectFactory } from "../../schemas/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
@@ -12,7 +12,9 @@ const emptyDoc = () => ({ version: 1 as const, root: [] });
 
 /** Serialize the doc, run it through validation, and assert it is valid. */
 const expectValid = (doc: { version: 1; root: unknown[] }) => {
-	const result = parseCanvasText(`${JSON.stringify(doc, null, "\t")}\n`);
+	const result = createCanvasParser().parse(
+		`${JSON.stringify(doc, null, "\t")}\n`,
+	);
 	expect(result.kind).toBe("ok");
 };
 
@@ -481,7 +483,7 @@ describe("connect with a free end", () => {
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
-	// The doc model reserves a line owned by nothing for polyline (validateConnectorDoc 参照).
+	// The doc model reserves a line owned by nothing for polyline (see validateConnectorDoc).
 	it("throws DocOperationError when both ends are points", () => {
 		const doc = twoRects();
 		const before = JSON.stringify(doc);

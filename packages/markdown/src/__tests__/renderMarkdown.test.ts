@@ -1,46 +1,47 @@
 import { describe, it, expect } from "vitest";
 
-import { renderMarkdown } from "../index";
+import { createMarkdownRenderer, renderMarkdown } from "../index";
 
-// renderMarkdown は「markdown-it（html:false）でパース → DOMPurify でサニタイズ」の
-// 2 層で XSS を防ぐ。ここでは公開契約（サニタイズ設定・リンク属性・数式・整形）が
-// 回帰しないことを end-to-end で固定する。DOM 環境は vitest.config.ts の jsdom。
+// renderMarkdown prevents XSS in two layers: parse with markdown-it (html:false),
+// then sanitize with DOMPurify. These tests pin the public contract (sanitizer
+// settings, link attributes, math, formatting) end to end so it cannot regress.
+// The DOM environment is jsdom, configured in vitest.config.ts.
 
-describe("renderMarkdown - サニタイズ（html:false + DOMPurify）", () => {
-	it("生の <script> はエスケープされ、実タグとして出力されない", () => {
+describe("renderMarkdown - sanitizing (html:false + DOMPurify)", () => {
+	it("escapes a raw <script> instead of emitting a real tag", () => {
 		const html = renderMarkdown("<script>alert(1)</script>");
 		expect(html).not.toContain("<script");
 		expect(html).toContain("&lt;script&gt;");
 	});
 
-	it("生の <img onerror> は実タグにならない（属性が発火しない）", () => {
+	it("does not turn a raw <img onerror> into a real tag (the attribute never fires)", () => {
 		const html = renderMarkdown("<img src=x onerror=alert(1)>");
-		// エスケープ後は "onerror" が文字列として残るため、実タグの有無で判定する
+		// "onerror" survives as text after escaping, so assert on the real tag instead
 		expect(html).not.toContain("<img");
 		expect(html).toContain("&lt;img");
 	});
 
-	it("コードフェンス内の HTML はエスケープされる", () => {
+	it("escapes HTML inside a code fence", () => {
 		const html = renderMarkdown("```\nplain <b>bold</b>\n```");
 		expect(html).toContain("&lt;b&gt;");
 		expect(html).not.toContain("<b>");
 	});
 });
 
-describe("renderMarkdown - リンク", () => {
-	it("リンクに target=_blank と rel が付与され、サニタイズを通過する", () => {
+describe("renderMarkdown - links", () => {
+	it("adds target=_blank and rel to links, and they survive sanitizing", () => {
 		const html = renderMarkdown("[link](https://example.com)");
 		expect(html).toContain('href="https://example.com"');
 		expect(html).toContain('target="_blank"');
 		expect(html).toContain('rel="noopener noreferrer"');
 	});
 
-	it("javascript: スキームはリンク化されない（アンカーを生成しない）", () => {
+	it("does not linkify the javascript: scheme (no anchor is produced)", () => {
 		const html = renderMarkdown("[x](javascript:alert(1))");
 		expect(html).not.toMatch(/<a\b/);
 	});
 
-	it("linkify で生の URL がリンク化され、同じ属性が付く", () => {
+	it("linkifies a bare URL and gives it the same attributes", () => {
 		const html = renderMarkdown("Visit https://example.com now");
 		expect(html).toContain('<a href="https://example.com"');
 		expect(html).toContain('target="_blank"');
@@ -48,52 +49,109 @@ describe("renderMarkdown - リンク", () => {
 	});
 });
 
-describe("renderMarkdown - 数式（KaTeX / normalizeMath）", () => {
-	it("$...$ はインライン数式としてレンダリングされる", () => {
+describe("renderMarkdown - math (KaTeX / normalizeMath)", () => {
+	it("renders $...$ as inline math", () => {
 		const html = renderMarkdown("$a+b$");
 		expect(html).toContain('class="katex"');
 		expect(html).toContain("<math");
 	});
 
-	it("$$...$$ はブロック数式（math-block）としてレンダリングされる", () => {
+	it("renders $$...$$ as block math (math-block)", () => {
 		const html = renderMarkdown("$$\na+b\n$$");
 		expect(html).toContain('class="math-block"');
 		expect(html).toContain("katex-display");
 	});
 
-	it("\\(...\\) は normalizeMath でインライン数式に変換される", () => {
+	it("converts \\(...\\) to inline math via normalizeMath", () => {
 		const html = renderMarkdown("\\(x\\)");
 		expect(html).toContain('class="katex"');
 		expect(html).not.toContain('class="math-block"');
 	});
 
-	it("\\[...\\] は normalizeMath でブロック数式に変換される", () => {
+	it("converts \\[...\\] to block math via normalizeMath", () => {
 		const html = renderMarkdown("\\[y\\]");
 		expect(html).toContain('class="math-block"');
 	});
 });
 
-describe("renderMarkdown - 基本整形", () => {
-	it("見出しをレンダリングする", () => {
+describe("renderMarkdown - basic formatting", () => {
+	it("renders headings", () => {
 		expect(renderMarkdown("# Title")).toContain("<h1>Title</h1>");
 	});
 
-	it("強調をレンダリングする", () => {
+	it("renders emphasis", () => {
 		expect(renderMarkdown("**x**")).toContain("<strong>x</strong>");
 	});
 
-	it("breaks: true により単一改行が <br> になる", () => {
+	it("turns a single newline into <br> because breaks: true is set", () => {
 		expect(renderMarkdown("a\nb")).toContain("<br>");
 	});
 
-	it("言語指定のコードフェンスは language- クラスが付き、ハイライトはされない", () => {
+	it("gives a language-tagged code fence a language- class without highlighting it", () => {
 		const html = renderMarkdown("```js\nconst a = 1;\n```");
 		expect(html).toContain('class="language-js"');
 		expect(html).not.toContain("hljs");
 	});
 
-	it("言語指定なしのコードフェンスはクラスなしの pre/code になる", () => {
+	it("renders a code fence without a language as plain pre/code", () => {
 		const html = renderMarkdown("```\nplain\n```");
 		expect(html).toContain("<pre><code>");
+	});
+});
+
+describe("createMarkdownRenderer - injected highlighter", () => {
+	it("puts the highlighter output inside pre/code and keeps the language class", () => {
+		const render = createMarkdownRenderer({
+			highlight: (code, language) =>
+				`<span class="tok-${language}">${code.trim()}</span>`,
+		});
+		const html = render("```js\nconst a = 1;\n```");
+		expect(html).toContain(
+			'<pre><code class="language-js"><span class="tok-js">const a = 1;</span></code></pre>',
+		);
+	});
+
+	it("receives the fence body unescaped and an empty language for a bare fence", () => {
+		const calls: [string, string][] = [];
+		const render = createMarkdownRenderer({
+			highlight: (code, language) => {
+				calls.push([code, language]);
+				return "";
+			},
+		});
+		render("```\n<b>x</b>\n```");
+		expect(calls).toEqual([["<b>x</b>\n", ""]]);
+	});
+
+	it("falls back to escaped text when the highlighter returns an empty string", () => {
+		const render = createMarkdownRenderer({ highlight: () => "" });
+		const html = render("```js\n<b>x</b>\n```");
+		expect(html).toContain("&lt;b&gt;");
+	});
+
+	it("falls back to escaped text when the highlighter throws", () => {
+		const render = createMarkdownRenderer({
+			highlight: () => {
+				throw new Error("unknown language");
+			},
+		});
+		const html = render("```js\nconst a = 1;\n```");
+		expect(html).toContain('class="language-js"');
+		expect(html).toContain("const a = 1;");
+	});
+
+	it("sanitizes the highlighter output like the rest of the document", () => {
+		const render = createMarkdownRenderer({
+			highlight: () =>
+				`<span onclick="alert(1)">x</span><script>alert(1)</script>`,
+		});
+		const html = render("```js\na\n```");
+		expect(html).not.toContain("onclick");
+		expect(html).not.toContain("<script");
+	});
+
+	it("leaves fences plain when no highlighter is given", () => {
+		const html = createMarkdownRenderer()("```js\nconst a = 1;\n```");
+		expect(html).toContain('<pre><code class="language-js">const a = 1;');
 	});
 });

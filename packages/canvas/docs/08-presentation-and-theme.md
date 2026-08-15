@@ -81,7 +81,7 @@ including stroke / fill / arrow color.
 - Since shape elements are emotion `styled` (`RectElement`, etc.), the resolved color is **passed via the
   `strokeColor` / `fillColor` props and interpolated as CSS on the styled-definition side**. emotion
   interpolates strings into the template, but the CSS safety (injection defense) of the interpolated color
-  and font values is already guaranteed at the **external-input boundary** (`parseCanvasText`'s two-stage
+  and font values is already guaranteed at the **external-input boundary** (the parser's two-stage
   validation / clipboard state validation), so no sanitization is performed at the sink (Principle 4).
 - For plain SVG elements without styled (render previews' `<rect>`, icons, etc.), apply it via inline `style`.
 

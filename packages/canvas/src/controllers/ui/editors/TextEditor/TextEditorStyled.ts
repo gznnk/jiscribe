@@ -11,11 +11,11 @@ import {
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 
 /**
- * Wrapper that carries the shape's position/transform and aligns the
- * textarea vertically, mirroring TextOverlayFrame's TextWrapper.
+ * Wrapper that carries the shape's position/transform and aligns the editable
+ * surface vertically, mirroring TextOverlayFrame's TextWrapper.
  *
- * Overflow stays visible so the textarea's scrollbar gutter can hang outside
- * the shape's right edge; vertical clipping is handled by the textarea's own
+ * Overflow stays visible so the surface's scrollbar gutter can hang outside
+ * the shape's right edge; vertical clipping is handled by the surface's own
  * max-height, which TextEditor sets to the region for a "scroll" slot and to
  * the shape's bottom edge for a "grow" one (see ObjectTextEditOverflowRegistry).
  *
@@ -41,15 +41,19 @@ export const TextEditorWrapper = styled.div`
 `;
 
 /**
- * Styled textarea element for the text editor (multi-line).
+ * The surface the shape's text is edited on: a contenteditable div, so the runs a
+ * body is styled in are drawn by the very element the caret and the selection are
+ * laid out in (a textarea has one style for the whole of its value, which put both
+ * where the unstyled text would be — issue #7). Its content is built and read back
+ * by editableTextDom; React renders it empty.
  *
  * Per-instance text styles (text-align / color / font-size / font-family /
  * font-weight) and max-height are passed via the `style` prop (see #131).
- * Height is set inline by TextEditor to fit the content, so the wrapper's
- * vertical alignment takes effect; max-height then clips it back and turns the
- * excess into scrolling — at the region for a "scroll" slot, at the shape's
- * bottom edge for a "grow" one, which until that point pushes the wrapper's
- * min-height instead of scrolling.
+ * The height follows the content on its own, so the wrapper's vertical alignment
+ * takes effect; max-height then clips it back and turns the excess into scrolling
+ * — at the region for a "scroll" slot, at the shape's bottom edge for a "grow"
+ * one, which until that point pushes the wrapper's min-height instead of
+ * scrolling.
  *
  * The element is widened by the scrollbar width and reserves that extra strip
  * as a permanent gutter (scrollbar-gutter: stable), so the content box always
@@ -58,7 +62,7 @@ export const TextEditorWrapper = styled.div`
  * right edge. flex-shrink: 0 keeps the flex parent from squeezing the extra
  * width back.
  */
-export const TextArea = styled.textarea`
+export const EditableTextSurface = styled.div`
 	width: calc(100% + ${SCROLLBAR_WIDTH}px);
 	flex-shrink: 0;
 	scrollbar-gutter: stable;
@@ -70,9 +74,13 @@ export const TextArea = styled.textarea`
 	outline: none;
 	overflow-y: auto;
 	${scrollbarStyles}
-	resize: none;
 	box-sizing: border-box;
 	padding: ${TEXT_BOX_PADDING_Y}px ${TEXT_BOX_PADDING_X}px;
 	pointer-events: auto;
 	border-radius: 2px;
+	/* The canvas root switches text selection off and only form elements opt back
+	   in (CanvasStyled), so an editable div has to say so itself; without it a drag
+	   inside the text selects nothing. */
+	user-select: text;
+	-webkit-user-select: text;
 `;

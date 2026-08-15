@@ -1,8 +1,6 @@
-import { roundToDecimal } from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 
 import { ORIGIN_SNAP_PX } from "../../../../../constants/axisLock";
-import { PRECISION } from "../../../../../constants/precision";
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type {
 	AxisLockFeedback,
@@ -204,10 +202,7 @@ export class VertexControlHandler extends ControlStrategy {
 		}
 
 		// Compute the new vertex position
-		const newPosition: Point = {
-			x: roundToDecimal(cursorX, PRECISION.COORDINATE),
-			y: roundToDecimal(cursorY, PRECISION.COORDINATE),
-		};
+		const newPosition: Point = { x: cursorX, y: cursorY };
 
 		// Update the vertex position
 		const newPoints = [...startObject.points];

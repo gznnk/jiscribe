@@ -1,4 +1,10 @@
-import { type RefObject, useLayoutEffect, useMemo, useState } from "react";
+import {
+	type RefObject,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 import { useLingeringFlag } from "./useLingeringFlag";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
@@ -37,10 +43,15 @@ type ObjectMenuPosition = {
  * - Automatically positions menu above object if it would overflow bottom viewport boundary
  * - Adjusts horizontal position to fit within left/right viewport boundaries
  * - Measures actual menu dimensions from DOM for accurate positioning
+ *
+ * @param state - Canvas state; the selection, the viewport and everything that hides the menu are read from it
+ * @param menuRef - ref of the menu container, measured for its real width and height (the fallback until it is mounted is 0×40)
+ * @param isPointerOverMenu - Whether the pointer currently sits on the menu. Together with an open dropdown this is what holds the anchor still while the menu is being used (see the latch below)
  */
 export function useObjectMenuPosition(
 	state: CanvasControllerState,
 	menuRef: RefObject<HTMLDivElement | null>,
+	isPointerOverMenu: boolean,
 ): ObjectMenuPosition {
 	const {
 		selectedIds,
@@ -67,12 +78,17 @@ export function useObjectMenuPosition(
 
 	// Measure menu dimensions from DOM when it renders or selection changes.
 	// Slot selection changes the item set (see filterTextSlotMenuSections), so the
-	// width must be re-measured then too or the centering uses the stale width.
+	// width must be re-measured then too or the centering uses the stale width;
+	// opening and closing a text editor narrows it the same way.
 	const selectedIdsString = selectedIds.slice().sort().join(",");
 	const selectedTextSlotKey =
 		selectedTextSlot === null
 			? null
 			: `${selectedTextSlot.objectId}:${selectedTextSlot.slotId}`;
+	const textEditKey =
+		textEditState === null
+			? null
+			: `${textEditState.kind}:${textEditState.objectId}`;
 
 	// Every way the view moves under the selection, as one state: dragging (except
 	// while an ObjectMenu dropdown is open, so its sliders stay usable) and the
@@ -90,10 +106,15 @@ export function useObjectMenuPosition(
 		if (contextMenuPosition !== null) {
 			return false;
 		}
-		// Hide during text editing: every click outside the editor then lands on
-		// canvas/object/control, all of which run commitTextEditIfNeeded, so the
-		// edit cannot be left dangling by a menu interaction (U6)
-		if (textEditState !== null) {
+		// A shape's text editor keeps the menu: its text items are how a stretch of
+		// the text being edited is styled (TextSlotStyleProperty), and the menu is
+		// the only place the color and the size of one live. The menu itself never
+		// commits the edit — ObjectMenuHandler runs no commit, and the press does
+		// not even move the focus off the editing surface (ObjectMenu) — so the session
+		// survives a menu interaction instead of being left dangling (U6).
+		// A connector label is still hidden: it is one text with one styling, so
+		// there is nothing the menu could do mid-edit that it cannot do after.
+		if (textEditState !== null && textEditState.kind !== "shape") {
 			return false;
 		}
 		// Away while the view moves under the selection — a drag of any kind, and
@@ -126,25 +147,46 @@ export function useObjectMenuPosition(
 		selectedIdsString,
 		selectedConnectorId,
 		selectedTextSlotKey,
+		textEditKey,
 	]);
 
+	const liveBounds = useMemo(
+		() =>
+			calcObjectsBoundingBox(
+				selectedConnectorId !== null
+					? [selectedConnectorId, ...selectedIds]
+					: selectedIds,
+				objects,
+				objectVisualBounds,
+			),
+		[selectedIds, selectedConnectorId, objects, objectVisualBounds],
+	);
+
+	// The menu writes properties that resize what it is anchored to: a font size or
+	// a bold on a `text` re-measures its box (resizeTextStateToContent), which moves
+	// the box's bottom edge and its center. Following that would slide the very
+	// control being used out from under the pointer, one step per change. So the
+	// anchor is held for as long as the menu is in use — a dropdown open, or the
+	// pointer on the menu — and re-taken the moment it is not, which is also what
+	// snaps the menu back below the grown object.
+	//
+	// What is held is the box in canvas coordinates, not the final px: zoom, the
+	// viewport clamping and the menu's own measured size all keep updating, so
+	// panning or zooming with a dropdown open still places the menu correctly.
+	const isMenuInUse = objectMenuOpenId !== null || isPointerOverMenu;
+	const anchorKey = `${selectedIdsString}/${selectedConnectorId ?? ""}`;
+	const latchedAnchorRef = useRef({ key: anchorKey, bounds: liveBounds });
+	if (
+		!shouldRender ||
+		!isMenuInUse ||
+		latchedAnchorRef.current.key !== anchorKey
+	) {
+		latchedAnchorRef.current = { key: anchorKey, bounds: liveBounds };
+	}
+	const bounds = latchedAnchorRef.current.bounds;
+
 	return useMemo(() => {
-		if (!shouldRender) {
-			return { shouldRender: false, x: 0, y: 0 };
-		}
-
-		// Compute the bounding box of all selected objects
-		const targetIds =
-			selectedConnectorId !== null
-				? [selectedConnectorId, ...selectedIds]
-				: selectedIds;
-		const bounds = calcObjectsBoundingBox(
-			targetIds,
-			objects,
-			objectVisualBounds,
-		);
-
-		if (!bounds) {
+		if (!shouldRender || !bounds) {
 			return { shouldRender: false, x: 0, y: 0 };
 		}
 
@@ -210,13 +252,5 @@ export function useObjectMenuPosition(
 			x: Math.round(menuX),
 			y: Math.round(menuY),
 		};
-	}, [
-		shouldRender,
-		selectedIds,
-		selectedConnectorId,
-		objects,
-		viewport,
-		menuDimensions,
-		objectVisualBounds,
-	]);
+	}, [shouldRender, bounds, viewport, menuDimensions]);
 }

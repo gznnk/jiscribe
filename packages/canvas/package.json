@@ -10,7 +10,11 @@
 		"./doc": "./src/doc.ts",
 		"./unstable-doc": "./src/unstable-doc.ts",
 		"./png-source": "./src/png-source.ts",
-		"./svg-source": "./src/svg-source.ts"
+		"./svg-source": "./src/svg-source.ts",
+		"./testing": "./e2e/testing.ts",
+		"./testing/playwright-config": "./e2e/testing-playwright-config.ts",
+		"./testing/vite-config": "./e2e/testing-vite-config.ts",
+		"./testing/harness": "./e2e/testing-harness.ts"
 	},
 	"scripts": {
 		"lint": "eslint .",
@@ -40,25 +44,18 @@
 		"react-dom": "catalog:"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.60.0",
+		"@playwright/test": "^1.62.1",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react-swc": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
-		"@vitest/ui": "^2.1.8",
-		"@jiscribe/plugin-annotation-shapes": "workspace:*",
-		"@jiscribe/plugin-container-shapes": "workspace:*",
-		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
-		"@jiscribe/plugin-general-shapes": "workspace:*",
-		"@jiscribe/plugin-markdown-shape": "workspace:*",
-		"@jiscribe/plugin-sticky-shape": "workspace:*",
-		"@jiscribe/plugin-uml-shapes": "workspace:*",
-		"katex": "catalog:",
+		"@vitest/ui": "^4.1.10",
 		"madge": "catalog:",
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
+		"jsdom": "catalog:",
 		"vitest": "catalog:"
 	}
 }

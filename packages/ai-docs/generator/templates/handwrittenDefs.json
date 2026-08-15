@@ -175,8 +175,19 @@
 						"required": ["text"],
 						"properties": {
 							"text": {
-								"description": "Stereotype string, conventionally written between guillemets (\"<<interface>>\"). Default: \"\"",
-								"type": "string",
+								"description": "Stereotype string, conventionally written between guillemets (\"<<interface>>\"). Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "array",
+										"items": {
+											"$ref": "#/$defs/TextRun"
+										},
+										"minItems": 1
+									}
+								],
 								"default": ""
 							},
 							"textAlign": {
@@ -227,8 +238,19 @@
 						"required": ["text"],
 						"properties": {
 							"text": {
-								"description": "Title string. Default: \"\"",
-								"type": "string",
+								"description": "Title string. Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "array",
+										"items": {
+											"$ref": "#/$defs/TextRun"
+										},
+										"minItems": 1
+									}
+								],
 								"default": ""
 							},
 							"textAlign": {
@@ -281,10 +303,21 @@
 						"required": ["text"],
 						"properties": {
 							"text": {
-								"description": "Attribute rows, one array entry per line (no newlines inside an entry). Default: []",
+								"description": "Attribute rows, one array entry per line (no newlines inside an entry). Write a plain string unless part of the row has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the row. Default: []",
 								"type": "array",
 								"items": {
-									"type": "string"
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "array",
+											"items": {
+												"$ref": "#/$defs/TextRun"
+											},
+											"minItems": 1
+										}
+									]
 								},
 								"default": []
 							},
@@ -336,10 +369,21 @@
 						"required": ["text"],
 						"properties": {
 							"text": {
-								"description": "Operation rows, one array entry per line (no newlines inside an entry). Default: []",
+								"description": "Operation rows, one array entry per line (no newlines inside an entry). Write a plain string unless part of the row has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the row. Default: []",
 								"type": "array",
 								"items": {
-									"type": "string"
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "array",
+											"items": {
+												"$ref": "#/$defs/TextRun"
+											},
+											"minItems": 1
+										}
+									]
 								},
 								"default": []
 							},
@@ -853,6 +897,10 @@
 			"description": {
 				"description": "Arbitrary description.",
 				"type": "string"
+			},
+			"reference": {
+				"description": "Relative path to another file this object refers to. Opened by the host application; jiscribe itself does not resolve it.",
+				"type": "string"
 			}
 		},
 		"additionalProperties": true
@@ -899,8 +947,19 @@
 		"type": "object",
 		"properties": {
 			"text": {
-				"description": "Text content to display. Default: \"\"",
-				"type": "string",
+				"description": "Text content to display. Write a plain string unless part of the text has to be drawn differently; the array of runs is only for that (a bold word, a phrase in red), and the runs are concatenated in order to form the text. Default: \"\"",
+				"anyOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "array",
+						"items": {
+							"$ref": "#/$defs/TextRun"
+						},
+						"minItems": 1
+					}
+				],
 				"default": ""
 			},
 			"textAlign": {
@@ -1015,5 +1074,35 @@
 			"CrowFootZeroOne",
 			"None"
 		]
+	},
+	"TextRun": {
+		"description": "One stretch of a text and the typography it alone is drawn with. Every field left out is drawn with the shape's (or the slot's) own typography, so a run carries the difference and not the whole style. There is no alignment here: it places the whole text, not part of it.",
+		"type": "object",
+		"required": ["text"],
+		"additionalProperties": false,
+		"properties": {
+			"text": {
+				"description": "The characters of this stretch of the text.",
+				"type": "string"
+			},
+			"fontColor": {
+				"$ref": "#/$defs/TextStyle/properties/fontColor"
+			},
+			"fontSize": {
+				"$ref": "#/$defs/TextStyle/properties/fontSize"
+			},
+			"fontFamily": {
+				"$ref": "#/$defs/TextStyle/properties/fontFamily"
+			},
+			"fontWeight": {
+				"$ref": "#/$defs/TextStyle/properties/fontWeight"
+			},
+			"fontStyle": {
+				"$ref": "#/$defs/TextStyle/properties/fontStyle"
+			},
+			"textDecoration": {
+				"$ref": "#/$defs/TextStyle/properties/textDecoration"
+			}
+		}
 	}
 }

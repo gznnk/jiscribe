@@ -97,7 +97,7 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 ## 連携属性 `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 キャンバス上の DOM 要素は `data-*` 属性でジェスチャーシステムと連携する。
-テキスト編集中の `textarea` やメニュー内の入力欄など、**ブラウザ標準動作をそのまま使いたい要素**を
+テキスト編集中の入力面やメニュー内の入力欄など、**ブラウザ標準動作をそのまま使いたい要素**を
 宣言的に扱うための規約。
 
 ### `data-gesture`
@@ -105,11 +105,11 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 ジェスチャーとの関わり方を宣言する。**空白区切りのトークンリスト**を取り、各トークンは
 `[data-gesture~="token"]` で**祖先方向に `closest` 探索**される。
 
-| トークン         | 意味                                                                                                                              | 主な付与先                                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `none`           | ジェスチャーの起点にしない。pointerdown を無視し、contextmenu もネイティブに任せる                                                | テキスト編集の `textarea` ラッパー、メニュー内の数値・カラー入力、コンテキストメニューの callback 項目 |
-| `native-pointer` | ジェスチャーには参加するが**ポインタキャプチャを行わない**。`inputValue` 収穫の対象にもなる                                       | スライダー（range input）                                                                              |
-| `native-wheel`   | 要素がスクロール可能（`scrollHeight > clientHeight`）なら wheel をネイティブスクロールに任せる（Ctrl 押下時はズームのため対象外） | テキスト編集の `textarea`                                                                              |
+| トークン         | 意味                                                                                                                              | 主な付与先                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `none`           | ジェスチャーの起点にしない。pointerdown を無視し、contextmenu もネイティブに任せる                                                | テキスト編集の入力面のラッパー、メニュー内の数値・カラー入力、コンテキストメニューの callback 項目 |
+| `native-pointer` | ジェスチャーには参加するが**ポインタキャプチャを行わない**。`inputValue` 収穫の対象にもなる                                       | スライダー（range input）                                                                          |
+| `native-wheel`   | 要素がスクロール可能（`scrollHeight > clientHeight`）なら wheel をネイティブスクロールに任せる（Ctrl 押下時はズームのため対象外） | テキスト編集の入力面                                                                               |
 
 併用例: `data-gesture="none native-wheel"`（ジェスチャー対象外かつネイティブスクロール）。
 
@@ -117,7 +117,7 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 - `none` → `isGestureOptedOut`（`GestureRecognizer.getHandlers()` の onPointerDown、`Canvas.tsx` の handleContextMenu）
 - `native-pointer` → `isNativePointerTarget`（キャプチャ抑止と `inputValue` 収穫の対象判定。pointerdown 時に一度だけ判定し `Pressed` に保持）
-- `native-wheel` → `shouldUseNativeWheel`（`useDocumentWheel`）
+- `native-wheel` → `shouldUseNativeWheel`（`useCanvasWheel`）
 
 判定ユーティリティはいずれも `findGestureElement(target, token)` を土台にし、
 `controllers/gestures/recognizer/utils/` に配置している。
@@ -176,6 +176,28 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 1. ブラウザ標準の操作で完結する要素 → `data-gesture="none"`
 2. ジェスチャー経由で値を伝えつつネイティブのポインタ挙動も必要 → `data-gesture="native-pointer"` + `data-kind` / `data-id`
 3. スクロール可能で内部スクロールを優先したい → `data-gesture="native-wheel"`
+
+## ホストページとジェスチャーを分け合う（`gestureHandling`）
+
+ウィンドウを埋めるキャンバスはスクロールジェスチャーを全部取ってよいが、スクロールする文書に
+埋め込まれたキャンバス（ランディングのヒーロー、記事中の図）が同じことをすると、そこまで
+スクロールしてきた読者が動けなくなる。`<Canvas gestureHandling>`（既定 `"greedy"`、譲るなら
+`"cooperative"`。埋め込み地図の同名オプションに倣った）がこの二択を選ぶ。
+
+引く線は**スクロールとズームの間**であって、ホイールとそれ以外の間ではない。`"cooperative"` では:
+
+- 修飾なしのホイールは `useCanvasWheel` が `preventDefault` の手前で return するので、ブラウザが
+  ホスト文書をスクロールし、レコグナイザーはイベントを見ない
+- Ctrl+ホイールはズームなので通常経路を通り、キャンバスをズームする。トラックパッドのピンチは
+  Ctrl 押下のホイールとして届くため、同じ分岐に入る
+- `CanvasRoot` の `touch-action` が `none` から `pan-y` に緩み、ページがスクロールする縦軸を
+  ブラウザに返す。`pan-y` はピンチを渡さないので、2 本指ピンチはキャンバスのズームのまま
+
+タッチ側には代償があり、それはこの値が引き受けたものそのものである。ブラウザがページスクロールと
+解決した 1 本指ドラッグはジェスチャー途中で奪われ `pointercancel` として届くので、ほぼ縦方向の
+ドラッグは図形を動かさずページをスクロールする。横方向のドラッグは影響を受けない。
+
+`e2e/specs/scenario/embedded-page-scroll.spec.ts` が `?pageScroll` のハーネスページに対して担保する。
 
 ## 反復ボタンは click と doubleClick を等価に扱う
 

@@ -29,9 +29,9 @@ export type CanvasParseResult =
  * structure/semantics — against the given registry, and returns the result as a
  * {@link CanvasParseResult}.
  *
- * Shared by `parseCanvasText` (global registry) and `createCanvasParser` (a dedicated
- * per-parser registry) so both go through identical `CanvasParseResult` semantics; only
- * the registry construction/lifecycle differs between the two callers.
+ * Kept separate from `createCanvasParser` so the staged pipeline stays independent of how
+ * the registry was composed; every parser goes through identical `CanvasParseResult`
+ * semantics.
  */
 export function parseWithRegistry(
 	text: string,

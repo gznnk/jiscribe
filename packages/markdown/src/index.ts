@@ -1,10 +1,8 @@
 import DOMPurify from "dompurify";
 import katex from "katex";
-import MarkdownIt from "markdown-it";
-// 型は @types/markdown-it-link-attributes（DefinitelyTyped の最新 3.0.5）を使う。
-// ランタイム v4 は型を同梱せず DT も v4 未公開だが、本コードが使う attrs 設定は
-// v3 スタブと互換のため 3.0.5 を維持する。
-import linkAttr from "markdown-it-link-attributes";
+// The default export is a callable wrapper around the class; the class itself is
+// only reachable as a named type export.
+import MarkdownIt, { type MarkdownIt as MarkdownItInstance } from "markdown-it";
 
 /**
  * Normalizes mathematical notation in markdown text.
@@ -32,7 +30,7 @@ const normalizeMath = (text: string): string => {
  *
  * @param md - The markdown-it instance to extend
  */
-const katexLite = (md: MarkdownIt): void => {
+const katexLite = (md: MarkdownItInstance): void => {
 	/**
 	 * Inline math handler ($...$)
 	 * Processes inline math expressions surrounded by single dollar signs
@@ -137,51 +135,122 @@ const katexLite = (md: MarkdownIt): void => {
 };
 
 /**
- * Create and configure the markdown-it instance with plugins and options.
+ * Stamps a fixed set of attributes onto every rendered link.
+ *
+ * This is what markdown-it-link-attributes did, inlined: that package ships no types
+ * of its own and DefinitelyTyped never published a v4 stub, so its only typing was a
+ * v3 stub written against markdown-it 14's type shape.
+ *
+ * @param md - The markdown-it instance to extend
+ * @param attrs - Attribute name/value pairs applied to every `<a>`; an attribute already
+ *   present on the link is overwritten
+ */
+const linkAttributes = (
+	md: MarkdownItInstance,
+	attrs: Record<string, string>,
+): void => {
+	const defaultRender = md.renderer.rules.link_open;
+	md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+		for (const [name, value] of Object.entries(attrs)) {
+			tokens[idx].attrSet(name, value);
+		}
+		return defaultRender
+			? defaultRender(tokens, idx, options, env, self)
+			: self.renderToken(tokens, idx, options);
+	};
+};
+
+/**
+ * Highlights the body of a code fence for {@link createMarkdownRenderer}.
+ *
+ * @param code - The fence body as written, unescaped and keeping its trailing newline
+ * @param language - The fence info string (`js` for a ```js fence), empty when the fence carries none
+ * @returns HTML-escaped markup for the body alone, the `<pre><code>` wrapper being
+ *   added by the caller; an empty string falls back to plain escaped text
+ */
+export type CodeHighlighter = (code: string, language: string) => string;
+
+/** Options for {@link createMarkdownRenderer}. */
+export type MarkdownRendererOptions = {
+	/**
+	 * Highlighter applied to code fences. Without it, fences stay plain escaped
+	 * text. Its output is sanitized with the rest of the document, so markup
+	 * DOMPurify strips (inline styles, event handlers) does not survive.
+	 */
+	highlight?: CodeHighlighter;
+};
+
+/** Sanitization config preserving the attributes that linkAttributes adds. */
+const sanitizeConfig = {
+	ADD_ATTR: ["target", "rel"],
+};
+
+/**
+ * Create and configure a markdown-it instance with plugins and options.
  * Includes math rendering and link attribute handling.
  *
- * Code fences are left to markdown-it's default renderer, which emits
- * `<pre><code class="language-xxx">` with the source escaped. Syntax
- * highlighting is deliberately absent: the shape's colors follow the theme and
- * the per-object font color via `currentColor`, which a highlighter's fixed
- * palette cannot follow, and image export flattens the body to plain text.
+ * @param highlight - Code fence highlighter, or undefined to leave fences plain
+ * @returns The configured instance
  */
-const md = new MarkdownIt({
-	// Disable raw HTML in source as defense-in-depth against XSS: user-typed
-	// HTML tags are escaped to literal text instead of relying solely on
-	// DOMPurify (which may have known mXSS bypasses). Math (KaTeX) emits HTML
-	// via renderer rules, so it is unaffected.
-	html: false,
-	breaks: true, // Convert '\n' in paragraphs into <br>
-	linkify: true, // Autoconvert URL-like text to links
-})
-	// Apply the custom KaTeX plugin
-	.use(katexLite)
-	// Configure all links to open in new tab with security attributes
-	.use(linkAttr, {
-		// No matcher specified - applies to all links
-		attrs: {
+const createMarkdownIt = (highlight: CodeHighlighter | undefined) =>
+	new MarkdownIt({
+		// Disable raw HTML in source as defense-in-depth against XSS: user-typed
+		// HTML tags are escaped to literal text instead of relying solely on
+		// DOMPurify (which may have known mXSS bypasses). Math (KaTeX) emits HTML
+		// via renderer rules, so it is unaffected.
+		html: false,
+		breaks: true, // Convert '\n' in paragraphs into <br>
+		linkify: true, // Autoconvert URL-like text to links
+		// A highlighter that throws on an unknown language would blank the whole
+		// document, so fall back to markdown-it's own escaping instead.
+		highlight:
+			highlight &&
+			((code, language) => {
+				try {
+					return highlight(code, language);
+				} catch {
+					return "";
+				}
+			}),
+	})
+		// Apply the custom KaTeX plugin
+		.use(katexLite)
+		// Configure all links to open in new tab with security attributes
+		.use(linkAttributes, {
 			target: "_blank",
 			rel: "noopener noreferrer",
-		},
-	});
+		});
+
+/**
+ * Builds a markdown renderer. Each call owns a markdown-it instance, so keep the
+ * returned function instead of creating a renderer per render.
+ *
+ * @param options - Renderer options; omitted, the result behaves like {@link renderMarkdown}
+ * @returns A function turning markdown text into sanitized HTML
+ */
+export const createMarkdownRenderer = (
+	options: MarkdownRendererOptions = {},
+): ((text: string) => string) => {
+	const md = createMarkdownIt(options.highlight);
+
+	// First render markdown to HTML, then sanitize the result
+	return (text) =>
+		DOMPurify.sanitize(md.render(normalizeMath(text)), sanitizeConfig);
+};
 
 /**
  * Renders markdown text to HTML with math support and sanitization.
  * Uses a custom KaTeX implementation and preserves target/rel attributes.
  *
+ * Code fences go through markdown-it's default renderer, which emits
+ * `<pre><code class="language-xxx">` with the source escaped. Syntax
+ * highlighting is deliberately absent here: the shape's colors follow the theme
+ * and the per-object font color via `currentColor`, which a highlighter's fixed
+ * palette cannot follow, and image export flattens the body to plain text.
+ * Document viewers under neither constraint pass a highlighter to
+ * {@link createMarkdownRenderer}.
+ *
  * @param text - The markdown text to render
  * @returns Sanitized HTML string with rendered markdown content
  */
-export const renderMarkdown = (text: string): string => {
-	// Configure sanitization to preserve link attributes
-	const sanitizeConfig = {
-		ADD_ATTR: ["target", "rel"],
-	};
-
-	// First render markdown to HTML, then sanitize the result
-	const html = md.render(normalizeMath(text));
-
-	// Apply sanitization with scoped configuration
-	return DOMPurify.sanitize(html, sanitizeConfig);
-};
+export const renderMarkdown = createMarkdownRenderer();
