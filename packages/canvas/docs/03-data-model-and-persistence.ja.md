@@ -54,6 +54,7 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
 - `root` … 図形（rect / ellipse / diamond / polyline / polygon / group / sticky / svg）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
 - コネクター（`type: "connector"`）… 端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する。`root` 直下にのみ置かれ、group の子にはならない。少なくとも一方の端点が owned であること（両端 free は不正）
 - 色フィールド（`stroke` / `fontColor` / `fill`）… 具体的な CSS 色のほか、sentinel 値 `"auto"`（テーマ追従）を取りうる。`"auto"` は描画時にテーマ前景色へ解決される（[表示・テーマ](./08-presentation-and-theme.ja.md) 参照）。新規図形の `stroke` / `fontColor` の既定値は `"auto"`
+- 数値フィールド（座標・サイズ・回転）… 丸めは **State → Doc へ変換する地点**で `PRECISION` に揃える。ジェスチャーやコマンドの計算地点では丸めない。Doc の幾何は State から導出されるため（`x = cx - width / 2`）、手前で丸めても導出でずれる。境界 1 か所で決めることで、自前では丸めない経路（グループ変換・プラグインの制御点・docOps）も同じ精度に乗る。`roundDocNumbers` 参照
 - 形式仕様の全文は `../../ai-docs/assets/reference.md` と `../../ai-docs/assets/jiscribe.schema.json` を参照
 
 ### テキストモデルの非対称（図形の `text` とコネクターの `label`）

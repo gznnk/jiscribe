@@ -1,7 +1,5 @@
-import { roundToDecimal } from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../../../constants/precision";
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type {
 	CanvasControllerState,
@@ -95,10 +93,7 @@ export class VertexInsertHandler extends ControlStrategy {
 		}
 
 		// Add a new vertex at the drag start position
-		const newPosition: Point = {
-			x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
-			y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
-		};
+		const newPosition: Point = { x: event.last.x, y: event.last.y };
 
 		// Insert the vertex (added at the segmentIndex + 1 position)
 		const newPoints = [...currentObject.points];
@@ -195,10 +190,7 @@ export class VertexInsertHandler extends ControlStrategy {
 		}
 
 		// Compute the new vertex position
-		const newPosition: Point = {
-			x: roundToDecimal(cursorX, PRECISION.COORDINATE),
-			y: roundToDecimal(cursorY, PRECISION.COORDINATE),
-		};
+		const newPosition: Point = { x: cursorX, y: cursorY };
 
 		// Update the vertex position
 		const newPoints = [...startObject.points];

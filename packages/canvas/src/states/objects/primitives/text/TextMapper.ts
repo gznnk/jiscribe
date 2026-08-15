@@ -1,5 +1,3 @@
-import { roundToDecimal } from "@jiscribe/geometry";
-
 import { calcTextObjectFrameSize } from "./calcTextObjectFrameSize";
 import {
 	calcTextCenterFromDrawnTopLeft,
@@ -7,7 +5,6 @@ import {
 } from "./textDrawnTopLeft";
 import type { TextState } from "./TextState";
 import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
-import { PRECISION } from "../../../../constants/precision";
 import type { TextStyleDoc } from "../../../../schemas/objects/base/TextStyleDoc";
 import type { TextDoc } from "../../../../schemas/objects/primitives/text/TextDoc";
 import type {
@@ -24,6 +21,7 @@ import {
 	mapTransformStateToDoc,
 } from "../../base/TransformMapper";
 import { rebrand } from "../../utils/rebrand";
+import { roundDocCoordinate } from "../../utils/roundDocNumbers";
 
 /**
  * Converts TextDoc to TextState, measuring the box the doc does not store.
@@ -81,7 +79,7 @@ export const textToDoc: StateToDocMapper<TextState, TextDoc> = (state) => {
 		// epsilon, and two callers read the doc as an exact value: the mapper
 		// round-trip test compares docs with toEqual, and isSameCanvasDocContent
 		// stringifies the doc to decide whether the file is dirty.
-		x: roundToDecimal(drawnTopLeft.x, PRECISION.COORDINATE),
-		y: roundToDecimal(drawnTopLeft.y, PRECISION.COORDINATE),
+		x: roundDocCoordinate(drawnTopLeft.x),
+		y: roundDocCoordinate(drawnTopLeft.y),
 	});
 };

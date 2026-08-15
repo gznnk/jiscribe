@@ -1,11 +1,6 @@
 import type { TransformedFrame } from "@jiscribe/geometry";
-import {
-	calcRotatedPoint,
-	degreesToRadians,
-	roundToDecimal,
-} from "@jiscribe/geometry";
+import { calcRotatedPoint, degreesToRadians } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../constants/precision";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { classifyChildRelativeRotation } from "../../utils/classifyChildRelativeRotation";
 import { normalizeRotation } from "../../utils/normalizeRotation";
@@ -121,10 +116,10 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 
 	return {
 		...frame,
-		cx: roundToDecimal(newChildCenter.x, PRECISION.COORDINATE),
-		cy: roundToDecimal(newChildCenter.y, PRECISION.COORDINATE),
-		width: roundToDecimal(newWidth, PRECISION.SIZE),
-		height: roundToDecimal(newHeight, PRECISION.SIZE),
+		cx: newChildCenter.x,
+		cy: newChildCenter.y,
+		width: newWidth,
+		height: newHeight,
 		rotation: newRotation,
 		scaleX: newScaleX,
 		scaleY: newScaleY,

@@ -161,6 +161,23 @@ describe("mapper invariant across every built-in type", () => {
 			state as unknown as ObjectState,
 		) as unknown as Record<string, unknown>;
 
+	// The slot invariants below do not depend on geometry, but the identity
+	// assertion does: toDoc rounds, and rounding an absent coordinate yields NaN
+	// where passing it through yielded undefined. Give each family a real box so
+	// the comparison is over numbers.
+	const geometryFields = (
+		features: ObjectFeatures,
+	): Record<string, unknown> => {
+		switch (features.geometry) {
+			case "rect":
+				return { x: 10, y: 20, width: 30, height: 40 };
+			case "ellipse":
+				return { cx: 10, cy: 20, rx: 15, ry: 20 };
+			default:
+				return {};
+		}
+	};
+
 	// Every built-in type spells its text as a single body; the keyed shape is
 	// exercised by the record plugin's own mapper tests.
 	const textTypes = types.filter(([, features]) => features.text === "body");
@@ -187,15 +204,19 @@ describe("mapper invariant across every built-in type", () => {
 		expect("fontSize" in state).toBe(false);
 	});
 
-	it.each(textTypes)("%s: state → doc → state is the identity", (type) => {
-		const state = toState({
-			id: `${type}-1`,
-			type,
-			text: "hello",
-			fontSize: 20,
-		});
-		expect(toState(toDoc(state))).toEqual(state);
-	});
+	it.each(textTypes)(
+		"%s: state → doc → state is the identity",
+		(type, features) => {
+			const state = toState({
+				id: `${type}-1`,
+				type,
+				text: "hello",
+				fontSize: 20,
+				...geometryFields(features),
+			});
+			expect(toState(toDoc(state))).toEqual(state);
+		},
+	);
 
 	it.each(textTypes)("%s: doc → state → doc is deterministic", (type) => {
 		const doc = toDoc(toState({ id: `${type}-1`, type, text: "hello" }));

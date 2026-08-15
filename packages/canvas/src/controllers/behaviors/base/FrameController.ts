@@ -1,7 +1,6 @@
-import { roundToDecimal, type TransformedFrame } from "@jiscribe/geometry";
+import type { TransformedFrame } from "@jiscribe/geometry";
 
 import { rotateFrameByGroup, transformFrameByGroup } from "./FrameTransform";
-import { PRECISION } from "../../../constants/precision";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { ObjectBehaviorEntry } from "../../gestures/registry/ObjectBehaviorTypes";
@@ -19,8 +18,8 @@ export const createFrameBehavior = <
 >(): ObjectBehaviorEntry<TState> => ({
 	moveByDelta: (state, delta) => ({
 		...state,
-		cx: roundToDecimal(state.cx + delta.x, PRECISION.COORDINATE),
-		cy: roundToDecimal(state.cy + delta.y, PRECISION.COORDINATE),
+		cx: state.cx + delta.x,
+		cy: state.cy + delta.y,
 	}),
 
 	transformByGroup: (state, groupStart, groupEnd) =>

@@ -117,7 +117,7 @@ export function createMultiSelectResizeBoundsCache(
  * cache, re-collecting points only for the non-affine leaves.
  *
  * Result matches calcMultiSelectGroupBounds (calcOrientedFrameFromPoints path)
- * up to coordinate-rounding error: the OBB is fully determined by the extents of
+ * up to float error: the OBB is fully determined by the extents of
  * the leaf points projected onto the group's rotated axes, and the affine leaves'
  * projected extents follow analytically from the startGroup → updatedGroup map
  * applied by transformFrameByGroup / transformPolyByGroup.

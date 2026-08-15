@@ -63,6 +63,26 @@ describe("TransformMapper", () => {
 			expect(doc.flipY).toBe(true);
 		});
 
+		it("rounds rotation to the persisted precision", () => {
+			const doc = mapTransformStateToDoc({
+				rotation: 10 / 3,
+				scaleX: 1,
+				scaleY: 1,
+			} as TransformState);
+
+			expect(doc.rotation).toBe(3.333);
+		});
+
+		it("drops a rotation that is only float noise away from upright", () => {
+			const doc = mapTransformStateToDoc({
+				rotation: 1e-9,
+				scaleX: 1,
+				scaleY: 1,
+			} as TransformState);
+
+			expect(doc.rotation).toBeUndefined();
+		});
+
 		it("preserves lockAspectRatio", () => {
 			const doc = mapTransformStateToDoc({
 				rotation: 0,

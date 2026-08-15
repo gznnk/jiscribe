@@ -1,11 +1,5 @@
-import type { Point } from "@jiscribe/geometry";
-import {
-	calcRotatedPoint,
-	degreesToRadians,
-	roundToDecimal,
-} from "@jiscribe/geometry";
+import { calcRotatedPoint, degreesToRadians } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../constants/precision";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { PolygonState } from "../../../states/objects/primitives/polygon/PolygonState";
 import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
@@ -54,18 +48,13 @@ export function transformPolyByGroup<T extends PolygonState | PolylineState>(
 		const dy = localOffsetY * groupScaleY;
 
 		// 4. Apply the new group rotation (convert back to the absolute coordinate system)
-		const newPoint = calcRotatedPoint(
+		return calcRotatedPoint(
 			transformRootGroupEndState.cx + dx,
 			transformRootGroupEndState.cy + dy,
 			transformRootGroupEndState.cx,
 			transformRootGroupEndState.cy,
 			degreesToRadians(transformRootGroupEndState.rotation),
 		);
-
-		return {
-			x: roundToDecimal(newPoint.x, PRECISION.COORDINATE),
-			y: roundToDecimal(newPoint.y, PRECISION.COORDINATE),
-		} as Point;
 	});
 
 	return {
@@ -91,20 +80,15 @@ export function rotatePolyByGroup<T extends PolygonState | PolylineState>(
 	const rotationDelta = endGroupRotation - rotationRootGroup.rotation;
 
 	// Rotate each vertex around the rotation center
-	const rotatedPoints = poly.points.map((point) => {
-		const rotatedPoint = calcRotatedPoint(
+	const rotatedPoints = poly.points.map((point) =>
+		calcRotatedPoint(
 			point.x,
 			point.y,
 			rotationRootGroup.cx,
 			rotationRootGroup.cy,
 			degreesToRadians(rotationDelta),
-		);
-
-		return {
-			x: roundToDecimal(rotatedPoint.x, PRECISION.COORDINATE),
-			y: roundToDecimal(rotatedPoint.y, PRECISION.COORDINATE),
-		} as Point;
-	});
+		),
+	);
 
 	return {
 		...poly,

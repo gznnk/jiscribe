@@ -1,5 +1,6 @@
 import type { TransformDoc } from "../../../schemas/objects/base/TransformDoc";
 import type { TransformState } from "../../../states/objects/base/TransformState";
+import { roundDocRotation } from "../utils/roundDocNumbers";
 
 /**
  * Maps TransformDoc to TransformState.
@@ -28,7 +29,7 @@ export function mapTransformDocToState(doc: TransformDoc): TransformState {
 
 /**
  * Maps TransformState to TransformDoc.
- * - rotation is omitted if 0
+ * - rotation is rounded to the persisted precision, then omitted if that lands on 0
  * - scaleX/scaleY convert to flipX/flipY (true if negative, omitted if positive)
  * - lockAspectRatio is preserved
  *
@@ -36,7 +37,10 @@ export function mapTransformDocToState(doc: TransformDoc): TransformState {
  * @returns Transform properties in Doc format
  */
 export function mapTransformStateToDoc(state: TransformState): TransformDoc {
-	const rotation = state.rotation !== 0 ? state.rotation : undefined;
+	// Rounded before the 0 test so an angle that is only float noise away from
+	// upright is dropped rather than persisted (roundDocNumbers).
+	const roundedRotation = roundDocRotation(state.rotation);
+	const rotation = roundedRotation !== 0 ? roundedRotation : undefined;
 	const flipX = state.scaleX < 0 ? true : undefined;
 	const flipY = state.scaleY < 0 ? true : undefined;
 	const lockAspectRatio = state.lockAspectRatio;

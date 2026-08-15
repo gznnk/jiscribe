@@ -1,6 +1,3 @@
-import { roundToDecimal } from "@jiscribe/geometry";
-
-import { PRECISION } from "../../../constants/precision";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { TextState } from "../../../states/objects/primitives/text/TextState";
 import type {
@@ -16,8 +13,8 @@ import {
 /** Moves a text object by a delta. Same as any Frame shape: the center is translated. */
 export const moveByDelta: MoveByDeltaFunction<TextState> = (state, delta) => ({
 	...state,
-	cx: roundToDecimal(state.cx + delta.x, PRECISION.COORDINATE),
-	cy: roundToDecimal(state.cy + delta.y, PRECISION.COORDINATE),
+	cx: state.cx + delta.x,
+	cy: state.cy + delta.y,
 });
 
 /**

@@ -20,6 +20,7 @@ import type { TransformState } from "./TransformState";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import type { TransformDoc } from "../../../schemas/objects/base/TransformDoc";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
+import { roundDocEllipse, roundDocRect } from "../utils/roundDocNumbers";
 import { collectStyleKeys, pick } from "../utils/stylePassthrough";
 
 /**
@@ -85,9 +86,13 @@ export const createFrameMapper = <
 		},
 
 		toDoc: (state) => {
+			// Rounded here, not at the State's cx / cy / width / height: the Doc's
+			// geometry is derived from those, and the halving re-introduces a float
+			// tail even when both operands are already round (roundDocNumbers).
+			const frame = state as unknown as Frame;
 			const geometry: Rect | Ellipse = isEllipse
-				? convertFrameToEllipse(state as unknown as Frame)
-				: convertFrameToRect(state as unknown as Frame);
+				? roundDocEllipse(convertFrameToEllipse(frame))
+				: roundDocRect(convertFrameToRect(frame));
 			const transform: Partial<TransformDoc> = features.transform
 				? mapTransformStateToDoc(state as unknown as TransformState)
 				: {};

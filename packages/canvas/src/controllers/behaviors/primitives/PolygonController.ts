@@ -1,6 +1,3 @@
-import { roundToDecimal } from "@jiscribe/geometry";
-
-import { PRECISION } from "../../../constants/precision";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { PolygonState } from "../../../states/objects/primitives/polygon/PolygonState";
 import type {
@@ -21,8 +18,8 @@ export const moveByDelta: MoveByDeltaFunction<PolygonState> = (
 	return {
 		...state,
 		points: state.points.map((p) => ({
-			x: roundToDecimal(p.x + delta.x, PRECISION.COORDINATE),
-			y: roundToDecimal(p.y + delta.y, PRECISION.COORDINATE),
+			x: p.x + delta.x,
+			y: p.y + delta.y,
 		})),
 	};
 };

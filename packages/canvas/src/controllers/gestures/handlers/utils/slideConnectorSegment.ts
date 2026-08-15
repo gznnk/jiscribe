@@ -3,9 +3,9 @@ import type { Point } from "@jiscribe/geometry";
 import { PRECISION } from "../../../../constants/precision";
 
 /**
- * Two coordinates this close apart lie on the same drawn line. Stored vertices are rounded to
- * PRECISION.COORDINATE while endpoints resolve unrounded, so segments that overlap on screen can
- * sit a rounding error apart in the data.
+ * Two coordinates this close apart lie on the same drawn line. Stored vertices settle onto
+ * PRECISION.COORDINATE (reconcileConnectorVertices) while endpoints resolve unrounded, so
+ * segments that overlap on screen can sit a rounding error apart in the data.
  */
 const COLINEAR_TOLERANCE = 10 ** -PRECISION.COORDINATE;
 
