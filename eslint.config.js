@@ -18,7 +18,15 @@ const tsconfigRootDir = fileURLToPath(new URL(".", import.meta.url));
 
 export default tseslint.config(
 	{
-		ignores: ["**/dist", "**/node_modules", ".dependency-graph"],
+		ignores: [
+			"**/dist",
+			"**/node_modules",
+			".dependency-graph",
+			// Playwright output: the html reporter (CI) writes bundled JS into
+			// playwright-report/, and test-results/ carries traces — both generated.
+			"**/playwright-report",
+			"**/test-results",
+		],
 	},
 	{
 		extends: [
