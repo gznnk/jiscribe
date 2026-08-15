@@ -5,7 +5,9 @@ import { createCanvasParser } from "../../src/doc";
 // Page for verifying gestureHandling="cooperative": a canvas embedded in a
 // document that scrolls, the way a landing page or an article figure embeds one.
 // The spacers make the document taller than the window, so window.scrollY is a
-// direct readout of whether the wheel reached the page or was trapped by the canvas.
+// direct readout of whether a gesture (wheel or touch drag) reached the page or
+// was trapped by the canvas. The embedded rect is what the touch specs grab to
+// show a shape drag survives on a scrolling page.
 const canvasParser = createCanvasParser();
 
 const parseEmbeddedDoc = (): CanvasDoc => {

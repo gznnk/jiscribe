@@ -1,6 +1,7 @@
 import type React from "react";
 import { type Dispatch, useEffect, useMemo, useRef } from "react";
 
+import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { isViewportPanDrag } from "../gestures/handlers/canvas/utils/isViewportPanDrag";
 import { GestureRecognizer } from "../gestures/recognizer/GestureRecognizer";
@@ -15,6 +16,12 @@ export type UseGestureRecognizerParams = {
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	canvasState: CanvasControllerState;
+	/**
+	 * The canvas's reactive `gestureHandling` prop; stamped onto every GESTURE
+	 * action at dispatch time so the handlers see the value the gesture fired
+	 * under (the recognizer itself stays unaware of it).
+	 */
+	gestureHandling: CanvasGestureHandling;
 };
 
 export type UseGestureRecognizerReturn = {
@@ -39,6 +46,7 @@ export const useGestureRecognizer = ({
 	containerRef,
 	svgRef,
 	canvasState,
+	gestureHandling,
 }: UseGestureRecognizerParams): UseGestureRecognizerReturn => {
 	// Hold the GestureRecognizer instance in a ref
 	const recognizerRef = useRef<GestureRecognizer | null>(null);
@@ -46,6 +54,10 @@ export const useGestureRecognizer = ({
 	// Ref that always holds the latest canvasState
 	const canvasStateRef = useRef<CanvasControllerState>(canvasState);
 	canvasStateRef.current = canvasState; // Set the latest value on every render
+
+	// Same pattern for the reactive gestureHandling prop, read at dispatch time
+	const gestureHandlingRef = useRef<CanvasGestureHandling>(gestureHandling);
+	gestureHandlingRef.current = gestureHandling;
 
 	// Lazily initialize the instance into the ref to guarantee "created only once".
 	// (useMemo may discard its memoized value and recompute, creating a second
@@ -57,7 +69,11 @@ export const useGestureRecognizer = ({
 		// Recognized gestures are dispatched to the reducer as GESTURE actions
 		// (the GestureRecognizer class itself stays React-independent via the callback contract)
 		const gestureCallback: GestureCallback = (gesture) => {
-			dispatch({ type: "GESTURE", gesture });
+			dispatch({
+				type: "GESTURE",
+				gesture,
+				gestureHandling: gestureHandlingRef.current,
+			});
 		};
 		recognizerRef.current = new GestureRecognizer({
 			gestureCallback,

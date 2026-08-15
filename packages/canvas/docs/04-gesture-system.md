@@ -196,12 +196,13 @@ The line it draws is **scroll versus zoom**, not wheel versus everything else. U
   host document and the recognizer never sees the event.
 - Ctrl+wheel is a zoom, so it takes the normal path and zooms the canvas. A trackpad pinch arrives
   as a Ctrl-held wheel, which lands in the same branch.
-- `CanvasRoot` relaxes `touch-action` from `none` to `pan-y`, handing the browser the vertical axis
-  a page scrolls along. `pan-y` still withholds pinch, so a two-finger pinch keeps zooming the canvas.
-
-The touch half has a cost, and it is the one the value asks for: a one-finger drag the browser
-resolves as a page scroll is taken away mid-gesture and arrives as `pointercancel`, so a mostly
-vertical drag scrolls the page instead of moving a shape. Horizontal drags are unaffected.
+- On touch the split runs by what the finger lands on. `CanvasRoot` relaxes `touch-action` from
+  `none` to `pan-x pan-y`, so a one-finger background drag scrolls the host page (the handler also
+  refuses to pan the viewport from it — otherwise a drag the page has no room to take would still
+  move the canvas). A touch starting on a shape stays a shape drag: the working claim is the
+  non-passive `touchstart` guard in `useCooperativeTouchClaim`, because Chromium and WebKit ignore
+  `touch-action` on inner SVG elements. Moving the view itself takes two fingers, which neither
+  `touch-action` value hands to the browser, so the pinch keeps panning and zooming the canvas.
 
 Covered by `e2e/specs/scenario/embedded-page-scroll.spec.ts`, against the `?pageScroll` harness page.
 

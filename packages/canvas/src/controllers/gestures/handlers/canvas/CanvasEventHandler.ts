@@ -293,6 +293,15 @@ export const CanvasEventHandler: GestureHandler = {
 				event.type === "drag" ||
 				event.type === "dragEnd")
 		) {
+			// Cooperative: the background belongs to the host page. The browser may
+			// resolve this very drag into a page scroll (touch-action allows it) and
+			// cancel the pointer, so panning here would fight the page and jitter.
+			// Moving the view is still possible with two fingers, which convert this
+			// drag into a pinch. Shape drags are untouched — their hit elements carry
+			// touch-action: none (see CanvasStyled), so those never race the page.
+			if (event.gestureHandling === "cooperative") {
+				return nextState;
+			}
 			// dragStart pans too: it already carries a threshold-sized clientDelta,
 			// and a slow touch stream may deliver only dragStart in a frame.
 			if (event.type === "dragStart" || event.type === "drag") {

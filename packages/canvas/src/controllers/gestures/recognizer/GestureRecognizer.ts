@@ -698,12 +698,22 @@ export class GestureRecognizer {
 			this.releasePointer(e.pointerId);
 
 			if (this.pressed.dragging) {
+				// A cancel carries no usable position — Chromium fires it with client
+				// (0,0) — so the drag ends where the last move left it. Using the
+				// cancel's own coordinates teleported the dragged shape to whatever
+				// world point the screen origin mapped to.
 				this.fireGestureFromPressed(this.pressed, {
 					type: "dragEnd",
-					last: currentPos,
-					clientLast: currentClientPos,
-					delta,
-					clientDelta,
+					last: this.pressed.last,
+					clientLast: this.pressed.clientLast,
+					delta: {
+						x: this.pressed.last.x - this.pressed.start.x,
+						y: this.pressed.last.y - this.pressed.start.y,
+					},
+					clientDelta: {
+						x: this.pressed.clientLast.x - this.pressed.clientStart.x,
+						y: this.pressed.clientLast.y - this.pressed.clientStart.y,
+					},
 					mods,
 					time,
 				});

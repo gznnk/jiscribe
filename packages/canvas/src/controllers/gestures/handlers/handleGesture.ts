@@ -6,6 +6,7 @@ import {
 import type { FrameKeyPoints, TransformedFrame } from "@jiscribe/geometry";
 
 import { isPoly } from "../../../schemas/objects/types/Poly";
+import type { CanvasGestureHandling } from "../../CanvasGestureHandling";
 import type {
 	CanvasControllerState,
 	EventStartSnapshot,
@@ -47,6 +48,7 @@ export const handleGesture = (
 	state: CanvasControllerState,
 	gesture: Gesture,
 	registries: CanvasRegistries,
+	gestureHandling?: CanvasGestureHandling,
 ): CanvasControllerState => {
 	// The end of a glide is a pure state transition — nothing to route, and no
 	// handler could tell it apart from a frame that merely moved zero pixels.
@@ -92,6 +94,7 @@ export const handleGesture = (
 	} else {
 		canvasEvent = gesture as CanvasEvent;
 	}
+	canvasEvent = { ...canvasEvent, gestureHandling };
 
 	// Save eventStartSnapshot on event start
 	if (EVENT_START_TYPES.includes(canvasEvent.type)) {
