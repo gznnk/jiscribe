@@ -7,6 +7,135 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-16
+
+Text is no longer one style per shape: any stretch of it can be bold, italic,
+underlined, struck through, coloured or resized on its own, and it is edited on a
+surface that draws what it will look like. A frameless `text` shape joins the
+library, `.jis` and `.jiscribe` open from the OS shell, and the extension is now
+MIT licensed.
+
+### Added
+
+#### Text
+
+- **Style a stretch of text, not just the whole shape.** Select part of a label
+  and apply bold / italic / underline / strikethrough, a colour or a size to just
+  those characters. **Ctrl/Cmd+B / I / U** toggle the selection while editing, and
+  the object menu's text items apply to the selection when there is one and to the
+  whole slot when there is not. A property set on the whole slot clears the same
+  property from the runs that overrode it, so the change is always visible.
+  Per-range styling survives copy / paste, undo / redo, saving, and PNG / SVG
+  export, and it works inside a `record`'s compartments row by row.
+  A document with no styled range is saved byte-for-byte as before — the plain
+  string stays the canonical form.
+- **Text is edited on a surface that draws its real styling.** The editor used to
+  be a transparent textarea laying the text out in one uniform font, so the caret,
+  the selection and the line wrapping sat where the _unstyled_ text would be. It
+  now draws the styled text itself, and the box grows around a part drawn larger.
+- **Text format buttons sit directly in the object menu** while text has the
+  focus (a slot is selected or text is being edited), instead of behind the
+  text-format dropdown. With only a shape selected, the dropdown is unchanged.
+- **`text`: a shape that is only text.** No frame, no fill, no wrapping — the box
+  is derived from the content and grows right and down from the point you place
+  it, with line breaks written explicitly. It sits next to Polygon in the toolbar,
+  takes rotation, snapping and marquee selection like any other shape, and only
+  the resize handles are hidden. Clicks pass through the empty side of a line, so
+  a shape underneath stays reachable.
+
+#### Shapes
+
+- **UML Package and UML Component**, in the UML flyout: a tabbed rectangle whose
+  name sits in the body, and a rectangle carrying the UML 2 component icon at the
+  top right. The shape set is now 50 drawable types.
+
+#### Files
+
+- **`.jis` and `.jiscribe` open in the canvas editor.** OS file association
+  resolves only the last dot segment, so a `.jis.json` file could not be opened
+  from the shell. Both single-segment extensions are now first-class — they open
+  in the canvas editor, are highlighted and schema-validated as JSON, and new
+  canvases default to `untitled.jis`. `.jis.json` / `.jiscribe.json` keep working
+  unchanged, and the AI adapters written by **Set up AI** cover the new
+  extensions.
+
+#### Canvas
+
+- **Panning with the middle or right button carries momentum.** Release while
+  moving and the view glides to a stop; release at rest and it stops where it is,
+  as before. A new press or a wheel tick cancels the glide immediately. The object
+  menu hides for the duration instead of flying across the screen with the
+  selection.
+
+### Changed
+
+- **The extension is now MIT licensed** (it shipped under a custom EULA before),
+  and the engine behind it is developed in the open at
+  [github.com/gznnk/jiscribe](https://github.com/gznnk/jiscribe).
+- **Scheme-less URLs are no longer auto-linked in Markdown shapes.** The Markdown
+  renderer moved to markdown-it 15, which drops fuzzy link detection: `example.com`
+  and `www.example.com` now render as plain text. URLs with a scheme
+  (`https://example.com`) and e-mail addresses are unaffected.
+- **The bundled AI authoring assets teach per-range styling** and cover the two
+  new UML shapes and `text`. The JSON schema also shrank from 164 KB to 104 KB by
+  sharing one definition across the 30 box-shaped types, with no change to what it
+  accepts. If you use AI authoring, re-run the **Set up AI** command to refresh the
+  assets under `.jiscribe/`.
+
+### Fixed
+
+- **Editing one `record` no longer edits every other one.** Shapes were created by
+  a shallow copy of their type's defaults, so all records made from the same
+  defaults shared the very same text slots — typing into one changed the text and
+  typography of the rest.
+- **Right-clicking a shape you just left-clicked opens the context menu.** The two
+  presses within 300 ms and 5 px were read as one double-click, which the context
+  menu does not respond to, so it silently failed to open.
+- **Saved files keep clean numbers.** Rounding was applied in the gesture and
+  command layers, so shapes whose geometry is derived (`x = cx - width / 2`) still
+  wrote values like `83.43334999999999`. Rounding now happens once, where state
+  becomes document.
+- **Editing a `record` no longer fattens the file.** Its compartments materialized
+  six typography fields each on the first save; omitted styling now stays omitted
+  and is resolved at draw time instead.
+- **A hand-authored or AI-generated document renders with its type's own text
+  defaults.** A field left out fell back to a shared centre / middle / 16 px, so a
+  bare `text` object drew centred although its type declares left-aligned.
+- **Labels hung below a shape no longer wrap early.** They were measured at 14 px
+  and drawn at 16 px, so the box came up short of its own text whenever the
+  document did not spell out a font size.
+- **Long connector, below-shape and group labels no longer wrap at an arbitrary
+  width cap**, and a styled label is measured under its real fonts (it used to be
+  measured as the literal text `[object Object]`).
+- **The object menu stays under your pointer while you use it.** Changing a font
+  size or weight re-measures the box, which moved the menu anchored to its bottom
+  edge out from under the pointer mid-drag. It also follows the box as it grows
+  while you type, instead of anchoring to the pre-edit size.
+- **Dragging a size slider over selected text no longer floods undo.** Every
+  preview frame was pushing a history entry, so returning to the original size took
+  many presses of undo.
+- **Keyboard shortcuts no longer steal keystrokes aimed at the text being edited**,
+  and the shortcut help (`?`) opens only for the focused canvas instead of once per
+  open canvas.
+- **Spell-check red squiggles are gone from text editing**, where identifiers and
+  abbreviations common in diagrams were being underlined.
+- **A shape being dragged no longer teleports when the drag is cancelled.** The
+  browser reports the cancel at client (0, 0), which was taken as the pointer's
+  position — visible mainly on touch, where a drag taken over as a page scroll
+  always ends this way.
+- **The UML stencil icons are legible at toolbar size** (their frame was 2 px
+  shorter than every other plugin's, leaving 3 px per band).
+
+### Performance
+
+- **Dragging no longer walks every object each frame.** The content re-measure pass
+  ran over the whole object map on every pointer move; it now visits only the ids
+  that could have changed. At 2000 objects that is 1.56 ms → 0.0005 ms per frame,
+  about 9% of a 60 fps budget returned. Duplicating the object record is ~2.8×
+  faster (5000 objects: 6.60 ms → 2.35 ms).
+- Text measurement sets the canvas font only when it actually changes, and
+  unwrapped heights are computed without touching the measuring canvas at all.
+
 ## [0.7.0] - 2026-08-08
 
 The largest release so far. The shape set grew from 8 drawable types to 47, text
