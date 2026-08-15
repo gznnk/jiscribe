@@ -115,8 +115,12 @@ export function ExamplesShell() {
 		return () => window.removeEventListener("hashchange", handleHashChange);
 	}, []);
 
+	// The branch tells apart the dev servers of several worktrees; the deployed
+	// gallery keeps the plain title from index.html.
 	useEffect(() => {
-		document.title = `canvas examples [${__GIT_BRANCH__}]`;
+		if (import.meta.env.DEV) {
+			document.title = `Jiscribe Canvas Examples [${__GIT_BRANCH__}]`;
+		}
 	}, []);
 
 	const selected =

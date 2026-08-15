@@ -1,0 +1,14 @@
+# Cloudflare Pages headers for examples.jiscribe.dev
+# HTML is revalidated on every request; the assets Vite emits with a content
+# hash are cached for a day. A hashed name would allow a year, but the shorter
+# window bounds how long a bad response can stick around, and `immutable` is
+# left off so a reload can always recover.
+# Note: Pages concatenates the headers of every matching rule, so /assets/*
+# cancels the Cache-Control coming from /* with `!` before setting its own.
+
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400, must-revalidate

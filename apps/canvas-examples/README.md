@@ -13,6 +13,9 @@ pnpm dev:examples     # 起動（http://localhost:5174/）
 pnpm build:examples   # ビルド（CI で examples の腐敗防止を兼ねる）
 ```
 
+この作例集は examples.jiscribe.dev として配信している。配信の手順と `public/` に
+置いてあるファイルの意味は [DEPLOY.md](./DEPLOY.md) を見ること。
+
 ## Gallery
 
 | id                  | 作例                             |

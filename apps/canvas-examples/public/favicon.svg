@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Jiscribe">
+	<defs>
+		<linearGradient id="jiscribe-favicon-bg" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#0f9e8f" />
+			<stop offset="1" stop-color="#075e56" />
+		</linearGradient>
+	</defs>
+	<rect width="240" height="240" rx="54" fill="url(#jiscribe-favicon-bg)" />
+	<g
+		fill="none"
+		stroke="#ecfffb"
+		stroke-width="10"
+		stroke-linejoin="round"
+		stroke-linecap="round"
+		transform="translate(116 116) scale(1.12) translate(-115 -117)"
+	>
+		<circle cx="118" cy="92" r="46" />
+		<path d="M82 96 L38 176 L130 176 Z" />
+		<rect x="112" y="108" width="80" height="80" rx="8" />
+	</g>
+</svg>

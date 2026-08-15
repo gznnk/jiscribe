@@ -6,6 +6,7 @@
 		"dev": "vite",
 		"dev:harness": "vite e2e/harness --configLoader runner",
 		"build": "tsc -b && vite build",
+		"deploy": "pnpm run build && pnpm dlx wrangler pages deploy dist --project-name=jiscribe-examples --branch=main",
 		"lint": "eslint .",
 		"preview": "vite preview",
 		"test:e2e": "playwright test",
