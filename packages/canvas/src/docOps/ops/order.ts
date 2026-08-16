@@ -1,6 +1,6 @@
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import { requireObjects } from "../utils/objectAccess";
+import { requireObject, requireObjects } from "../utils/objectAccess";
 
 /**
  * Where objects are taken to in their parent's stacking order. "front" / "back" go the whole
@@ -122,4 +122,28 @@ export const reorderObjects = (
 				break;
 		}
 	}
+};
+
+export type GetZOrderResult = {
+	/** 0-based position among its siblings, counting from the back. */
+	index: number;
+	/** How many siblings it sits among, itself included. */
+	total: number;
+};
+
+/**
+ * Where an object stands in the stacking order — the reading behind
+ * {@link reorderObjects}, and what says whether a "front" call would change anything.
+ *
+ * @param doc - Searched but not modified, group children included
+ * @param id - Id of the object to locate; must exist in the root tree
+ * @returns Its position and how many objects share that parent. Both are counted within
+ *   the parent holding it — a group's child among its siblings, never against the root —
+ *   so `index === total - 1` means it is drawn over everything else in that parent, which
+ *   is what "front" would leave it as
+ * @throws {@link DocOperationError} when no object carries the id
+ */
+export const getZOrder = (doc: CanvasDoc, id: string): GetZOrderResult => {
+	const { siblings, index } = requireObject(doc, id);
+	return { index, total: siblings.length };
 };

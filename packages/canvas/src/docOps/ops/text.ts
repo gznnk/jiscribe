@@ -20,6 +20,12 @@ import {
 	type DocDefinitions,
 	isConnectorObject,
 } from "../utils/objectGeometry";
+import {
+	readConnectorLabelText,
+	readSlots,
+	readTextField,
+	requireSlotId,
+} from "../utils/textFields";
 
 /**
  * The new text for a body that may be styled per range: the characters the
@@ -42,14 +48,6 @@ const setConnectorLabelText = (object: ObjectRecord, text: string): void => {
 		return;
 	}
 	object.label = { text };
-};
-
-/** Slot objects of a `text: "slots"` doc, keyed by slot id. */
-const readSlots = (object: ObjectRecord): Record<string, unknown> | null => {
-	const slots = object.text;
-	return typeof slots === "object" && slots !== null
-		? (slots as Record<string, unknown>)
-		: null;
 };
 
 /**
@@ -108,15 +106,12 @@ const planTextWrite = (
 	if (slots === null || slotIds.length === 0) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
-	const targetSlotId = slot ?? (slotIds.length === 1 ? slotIds[0] : undefined);
-	if (targetSlotId === undefined || !slotIds.includes(targetSlotId)) {
-		throw new DocOperationError(
-			`${id} ("${object.type}") needs the slot to write: ${slotIds.join(" / ")}`,
-		);
-	}
 	return {
 		kind: "slot",
-		slot: slots[targetSlotId] as Record<string, unknown>,
+		slot: slots[requireSlotId(object, id, slotIds, slot, "write")] as Record<
+			string,
+			unknown
+		>,
 		text,
 	};
 };
@@ -212,6 +207,54 @@ export const setTexts = (
 	for (const write of writes) {
 		applyTextWrite(write);
 	}
+};
+
+/**
+ * Read one object's text back as plain characters, the counterpart of {@link setText}:
+ * what it returns is what `setText` would take to write the same text again.
+ *
+ * Styling is dropped — a body styled in parts reads as its characters alone — and what
+ * "text" means follows the type exactly as it does when writing: a shape's single body,
+ * one named slot, or a connector's label.
+ *
+ * @param doc - Searched but not modified
+ * @param id - Id of the object to read; must exist in the root tree
+ * @param slot - Which slot to read, for a slotted type only. `undefined` is allowed when
+ *   the object has exactly one slot, as in {@link setText}
+ * @param definitions - Type table `features.text` is read from
+ * @returns The characters: the rows of a row-partitioned slot joined by "\n", and "" for a
+ *   connector carrying no label
+ * @throws {@link DocOperationError} when the id is missing, when the type holds no text at
+ *   all, or when `slot` is absent/unknown on a slotted type — the message lists the slots
+ *   the object actually has
+ */
+export const getText = (
+	doc: CanvasDoc,
+	id: string,
+	slot: string | undefined,
+	definitions: DocDefinitions,
+): string => {
+	const { object } = requireObject(doc, id);
+	if (isConnectorObject(object)) {
+		return readConnectorLabelText(object);
+	}
+
+	const textFeature = definitions.get(object.type)?.features.text;
+	if (textFeature === "body") {
+		return readTextField(object);
+	}
+	if (textFeature !== "slots") {
+		throw new DocOperationError(
+			`${id} ("${object.type}") holds no text that can be read`,
+		);
+	}
+
+	const slots = readSlots(object);
+	const slotIds = slots === null ? [] : Object.keys(slots);
+	if (slots === null || slotIds.length === 0) {
+		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
+	}
+	return readTextField(slots[requireSlotId(object, id, slotIds, slot, "read")]);
 };
 
 /**
@@ -448,16 +491,16 @@ const resolveTextTarget = (
 			`${id} ("${object.type}") holds no text that can be styled`,
 		);
 	}
-	const slots = object.text;
-	if (typeof slots !== "object" || slots === null) {
+	const slots = readSlots(object);
+	if (slots === null) {
 		throw new DocOperationError(`${id} ("${object.type}") has no text slot`);
 	}
-	const slotIds = Object.keys(slots);
-	const targetSlotId = slot ?? (slotIds.length === 1 ? slotIds[0] : undefined);
-	if (targetSlotId === undefined || !slotIds.includes(targetSlotId)) {
-		throw new DocOperationError(
-			`${id} ("${object.type}") needs the slot to style: ${slotIds.join(" / ")}`,
-		);
-	}
+	const targetSlotId = requireSlotId(
+		object,
+		id,
+		Object.keys(slots),
+		slot,
+		"style",
+	);
 	return (slots as Record<string, ObjectRecord>)[targetSlotId];
 };

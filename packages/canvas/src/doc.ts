@@ -13,7 +13,8 @@
 // only creation: building (`addObject` / `connect`) and reworking what is already there
 // (delete / move / resize / rotate / reshape / restack / style / retext / re-route /
 // align / group) handle built-in and plugin types uniformly, following each type's
-// `features`.
+// `features`. Reading is covered too: `get` / `list` / `find` ops answer what is in the
+// doc without handing back the whole of it.
 // They take already-typed params (no zod; tool-input validation is the
 // adapter's responsibility) and reuse the same ObjectFactory as the canvas, producing
 // correct ObjectDocs down to the style defaults. Every editing op mutates the doc in place
@@ -82,10 +83,14 @@ export {
 	type DeleteObjectsResult,
 	type DistributeAxis,
 	type DocOps,
+	type GetZOrderResult,
 	type EdgeAnchorHandle,
 	type EdgeAnchorSide,
 	type MoveObjectEntry,
 	type MoveObjectParams,
+	type ObjectFilter,
+	type ObjectSummary,
+	type ObjectTypeSummary,
 	type Point,
 	type Rect,
 	type RemoveObjectsFromGroupResult,

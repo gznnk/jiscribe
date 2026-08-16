@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-	docOps,
-	emptyDoc,
-} from "./support/docFixtures";
+import { docOps, emptyDoc } from "./support/docFixtures";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { DocOperationError } from "../errors";
@@ -16,6 +13,45 @@ const threeRects = (): CanvasDoc => {
 	docOps.addObject(doc, "rect", { x: 400, y: 10, width: 100, height: 100 });
 	return doc;
 };
+
+describe("getObjectBounds", () => {
+	it("measures one object", () => {
+		expect(docOps.getObjectBounds(threeRects(), "rect-2")).toEqual({
+			x: 130,
+			y: 40,
+			width: 100,
+			height: 60,
+		});
+	});
+
+	it("measures a group from its children", () => {
+		const doc = threeRects();
+		const groupId = docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+
+		expect(docOps.getObjectBounds(doc, groupId)).toEqual({
+			x: 0,
+			y: 0,
+			width: 230,
+			height: 100,
+		});
+	});
+
+	it("returns null for a connector, which has no box of its own", () => {
+		const doc = threeRects();
+		const connectorId = docOps.connect(doc, {
+			sourceId: "rect-1",
+			targetId: "rect-3",
+		});
+
+		expect(docOps.getObjectBounds(doc, connectorId)).toBeNull();
+	});
+
+	it("throws DocOperationError for an id the doc does not hold", () => {
+		expect(() => docOps.getObjectBounds(threeRects(), "nope")).toThrow(
+			DocOperationError,
+		);
+	});
+});
 
 describe("getObjectsBounds", () => {
 	it("unions every object in the doc when no ids are given", () => {

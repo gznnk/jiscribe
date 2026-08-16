@@ -735,3 +735,117 @@ describe("updateConnectors", () => {
 		expect(JSON.stringify(batchDoc)).toBe(JSON.stringify(singleDoc));
 	});
 });
+
+describe("getConnectors / getConnectedObjects", () => {
+	/** {@link twoConnectedRects} plus `rect-3`, which nothing reaches. */
+	const wiredRects = (): CanvasDoc => {
+		const doc = twoConnectedRects();
+		docOps.addObject(doc, "rect", { x: 600, y: 0, width: 100, height: 100 });
+		return doc;
+	};
+
+	it("finds the connector from either of its ends", () => {
+		const doc = wiredRects();
+
+		expect(docOps.getConnectors(doc, "rect-1").map(({ id }) => id)).toEqual([
+			"connector-1",
+		]);
+		expect(docOps.getConnectors(doc, "rect-2").map(({ id }) => id)).toEqual([
+			"connector-1",
+		]);
+		expect(docOps.getConnectedObjects(doc, "rect-1")).toEqual(["rect-2"]);
+		expect(docOps.getConnectedObjects(doc, "rect-2")).toEqual(["rect-1"]);
+	});
+
+	it("hands back the doc's own connector rather than a copy", () => {
+		const doc = wiredRects();
+
+		expect(docOps.getConnectors(doc, "rect-1")[0]).toBe(
+			readObject(doc, "connector-1"),
+		);
+	});
+
+	it("lists several connectors in drawing order, whichever end they meet on", () => {
+		const doc = wiredRects();
+		docOps.connect(doc, { sourceId: "rect-3", targetId: "rect-2" });
+		docOps.connect(doc, { sourceId: "rect-2", targetId: "rect-3" });
+
+		expect(docOps.getConnectors(doc, "rect-2").map(({ id }) => id)).toEqual([
+			"connector-1",
+			"connector-2",
+			"connector-3",
+		]);
+	});
+
+	it("folds a neighbour reached by more than one connector into one id", () => {
+		const doc = wiredRects();
+		docOps.connect(doc, { sourceId: "rect-2", targetId: "rect-1" });
+
+		expect(docOps.getConnectors(doc, "rect-1")).toHaveLength(2);
+		expect(docOps.getConnectedObjects(doc, "rect-1")).toEqual(["rect-2"]);
+	});
+
+	it("is empty for an object nothing is attached to", () => {
+		const doc = wiredRects();
+
+		expect(docOps.getConnectors(doc, "rect-3")).toEqual([]);
+		expect(docOps.getConnectedObjects(doc, "rect-3")).toEqual([]);
+	});
+
+	it("is empty for a connector, which is never an endpoint owner", () => {
+		const doc = wiredRects();
+
+		expect(docOps.getConnectors(doc, "connector-1")).toEqual([]);
+		expect(docOps.getConnectedObjects(doc, "connector-1")).toEqual([]);
+	});
+
+	it("keeps a connector whose far end is free, and reports no neighbour for it", () => {
+		const doc = wiredRects();
+		docOps.connect(doc, {
+			sourceId: "rect-3",
+			targetPoint: { x: 900, y: 400 },
+		});
+
+		expect(docOps.getConnectors(doc, "rect-3").map(({ id }) => id)).toEqual([
+			"connector-2",
+		]);
+		expect(docOps.getConnectedObjects(doc, "rect-3")).toEqual([]);
+	});
+
+	it("lists a self-loop once and leaves the object out of its own neighbours", () => {
+		const doc = wiredRects();
+		docOps.connect(doc, {
+			sourceId: "rect-3",
+			targetId: "rect-3",
+			sourceAnchor: "topCenter",
+			targetAnchor: "bottomCenter",
+		});
+
+		expect(docOps.getConnectors(doc, "rect-3").map(({ id }) => id)).toEqual([
+			"connector-2",
+		]);
+		expect(docOps.getConnectedObjects(doc, "rect-3")).toEqual([]);
+		expectValid(doc);
+	});
+
+	it("finds the connectors on an object that has since been grouped", () => {
+		const doc = wiredRects();
+		docOps.groupObjects(doc, ["rect-1", "rect-3"]);
+
+		expect(docOps.getConnectors(doc, "rect-1").map(({ id }) => id)).toEqual([
+			"connector-1",
+		]);
+		expect(docOps.getConnectedObjects(doc, "rect-1")).toEqual(["rect-2"]);
+	});
+
+	it("throws for an id that is not in the doc", () => {
+		const doc = wiredRects();
+
+		expect(() => docOps.getConnectors(doc, "missing")).toThrow(
+			DocOperationError,
+		);
+		expect(() => docOps.getConnectedObjects(doc, "missing")).toThrow(
+			"object not found: missing",
+		);
+	});
+});

@@ -25,12 +25,14 @@ This is the headless document layer. It must not import `react`, `react-dom`,
 | `index.ts`        | What the directory exports, re-exported in turn by `src/doc.ts`                                                            |
 | `errors.ts`       | `DocOperationError` — the only exception these ops throw                                                                   |
 | `ops/`            | The ops. Named for the group they belong to, not for one op, so adding an op does not make a file name a lie               |
+| `ops/query.ts`    | The reads that answer about the doc as a whole rather than about one group of ops                                          |
+| `ops/types.ts`    | `listTypes`, the one op that answers from the definitions instead of from a doc                                            |
 | `utils/`          | What the ops share: id allocation, object lookup, geometry, endpoint building, style/transform field writing               |
 | `__tests__/`      | One suite per `ops/` file plus `createDocOps.test.ts`, with shared fixtures in `__tests__/support/`                        |
 
 ## The contract every op holds
 
-Every op mutates `doc` in place, and checks its arguments **before** it writes. A call that
+Every editing op mutates `doc` in place, and checks its arguments **before** it writes. A call that
 throws `DocOperationError` therefore leaves the document exactly as it was — there is no
 half-applied state to clean up and no need to snapshot before calling.
 
@@ -40,7 +42,37 @@ splitting into two phases — resolve and validate everything, then write — ra
 copying the doc. `translateObjects` ("measure every object first") and the
 `plan…` / `apply…` pairs in `ops/text.ts` and `ops/connectors.ts` are the shape to follow.
 
-`getObjectsBounds` is the only op that does not write.
+A read never writes, but it shares the other half of the contract: **naming an id that the
+document does not hold is an error, not an empty answer.** A caller asking about something
+that is not there has made a mistake, and a null would hide it. Ask `listObjects` or
+`findObjects` when the question is whether something exists at all.
+
+## Reading
+
+A `get` / `list` / `find` prefix marks an op that only reads. `get` names one subject and
+returns what it holds, `list` returns everything, `find` narrows by a filter. Every other op
+writes.
+
+Each read sits beside the op that writes what it reads — `getZOrder` after `reorderObjects`,
+`getText` after `setTexts` — so a write always has its counterpart in view. Only the reads
+with no write to pair with (`getObject`, `listObjects`, `findObjects`, `listTypes`) sit in a
+block of their own.
+
+**There is no getter per property.** `getObject` hands back the doc's own object, so style,
+rotation, points, endpoints and slots are all read from it; a getter per written field would
+mean one read op per write op. The exceptions earn their place by doing work the caller
+would otherwise repeat: `getObjectBounds` derives a box the doc does not store, `getText`
+flattens styled runs and rows into plain characters, and `listObjects` summarizes.
+
+`listObjects` exists because handing over the whole document does not scale — a 47-object
+diagram is over 100 KB of JSON, and the AI tool layer truncates its dump at 20,000
+characters. A summary carries id, type, bounds, parent and text, which is what a caller
+needs to decide what to touch next.
+
+**A read hands back the document's own objects, never copies.** Changing what comes back
+edits the doc behind every check these ops make, so the return types are `Readonly` and the
+JSDoc says so. TypeScript's `Readonly` is shallow — the arrays underneath are still the
+doc's — so treat the whole of it as read-only and edit through the ops.
 
 ## Tests
 
@@ -79,7 +111,9 @@ is named `ids` or `entries` accordingly, and that name appears verbatim in error
 
 **A result type is the op's name plus `Result`**, and only exists where the return value
 needs naming (`DeleteObjectsResult`, `RemoveObjectsFromGroupResult`). An op returning bare
-ids returns `string[]`.
+ids returns `string[]`. A read that reports a shape of its own names it for what it reports
+rather than for the op (`ObjectSummary`, `ObjectTypeSummary`, `ObjectFilter`), since more
+than one op takes or returns it.
 
 ## Argument order
 
@@ -122,3 +156,6 @@ them together tells the caller more than pointing at the first index would.
 6. Allocate ids with `generateUniqueId` from `utils/ids.ts`. A batch that stages objects
    before pushing them must pass the ids it has already handed out as `reservedIds`, since
    the allocator only scans `doc.root`
+7. For a read, prefix it `get` / `list` / `find`, throw for an id the doc does not hold, and
+   check first whether `getObject` already answers it — a getter per written property is
+   what this layer does not do

@@ -416,3 +416,75 @@ describe("objects measured from their children", () => {
 		);
 	});
 });
+
+describe("getParentGroup / getGroupMembers", () => {
+	/** `group-1` holding `rect-1` and a nested `group-2`, beside a loose `rect-4`. */
+	const nestedGroups = (): CanvasDoc => {
+		const doc = emptyDoc();
+		for (let index = 0; index < 4; index += 1) {
+			docOps.addObject(doc, "rect", { x: index * 200, y: 0 });
+		}
+		docOps.groupObjects(doc, ["rect-2", "rect-3"]);
+		docOps.groupObjects(doc, ["rect-1", "group-1"]);
+		return doc;
+	};
+
+	it("names the group directly holding the object", () => {
+		const doc = nestedGroups();
+
+		expect(docOps.getParentGroup(doc, "rect-2")).toBe("group-1");
+		expect(docOps.getParentGroup(doc, "group-1")).toBe("group-2");
+	});
+
+	it("is null for an object sitting at the root", () => {
+		const doc = nestedGroups();
+
+		expect(docOps.getParentGroup(doc, "group-2")).toBeNull();
+		expect(docOps.getParentGroup(doc, "rect-4")).toBeNull();
+	});
+
+	it("lists the direct children in drawing order, grandchildren left out", () => {
+		const doc = nestedGroups();
+
+		expect(docOps.getGroupMembers(doc, "group-2")).toEqual([
+			"rect-1",
+			"group-1",
+		]);
+		expect(docOps.getGroupMembers(doc, "group-1")).toEqual([
+			"rect-2",
+			"rect-3",
+		]);
+	});
+
+	it("reads a group that is rotated, which only editing its membership refuses", () => {
+		const doc = nestedGroups();
+		docOps.setRotation(doc, ["group-1"], 30);
+
+		expect(docOps.getGroupMembers(doc, "group-1")).toEqual([
+			"rect-2",
+			"rect-3",
+		]);
+		expect(() => docOps.addObjectsToGroup(doc, "group-1", ["rect-4"])).toThrow(
+			DocOperationError,
+		);
+	});
+
+	it("refuses an id that is not a group", () => {
+		const doc = nestedGroups();
+
+		expect(() => docOps.getGroupMembers(doc, "rect-4")).toThrow(
+			'rect-4 is "rect", not a group',
+		);
+	});
+
+	it("throws for an id that is not in the doc", () => {
+		const doc = nestedGroups();
+
+		expect(() => docOps.getParentGroup(doc, "missing")).toThrow(
+			"object not found: missing",
+		);
+		expect(() => docOps.getGroupMembers(doc, "missing")).toThrow(
+			DocOperationError,
+		);
+	});
+});

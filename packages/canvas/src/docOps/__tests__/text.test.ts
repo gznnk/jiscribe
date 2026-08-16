@@ -250,6 +250,84 @@ describe("setText on a slotted type", () => {
 	});
 });
 
+describe("getText", () => {
+	const slotOps = createDocOps({
+		plugins: [{ id: "slot-plugin", objects: { "slot-card": cardDefinition } }],
+	});
+	/** One `slot-card`, with the slots the argument names. */
+	const cardDoc = (slots: Record<string, unknown>): CanvasDoc => ({
+		version: 1,
+		root: [
+			{
+				id: "card-1",
+				type: "slot-card",
+				x: 0,
+				y: 0,
+				width: 180,
+				height: 90,
+				text: slots,
+			} as unknown as ObjectDoc,
+		],
+	});
+
+	it("reads a single-body shape's text back as setText took it", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		docOps.setText(doc, "rect-1", "yes (2FA off)");
+
+		expect(docOps.getText(doc, "rect-1")).toBe("yes (2FA off)");
+	});
+
+	it("drops the styling of a body styled in parts", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "Payment failed" });
+		docOps.setTextStyle(doc, "rect-1", { match: "failed", fontWeight: "bold" });
+
+		expect(docOps.getText(doc, "rect-1")).toBe("Payment failed");
+	});
+
+	it("reads a connector's label, and empty for one carrying none", () => {
+		const doc = twoConnectedRects();
+		expect(docOps.getText(doc, "connector-1")).toBe("");
+
+		docOps.setText(doc, "connector-1", "on failure");
+		expect(docOps.getText(doc, "connector-1")).toBe("on failure");
+	});
+
+	it("reads a named slot, rows joined one per line", () => {
+		const doc = cardDoc({
+			name: { text: "User" },
+			attributes: { text: ["id", "email"] },
+		});
+
+		expect(slotOps.getText(doc, "card-1", "name")).toBe("User");
+		expect(slotOps.getText(doc, "card-1", "attributes")).toBe("id\nemail");
+	});
+
+	it("takes the only slot when none is named, and names them all when there are two", () => {
+		expect(slotOps.getText(cardDoc({ name: { text: "User" } }), "card-1")).toBe(
+			"User",
+		);
+		expect(() =>
+			slotOps.getText(
+				cardDoc({ name: { text: "User" }, attributes: { text: [] } }),
+				"card-1",
+			),
+		).toThrow(/name \/ attributes/);
+	});
+
+	it("refuses a type that holds no text", () => {
+		const doc = twoRects();
+		const groupId = docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+
+		expect(() => docOps.getText(doc, groupId)).toThrow(DocOperationError);
+	});
+
+	it("throws DocOperationError for an id the doc does not hold", () => {
+		expect(() => docOps.getText(twoRects(), "nope")).toThrow(DocOperationError);
+	});
+});
+
 describe("setTexts", () => {
 	it("writes every entry, a connector label included", () => {
 		const doc = twoConnectedRects();

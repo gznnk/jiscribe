@@ -1,5 +1,6 @@
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
+import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
 import { DocOperationError } from "../errors";
 
 /**
@@ -83,6 +84,19 @@ export const requireObjects = (
 		throw new DocOperationError(`object not found: ${missingIds.join(", ")}`);
 	}
 	return located.map(({ location }) => location as ObjectLocation);
+};
+
+/** Read `id` as a group, failing when it is something else, with its children to hand. */
+export const requireGroup = (
+	doc: CanvasDoc,
+	id: string,
+): ObjectLocation & { children: ObjectDoc[] } => {
+	const location = requireObject(doc, id);
+	const { object } = location;
+	if (object.type !== GroupFeatures.type || !Array.isArray(object.children)) {
+		throw new DocOperationError(`${id} is "${object.type}", not a group`);
+	}
+	return { ...location, children: object.children as ObjectDoc[] };
 };
 
 /** Ids of `object` and of every descendant reachable through group children. */

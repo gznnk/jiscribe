@@ -10,13 +10,14 @@ import {
 	type ObjectLocation,
 	type ObjectRecord,
 	rejectIds,
+	requireGroup,
 	requireObject,
 	requireObjects,
 } from "../utils/objectAccess";
 import { isConnectorObject } from "../utils/objectGeometry";
 
 /**
- * Read `id` as a group, failing when it is something else or is turned.
+ * {@link requireGroup} that also refuses a turned group.
  * A rotated group's rotation stands for its children as a whole, so a member joining
  * or leaving would be swung to a place the caller never asked for.
  */
@@ -24,17 +25,14 @@ const requireUnrotatedGroup = (
 	doc: CanvasDoc,
 	id: string,
 ): ObjectLocation & { children: ObjectDoc[] } => {
-	const location = requireObject(doc, id);
-	const { object } = location;
-	if (object.type !== GroupFeatures.type || !Array.isArray(object.children)) {
-		throw new DocOperationError(`${id} is "${object.type}", not a group`);
-	}
-	if (typeof object.rotation === "number" && object.rotation !== 0) {
+	const group = requireGroup(doc, id);
+	const { rotation } = group.object;
+	if (typeof rotation === "number" && rotation !== 0) {
 		throw new DocOperationError(
-			`${id} is rotated by ${object.rotation}°: the rotation stands for its children as a whole, so members cannot be added or taken out`,
+			`${id} is rotated by ${rotation}°: the rotation stands for its children as a whole, so members cannot be added or taken out`,
 		);
 	}
-	return { ...location, children: object.children as ObjectDoc[] };
+	return group;
 };
 
 /** The group holding `id`, or undefined when the object sits at the root. */
@@ -307,3 +305,32 @@ export const removeObjectsFromGroup = (
 		droppedGroupIds: dropEmptyGroups(doc),
 	};
 };
+
+/**
+ * The group holding an object, which is what says whether an id stands on its own or is
+ * carried by something bigger — a move applied to a member disturbs the group's layout.
+ *
+ * @param doc - Searched but not modified, group children included
+ * @param id - Id of the object to look up; must exist in the root tree
+ * @returns The id of the group directly holding it, or null when it sits at the root.
+ *   One level only: pass the result back in to climb a nesting
+ * @throws {@link DocOperationError} when no object carries the id
+ */
+export const getParentGroup = (doc: CanvasDoc, id: string): string | null => {
+	requireObject(doc, id);
+	return findHoldingGroup(doc, id)?.object.id ?? null;
+};
+
+/**
+ * What a group holds, in drawing order — the reading behind {@link addObjectsToGroup} and
+ * {@link removeObjectsFromGroup}.
+ *
+ * @param doc - Searched but not modified; the group is looked up anywhere in the tree, so
+ *   a nested group can be asked about directly
+ * @param groupId - Id of the group to read; must exist and be a group
+ * @returns The ids of its direct children, back to front. Grandchildren are left out — a
+ *   nested group appears as the one id it is, to be passed back in for a level deeper
+ * @throws {@link DocOperationError} when the id is missing or is not a group
+ */
+export const getGroupMembers = (doc: CanvasDoc, groupId: string): string[] =>
+	requireGroup(doc, groupId).children.map((child) => child.id);

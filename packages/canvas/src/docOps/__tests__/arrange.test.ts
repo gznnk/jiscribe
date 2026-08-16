@@ -2,11 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { DocOperationError } from "../errors";
-import {
-	docOps,
-	emptyDoc,
-	readObject,
-} from "./support/docFixtures";
+import { docOps, emptyDoc, readObject } from "./support/docFixtures";
 
 describe("alignObjects / distributeObjects", () => {
 	const threeRects = (): CanvasDoc => {

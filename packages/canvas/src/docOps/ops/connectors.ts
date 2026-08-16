@@ -520,3 +520,60 @@ export const updateConnectors = (
 		applyConnectorUpdate(write);
 	}
 };
+
+/** The objects a connector's two ends are attached to; a free end contributes nothing. */
+const endpointOwnerIds = (connector: ObjectRecord): string[] =>
+	[connector.source, connector.target].flatMap((endpoint) => {
+		const ownerId = (endpoint as EndpointRef | undefined)?.owner?.id;
+		return ownerId === undefined ? [] : [ownerId];
+	});
+
+/** The connectors holding `id` at either end, in drawing order, `id` itself unchecked. */
+const collectConnectors = (doc: CanvasDoc, id: string): ObjectRecord[] =>
+	(doc.root as ObjectRecord[]).filter(
+		(object) =>
+			isConnectorObject(object) && endpointOwnerIds(object).includes(id),
+	);
+
+/**
+ * The connectors attached to one object, in drawing order — what tells a caller which
+ * lines a shape carries before moving, restyling or deleting it.
+ *
+ * The connectors handed back are the document's own objects, not copies. Writing to one
+ * goes round every check these ops make, so treat them as read-only and reach for
+ * {@link updateConnector} to change anything.
+ *
+ * @param doc - Searched but not modified; only `doc.root` is scanned, a connector being
+ *   barred from a group's children (see validateStructure)
+ * @param id - Id of the object the connectors hang on; must exist in the root tree.
+ *   A connector's own id yields an empty array, since a connector is never an endpoint owner
+ * @returns Every connector holding `id` at either end, each listed once however many of its
+ *   ends are on it, so a self-loop appears the same as any other; empty when nothing is
+ *   attached to the object
+ * @throws {@link DocOperationError} when no object carries the id
+ */
+export const getConnectors = (
+	doc: CanvasDoc,
+	id: string,
+): Readonly<ObjectDoc>[] => {
+	requireObject(doc, id);
+	return collectConnectors(doc, id);
+};
+
+/**
+ * The objects at the far end of the connectors attached to one object — its neighbours in
+ * the graph the diagram draws.
+ *
+ * @param doc - Searched but not modified
+ * @param id - Id of the object to start from; must exist in the root tree
+ * @returns The other end's owner id per connector, in the connectors' drawing order and
+ *   each listed once however many connectors lead to it. A free end contributes nothing,
+ *   and a self-loop leaves `id` out of its own result, so the length is not the number of
+ *   connectors {@link getConnectors} returns
+ * @throws {@link DocOperationError} when no object carries the id
+ */
+export const getConnectedObjects = (doc: CanvasDoc, id: string): string[] => {
+	requireObject(doc, id);
+	const ownerIds = collectConnectors(doc, id).flatMap(endpointOwnerIds);
+	return [...new Set(ownerIds)].filter((ownerId) => ownerId !== id);
+};

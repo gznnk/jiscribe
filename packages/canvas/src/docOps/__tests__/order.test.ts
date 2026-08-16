@@ -10,16 +10,16 @@ import {
 	rootIds,
 } from "./support/docFixtures";
 
-describe("reorderObjects", () => {
-	/** Four rects at the root, drawn in the order they were added. */
-	const fourRects = (): CanvasDoc => {
-		const doc = emptyDoc();
-		for (let index = 0; index < 4; index += 1) {
-			docOps.addObject(doc, "rect", { x: index * 200, y: 0 });
-		}
-		return doc;
-	};
+/** Four rects at the root, drawn in the order they were added. */
+const fourRects = (): CanvasDoc => {
+	const doc = emptyDoc();
+	for (let index = 0; index < 4; index += 1) {
+		docOps.addObject(doc, "rect", { x: index * 200, y: 0 });
+	}
+	return doc;
+};
 
+describe("reorderObjects", () => {
 	it("brings objects to the end of the array, which is the front of the drawing", () => {
 		const doc = fourRects();
 
@@ -107,5 +107,38 @@ describe("reorderObjects", () => {
 			docOps.reorderObjects(doc, ["rect-1", "missing"], "front"),
 		).toThrow(DocOperationError);
 		expect(rootIds(doc)).toEqual(["rect-1", "rect-2", "rect-3", "rect-4"]);
+	});
+});
+
+describe("getZOrder", () => {
+	it("counts from the back, the last index being the front", () => {
+		const doc = fourRects();
+
+		expect(docOps.getZOrder(doc, "rect-1")).toEqual({ index: 0, total: 4 });
+		expect(docOps.getZOrder(doc, "rect-4")).toEqual({ index: 3, total: 4 });
+	});
+
+	it("follows a restacking", () => {
+		const doc = fourRects();
+
+		docOps.reorderObjects(doc, ["rect-1"], "front");
+
+		expect(docOps.getZOrder(doc, "rect-1")).toEqual({ index: 3, total: 4 });
+	});
+
+	it("counts a group's child among its siblings, not against the root", () => {
+		const doc = fourRects();
+		docOps.groupObjects(doc, ["rect-1", "rect-2", "rect-3"]);
+
+		expect(docOps.getZOrder(doc, "rect-3")).toEqual({ index: 2, total: 3 });
+		expect(docOps.getZOrder(doc, "group-1")).toEqual({ index: 0, total: 2 });
+	});
+
+	it("throws for an id that is not in the doc", () => {
+		const doc = fourRects();
+
+		expect(() => docOps.getZOrder(doc, "missing")).toThrow(
+			"object not found: missing",
+		);
 	});
 });

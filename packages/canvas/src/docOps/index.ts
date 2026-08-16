@@ -3,23 +3,20 @@
 export { createDocOps, type DocOps } from "./createDocOps";
 export { type AlignEdge, type DistributeAxis } from "./ops/arrange";
 export {
-	type UpdateConnectorEntry,
 	type ConnectParams,
+	type UpdateConnectorEntry,
 	type UpdateConnectorParams,
 } from "./ops/connectors";
-export { type AddObjectParams, type AddObjectEntry } from "./ops/create";
-export {
-	type AnchorHandleId,
-	type EdgeAnchorHandle,
-} from "./utils/connectorEndpoints";
+export { type AddObjectEntry, type AddObjectParams } from "./ops/create";
 export { type DeleteObjectsResult } from "./ops/delete";
 export { type RemoveObjectsFromGroupResult } from "./ops/grouping";
-export { type ZOrderPlacement } from "./ops/order";
+export { type GetZOrderResult, type ZOrderPlacement } from "./ops/order";
 export {
-	type MoveObjectParams,
 	type MoveObjectEntry,
+	type MoveObjectParams,
 	type ResizeObjectParams,
 } from "./ops/place";
+export { type ObjectFilter, type ObjectSummary } from "./ops/query";
 export { type SetPointsEntry, type SetRotationResult } from "./ops/reshape";
 export { type SetStyleResult } from "./ops/style";
 export {
@@ -27,9 +24,17 @@ export {
 	type SetTextStyleEntry,
 	type TextStyleParams,
 } from "./ops/text";
+export { type ObjectTypeSummary } from "./ops/types";
+export {
+	type AnchorHandleId,
+	type EdgeAnchorHandle,
+} from "./utils/connectorEndpoints";
 export { type StyleParams } from "./utils/styleFields";
 export { DocOperationError } from "./errors";
 export type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+// Re-exported so a consumer can name what getObject and getConnectors hand back without
+// reaching into the schemas layer.
+export type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 // Re-exported so a consumer can name an EdgeAnchorHandle's side without reaching into
 // the schemas layer.
 export type { EdgeAnchorSide } from "../schemas/objects/types/EndpointRef";

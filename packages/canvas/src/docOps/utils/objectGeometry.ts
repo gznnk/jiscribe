@@ -27,7 +27,7 @@ const readNumber = (value: unknown): number =>
 const readPoints = (value: unknown): Point[] =>
 	Array.isArray(value) ? (value as Point[]) : [];
 
-const readChildren = (object: ObjectRecord): ObjectRecord[] =>
+export const readChildren = (object: ObjectRecord): ObjectRecord[] =>
 	Array.isArray(object.children) ? (object.children as ObjectRecord[]) : [];
 
 /** Smallest box containing all of `boxes`, or null when there are none. */
