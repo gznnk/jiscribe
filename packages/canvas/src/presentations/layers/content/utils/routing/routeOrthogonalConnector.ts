@@ -14,7 +14,7 @@ import type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,
 } from "./types";
-import { DEFAULT_CONNECTOR_MARGIN } from "../../../../constants/connectorRouting";
+import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRouting";
 
 /**
  * Generates an orthogonal route connecting two endpoints using only horizontal/vertical segments.

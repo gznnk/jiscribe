@@ -8,9 +8,9 @@ import { calcEndpointDirection } from "./endpointDirection";
 import { routeOrthogonalConnector } from "./routeOrthogonalConnector";
 import { routeSelfLoop } from "./selfLoop";
 import type { OrthogonalConnectorEndpoint } from "./types";
-import type { AnchorSpec } from "../../../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsRegistry";
+import type { AnchorSpec } from "../../../../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
 
 /**
  * Assembles an endpoint descriptor for the orthogonal router. Attaches the outward direction and an AABB to avoid to the resolved coordinate.

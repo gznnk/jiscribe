@@ -8,8 +8,8 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import type { GeometryType } from "../../../../schemas/objects/types/GeometryType";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { GeometryType } from "../../../../../schemas/objects/types/GeometryType";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /** Snaps onto the outline the shape's box implies, returning null where the line misses it. */
 type OutlineSnapper = (frame: TransformedFrame, toward: Point) => Point | null;

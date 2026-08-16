@@ -28,10 +28,6 @@ packages/canvas/src/
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
 │   ├── objects/            # base / primitives / connections / annotations (State + Mapper)
 │   └── registry/           # ObjectMapperRegistry / ObjectStateValidatorRegistry
-├── domain/                 # domain logic over State (pure calculation, no React / DOM)
-│   └── state/
-│       ├── connector/      # endpoint resolution / connect points / orthogonal routing / label placement
-│       └── registry/       # ObjectOutlineRegistry / ObjectAnchorRegionRegistry / ObjectExtraConnectPointsRegistry
 ├── controllers/            # state management + business logic
 │   ├── Canvas.tsx
 │   ├── gestures/           # recognizer + handlers + registry/ (GestureHandlerRegistry / ObjectBehaviorRegistry)
@@ -43,7 +39,7 @@ packages/canvas/src/
 │   ├── ui/                 # UI control (transform controls, menus, icons) incl. StencilRegistry / ObjectMenuRegistry
 │   └── utils/
 ├── presentations/          # pure rendering components (layers / objects / defs)
-│   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectVisualBoundsRegistry
+│   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
 └── constants/              # theme.ts / precision.ts, etc.
 ```
@@ -61,12 +57,6 @@ For each shape (rect / ellipse / diamond / group / polygon / polyline / connecto
 
 Dependency: `states → schemas` (State is converted from Doc).
 
-### Domain Layer (domain)
-
-Domain logic that reads and computes over `State`, with no React, DOM or styling: connector endpoint resolution, connect-point geometry, orthogonal routing and label placement (`domain/state/connector/`), plus the registry classes those calculations resolve per shape type (`domain/state/registry/`). It is the shared calculation both the renderers and the controllers call, so neither layer owns it.
-
-Dependency: `domain → states / schemas / constants` and `@jiscribe/geometry`. It must not import `controllers/` or `presentations/` — that is what makes the calculation callable from either side.
-
 ### Logic Layer (controllers)
 
 - **gestures/handlers/**: Receive gestures and update `CanvasState`. Under `objects/` and `controls/` are the per-target EventHandlers.
@@ -75,30 +65,27 @@ Dependency: `domain → states / schemas / constants` and `@jiscribe/geometry`. 
 - **reducer/**: Dispatches actions to the appropriate handlers → [State Update Flow](./06-state-update-flow.md).
 - **ui/**: UI control logic such as transform controls and menus.
 
-Dependencies: `controllers → states / schemas / domain`. Connector endpoint resolution, connect-point geometry and orthogonal routing are all reached through `domain/state/connector/` — from `ui` (anchor dots, connector controls), `gestures` (free-endpoint snapping / re-anchoring, nearest-anchor search) and `utils` (freeing endpoints on delete, bounding boxes, visibility). The free-endpoint coordinates persisted on delete go through this same resolution (deliberately, to capture the on-screen position at deletion time).
-
-`controllers → presentations` also exists, in three shapes: presentation **components** embedded in controller UI (`PendingConnectorOverlay` → `ConnectorRenderer`, `ArrowHeadIconPreview` → `Arrow`, `Canvas` → `CanvasView`, the shape components behind menu previews and `initializeObjectRegistry`), the presentation **registries and their Contexts** (`ObjectVisualBoundsRegistry` / `ObjectTextRegionRegistry` / `ObjectComponentRegistry` / `ObjectSvgDefsRegistry` / `PresentationRegistriesProvider`, …), and presentation **utils** describing how a shape is drawn (`resolveAutoColor` / `createSvgTransform` / `calcTextRegion` / `verticalAlignToAlignItems`). The utils references now come from `ui` alone — `gestures` no longer imports `presentations` at all. The direction (controllers may depend on presentations, never the reverse) still holds.
+Dependencies: `controllers → states / schemas`. `controllers → presentations` also exists. Most of it is utility references, chiefly connector endpoint resolution / orthogonal routing (`presentations/layers/content/utils/endpoints` / `routing`) — consumed not only by `ui` but also by `gestures` (free-endpoint snapping / re-anchoring) and `utils` (freeing endpoints on delete, bounding boxes, visibility). The free-endpoint coordinates persisted on delete go through this same resolution (deliberately, to capture the on-screen position at deletion time). Some UI controllers additionally import presentation **components** (e.g. `PendingConnectorOverlay` → `ConnectorRenderer`, `ArrowHeadIconPreview` → `Arrow`) and the presentation-layer registry contexts (`PresentationRegistriesProvider`, etc.). The direction (controllers may depend on presentations, never the reverse) still holds.
 
 ### Presentation Layer (presentations)
 
 Pure components (Dumb Components) that receive State as Props and render SVG.
 They hold no logic or state, and receive event handlers via Props → [Presentation and Theme](./08-presentation-and-theme.md).
 
-Dependency: `presentations → states / schemas / domain` (State as the type of Props, plus schema types such as `EndpointRef` and constants such as `AUTO_COLOR`; the connector renderers call the domain endpoint resolution and label placement).
+Dependency: `presentations → states / schemas` (State as the type of Props, plus schema types such as `EndpointRef` and constants such as `AUTO_COLOR`).
 
 ### Registries (distributed — there is no single "registry" layer)
 
 There is **no top-level `src/registry/` directory and no `ObjectRegistry` class**. Instead, per-shape functionality is resolved through several small registry **classes**, each **colocated with the layer it belongs to**:
 
-| Registry class                                                                              | Location                                    | Resolves                                                               |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------- |
-| `ObjectFactoryRegistry`                                                                     | `schemas/registry/`                         | per-type shape factory (create Doc / bounds)                           |
-| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                                     | `states/registry/`                          | Doc ↔ State mapper (+ features), State validator                       |
-| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                         | `controllers/gestures/registry/`            | gesture handlers, `moveByDelta` / `transformByGroup`                   |
-| `ObjectOutlineRegistry` / `ObjectAnchorRegionRegistry` / `ObjectExtraConnectPointsRegistry` | `domain/state/registry/`                    | hit-test / snap outline, edge-anchor region, extra connect points      |
-| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectVisualBoundsRegistry`       | `presentations/objects/registry/`           | render component, editable-text region, drawn visual bounds            |
-| `StencilRegistry` / `ObjectMenuRegistry` / `SelectionControlRegistry`                       | `controllers/ui/...` (colocated per domain) | StencilLibrary presets, per-type ObjectMenu, per-type SelectionControl |
-| `CommandRegistry`                                                                           | `controllers/commands/`                     | commands (see [Command System](./05-command-system.md))                |
+| Registry class                                                                   | Location                                    | Resolves                                                               |
+| -------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------- |
+| `ObjectFactoryRegistry`                                                          | `schemas/registry/`                         | per-type shape factory (create Doc / bounds)                           |
+| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                          | `states/registry/`                          | Doc ↔ State mapper (+ features), State validator                       |
+| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                              | `controllers/gestures/registry/`            | gesture handlers, `moveByDelta` / `transformByGroup`                   |
+| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry` | `presentations/objects/registry/`           | render component, editable-text region, hit-test / snap outline        |
+| `StencilRegistry` / `ObjectMenuRegistry` / `SelectionControlRegistry`            | `controllers/ui/...` (colocated per domain) | StencilLibrary presets, per-type ObjectMenu, per-type SelectionControl |
+| `CommandRegistry`                                                                | `controllers/commands/`                     | commands (see [Command System](./05-command-system.md))                |
 
 Because each registry keys off the shape type (`"rect"`, `"ellipse"`, …), cross-shape processing can be written type-safely without `if (type === ...)` branching.
 
@@ -132,14 +119,10 @@ graph TD
     subgraph Plugin["Extension Seam (plugin)"]
         PluginVocab["ObjectTypeDefinition&lt;TDoc,TState&gt; / defineObject / CanvasPlugin"]
     end
-    subgraph Domain["Domain Layer (domain)"]
-        DomainConnector["state/connector (endpoint resolution / connect points / orthogonal routing / label placement)"]
-        DomainRegistryTypes["registry contracts (outline / anchorRegion / extraConnectPoints)"]
-    end
     subgraph Presentations["Presentation Layer (presentations)"]
         PresentationComponents["React Components"]
-        PresentationUtils["utils (resolveAutoColor / createSvgTransform / calcTextRegion, etc.)"]
-        PresentationRegistryTypes["registry contracts (component / textRegion / visualBounds)"]
+        PresentationUtils["utils (connector endpoint resolution / orthogonal routing, etc.)"]
+        PresentationRegistryTypes["registry contracts (component / textRegion / outline)"]
     end
     subgraph Controllers["Logic Layer (controllers)"]
         Gestures["gestures/handlers (+ registry/ · ObjectBehaviorEntry)"]
@@ -164,14 +147,8 @@ graph TD
     UI --> StatesTypes
     CtrlUtils --> StatesTypes
     Registries --> StatesTypes
-    DomainConnector --> StatesTypes
-    DomainConnector --> DomainRegistryTypes
-    Gestures --> DomainConnector
-    CtrlUtils --> DomainConnector
-    UI --> DomainConnector
-    PresentationComponents --> DomainConnector
-    Registries --> DomainRegistryTypes
-    UI --> DomainRegistryTypes
+    Gestures --> PresentationUtils
+    CtrlUtils --> PresentationUtils
     UI --> PresentationUtils
     UI --> PresentationComponents
     UI --> PresentationRegistryTypes
@@ -185,14 +162,13 @@ graph TD
     Plugin --> Gestures
     Plugin --> UI
     Plugin --> PresentationRegistryTypes
-    Plugin --> DomainRegistryTypes
     Plugin --> StatesTypes
     Plugin --> SchemasTypes
 ```
 
 Direct references to schema types/constants (`EndpointRef`, `AUTO_COLOR`, …) and to `constants/` (theme, etc.) exist from nearly everywhere, so they are omitted from the graph.
 
-**On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `schemas`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, component/textRegion/visualBounds contracts from `presentations`, outline/anchorRegion/extraConnectPoints contracts from `domain`), so `plugin` depends on all of them. Conversely `controllers/registries` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries). At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
+**On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `schemas`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, component/textRegion/outline contracts from `presentations`), so `plugin` depends on all four layers. Conversely `controllers/registries` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries). At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
 
 It is deliberately **not** a concrete import cycle: `plugin` pulls only leaf _type_ modules (`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `ObjectTextEditOverflowTypes` / `Stencil`), while the files that consume `plugin` (`registries/initializeObjectRegistry` and friends) are different files that none of those leaf modules import back. So madge `dep:check` stays green even though the folders reference each other. Keeping `applyObjectDefinition` (the runtime wiring) in `registries` rather than `plugin` is what preserves this: `plugin` never imports the concrete registries.
 

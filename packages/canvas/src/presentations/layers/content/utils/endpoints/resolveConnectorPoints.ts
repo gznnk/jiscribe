@@ -2,15 +2,15 @@ import { isTransformedFrame, type Point, type Rect } from "@jiscribe/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
-import { isConnectorDrawnOrthogonal } from "../../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
-import type { ObjectAnchorRegionRegistry } from "../../registry/ObjectAnchorRegionRegistry";
+import { isConnectorDrawnOrthogonal } from "../../../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { ObjectAnchorRegionRegistry } from "../../../../objects/registry/ObjectAnchorRegionRegistry";
 import type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsRegistry,
-} from "../../registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../registry/ObjectOutlineRegistry";
+} from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../../../objects/registry/ObjectOutlineRegistry";
 import {
 	alignVertexPath,
 	calcEndpointDirection,

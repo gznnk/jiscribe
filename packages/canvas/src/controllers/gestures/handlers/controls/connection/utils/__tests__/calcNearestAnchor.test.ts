@@ -1,7 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { ExtraConnectPoint } from "../../../../../../../domain/state/registry/ObjectExtraConnectPointsRegistry";
+import type { ExtraConnectPoint } from "../../../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import { calcNearestAnchor } from "../calcNearestAnchor";
 
 /** An unrotated, unscaled frame (center 100,100 / width 40 / height 20). */

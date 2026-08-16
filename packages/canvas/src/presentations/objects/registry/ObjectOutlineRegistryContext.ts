@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 import {
 	type ObjectOutlineRegistry,
 	createObjectOutlineRegistry,
-} from "../../../domain/state/registry/ObjectOutlineRegistry";
+} from "./ObjectOutlineRegistry";
 
 /**
  * Presentation-layer context that distributes the per-canvas

@@ -4,12 +4,12 @@ import type { BoundingBox, Point } from "@jiscribe/geometry";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../domain/state/connector/endpoints";
-import { calcConnectorLabelAnchor } from "../../domain/state/connector/label/calcConnectorLabelAnchor";
-import type { ObjectAnchorRegionRegistry } from "../../domain/state/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../domain/state/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../domain/state/registry/ObjectOutlineRegistry";
+} from "../../presentations/layers/content/utils/endpoints";
+import { calcConnectorLabelAnchor } from "../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import { resolveConnectorLabelBox } from "../../presentations/objects/connections/ConnectorLabel/utils/connectorLabelLayout";
+import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";

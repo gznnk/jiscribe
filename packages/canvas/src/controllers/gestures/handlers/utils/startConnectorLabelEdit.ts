@@ -4,7 +4,7 @@ import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../constants/connectorHitAr
 import {
 	calcConnectorLabelPlacement,
 	type ConnectorLabelPlacement,
-} from "../../../../domain/state/connector/label/calcConnectorLabelPlacement";
+} from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";

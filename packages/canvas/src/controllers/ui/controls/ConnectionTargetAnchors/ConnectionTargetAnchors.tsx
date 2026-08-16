@@ -2,11 +2,11 @@ import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
+import type { ExtraConnectPoint } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcExtraConnectPoint,
-} from "../../../../domain/state/connector/endpoints/calcConnectPoint";
-import type { ExtraConnectPoint } from "../../../../domain/state/registry/ObjectExtraConnectPointsRegistry";
+} from "../../../../presentations/objects/utils/calcConnectPoint";
 import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 

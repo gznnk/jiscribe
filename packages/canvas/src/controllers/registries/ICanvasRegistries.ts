@@ -1,6 +1,6 @@
-import type { ObjectAnchorRegionRegistry } from "../../domain/state/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../domain/state/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../domain/state/registry/ObjectOutlineRegistry";
+import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";

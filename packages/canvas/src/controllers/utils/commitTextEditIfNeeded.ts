@@ -1,5 +1,5 @@
 import { applyLabelPlacement } from "./applyLabelPlacement";
-import type { ConnectorLabelPlacement } from "../../domain/state/connector/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { RichText } from "../../schemas/objects/types/RichText";
 import { isSameRichText } from "../../schemas/objects/types/RichText";

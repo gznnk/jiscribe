@@ -6,7 +6,7 @@ import type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,
 } from "./types";
-import { DEFAULT_CONNECTOR_MARGIN } from "../../../../constants/connectorRouting";
+import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRouting";
 
 /** Tolerance for perimeter-parameter comparisons (px). Used for corner/endpoint overlap detection. */
 const EPS = 1e-6;

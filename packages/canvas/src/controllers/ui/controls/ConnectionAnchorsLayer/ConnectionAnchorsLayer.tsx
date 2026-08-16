@@ -2,16 +2,16 @@ import { isTransformedFrame } from "@jiscribe/geometry";
 import type { Point, Rect } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 
-import { calcEdgeAnchorPoint } from "../../../../domain/state/connector/endpoints/calcConnectPoint";
-import type { ObjectAnchorRegionRegistry } from "../../../../domain/state/registry/ObjectAnchorRegionRegistry";
+import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import { useObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistryContext";
 import type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsRegistry,
-} from "../../../../domain/state/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../../../domain/state/registry/ObjectOutlineRegistry";
-import { useObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistryContext";
+} from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useObjectExtraConnectPointsRegistry } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistryContext";
+import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import { useObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistryContext";
+import { calcEdgeAnchorPoint } from "../../../../presentations/objects/utils/calcConnectPoint";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { DragKind } from "../../../CanvasTypes";

@@ -7,11 +7,11 @@ import {
 } from "@jiscribe/geometry";
 
 import { routeOrthogonalConnector } from "..";
-import type { ConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
+import type { ConnectPointId } from "../../../../../../schemas/objects/types/EndpointRef";
 import {
 	calcConnectPoint,
 	calcConnectPointDirection,
-} from "../../endpoints/calcConnectPoint";
+} from "../../../../../objects/utils/calcConnectPoint";
 import { countReversals } from "../routeCost";
 import type { OrthogonalConnectorEndpoint } from "../types";
 

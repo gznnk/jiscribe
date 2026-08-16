@@ -1,12 +1,12 @@
 import type { Dimensions, Point } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
-import { outlinedPlugin } from "../../../../../controllers/__tests__/support/outlinedPlugin";
-import { createCanvasRegistries } from "../../../../../controllers/registries/createCanvasRegistries";
-import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import { ObjectOutlineRegistry } from "../../../registry/ObjectOutlineRegistry";
+import { outlinedPlugin } from "../../../../../../controllers/__tests__/support/outlinedPlugin";
+import { createCanvasRegistries } from "../../../../../../controllers/registries/createCanvasRegistries";
+import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import { ObjectOutlineRegistry } from "../../../../../objects/registry/ObjectOutlineRegistry";
 import { resolveConnectorPoints } from "../resolveConnectorPoints";
 
 /**

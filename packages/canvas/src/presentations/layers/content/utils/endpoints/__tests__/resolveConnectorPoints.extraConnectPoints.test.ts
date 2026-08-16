@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { createCanvasRegistries } from "../../../../../controllers/registries/createCanvasRegistries";
-import type { CanvasPlugin } from "../../../../../plugin/CanvasPlugin";
-import { defineObject } from "../../../../../plugin/ObjectTypeDefinition";
-import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
-import { createFrameObjectFactory } from "../../../../../schemas/objects/utils/createFrameObjectFactory";
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import { ObjectExtraConnectPointsRegistry } from "../../../registry/ObjectExtraConnectPointsRegistry";
+import { createCanvasRegistries } from "../../../../../../controllers/registries/createCanvasRegistries";
+import type { CanvasPlugin } from "../../../../../../plugin/CanvasPlugin";
+import { defineObject } from "../../../../../../plugin/ObjectTypeDefinition";
+import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
+import { createFrameObjectFactory } from "../../../../../../schemas/objects/utils/createFrameObjectFactory";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import { ObjectExtraConnectPointsRegistry } from "../../../../../objects/registry/ObjectExtraConnectPointsRegistry";
 import { resolveConnectorPoints } from "../resolveConnectorPoints";
 
 /**

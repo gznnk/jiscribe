@@ -1,7 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { routeOrthogonalConnector } from "../../../../../domain/state/connector/routing";
+import { routeOrthogonalConnector } from "../../../../../presentations/layers/content/utils/routing";
 import { slideConnectorSegment } from "../slideConnectorSegment";
 import {
 	alignedDrawnPath,

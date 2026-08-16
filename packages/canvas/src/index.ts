@@ -165,12 +165,12 @@ export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,
 } from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
-export type { ObjectOutlineCalculator } from "./domain/state/registry/ObjectOutlineRegistry";
-export type { ObjectAnchorRegionCalculator } from "./domain/state/registry/ObjectAnchorRegionRegistry";
+export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
+export type { ObjectAnchorRegionCalculator } from "./presentations/objects/registry/ObjectAnchorRegionRegistry";
 export type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsCalculator,
-} from "./domain/state/registry/ObjectExtraConnectPointsRegistry";
+} from "./presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 export type { ObjectGeometryKeyCalculator } from "./presentations/objects/registry/ObjectGeometryKeyRegistry";
 export type { ObjectVisualBoundsCalculator } from "./presentations/objects/registry/ObjectVisualBoundsRegistry";
 export type { ObjectTransformHandles } from "./controllers/ui/controls/ObjectTransformHandlesRegistry";

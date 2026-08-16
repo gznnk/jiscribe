@@ -1,20 +1,20 @@
 import type { ReactNode } from "react";
 
+import type { ObjectAnchorRegionRegistry } from "./ObjectAnchorRegionRegistry";
 import { ObjectAnchorRegionRegistryContext } from "./ObjectAnchorRegionRegistryContext";
 import type { ObjectComponentRegistry } from "./ObjectComponentRegistry";
 import { ObjectComponentRegistryContext } from "./ObjectComponentRegistryContext";
+import type { ObjectExtraConnectPointsRegistry } from "./ObjectExtraConnectPointsRegistry";
 import { ObjectExtraConnectPointsRegistryContext } from "./ObjectExtraConnectPointsRegistryContext";
 import type { ObjectGeometryKeyRegistry } from "./ObjectGeometryKeyRegistry";
 import { ObjectGeometryKeyRegistryContext } from "./ObjectGeometryKeyRegistryContext";
+import type { ObjectOutlineRegistry } from "./ObjectOutlineRegistry";
 import { ObjectOutlineRegistryContext } from "./ObjectOutlineRegistryContext";
 import type { ObjectSvgDefsRegistry } from "./ObjectSvgDefsRegistry";
 import { ObjectSvgDefsRegistryContext } from "./ObjectSvgDefsRegistryContext";
 import type { ObjectTextRegionRegistry } from "./ObjectTextRegionRegistry";
 import { ObjectTextRegionRegistryContext } from "./ObjectTextRegionRegistryContext";
 import { ObjectTextStyleDefaultsRegistryContext } from "./ObjectTextStyleDefaultsRegistryContext";
-import type { ObjectAnchorRegionRegistry } from "../../../domain/state/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../../domain/state/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../../domain/state/registry/ObjectOutlineRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 
 type PresentationRegistriesProviderProps = {

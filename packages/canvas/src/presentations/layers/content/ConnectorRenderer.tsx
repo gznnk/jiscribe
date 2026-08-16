@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
 
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
-import { calcConnectorLabelAnchor } from "../../../domain/state/connector/label/calcConnectorLabelAnchor";
+import { calcConnectorLabelAnchor } from "./utils/label/calcConnectorLabelAnchor";
 import { isConnectorDrawnOrthogonal } from "../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
 import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";

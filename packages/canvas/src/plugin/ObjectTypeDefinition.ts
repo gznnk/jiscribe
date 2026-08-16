@@ -6,10 +6,10 @@ import type { SelectionControlDefinition } from "../controllers/ui/controls/Sele
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
-import type { ObjectAnchorRegionCalculator } from "../domain/state/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsCalculator } from "../domain/state/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineCalculator } from "../domain/state/registry/ObjectOutlineRegistry";
+import type { ObjectAnchorRegionCalculator } from "../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsCalculator } from "../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectGeometryKeyCalculator } from "../presentations/objects/registry/ObjectGeometryKeyRegistry";
+import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsCalculator } from "../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";

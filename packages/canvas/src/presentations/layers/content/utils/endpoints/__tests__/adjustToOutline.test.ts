@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { adjustToOutline } from "../adjustToOutline";
 
 const rectObj = (

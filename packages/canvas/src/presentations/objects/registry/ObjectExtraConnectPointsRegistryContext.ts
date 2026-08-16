@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 import {
 	type ObjectExtraConnectPointsRegistry,
 	createObjectExtraConnectPointsRegistry,
-} from "../../../domain/state/registry/ObjectExtraConnectPointsRegistry";
+} from "./ObjectExtraConnectPointsRegistry";
 
 /**
  * Presentation-layer context that distributes the per-canvas
