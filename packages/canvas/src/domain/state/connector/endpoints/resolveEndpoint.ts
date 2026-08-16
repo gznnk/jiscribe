@@ -5,15 +5,15 @@ import {
 	type Rect,
 } from "@jiscribe/geometry";
 
-import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
-import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
-} from "../../../../objects/utils/calcConnectPoint";
+} from "./calcConnectPoint";
+import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
+import { isConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsRegistry";
 
 /**
  * Resolves an EndpointRef to a Point coordinate. It takes a single target

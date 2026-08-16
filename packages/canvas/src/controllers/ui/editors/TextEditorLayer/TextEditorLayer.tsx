@@ -4,12 +4,12 @@ import { memo } from "react";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../../../presentations/layers/content/utils/endpoints";
-import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
-import type { ConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
+} from "../../../../domain/state/connector/endpoints";
+import { calcConnectorLabelAnchor } from "../../../../domain/state/connector/label/calcConnectorLabelAnchor";
+import type { ConnectorLabelPlacement } from "../../../../domain/state/connector/label/calcConnectorLabelPlacement";
+import type { ObjectAnchorRegionRegistry } from "../../../../domain/state/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../../../domain/state/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../../../domain/state/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
 import type { RichText } from "../../../../schemas/objects/types/RichText";

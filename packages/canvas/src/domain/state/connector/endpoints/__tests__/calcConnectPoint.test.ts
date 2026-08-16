@@ -1,7 +1,7 @@
 import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsRegistry";
+import type { ExtraConnectPoint } from "../../../registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcConnectPointDirection,

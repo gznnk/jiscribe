@@ -1,6 +1,7 @@
 import type { Point, TransformedFrame } from "@jiscribe/geometry";
 import { useMemo } from "react";
 
+import { resolveConnectorPoints } from "../../../../domain/state/connector/endpoints";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { useObjectAnchorRegionRegistry } from "../../../objects/registry/ObjectAnchorRegionRegistryContext";
@@ -8,7 +9,6 @@ import { useObjectExtraConnectPointsRegistry } from "../../../objects/registry/O
 import type { ObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistry";
 import { useObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistryContext";
 import { useObjectOutlineRegistry } from "../../../objects/registry/ObjectOutlineRegistryContext";
-import { resolveConnectorPoints } from "../utils/endpoints";
 
 /**
  * Resolved connector coordinates.

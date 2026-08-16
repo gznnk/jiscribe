@@ -2,7 +2,7 @@ import { getRootConnectorIds } from "./getRootConnectorIds";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../presentations/layers/content/utils/endpoints";
+} from "../../domain/state/connector/endpoints";
 import type { FreeEndpointRef } from "../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";

@@ -1,5 +1,5 @@
-import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
-import { calcConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
+import { calcConnectorLabelAnchor } from "../../../../domain/state/connector/label/calcConnectorLabelAnchor";
+import { calcConnectorLabelPlacement } from "../../../../domain/state/connector/label/calcConnectorLabelPlacement";
 import type { ConnectorLabel } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {

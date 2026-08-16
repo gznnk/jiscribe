@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 import {
 	type ObjectAnchorRegionRegistry,
 	createObjectAnchorRegionRegistry,
-} from "./ObjectAnchorRegionRegistry";
+} from "../../../domain/state/registry/ObjectAnchorRegionRegistry";
 
 /**
  * Presentation-layer context that distributes the per-canvas

@@ -14,13 +14,13 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../constants/precision";
+import { PRECISION } from "../../../../constants/precision";
 import type {
 	ConnectPointId,
 	EdgeAnchorSide,
 	EdgeAnchorSpec,
-} from "../../../schemas/objects/types/EndpointRef";
-import type { ExtraConnectPoint } from "../registry/ObjectExtraConnectPointsRegistry";
+} from "../../../../schemas/objects/types/EndpointRef";
+import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsRegistry";
 
 /** Outward direction of each local bounding-box edge in the shape's local space. */
 const EDGE_LOCAL_DIRECTIONS: Record<EdgeAnchorSide, Point> = {

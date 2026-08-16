@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 import { ConnectorRenderer } from "./ConnectorRenderer";
-import { resolveEndpointOwner } from "./utils/endpoints";
+import { resolveEndpointOwner } from "../../../domain/state/connector/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";

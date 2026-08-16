@@ -1,6 +1,6 @@
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
-import type { ConnectorLabelPlacement } from "../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../domain/state/connector/label/calcConnectorLabelPlacement";
 import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
 import type { RichText } from "../schemas/objects/types/RichText";
 import type { CanvasState } from "../states/canvas/CanvasState";

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
-import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../../../objects/registry/ObjectExtraConnectPointsRegistry";
+import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../../registry/ObjectExtraConnectPointsRegistry";
 import { resolveEndpoint } from "../resolveEndpoint";
 
 const freeEndpoint = (x: number, y: number): EndpointRef =>

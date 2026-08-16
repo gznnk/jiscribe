@@ -5,15 +5,15 @@ import {
 	type Point,
 } from "@jiscribe/geometry";
 
-import type { AnchorSpec } from "../../../../../schemas/objects/types/EndpointRef";
-import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
+import type { AnchorSpec } from "../../../../schemas/objects/types/EndpointRef";
+import { isConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ExtraConnectPoint } from "../../registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPointDirection,
 	calcEdgeAnchorDirection,
 	calcExtraConnectPointDirection,
-} from "../../../../objects/utils/calcConnectPoint";
+} from "../endpoints/calcConnectPoint";
 
 /**
  * Determines an endpoint's outward direction — the direction the line has to leave it in.

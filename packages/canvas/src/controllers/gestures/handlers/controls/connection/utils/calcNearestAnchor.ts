@@ -10,13 +10,13 @@ import {
 } from "@jiscribe/geometry";
 
 import { PRECISION } from "../../../../../../constants/precision";
-import type { ExtraConnectPoint } from "../../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcEdgeAnchorFromPoint,
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
-} from "../../../../../../presentations/objects/utils/calcConnectPoint";
+} from "../../../../../../domain/state/connector/endpoints/calcConnectPoint";
+import type { ExtraConnectPoint } from "../../../../../../domain/state/registry/ObjectExtraConnectPointsRegistry";
 import {
 	ConnectPointIds,
 	type CenterAnchorSpec,
