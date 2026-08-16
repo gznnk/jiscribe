@@ -2,13 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import type { CanvasControllerState, DocSnapshot } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import {
 	createDocSnapshotFromDoc,
 	resolveDocSnapshot,
-	type DocSnapshot,
-} from "../../../../states/canvas/DocSnapshot";
-import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+} from "../../../utils/resolveDocSnapshot";
 import { UndoCommand } from "../UndoCommand";
 
 const registries = createTestRegistries();

@@ -2,11 +2,11 @@ import { DEFAULT_FONT_FAMILY } from "../../constants/defaultFontFamily";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
-import { createDocSnapshotFromDoc } from "../../states/canvas/DocSnapshot";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resetUiState } from "../utils/resetUiState";
+import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
 
 /**
  * Builds the initial CanvasControllerState from a CanvasDoc.

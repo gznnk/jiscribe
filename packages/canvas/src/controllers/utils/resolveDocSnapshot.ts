@@ -1,36 +1,7 @@
-import { canvasToDoc } from "./CanvasMapper";
-import type { CanvasState } from "./CanvasState";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import type { ObjectMapperRegistry } from "../registry/ObjectMapperRegistry";
-
-/**
- * The slice of CanvasState a snapshot needs to rebuild its CanvasDoc later.
- * Holding these references is safe because every state update path replaces
- * objects immutably; the committed map can never change under the snapshot.
- */
-export type DocSnapshotSource = Pick<
-	CanvasState,
-	"objects" | "rootIds" | "background"
->;
-
-/**
- * A history entry whose CanvasDoc is materialized lazily.
- *
- * Rebuilding the Doc tree (`canvasToDoc`) is O(N) over all objects, which is
- * too expensive to run on every commit during key-repeat nudges. Instead the
- * history stack stores either an already-resolved Doc or a reference to the
- * committed state, and `resolveDocSnapshot` converts on first read only.
- *
- * Invariant: neither ObjectState contents nor a resolved Doc may ever be
- * mutated in place — mappers share inner arrays (e.g. Poly `points`) by
- * reference between the two representations.
- */
-export type DocSnapshot = {
-	/** Resolved Doc (memoized). null until first resolution. */
-	doc: CanvasDoc | null;
-	/** Committed-state references for lazy conversion. null once resolved (or when created from a Doc). */
-	source: DocSnapshotSource | null;
-};
+import { canvasToDoc } from "../../states/canvas/CanvasMapper";
+import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
+import type { DocSnapshot, DocSnapshotSource } from "../CanvasTypes";
 
 /** Creates a snapshot from a committed state; the Doc is built lazily on first resolve. */
 export const createDocSnapshotFromState = (

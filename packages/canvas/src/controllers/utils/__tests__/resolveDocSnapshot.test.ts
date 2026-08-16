@@ -1,13 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createTestRegistries } from "../../../controllers/registries/createCanvasRegistries";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import { canvasToDoc, canvasToState } from "../CanvasMapper";
+import {
+	canvasToDoc,
+	canvasToState,
+} from "../../../states/canvas/CanvasMapper";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import {
 	createDocSnapshotFromDoc,
 	createDocSnapshotFromState,
 	resolveDocSnapshot,
-} from "../DocSnapshot";
+} from "../resolveDocSnapshot";
 
 const registries = createTestRegistries();
 const mapper = registries.objectMapper;

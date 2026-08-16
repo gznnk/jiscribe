@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 import { createInitialControllerState } from "../createInitialControllerState";
 
 const registries = createTestRegistries();

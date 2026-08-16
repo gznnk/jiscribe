@@ -1,10 +1,10 @@
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
 import type { RichText } from "../schemas/objects/types/RichText";
 import type { CanvasState } from "../states/canvas/CanvasState";
-import type { DocSnapshot } from "../states/canvas/DocSnapshot";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { Stencil } from "./ui/objects/Stencil";
@@ -102,6 +102,35 @@ export type AxisLockFeedback = {
 	x?: number;
 	/** Y coordinate of the horizontal guide line (SVG coordinates) */
 	y?: number;
+};
+
+/**
+ * The slice of CanvasState a snapshot needs to rebuild its CanvasDoc later.
+ * Holding these references is safe because every state update path replaces
+ * objects immutably; the committed map can never change under the snapshot.
+ */
+export type DocSnapshotSource = Pick<
+	CanvasState,
+	"objects" | "rootIds" | "background"
+>;
+
+/**
+ * A history entry whose CanvasDoc is materialized lazily.
+ *
+ * Rebuilding the Doc tree (`canvasToDoc`) is O(N) over all objects, which is
+ * too expensive to run on every commit during key-repeat nudges. Instead the
+ * history stack stores either an already-resolved Doc or a reference to the
+ * committed state, and `resolveDocSnapshot` converts on first read only.
+ *
+ * Invariant: neither ObjectState contents nor a resolved Doc may ever be
+ * mutated in place — mappers share inner arrays (e.g. Poly `points`) by
+ * reference between the two representations.
+ */
+export type DocSnapshot = {
+	/** Resolved Doc (memoized). null until first resolution. */
+	doc: CanvasDoc | null;
+	/** Committed-state references for lazy conversion. null once resolved (or when created from a Doc). */
+	source: DocSnapshotSource | null;
 };
 
 /**

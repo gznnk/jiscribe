@@ -1,6 +1,6 @@
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
-import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { resetUiState } from "../../utils/resetUiState";
+import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**

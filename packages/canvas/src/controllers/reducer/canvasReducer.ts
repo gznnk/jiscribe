@@ -1,12 +1,11 @@
 import type { CanvasAction } from "./CanvasActions";
+import { isSameCamera } from "../../states/canvas/Viewport";
+import type { CanvasControllerState } from "../CanvasTypes";
+import { handlePaste } from "./handlers/handlePaste";
 import {
 	normalizeRichText,
 	richTextToPlain,
 } from "../../schemas/objects/types/RichText";
-import { createDocSnapshotFromState } from "../../states/canvas/DocSnapshot";
-import { isSameCamera } from "../../states/canvas/Viewport";
-import type { CanvasControllerState } from "../CanvasTypes";
-import { handlePaste } from "./handlers/handlePaste";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
@@ -19,6 +18,7 @@ import {
 } from "../utils/reconcileConnectorVertices";
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
+import { createDocSnapshotFromState } from "../utils/resolveDocSnapshot";
 import { resolveRequestedSelection } from "../utils/resolveRequestedSelection";
 import { toggleTextEditFormat } from "../utils/toggleTextEditFormat";
 
