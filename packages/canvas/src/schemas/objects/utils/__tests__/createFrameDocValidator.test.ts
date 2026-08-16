@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { SemanticDiagnostic } from "../../../canvas/validators/types";
+import type { SemanticDiagnostic } from "../../../types/SemanticDiagnostic";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { createFrameDocValidator } from "../createFrameDocValidator";
 

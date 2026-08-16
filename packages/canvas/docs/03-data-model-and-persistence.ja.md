@@ -108,7 +108,7 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 
 ## parser の二段検証（境界での防御）
 
-外部から渡る JSON 文字列は、`createCanvasParser` が返すパーサー（`schemas/canvas/validators/`）が
+外部から渡る JSON 文字列は、`createCanvasParser` が返すパーサー（`parser/`）が
 **例外を投げずに判別可能なユニオン**で結果を返す。これにより拡張側・Webview 側が
 同一ロジックを共有し、エラーの取りこぼしを防ぐ。
 
@@ -126,7 +126,7 @@ type CanvasParseResult =
 検証は 2 段階。構造が成立していなければ意味検証へ進まない。
 
 1. **構造検証 `validateStructure`** — 各ノードの型・必須フィールドを検証。型別の検証は
-   `objectDocValidatorRegistry` に委譲し、`group` の `children` 再帰だけは構造ルールとしてここで処理する。
+   パーサーが構築した doc バリデータのレジストリに委譲し、`group` の `children` 再帰だけは構造ルールとしてここで処理する。
 2. **意味検証 `validateSemantics`** — 文書全体を横断しないと判断できない整合性を検証。
    - **ID の一意性**: root ツリー（コネクター含む）を通じて ID が重複しないこと。
      `CanvasDoc` はネストしたツリーなので「親子の循環」は構造的に起こり得ず、循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。

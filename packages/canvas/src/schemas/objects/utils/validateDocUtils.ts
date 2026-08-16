@@ -5,7 +5,7 @@ import {
 	isString,
 } from "@jiscribe/basic-validators";
 
-import type { SemanticDiagnostic } from "../../canvas/validators/types";
+import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import { isArrowType } from "../types/ArrowType";
 import { isEdgeAnchorSide } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";

@@ -1,21 +1,15 @@
-import { beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
-import { initializeObjectDocValidatorRegistry } from "../../../registry/initializeObjectDocValidatorRegistry";
-import { objectDocValidatorRegistry } from "../../../registry/ObjectDocValidatorRegistry";
-import type { SemanticDiagnostic } from "../types";
+import type { SemanticDiagnostic } from "../../schemas/types/SemanticDiagnostic";
+import { createDocValidatorRegistry } from "../createDocValidatorRegistry";
 import { validateStructure as validateStructureWithRegistry } from "../validateStructure";
 
-// validateStructure now takes a registry argument (createCanvasParser can supply a
-// non-global one); this suite still exercises it against the global registry, so wrap it
-// to keep every existing single-arg call site below unchanged.
+// validateStructure delegates per-type validation and known-type checks to a registry,
+// which the parser builds per instance; the built-in set is the same precondition
+// production has. Wrapped so every single-arg call site below stays unchanged.
+const registry = createDocValidatorRegistry();
 const validateStructure = (doc: unknown): SemanticDiagnostic[] =>
-	validateStructureWithRegistry(doc, objectDocValidatorRegistry);
-
-// validateStructure delegates per-type validation and known-type checks to the registry.
-// In production the parser builds a populated one, so set up the same precondition here.
-beforeAll(() => {
-	initializeObjectDocValidatorRegistry();
-});
+	validateStructureWithRegistry(doc, registry);
 
 // ─── Fixture helpers ─────────────────────────────────────────
 const rect = (id: string, over: Record<string, unknown> = {}) => ({

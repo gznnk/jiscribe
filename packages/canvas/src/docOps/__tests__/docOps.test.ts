@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createCanvasParser } from "../../schemas/canvas/validators";
+import { createCanvasParser } from "../../parser";
 import type { EdgeAnchorSide } from "../../schemas/objects/types/EndpointRef";
 import { createFrameObjectFactory } from "../../schemas/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";

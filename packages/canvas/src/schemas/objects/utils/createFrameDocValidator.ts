@@ -7,8 +7,8 @@ import {
 	validateTextStyleFields,
 	validateTransformFields,
 } from "./validateDocUtils";
-import type { SemanticDiagnostic } from "../../canvas/validators/types";
 import type { ObjectDocValidateFn } from "../../registry/ObjectDocValidatorRegistry";
+import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import type { GeometryType } from "../types/GeometryType";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
 

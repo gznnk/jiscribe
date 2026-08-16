@@ -67,12 +67,9 @@ export type { ObjectDocDefinition } from "./schemas/plugin/ObjectDocDefinition";
 export type { ObjectTextSlotStyleDefaults } from "./schemas/registry/ObjectTextStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./schemas/plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorRegistry";
-export type {
-	CanvasParser,
-	CanvasParseResult,
-	SemanticDiagnostic,
-} from "./schemas/canvas/validators";
-export { createCanvasParser } from "./schemas/canvas/validators";
+export type { SemanticDiagnostic } from "./schemas/types/SemanticDiagnostic";
+export type { CanvasParser, CanvasParseResult } from "./parser";
+export { createCanvasParser } from "./parser";
 export { builtinObjectDocDefinitions } from "./schemas/registry/builtinObjectDocDefinitions";
 export {
 	createDocOps,

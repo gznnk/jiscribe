@@ -1,11 +1,7 @@
 import { isArray, isObject, isString } from "@jiscribe/basic-validators";
 
-import type { SemanticDiagnostic } from "./types";
-import type { createObjectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
-
-type ObjectDocValidatorRegistry = ReturnType<
-	typeof createObjectDocValidatorRegistry
->;
+import type { ObjectDocValidatorRegistry } from "../schemas/registry/ObjectDocValidatorRegistry";
+import type { SemanticDiagnostic } from "../schemas/types/SemanticDiagnostic";
 
 function validateObjectNode(
 	obj: unknown,

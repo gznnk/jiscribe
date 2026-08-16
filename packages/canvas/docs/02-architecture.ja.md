@@ -17,13 +17,14 @@
 ```
 packages/canvas/src/
 ├── index.ts                # パッケージエントリ（Canvas / CanvasDoc / パース結果型を re-export）
-├── parser.ts               # パーサー専用エントリ（UI 依存なし。VSCode 拡張の Node 側向け）
-├── schemas/                # 永続化データ型定義（Doc モデル）+ 構造/意味の検証
-│   ├── canvas/
-│   │   ├── CanvasDoc.ts
-│   │   └── validators/     # createCanvasParser / validateStructure / validateSemantics
+├── doc.ts                  # ヘッドレスエントリ（UI 依存なし。VSCode 拡張の Node 側・MCP 向け）
+├── schemas/                # 永続化データ型定義（Doc モデル）+ 型別の検証
+│   ├── canvas/             # CanvasDoc
 │   ├── objects/            # base / primitives / connections / annotations / types + 型別 validateXxxDoc
-│   └── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry（+ 初期化）
+│   ├── plugin/             # ObjectDocDefinition / CanvasDocPlugin / resolveDocDefinitions
+│   ├── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry
+│   └── types/              # doc 層共通の語彙（SemanticDiagnostic）
+├── parser/                 # text → CanvasDoc: createCanvasParser / validateStructure / validateSemantics
 ├── states/                 # ランタイム状態型（State モデル）+ Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
 │   ├── objects/            # base / primitives / connections / annotations（State + Mapper）

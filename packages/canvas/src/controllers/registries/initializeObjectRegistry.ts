@@ -381,7 +381,7 @@ export const applyObjectDefinition = (
  *
  * The doc validators are not initialized here. They are used only during parse-time
  * validation, where `createCanvasParser` builds its own registry from the definition
- * set it is given (schemas/canvas/validators/createCanvasParser).
+ * set it is given (parser/createCanvasParser).
  *
  * @param registries Target bundle to populate.
  */

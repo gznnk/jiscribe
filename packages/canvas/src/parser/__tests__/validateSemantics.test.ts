@@ -1,21 +1,33 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
-import type { ObjectDoc } from "../../../objects/base/ObjectDoc";
-import type { ConnectorDoc } from "../../../objects/connections/connector/ConnectorDoc";
-import type { GroupDoc } from "../../../objects/primitives/group/GroupDoc";
-import type { RectDoc } from "../../../objects/primitives/rect/RectDoc";
-import type { ObjectFeatures } from "../../../objects/types/ObjectFeatures";
-import { initializeObjectDocValidatorRegistry } from "../../../registry/initializeObjectDocValidatorRegistry";
-import { objectDocValidatorRegistry } from "../../../registry/ObjectDocValidatorRegistry";
-import type { CanvasDoc } from "../../CanvasDoc";
-import type { SemanticDiagnostic } from "../types";
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
+import type { ConnectorDoc } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
+import type { RectDoc } from "../../schemas/objects/primitives/rect/RectDoc";
+import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
+import { createObjectDocValidatorRegistry } from "../../schemas/registry/ObjectDocValidatorRegistry";
+import type { SemanticDiagnostic } from "../../schemas/types/SemanticDiagnostic";
+import { createDocValidatorRegistry } from "../createDocValidatorRegistry";
 import { validateSemantics as validateSemanticsWithRegistry } from "../validateSemantics";
 
-// validateSemantics now takes a registry argument (createCanvasParser can supply a
-// non-global one); this suite still exercises it against the global registry (populated
-// per-describe-block below), so wrap it to keep every existing single-arg call site unchanged.
-const validateSemantics = (doc: CanvasDoc): SemanticDiagnostic[] =>
-	validateSemanticsWithRegistry(doc, objectDocValidatorRegistry);
+// connectable checks read the registry's features, so register a minimal set for tests.
+const noopValidate = () => [];
+const features = (type: string, connectable: boolean): ObjectFeatures =>
+	({ type, geometry: "rect", connectable }) as unknown as ObjectFeatures;
+
+const mockRegistry = createObjectDocValidatorRegistry();
+mockRegistry.register("rect", noopValidate, features("rect", true));
+mockRegistry.register("group", noopValidate, features("group", false));
+mockRegistry.register("connector", noopValidate, features("connector", false));
+
+// validateSemantics takes a registry argument (the parser builds one per instance). Most
+// of this suite runs against the mock registry above, so wrap it to keep every existing
+// single-arg call site unchanged; the last describe passes the built-in one explicitly.
+const validateSemantics = (
+	doc: CanvasDoc,
+	registry = mockRegistry,
+): SemanticDiagnostic[] => validateSemanticsWithRegistry(doc, registry);
 
 const rect = (id: string): RectDoc =>
 	({ id, type: "rect" }) as unknown as RectDoc;
@@ -40,35 +52,7 @@ const connector = (
 ): ConnectorDoc =>
 	({ id, type: "connector", source, target }) as unknown as ConnectorDoc;
 
-// connectable checks read the registry's features, so register a minimal set for tests.
-const noopValidate = () => [];
-const features = (type: string, connectable: boolean): ObjectFeatures =>
-	({ type, geometry: "rect", connectable }) as unknown as ObjectFeatures;
-
 describe("validateSemantics", () => {
-	beforeEach(() => {
-		objectDocValidatorRegistry.clear();
-		objectDocValidatorRegistry.register(
-			"rect",
-			noopValidate,
-			features("rect", true),
-		);
-		objectDocValidatorRegistry.register(
-			"group",
-			noopValidate,
-			features("group", false),
-		);
-		objectDocValidatorRegistry.register(
-			"connector",
-			noopValidate,
-			features("connector", false),
-		);
-	});
-
-	afterEach(() => {
-		objectDocValidatorRegistry.clear();
-	});
-
 	describe("A. ID uniqueness", () => {
 		it("returns no errors for a valid tree", () => {
 			const doc: CanvasDoc = {
@@ -374,12 +358,7 @@ describe("validateSemantics", () => {
 // connectable checks against the real registry (production features) to guard
 // against regressions if someone flips Features.connectable.
 describe("validateSemantics (connectable via the real registry)", () => {
-	beforeEach(() => {
-		initializeObjectDocValidatorRegistry();
-	});
-	afterEach(() => {
-		objectDocValidatorRegistry.clear();
-	});
+	const builtinRegistry = createDocValidatorRegistry();
 
 	const targetDoc = (type: string): CanvasDoc => ({
 		version: 1,
@@ -393,14 +372,14 @@ describe("validateSemantics (connectable via the real registry)", () => {
 	it.each(["rect", "ellipse", "text"])(
 		"%s is connectable (no error)",
 		(type) => {
-			expect(validateSemantics(targetDoc(type))).toEqual([]);
+			expect(validateSemantics(targetDoc(type), builtinRegistry)).toEqual([]);
 		},
 	);
 
 	it.each(["polyline", "polygon", "svg", "group"])(
 		"%s is not connectable (not connectable)",
 		(type) => {
-			const errors = validateSemantics(targetDoc(type));
+			const errors = validateSemantics(targetDoc(type), builtinRegistry);
 			expect(
 				errors.some(
 					(e) =>

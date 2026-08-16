@@ -61,11 +61,8 @@ export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 // Headless parse/build API. `createCanvasParser` and the doc-ops live on the
 // `./doc` entry (UI-free); the root carries only the result types, so a UI consumer
 // can type a parse result without importing the parser factory itself.
-export type {
-	SemanticDiagnostic,
-	CanvasParseResult,
-	CanvasParser,
-} from "./schemas/canvas/validators";
+export type { SemanticDiagnostic } from "./schemas/types/SemanticDiagnostic";
+export type { CanvasParseResult, CanvasParser } from "./parser";
 
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
 // Pass a `CanvasConfig` (capability set + view setup) to `<Canvas initialConfig={...}>`;

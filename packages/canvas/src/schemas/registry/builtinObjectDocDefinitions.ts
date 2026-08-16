@@ -34,8 +34,8 @@ import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
  * One {@link ObjectDocDefinition} per built-in object type — the single source of
  * truth for the headless (doc) layer of the built-ins. The UI table
  * (`ALL_OBJECT_DEFINITIONS`) spreads each entry and adds its render/interaction
- * fields; `initializeObjectDocValidatorRegistry` folds these into the global
- * registry; and `createCanvasParser`'s default config uses them verbatim.
+ * fields, and `resolveDocDefinitions` uses them verbatim as the default preset
+ * that `createCanvasParser` / `createDocOps` fall back to.
  *
  * When adding a new built-in type, add its entry here (otherwise parse-time
  * structure validation and connectability checks report it as unknown). `factory`

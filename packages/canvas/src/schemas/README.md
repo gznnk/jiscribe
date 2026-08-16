@@ -7,13 +7,20 @@ It leverages TypeScript's type system to automatically compose object types base
 
 ## Directory Structure
 
-| Directory        | Description                                                                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `canvas/`        | Defines the root structure of the entire canvas (`CanvasDoc`).                                                                                 |
-| `objects/`       | Individual object definitions, classified into `base` (common), `primitives` (basic shapes), `connections` (lines/arrows), `annotations`, etc. |
-| `objects/types/` | Defines the enums and shared types used by objects (`ObjectType`, `GeometryType`, etc.) and the type-composition utility (`CreateObjectType`). |
-| `objects/utils/` | Runtime helpers that assist in generating and validating Docs (`createObjectDoc`, `autoColor`, `validateDocUtils`, etc.).                      |
-| `registry/`      | Manages the per-type doc validator and ObjectFactory registry and its initialization (`initializeObjectDocValidatorRegistry`).                 |
+| Directory        | Description                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas/`        | Defines the root structure of the entire canvas (`CanvasDoc`).                                                                                          |
+| `objects/`       | Individual object definitions, classified into `base` (common), `primitives` (basic shapes), `connections` (lines/arrows), `annotations`, etc.          |
+| `objects/types/` | Defines the enums and shared types used by objects (`ObjectType`, `GeometryType`, etc.) and the type-composition utility (`CreateObjectType`).          |
+| `objects/utils/` | Runtime helpers that assist in generating and validating Docs (`createObjectDoc`, `autoColor`, `validateDocUtils`, etc.).                               |
+| `plugin/`        | The doc-side plugin surface: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, and `resolveDocDefinitions`.         |
+| `registry/`      | The per-type doc validator and ObjectFactory registries, plus the built-in definition table (`builtinObjectDocDefinitions`).                            |
+| `types/`         | Vocabulary shared across the whole doc layer: `SemanticDiagnostic`, the diagnostic every `validateXxxDoc` returns and the currency of the parse result. |
+
+Turning a text into a `CanvasDoc` is not here but in `../parser/`, which composes a
+registry from these definitions and runs the staged validation. This layer only defines
+the types and validates them one at a time — symmetric with `../states/`, which has no
+parse stage either.
 
 ## Type Composition Architecture
 

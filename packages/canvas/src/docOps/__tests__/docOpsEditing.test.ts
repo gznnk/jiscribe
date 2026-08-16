@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createCanvasParser } from "../../parser";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import { createCanvasParser } from "../../schemas/canvas/validators";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { createFrameObjectFactory } from "../../schemas/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { ObjectDocDefinition } from "../../../plugin/ObjectDocDefinition";
-import { builtinObjectDocDefinitions } from "../../../registry/builtinObjectDocDefinitions";
-import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
+import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
+import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
+import type { ObjectDocValidateFn } from "../../schemas/registry/ObjectDocValidatorRegistry";
+import type { SemanticDiagnostic } from "../../schemas/types/SemanticDiagnostic";
 import { createCanvasParser } from "../createCanvasParser";
-import type { SemanticDiagnostic } from "../types";
 
 // createCanvasParser builds a dedicated (non-global) registry from a preset/plugin
 // composition. These tests exercise that composition contract; the individual

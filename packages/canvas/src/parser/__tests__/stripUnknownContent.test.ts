@@ -1,17 +1,13 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { initializeObjectDocValidatorRegistry } from "../../../registry/initializeObjectDocValidatorRegistry";
-import { objectDocValidatorRegistry } from "../../../registry/ObjectDocValidatorRegistry";
+import { createDocValidatorRegistry } from "../createDocValidatorRegistry";
 import { stripUnknownContent } from "../stripUnknownContent";
 
-// stripUnknownContent decides known/unknown via the registry, so set up the same
-// precondition as production (the parser hands it a populated one).
-beforeAll(() => {
-	initializeObjectDocValidatorRegistry();
-});
+// stripUnknownContent decides known/unknown via the registry, so use the same
+// precondition as production (the parser hands it the built-in set).
+const registry = createDocValidatorRegistry();
 
-const strip = (data: unknown) =>
-	stripUnknownContent(data, objectDocValidatorRegistry);
+const strip = (data: unknown) => stripUnknownContent(data, registry);
 
 // ─── Fixture helpers ─────────────────────────────────────────
 const rect = (id: string, over: Record<string, unknown> = {}) => ({

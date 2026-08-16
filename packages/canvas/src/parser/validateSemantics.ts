@@ -1,15 +1,11 @@
-import type { SemanticDiagnostic } from "./types";
-import type { ObjectDoc } from "../../objects/base/ObjectDoc";
-import type { ConnectorDoc } from "../../objects/connections/connector/ConnectorDoc";
-import type { GroupDoc } from "../../objects/primitives/group/GroupDoc";
-import type { EndpointRef } from "../../objects/types/EndpointRef";
-import type { ObjectType } from "../../objects/types/ObjectType";
-import type { createObjectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
-import type { CanvasDoc } from "../CanvasDoc";
-
-type ObjectDocValidatorRegistry = ReturnType<
-	typeof createObjectDocValidatorRegistry
->;
+import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
+import type { ConnectorDoc } from "../schemas/objects/connections/connector/ConnectorDoc";
+import type { GroupDoc } from "../schemas/objects/primitives/group/GroupDoc";
+import type { EndpointRef } from "../schemas/objects/types/EndpointRef";
+import type { ObjectType } from "../schemas/objects/types/ObjectType";
+import type { ObjectDocValidatorRegistry } from "../schemas/registry/ObjectDocValidatorRegistry";
+import type { SemanticDiagnostic } from "../schemas/types/SemanticDiagnostic";
 
 /**
  * Checks consistency that can only be determined by traversing the whole document.

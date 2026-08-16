@@ -1,9 +1,9 @@
-import type { CanvasDoc } from "../CanvasDoc";
 import { stripUnknownContent } from "./stripUnknownContent";
-import type { SemanticDiagnostic } from "./types";
 import { validateSemantics } from "./validateSemantics";
 import { validateStructure } from "./validateStructure";
-import type { createObjectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
+import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { ObjectDocValidatorRegistry } from "../schemas/registry/ObjectDocValidatorRegistry";
+import type { SemanticDiagnostic } from "../schemas/types/SemanticDiagnostic";
 
 /**
  * Result of parsing a Canvas document string.
@@ -35,7 +35,7 @@ export type CanvasParseResult =
  */
 export function parseWithRegistry(
 	text: string,
-	registry: ReturnType<typeof createObjectDocValidatorRegistry>,
+	registry: ObjectDocValidatorRegistry,
 ): CanvasParseResult {
 	let data: unknown;
 	try {

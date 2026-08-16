@@ -1,17 +1,13 @@
 import { isArray, isObject, isString } from "@jiscribe/basic-validators";
 
-import type { SemanticDiagnostic } from "./types";
-import { isArrowType } from "../../objects/types/ArrowType";
-import { isConnectorRouting } from "../../objects/types/ConnectorRouting";
-import { isAnchorKind } from "../../objects/types/EndpointRef";
-import { isStrokeDashType } from "../../objects/types/StrokeDashType";
-import { isTextAlign } from "../../objects/types/TextAlign";
-import { isVerticalAlign } from "../../objects/types/VerticalAlign";
-import type { createObjectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
-
-type ObjectDocValidatorRegistry = ReturnType<
-	typeof createObjectDocValidatorRegistry
->;
+import { isArrowType } from "../schemas/objects/types/ArrowType";
+import { isConnectorRouting } from "../schemas/objects/types/ConnectorRouting";
+import { isAnchorKind } from "../schemas/objects/types/EndpointRef";
+import { isStrokeDashType } from "../schemas/objects/types/StrokeDashType";
+import { isTextAlign } from "../schemas/objects/types/TextAlign";
+import { isVerticalAlign } from "../schemas/objects/types/VerticalAlign";
+import type { ObjectDocValidatorRegistry } from "../schemas/registry/ObjectDocValidatorRegistry";
+import type { SemanticDiagnostic } from "../schemas/types/SemanticDiagnostic";
 
 export type StripUnknownContentResult = {
 	/** The input with unknown content removed (the input itself when nothing was removed). */

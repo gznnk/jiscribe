@@ -1,6 +1,6 @@
-import type { SemanticDiagnostic } from "../canvas/validators/types";
 import type { ObjectFeatures } from "../objects/types/ObjectFeatures";
 import type { ObjectType } from "../objects/types/ObjectType";
+import type { SemanticDiagnostic } from "../types/SemanticDiagnostic";
 
 export type ObjectDocValidateFn = (
 	obj: Record<string, unknown>,
@@ -39,18 +39,11 @@ class ObjectDocValidatorRegistry {
 	isConnectable(type: string): boolean {
 		return this.entries.get(type as ObjectType)?.features.connectable === true;
 	}
-
-	/** Whether the registry is empty (no type registered yet). */
-	isEmpty(): boolean {
-		return this.entries.size === 0;
-	}
-
-	clear(): void {
-		this.entries.clear();
-	}
 }
 
 export const createObjectDocValidatorRegistry =
 	(): ObjectDocValidatorRegistry => new ObjectDocValidatorRegistry();
 
-export const objectDocValidatorRegistry = createObjectDocValidatorRegistry();
+// Exported as a type only: a registry is always obtained from the factory above (one per
+// parser — there is no shared global instance), never by construction.
+export type { ObjectDocValidatorRegistry };

@@ -26,7 +26,7 @@ For the core design principles (Type Composition, Branded Types, ObjectFeatures)
 
 ## Registry initialization
 
-The registries under `registry/` (`ObjectMapperRegistry` / `ObjectStateValidatorRegistry`) are registered **all at once** by `registerObject()` in `controllers/registries/initializeObjectRegistry.ts`, together with the other registries such as presentations / gestures / menu. The State side has no dedicated initialization file (asymmetric with the `schemas` doc validators, whose registry is built per parser by `createCanvasParser`).
+The registries under `registry/` (`ObjectMapperRegistry` / `ObjectStateValidatorRegistry`) are registered **all at once** by `registerObject()` in `controllers/registries/initializeObjectRegistry.ts`, together with the other registries such as presentations / gestures / menu. The doc-validator registry on the `schemas` side is not part of that bundle: it is needed only at parse time, so `parser/createCanvasParser` builds one per parser instance.
 
 ## Usage Example
 

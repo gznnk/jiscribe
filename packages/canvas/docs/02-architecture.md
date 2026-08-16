@@ -17,13 +17,14 @@ The internal structure and layer separation of `canvas`. For the rationale behin
 ```
 packages/canvas/src/
 ├── index.ts                # package entry (re-exports Canvas / CanvasDoc / the parse result types)
-├── parser.ts               # parser-only entry (no UI dependency; for the Node side of the VSCode extension)
-├── schemas/                # persistence data type definitions (Doc model) + structural/semantic validation
-│   ├── canvas/
-│   │   ├── CanvasDoc.ts
-│   │   └── validators/     # createCanvasParser / validateStructure / validateSemantics
+├── doc.ts                  # headless entry (no UI dependency; for the Node side of the VSCode extension, MCP, …)
+├── schemas/                # persistence data type definitions (Doc model) + per-type validation
+│   ├── canvas/             # CanvasDoc
 │   ├── objects/            # base / primitives / connections / annotations / types + per-type validateXxxDoc
-│   └── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry (+ initialization)
+│   ├── plugin/             # ObjectDocDefinition / CanvasDocPlugin / resolveDocDefinitions
+│   ├── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry
+│   └── types/              # doc-layer-wide vocabulary (SemanticDiagnostic)
+├── parser/                 # text → CanvasDoc: createCanvasParser / validateStructure / validateSemantics
 ├── states/                 # runtime state types (State model) + Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
 │   ├── objects/            # base / primitives / connections / annotations (State + Mapper)

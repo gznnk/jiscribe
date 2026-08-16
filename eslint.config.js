@@ -150,6 +150,7 @@ export default tseslint.config(
 			"packages/canvas/src/doc.ts",
 			"packages/canvas/src/unstable-doc.ts",
 			"packages/canvas/src/schemas/**",
+			"packages/canvas/src/parser/**",
 			"packages/canvas/src/docOps/**",
 		],
 		ignores: ["**/__tests__/**"],
@@ -195,7 +196,11 @@ export default tseslint.config(
 		// principle (conditional types are not reduced while the type argument is
 		// unresolved), which each file states in its JSDoc.
 		// When adding an exemption, write down on the spot why it cannot be checked.
-		files: ["packages/canvas/src/states/**", "packages/canvas/src/schemas/**"],
+		files: [
+			"packages/canvas/src/states/**",
+			"packages/canvas/src/schemas/**",
+			"packages/canvas/src/parser/**",
+		],
 		ignores: [
 			"**/__tests__/**",
 			"packages/canvas/src/states/objects/base/FrameMapper.ts",

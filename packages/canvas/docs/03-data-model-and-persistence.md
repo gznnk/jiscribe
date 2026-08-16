@@ -93,7 +93,7 @@ action is rejected because it would duplicate these commit subtleties.
 
 ## The Parser's Two-Stage Validation (Defense at the Boundary)
 
-For JSON strings coming from outside, a parser from `createCanvasParser` (`schemas/canvas/validators/`)
+For JSON strings coming from outside, a parser from `createCanvasParser` (`parser/`)
 returns its result as a **discriminated union without throwing exceptions**. This lets the
 extension side and the Webview side share the same logic and prevents errors from slipping through.
 
@@ -112,7 +112,7 @@ each stage's failure surfaces as a distinct variant.
 Validation happens in two stages. If the structure does not hold, semantic validation is not reached.
 
 1. **Structural validation `validateStructure`** — Validates each node's type and required fields.
-   Type-specific validation is delegated to `objectDocValidatorRegistry`, and only the recursion into a
+   Type-specific validation is delegated to the doc-validator registry the parser built, and only the recursion into a
    `group`'s `children` is handled here as a structural rule.
 2. **Semantic validation `validateSemantics`** — Validates consistency that can only be judged by
    traversing the entire document.
