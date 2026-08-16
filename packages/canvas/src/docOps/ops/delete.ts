@@ -1,13 +1,13 @@
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
+import type { EndpointRef } from "../../schemas/objects/types/EndpointRef";
 import {
 	collectObjectIds,
 	dropEmptyGroups,
 	type ObjectRecord,
 	requireObjects,
-} from "./objectAccess";
-import { isConnectorObject } from "./objectGeometry";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
-import type { EndpointRef } from "../schemas/objects/types/EndpointRef";
+} from "../utils/objectAccess";
+import { isConnectorObject } from "../utils/objectGeometry";
 
 export type DeleteObjectsResult = {
 	/** Every id that left the doc: the named objects, their descendants, and the cascade. */

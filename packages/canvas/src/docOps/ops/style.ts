@@ -1,11 +1,11 @@
-import { requireObjects } from "./objectAccess";
-import type { DocDefinitions } from "./objectGeometry";
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import { requireObjects } from "../utils/objectAccess";
+import type { DocDefinitions } from "../utils/objectGeometry";
 import {
 	applyStyle,
 	requestedStyleKeys,
 	type StyleParams,
-} from "./styleFields";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+} from "../utils/styleFields";
 
 export type SetStyleResult = {
 	/** Ids whose object took at least one of the requested properties. */

@@ -1,7 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { DocOperationError } from "./errors";
-import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
+import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
+import { DocOperationError } from "../errors";
 
 // The vertex list `setPoints` and `addObject` both write, checked and copied here so
 // neither op restates the other's rules.

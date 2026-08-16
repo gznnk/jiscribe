@@ -1,9 +1,9 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { DocOperationError } from "./errors";
+import { DocOperationError } from "../errors";
 import { findObject } from "./objectAccess";
 import type { DocDefinitions } from "./objectGeometry";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type {
 	ConnectPointId,
 	EdgeAnchorSide,
@@ -11,12 +11,12 @@ import type {
 	EndpointRef,
 	FreeEndpointRef,
 	OwnedEndpointRef,
-} from "../schemas/objects/types/EndpointRef";
+} from "../../schemas/objects/types/EndpointRef";
 import {
 	EdgeAnchorSides,
 	isEdgeAnchorSide,
 	isOwnedEndpointRef,
-} from "../schemas/objects/types/EndpointRef";
+} from "../../schemas/objects/types/EndpointRef";
 
 /** Which end of a connector an operation is working on; names the parameters in errors. */
 export type ConnectorEnd = "source" | "target";

@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import {
+	docOps,
+	emptyDoc,
+} from "./support/docFixtures";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
-
-/** Fresh empty CanvasDoc per call, never shared between tests. */
-const emptyDoc = (): CanvasDoc => ({ version: 1, root: [] });
-
-/** Default doc-ops, built-in definitions only. */
-const docOps = createDocOps();
 
 /** Three rects spread over x 0..500 and y 0..110. */
 const threeRects = (): CanvasDoc => {

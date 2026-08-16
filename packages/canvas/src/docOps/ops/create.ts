@@ -1,18 +1,22 @@
 import { calcPolyBoundingBox, type Point } from "@jiscribe/geometry";
 
-import { DocOperationError } from "./errors";
-import { generateUniqueId } from "./ids";
-import type { ObjectRecord } from "./objectAccess";
-import type { DocDefinitions } from "./objectGeometry";
-import { requirePolyPoints } from "./polyFields";
-import { applyStyle, type StyleParams } from "./styleFields";
-import { applyRotation, requireRotationDegrees } from "./transformFields";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
+import { DocOperationError } from "../errors";
+import { batchItemError } from "../utils/batchErrors";
+import { generateUniqueId } from "../utils/ids";
+import type { ObjectRecord } from "../utils/objectAccess";
+import type { DocDefinitions } from "../utils/objectGeometry";
+import { requirePolyPoints } from "../utils/polyFields";
+import { applyStyle, type StyleParams } from "../utils/styleFields";
+import {
+	applyRotation,
+	requireRotationDegrees,
+} from "../utils/transformFields";
 
 /**
  * Where and how big the new object is, plus any styling to give it on the spot. The
- * styling is the same set {@link import("./setStyle").setStyle} takes, and a property the
+ * styling is the same set {@link import("./style").setStyle} takes, and a property the
  * type has no place for is ignored the same way.
  */
 export type AddObjectParams = StyleParams & {
@@ -47,35 +51,21 @@ export type AddObjectParams = StyleParams & {
 	rotation?: number;
 };
 
+/** One object to create in an {@link addObjects} call. */
+export type AddObjectEntry = { type: string } & AddObjectParams;
+
 /**
- * Add an object of `type` and return the generated id, mutating `doc` in place.
+ * Build the object `addObject` would push, id included, without touching `doc`.
  *
- * Position is the top-left of the bounding box, sized by the effective width/height.
- * A factory with `createDocFromBounds` uses it — the one uniform entry that maps bounds
- * correctly for both rect-like and ellipse-like shapes — otherwise this falls back to the
- * center-based `createDoc`. Point-geometry types skip the sizing entirely: their
- * `createDoc` already takes the drawn top-left. The factory's UUID is replaced by a
- * `${type}-N` sequence.
- *
- * @param doc - Mutated in place: the created object is pushed onto `doc.root`
- * @param type - Object type name, which must be a key of `definitions` and carry a factory
- * @param params - Top-left position and optional size/text/styling/rotation; omitted
- *   width/height fall back to `calcDimensions`' default size, and styling the type cannot hold
- *   is ignored. `points` supersedes the position and size outright
- * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
- * @returns The id assigned to the new object, `${type}-N` unique across the root tree
- * @throws {@link DocOperationError} for an unknown type, for one without a factory
- *   (group / connector / svg and the like), when width/height are given for a
- *   point-geometry type that cannot store them, when the factory rejects the given size,
- *   when `points` are given to a type not built from vertices or are too few, or for a
- *   rotation that is not finite
+ * @param reservedIds - Ids already handed out to objects staged but not yet pushed
  */
-export const addObject = (
+const buildObject = (
 	doc: CanvasDoc,
 	type: string,
 	params: AddObjectParams,
 	definitions: DocDefinitions,
-): string => {
+	reservedIds?: ReadonlySet<string>,
+): ObjectDoc => {
 	const definition = definitions.get(type);
 	if (definition === undefined) {
 		throw new DocOperationError(
@@ -164,7 +154,7 @@ export const addObject = (
 		created = sized;
 	}
 
-	created.id = generateUniqueId(doc, type);
+	created.id = generateUniqueId(doc, type, reservedIds);
 	if (points !== undefined) {
 		(created as ObjectRecord).points = points;
 	}
@@ -173,6 +163,80 @@ export const addObject = (
 	if (rotation !== undefined) {
 		applyRotation(created as ObjectRecord, rotation, definition);
 	}
+	return created;
+};
+
+/**
+ * Add an object of `type` and return the generated id, mutating `doc` in place.
+ *
+ * Position is the top-left of the bounding box, sized by the effective width/height.
+ * A factory with `createDocFromBounds` uses it — the one uniform entry that maps bounds
+ * correctly for both rect-like and ellipse-like shapes — otherwise this falls back to the
+ * center-based `createDoc`. Point-geometry types skip the sizing entirely: their
+ * `createDoc` already takes the drawn top-left. The factory's UUID is replaced by a
+ * `${type}-N` sequence.
+ *
+ * @param doc - Mutated in place: the created object is pushed onto `doc.root`
+ * @param type - Object type name, which must be a key of `definitions` and carry a factory
+ * @param params - Top-left position and optional size/text/styling/rotation; omitted
+ *   width/height fall back to `calcDimensions`' default size, and styling the type cannot hold
+ *   is ignored. `points` supersedes the position and size outright
+ * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
+ * @returns The id assigned to the new object, `${type}-N` unique across the root tree
+ * @throws {@link DocOperationError} for an unknown type, for one without a factory
+ *   (group / connector / svg and the like), when width/height are given for a
+ *   point-geometry type that cannot store them, when the factory rejects the given size,
+ *   when `points` are given to a type not built from vertices or are too few, or for a
+ *   rotation that is not finite
+ */
+export const addObject = (
+	doc: CanvasDoc,
+	type: string,
+	params: AddObjectParams,
+	definitions: DocDefinitions,
+): string => {
+	const created = buildObject(doc, type, params, definitions);
 	doc.root.push(created);
 	return created.id;
+};
+
+/**
+ * Add several objects in one go and return their ids in the order given, mutating `doc`
+ * in place.
+ *
+ * Each object is created exactly as {@link addObject} would create it. Every one is built
+ * before any is pushed, so a call that throws leaves the document untouched — no half-added
+ * batch to clean up. Ids are handed out across the whole batch, so two objects of the same
+ * type never collide.
+ *
+ * @param doc - Mutated in place: the created objects are pushed onto `doc.root`, in the
+ *   order they appear in `entries`
+ * @param entries - What to create, each an `addObject` parameter set carrying its own `type`;
+ *   an empty array is a no-op returning an empty array. The same type may repeat freely
+ * @param definitions - Type table the factories are looked up in; its keys bound what each
+ *   `type` accepts
+ * @returns The assigned ids, positionally matching `entries`
+ * @throws {@link DocOperationError} for anything {@link addObject} rejects, prefixed with
+ *   `entries[i] (<type>)` so the offending element can be told apart
+ */
+export const addObjects = (
+	doc: CanvasDoc,
+	entries: readonly AddObjectEntry[],
+	definitions: DocDefinitions,
+): string[] => {
+	const reservedIds = new Set<string>();
+	const staged: ObjectDoc[] = [];
+	entries.forEach(({ type, ...params }, index) => {
+		let created: ObjectDoc;
+		try {
+			created = buildObject(doc, type, params, definitions, reservedIds);
+		} catch (error) {
+			throw batchItemError("entries", index, type, error);
+		}
+		reservedIds.add(created.id);
+		staged.push(created);
+	});
+
+	doc.root.push(...staged);
+	return staged.map((created) => created.id);
 };

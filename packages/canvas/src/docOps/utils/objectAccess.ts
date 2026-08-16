@@ -1,6 +1,6 @@
-import { DocOperationError } from "./errors";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
+import { DocOperationError } from "../errors";
 
 /**
  * A doc object seen as a plain record. The doc-ops read and write fields that only

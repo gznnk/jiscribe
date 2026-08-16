@@ -1,13 +1,13 @@
 import type { Rect } from "@jiscribe/geometry";
 
-import { DocOperationError } from "./errors";
-import { type ObjectRecord, requireObjects } from "./objectAccess";
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import { DocOperationError } from "../errors";
+import { type ObjectRecord, requireObjects } from "../utils/objectAccess";
 import {
 	type DocDefinitions,
 	requireObjectBounds,
 	translateObject,
-} from "./objectGeometry";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+} from "../utils/objectGeometry";
 
 /** Which edge (or midline) of the selection every object is brought to. */
 export type AlignEdge =

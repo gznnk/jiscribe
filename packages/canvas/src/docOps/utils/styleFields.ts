@@ -3,27 +3,27 @@ import { isConnectorObject } from "./objectGeometry";
 import {
 	FILL_STYLE_KEYS,
 	type FillStyleDoc,
-} from "../schemas/objects/base/FillStyleDoc";
+} from "../../schemas/objects/base/FillStyleDoc";
 import {
 	RADIUS_STYLE_KEYS,
 	type RadiusStyleDoc,
-} from "../schemas/objects/base/RadiusStyleDoc";
+} from "../../schemas/objects/base/RadiusStyleDoc";
 import {
 	STROKE_STYLE_KEYS,
 	type StrokeStyleDoc,
-} from "../schemas/objects/base/StrokeStyleDoc";
-import type { InlineTextStyle } from "../schemas/objects/types/RichText";
+} from "../../schemas/objects/base/StrokeStyleDoc";
+import type { InlineTextStyle } from "../../schemas/objects/types/RichText";
 import {
 	clearInlineStyleFromRuns,
 	isStyledRichText,
 	TEXT_INLINE_STYLE_KEYS,
-} from "../schemas/objects/types/RichText";
+} from "../../schemas/objects/types/RichText";
 import {
 	isTextRows,
 	TEXT_SLOT_STYLE_KEYS,
 	type TextSlot,
-} from "../schemas/objects/types/TextSlot";
-import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
+} from "../../schemas/objects/types/TextSlot";
+import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
 
 /**
  * Every styling property the doc-ops can set, gathered from the same style groups the

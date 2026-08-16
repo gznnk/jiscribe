@@ -1,6 +1,6 @@
-import { requireObjects } from "./objectAccess";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
+import { requireObjects } from "../utils/objectAccess";
 
 /**
  * Where objects are taken to in their parent's stacking order. "front" / "back" go the whole

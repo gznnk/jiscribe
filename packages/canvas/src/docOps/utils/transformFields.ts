@@ -1,8 +1,8 @@
 import { normalizeAngleDeg } from "@jiscribe/geometry";
 
-import { DocOperationError } from "./errors";
+import { DocOperationError } from "../errors";
 import type { ObjectRecord } from "./objectAccess";
-import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
+import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
 
 // The rotation field `setRotation` and `addObject` both write, checked and applied here so
 // neither op restates the other's rules.

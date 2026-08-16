@@ -1,5 +1,9 @@
-import { DocOperationError } from "./errors";
-import { generateUniqueId } from "./ids";
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
+import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
+import { DocOperationError } from "../errors";
+import { batchItemError } from "../utils/batchErrors";
+import { generateUniqueId } from "../utils/ids";
 import {
 	collectObjectIds,
 	dropEmptyGroups,
@@ -8,11 +12,8 @@ import {
 	rejectIds,
 	requireObject,
 	requireObjects,
-} from "./objectAccess";
-import { isConnectorObject } from "./objectGeometry";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
-import { GroupFeatures } from "../schemas/objects/primitives/group/GroupDoc";
+} from "../utils/objectAccess";
+import { isConnectorObject } from "../utils/objectGeometry";
 
 /**
  * Read `id` as a group, failing when it is something else or is turned.
@@ -141,6 +142,51 @@ export const ungroupObject = (doc: CanvasDoc, id: string): string[] => {
 };
 
 /**
+ * Dissolve several groups, each putting its children back where it stood. Mutates `doc` in
+ * place.
+ *
+ * A group and a group nested inside it may be named together: the ids are taken in the order
+ * given and each is located afresh, so a nested group dissolved after its parent is taken
+ * apart where the parent stood, and either order ends with both levels gone and the children
+ * in the same drawing order. Such an inner group is not reported as released — its own turn
+ * takes it apart — so the result only ever names objects that stand on their own once the
+ * call returns.
+ *
+ * @param doc - Mutated in place
+ * @param ids - Ids of the groups to dissolve; all must exist, be groups, and be unrotated.
+ *   Repeats are counted once, the second turn having nothing left to dissolve
+ * @returns The ids released, in the order their groups were given, each listed once
+ * @throws {@link DocOperationError} before dissolving anything, identified as `ids[i] (id)`:
+ *   when an id is missing, is not a group, or names a rotated group — whose rotation applies
+ *   to the children as a whole and has nowhere to go once they stand on their own
+ */
+export const ungroupObjects = (
+	doc: CanvasDoc,
+	ids: readonly string[],
+): string[] => {
+	const dissolvedIds = new Set(ids);
+	// Check every group first: a mid-way failure would leave part of the batch broken up.
+	for (const id of dissolvedIds) {
+		try {
+			requireUnrotatedGroup(doc, id);
+		} catch (error) {
+			// Reported against the caller's own array, which a repeated id makes wider than the set.
+			throw batchItemError("ids", ids.indexOf(id), id, error);
+		}
+	}
+
+	const releasedIds = new Set<string>();
+	for (const id of dissolvedIds) {
+		for (const childId of ungroupObject(doc, id)) {
+			if (!dissolvedIds.has(childId)) {
+				releasedIds.add(childId);
+			}
+		}
+	}
+	return [...releasedIds];
+};
+
+/**
  * Move objects that are already in the doc into an existing group, mutating `doc` in place.
  *
  * They are appended in the order given, so they end up drawn on top of what the group
@@ -186,7 +232,7 @@ export const addObjectsToGroup = (
 	return dropEmptyGroups(doc);
 };
 
-export type RemoveFromGroupResult = {
+export type RemoveObjectsFromGroupResult = {
 	/** The ids taken out, in the order they were given. */
 	releasedIds: string[];
 	/** Groups dropped for being left with nothing, innermost first. */
@@ -211,7 +257,7 @@ export type RemoveFromGroupResult = {
 export const removeObjectsFromGroup = (
 	doc: CanvasDoc,
 	ids: readonly string[],
-): RemoveFromGroupResult => {
+): RemoveObjectsFromGroupResult => {
 	// A repeated id would splice the same object twice and take a bystander with it.
 	const locations = requireObjects(doc, [...new Set(ids)]);
 	const holders = locations.map(({ object }) => ({
