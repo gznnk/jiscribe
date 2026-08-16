@@ -199,7 +199,7 @@ export type DocOps = {
  *   duplicate-type detection mirror createCanvasParser. Omit to handle only built-in definitions
  */
 export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
-	const definitions = resolveDocDefinitions(config, "createDocOps");
+	const definitions = resolveDocDefinitions(config);
 	return {
 		addObject: (doc, type, params) => addObject(doc, type, params, definitions),
 		connect: (doc, params) => connect(doc, params, definitions),

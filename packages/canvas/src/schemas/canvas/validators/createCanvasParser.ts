@@ -19,7 +19,7 @@ export type CanvasParser = {
 export const createCanvasParser = (
 	config?: DocDefinitionsConfig,
 ): CanvasParser => {
-	const definitions = resolveDocDefinitions(config, "createCanvasParser");
+	const definitions = resolveDocDefinitions(config);
 
 	const registry = createObjectDocValidatorRegistry();
 	definitions.forEach((definition, type) => {

@@ -30,11 +30,10 @@ export type DocDefinitionsConfig = {
  * `plugins` entry; a `type` present in both `presetDefinitions` and a plugin (or
  * shared between two plugins) is rejected rather than silently last-wins, so an
  * accidental duplicate fails loudly. Merge order is `presetDefinitions` → `plugins`
- * (declared order); `context` prefixes the duplicate-type error with the caller name.
+ * (declared order).
  */
 export const resolveDocDefinitions = (
 	config: DocDefinitionsConfig | undefined,
-	context: string,
 ): Map<string, ObjectDocDefinition> => {
 	const presetDefinitions =
 		config?.presetDefinitions ?? builtinObjectDocDefinitions;
@@ -69,7 +68,7 @@ export const resolveDocDefinitions = (
 	});
 	if (duplicateMessages.length > 0) {
 		throw new Error(
-			`${context}: duplicate object type(s) registered: ${duplicateMessages.join(", ")}`,
+			`duplicate object type(s) in doc definitions config: ${duplicateMessages.join(", ")}`,
 		);
 	}
 
