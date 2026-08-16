@@ -2,8 +2,8 @@ import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcContentBounds } from "./calcContentBounds";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
-import type { ScrollBoundsConfig } from "../../states/canvas/ScrollBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ScrollBoundsConfig } from "../CanvasTypes";
 
 /** Margin left outside the content when `padding` is omitted (world units). */
 const DEFAULT_SCROLL_BOUNDS_PADDING = 100;

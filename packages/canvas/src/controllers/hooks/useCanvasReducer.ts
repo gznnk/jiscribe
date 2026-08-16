@@ -2,9 +2,8 @@ import { type Dispatch, useMemo, useReducer } from "react";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
-import type { ScrollBoundsConfig } from "../../states/canvas/ScrollBounds";
 import type { Camera } from "../../states/canvas/Viewport";
-import type { CanvasControllerState } from "../CanvasTypes";
+import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { createCanvasReducer } from "../reducer/canvasReducer";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";

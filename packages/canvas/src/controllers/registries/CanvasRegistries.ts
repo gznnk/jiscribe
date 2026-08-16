@@ -10,11 +10,11 @@ import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/reg
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
-import type { ScrollBoundsConfig } from "../../states/canvas/ScrollBounds";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
+import type { ScrollBoundsConfig } from "../CanvasTypes";
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";

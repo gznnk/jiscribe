@@ -3,9 +3,8 @@ import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import { createDocSnapshotFromDoc } from "../../states/canvas/DocSnapshot";
-import type { ScrollBoundsConfig } from "../../states/canvas/ScrollBounds";
 import type { Camera } from "../../states/canvas/Viewport";
-import type { CanvasControllerState } from "../CanvasTypes";
+import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resetUiState } from "../utils/resetUiState";
 

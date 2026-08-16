@@ -56,7 +56,7 @@ export type {
 } from "./theme/CanvasTheme";
 export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
 export type { Camera, Viewport } from "./states/canvas/Viewport";
-export type { ScrollBoundsConfig } from "./states/canvas/ScrollBounds";
+export type { ScrollBoundsConfig } from "./controllers/CanvasTypes";
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 // Headless parse/build API. `createCanvasParser` and the doc-ops live on the
 // `./doc` entry (UI-free); the root carries only the result types, so a UI consumer
