@@ -28,32 +28,61 @@ describe("createCanvasToolDescriptors", () => {
 		// The entire surface the AI sees. Drop one only on purpose
 		expect(names).toEqual([
 			"describe_canvas",
+			"list_objects",
+			"find_objects",
+			"get_object",
+			"get_object_bounds",
+			"get_combined_bounds",
+			"get_text",
+			"get_z_order",
+			"get_parent_group",
+			"get_group_members",
+			"get_connectors",
+			"get_connected_objects",
+			"list_types",
 			"capture_canvas",
 			"measure_text",
 			"find_overlaps",
 			"measure_connector_path",
 			"measure_visual_bounds",
+			"hit_test",
+			"get_selection",
+			"get_view",
+			"get_interaction_status",
+			"to_svg",
+			"to_world",
+			"to_client",
 			"add_object",
 			"add_objects",
 			"connect",
+			"connect_many",
 			"delete_objects",
 			"set_position",
+			"set_positions",
 			"translate_objects",
 			"resize_object",
+			"resize_objects",
 			"set_rotation",
 			"set_points",
+			"set_points_many",
 			"reorder_objects",
 			"set_style",
 			"set_text",
+			"set_texts",
+			"set_text_style",
+			"set_text_styles",
 			"update_connector",
+			"update_connectors",
 			"align_objects",
 			"distribute_objects",
 			"group_objects",
 			"dissolve_group",
+			"dissolve_groups",
 			"add_to_group",
 			"remove_from_group",
 			"select_objects",
 			"center_view",
+			"set_view",
 			"fit_view",
 			"undo",
 		]);
@@ -67,11 +96,30 @@ describe("createCanvasToolDescriptors", () => {
 
 		expect(readOnlyNames).toEqual([
 			"describe_canvas",
+			"list_objects",
+			"find_objects",
+			"get_object",
+			"get_object_bounds",
+			"get_combined_bounds",
+			"get_text",
+			"get_z_order",
+			"get_parent_group",
+			"get_group_members",
+			"get_connectors",
+			"get_connected_objects",
+			"list_types",
 			"capture_canvas",
 			"measure_text",
 			"find_overlaps",
 			"measure_connector_path",
 			"measure_visual_bounds",
+			"hit_test",
+			"get_selection",
+			"get_view",
+			"get_interaction_status",
+			"to_svg",
+			"to_world",
+			"to_client",
 		]);
 	});
 
@@ -160,6 +208,36 @@ describe("createCanvasToolDescriptors", () => {
 		expect(z.safeParse(sourcePoint, { x: 10, y: 20 }).success).toBe(true);
 	});
 
+	it("takes one type or several on find_objects, and a whole rect to search inside", () => {
+		const descriptors = createCanvasToolDescriptors(capabilities);
+
+		const { type, within } = findDescriptor(
+			descriptors,
+			"find_objects",
+		).inputSchema;
+
+		expect(z.safeParse(type, "rect").success).toBe(true);
+		expect(z.safeParse(type, ["rect", "ellipse"]).success).toBe(true);
+		// Every condition is optional: a filter setting none is list_objects
+		expect(z.safeParse(type, undefined).success).toBe(true);
+		expect(
+			z.safeParse(within, { x: 0, y: 0, width: 400, height: 300 }).success,
+		).toBe(true);
+		expect(z.safeParse(within, { x: 0, y: 0 }).success).toBe(false);
+	});
+
+	it("sends describe_canvas on to the reading tools a large canvas needs", () => {
+		const description = findDescriptor(
+			createCanvasToolDescriptors(capabilities),
+			"describe_canvas",
+		).description;
+
+		expect(description).toContain("cut off");
+		expect(description).toContain("list_objects");
+		expect(description).toContain("find_objects");
+		expect(description).toContain("get_object");
+	});
+
 	it("accepts only the four placements on reorder_objects", () => {
 		const descriptors = createCanvasToolDescriptors(capabilities);
 
@@ -171,6 +249,46 @@ describe("createCanvasToolDescriptors", () => {
 		expect(z.safeParse(placement, "front").success).toBe(true);
 		expect(z.safeParse(placement, "backward").success).toBe(true);
 		expect(z.safeParse(placement, "top").success).toBe(false);
+	});
+
+	it("holds the set_view zoom to the range center_view takes", () => {
+		const { zoom } = findDescriptor(
+			createCanvasToolDescriptors(capabilities),
+			"set_view",
+		).inputSchema;
+
+		expect(z.safeParse(zoom, 1).success).toBe(true);
+		// SET_VIEWPORT itself clamps nothing, so the schema is where a broken
+		// magnification is stopped
+		expect(z.safeParse(zoom, 0.05).success).toBe(false);
+		expect(z.safeParse(zoom, 20).success).toBe(false);
+	});
+
+	it("takes a target or a world rect on fit_view", () => {
+		const { target, rect } = findDescriptor(
+			createCanvasToolDescriptors(capabilities),
+			"fit_view",
+		).inputSchema;
+
+		expect(z.safeParse(target, "all").success).toBe(true);
+		// Either argument may be left out; which one is missing is checked where the
+		// operation is applied
+		expect(z.safeParse(target, undefined).success).toBe(true);
+		expect(
+			z.safeParse(rect, { x: 0, y: 0, width: 200, height: 120 }).success,
+		).toBe(true);
+	});
+
+	it("takes a point or a rect on hit_test", () => {
+		const { point, rect } = findDescriptor(
+			createCanvasToolDescriptors(capabilities),
+			"hit_test",
+		).inputSchema;
+
+		expect(z.safeParse(point, { x: 120, y: 80 }).success).toBe(true);
+		expect(
+			z.safeParse(rect, { x: 0, y: 0, width: 200, height: 120 }).success,
+		).toBe(true);
 	});
 });
 

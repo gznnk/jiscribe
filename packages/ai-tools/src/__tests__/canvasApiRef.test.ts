@@ -27,40 +27,12 @@ const capabilities: AiCanvasCapabilities = {
  * a list rather than a rule so that adding a doc-op forces the decision to be made
  * and written down: the exhaustiveness test below fails until the new member is
  * either driven by a tool or entered here.
+ *
+ * Empty is the state to keep it in — every doc-op is reachable by the model today.
+ * The list stays because it is the place a future member is argued out of the tool
+ * set; deleting it would let one be added and never exposed, unnoticed.
  */
-const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {
-	connectMany:
-		"No batch connector tool is exposed; the model calls connect once per edge.",
-	setPositions:
-		"set_position places one object, and a whole computed layout is applied through align_objects / distribute_objects instead.",
-	resizeObjects:
-		"No batch resize tool is exposed; resize_object is called per object.",
-	setPointsMany:
-		"Every poly outline is given in full anyway, so set_points per shape costs the model nothing extra.",
-	setTexts: "No batch retext tool is exposed; set_text is called per object.",
-	setInlineTextStyle:
-		"Styling a stretch within one text is outside the AI style vocabulary, which set_style applies to whole objects.",
-	setInlineTextStyles: "Same as setInlineTextStyle, in its batch form.",
-	updateConnectors:
-		"No batch tool is exposed; update_connector is called per connector.",
-	dissolveGroups:
-		"No batch tool is exposed; dissolve_group is called per group.",
-	getZOrder:
-		"Reading is served by describe_canvas, which hands back the whole doc; drawing order is the object order in it.",
-	getText: "Reading is served by describe_canvas.",
-	getConnectors: "Reading is served by describe_canvas.",
-	getConnectedObjects: "Reading is served by describe_canvas.",
-	getParentGroup: "Reading is served by describe_canvas.",
-	getGroupMembers: "Reading is served by describe_canvas.",
-	getCombinedBounds:
-		"Reading is served by describe_canvas. A host that builds a whole diagram itself does call it (studio's draw_file_tree), but that tool is the host's, not one of these.",
-	getObject: "Reading is served by describe_canvas.",
-	getObjectBounds: "Reading is served by describe_canvas.",
-	listObjects: "Reading is served by describe_canvas.",
-	findObjects: "Reading is served by describe_canvas.",
-	listTypes:
-		"The creatable and connectable type lists reach the model on the tool schemas themselves, through toCanvasCapabilities.",
-};
+const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {};
 
 const toCamelCase = (toolName: string): string =>
 	toolName.replace(/_(.)/g, (_match, letter: string) => letter.toUpperCase());

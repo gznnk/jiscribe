@@ -12,7 +12,15 @@ import type {
 	AnchorHandleId,
 	ConnectParams,
 	DistributeAxis,
+	InlineTextStyleParams,
+	ObjectFilter,
+	Rect,
+	SetInlineTextStyleEntry,
+	SetPointsEntry,
+	SetPositionEntry,
+	SetTextEntry,
 	StyleParams,
+	UpdateConnectorEntry,
 	UpdateConnectorParams,
 	ZOrderPlacement,
 } from "@jiscribe/canvas/doc";
@@ -37,7 +45,17 @@ export type AiHandleOp =
 	| { kind: "selectObjects"; ids: string[] }
 	// Puts world (x, y) at the centre of the screen; omitting zoom keeps the current one
 	| { kind: "centerView"; x: number; y: number; zoom?: number }
-	| { kind: "fitView"; target: AiFitTarget }
+	// The camera as the host may set it whole; zoom is clamped by the tool schema
+	| { kind: "setView"; minX: number; minY: number; zoom: number }
+	// Reads the camera together with the world rect currently on screen
+	| { kind: "getView" }
+	| {
+			kind: "fitView";
+			/** What the canvas holds; exclusive with rect, and one of the two is required */
+			target?: AiFitTarget;
+			/** A region worked out by the caller; exclusive with target */
+			rect?: AiRect;
+	  }
 	| {
 			kind: "measureText";
 			id: string;
@@ -48,9 +66,25 @@ export type AiHandleOp =
 	| { kind: "findOverlaps"; ids?: string[] }
 	| { kind: "measureConnectorPath"; id: string }
 	// The result is one rectangle: the union of what all of them draw
-	| { kind: "measureVisualBounds"; ids: string[] };
+	| { kind: "measureVisualBounds"; ids: string[] }
+	| {
+			kind: "hitTest";
+			/** A world point, tested against the outlines; exclusive with rect */
+			point?: AiPoint;
+			/** A world rect, tested against bounding boxes; exclusive with point */
+			rect?: AiRect;
+			/** Hit slack (world px) for line-like shapes; omitted leaves the canvas default */
+			tolerance?: number;
+	  }
+	| { kind: "getSelection" }
+	| { kind: "toSvg" }
+	| { kind: "getInteractionStatus" }
+	// Client coordinates, the space PointerEvent.clientX/Y is in
+	| { kind: "toWorld"; x: number; y: number }
+	// World coordinates, converted the other way
+	| { kind: "toClient"; x: number; y: number };
 
-/** What fitView frames: the whole drawing, or the current selection */
+/** What fitView frames when it is not given a rect: the whole drawing, or the current selection */
 export type AiFitTarget = "all" | "selection";
 
 /**
@@ -63,11 +97,19 @@ const HANDLE_OP_KINDS: Readonly<Record<AiHandleOp["kind"], true>> = {
 	captureCanvas: true,
 	selectObjects: true,
 	centerView: true,
+	setView: true,
+	getView: true,
 	fitView: true,
 	measureText: true,
 	findOverlaps: true,
 	measureConnectorPath: true,
 	measureVisualBounds: true,
+	hitTest: true,
+	getSelection: true,
+	toSvg: true,
+	getInteractionStatus: true,
+	toWorld: true,
+	toClient: true,
 };
 
 /**
@@ -85,6 +127,24 @@ export const isAiDocOp = (value: AiCanvasOp): value is AiDocOp =>
 /** An operation that reads or changes the document; kept in step with docOps */
 export type AiDocOp =
 	| { kind: "describeCanvas" }
+	| { kind: "listObjects" }
+	| ({ kind: "findObjects" } & AiObjectFilter)
+	| { kind: "getObject"; id: string }
+	| { kind: "getObjectBounds"; id: string }
+	// Omitting ids measures the whole drawing
+	| { kind: "getCombinedBounds"; ids?: string[] }
+	| {
+			kind: "getText";
+			id: string;
+			/** Which text slot; omitted reads the shape's single body of text */
+			slot?: string;
+	  }
+	| { kind: "getZOrder"; id: string }
+	| { kind: "getParentGroup"; id: string }
+	| { kind: "getGroupMembers"; groupId: string }
+	| { kind: "getConnectors"; id: string }
+	| { kind: "getConnectedObjects"; id: string }
+	| { kind: "listTypes" }
 	| ({ kind: "addObject"; type: string } & AiAddObjectParams)
 	| {
 			kind: "addObjects";
@@ -112,10 +172,22 @@ export type AiDocOp =
 			routing?: AiRouting;
 			points?: AiPoint[];
 	  }
+	// Endpoints are resolved against the doc as it already stands, so an object added
+	// in the same turn must be added before this runs
+	| { kind: "connectMany"; entries: readonly AiConnectEntry[] }
 	| { kind: "deleteObjects"; ids: string[] }
 	| { kind: "setPosition"; id: string; x?: number; y?: number }
+	| { kind: "setPositions"; entries: readonly AiSetPositionEntry[] }
 	| { kind: "translateObjects"; ids: string[]; deltaX: number; deltaY: number }
 	| { kind: "resizeObject"; id: string; width?: number; height?: number }
+	| {
+			kind: "resizeObjects";
+			ids: string[];
+			/** One width for every id; omitted keeps each object's own */
+			width?: number;
+			/** One height for every id; omitted keeps each object's own */
+			height?: number;
+	  }
 	| {
 			kind: "setRotation";
 			ids: string[];
@@ -129,6 +201,7 @@ export type AiDocOp =
 			/** The whole new outline in world coordinates; the shape follows its vertices */
 			points: AiPoint[];
 	  }
+	| { kind: "setPointsMany"; entries: readonly AiSetPointsEntry[] }
 	| {
 			kind: "reorderObjects";
 			ids: string[];
@@ -137,7 +210,12 @@ export type AiDocOp =
 	  }
 	| { kind: "setStyle"; ids: string[]; style: AiStyle }
 	| { kind: "setText"; id: string; text: string; slot?: string }
+	| { kind: "setTexts"; entries: readonly AiSetTextEntry[] }
+	| ({ kind: "setTextStyle"; id: string } & AiInlineTextStyleParams)
+	| { kind: "setTextStyles"; entries: readonly AiSetTextStyleEntry[] }
 	| ({ kind: "updateConnector"; id: string } & UpdateConnectorParams)
+	// An id may appear only once, each entry holding every change to that connector
+	| { kind: "updateConnectors"; entries: readonly AiUpdateConnectorEntry[] }
 	| { kind: "alignObjects"; ids: string[]; edge: AiAlignEdge }
 	| {
 			kind: "distributeObjects";
@@ -147,15 +225,43 @@ export type AiDocOp =
 	  }
 	| { kind: "groupObjects"; ids: string[] }
 	| { kind: "dissolveGroup"; id: string }
+	| { kind: "dissolveGroups"; ids: string[] }
 	| { kind: "addToGroup"; groupId: string; ids: string[] }
 	| { kind: "removeFromGroup"; ids: string[] }
 	| { kind: "undo" };
+
+/** The conditions find_objects narrows by; every one given must hold */
+export type AiObjectFilter = ObjectFilter;
 
 /** One object as add_object / add_objects takes it: place, size, text and style */
 export type AiAddObjectParams = AddObjectParams;
 
 /** One element of add_objects: the same as {@link AiAddObjectParams} plus the type name */
 export type AiNewObject = { type: string } & AiAddObjectParams;
+
+/** One element of connect_many: the endpoint pair and options connect itself takes */
+export type AiConnectEntry = ConnectParams;
+
+/** One element of set_positions: an id and the absolute top-left set_position takes */
+export type AiSetPositionEntry = SetPositionEntry;
+
+/** One element of set_points_many: an id and the whole outline set_points takes */
+export type AiSetPointsEntry = SetPointsEntry;
+
+/** One element of set_texts: an id and the text and slot set_text takes */
+export type AiSetTextEntry = SetTextEntry;
+
+/** One element of update_connectors: an id and the changes update_connector takes */
+export type AiUpdateConnectorEntry = UpdateConnectorEntry;
+
+/**
+ * What set_text_style decorates and how: the characters to match, which occurrence
+ * of them, the slot they sit in, and the inline typography to lay over them
+ */
+export type AiInlineTextStyleParams = InlineTextStyleParams;
+
+/** One element of set_text_styles: an id and one {@link AiInlineTextStyleParams} */
+export type AiSetTextStyleEntry = SetInlineTextStyleEntry;
 
 /** Arrowhead kind; canvas does not export ArrowType, so it is borrowed from ConnectParams */
 export type AiArrowType = NonNullable<ConnectParams["startArrow"]>;
@@ -165,6 +271,9 @@ export type AiRouting = NonNullable<ConnectParams["routing"]>;
 
 /** A bend on a connector route; geometry's Point borrowed through canvas */
 export type AiPoint = NonNullable<ConnectParams["points"]>[number];
+
+/** A world region: top-left plus size, the same form every bounds result is read in */
+export type AiRect = Rect;
 
 /** The whole style vocabulary set_style and add_object accept */
 export type AiStyle = StyleParams;
@@ -190,3 +299,29 @@ export type AiCanvasOpOutcome = {
 	 */
 	imagePngBase64?: string;
 };
+
+/**
+ * How many characters of document JSON `describe_canvas` hands back before it is
+ * cut off. Declared here rather than where the truncation happens because the
+ * tool's own description states the figure: one source keeps the two in step.
+ * A drawing of some 50 objects already exceeds it.
+ */
+export const MAX_DESCRIBE_CHARS = 20_000;
+
+/**
+ * The same budget for the summary lists `list_objects` and `find_objects` return.
+ * Equal to {@link MAX_DESCRIBE_CHARS} on purpose, so neither read path costs the
+ * model more than the other at worst; a summary is roughly a tenth of the object
+ * it stands for, so the same budget carries an order of magnitude more objects.
+ */
+export const MAX_SUMMARY_CHARS = 20_000;
+
+/**
+ * The same budget again for the markup `to_svg` hands back. Rendered markup runs
+ * several times the length of the document it came from — one shape becomes a
+ * group of elements with its own transform, paths and text spans — so this cuts
+ * in well before the drawings {@link MAX_DESCRIBE_CHARS} still fits whole. That is
+ * the intended shape of the tool: the markup is worth reading in the small, and
+ * capture_canvas is what a whole drawing is judged by.
+ */
+export const MAX_SVG_CHARS = 20_000;

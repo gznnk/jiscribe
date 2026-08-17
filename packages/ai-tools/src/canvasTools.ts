@@ -11,6 +11,7 @@
 import { z } from "zod";
 
 import type { CanvasApiRef } from "./canvasApiRef";
+import { MAX_DESCRIBE_CHARS, MAX_SVG_CHARS } from "./canvasOps";
 import type {
 	AiAlignEdge,
 	AiArrowType,
@@ -177,6 +178,209 @@ const pointSchema = z.object({
 });
 
 /**
+ * The typography a stretch of characters carries on its own; set_text_style and
+ * set_text_styles decorate part of a body with it. Alignment is absent on purpose:
+ * it places the whole body, so it lives in the styleSchema set_style speaks.
+ */
+const inlineTextStyleSchema = {
+	fontColor: z
+		.string()
+		.optional()
+		.describe("Color of the matched characters, any CSS color."),
+	fontSize: z
+		.number()
+		.min(1)
+		.optional()
+		.describe(
+			"Size of the matched characters in px; the rest of the body keeps the shape's own size.",
+		),
+	fontFamily: z
+		.string()
+		.optional()
+		.describe(
+			'Font family for the matched characters, e.g. "monospace" for a code term inside a sentence.',
+		),
+	fontWeight: z
+		.enum(["normal", "bold"])
+		.optional()
+		.describe(
+			'Weight of the matched characters; "normal" takes bold off again.',
+		),
+	fontStyle: z
+		.enum(["normal", "italic"])
+		.optional()
+		.describe(
+			'Slant of the matched characters; "normal" stands them upright again.',
+		),
+	textDecoration: z
+		.enum(["none", "underline", "line-through", "underline line-through"])
+		.optional()
+		.describe('Line drawn on the matched characters; "none" removes it.'),
+};
+
+/**
+ * Which characters to decorate: the text itself rather than an offset, since an
+ * offset is something the model would have to count out of a string it wrote.
+ */
+const textStretchSchema = {
+	match: z
+		.string()
+		.min(1)
+		.describe(
+			"The characters to decorate, matched literally against the object's own text. Must occur in it — a stretch that does not is an error, not a silent no-op.",
+		),
+	occurrence: z
+		.number()
+		.int()
+		.min(1)
+		.optional()
+		.describe(
+			"Which occurrence to decorate when the text holds several, counted from 1. Omit to decorate every occurrence.",
+		),
+	slot: z
+		.string()
+		.optional()
+		.describe(
+			'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one holds the stretch. Omit for the shape\'s single body of text.',
+		),
+};
+
+/** The endpoints and options one connector is drawn with; connect and connect_many share them. */
+const connectorDrawSchema = {
+	sourceId: z
+		.string()
+		.optional()
+		.describe(
+			"id of the source object; give sourcePoint instead to leave this end unattached.",
+		),
+	targetId: z
+		.string()
+		.optional()
+		.describe(
+			"id of the target object; give targetPoint instead to leave this end unattached.",
+		),
+	sourcePoint: pointSchema
+		.optional()
+		.describe(
+			"World coordinate to stand the source end at instead of attaching it. Cannot be combined with sourceId or sourceAnchor, and the target end must then be attached.",
+		),
+	targetPoint: pointSchema
+		.optional()
+		.describe(
+			"World coordinate to stand the target end at instead of attaching it. Cannot be combined with targetId or targetAnchor, and the source end must then be attached.",
+		),
+	sourceAnchor: z
+		.enum(ANCHOR_HANDLE_IDS)
+		.optional()
+		.describe("Anchor on the source (default center)."),
+	targetAnchor: z
+		.enum(ANCHOR_HANDLE_IDS)
+		.optional()
+		.describe("Anchor on the target (default center)."),
+	startArrow: z
+		.enum(ARROW_TYPES)
+		.optional()
+		.describe("Arrowhead at the source end."),
+	endArrow: z
+		.enum(ARROW_TYPES)
+		.optional()
+		.describe("Arrowhead at the target end (use FilledTriangle for a flow)."),
+	label: z
+		.string()
+		.optional()
+		.describe(
+			'Text drawn on the line, e.g. "yes" / "no". Sits on the line itself, so never place a separate text shape next to a connector.',
+		),
+	routing: z
+		.enum(ROUTINGS)
+		.optional()
+		.describe(
+			"Line shape; omitted derives it from the anchors (center ends give a straight line).",
+		),
+	points: z
+		.array(pointSchema)
+		.optional()
+		.describe(
+			[
+				"Corners the line bends at, source → target, excluding the endpoints. As many as you like — there is no limit.",
+				'With routing "straight" the line is drawn through exactly these points, so a single connector is a whole polyline.',
+				"The two endpoints are named by sourceId / sourcePoint and targetId / targetPoint; every bend between them belongs here. Never put an invisible shape at each bend and chain connectors between them.",
+				"Omit to let the engine route it.",
+			].join(" "),
+		),
+};
+
+/** The changes one existing connector takes; update_connector and update_connectors share them. */
+const connectorChangeSchema = {
+	sourceId: z
+		.string()
+		.optional()
+		.describe("Re-attach the source end to this object."),
+	targetId: z
+		.string()
+		.optional()
+		.describe("Re-attach the target end to this object."),
+	sourcePoint: pointSchema
+		.optional()
+		.describe(
+			"Detach the source end and stand it at this world coordinate. Cannot be combined with sourceId or sourceAnchor, and is refused when it would leave both ends unattached.",
+		),
+	targetPoint: pointSchema
+		.optional()
+		.describe(
+			"Detach the target end and stand it at this world coordinate. Cannot be combined with targetId or targetAnchor, and is refused when it would leave both ends unattached.",
+		),
+	sourceAnchor: z
+		.enum(ANCHOR_HANDLE_IDS)
+		.optional()
+		.describe("Move the source end to this anchor."),
+	targetAnchor: z
+		.enum(ANCHOR_HANDLE_IDS)
+		.optional()
+		.describe("Move the target end to this anchor."),
+	startArrow: z
+		.enum(ARROW_TYPES)
+		.optional()
+		.describe('Arrowhead at the source end; "None" removes it.'),
+	endArrow: z
+		.enum(ARROW_TYPES)
+		.optional()
+		.describe('Arrowhead at the target end; "None" removes it.'),
+	routing: z.enum(ROUTINGS).optional().describe("Line shape."),
+	points: z
+		.array(pointSchema)
+		.optional()
+		.describe(
+			[
+				"Corners the line bends at, source → target, excluding the endpoints. As many as you like — there is no limit.",
+				'With routing "straight" the line is drawn through exactly these points, so a single connector is a whole polyline.',
+				"[] gives the route back to the engine.",
+			].join(" "),
+		),
+	labelPosition: z
+		.number()
+		.min(0)
+		.max(1)
+		.optional()
+		.describe(
+			"Where the label sits along the line: 0 at the source, 1 at the target, 0.5 the middle.",
+		),
+	labelOffset: z
+		.number()
+		.optional()
+		.describe(
+			"How far the label sits off the line in px; the sign picks the side. Use it when the label overlaps the line or another shape.",
+		),
+};
+
+const rectSchema = z.object({
+	x: z.number().describe("Top-left x in px."),
+	y: z.number().describe("Top-left y in px."),
+	width: z.number().min(0).describe("Width in px, rightwards from x."),
+	height: z.number().min(0).describe("Height in px, downwards from y."),
+});
+
+/**
  * Declares the whole canvas tool set.
  *
  * The type list reaches the host at session start, so the descriptors are rebuilt
@@ -195,11 +399,226 @@ export const createCanvasToolDescriptors = (
 
 	const describeCanvasTool = defineCanvasTool(
 		"describe_canvas",
-		"Read the current canvas document. Returns the CanvasDoc JSON, including every object's id, type, position, size and style. Call this before adding or editing anything so you know what already exists, what its ids are, and where the free space is.",
+		[
+			"Read the current canvas document. Returns the CanvasDoc JSON, including every object's id, type, position, size and style. Call this before adding or editing anything so you know what already exists, what its ids are, and where the free space is.",
+			`The result is cut off once the document runs past ${MAX_DESCRIBE_CHARS.toLocaleString("en-US")} characters, which a drawing of some 50 objects already does, and the part beyond that cannot be reached through this tool at all.`,
+			"So use it on small drawings only: on anything larger read list_objects for the whole map, find_objects to narrow it down, and get_object for the one object you need in full — those stay small however big the drawing grows.",
+		].join(" "),
 		{},
 		() => ({ kind: "describeCanvas" }),
 		// The host serializes the document it already holds; no doc-ops read is involved
 		{ isReadOnly: true, drives: ["agent"] },
+	);
+
+	const listObjectsTool = defineCanvasTool(
+		"list_objects",
+		[
+			"Map the whole canvas: one summary per object — id, type, bounding box, the group holding it, and its text — in drawing order, back to front, each group followed straight away by what it holds.",
+			"This is what you read on a drawing you did not just build yourself, and the summaries are an order of magnitude smaller than the objects they stand for, so this survives on drawings where describe_canvas is cut off.",
+			"The usual way round a large canvas is this tool for the layout, find_objects to narrow down to what you are after, and get_object for the full detail of one object.",
+			"Objects that cannot be measured (a connector, an empty group) report a null box, which is not an error.",
+			"Very large drawings are cut off here too, and the result says so; narrow with find_objects rather than reading the rest.",
+		].join(" "),
+		{},
+		() => ({ kind: "listObjects" }),
+		{ isReadOnly: true, drives: ["docOps.listObjects"] },
+	);
+
+	const findObjectsTool = defineCanvasTool(
+		"find_objects",
+		[
+			"Search the canvas, returning the same summaries list_objects returns for the objects that match.",
+			'Narrow by type, by the text an object carries, by a rectangle it sits entirely inside, or by the group holding it — this is how you answer "which boxes say Login", "what is in this group", "what stands in the top-left corner" without reading the whole drawing.',
+			"Every condition given must hold, so naming two narrows rather than widens, and an object that cannot answer a condition fails it: one holding no text never matches text, one with no box never matches within.",
+			"An empty result means nothing on the canvas matches, not that the call failed.",
+			"Give no condition at all and this is list_objects; take one match to get_object for its every field.",
+		].join(" "),
+		{
+			type: z
+				.union([z.string(), z.array(z.string()).min(1)])
+				.optional()
+				.describe(
+					'Keep only these types, one name or several ("rect", ["rect", "ellipse"]); omit to keep every type. Names are the ones add_object takes, which list_types spells out.',
+				),
+			text: z
+				.string()
+				.optional()
+				.describe(
+					"Keep objects whose text contains this, matched case-insensitively as a substring against the same characters get_text returns. A shape holding no text never matches.",
+				),
+			within: rectSchema
+				.optional()
+				.describe(
+					"Keep objects whose bounding box sits entirely inside this rect, edges touching included. It is containment and not intersection, so a shape straddling the edge is left out, and a shape with no box (a connector, an empty group) never matches.",
+				),
+			inGroup: z
+				.string()
+				.optional()
+				.describe(
+					"Keep the direct children of this group only; a nested group's own children belong to that group, so ask for it in turn. Fails when the id is not a group.",
+				),
+		},
+		(args) => ({ kind: "findObjects", ...args }),
+		{ isReadOnly: true, drives: ["docOps.findObjects"] },
+	);
+
+	const getObjectTool = defineCanvasTool(
+		"get_object",
+		[
+			"Read one object in full: every field its type declares — place, size, style, rotation, vertices, text slots, a connector's endpoints and route — as JSON.",
+			"This is the detail behind a list_objects or find_objects summary, and the way to read what you need out of a drawing of any size without asking for the whole document.",
+			"Reading a handful of objects one by one is still far smaller than describe_canvas on a large canvas.",
+			"Fails when no object carries the id, so it doubles as the check that an id you were given is real.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object to read; groups included."),
+		},
+		(args) => ({ kind: "getObject", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getObject"] },
+	);
+
+	const getObjectBoundsTool = defineCanvasTool(
+		"get_object_bounds",
+		[
+			"Measure the box one object occupies, in world coordinates: the same top-left form add_object takes and set_position writes back, so the numbers go straight back into your next call.",
+			"Rotation is ignored — it turns a shape about its own centre, and this is the untransformed box every placement op works on.",
+			"A group is measured from what it holds, which is the one way to get its extent.",
+			"Objects that cannot be measured (a connector, which follows the objects it joins; a group holding nothing) say so rather than failing.",
+			"For what an object actually draws, decoration outside its geometry included, use measure_visual_bounds instead.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object to measure."),
+		},
+		(args) => ({ kind: "getObjectBounds", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getObjectBounds"] },
+	);
+
+	const getCombinedBoundsTool = defineCanvasTool(
+		"get_combined_bounds",
+		[
+			"Measure the single box several objects occupy together, or the whole drawing when ids are omitted.",
+			"Omitting ids is how you find out how far the canvas already reaches, so you can place new content past its edge instead of guessing — read the box, then add_object beyond its right or bottom edge.",
+			"Ids that contribute nothing (a connector, an empty group) are simply skipped, and a set that contributes nothing at all says so rather than failing; an id that is not on the canvas is an error.",
+			"Rotation is ignored, as in get_object_bounds.",
+		].join(" "),
+		{
+			ids: z
+				.array(z.string())
+				.min(1)
+				.optional()
+				.describe(
+					"ids to measure together; omit to measure everything on the canvas, which is what you want before placing new content.",
+				),
+		},
+		(args) => ({ kind: "getCombinedBounds", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getCombinedBounds"] },
+	);
+
+	const getTextTool = defineCanvasTool(
+		"get_text",
+		[
+			"Read one object's text as plain characters: inline styling dropped and rows joined by newlines, which is what set_text would take back.",
+			"Use it to check a label you are about to rewrite, and to read a text too long for the list_objects summary to be worth trusting.",
+			"On a connector this reads the label drawn on the line.",
+			"An object whose text is empty says so; a type that holds no text at all is an error, as is an unknown slot.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object to read the text of."),
+			slot: z
+				.string()
+				.optional()
+				.describe(
+					'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one to read. Omit for the shape\'s single body of text; list_types says which types keep slots.',
+				),
+		},
+		(args) => ({ kind: "getText", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getText"] },
+	);
+
+	const getZOrderTool = defineCanvasTool(
+		"get_z_order",
+		[
+			"Read where an object stands in the stacking order: its position among its siblings, counting from the back, and how many siblings it stands among.",
+			"Both are counted inside the parent holding it — a group's child among its siblings, never against the whole canvas — which is also how reorder_objects moves it.",
+			"Call it before restacking to know whether a move would change anything at all: an object already at the front stays where it is however often you send it there.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object to locate."),
+		},
+		(args) => ({ kind: "getZOrder", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getZOrder"] },
+	);
+
+	const getParentGroupTool = defineCanvasTool(
+		"get_parent_group",
+		[
+			"Read which group holds an object, or that it sits at the top level in none.",
+			"Sitting in no group is an answer, not a failure — only an id that is not on the canvas fails.",
+			"Read it before moving or restacking something you did not place yourself: an object inside a group is restacked among its siblings only, and taking it out is remove_from_group.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object whose group is read."),
+		},
+		(args) => ({ kind: "getParentGroup", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getParentGroup"] },
+	);
+
+	const getGroupMembersTool = defineCanvasTool(
+		"get_group_members",
+		[
+			"List what a group holds directly, in drawing order, back to front.",
+			"Only its own children come back: a nested group is named as one id, and what that group holds is read by asking for it in turn.",
+			"Use it to work out what dissolve_group would release, and what a resize_object on the group would scale.",
+			"Fails when the id is not on the canvas or names something that is not a group.",
+		].join(" "),
+		{
+			groupId: z.string().describe("id of the group to read."),
+		},
+		(args) => ({ kind: "getGroupMembers", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getGroupMembers"] },
+	);
+
+	const getConnectorsTool = defineCanvasTool(
+		"get_connectors",
+		[
+			"List the connectors with an end on this object, in drawing order.",
+			"This is how you find the line to re-route or re-label with update_connector without reading the whole drawing, and how you know what delete_objects would take with the object.",
+			"Only the ids come back; pass one to get_object for its endpoints, arrowheads and route, or to measure_connector_path for where it is actually drawn.",
+			"An object with nothing attached says so, which is an answer and not a failure.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object whose connectors are listed."),
+		},
+		(args) => ({ kind: "getConnectors", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getConnectors"] },
+	);
+
+	const getConnectedObjectsTool = defineCanvasTool(
+		"get_connected_objects",
+		[
+			"List the objects at the far end of this object's connectors, each named once however many lines run to it.",
+			"This is one step through the diagram: what a flowchart node leads to and comes from, what an entity is related to — walk it id by id instead of reading the whole document to trace a path.",
+			"The object itself and ends hanging at a bare coordinate are left out, and the direction of a line is not distinguished, so use get_connectors and get_object when you need to tell incoming from outgoing.",
+			"An object connected to nothing says so, which is an answer and not a failure.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object to step out from."),
+		},
+		(args) => ({ kind: "getConnectedObjects", ...args }),
+		{ isReadOnly: true, drives: ["docOps.getConnectedObjects"] },
+	);
+
+	const listTypesTool = defineCanvasTool(
+		"list_types",
+		[
+			"List every object type this canvas knows and what each one can be asked to do: whether add_object can create it, whether connect may put an endpoint on it, what text it carries (one body, named slots, or none) and how its shape is stored.",
+			"The geometry answers which ops apply: only a poly type takes set_points, and a type stored as a point takes its size from its content rather than resize_object.",
+			"Read it when a call was refused for the type rather than the arguments, and before writing a named slot with set_text.",
+			"It describes the canvas rather than the drawing, so it answers the same on an empty one.",
+		].join(" "),
+		{},
+		() => ({ kind: "listTypes" }),
+		{ isReadOnly: true, drives: ["docOps.listTypes"] },
 	);
 
 	// add_object and one entry of add_objects speak the same vocabulary. Build the
@@ -313,73 +732,28 @@ export const createCanvasToolDescriptors = (
 			"One end may stand at a bare coordinate instead of an object (sourcePoint / targetPoint), but never both: a line attached to nothing is a polyline, so add_object a polyline with points for that.",
 			"Use update_connector afterwards to re-route or re-attach it.",
 		].join(" "),
-		{
-			sourceId: z
-				.string()
-				.optional()
-				.describe(
-					"id of the source object; give sourcePoint instead to leave this end unattached.",
-				),
-			targetId: z
-				.string()
-				.optional()
-				.describe(
-					"id of the target object; give targetPoint instead to leave this end unattached.",
-				),
-			sourcePoint: pointSchema
-				.optional()
-				.describe(
-					"World coordinate to stand the source end at instead of attaching it. Cannot be combined with sourceId or sourceAnchor, and the target end must then be attached.",
-				),
-			targetPoint: pointSchema
-				.optional()
-				.describe(
-					"World coordinate to stand the target end at instead of attaching it. Cannot be combined with targetId or targetAnchor, and the source end must then be attached.",
-				),
-			sourceAnchor: z
-				.enum(ANCHOR_HANDLE_IDS)
-				.optional()
-				.describe("Anchor on the source (default center)."),
-			targetAnchor: z
-				.enum(ANCHOR_HANDLE_IDS)
-				.optional()
-				.describe("Anchor on the target (default center)."),
-			startArrow: z
-				.enum(ARROW_TYPES)
-				.optional()
-				.describe("Arrowhead at the source end."),
-			endArrow: z
-				.enum(ARROW_TYPES)
-				.optional()
-				.describe(
-					"Arrowhead at the target end (use FilledTriangle for a flow).",
-				),
-			label: z
-				.string()
-				.optional()
-				.describe(
-					'Text drawn on the line, e.g. "yes" / "no". Sits on the line itself, so never place a separate text shape next to a connector.',
-				),
-			routing: z
-				.enum(ROUTINGS)
-				.optional()
-				.describe(
-					"Line shape; omitted derives it from the anchors (center ends give a straight line).",
-				),
-			points: z
-				.array(pointSchema)
-				.optional()
-				.describe(
-					[
-						"Corners the line bends at, source → target, excluding the endpoints. As many as you like — there is no limit.",
-						'With routing "straight" the line is drawn through exactly these points, so a single connector is a whole polyline.',
-						"The two endpoints are named by sourceId / sourcePoint and targetId / targetPoint; every bend between them belongs here. Never put an invisible shape at each bend and chain connectors between them.",
-						"Omit to let the engine route it.",
-					].join(" "),
-				),
-		},
+		{ ...connectorDrawSchema },
 		(args) => ({ kind: "connect", ...args }),
 		{ drives: ["docOps.connect"] },
+	);
+
+	const connectManyTool = defineCanvasTool(
+		"connect_many",
+		[
+			"Draw many connectors in one call: the batch form of connect, each entry taking exactly what connect takes — the two ends, their anchors, arrowheads, label and route.",
+			"This is the second half of building a diagram: add_objects for every node, then this for every edge between them, instead of calling connect once per line.",
+			"Endpoints are resolved against the canvas as it already stands, so an object created in the same turn has to be added before this call, never inside it.",
+			"All or nothing: if one entry is rejected nothing is drawn at all, and the error names the entry that failed — a guarantee a loop of connect calls cannot give you, since it would leave the lines it already drew behind.",
+			"Returns the new connector ids in the order given.",
+		].join(" "),
+		{
+			entries: z
+				.array(z.object(connectorDrawSchema))
+				.min(1)
+				.describe("The connectors to draw, in drawing order."),
+		},
+		(args) => ({ kind: "connectMany", ...args }),
+		{ drives: ["docOps.connectMany"] },
 	);
 
 	const deleteObjectsTool = defineCanvasTool(
@@ -404,6 +778,30 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.setPosition"] },
 	);
 
+	const setPositionsTool = defineCanvasTool(
+		"set_positions",
+		[
+			"Move many objects to places of their own: the batch form of set_position, each entry carrying an absolute top-left exactly as set_position does.",
+			"This is how a layout you worked out yourself is applied — every box lands at the coordinates you computed, in one call and one undo step, instead of a set_position per shape.",
+			"An omitted axis leaves that object where it is, per entry. To shift a cluster while keeping the spacing inside it, use translate_objects, which takes one delta for all of them.",
+			"All or nothing: if one entry is rejected nothing moves at all, and the error names the entry that failed — so the drawing is never left half re-laid-out.",
+		].join(" "),
+		{
+			entries: z
+				.array(
+					z.object({
+						id: z.string().describe("id of the object to move."),
+						x: z.number().optional().describe("New top-left x in px."),
+						y: z.number().optional().describe("New top-left y in px."),
+					}),
+				)
+				.min(1)
+				.describe("Where each object goes, one entry per object."),
+		},
+		(args) => ({ kind: "setPositions", ...args }),
+		{ drives: ["docOps.setPositions"] },
+	);
+
 	const translateObjectsTool = defineCanvasTool(
 		"translate_objects",
 		"Shift several objects by the same amount, keeping the layout between them. Use this to open up room for something new instead of re-placing every shape.",
@@ -426,6 +824,36 @@ export const createCanvasToolDescriptors = (
 		},
 		(args) => ({ kind: "resizeObject", ...args }),
 		{ drives: ["docOps.resizeObject"] },
+	);
+
+	const resizeObjectsTool = defineCanvasTool(
+		"resize_objects",
+		[
+			"Give many objects one and the same size, each keeping its own top-left corner — how a row of boxes is evened up to a common width.",
+			"Its arguments are shaped unlike the other batch tools: one ids list and one width / height for all of them, the way set_style hands one style to every id. There is no size per object here; for that, call resize_object per object.",
+			"An omitted axis keeps each object's current extent, so passing width alone leaves the heights as varied as they were.",
+			"A group scales its children with it, as in resize_object.",
+			"All or nothing: if one id is rejected — missing, or an object with no size of its own — nothing is resized at all, and the error names the id that failed.",
+		].join(" "),
+		{
+			ids: z.array(z.string()).min(1).describe("ids to resize to one size."),
+			width: z
+				.number()
+				.min(1)
+				.optional()
+				.describe(
+					"New width in px, shared by every id; omit to keep each object's own width.",
+				),
+			height: z
+				.number()
+				.min(1)
+				.optional()
+				.describe(
+					"New height in px, shared by every id; omit to keep each object's own height.",
+				),
+		},
+		(args) => ({ kind: "resizeObjects", ...args }),
+		{ drives: ["docOps.resizeObjects"] },
 	);
 
 	const setRotationTool = defineCanvasTool(
@@ -465,6 +893,34 @@ export const createCanvasToolDescriptors = (
 		},
 		(args) => ({ kind: "setPoints", ...args }),
 		{ drives: ["docOps.setPoints"] },
+	);
+
+	const setPointsManyTool = defineCanvasTool(
+		"set_points_many",
+		[
+			"Rewrite the outlines of many polygons and polylines at once: the batch form of set_points, each entry giving one shape's whole new outline.",
+			"A poly shape has no x / y / width / height of its own, so this moves, resizes and reshapes every one of them together — which is what you want after recomputing a set of shapes, a chart's series or a fan of arrows.",
+			"Each entry follows set_points exactly: world coordinates in drawing order, the whole outline at once, a polygon closing itself (3 vertices, never repeating the first) and a polyline needing 2.",
+			"All or nothing: if one entry is rejected nothing is reshaped at all, and the error names the entry that failed, so the drawing never ends up with half the new geometry.",
+		].join(" "),
+		{
+			entries: z
+				.array(
+					z.object({
+						id: z
+							.string()
+							.describe("id of the polygon or polyline to reshape."),
+						points: z
+							.array(pointSchema)
+							.min(2)
+							.describe("The whole new outline, in drawing order."),
+					}),
+				)
+				.min(1)
+				.describe("One outline per shape."),
+		},
+		(args) => ({ kind: "setPointsMany", ...args }),
+		{ drives: ["docOps.setPointsMany"] },
 	);
 
 	const reorderObjectsTool = defineCanvasTool(
@@ -519,6 +975,83 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.setText"] },
 	);
 
+	const setTextsTool = defineCanvasTool(
+		"set_texts",
+		[
+			"Rewrite the text of many objects in one call: the batch form of set_text, each entry taking the same id, text and optional slot.",
+			"This is how a whole diagram's labels are filled in — add_objects for the shapes, then one call here for every label — and how a set of wordings is corrected together rather than one call per shape.",
+			'Each entry reads exactly as set_text does: on a connector the text is the label drawn on the line, and "" clears it.',
+			"All or nothing: if one entry is rejected nothing is rewritten at all, and the error names the entry that failed, so the diagram is never left with half its labels changed.",
+		].join(" "),
+		{
+			entries: z
+				.array(
+					z.object({
+						id: z.string().describe("id of the object to retext."),
+						text: z
+							.string()
+							.describe(
+								'The new text; "" clears it (and drops a connector label).',
+							),
+						slot: z
+							.string()
+							.optional()
+							.describe(
+								'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one to write. The slot must already exist.',
+							),
+					}),
+				)
+				.min(1)
+				.describe("One text per object, written in the order given."),
+		},
+		(args) => ({ kind: "setTexts", ...args }),
+		{ drives: ["docOps.setTexts"] },
+	);
+
+	const setTextStyleTool = defineCanvasTool(
+		"set_text_style",
+		[
+			"Decorate part of one object's text — a few words in bold, one term in another color, a phrase struck through — leaving the rest of the body as it was.",
+			"This is the only tool that reaches inside a text. set_style is the other side of that line: it styles the whole object, so its fontColor / fontSize reach every character, and applying it afterwards overrides what you set here.",
+			"The stretch is named by the characters themselves (match), never by an offset; occurrence picks which one when the text holds several, and omitting it decorates every occurrence.",
+			"Only typography a run of characters carries on its own is settable: fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration. textAlign and verticalAlign place the whole body and belong to set_style.",
+			"Fails when match does not occur in the text, and on text that can only be styled as a whole (a connector label, a slot holding rows) — use set_style there.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object whose text is decorated."),
+			...textStretchSchema,
+			...inlineTextStyleSchema,
+		},
+		(args) => ({ kind: "setTextStyle", ...args }),
+		{ drives: ["docOps.setInlineTextStyle"] },
+	);
+
+	const setTextStylesTool = defineCanvasTool(
+		"set_text_styles",
+		[
+			"Decorate stretches of text on many objects in one call: the batch form of set_text_style, each entry naming one object, the characters to match and the typography to lay over them.",
+			"Repeat an id to decorate several stretches of the same text — that is how one paragraph gets a term in bold and another in color — and the entries stack in the order given.",
+			"The same line holds as in set_text_style: only fontColor / fontSize / fontFamily / fontWeight / fontStyle / textDecoration, never alignment, and a later set_style on the whole object overrides all of it.",
+			"All or nothing: every match is looked for before anything is decorated, so one entry whose text does not contain its match leaves the whole call unapplied, and the error names that entry.",
+		].join(" "),
+		{
+			entries: z
+				.array(
+					z.object({
+						id: z
+							.string()
+							.describe("id of the object whose text is decorated."),
+						...textStretchSchema,
+						...inlineTextStyleSchema,
+					}),
+				)
+				.min(1)
+				.describe("One stretch per entry, decorated in the order given."),
+		},
+		(args) => ({ kind: "setTextStyles", ...args }),
+		{ drives: ["docOps.setInlineTextStyles"] },
+	);
+
 	const updateConnectorTool = defineCanvasTool(
 		"update_connector",
 		[
@@ -530,68 +1063,33 @@ export const createCanvasToolDescriptors = (
 		].join(" "),
 		{
 			id: z.string().describe("id of the connector to change."),
-			sourceId: z
-				.string()
-				.optional()
-				.describe("Re-attach the source end to this object."),
-			targetId: z
-				.string()
-				.optional()
-				.describe("Re-attach the target end to this object."),
-			sourcePoint: pointSchema
-				.optional()
-				.describe(
-					"Detach the source end and stand it at this world coordinate. Cannot be combined with sourceId or sourceAnchor, and is refused when it would leave both ends unattached.",
-				),
-			targetPoint: pointSchema
-				.optional()
-				.describe(
-					"Detach the target end and stand it at this world coordinate. Cannot be combined with targetId or targetAnchor, and is refused when it would leave both ends unattached.",
-				),
-			sourceAnchor: z
-				.enum(ANCHOR_HANDLE_IDS)
-				.optional()
-				.describe("Move the source end to this anchor."),
-			targetAnchor: z
-				.enum(ANCHOR_HANDLE_IDS)
-				.optional()
-				.describe("Move the target end to this anchor."),
-			startArrow: z
-				.enum(ARROW_TYPES)
-				.optional()
-				.describe('Arrowhead at the source end; "None" removes it.'),
-			endArrow: z
-				.enum(ARROW_TYPES)
-				.optional()
-				.describe('Arrowhead at the target end; "None" removes it.'),
-			routing: z.enum(ROUTINGS).optional().describe("Line shape."),
-			points: z
-				.array(pointSchema)
-				.optional()
-				.describe(
-					[
-						"Corners the line bends at, source → target, excluding the endpoints. As many as you like — there is no limit.",
-						'With routing "straight" the line is drawn through exactly these points, so a single connector is a whole polyline.',
-						"[] gives the route back to the engine.",
-					].join(" "),
-				),
-			labelPosition: z
-				.number()
-				.min(0)
-				.max(1)
-				.optional()
-				.describe(
-					"Where the label sits along the line: 0 at the source, 1 at the target, 0.5 the middle.",
-				),
-			labelOffset: z
-				.number()
-				.optional()
-				.describe(
-					"How far the label sits off the line in px; the sign picks the side. Use it when the label overlaps the line or another shape.",
-				),
+			...connectorChangeSchema,
 		},
 		(args) => ({ kind: "updateConnector", ...args }),
 		{ drives: ["docOps.updateConnector"] },
+	);
+
+	const updateConnectorsTool = defineCanvasTool(
+		"update_connectors",
+		[
+			"Change many connectors in one call: the batch form of update_connector, each entry taking exactly what it takes — endpoints, anchors, arrowheads, routing, corners and label placement.",
+			"Reach for it when one move breaks a whole fan of lines: re-anchor every edge into the side that now faces the shape, or give a set of edges the same arrowhead, in one call and one undo step.",
+			"An id may appear only once. Put every change to one connector in a single entry, since two entries would each be checked against the connector as it was before the call.",
+			"All or nothing: if one entry is rejected nothing is changed at all, and the error names the entry that failed, so a batch can never leave half the lines re-attached.",
+		].join(" "),
+		{
+			entries: z
+				.array(
+					z.object({
+						id: z.string().describe("id of the connector to change."),
+						...connectorChangeSchema,
+					}),
+				)
+				.min(1)
+				.describe("The connectors to change, one entry each."),
+		},
+		(args) => ({ kind: "updateConnectors", ...args }),
+		{ drives: ["docOps.updateConnectors"] },
 	);
 
 	const alignObjectsTool = defineCanvasTool(
@@ -648,6 +1146,25 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.dissolveGroup"] },
 	);
 
+	const dissolveGroupsTool = defineCanvasTool(
+		"dissolve_groups",
+		[
+			"Dissolve many groups at once: the batch form of dissolve_group, every group leaving its children in place as independent objects.",
+			"Use it to flatten a whole grouping before re-organizing the drawing, instead of a dissolve_group per group.",
+			"A group and a group nested inside it may be named together, in either order: both levels end up gone and the children keep their drawing order.",
+			"All or nothing: if one id is rejected — missing, not a group, or a rotated group — nothing is dissolved at all, and the error names the id that failed.",
+			"Returns the ids released, which are the objects you now address one by one.",
+		].join(" "),
+		{
+			ids: z
+				.array(z.string())
+				.min(1)
+				.describe("ids of the groups to dissolve."),
+		},
+		(args) => ({ kind: "dissolveGroups", ...args }),
+		{ drives: ["docOps.dissolveGroups"] },
+	);
+
 	const addToGroupTool = defineCanvasTool(
 		"add_to_group",
 		"Move objects that already exist into an existing group, so a cluster can grow without being taken apart and rebuilt. Nothing on the canvas moves — only what the group holds. A group the move empties is dropped, and connectors cannot join a group (they follow the objects they join anyway).",
@@ -688,10 +1205,7 @@ export const createCanvasToolDescriptors = (
 	);
 
 	// The measurement tools below answer with numbers what capture_canvas can only
-	// hint at in a picture. measure.hitTest is left out of them on purpose: its one
-	// use is turning a coordinate read off an exported image back into object ids,
-	// and capture_canvas tells the model not to read coordinates off the image at
-	// all, so a tool for it would only make the discouraged way of working easier.
+	// hint at in a picture.
 
 	const measureTextTool = defineCanvasTool(
 		"measure_text",
@@ -767,6 +1281,128 @@ export const createCanvasToolDescriptors = (
 		{ isReadOnly: true, drives: ["handle.measure.visualBounds"] },
 	);
 
+	const hitTestTool = defineCanvasTool(
+		"hit_test",
+		[
+			"Ask what is drawn at a world position: the objects under a point, or every object reaching into a rect, front-most first — so the first id is what a click there would land on.",
+			"This is how a coordinate becomes ids. Check whether the spot you are about to place a shape at is already taken, or name the objects sitting inside a region you measured, without reading the whole drawing.",
+			"A point is tested against the outline a shape is really drawn with, so an ellipse is not hit at the corner of its box and a connector is hit only near its line. A rect is matched against bounding boxes instead, so it collects everything whose box reaches into it.",
+			"Groups are never named; their members are tested one by one.",
+			"Coordinates come from the drawing itself — describe_canvas, get_object_bounds, measure_visual_bounds — and never from a capture_canvas picture, which is scaled and says nothing exact.",
+			"Nothing at that spot is an answer, not a failure.",
+		].join(" "),
+		{
+			point: pointSchema
+				.optional()
+				.describe(
+					"World point to test. Give this or rect, not both and not neither.",
+				),
+			rect: rectSchema
+				.optional()
+				.describe(
+					"World rect to collect everything reaching into. Give this or point, not both and not neither.",
+				),
+			tolerance: z
+				.number()
+				.min(0)
+				.optional()
+				.describe(
+					"How far beyond its line a connector or polyline still counts as hit, in world px; omit for the canvas default of 4. Shapes with an area ignore it, being hit inside their outline and nowhere else.",
+				),
+		},
+		(args) => ({ kind: "hitTest", ...args }),
+		{ isReadOnly: true, drives: ["handle.measure.hitTest"] },
+	);
+
+	const getSelectionTool = defineCanvasTool(
+		"get_selection",
+		[
+			"Read which objects the user has selected right now.",
+			'This is the way to find out what they mean by "this" or "these": read the selection before acting on a request that points at something without naming it, rather than guessing which shape they had in mind.',
+			"select_objects is the other direction — it sets the selection so the user sees which objects you are talking about.",
+			"An empty selection is an answer, not a failure.",
+		].join(" "),
+		{},
+		() => ({ kind: "getSelection" }),
+		{ isReadOnly: true, drives: ["handle.selection.getSelectedIds"] },
+	);
+
+	const getViewTool = defineCanvasTool(
+		"get_view",
+		[
+			"Read the view as it stands: where the camera's top-left corner sits in world coordinates, how far it is zoomed in, how large the drawing area is in screen px, and which rectangle of the world is on screen because of all that.",
+			"That rectangle is where the user is looking, so something added inside it lands in front of them and something added outside it is off screen until you take them there.",
+			"It is also the read side of set_view: read the three camera numbers here, show the user another part of the drawing, then hand the same numbers back to set_view to put them back where they were.",
+		].join(" "),
+		{},
+		() => ({ kind: "getView" }),
+		{
+			isReadOnly: true,
+			drives: [
+				"handle.viewport.getViewport",
+				"handle.viewport.getVisibleWorldRect",
+			],
+		},
+	);
+
+	const getInteractionStatusTool = defineCanvasTool(
+		"get_interaction_status",
+		[
+			"Read what the user is doing to the canvas at this instant: whether a drag is under way, which object's text they have open in the editor, whether the view is still coasting from a pan, which drawing tool is armed, and whether a dialog is open.",
+			"Two of those change what you should do. The object being edited is one the user is typing in right now, so leave its text alone — never set_text over what they are writing. A drag in progress means a pointer is down, which is why an edit of yours may have been refused or wiped out a moment later; wait for it to end instead of calling again.",
+			"It is a snapshot of the moment rather than a live value, so read it again rather than trusting an old answer.",
+		].join(" "),
+		{},
+		() => ({ kind: "getInteractionStatus" }),
+		{ isReadOnly: true, drives: ["handle.interaction.getStatus"] },
+	);
+
+	const toSvgTool = defineCanvasTool(
+		"to_svg",
+		[
+			"Read the canvas as an SVG string: the markup it is really drawn with, elements, paths and transforms included.",
+			"Reach for it only when the markup itself is the question — quoting the SVG to the user, or checking how something ended up rendered. To see what the drawing looks like use capture_canvas, which shows it as a picture and is what a layout is judged by; for the objects and their numbers use describe_canvas, list_objects and get_object.",
+			`The markup is cut off past ${MAX_SVG_CHARS.toLocaleString("en-US")} characters and the rest cannot be reached through this tool at all, so on anything but a small drawing expect the beginning only.`,
+		].join(" "),
+		{},
+		() => ({ kind: "toSvg" }),
+		{ isReadOnly: true, drives: ["handle.export.toSvgString"] },
+	);
+
+	const toWorldTool = defineCanvasTool(
+		"to_world",
+		[
+			"Convert a client coordinate — the space a browser pointer event reports, measured from the top-left corner of the window — into the world coordinate the canvas draws in.",
+			"You will normally have no use for this. Every coordinate the other tools give you and take from you is already a world coordinate, and nothing hands you a client one; it is here for the rare case where a position was read off the page itself, such as a screen position the user quotes at you.",
+			"Fails while the canvas has not finished mounting, since there is no coordinate system to convert through yet.",
+		].join(" "),
+		{
+			x: z
+				.number()
+				.describe("Client x in px, from the left edge of the window."),
+			y: z
+				.number()
+				.describe("Client y in px, from the top edge of the window."),
+		},
+		(args) => ({ kind: "toWorld", ...args }),
+		{ isReadOnly: true, drives: ["handle.viewport.toWorld"] },
+	);
+
+	const toClientTool = defineCanvasTool(
+		"to_client",
+		[
+			"The inverse of to_world: where a world coordinate currently sits on the user's screen, in the client space a browser pointer event reports.",
+			"As with to_world you will normally have no use for it — it answers where something is on screen, which matters to code putting its own overlay over the canvas rather than to drawing on the canvas. The answer also moves with every pan and zoom, so it is only true for the instant it was read.",
+			"Fails while the canvas has not finished mounting, since there is no coordinate system to convert through yet.",
+		].join(" "),
+		{
+			x: z.number().describe("World x in px."),
+			y: z.number().describe("World y in px."),
+		},
+		(args) => ({ kind: "toClient", ...args }),
+		{ isReadOnly: true, drives: ["handle.viewport.toClient"] },
+	);
+
 	const selectObjectsTool = defineCanvasTool(
 		"select_objects",
 		[
@@ -806,23 +1442,64 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["handle.viewport.centerOn"] },
 	);
 
+	const setViewTool = defineCanvasTool(
+		"set_view",
+		[
+			"Put the view exactly where you say: the world coordinate of its top-left corner and the zoom factor, which are the same three numbers get_view reports.",
+			"Its one everyday use is putting the user back: read the view with get_view before you take them somewhere, show what you wanted to show, then hand those numbers back here.",
+			"To bring a position into view without working the corner out yourself use center_view, and to frame a region use fit_view — both of them compute this camera for you.",
+			"Only what the user sees changes; nothing on the canvas moves.",
+		].join(" "),
+		{
+			minX: z
+				.number()
+				.describe(
+					"World x of the view's top-left corner, as get_view reports.",
+				),
+			minY: z
+				.number()
+				.describe(
+					"World y of the view's top-left corner, as get_view reports.",
+				),
+			zoom: z
+				.number()
+				.min(0.1)
+				.max(10)
+				.describe(
+					"Zoom factor: 1 is 100%, 2 doubles the size on screen. Required — there is no 'keep the current zoom' here, so read it with get_view first.",
+				),
+		},
+		(args) => ({ kind: "setView", ...args }),
+		{ drives: ["handle.viewport.setViewport"] },
+	);
+
 	const fitViewTool = defineCanvasTool(
 		"fit_view",
 		[
-			'Frame the whole drawing ("all") or just what is selected ("selection") in the view.',
+			'Frame the whole drawing ("all"), just what is selected ("selection"), or a world rect you name in the view.',
 			"Use it after drawing so the user sees everything you made, and after select_objects to zoom in on one part.",
-			"Fails when there is nothing to frame: an empty canvas, or an empty selection.",
+			"A rect is for a region you worked out yourself — the bounds measure_visual_bounds reported, the area around one node — and is fitted the same way the other two are.",
+			"Give exactly one of target and rect.",
+			"A rect is what the view is fitted around rather than what it ends up showing: the window's proportions decide how much extra comes into view on one axis, and get_view reads back what is really on screen.",
+			"Fails when there is nothing to frame: an empty canvas, an empty selection, or a rect with no extent on either axis.",
 		].join(" "),
 		{
 			target: z
 				.enum(["all", "selection"])
-				.describe("What to fit into the view."),
+				.optional()
+				.describe("What to fit into the view; omit when giving rect instead."),
+			rect: rectSchema
+				.optional()
+				.describe(
+					"World rect to frame; omit when giving target instead. A rect flat on one axis still fits along the other.",
+				),
 		},
 		(args) => ({ kind: "fitView", ...args }),
 		{
 			drives: [
 				"handle.viewport.fitToContent",
 				"handle.viewport.fitToSelection",
+				"handle.viewport.fitToRect",
 			],
 		},
 	);
@@ -839,32 +1516,61 @@ export const createCanvasToolDescriptors = (
 
 	return [
 		describeCanvasTool,
+		listObjectsTool,
+		findObjectsTool,
+		getObjectTool,
+		getObjectBoundsTool,
+		getCombinedBoundsTool,
+		getTextTool,
+		getZOrderTool,
+		getParentGroupTool,
+		getGroupMembersTool,
+		getConnectorsTool,
+		getConnectedObjectsTool,
+		listTypesTool,
 		captureCanvasTool,
 		measureTextTool,
 		findOverlapsTool,
 		measureConnectorPathTool,
 		measureVisualBoundsTool,
+		hitTestTool,
+		getSelectionTool,
+		getViewTool,
+		getInteractionStatusTool,
+		toSvgTool,
+		toWorldTool,
+		toClientTool,
 		addObjectTool,
 		addObjectsTool,
 		connectTool,
+		connectManyTool,
 		deleteObjectsTool,
 		setPositionTool,
+		setPositionsTool,
 		translateObjectsTool,
 		resizeObjectTool,
+		resizeObjectsTool,
 		setRotationTool,
 		setPointsTool,
+		setPointsManyTool,
 		reorderObjectsTool,
 		setStyleTool,
 		setTextTool,
+		setTextsTool,
+		setTextStyleTool,
+		setTextStylesTool,
 		updateConnectorTool,
+		updateConnectorsTool,
 		alignObjectsTool,
 		distributeObjectsTool,
 		groupObjectsTool,
 		dissolveGroupTool,
+		dissolveGroupsTool,
 		addToGroupTool,
 		removeFromGroupTool,
 		selectObjectsTool,
 		centerViewTool,
+		setViewTool,
 		fitViewTool,
 		undoTool,
 	];

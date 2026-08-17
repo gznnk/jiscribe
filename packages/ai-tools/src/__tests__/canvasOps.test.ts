@@ -25,6 +25,16 @@ describe("isAiDocOp", () => {
 		expect(isAiDocOp({ kind: "measureVisualBounds", ids: ["rect-1"] })).toBe(
 			false,
 		);
+		expect(isAiDocOp({ kind: "hitTest", point: { x: 0, y: 0 } })).toBe(false);
+		expect(isAiDocOp({ kind: "getSelection" })).toBe(false);
+		expect(isAiDocOp({ kind: "getView" })).toBe(false);
+		expect(isAiDocOp({ kind: "getInteractionStatus" })).toBe(false);
+		expect(isAiDocOp({ kind: "toSvg" })).toBe(false);
+		expect(isAiDocOp({ kind: "toWorld", x: 0, y: 0 })).toBe(false);
+		expect(isAiDocOp({ kind: "toClient", x: 0, y: 0 })).toBe(false);
+		expect(isAiDocOp({ kind: "setView", minX: 0, minY: 0, zoom: 1 })).toBe(
+			false,
+		);
 	});
 
 	it("routes every tool's operation one way or the other", () => {
@@ -40,8 +50,16 @@ describe("isAiDocOp", () => {
 			"find_overlaps",
 			"measure_connector_path",
 			"measure_visual_bounds",
+			"hit_test",
+			"get_selection",
+			"get_view",
+			"get_interaction_status",
+			"to_svg",
+			"to_world",
+			"to_client",
 			"select_objects",
 			"center_view",
+			"set_view",
 			"fit_view",
 		]);
 	});
