@@ -1,14 +1,24 @@
-import { roundToDecimal, type Point } from "@jiscribe/geometry";
-import { type Dispatch, useLayoutEffect, useMemo, useRef } from "react";
+import {
+	convertRectToBoundingBox,
+	roundToDecimal,
+	type Point,
+	type Rect,
+} from "@jiscribe/geometry";
+import { type Dispatch, type RefObject, useMemo } from "react";
 
+import { useCanvasStateMirror } from "./useCanvasStateMirror";
 import { PRECISION } from "../../constants/precision";
 import { ZOOM } from "../../constants/zoom";
 import type { Camera, Viewport } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { getSvgPoint } from "../gestures/recognizer/utils/getSvgPoint";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { calcFitViewport } from "../utils/calcFitViewport";
 import { calcSelectionFitViewport } from "../utils/calcSelectionFitViewport";
+import { calcViewportForBounds } from "../utils/calcViewportForBounds";
+import { calcVisibleWorldRect } from "../utils/calcVisibleWorldRect";
+import { getClientPoint } from "../utils/getClientPoint";
 
 /** Per-call options shared by the fit methods of {@link CanvasViewportHandle} */
 export type CanvasFitOptions = {
@@ -66,6 +76,54 @@ export type CanvasViewportHandle = {
 	 *   the selection has no extent — the view is then left alone
 	 */
 	fitToSelection(options?: CanvasFitOptions): Camera | null;
+	/**
+	 * Fit an arbitrary world rect into the view — the same fit the other two make,
+	 * aimed at a region the caller worked out for itself (the bounds of a search
+	 * result, the region an image was captured of).
+	 *
+	 * The rect is what the view is fitted *around*, not what it ends up showing:
+	 * the container's aspect ratio decides how much extra comes into view on one
+	 * axis. Read {@link getVisibleWorldRect} back for what is actually on screen.
+	 *
+	 * @param rect - The region to bring into view, in world coordinates. A
+	 *   negative extent is normalized; a rect flat on one axis (a horizontal
+	 *   line) still fits along the other
+	 * @param options - Margin around the rect; defaults to 48 screen px
+	 * @returns The camera that was applied, or null for a rect with no extent on
+	 *   either axis (a point) — the view is then left alone
+	 */
+	fitToRect(rect: Rect, options?: CanvasFitOptions): Camera | null;
+	/**
+	 * The part of the world the view currently shows, which is where a shape has
+	 * to be put to land in front of the user (and what a `"viewport"` export
+	 * crops to). The read side of {@link fitToRect}, which cannot answer it — a
+	 * fitted rect is not the visible one.
+	 *
+	 * @returns The visible rect in world coordinates. Before the container has
+	 *   been measured it is zero-sized rather than null, the same zero the
+	 *   viewport itself starts at
+	 */
+	getVisibleWorldRect(): Rect;
+	/**
+	 * Converts a client point — the space `PointerEvent.clientX/Y` and
+	 * `getBoundingClientRect` are in — to world coordinates, so a position taken
+	 * from the page (a drop, a host overlay's corner) can be used as a canvas
+	 * coordinate.
+	 *
+	 * @param clientPoint - The point in client coordinates
+	 * @returns The world point, or null before the canvas has mounted its `<svg>`
+	 */
+	toWorld(clientPoint: Point): Point | null;
+	/**
+	 * The inverse of {@link toWorld}: where a world point currently sits on
+	 * screen, for a host placing its own DOM over the canvas. The answer moves
+	 * with every pan and zoom, so read it again rather than caching it.
+	 *
+	 * @param worldPoint - The point in world coordinates
+	 * @returns The point in client coordinates, or null before the canvas has
+	 *   mounted its `<svg>`
+	 */
+	toScreen(worldPoint: Point): Point | null;
 };
 
 const toCamera = ({ minX, minY, zoom }: Viewport): Camera => ({
@@ -83,19 +141,16 @@ const toCamera = ({ minX, minY, zoom }: Viewport): Camera => ({
  *   render time) so the handle stays referentially stable
  * @param registries - The canvas's registry bundle; its visual bounds decide how
  *   much of what a shape draws outside its geometry box the fits keep in view
+ * @param svgRef - Ref to the canvas's `<svg>`, whose screen CTM converts between
+ *   world and client coordinates; null until the view mounts
  */
 export const useViewportHandle = (
 	dispatch: Dispatch<CanvasAction>,
 	canvasState: CanvasControllerState,
 	registries: CanvasRegistries,
+	svgRef: RefObject<SVGSVGElement | null>,
 ): CanvasViewportHandle => {
-	// Always-fresh mirror of the state, read when a method is called. Must be a
-	// layout effect: a host can call the handle synchronously right after a
-	// commit, before passive effects run (same pattern as useCanvasExport).
-	const canvasStateRef = useRef(canvasState);
-	useLayoutEffect(() => {
-		canvasStateRef.current = canvasState;
-	});
+	const canvasStateRef = useCanvasStateMirror(canvasState);
 
 	return useMemo(() => {
 		const applyCamera = (camera: Camera): Camera => {
@@ -169,6 +224,30 @@ export const useViewportHandle = (
 					),
 				);
 			},
+
+			fitToRect: (rect, options) => {
+				const { viewport } = canvasStateRef.current;
+				return applyFitted(
+					calcViewportForBounds(convertRectToBoundingBox(rect), {
+						width: viewport.width,
+						height: viewport.height,
+						padding: options?.padding,
+					}),
+				);
+			},
+
+			getVisibleWorldRect: () =>
+				calcVisibleWorldRect(canvasStateRef.current.viewport),
+
+			toWorld: (clientPoint) =>
+				svgRef.current
+					? getSvgPoint(svgRef.current, clientPoint.x, clientPoint.y)
+					: null,
+
+			toScreen: (worldPoint) =>
+				svgRef.current
+					? getClientPoint(svgRef.current, worldPoint.x, worldPoint.y)
+					: null,
 		};
-	}, [dispatch, registries]);
+	}, [canvasStateRef, dispatch, registries, svgRef]);
 };

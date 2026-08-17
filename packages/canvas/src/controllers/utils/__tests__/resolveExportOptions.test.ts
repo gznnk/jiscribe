@@ -4,7 +4,10 @@ import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { EXPORT_FIT_PADDING, resolveExportOptions } from "../useCanvasExport";
+import {
+	EXPORT_FIT_PADDING,
+	resolveExportOptions,
+} from "../resolveExportOptions";
 
 /**
  * Verifies the conversion rules of resolveExportOptions (the pure function that
@@ -28,19 +31,27 @@ const createRectDoc = (id: string, x = 0, y = 0): RectDoc =>
 		flipY: false,
 	}) as unknown as RectDoc;
 
-const createStateWithRect = () => {
+/** 800×600 of world at zoom 2, so a "viewport" region reads back as 400×300 of world. */
+const testViewport = { minX: 20, minY: 10, width: 800, height: 600, zoom: 2 };
+
+const createStateWithRects = (...rects: RectDoc[]) => {
 	const doc: CanvasDoc = {
 		version: 1,
-		root: [createRectDoc("rect-1")],
+		root: rects,
 	} as unknown as CanvasDoc;
-	return canvasToState(
-		doc,
-		registries.objectMapper,
-		registries.objectContentResizer,
-	);
+	return {
+		...canvasToState(
+			doc,
+			registries.objectMapper,
+			registries.objectContentResizer,
+		),
+		viewport: testViewport,
+	};
 };
 
-const emptyState = { objects: {}, rootIds: [] };
+const createStateWithRect = () => createStateWithRects(createRectDoc("rect-1"));
+
+const emptyState = { objects: {}, rootIds: [], viewport: testViewport };
 
 describe("resolveExportOptions", () => {
 	it("applies EXPORT_FIT_PADDING as the default margin around the content bounds", () => {
@@ -120,6 +131,58 @@ describe("resolveExportOptions", () => {
 			},
 		);
 		expect(options.source).toBeUndefined();
+	});
+
+	it('takes the "viewport" region exactly, without the margin', () => {
+		const state = createStateWithRect();
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries.objectVisualBounds,
+			{ region: "viewport", margin: 50 },
+		);
+		expect(options.viewBox).toEqual({ x: 20, y: 10, width: 400, height: 300 });
+	});
+
+	it("fits an { ids } region to those objects alone, margin included", () => {
+		const state = createStateWithRects(
+			createRectDoc("rect-1"),
+			createRectDoc("rect-2", 500, 500),
+		);
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries.objectVisualBounds,
+			{ region: { ids: ["rect-2"] }, margin: 5 },
+		);
+		expect(options.viewBox).toEqual({
+			x: 495,
+			y: 495,
+			width: 20,
+			height: 20,
+		});
+	});
+
+	it("omits the viewBox when an { ids } region matches nothing to measure", () => {
+		const state = createStateWithRect();
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries.objectVisualBounds,
+			{ region: { ids: ["missing"] } },
+		);
+		expect(options.viewBox).toBeUndefined();
+	});
+
+	it("takes a rect region exactly, without the margin", () => {
+		const state = createStateWithRect();
+		const options = resolveExportOptions(
+			state,
+			registries.objectMapper,
+			registries.objectVisualBounds,
+			{ region: { x: 1, y: 2, width: 30, height: 40 }, margin: 50 },
+		);
+		expect(options.viewBox).toEqual({ x: 1, y: 2, width: 30, height: 40 });
 	});
 
 	it('maps transparentBackground to "transparent", default to undefined (live theme background)', () => {

@@ -305,8 +305,8 @@ function App() {
 						break;
 					}
 					handle
-						.toPngBlob()
-						.then((blob) => (blob ? blobToBase64(blob) : null))
+						.capturePng()
+						.then((capture) => (capture ? blobToBase64(capture.blob) : null))
 						.then(respond, (err: unknown) => {
 							console.error("[Jiscribe] PNG export failed:", err);
 							respond(null);

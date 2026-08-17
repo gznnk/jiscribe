@@ -123,6 +123,14 @@ canvasRef.current?.selection.select(ids);
 await canvasRef.current?.export.toSvgString();
 ```
 
+ハンドルには「canvas が doc をどう描いたか」を読み返す口もある。`CanvasDoc` が
+持たない側の情報で、`measure`（テキストが何行に折り返して収まっているか、図形が
+枠の外へ何を描いているか、コネクターがどう通ったか、どの図形が重なっているか、
+ある点に何が描かれているか）、`history`（undo スタック。`mark` / `revertTo` で
+一連の編集をまとめて巻き戻せる）、`interaction`（ユーザーが操作中か＝外から書き
+込むと壊れる状態か）の 3 つ。doc 自体の編集に canvas は要らないので、そちらは
+headless な `docOps` の担当。
+
 state をホストへ持ち上げる（controlled props 化）案は検討したうえで**採らない**。
 
 1. **性能モデルと衝突する。**`CanvasState` はドラッグ中に RAF バッチで毎フレーム

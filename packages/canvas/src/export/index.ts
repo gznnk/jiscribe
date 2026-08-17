@@ -1,6 +1,7 @@
-export { exportCanvasToPng, rasterizeSvgToPngBlob } from "./exportCanvasToPng";
+export { exportCanvasToPng, rasterizeSvgToPng } from "./exportCanvasToPng";
 export type {
 	ExportCanvasToPngOptions,
+	RasterizedPng,
 	RasterizeSvgOptions,
 } from "./exportCanvasToPng";
 export { exportCanvasToSvg, canvasToSvgString } from "./exportCanvasToSvg";

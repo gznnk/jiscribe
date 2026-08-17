@@ -129,6 +129,14 @@ canvasRef.current?.selection.select(ids);
 await canvasRef.current?.export.toSvgString();
 ```
 
+The handle also reads back what the canvas made of the document — the part no
+`CanvasDoc` holds: `measure` (how a text wrapped and whether it still fits, what
+a shape draws outside its box, the route a connector took, which shapes overlap,
+what is drawn at a point), `history` (the undo stack, with `mark` / `revertTo` to
+roll a whole batch of edits back), and `interaction` (whether the user is
+mid-gesture, which is when an external write would be destructive). Editing the
+document itself needs no canvas and belongs to the headless `docOps`.
+
 Lifting state into the host (controlled props) was considered and rejected:
 
 1. **It fights the performance model.** `CanvasState` updates every frame during a

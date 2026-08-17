@@ -4,17 +4,17 @@ import {
 	canvasToSvgString,
 	exportCanvasToPng,
 	exportCanvasToSvg,
-	rasterizeSvgToPngBlob,
+	rasterizeSvgToPng,
 } from "../../../export";
 import type { BuildExportSvgOptions } from "../../../export";
 import type { ExportSubmitValues } from "../../ui/modal/ExportDialog";
-import { runExportSubmit } from "../useCanvasExport";
+import { runExportSubmit } from "../useExportDialog";
 
 vi.mock("../../../export", () => ({
 	canvasToSvgString: vi.fn(),
 	exportCanvasToPng: vi.fn(),
 	exportCanvasToSvg: vi.fn(),
-	rasterizeSvgToPngBlob: vi.fn(),
+	rasterizeSvgToPng: vi.fn(),
 }));
 
 /**
@@ -73,7 +73,11 @@ describe("runExportSubmit", () => {
 
 		it("delivers the PNG payload to the host", async () => {
 			const pngBlob = new Blob(["png"]);
-			vi.mocked(rasterizeSvgToPngBlob).mockResolvedValue(pngBlob);
+			vi.mocked(rasterizeSvgToPng).mockResolvedValue({
+				blob: pngBlob,
+				width: 100,
+				height: 50,
+			});
 
 			runExportSubmit(
 				svg,
@@ -111,7 +115,7 @@ describe("runExportSubmit", () => {
 		});
 
 		it("notifies exportImageError when PNG rasterization rejects", async () => {
-			vi.mocked(rasterizeSvgToPngBlob).mockRejectedValue(
+			vi.mocked(rasterizeSvgToPng).mockRejectedValue(
 				new Error("rasterize failed"),
 			);
 

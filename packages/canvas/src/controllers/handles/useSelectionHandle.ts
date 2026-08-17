@@ -1,6 +1,7 @@
-import { type Dispatch, useLayoutEffect, useMemo, useRef } from "react";
+import { type Dispatch, useMemo } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
+import { useCanvasStateMirror } from "./useCanvasStateMirror";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import {
 	resolveRequestedSelection,
@@ -42,11 +43,7 @@ export const useSelectionHandle = (
 	dispatch: Dispatch<CanvasAction>,
 	canvasState: CanvasControllerState,
 ): CanvasSelectionHandle => {
-	// Always-fresh mirror of the state (same reasoning as useViewportHandle).
-	const canvasStateRef = useRef(canvasState);
-	useLayoutEffect(() => {
-		canvasStateRef.current = canvasState;
-	});
+	const canvasStateRef = useCanvasStateMirror(canvasState);
 
 	return useMemo(
 		() => ({
@@ -62,6 +59,6 @@ export const useSelectionHandle = (
 				return resolveRequestedSelection(ids, canvasStateRef.current.objects);
 			},
 		}),
-		[dispatch],
+		[canvasStateRef, dispatch],
 	);
 };

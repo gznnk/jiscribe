@@ -19,11 +19,8 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
-import { useCanvasExport, EXPORT_FIT_PADDING } from "./hooks/useCanvasExport";
-import type {
-	CanvasExportHandle,
-	CanvasExportImagePayload,
-} from "./hooks/useCanvasExport";
+import type { CanvasHandle } from "./handles/CanvasHandle";
+import { useCanvasHandle } from "./handles/useCanvasHandle";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
@@ -34,19 +31,17 @@ import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
 import { useErrorNotification } from "./hooks/useErrorNotification";
+import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
+import { useExportDialog } from "./hooks/useExportDialog";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
-import type { CanvasSelectionHandle } from "./hooks/useSelectionHandle";
-import { useSelectionHandle } from "./hooks/useSelectionHandle";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
-import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
-import { useViewportHandle } from "./hooks/useViewportHandle";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
@@ -82,6 +77,7 @@ import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 
@@ -286,25 +282,12 @@ type CanvasProps = {
 	 * Receives the imperative Canvas handle ({@link CanvasHandle}), grouping every
 	 * imperative API by subsystem: `ref.current.viewport` to move pan/zoom
 	 * (fit-to-content, jump-to-node, a scripted intro), `ref.current.selection` to
-	 * select objects programmatically, and `ref.current.export.toSvgString()` /
-	 * `toPngBlob()` to get the exported image. Imperative by design so the view
-	 * cannot feed back into a render loop the way a controlled value prop would.
+	 * select objects programmatically, `ref.current.export` to get the exported
+	 * image, and `ref.current.measure` / `history` / `interaction` to read back how
+	 * the canvas drew what it was given. Imperative by design so the view cannot
+	 * feed back into a render loop the way a controlled value prop would.
 	 */
 	ref?: React.Ref<CanvasHandle>;
-};
-
-/**
- * Imperative Canvas API delivered through the component `ref`. Each subsystem
- * owns a namespace; new imperative capabilities are added as new namespaces
- * rather than new props.
- */
-export type CanvasHandle = {
-	/** Pan/zoom control (see {@link CanvasViewportHandle}). */
-	viewport: CanvasViewportHandle;
-	/** Selection control (see {@link CanvasSelectionHandle}). */
-	selection: CanvasSelectionHandle;
-	/** Image export (see {@link CanvasExportHandle}). */
-	export: CanvasExportHandle;
 };
 
 const CanvasComponent = ({
@@ -396,11 +379,6 @@ const CanvasComponent = ({
 		onSelectionChange,
 	);
 
-	// The canvas stays authoritative for the live camera and selection: the host reads them
-	// out and pushes changes back imperatively, with no controlled prop that could fight a
-	// gesture.
-	const viewportHandle = useViewportHandle(dispatch, state, registries);
-	const selectionHandle = useSelectionHandle(dispatch, state);
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
@@ -536,7 +514,16 @@ const CanvasComponent = ({
 		registries.objectVisualBounds,
 	);
 
-	const { exportHandle, handleExportSubmit } = useCanvasExport({
+	// Built here rather than beside the other state-derived hooks because the
+	// export namespace needs the culling suspension declared just above.
+	const canvasHandle = useCanvasHandle({
+		dispatch,
+		canvasState: state,
+		registries,
+		svgRef,
+		withCullingSuspended,
+	});
+	const handleExportSubmit = useExportDialog({
 		svgRef,
 		canvasState: state,
 		registries,
@@ -546,15 +533,7 @@ const CanvasComponent = ({
 		withCullingSuspended,
 	});
 
-	useImperativeHandle(
-		ref,
-		() => ({
-			viewport: viewportHandle,
-			selection: selectionHandle,
-			export: exportHandle,
-		}),
-		[viewportHandle, selectionHandle, exportHandle],
-	);
+	useImperativeHandle(ref, () => canvasHandle, [canvasHandle]);
 
 	// The camera the scene is drawn with. It is the committed one moved onto the
 	// device pixel grid, so text stops creeping inside its shape as the viewport

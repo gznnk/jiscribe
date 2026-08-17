@@ -1,23 +1,44 @@
 export { Canvas } from "./controllers/Canvas";
-export type { CanvasHandle } from "./controllers/Canvas";
 export type { CanvasGestureHandling } from "./controllers/CanvasGestureHandling";
+// The imperative handle and its namespaces (controllers/handles): the whole
+// surface a host drives a mounted canvas through.
+export type { CanvasHandle } from "./controllers/handles/CanvasHandle";
 export type {
 	CanvasExportHandle,
-	CanvasExportImagePayload,
-	CanvasExportOptions,
-	CanvasPngExportOptions,
-} from "./controllers/hooks/useCanvasExport";
+	CanvasPngCapture,
+} from "./controllers/handles/useExportHandle";
 export type {
 	CanvasFitOptions,
 	CanvasViewportHandle,
-} from "./controllers/hooks/useViewportHandle";
-export type { CanvasSelectionHandle } from "./controllers/hooks/useSelectionHandle";
+} from "./controllers/handles/useViewportHandle";
+export type { CanvasSelectionHandle } from "./controllers/handles/useSelectionHandle";
+export type {
+	CanvasHitTestOptions,
+	CanvasMeasureHandle,
+} from "./controllers/handles/useMeasureHandle";
+export type {
+	CanvasHistoryHandle,
+	CanvasHistoryMark,
+} from "./controllers/handles/useHistoryHandle";
+export type {
+	CanvasInteractionHandle,
+	CanvasInteractionStatus,
+} from "./controllers/handles/useInteractionHandle";
+export type {
+	CanvasExportOptions,
+	CanvasExportRegion,
+	CanvasPngExportOptions,
+} from "./controllers/utils/resolveExportOptions";
+export type { CanvasExportImagePayload } from "./controllers/hooks/useExportDialog";
+export type { TextSlotMeasurement } from "./controllers/utils/measureTextSlot";
+export type { ObjectOverlap } from "./controllers/utils/findObjectOverlaps";
+export type { CanvasModalKind, DragKind } from "./controllers/CanvasTypes";
 export type { ResolvedSelection } from "./controllers/utils/resolveRequestedSelection";
 export { CanvasThumbnail } from "./controllers/CanvasThumbnail";
 export {
 	exportCanvasToPng,
 	exportCanvasToSvg,
-	rasterizeSvgToPngBlob,
+	rasterizeSvgToPng,
 	canvasToSvgString,
 	buildExportSvg,
 	serializeSvg,
@@ -30,6 +51,7 @@ export {
 export type {
 	ExportCanvasToPngOptions,
 	ExportCanvasToSvgOptions,
+	RasterizedPng,
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
 } from "./export";
