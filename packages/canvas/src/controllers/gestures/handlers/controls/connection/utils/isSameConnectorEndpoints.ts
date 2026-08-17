@@ -1,5 +1,5 @@
 import { isSameEndpoint } from "../../../../../../schemas/objects/types/EndpointRef";
-import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 
 /**
  * Determines whether two connectors have equal endpoints (source / target) and

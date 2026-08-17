@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ConnectorFeatures } from "../../../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { ConnectorFeatures } from "../../../../../../../schemas/objects/connector/ConnectorDoc";
 import { RectFeatures } from "../../../../../../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectFeatures } from "../../../../../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../../../../../../schemas/objects/types/ObjectType";

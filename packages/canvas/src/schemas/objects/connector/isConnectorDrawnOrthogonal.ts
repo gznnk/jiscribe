@@ -1,7 +1,7 @@
 import { isSelfLoopConnector } from "./isSelfLoopConnector";
-import { isOrthogonalRouting } from "../../types/ConnectorRouting";
-import type { ConnectorRouting } from "../../types/ConnectorRouting";
-import type { EndpointRef } from "../../types/EndpointRef";
+import { isOrthogonalRouting } from "../types/ConnectorRouting";
+import type { ConnectorRouting } from "../types/ConnectorRouting";
+import type { EndpointRef } from "../types/EndpointRef";
 
 /**
  * Whether the connector's line is drawn at right angles — which is not the same question as what

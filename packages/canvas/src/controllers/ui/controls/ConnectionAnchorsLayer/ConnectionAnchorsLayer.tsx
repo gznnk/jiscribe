@@ -13,7 +13,7 @@ import type { ObjectOutlineRegistry } from "../../../../presentations/objects/re
 import { useObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistryContext";
 import { calcEdgeAnchorPoint } from "../../../../presentations/objects/utils/calcConnectPoint";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { isConnectableObject } from "../../../utils/isConnectableObject";

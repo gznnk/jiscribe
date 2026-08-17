@@ -1,17 +1,17 @@
 import { isCssSafeValue, isNumber, isString } from "@jiscribe/basic-validators";
 
-import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
-import type { SemanticDiagnostic } from "../../../types/SemanticDiagnostic";
-import { isConnectorRouting } from "../../types/ConnectorRouting";
-import { isOwnedEndpointRef } from "../../types/EndpointRef";
-import { isStrokeDashType } from "../../types/StrokeDashType";
+import type { ObjectDocValidateFn } from "../../registry/ObjectDocValidatorRegistry";
+import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
+import { isConnectorRouting } from "../types/ConnectorRouting";
+import { isOwnedEndpointRef } from "../types/EndpointRef";
+import { isStrokeDashType } from "../types/StrokeDashType";
 import {
 	validateArrowFields,
 	validateEndpointRef,
 	validateOptionalNumber,
 	validateStrokeStyleFields,
 	validateWaypointFields,
-} from "../../utils/validateDocUtils";
+} from "../utils/validateDocUtils";
 
 /**
  * Validates a connector's `label` (a nested annotation).

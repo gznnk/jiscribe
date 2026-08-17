@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import { outlinedPlugin } from "../../__tests__/support/outlinedPlugin";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";
 import {

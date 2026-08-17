@@ -4,7 +4,7 @@ import {
 	resolveEndpointOwner,
 } from "../../presentations/layers/content/utils/endpoints";
 import type { FreeEndpointRef } from "../../schemas/objects/types/EndpointRef";
-import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 

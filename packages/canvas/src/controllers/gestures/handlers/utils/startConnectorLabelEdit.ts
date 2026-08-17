@@ -5,7 +5,7 @@ import {
 	calcConnectorLabelPlacement,
 	type ConnectorLabelPlacement,
 } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";

@@ -2,16 +2,16 @@ import { memo, useMemo } from "react";
 
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
 import { calcConnectorLabelAnchor } from "./utils/label/calcConnectorLabelAnchor";
-import { isConnectorDrawnOrthogonal } from "../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
+import { isConnectorDrawnOrthogonal } from "../../../schemas/objects/connector/isConnectorDrawnOrthogonal";
 import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import {
 	Connector,
 	ConnectorSegmentMoveHitAreas,
 	ConnectorSegmentSlideHitAreas,
-} from "../../objects/connections/Connector";
-import { ConnectorLabel } from "../../objects/connections/ConnectorLabel";
+} from "../../objects/connector/Connector";
+import { ConnectorLabel } from "../../objects/connector/ConnectorLabel";
 
 /** Renders a connector along with its optional static label. */
 type ConnectorRendererProps = {

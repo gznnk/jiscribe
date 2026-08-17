@@ -1,11 +1,11 @@
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import { calcConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { ConnectorLabel } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorLabel } from "../../../../schemas/objects/connector/ConnectorDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isConnectorState,
 	type ConnectorState,
-} from "../../../../states/objects/connections/connector/ConnectorState";
+} from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import {

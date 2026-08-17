@@ -5,7 +5,7 @@ import { outlinedPlugin } from "../../../../../../controllers/__tests__/support/
 import { createCanvasRegistries } from "../../../../../../controllers/registries/createCanvasRegistries";
 import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 import { ObjectOutlineRegistry } from "../../../../../objects/registry/ObjectOutlineRegistry";
 import { resolveConnectorPoints } from "../resolveConnectorPoints";
 

@@ -1,4 +1,4 @@
-import type { EndpointRef } from "../../types/EndpointRef";
+import type { EndpointRef } from "../types/EndpointRef";
 
 /**
  * Determines whether a connector is a self-loop (both endpoints connect to the same object).

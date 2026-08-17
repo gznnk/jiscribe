@@ -14,7 +14,7 @@
 構成:
 
 - `layers/` … 描画の重なり順（`background` / `content`）
-- `objects/` … 形状別コンポーネント（`primitives/` / `connections/` / `annotations/`、`base/TextOverlay`、`arrows/`）
+- `objects/` … 形状別コンポーネント（`primitives/` / `connector/` / `annotations/`、`base/TextOverlay`、`arrows/`）
 - `defs/` … SVG `defs`（フィルター等）
 
 「純粋描画に徹する」ことで、表示は state の関数として決まり、テストや再利用がしやすくなる。

@@ -7,7 +7,7 @@ import {
 import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions";
 import { isPoly } from "../../../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import { isConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import { isConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { MultiSelectResizeBoundsCache } from "../../../../../CanvasTypes";

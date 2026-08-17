@@ -1,7 +1,7 @@
 import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
-import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../presentations/objects/connections/ConnectorLabel";
+import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../presentations/objects/connector/ConnectorLabel";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";

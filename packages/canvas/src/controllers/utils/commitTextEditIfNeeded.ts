@@ -1,6 +1,6 @@
 import { applyLabelPlacement } from "./applyLabelPlacement";
 import type { ConnectorLabelPlacement } from "../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorLabel } from "../../schemas/objects/connector/ConnectorDoc";
 import type { RichText } from "../../schemas/objects/types/RichText";
 import { isSameRichText } from "../../schemas/objects/types/RichText";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -8,7 +8,7 @@ import {
 	isTextStyleState,
 	type TextStyleState,
 } from "../../states/objects/base/TextStyleState";
-import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import {
 	readRichTextSlot,
 	writeRichTextSlot,

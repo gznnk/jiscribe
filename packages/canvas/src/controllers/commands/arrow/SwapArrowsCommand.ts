@@ -1,4 +1,4 @@
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
 import type { ExecutableCommand } from "../CommandTypes";
 

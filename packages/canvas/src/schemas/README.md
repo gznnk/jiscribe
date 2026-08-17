@@ -10,7 +10,7 @@ It leverages TypeScript's type system to automatically compose object types base
 | Directory        | Description                                                                                                                                             |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `canvas/`        | Defines the root structure of the entire canvas (`CanvasDoc`).                                                                                          |
-| `objects/`       | Individual object definitions, classified into `base` (common), `primitives` (basic shapes), `connections` (lines/arrows), `annotations`, etc.          |
+| `objects/`       | Individual object definitions, classified into `base` (common), `primitives` (basic shapes), `connector` (lines/arrows), `annotations`, etc.            |
 | `objects/types/` | Defines the enums and shared types used by objects (`ObjectType`, `GeometryType`, etc.) and the type-composition utility (`CreateObjectType`).          |
 | `objects/utils/` | Runtime helpers that assist in generating and validating Docs (`createObjectDoc`, `autoColor`, `validateDocUtils`, etc.).                               |
 | `plugin/`        | The doc-side plugin surface: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, and `resolveDocDefinitions`.         |

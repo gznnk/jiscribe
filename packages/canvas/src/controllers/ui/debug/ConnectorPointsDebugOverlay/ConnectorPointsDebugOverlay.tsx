@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { isConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { isConnectorState } from "../../../../states/objects/connector/ConnectorState";
 
 type ConnectorPointsDebugOverlayProps = {
 	objects: Record<string, ObjectState>;

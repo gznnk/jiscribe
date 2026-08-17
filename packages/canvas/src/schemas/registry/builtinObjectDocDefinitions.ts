@@ -1,5 +1,5 @@
-import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
-import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
+import { ConnectorFeatures } from "../objects/connector/ConnectorDoc";
+import { validateConnectorDoc } from "../objects/connector/validateConnectorDoc";
 import {
 	ELLIPSE_DOC_DEFAULTS,
 	EllipseFeatures,

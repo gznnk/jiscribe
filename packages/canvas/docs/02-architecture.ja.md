@@ -20,14 +20,14 @@ packages/canvas/src/
 ├── doc.ts                  # ヘッドレスエントリ（UI 依存なし。VSCode 拡張の Node 側・MCP 向け）
 ├── schemas/                # 永続化データ型定義（Doc モデル）+ 型別の検証
 │   ├── canvas/             # CanvasDoc
-│   ├── objects/            # base / primitives / connections / annotations / types + 型別 validateXxxDoc
+│   ├── objects/            # base / primitives / connector / annotations / types + 型別 validateXxxDoc
 │   ├── plugin/             # ObjectDocDefinition / CanvasDocPlugin / resolveDocDefinitions
 │   ├── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry
 │   └── types/              # doc 層共通の語彙（SemanticDiagnostic）
 ├── parser/                 # text → CanvasDoc: createCanvasParser / validateStructure / validateSemantics
 ├── states/                 # ランタイム状態型（State モデル）+ Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
-│   ├── objects/            # base / primitives / connections / annotations（State + Mapper）
+│   ├── objects/            # base / primitives / connector / annotations（State + Mapper）
 │   └── registry/           # ObjectMapperRegistry / ObjectStateValidatorRegistry
 ├── controllers/            # 状態管理 + ビジネスロジック
 │   ├── Canvas.tsx
@@ -61,7 +61,7 @@ packages/canvas/src/
 ### ロジック層（controllers）
 
 - **gestures/handlers/**: ジェスチャーを受けて `CanvasState` を更新する。`objects/` と `controls/` の配下に対象ごとの EventHandler を置く。
-- **behaviors/**: `ObjectBehaviorRegistry` に登録される `ObjectBehavior` 実装（`moveByDelta` / `transformByGroup` / `rotateByGroup`）。形状ごとの Controller は `primitives/` と `connections/`、共通変形ロジックは `base/`（FrameTransform / PolyTransform / GroupTransform）。`gestures` / `commands` / `reducer` / `utils` からレジストリ経由で使われる。
+- **behaviors/**: `ObjectBehaviorRegistry` に登録される `ObjectBehavior` 実装（`moveByDelta` / `transformByGroup` / `rotateByGroup`）。形状ごとの Controller は `primitives/` と `connector/`、共通変形ロジックは `base/`（FrameTransform / PolyTransform / GroupTransform）。`gestures` / `commands` / `reducer` / `utils` からレジストリ経由で使われる。
 - **commands/**: ショートカット・メニュー・ツールバー共通の操作 → [コマンドシステム](./05-command-system.ja.md)。
 - **reducer/**: アクションを各ハンドラへ振り分ける → [状態更新フロー](./06-state-update-flow.ja.md)。
 - **ui/**: 変形コントロールやメニューなど UI 制御ロジック。

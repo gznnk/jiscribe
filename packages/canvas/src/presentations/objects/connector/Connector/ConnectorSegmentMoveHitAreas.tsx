@@ -2,7 +2,7 @@ import { calcEuclideanDistance, type Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../constants/connectorHitArea";
-import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connections/connector/isConnectorSegmentFreelyMovable";
+import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connector/isConnectorSegmentFreelyMovable";
 
 // Bands of two segments overlap around the vertex they share, so a segment shorter than the band
 // width sits entirely inside that overlap and cannot be aimed at. Below this length a segment gets

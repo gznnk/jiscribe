@@ -1,7 +1,7 @@
 import { calcPolyBoundingBox, type Point, type Rect } from "@jiscribe/geometry";
 
 import { type ObjectRecord } from "./objectAccess";
-import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import { ConnectorFeatures } from "../../schemas/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../schemas/objects/types/GeometryType";
 import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";

@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
 	ConnectorExtraStyleProperties,
 	ConnectorFeatures,
-} from "../../../schemas/objects/connections/connector/ConnectorDoc";
+} from "../../../schemas/objects/connector/ConnectorDoc";
 import { GroupFeatures } from "../../../schemas/objects/primitives/group/GroupDoc";
 import { PolylineFeatures } from "../../../schemas/objects/primitives/polyline/PolylineDoc";
 import { RectFeatures } from "../../../schemas/objects/primitives/rect/RectDoc";

@@ -8,7 +8,7 @@ import {
 	twoRectsWithConnectorDoc,
 } from "./support/fixtures";
 import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 
 const connectorOf = (

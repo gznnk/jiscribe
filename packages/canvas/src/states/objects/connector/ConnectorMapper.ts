@@ -1,7 +1,7 @@
 import type { ConnectorState } from "./ConnectorState";
-import { ConnectorFeatures } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
-import type { ConnectorDoc } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
-import { createPolyMapper } from "../../base/PolyMapper";
+import { ConnectorFeatures } from "../../../schemas/objects/connector/ConnectorDoc";
+import type { ConnectorDoc } from "../../../schemas/objects/connector/ConnectorDoc";
+import { createPolyMapper } from "../base/PolyMapper";
 
 /**
  * ConnectorDoc ↔ ConnectorState conversion (Poly-family common logic generated from features).

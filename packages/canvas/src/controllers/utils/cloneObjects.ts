@@ -5,7 +5,7 @@ import {
 	type EndpointRef,
 } from "../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
 import { moveObjectTree } from "../behaviors/primitives/GroupController";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";

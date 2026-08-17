@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import { deepFreezeState } from "../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";

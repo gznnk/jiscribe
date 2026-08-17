@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { ConnectorDoc } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorDoc } from "../../../../schemas/objects/connector/ConnectorDoc";
 import {
 	connectorToDoc,
 	connectorToState,
-} from "../../../../../states/objects/connections/connector/ConnectorMapper";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+} from "../../../../states/objects/connector/ConnectorMapper";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 
 describe("ConnectorMapper", () => {
 	describe("connectorToState", () => {

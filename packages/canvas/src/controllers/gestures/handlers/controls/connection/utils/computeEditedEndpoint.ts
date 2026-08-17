@@ -11,7 +11,7 @@ import {
 	type EndpointRef,
 } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 
 /**
  * Pure function that returns a new ConnectorState with the connector's edited

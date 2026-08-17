@@ -2,10 +2,10 @@ import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../../../schemas/canvas/CanvasDoc";
-import { ConnectorFeatures } from "../../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { ConnectorFeatures } from "../../../../../../schemas/objects/connector/ConnectorDoc";
 import { isOrthogonalRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";

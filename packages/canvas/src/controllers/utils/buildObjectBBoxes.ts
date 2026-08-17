@@ -2,7 +2,7 @@ import { calcKeyPointsBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, FrameKeyPoints } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { isConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
 /**

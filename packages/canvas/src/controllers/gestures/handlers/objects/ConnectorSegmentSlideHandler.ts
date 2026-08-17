@@ -5,7 +5,7 @@ import { PRECISION } from "../../../../constants/precision";
 import {
 	isConnectorState,
 	type ConnectorState,
-} from "../../../../states/objects/connections/connector/ConnectorState";
+} from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";

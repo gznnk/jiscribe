@@ -10,7 +10,7 @@ import {
 	calcConnectorLabelBox,
 	CONNECTOR_LABEL_DEFAULTS,
 	resolveLabelFill,
-} from "../../../../presentations/objects/connections/ConnectorLabel";
+} from "../../../../presentations/objects/connector/ConnectorLabel";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { useCaretReporter } from "../hooks/useCaretReporter";

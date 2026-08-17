@@ -1,6 +1,6 @@
-import { isSelfLoopConnector } from "../../../../../../../schemas/objects/connections/connector/isSelfLoopConnector";
+import { isSelfLoopConnector } from "../../../../../../../schemas/objects/connector/isSelfLoopConnector";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../../../states/objects/connector/ConnectorState";
 
 /**
  * Whether the selected connector is a self-loop. Self-loops are orthogonal-only,

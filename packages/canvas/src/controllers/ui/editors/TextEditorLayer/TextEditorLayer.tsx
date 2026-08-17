@@ -19,7 +19,7 @@ import {
 	isTextStyleState,
 	type TextStyleState,
 } from "../../../../states/objects/base/TextStyleState";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";

@@ -6,13 +6,13 @@ import {
 	resolveEndpointOwner,
 } from "../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
-import { resolveConnectorLabelBox } from "../../presentations/objects/connections/ConnectorLabel/utils/connectorLabelLayout";
+import { resolveConnectorLabelBox } from "../../presentations/objects/connector/ConnectorLabel/utils/connectorLabelLayout";
 import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
-import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorLabel } from "../../schemas/objects/connector/ConnectorDoc";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 
 /**
  * Collects every point along a connector: the dynamically resolved endpoints

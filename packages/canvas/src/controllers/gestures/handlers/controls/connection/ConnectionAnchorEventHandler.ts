@@ -8,7 +8,7 @@ import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
 import { resolveEndpointOwner } from "../../../../../presentations/layers/content/utils/endpoints/resolveEndpointOwner";
 import type { ExtraConnectPoint } from "../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { ConnectorFeatures } from "../../../../../schemas/objects/connector/ConnectorDoc";
 import { defaultRoutingForAnchors } from "../../../../../schemas/objects/types/ConnectorRouting";
 import {
 	isFreeEndpointRef,
@@ -16,7 +16,7 @@ import {
 } from "../../../../../schemas/objects/types/EndpointRef";
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";

@@ -11,7 +11,7 @@ import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import { isPoly } from "../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { isConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
 /**

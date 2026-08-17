@@ -2,7 +2,7 @@ import type { Point, TransformedFrame } from "@jiscribe/geometry";
 import { useMemo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import { useObjectAnchorRegionRegistry } from "../../../objects/registry/ObjectAnchorRegionRegistryContext";
 import { useObjectExtraConnectPointsRegistry } from "../../../objects/registry/ObjectExtraConnectPointsRegistryContext";
 import type { ObjectGeometryKeyRegistry } from "../../../objects/registry/ObjectGeometryKeyRegistry";

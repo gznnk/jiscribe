@@ -3,7 +3,7 @@ import type { Point } from "@jiscribe/geometry";
 import {
 	isConnectorState,
 	type ConnectorState,
-} from "../../../../states/objects/connections/connector/ConnectorState";
+} from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {

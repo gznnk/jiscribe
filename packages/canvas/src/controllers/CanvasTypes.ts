@@ -9,7 +9,7 @@ import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { Stencil } from "./ui/objects/Stencil";
 import type { ObjectState } from "../states/objects/base/ObjectState";
-import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../states/objects/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
 
 // ---------------------------------------------------------------------------

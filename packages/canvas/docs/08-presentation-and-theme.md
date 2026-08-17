@@ -14,7 +14,7 @@ on `controllers` (a prohibition from [Architecture](./02-architecture.md)).
 Structure:
 
 - `layers/` … render stacking order (`background` / `content`)
-- `objects/` … per-shape components (`primitives/` / `connections/` / `annotations/`, `base/TextOverlay`, `arrows/`)
+- `objects/` … per-shape components (`primitives/` / `connector/` / `annotations/`, `base/TextOverlay`, `arrows/`)
 - `defs/` … SVG `defs` (filters, etc.)
 
 By committing to pure rendering, the presentation is determined purely as a function of state, making it easy to test and reuse.

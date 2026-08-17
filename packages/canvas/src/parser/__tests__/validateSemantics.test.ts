@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import type { ConnectorDoc } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorDoc } from "../../schemas/objects/connector/ConnectorDoc";
 import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { RectDoc } from "../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";

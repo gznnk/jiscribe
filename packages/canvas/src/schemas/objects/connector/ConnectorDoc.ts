@@ -1,15 +1,15 @@
 import type { Point } from "@jiscribe/geometry";
 import type { Prettify } from "@jiscribe/utility-types";
 
-import type { FillStyleDoc } from "../../base/FillStyleDoc";
-import type { StrokeStyleDoc } from "../../base/StrokeStyleDoc";
-import type { TextStyleDoc } from "../../base/TextStyleDoc";
-import type { ArrowType } from "../../types/ArrowType";
-import type { ConnectorRouting } from "../../types/ConnectorRouting";
-import type { CreateObjectType } from "../../types/CreateObjectType";
-import type { EndpointRef } from "../../types/EndpointRef";
-import type { ExtraStylePropertyDescriptor } from "../../types/ExtraStyleProperty";
-import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import type { FillStyleDoc } from "../base/FillStyleDoc";
+import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
+import type { TextStyleDoc } from "../base/TextStyleDoc";
+import type { ArrowType } from "../types/ArrowType";
+import type { ConnectorRouting } from "../types/ConnectorRouting";
+import type { CreateObjectType } from "../types/CreateObjectType";
+import type { EndpointRef } from "../types/EndpointRef";
+import type { ExtraStylePropertyDescriptor } from "../types/ExtraStyleProperty";
+import type { ObjectFeatures } from "../types/ObjectFeatures";
 
 /** Feature descriptor for the connector object type (poly geometry, strokeable, arrow ends, not connectable). */
 export const ConnectorFeatures = {

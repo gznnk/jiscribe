@@ -2,7 +2,7 @@ import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { EndpointRef } from "../../../../../../../schemas/objects/types/EndpointRef";
-import type { ConnectorState } from "../../../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../../../states/objects/connector/ConnectorState";
 import { isSameConnectorEndpoints } from "../isSameConnectorEndpoints";
 
 const free = (x: number, y: number): EndpointRef => ({

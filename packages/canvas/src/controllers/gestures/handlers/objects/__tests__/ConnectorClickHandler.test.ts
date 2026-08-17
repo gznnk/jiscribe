@@ -2,8 +2,8 @@ import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../../constants/connectorHitArea";
-import type { ConnectorLabel } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorLabel } from "../../../../../schemas/objects/connector/ConnectorDoc";
+import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import { outlinedPlugin } from "../../../../__tests__/support/outlinedPlugin";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";

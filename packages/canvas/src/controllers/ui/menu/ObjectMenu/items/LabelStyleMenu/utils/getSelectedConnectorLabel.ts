@@ -1,4 +1,4 @@
-import type { ConnectorLabel } from "../../../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorLabel } from "../../../../../../../schemas/objects/connector/ConnectorDoc";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 
 /**

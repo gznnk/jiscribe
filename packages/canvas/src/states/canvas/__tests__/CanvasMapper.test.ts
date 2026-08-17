@@ -3,7 +3,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { PRECISION } from "../../../constants/precision";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
-import type { ConnectorDoc } from "../../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorDoc } from "../../../schemas/objects/connector/ConnectorDoc";
 import type { GroupDoc } from "../../../schemas/objects/primitives/group/GroupDoc";
 import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import {
@@ -15,7 +15,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import {
 	connectorToState,
 	connectorToDoc,
-} from "../../../states/objects/connections/connector/ConnectorMapper";
+} from "../../../states/objects/connector/ConnectorMapper";
 import {
 	groupToState,
 	groupToDoc,

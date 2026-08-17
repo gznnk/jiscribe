@@ -5,9 +5,9 @@ import {
 	isString,
 } from "@jiscribe/basic-validators";
 
-import { isConnectorRouting } from "../../../../schemas/objects/types/ConnectorRouting";
-import { isStrokeDashType } from "../../../../schemas/objects/types/StrokeDashType";
-import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
+import { isConnectorRouting } from "../../../schemas/objects/types/ConnectorRouting";
+import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
+import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
 import {
 	hasOwnedEndpoint,
 	hasValidIdAndType,
@@ -16,7 +16,7 @@ import {
 	isValidStrokeStyleState,
 	isValidWaypointState,
 	type StateRecord,
-} from "../../utils/validateStateUtils";
+} from "../utils/validateStateUtils";
 
 /**
  * Validates the structure of `label` (a nested annotation). Omitting it is

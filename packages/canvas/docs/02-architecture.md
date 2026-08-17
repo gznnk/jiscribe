@@ -20,14 +20,14 @@ packages/canvas/src/
 ├── doc.ts                  # headless entry (no UI dependency; for the Node side of the VSCode extension, MCP, …)
 ├── schemas/                # persistence data type definitions (Doc model) + per-type validation
 │   ├── canvas/             # CanvasDoc
-│   ├── objects/            # base / primitives / connections / annotations / types + per-type validateXxxDoc
+│   ├── objects/            # base / primitives / connector / annotations / types + per-type validateXxxDoc
 │   ├── plugin/             # ObjectDocDefinition / CanvasDocPlugin / resolveDocDefinitions
 │   ├── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry
 │   └── types/              # doc-layer-wide vocabulary (SemanticDiagnostic)
 ├── parser/                 # text → CanvasDoc: createCanvasParser / validateStructure / validateSemantics
 ├── states/                 # runtime state types (State model) + Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
-│   ├── objects/            # base / primitives / connections / annotations (State + Mapper)
+│   ├── objects/            # base / primitives / connector / annotations (State + Mapper)
 │   └── registry/           # ObjectMapperRegistry / ObjectStateValidatorRegistry
 ├── controllers/            # state management + business logic
 │   ├── Canvas.tsx
@@ -61,7 +61,7 @@ Dependency: `states → schemas` (State is converted from Doc).
 ### Logic Layer (controllers)
 
 - **gestures/handlers/**: Receive gestures and update `CanvasState`. Under `objects/` and `controls/` are the per-target EventHandlers.
-- **behaviors/**: `ObjectBehavior` implementations registered in `ObjectBehaviorRegistry` (`moveByDelta` / `transformByGroup` / `rotateByGroup`). Per-shape Controllers live under `primitives/` and `connections/`, shared transform logic under `base/` (FrameTransform / PolyTransform / GroupTransform). Consumed via the registry from `gestures`, `commands`, `reducer`, and `utils`.
+- **behaviors/**: `ObjectBehavior` implementations registered in `ObjectBehaviorRegistry` (`moveByDelta` / `transformByGroup` / `rotateByGroup`). Per-shape Controllers live under `primitives/` and `connector/`, shared transform logic under `base/` (FrameTransform / PolyTransform / GroupTransform). Consumed via the registry from `gestures`, `commands`, `reducer`, and `utils`.
 - **commands/**: Operations shared by shortcuts, menus, and the toolbar → [Command System](./05-command-system.md).
 - **reducer/**: Dispatches actions to the appropriate handlers → [State Update Flow](./06-state-update-flow.md).
 - **ui/**: UI control logic such as transform controls and menus.

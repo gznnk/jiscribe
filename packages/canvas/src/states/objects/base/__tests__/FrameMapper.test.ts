@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { ConnectorDoc } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
-import { ConnectorFeatures } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorDoc } from "../../../../schemas/objects/connector/ConnectorDoc";
+import { ConnectorFeatures } from "../../../../schemas/objects/connector/ConnectorDoc";
 import { EllipseFeatures } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
 import type { PolylineDoc } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
 import { PolylineFeatures } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
@@ -9,7 +9,7 @@ import type { RectDoc } from "../../../../schemas/objects/primitives/rect/RectDo
 import { RectFeatures } from "../../../../schemas/objects/primitives/rect/RectDoc";
 import type { CreateObjectType } from "../../../../schemas/objects/types/CreateObjectType";
 import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
-import type { ConnectorState } from "../../connections/connector/ConnectorState";
+import type { ConnectorState } from "../../connector/ConnectorState";
 import type { EllipseState } from "../../primitives/ellipse/EllipseState";
 import type { PolylineState } from "../../primitives/polyline/PolylineState";
 import { rectToDoc, rectToState } from "../../primitives/rect/RectMapper";

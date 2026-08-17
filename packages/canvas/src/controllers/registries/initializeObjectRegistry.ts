@@ -5,7 +5,7 @@ import type {
 	AnyObjectTypeDefinition,
 	ObjectTypeDefinition,
 } from "../../plugin/ObjectTypeDefinition";
-import { Connector } from "../../presentations/objects/connections/Connector";
+import { Connector } from "../../presentations/objects/connector/Connector";
 import {
 	Ellipse,
 	calcEllipseTextRegion,
@@ -15,15 +15,15 @@ import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { Svg } from "../../presentations/objects/primitives/Svg";
 import { Text } from "../../presentations/objects/primitives/Text";
-import { ConnectorExtraStyleProperties } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import { ConnectorExtraStyleProperties } from "../../schemas/objects/connector/ConnectorDoc";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
 import { extractTextSlotStyleDefaults } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import {
 	connectorToDoc,
 	connectorToState,
-} from "../../states/objects/connections/connector/ConnectorMapper";
-import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
+} from "../../states/objects/connector/ConnectorMapper";
+import { isValidConnectorState } from "../../states/objects/connector/validateConnectorState";
 import {
 	ellipseToDoc,
 	ellipseToState,
@@ -68,7 +68,7 @@ import {
 	moveByDelta as connectorMoveByDelta,
 	rotateByGroup as connectorRotateByGroup,
 	transformByGroup as connectorTransformByGroup,
-} from "../behaviors/connections/ConnectorController";
+} from "../behaviors/connector/ConnectorController";
 import {
 	moveByDelta as groupMoveByDelta,
 	rotateByGroup as groupRotateByGroup,

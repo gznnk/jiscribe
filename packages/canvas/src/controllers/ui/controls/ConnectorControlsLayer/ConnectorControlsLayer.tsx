@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { ConnectorControls } from "../ConnectorControls";
 

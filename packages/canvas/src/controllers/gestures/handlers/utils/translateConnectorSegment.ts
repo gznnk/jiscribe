@@ -6,8 +6,8 @@ import {
 	isFreeEndpointRef,
 	type EndpointRef,
 } from "../../../../schemas/objects/types/EndpointRef";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
-import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connections/connector/isConnectorSegmentFreelyMovable";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
+import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connector/isConnectorSegmentFreelyMovable";
 
 /** The fields a translation rewrites, ready to spread onto the connector. */
 export type TranslatedConnectorSegment = {
