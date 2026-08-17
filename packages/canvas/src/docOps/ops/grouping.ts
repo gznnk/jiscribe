@@ -133,7 +133,7 @@ export const groupObjects = (
  *   rotated group — whose rotation applies to the children as a whole and has nowhere to
  *   go once they stand on their own
  */
-export const ungroupObject = (doc: CanvasDoc, id: string): string[] => {
+export const dissolveGroup = (doc: CanvasDoc, id: string): string[] => {
 	const { siblings, index, children } = requireUnrotatedGroup(doc, id);
 	siblings.splice(index, 1, ...children);
 	return children.map((child) => child.id);
@@ -158,7 +158,7 @@ export const ungroupObject = (doc: CanvasDoc, id: string): string[] => {
  *   when an id is missing, is not a group, or names a rotated group — whose rotation applies
  *   to the children as a whole and has nowhere to go once they stand on their own
  */
-export const ungroupObjects = (
+export const dissolveGroups = (
 	doc: CanvasDoc,
 	ids: readonly string[],
 ): string[] => {
@@ -175,7 +175,7 @@ export const ungroupObjects = (
 
 	const releasedIds = new Set<string>();
 	for (const id of dissolvedIds) {
-		for (const childId of ungroupObject(doc, id)) {
+		for (const childId of dissolveGroup(doc, id)) {
 			if (!dissolvedIds.has(childId)) {
 				releasedIds.add(childId);
 			}
@@ -239,7 +239,7 @@ export type RemoveObjectsFromGroupResult = {
 
 /**
  * Take objects out of the group holding them and put them back beside it, mutating `doc`
- * in place. The reverse of {@link addObjectsToGroup}; use {@link ungroupObject} to dissolve
+ * in place. The reverse of {@link addObjectsToGroup}; use {@link dissolveGroup} to dissolve
  * a whole group instead.
  *
  * Each object lands directly after its former group in drawing order, so it keeps sitting

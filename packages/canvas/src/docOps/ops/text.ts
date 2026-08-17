@@ -263,7 +263,7 @@ export const getText = (
  * of the string it just wrote, and a miscount styles the wrong words without
  * failing.
  */
-export type TextStyleParams = InlineTextStyle & {
+export type InlineTextStyleParams = InlineTextStyle & {
 	/**
 	 * The text to style, matched literally against the object's own. Must occur in
 	 * it; a stretch that does not is an error rather than a silent no-op.
@@ -292,7 +292,7 @@ const findOccurrences = (plain: string, match: string): number[] => {
 };
 
 /** The styling fields the params actually ask for, `match` / `occurrence` / `slot` left out. */
-const requestedStyle = (params: TextStyleParams): InlineTextStyle => {
+const requestedStyle = (params: InlineTextStyleParams): InlineTextStyle => {
 	const style: Record<string, unknown> = {};
 	for (const key of TEXT_INLINE_STYLE_KEYS) {
 		const value = params[key];
@@ -339,7 +339,7 @@ type TextStyleWrite = {
 const planTextStyle = (
 	doc: CanvasDoc,
 	id: string,
-	params: TextStyleParams,
+	params: InlineTextStyleParams,
 	definitions: DocDefinitions,
 ): TextStyleWrite => {
 	const { object } = requireObject(doc, id);
@@ -425,26 +425,26 @@ const applyTextStyle = (write: TextStyleWrite): void => {
  *   slotted type, when `match` does not occur in the text, or when `occurrence` is
  *   past the last one
  */
-export const setTextStyle = (
+export const setInlineTextStyle = (
 	doc: CanvasDoc,
 	id: string,
-	params: TextStyleParams,
+	params: InlineTextStyleParams,
 	definitions: DocDefinitions,
 ): void => {
 	applyTextStyle(planTextStyle(doc, id, params, definitions));
 };
 
-/** One stretch of text to style in a {@link setTextStyles} call. */
-export type SetTextStyleEntry = {
+/** One stretch of text to style in a {@link setInlineTextStyles} call. */
+export type SetInlineTextStyleEntry = {
 	/** Id of the object to style; must exist in the root tree. */
 	id: string;
-} & TextStyleParams;
+} & InlineTextStyleParams;
 
 /**
  * Style a stretch of text on each of several objects in one call, mutating `doc` in place.
  *
  * Every entry is matched against the text it names before any styling is written, so a
- * call that throws leaves the document exactly as it was — a loop of {@link setTextStyle}
+ * call that throws leaves the document exactly as it was — a loop of {@link setInlineTextStyle}
  * would stop half way through with the earlier stretches already styled.
  *
  * @param doc - Mutated in place
@@ -453,12 +453,12 @@ export type SetTextStyleEntry = {
  *   get styled: the entries stack, and where two of them overlap the later one wins on
  *   the properties it sets
  * @param definitions - Type table `features.text` is read from
- * @throws {@link DocOperationError} for any reason {@link setTextStyle} throws for, with the
+ * @throws {@link DocOperationError} for any reason {@link setInlineTextStyle} throws for, with the
  *   offending entry named as `entries[i] (id)` and the document still untouched
  */
-export const setTextStyles = (
+export const setInlineTextStyles = (
 	doc: CanvasDoc,
-	entries: readonly SetTextStyleEntry[],
+	entries: readonly SetInlineTextStyleEntry[],
 	definitions: DocDefinitions,
 ): void => {
 	const writes = entries.map((entry, index) => {

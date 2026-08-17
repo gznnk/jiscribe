@@ -117,7 +117,7 @@ export type SetRotationResult = {
  * Turn several objects to the same angle, mutating `doc` in place.
  *
  * The shape turns about its own centre and keeps that centre, so a rotated object still
- * measures the same untransformed bounding box to `getObjectsBounds` and still moves by the
+ * measures the same untransformed bounding box to `getCombinedBounds` and still moves by the
  * placement ops. A type that cannot be turned is skipped rather than written, the way
  * {@link import("./style").setStyle} skips a property a type has no place for, and every
  * such id is reported.

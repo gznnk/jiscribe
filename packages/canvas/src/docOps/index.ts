@@ -12,17 +12,17 @@ export { type DeleteObjectsResult } from "./ops/delete";
 export { type RemoveObjectsFromGroupResult } from "./ops/grouping";
 export { type GetZOrderResult, type ZOrderPlacement } from "./ops/order";
 export {
-	type MoveObjectEntry,
-	type MoveObjectParams,
 	type ResizeObjectParams,
+	type SetPositionEntry,
+	type SetPositionParams,
 } from "./ops/place";
 export { type ObjectFilter, type ObjectSummary } from "./ops/query";
 export { type SetPointsEntry, type SetRotationResult } from "./ops/reshape";
 export { type SetStyleResult } from "./ops/style";
 export {
+	type InlineTextStyleParams,
+	type SetInlineTextStyleEntry,
 	type SetTextEntry,
-	type SetTextStyleEntry,
-	type TextStyleParams,
 } from "./ops/text";
 export { type ObjectTypeSummary } from "./ops/types";
 export {
@@ -32,12 +32,12 @@ export {
 export { type StyleParams } from "./utils/styleFields";
 export { DocOperationError } from "./errors";
 export type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-// Re-exported so a consumer can name what getObject and getConnectors hand back without
-// reaching into the schemas layer.
+// Re-exported so a consumer can name what getObject hands back without reaching into the
+// schemas layer.
 export type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 // Re-exported so a consumer can name an EdgeAnchorHandle's side without reaching into
 // the schemas layer.
 export type { EdgeAnchorSide } from "../schemas/objects/types/EndpointRef";
-// Re-exported so a consumer can name what getObjectsBounds returns, and the vertices
+// Re-exported so a consumer can name what getCombinedBounds returns, and the vertices
 // setPoints takes, without taking a dependency on @jiscribe/geometry.
 export type { Point, Rect } from "@jiscribe/geometry";

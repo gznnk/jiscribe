@@ -539,25 +539,19 @@ const collectConnectors = (doc: CanvasDoc, id: string): ObjectRecord[] =>
  * The connectors attached to one object, in drawing order — what tells a caller which
  * lines a shape carries before moving, restyling or deleting it.
  *
- * The connectors handed back are the document's own objects, not copies. Writing to one
- * goes round every check these ops make, so treat them as read-only and reach for
- * {@link updateConnector} to change anything.
- *
  * @param doc - Searched but not modified; only `doc.root` is scanned, a connector being
  *   barred from a group's children (see validateStructure)
  * @param id - Id of the object the connectors hang on; must exist in the root tree.
  *   A connector's own id yields an empty array, since a connector is never an endpoint owner
- * @returns Every connector holding `id` at either end, each listed once however many of its
- *   ends are on it, so a self-loop appears the same as any other; empty when nothing is
- *   attached to the object
+ * @returns The id of every connector holding `id` at either end, in drawing order, each
+ *   listed once however many of its ends are on it, so a self-loop appears the same as any
+ *   other; empty when nothing is attached to the object. Pass one to {@link getObject} for
+ *   the connector itself, or to {@link updateConnector} to change it
  * @throws {@link DocOperationError} when no object carries the id
  */
-export const getConnectors = (
-	doc: CanvasDoc,
-	id: string,
-): Readonly<ObjectDoc>[] => {
+export const getConnectors = (doc: CanvasDoc, id: string): string[] => {
 	requireObject(doc, id);
-	return collectConnectors(doc, id);
+	return collectConnectors(doc, id).map(({ id: connectorId }) => connectorId);
 };
 
 /**

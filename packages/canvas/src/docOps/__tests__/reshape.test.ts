@@ -97,7 +97,7 @@ describe("setPoints", () => {
 		]);
 
 		expect(readObject(doc, "polygon-1").points).toHaveLength(4);
-		expect(docOps.getObjectsBounds(doc, ["polygon-1"])).toEqual({
+		expect(docOps.getCombinedBounds(doc, ["polygon-1"])).toEqual({
 			x: 0,
 			y: 0,
 			width: 40,

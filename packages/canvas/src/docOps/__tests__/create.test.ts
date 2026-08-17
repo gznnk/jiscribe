@@ -204,7 +204,7 @@ describe("addObject with points", () => {
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
 		]);
-		expect(docOps.getObjectsBounds(doc, ["polyline-1"])).toEqual({
+		expect(docOps.getCombinedBounds(doc, ["polyline-1"])).toEqual({
 			x: 0,
 			y: 0,
 			width: 100,

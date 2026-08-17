@@ -54,7 +54,7 @@ describe("setText", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "Payment failed" });
 
-		docOps.setTextStyle(doc, "rect-1", {
+		docOps.setInlineTextStyle(doc, "rect-1", {
 			match: "failed",
 			fontColor: "#d32f2f",
 			fontWeight: "bold",
@@ -71,7 +71,10 @@ describe("setText", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "a b a" });
 
-		docOps.setTextStyle(doc, "rect-1", { match: "a", fontWeight: "bold" });
+		docOps.setInlineTextStyle(doc, "rect-1", {
+			match: "a",
+			fontWeight: "bold",
+		});
 		expect(readObject(doc, "rect-1").text).toEqual([
 			{ text: "a", fontWeight: "bold" },
 			{ text: " b " },
@@ -80,7 +83,7 @@ describe("setText", () => {
 
 		const single = emptyDoc();
 		docOps.addObject(single, "rect", { x: 0, y: 0, text: "a b a" });
-		docOps.setTextStyle(single, "rect-1", {
+		docOps.setInlineTextStyle(single, "rect-1", {
 			match: "a",
 			occurrence: 2,
 			fontWeight: "bold",
@@ -96,13 +99,13 @@ describe("setText", () => {
 		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "Payment failed" });
 
 		expect(() =>
-			docOps.setTextStyle(doc, "rect-1", {
+			docOps.setInlineTextStyle(doc, "rect-1", {
 				match: "missing",
 				fontWeight: "bold",
 			}),
 		).toThrow(DocOperationError);
 		expect(() =>
-			docOps.setTextStyle(doc, "rect-1", {
+			docOps.setInlineTextStyle(doc, "rect-1", {
 				match: "failed",
 				occurrence: 2,
 				fontWeight: "bold",
@@ -117,7 +120,7 @@ describe("setText", () => {
 		docOps.setText(doc, "connector-1", "on failure");
 
 		expect(() =>
-			docOps.setTextStyle(doc, "connector-1", {
+			docOps.setInlineTextStyle(doc, "connector-1", {
 				match: "failure",
 				fontWeight: "bold",
 			}),
@@ -281,7 +284,10 @@ describe("getText", () => {
 	it("drops the styling of a body styled in parts", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "Payment failed" });
-		docOps.setTextStyle(doc, "rect-1", { match: "failed", fontWeight: "bold" });
+		docOps.setInlineTextStyle(doc, "rect-1", {
+			match: "failed",
+			fontWeight: "bold",
+		});
 
 		expect(docOps.getText(doc, "rect-1")).toBe("Payment failed");
 	});
@@ -392,7 +398,7 @@ describe("setTexts", () => {
 	});
 });
 
-describe("setTextStyles", () => {
+describe("setInlineTextStyles", () => {
 	/** Two rects carrying the text the stretches below are matched against. */
 	const twoLabelledRects = (): CanvasDoc => {
 		const doc = emptyDoc();
@@ -404,7 +410,7 @@ describe("setTextStyles", () => {
 	it("styles a stretch on each object", () => {
 		const doc = twoLabelledRects();
 
-		docOps.setTextStyles(doc, [
+		docOps.setInlineTextStyles(doc, [
 			{ id: "rect-1", match: "failed", fontWeight: "bold" },
 			{ id: "rect-2", match: "Retry", fontColor: "#1976d2" },
 		]);
@@ -425,7 +431,7 @@ describe("setTextStyles", () => {
 	it("stacks two stretches of one text", () => {
 		const doc = twoLabelledRects();
 
-		docOps.setTextStyles(doc, [
+		docOps.setInlineTextStyles(doc, [
 			{ id: "rect-1", match: "Payment", fontWeight: "bold" },
 			{ id: "rect-1", match: "failed", fontColor: "#d32f2f" },
 		]);
@@ -443,7 +449,7 @@ describe("setTextStyles", () => {
 		const before = JSON.stringify(doc);
 
 		expect(() =>
-			docOps.setTextStyles(doc, [
+			docOps.setInlineTextStyles(doc, [
 				{ id: "rect-1", match: "failed", fontWeight: "bold" },
 				{ id: "rect-2", match: "missing", fontWeight: "bold" },
 			]),
@@ -457,20 +463,20 @@ describe("setTextStyles", () => {
 		const doc = twoLabelledRects();
 		const before = JSON.stringify(doc);
 
-		docOps.setTextStyles(doc, []);
+		docOps.setInlineTextStyles(doc, []);
 
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
-	it("matches setTextStyle for a single entry", () => {
+	it("matches setInlineTextStyle for a single entry", () => {
 		const singleDoc = twoLabelledRects();
-		docOps.setTextStyle(singleDoc, "rect-1", {
+		docOps.setInlineTextStyle(singleDoc, "rect-1", {
 			match: "failed",
 			fontWeight: "bold",
 		});
 
 		const batchDoc = twoLabelledRects();
-		docOps.setTextStyles(batchDoc, [
+		docOps.setInlineTextStyles(batchDoc, [
 			{ id: "rect-1", match: "failed", fontWeight: "bold" },
 		]);
 

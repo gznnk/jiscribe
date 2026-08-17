@@ -123,7 +123,7 @@ export type CanvasViewportHandle = {
 	 * @returns The point in client coordinates, or null before the canvas has
 	 *   mounted its `<svg>`
 	 */
-	toScreen(worldPoint: Point): Point | null;
+	toClient(worldPoint: Point): Point | null;
 };
 
 const toCamera = ({ minX, minY, zoom }: Viewport): Camera => ({
@@ -244,7 +244,7 @@ export const useViewportHandle = (
 					? getSvgPoint(svgRef.current, clientPoint.x, clientPoint.y)
 					: null,
 
-			toScreen: (worldPoint) =>
+			toClient: (worldPoint) =>
 				svgRef.current
 					? getClientPoint(svgRef.current, worldPoint.x, worldPoint.y)
 					: null,

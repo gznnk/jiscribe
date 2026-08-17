@@ -11,12 +11,12 @@ import {
 	twoRects,
 } from "./support/docFixtures";
 
-describe("moveObject / translateObjects", () => {
+describe("setPosition / translateObjects", () => {
 	it("moves a rect to an absolute top-left, one axis at a time", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 10, y: 20, width: 100, height: 50 });
 
-		docOps.moveObject(doc, "rect-1", { x: 400 });
+		docOps.setPosition(doc, "rect-1", { x: 400 });
 
 		expect(readObject(doc, "rect-1")).toMatchObject({ x: 400, y: 20 });
 	});
@@ -30,7 +30,7 @@ describe("moveObject / translateObjects", () => {
 			height: 100,
 		});
 
-		docOps.moveObject(doc, "ellipse-1", { x: 100, y: 200 });
+		docOps.setPosition(doc, "ellipse-1", { x: 100, y: 200 });
 
 		// Top-left (100, 200) with a 160x100 box gives center (180, 250).
 		expect(readObject(doc, "ellipse-1")).toMatchObject({ cx: 180, cy: 250 });
@@ -48,7 +48,7 @@ describe("moveObject / translateObjects", () => {
 	it("refuses a connector, which follows the objects it joins", () => {
 		const doc = twoConnectedRects();
 
-		expect(() => docOps.moveObject(doc, "connector-1", { x: 0 })).toThrow(
+		expect(() => docOps.setPosition(doc, "connector-1", { x: 0 })).toThrow(
 			/connector/,
 		);
 	});
@@ -63,13 +63,13 @@ describe("moveObject / translateObjects", () => {
 	});
 });
 
-describe("moveObjects", () => {
+describe("setPositions", () => {
 	it("places each object at its own absolute top-left", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 100 });
 		docOps.addObject(doc, "ellipse", { x: 0, y: 0, width: 100, height: 100 });
 
-		docOps.moveObjects(doc, [
+		docOps.setPositions(doc, [
 			{ id: "rect-1", x: 400 },
 			{ id: "ellipse-1", x: 10, y: 20 },
 		]);
@@ -83,7 +83,7 @@ describe("moveObjects", () => {
 	it("lets the last entry for a repeated id decide", () => {
 		const doc = twoRects();
 
-		docOps.moveObjects(doc, [
+		docOps.setPositions(doc, [
 			{ id: "rect-1", x: 100 },
 			{ id: "rect-1", x: 200, y: 50 },
 		]);
@@ -96,7 +96,7 @@ describe("moveObjects", () => {
 		const before = JSON.stringify(doc);
 
 		expect(() =>
-			docOps.moveObjects(doc, [
+			docOps.setPositions(doc, [
 				{ id: "rect-1", x: 50 },
 				{ id: "connector-1", x: 50 },
 			]),
@@ -111,7 +111,7 @@ describe("moveObjects", () => {
 		const before = JSON.stringify(doc);
 
 		expect(() =>
-			docOps.moveObjects(doc, [
+			docOps.setPositions(doc, [
 				{ id: "rect-1", x: 50 },
 				{ id: "gone-1", x: 50 },
 				{ id: "gone-2", x: 50 },
@@ -124,17 +124,17 @@ describe("moveObjects", () => {
 		const doc = twoRects();
 		const before = JSON.stringify(doc);
 
-		docOps.moveObjects(doc, []);
+		docOps.setPositions(doc, []);
 
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
-	it("matches moveObject for a single entry", () => {
+	it("matches setPosition for a single entry", () => {
 		const singleDoc = twoRects();
-		docOps.moveObject(singleDoc, "rect-2", { x: 40, y: 80 });
+		docOps.setPosition(singleDoc, "rect-2", { x: 40, y: 80 });
 
 		const batchDoc = twoRects();
-		docOps.moveObjects(batchDoc, [{ id: "rect-2", x: 40, y: 80 }]);
+		docOps.setPositions(batchDoc, [{ id: "rect-2", x: 40, y: 80 }]);
 
 		expect(JSON.stringify(batchDoc)).toBe(JSON.stringify(singleDoc));
 	});
@@ -290,7 +290,7 @@ describe("objects measured from their points", () => {
 	it("move by shifting every vertex, measured from the box the points span", () => {
 		const doc = triangleDoc();
 
-		docOps.moveObject(doc, "polygon-1", { x: 100, y: 0 });
+		docOps.setPosition(doc, "polygon-1", { x: 100, y: 0 });
 
 		expect(readObject(doc, "polygon-1").points).toEqual([
 			{ x: 100, y: 0 },

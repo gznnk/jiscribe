@@ -16,7 +16,7 @@ import {
 } from "../utils/objectGeometry";
 
 /** Position an object is moved to, as the top-left of its bounding box. */
-export type MoveObjectParams = {
+export type SetPositionParams = {
 	/** New left edge in px; omitted keeps the current one. */
 	x?: number;
 	/** New top edge in px; omitted keeps the current one. */
@@ -36,10 +36,10 @@ export type MoveObjectParams = {
  * @throws {@link DocOperationError} when the id is missing, or names a connector or another
  *   object with no position of its own
  */
-export const moveObject = (
+export const setPosition = (
 	doc: CanvasDoc,
 	id: string,
-	params: MoveObjectParams,
+	params: SetPositionParams,
 	definitions: DocDefinitions,
 ): void => {
 	const { object } = requireObject(doc, id);
@@ -52,8 +52,8 @@ export const moveObject = (
 	);
 };
 
-/** One object's new position in a {@link moveObjects} call. */
-export type MoveObjectEntry = { id: string } & MoveObjectParams;
+/** One object's new position in a {@link setPositions} call. */
+export type SetPositionEntry = { id: string } & SetPositionParams;
 
 /**
  * Move several objects to positions of their own, mutating `doc` in place.
@@ -69,9 +69,9 @@ export type MoveObjectEntry = { id: string } & MoveObjectParams;
  * @throws {@link DocOperationError} before touching the doc: for a missing id, naming every
  *   missing one at once; for an id with no position of its own, identified as `entries[i] (id)`
  */
-export const moveObjects = (
+export const setPositions = (
 	doc: CanvasDoc,
-	entries: readonly MoveObjectEntry[],
+	entries: readonly SetPositionEntry[],
 	definitions: DocDefinitions,
 ): void => {
 	const locations = requireObjects(

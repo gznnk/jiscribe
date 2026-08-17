@@ -747,20 +747,16 @@ describe("getConnectors / getConnectedObjects", () => {
 	it("finds the connector from either of its ends", () => {
 		const doc = wiredRects();
 
-		expect(docOps.getConnectors(doc, "rect-1").map(({ id }) => id)).toEqual([
-			"connector-1",
-		]);
-		expect(docOps.getConnectors(doc, "rect-2").map(({ id }) => id)).toEqual([
-			"connector-1",
-		]);
+		expect(docOps.getConnectors(doc, "rect-1")).toEqual(["connector-1"]);
+		expect(docOps.getConnectors(doc, "rect-2")).toEqual(["connector-1"]);
 		expect(docOps.getConnectedObjects(doc, "rect-1")).toEqual(["rect-2"]);
 		expect(docOps.getConnectedObjects(doc, "rect-2")).toEqual(["rect-1"]);
 	});
 
-	it("hands back the doc's own connector rather than a copy", () => {
+	it("hands back an id getObject resolves to the doc's own connector", () => {
 		const doc = wiredRects();
 
-		expect(docOps.getConnectors(doc, "rect-1")[0]).toBe(
+		expect(docOps.getObject(doc, docOps.getConnectors(doc, "rect-1")[0])).toBe(
 			readObject(doc, "connector-1"),
 		);
 	});
@@ -770,7 +766,7 @@ describe("getConnectors / getConnectedObjects", () => {
 		docOps.connect(doc, { sourceId: "rect-3", targetId: "rect-2" });
 		docOps.connect(doc, { sourceId: "rect-2", targetId: "rect-3" });
 
-		expect(docOps.getConnectors(doc, "rect-2").map(({ id }) => id)).toEqual([
+		expect(docOps.getConnectors(doc, "rect-2")).toEqual([
 			"connector-1",
 			"connector-2",
 			"connector-3",
@@ -806,9 +802,7 @@ describe("getConnectors / getConnectedObjects", () => {
 			targetPoint: { x: 900, y: 400 },
 		});
 
-		expect(docOps.getConnectors(doc, "rect-3").map(({ id }) => id)).toEqual([
-			"connector-2",
-		]);
+		expect(docOps.getConnectors(doc, "rect-3")).toEqual(["connector-2"]);
 		expect(docOps.getConnectedObjects(doc, "rect-3")).toEqual([]);
 	});
 
@@ -821,9 +815,7 @@ describe("getConnectors / getConnectedObjects", () => {
 			targetAnchor: "bottomCenter",
 		});
 
-		expect(docOps.getConnectors(doc, "rect-3").map(({ id }) => id)).toEqual([
-			"connector-2",
-		]);
+		expect(docOps.getConnectors(doc, "rect-3")).toEqual(["connector-2"]);
 		expect(docOps.getConnectedObjects(doc, "rect-3")).toEqual([]);
 		expectValid(doc);
 	});
@@ -832,9 +824,7 @@ describe("getConnectors / getConnectedObjects", () => {
 		const doc = wiredRects();
 		docOps.groupObjects(doc, ["rect-1", "rect-3"]);
 
-		expect(docOps.getConnectors(doc, "rect-1").map(({ id }) => id)).toEqual([
-			"connector-1",
-		]);
+		expect(docOps.getConnectors(doc, "rect-1")).toEqual(["connector-1"]);
 		expect(docOps.getConnectedObjects(doc, "rect-1")).toEqual(["rect-2"]);
 	});
 

@@ -51,7 +51,7 @@ export type CanvasMeasureHandle = {
 	/**
 	 * Bounds of what the objects *draw*, decoration outside their geometry
 	 * included (an actor's label, a sticky's shadow) — the extent zoom-to-fit
-	 * and the export viewBox use. `docOps.getObjectsBounds` is the geometry-box
+	 * and the export viewBox use. `docOps.getCombinedBounds` is the geometry-box
 	 * counterpart, which is what a layout should be computed from.
 	 *
 	 * @param ids - Objects to include; missing ids and objects with no extent
@@ -70,7 +70,7 @@ export type CanvasMeasureHandle = {
 	 * @returns The measurement, or null for a missing object, a shape with no
 	 *   text region (a connector, a poly shape), or an absent slot
 	 */
-	textBounds(id: string, slotId?: string): TextSlotMeasurement | null;
+	textSlot(id: string, slotId?: string): TextSlotMeasurement | null;
 	/**
 	 * The line a connector is actually drawn along: its endpoints as they landed
 	 * on the two silhouettes, with every bend the router chose in between. The
@@ -90,7 +90,7 @@ export type CanvasMeasureHandle = {
 	 * @param ids - Shapes to compare, or every object on the canvas when omitted
 	 * @returns One entry per overlapping pair, largest shared area first
 	 */
-	overlaps(ids?: readonly string[]): ObjectOverlap[];
+	findOverlaps(ids?: readonly string[]): ObjectOverlap[];
 	/**
 	 * The objects drawn at a world point, front-most first — how a coordinate
 	 * read off an exported image is turned back into the objects it names.
@@ -131,7 +131,7 @@ export const useMeasureHandle = (
 				return bounds ? convertBoundingBoxToRect(bounds) : null;
 			},
 
-			textBounds: (id, slotId) => {
+			textSlot: (id, slotId) => {
 				const { objects, docDefaults } = canvasStateRef.current;
 				const object = objects[id];
 				if (!object) {
@@ -168,7 +168,7 @@ export const useMeasureHandle = (
 				);
 			},
 
-			overlaps: (ids) =>
+			findOverlaps: (ids) =>
 				findObjectOverlaps(ids, canvasStateRef.current.objects),
 
 			hitTest: (target, options) => {

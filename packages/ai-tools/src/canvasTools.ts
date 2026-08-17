@@ -372,26 +372,26 @@ export const createCanvasToolDescriptors = (
 		(args) => ({ kind: "deleteObjects", ...args }),
 	);
 
-	const moveObjectTool = defineCanvasTool(
-		"move_object",
+	const setPositionTool = defineCanvasTool(
+		"set_position",
 		"Move one object so its bounding box starts at the given top-left. Give at least one of x / y; the axis you leave out stays where it is. Connectors attached to it follow on their own.",
 		{
 			id: z.string().describe("id of the object to move."),
 			x: z.number().optional().describe("New top-left x in px."),
 			y: z.number().optional().describe("New top-left y in px."),
 		},
-		(args) => ({ kind: "moveObject", ...args }),
+		(args) => ({ kind: "setPosition", ...args }),
 	);
 
-	const moveObjectsTool = defineCanvasTool(
-		"move_objects",
+	const translateObjectsTool = defineCanvasTool(
+		"translate_objects",
 		"Shift several objects by the same amount, keeping the layout between them. Use this to open up room for something new instead of re-placing every shape.",
 		{
 			ids: z.array(z.string()).min(1).describe("ids to shift."),
 			deltaX: z.number().describe("Px to move right; negative moves left."),
 			deltaY: z.number().describe("Px to move down; negative moves up."),
 		},
-		(args) => ({ kind: "moveObjects", ...args }),
+		(args) => ({ kind: "translateObjects", ...args }),
 	);
 
 	const resizeObjectTool = defineCanvasTool(
@@ -606,13 +606,13 @@ export const createCanvasToolDescriptors = (
 		(args) => ({ kind: "groupObjects", ...args }),
 	);
 
-	const ungroupObjectTool = defineCanvasTool(
-		"ungroup_object",
+	const dissolveGroupTool = defineCanvasTool(
+		"dissolve_group",
 		"Dissolve a group, leaving its children in place as independent objects.",
 		{
 			id: z.string().describe("id of the group to dissolve."),
 		},
-		(args) => ({ kind: "ungroupObject", ...args }),
+		(args) => ({ kind: "dissolveGroup", ...args }),
 	);
 
 	const addToGroupTool = defineCanvasTool(
@@ -630,7 +630,7 @@ export const createCanvasToolDescriptors = (
 
 	const removeFromGroupTool = defineCanvasTool(
 		"remove_from_group",
-		"Take objects out of the group holding them, leaving them on the canvas where they are. Use this to release one member; ungroup_object dissolves the whole group. Taking the last member out drops the group.",
+		"Take objects out of the group holding them, leaving them on the canvas where they are. Use this to release one member; dissolve_group dissolves the whole group. Taking the last member out drops the group.",
 		{
 			ids: z
 				.array(z.string())
@@ -718,8 +718,8 @@ export const createCanvasToolDescriptors = (
 		addObjectsTool,
 		connectTool,
 		deleteObjectsTool,
-		moveObjectTool,
-		moveObjectsTool,
+		setPositionTool,
+		translateObjectsTool,
 		resizeObjectTool,
 		setRotationTool,
 		setPointsTool,
@@ -730,7 +730,7 @@ export const createCanvasToolDescriptors = (
 		alignObjectsTool,
 		distributeObjectsTool,
 		groupObjectsTool,
-		ungroupObjectTool,
+		dissolveGroupTool,
 		addToGroupTool,
 		removeFromGroupTool,
 		selectObjectsTool,

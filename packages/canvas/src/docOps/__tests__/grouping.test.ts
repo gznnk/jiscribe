@@ -12,7 +12,7 @@ import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { DocOperationError } from "../errors";
 
-describe("groupObjects / ungroupObject", () => {
+describe("groupObjects / dissolveGroup", () => {
 	it("wraps siblings in a group at the earliest member's place", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0 });
@@ -47,7 +47,7 @@ describe("groupObjects / ungroupObject", () => {
 		docOps.addObject(doc, "rect", { x: 400, y: 0 });
 		const groupId = docOps.groupObjects(doc, ["rect-1", "rect-2"]);
 
-		expect(docOps.ungroupObject(doc, groupId)).toEqual(["rect-1", "rect-2"]);
+		expect(docOps.dissolveGroup(doc, groupId)).toEqual(["rect-1", "rect-2"]);
 		expect(rootIds(doc)).toEqual(["rect-1", "rect-2", "rect-3"]);
 		expectValid(doc);
 	});
@@ -61,7 +61,7 @@ describe("groupObjects / ungroupObject", () => {
 	});
 });
 
-describe("ungroupObjects", () => {
+describe("dissolveGroups", () => {
 	/** root: [group-2[rect-1, group-1[rect-2, rect-3]], rect-4] */
 	const nestedGroups = (): CanvasDoc => {
 		const doc = emptyDoc();
@@ -81,7 +81,7 @@ describe("ungroupObjects", () => {
 		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
 		docOps.groupObjects(doc, ["rect-3", "rect-4"]);
 
-		expect(docOps.ungroupObjects(doc, ["group-2", "group-1"])).toEqual([
+		expect(docOps.dissolveGroups(doc, ["group-2", "group-1"])).toEqual([
 			"rect-3",
 			"rect-4",
 			"rect-1",
@@ -95,7 +95,7 @@ describe("ungroupObjects", () => {
 	// as released; either order ends with both levels gone and the drawing order kept.
 	it("takes a parent and its nested group apart in whichever order they are given", () => {
 		const parentFirst = nestedGroups();
-		expect(docOps.ungroupObjects(parentFirst, ["group-2", "group-1"])).toEqual([
+		expect(docOps.dissolveGroups(parentFirst, ["group-2", "group-1"])).toEqual([
 			"rect-1",
 			"rect-2",
 			"rect-3",
@@ -108,7 +108,7 @@ describe("ungroupObjects", () => {
 		]);
 
 		const childFirst = nestedGroups();
-		expect(docOps.ungroupObjects(childFirst, ["group-1", "group-2"])).toEqual([
+		expect(docOps.dissolveGroups(childFirst, ["group-1", "group-2"])).toEqual([
 			"rect-2",
 			"rect-3",
 			"rect-1",
@@ -124,7 +124,7 @@ describe("ungroupObjects", () => {
 	it("counts a repeated id once, the second turn having nothing left to dissolve", () => {
 		const doc = nestedGroups();
 
-		expect(docOps.ungroupObjects(doc, ["group-2", "group-2"])).toEqual([
+		expect(docOps.dissolveGroups(doc, ["group-2", "group-2"])).toEqual([
 			"rect-1",
 			"group-1",
 		]);
@@ -135,7 +135,7 @@ describe("ungroupObjects", () => {
 		const doc = nestedGroups();
 		const before = JSON.stringify(doc);
 
-		expect(() => docOps.ungroupObjects(doc, ["group-2", "rect-4"])).toThrow(
+		expect(() => docOps.dissolveGroups(doc, ["group-2", "rect-4"])).toThrow(
 			'ids[1] (rect-4): rect-4 is "rect", not a group — the document was left unchanged',
 		);
 		expect(JSON.stringify(doc)).toBe(before);
@@ -147,7 +147,7 @@ describe("ungroupObjects", () => {
 		const doc = nestedGroups();
 
 		expect(() =>
-			docOps.ungroupObjects(doc, ["group-2", "group-2", "rect-4"]),
+			docOps.dissolveGroups(doc, ["group-2", "group-2", "rect-4"]),
 		).toThrow('ids[2] (rect-4): rect-4 is "rect", not a group');
 	});
 
@@ -155,16 +155,16 @@ describe("ungroupObjects", () => {
 		const doc = nestedGroups();
 		const before = JSON.stringify(doc);
 
-		expect(docOps.ungroupObjects(doc, [])).toEqual([]);
+		expect(docOps.dissolveGroups(doc, [])).toEqual([]);
 		expect(JSON.stringify(doc)).toBe(before);
 	});
 
-	it("matches ungroupObject for a single id", () => {
+	it("matches dissolveGroup for a single id", () => {
 		const singleDoc = nestedGroups();
-		const singleReleasedIds = docOps.ungroupObject(singleDoc, "group-2");
+		const singleReleasedIds = docOps.dissolveGroup(singleDoc, "group-2");
 
 		const batchDoc = nestedGroups();
-		const batchReleasedIds = docOps.ungroupObjects(batchDoc, ["group-2"]);
+		const batchReleasedIds = docOps.dissolveGroups(batchDoc, ["group-2"]);
 
 		expect(batchReleasedIds).toEqual(singleReleasedIds);
 		expect(JSON.stringify(batchDoc)).toBe(JSON.stringify(singleDoc));
@@ -291,7 +291,7 @@ describe("a rotated group", () => {
 	it("cannot be dissolved, because its rotation has nowhere to go", () => {
 		const doc = rotatedGroup(30);
 
-		expect(() => docOps.ungroupObject(doc, "group-1")).toThrow(/rotated by 30/);
+		expect(() => docOps.dissolveGroup(doc, "group-1")).toThrow(/rotated by 30/);
 		expect(rootIds(doc)).toEqual(["group-1", "rect-3"]);
 	});
 
@@ -397,7 +397,7 @@ describe("objects measured from their children", () => {
 			children: [],
 		} as unknown as ObjectDoc);
 
-		expect(() => docOps.moveObject(doc, "group-1", { x: 10 })).toThrow(
+		expect(() => docOps.setPosition(doc, "group-1", { x: 10 })).toThrow(
 			/has no position that can be changed/,
 		);
 	});
@@ -411,7 +411,7 @@ describe("objects measured from their children", () => {
 			y: 0,
 		} as unknown as ObjectDoc);
 
-		expect(() => docOps.moveObject(doc, "gadget-1", { x: 10 })).toThrow(
+		expect(() => docOps.setPosition(doc, "gadget-1", { x: 10 })).toThrow(
 			/"gadget"\) has no position that can be changed/,
 		);
 	});

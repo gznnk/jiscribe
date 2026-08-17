@@ -67,8 +67,8 @@ export type AiDocOp =
 			points?: AiPoint[];
 	  }
 	| { kind: "deleteObjects"; ids: string[] }
-	| { kind: "moveObject"; id: string; x?: number; y?: number }
-	| { kind: "moveObjects"; ids: string[]; deltaX: number; deltaY: number }
+	| { kind: "setPosition"; id: string; x?: number; y?: number }
+	| { kind: "translateObjects"; ids: string[]; deltaX: number; deltaY: number }
 	| { kind: "resizeObject"; id: string; width?: number; height?: number }
 	| {
 			kind: "setRotation";
@@ -100,7 +100,7 @@ export type AiDocOp =
 			spacing?: number;
 	  }
 	| { kind: "groupObjects"; ids: string[] }
-	| { kind: "ungroupObject"; id: string }
+	| { kind: "dissolveGroup"; id: string }
 	| { kind: "addToGroup"; groupId: string; ids: string[] }
 	| { kind: "removeFromGroup"; ids: string[] }
 	| { kind: "undo" };

@@ -6,7 +6,7 @@ import {
 	type DistributeAxis,
 	distributeObjects,
 } from "./ops/arrange";
-import { getObjectBounds, getObjectsBounds } from "./ops/bounds";
+import { getCombinedBounds, getObjectBounds } from "./ops/bounds";
 import {
 	connect,
 	connectMany,
@@ -30,10 +30,10 @@ import {
 	getGroupMembers,
 	getParentGroup,
 	groupObjects,
+	dissolveGroup,
+	dissolveGroups,
 	removeObjectsFromGroup,
 	type RemoveObjectsFromGroupResult,
-	ungroupObject,
-	ungroupObjects,
 } from "./ops/grouping";
 import {
 	type GetZOrderResult,
@@ -42,13 +42,13 @@ import {
 	type ZOrderPlacement,
 } from "./ops/order";
 import {
-	moveObject,
-	type MoveObjectEntry,
-	type MoveObjectParams,
-	moveObjects,
 	resizeObject,
 	resizeObjects,
 	type ResizeObjectParams,
+	setPosition,
+	type SetPositionEntry,
+	type SetPositionParams,
+	setPositions,
 	translateObjects,
 } from "./ops/place";
 import {
@@ -71,10 +71,10 @@ import {
 	setText,
 	type SetTextEntry,
 	setTexts,
-	setTextStyle,
-	type SetTextStyleEntry,
-	setTextStyles,
-	type TextStyleParams,
+	setInlineTextStyle,
+	type SetInlineTextStyleEntry,
+	setInlineTextStyles,
+	type InlineTextStyleParams,
 } from "./ops/text";
 import { listTypes, type ObjectTypeSummary } from "./ops/types";
 import type { StyleParams } from "./utils/styleFields";
@@ -98,7 +98,7 @@ import { resolveDocDefinitions } from "../schemas/plugin/resolveDocDefinitions";
  * bad element anywhere leaves the document untouched rather than half-edited. Which of the
  * two shapes the batch takes follows what the op does — an argument that means the same for
  * every object is given once (`setStyle`, `resizeObjects`), while one that differs per object
- * is given as a list of `entries` (`addObjects`, `moveObjects`).
+ * is given as a list of `entries` (`addObjects`, `setPositions`).
  *
  * A `get` / `list` / `find` prefix marks an op that only reads, and each one sits beside the
  * op that writes what it reads, so a write always has its counterpart in view. The naming
@@ -135,13 +135,13 @@ export type DocOps = {
 	 * Move one object so its bounding box starts at the given top-left.
 	 * Throws `DocOperationError` for a missing id or an object with no position of its own.
 	 */
-	moveObject(doc: CanvasDoc, id: string, params: MoveObjectParams): void;
+	setPosition(doc: CanvasDoc, id: string, params: SetPositionParams): void;
 	/**
 	 * Put each object at its own top-left, which is how a computed layout is applied; use
 	 * `translateObjects` to shift a cluster without disturbing it.
 	 * Throws `DocOperationError` naming the entry at fault, having moved nothing.
 	 */
-	moveObjects(doc: CanvasDoc, entries: readonly MoveObjectEntry[]): void;
+	setPositions(doc: CanvasDoc, entries: readonly SetPositionEntry[]): void;
 	/**
 	 * Shift several objects by the same delta, keeping the layout between them.
 	 * Throws `DocOperationError` for a missing id or an object with no position of its own.
@@ -233,13 +233,20 @@ export type DocOps = {
 	 * Throws `DocOperationError` for a missing id, a type or slot whose text is styled
 	 * only as a whole, an unknown slot, or a stretch that does not occur.
 	 */
-	setTextStyle(doc: CanvasDoc, id: string, params: TextStyleParams): void;
+	setInlineTextStyle(
+		doc: CanvasDoc,
+		id: string,
+		params: InlineTextStyleParams,
+	): void;
 	/**
 	 * Style one stretch of text per entry, which is also how several stretches within one
 	 * object are styled — repeat its id.
 	 * Throws `DocOperationError` naming the entry at fault, having styled nothing.
 	 */
-	setTextStyles(doc: CanvasDoc, entries: readonly SetTextStyleEntry[]): void;
+	setInlineTextStyles(
+		doc: CanvasDoc,
+		entries: readonly SetInlineTextStyleEntry[],
+	): void;
 	/**
 	 * Re-attach, re-route, or re-label an existing connector.
 	 * Throws `DocOperationError` when the id is not a connector or a new endpoint is illegal.
@@ -259,10 +266,11 @@ export type DocOps = {
 		entries: readonly UpdateConnectorEntry[],
 	): void;
 	/**
-	 * Read the connectors with an end on this object, in drawing order. The doc's own objects
-	 * come back, not copies. Throws `DocOperationError` when the id is not in the doc.
+	 * Read the ids of the connectors with an end on this object, in drawing order; pass one to
+	 * `getObject` for the connector itself. Throws `DocOperationError` when the id is not in
+	 * the doc.
 	 */
-	getConnectors(doc: CanvasDoc, id: string): Readonly<ObjectDoc>[];
+	getConnectors(doc: CanvasDoc, id: string): string[];
 	/**
 	 * Read the ids at the far end of those connectors, deduplicated; free ends and the object
 	 * itself are left out. Throws `DocOperationError` when the id is not in the doc.
@@ -293,13 +301,13 @@ export type DocOps = {
 	 * Dissolve a group, putting its children back in its place and returning their ids.
 	 * Throws `DocOperationError` when the id is not a group, or names a rotated one.
 	 */
-	ungroupObject(doc: CanvasDoc, id: string): string[];
+	dissolveGroup(doc: CanvasDoc, id: string): string[];
 	/**
 	 * Dissolve several groups and return what stands on its own afterwards — a group named
 	 * in the same call is left out of that, since it is gone too.
 	 * Throws `DocOperationError` naming the entry at fault, having dissolved nothing.
 	 */
-	ungroupObjects(doc: CanvasDoc, ids: readonly string[]): string[];
+	dissolveGroups(doc: CanvasDoc, ids: readonly string[]): string[];
 	/**
 	 * Move objects already in the doc into an existing group, returning the groups they
 	 * left empty. Throws `DocOperationError` for a missing id, a connector, a rotated
@@ -334,7 +342,7 @@ export type DocOps = {
 	 * omitted; null when nothing measurable was found. Throws `DocOperationError` naming every
 	 * id that was not found.
 	 */
-	getObjectsBounds(doc: CanvasDoc, ids?: readonly string[]): Rect | null;
+	getCombinedBounds(doc: CanvasDoc, ids?: readonly string[]): Rect | null;
 	/**
 	 * Read one object as it sits in the doc — the doc's own object, not a copy, carrying every
 	 * field its type declares. Throws `DocOperationError` when the id is not in the doc.
@@ -378,8 +386,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		connect: (doc, params) => connect(doc, params, definitions),
 		connectMany: (doc, entries) => connectMany(doc, entries, definitions),
 		deleteObjects: (doc, ids) => deleteObjects(doc, ids),
-		moveObject: (doc, id, params) => moveObject(doc, id, params, definitions),
-		moveObjects: (doc, entries) => moveObjects(doc, entries, definitions),
+		setPosition: (doc, id, params) => setPosition(doc, id, params, definitions),
+		setPositions: (doc, entries) => setPositions(doc, entries, definitions),
 		translateObjects: (doc, ids, deltaX, deltaY) =>
 			translateObjects(doc, ids, deltaX, deltaY, definitions),
 		resizeObject: (doc, id, params) =>
@@ -387,9 +395,10 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		resizeObjects: (doc, ids, params) =>
 			resizeObjects(doc, ids, params, definitions),
 		setStyle: (doc, ids, style) => setStyle(doc, ids, style, definitions),
-		setTextStyle: (doc, id, params) =>
-			setTextStyle(doc, id, params, definitions),
-		setTextStyles: (doc, entries) => setTextStyles(doc, entries, definitions),
+		setInlineTextStyle: (doc, id, params) =>
+			setInlineTextStyle(doc, id, params, definitions),
+		setInlineTextStyles: (doc, entries) =>
+			setInlineTextStyles(doc, entries, definitions),
 		setRotation: (doc, ids, rotation) =>
 			setRotation(doc, ids, rotation, definitions),
 		setPoints: (doc, id, points) => setPoints(doc, id, points, definitions),
@@ -410,14 +419,14 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		distributeObjects: (doc, ids, axis, spacing) =>
 			distributeObjects(doc, ids, axis, spacing, definitions),
 		groupObjects: (doc, ids) => groupObjects(doc, ids),
-		ungroupObject: (doc, id) => ungroupObject(doc, id),
-		ungroupObjects: (doc, ids) => ungroupObjects(doc, ids),
+		dissolveGroup: (doc, id) => dissolveGroup(doc, id),
+		dissolveGroups: (doc, ids) => dissolveGroups(doc, ids),
 		addObjectsToGroup: (doc, groupId, ids) =>
 			addObjectsToGroup(doc, groupId, ids),
 		removeObjectsFromGroup: (doc, ids) => removeObjectsFromGroup(doc, ids),
 		getParentGroup: (doc, id) => getParentGroup(doc, id),
 		getGroupMembers: (doc, groupId) => getGroupMembers(doc, groupId),
-		getObjectsBounds: (doc, ids) => getObjectsBounds(doc, ids, definitions),
+		getCombinedBounds: (doc, ids) => getCombinedBounds(doc, ids, definitions),
 		getObject: (doc, id) => getObject(doc, id),
 		getObjectBounds: (doc, id) => getObjectBounds(doc, id, definitions),
 		listObjects: (doc) => listObjects(doc, definitions),

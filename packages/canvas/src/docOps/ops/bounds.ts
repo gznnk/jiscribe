@@ -14,7 +14,7 @@ import {
 
 /**
  * Axis-aligned box one object occupies, in world coordinates — the same top-left form
- * `addObject` takes and `moveObject` writes back. Rotation is ignored: `rotation` turns the
+ * `addObject` takes and `setPosition` writes back. Rotation is ignored: `rotation` turns the
  * shape around its own centre, and the box measured here is the untransformed one every
  * placement op works on.
  *
@@ -47,7 +47,7 @@ export const getObjectBounds = (
  *   {@link getObjectBounds} cannot measure (connectors, empty groups, unknown types)
  * @throws {@link DocOperationError} naming every id in `ids` that was not found
  */
-export const getObjectsBounds = (
+export const getCombinedBounds = (
 	doc: CanvasDoc,
 	ids: readonly string[] | undefined,
 	definitions: DocDefinitions,

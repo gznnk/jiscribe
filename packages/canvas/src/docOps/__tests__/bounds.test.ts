@@ -53,9 +53,9 @@ describe("getObjectBounds", () => {
 	});
 });
 
-describe("getObjectsBounds", () => {
+describe("getCombinedBounds", () => {
 	it("unions every object in the doc when no ids are given", () => {
-		expect(docOps.getObjectsBounds(threeRects())).toEqual({
+		expect(docOps.getCombinedBounds(threeRects())).toEqual({
 			x: 0,
 			y: 0,
 			width: 500,
@@ -64,7 +64,7 @@ describe("getObjectsBounds", () => {
 	});
 
 	it("measures only the ids that were given", () => {
-		expect(docOps.getObjectsBounds(threeRects(), ["rect-2"])).toEqual({
+		expect(docOps.getCombinedBounds(threeRects(), ["rect-2"])).toEqual({
 			x: 130,
 			y: 40,
 			width: 100,
@@ -76,7 +76,7 @@ describe("getObjectsBounds", () => {
 		const doc = threeRects();
 		const groupId = docOps.groupObjects(doc, ["rect-1", "rect-2"]);
 
-		expect(docOps.getObjectsBounds(doc, [groupId])).toEqual({
+		expect(docOps.getCombinedBounds(doc, [groupId])).toEqual({
 			x: 0,
 			y: 0,
 			width: 230,
@@ -85,7 +85,7 @@ describe("getObjectsBounds", () => {
 	});
 
 	it("returns null for an empty doc", () => {
-		expect(docOps.getObjectsBounds(emptyDoc())).toBeNull();
+		expect(docOps.getCombinedBounds(emptyDoc())).toBeNull();
 	});
 
 	it("returns null for a doc holding nothing but a connector", () => {
@@ -95,7 +95,7 @@ describe("getObjectsBounds", () => {
 		doc.root = doc.root.filter((object) => object.type === "connector");
 
 		expect(doc.root).toHaveLength(1);
-		expect(docOps.getObjectsBounds(doc)).toBeNull();
+		expect(docOps.getCombinedBounds(doc)).toBeNull();
 	});
 
 	it("returns null for a group with no children", () => {
@@ -105,12 +105,12 @@ describe("getObjectsBounds", () => {
 		// that an edit leaves behind.
 		(doc.root[0] as unknown as { children: ObjectDoc[] }).children = [];
 
-		expect(docOps.getObjectsBounds(doc, [groupId])).toBeNull();
+		expect(docOps.getCombinedBounds(doc, [groupId])).toBeNull();
 	});
 
 	it("throws DocOperationError for an id the doc does not hold", () => {
 		expect(() =>
-			docOps.getObjectsBounds(threeRects(), ["rect-1", "nope"]),
+			docOps.getCombinedBounds(threeRects(), ["rect-1", "nope"]),
 		).toThrow(DocOperationError);
 	});
 });
