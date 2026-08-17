@@ -1,3 +1,5 @@
+import type { Prettify } from "@jiscribe/utility-types";
+
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
 import type { ObjectType } from "../objects/types/ObjectType";
 
@@ -10,8 +12,11 @@ import type { ObjectType } from "../objects/types/ObjectType";
  * extend {@link ObjectDocDefinition}.
  */
 export type CanvasDocPlugin = {
+	/** Names the plugin in diagnostics, such as the duplicate-type error. Not enforced to be unique. */
 	id: string;
 
 	/** Object-type doc contributions, keyed by type. */
-	objects?: Readonly<Partial<Record<ObjectType, ObjectDocDefinition>>>;
+	objects?: Readonly<
+		Prettify<Partial<Record<ObjectType, ObjectDocDefinition>>>
+	>;
 };
