@@ -2,7 +2,7 @@ import { test, expect, selectors } from "@jiscribe/canvas/testing";
 import type { CanvasDriver } from "@jiscribe/canvas/testing";
 
 /**
- * All seven shipped plugins registered on one canvas. Each plugin's own e2e suite
+ * All eight shipped plugins registered on one canvas. Each plugin's own e2e suite
  * loads a harness holding that plugin alone, so nothing there can see what only
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
@@ -27,6 +27,7 @@ const PINNED_PRESET_IDS = [
 	"text",
 	"sticky",
 	"markdown",
+	"lucideIcon",
 ];
 
 /**
@@ -134,6 +135,12 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	// Stickies are center-placed on click (no bounds drawing), which lands this one
 	// clear of everything above.
 	ids.push(await canvas.placeShape("Sticky"));
+	await canvas.deselect();
+
+	// The icon is center-placed too, so it lands under the sticky. Overlap is fine
+	// here: this suite asks whether every plugin's shape coexists in one document,
+	// and a covered element is still a rendered, visible one.
+	ids.push(await canvas.placeShape("Icon"));
 	await canvas.deselect();
 
 	return ids;

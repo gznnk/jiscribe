@@ -39,6 +39,7 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "text" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
+	{ kind: "preset", presetId: "lucideIcon" },
 	flowchartToolbarEntry,
 	umlToolbarEntry,
 	containerToolbarEntry,

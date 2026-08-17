@@ -6,6 +6,7 @@ import { annotationDocPlugin } from "@jiscribe/plugin-annotation-shapes/doc";
 import { containerDocPlugin } from "@jiscribe/plugin-container-shapes/doc";
 import { flowchartDocPlugin } from "@jiscribe/plugin-flowchart-shapes/doc";
 import { generalDocPlugin } from "@jiscribe/plugin-general-shapes/doc";
+import { lucideIconDocPlugin } from "@jiscribe/plugin-lucide-icon-shape/doc";
 import { markdownDocPlugin } from "@jiscribe/plugin-markdown-shape/doc";
 import { stickyDocPlugin } from "@jiscribe/plugin-sticky-shape/doc";
 import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
@@ -43,6 +44,8 @@ export const CANONICAL_TYPE_ORDER = [
 	"queue",
 	"lock",
 	"shield",
+	// A named pictogram from the bundled Lucide set, belonging to no notation either
+	"lucideIcon",
 	// The general-purpose annotations of annotation-shapes (shapes that explain a diagram, belonging to no notation)
 	"callout",
 	"note",
@@ -125,6 +128,7 @@ export const DETAIL_SECTION_TYPES = [
 	"rect",
 	"ellipse",
 	"text",
+	"lucideIcon",
 	"callout",
 	"note",
 	"brace",
@@ -147,6 +151,7 @@ const definitionSources: ReadonlyArray<
 	[markdownDocPlugin.id, markdownDocPlugin.objects],
 	[stickyDocPlugin.id, stickyDocPlugin.objects],
 	[generalDocPlugin.id, generalDocPlugin.objects],
+	[lucideIconDocPlugin.id, lucideIconDocPlugin.objects],
 	[annotationDocPlugin.id, annotationDocPlugin.objects],
 	[containerDocPlugin.id, containerDocPlugin.objects],
 ];

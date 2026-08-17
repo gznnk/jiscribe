@@ -82,6 +82,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | `queue`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | job queue, message queue                              |
 | `lock`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | authentication, protected resource                    |
 | `shield`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | security boundary, trust zone                         |
+| `lucideIcon`            | `x`,`y`,`width`,`height`             | stroke / rotation                                | decorative Lucide icon (no text, not connectable)     |
 | `callout`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | annotation bubble                                     |
 | `note`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | comment box, UML note                                 |
 | `brace`                 | `x`,`y`,`width`,`height`             | stroke / text / rotation                         | group marker, grouping annotation                     |

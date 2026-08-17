@@ -47,8 +47,8 @@ pnpm lint
 - **どのパッケージでも** — そのパッケージのユニットテストを流す:
   `pnpm --filter @jiscribe/canvas test`
 - **挙動または描画** — 触った対象を所有するスイートの e2e を流す。Playwright は
-  9 スイートに分かれている: `packages/canvas/e2e/`（コア）、`plugins/<name>/e2e/`
-  （そのプラグイン単体）、`apps/canvas-examples/e2e/`（7 プラグイン同居）。
+  10 スイートに分かれている: `packages/canvas/e2e/`（コア）、`plugins/<name>/e2e/`
+  （そのプラグイン単体）、`apps/canvas-examples/e2e/`（8 プラグイン同居）。
   - `packages/canvas/src/{gestures,controllers,presentations,states}` — スイート全体
     ではなくキーワードで関連スペックだけを絞る:
     `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`

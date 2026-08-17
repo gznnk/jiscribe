@@ -71,13 +71,13 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 ## E2E (Playwright)
 
 Non-regression tests using a real browser and real UI operations. They are spread over
-**nine suites**, because the package that owns a shape owns the specs for it.
+**ten suites**, because the package that owns a shape owns the specs for it.
 
 | Suite              | Location                    | Scope                                                                                                   |
 | ------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------- |
 | canvas             | `packages/canvas/e2e/`      | Core behavior: gestures, selection, transform, text editing, connectors, arrangement, toolbar and menus |
 | each shape plugin  | `plugins/<name>/e2e/`       | That package's shapes only                                                                              |
-| plugin coexistence | `apps/canvas-examples/e2e/` | One spec: all seven shipped plugins on a single canvas                                                  |
+| plugin coexistence | `apps/canvas-examples/e2e/` | One spec: all eight shipped plugins on a single canvas                                                  |
 
 Every suite is laid out the same way and runs on the shared kit described below.
 
@@ -99,10 +99,10 @@ Every suite is laid out the same way and runs on the shared kit described below.
   Core specs that used a shipped shape as their subject drive these instead
 - **A plugin's harness mounts that plugin alone.** Passing under a solo load is itself the
   evidence that the package carries no implicit dependency on another plugin
-- **canvas-examples' harness mounts all seven**, and its one spec looks only at what breaks
+- **canvas-examples' harness mounts all eight**, and its one spec looks only at what breaks
   when they share a canvas: ObjectType registration collisions, duplicated toolbar entries,
   `<defs>` id collisions. It can hold that without a dependency cycle because it sits at the
-  top of the dependency graph — it depends on canvas and all seven plugins, and nothing
+  top of the dependency graph — it depends on canvas and all eight plugins, and nothing
   depends on it
 - `support/CanvasDriver.ts` … the API for drawing, selection, text, color, and connector operations.
   `support/selectors.ts` … `data-kind` / `data-id` selector constants. `fixtures.ts` injects the CanvasDriver.

@@ -6,7 +6,7 @@ The practical side of [Plugin Architecture](./12-plugin-architecture.md): how a
 shape package is laid out, what the authoring kit gives you, where a piece of code
 belongs, and the wiring you must not forget.
 
-The seven packages under `plugins/` are the worked examples. `sticky-shape` is the
+The eight packages under `plugins/` are the worked examples. `sticky-shape` is the
 smallest complete one; `container-shapes` shows a type-specific selection control;
 `uml-shapes` shows multiple text slots.
 

@@ -79,6 +79,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `queue`            | Job queue, message queue                              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `lock`             | Authentication, protected resource                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `shield`           | Security boundary, trust zone                         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `lucideIcon`       | Decorative Lucide icon (no text, not connectable)     | `x`, `y`, `width`, `height`             | Stroke, Transform (no text)           |
 | `callout`          | Annotation bubble                                     | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `note`             | Comment box, UML note                                 | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `brace`            | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
@@ -204,6 +205,34 @@ Standalone text with no box drawn around it. `x` / `y` are the top-left of the t
 | ----- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `x`   | `number` | `0`     | X of the text's top-left.                                                                                                                                                                                             |
 | `y`   | `number` | `0`     | Y of the text's top-left. There is no `width` / `height` field: the box is measured from the text itself. Under `rotation` or a flip the corner is the shape's own top-left, so `x` / `y` stay put as the text grows. |
+
+---
+
+### `lucideIcon`
+
+A named pictogram from the bundled Lucide icon set, drawn as line art. Decoration, not a node: it holds no text and cannot be a connector endpoint, so place it beside the shape it marks (a rect, a container header, a sticky) and connect arrows to that shape instead. For a picture that is itself a node, use a labelled pictogram such as "server", "package" or "db". The drawing is scaled uniformly to the smaller side of the box and centred, so keep the box square (the 64x64 default) unless margin is wanted. `stroke` is the icon's own color and `strokeWidth` its line weight, both honoured at any size. It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "lucide-icon-1",
+	"type": "lucideIcon",
+	"x": 200,
+	"y": 150,
+	"width": 48,
+	"height": 48,
+	"icon": "lock",
+	"stroke": "auto",
+	"strokeWidth": 2
+}
+```
+
+| Field    | Type     | Default  | Description                                                                                                                                                                                                                                                                                                                |
+| -------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`      | `number` | `0`      | X of the bounding box's top-left.                                                                                                                                                                                                                                                                                          |
+| `y`      | `number` | `0`      | Y of the bounding box's top-left.                                                                                                                                                                                                                                                                                          |
+| `width`  | `number` | `64`     | Bounding-box width (px).                                                                                                                                                                                                                                                                                                   |
+| `height` | `number` | `64`     | Bounding-box height (px).                                                                                                                                                                                                                                                                                                  |
+| `icon`   | `string` | `"star"` | Which icon to draw, as a kebab-case name from the bundled Lucide set (1767 icons; any of them, not only the ones listed in the schema). A superseded name (`"user-circle"`) or another spelling (`"fileText"`) resolves to the current one; a name that resolves to nothing is rejected with the nearest candidates named. |
 
 ---
 

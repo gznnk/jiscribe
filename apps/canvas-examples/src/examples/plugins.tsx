@@ -17,6 +17,7 @@ import {
 	generalPlugin,
 	generalToolbarEntry,
 } from "@jiscribe/plugin-general-shapes";
+import { lucideIconPlugin } from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
 import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
@@ -30,6 +31,7 @@ import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
 //   container  container
 //   sticky     sticky
 //   markdown   markdown
+//   lucide     lucideIcon
 // Only rect / ellipse / polyline / polygon / text / connector are core.
 const plugins = [
 	flowchartPlugin,
@@ -39,6 +41,7 @@ const plugins = [
 	umlPlugin,
 	generalPlugin,
 	annotationPlugin,
+	lucideIconPlugin,
 ];
 
 // The same array has to reach BOTH sides, and neither side complains when it does not:
@@ -60,6 +63,7 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
+	{ kind: "preset", presetId: "lucideIcon" },
 	flowchartToolbarEntry,
 	umlToolbarEntry,
 	containerToolbarEntry,
@@ -77,6 +81,7 @@ const legendMarkdown = [
 	"- **container** — order-service",
 	"- **sticky** — the yellow note",
 	"- **markdown** — this card",
+	"- **lucide-icon** — the lock over the request arrow",
 ].join("\n");
 
 const buildPluginsDoc = (): CanvasDoc => {
@@ -169,6 +174,15 @@ const buildPluginsDoc = (): CanvasDoc => {
 					height: 22,
 					direction: "down",
 					text: "persistence",
+				},
+				{
+					id: "auth-lock",
+					type: "lucideIcon",
+					x: 169,
+					y: 143,
+					width: 32,
+					height: 32,
+					icon: "lock",
 				},
 				{
 					id: "legend",
@@ -274,7 +288,7 @@ const buildPluginsDoc = (): CanvasDoc => {
 const pluginsDoc = buildPluginsDoc();
 
 /**
- * Assembling a canvas out of shape plugins: the seven shipped plugins are registered at
+ * Assembling a canvas out of shape plugins: the eight shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
  * the toolbar to draw more of them.
  */

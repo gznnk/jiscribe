@@ -15,6 +15,7 @@ import { annotationDocPlugin } from "@jiscribe/plugin-annotation-shapes/doc";
 import { containerDocPlugin } from "@jiscribe/plugin-container-shapes/doc";
 import { flowchartDocPlugin } from "@jiscribe/plugin-flowchart-shapes/doc";
 import { generalDocPlugin } from "@jiscribe/plugin-general-shapes/doc";
+import { lucideIconDocPlugin } from "@jiscribe/plugin-lucide-icon-shape/doc";
 import { markdownDocPlugin } from "@jiscribe/plugin-markdown-shape/doc";
 import { stickyDocPlugin } from "@jiscribe/plugin-sticky-shape/doc";
 import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
@@ -33,6 +34,7 @@ const canvasParser = createCanvasParser({
 		stickyDocPlugin,
 		umlDocPlugin,
 		generalDocPlugin,
+		lucideIconDocPlugin,
 		annotationDocPlugin,
 	],
 });

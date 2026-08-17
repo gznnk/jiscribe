@@ -24,16 +24,16 @@ packages/
   utility-types/     shared TypeScript utility types
   ai-docs/           generated JSON Schema / AI reference for the shipped shapes
   ai-tools/          the canvas tool set an AI can call, declared free of any transport
-plugins/             flowchart, uml, container, general, annotation, sticky, markdown — each with its own e2e suite
+plugins/             flowchart, uml, container, general, annotation, sticky, markdown, lucide-icon — each with its own e2e suite
 apps/
   canvas-examples/   integration examples (one example = one file) + the plugin-coexistence e2e suite
   vscode-extension/  the VSCode extension
 ```
 
-Playwright e2e is spread over nine suites, one per package that owns shapes:
+Playwright e2e is spread over ten suites, one per package that owns shapes:
 `packages/canvas/e2e/` (core, on a harness registering no shipped plugin),
 `plugins/<name>/e2e/` (that plugin alone), and `apps/canvas-examples/e2e/` (one spec:
-all seven plugins on a single canvas). Each has its own `playwright.config.ts` and runs
+all eight plugins on a single canvas). Each has its own `playwright.config.ts` and runs
 as `pnpm --filter <package> test:e2e`. They share canvas's kit, which plugins reach
 through `@jiscribe/canvas-sdk/testing/*` — see `packages/canvas/docs/09-testing.md`.
 

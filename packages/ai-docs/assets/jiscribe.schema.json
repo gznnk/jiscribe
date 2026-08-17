@@ -109,6 +109,9 @@
 					"$ref": "#/$defs/ShieldDoc"
 				},
 				{
+					"$ref": "#/$defs/LucideIconDoc"
+				},
+				{
 					"$ref": "#/$defs/CalloutDoc"
 				},
 				{
@@ -269,6 +272,9 @@
 				},
 				{
 					"$ref": "#/$defs/ShieldDoc"
+				},
+				{
+					"$ref": "#/$defs/LucideIconDoc"
 				},
 				{
 					"$ref": "#/$defs/CalloutDoc"
@@ -1277,6 +1283,70 @@
 				},
 				"textDecoration": {
 					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"LucideIconDoc": {
+			"description": "A named pictogram from the bundled Lucide icon set, drawn as line art. Decoration, not a node: it holds no text and cannot be a connector endpoint, so place it beside the shape it marks (a rect, a container header, a sticky) and connect arrows to that shape instead. For a picture that is itself a node, use a labelled pictogram such as \"server\", \"package\" or \"db\". The drawing is scaled uniformly to the smaller side of the box and centred, so keep the box square (the 64x64 default) unless margin is wanted. `stroke` is the icon's own color and `strokeWidth` its line weight, both honoured at any size.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"lucideIcon\".",
+					"type": "string",
+					"const": "lucideIcon"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"icon": {
+					"description": "Which icon to draw, as a kebab-case name from the bundled Lucide set (1767 icons). Any name in that set is accepted, not only the ones listed below. A superseded name (\"user-circle\") or another spelling (\"fileText\", \"file_text\") resolves to the current one, and a name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set (\"account_circle\", \"document-text\") — those resolve to nothing. Commonly wanted names (149 of them) — people: user users user-round circle-user contact; devices: monitor smartphone tablet laptop server hard-drive cpu printer webcam; infrastructure: cloud cloud-upload cloud-download database network router wifi globe radio-tower; files: file file-text files folder folder-open archive save book clipboard; messaging: mail message-square message-circle send bell phone rss share-2 link at-sign; security: lock lock-open shield shield-check key key-round fingerprint-pattern eye eye-off scan-face; status: check circle-check x circle-x triangle-alert info circle-question-mark octagon-alert ban loader hourglass clock timer; actions: plus minus pencil square-pen trash-2 copy clipboard-copy download upload refresh-cw rotate-ccw play pause settings sliders-horizontal funnel search zoom-in external-link; flow: arrow-right arrow-left arrow-up arrow-down arrow-right-left chevron-right chevron-down corner-down-right git-branch git-merge workflow split merge; data and code: chart-line chart-bar chart-pie table list layers box package boxes binary braces code terminal bug; business: building building-2 factory store shopping-cart credit-card banknote receipt briefcase calendar users-round; other: star heart flag bookmark tag map-pin lightbulb zap flame sparkles wrench hammer cog gauge activity target trending-up trending-down thumbs-up face-slightly-smiling alarm-clock rocket gift coffee leaf sun moon. Omitted = \"star\".",
+					"type": "string",
+					"default": "star"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 64",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 64",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3045,7 +3115,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / container / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / container / sticky (NOT lucideIcon / polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

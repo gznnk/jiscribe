@@ -125,6 +125,9 @@ importers:
       '@jiscribe/plugin-general-shapes':
         specifier: workspace:*
         version: link:../../plugins/general-shapes
+      '@jiscribe/plugin-lucide-icon-shape':
+        specifier: workspace:*
+        version: link:../../plugins/lucide-icon-shape
       '@jiscribe/plugin-markdown-shape':
         specifier: workspace:*
         version: link:../../plugins/markdown-shape
@@ -186,6 +189,9 @@ importers:
       '@jiscribe/plugin-general-shapes':
         specifier: workspace:*
         version: link:../../plugins/general-shapes
+      '@jiscribe/plugin-lucide-icon-shape':
+        specifier: workspace:*
+        version: link:../../plugins/lucide-icon-shape
       '@jiscribe/plugin-markdown-shape':
         specifier: workspace:*
         version: link:../../plugins/markdown-shape
@@ -246,6 +252,9 @@ importers:
       '@jiscribe/plugin-general-shapes':
         specifier: workspace:*
         version: link:../../plugins/general-shapes
+      '@jiscribe/plugin-lucide-icon-shape':
+        specifier: workspace:*
+        version: link:../../plugins/lucide-icon-shape
       '@jiscribe/plugin-markdown-shape':
         specifier: workspace:*
         version: link:../../plugins/markdown-shape
@@ -572,6 +581,42 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
+      react:
+        specifier: 'catalog:'
+        version: 19.2.8
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@22.20.1)(tsx@4.23.11)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1)(vite@7.3.6(@types/node@22.20.1)(tsx@4.23.11))
+
+  plugins/lucide-icon-shape:
+    devDependencies:
+      '@emotion/react':
+        specifier: 'catalog:'
+        version: 11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@7.2.0)
+      '@emotion/styled':
+        specifier: 'catalog:'
+        version: 11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@7.2.0))(@types/react@19.2.18)(react@19.2.8)(supports-color@7.2.0)
+      '@jiscribe/canvas':
+        specifier: workspace:*
+        version: link:../../packages/canvas
+      '@jiscribe/canvas-sdk':
+        specifier: workspace:*
+        version: link:../../packages/canvas-sdk
+      '@playwright/test':
+        specifier: ^1.62.1
+        version: 1.62.1
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
+      lucide:
+        specifier: 1.31.0
+        version: 1.31.0
       react:
         specifier: 'catalog:'
         version: 19.2.8
@@ -2992,6 +3037,9 @@ packages:
   lru-cache@6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
+
+  lucide@1.31.0:
+    resolution: {integrity: sha512-iPJC7py8o990ZSmvFZlS+4+bNasP+ANDkD0IeDOGgQZjTm3p85F2Ldut7leM1yhYavr1pmoPfigm9MDHyyCOrw==}
 
   madge@8.0.0:
     resolution: {integrity: sha512-9sSsi3TBPhmkTCIpVQF0SPiChj1L7Rq9kU2KDG1o6v2XH9cCw086MopjVCD+vuoL5v8S77DTbVopTO8OUiQpIw==}
@@ -6639,6 +6687,8 @@ snapshots:
   lru-cache@6.0.0:
     dependencies:
       yallist: 4.0.0
+
+  lucide@1.31.0: {}
 
   madge@8.0.0(supports-color@7.2.0)(typescript@5.9.3):
     dependencies:

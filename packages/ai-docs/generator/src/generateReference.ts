@@ -86,6 +86,17 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 		y: 150,
 		text: "Retries are capped at 3",
 	},
+	lucideIcon: {
+		id: "lucide-icon-1",
+		type: "lucideIcon",
+		x: 200,
+		y: 150,
+		width: 48,
+		height: 48,
+		icon: "lock",
+		stroke: "auto",
+		strokeWidth: 2,
+	},
 };
 
 /** JSON example for the grouped catalog section (one representative type). */
@@ -117,6 +128,9 @@ const EXTRA_FIELD_ROWS: Readonly<Record<string, string[]>> = {
 	],
 	bracket: [
 		'| `direction` | `string` | `"left"` | Which side the spine sits on, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `[`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |',
+	],
+	lucideIcon: [
+		'| `icon` | `string` | `"star"` | Which icon to draw, as a kebab-case name from the bundled Lucide set (1767 icons; any of them, not only the ones listed in the schema). A superseded name (`"user-circle"`) or another spelling (`"fileText"`) resolves to the current one; a name that resolves to nothing is rejected with the nearest candidates named. |',
 	],
 	container: [
 		'| `headerFill` | `string` | `"auto"` | Header band color, independent of `fill` (the body). `"auto"` follows the theme surface color. |',
