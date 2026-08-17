@@ -14,6 +14,23 @@ it is transported.
 - `toCanvasCapabilities(docPlugins)` — the shape types the descriptors may name,
   derived from a doc plugin set.
 
+## Which canvas API a tool drives
+
+A tool name and the canvas member behind it are allowed to differ: the canvas
+namespaces its API where the tool namespace is flat, so `viewport.centerOn` folds
+into `center_view`. What is not allowed is leaving the correspondence implied —
+that is how `move_objects` came to call `translateObjects` while a differently
+meaning `moveObjects` existed beside it. Every descriptor therefore states its
+`drives`, a list of `CanvasApiRef` (`docOps.<member>`, `handle.<namespace>.<member>`,
+or `"agent"` for what the host owns rather than the canvas), typed off the real
+`DocOps` and `CanvasHandle` declarations so a member that does not exist cannot be
+named.
+
+Adding a doc-op fails `src/__tests__/canvasApiRef.test.ts` until it is either
+driven by a tool or entered in that file's `UNEXPOSED_DOC_OPS` with the reason it
+is not worth one. The canvas handle gets no such check — it only exists once a
+canvas is mounted — so that side rests on the type alone.
+
 zod is the source of truth for the argument schemas. The Claude Agent SDK's
 `tool()` takes a raw shape as it is, and the Messages API's `input_schema` is one
 call away with `z.toJSONSchema(z.object(inputSchema))`; the reverse is not

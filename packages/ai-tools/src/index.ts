@@ -1,7 +1,9 @@
-// The declaration of the canvas tool set an AI can call, and the derivation that
-// fills in which shape types those tools may name. Transport-free: how the tools
-// are handed to a model belongs to the host.
+// The declaration of the canvas tool set an AI can call — each tool naming the
+// canvas API behind it — and the derivation that fills in which shape types those
+// tools may name. Transport-free: how the tools are handed to a model belongs to
+// the host.
 
+export type { CanvasApiRef } from "./canvasApiRef";
 export type {
 	AiAddObjectParams,
 	AiAlignEdge,

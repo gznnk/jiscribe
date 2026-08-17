@@ -1,6 +1,6 @@
 // The declaration of every canvas tool an AI can call: its name, the wording the
-// model reads, the argument schema, and how validated arguments become an
-// {@link AiCanvasOp}.
+// model reads, the argument schema, how validated arguments become an
+// {@link AiCanvasOp}, and which canvas API ends up driven (see canvasApiRef.ts).
 //
 // Nothing here knows how the tools reach a model. Wrapping a descriptor for the
 // Claude Agent SDK, or turning it into a `{ name, description, input_schema }`
@@ -10,6 +10,7 @@
 
 import { z } from "zod";
 
+import type { CanvasApiRef } from "./canvasApiRef";
 import type {
 	AiAlignEdge,
 	AiArrowType,
@@ -39,6 +40,11 @@ export type CanvasToolDescriptor = {
 	toOp: (args: CanvasToolArgs) => AiCanvasOp;
 	/** True when the tool only reads (describe_canvas / capture_canvas) */
 	isReadOnly: boolean;
+	/**
+	 * The canvas API this tool drives. A tool that combines several calls names
+	 * every one of them, including the ones only some arguments reach
+	 */
+	drives: readonly CanvasApiRef[];
 };
 
 /**
@@ -49,14 +55,16 @@ export type CanvasToolDescriptor = {
  * @param description - The wording the model reads
  * @param inputSchema - The argument properties; `{}` for a tool that takes none
  * @param toOp - Builds the operation from arguments typed by `inputSchema`
- * @param options - `isReadOnly` defaults to false, i.e. the tool changes something
+ * @param options - Required for the sake of `drives`, which every tool must state
+ *   (see {@link CanvasToolDescriptor.drives}); `isReadOnly` defaults to false,
+ *   i.e. the tool changes something
  */
 const defineCanvasTool = <Shape extends z.ZodRawShape>(
 	name: string,
 	description: string,
 	inputSchema: Shape,
 	toOp: (args: z.output<z.ZodObject<Shape>>) => AiCanvasOp,
-	options: { isReadOnly?: boolean } = {},
+	options: { drives: readonly CanvasApiRef[]; isReadOnly?: boolean },
 ): CanvasToolDescriptor => ({
 	name,
 	description,
@@ -67,6 +75,7 @@ const defineCanvasTool = <Shape extends z.ZodRawShape>(
 	// inputSchema validated.
 	toOp: toOp as (args: CanvasToolArgs) => AiCanvasOp,
 	isReadOnly: options.isReadOnly ?? false,
+	drives: options.drives,
 });
 
 const ANCHOR_HANDLE_IDS = [
@@ -189,7 +198,8 @@ export const createCanvasToolDescriptors = (
 		"Read the current canvas document. Returns the CanvasDoc JSON, including every object's id, type, position, size and style. Call this before adding or editing anything so you know what already exists, what its ids are, and where the free space is.",
 		{},
 		() => ({ kind: "describeCanvas" }),
-		{ isReadOnly: true },
+		// The host serializes the document it already holds; no doc-ops read is involved
+		{ isReadOnly: true, drives: ["agent"] },
 	);
 
 	// add_object and one entry of add_objects speak the same vocabulary. Build the
@@ -250,6 +260,7 @@ export const createCanvasToolDescriptors = (
 		].join(" "),
 		{ type: objectTypeSchema, ...newObjectSchema },
 		(args) => ({ kind: "addObject", ...args }),
+		{ drives: ["docOps.addObject"] },
 	);
 
 	const addObjectsTool = defineCanvasTool(
@@ -279,6 +290,13 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "addObjects", ...args }),
+		{
+			drives: [
+				"docOps.addObject",
+				"docOps.groupObjects",
+				"docOps.addObjectsToGroup",
+			],
+		},
 	);
 
 	const connectableNote =
@@ -361,6 +379,7 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "connect", ...args }),
+		{ drives: ["docOps.connect"] },
 	);
 
 	const deleteObjectsTool = defineCanvasTool(
@@ -370,6 +389,7 @@ export const createCanvasToolDescriptors = (
 			ids: z.array(z.string()).min(1).describe("ids to delete."),
 		},
 		(args) => ({ kind: "deleteObjects", ...args }),
+		{ drives: ["docOps.deleteObjects"] },
 	);
 
 	const setPositionTool = defineCanvasTool(
@@ -381,6 +401,7 @@ export const createCanvasToolDescriptors = (
 			y: z.number().optional().describe("New top-left y in px."),
 		},
 		(args) => ({ kind: "setPosition", ...args }),
+		{ drives: ["docOps.setPosition"] },
 	);
 
 	const translateObjectsTool = defineCanvasTool(
@@ -392,6 +413,7 @@ export const createCanvasToolDescriptors = (
 			deltaY: z.number().describe("Px to move down; negative moves up."),
 		},
 		(args) => ({ kind: "translateObjects", ...args }),
+		{ drives: ["docOps.translateObjects"] },
 	);
 
 	const resizeObjectTool = defineCanvasTool(
@@ -403,6 +425,7 @@ export const createCanvasToolDescriptors = (
 			height: z.number().min(1).optional().describe("New height in px."),
 		},
 		(args) => ({ kind: "resizeObject", ...args }),
+		{ drives: ["docOps.resizeObject"] },
 	);
 
 	const setRotationTool = defineCanvasTool(
@@ -422,6 +445,7 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "setRotation", ...args }),
+		{ drives: ["docOps.setRotation"] },
 	);
 
 	const setPointsTool = defineCanvasTool(
@@ -440,6 +464,7 @@ export const createCanvasToolDescriptors = (
 				.describe("The whole new outline, in drawing order."),
 		},
 		(args) => ({ kind: "setPoints", ...args }),
+		{ drives: ["docOps.setPoints"] },
 	);
 
 	const reorderObjectsTool = defineCanvasTool(
@@ -461,6 +486,7 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "reorderObjects", ...args }),
+		{ drives: ["docOps.reorderObjects"] },
 	);
 
 	const setStyleTool = defineCanvasTool(
@@ -471,6 +497,7 @@ export const createCanvasToolDescriptors = (
 			...styleSchema,
 		},
 		({ ids, ...style }) => ({ kind: "setStyle", ids, style }),
+		{ drives: ["docOps.setStyle"] },
 	);
 
 	const setTextTool = defineCanvasTool(
@@ -489,6 +516,7 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "setText", ...args }),
+		{ drives: ["docOps.setText"] },
 	);
 
 	const updateConnectorTool = defineCanvasTool(
@@ -563,6 +591,7 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "updateConnector", ...args }),
+		{ drives: ["docOps.updateConnector"] },
 	);
 
 	const alignObjectsTool = defineCanvasTool(
@@ -577,6 +606,7 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "alignObjects", ...args }),
+		{ drives: ["docOps.alignObjects"] },
 	);
 
 	const distributeObjectsTool = defineCanvasTool(
@@ -595,6 +625,7 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "distributeObjects", ...args }),
+		{ drives: ["docOps.distributeObjects"] },
 	);
 
 	const groupObjectsTool = defineCanvasTool(
@@ -604,6 +635,7 @@ export const createCanvasToolDescriptors = (
 			ids: z.array(z.string()).min(2).describe("ids to group."),
 		},
 		(args) => ({ kind: "groupObjects", ...args }),
+		{ drives: ["docOps.groupObjects"] },
 	);
 
 	const dissolveGroupTool = defineCanvasTool(
@@ -613,6 +645,7 @@ export const createCanvasToolDescriptors = (
 			id: z.string().describe("id of the group to dissolve."),
 		},
 		(args) => ({ kind: "dissolveGroup", ...args }),
+		{ drives: ["docOps.dissolveGroup"] },
 	);
 
 	const addToGroupTool = defineCanvasTool(
@@ -626,6 +659,7 @@ export const createCanvasToolDescriptors = (
 				.describe("ids to move in; they end up drawn on top of the group."),
 		},
 		(args) => ({ kind: "addToGroup", ...args }),
+		{ drives: ["docOps.addObjectsToGroup"] },
 	);
 
 	const removeFromGroupTool = defineCanvasTool(
@@ -638,6 +672,7 @@ export const createCanvasToolDescriptors = (
 				.describe("ids to take out; each must currently sit inside a group."),
 		},
 		(args) => ({ kind: "removeFromGroup", ...args }),
+		{ drives: ["docOps.removeObjectsFromGroup"] },
 	);
 
 	const captureCanvasTool = defineCanvasTool(
@@ -649,7 +684,7 @@ export const createCanvasToolDescriptors = (
 		].join(" "),
 		{},
 		() => ({ kind: "captureCanvas" }),
-		{ isReadOnly: true },
+		{ isReadOnly: true, drives: ["handle.export.capturePng"] },
 	);
 
 	const selectObjectsTool = defineCanvasTool(
@@ -665,6 +700,7 @@ export const createCanvasToolDescriptors = (
 				.describe("ids to select; an empty list clears the selection."),
 		},
 		(args) => ({ kind: "selectObjects", ...args }),
+		{ drives: ["handle.selection.select"] },
 	);
 
 	const centerViewTool = defineCanvasTool(
@@ -687,6 +723,7 @@ export const createCanvasToolDescriptors = (
 				),
 		},
 		(args) => ({ kind: "centerView", ...args }),
+		{ drives: ["handle.viewport.centerOn"] },
 	);
 
 	const fitViewTool = defineCanvasTool(
@@ -702,6 +739,12 @@ export const createCanvasToolDescriptors = (
 				.describe("What to fit into the view."),
 		},
 		(args) => ({ kind: "fitView", ...args }),
+		{
+			drives: [
+				"handle.viewport.fitToContent",
+				"handle.viewport.fitToSelection",
+			],
+		},
 	);
 
 	const undoTool = defineCanvasTool(
@@ -709,6 +752,9 @@ export const createCanvasToolDescriptors = (
 		"Take back your own last canvas change. Refused once the user has edited the canvas themselves, so it can never discard their work — fix things forward in that case.",
 		{},
 		() => ({ kind: "undo" }),
+		// The AI's own snapshot history, kept by the host apart from the canvas undo
+		// stack so it can never reach a change the user made
+		{ drives: ["agent"] },
 	);
 
 	return [
