@@ -292,7 +292,7 @@ export const createCanvasToolDescriptors = (
 		(args) => ({ kind: "addObjects", ...args }),
 		{
 			drives: [
-				"docOps.addObject",
+				"docOps.addObjects",
 				"docOps.groupObjects",
 				"docOps.addObjectsToGroup",
 			],
@@ -687,6 +687,86 @@ export const createCanvasToolDescriptors = (
 		{ isReadOnly: true, drives: ["handle.export.capturePng"] },
 	);
 
+	// The measurement tools below answer with numbers what capture_canvas can only
+	// hint at in a picture. measure.hitTest is left out of them on purpose: its one
+	// use is turning a coordinate read off an exported image back into object ids,
+	// and capture_canvas tells the model not to read coordinates off the image at
+	// all, so a tool for it would only make the discouraged way of working easier.
+
+	const measureTextTool = defineCanvasTool(
+		"measure_text",
+		[
+			"Measure how one label actually came out: the box it is drawn in, the size the wrapped text takes, how many lines it wrapped to, and whether the shape is cutting it off.",
+			'This is the exact answer to "does the label fit?" that capture_canvas can only suggest — call it after putting text on a shape you did not size for it, instead of judging the fit from a picture.',
+			"describe_canvas cannot answer it either: the document holds the text and the shape size, not the wrapping between them.",
+			"When the text does not fit, the result says how much room is missing, so you can resize_object, drop the fontSize or shorten the text by a known amount.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object whose label is measured."),
+			slot: z
+				.string()
+				.optional()
+				.describe(
+					'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one to measure. Omit for the shape\'s single label.',
+				),
+		},
+		(args) => ({ kind: "measureText", ...args }),
+		{ isReadOnly: true, drives: ["handle.measure.textSlot"] },
+	);
+
+	const findOverlapsTool = defineCanvasTool(
+		"find_overlaps",
+		[
+			"List the shapes sitting on top of one another, with the rectangle each pair shares and how big it is.",
+			"This is the numeric form of the overlap check you would otherwise make by eye on capture_canvas: call it after add_objects and after moving things about, and trust it over the picture.",
+			"Shapes are compared by bounding box, so a pair whose drawn outlines only come close is still reported; a pair where one fully contains the other is marked as such, since that is usually deliberate.",
+			"Connectors and groups are never compared — a line crossing a shape is how connectors are drawn.",
+			"An empty result means the layout is clean, not that the call failed.",
+		].join(" "),
+		{
+			ids: z
+				.array(z.string())
+				.optional()
+				.describe(
+					"Shapes to compare; omit to compare everything on the canvas, which is what you want after a batch of edits.",
+				),
+		},
+		(args) => ({ kind: "findOverlaps", ...args }),
+		{ isReadOnly: true, drives: ["handle.measure.findOverlaps"] },
+	);
+
+	const measureConnectorPathTool = defineCanvasTool(
+		"measure_connector_path",
+		[
+			"Trace where a connector is really drawn: both endpoints as they landed on the shapes' outlines, and every corner the router put in between.",
+			"The document stores neither — an end is an anchor reference and a route is computed at draw time — so this is the only way to know a line's actual path short of looking at a capture_canvas picture.",
+			"Use it when you suspect a line cuts through a shape: compare the returned points against the boxes describe_canvas reports, then re-route it with update_connector.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the connector to trace."),
+		},
+		(args) => ({ kind: "measureConnectorPath", ...args }),
+		{ isReadOnly: true, drives: ["handle.measure.connectorPath"] },
+	);
+
+	const measureVisualBoundsTool = defineCanvasTool(
+		"measure_visual_bounds",
+		[
+			"Measure the rectangle objects really cover once drawn, decoration outside their geometry included (an actor's label, a shadow).",
+			"describe_canvas reports the boxes you asked for; this reports what came of them, which is what actually collides with a neighbour and what fit_view frames.",
+			"Use it to place something beside existing work without guessing the gap off a capture_canvas picture: measure what is there, then set_position past its edge.",
+			"The result is a single rectangle, the union of everything named, so measure ids one at a time when you need them apart.",
+		].join(" "),
+		{
+			ids: z
+				.array(z.string())
+				.min(1)
+				.describe("ids to measure together; the union is what comes back."),
+		},
+		(args) => ({ kind: "measureVisualBounds", ...args }),
+		{ isReadOnly: true, drives: ["handle.measure.visualBounds"] },
+	);
+
 	const selectObjectsTool = defineCanvasTool(
 		"select_objects",
 		[
@@ -760,6 +840,10 @@ export const createCanvasToolDescriptors = (
 	return [
 		describeCanvasTool,
 		captureCanvasTool,
+		measureTextTool,
+		findOverlapsTool,
+		measureConnectorPathTool,
+		measureVisualBoundsTool,
 		addObjectTool,
 		addObjectsTool,
 		connectTool,

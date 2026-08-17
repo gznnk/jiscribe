@@ -29,6 +29,10 @@ describe("createCanvasToolDescriptors", () => {
 		expect(names).toEqual([
 			"describe_canvas",
 			"capture_canvas",
+			"measure_text",
+			"find_overlaps",
+			"measure_connector_path",
+			"measure_visual_bounds",
 			"add_object",
 			"add_objects",
 			"connect",
@@ -61,7 +65,14 @@ describe("createCanvasToolDescriptors", () => {
 			.filter((descriptor) => descriptor.isReadOnly)
 			.map((descriptor) => descriptor.name);
 
-		expect(readOnlyNames).toEqual(["describe_canvas", "capture_canvas"]);
+		expect(readOnlyNames).toEqual([
+			"describe_canvas",
+			"capture_canvas",
+			"measure_text",
+			"find_overlaps",
+			"measure_connector_path",
+			"measure_visual_bounds",
+		]);
 	});
 
 	it("turns every input schema into a JSON Schema, which is what the direct API route needs", () => {

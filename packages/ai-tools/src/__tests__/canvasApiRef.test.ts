@@ -29,8 +29,6 @@ const capabilities: AiCanvasCapabilities = {
  * either driven by a tool or entered here.
  */
 const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {
-	addObjects:
-		"add_objects reproduces the all-or-nothing guarantee by looping addObject over a draft doc it throws away on failure, so the batch op itself is never reached.",
 	connectMany:
 		"No batch connector tool is exposed; the model calls connect once per edge.",
 	setPositions:

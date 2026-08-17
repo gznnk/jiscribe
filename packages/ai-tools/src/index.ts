@@ -4,21 +4,22 @@
 // the host.
 
 export type { CanvasApiRef } from "./canvasApiRef";
-export type {
-	AiAddObjectParams,
-	AiAlignEdge,
-	AiArrowType,
-	AiCanvasOp,
-	AiCanvasOpOutcome,
-	AiDistributeAxis,
-	AiDocOp,
-	AiFitTarget,
-	AiNewObject,
-	AiPoint,
-	AiRouting,
-	AiStyle,
-	AiViewOp,
-	AiZOrderPlacement,
+export {
+	type AiAddObjectParams,
+	type AiAlignEdge,
+	type AiArrowType,
+	type AiCanvasOp,
+	type AiCanvasOpOutcome,
+	type AiDistributeAxis,
+	type AiDocOp,
+	type AiFitTarget,
+	type AiHandleOp,
+	type AiNewObject,
+	type AiPoint,
+	type AiRouting,
+	type AiStyle,
+	type AiZOrderPlacement,
+	isAiDocOp,
 } from "./canvasOps";
 export {
 	type CanvasToolArgs,

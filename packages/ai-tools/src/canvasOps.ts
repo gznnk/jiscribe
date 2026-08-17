@@ -1,6 +1,10 @@
 // The vocabulary of canvas operations an AI tool can ask for. Transport-free:
 // who carries the request (IPC, a websocket, a direct call) and who applies it
 // belong to the host, and only this vocabulary is shared between them.
+//
+// The one distinction the vocabulary itself makes is what an operation takes to
+// answer — a document, or a canvas that is mounted — because that is what decides
+// where the host has to send it.
 
 import type {
 	AddObjectParams,
@@ -14,27 +18,69 @@ import type {
 } from "@jiscribe/canvas/doc";
 
 /**
- * A canvas operation an AI tool can ask for. {@link AiDocOp} reads or writes the
- * document, {@link AiViewOp} moves the camera and the selection, and the two take
- * different routes: the former needs a document only, the latter needs a canvas
- * that is actually on screen.
+ * A canvas operation an AI tool can ask for, split by what it takes to answer:
+ * {@link AiDocOp} needs a document and nothing else, {@link AiHandleOp} needs a
+ * canvas that is actually mounted. The two take different routes through the
+ * host, and the split is the same one the canvas API itself draws between
+ * `docOps` and the imperative handle.
  */
-export type AiCanvasOp = AiDocOp | AiViewOp;
+export type AiCanvasOp = AiDocOp | AiHandleOp;
 
 /**
- * An operation that leaves the document alone and only moves the camera and the
- * selection. A host that merely holds a document cannot run any of these.
+ * An operation only a mounted canvas can serve: the rendered image, the camera,
+ * the selection, and the measurements of what was actually drawn. None of them
+ * touches the document, and a host that merely holds one cannot run any of them.
  */
-export type AiViewOp =
+export type AiHandleOp =
 	| { kind: "captureCanvas" }
 	// An empty ids clears the selection
 	| { kind: "selectObjects"; ids: string[] }
 	// Puts world (x, y) at the centre of the screen; omitting zoom keeps the current one
 	| { kind: "centerView"; x: number; y: number; zoom?: number }
-	| { kind: "fitView"; target: AiFitTarget };
+	| { kind: "fitView"; target: AiFitTarget }
+	| {
+			kind: "measureText";
+			id: string;
+			/** Which text slot; omitted measures the shape's first one */
+			slot?: string;
+	  }
+	// Omitting ids compares every object on the canvas
+	| { kind: "findOverlaps"; ids?: string[] }
+	| { kind: "measureConnectorPath"; id: string }
+	// The result is one rectangle: the union of what all of them draw
+	| { kind: "measureVisualBounds"; ids: string[] };
 
 /** What fitView frames: the whole drawing, or the current selection */
 export type AiFitTarget = "all" | "selection";
+
+/**
+ * Every {@link AiHandleOp} kind, written as a map so that a variant added to the
+ * union fails to compile until it is entered here. {@link isAiDocOp} is the only
+ * reader, and getting an entry wrong there silently routes an operation to a host
+ * that cannot serve it.
+ */
+const HANDLE_OP_KINDS: Readonly<Record<AiHandleOp["kind"], true>> = {
+	captureCanvas: true,
+	selectObjects: true,
+	centerView: true,
+	fitView: true,
+	measureText: true,
+	findOverlaps: true,
+	measureConnectorPath: true,
+	measureVisualBounds: true,
+};
+
+/**
+ * Whether an operation can be served from a document alone, i.e. without a
+ * mounted canvas. Hosts route on this: a document-only operation may be applied
+ * to a file on a server, while everything else has to reach the canvas on screen.
+ *
+ * @param value - Any canvas operation; narrowing is by kind, so an object that
+ *   was not built from this vocabulary counts as a doc op
+ * @returns True for {@link AiDocOp}, false for {@link AiHandleOp}
+ */
+export const isAiDocOp = (value: AiCanvasOp): value is AiDocOp =>
+	!Object.hasOwn(HANDLE_OP_KINDS, value.kind);
 
 /** An operation that reads or changes the document; kept in step with docOps */
 export type AiDocOp =
