@@ -4,8 +4,8 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * Transient UI/interaction fields of CanvasControllerState.
  *
  * These are cleared as a set whenever the underlying object set is swapped out
- * (undo/redo, external sync) or the canvas is initialized. They are not part of
- * CanvasDoc and carry no history.
+ * (history navigation — see restoreHistorySnapshot — and external sync) or the
+ * canvas is initialized. They are not part of CanvasDoc and carry no history.
  *
  * Kept as a `Pick` so the field list stays type-locked to CanvasControllerState:
  * renaming a field there fails to compile here.
@@ -42,8 +42,8 @@ export type UiStateReset = Pick<
  * Returns the reset values for every transient UI/interaction field.
  *
  * Single source of truth for the "clear all UI state" list previously duplicated
- * across undo/redo, external sync, and initialization. Spread over a state to
- * clear them all at once: `{ ...state, ...resetUiState() }`.
+ * across history navigation, external sync, and initialization. Spread over a
+ * state to clear them all at once: `{ ...state, ...resetUiState() }`.
  *
  * Returns a fresh object (with fresh `selectedIds` / `keyPointsCache`) on every
  * call so no mutable reference is shared between states.

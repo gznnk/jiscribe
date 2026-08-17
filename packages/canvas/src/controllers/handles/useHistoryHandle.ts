@@ -51,8 +51,11 @@ export type CanvasHistoryHandle = {
 	 */
 	mark(): CanvasHistoryMark;
 	/**
-	 * Undoes back to a mark, however many entries that takes, in one step.
-	 * Redo is unaffected: everything undone stays redoable.
+	 * Undoes back to a mark, however many entries that takes, in one step — the
+	 * document is materialized once, not once per entry undone.
+	 *
+	 * Redo is unaffected: everything undone stays redoable, one entry at a time,
+	 * exactly as it would be after that many separate undos.
 	 *
 	 * @param mark - A mark from {@link mark} on this canvas
 	 * @returns Whether the document is now at the mark. False changes nothing at
@@ -66,9 +69,10 @@ export type CanvasHistoryHandle = {
 /**
  * Builds the stable history sub-handle assembled into the Canvas handle.
  *
- * @param dispatch - The canvas reducer's dispatch; every method here goes
- *   through the undo/redo commands, so a restricted `initialConfig.commands`
- *   that drops them disables this handle too
+ * @param dispatch - The canvas reducer's dispatch. `undo` / `redo` go through
+ *   the commands of the same name, and `revertTo` through an action of its own;
+ *   all three are still gated on the undo command being available, so a
+ *   restricted `initialConfig.commands` that drops it disables this handle too
  * @param canvasState - Current controller state, read at call time (not at
  *   render time) so the handle stays referentially stable
  * @param registries - The canvas's registry bundle; its command registry both
@@ -112,19 +116,17 @@ export const useHistoryHandle = (
 				if (history.present === mark.entry) {
 					return true;
 				}
-				const markIndex = history.past.findIndex(
-					(entry) => entry === mark.entry,
-				);
-				// Checked before the first dispatch so a mark that cannot be reached
-				// leaves the document where it is rather than partly rolled back.
-				if (markIndex < 0 || !canRun("undo")) {
+				// The reducer checks reachability again (it must, being dispatchable
+				// from anywhere); this one is what lets the caller be told, and it
+				// keeps revert unavailable wherever undo itself is — a canvas
+				// configured without the undo command has no back door here.
+				if (
+					!history.past.some((entry) => entry === mark.entry) ||
+					!canRun("undo")
+				) {
 					return false;
 				}
-				// Each undo pops one entry off `past`; the reducer applies them in
-				// order, so the count is taken from the state as it is now.
-				for (let step = history.past.length; step > markIndex; step--) {
-					dispatch({ type: "COMMAND", commandId: "undo" });
-				}
+				dispatch({ type: "REVERT_HISTORY", entry: mark.entry });
 				return true;
 			},
 		};

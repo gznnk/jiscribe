@@ -20,6 +20,10 @@ import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSize
 import { resetUiState } from "../utils/resetUiState";
 import { createDocSnapshotFromState } from "../utils/resolveDocSnapshot";
 import { resolveRequestedSelection } from "../utils/resolveRequestedSelection";
+import {
+	canNavigateHistory,
+	restoreHistorySnapshot,
+} from "../utils/restoreHistorySnapshot";
 import { toggleTextEditFormat } from "../utils/toggleTextEditFormat";
 
 /**
@@ -77,6 +81,42 @@ export const createCanvasReducer =
 					registries,
 				);
 				return recordHistoryIfNeeded(reconciledResult, state);
+			}
+
+			case "REVERT_HISTORY": {
+				const { past, present, future } = state.history;
+				const markIndex = past.findIndex((entry) => entry === action.entry);
+				// Off the stack, or already the present one: either way there is
+				// nothing to undo back to (see RevertHistoryAction).
+				if (markIndex < 0 || !canNavigateHistory(state)) {
+					return state;
+				}
+				// The stacks the same number of undos would have left: everything
+				// after the target moves to the redo stack, oldest first, with the
+				// state being left behind on top of it.
+				const revertedResult = restoreHistorySnapshot(
+					state,
+					{
+						past: past.slice(0, markIndex),
+						present: past[markIndex],
+						future: [...past.slice(markIndex + 1), present, ...future],
+					},
+					registries,
+				);
+				// The same reconciliation the undos it stands in for would have run,
+				// so the two cannot diverge. recordHistoryIfNeeded is deliberately not
+				// called: restoring is not a commit, and it would no-op on the
+				// unchanged commitVersion anyway.
+				const resizedResult = reconcileObjectContentSizes(
+					revertedResult,
+					state,
+					registries.objectContentResizer,
+				);
+				return reconcileConnectorVerticesIfCommitted(
+					resizedResult,
+					state,
+					registries,
+				);
 			}
 
 			case "SET_DOC_DEFAULTS": {

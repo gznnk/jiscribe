@@ -67,6 +67,29 @@ export type CommandAction = {
 };
 
 /**
+ * Undoes back to one specific history entry in a single step, however many
+ * entries lie in between (`ref.current.history.revertTo`).
+ *
+ * Not the undo command repeated: each undo materializes the document it lands on,
+ * so repeating it would rebuild the whole object tree once per entry when only
+ * the last one is ever seen. This lands on the target directly and moves the
+ * entries it passed over to the redo stack in one go, leaving exactly the stacks
+ * the repeated undos would have.
+ */
+export type RevertHistoryAction = {
+	type: "REVERT_HISTORY";
+	/**
+	 * The history entry to make present again. Compared by identity against the
+	 * undo stack and never read, which is why it is typed as `object`: the public
+	 * mark (`CanvasHistoryMark`) carries one of these without the internal
+	 * DocSnapshot type having to become part of the API. An entry that is no
+	 * longer on the stack — already undone past, or dropped by the 50-entry cap —
+	 * leaves the document where it is.
+	 */
+	entry: object;
+};
+
+/**
  * Update text edit action - updates text during editing. The editor reports the
  * whole edited body as it reads back off its surface, styling included
  * (readEditableRichText), so the draft holds exactly what is on screen; a
@@ -166,6 +189,7 @@ export type CanvasAction =
 	| SetViewportAction
 	| SetSelectionAction
 	| CommandAction
+	| RevertHistoryAction
 	| UpdateTextEditAction
 	| UpdateTextEditSelectionAction
 	| ToggleTextFormatAction
