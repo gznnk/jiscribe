@@ -110,7 +110,7 @@ describe("listTypes", () => {
 	});
 
 	// The set an AI tool schema offers is derived by hand in
-	// packages/canvas-agent/src/capabilities.ts (toCanvasCapabilities), whose whole hazard
+	// packages/ai-tools/src/capabilities.ts (toCanvasCapabilities), whose whole hazard
 	// is drifting from what these ops accept. Restated here so listTypes can replace it.
 	it("yields the sets toCanvasCapabilities derives by hand", () => {
 		const handDerived: Array<[string, ObjectDocDefinition]> = [

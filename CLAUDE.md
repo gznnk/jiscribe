@@ -23,6 +23,7 @@ packages/
   basic-validators/  primitive runtime validators
   utility-types/     shared TypeScript utility types
   ai-docs/           generated JSON Schema / AI reference for the shipped shapes
+  ai-tools/          the canvas tool set an AI can call, declared free of any transport
 plugins/             flowchart, uml, container, general, annotation, sticky, markdown — each with its own e2e suite
 apps/
   canvas-examples/   integration examples (one example = one file) + the plugin-coexistence e2e suite
