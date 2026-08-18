@@ -29,3 +29,8 @@ export type SvgDoc = CreateObjectType<
 	typeof SvgDocBrand,
 	SvgExtraDoc
 >;
+
+/** Doc fields svg carries beyond the ones its features imply (see ObjectDocDefinition.extraKeys). */
+export const SVG_EXTRA_KEYS = [
+	"svgText",
+] as const satisfies readonly (keyof SvgDoc)[];

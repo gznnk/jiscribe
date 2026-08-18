@@ -29,13 +29,6 @@ export type FrameObjectDefinitionParams<
 	doc: ObjectDocDefinition;
 
 	/**
-	 * Doc fields the mapper carries over unchanged on top of the ones features
-	 * implies (a shape-specific field such as the sticky's `variant`). Order does
-	 * not matter; unknown keys are simply absent from the result.
-	 */
-	extraKeys?: readonly string[];
-
-	/**
 	 * State checks beyond the ones features implies, run last in the type-guard
 	 * chain. Returns whether the state is valid; the record it receives has already
 	 * passed the id / type / frame checks.
@@ -64,7 +57,6 @@ export const createFrameObjectDefinition = <
 	TState extends ObjectState & TransformedFrame & { type: TDoc["type"] },
 >({
 	doc,
-	extraKeys,
 	isExtraStateValid,
 	...definition
 }: FrameObjectDefinitionParams<TDoc, TState>): ObjectTypeDefinition<
@@ -80,7 +72,9 @@ export const createFrameObjectDefinition = <
 
 	return {
 		...doc,
-		mapper: createFrameMapper<TDoc, TState>(features, extraKeys),
+		// The shape's own field names come from the doc definition, which is where they
+		// are declared once for the mapper and doc-ops alike.
+		mapper: createFrameMapper<TDoc, TState>(features, doc.extraKeys),
 		stateValidator: createFrameStateValidator(features, isExtraStateValid),
 		behavior: createFrameBehavior<TState>(),
 		...definition,

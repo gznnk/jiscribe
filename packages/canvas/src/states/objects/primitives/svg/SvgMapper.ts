@@ -1,14 +1,17 @@
 import type { SvgState } from "./SvgState";
 import type { SvgDoc } from "../../../../schemas/objects/primitives/svg/SvgDoc";
-import { SvgFeatures } from "../../../../schemas/objects/primitives/svg/SvgDoc";
+import {
+	SVG_EXTRA_KEYS,
+	SvgFeatures,
+} from "../../../../schemas/objects/primitives/svg/SvgDoc";
 import { createFrameMapper } from "../../base/FrameMapper";
 
 /**
  * SvgDoc ↔ SvgState conversion (Frame-family shared logic generated from features).
- * svgText is a shape-specific pass-through field, so it is passed as an extra key
- * in the allow-list.
+ * The allow-list takes the type's own fields from the one declaration of them
+ * (SVG_EXTRA_KEYS), which the doc definition passes to doc-ops as well.
  */
 export const { toState: svgToState, toDoc: svgToDoc } = createFrameMapper<
 	SvgDoc,
 	SvgState
->(SvgFeatures, ["svgText"] satisfies readonly (keyof SvgDoc)[]);
+>(SvgFeatures, SVG_EXTRA_KEYS);

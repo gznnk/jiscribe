@@ -1,4 +1,4 @@
-import type { ArrowType } from "../../types/ArrowType";
+import { ARROW_STYLE_KEYS, type ArrowStyleDoc } from "../../base/ArrowStyleDoc";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 
@@ -16,8 +16,10 @@ declare const PolylineDocBrand: unique symbol;
 export type PolylineDoc = CreateObjectType<
 	typeof PolylineFeatures,
 	typeof PolylineDocBrand,
-	{
-		startArrow?: ArrowType;
-		endArrow?: ArrowType;
-	}
+	ArrowStyleDoc
 >;
+
+/** Doc fields polyline carries beyond the ones its features imply (see ObjectDocDefinition.extraKeys). */
+export const POLYLINE_EXTRA_KEYS = [
+	...ARROW_STYLE_KEYS,
+] as const satisfies readonly (keyof PolylineDoc)[];

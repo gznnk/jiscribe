@@ -41,8 +41,9 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
   （`supportsBounds` と型排他）
 - `createFrameObjectDefinition<TDoc, TState>({ doc, component, ... })` — mapper /
   stateValidator / behavior を doc.features から充填して `ObjectTypeDefinition` を返す。
-  `extraKeys` / `isExtraStateValid` と、`textRegion` / `outline` / `stencils` 等の
-  任意フィールドを透過
+  図形固有のフィールド名は doc 定義の `extraKeys` から読む（宣言は
+  `createFrameObjectDoc` 側 1 箇所）。`isExtraStateValid` と、`textRegion` /
+  `outline` / `stencils` 等の任意フィールドを透過
 
 どちらも糖衣であり、`ObjectDocDefinition` / `ObjectTypeDefinition` の直書きは引き続き
 第一級（例: uml の record は mapper が派生物のため definition を直書き）。

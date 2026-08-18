@@ -44,7 +44,11 @@ const CONNECTOR_LABEL_KEYS = [
 	"fontWeight",
 ] as const satisfies readonly (keyof StyleParams)[];
 
-const ALL_STYLE_KEYS = [
+/**
+ * Every property name {@link StyleParams} covers. Exported because an op taking
+ * properties of its own has to know which names this already speaks for.
+ */
+export const ALL_STYLE_KEYS = [
 	...FILL_STYLE_KEYS,
 	...STROKE_STYLE_KEYS,
 	...RADIUS_STYLE_KEYS,

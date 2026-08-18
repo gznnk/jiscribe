@@ -36,3 +36,47 @@ export const cardDefinition: ObjectDocDefinition = {
 	},
 	validateDoc: () => [],
 };
+
+/** Values the badge fixture accepts, so an unknown one has something to be measured against. */
+export const BADGE_KINDS = ["new", "beta"] as const;
+
+/**
+ * A shape carrying a property of its own, which is what `props` exists to reach. It
+ * declares `badge` twice over — `extraKeys` says the name exists, the validator says
+ * what it may hold — which is the pair a creation call is checked against.
+ */
+export const badgeDefinition: ObjectDocDefinition = {
+	features: {
+		type: "badged",
+		geometry: "rect",
+		transform: true,
+		connectable: true,
+	},
+	extraKeys: ["badge"],
+	validateDoc: (o, path) => {
+		if (!("badge" in o) || o.badge === undefined) {
+			return [];
+		}
+		if (
+			typeof o.badge !== "string" ||
+			!(BADGE_KINDS as readonly string[]).includes(o.badge)
+		) {
+			return [
+				{
+					path: `${path}.badge`,
+					message: `must be one of ${BADGE_KINDS.join(" | ")}`,
+					beyondSchema: true,
+				},
+			];
+		}
+		return [];
+	},
+	factory: createFrameObjectFactory({
+		type: "badged",
+		width: 100,
+		height: 60,
+		fill: "transparent",
+		stroke: "auto",
+		strokeWidth: 2,
+	}),
+};

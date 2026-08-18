@@ -4,20 +4,26 @@ import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { DocOperationError } from "../errors";
 import { batchItemError } from "../utils/batchErrors";
+import { applyExtraProps } from "../utils/extraFields";
 import { generateUniqueId } from "../utils/ids";
 import type { ObjectRecord } from "../utils/objectAccess";
 import type { DocDefinitions } from "../utils/objectGeometry";
 import { requirePolyPoints } from "../utils/polyFields";
-import { applyStyle, type StyleParams } from "../utils/styleFields";
+import {
+	ALL_STYLE_KEYS,
+	applyStyle,
+	type StyleParams,
+} from "../utils/styleFields";
 import {
 	applyRotation,
 	requireRotationDegrees,
 } from "../utils/transformFields";
 
 /**
- * Where and how big the new object is, plus any styling to give it on the spot. The
- * styling is the same set {@link import("./style").setStyle} takes, and a property the
- * type has no place for is ignored the same way.
+ * Where and how big the new object is, plus any styling to give it on the spot and any
+ * property belonging to the type itself. The styling is the same set
+ * {@link import("./style").setStyle} takes, and a property the type has no place for is
+ * ignored the same way.
  */
 export type AddObjectParams = StyleParams & {
 	/** Left edge in px; the bounding box is top-left based, not center based. */
@@ -49,7 +55,37 @@ export type AddObjectParams = StyleParams & {
 	 * Ignored by a type that has no rotation of its own, the way styling it cannot hold is.
 	 */
 	rotation?: number;
+	/**
+	 * Properties belonging to the type itself, which no parameter above covers — the
+	 * lucide icon's `icon`, the callout's `tail`, the container's `headerHeight`. Only
+	 * the names the type declares (`ObjectDocDefinition.extraKeys`) are accepted, and
+	 * the value is then checked by the type's own `validateDoc` — so a name the type
+	 * does not have and a malformed value are both refused rather than stored. A name
+	 * this call already takes as a parameter is refused outright.
+	 */
+	props?: Readonly<Record<string, unknown>>;
 };
+
+/**
+ * The names a creation call spells out itself, which {@link AddObjectParams.props} must
+ * not shadow. `satisfies` ties the list to the type, so a parameter added above without
+ * a line here fails to compile; `id` and `type` are not parameters but decide what the
+ * object *is*, and letting `props` write them would corrupt it.
+ */
+const RESERVED_PROP_KEYS: ReadonlySet<string> = new Set<string>([
+	"id",
+	"type",
+	...([
+		"x",
+		"y",
+		"width",
+		"height",
+		"text",
+		"points",
+		"rotation",
+	] as const satisfies readonly (keyof AddObjectParams)[]),
+	...ALL_STYLE_KEYS,
+]);
 
 /** One object to create in an {@link addObjects} call. */
 export type AddObjectEntry = { type: string } & AddObjectParams;
@@ -163,6 +199,27 @@ const buildObject = (
 	if (rotation !== undefined) {
 		applyRotation(created as ObjectRecord, rotation, definition);
 	}
+	if (params.props !== undefined) {
+		applyExtraProps(
+			created as ObjectRecord,
+			params.props,
+			definition,
+			RESERVED_PROP_KEYS,
+			type,
+		);
+	}
+
+	// Last, so it sees the finished object. The parameters above are each checked as
+	// they are applied, but `props` is an open door: only the type knows which names it
+	// has and what they may hold, and this is where it gets to say so.
+	const diagnostics = definition.validateDoc(created as ObjectRecord, type);
+	if (diagnostics.length > 0) {
+		throw new DocOperationError(
+			`cannot create "${type}": ${diagnostics
+				.map((diagnostic) => `${diagnostic.path} ${diagnostic.message}`)
+				.join("; ")}`,
+		);
+	}
 	return created;
 };
 
@@ -178,16 +235,19 @@ const buildObject = (
  *
  * @param doc - Mutated in place: the created object is pushed onto `doc.root`
  * @param type - Object type name, which must be a key of `definitions` and carry a factory
- * @param params - Top-left position and optional size/text/styling/rotation; omitted
- *   width/height fall back to `calcDimensions`' default size, and styling the type cannot hold
- *   is ignored. `points` supersedes the position and size outright
+ * @param params - Top-left position and optional size/text/styling/rotation, plus `props`
+ *   for the type's own properties; omitted width/height fall back to `calcDimensions`'
+ *   default size, and styling the type cannot hold is ignored. `points` supersedes the
+ *   position and size outright
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
  * @throws {@link DocOperationError} for an unknown type, for one without a factory
  *   (group / connector / svg and the like), when width/height are given for a
  *   point-geometry type that cannot store them, when the factory rejects the given size,
- *   when `points` are given to a type not built from vertices or are too few, or for a
- *   rotation that is not finite
+ *   when `points` are given to a type not built from vertices or are too few, for a
+ *   rotation that is not finite, when `props` carries a name this call already takes as a
+ *   parameter or one the type does not declare, or when the finished object fails the
+ *   type's own `validateDoc`
  */
 export const addObject = (
 	doc: CanvasDoc,

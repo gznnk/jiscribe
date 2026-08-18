@@ -1,10 +1,10 @@
 import type { Point } from "@jiscribe/geometry";
 import type { Prettify } from "@jiscribe/utility-types";
 
+import { ARROW_STYLE_KEYS, type ArrowStyleDoc } from "../base/ArrowStyleDoc";
 import type { FillStyleDoc } from "../base/FillStyleDoc";
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
 import type { TextStyleDoc } from "../base/TextStyleDoc";
-import type { ArrowType } from "../types/ArrowType";
 import type { ConnectorRouting } from "../types/ConnectorRouting";
 import type { CreateObjectType } from "../types/CreateObjectType";
 import type { EndpointRef } from "../types/EndpointRef";
@@ -93,12 +93,10 @@ export type ConnectorDoc = Prettify<
 		CreateObjectType<
 			typeof ConnectorFeatures,
 			typeof ConnectorDocBrand,
-			{
+			ArrowStyleDoc & {
 				source: EndpointRef;
 				target: EndpointRef;
 				routing?: ConnectorRouting;
-				startArrow?: ArrowType;
-				endArrow?: ArrowType;
 				/** Annotation on the connector. Omitted means no label. */
 				label?: ConnectorLabel;
 			}
@@ -109,3 +107,16 @@ export type ConnectorDoc = Prettify<
 		points?: Point[];
 	}
 >;
+
+/**
+ * Doc fields connector carries beyond the ones its features imply
+ * (see ObjectDocDefinition.extraKeys). `points` is not among them: the poly geometry
+ * already accounts for it.
+ */
+export const CONNECTOR_EXTRA_KEYS = [
+	"source",
+	"target",
+	"routing",
+	...ARROW_STYLE_KEYS,
+	"label",
+] as const satisfies readonly (keyof ConnectorDoc)[];

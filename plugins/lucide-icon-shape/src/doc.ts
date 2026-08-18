@@ -10,6 +10,7 @@ import type {
 } from "@jiscribe/canvas/doc";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 
+import type { IconDoc } from "./schema/IconDoc";
 import { ICON_DOC_DEFAULTS, IconFeatures } from "./schema/IconDoc";
 import { validateIconName } from "./schema/validateIconName";
 
@@ -17,6 +18,7 @@ export const lucideIconDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: IconFeatures,
 		defaults: ICON_DOC_DEFAULTS,
+		extraKeys: ["icon"] satisfies readonly (keyof IconDoc)[],
 		description:
 			'A named pictogram from the bundled Lucide icon set, drawn as line art. Decoration, not a node: it holds no text and cannot be a connector endpoint, so place it beside the shape it marks (a rect, a container header, a sticky) and connect arrows to that shape instead. For a picture that is itself a node, use a labelled pictogram such as "server", "package" or "db". The drawing is scaled uniformly to the smaller side of the box and centred, so keep the box square (the 64x64 default) unless margin is wanted. `stroke` is the icon\'s own color and `strokeWidth` its line weight, both honoured at any size.',
 		summary: "decorative Lucide icon (no text, not connectable)",

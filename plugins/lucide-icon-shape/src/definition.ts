@@ -22,7 +22,6 @@ export const lucideIconDefinition: ObjectTypeDefinition<IconDoc, IconState> =
 	createFrameObjectDefinition<IconDoc, IconState>({
 		doc: lucideIconDocDefinition,
 		component: Icon,
-		extraKeys: ["icon"],
 		// The same resolution the doc validator applies, so a name that could not be
 		// written to a document cannot reach the renderer through a state either.
 		isExtraStateValid: (state) =>

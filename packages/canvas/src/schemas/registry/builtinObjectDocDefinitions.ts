@@ -1,4 +1,7 @@
-import { ConnectorFeatures } from "../objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_EXTRA_KEYS,
+	ConnectorFeatures,
+} from "../objects/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connector/validateConnectorDoc";
 import {
 	ELLIPSE_DOC_DEFAULTS,
@@ -11,7 +14,10 @@ import { validateGroupDoc } from "../objects/primitives/group/validateGroupDoc";
 import { PolygonFeatures } from "../objects/primitives/polygon/PolygonDoc";
 import { PolygonObjectFactory } from "../objects/primitives/polygon/PolygonObjectFactory";
 import { validatePolygonDoc } from "../objects/primitives/polygon/validatePolygonDoc";
-import { PolylineFeatures } from "../objects/primitives/polyline/PolylineDoc";
+import {
+	POLYLINE_EXTRA_KEYS,
+	PolylineFeatures,
+} from "../objects/primitives/polyline/PolylineDoc";
 import { PolylineObjectFactory } from "../objects/primitives/polyline/PolylineObjectFactory";
 import { validatePolylineDoc } from "../objects/primitives/polyline/validatePolylineDoc";
 import {
@@ -20,7 +26,7 @@ import {
 } from "../objects/primitives/rect/RectDoc";
 import { RectObjectFactory } from "../objects/primitives/rect/RectObjectFactory";
 import { validateRectDoc } from "../objects/primitives/rect/validateRectDoc";
-import { SvgFeatures } from "../objects/primitives/svg/SvgDoc";
+import { SVG_EXTRA_KEYS, SvgFeatures } from "../objects/primitives/svg/SvgDoc";
 import { validateSvgDoc } from "../objects/primitives/svg/validateSvgDoc";
 import {
 	TEXT_DOC_DEFAULTS,
@@ -85,17 +91,20 @@ export const builtinObjectDocDefinitions = {
 	polyline: {
 		features: PolylineFeatures,
 		validateDoc: validatePolylineDoc,
+		extraKeys: POLYLINE_EXTRA_KEYS,
 		factory: PolylineObjectFactory,
 		summary: "open line",
 	},
 	connector: {
 		features: ConnectorFeatures,
 		validateDoc: validateConnectorDoc,
+		extraKeys: CONNECTOR_EXTRA_KEYS,
 		summary: "edge / arrow between objects",
 	},
 	svg: {
 		features: SvgFeatures,
 		validateDoc: validateSvgDoc,
+		extraKeys: SVG_EXTRA_KEYS,
 		summary: "raw SVG escape hatch (opaque box)",
 	},
 } satisfies Readonly<Record<string, ObjectDocDefinition>>;

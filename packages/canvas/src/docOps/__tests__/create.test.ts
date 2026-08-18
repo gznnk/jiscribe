@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
 import {
 	docOps,
@@ -9,6 +10,7 @@ import {
 	rootIds,
 	twoRects,
 } from "./support/docFixtures";
+import { badgeDefinition } from "./support/pluginFixtures";
 
 describe("addObject", () => {
 	it("assigns friendly sequential ids and keeps top-left coordinates", () => {
@@ -275,6 +277,105 @@ describe("addObject with points", () => {
 			}),
 		).toThrow(/points\[1\] is not a finite coordinate pair/);
 		expect(doc.root).toEqual([]);
+	});
+});
+
+describe("addObject with a type's own props", () => {
+	const badgedDocOps = createDocOps({
+		plugins: [{ id: "badged-plugin", objects: { badged: badgeDefinition } }],
+	});
+
+	it("writes a property no parameter covers onto the new object", () => {
+		const doc = emptyDoc();
+		const id = badgedDocOps.addObject(doc, "badged", {
+			x: 10,
+			y: 20,
+			props: { badge: "beta" },
+		});
+
+		expect(readObject(doc, id).badge).toBe("beta");
+	});
+
+	it("drops a prop given as undefined, the way an unfilled argument reads", () => {
+		const doc = emptyDoc();
+		const id = badgedDocOps.addObject(doc, "badged", {
+			x: 0,
+			y: 0,
+			props: { badge: undefined },
+		});
+
+		expect(readObject(doc, id)).not.toHaveProperty("badge");
+	});
+
+	it("refuses a value the type rejects, leaving the doc untouched", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			badgedDocOps.addObject(doc, "badged", {
+				x: 0,
+				y: 0,
+				props: { badge: "shiny" },
+			}),
+		).toThrow(DocOperationError);
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("names the offending property in the error", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			badgedDocOps.addObject(doc, "badged", {
+				x: 0,
+				y: 0,
+				props: { badge: 42 },
+			}),
+		).toThrow(/badged\.badge/);
+	});
+
+	it("refuses a name the type does not declare, naming the ones it has", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			badgedDocOps.addObject(doc, "badged", {
+				x: 0,
+				y: 0,
+				props: { badgeKind: "new" },
+			}),
+		).toThrow(/must not carry "badgeKind".*own properties are "badge"/);
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("refuses any prop on a type that declares none", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			docOps.addObject(doc, "rect", { x: 0, y: 0, props: { badge: "new" } }),
+		).toThrow(/no properties of its own/);
+	});
+
+	it("refuses a name the call already takes as a parameter", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			badgedDocOps.addObject(doc, "badged", {
+				x: 0,
+				y: 0,
+				props: { width: 400 },
+			}),
+		).toThrow(/must not carry "width"/);
+		expect(() =>
+			badgedDocOps.addObject(doc, "badged", {
+				x: 0,
+				y: 0,
+				props: { id: "mine" },
+			}),
+		).toThrow(/must not carry "id"/);
+	});
+
+	it("reports which entry of a batch was refused", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			badgedDocOps.addObjects(doc, [
+				{ type: "badged", x: 0, y: 0, props: { badge: "new" } },
+				{ type: "badged", x: 120, y: 0, props: { badge: "shiny" } },
+			]),
+		).toThrow(/1/);
+		expect(doc.root).toHaveLength(0);
 	});
 });
 

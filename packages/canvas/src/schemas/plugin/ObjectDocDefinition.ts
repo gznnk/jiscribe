@@ -25,6 +25,19 @@ export type ObjectDocDefinition = {
 	factory?: ObjectFactory;
 
 	/**
+	 * Names of the doc fields this type carries beyond the ones `features` implies —
+	 * the callout's `tail`, the container's `headerFill` / `headerHeight`. The single
+	 * declaration of what the type is allowed to hold: the mapper passes exactly these
+	 * between doc and state, and doc-ops refuses any other name written through a
+	 * creation call's `props`.
+	 *
+	 * Tie the array to the doc type with `satisfies readonly (keyof XxxDoc)[]`, so a
+	 * field added to one and not the other fails to compile. Omitted means the type has
+	 * no fields of its own.
+	 */
+	extraKeys?: readonly string[];
+
+	/**
 	 * AI-facing description of the shape (1–3 sentences, English): what it draws,
 	 * what it is typically used for, and where text is laid out. Verbatim source of
 	 * the type's JSON-schema `$def` description and its reference.md section, so

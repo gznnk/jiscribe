@@ -32,6 +32,15 @@ type FrameObjectDocCommonParams = {
 		height: number;
 	} & Record<string, unknown>;
 
+	/**
+	 * Names of the doc fields this shape carries beyond the ones `features` implies
+	 * (see `ObjectDocDefinition.extraKeys`). Declare it as
+	 * `["tail"] satisfies readonly (keyof CalloutDoc)[]` so the list cannot drift from
+	 * the doc type. The definition this builds is the single place it is declared: the
+	 * mapper and doc-ops both read it from there.
+	 */
+	extraKeys?: readonly string[];
+
 	/** AI-facing description of the shape (see `ObjectDocDefinition.description`). */
 	description?: string;
 
@@ -104,6 +113,7 @@ export type FrameObjectDocParams = FrameObjectDocCommonParams &
 export const createFrameObjectDoc = ({
 	features,
 	defaults,
+	extraKeys,
 	description,
 	summary,
 	outlineDescription,
@@ -114,6 +124,7 @@ export const createFrameObjectDoc = ({
 }: FrameObjectDocParams): ObjectDocDefinition => ({
 	features,
 	validateDoc: createFrameDocValidator(features, validateExtra),
+	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	description,
 	summary,

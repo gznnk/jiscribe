@@ -79,7 +79,6 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 		visualBounds: calcGroupMarkerVisualBounds,
 		extraConnectPoints: calcGroupMarkerConnectPoints,
 		geometryKey: groupMarkerGeometryKey,
-		extraKeys: ["direction", "tipPosition"],
 		isExtraStateValid: isValidGroupMarkerTipFields,
 		selectionControls: [
 			{
@@ -104,9 +103,9 @@ export const braceDefinition: ObjectTypeDefinition<BraceDoc, BraceState> =
 /**
  * Same as the brace, except that the tip does not move: the handle only ever
  * re-attaches the bracket to another edge (handleGroupMarkerDirection), and
- * `tipPosition` is neither declared nor styleable. `extraKeys` is the mapper's
- * allow-list, so a `tipPosition` written onto a bracket doc is dropped rather
- * than travelling as dead state.
+ * `tipPosition` is neither declared nor styleable: the bracket's doc definition
+ * leaves it out of `extraKeys`, so one written onto a bracket doc is refused by
+ * doc-ops and dropped by the mapper rather than travelling as dead state.
  */
 export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 	createFrameObjectDefinition<BracketDoc, BracketState>({
@@ -116,7 +115,6 @@ export const bracketDefinition: ObjectTypeDefinition<BracketDoc, BracketState> =
 		visualBounds: calcGroupMarkerVisualBounds,
 		extraConnectPoints: calcGroupMarkerConnectPoints,
 		geometryKey: groupMarkerGeometryKey,
-		extraKeys: ["direction"],
 		isExtraStateValid: isValidGroupMarkerDirection,
 		selectionControls: [
 			{
@@ -145,7 +143,6 @@ export const bracketWithStemDefinition: ObjectTypeDefinition<
 	visualBounds: calcGroupMarkerVisualBounds,
 	extraConnectPoints: calcGroupMarkerConnectPoints,
 	geometryKey: groupMarkerGeometryKey,
-	extraKeys: ["direction", "tipPosition"],
 	isExtraStateValid: isValidGroupMarkerTipFields,
 	selectionControls: [
 		{
@@ -179,7 +176,6 @@ export const calloutDefinition: ObjectTypeDefinition<CalloutDoc, CalloutState> =
 		textRegion: calcCalloutTextRegion,
 		outline: calloutOutline,
 		geometryKey: calloutGeometryKey,
-		extraKeys: ["tail"],
 		isExtraStateValid: (state) =>
 			state.tail === undefined || isCalloutTail(state.tail),
 		selectionControls: [

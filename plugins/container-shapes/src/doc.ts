@@ -10,6 +10,7 @@ import type {
 } from "@jiscribe/canvas/doc";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 
+import type { ContainerDoc } from "./schema/ContainerDoc";
 import {
 	CONTAINER_DOC_DEFAULTS,
 	ContainerFeatures,
@@ -20,6 +21,10 @@ export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 	{
 		features: ContainerFeatures,
 		defaults: CONTAINER_DOC_DEFAULTS,
+		extraKeys: [
+			"headerFill",
+			"headerHeight",
+		] satisfies readonly (keyof ContainerDoc)[],
 		description:
 			'Container ("frame") shape: a titled rectangle that marks off a region of the diagram, typically a module, subsystem or bounded context. Uses the same rect-based geometry (x/y/width/height) as RectDoc. `text` is the title and is drawn in the top header band, never in the body; the body is click-through, so objects lying over it stay directly selectable. Objects are put inside it by geometry alone: give them coordinates within the box and place them after the container in `root` so they paint on top. A container has no `children` and does not carry its contents when it moves — wrap them in a GroupDoc when they must move together. The palette entries Frame / Boundary / Zone are all this type: Boundary is a container with `strokeDashType: "dashed"`, Zone one with a tinted `fill`.',
 		summary: "titled region (module, subsystem, boundary)",

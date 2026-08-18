@@ -90,15 +90,19 @@ describe("createFrameObjectDefinition", () => {
 		expect(mapper.toDoc(state)).toMatchObject({ x: 0, y: 0 });
 	});
 
-	it("passes extraKeys through the mapper", () => {
+	it("takes the shape's own field names from the doc definition", () => {
 		const withoutExtraKeys = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: demoDocDefinition,
 			component: DemoComponent,
 		});
 		const withExtraKeys = createFrameObjectDefinition<DemoDoc, DemoState>({
-			doc: demoDocDefinition,
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				description: "Demo shape.",
+				extraKeys: ["variant"],
+			}),
 			component: DemoComponent,
-			extraKeys: ["variant"],
 		});
 
 		expect(withoutExtraKeys.mapper.toState(demoDoc)).not.toHaveProperty(

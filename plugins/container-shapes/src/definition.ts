@@ -30,7 +30,6 @@ export const containerDefinition: ObjectTypeDefinition<
 	doc: containerDocDefinition,
 	component: Container,
 	textRegion: calcContainerTextRegion,
-	extraKeys: ["headerFill", "headerHeight"],
 	// The headerHeight bound (>= 1) matches validateContainerHeaderFields and the
 	// JSON schema.
 	isExtraStateValid: (state) =>

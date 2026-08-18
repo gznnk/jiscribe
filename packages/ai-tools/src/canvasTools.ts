@@ -665,6 +665,16 @@ export const createCanvasToolDescriptors = (
 			.describe(
 				"Clockwise degrees about the shape's own centre; 0 is upright. Ignored by types that cannot turn (polygon, polyline, connector) — turn those by giving turned points instead.",
 			),
+		props: z
+			.record(z.string(), z.unknown())
+			.optional()
+			.describe(
+				[
+					"Properties belonging to the type itself, which the arguments above do not cover: lucideIcon's `icon`, callout's `tail`, container's `headerFill` / `headerHeight`.",
+					"Read the type's own schema for the names it has and what they hold; a malformed value is refused with the reason, so a rejected call can be corrected and retried.",
+					"Do not repeat an argument above here (x, width, text, a style property, …) — that is refused outright.",
+				].join(" "),
+			),
 		...styleSchema,
 	};
 

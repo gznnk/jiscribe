@@ -6,6 +6,7 @@ import {
 } from "@jiscribe/basic-validators";
 
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
+import { ARROW_STYLE_KEYS } from "../base/ArrowStyleDoc";
 import { isArrowType } from "../types/ArrowType";
 import { isEdgeAnchorSide } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
@@ -462,23 +463,18 @@ export function validateRadiusStyleFields(
 	return validateOptionalNumber(o, path, "rx", 0);
 }
 
-/** Validate optional arrowhead fields `startArrow`/`endArrow` as valid ArrowType values. */
+/**
+ * Validate the optional arrowhead fields as valid ArrowType values. The fields are taken
+ * from ARROW_STYLE_KEYS, so a field added to the group is checked without editing this.
+ */
 export function validateArrowFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	const errors: SemanticDiagnostic[] = [];
-	if ("startArrow" in o && !isArrowType(o.startArrow)) {
-		errors.push({
-			path: `${path}.startArrow`,
+	return ARROW_STYLE_KEYS.filter((key) => key in o && !isArrowType(o[key])).map(
+		(key) => ({
+			path: `${path}.${key}`,
 			message: "must be a valid ArrowType",
-		});
-	}
-	if ("endArrow" in o && !isArrowType(o.endArrow)) {
-		errors.push({
-			path: `${path}.endArrow`,
-			message: "must be a valid ArrowType",
-		});
-	}
-	return errors;
+		}),
+	);
 }
