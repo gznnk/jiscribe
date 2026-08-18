@@ -25,10 +25,14 @@ export {
 	readIconNodes,
 	resolveIconName,
 } from "./schema/icon/resolveIconName";
+export { COMMON_ICON_NAMES } from "./schema/icon/commonIconNames";
 export { suggestIconNames } from "./schema/icon/suggestIconNames";
 export { validateIconName } from "./schema/validateIconName";
 
 export { Icon } from "./presentation/Icon";
+
+export { IconGlyph } from "./menu/IconGlyph";
+export { IconPickerMenu } from "./menu/IconPickerMenu";
 
 export { IconStencilIcon } from "./stencil/IconStencilIcon";
 export { IconStencils } from "./stencil/IconStencils";

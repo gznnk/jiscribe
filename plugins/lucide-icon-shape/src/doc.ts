@@ -10,6 +10,7 @@ import type {
 } from "@jiscribe/canvas/doc";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 
+import { COMMON_ICON_GROUPS } from "./schema/icon/commonIconNames";
 import type { IconDoc } from "./schema/IconDoc";
 import { ICON_DOC_DEFAULTS, IconFeatures } from "./schema/IconDoc";
 import { validateIconName } from "./schema/validateIconName";
@@ -37,3 +38,9 @@ export const lucideIconDocPlugin: CanvasDocPlugin = {
 	id: "lucide-icon",
 	objects: { lucideIcon: lucideIconDocDefinition },
 };
+
+/**
+ * The icons the generated JSON schema names as a starting point. Re-exported from the
+ * headless entry because the docs generator reads it and must not pull in any React.
+ */
+export { COMMON_ICON_GROUPS };

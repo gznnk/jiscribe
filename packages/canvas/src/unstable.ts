@@ -144,3 +144,9 @@ export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessage
 // The value is the `--jiscribe-*` CSS variables plus a dark-theme fallback
 // (see theme/CanvasTheme.ts).
 export { theme as canvasThemeCssVars } from "./constants/theme";
+
+// The scrollbar the canvas's own scrollable panels wear (the text editor, the shortcut
+// help). A plugin panel that scrolls has no other way to match them, and a default
+// browser scrollbar next to a custom one is exactly the kind of seam a plugin should not
+// be introducing.
+export { SCROLLBAR_WIDTH, scrollbarStyles } from "./constants/scrollbarStyles";

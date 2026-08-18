@@ -1,10 +1,15 @@
 import { createStencilIcon } from "@jiscribe/canvas-sdk";
+import { createElement } from "react";
+
+import { ICON_NODES } from "../schema/icon/iconData.generated";
 
 /**
- * Toolbar glyph for the icon shape: the "shapes" icon of the bundled set, drawn
- * inline rather than looked up, so the palette does not depend on the icon data
- * loading.
+ * The icon the palette entry wears: one of the set it offers, so it cannot be a drawing
+ * the set does not have. A face rather than the obvious `shapes`, whose circle / triangle
+ * / square is the application's own mark and reads as "the shape tools" on a toolbar.
  */
+const STENCIL_ICON_NAME = "face-slightly-smiling";
+
 export const IconStencilIcon = createStencilIcon(
 	<g
 		fill="none"
@@ -13,8 +18,8 @@ export const IconStencilIcon = createStencilIcon(
 		strokeLinecap="round"
 		strokeLinejoin="round"
 	>
-		<path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z" />
-		<rect x="3" y="14" width="7" height="7" rx="1" />
-		<circle cx="17.5" cy="17.5" r="3.5" />
+		{(ICON_NODES[STENCIL_ICON_NAME] ?? []).map(([tag, attrs], index) =>
+			createElement(tag, { key: index, ...attrs }),
+		)}
 	</g>,
 );

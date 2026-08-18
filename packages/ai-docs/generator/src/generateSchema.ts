@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import type { ObjectDocDefinition } from "@jiscribe/canvas/doc";
+import { COMMON_ICON_GROUPS } from "@jiscribe/plugin-lucide-icon-shape/doc";
 
 import {
 	CANONICAL_TYPE_ORDER,
@@ -16,8 +17,46 @@ const handwrittenDefs = JSON.parse(
 	readFileSync(templatePath("handwrittenDefs.json"), "utf8"),
 ) as Record<string, JsonSchemaNode>;
 
-const propertyOverrides = JSON.parse(
-	readFileSync(templatePath("propertyOverrides.json"), "utf8"),
+/**
+ * Names a template description can ask for rather than spell out, so a list that also
+ * exists in code is written once. `{{TOKEN}}` is replaced wherever it appears in a
+ * description; a token with no entry here is left alone and shows up in the output, which
+ * is louder than silently emitting nothing.
+ */
+const DESCRIPTION_TOKENS: Readonly<Record<string, string>> = {
+	COMMON_ICON_GROUPS: COMMON_ICON_GROUPS.map(
+		(group) => `${group.label}: ${group.names.join(", ")}`,
+	).join("; "),
+};
+
+const expandDescriptionTokens = (node: JsonSchemaNode): JsonSchemaNode => {
+	const { description } = node;
+	if (typeof description !== "string") {
+		return node;
+	}
+	return {
+		...node,
+		description: description.replace(
+			/\{\{(\w+)\}\}/g,
+			(whole, token: string) => DESCRIPTION_TOKENS[token] ?? whole,
+		),
+	};
+};
+
+const propertyOverrides = Object.fromEntries(
+	Object.entries(
+		JSON.parse(
+			readFileSync(templatePath("propertyOverrides.json"), "utf8"),
+		) as Record<string, Record<string, JsonSchemaNode>>,
+	).map(([type, properties]) => [
+		type,
+		Object.fromEntries(
+			Object.entries(properties).map(([name, node]) => [
+				name,
+				expandDescriptionTokens(node),
+			]),
+		),
+	]),
 ) as Record<string, Record<string, JsonSchemaNode>>;
 
 const rootTemplate = JSON.parse(
