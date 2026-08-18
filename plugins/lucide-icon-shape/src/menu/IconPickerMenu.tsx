@@ -24,7 +24,12 @@ import { normalizeIconName } from "../schema/icon/normalizeIconName";
 import { resolveIconName } from "../schema/icon/resolveIconName";
 import { DEFAULT_ICON_NAME } from "../schema/IconDoc";
 
-const SECTION_ID = "icon";
+/**
+ * Distinct from the toolbar category's id, which is also about icons: both render a
+ * `toggle:{id}` part, and sharing the string would make the two indistinguishable to
+ * anything selecting on it.
+ */
+const SECTION_ID = "lucide-icon";
 
 /**
  * How many results a search shows. The whole set is far too large to lay out at once, and

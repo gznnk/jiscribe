@@ -29,7 +29,7 @@ export const lucideIconDefinition: ObjectTypeDefinition<IconDoc, IconState> =
 		stencils: IconStencils,
 		menu: [
 			{
-				id: "icon",
+				id: "lucide-icon",
 				items: [{ type: "custom", id: "icon", component: IconPickerMenu }],
 			},
 			{ id: "line", items: [{ type: "lineColor" }, { type: "lineStyle" }] },

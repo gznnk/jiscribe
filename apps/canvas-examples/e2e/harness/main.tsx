@@ -15,7 +15,10 @@ import {
 	generalPlugin,
 	generalToolbarEntry,
 } from "@jiscribe/plugin-general-shapes";
-import { lucideIconPlugin } from "@jiscribe/plugin-lucide-icon-shape";
+import {
+	lucideIconPlugin,
+	lucideIconToolbarEntry,
+} from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
 import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
@@ -45,11 +48,11 @@ mountPluginHarness({
 		{ kind: "preset", presetId: "text" },
 		{ kind: "preset", presetId: "sticky" },
 		{ kind: "preset", presetId: "markdown" },
-		{ kind: "preset", presetId: "lucideIcon" },
 		flowchartToolbarEntry,
 		umlToolbarEntry,
 		containerToolbarEntry,
 		generalToolbarEntry,
 		annotationToolbarEntry,
+		lucideIconToolbarEntry,
 	],
 });

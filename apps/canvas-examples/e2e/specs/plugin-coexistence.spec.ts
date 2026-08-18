@@ -27,7 +27,6 @@ const PINNED_PRESET_IDS = [
 	"text",
 	"sticky",
 	"markdown",
-	"lucideIcon",
 ];
 
 /**
@@ -41,6 +40,7 @@ const CATEGORIES = [
 	{ id: "container", ownPresetId: "frame" },
 	{ id: "general", ownPresetId: "actor" },
 	{ id: "annotation", ownPresetId: "callout" },
+	{ id: "icon", ownPresetId: "lucideIconUser" },
 ];
 
 /** Every toolbar category button, pinned presets excluded. */
@@ -140,7 +140,7 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	// The icon is center-placed too, so it lands under the sticky. Overlap is fine
 	// here: this suite asks whether every plugin's shape coexists in one document,
 	// and a covered element is still a rendered, visible one.
-	ids.push(await canvas.placeShape("Icon"));
+	ids.push(await canvas.placeShapeFromFlyout("icon", "lucideIconUser"));
 	await canvas.deselect();
 
 	return ids;

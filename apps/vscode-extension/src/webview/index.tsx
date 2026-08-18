@@ -11,6 +11,7 @@ import { annotationToolbarEntry } from "@jiscribe/plugin-annotation-shapes";
 import { containerToolbarEntry } from "@jiscribe/plugin-container-shapes";
 import { flowchartToolbarEntry } from "@jiscribe/plugin-flowchart-shapes";
 import { generalToolbarEntry } from "@jiscribe/plugin-general-shapes";
+import { lucideIconToolbarEntry } from "@jiscribe/plugin-lucide-icon-shape";
 import { umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -28,7 +29,7 @@ import type {
 // (packages/canvas/docs/13-authoring-plugins.md).
 const initialConfig: CanvasConfig = { plugins };
 
-// The annotation / flowchart / container / general categories and the markdown preset are
+// The annotation / flowchart / container / general / icon categories and the markdown preset are
 // not part of core's default layout (they come from plugins). The host decides their order
 // and inserts them.
 const toolbarLayout: ToolbarEntry[] = [
@@ -39,12 +40,12 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "text" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
-	{ kind: "preset", presetId: "lucideIcon" },
 	flowchartToolbarEntry,
 	umlToolbarEntry,
 	containerToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
+	lucideIconToolbarEntry,
 ];
 
 /**

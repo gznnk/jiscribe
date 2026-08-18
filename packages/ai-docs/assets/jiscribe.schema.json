@@ -1358,7 +1358,9 @@
 					"$ref": "#/$defs/TransformStyle/properties/flipY"
 				},
 				"lockAspectRatio": {
-					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+					"description": "Lock aspect ratio during resize. Default: true (overrides the shared default false).",
+					"type": "boolean",
+					"default": true
 				}
 			}
 		},

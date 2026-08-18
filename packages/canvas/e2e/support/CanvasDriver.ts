@@ -466,6 +466,41 @@ export class CanvasDriver {
 		return created.id;
 	}
 
+	/**
+	 * Add a click-placed shape from a category flyout and return the new data-id. The
+	 * flyout counterpart of placeShape: a preset whose type is created without a bounds
+	 * drag (`supportsBounds: false`) is placed by the click that picks it, so there is no
+	 * crosshair to wait for and nothing to drag.
+	 */
+	async placeShapeFromFlyout(
+		categoryId: string,
+		presetId: string,
+	): Promise<string> {
+		const before = await this.captureObjects();
+		const beforeIds = new Set(before.map((obj) => obj.id));
+
+		await this.page.click(selectors.categoryButton(categoryId));
+		const item = this.page.locator(selectors.shapeItem(presetId));
+		await expect(item).toBeVisible();
+		await item.click();
+
+		await expect
+			.poll(async () => (await this.captureObjects()).length, {
+				message: `${presetId} places a new shape`,
+			})
+			.toBe(before.length + 1);
+
+		const created = (await this.captureObjects()).find(
+			(obj) => !beforeIds.has(obj.id),
+		);
+		if (!created?.id) {
+			throw new Error(
+				`cannot read the data-id of the shape placed by ${presetId}`,
+			);
+		}
+		return created.id;
+	}
+
 	/** Click a shape to select it and wait for the ObjectMenu. */
 	async selectAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);

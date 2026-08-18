@@ -64,6 +64,10 @@ export const ICON_DOC_DEFAULTS: Omit<IconDoc, "id"> = {
 	width: 64,
 	height: 64,
 	icon: DEFAULT_ICON_NAME,
+	// The drawing is square and stays square, so a box that is not leaves dead margin
+	// rather than a bigger icon. Locking by default keeps a resize doing the one thing
+	// it can do here; the menu's lock is still there to be turned off deliberately.
+	lockAspectRatio: true,
 	stroke: AUTO_COLOR,
 	// The icon set draws at this width on its own grid, and the renderer keeps it
 	// visually constant regardless of how far the grid is scaled.

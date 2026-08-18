@@ -34,8 +34,9 @@ export { Icon } from "./presentation/Icon";
 export { IconGlyph } from "./menu/IconGlyph";
 export { IconPickerMenu } from "./menu/IconPickerMenu";
 
-export { IconStencilIcon } from "./stencil/IconStencilIcon";
-export { IconStencils } from "./stencil/IconStencils";
+export { createLucideStencilIcon } from "./stencil/createLucideStencilIcon";
+export { ICON_STENCIL_IDS, IconStencils } from "./stencil/IconStencils";
+export { lucideIconToolbarEntry } from "./stencil/IconToolbarEntry";
 
 export { lucideIconDefinition } from "./definition";
 export { lucideIconDocDefinition, lucideIconDocPlugin } from "./doc";
