@@ -1,6 +1,7 @@
 import type { Ellipse, Point, Rect } from "@jiscribe/geometry";
 import type { Brand, Prettify } from "@jiscribe/utility-types";
 
+import type { ArrowStyleDoc } from "../base/ArrowStyleDoc";
 import type { FillStyleDoc } from "../base/FillStyleDoc";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { RadiusStyleDoc } from "../base/RadiusStyleDoc";
@@ -68,6 +69,7 @@ export type CreateObjectType<
 		(T["fill"] extends true ? FillStyleDoc : object) &
 		(T["text"] extends "body" ? TextStyleDoc : object) &
 		(T["radius"] extends true ? RadiusStyleDoc : object) &
+		(T["arrow"] extends true ? ArrowStyleDoc : object) &
 		Brand<S> &
 		P
 >;

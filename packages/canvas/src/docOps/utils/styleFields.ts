@@ -1,6 +1,10 @@
 import type { ObjectRecord } from "./objectAccess";
 import { isConnectorObject } from "./objectGeometry";
 import {
+	ARROW_STYLE_KEYS,
+	type ArrowStyleDoc,
+} from "../../schemas/objects/base/ArrowStyleDoc";
+import {
 	FILL_STYLE_KEYS,
 	type FillStyleDoc,
 } from "../../schemas/objects/base/FillStyleDoc";
@@ -34,6 +38,7 @@ import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefiniti
 export type StyleParams = FillStyleDoc &
 	StrokeStyleDoc &
 	RadiusStyleDoc &
+	ArrowStyleDoc &
 	Omit<TextSlot, "text">;
 
 /** Label styling a connector accepts, in the order ConnectorExtraStyleProperties declares it. */
@@ -52,6 +57,7 @@ export const ALL_STYLE_KEYS = [
 	...FILL_STYLE_KEYS,
 	...STROKE_STYLE_KEYS,
 	...RADIUS_STYLE_KEYS,
+	...ARROW_STYLE_KEYS,
 	...TEXT_SLOT_STYLE_KEYS,
 ] as const satisfies readonly (keyof StyleParams)[];
 
@@ -141,9 +147,11 @@ export const applyStyle = (
 	const appliedKeys = new Set<string>();
 
 	if (isConnectorObject(object)) {
-		applyKeys(object, style, STROKE_STYLE_KEYS).forEach((key) =>
-			appliedKeys.add(key),
-		);
+		// The arrowheads belong to the line, the same as its stroke.
+		applyKeys(object, style, [
+			...STROKE_STYLE_KEYS,
+			...ARROW_STYLE_KEYS,
+		]).forEach((key) => appliedKeys.add(key));
 		const label = object.label;
 		if (typeof label === "object" && label !== null) {
 			applyKeys(
@@ -158,6 +166,7 @@ export const applyStyle = (
 			...(features?.fill === true ? FILL_STYLE_KEYS : []),
 			...(features?.stroke === true ? STROKE_STYLE_KEYS : []),
 			...(features?.radius === true ? RADIUS_STYLE_KEYS : []),
+			...(features?.arrow === true ? ARROW_STYLE_KEYS : []),
 		];
 		applyKeys(object, style, shapeKeys).forEach((key) => appliedKeys.add(key));
 

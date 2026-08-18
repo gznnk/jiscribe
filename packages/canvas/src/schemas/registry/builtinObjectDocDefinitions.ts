@@ -14,10 +14,7 @@ import { validateGroupDoc } from "../objects/primitives/group/validateGroupDoc";
 import { PolygonFeatures } from "../objects/primitives/polygon/PolygonDoc";
 import { PolygonObjectFactory } from "../objects/primitives/polygon/PolygonObjectFactory";
 import { validatePolygonDoc } from "../objects/primitives/polygon/validatePolygonDoc";
-import {
-	POLYLINE_EXTRA_KEYS,
-	PolylineFeatures,
-} from "../objects/primitives/polyline/PolylineDoc";
+import { PolylineFeatures } from "../objects/primitives/polyline/PolylineDoc";
 import { PolylineObjectFactory } from "../objects/primitives/polyline/PolylineObjectFactory";
 import { validatePolylineDoc } from "../objects/primitives/polyline/validatePolylineDoc";
 import {
@@ -91,7 +88,6 @@ export const builtinObjectDocDefinitions = {
 	polyline: {
 		features: PolylineFeatures,
 		validateDoc: validatePolylineDoc,
-		extraKeys: POLYLINE_EXTRA_KEYS,
 		factory: PolylineObjectFactory,
 		summary: "open line",
 	},

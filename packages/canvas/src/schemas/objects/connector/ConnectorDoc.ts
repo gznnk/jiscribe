@@ -1,7 +1,6 @@
 import type { Point } from "@jiscribe/geometry";
 import type { Prettify } from "@jiscribe/utility-types";
 
-import { ARROW_STYLE_KEYS, type ArrowStyleDoc } from "../base/ArrowStyleDoc";
 import type { FillStyleDoc } from "../base/FillStyleDoc";
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
 import type { TextStyleDoc } from "../base/TextStyleDoc";
@@ -93,7 +92,7 @@ export type ConnectorDoc = Prettify<
 		CreateObjectType<
 			typeof ConnectorFeatures,
 			typeof ConnectorDocBrand,
-			ArrowStyleDoc & {
+			{
 				source: EndpointRef;
 				target: EndpointRef;
 				routing?: ConnectorRouting;
@@ -117,6 +116,5 @@ export const CONNECTOR_EXTRA_KEYS = [
 	"source",
 	"target",
 	"routing",
-	...ARROW_STYLE_KEYS,
 	"label",
 ] as const satisfies readonly (keyof ConnectorDoc)[];

@@ -133,8 +133,9 @@ const ARROW_TYPES = [
 
 /**
  * The shared style vocabulary; add_object and set_style speak the same one.
- * Properties a type has no place for (fill on a connector, a font colour on a
- * shape without text) are dropped by docOps, which says so in the tool result.
+ * Properties a type has no place for (fill on a connector, an arrowhead on a rect,
+ * a font colour on a shape without text) are dropped by docOps, which says so in the
+ * tool result.
  */
 const styleSchema = {
 	fill: z
@@ -158,6 +159,18 @@ const styleSchema = {
 		.enum(["solid", "dashed", "dotted"])
 		.optional()
 		.describe("Outline dash pattern."),
+	startArrow: z
+		.enum(ARROW_TYPES)
+		.optional()
+		.describe(
+			"Arrowhead at the start of the line. Only for polyline and connector; every other type ignores it. A connector's arrowheads can also be set as it is drawn, by connect.",
+		),
+	endArrow: z
+		.enum(ARROW_TYPES)
+		.optional()
+		.describe(
+			"Arrowhead at the end of the line, the one that carries the direction (FilledTriangle for a flow). Only for polyline and connector.",
+		),
 	rx: z.number().min(0).optional().describe("Corner radius in px; rect only."),
 	fontColor: z.string().optional().describe("Text color, any CSS color."),
 	fontSize: z.number().min(1).optional().describe("Text size in px."),

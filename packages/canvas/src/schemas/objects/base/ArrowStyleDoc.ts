@@ -2,12 +2,9 @@ import type { ArrowType } from "../types/ArrowType";
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /**
- * Properties related to arrowheads, the group `features.arrow` stands for.
- *
- * Unlike the other style groups this one is not mixed in by `CreateObjectType`: the two
- * types that carry it (polyline, connector) declare it among their own properties. It is
- * spelled out here all the same, so the field names have one source the way every other
- * group does.
+ * Properties related to arrowheads, the group `features.arrow` stands for. Mixed into a
+ * type's Doc by `CreateObjectType` when the flag is set, the same as every other style
+ * group (polyline and connector are the two that set it).
  */
 export type ArrowStyleDoc = {
 	/** Arrowhead drawn at the start of the line. Omitted means none. */
@@ -18,8 +15,8 @@ export type ArrowStyleDoc = {
 
 /**
  * Field names owned by ArrowStyleDoc/State (identical for Doc and State).
- * Referenced by the mappers' allow-list and by the types' `extraKeys`, so a field added
- * to the group reaches both without either being edited.
+ * Referenced by the mappers' allow-list (`collectStyleKeys`) and by doc-ops' styling, so
+ * a field added to the group reaches both without either being edited.
  */
 export const ARROW_STYLE_KEYS = exhaustiveKeysOf<ArrowStyleDoc>()([
 	"startArrow",

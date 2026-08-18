@@ -25,7 +25,7 @@ import { collectStyleKeys, pick } from "../utils/stylePassthrough";
  * The picked keys are the style groups enabled in `features` (`collectStyleKeys`, bound to their
  * types via `exhaustiveKeysOf` — adding a field to e.g. StrokeStyleDoc is a compile error until the
  * key constant is updated, after which the field flows through automatically) plus shape-specific
- * `extraKeys` (connector's source/target/routing/arrows/label, polyline's arrows). Because it is an
+ * `extraKeys` (connector's source/target/routing/label). Because it is an
  * allow-list, runtime-only fields cannot structurally leak into the Doc.
  *
  * `features` is tied to `TDoc` through the `type` discriminator, so a call whose Doc, State,

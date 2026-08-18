@@ -166,6 +166,46 @@ describe("addObject with styling", () => {
 	});
 });
 
+describe("addObject with arrowheads", () => {
+	it("gives a polyline its arrowheads on the spot", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "polyline", {
+			x: 0,
+			y: 0,
+			startArrow: "None",
+			endArrow: "FilledTriangle",
+		});
+
+		expect(readObject(doc, id)).toMatchObject({
+			startArrow: "None",
+			endArrow: "FilledTriangle",
+		});
+		expectValid(doc);
+	});
+
+	it("ignores arrowheads on a type that has no arrow feature", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "rect", {
+			x: 0,
+			y: 0,
+			endArrow: "FilledTriangle",
+		});
+
+		expect(readObject(doc, id)).not.toHaveProperty("endArrow");
+	});
+
+	it("refuses an arrowhead written through props, now that it is a style", () => {
+		const doc = emptyDoc();
+		expect(() =>
+			docOps.addObject(doc, "polyline", {
+				x: 0,
+				y: 0,
+				props: { endArrow: "FilledTriangle" },
+			}),
+		).toThrow(/must not carry "endArrow"/);
+	});
+});
+
 describe("addObject with points", () => {
 	it("takes the vertices verbatim and keeps the factory's style defaults", () => {
 		const doc = emptyDoc();
