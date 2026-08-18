@@ -41,7 +41,7 @@ export const cardDefinition: ObjectDocDefinition = {
 export const BADGE_KINDS = ["new", "beta"] as const;
 
 /**
- * A shape carrying a property of its own, which is what `props` exists to reach. It
+ * A shape carrying a property of its own, which is what `extraProps` exists to reach. It
  * declares `badge` twice over — `extraKeys` says the name exists, the validator says
  * what it may hold — which is the pair a creation call is checked against.
  */

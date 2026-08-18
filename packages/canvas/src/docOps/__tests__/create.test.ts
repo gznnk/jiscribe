@@ -194,13 +194,13 @@ describe("addObject with arrowheads", () => {
 		expect(readObject(doc, id)).not.toHaveProperty("endArrow");
 	});
 
-	it("refuses an arrowhead written through props, now that it is a style", () => {
+	it("refuses an arrowhead written through extraProps, now that it is a style", () => {
 		const doc = emptyDoc();
 		expect(() =>
 			docOps.addObject(doc, "polyline", {
 				x: 0,
 				y: 0,
-				props: { endArrow: "FilledTriangle" },
+				extraProps: { endArrow: "FilledTriangle" },
 			}),
 		).toThrow(/must not carry "endArrow"/);
 	});
@@ -320,7 +320,7 @@ describe("addObject with points", () => {
 	});
 });
 
-describe("addObject with a type's own props", () => {
+describe("addObject with a type's own extraProps", () => {
 	const badgedDocOps = createDocOps({
 		plugins: [{ id: "badged-plugin", objects: { badged: badgeDefinition } }],
 	});
@@ -330,7 +330,7 @@ describe("addObject with a type's own props", () => {
 		const id = badgedDocOps.addObject(doc, "badged", {
 			x: 10,
 			y: 20,
-			props: { badge: "beta" },
+			extraProps: { badge: "beta" },
 		});
 
 		expect(readObject(doc, id).badge).toBe("beta");
@@ -341,7 +341,7 @@ describe("addObject with a type's own props", () => {
 		const id = badgedDocOps.addObject(doc, "badged", {
 			x: 0,
 			y: 0,
-			props: { badge: undefined },
+			extraProps: { badge: undefined },
 		});
 
 		expect(readObject(doc, id)).not.toHaveProperty("badge");
@@ -353,7 +353,7 @@ describe("addObject with a type's own props", () => {
 			badgedDocOps.addObject(doc, "badged", {
 				x: 0,
 				y: 0,
-				props: { badge: "shiny" },
+				extraProps: { badge: "shiny" },
 			}),
 		).toThrow(DocOperationError);
 		expect(doc.root).toHaveLength(0);
@@ -365,7 +365,7 @@ describe("addObject with a type's own props", () => {
 			badgedDocOps.addObject(doc, "badged", {
 				x: 0,
 				y: 0,
-				props: { badge: 42 },
+				extraProps: { badge: 42 },
 			}),
 		).toThrow(/badged\.badge/);
 	});
@@ -376,7 +376,7 @@ describe("addObject with a type's own props", () => {
 			badgedDocOps.addObject(doc, "badged", {
 				x: 0,
 				y: 0,
-				props: { badgeKind: "new" },
+				extraProps: { badgeKind: "new" },
 			}),
 		).toThrow(/must not carry "badgeKind".*own properties are "badge"/);
 		expect(doc.root).toHaveLength(0);
@@ -385,7 +385,11 @@ describe("addObject with a type's own props", () => {
 	it("refuses any prop on a type that declares none", () => {
 		const doc = emptyDoc();
 		expect(() =>
-			docOps.addObject(doc, "rect", { x: 0, y: 0, props: { badge: "new" } }),
+			docOps.addObject(doc, "rect", {
+				x: 0,
+				y: 0,
+				extraProps: { badge: "new" },
+			}),
 		).toThrow(/no properties of its own/);
 	});
 
@@ -395,14 +399,14 @@ describe("addObject with a type's own props", () => {
 			badgedDocOps.addObject(doc, "badged", {
 				x: 0,
 				y: 0,
-				props: { width: 400 },
+				extraProps: { width: 400 },
 			}),
 		).toThrow(/must not carry "width"/);
 		expect(() =>
 			badgedDocOps.addObject(doc, "badged", {
 				x: 0,
 				y: 0,
-				props: { id: "mine" },
+				extraProps: { id: "mine" },
 			}),
 		).toThrow(/must not carry "id"/);
 	});
@@ -411,8 +415,8 @@ describe("addObject with a type's own props", () => {
 		const doc = emptyDoc();
 		expect(() =>
 			badgedDocOps.addObjects(doc, [
-				{ type: "badged", x: 0, y: 0, props: { badge: "new" } },
-				{ type: "badged", x: 120, y: 0, props: { badge: "shiny" } },
+				{ type: "badged", x: 0, y: 0, extraProps: { badge: "new" } },
+				{ type: "badged", x: 120, y: 0, extraProps: { badge: "shiny" } },
 			]),
 		).toThrow(/1/);
 		expect(doc.root).toHaveLength(0);

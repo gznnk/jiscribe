@@ -63,14 +63,14 @@ export type AddObjectParams = StyleParams & {
 	 * does not have and a malformed value are both refused rather than stored. A name
 	 * this call already takes as a parameter is refused outright.
 	 */
-	props?: Readonly<Record<string, unknown>>;
+	extraProps?: Readonly<Record<string, unknown>>;
 };
 
 /**
- * The names a creation call spells out itself, which {@link AddObjectParams.props} must
+ * The names a creation call spells out itself, which {@link AddObjectParams.extraProps} must
  * not shadow. `satisfies` ties the list to the type, so a parameter added above without
  * a line here fails to compile; `id` and `type` are not parameters but decide what the
- * object *is*, and letting `props` write them would corrupt it.
+ * object *is*, and letting `extraProps` write them would corrupt it.
  */
 const RESERVED_PROP_KEYS: ReadonlySet<string> = new Set<string>([
 	"id",
@@ -199,10 +199,10 @@ const buildObject = (
 	if (rotation !== undefined) {
 		applyRotation(created as ObjectRecord, rotation, definition);
 	}
-	if (params.props !== undefined) {
+	if (params.extraProps !== undefined) {
 		applyExtraProps(
 			created as ObjectRecord,
-			params.props,
+			params.extraProps,
 			definition,
 			RESERVED_PROP_KEYS,
 			type,
@@ -210,7 +210,7 @@ const buildObject = (
 	}
 
 	// Last, so it sees the finished object. The parameters above are each checked as
-	// they are applied, but `props` is an open door: only the type knows which names it
+	// they are applied, but `extraProps` is an open door: only the type knows which names it
 	// has and what they may hold, and this is where it gets to say so.
 	const diagnostics = definition.validateDoc(created as ObjectRecord, type);
 	if (diagnostics.length > 0) {
@@ -235,8 +235,8 @@ const buildObject = (
  *
  * @param doc - Mutated in place: the created object is pushed onto `doc.root`
  * @param type - Object type name, which must be a key of `definitions` and carry a factory
- * @param params - Top-left position and optional size/text/styling/rotation, plus `props`
- *   for the type's own properties; omitted width/height fall back to `calcDimensions`'
+ * @param params - Top-left position and optional size/text/styling/rotation, plus
+ *   `extraProps` for the type's own properties; omitted width/height fall back to `calcDimensions`'
  *   default size, and styling the type cannot hold is ignored. `points` supersedes the
  *   position and size outright
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
@@ -245,7 +245,7 @@ const buildObject = (
  *   (group / connector / svg and the like), when width/height are given for a
  *   point-geometry type that cannot store them, when the factory rejects the given size,
  *   when `points` are given to a type not built from vertices or are too few, for a
- *   rotation that is not finite, when `props` carries a name this call already takes as a
+ *   rotation that is not finite, when `extraProps` carries a name this call already takes as a
  *   parameter or one the type does not declare, or when the finished object fails the
  *   type's own `validateDoc`
  */

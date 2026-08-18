@@ -678,7 +678,7 @@ export const createCanvasToolDescriptors = (
 			.describe(
 				"Clockwise degrees about the shape's own centre; 0 is upright. Ignored by types that cannot turn (polygon, polyline, connector) — turn those by giving turned points instead.",
 			),
-		props: z
+		extraProps: z
 			.record(z.string(), z.unknown())
 			.optional()
 			.describe(
@@ -977,6 +977,25 @@ export const createCanvasToolDescriptors = (
 		},
 		({ ids, ...style }) => ({ kind: "setStyle", ids, style }),
 		{ drives: ["docOps.setStyle"] },
+	);
+
+	const setExtraPropsTool = defineCanvasTool(
+		"set_extra_props",
+		[
+			"Set the properties belonging to a shape type itself: lucideIcon's `icon`, callout's `tail`, container's `headerFill` / `headerHeight`.",
+			"One object at a time, because these names belong to a single type — read the type's own schema for the names it has.",
+			"Unlike set_style nothing is silently skipped: a name the type does not have, or a value it rejects, comes back as an error with the reason, and the object is left as it was.",
+		].join(" "),
+		{
+			id: z.string().describe("id of the object to change."),
+			extraProps: z
+				.record(z.string(), z.unknown())
+				.describe(
+					"Property names and values to set. Only the names the type declares are accepted; the geometry, the text and the styling have their own tools.",
+				),
+		},
+		({ id, extraProps }) => ({ kind: "setExtraProps", id, extraProps }),
+		{ drives: ["docOps.setExtraProps"] },
 	);
 
 	const setTextTool = defineCanvasTool(
@@ -1578,6 +1597,7 @@ export const createCanvasToolDescriptors = (
 		setPointsManyTool,
 		reorderObjectsTool,
 		setStyleTool,
+		setExtraPropsTool,
 		setTextTool,
 		setTextsTool,
 		setTextStyleTool,

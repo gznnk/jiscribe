@@ -18,6 +18,7 @@ export {
 } from "./ops/place";
 export { type ObjectFilter, type ObjectSummary } from "./ops/query";
 export { type SetPointsEntry, type SetRotationResult } from "./ops/reshape";
+export { setExtraProps } from "./ops/extraProps";
 export { type SetStyleResult } from "./ops/style";
 export {
 	type InlineTextStyleParams,

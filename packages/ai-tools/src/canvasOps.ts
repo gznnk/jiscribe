@@ -209,6 +209,12 @@ export type AiDocOp =
 			placement: AiZOrderPlacement;
 	  }
 	| { kind: "setStyle"; ids: string[]; style: AiStyle }
+	/** 型が自分で持つプロパティ（lucideIcon の icon、callout の tail）の書き換え */
+	| {
+			kind: "setExtraProps";
+			id: string;
+			extraProps: Readonly<Record<string, unknown>>;
+	  }
 	| { kind: "setText"; id: string; text: string; slot?: string }
 	| { kind: "setTexts"; entries: readonly AiSetTextEntry[] }
 	| ({ kind: "setTextStyle"; id: string } & AiInlineTextStyleParams)

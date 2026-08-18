@@ -25,6 +25,7 @@ import {
 	addObjects,
 } from "./ops/create";
 import { deleteObjects, type DeleteObjectsResult } from "./ops/delete";
+import { setExtraProps } from "./ops/extraProps";
 import {
 	addObjectsToGroup,
 	getGroupMembers,
@@ -176,6 +177,18 @@ export type DocOps = {
 		ids: readonly string[],
 		style: StyleParams,
 	): SetStyleResult;
+	/**
+	 * Set the properties belonging to the type itself on one object (the callout's `tail`,
+	 * the container's `headerHeight`), and return the names written. One object at a time,
+	 * because these names belong to a single type.
+	 * Throws `DocOperationError` for a missing id, a name the type does not declare, or a
+	 * value the type rejects, having written nothing.
+	 */
+	setExtraProps(
+		doc: CanvasDoc,
+		id: string,
+		extraProps: Readonly<Record<string, unknown>>,
+	): string[];
 	/**
 	 * Turn several objects to the same angle, in clockwise degrees about each one's own centre,
 	 * skipping and reporting the types that have no rotation.
@@ -395,6 +408,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		resizeObjects: (doc, ids, params) =>
 			resizeObjects(doc, ids, params, definitions),
 		setStyle: (doc, ids, style) => setStyle(doc, ids, style, definitions),
+		setExtraProps: (doc, id, extraProps) =>
+			setExtraProps(doc, id, extraProps, definitions),
 		setInlineTextStyle: (doc, id, params) =>
 			setInlineTextStyle(doc, id, params, definitions),
 		setInlineTextStyles: (doc, entries) =>

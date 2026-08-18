@@ -67,6 +67,7 @@ describe("createCanvasToolDescriptors", () => {
 			"set_points_many",
 			"reorder_objects",
 			"set_style",
+			"set_extra_props",
 			"set_text",
 			"set_texts",
 			"set_text_style",
