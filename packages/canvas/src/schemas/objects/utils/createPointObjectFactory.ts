@@ -1,6 +1,6 @@
+import { pickSupportedDocDefaults } from "./pickSupportedDocDefaults";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectFactory } from "../types/ObjectFactory";
-import { pickSupportedDocDefaults } from "../types/ObjectFactory";
 
 /**
  * Minimal shape that DOC_DEFAULTS of point-geometry shapes must satisfy. No

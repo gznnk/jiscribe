@@ -1,11 +1,9 @@
 import { ELLIPSE_DOC_DEFAULTS } from "./EllipseDoc";
 import type { ObjectDoc } from "../../base/ObjectDoc";
 import type { ObjectFactory } from "../../types/ObjectFactory";
-import {
-	numberOverride,
-	pickSupportedDocDefaults,
-} from "../../types/ObjectFactory";
 import { calcDrawBounds } from "../../utils/calcDrawBounds";
+import { numberOverride } from "../../utils/numberOverride";
+import { pickSupportedDocDefaults } from "../../utils/pickSupportedDocDefaults";
 
 export const EllipseObjectFactory: ObjectFactory = {
 	createDoc(position, overrides, docDefaults) {

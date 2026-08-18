@@ -1,10 +1,8 @@
 import { calcDrawBounds } from "./calcDrawBounds";
+import { numberOverride } from "./numberOverride";
+import { pickSupportedDocDefaults } from "./pickSupportedDocDefaults";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectFactory } from "../types/ObjectFactory";
-import {
-	numberOverride,
-	pickSupportedDocDefaults,
-} from "../types/ObjectFactory";
 
 /**
  * Minimal shape that DOC_DEFAULTS of Frame-family shapes (geometry: "rect" / top-left origin)

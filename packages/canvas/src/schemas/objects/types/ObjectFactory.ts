@@ -53,20 +53,3 @@ export type ObjectFactory = {
 		docDefaults?: DocCreationDefaults,
 	): ObjectDoc | null;
 };
-
-/** Small helper that reads a numeric field from overrides, returning the fallback if it is not a finite number. */
-export const numberOverride = (value: unknown, fallback: number): number =>
-	Number.isFinite(value) ? (value as number) : fallback;
-
-/**
- * Picks the docDefaults entries the shape actually declares in its
- * DOC_DEFAULTS. Spread between the DOC_DEFAULTS and `overrides` so theme
- * defaults replace built-in defaults without adding unsupported fields.
- */
-export const pickSupportedDocDefaults = (
-	defaults: Record<string, unknown>,
-	docDefaults?: DocCreationDefaults,
-): Partial<DocCreationDefaults> =>
-	docDefaults && "fontFamily" in defaults
-		? { fontFamily: docDefaults.fontFamily }
-		: {};
