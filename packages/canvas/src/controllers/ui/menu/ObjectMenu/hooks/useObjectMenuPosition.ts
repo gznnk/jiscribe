@@ -17,7 +17,7 @@ const DISTANCE_FROM_OBJECT = 40;
 /**
  * How long the menu stays away after the view stops moving (ms).
  *
- * A pan and the glide it leaves behind are separate states, and so are a glide
+ * A pan and the fling it leaves behind are separate states, and so are a fling
  * and the next pan: each pair has a gap of a frame or more where neither is set,
  * which without this would flash the menu back for that gap. Long enough to
  * bridge a press that is about to become a drag, short enough to read as the
@@ -92,7 +92,7 @@ export function useObjectMenuPosition(
 
 	// Every way the view moves under the selection, as one state: dragging (except
 	// while an ObjectMenu dropdown is open, so its sliders stay usable) and the
-	// glide a released pan leaves behind. The linger is what keeps the handover
+	// fling a released pan leaves behind. The linger is what keeps the handover
 	// between the two from flashing the menu (see REAPPEAR_DELAY_MS).
 	const isViewMoving =
 		(activeDragKind !== null && objectMenuOpenId === null) || inertialScrolling;
@@ -118,7 +118,7 @@ export function useObjectMenuPosition(
 			return false;
 		}
 		// Away while the view moves under the selection — a drag of any kind, and
-		// the glide that continues a released pan, which would otherwise fly the
+		// the fling that continues a released pan, which would otherwise fly the
 		// menu across the screen.
 		if (isViewUnsettled) {
 			return false;

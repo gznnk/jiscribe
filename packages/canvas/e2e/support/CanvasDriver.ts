@@ -30,7 +30,7 @@ export const AUTO_SCROLL_MARGIN = 25;
  * carries no velocity and the view stops where the drag stopped
  * (FLING_RELEASE_IDLE_MS is 50). Not a synchronization wait: it is part of the
  * input being performed — steps dispatched back to back and released mid-motion
- * are a flick, and the view would glide past the target.
+ * are a flick, and the view would fling past the target.
  */
 const PAN_SETTLE_MS = 120;
 
@@ -263,9 +263,9 @@ export class CanvasDriver {
 	 * (see {@link PAN_SETTLE_MS}), so the pan ends exactly where the drag did.
 	 *
 	 * @param options.fling - Skip the rest, letting the release keep its velocity so
-	 *   the view glides on (inertial scrolling). The steps are dispatched back to
+	 *   a fling follows (inertial scrolling). The steps are dispatched back to
 	 *   back, so the resulting speed is not a controlled quantity — a spec that
-	 *   measures the glide should drive the mouse itself.
+	 *   measures the fling should drive the mouse itself.
 	 */
 	async rightDrag(
 		from: { x: number; y: number },

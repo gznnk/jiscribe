@@ -54,7 +54,7 @@ export const resetUiState = (): UiStateReset => ({
 	// cancelPendingGesture() drops an in-flight drag without firing dragEnd, so this
 	// reset is what keeps the kind from outliving the gesture on an external swap.
 	activeDragKind: null,
-	// Same reason as activeDragKind: cancelPendingGesture() may kill a glide during
+	// Same reason as activeDragKind: cancelPendingGesture() may kill a fling during
 	// the swap, and the flag must not outlive it.
 	inertialScrolling: false,
 	keyPointsCache: {},
