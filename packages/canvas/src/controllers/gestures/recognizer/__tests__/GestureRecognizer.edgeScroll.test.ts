@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GestureRecognizer } from "../GestureRecognizer";
+import { FLING_VELOCITY_WINDOW_MS } from "../GestureRecognizerConstants";
 import type {
 	Gesture,
 	GestureRecognizerConfig,
@@ -156,7 +157,7 @@ const setup = () => {
 				break;
 		}
 	};
-	return { events, dispatch, wheelHandler };
+	return { events, dispatch, wheelHandler, recognizer };
 };
 
 type Sample = {
@@ -375,5 +376,84 @@ describe("GestureRecognizer arm-on-leave (preventing runaway right after grabbin
 		const samples = runEdgeScroll(6);
 		expect(samples.length).toBeGreaterThanOrEqual(4);
 		expect(samples[0].deltaX).not.toBe(0);
+	});
+});
+
+/**
+ * The tick that keeps edge scrolling alive is enqueued by the recognizer itself, and
+ * it is a fresh event rather than a replay of the move that started the scroll.
+ * Copying that move wholesale stopped time for the whole hold: every drag reported
+ * the same `time`, and the velocity window — trimmed against the newest stamp — could
+ * never advance past it, so it kept every sample and grew by one per frame.
+ */
+describe("GestureRecognizer edge-scroll ticks carry the current time", () => {
+	const FRAME_MS = 16;
+	/** Value the stubbed performance.now returns; advanced one frame at a time below. */
+	let clock = 0;
+
+	beforeEach(() => {
+		clock = 100_000;
+		vi.spyOn(performance, "now").mockImplementation(() => clock);
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	/** Drag to the edge (arming on the way) and then hold there for `frames` frames. */
+	const holdAtEdge = (frames: number) => {
+		const { events, dispatch, recognizer } = setup();
+
+		// The clock is advanced before each flush, so the frame a tick is stamped in is
+		// always later than the event that scheduled it.
+		const frame = (): void => {
+			clock += FRAME_MS;
+			flushRaf();
+		};
+
+		dispatch(makeEvent("pointerdown", CLIENT_X_INTERIOR, 100, clock));
+		frame();
+		dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 20, 100, clock));
+		frame();
+		// Interior drag: leaving the zone is what arms the scroll.
+		dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 40, 100, clock));
+		frame();
+		// Reach the edge. From here the recognizer feeds itself — the cursor never moves again.
+		dispatch(makeEvent("pointermove", CLIENT_X, 100, clock));
+
+		for (let i = 0; i < frames; i++) {
+			frame();
+		}
+		return { events, recognizer };
+	};
+
+	it("advances the time of every drag emitted while the cursor is held still", () => {
+		const { events } = holdAtEdge(10);
+
+		const times = events
+			.filter((e) => e.type === "drag" && e.scrollDelta !== undefined)
+			.map((e) => e.time);
+
+		expect(times.length).toBeGreaterThanOrEqual(5);
+		for (let i = 1; i < times.length; i++) {
+			expect(times[i]).toBeGreaterThan(times[i - 1]);
+		}
+	});
+
+	it("keeps the velocity window trimmed instead of growing one sample per frame", () => {
+		const frames = 40;
+		const { recognizer } = holdAtEdge(frames);
+
+		// No public surface exposes the buffer, and the growth it guards against stays
+		// invisible until the trim finally runs — by which point the cost is already paid.
+		const samples = (recognizer as unknown as { flingSamples: unknown[] })
+			.flingSamples;
+
+		// Every retained sample must fit the estimation window, so the count is bounded by
+		// the frames that window spans — nowhere near the frames the hold lasted.
+		expect(samples.length).toBeLessThanOrEqual(
+			Math.ceil(FLING_VELOCITY_WINDOW_MS / FRAME_MS) + 1,
+		);
+		expect(samples.length).toBeLessThan(frames);
 	});
 });

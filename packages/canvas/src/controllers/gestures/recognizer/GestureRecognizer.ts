@@ -619,9 +619,15 @@ export class GestureRecognizer {
 						);
 
 						// Keeps scrolling while the cursor is held still at the edge; move
-						// coalescing holds this to one tick per frame.
+						// coalescing holds this to one tick per frame. The stamp must be
+						// this frame's, not the copied one: every consumer of the tick reads
+						// it as the moment it happened. Reusing the original froze the
+						// emitted Gesture.time for the whole hold, and left the velocity
+						// window unable to advance — so it never trimmed and grew by one
+						// sample per frame.
 						this.enqueue({
 							...e,
+							timeStamp: performance.now(),
 						});
 					}
 				}
