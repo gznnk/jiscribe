@@ -52,7 +52,7 @@ Then, depending on what you touched:
   Playwright is spread over ten suites: `packages/canvas/e2e/` (core),
   `plugins/<name>/e2e/` (that plugin alone) and `apps/canvas-examples/e2e/`
   (all eight plugins on one canvas).
-  - `packages/canvas/src/{gestures,controllers,presentations,states}` — select the
+  - `packages/canvas/src/{gestures,controllers,rendering,states}` — select the
     related specs by keyword rather than running the suite in full:
     `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
   - a plugin's shapes — run its whole suite, which is a handful of specs:

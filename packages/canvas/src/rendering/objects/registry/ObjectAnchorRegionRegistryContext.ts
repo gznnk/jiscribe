@@ -6,7 +6,7 @@ import {
 } from "./ObjectAnchorRegionRegistry";
 
 /**
- * Presentation-layer context that distributes the per-canvas
+ * Rendering-layer context that distributes the per-canvas
  * `ObjectAnchorRegionRegistry` to the connector renderer and connection-anchor
  * dots (handed down separately from the controllers-layer bundle for the same
  * reason as ObjectTextRegionRegistryContext).

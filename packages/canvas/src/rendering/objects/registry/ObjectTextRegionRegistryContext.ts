@@ -6,7 +6,7 @@ import {
 } from "./ObjectTextRegionRegistry";
 
 /**
- * Presentation-layer context that distributes the per-canvas
+ * Rendering-layer context that distributes the per-canvas
  * `ObjectTextRegionRegistry` to shape renderers (handed down separately from the
  * controllers-layer bundle for the same reason as ObjectComponentRegistryContext).
  *

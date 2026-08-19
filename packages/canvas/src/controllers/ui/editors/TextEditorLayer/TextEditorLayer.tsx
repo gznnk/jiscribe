@@ -4,14 +4,14 @@ import { memo } from "react";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../../../presentations/layers/content/utils/endpoints";
-import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
-import type { ConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
-import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
-import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
+} from "../../../../rendering/layers/content/utils/endpoints";
+import { calcConnectorLabelAnchor } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelAnchor";
+import type { ConnectorLabelPlacement } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ObjectTextRegionCalculator } from "../../../../rendering/objects/registry/ObjectTextRegionRegistry";
+import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
 import type { RichText } from "../../../../schemas/objects/types/RichText";
 import type { ObjectTextStyleDefaultsRegistry } from "../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";

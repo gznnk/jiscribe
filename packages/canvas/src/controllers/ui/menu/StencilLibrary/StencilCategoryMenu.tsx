@@ -35,7 +35,7 @@ const CARET_SIZE = 14;
  * the flyout items go through the gesture system (`data-kind="menu"`): the toggle
  * is handled by StencilCategoryToggleHandler and each item by StencilLibraryItemHandler.
  * Open/close is reducer state (`stencilLibraryOpenCategory`), so this component is
- * purely presentational and multiple <Canvas> instances stay independent.
+ * purely render-only and multiple <Canvas> instances stay independent.
  */
 const StencilCategoryMenuComponent: React.FC<StencilCategoryMenuProps> = ({
 	id,

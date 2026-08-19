@@ -1,14 +1,14 @@
-> 🌐 English version: [08-presentation-and-theme.md](./08-presentation-and-theme.md)
+> 🌐 English version: [08-rendering-and-theme.md](./08-rendering-and-theme.md)
 
-# 表示・テーマ
+# 描画・テーマ
 
-描画層（presentations）の役割と、色の扱い方の規約。
+描画層（rendering）の役割と、色の扱い方の規約。
 
-## presentations は純粋描画（Dumb Component）
+## 描画層は純粋描画
 
-`presentations/` のコンポーネントは **State を Props で受け取り SVG を描画するだけ**で、
+`rendering/` のコンポーネントは **State を Props で受け取り SVG を描画するだけ**で、
 状態を持たずロジックも持たない。イベントハンドラは Props 経由で受け取る。
-依存は `presentations → states`（型参照）のみで、`controllers` には依存しない
+依存は `rendering → states`（型参照）のみで、`controllers` には依存しない
 （[アーキテクチャ](./02-architecture.ja.md) の禁止事項）。
 
 構成:
@@ -55,7 +55,7 @@
 ポータビリティを壊さない。新規図形の `stroke` / `fontColor` の既定値はこの `"auto"`。
 
 - **保存**: `.jis.json`・State には `"auto"` のまま保持する。Mapper では変換しない。
-- **解決**: 描画時に `presentations/objects/utils/resolveAutoColor.ts` が**ロール（役割）ごと**に
+- **解決**: 描画時に `rendering/objects/utils/resolveAutoColor.ts` が**ロール（役割）ごと**に
   テーマ色へ解決する（後述）。
 - **明示色**: ユーザーがカラーピッカーで具体色を選ぶと、その時点で具体値として保存され、以後は
   従来どおりテーマ非依存で表示される（後方互換）。
@@ -63,7 +63,7 @@
 #### auto はロール（役割）ごとのテーマトークンへ解決する
 
 `"auto"` が「従うべき色」はフィールドの役割で決まる。解決は `resolveAutoColor(value, role)`
-（`presentations/objects/utils/resolveAutoColor.ts`）の **1 関数に集約**する。
+（`rendering/objects/utils/resolveAutoColor.ts`）の **1 関数に集約**する。
 
 | ロール           | 対象フィールド         | 解決先（テーマトークン）                                  |
 | ---------------- | ---------------------- | --------------------------------------------------------- |
@@ -127,7 +127,7 @@ style」という 2 方式混在を解消）。
 
 ### 細則
 
-- presentational な「汎用」シェイプ（矢印・GroupIcon 等）は `theme` を直接 import しない。
+- 描画専用の「汎用」シェイプ（矢印・GroupIcon 等）は `theme` を直接 import しない。
   図形データ色の auto 解決は描画層の `resolveAutoColor`（唯一の theme 結合点）に委ね、シェイプは
   解決済みの色を props/`style` で受け取るだけにする。一方 ObjectMenu 専用のカラー系アイコン
   （ColorPreviewIcon / BorderColorIcon 等）は UI クロームなので `theme` トークンの参照を許容する。

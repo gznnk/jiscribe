@@ -1,7 +1,7 @@
-import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
-import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
@@ -25,7 +25,7 @@ import type { StencilRegistry } from "../ui/objects/StencilRegistry";
  * expected.
  *
  * The three geometry registries are declared by their real classes: they live in
- * `presentations` but are imported type-only (as `CanvasRegistries` already
+ * `rendering` but are imported type-only (as `CanvasRegistries` already
  * does), so no runtime edge is added and the graph stays acyclic.
  */
 export interface ICanvasRegistries {

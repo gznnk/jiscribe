@@ -10,8 +10,8 @@ import {
 	calcConnectorLabelBox,
 	CONNECTOR_LABEL_DEFAULTS,
 	resolveLabelFill,
-} from "../../../../presentations/objects/connector/ConnectorLabel";
-import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
+} from "../../../../rendering/objects/connector/ConnectorLabel";
+import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";

@@ -16,9 +16,9 @@ import type {
 import { collectConnectorPoints } from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import { sortObjectIdsByZOrder } from "./sortObjectIdsByZOrder";
-import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
+import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
 import { isPoly } from "../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";

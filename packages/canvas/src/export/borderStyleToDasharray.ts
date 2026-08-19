@@ -1,4 +1,4 @@
-import { getStrokeDasharray } from "../presentations/objects/utils/getStrokeDasharray";
+import { getStrokeDasharray } from "../rendering/objects/utils/getStrokeDasharray";
 import { isStrokeDashType } from "../schemas/objects/types/StrokeDashType";
 
 /**

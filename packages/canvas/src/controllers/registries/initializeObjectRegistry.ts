@@ -5,16 +5,16 @@ import type {
 	AnyObjectTypeDefinition,
 	ObjectTypeDefinition,
 } from "../../plugin/ObjectTypeDefinition";
-import { Connector } from "../../presentations/objects/connector/Connector";
+import { Connector } from "../../rendering/objects/connector/Connector";
 import {
 	Ellipse,
 	calcEllipseTextRegion,
-} from "../../presentations/objects/primitives/Ellipse";
-import { Polygon } from "../../presentations/objects/primitives/Polygon";
-import { Polyline } from "../../presentations/objects/primitives/Polyline";
-import { Rect } from "../../presentations/objects/primitives/Rect";
-import { Svg } from "../../presentations/objects/primitives/Svg";
-import { Text } from "../../presentations/objects/primitives/Text";
+} from "../../rendering/objects/primitives/Ellipse";
+import { Polygon } from "../../rendering/objects/primitives/Polygon";
+import { Polyline } from "../../rendering/objects/primitives/Polyline";
+import { Rect } from "../../rendering/objects/primitives/Rect";
+import { Svg } from "../../rendering/objects/primitives/Svg";
+import { Text } from "../../rendering/objects/primitives/Text";
 import { ConnectorExtraStyleProperties } from "../../schemas/objects/connector/ConnectorDoc";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";

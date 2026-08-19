@@ -142,7 +142,7 @@ export default tseslint.config(
 	},
 	{
 		// The canvas headless (doc) layer: ban react / @emotion and relative reach into
-		// the presentation, controller and state layers, so UI independence is enforced
+		// the rendering, control and state layers, so UI independence is enforced
 		// structurally (consumed through ./doc and ./unstable-doc).
 		// __tests__ is excluded because registration tests use the test helpers from
 		// controllers/registries.
@@ -175,13 +175,9 @@ export default tseslint.config(
 								"Do not pull in @emotion; it would break the headless (doc) layer.",
 						},
 						{
-							group: [
-								"**/presentations/**",
-								"**/controllers/**",
-								"**/states/**",
-							],
+							group: ["**/rendering/**", "**/controllers/**", "**/states/**"],
 							message:
-								"The headless (doc) layer cannot depend on the presentation / controller / state layers.",
+								"The headless (doc) layer cannot depend on the rendering / control / state layers.",
 						},
 					],
 				},

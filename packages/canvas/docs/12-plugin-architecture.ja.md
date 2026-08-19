@@ -64,7 +64,7 @@ export type CanvasDocPlugin = {
 
 分けてある理由は、ドキュメントを検証するだけの消費者に React を読ませないため。
 VSCode 拡張の診断も MCP サーバーも Node プロセスで `.jis.json` をパースする。
-プラグインの `.` 入口を import すると React・`@emotion`・presentation 層一式が
+プラグインの `.` 入口を import すると React・`@emotion`・描画層一式が
 そのバンドルに入り込む。そこでプラグインは `./doc` をそれらから切り離しており、
 ESLint がこれを強制する（[プラグインの作り方](./13-authoring-plugins.ja.md#リンタが強制する境界)参照）。
 

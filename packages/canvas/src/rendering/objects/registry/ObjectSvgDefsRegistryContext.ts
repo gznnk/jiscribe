@@ -6,13 +6,13 @@ import {
 } from "./ObjectSvgDefsRegistry";
 
 /**
- * Presentation-layer context that distributes the per-canvas
+ * Rendering-layer context that distributes the per-canvas
  * `ObjectSvgDefsRegistry` to `CanvasDefs`.
  *
- * Presentation components must not import the full `CanvasRegistries` bundle from
- * the controllers layer (docs/02-architecture.md), so this presentation-owned
+ * Rendering components must not import the full `CanvasRegistries` bundle from
+ * the controllers layer (docs/02-architecture.md), so this rendering-owned
  * registry is handed down separately; `Canvas.tsx` provides
- * `registries.objectSvgDefs` into it (controllers → presentations is allowed).
+ * `registries.objectSvgDefs` into it (controllers → rendering is allowed).
  *
  * The default is a fresh empty registry, so rendering without a Provider yields
  * an empty `<defs>` rather than reaching for a module-level singleton (there is

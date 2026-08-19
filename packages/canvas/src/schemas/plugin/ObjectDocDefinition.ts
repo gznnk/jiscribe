@@ -7,7 +7,7 @@ import type { ObjectTextSlotStyleDefaults } from "../registry/ObjectTextStyleDef
 /**
  * Headless (UI-independent) description of a single object type: everything the
  * parse layer needs to know a type exists, validate its doc, and create it from
- * a doc — with no React / presentation / controller dependency — plus the
+ * a doc — with no React / rendering / control dependency — plus the
  * AI-facing metadata the schema/docs generator reads (`pnpm generate:ai`,
  * packages/ai-docs). The full
  * {@link import("../../plugin/ObjectTypeDefinition").ObjectTypeDefinition} is this

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import { ZOOM } from "../../../constants/zoom";
-import type { ObjectVisualBoundsRegistry } from "../../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { calcSelectionBounds } from "../calcSelectionBounds";
 import { calcSelectionFitViewport } from "../calcSelectionFitViewport";

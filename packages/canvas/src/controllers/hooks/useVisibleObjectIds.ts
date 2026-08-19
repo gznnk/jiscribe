@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 
-import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../states/canvas/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { calcVisibleObjectIds } from "../utils/calcVisibleObjectIds";

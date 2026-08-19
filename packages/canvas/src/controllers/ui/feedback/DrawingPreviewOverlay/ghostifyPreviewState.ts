@@ -1,4 +1,4 @@
-import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
+import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../../states/objects/base/StrokeStyleState";

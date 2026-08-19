@@ -1,6 +1,6 @@
 import { isObject } from "@jiscribe/basic-validators";
 
-import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
+import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import type {
 	InlineTextStyle,
 	RichText,

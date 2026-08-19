@@ -6,14 +6,14 @@ import {
 	applyObjectDefinition,
 } from "./initializeObjectRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
-import { createObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
-import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
-import { createObjectExtraConnectPointsRegistry } from "../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import { createObjectGeometryKeyRegistry } from "../../presentations/objects/registry/ObjectGeometryKeyRegistry";
-import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
-import { createObjectSvgDefsRegistry } from "../../presentations/objects/registry/ObjectSvgDefsRegistry";
-import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
-import { createObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import { createObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import { createObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
+import { createObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import { createObjectGeometryKeyRegistry } from "../../rendering/objects/registry/ObjectGeometryKeyRegistry";
+import { createObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
+import { createObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
+import { createObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
+import { createObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import { createObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";

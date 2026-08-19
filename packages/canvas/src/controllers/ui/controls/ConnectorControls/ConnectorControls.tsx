@@ -1,8 +1,8 @@
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
-import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/hooks/useResolvedConnectorPoints";
-import { resolveEndpointOwner } from "../../../../presentations/layers/content/utils/endpoints";
+import { useResolvedConnectorPoints } from "../../../../rendering/layers/content/hooks/useResolvedConnectorPoints";
+import { resolveEndpointOwner } from "../../../../rendering/layers/content/utils/endpoints";
 import { isConnectorDrawnOrthogonal } from "../../../../schemas/objects/connector/isConnectorDrawnOrthogonal";
 import { isFreeEndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";

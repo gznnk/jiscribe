@@ -6,7 +6,7 @@ import {
 	SELECTION_OUTLINE_WIDTH,
 } from "../../../../constants/selectionOutline";
 import { theme } from "../../../../constants/theme";
-import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
+import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 
 type OutlineProps = {
 	frame: TransformedFrame;

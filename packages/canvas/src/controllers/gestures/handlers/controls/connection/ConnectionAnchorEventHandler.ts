@@ -6,8 +6,8 @@ import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
-import { resolveEndpointOwner } from "../../../../../presentations/layers/content/utils/endpoints/resolveEndpointOwner";
-import type { ExtraConnectPoint } from "../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import { resolveEndpointOwner } from "../../../../../rendering/layers/content/utils/endpoints/resolveEndpointOwner";
+import type { ExtraConnectPoint } from "../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { ConnectorFeatures } from "../../../../../schemas/objects/connector/ConnectorDoc";
 import { defaultRoutingForAnchors } from "../../../../../schemas/objects/types/ConnectorRouting";
 import {

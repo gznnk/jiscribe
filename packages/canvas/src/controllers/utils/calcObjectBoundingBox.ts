@@ -7,7 +7,7 @@ import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 
 import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
 import { calcTransformedRectBounds } from "./calcTransformedRectBounds";
-import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { isPoly } from "../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";

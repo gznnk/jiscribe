@@ -1,14 +1,14 @@
-> 🌐 日本語版: [08-presentation-and-theme.ja.md](./08-presentation-and-theme.ja.md)
+> 🌐 日本語版: [08-rendering-and-theme.ja.md](./08-rendering-and-theme.ja.md)
 
-# Presentation and Theme
+# Rendering and Theme
 
-The role of the rendering layer (presentations) and the conventions for handling color.
+The role of the rendering layer (`rendering/`) and the conventions for handling color.
 
-## presentations are pure rendering (Dumb Components)
+## The rendering layer is pure rendering
 
-Components under `presentations/` **only receive State via Props and render SVG**;
+Components under `rendering/` **only receive State via Props and render SVG**;
 they hold no state and contain no logic. Event handlers are received through Props.
-Their only dependency is `presentations → states` (type references); they do not depend
+Their only dependency is `rendering → states` (type references); they do not depend
 on `controllers` (a prohibition from [Architecture](./02-architecture.md)).
 
 Structure:
@@ -56,7 +56,7 @@ the saved value does not become theme-dependent, it does not break portability. 
 `fontColor` for new shapes is this `"auto"`.
 
 - **Storage**: `.jis.json` and State retain `"auto"` as-is. The Mapper does not convert it.
-- **Resolution**: at render time, `presentations/objects/utils/resolveAutoColor.ts` resolves it to a
+- **Resolution**: at render time, `rendering/objects/utils/resolveAutoColor.ts` resolves it to a
   theme color **per role** (described below).
 - **Explicit color**: once the user picks a concrete color in the color picker, it is saved as a concrete
   value at that point and thereafter displayed theme-independently as before (backward compatible).
@@ -64,7 +64,7 @@ the saved value does not become theme-dependent, it does not break portability. 
 #### auto resolves to a theme token per role
 
 The color that `"auto"` "should follow" is determined by the field's role. Resolution is **consolidated
-into a single function**, `resolveAutoColor(value, role)` (`presentations/objects/utils/resolveAutoColor.ts`).
+into a single function**, `resolveAutoColor(value, role)` (`rendering/objects/utils/resolveAutoColor.ts`).
 
 | Role    | Target fields          | Resolves to (theme token)                                |
 | ------- | ---------------------- | -------------------------------------------------------- |
@@ -133,7 +133,7 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
 
 ### Details
 
-- Presentational "generic" shapes (arrows, GroupIcon, etc.) do not import `theme` directly. Auto resolution
+- Render-only "generic" shapes (arrows, GroupIcon, etc.) do not import `theme` directly. Auto resolution
   of shape-data colors is delegated to the rendering layer's `resolveAutoColor` (the single point of theme
   coupling), and shapes merely receive the resolved color via props/`style`. On the other hand,
   ObjectMenu-specific color icons (ColorPreviewIcon / BorderColorIcon, etc.) are UI chrome, so referencing

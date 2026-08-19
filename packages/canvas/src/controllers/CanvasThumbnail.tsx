@@ -3,8 +3,8 @@ import { memo, useMemo, useRef, useState } from "react";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import type { CanvasPlugin } from "../plugin/CanvasPlugin";
-import { CanvasView } from "../presentations/CanvasView";
-import { PresentationRegistriesProvider } from "../presentations/objects/registry/PresentationRegistriesProvider";
+import { CanvasView } from "../rendering/CanvasView";
+import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
@@ -94,7 +94,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 
 	return (
 		<CanvasThemeContext value={theme}>
-			<PresentationRegistriesProvider
+			<RenderingRegistriesProvider
 				objectComponent={registries.objectComponent}
 				objectTextRegion={registries.objectTextRegion}
 				objectTextStyleDefaults={registries.objectTextStyleDefaults}
@@ -114,7 +114,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 						surfaceColor={theme.tokens.canvasBg}
 					/>
 				</div>
-			</PresentationRegistriesProvider>
+			</RenderingRegistriesProvider>
 		</CanvasThemeContext>
 	);
 };

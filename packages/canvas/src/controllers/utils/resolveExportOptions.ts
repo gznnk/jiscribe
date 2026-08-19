@@ -5,7 +5,7 @@ import { calcContentBounds } from "./calcContentBounds";
 import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
 import { calcVisibleWorldRect } from "./calcVisibleWorldRect";
 import type { BuildExportSvgOptions, RasterizeSvgOptions } from "../../export";
-import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";

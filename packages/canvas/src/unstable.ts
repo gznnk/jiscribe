@@ -3,32 +3,32 @@
  * (#144 tier 2: frame-based implementations). Unlike the stable API (`.`), this is NOT
  * covered by semver compatibility guarantees and may change without notice.
  *
- * This entry carries state / presentation / controller dependencies (react /
+ * This entry carries state / rendering / control dependencies (react /
  * @emotion). The headless schema-side helpers a plugin's `schema/**` needs
  * (createFrameObjectFactory / createFrameDocValidator / validateOptionalNumber /
  * ObjectDocValidateFn / AUTO_COLOR / DEFAULT_FONT_FAMILY) live in `./unstable-doc`
  * so they can be imported without pulling in the UI.
  */
 
-export { createFrameObject } from "./presentations/objects/base/createFrameObject";
+export { createFrameObject } from "./rendering/objects/base/createFrameObject";
 export type {
 	FrameShapeProps,
 	FrameTextOverlayProps,
 	FrameTextOverlayRenderer,
-} from "./presentations/objects/base/createFrameObject";
-export type { TextEditable } from "./presentations/objects/base/TextOverlay/TextOverlay";
+} from "./rendering/objects/base/createFrameObject";
+export type { TextEditable } from "./rendering/objects/base/TextOverlay/TextOverlay";
 
 // Container for shapes whose body is not plain text (Markdown and the like). The display
 // side and the core editing surface must share one visual contract (line-height / padding /
 // placement / color and font resolution), so the container stays in core and only its
 // contents are swapped. Use together with createFrameObject's renderTextOverlay.
-export { TextOverlayFrame } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
-export type { TextOverlayFrameProps } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
+export { TextOverlayFrame } from "./rendering/objects/base/TextOverlay/TextOverlayFrame";
+export type { TextOverlayFrameProps } from "./rendering/objects/base/TextOverlay/TextOverlayFrame";
 
 // For shapes that keep plain-text bodies but vary typography per slot (a record's title
 // band, say). Pass the props from renderTextOverlay straight through and override only
 // what needs to change.
-export { TextOverlay } from "./presentations/objects/base/TextOverlay/TextOverlay";
+export { TextOverlay } from "./rendering/objects/base/TextOverlay/TextOverlay";
 
 // Only for a type that draws its own component instead of going through
 // createFrameObject (which resolves this already): the per-canvas registry of
@@ -36,7 +36,7 @@ export { TextOverlay } from "./presentations/objects/base/TextOverlay/TextOverla
 // before handing its fields to
 // TextOverlay, or the drawn text and the editing surface — which always resolves —
 // disagree wherever the type's defaults differ from TEXT_STYLE_FALLBACK.
-export { useObjectTextStyleDefaultsRegistry } from "./presentations/objects/registry/ObjectTextStyleDefaultsRegistryContext";
+export { useObjectTextStyleDefaultsRegistry } from "./rendering/objects/registry/ObjectTextStyleDefaultsRegistryContext";
 
 export { createFrameBehavior } from "./controllers/behaviors/base/FrameController";
 
@@ -61,11 +61,11 @@ export type { TextSlots } from "./states/objects/types/TextSlots";
 // makes internally. `calcTextRegion` is the seam the in-place editor also goes
 // through, so a renderer that places text itself must use it or the text jumps
 // on entering edit mode.
-export { calcTextRegion } from "./presentations/objects/utils/calcTextRegion";
-export { createSvgTransform } from "./presentations/objects/utils/createSvgTransform";
+export { calcTextRegion } from "./rendering/objects/utils/calcTextRegion";
+export { createSvgTransform } from "./rendering/objects/utils/createSvgTransform";
 
-export { resolveAutoColor } from "./presentations/objects/utils/resolveAutoColor";
-export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoColor";
+export { resolveAutoColor } from "./rendering/objects/utils/resolveAutoColor";
+export type { AutoColorRole } from "./rendering/objects/utils/resolveAutoColor";
 
 // The box a text of its own takes — the `text` object's frame, and every label a
 // shape sizes from its content rather than from its box. Laid out as authored, so

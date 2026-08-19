@@ -9,9 +9,9 @@ import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
 import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
-import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
-import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
-import { verticalAlignToAlignItems } from "../../../../presentations/objects/utils/verticalAlignToAlignItems";
+import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
+import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
+import { verticalAlignToAlignItems } from "../../../../rendering/objects/utils/verticalAlignToAlignItems";
 import type { RichText } from "../../../../schemas/objects/types/RichText";
 import { isSameRichText } from "../../../../schemas/objects/types/RichText";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";

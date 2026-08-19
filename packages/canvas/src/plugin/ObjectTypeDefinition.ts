@@ -6,12 +6,12 @@ import type { SelectionControlDefinition } from "../controllers/ui/controls/Sele
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
-import type { ObjectAnchorRegionCalculator } from "../presentations/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsCalculator } from "../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectGeometryKeyCalculator } from "../presentations/objects/registry/ObjectGeometryKeyRegistry";
-import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
-import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
-import type { ObjectVisualBoundsCalculator } from "../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectAnchorRegionCalculator } from "../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/ObjectGeometryKeyRegistry";
+import type { ObjectOutlineCalculator } from "../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ObjectTextRegionCalculator } from "../rendering/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectVisualBoundsCalculator } from "../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
 import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
@@ -56,7 +56,7 @@ export type ObjectTypeDefinition<
 	 */
 	contentResizer?: ObjectContentResizer<TState>;
 
-	// --- Render (presentation) ---
+	// --- Rendering layer ---
 
 	/** SVG renderer for the shape. Editable types read `isEditing` by self-declaring `FC<TState & TextEditable>`. */
 	component: FC<TState>;

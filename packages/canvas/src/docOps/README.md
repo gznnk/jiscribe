@@ -14,7 +14,7 @@ document covers the rules that hold across all of them, not the ops themselves.
 ## Layer boundary
 
 This is the headless document layer. It must not import `react`, `react-dom`,
-`@emotion/*`, or the presentation / controller / state layers — ESLint enforces it (see
+`@emotion/*`, or the rendering / control / state layers — ESLint enforces it (see
 `eslint.config.js`). It reads and writes the plain JSON `CanvasDoc` and nothing else.
 
 ## Directory structure

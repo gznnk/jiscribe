@@ -29,7 +29,7 @@ Each layer keeps a `__tests__/` directory **co-located** with it. State + Mapper
 and sociable behavior tests are placed right next to the files they target
 (the co-location policy from [Architecture](./02-architecture.md)).
 
-- Targets are the `schemas` / `states` / `controllers` / `presentations` layers
+- Targets are the `schemas` / `states` / `controllers` / `rendering` layers
   (Mapper round-trip conversions, `validateXxxDoc`, a Command's `execute`, transformation logic, behavior via `canvasReducer`, etc.)
 - `vitest.config.ts` uses `environment: "node"`. Without going through the DOM, it verifies input state → output state directly
 - Run: `pnpm --filter @jiscribe/canvas test` (`vitest run`).

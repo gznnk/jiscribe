@@ -1,7 +1,7 @@
 import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
-import { resolveLabelFill } from "../../../../../../presentations/objects/connector/ConnectorLabel";
+import { resolveLabelFill } from "../../../../../../rendering/objects/connector/ConnectorLabel";
 import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";

@@ -6,7 +6,7 @@ import {
 } from "./ObjectGeometryKeyRegistry";
 
 /**
- * Presentation-layer context that distributes the per-canvas
+ * Rendering-layer context that distributes the per-canvas
  * `ObjectGeometryKeyRegistry` to the connector endpoint memo (handed down
  * separately from the controllers-layer bundle for the same reason as
  * ObjectTextRegionRegistryContext).

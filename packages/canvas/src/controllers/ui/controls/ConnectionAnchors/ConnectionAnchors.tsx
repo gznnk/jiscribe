@@ -3,12 +3,12 @@ import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
-import type { ExtraConnectPoint } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcExtraConnectPoint,
 	calcOutwardVector,
-} from "../../../../presentations/objects/utils/calcConnectPoint";
+} from "../../../../rendering/objects/utils/calcConnectPoint";
 import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 

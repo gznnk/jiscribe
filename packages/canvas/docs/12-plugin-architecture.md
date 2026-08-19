@@ -65,7 +65,7 @@ export type CanvasDocPlugin = {
 The split exists so a consumer that only validates documents never loads React.
 The VSCode extension's diagnostics provider and the MCP server both parse
 `.jis.json` in a Node process; importing a plugin's `.` entry would drag React,
-`@emotion` and the whole presentation layer into their bundle. So plugins keep
+`@emotion` and the whole rendering layer into their bundle. So plugins keep
 `./doc` free of them, and ESLint enforces it (see
 [Authoring Plugins](./13-authoring-plugins.md#boundaries-the-linter-enforces)).
 

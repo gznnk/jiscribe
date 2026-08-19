@@ -1,7 +1,7 @@
 import { memo } from "react";
 
-import { Arrow } from "../../../../../../presentations/objects/arrows/Arrow";
-import { getArrowLineInset } from "../../../../../../presentations/objects/arrows/getArrowLineInset";
+import { Arrow } from "../../../../../../rendering/objects/arrows/Arrow";
+import { getArrowLineInset } from "../../../../../../rendering/objects/arrows/getArrowLineInset";
 import type { ArrowType } from "../../../../../../schemas/objects/types/ArrowType";
 
 type ArrowHeadIconPreviewProps = {

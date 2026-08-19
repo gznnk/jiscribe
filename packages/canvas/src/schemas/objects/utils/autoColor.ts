@@ -5,7 +5,7 @@
  * the unambiguous meaning of "follow the theme").
  *
  * At render time it is resolved to `currentColor` (= theme foreground) by
- * `resolveAutoColor` on the `presentations` side. The data and State layers keep
+ * `resolveAutoColor` on the `rendering` side. The data and State layers keep
  * it as `"auto"` (to avoid corrupting the stored value).
  */
 export const AUTO_COLOR = "auto";

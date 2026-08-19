@@ -4,7 +4,7 @@
  *
  * The counterpart to `./unstable`, split off so the schema-side helpers a plugin's
  * `schema/**` and `doc.ts` need (doc factory / doc validator / doc-default
- * constants) carry no react / @emotion / presentation / controller dependency, and
+ * constants) carry no react / @emotion / rendering / control dependency, and
  * a Node-side consumer (VSCode DiagnosticProvider) can pull a plugin's doc entry
  * without dragging the React UI into its bundle. Like `./unstable`, this is NOT
  * covered by semver compatibility guarantees.

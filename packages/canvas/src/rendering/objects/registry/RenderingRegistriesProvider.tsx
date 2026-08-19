@@ -17,7 +17,7 @@ import { ObjectTextRegionRegistryContext } from "./ObjectTextRegionRegistryConte
 import { ObjectTextStyleDefaultsRegistryContext } from "./ObjectTextStyleDefaultsRegistryContext";
 import type { ObjectTextStyleDefaultsRegistry } from "../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 
-type PresentationRegistriesProviderProps = {
+type RenderingRegistriesProviderProps = {
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
@@ -30,12 +30,12 @@ type PresentationRegistriesProviderProps = {
 };
 
 /**
- * Bundles the presentation-layer registry contexts so consumers (`Canvas`,
+ * Bundles the rendering-layer registry contexts so consumers (`Canvas`,
  * `CanvasThumbnail`) provide them in one node instead of a nested stack. Takes
  * the registries individually rather than the controllers-layer
  * `CanvasRegistries` bundle (docs/02-architecture.md layering).
  */
-export function PresentationRegistriesProvider({
+export function RenderingRegistriesProvider({
 	objectComponent,
 	objectTextRegion,
 	objectTextStyleDefaults,
@@ -45,7 +45,7 @@ export function PresentationRegistriesProvider({
 	objectGeometryKey,
 	objectSvgDefs,
 	children,
-}: PresentationRegistriesProviderProps) {
+}: RenderingRegistriesProviderProps) {
 	return (
 		<ObjectComponentRegistryContext value={objectComponent}>
 			<ObjectTextRegionRegistryContext value={objectTextRegion}>

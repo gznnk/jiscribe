@@ -4,12 +4,12 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import { alignVertexPath } from "../../../../../presentations/layers/content/utils/routing";
-import type { OrthogonalConnectorEndpoint } from "../../../../../presentations/layers/content/utils/routing";
+import { alignVertexPath } from "../../../../../rendering/layers/content/utils/routing";
+import type { OrthogonalConnectorEndpoint } from "../../../../../rendering/layers/content/utils/routing";
 import {
 	calcConnectPoint,
 	calcConnectPointDirection,
-} from "../../../../../presentations/objects/utils/calcConnectPoint";
+} from "../../../../../rendering/objects/utils/calcConnectPoint";
 import type { ConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 
 /**

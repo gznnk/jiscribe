@@ -1,7 +1,7 @@
 import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
+import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";

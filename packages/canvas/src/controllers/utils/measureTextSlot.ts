@@ -9,8 +9,8 @@ import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
 } from "../../constants/textBoxPadding";
-import type { ObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
-import { calcTextRegion } from "../../presentations/objects/utils/calcTextRegion";
+import type { ObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
+import { calcTextRegion } from "../../rendering/objects/utils/calcTextRegion";
 import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";

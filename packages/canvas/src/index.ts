@@ -170,7 +170,7 @@ export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTy
 // The slot id every single-text shape (`features.text: "body"`) holds, i.e. the
 // key its `state.text` carries. A shape with several slots names its own instead.
 export { BODY_TEXT_SLOT_ID } from "./constants/textSlotId";
-export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
+export type { ObjectTextRegionCalculator } from "./rendering/objects/registry/ObjectTextRegionRegistry";
 // Per-type, per-slot text-style defaults: the registry a canvas resolves an
 // unset text style through, reachable as
 // `CanvasRegistries["objectTextStyleDefaults"]`.
@@ -184,14 +184,14 @@ export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,
 } from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
-export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
-export type { ObjectAnchorRegionCalculator } from "./presentations/objects/registry/ObjectAnchorRegionRegistry";
+export type { ObjectOutlineCalculator } from "./rendering/objects/registry/ObjectOutlineRegistry";
+export type { ObjectAnchorRegionCalculator } from "./rendering/objects/registry/ObjectAnchorRegionRegistry";
 export type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsCalculator,
-} from "./presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-export type { ObjectGeometryKeyCalculator } from "./presentations/objects/registry/ObjectGeometryKeyRegistry";
-export type { ObjectVisualBoundsCalculator } from "./presentations/objects/registry/ObjectVisualBoundsRegistry";
+} from "./rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+export type { ObjectGeometryKeyCalculator } from "./rendering/objects/registry/ObjectGeometryKeyRegistry";
+export type { ObjectVisualBoundsCalculator } from "./rendering/objects/registry/ObjectVisualBoundsRegistry";
 export type { ObjectTransformHandles } from "./controllers/ui/controls/ObjectTransformHandlesRegistry";
 export type {
 	Stencil,
