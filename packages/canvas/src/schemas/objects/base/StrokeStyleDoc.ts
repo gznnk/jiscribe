@@ -15,7 +15,8 @@ export type StrokeStyleDoc = {
 
 /**
  * Field names owned by StrokeStyleDoc/State (identical for Doc and State).
- * Referenced by Frame mappers to pass the stroke group through via an allow-list.
+ * Every enumeration of the group is built from this, so a field added to the type
+ * reaches them all without any being edited.
  */
 export const STROKE_STYLE_KEYS = exhaustiveKeysOf<StrokeStyleDoc>()([
 	"stroke",

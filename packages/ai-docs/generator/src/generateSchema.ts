@@ -1,6 +1,12 @@
 import { readFileSync } from "node:fs";
 
-import type { ObjectDocDefinition } from "@jiscribe/canvas/doc";
+import {
+	FILL_STYLE_KEYS,
+	STROKE_STYLE_KEYS,
+	TEXT_SLOT_STYLE_KEYS,
+	TRANSFORM_STYLE_KEYS,
+	type ObjectDocDefinition,
+} from "@jiscribe/canvas/doc";
 import { COMMON_ICON_GROUPS } from "@jiscribe/plugin-lucide-icon-shape/doc";
 
 import {
@@ -63,37 +69,34 @@ const rootTemplate = JSON.parse(
 	readFileSync(templatePath("rootTemplate.json"), "utf8"),
 ) as JsonSchemaNode;
 
-/** Feature flag → the shared style $def properties it pulls in (as $ref targets). */
+/**
+ * Feature flag → the shared style $def properties it pulls in (as $ref targets).
+ *
+ * The names come from the canvas's own key constants rather than being spelled again
+ * here, so a field added to a style group reaches the generated schema without this
+ * being edited. Their order is the order the properties appear in the output.
+ *
+ * The radius and arrow groups are absent because they are not shared this way: `rx`
+ * and the arrowheads are written into the defs that have them, a few lines below.
+ */
 const STYLE_PROP_SOURCES: ReadonlyArray<{
 	feature: "stroke" | "fill" | "text" | "transform";
 	styleDef: "StrokeStyle" | "FillStyle" | "TextStyle" | "TransformStyle";
 	props: readonly string[];
 }> = [
+	{ feature: "stroke", styleDef: "StrokeStyle", props: STROKE_STYLE_KEYS },
+	{ feature: "fill", styleDef: "FillStyle", props: FILL_STYLE_KEYS },
 	{
-		feature: "stroke",
-		styleDef: "StrokeStyle",
-		props: ["stroke", "strokeWidth", "strokeDashType"],
-	},
-	{ feature: "fill", styleDef: "FillStyle", props: ["fill"] },
-	{
+		// The content first, then the styling of it: "text" is the body, which the slot
+		// keys deliberately leave out (they are `Omit<TextSlot, "text">`).
 		feature: "text",
 		styleDef: "TextStyle",
-		props: [
-			"text",
-			"textAlign",
-			"verticalAlign",
-			"fontColor",
-			"fontSize",
-			"fontFamily",
-			"fontWeight",
-			"fontStyle",
-			"textDecoration",
-		],
+		props: ["text", ...TEXT_SLOT_STYLE_KEYS],
 	},
 	{
 		feature: "transform",
 		styleDef: "TransformStyle",
-		props: ["rotation", "flipX", "flipY", "lockAspectRatio"],
+		props: TRANSFORM_STYLE_KEYS,
 	},
 ];
 

@@ -10,7 +10,8 @@ export type FillStyleDoc = {
 
 /**
  * Field names owned by FillStyleDoc/State (identical for Doc and State).
- * Referenced by Frame mappers to pass the fill group through via an allow-list.
+ * Every enumeration of the group is built from this, so a field added to the type
+ * reaches them all without any being edited.
  */
 export const FILL_STYLE_KEYS = exhaustiveKeysOf<FillStyleDoc>()([
 	"fill",

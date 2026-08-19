@@ -26,6 +26,15 @@ export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
 export type { ObjectFeatures } from "./schemas/objects/types/ObjectFeatures";
 export type { CreateObjectType } from "./schemas/objects/types/CreateObjectType";
+// The field names each style group owns, tied to its Doc type so a field added to the
+// group cannot be left out. Consumers that enumerate style properties of their own —
+// the AI schema generator's property table is the one outside this package — build
+// their lists from these rather than spelling the names again.
+export { FILL_STYLE_KEYS } from "./schemas/objects/base/FillStyleDoc";
+export { STROKE_STYLE_KEYS } from "./schemas/objects/base/StrokeStyleDoc";
+export { RADIUS_STYLE_KEYS } from "./schemas/objects/base/RadiusStyleDoc";
+export { ARROW_STYLE_KEYS } from "./schemas/objects/base/ArrowStyleDoc";
+export { TRANSFORM_STYLE_KEYS } from "./schemas/objects/base/TransformDoc";
 // A text slot is the unit of text in both layers, so a type that spells out its
 // own slots (features.text: "slots") declares them with this in its Doc and reuses
 // the very same values in its State.

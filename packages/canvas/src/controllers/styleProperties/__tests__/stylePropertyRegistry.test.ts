@@ -159,11 +159,12 @@ describe("shape-declared extra properties (registry-driven)", () => {
 
 describe("registry consistency", () => {
 	it("shape-declared property names do not shadow system properties", () => {
+		const systemNames = new Set<string>(Object.keys(SYSTEM_STYLE_PROPERTIES));
 		for (const { property } of EXTRA_DECLARATIONS) {
 			expect(
-				SYSTEM_STYLE_PROPERTIES[property],
+				systemNames.has(property),
 				`"${property}" is declared as a shape extra but already exists as a system property`,
-			).toBeUndefined();
+			).toBe(false);
 		}
 	});
 

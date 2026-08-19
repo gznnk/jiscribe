@@ -7,6 +7,7 @@ import {
 
 import { isCssColor } from "./isCssColor";
 import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
+import { ARROW_STYLE_KEYS } from "../../../schemas/objects/base/ArrowStyleDoc";
 import { isArrowType } from "../../../schemas/objects/types/ArrowType";
 import { isOwnedEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
@@ -205,20 +206,13 @@ export const isValidTextStyleState = (
 export const isValidRadiusStyleState = (o: StateRecord): boolean =>
 	isValidOptionalNumber(o.rx, 0);
 
-/** Validates arrow ends (startArrow / endArrow) as ArrowType when present. */
-export const isValidArrowFields = (o: StateRecord): boolean => {
-	if (
-		"startArrow" in o &&
-		o.startArrow !== undefined &&
-		!isArrowType(o.startArrow)
-	) {
-		return false;
-	}
-	if ("endArrow" in o && o.endArrow !== undefined && !isArrowType(o.endArrow)) {
-		return false;
-	}
-	return true;
-};
+/**
+ * Validates arrow ends (startArrow / endArrow) as ArrowType when present. The fields are
+ * taken from ARROW_STYLE_KEYS, so a field added to the group is checked without editing
+ * this, the same as the doc-side `validateArrowFields`.
+ */
+export const isValidArrowFields = (o: StateRecord): boolean =>
+	ARROW_STYLE_KEYS.every((key) => o[key] === undefined || isArrowType(o[key]));
 
 /**
  * Validates that childIds is a non-empty array of strings.

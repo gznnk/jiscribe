@@ -15,8 +15,8 @@ export type ArrowStyleDoc = {
 
 /**
  * Field names owned by ArrowStyleDoc/State (identical for Doc and State).
- * Referenced by the mappers' allow-list (`collectStyleKeys`) and by doc-ops' styling, so
- * a field added to the group reaches both without either being edited.
+ * Every enumeration of the group is built from this, so a field added to the type
+ * reaches them all without any being edited.
  */
 export const ARROW_STYLE_KEYS = exhaustiveKeysOf<ArrowStyleDoc>()([
 	"startArrow",
