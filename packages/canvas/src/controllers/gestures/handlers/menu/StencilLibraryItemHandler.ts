@@ -20,6 +20,9 @@ import {
 /**
  * Extracts the preset ID from a targetPart.
  * Format: "item:<presetId>"
+ *
+ * Splitting is enough because a preset id holds no colon of its own — StencilRegistry
+ * refuses one that does, rather than letting it reach here and resolve to nothing.
  */
 const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
 

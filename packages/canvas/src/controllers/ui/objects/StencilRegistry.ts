@@ -12,7 +12,19 @@ export class StencilRegistry {
 	private readonly ordered: Stencil[] = [];
 	private readonly byId = new Map<string, Stencil>();
 
+	/**
+	 * @param preset - The palette entry; its `id` may not contain a colon
+	 * @throws When the id contains a colon. The id is carried to the click handler inside
+	 *   `data-part="item:{id}"`, whose own separator is that character, so one in the id
+	 *   leaves the entry rendered and clickable but resolving to nothing. Refusing it here
+	 *   turns a palette that silently does nothing into a plugin that will not load.
+	 */
 	register(preset: Stencil): void {
+		if (preset.id.includes(":")) {
+			throw new Error(
+				`StencilRegistry.register: preset id "${preset.id}" may not contain a colon; it is the separator of the data-part the palette entry is read through`,
+			);
+		}
 		this.ordered.push(preset);
 		this.byId.set(preset.id, preset);
 	}

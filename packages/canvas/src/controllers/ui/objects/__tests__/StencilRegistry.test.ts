@@ -22,6 +22,15 @@ describe("StencilRegistry", () => {
 		expect(registry.all().map((p) => p.id)).toEqual(["b", "a", "c"]);
 	});
 
+	it("refuses an id carrying the separator its own data-part uses", () => {
+		const registry = createStencilRegistry();
+
+		// Registered, it would render a palette entry that clicks into nothing: the click
+		// handler reads the id back out of `item:{id}` and would stop at the first colon.
+		expect(() => registry.register(preset("lucideIcon:user"))).toThrow(/colon/);
+		expect(registry.all()).toHaveLength(0);
+	});
+
 	it("looks a preset up by id with get, returning undefined when unregistered", () => {
 		const registry = createStencilRegistry();
 		registry.register(preset("rect"));
