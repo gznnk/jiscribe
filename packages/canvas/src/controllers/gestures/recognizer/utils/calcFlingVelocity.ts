@@ -19,11 +19,11 @@ export type FlingSample = {
 const ZERO_VELOCITY: Point = { x: 0, y: 0 };
 
 /**
- * Velocity a released drag glides on, in screen px per millisecond, measured
+ * Velocity a released drag hands to its fling, in screen px per millisecond, measured
  * across the recorded samples. Screen-based like the pan itself: world
  * coordinates shift while the view moves, client coordinates do not.
  *
- * Returns a zero vector whenever there is nothing to glide from: fewer than two
+ * Returns a zero vector whenever there is nothing to fling from: fewer than two
  * samples, a span too short to divide by, or a pointer that had come to rest
  * before it lifted.
  *

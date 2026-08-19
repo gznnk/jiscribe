@@ -258,7 +258,7 @@ export type CanvasControllerState = CanvasState & {
 	 * Whether the view is still coasting from a released pan (inertial scrolling).
 	 * Deliberately not folded into activeDragKind: no pointer is down and no
 	 * eventStartSnapshot is open, so the two would stop being set as a pair.
-	 * handleGesture owns the lifecycle — up on every glide frame, down on the
+	 * handleGesture owns the lifecycle — up on every fling frame, down on the
 	 * recognizer's inertialScrollEnd.
 	 */
 	inertialScrolling: boolean;

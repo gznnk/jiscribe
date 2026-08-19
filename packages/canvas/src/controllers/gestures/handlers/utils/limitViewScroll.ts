@@ -8,7 +8,7 @@ import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 /**
  * Whether this gesture is one of the deliberate view scrolls the limit applies
  * to: the wheel (Ctrl held makes it a zoom, which is never limited), the grab
- * pan of a middle-/right-button drag, the one-finger touch pan, and the glide a
+ * pan of a middle-/right-button drag, the one-finger touch pan, and the fling a
  * released pan leaves behind.
  *
  * Every other way the view moves is left alone — the scroll a drag carries with

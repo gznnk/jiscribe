@@ -3,15 +3,15 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * Inertial scrolling: a right-button pan released mid-motion keeps gliding, and
- * fresh input takes the view back immediately.
+ * Inertial scrolling: a right-button pan released mid-motion leaves a fling
+ * behind, and fresh input takes the view back immediately.
  *
  * The mouse is driven step by step here rather than through canvas.rightDrag:
- * the glide exists only if the release still carries speed, and rightDrag
+ * the fling exists only if the release still carries speed, and rightDrag
  * deliberately rests before lifting (see PAN_SETTLE_MS) so every other pan spec
  * measures a drag that stops where it ended.
  *
- * pan-delta.spec is the counterpart for the rested release: no glide, and the
+ * pan-delta.spec is the counterpart for the rested release: no fling, and the
  * view lands exactly on the drag distance.
  */
 
@@ -30,8 +30,8 @@ const FLICK_STEPS = 6;
 const FLICK_STEP_PX = 40;
 const FLICK_STEP_MS = 16;
 const FLICK_START = { x: 400, y: 500 };
-/** Movement past the drag itself that counts as "the glide is under way" (px). */
-const GLIDE_MARGIN_PX = 20;
+/** Movement past the drag itself that counts as "the fling is under way" (px). */
+const FLING_MARGIN_PX = 20;
 
 /** Right-drag leftwards at a steady speed and let go while still moving. */
 async function flickLeft(canvas: CanvasDriver): Promise<void> {
@@ -83,12 +83,12 @@ test.describe("inertial pan", () => {
 		await flickLeft(canvas);
 		const justAfterRelease = parseViewBox(await canvas.getViewBox());
 
-		// Dragging left moves the view right, so the glide keeps increasing minX.
+		// Dragging left moves the view right, so the fling keeps increasing minX.
 		await expect
 			.poll(() => readMinX(canvas), {
 				message: "the view keeps moving after the release",
 			})
-			.toBeGreaterThan(justAfterRelease.minX + GLIDE_MARGIN_PX);
+			.toBeGreaterThan(justAfterRelease.minX + FLING_MARGIN_PX);
 
 		// It stops on its own: two reads a moment apart land on the same place.
 		await expect
@@ -98,11 +98,11 @@ test.describe("inertial pan", () => {
 					await canvas.page.waitForTimeout(150);
 					return (await readMinX(canvas)) === first;
 				},
-				{ timeout: 10000, message: "the glide comes to rest" },
+				{ timeout: 10000, message: "the fling comes to rest" },
 			)
 			.toBe(true);
 
-		// The glide only pans: the zoom factor is untouched.
+		// The fling only pans: the zoom factor is untouched.
 		const settled = parseViewBox(await canvas.getViewBox());
 		expect(settled.width).toBeCloseTo(justAfterRelease.width, 3);
 	});
@@ -115,9 +115,9 @@ test.describe("inertial pan", () => {
 
 		await expect
 			.poll(() => readMinX(canvas), {
-				message: "the glide is under way before it is interrupted",
+				message: "the fling is under way before it is interrupted",
 			})
-			.toBeGreaterThan(justAfterRelease.minX + GLIDE_MARGIN_PX);
+			.toBeGreaterThan(justAfterRelease.minX + FLING_MARGIN_PX);
 
 		const empty = canvas.toScreen({ x: 700, y: 700 });
 		await canvas.page.mouse.click(empty.x, empty.y);
@@ -127,7 +127,7 @@ test.describe("inertial pan", () => {
 		expect(await readMinX(canvas)).toBe(atPress);
 	});
 
-	test("keeps the object menu away until the glide has stopped", async ({
+	test("keeps the object menu away until the fling has stopped", async ({
 		canvas,
 	}) => {
 		// Drawing leaves the shape selected, so the menu is up before the pan.
@@ -140,14 +140,14 @@ test.describe("inertial pan", () => {
 
 		// Wait for the view to coast past where the drag ended before reading the
 		// menu: right after mouse.up the drag itself is still what hides it, so a
-		// check there would pass whatever the glide does.
+		// check there would pass whatever the fling does.
 		await expect
 			.poll(() => readMinX(canvas), {
-				message: "the glide is under way before the menu is checked",
+				message: "the fling is under way before the menu is checked",
 			})
-			.toBeGreaterThan(justAfterRelease + GLIDE_MARGIN_PX);
+			.toBeGreaterThan(justAfterRelease + FLING_MARGIN_PX);
 
-		// The pan hid it; the glide continues the pan, so it must stay hidden
+		// The pan hid it; the fling continues the pan, so it must stay hidden
 		// instead of flying across the screen with the selection.
 		expect(await objectMenu.count()).toBe(0);
 
@@ -155,7 +155,7 @@ test.describe("inertial pan", () => {
 		await expect(objectMenu).toBeVisible({ timeout: 10000 });
 	});
 
-	test("never flashes the object menu at either edge of the glide", async ({
+	test("never flashes the object menu at either edge of the fling", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 420, y: 250 }, { x: 580, y: 350 });
@@ -169,7 +169,7 @@ test.describe("inertial pan", () => {
 			await canvas.page.waitForTimeout(FLICK_STEP_MS);
 		}
 
-		// The drag hides the menu and the glide keeps it hidden, but the two are
+		// The drag hides the menu and the fling keeps it hidden, but the two are
 		// separate states with a gap between them. Sampling would miss a gap that
 		// lasts one frame, so watch the DOM instead.
 		await watchForMenu(canvas);
@@ -177,7 +177,7 @@ test.describe("inertial pan", () => {
 		await canvas.page.waitForTimeout(400);
 		expect(await menuWasSeen(canvas)).toBe(false);
 
-		// Same handover in reverse: interrupt the glide with a fresh pan. Between
+		// Same handover in reverse: interrupt the fling with a fresh pan. Between
 		// the press that stops it and the drag being confirmed, nothing hides the
 		// menu on its own.
 		await watchForMenu(canvas);

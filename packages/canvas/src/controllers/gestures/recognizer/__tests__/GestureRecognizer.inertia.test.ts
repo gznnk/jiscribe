@@ -17,10 +17,10 @@ import type * as RecognizerUtils from "../utils";
  *
  * The real velocity estimator runs (only the DOM-dependent utilities are stubbed),
  * so these tests pin the whole path from raw pointer samples to per-frame
- * scrollDelta — including the two ways a fast release still must not glide
+ * scrollDelta — including the two ways a fast release still must not fling
  * (below the speed threshold, and released after coming to rest).
  *
- * Frame timestamps are supplied by hand: the recognizer integrates the glide
+ * Frame timestamps are supplied by hand: the recognizer integrates the fling
  * against them, so controlling them is what makes the emitted distances exact.
  */
 
@@ -143,13 +143,13 @@ const setup = () => {
 				break;
 		}
 	};
-	const glides = (): Gesture[] =>
+	const flings = (): Gesture[] =>
 		events.filter((e) => e.type === "inertialScroll");
 	const ends = (): Gesture[] =>
 		events.filter((e) => e.type === "inertialScrollEnd");
 	return {
 		events,
-		glides,
+		flings,
 		ends,
 		dispatch,
 		wheelHandler: recognizer.getWheelHandler(),
@@ -193,15 +193,15 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 		const harness = setup();
 		const { releaseTime, velocity } = flickAndRelease(harness);
 
-		expect(harness.glides()).toHaveLength(0);
+		expect(harness.flings()).toHaveLength(0);
 
 		flushRaf(releaseTime + FRAME_MS);
 
-		const [glide] = harness.glides();
-		expect(glide).toBeDefined();
+		const [fling] = harness.flings();
+		expect(fling).toBeDefined();
 		// Dragging right moves the viewport left, exactly as a wheel scroll would.
-		expect(glide.scrollDelta?.deltaX).toBeCloseTo(-velocity * FRAME_MS, 6);
-		expect(glide.scrollDelta?.deltaY).toBeCloseTo(0, 6);
+		expect(fling.scrollDelta?.deltaX).toBeCloseTo(-velocity * FRAME_MS, 6);
+		expect(fling.scrollDelta?.deltaY).toBeCloseTo(0, 6);
 	});
 
 	it("fires as a canvas-level gesture carrying no pointer and no modifiers", () => {
@@ -209,17 +209,17 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 		const { releaseTime } = flickAndRelease(harness);
 		flushRaf(releaseTime + FRAME_MS);
 
-		const [glide] = harness.glides();
-		expect(glide.targetKind).toBe("canvas");
-		expect(glide.targetId).toBe("canvas");
-		expect(glide.button).toBe(0);
-		expect(glide.mods).toEqual({
+		const [fling] = harness.flings();
+		expect(fling.targetKind).toBe("canvas");
+		expect(fling.targetId).toBe("canvas");
+		expect(fling.button).toBe(0);
+		expect(fling.mods).toEqual({
 			shift: false,
 			alt: false,
 			ctrl: false,
 			meta: false,
 		});
-		expect(glide.clientDelta).toEqual({ x: 0, y: 0 });
+		expect(fling.clientDelta).toEqual({ x: 0, y: 0 });
 	});
 
 	it("decelerates every frame and comes to a stop on its own", () => {
@@ -227,23 +227,23 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 		const { releaseTime } = flickAndRelease(harness);
 
 		let time = releaseTime;
-		// Far more frames than the glide needs; it must stop booking them well before.
+		// Far more frames than the fling needs; it must stop booking them well before.
 		for (let frame = 0; frame < 400; frame++) {
 			time += FRAME_MS;
 			flushRaf(time);
 		}
 
-		const deltas = harness.glides().map((g) => g.scrollDelta?.deltaX ?? 0);
+		const deltas = harness.flings().map((g) => g.scrollDelta?.deltaX ?? 0);
 		expect(deltas.length).toBeGreaterThan(1);
 		for (let i = 1; i < deltas.length; i++) {
 			expect(Math.abs(deltas[i])).toBeLessThan(Math.abs(deltas[i - 1]));
 		}
 
 		// No frame is left booked once it has come to rest.
-		const settled = harness.glides().length;
+		const settled = harness.flings().length;
 		time += FRAME_MS;
 		flushRaf(time);
-		expect(harness.glides()).toHaveLength(settled);
+		expect(harness.flings()).toHaveLength(settled);
 	});
 
 	it("announces the end once, after the final frame and carrying no movement", () => {
@@ -258,42 +258,42 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 
 		expect(harness.ends()).toHaveLength(1);
 		expect(harness.ends()[0].scrollDelta).toBeUndefined();
-		// It is the last thing the glide says: no frame follows it.
+		// It is the last thing the fling says: no frame follows it.
 		const types = harness.events.map((e) => e.type);
 		expect(types[types.length - 1]).toBe("inertialScrollEnd");
 	});
 
-	it("does not glide when the release was too slow", () => {
+	it("does not fling when the release was too slow", () => {
 		const harness = setup();
 		// 6px over 48ms = 0.125 px/ms, under FLING_MIN_SPEED but past the drag threshold.
 		const { releaseTime } = flickAndRelease(harness, { stepPx: 2 });
 
 		flushRaf(releaseTime + FRAME_MS);
-		expect(harness.glides()).toHaveLength(0);
+		expect(harness.flings()).toHaveLength(0);
 		expect(harness.ends()).toHaveLength(0);
 	});
 
-	it("does not glide when the pointer came to rest before lifting", () => {
+	it("does not fling when the pointer came to rest before lifting", () => {
 		const harness = setup();
 		const { releaseTime } = flickAndRelease(harness, {
 			idleBeforeRelease: FLING_RELEASE_IDLE_MS + 1,
 		});
 
 		flushRaf(releaseTime + FRAME_MS);
-		expect(harness.glides()).toHaveLength(0);
+		expect(harness.flings()).toHaveLength(0);
 		expect(harness.ends()).toHaveLength(0);
 	});
 
-	it("does not glide for a drag the policy rejects", () => {
+	it("does not fling for a drag the policy rejects", () => {
 		const harness = setup();
 		const { releaseTime } = flickAndRelease(harness, { button: LEFT_BUTTON });
 
 		flushRaf(releaseTime + FRAME_MS);
-		expect(harness.glides()).toHaveLength(0);
+		expect(harness.flings()).toHaveLength(0);
 		expect(harness.ends()).toHaveLength(0);
 	});
 
-	it("measures only the final motion, so a flick after a pause still glides", () => {
+	it("measures only the final motion, so a flick after a pause still flings", () => {
 		const harness = setup();
 		const { dispatch } = harness;
 		dispatch(makeEvent("pointerdown", 400, 0, RIGHT_BUTTON));
@@ -313,36 +313,36 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 		flushRaf(flickEnd);
 		flushRaf(flickEnd + FRAME_MS);
 
-		const [glide] = harness.glides();
-		expect(glide).toBeDefined();
+		const [fling] = harness.flings();
+		expect(fling).toBeDefined();
 		// 80px over the 32ms since the pause ended, not over the whole press.
-		expect(glide.scrollDelta?.deltaX).toBeCloseTo(
+		expect(fling.scrollDelta?.deltaX).toBeCloseTo(
 			(-80 / (2 * FRAME_MS)) * FRAME_MS,
 			6,
 		);
 	});
 
-	describe("a glide yields to fresh input", () => {
-		const startGlide = () => {
+	describe("a fling yields to fresh input", () => {
+		const startFling = () => {
 			const harness = setup();
 			const { releaseTime } = flickAndRelease(harness);
 			flushRaf(releaseTime + FRAME_MS);
-			expect(harness.glides()).toHaveLength(1);
+			expect(harness.flings()).toHaveLength(1);
 			return { harness, time: releaseTime + FRAME_MS };
 		};
 
 		it("stops on a new press", () => {
-			const { harness, time } = startGlide();
+			const { harness, time } = startFling();
 			harness.dispatch(makeEvent("pointerdown", 400, time + 1, RIGHT_BUTTON));
 
 			flushRaf(time + FRAME_MS);
 			flushRaf(time + 2 * FRAME_MS);
-			expect(harness.glides()).toHaveLength(1);
+			expect(harness.flings()).toHaveLength(1);
 			expect(harness.ends()).toHaveLength(1);
 		});
 
 		it("stops on a wheel", () => {
-			const { harness, time } = startGlide();
+			const { harness, time } = startFling();
 			harness.wheelHandler({
 				clientX: 400,
 				clientY: 300,
@@ -358,17 +358,17 @@ describe("GestureRecognizer - inertial scrolling after a released pan", () => {
 
 			flushRaf(time + FRAME_MS);
 			flushRaf(time + 2 * FRAME_MS);
-			expect(harness.glides()).toHaveLength(1);
+			expect(harness.flings()).toHaveLength(1);
 			expect(harness.ends()).toHaveLength(1);
 		});
 
 		it("stops on cancelPendingGesture (external sync / unmount)", () => {
-			const { harness, time } = startGlide();
+			const { harness, time } = startFling();
 			harness.cancelPendingGesture();
 
 			flushRaf(time + FRAME_MS);
 			flushRaf(time + 2 * FRAME_MS);
-			expect(harness.glides()).toHaveLength(1);
+			expect(harness.flings()).toHaveLength(1);
 			expect(harness.ends()).toHaveLength(1);
 		});
 	});

@@ -34,7 +34,7 @@ export const PINCH_MIN_DISTANCE = 1;
 /**
  * Age of the oldest pointer sample the release velocity is estimated over
  * (milliseconds). Long enough to average out per-frame jitter, short enough that
- * only the final motion of the drag decides the glide.
+ * only the final motion of the drag decides the fling.
  */
 export const FLING_VELOCITY_WINDOW_MS = 100;
 
@@ -46,14 +46,14 @@ export const FLING_VELOCITY_WINDOW_MS = 100;
 export const FLING_VELOCITY_MIN_SPAN_MS = 8;
 
 /**
- * How stale the newest sample may be at the release for a glide to start
+ * How stale the newest sample may be at the release for a fling to start
  * (milliseconds). Coming to rest before letting go means "stop here", however
  * fast the drag was a moment earlier.
  */
 export const FLING_RELEASE_IDLE_MS = 50;
 
 /**
- * Release speed below which no glide starts (screen px per millisecond).
+ * Release speed below which no fling starts (screen px per millisecond).
  * Keeps an ordinary slow pan from drifting past where it was released.
  */
 export const FLING_MIN_SPEED = 0.15;
@@ -65,11 +65,11 @@ export const FLING_MIN_SPEED = 0.15;
  */
 export const FLING_MAX_SPEED = 4;
 
-/** Speed at which the glide is considered finished (screen px per millisecond). */
+/** Speed at which the fling is considered finished (screen px per millisecond). */
 export const FLING_STOP_SPEED = 0.02;
 
 /**
- * Fraction of the speed a glide keeps per FLING_REFERENCE_FRAME_MS. Applied as
+ * Fraction of the speed a fling keeps per FLING_REFERENCE_FRAME_MS. Applied as
  * an exponent of the elapsed time so the deceleration curve is the same on any
  * refresh rate.
  */
@@ -79,7 +79,7 @@ export const FLING_DECAY_PER_FRAME = 0.95;
 export const FLING_REFERENCE_FRAME_MS = 1000 / 60;
 
 /**
- * Longest frame delta a glide integrates over (milliseconds). A backgrounded tab
+ * Longest frame delta a fling integrates over (milliseconds). A backgrounded tab
  * delivers no frames, and without the clamp the first frame after it returns
  * would jump the view by the whole absence.
  */
