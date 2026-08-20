@@ -70,7 +70,9 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 					connectorState={connectorState}
 					sourceObj={resolveEndpointOwner(objects, connectorState.source)}
 					targetObj={resolveEndpointOwner(objects, connectorState.target)}
-					textEditObjectId={textEditObjectId}
+					// Derived here so only the edited connector's prop changes and
+					// starting/ending an edit does not break the others' memo.
+					isEditing={id === textEditObjectId}
 				/>,
 			);
 			return;

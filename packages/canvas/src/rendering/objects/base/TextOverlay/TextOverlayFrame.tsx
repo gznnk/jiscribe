@@ -1,7 +1,6 @@
 import { negativeToZero } from "@jiscribe/geometry";
 import type React from "react";
 import type { ReactNode } from "react";
-import { memo } from "react";
 
 import {
 	ForeignObjectElement,
@@ -50,7 +49,27 @@ export type TextOverlayFrameProps = {
 	children: ReactNode;
 };
 
-const TextOverlayFrameComponent: React.FC<TextOverlayFrameProps> = ({
+/**
+ * The box every text overlay is drawn in: a foreignObject placed and transformed
+ * with the parent shape, holding one content element that carries the shared
+ * typography contract (line-height, padding, alignment, resolved color/font).
+ *
+ * The same contract has to hold on the editing side (TextEditor lays its
+ * editable surface over the identical region), so display and edit must not drift apart
+ * — which is why this box lives here rather than in each shape. Shapes that draw
+ * something other than plain text (Markdown, for one) render their own element
+ * as `children` instead of duplicating the box.
+ *
+ * The DOM shape is load-bearing: `foreignObject > wrapper > content`. Image
+ * export walks exactly these two levels and reads the computed style off the
+ * content element (see foreignObjectToSvgText), so children must nest *inside*
+ * the content element, never between the levels.
+ *
+ * Deliberately not memoized: `children` is a JSX element every caller builds
+ * fresh per render, so a memo here could never bail out — the effective memo
+ * boundary is the caller (TextOverlay, or the type's own overlay renderer).
+ */
+export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
 	x,
 	y,
 	width,
@@ -110,21 +129,3 @@ const TextOverlayFrameComponent: React.FC<TextOverlayFrameProps> = ({
 		</ForeignObjectElement>
 	);
 };
-
-/**
- * The box every text overlay is drawn in: a foreignObject placed and transformed
- * with the parent shape, holding one content element that carries the shared
- * typography contract (line-height, padding, alignment, resolved color/font).
- *
- * The same contract has to hold on the editing side (TextEditor lays its
- * editable surface over the identical region), so display and edit must not drift apart
- * — which is why this box lives here rather than in each shape. Shapes that draw
- * something other than plain text (Markdown, for one) render their own element
- * as `children` instead of duplicating the box.
- *
- * The DOM shape is load-bearing: `foreignObject > wrapper > content`. Image
- * export walks exactly these two levels and reads the computed style off the
- * content element (see foreignObjectToSvgText), so children must nest *inside*
- * the content element, never between the levels.
- */
-export const TextOverlayFrame = memo(TextOverlayFrameComponent);

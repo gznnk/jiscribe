@@ -67,7 +67,11 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
+import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
+import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { RichText } from "../schemas/objects/types/RichText";
 import type { Camera } from "../states/canvas/Viewport";
 import type {
 	ObjectMenuPropertyUpdater,
@@ -78,9 +82,7 @@ import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
-import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
-import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
-import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
+import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
 type CanvasProps = {
 	// ── Model & persistence (the core contract) ──
@@ -527,6 +529,31 @@ const CanvasComponent = ({
 		dispatch,
 	});
 
+	// Editor handlers with stable identities: TextEditorLayer is memoized, and
+	// TextEditor keys its native-listener effects on these, so inline literals
+	// here would re-attach those listeners on every canvas dispatch mid-edit.
+	const handleTextEditChange = useCallback(
+		(text: RichText) => {
+			dispatch({ type: "UPDATE_TEXT_EDIT", text });
+		},
+		[dispatch],
+	);
+	const handleTextEditEscape = useCallback(() => {
+		dispatch({ type: "END_TEXT_EDIT", commit: false });
+	}, [dispatch]);
+	const handleTextEditSelectionChange = useCallback(
+		(selection: { start: number; end: number }) => {
+			dispatch({ type: "UPDATE_TEXT_EDIT_SELECTION", selection });
+		},
+		[dispatch],
+	);
+	const handleTextEditToggleFormat = useCallback(
+		(format: TextEditFormat) => {
+			dispatch({ type: "TOGGLE_TEXT_FORMAT", format });
+		},
+		[dispatch],
+	);
+
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
 	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.
 	const { visibleObjectIds, withCullingSuspended } = useViewportCulling(
@@ -705,19 +732,11 @@ const CanvasComponent = ({
 							<TextEditorLayer
 								textEditState={state.textEditState}
 								objects={draftObjects}
-								onTextChange={(text) =>
-									dispatch({ type: "UPDATE_TEXT_EDIT", text })
-								}
-								onEscape={() =>
-									dispatch({ type: "END_TEXT_EDIT", commit: false })
-								}
+								onTextChange={handleTextEditChange}
+								onEscape={handleTextEditEscape}
 								onCaretMove={revealCaret}
-								onSelectionChange={(selection) =>
-									dispatch({ type: "UPDATE_TEXT_EDIT_SELECTION", selection })
-								}
-								onToggleFormat={(format) =>
-									dispatch({ type: "TOGGLE_TEXT_FORMAT", format })
-								}
+								onSelectionChange={handleTextEditSelectionChange}
+								onToggleFormat={handleTextEditToggleFormat}
 							/>
 						</ZoomScaledOverlay>
 						{/* HTML whose position follows zoom but whose size does not */}
