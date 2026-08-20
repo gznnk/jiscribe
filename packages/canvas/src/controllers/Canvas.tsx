@@ -315,7 +315,10 @@ const CanvasComponent = ({
 		[locale, messages],
 	);
 
-	const themeCssVars = useMemo(() => buildThemeCssVars(theme.tokens), [theme]);
+	const themeCssVars = useMemo(
+		() => buildThemeCssVars(theme.tokens),
+		[theme.tokens],
+	);
 
 	const docDefaults = useMemo(
 		() => ({ fontFamily: theme.fontFamily }),
@@ -406,6 +409,13 @@ const CanvasComponent = ({
 		state.internalClipboard,
 		dispatch,
 		registries,
+	);
+
+	// Held stable so the wrapper object does not defeat ContextMenu's memo;
+	// an inline literal would fail its shallow compare on every render.
+	const contextMenuCallbacks = useMemo(
+		() => ({ paste: handlePaste }),
+		[handlePaste],
 	);
 
 	// Scoped to the focusable canvas root, so with several Canvases on a page only the
@@ -713,7 +723,7 @@ const CanvasComponent = ({
 						<ContextMenu
 							position={state.contextMenuPosition}
 							canvasState={state}
-							callbacks={{ paste: handlePaste }}
+							callbacks={contextMenuCallbacks}
 						/>
 					</ViewportOverlay>
 				</Viewport>
