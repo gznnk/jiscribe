@@ -43,7 +43,12 @@ vi.mock("../utils", async (importActual) => {
 	const actual = await importActual<typeof RecognizerUtils>();
 	return {
 		...actual,
-		getSvgPoint: (_svg: unknown, clientX: number, clientY: number) => ({
+		getWorldPoint: (
+			_svg: unknown,
+			_viewport: unknown,
+			clientX: number,
+			clientY: number,
+		) => ({
 			x: clientX / mockUtil.zoom,
 			y: clientY / mockUtil.zoom,
 		}),

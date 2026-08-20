@@ -103,7 +103,12 @@ export type PointerEventHandlers = {
  * pass their existing ref unchanged.
  */
 export type RecognizerCanvasState = {
-	/** Current pan/zoom; supplies the rect for edge-proximity detection and the zoom that divides screen-px scroll deltas into SVG units. */
+	/**
+	 * Current pan/zoom; the client→world conversion (getWorldPoint), edge-proximity
+	 * detection and the zoom that divides screen-px scroll deltas into SVG units
+	 * all read it, so every gesture is derived from the same state the scroll
+	 * handlers increment — not from the rendered DOM, which may lag a frame.
+	 */
 	viewport: Viewport;
 	/** Whether a drag near the container edge auto-scrolls the viewport; false makes the drag stop at the edge. */
 	edgeScrollEnabled: boolean;
