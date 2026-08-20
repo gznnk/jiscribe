@@ -2,7 +2,7 @@ import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
 import type { TextEditable } from "@jiscribe/canvas-sdk";
 import {
 	TextOverlay,
-	calcTextRegion,
+	calcFullTextRegion,
 	createSvgTransform,
 	readRichTextSlot,
 	useObjectTextStyleDefaultsRegistry,
@@ -39,7 +39,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 	// Sticky is a "body"-feature type: its one slot is addressed by name rather
 	// than enumerated, so a malformed multi-slot state cannot overlap-draw here.
 	const bodySlot = text?.[BODY_TEXT_SLOT_ID];
-	const textRegion = calcTextRegion(props, BODY_TEXT_SLOT_ID);
+	const textRegion = calcFullTextRegion(props);
 	// Hand-drawn shapes have to resolve the type's own text-style defaults
 	// themselves; createFrameObject does it for the shapes that go through it, and
 	// the editing surface does it either way (issue #8).

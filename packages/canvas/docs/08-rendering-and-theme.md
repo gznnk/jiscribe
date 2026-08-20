@@ -124,6 +124,17 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     breaks multiple Canvases with different themes on one page). Unifying the routes would mean
     moving doc creation out of the reducer, which is not worth losing the reducer's determinism
     and state-transition testability.
+  - **Why a loaded font is a second signal**: the family alone does not settle what text measures.
+    Web fonts arrive after the first paint, so a box derived from its content is measured against
+    the stack's generic keyword and drawn moments later in a face with other metrics.
+    `useFontsLoadedNonce` watches `document.fonts` (`ready` for the first layout, `loadingdone` for
+    the later unicode-range fetches a JP character triggers) and returns a counter. Canvas turns it
+    into a `REMEASURE_TEXT` dispatch, which re-runs `reconcileObjectContentSizes` with its
+    `forceRemeasure` flag — the one pass neither the slots nor the family can ask for.
+    `CanvasThumbnail` has no reducer to dispatch through, so it takes the same counter as a memo key
+    on `canvasToState` instead. A pass that moves no box returns the same state reference, so the
+    two events overlapping costs nothing. The faces themselves are opt-in: a host imports
+    `@jiscribe/canvas/fonts.css` to get the ones `CANVAS_FONT_FAMILIES` names.
 - **Standard themes**: `darkCanvasTheme` (the default; its values double as the token fallbacks) and
   `lightCanvasTheme` are exported from the package (`theme/themePresets.ts`).
 - **VSCode mapping layer**: the VSCode host (not this package) maps `--vscode-*` onto the neutral

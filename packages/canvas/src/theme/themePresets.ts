@@ -1,5 +1,5 @@
 import type { CanvasTheme } from "./CanvasTheme";
-import { DEFAULT_FONT_FAMILY } from "../constants/defaultFontFamily";
+import { DEFAULT_FONT_FAMILY } from "../constants/fontFamilies";
 
 /**
  * Derives the transparency checker from the injected foreground so it

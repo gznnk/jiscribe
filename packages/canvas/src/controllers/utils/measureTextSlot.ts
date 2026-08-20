@@ -100,6 +100,7 @@ export const measureTextSlot = (
 		object,
 		slotId,
 		registries.objectTextRegion.get(object.type),
+		{ fontFamily: fallbackFontFamily },
 	);
 	// A flipped shape carries the flip in scaleX/scaleY, but a calculator may
 	// also hand back a negative extent; either way the text has the same room.

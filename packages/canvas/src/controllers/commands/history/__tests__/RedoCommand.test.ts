@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
+import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { CanvasControllerState, DocSnapshot } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";

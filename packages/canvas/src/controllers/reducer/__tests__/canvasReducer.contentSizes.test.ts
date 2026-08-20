@@ -2,7 +2,7 @@ import { roundToDecimal } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
-import { DEFAULT_FONT_FAMILY } from "../../../constants/defaultFontFamily";
+import { DEFAULT_FONT_FAMILY } from "../../../constants/fontFamilies";
 import { PRECISION } from "../../../constants/precision";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";

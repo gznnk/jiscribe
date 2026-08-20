@@ -13,6 +13,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
+import { useCanvasTheme } from "../../../theme/CanvasThemeContext";
 import { useObjectTextRegionRegistry } from "../registry/ObjectTextRegionRegistryContext";
 import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
@@ -144,6 +145,9 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		} = props;
 
 		const textRegionCalculator = useObjectTextRegionRegistry().get(type);
+		// A calculator sizing its region from its own text measures with the family
+		// the overlay below draws unstyled text in; both read it from the theme.
+		const { fontFamily: themeFontFamily } = useCanvasTheme();
 		const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 		// The features.text gate matches the one used by the text-edit gesture and
@@ -162,7 +166,9 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		};
 
 		const drawSlotOverlay = (slotId: string, slot: TextSlot): ReactNode => {
-			const textRegion = calcTextRegion(props, slotId, textRegionCalculator);
+			const textRegion = calcTextRegion(props, slotId, textRegionCalculator, {
+				fontFamily: themeFontFamily,
+			});
 			// The type's own defaults for this slot stand in for whatever the slot
 			// leaves unset, the same resolution the editing surface and text
 			// measurement make.

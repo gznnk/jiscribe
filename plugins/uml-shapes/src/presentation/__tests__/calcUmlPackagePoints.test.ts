@@ -11,6 +11,9 @@ import { umlPackageOutline } from "../umlPackageOutline";
 const DEFAULT_SIZE = { width: 160, height: 108 };
 const SHORT_SIZE = { width: 160, height: 40 };
 
+/** Any family: these calculators derive their region from the box and read no context. */
+const TEXT_REGION_CONTEXT = { fontFamily: "sans-serif" };
+
 describe("calcUmlPackagePoints", () => {
 	it("draws the tab at 40% of the width and 16px tall on a box that fits it", () => {
 		const { width, height } = DEFAULT_SIZE;
@@ -51,7 +54,9 @@ describe("umlPackageOutline", () => {
 
 describe("calcUmlPackageTextRegion", () => {
 	it("spans the body below the tab, in full", () => {
-		expect(calcUmlPackageTextRegion(DEFAULT_SIZE, "text")).toEqual({
+		expect(
+			calcUmlPackageTextRegion(DEFAULT_SIZE, "text", TEXT_REGION_CONTEXT),
+		).toEqual({
 			x: -80,
 			y: -38,
 			width: 160,
@@ -60,7 +65,9 @@ describe("calcUmlPackageTextRegion", () => {
 	});
 
 	it("follows the clamped tab on a short box", () => {
-		expect(calcUmlPackageTextRegion(SHORT_SIZE, "text")).toEqual({
+		expect(
+			calcUmlPackageTextRegion(SHORT_SIZE, "text", TEXT_REGION_CONTEXT),
+		).toEqual({
 			x: -80,
 			y: -10,
 			width: 160,

@@ -2,6 +2,8 @@ import type { Point } from "@jiscribe/geometry";
 import type React from "react";
 
 import {
+	AUTO_SCROLL_MAX_TICK_MS,
+	AUTO_SCROLL_REFERENCE_FRAME_MS,
 	DRAG_THRESHOLD,
 	DRAG_THRESHOLD_TOUCH,
 	FLING_DECAY_PER_FRAME,
@@ -33,7 +35,7 @@ import {
 	type FlingSample,
 	getGestureTarget,
 	getInputValue,
-	getSvgPoint,
+	getWorldPoint,
 	isDoubleClick,
 	isGestureOptedOut,
 	isNativePointerTarget,
@@ -42,7 +44,7 @@ import {
 
 /** Fields every queued event carries, whatever produced it (DOM event, wheel conversion, long-press timer). */
 type InternalEventBase = {
-	/** Client / screen X in px; feed converts it to world coordinates with getSvgPoint. */
+	/** Client / screen X in px; feed converts it to world coordinates with getWorldPoint. */
 	clientX: number;
 	/** Client / screen Y in px, measured from the viewport top — not the canvas origin. */
 	clientY: number;
@@ -166,6 +168,21 @@ export type Pressed = {
 	 * touches the edge starts inside the zone, so scrolling must not fire until then.
 	 */
 	edgeScrollArmed: boolean;
+	/**
+	 * Time of the previous edge-scroll tick (performance.now() base), or null before
+	 * the first tick of a stay in the edge zone. Each tick scrolls by the time
+	 * elapsed since this stamp, so the speed stays constant however unevenly the
+	 * ticks arrive; leaving the zone resets it to null.
+	 */
+	edgeScrollLastTime: number | null;
+	/**
+	 * The state viewport's minX/minY captured when the last edge-scroll tick was
+	 * emitted, or null when no tick is outstanding. While the viewport still
+	 * shows these values the emitted scroll has not come back through the state
+	 * (the commit is running late, or a scroll bound swallowed it), and the next
+	 * tick holds instead of scrolling again — see the hold branch in feed.
+	 */
+	edgeScrollPendingViewport: Point | null;
 };
 
 /**
@@ -241,10 +258,8 @@ export class GestureRecognizer {
 	private pinch: Pinch | null = null;
 
 	// Event context of pinch moves accumulated during the current RAF batch, fired
-	// as a single pinch gesture at settleBatch. One gesture per frame is not only
-	// thinning: the zoom anchor (the midpoint in world coordinates) is derived from
-	// the DOM viewBox, which reflects at most one viewport update per frame — a second
-	// gesture in the same batch would anchor against a stale viewBox and drift.
+	// as a single pinch gesture at settleBatch: both fingers may move within one
+	// batch, and their combined effect should zoom/pan the view once per frame.
 	private pinchPending: {
 		mods: Mods;
 		time: number;
@@ -353,7 +368,12 @@ export class GestureRecognizer {
 	 * modifiers at this event's moment, then fire the Gesture its type calls for.
 	 */
 	private feed(e: InternalEvent): void {
-		const currentPos = getSvgPoint(this.svgRef.current, e.clientX, e.clientY);
+		const currentPos = getWorldPoint(
+			this.svgRef.current,
+			this.canvasStateRef.current?.viewport,
+			e.clientX,
+			e.clientY,
+		);
 		const currentClientPos = { x: e.clientX, y: e.clientY };
 		const mods: Mods = {
 			shift: e.shiftKey,
@@ -526,6 +546,8 @@ export class GestureRecognizer {
 				dragging: false,
 				button: e.button,
 				edgeScrollArmed: false,
+				edgeScrollLastTime: null,
+				edgeScrollPendingViewport: null,
 				isNativePointerTarget: isNativePointer,
 			};
 
@@ -610,12 +632,49 @@ export class GestureRecognizer {
 
 					if (!edgeProximity.isNearEdge) {
 						this.pressed.edgeScrollArmed = true;
+						// The next stay in the zone starts its timing fresh: measuring from
+						// the previous stay would bill its first tick for the time spent
+						// outside the zone.
+						this.pressed.edgeScrollLastTime = null;
+						this.pressed.edgeScrollPendingViewport = null;
 					}
 
 					if (this.pressed.edgeScrollArmed && edgeProximity.isNearEdge) {
+						const { minX, minY } = canvasState.viewport;
+						const pending = this.pressed.edgeScrollPendingViewport;
+						if (pending !== null && pending.x === minX && pending.y === minY) {
+							// The previous tick's scroll has not come back through the state
+							// yet: the commit is running late, or a scroll bound swallowed it.
+							// Scrolling again now would step the viewport twice while the drag
+							// position still derives from the old view, and the dragged shape
+							// would fall behind the cursor and snap back on the catch-up frame
+							// — visible trembling. Hold the tick instead: no gesture fires,
+							// and edgeScrollLastTime stays on the last emitted tick so the
+							// next one covers the whole wait (clamped).
+							this.enqueue({
+								...e,
+								timeStamp: performance.now(),
+							});
+							return;
+						}
+
+						// Scroll by elapsed time, not per tick: ticks arrive once per frame,
+						// so a fixed step sagged with the frame rate and bunched after a
+						// dropped frame. The first tick of a stay has no interval yet and is
+						// billed one reference frame; the clamp keeps a long stall from
+						// jumping the view by the whole absence.
+						const elapsedMs = Math.min(
+							this.pressed.edgeScrollLastTime === null
+								? AUTO_SCROLL_REFERENCE_FRAME_MS
+								: Math.max(0, time - this.pressed.edgeScrollLastTime),
+							AUTO_SCROLL_MAX_TICK_MS,
+						);
+						this.pressed.edgeScrollLastTime = time;
+						this.pressed.edgeScrollPendingViewport = { x: minX, y: minY };
 						scrollDelta = calculateScrollDelta(
 							edgeProximity.horizontal,
 							edgeProximity.vertical,
+							elapsedMs,
 						);
 
 						// Keeps scrolling while the cursor is held still at the edge; move
@@ -844,7 +903,12 @@ export class GestureRecognizer {
 			pinch.lastDist < PINCH_MIN_DISTANCE || dist < PINCH_MIN_DISTANCE
 				? 1
 				: dist / pinch.lastDist;
-		const midWorld = getSvgPoint(this.svgRef.current, mid.x, mid.y);
+		const midWorld = getWorldPoint(
+			this.svgRef.current,
+			this.canvasStateRef.current?.viewport,
+			mid.x,
+			mid.y,
+		);
 
 		this.gestureCallback({
 			type: "pinch",
@@ -1034,7 +1098,12 @@ export class GestureRecognizer {
 		scrollDelta?: ScrollDelta,
 	): void {
 		const clientPos = fling.clientPos;
-		const worldPos = getSvgPoint(this.svgRef.current, clientPos.x, clientPos.y);
+		const worldPos = getWorldPoint(
+			this.svgRef.current,
+			this.canvasStateRef.current?.viewport,
+			clientPos.x,
+			clientPos.y,
+		);
 		this.gestureCallback({
 			type,
 			target: null,

@@ -3,13 +3,20 @@ import { describe, it, expect } from "vitest";
 
 import { DB_CAP_RATIO } from "../../../schema/db/DbDoc";
 
+/** Any family: these calculators derive their region from the box and read no context. */
+const TEXT_REGION_CONTEXT = { fontFamily: "sans-serif" };
+
 describe("db textRegion", () => {
 	it("keeps the region clear of the whole top cap and inside the bulge below", () => {
 		const textRegion = createInsetTextRegion({
 			top: DB_CAP_RATIO * 2,
 			bottom: DB_CAP_RATIO,
 		});
-		const result = textRegion({ width: 120, height: 100 }, "body");
+		const result = textRegion(
+			{ width: 120, height: 100 },
+			"body",
+			TEXT_REGION_CONTEXT,
+		);
 		const capRy = 100 * DB_CAP_RATIO;
 		expect(result.x).toBe(-60);
 		expect(result.width).toBe(120);

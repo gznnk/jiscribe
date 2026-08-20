@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GestureRecognizer } from "../GestureRecognizer";
-import { FLING_VELOCITY_WINDOW_MS } from "../GestureRecognizerConstants";
+import {
+	AUTO_SCROLL_MAX_TICK_MS,
+	AUTO_SCROLL_REFERENCE_FRAME_MS,
+	FLING_VELOCITY_WINDOW_MS,
+} from "../GestureRecognizerConstants";
 import type {
 	Gesture,
 	GestureRecognizerConfig,
@@ -17,12 +21,12 @@ import type {
  *
  * The reproduced real loop:
  *   1. The recognizer gets the cursor's world coordinate reflecting the current viewport via
- *      getSvgPoint (= inverse getScreenCTM transform).
+ *      getWorldPoint (the state-viewport conversion).
  *   2. Fire a drag (last / delta / scrollDelta).
  *   3. CanvasEventHandler does viewport.minX += scrollDelta/zoom via a scroll-derived event.
- *   4. The next frame's getSvgPoint reflects the updated viewport.
+ *   4. The next frame's getWorldPoint reflects the updated viewport.
  *
- * sim.viewport is shared between the getSvgPoint mock and canvasStateRef, and after each frame
+ * sim.viewport is shared between the getWorldPoint mock and canvasStateRef, and after each frame
  * we perform the reducer-equivalent viewport update by hand to reproduce the above.
  */
 
@@ -31,15 +35,22 @@ const CLIENT_X = 790; // Client X of the cursor held at the edge (near the right
 // Interior client X for arming (arm-on-leave). Grabbing here puts the start point outside the edge.
 const CLIENT_X_INTERIOR = 400;
 
-// Mutable viewport shared between the getSvgPoint mock and canvasStateRef.
+// Mutable viewport shared between the getWorldPoint mock and canvasStateRef.
+// scrollTickIntervals records the elapsedMs each tick hands calculateScrollDelta.
 const sim = vi.hoisted(() => ({
 	viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 2 },
+	scrollTickIntervals: [] as number[],
 }));
 
 vi.mock("../utils", () => ({
-	// Inverse getScreenCTM transform when drawing viewBox = `minX minY width/zoom height/zoom`
+	// The state-viewport conversion when drawing viewBox = `minX minY width/zoom height/zoom`
 	// onto screen size width x height: world = minX + clientX / zoom. The key point is that it reflects the viewport.
-	getSvgPoint: (_svg: unknown, clientX: number, clientY: number) => ({
+	getWorldPoint: (
+		_svg: unknown,
+		_viewport: unknown,
+		clientX: number,
+		clientY: number,
+	) => ({
 		x: sim.viewport.minX + clientX / sim.viewport.zoom,
 		y: sim.viewport.minY + clientY / sim.viewport.zoom,
 	}),
@@ -63,7 +74,10 @@ vi.mock("../utils", () => ({
 			vertical: null,
 		};
 	},
-	calculateScrollDelta: () => ({ deltaX: STEP, deltaY: 0 }),
+	calculateScrollDelta: (_h: unknown, _v: unknown, elapsedMs: number) => {
+		sim.scrollTickIntervals.push(elapsedMs);
+		return { deltaX: STEP, deltaY: 0 };
+	},
 }));
 
 let rafCallbacks: FrameRequestCallback[] = [];
@@ -81,6 +95,7 @@ const flushRaf = (): void => {
 beforeEach(() => {
 	rafCallbacks = [];
 	sim.viewport = { minX: 0, minY: 0, width: 800, height: 600, zoom: 2 };
+	sim.scrollTickIntervals = [];
 	vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback): number => {
 		rafCallbacks.push(cb);
 		return rafCallbacks.length;
@@ -406,9 +421,19 @@ describe("GestureRecognizer edge-scroll ticks carry the current time", () => {
 
 		// The clock is advanced before each flush, so the frame a tick is stamped in is
 		// always later than the event that scheduled it.
+		let applied = 0;
 		const frame = (): void => {
 			clock += FRAME_MS;
 			flushRaf();
+			// Reducer-equivalent viewport update for each newly emitted tick; without
+			// it the pending-viewport hold in feed would stop the loop after one tick.
+			const scrolls = events.filter(
+				(e) => e.type === "drag" && e.scrollDelta !== undefined,
+			);
+			for (; applied < scrolls.length; applied++) {
+				sim.viewport.minX +=
+					(scrolls[applied].scrollDelta?.deltaX ?? 0) / sim.viewport.zoom;
+			}
 		};
 
 		dispatch(makeEvent("pointerdown", CLIENT_X_INTERIOR, 100, clock));
@@ -455,5 +480,167 @@ describe("GestureRecognizer edge-scroll ticks carry the current time", () => {
 			Math.ceil(FLING_VELOCITY_WINDOW_MS / FRAME_MS) + 1,
 		);
 		expect(samples.length).toBeLessThan(frames);
+	});
+});
+
+/**
+ * Each tick scrolls by the time elapsed since the previous tick, so the speed
+ * stays constant however unevenly frames arrive. The elapsedMs each tick hands
+ * calculateScrollDelta is recorded via sim.scrollTickIntervals; the tick's
+ * timeStamp is set at enqueue (the previous frame), so a frame gap surfaces in
+ * the interval one tick later.
+ */
+describe("GestureRecognizer edge-scroll ticks scroll by elapsed time", () => {
+	const FRAME_MS = 16;
+	let clock = 0;
+
+	beforeEach(() => {
+		clock = 200_000;
+		vi.spyOn(performance, "now").mockImplementation(() => clock);
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	let applied = 0;
+	const frame = (): void => {
+		clock += FRAME_MS;
+		flushRaf();
+		// Reducer-equivalent viewport update per emitted tick (one interval is
+		// recorded per emission); without it the pending-viewport hold in feed
+		// would stop the loop after one tick.
+		while (applied < sim.scrollTickIntervals.length) {
+			sim.viewport.minX += 5;
+			applied++;
+		}
+	};
+
+	/** Drag to the edge (arming on the way through the interior) and hold. */
+	const startEdgeHold = () => {
+		applied = 0;
+		const { events, dispatch } = setup();
+		dispatch(makeEvent("pointerdown", CLIENT_X_INTERIOR, 100, clock));
+		frame();
+		dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 20, 100, clock));
+		frame();
+		dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 40, 100, clock));
+		frame();
+		dispatch(makeEvent("pointermove", CLIENT_X, 100, clock));
+		return { events, dispatch };
+	};
+
+	it("bills the first tick one reference frame and later ticks the measured interval", () => {
+		startEdgeHold();
+		for (let i = 0; i < 5; i++) {
+			frame();
+		}
+
+		const [first, ...rest] = sim.scrollTickIntervals;
+		expect(first).toBeCloseTo(AUTO_SCROLL_REFERENCE_FRAME_MS);
+		expect(rest.length).toBeGreaterThanOrEqual(3);
+		for (const interval of rest) {
+			expect(interval).toBeCloseTo(FRAME_MS);
+		}
+	});
+
+	it("clamps the tick after a stalled frame instead of jumping by the whole stall", () => {
+		startEdgeHold();
+		frame();
+		frame();
+
+		// The main thread stalls for 500ms; the tick enqueued after it carries the
+		// late stamp, so the following tick sees the gap — clamped.
+		clock += 500;
+		frame();
+		frame();
+
+		const last = sim.scrollTickIntervals[sim.scrollTickIntervals.length - 1];
+		expect(last).toBe(AUTO_SCROLL_MAX_TICK_MS);
+	});
+
+	it("restarts timing when the cursor re-enters the zone, not from the previous stay", () => {
+		const { dispatch } = startEdgeHold();
+		frame();
+		frame();
+
+		// Leave the zone (interval bookkeeping resets), linger, and come back.
+		dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR, 100, clock));
+		frame();
+		frame();
+		frame();
+		dispatch(makeEvent("pointermove", CLIENT_X, 100, clock));
+		frame();
+
+		const last = sim.scrollTickIntervals[sim.scrollTickIntervals.length - 1];
+		expect(last).toBeCloseTo(AUTO_SCROLL_REFERENCE_FRAME_MS);
+	});
+});
+
+/**
+ * While the scroll a tick emitted has not come back through the state viewport
+ * (a busy frame delays the commit, or a scroll bound swallowed the move), the
+ * next tick must hold: scrolling again would step the viewport twice while the
+ * drag position still derives from the old view, and the dragged shape would
+ * fall behind the cursor and snap back — the on-screen trembling this guards
+ * against. The hold fires no gesture at all and keeps the tick loop alive.
+ */
+describe("GestureRecognizer edge-scroll holds while the viewport lags the emitted scroll", () => {
+	const dragCount = (events: Gesture[]): number =>
+		events.filter((e) => e.type === "drag").length;
+	const scrollDragCount = (events: Gesture[]): number =>
+		events.filter((e) => e.type === "drag" && e.scrollDelta !== undefined)
+			.length;
+
+	/** Arm via the interior and reach the edge; the first tick fires on the next flush. */
+	const reachEdge = () => {
+		const { events, dispatch } = setup();
+		dispatch(makeEvent("pointerdown", CLIENT_X_INTERIOR, 100, 0));
+		flushRaf();
+		dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 20, 100, 16));
+		flushRaf();
+		dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 40, 100, 24));
+		flushRaf();
+		dispatch(makeEvent("pointermove", CLIENT_X, 100, 32));
+		flushRaf();
+		return { events, dispatch };
+	};
+
+	it("emits no further tick and no gesture until the viewport reflects the scroll", () => {
+		const { events } = reachEdge();
+		expect(scrollDragCount(events)).toBe(1);
+		const dragsAfterFirstTick = dragCount(events);
+
+		// The viewport is left untouched (the commit never lands): held frames add
+		// neither scroll ticks nor plain drags.
+		flushRaf();
+		flushRaf();
+		flushRaf();
+		expect(scrollDragCount(events)).toBe(1);
+		expect(dragCount(events)).toBe(dragsAfterFirstTick);
+	});
+
+	it("resumes ticking once the emitted scroll lands in the viewport", () => {
+		const { events } = reachEdge();
+		expect(scrollDragCount(events)).toBe(1);
+		flushRaf();
+		flushRaf();
+
+		// The reducer-equivalent update finally lands; the held loop resumes.
+		sim.viewport.minX += 5;
+		flushRaf();
+		expect(scrollDragCount(events)).toBe(2);
+	});
+
+	it("stops for good at a scroll bound, where the viewport never advances", () => {
+		const { events } = reachEdge();
+
+		// A wall (limitViewScroll) swallows every emitted scroll: the viewport
+		// stays put, so the loop holds indefinitely instead of pushing the drag
+		// position further past the cursor each frame.
+		for (let i = 0; i < 10; i++) {
+			flushRaf();
+		}
+		expect(scrollDragCount(events)).toBe(1);
 	});
 });

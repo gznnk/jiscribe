@@ -8,6 +8,7 @@ export { getGestureTarget, type GestureTarget } from "./getGestureTarget";
 export { createGetHovered, getHoveredElements } from "./getHoveredElements";
 export { getInputValue, readInputValue } from "./getInputValue";
 export { getSvgPoint } from "./getSvgPoint";
+export { getWorldPoint } from "./getWorldPoint";
 export { isDoubleClick } from "./isDoubleClick";
 export { isGestureOptedOut } from "./isGestureOptedOut";
 export { isNativePointerTarget } from "./isNativePointerTarget";

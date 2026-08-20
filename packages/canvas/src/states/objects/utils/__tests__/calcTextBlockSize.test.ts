@@ -66,6 +66,102 @@ describe("calcTextBlockSize", () => {
 		);
 	});
 
+	it("heightens a line drawn in a second font family", () => {
+		// The browser's line box is the baseline-aligned union of its inline boxes,
+		// so a second family reaches past fontSize × 1.5. At this type size the
+		// allowance is its 1px floor rather than the 0.05em share.
+		const mixed = [{ text: "ab" }, { text: "cd", fontFamily: "Some Other" }];
+
+		expect(calcTextBlockSize(mixed, font).height).toBe(expectedHeight(1) + 1);
+	});
+
+	it("leaves a line whose runs all keep the slot's family alone", () => {
+		const uniform = [
+			{ text: "ab" },
+			{ text: "cd", fontFamily: font.fontFamily },
+		];
+
+		expect(calcTextBlockSize(uniform, font).height).toBe(expectedHeight(1));
+	});
+
+	it("heightens only the line that mixes families", () => {
+		const text = [{ text: "ab\n" }, { text: "cd", fontFamily: "Some Other" }];
+
+		expect(calcTextBlockSize(text, font).height).toBe(expectedHeight(2) + 1);
+	});
+
+	it("takes the allowance as a share of the type size once that exceeds a pixel", () => {
+		const mixed = [{ text: "ab" }, { text: "cd", fontFamily: "Some Other" }];
+		const large = { ...font, fontSize: 40 };
+
+		// 40 × 0.05 = 2, past the floor.
+		expect(calcTextBlockSize(mixed, large).height).toBe(
+			40 * 1.5 + VERTICAL_EXTRA + 2,
+		);
+	});
+
+	it("measures an empty last line in the typography it opens from", () => {
+		// Enter at the end of a larger run leaves the browser drawing that line at
+		// the run's size, so measuring it at the slot's comes up a line short.
+		const openedFromLarger = [{ text: "ab\n", fontSize: 40 }];
+
+		expect(calcTextBlockSize(openedFromLarger, font).height).toBe(
+			2 * 40 * 1.5 + VERTICAL_EXTRA,
+		);
+	});
+
+	it("counts the family an empty last line opens from as a second one", () => {
+		const openedFromOtherFamily = [{ text: "ab\n", fontFamily: "Some Other" }];
+
+		// Both lines sit in the run, so both take the allowance.
+		expect(calcTextBlockSize(openedFromOtherFamily, font).height).toBe(
+			expectedHeight(2) + 2,
+		);
+	});
+
+	it("measures an empty first line in the run its own break belongs to", () => {
+		const leadingBreak = [{ text: "\nab", fontSize: 40 }];
+
+		// The break opening the text is the run's first character, so the run is
+		// opened on that empty line and the browser gives it a box of the run's
+		// size — both lines are laid out at 40.
+		expect(calcTextBlockSize(leadingBreak, font).height).toBe(
+			2 * 40 * 1.5 + VERTICAL_EXTRA,
+		);
+	});
+
+	it("heightens a line whose ending newline opens a larger run", () => {
+		// The run's first character is the break that ends the line before it, so
+		// the browser opens a box of its size there — a line drawn entirely in
+		// smaller text is still laid out at the larger one.
+		const text = [
+			{ text: "ab", fontSize: 24 },
+			{ text: "\ncd", fontSize: 40 },
+		];
+
+		// Line 1 is the 24px "ab" under a 40px run opening at its newline; line 2
+		// is the 40px "cd".
+		expect(calcTextBlockSize(text, font).height).toBe(
+			40 * 1.5 * 2 + VERTICAL_EXTRA,
+		);
+	});
+
+	it("leaves the line before a soft wrap to its own runs", () => {
+		// A wrapped line ends at a character that belongs to the next line, not at
+		// a newline, so the run starting there is not drawn on it.
+		const text = [
+			{ text: "aaaaa ", fontSize: 10 },
+			{ text: "bbbbb", fontSize: 40 },
+		];
+
+		// Laid out as authored (no width to wrap in), both runs share one line, so
+		// this is the guard that the extension is keyed on the newline rather than
+		// on the line end alone.
+		expect(calcTextBlockSize(text, font).height).toBe(
+			40 * 1.5 + VERTICAL_EXTRA,
+		);
+	});
+
 	it("scales the height with the font size", () => {
 		const larger = calcTextBlockSize("a\nb", { ...font, fontSize: 20 });
 		expect(larger.height).toBe(2 * 20 * 1.5 + VERTICAL_EXTRA);

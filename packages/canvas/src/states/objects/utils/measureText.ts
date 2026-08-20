@@ -1,3 +1,4 @@
+import { calcMixedFamilyLineSlack } from "./mixedFamilyLineSlack";
 import { TEXT_LINE_HEIGHT } from "../../../constants/textLineHeight";
 import type {
 	RichText,
@@ -124,11 +125,45 @@ const toStyledRanges = (
 };
 
 /**
+ * The offset a line's layout reaches, which is one past its last visible
+ * character when a newline ends it.
+ *
+ * A run whose first character is that newline is opened on this line: the break
+ * is laid out here, so the browser puts an inline box of the run's own size on
+ * this line even though the run draws nothing visible until the next one. A line
+ * ended by a soft wrap has no such character, and the offset the next line starts
+ * at belongs to that line alone.
+ *
+ * @param plain - The flattened text the line indexes into
+ * @param lineEnd - The line's end offset, exclusive of the newline that ends it
+ * @returns `lineEnd + 1` when a newline ends the line, `lineEnd` for a soft wrap or the last line
+ */
+const calcLineLayoutEnd = (plain: string, lineEnd: number): number =>
+	plain[lineEnd] === "\n" ? lineEnd + 1 : lineEnd;
+
+/**
+ * Whether `range` is drawn on the offsets `[start, end)` a line is laid out from
+ * — which {@link calcLineLayoutEnd} extends past the visible characters, so a run
+ * opening at the newline that ends the line counts as being on it.
+ *
+ * The second clause is for an empty line, a zero-length range that overlaps
+ * nothing: it is drawn in the typography of the run it sits in rather than the
+ * block's, because the browser keeps the caret's style on the line a break opens.
+ * Pressing Enter at the end of a run drawn at 40px gives an empty line with a
+ * 40px line box; taking it as the base size measures that line more than a whole
+ * line short. A zero-length range therefore also matches the run reaching the
+ * offset, leaving only a break at the very start of a text with nothing to
+ * inherit.
+ */
+const isDrawnOn = (range: StyledRange, start: number, end: number): boolean =>
+	Math.max(start, range.start) < Math.min(end, range.end) ||
+	(start === end && range.start < start && start <= range.end);
+
+/**
  * The largest type size drawn on `[start, end)`, never below the base font's own:
  * the block's font sets the line box's floor (the CSS strut), so a line holding
- * only smaller runs is still as tall as an unstyled one. A range no run overlaps
- * — an empty line, or one whose runs are all zero-length — measures as the base
- * size for the same reason.
+ * only smaller runs is still as tall as an unstyled one. A range no run is drawn
+ * on measures as the base size for the same reason.
  */
 const calcMaxFontSize = (
 	ranges: StyledRange[],
@@ -138,14 +173,47 @@ const calcMaxFontSize = (
 ): number => {
 	let largest = base.fontSize;
 	for (const range of ranges) {
-		if (
-			Math.max(start, range.start) < Math.min(end, range.end) &&
-			range.font.fontSize > largest
-		) {
+		if (isDrawnOn(range, start, end) && range.font.fontSize > largest) {
 			largest = range.font.fontSize;
 		}
 	}
 	return largest;
+};
+
+/**
+ * Whether `[start, end)` is drawn in more than one font family. The base font is
+ * one of them whether or not a run covers the range — it is the CSS strut, which
+ * joins every line box — so a single run in another family already counts.
+ */
+const hasMixedFontFamilies = (
+	ranges: StyledRange[],
+	base: TextMeasureFont,
+	start: number,
+	end: number,
+): boolean =>
+	ranges.some(
+		(range) =>
+			isDrawnOn(range, start, end) && range.font.fontFamily !== base.fontFamily,
+	);
+
+/**
+ * Height of the line box `[start, end)` occupies: the tallest type size on it
+ * times the line height, plus what a line in more than one family needs on top
+ * ({@link calcMixedFamilyLineSlack}).
+ */
+const calcLineHeight = (
+	ranges: StyledRange[],
+	base: TextMeasureFont,
+	start: number,
+	end: number,
+): number => {
+	const maxFontSize = calcMaxFontSize(ranges, base, start, end);
+	return (
+		maxFontSize * TEXT_LINE_HEIGHT +
+		(hasMixedFontFamilies(ranges, base, start, end)
+			? calcMixedFamilyLineSlack(maxFontSize)
+			: 0)
+	);
 };
 
 /** A styled range with the measurer for its font, built once per layout pass. */
@@ -170,8 +238,8 @@ const toStyledSegments = (
 type OffsetMeasurer = {
 	/** Rendered width of `[start, end)`, summed over the runs it spans. */
 	width: (start: number, end: number) => number;
-	/** The largest type size on `[start, end)`, never below the slot's own. */
-	maxFontSize: (start: number, end: number) => number;
+	/** Height of the line box `[start, end)` occupies, the mixed-family allowance included. */
+	lineHeight: (start: number, end: number) => number;
 };
 
 const createOffsetMeasurer = (
@@ -194,7 +262,8 @@ const createOffsetMeasurer = (
 				}
 				return total;
 			},
-			maxFontSize: (start, end) => calcMaxFontSize(segments, base, start, end),
+			lineHeight: (start, end) =>
+				calcLineHeight(segments, base, start, calcLineLayoutEnd(plain, end)),
 		},
 	};
 };
@@ -204,7 +273,9 @@ type TextRange = { start: number; end: number };
 
 /**
  * The lines the text was authored as, split on newlines. The newline itself
- * belongs to neither side, so an empty line is an empty range; an empty text is
+ * belongs to neither side — measuring a line's height reattaches it
+ * (calcLineLayoutEnd), since it is laid out on the line it ends — so an empty
+ * line is an empty range; an empty text is
  * one such line, as is the line a trailing newline opens.
  */
 const splitAuthoredLines = (plain: string): TextRange[] => {
@@ -342,7 +413,13 @@ export type VisualLine = {
 	end: number;
 	/** Rendered width in local pixels, trailing spaces included. */
 	width: number;
-	/** Line box height: the tallest type size on the line × the shared line-height. */
+	/**
+	 * Line box height: the tallest type size laid out on the line × the shared
+	 * line-height, plus the allowance a line in more than one family takes
+	 * ({@link calcMixedFamilyLineSlack}). "Laid out on" reaches one past `end`
+	 * where a newline ends the line (see calcLineLayoutEnd), so a run opening
+	 * there counts.
+	 */
 	height: number;
 };
 
@@ -381,7 +458,7 @@ export const layoutVisualLines = (
 			start: line.start,
 			end: line.end,
 			width: measurer.width(line.start, line.end),
-			height: measurer.maxFontSize(line.start, line.end) * TEXT_LINE_HEIGHT,
+			height: measurer.lineHeight(line.start, line.end),
 		}));
 };
 
@@ -407,7 +484,7 @@ export const measureTextWidth = (
  * counting authored newlines and automatic wrapping alike (see
  * {@link layoutVisualLines}). Multiply by `fontSize × line-height` for a box
  * height that does not clip the text — or, for a text whose runs are not all one
- * size, take {@link calcVisualTextHeight} instead.
+ * size and one family, take {@link calcVisualTextHeight} instead.
  *
  * @param text - The whole text, authored newlines included; an empty string counts as one line, as does each empty line
  * @param font - Font the text is drawn with; a family other than the drawn one moves where lines break
@@ -424,7 +501,7 @@ export const calcVisualLineCount = (
  * Height the drawn lines of a text add up to, the line boxes of parts drawn
  * larger included. The height counterpart of {@link calcVisualLineCount}, and
  * equal to `lineCount × fontSize × line-height` whenever nothing overrides the
- * type size.
+ * type size or the font family.
  *
  * @param text - The whole text, authored newlines included
  * @param font - Font the slot is drawn with
@@ -447,10 +524,16 @@ export const calcVisualTextHeight = (
 	// would canvas-measure every line for a width this caller discards, and the
 	// callers that pass no width ask for a height per line on every render.
 	const ranges = toStyledRanges(text, font);
-	return splitAuthoredLines(richTextToPlain(text)).reduce(
+	const plain = richTextToPlain(text);
+	return splitAuthoredLines(plain).reduce(
 		(total, line) =>
 			total +
-			calcMaxFontSize(ranges, font, line.start, line.end) * TEXT_LINE_HEIGHT,
+			calcLineHeight(
+				ranges,
+				font,
+				line.start,
+				calcLineLayoutEnd(plain, line.end),
+			),
 		0,
 	);
 };

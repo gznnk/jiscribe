@@ -16,8 +16,9 @@ export const TEXT_BLOCK_MIN_WIDTH = 16;
  * Size of the box a text of its own — one with no frame to wrap inside — takes.
  * The text is laid out as authored: lines break at `\n` and nowhere else, so
  * width grows with the longest line and there is deliberately no maximum. A part
- * of the text drawn larger widens its line and heightens its line box, so the box
- * grows around it. The caller keeps the box's top-left fixed when this grows.
+ * of the text drawn larger widens its line and heightens its line box, as does a
+ * part drawn in another font family, so the box grows around it. The caller keeps
+ * the box's top-left fixed when this grows.
  *
  * Shared by the `text` object and by every label sized from its own content (the
  * connector's, and the ones canvas-sdk hangs off a shape): sizing them all from

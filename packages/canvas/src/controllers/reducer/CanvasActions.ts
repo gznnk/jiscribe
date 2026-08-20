@@ -162,6 +162,15 @@ export type SetDocDefaultsAction = {
 };
 
 /**
+ * Re-measure action - re-derives every content-sized box against the fonts as
+ * they now resolve. Dispatched when web fonts finish loading, which changes what
+ * a family measures without changing the family (see useFontsLoadedNonce).
+ */
+export type RemeasureTextAction = {
+	type: "REMEASURE_TEXT";
+};
+
+/**
  * Close context menu action - clears the context menu without any other change.
  * Used by callback menu items (e.g. paste with empty clipboard) that bypass the
  * gesture system and would otherwise leave the menu open.
@@ -197,5 +206,6 @@ export type CanvasAction =
 	| MenuPropertyUpdateAction
 	| PasteAction
 	| SetDocDefaultsAction
+	| RemeasureTextAction
 	| CloseContextMenuAction
 	| CloseModalAction;

@@ -12,6 +12,16 @@ import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
  * measurement back to a line count and rebuilding the height from it restores
  * the exact value the display side has.
  *
+ * That rebuilt height is only right while every line box really is
+ * `fontSize × TEXT_LINE_HEIGHT` tall. A line drawn in more than one font family
+ * is taller — the line box is the baseline-aligned union of inline boxes, and
+ * how far one reaches past the baseline follows its own font's metrics — and
+ * rebuilding from the line count rounds that extra height away, leaving the
+ * editor scrolling inside content it has no room for. `scrollHeight` being the
+ * whole-pixel rounding of the true height, it can stand at most half a pixel
+ * above the rebuilt value for that reason alone; a wider gap is content, and
+ * then the measurement itself is the height to take.
+ *
  * @param scrollHeight - The textarea's `scrollHeight` measured with its height
  *   collapsed to 0, i.e. content plus vertical padding, rounded to whole pixels
  * @param fontSize - Type size the content is drawn at, in local px; 0 or less
@@ -19,7 +29,7 @@ import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
  * @param verticalPadding - `padding-top` plus `padding-bottom` of the textarea,
  *   in local px; part of `scrollHeight`, so it is taken off before the division
  * @returns Whole line boxes plus the padding, never fewer than one line while
- *   `fontSize` is positive
+ *   `fontSize` is positive, and never short of the content it has to hold
  */
 export const calcTextAreaHeight = (
 	scrollHeight: number,
@@ -34,7 +44,8 @@ export const calcTextAreaHeight = (
 		1,
 		Math.round((scrollHeight - verticalPadding) / lineHeight),
 	);
-	return lineCount * lineHeight + verticalPadding;
+	const fitted = lineCount * lineHeight + verticalPadding;
+	return scrollHeight - fitted > 0.5 ? scrollHeight : fitted;
 };
 
 /**

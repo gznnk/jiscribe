@@ -30,11 +30,18 @@ const regionOf = (
 	height: number,
 	slot?: Partial<TextSlot>,
 ): ReturnType<typeof calcBelowLabelTextRegion> =>
-	calcBelowLabelTextRegion(shape(width, height, slot), BODY_TEXT_SLOT_ID);
+	calcBelowLabelTextRegion(
+		shape(width, height, slot),
+		BODY_TEXT_SLOT_ID,
+		TEXT_REGION_CONTEXT,
+	);
 
 /** The label box of a single line at the default font size. */
 const singleLineHeight =
 	BELOW_LABEL_STYLE_DEFAULTS.fontSize * TEXT_LINE_HEIGHT + 2 * 2;
+
+/** Any family: these calculators derive their region from the box and read no context. */
+const TEXT_REGION_CONTEXT = { fontFamily: "sans-serif" };
 
 describe("calcBelowLabelTextRegion", () => {
 	it("hangs the label below the box, horizontally centered on the origin", () => {
