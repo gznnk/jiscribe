@@ -79,20 +79,16 @@ export const resolveTextSlotId = (
 	return getFirstTextSlotId(text);
 };
 
-// One joined body per rows array. The join builds a fresh value each call, and
-// the rendering side reads slots on every pass — a styled rows slot would hand
-// the memoized text overlays a new `text` identity per render and defeat their
-// memo. State immutability replaces the rows array on every edit, so its
-// identity is exactly the join's validity.
-const joinedRowsCache = new WeakMap<readonly RichText[], RichText>();
-
 /**
  * Reads a slot's content as the single body of text it draws as: a
  * row-partitioned slot is joined with "\n" (the commit splits it back), and a
  * slot styled per range keeps its runs. The form the drawing and the measuring
  * side take, both of which need the styling; {@link readTextSlot} is the plain
- * counterpart. The joined body keeps its identity while the rows are unedited,
- * so it can feed memoized rendering directly.
+ * counterpart.
+ *
+ * The join builds a fresh value per call, so a render path that feeds the
+ * result to memoized components must hold it (e.g. `useMemo` keyed on the
+ * slot's content) rather than re-read every render.
  *
  * @param text - The shape's slots; undefined for a shape that holds no text
  * @param slotId - Key to read; an absent key reads as ""
@@ -106,16 +102,7 @@ export const readRichTextSlot = (
 	if (content === undefined) {
 		return "";
 	}
-	if (!isTextRows(content)) {
-		return content;
-	}
-	const cached = joinedRowsCache.get(content);
-	if (cached !== undefined) {
-		return cached;
-	}
-	const joined = joinRichTextLines(content);
-	joinedRowsCache.set(content, joined);
-	return joined;
+	return isTextRows(content) ? joinRichTextLines(content) : content;
 };
 
 /**
