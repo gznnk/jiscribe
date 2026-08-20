@@ -104,6 +104,42 @@ const stateWithStaleTextBox = (text: string): CanvasControllerState => {
 };
 
 describe("canvasReducer (integration)", () => {
+	describe("REMEASURE_TEXT", () => {
+		it("re-measures every text box, though neither the slots nor the family moved", () => {
+			// What a web font finishing after the first paint looks like: the family
+			// is the one it always was, and every box derived before the face landed
+			// was measured against a fallback. Nothing in the state says so, which is
+			// why the pass has to be asked for.
+			const state = stateWithStaleTextBox("hello");
+
+			const after = canvasReducer(state, { type: "REMEASURE_TEXT" });
+
+			expect(boxOf(after, "text-1")).toEqual({
+				...measuredBoxOf("hello"),
+				left: TEXT_ORIGIN.x,
+				top: TEXT_ORIGIN.y,
+			});
+		});
+
+		it("hands back the same state when no box moved, so repeating it is free", () => {
+			// Both font events can fire for one load, and every later unicode-range
+			// fetch fires another.
+			const state = canvasReducer(stateWithStaleTextBox("hello"), {
+				type: "REMEASURE_TEXT",
+			});
+
+			expect(canvasReducer(state, { type: "REMEASURE_TEXT" })).toBe(state);
+		});
+
+		it("does not record history, the doc storing no size to have changed", () => {
+			const state = stateWithStaleTextBox("hello");
+
+			const after = canvasReducer(state, { type: "REMEASURE_TEXT" });
+
+			expect(after.history).toBe(state.history);
+		});
+	});
+
 	describe("SET_DOC_DEFAULTS", () => {
 		it("re-measures every text box when the host swaps the theme's family", () => {
 			// A family change invalidates every measurement at once, so the pass has to

@@ -2,7 +2,7 @@ import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
 import type { ObjectVisualBoundsCalculator } from "@jiscribe/canvas";
 import type { TextSlot } from "@jiscribe/canvas/doc";
 import { readTextSlot } from "@jiscribe/canvas/unstable";
-import { DEFAULT_FONT_FAMILY } from "@jiscribe/canvas/unstable-doc";
+import { CROP_MEASURE_FONT_FAMILY } from "@jiscribe/canvas/unstable-doc";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { calcBelowLabelTextRegion } from "./calcBelowLabelTextRegion";
@@ -37,13 +37,10 @@ export const calcBelowLabelVisualBounds: ObjectVisualBoundsCalculator<
 		return figure;
 	}
 
-	// Measured with the built-in family rather than the host's: a visual-bounds
-	// calculator is handed only the state (ObjectVisualBoundsCalculator), and these
-	// bounds decide a crop rather than the box the text is drawn in — a host on
-	// another family gets a zoom-to-fit and an export viewBox off by the width the
-	// two faces differ by, not a clipped label.
+	// These bounds decide a crop, not the box the text is drawn in, so they measure
+	// without the host's family (see CROP_MEASURE_FONT_FAMILY).
 	const label = calcBelowLabelTextRegion(state, BODY_TEXT_SLOT_ID, {
-		fontFamily: DEFAULT_FONT_FAMILY,
+		fontFamily: CROP_MEASURE_FONT_FAMILY,
 	});
 	const left = Math.min(figure.x, label.x);
 	const top = Math.min(figure.y, label.y);

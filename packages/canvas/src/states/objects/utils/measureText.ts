@@ -160,46 +160,44 @@ const isDrawnOn = (range: StyledRange, start: number, end: number): boolean =>
 	(start === end && range.start < start && start <= range.end);
 
 /**
- * The largest type size drawn on `[start, end)`, never below the base font's own:
- * the block's font sets the line box's floor (the CSS strut), so a line holding
- * only smaller runs is still as tall as an unstyled one. A range no run is drawn
- * on measures as the base size for the same reason.
+ * What decides a line box's height on the offsets `[start, end)` it is laid out
+ * from: the tallest type size on it, and whether more than one font family is.
+ *
+ * The tallest size is never below the base font's own — the block's font sets the
+ * line box's floor (the CSS strut), so a line holding only smaller runs is still
+ * as tall as an unstyled one, and a range no run is drawn on measures as the base
+ * size for the same reason. The base font also counts as one of the families
+ * whether or not a run covers the range, so a single run in another family
+ * already makes the line mixed.
+ *
+ * Both come off one pass: every line of every layout asks for them together.
  */
-const calcMaxFontSize = (
+const readLineTypography = (
 	ranges: StyledRange[],
 	base: TextMeasureFont,
 	start: number,
 	end: number,
-): number => {
-	let largest = base.fontSize;
+): { maxFontSize: number; isMixedFamily: boolean } => {
+	let maxFontSize = base.fontSize;
+	let isMixedFamily = false;
 	for (const range of ranges) {
-		if (isDrawnOn(range, start, end) && range.font.fontSize > largest) {
-			largest = range.font.fontSize;
+		if (!isDrawnOn(range, start, end)) {
+			continue;
+		}
+		if (range.font.fontSize > maxFontSize) {
+			maxFontSize = range.font.fontSize;
+		}
+		if (range.font.fontFamily !== base.fontFamily) {
+			isMixedFamily = true;
 		}
 	}
-	return largest;
+	return { maxFontSize, isMixedFamily };
 };
 
 /**
- * Whether `[start, end)` is drawn in more than one font family. The base font is
- * one of them whether or not a run covers the range — it is the CSS strut, which
- * joins every line box — so a single run in another family already counts.
- */
-const hasMixedFontFamilies = (
-	ranges: StyledRange[],
-	base: TextMeasureFont,
-	start: number,
-	end: number,
-): boolean =>
-	ranges.some(
-		(range) =>
-			isDrawnOn(range, start, end) && range.font.fontFamily !== base.fontFamily,
-	);
-
-/**
- * Height of the line box `[start, end)` occupies: the tallest type size on it
- * times the line height, plus what a line in more than one family needs on top
- * ({@link calcMixedFamilyLineSlack}).
+ * Height of the line box the offsets `[start, end)` are laid out into: the
+ * tallest type size on it times the line height, plus what a line in more than
+ * one family needs on top ({@link calcMixedFamilyLineSlack}).
  */
 const calcLineHeight = (
 	ranges: StyledRange[],
@@ -207,12 +205,15 @@ const calcLineHeight = (
 	start: number,
 	end: number,
 ): number => {
-	const maxFontSize = calcMaxFontSize(ranges, base, start, end);
+	const { maxFontSize, isMixedFamily } = readLineTypography(
+		ranges,
+		base,
+		start,
+		end,
+	);
 	return (
 		maxFontSize * TEXT_LINE_HEIGHT +
-		(hasMixedFontFamilies(ranges, base, start, end)
-			? calcMixedFamilyLineSlack(maxFontSize)
-			: 0)
+		(isMixedFamily ? calcMixedFamilyLineSlack(maxFontSize) : 0)
 	);
 };
 

@@ -23,6 +23,15 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * Implementations declare what they read via `TState` (most:
  * `ObjectVisualBoundsCalculator<Dimensions>`); the registry stores the default
  * instantiation, to which narrower readers are assignable by contravariance.
+ *
+ * Takes the state and nothing else, deliberately. A sibling registry hands its
+ * calculators the drawing context (ObjectTextRegionContext) because what they
+ * decide is the box text is drawn into; these decide a crop — the zoom-to-fit
+ * rect and the export viewBox — where measuring against the built-in family
+ * instead of the host's moves a margin by a few percent and clips nothing. An
+ * implementation sizing its bounds from its own text measures with
+ * `CROP_MEASURE_FONT_FAMILY`, whose doc carries what threading the context here
+ * would have cost.
  */
 export type ObjectVisualBoundsCalculator<
 	TState extends Dimensions = ObjectState & Dimensions,

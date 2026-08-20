@@ -757,6 +757,7 @@ export class CanvasDriver {
 			text: string;
 			color: string;
 			fontSize: string;
+			fontFamily: string;
 			fontWeight: string;
 			fontStyle: string;
 		}[]
@@ -797,6 +798,7 @@ export class CanvasDriver {
 						text: part.textContent ?? "",
 						color: style.color,
 						fontSize: style.fontSize,
+						fontFamily: style.fontFamily,
 						fontWeight: style.fontWeight,
 						fontStyle: style.fontStyle,
 					};
