@@ -19,6 +19,9 @@ const shape = (
 	text: slot ? { [BODY_TEXT_SLOT_ID]: { text: "", ...slot } } : undefined,
 });
 
+/** Any family: these calculators derive their region from the box and read no context. */
+const TEXT_REGION_CONTEXT = { fontFamily: "sans-serif" };
+
 describe("calcBelowLabelVisualBounds", () => {
 	it("is just the box when there is no label to draw", () => {
 		const figureBox = { x: -40, y: -50, width: 80, height: 100 };
@@ -31,7 +34,11 @@ describe("calcBelowLabelVisualBounds", () => {
 
 	it("extends below the box by the gap plus the label height", () => {
 		const state = shape(80, 100, { text: "Customer" });
-		const label = calcBelowLabelTextRegion(state, BODY_TEXT_SLOT_ID);
+		const label = calcBelowLabelTextRegion(
+			state,
+			BODY_TEXT_SLOT_ID,
+			TEXT_REGION_CONTEXT,
+		);
 		const bounds = calcBelowLabelVisualBounds(state);
 
 		expect(bounds.y).toBeCloseTo(-50);
@@ -47,7 +54,11 @@ describe("calcBelowLabelVisualBounds", () => {
 
 	it("widens past the box when the label is wider than it", () => {
 		const state = shape(20, 100, { text: "a long label that overflows" });
-		const label = calcBelowLabelTextRegion(state, BODY_TEXT_SLOT_ID);
+		const label = calcBelowLabelTextRegion(
+			state,
+			BODY_TEXT_SLOT_ID,
+			TEXT_REGION_CONTEXT,
+		);
 		const bounds = calcBelowLabelVisualBounds(state);
 
 		expect(label.width).toBeGreaterThan(20);

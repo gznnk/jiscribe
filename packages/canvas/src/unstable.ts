@@ -38,6 +38,11 @@ export { TextOverlay } from "./rendering/objects/base/TextOverlay/TextOverlay";
 // disagree wherever the type's defaults differ from TEXT_STYLE_FALLBACK.
 export { useObjectTextStyleDefaultsRegistry } from "./rendering/objects/registry/ObjectTextStyleDefaultsRegistryContext";
 
+// The active theme, for a component that has to measure text the way the overlay
+// draws it: an unstyled slot is drawn in `fontFamily`, so anything sizing a box
+// from its own text has to measure with the same one (see ObjectTextRegionContext).
+export { useCanvasTheme } from "./theme/CanvasThemeContext";
+
 export { createFrameBehavior } from "./controllers/behaviors/base/FrameController";
 
 export { createFrameMapper } from "./states/objects/base/FrameMapper";
@@ -61,7 +66,10 @@ export type { TextSlots } from "./states/objects/types/TextSlots";
 // makes internally. `calcTextRegion` is the seam the in-place editor also goes
 // through, so a renderer that places text itself must use it or the text jumps
 // on entering edit mode.
-export { calcTextRegion } from "./rendering/objects/utils/calcTextRegion";
+export {
+	calcTextRegion,
+	calcFullTextRegion,
+} from "./rendering/objects/utils/calcTextRegion";
 export { createSvgTransform } from "./rendering/objects/utils/createSvgTransform";
 
 export { resolveAutoColor } from "./rendering/objects/utils/resolveAutoColor";

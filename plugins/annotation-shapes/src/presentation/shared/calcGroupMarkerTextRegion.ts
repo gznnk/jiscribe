@@ -41,13 +41,18 @@ type GroupMarkerLabelState = Dimensions & {
  *
  * @param state The shape's box, tip placement, and text slots.
  * @param slotId Which slot to place; a shape with no such slot lays out an empty label.
+ * @param context The drawing context; its family is what a slot naming none is measured with, matching what the overlay draws.
  * @returns The label rectangle in local coordinates (shape center as origin), always outside the box.
  */
 export const calcGroupMarkerTextRegion: ObjectTextRegionCalculator<
 	GroupMarkerLabelState
-> = (state, slotId): Rect => {
+> = (state, slotId, context): Rect => {
 	const direction = resolveGroupMarkerDirection(state);
-	const { width, height } = calcLabelBoxSize(state.text, slotId);
+	const { width, height } = calcLabelBoxSize(
+		state.text,
+		slotId,
+		context.fontFamily,
+	);
 	const tip = calcGroupMarkerTip(
 		-state.width / 2,
 		-state.height / 2,

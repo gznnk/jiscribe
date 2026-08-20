@@ -18,7 +18,9 @@ export type { FrameObjectDefinitionParams } from "./definition/createFrameObject
 // and the bounds as its `visualBounds` (without the latter, zoom-to-fit and the
 // export viewBox crop the label away), and place the hit area inside the shape's
 // own `data-kind="object"` group so the label can be grabbed. The typography
-// they measure with lives in `./doc` as BELOW_LABEL_STYLE_DEFAULTS.
+// they measure with lives in `./doc` as BELOW_LABEL_STYLE_DEFAULTS — except the
+// family, which the region takes from the drawing context it is handed
+// (ObjectTextRegionContext) because the overlay draws it in the theme's.
 export {
 	BELOW_LABEL_GAP,
 	calcBelowLabelTextRegion,

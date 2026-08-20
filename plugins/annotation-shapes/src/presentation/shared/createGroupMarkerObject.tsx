@@ -1,5 +1,9 @@
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
-import { createFrameObject, readTextSlot } from "@jiscribe/canvas-sdk";
+import {
+	useCanvasTheme,
+	createFrameObject,
+	readTextSlot,
+} from "@jiscribe/canvas-sdk";
 
 import { calcGroupMarkerTextRegion } from "./calcGroupMarkerTextRegion";
 import {
@@ -42,10 +46,14 @@ type GroupMarkerPathBuilder = (
  */
 export const createGroupMarkerObject = (buildPath: GroupMarkerPathBuilder) =>
 	createFrameObject<GroupMarkerState>((state, shape) => {
+		// The label is sized from its own text, so it is measured with the family
+		// the overlay draws it in — the same context the registry hands the region
+		// calculator this component has to agree with.
+		const { fontFamily } = useCanvasTheme();
 		const label =
 			readTextSlot(state.text, BODY_TEXT_SLOT_ID) === ""
 				? null
-				: calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID);
+				: calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID, { fontFamily });
 		return (
 			<g
 				data-kind={shape["data-kind"]}

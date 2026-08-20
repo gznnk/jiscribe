@@ -175,7 +175,10 @@ export type {
 	CanvasFontFamily,
 	CanvasFontFamilyId,
 } from "./constants/fontFamilies";
-export type { ObjectTextRegionCalculator } from "./rendering/objects/registry/ObjectTextRegionRegistry";
+export type {
+	ObjectTextRegionCalculator,
+	ObjectTextRegionContext,
+} from "./rendering/objects/registry/ObjectTextRegionRegistry";
 // Per-type, per-slot text-style defaults: the registry a canvas resolves an
 // unset text style through, reachable as
 // `CanvasRegistries["objectTextStyleDefaults"]`.

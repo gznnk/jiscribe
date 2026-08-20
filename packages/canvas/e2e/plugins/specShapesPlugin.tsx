@@ -31,7 +31,7 @@ import { BODY_TEXT_SLOT_ID } from "../../src";
 import type { FrameShapeProps, TextEditable } from "../../src/unstable";
 import {
 	TextOverlay,
-	calcTextRegion,
+	calcFullTextRegion,
 	createFrameBehavior,
 	createFrameMapper,
 	createFrameObject,
@@ -243,7 +243,7 @@ const CardComponent: React.FC<CardState & TextEditable> = (props) => {
 	// A "body" type addresses its one slot by name rather than enumerating, the
 	// same way createFrameObject does.
 	const bodySlot = text?.[BODY_TEXT_SLOT_ID];
-	const textRegion = calcTextRegion(props, BODY_TEXT_SLOT_ID);
+	const textRegion = calcFullTextRegion(props);
 
 	return (
 		<g data-kind="object" data-id={id}>

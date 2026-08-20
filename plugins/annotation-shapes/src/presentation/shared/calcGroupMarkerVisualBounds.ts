@@ -2,6 +2,7 @@ import type { ObjectVisualBoundsCalculator } from "@jiscribe/canvas";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
 import type { TextSlot } from "@jiscribe/canvas/doc";
 import { readTextSlot } from "@jiscribe/canvas-sdk";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { calcGroupMarkerTextRegion } from "./calcGroupMarkerTextRegion";
@@ -40,7 +41,14 @@ export const calcGroupMarkerVisualBounds: ObjectVisualBoundsCalculator<
 		return marker;
 	}
 
-	const label = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID);
+	// Measured with the built-in family rather than the host's: a visual-bounds
+	// calculator is handed only the state (ObjectVisualBoundsCalculator), and these
+	// bounds decide a crop rather than the box the text is drawn in — a host on
+	// another family gets a zoom-to-fit and an export viewBox off by the width the
+	// two faces differ by, not a clipped label.
+	const label = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID, {
+		fontFamily: DEFAULT_FONT_FAMILY,
+	});
 	const left = Math.min(marker.x, label.x);
 	const top = Math.min(marker.y, label.y);
 	const right = Math.max(marker.x + marker.width, label.x + label.width);

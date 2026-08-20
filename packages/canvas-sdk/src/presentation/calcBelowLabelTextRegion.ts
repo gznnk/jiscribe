@@ -34,12 +34,17 @@ type BelowLabelState = Dimensions & {
  *
  * @param state The shape's box (width/height) and its text slots.
  * @param slotId Which slot to place; a shape with no such slot lays out an empty label.
+ * @param context The drawing context; its family is what a slot naming none is measured with, matching what the overlay draws.
  * @returns The label rectangle in local coordinates (shape center as origin), always below the box.
  */
 export const calcBelowLabelTextRegion: ObjectTextRegionCalculator<
 	BelowLabelState
-> = (state, slotId) => {
-	const { width, height } = calcLabelBoxSize(state.text, slotId);
+> = (state, slotId, context) => {
+	const { width, height } = calcLabelBoxSize(
+		state.text,
+		slotId,
+		context.fontFamily,
+	);
 
 	return {
 		x: -width / 2,
