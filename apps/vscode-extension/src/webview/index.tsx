@@ -15,6 +15,7 @@ import { lucideIconToolbarEntry } from "@jiscribe/plugin-lucide-icon-shape";
 import { umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import "@jiscribe/canvas/fonts.css";
 import "katex/dist/katex.min.css";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";

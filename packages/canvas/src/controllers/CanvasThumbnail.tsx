@@ -1,5 +1,6 @@
 import { memo, useMemo, useRef, useState } from "react";
 
+import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import type { CanvasPlugin } from "../plugin/CanvasPlugin";
@@ -58,6 +59,14 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 		plugins ? createCanvasRegistries({ plugins }) : defaultCanvasRegistries,
 	);
 
+	// Content-derived boxes are measured against the fonts loaded at the time of
+	// mapping, and a thumbnail has no reducer to re-measure through — so the nonce
+	// is a memo key rather than an effect: a web font landing after the first paint
+	// re-maps the doc against the face it is actually drawn in. It is an
+	// invalidation signal, not an argument, which is why the dependency is one the
+	// callback does not read.
+	const fontsLoadedNonce = useFontsLoadedNonce();
+
 	const { objects, rootIds, background } = useMemo(
 		() =>
 			canvasToState(
@@ -66,7 +75,8 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				registries.objectContentResizer,
 				theme.fontFamily,
 			),
-		[canvasDoc, registries, theme.fontFamily],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[canvasDoc, registries, theme.fontFamily, fontsLoadedNonce],
 	);
 
 	const viewport = useMemo(

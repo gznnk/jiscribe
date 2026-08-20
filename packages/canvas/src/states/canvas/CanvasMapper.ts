@@ -1,6 +1,6 @@
 ﻿import type { Point } from "@jiscribe/geometry";
 
-import { DEFAULT_FONT_FAMILY } from "../../constants/defaultFontFamily";
+import { DEFAULT_FONT_FAMILY } from "../../constants/fontFamilies";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";

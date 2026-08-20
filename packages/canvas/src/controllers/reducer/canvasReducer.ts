@@ -136,6 +136,18 @@ export const createCanvasReducer =
 				);
 			}
 
+			case "REMEASURE_TEXT": {
+				// Web fonts arrive after the first paint, so every box derived before
+				// then was measured against a fallback face. Not a commit: the doc
+				// stores no size, so nothing about it changed.
+				return reconcileObjectContentSizes(
+					state,
+					state,
+					registries.objectContentResizer,
+					true,
+				);
+			}
+
 			case "CONTAINER_RESIZE": {
 				return {
 					...state,

@@ -1,4 +1,4 @@
-import { DEFAULT_FONT_FAMILY } from "../../../../../constants/defaultFontFamily";
+import { DEFAULT_FONT_FAMILY } from "../../../../../constants/fontFamilies";
 import type { ConnectorLabel } from "../../../../../schemas/objects/connector/ConnectorDoc";
 import { calcTextBlockSize } from "../../../../../states/objects/utils/calcTextBlockSize";
 import type { TextMeasureFont } from "../../../../../states/objects/utils/measureText";

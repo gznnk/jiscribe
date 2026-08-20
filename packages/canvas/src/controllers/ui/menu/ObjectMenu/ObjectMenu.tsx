@@ -7,6 +7,7 @@ import { ArrowHeadMenu } from "./items/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./items/BackgroundColorMenu";
 import { BorderStyleMenu } from "./items/BorderStyleMenu";
 import { FontColorMenu } from "./items/FontColorMenu";
+import { FontFamilyMenu } from "./items/FontFamilyMenu";
 import { FontSizeMenu } from "./items/FontSizeMenu";
 import { GroupMenu } from "./items/GroupMenu";
 import { KeepAspectRatioMenu } from "./items/KeepAspectRatioMenu";
@@ -91,6 +92,7 @@ const renderItem = (
 		case "fontStyle":
 			return (
 				<React.Fragment key="fontStyle">
+					<FontFamilyMenu canvasState={canvasState} />
 					<FontSizeMenu
 						canvasState={canvasState}
 						onPropertyUpdate={onPropertyUpdate}

@@ -30,6 +30,13 @@ describe("calcTextAreaHeight", () => {
 		expect(calcTextAreaHeight(27, 15, PADDING)).toBe(displayHeight(1, 15));
 	});
 
+	it("takes the measurement when the content stands above whole line boxes", () => {
+		// A line drawn in two font families is about a pixel taller than
+		// fontSize × 1.5; rebuilding from the line count would round that away and
+		// leave the editor scrolling inside it.
+		expect(calcTextAreaHeight(29, 16, PADDING)).toBe(29);
+	});
+
 	it("keeps one line when the measurement is only the padding", () => {
 		expect(calcTextAreaHeight(PADDING, 16, PADDING)).toBe(displayHeight(1, 16));
 	});

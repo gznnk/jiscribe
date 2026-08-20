@@ -1,0 +1,45 @@
+/*
+ * The faces behind CANVAS_FONT_FAMILIES, for hosts that want the fonts a doc
+ * names to actually be present. Import once at the host's entry point:
+ *
+ *   import "@jiscribe/canvas/fonts.css";
+ *
+ * Optional, not required: every stack ends in a generic keyword, so a host that
+ * skips this still draws. What it loses is agreement between viewers — a box
+ * derived from its content is measured against the family the doc names, so a
+ * viewer falling back to a different face gets a different box.
+ *
+ * Each file below declares one weight split by unicode-range, so a page fetches
+ * only the ranges it actually draws; the JP faces cost nothing until JP text is
+ * on screen. Weights are limited to the two `fontWeight` exposes (normal/bold),
+ * and italics to the Latin faces, which are the ones with a drawn italic — the
+ * JP faces are left to the browser's synthetic oblique.
+ */
+
+/* sans — Source Sans is the Latin that Source Han Sans (= Noto Sans JP) draws its own from */
+@import "@fontsource/source-sans-3/400.css";
+@import "@fontsource/source-sans-3/400-italic.css";
+@import "@fontsource/source-sans-3/700.css";
+@import "@fontsource/source-sans-3/700-italic.css";
+@import "@fontsource/noto-sans-jp/400.css";
+@import "@fontsource/noto-sans-jp/700.css";
+
+/* serif — the same pairing one step over: Source Serif and Source Han Serif */
+@import "@fontsource/source-serif-4/400.css";
+@import "@fontsource/source-serif-4/400-italic.css";
+@import "@fontsource/source-serif-4/700.css";
+@import "@fontsource/source-serif-4/700-italic.css";
+@import "@fontsource/noto-serif-jp/400.css";
+@import "@fontsource/noto-serif-jp/700.css";
+
+/* mono — Source Code Pro over the sans JP face; no JP monospace ships on this registry */
+@import "@fontsource/source-code-pro/400.css";
+@import "@fontsource/source-code-pro/400-italic.css";
+@import "@fontsource/source-code-pro/700.css";
+@import "@fontsource/source-code-pro/700-italic.css";
+
+/* hand — Klee One's heaviest drawn weight is 600, which "bold" resolves to */
+@import "@fontsource/caveat/400.css";
+@import "@fontsource/caveat/700.css";
+@import "@fontsource/klee-one/400.css";
+@import "@fontsource/klee-one/600.css";

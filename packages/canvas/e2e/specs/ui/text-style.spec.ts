@@ -62,6 +62,23 @@ test.describe("text styling through the ObjectMenu", () => {
 			.toBe("40px");
 	});
 
+	test("follows the font family change in the rendered text", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		const before = await canvas.textStyleOf(id);
+		// The theme's family, which is the sans entry, until the menu says otherwise.
+		expect(before?.fontFamily).toContain("Source Sans 3");
+
+		await canvas.openObjectMenu("font-family");
+		await canvas.page.click(selectors.objectMenuFont("mono"));
+
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.fontFamily)
+			.toContain("Source Code Pro");
+	});
+
 	test("follows the text color change in the rendered text", async ({
 		canvas,
 	}) => {

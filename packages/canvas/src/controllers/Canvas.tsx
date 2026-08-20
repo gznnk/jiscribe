@@ -33,6 +33,7 @@ import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
 import { useExportDialog } from "./hooks/useExportDialog";
+import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
@@ -353,6 +354,18 @@ const CanvasComponent = ({
 	useEffect(() => {
 		dispatch({ type: "SET_DOC_DEFAULTS", docDefaults });
 	}, [docDefaults, dispatch]);
+
+	// Web fonts land after the first paint, so every content-derived box mapped
+	// before then was measured against a fallback face. Nothing in the doc or the
+	// theme moves when the real one arrives, which is why this needs a signal of
+	// its own; a pass that moves no box returns the same state, so the nonce
+	// firing more than once costs nothing.
+	const fontsLoadedNonce = useFontsLoadedNonce();
+	useEffect(() => {
+		if (fontsLoadedNonce > 0) {
+			dispatch({ type: "REMEASURE_TEXT" });
+		}
+	}, [fontsLoadedNonce, dispatch]);
 
 	// Single toast slot shared by every error source (clipboard, export).
 	const { errorNotification, notifyError } = useErrorNotification();

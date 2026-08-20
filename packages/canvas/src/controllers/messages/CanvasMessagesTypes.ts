@@ -57,6 +57,15 @@ export type CanvasMessageStrings = {
 	menuUnderline: string;
 	menuStrikethrough: string;
 	menuFontSize: string;
+	menuFontFamily: string;
+	/** Label of the CANVAS_FONT_FAMILIES entry whose id is "sans" */
+	fontFamilySans: string;
+	/** Label of the CANVAS_FONT_FAMILIES entry whose id is "serif" */
+	fontFamilySerif: string;
+	/** Label of the CANVAS_FONT_FAMILIES entry whose id is "mono" */
+	fontFamilyMono: string;
+	/** Label of the CANVAS_FONT_FAMILIES entry whose id is "hand" */
+	fontFamilyHand: string;
 	menuFontColor: string;
 	menuBackgroundColor: string;
 	menuStrokeColor: string;

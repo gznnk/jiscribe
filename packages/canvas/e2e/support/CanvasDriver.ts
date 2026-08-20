@@ -1303,6 +1303,7 @@ export class CanvasDriver {
 	 */
 	async textStyleOf(id: string): Promise<{
 		fontSize: string;
+		fontFamily: string;
 		color: string;
 		fontWeight: string;
 		fontStyle: string;
@@ -1333,6 +1334,7 @@ export class CanvasDriver {
 			const textStyle = getComputedStyle(textDiv);
 			return {
 				fontSize: textStyle.fontSize,
+				fontFamily: textStyle.fontFamily,
 				color: textStyle.color,
 				fontWeight: textStyle.fontWeight,
 				fontStyle: textStyle.fontStyle,

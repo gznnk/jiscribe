@@ -78,7 +78,7 @@ export { calcTextBlockSize } from "./states/objects/utils/calcTextBlockSize";
 // width of one line, calcVisualLineCount the number of lines by reproducing the
 // wrapping of the display-side CSS (pre-wrap + break-word), and calcVisualTextHeight
 // what those lines add up to — which is not the count times the type size once part
-// of the text is drawn larger (RichText).
+// of the text is drawn larger, or in another font family (RichText).
 export {
 	calcVisualLineCount,
 	calcVisualTextHeight,

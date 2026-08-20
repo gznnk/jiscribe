@@ -104,6 +104,14 @@ export const selectors = {
 	objectMenuSet: (property: string, value: string) =>
 		`[data-part="set:${property}:${value}"]`,
 
+	/**
+	 * FontFamilyMenu entry, by CanvasFontFamilyId. Its own attribute rather than
+	 * `objectMenuSet`, whose value would be the font stack — quotes and commas an
+	 * attribute selector cannot carry.
+	 */
+	objectMenuFont: (fontId: string) =>
+		`[data-id="object-menu"][data-font="${fontId}"]`,
+
 	/** ObjectMenu command button, such as bringToFront for z-order. */
 	objectMenuCommand: (commandId: string) =>
 		`[data-part="command:${commandId}"][data-id="object-menu"]`,

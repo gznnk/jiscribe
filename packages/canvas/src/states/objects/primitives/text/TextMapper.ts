@@ -4,7 +4,7 @@ import {
 	calcTextDrawnTopLeft,
 } from "./textDrawnTopLeft";
 import type { TextState } from "./TextState";
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
+import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
 import type { TextStyleDoc } from "../../../../schemas/objects/base/TextStyleDoc";
 import type { TextDoc } from "../../../../schemas/objects/primitives/text/TextDoc";
 import type {

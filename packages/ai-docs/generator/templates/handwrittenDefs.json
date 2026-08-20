@@ -992,9 +992,9 @@
 				"default": 16
 			},
 			"fontFamily": {
-				"description": "Font family. Default: \"Noto Sans JP\"",
+				"description": "Font family. Pick one of the four the canvas ships faces for: \"\\\"Source Sans 3\\\", \\\"Noto Sans JP\\\", sans-serif\" (sans, the default), \"\\\"Source Serif 4\\\", \\\"Noto Serif JP\\\", serif\" (serif), \"\\\"Source Code Pro\\\", \\\"Noto Sans JP\\\", monospace\" (monospace), \"Caveat, \\\"Klee One\\\", cursive\" (handwriting). Any other value still loads, but is drawn only if the viewer happens to have that font, and the shape's box is measured against whatever it falls back to. Default: \"\\\"Source Sans 3\\\", \\\"Noto Sans JP\\\", sans-serif\"",
 				"type": "string",
-				"default": "Noto Sans JP"
+				"default": "\"Source Sans 3\", \"Noto Sans JP\", sans-serif"
 			},
 			"fontWeight": {
 				"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"normal\"",

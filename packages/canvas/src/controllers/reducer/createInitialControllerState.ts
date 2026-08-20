@@ -1,4 +1,4 @@
-import { DEFAULT_FONT_FAMILY } from "../../constants/defaultFontFamily";
+import { DEFAULT_FONT_FAMILY } from "../../constants/fontFamilies";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import { canvasToState } from "../../states/canvas/CanvasMapper";

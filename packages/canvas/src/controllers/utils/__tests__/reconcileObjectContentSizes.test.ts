@@ -83,6 +83,30 @@ describe("reconcileObjectContentSizes", () => {
 		);
 	});
 
+	it("leaves a stale box alone while the slots and the family say nothing moved", () => {
+		const state = stateOf([withStaleBox(textObject("t1", "hello"))]);
+
+		expect(reconcileObjectContentSizes(state, state, contentResizer)).toBe(
+			state,
+		);
+	});
+
+	it("re-measures that same box when forced", () => {
+		// The case neither the slots nor the family can express: a web font
+		// arriving after the first paint, so the family measures differently than
+		// it did without changing.
+		const state = stateOf([withStaleBox(textObject("t1", "hello"))]);
+
+		const next = reconcileObjectContentSizes(
+			state,
+			state,
+			contentResizer,
+			true,
+		);
+
+		expect(next.objects.t1).toEqual(textObject("t1", "hello"));
+	});
+
 	it("re-measures a text object whose text changed", () => {
 		const previous = stateOf([textObject("t1", "hello")]);
 		const state = stateOf([withStaleBox(textObject("t1", "hello world"))]);

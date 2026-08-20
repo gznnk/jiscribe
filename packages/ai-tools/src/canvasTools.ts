@@ -211,7 +211,7 @@ const inlineTextStyleSchema = {
 		.string()
 		.optional()
 		.describe(
-			'Font family for the matched characters, e.g. "monospace" for a code term inside a sentence.',
+			'Font family for the matched characters, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace, e.g. for a code term inside a sentence), \'Caveat, "Klee One", cursive\' (handwriting).',
 		),
 	fontWeight: z
 		.enum(["normal", "bold"])

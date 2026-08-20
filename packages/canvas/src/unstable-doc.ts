@@ -39,7 +39,7 @@ export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorR
 
 export { AUTO_COLOR } from "./schemas/objects/utils/autoColor";
 
-export { DEFAULT_FONT_FAMILY } from "./constants/defaultFontFamily";
+export { DEFAULT_FONT_FAMILY } from "./constants/fontFamilies";
 
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows

@@ -14,9 +14,8 @@ import { TEXT_BLOCK_WIDTH_SLACK } from "../../../../states/objects/utils/textBlo
  * The bands a frameless text can be picked by: one per line, each covering only
  * that line's own glyphs and sitting where the alignment puts them, so the blank
  * side of a short line lets the pointer through to whatever is underneath. A band
- * spans the full line height (the line's tallest type size × TEXT_LINE_HEIGHT),
- * leading included, since a gap the height of the leading would be too fine to
- * aim at either way.
+ * spans the full line height the layout gives it, leading included, since a gap
+ * the height of the leading would be too fine to aim at either way.
  *
  * An empty line yields no band at all — there is nothing there to pick — with
  * one exception: a text whose lines are all empty falls back to a single band

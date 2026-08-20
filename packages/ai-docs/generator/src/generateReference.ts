@@ -37,7 +37,7 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 		verticalAlign: "middle",
 		fontColor: "#000000",
 		fontSize: 16,
-		fontFamily: "Noto Sans JP",
+		fontFamily: '"Source Sans 3", "Noto Sans JP", sans-serif',
 		fontWeight: "normal",
 		rotation: 0,
 	},

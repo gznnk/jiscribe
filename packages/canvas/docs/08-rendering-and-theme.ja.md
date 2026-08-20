@@ -118,6 +118,17 @@ style」という 2 方式混在を解消）。
     への添付（レコグナイザ層にテーマの関心が漏れる）、モジュールレベルの可変既定値（隠れ状態に
     なり、1 ページ複数 Canvas の別テーマが壊れる）。経路を統一するには doc 生成を reducer の外に
     出すことになるが、reducer の決定性と state 遷移テストのしやすさを失ってまでやる価値はない。
+  - **フォントの読み込み完了が第 2 の信号である理由**: ファミリだけではテキストの計測結果は
+    決まらない。web フォントは初回描画の後に届くので、内容から導出する箱はスタックの総称
+    キーワードで計測され、その直後に別のメトリクスの字面で描かれる。`useFontsLoadedNonce` が
+    `document.fonts` を監視し（初回レイアウト分は `ready`、日本語入力が引き起こす後続の
+    unicode-range 取得は `loadingdone`）、カウンタを返す。Canvas はそれを `REMEASURE_TEXT` の
+    dispatch に変え、`reconcileObjectContentSizes` を `forceRemeasure` 付きで再実行する。
+    スロットもファミリも要求できない唯一のパス。`CanvasThumbnail` は dispatch する reducer を
+    持たないので、同じカウンタを `canvasToState` の memo キーとして使う。箱が 1 つも動かなければ
+    同じ state 参照が返るので、2 つのイベントが重なっても無駄はない。字面自体はオプトインで、
+    `CANVAS_FONT_FAMILIES` が挙げるものを使うにはホストが `@jiscribe/canvas/fonts.css` を
+    import する。
 - **標準テーマ**: `darkCanvasTheme`（既定。その値はトークンのフォールバックを兼ねる）と
   `lightCanvasTheme` をパッケージから export する（`theme/themePresets.ts`）。
 - **VSCode マッピング層**: VSCode ホスト側（このパッケージではない）が、トークン値として
