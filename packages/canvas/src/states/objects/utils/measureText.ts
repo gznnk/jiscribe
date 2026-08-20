@@ -125,21 +125,39 @@ const toStyledRanges = (
 };
 
 /**
- * Whether `range` is drawn on `[start, end)`.
+ * The offset a line's layout reaches, which is one past its last visible
+ * character when a newline ends it.
  *
- * An empty line is a zero-length range, which overlaps nothing — yet it is drawn
- * in the typography of the run it sits in, not the block's: the browser keeps the
- * caret's style on the line a break opens, so pressing Enter at the end of a run
- * drawn at 40px gives an empty line with a 40px line box. Taking it as the base
- * size instead measures that line more than a whole line short, and the box then
- * clips or scrolls. A zero-length range therefore matches the run reaching the
- * offset — the one the caret is in — leaving only a break at the very start of a
- * text with nothing to inherit.
+ * A run whose first character is that newline is opened on this line: the break
+ * is laid out here, so the browser puts an inline box of the run's own size on
+ * this line even though the run draws nothing visible until the next one. A line
+ * ended by a soft wrap has no such character, and the offset the next line starts
+ * at belongs to that line alone.
+ *
+ * @param plain - The flattened text the line indexes into
+ * @param lineEnd - The line's end offset, exclusive of the newline that ends it
+ * @returns `lineEnd + 1` when a newline ends the line, `lineEnd` for a soft wrap or the last line
+ */
+const calcLineLayoutEnd = (plain: string, lineEnd: number): number =>
+	plain[lineEnd] === "\n" ? lineEnd + 1 : lineEnd;
+
+/**
+ * Whether `range` is drawn on the offsets `[start, end)` a line is laid out from
+ * — which {@link calcLineLayoutEnd} extends past the visible characters, so a run
+ * opening at the newline that ends the line counts as being on it.
+ *
+ * The second clause is for an empty line, a zero-length range that overlaps
+ * nothing: it is drawn in the typography of the run it sits in rather than the
+ * block's, because the browser keeps the caret's style on the line a break opens.
+ * Pressing Enter at the end of a run drawn at 40px gives an empty line with a
+ * 40px line box; taking it as the base size measures that line more than a whole
+ * line short. A zero-length range therefore also matches the run reaching the
+ * offset, leaving only a break at the very start of a text with nothing to
+ * inherit.
  */
 const isDrawnOn = (range: StyledRange, start: number, end: number): boolean =>
-	start === end
-		? range.start < start && start <= range.end
-		: Math.max(start, range.start) < Math.min(end, range.end);
+	Math.max(start, range.start) < Math.min(end, range.end) ||
+	(start === end && range.start < start && start <= range.end);
 
 /**
  * The largest type size drawn on `[start, end)`, never below the base font's own:
@@ -244,7 +262,8 @@ const createOffsetMeasurer = (
 				}
 				return total;
 			},
-			lineHeight: (start, end) => calcLineHeight(segments, base, start, end),
+			lineHeight: (start, end) =>
+				calcLineHeight(segments, base, start, calcLineLayoutEnd(plain, end)),
 		},
 	};
 };
@@ -254,7 +273,9 @@ type TextRange = { start: number; end: number };
 
 /**
  * The lines the text was authored as, split on newlines. The newline itself
- * belongs to neither side, so an empty line is an empty range; an empty text is
+ * belongs to neither side — measuring a line's height reattaches it
+ * (calcLineLayoutEnd), since it is laid out on the line it ends — so an empty
+ * line is an empty range; an empty text is
  * one such line, as is the line a trailing newline opens.
  */
 const splitAuthoredLines = (plain: string): TextRange[] => {
@@ -392,7 +413,13 @@ export type VisualLine = {
 	end: number;
 	/** Rendered width in local pixels, trailing spaces included. */
 	width: number;
-	/** Line box height: the tallest type size on the line × the shared line-height. */
+	/**
+	 * Line box height: the tallest type size laid out on the line × the shared
+	 * line-height, plus the allowance a line in more than one family takes
+	 * ({@link calcMixedFamilyLineSlack}). "Laid out on" reaches one past `end`
+	 * where a newline ends the line (see calcLineLayoutEnd), so a run opening
+	 * there counts.
+	 */
 	height: number;
 };
 
@@ -497,8 +524,16 @@ export const calcVisualTextHeight = (
 	// would canvas-measure every line for a width this caller discards, and the
 	// callers that pass no width ask for a height per line on every render.
 	const ranges = toStyledRanges(text, font);
-	return splitAuthoredLines(richTextToPlain(text)).reduce(
-		(total, line) => total + calcLineHeight(ranges, font, line.start, line.end),
+	const plain = richTextToPlain(text);
+	return splitAuthoredLines(plain).reduce(
+		(total, line) =>
+			total +
+			calcLineHeight(
+				ranges,
+				font,
+				line.start,
+				calcLineLayoutEnd(plain, line.end),
+			),
 		0,
 	);
 };

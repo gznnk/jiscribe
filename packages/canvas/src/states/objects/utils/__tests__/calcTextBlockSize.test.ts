@@ -119,13 +119,46 @@ describe("calcTextBlockSize", () => {
 		);
 	});
 
-	it("leaves a break at the very start with nothing to inherit", () => {
+	it("measures an empty first line in the run its own break belongs to", () => {
 		const leadingBreak = [{ text: "\nab", fontSize: 40 }];
 
-		// The first line opens the text rather than a run, so it keeps the slot's
-		// size; only the second line is drawn at 40.
+		// The break opening the text is the run's first character, so the run is
+		// opened on that empty line and the browser gives it a box of the run's
+		// size — both lines are laid out at 40.
 		expect(calcTextBlockSize(leadingBreak, font).height).toBe(
-			10 * 1.5 + 40 * 1.5 + VERTICAL_EXTRA,
+			2 * 40 * 1.5 + VERTICAL_EXTRA,
+		);
+	});
+
+	it("heightens a line whose ending newline opens a larger run", () => {
+		// The run's first character is the break that ends the line before it, so
+		// the browser opens a box of its size there — a line drawn entirely in
+		// smaller text is still laid out at the larger one.
+		const text = [
+			{ text: "ab", fontSize: 24 },
+			{ text: "\ncd", fontSize: 40 },
+		];
+
+		// Line 1 is the 24px "ab" under a 40px run opening at its newline; line 2
+		// is the 40px "cd".
+		expect(calcTextBlockSize(text, font).height).toBe(
+			40 * 1.5 * 2 + VERTICAL_EXTRA,
+		);
+	});
+
+	it("leaves the line before a soft wrap to its own runs", () => {
+		// A wrapped line ends at a character that belongs to the next line, not at
+		// a newline, so the run starting there is not drawn on it.
+		const text = [
+			{ text: "aaaaa ", fontSize: 10 },
+			{ text: "bbbbb", fontSize: 40 },
+		];
+
+		// Laid out as authored (no width to wrap in), both runs share one line, so
+		// this is the guard that the extension is keyed on the newline rather than
+		// on the line end alone.
+		expect(calcTextBlockSize(text, font).height).toBe(
+			40 * 1.5 + VERTICAL_EXTRA,
 		);
 	});
 
