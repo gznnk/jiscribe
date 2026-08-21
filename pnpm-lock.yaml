@@ -113,6 +113,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@jiscribe/plugin-annotation-shapes':
         specifier: workspace:*
         version: link:../../plugins/annotation-shapes
@@ -208,6 +211,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@jiscribe/standard-shapes':
         specifier: workspace:*
         version: link:../../packages/standard-shapes
@@ -247,6 +253,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@jiscribe/standard-shapes':
         specifier: workspace:*
         version: link:../../packages/standard-shapes
@@ -289,6 +298,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../canvas
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../doc
       '@jiscribe/plugin-lucide-icon-shape':
         specifier: workspace:*
         version: link:../../plugins/lucide-icon-shape
@@ -313,6 +325,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../canvas
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../doc
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -442,6 +457,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../canvas
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../doc
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.1
@@ -512,6 +530,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../canvas
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../doc
       '@jiscribe/geometry':
         specifier: workspace:*
         version: link:../geometry
@@ -615,6 +636,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../canvas
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../doc
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -646,6 +670,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -686,6 +713,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -723,6 +753,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -760,6 +793,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -793,6 +829,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -833,6 +872,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -869,6 +911,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -909,6 +954,9 @@ importers:
       '@jiscribe/canvas-sdk':
         specifier: workspace:*
         version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
