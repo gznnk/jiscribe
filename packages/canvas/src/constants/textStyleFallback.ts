@@ -7,9 +7,9 @@ import type { TextSlot } from "../schemas/objects/types/TextSlot";
  * editing (TextEditor) and measurement (resolveTextObjectFont) — so it is kept
  * here rather than repeated as a default parameter in each of them.
  *
- * `fontFamily` is deliberately absent: an unset family follows the host theme
- * (`CanvasTheme.fontFamily`), a property of the viewer rather than of the
- * document, so no constant can stand in for it.
+ * `fontFamily` is deliberately absent: an unset family falls back to
+ * DEFAULT_FONT_FAMILY, which lives with the family list it belongs to because
+ * doc creation writes the same value.
  */
 export const TEXT_STYLE_FALLBACK = {
 	textAlign: "center",

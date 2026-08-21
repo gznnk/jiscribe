@@ -73,10 +73,9 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				canvasDoc,
 				registries.objectMapper,
 				registries.objectContentResizer,
-				theme.fontFamily,
 			),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[canvasDoc, registries, theme.fontFamily, fontsLoadedNonce],
+		[canvasDoc, registries, fontsLoadedNonce],
 	);
 
 	const viewport = useMemo(

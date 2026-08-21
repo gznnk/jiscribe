@@ -1,3 +1,4 @@
+import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
 import type { TextSlot } from "../../../../schemas/objects/types/TextSlot";
 import type { TextMeasureFont } from "../../utils/measureText";
@@ -13,18 +14,18 @@ export type TextObjectTypography = Pick<
  * single place the overlay's own defaults are filled in, so measuring the box
  * and measuring its lines can never disagree about the font. What the type
  * itself declares is resolved before this (resolveTextSlotStyle); what is left
- * falls to the shared last resort the overlay draws with (TEXT_STYLE_FALLBACK).
+ * falls to the shared last resort the overlay draws with (TEXT_STYLE_FALLBACK,
+ * and DEFAULT_FONT_FAMILY for the family, which lives outside it because it is
+ * shared with doc creation).
  *
  * @param typography - The object's own text styling, the type's defaults already resolved into it; each still-unset field falls back to what the overlay draws with
- * @param fallbackFontFamily - Family used when `typography.fontFamily` is unset. Pass the family the text is actually drawn in (the host theme's), or every measurement comes out a few percent narrow
  * @returns The resolved font, ready for measureTextWidth / calcTextBlockSize
  */
 export const resolveTextObjectFont = (
 	typography: TextObjectTypography,
-	fallbackFontFamily: string,
 ): TextMeasureFont => ({
 	fontSize: typography.fontSize ?? TEXT_STYLE_FALLBACK.fontSize,
-	fontFamily: typography.fontFamily ?? fallbackFontFamily,
+	fontFamily: typography.fontFamily ?? DEFAULT_FONT_FAMILY,
 	fontWeight: typography.fontWeight ?? TEXT_STYLE_FALLBACK.fontWeight,
 	fontStyle: typography.fontStyle,
 });

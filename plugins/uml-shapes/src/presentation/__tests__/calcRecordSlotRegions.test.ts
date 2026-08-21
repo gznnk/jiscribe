@@ -43,9 +43,6 @@ const titleAndAttributes = (
 /** Height of one line of text at the given size, without the band's padding. */
 const lineHeightOf = (fontSize: number): number => fontSize * TEXT_LINE_HEIGHT;
 
-/** Any family: these calculators derive their region from the box and read no context. */
-const TEXT_REGION_CONTEXT = { fontFamily: "sans-serif" };
-
 describe("calcRecordSlotRegions", () => {
 	it("gives the band the whole box when the title is the only slot", () => {
 		const regions = calcRecordSlotRegions({ width: 180, height: 100 });
@@ -296,17 +293,15 @@ describe("calcRecordTextRegion", () => {
 			text: titleAndAttributes(""),
 		};
 		const regions = calcRecordSlotRegions(state);
-		expect(calcRecordTextRegion(state, "name", TEXT_REGION_CONTEXT)).toEqual(
-			regions.name,
+		expect(calcRecordTextRegion(state, "name")).toEqual(regions.name);
+		expect(calcRecordTextRegion(state, "attributes")).toEqual(
+			regions.attributes,
 		);
-		expect(
-			calcRecordTextRegion(state, "attributes", TEXT_REGION_CONTEXT),
-		).toEqual(regions.attributes);
 	});
 
 	it("falls back to the title band for an unknown slot id", () => {
 		const state = { width: 180, height: 100 };
-		expect(calcRecordTextRegion(state, "nope", TEXT_REGION_CONTEXT)).toEqual(
+		expect(calcRecordTextRegion(state, "nope")).toEqual(
 			calcRecordSlotRegions(state).name,
 		);
 	});
@@ -317,9 +312,9 @@ describe("calcRecordTextRegion", () => {
 			height: 100,
 			text: titleAndAttributes(""),
 		};
-		expect(
-			calcRecordTextRegion(state, "operations", TEXT_REGION_CONTEXT),
-		).toEqual(calcRecordSlotRegions(state).name);
+		expect(calcRecordTextRegion(state, "operations")).toEqual(
+			calcRecordSlotRegions(state).name,
+		);
 	});
 
 	it("places the compartment under the band the title actually needs", () => {
@@ -329,9 +324,9 @@ describe("calcRecordTextRegion", () => {
 			text: titleAndAttributes("User\nAccount"),
 		};
 		const regions = calcRecordSlotRegions(state);
-		expect(
-			calcRecordTextRegion(state, "attributes", TEXT_REGION_CONTEXT),
-		).toEqual(regions.attributes);
+		expect(calcRecordTextRegion(state, "attributes")).toEqual(
+			regions.attributes,
+		);
 		expect(regions.attributes?.y).toBe(-100 + regions.name.height);
 	});
 });

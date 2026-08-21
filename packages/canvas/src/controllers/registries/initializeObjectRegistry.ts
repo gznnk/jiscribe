@@ -136,11 +136,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: textToDoc, toState: textToState },
 			stateValidator: isValidTextState,
 			contentResizer: (state, context) =>
-				resizeTextStateToContent(
-					state,
-					context.fontFamily,
-					context.textStyleDefaults,
-				),
+				resizeTextStateToContent(state, context.textStyleDefaults),
 			component: Text,
 			behavior: {
 				moveByDelta: textMoveByDelta,

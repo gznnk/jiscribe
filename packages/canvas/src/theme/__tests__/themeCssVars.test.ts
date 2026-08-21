@@ -84,9 +84,4 @@ describe("theme presets", () => {
 			lightCanvasTheme.tokens.foreground,
 		);
 	});
-
-	it("fontFamily is a concrete font (no var()), usable for canvas text measurement", () => {
-		expect(darkCanvasTheme.fontFamily).not.toContain("var(");
-		expect(lightCanvasTheme.fontFamily).not.toContain("var(");
-	});
 });

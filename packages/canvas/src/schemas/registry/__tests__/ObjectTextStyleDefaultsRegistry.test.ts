@@ -34,7 +34,7 @@ describe("extractTextSlotStyleDefaults", () => {
 		});
 	});
 
-	it("leaves the family out, so an unset one keeps following the host theme", () => {
+	it("leaves the family out, so an unset one keeps falling back to the shared default", () => {
 		const defaults = extractTextSlotStyleDefaults(
 			TextFeatures,
 			TEXT_DOC_DEFAULTS,

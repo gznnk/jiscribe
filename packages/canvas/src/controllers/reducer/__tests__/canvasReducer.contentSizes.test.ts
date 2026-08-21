@@ -2,7 +2,6 @@ import { roundToDecimal } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
-import { DEFAULT_FONT_FAMILY } from "../../../constants/fontFamilies";
 import { PRECISION } from "../../../constants/precision";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
@@ -22,9 +21,6 @@ import { createCanvasReducer } from "../canvasReducer";
  * browser the widths are estimated, so a literal would pin the estimate rather
  * than the wiring.
  */
-
-/** Family a host on another theme would hand in, distinct from the built-in one. */
-const OTHER_FONT_FAMILY = "Some Other Family";
 
 /** The corner the doc stores, which every re-measurement has to leave where it is. */
 const TEXT_ORIGIN = { x: 100, y: 60 };
@@ -46,9 +42,9 @@ const docWithText = (text: string): CanvasDoc =>
 		],
 	}) as unknown as CanvasDoc;
 
-/** Box a text of this content is measured to, the built-in family standing in for the theme's. */
+/** Box a text of this content is measured to. */
 const measuredBoxOf = (text: string) =>
-	calcTextObjectFrameSize(text, { fontSize: 16 }, DEFAULT_FONT_FAMILY);
+	calcTextObjectFrameSize(text, { fontSize: 16 });
 
 /**
  * The size and stored corner of a text object, the two things a derivation
@@ -140,52 +136,6 @@ describe("canvasReducer (integration)", () => {
 		});
 	});
 
-	describe("SET_DOC_DEFAULTS", () => {
-		it("re-measures every text box when the host swaps the theme's family", () => {
-			// A family change invalidates every measurement at once, so the pass has to
-			// bypass its own "the slots did not move" skip. Nothing else in this
-			// transition touches the object.
-			const state = stateWithStaleTextBox("hello");
-
-			const after = canvasReducer(state, {
-				type: "SET_DOC_DEFAULTS",
-				docDefaults: { fontFamily: OTHER_FONT_FAMILY },
-			});
-
-			expect(after.docDefaults.fontFamily).toBe(OTHER_FONT_FAMILY);
-			expect(boxOf(after, "text-1")).toEqual({
-				...measuredBoxOf("hello"),
-				left: TEXT_ORIGIN.x,
-				top: TEXT_ORIGIN.y,
-			});
-		});
-
-		it("does not record history, the doc storing no size to have changed", () => {
-			const state = stateWithStaleTextBox("hello");
-
-			const after = canvasReducer(state, {
-				type: "SET_DOC_DEFAULTS",
-				docDefaults: { fontFamily: OTHER_FONT_FAMILY },
-			});
-
-			expect(after.commitVersion).toBe(state.commitVersion);
-			expect(after.history.past).toHaveLength(0);
-		});
-
-		it("returns the same state for the family it already holds", () => {
-			// The mount-time sync dispatches this unconditionally, so an unchanged
-			// family must not produce a new state object.
-			const state = stateWithStaleTextBox("hello");
-
-			expect(
-				canvasReducer(state, {
-					type: "SET_DOC_DEFAULTS",
-					docDefaults: { fontFamily: DEFAULT_FONT_FAMILY },
-				}),
-			).toBe(state);
-		});
-	});
-
 	describe("PASTE", () => {
 		/** Clipboard holding one text object, its box already stale. */
 		const clipboardWithStaleTextBox = (
@@ -232,28 +182,12 @@ describe("canvasReducer (integration)", () => {
 	});
 
 	describe("undo / redo of a text object", () => {
-		/** Registries whose text resizer records the family it was handed. */
-		const createSpyingRegistries = () => {
-			const registries = createTestRegistries();
-			const measuredFamilies: string[] = [];
-			const resizeToContent = registries.objectContentResizer.get("text");
-			if (!resizeToContent) {
-				throw new Error("the test registries register no resizer for text");
-			}
-			registries.objectContentResizer.register("text", (object, context) => {
-				measuredFamilies.push(context.fontFamily);
-				return resizeToContent(object, context);
-			});
-			return { registries, measuredFamilies };
-		};
-
 		/** State whose text has been rewritten and committed once, ready to be undone. */
 		const afterRewriting = (
 			reducer: ReturnType<typeof createCanvasReducer>,
-			docDefaults: { fontFamily: string },
 		): CanvasControllerState => {
 			const state = {
-				...createTestState(docWithText("hello"), { docDefaults }),
+				...createTestState(docWithText("hello")),
 				textEditState: {
 					kind: "shape" as const,
 					objectId: "text-1",
@@ -266,9 +200,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("restores the box of the text it restores, and redo the newer one", () => {
 			const reducer = createCanvasReducer(createTestRegistries());
-			let state = afterRewriting(reducer, {
-				fontFamily: DEFAULT_FONT_FAMILY,
-			});
+			let state = afterRewriting(reducer);
 			expect(boxOf(state, "text-1").width).toBe(
 				measuredBoxOf("hello world").width,
 			);
@@ -286,36 +218,6 @@ describe("canvasReducer (integration)", () => {
 				left: TEXT_ORIGIN.x,
 				top: TEXT_ORIGIN.y,
 			});
-		});
-
-		it("re-derives the restored boxes with the canvas's own theme family", () => {
-			// The load-bearing assertion of the pair: the doc carries no size, so undo
-			// re-measures from scratch, and handing the resizer anything but the family
-			// the text is drawn in shrinks the box a few percent on every undo.
-			const { registries, measuredFamilies } = createSpyingRegistries();
-			const reducer = createCanvasReducer(registries);
-			const state = afterRewriting(reducer, { fontFamily: OTHER_FONT_FAMILY });
-			measuredFamilies.length = 0;
-
-			reducer(state, { type: "COMMAND", commandId: "undo" });
-
-			expect(measuredFamilies).not.toEqual([]);
-			expect(new Set(measuredFamilies)).toEqual(new Set([OTHER_FONT_FAMILY]));
-		});
-
-		it("re-derives with that family on redo too", () => {
-			const { registries, measuredFamilies } = createSpyingRegistries();
-			const reducer = createCanvasReducer(registries);
-			const undone = reducer(
-				afterRewriting(reducer, { fontFamily: OTHER_FONT_FAMILY }),
-				{ type: "COMMAND", commandId: "undo" },
-			);
-			measuredFamilies.length = 0;
-
-			reducer(undone, { type: "COMMAND", commandId: "redo" });
-
-			expect(measuredFamilies).not.toEqual([]);
-			expect(new Set(measuredFamilies)).toEqual(new Set([OTHER_FONT_FAMILY]));
 		});
 	});
 });

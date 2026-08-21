@@ -1,6 +1,6 @@
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
 import type { TextSlot } from "@jiscribe/canvas/doc";
-import { readTextSlot, useCanvasTheme } from "@jiscribe/canvas/unstable";
+import { readTextSlot } from "@jiscribe/canvas/unstable";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { HitAreaRect } from "./BelowLabelHitAreaStyled";
@@ -31,17 +31,10 @@ type BelowLabelHitAreaProps = {
 export const BelowLabelHitArea: React.FC<BelowLabelHitAreaProps> = ({
 	state,
 }) => {
-	const { fontFamily } = useCanvasTheme();
-
 	if (readTextSlot(state.text, BODY_TEXT_SLOT_ID) === "") {
 		return null;
 	}
-	// The grab rect has to land on the label as drawn, so it is measured with the
-	// family the overlay draws it in — the same context the registry hands the
-	// region calculator.
-	const label = calcBelowLabelTextRegion(state, BODY_TEXT_SLOT_ID, {
-		fontFamily,
-	});
+	const label = calcBelowLabelTextRegion(state, BODY_TEXT_SLOT_ID);
 	return (
 		<HitAreaRect
 			data-part={BODY_TEXT_SLOT_ID}

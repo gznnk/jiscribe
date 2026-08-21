@@ -31,17 +31,10 @@ const tipOf = (state: ReturnType<typeof stateOf>) =>
 		state.tipPosition,
 	);
 
-/** Any family: these calculators derive their region from the box and read no context. */
-const TEXT_REGION_CONTEXT = { fontFamily: "sans-serif" };
-
 describe("calcGroupMarkerTextRegion", () => {
 	it("sets the label beyond the tip and centers it there (left)", () => {
 		const state = stateOf("left", "doc layer");
-		const region = calcGroupMarkerTextRegion(
-			state,
-			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
-		);
+		const region = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID);
 		const tip = tipOf(state);
 		expect(region.x + region.width).toBe(tip.x - GROUP_MARKER_LABEL_GAP);
 		expect(region.y + region.height / 2).toBe(tip.y);
@@ -49,11 +42,7 @@ describe("calcGroupMarkerTextRegion", () => {
 
 	it("mirrors that for the opposite direction (right)", () => {
 		const state = stateOf("right", "doc layer");
-		const region = calcGroupMarkerTextRegion(
-			state,
-			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
-		);
+		const region = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID);
 		const tip = tipOf(state);
 		expect(region.x).toBe(tip.x + GROUP_MARKER_LABEL_GAP);
 		expect(region.y + region.height / 2).toBe(tip.y);
@@ -61,11 +50,7 @@ describe("calcGroupMarkerTextRegion", () => {
 
 	it("hangs the label below the tip for a down marker", () => {
 		const state = stateOf("down", "one transaction", 300, 30);
-		const region = calcGroupMarkerTextRegion(
-			state,
-			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
-		);
+		const region = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID);
 		const tip = tipOf(state);
 		expect(region.y).toBe(tip.y + GROUP_MARKER_LABEL_GAP);
 		expect(region.x + region.width / 2).toBe(tip.x);
@@ -75,19 +60,16 @@ describe("calcGroupMarkerTextRegion", () => {
 		const short = calcGroupMarkerTextRegion(
 			stateOf("left", "a"),
 			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
 		);
 		const long = calcGroupMarkerTextRegion(
 			stateOf("left", "a".repeat(40)),
 			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
 		);
 		expect(long.width).toBeGreaterThan(short.width);
 
 		const wideBox = calcGroupMarkerTextRegion(
 			stateOf("left", "a", 96, 160),
 			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
 		);
 		expect(wideBox.width).toBe(short.width);
 	});
@@ -96,12 +78,10 @@ describe("calcGroupMarkerTextRegion", () => {
 		const oneLine = calcGroupMarkerTextRegion(
 			stateOf("left", "a"),
 			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
 		);
 		const long = calcGroupMarkerTextRegion(
 			stateOf("left", "a".repeat(400)),
 			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
 		);
 		expect(long.width).toBeGreaterThan(240);
 		expect(long.height).toBeCloseTo(oneLine.height);
@@ -111,12 +91,10 @@ describe("calcGroupMarkerTextRegion", () => {
 		const oneLine = calcGroupMarkerTextRegion(
 			stateOf("left", "doc layer"),
 			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
 		);
 		const twoLines = calcGroupMarkerTextRegion(
 			stateOf("left", "doc\nlayer"),
 			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
 		);
 		expect(twoLines.height).toBeGreaterThan(oneLine.height);
 	});
@@ -133,16 +111,11 @@ describe("calcGroupMarkerTextRegion", () => {
 			text: { [BODY_TEXT_SLOT_ID]: { text: "doc layer" } },
 		};
 		expect(
-			calcGroupMarkerTextRegion(
-				withoutTipPosition,
-				BODY_TEXT_SLOT_ID,
-				TEXT_REGION_CONTEXT,
-			),
+			calcGroupMarkerTextRegion(withoutTipPosition, BODY_TEXT_SLOT_ID),
 		).toEqual(
 			calcGroupMarkerTextRegion(
 				stateOf("left", "doc layer"),
 				BODY_TEXT_SLOT_ID,
-				TEXT_REGION_CONTEXT,
 			),
 		);
 	});
@@ -161,11 +134,7 @@ describe("calcGroupMarkerVisualBounds", () => {
 	it("widens towards the tip once the label has text", () => {
 		const state = stateOf("left", "doc layer");
 		const bounds = calcGroupMarkerVisualBounds(state);
-		const region = calcGroupMarkerTextRegion(
-			state,
-			BODY_TEXT_SLOT_ID,
-			TEXT_REGION_CONTEXT,
-		);
+		const region = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID);
 		expect(bounds.x).toBe(region.x);
 		// Summed from a measured label width, so the right edge lands on the marker's
 		// own edge only to within float error.

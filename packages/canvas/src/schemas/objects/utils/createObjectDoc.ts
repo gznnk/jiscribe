@@ -2,7 +2,6 @@ import type { Point } from "@jiscribe/geometry";
 
 import type { ObjectFactoryRegistry } from "../../registry/ObjectFactoryRegistry";
 import type { ObjectDoc } from "../base/ObjectDoc";
-import type { DocCreationDefaults } from "../types/DocCreationDefaults";
 import type { ObjectType } from "../types/ObjectType";
 
 /**
@@ -18,7 +17,6 @@ import type { ObjectType } from "../types/ObjectType";
  * @param position - Placement position, center-based for every geometry but `point`, whose doc stores it as the drawn top-left
  * @param objectFactory - The canvas's object factory registry
  * @param overrides - Overrides for the default values
- * @param docDefaults - Theme-derived creation defaults (e.g. fontFamily)
  * @returns The created ObjectDoc
  */
 export const createObjectDoc = (
@@ -26,11 +24,10 @@ export const createObjectDoc = (
 	position: Point,
 	objectFactory: ObjectFactoryRegistry,
 	overrides?: Record<string, unknown>,
-	docDefaults?: DocCreationDefaults,
 ): ObjectDoc => {
 	const factory = objectFactory.get(type);
 	if (!factory) {
 		throw new Error(`Unsupported object type: ${type}`);
 	}
-	return factory.createDoc(position, overrides, docDefaults);
+	return factory.createDoc(position, overrides);
 };

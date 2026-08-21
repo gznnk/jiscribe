@@ -104,27 +104,21 @@ style」という 2 方式混在を解消）。
   カスタムプロパティとして注入する（`theme/themeCssVars.ts`）。カスタムプロパティは継承されるため、
   配下のすべてのスタイルが解決できる。
 - **2 つの伝搬経路**: CSS で消費するトークンはカスタムプロパティ経由。JS で消費する値
-  （ズーム補正計算に使うハンドル寸法、canvas でのテキスト計測と新規図形の既定に使う
-  `fontFamily`）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、`var(...)` 文字列ではなく
-  具体値でなければならない。既定 fontFamily は `state.docDefaults` → `ObjectFactory` を通じて
-  doc 生成にも届く（`pickSupportedDocDefaults` が DOC_DEFAULTS に `fontFamily` を宣言する図形に
-  だけ適用する）。
-  - **fontFamily だけ Context と state の 2 経路を持つ理由**: 2 つの消費者の構造的制約が逆向き
-    だから。描画側は reducer なしで動く必要がある（`CanvasThumbnail` は reducer を持たないが
-    コネクターラベルの計測にフォントが要る）→ 既定値付き Context。生成側は React の外で動く
-    （ジェスチャーハンドラは reducer 内の純粋関数 `(state, gesture) → state` で、`useContext` が
-    届かない）→ コントローラ state。どちらも Canvas.tsx の同じ `theme` prop から導出され
-    （state 側は `SET_DOC_DEFAULTS` で同期）、真実の源は 1 つ。却下した代替案: GESTURE アクション
-    への添付（レコグナイザ層にテーマの関心が漏れる）、モジュールレベルの可変既定値（隠れ状態に
-    なり、1 ページ複数 Canvas の別テーマが壊れる）。経路を統一するには doc 生成を reducer の外に
-    出すことになるが、reducer の決定性と state 遷移テストのしやすさを失ってまでやる価値はない。
+  （ズーム補正計算に使うハンドル寸法）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、
+  `var(...)` 文字列ではなく具体値でなければならない。
+  - **フォントをテーマに載せない理由**: 内容から導出する箱は doc が名指すファミリで JS 計測する
+    （`measureText`）ので、canvas が同梱していないファミリは正しく計測できない — テキストが実際に
+    描かれる字面とは別の字面で箱が決まってしまう。したがって doc が名指せるファミリは閉じた集合
+    （`CANVAS_FONT_FAMILIES`。`@jiscribe/canvas/fonts.css` が同梱する）で、どれも指定しないスロット
+    は `DEFAULT_FONT_FAMILY` へフォールバックする。この定数が唯一のフォールバックで、描画・計測の
+    各地点は上から渡されるのではなく直接 import する。新規図形に書き込まれる既定値も同じもの。
   - **フォントの読み込み完了が第 2 の信号である理由**: ファミリだけではテキストの計測結果は
     決まらない。web フォントは初回描画の後に届くので、内容から導出する箱はスタックの総称
     キーワードで計測され、その直後に別のメトリクスの字面で描かれる。`useFontsLoadedNonce` が
     `document.fonts` を監視し（初回レイアウト分は `ready`、日本語入力が引き起こす後続の
     unicode-range 取得は `loadingdone`）、カウンタを返す。Canvas はそれを `REMEASURE_TEXT` の
     dispatch に変え、`reconcileObjectContentSizes` を `forceRemeasure` 付きで再実行する。
-    スロットもファミリも要求できない唯一のパス。`CanvasThumbnail` は dispatch する reducer を
+    スロットからは要求できない唯一のパス。`CanvasThumbnail` は dispatch する reducer を
     持たないので、同じカウンタを `canvasToState` の memo キーとして使う。箱が 1 つも動かなければ
     同じ state 参照が返るので、2 つのイベントが重なっても無駄はない。字面自体はオプトインで、
     `CANVAS_FONT_FAMILIES` が挙げるものを使うにはホストが `@jiscribe/canvas/fonts.css` を

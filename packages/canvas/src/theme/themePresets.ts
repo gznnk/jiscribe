@@ -1,5 +1,4 @@
 import type { CanvasTheme } from "./CanvasTheme";
-import { DEFAULT_FONT_FAMILY } from "../constants/fontFamilies";
 
 /**
  * Derives the transparency checker from the injected foreground so it
@@ -61,7 +60,6 @@ export const darkCanvasTheme: CanvasTheme = {
 		objectSurface: "#252526",
 	},
 	handleDimensions: HANDLE_DIMENSIONS,
-	fontFamily: DEFAULT_FONT_FAMILY,
 };
 
 /** Standard light theme. */
@@ -95,5 +93,4 @@ export const lightCanvasTheme: CanvasTheme = {
 		objectSurface: "#f3f3f3",
 	},
 	handleDimensions: HANDLE_DIMENSIONS,
-	fontFamily: DEFAULT_FONT_FAMILY,
 };

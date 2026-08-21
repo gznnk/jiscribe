@@ -119,23 +119,6 @@ export const createCanvasReducer =
 				);
 			}
 
-			case "SET_DOC_DEFAULTS": {
-				// No-op when unchanged so the mount-time sync dispatch does not
-				// produce a new state object.
-				if (state.docDefaults.fontFamily === action.docDefaults.fontFamily) {
-					return state;
-				}
-				// The family decides how wide text measures, so every derived box is
-				// stale the moment the host swaps themes. Not a commit: the doc stores
-				// no size, so nothing about it changed.
-				const themedState = { ...state, docDefaults: action.docDefaults };
-				return reconcileObjectContentSizes(
-					themedState,
-					state,
-					registries.objectContentResizer,
-				);
-			}
-
 			case "REMEASURE_TEXT": {
 				// Web fonts arrive after the first paint, so every box derived before
 				// then was measured against a fallback face. Not a commit: the doc

@@ -71,9 +71,6 @@ export type TextSlotMeasurement = {
  * @param slotId - Key of the object's `text`; an absent key yields null
  * @param registries - The canvas's region calculators and per-type text-style
  *   defaults, i.e. the two lookups the drawn overlay resolves its box through
- * @param fallbackFontFamily - Family to measure a slot that sets none with; pass
- *   the theme family the canvas actually draws in (`docDefaults.fontFamily`) or
- *   every width comes out slightly off
  * @returns The measurement, or null when the object holds no such slot
  */
 export const measureTextSlot = (
@@ -86,7 +83,6 @@ export const measureTextSlot = (
 			"resolveSlotStyle"
 		>;
 	},
-	fallbackFontFamily: string,
 ): TextSlotMeasurement | null => {
 	if (!isTransformedFrame(object) || !isTextStyleState(object)) {
 		return null;
@@ -100,7 +96,6 @@ export const measureTextSlot = (
 		object,
 		slotId,
 		registries.objectTextRegion.get(object.type),
-		{ fontFamily: fallbackFontFamily },
 	);
 	// A flipped shape carries the flip in scaleX/scaleY, but a calculator may
 	// also hand back a negative extent; either way the text has the same room.
@@ -114,7 +109,6 @@ export const measureTextSlot = (
 			slotId,
 			slot,
 		),
-		fallbackFontFamily,
 	);
 
 	const lines = layoutVisualLines(

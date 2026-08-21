@@ -11,14 +11,8 @@ import { resizeTextStateToContent } from "../resizeTextStateToContent";
 import { textToDoc, textToState } from "../TextMapper";
 import type { TextState } from "../TextState";
 
-const FONT_FAMILY = "Noto Sans JP";
-
 const stateOf = (text: string, overrides: Record<string, unknown> = {}) => {
-	const { width, height } = calcTextObjectFrameSize(
-		text,
-		{ fontSize: 16 },
-		FONT_FAMILY,
-	);
+	const { width, height } = calcTextObjectFrameSize(text, { fontSize: 16 });
 	return {
 		id: "t1",
 		type: "text",
@@ -68,17 +62,15 @@ const typedLonger = (transform: Record<string, unknown>) => {
 	const state = stateOf("hello", transform);
 	const typed = {
 		...state,
-		text: {
-			body: { text: "hello world", fontSize: 16, fontFamily: FONT_FAMILY },
-		},
+		text: { body: { text: "hello world", fontSize: 16 } },
 	} as TextState;
-	return { state, resized: resizeTextStateToContent(typed, FONT_FAMILY) };
+	return { state, resized: resizeTextStateToContent(typed) };
 };
 
 describe("resizeTextStateToContent", () => {
 	it("returns the same reference when the box already matches the text", () => {
 		const state = stateOf("hello");
-		expect(resizeTextStateToContent(state, FONT_FAMILY)).toBe(state);
+		expect(resizeTextStateToContent(state)).toBe(state);
 	});
 
 	it("keeps the top-left where it was when the text grows", () => {
@@ -88,7 +80,7 @@ describe("resizeTextStateToContent", () => {
 			text: { body: { text: "hello world", fontSize: 16 } },
 		} as TextState;
 
-		const resized = resizeTextStateToContent(typed, FONT_FAMILY);
+		const resized = resizeTextStateToContent(typed);
 
 		expect(resized.width).toBeGreaterThan(state.width);
 		expect(axisAlignedTopLeftOf(resized)).toEqual(ANCHOR);
@@ -101,7 +93,7 @@ describe("resizeTextStateToContent", () => {
 			text: { body: { text: "h", fontSize: 16 } },
 		} as TextState;
 
-		const resized = resizeTextStateToContent(typed, FONT_FAMILY);
+		const resized = resizeTextStateToContent(typed);
 
 		expect(resized.width).toBeLessThan(state.width);
 		expect(axisAlignedTopLeftOf(resized)).toEqual(ANCHOR);
@@ -109,13 +101,10 @@ describe("resizeTextStateToContent", () => {
 
 	it("grows the height by a line for each authored newline", () => {
 		const oneLine = stateOf("a");
-		const twoLines = resizeTextStateToContent(
-			{
-				...oneLine,
-				text: { body: { text: "a\nb", fontSize: 16 } },
-			} as TextState,
-			FONT_FAMILY,
-		);
+		const twoLines = resizeTextStateToContent({
+			...oneLine,
+			text: { body: { text: "a\nb", fontSize: 16 } },
+		} as TextState);
 
 		expect(twoLines.height).toBeGreaterThan(oneLine.height);
 		expect(axisAlignedTopLeftOf(twoLines).y).toBe(ANCHOR.y);
@@ -160,11 +149,11 @@ describe("resizeTextStateToContent", () => {
 	it("sizes an object with no slot at all to the empty box", () => {
 		const state = stateOf("hello");
 		const empty = { ...state, text: undefined } as TextState;
-		const resized = resizeTextStateToContent(empty, FONT_FAMILY);
+		const resized = resizeTextStateToContent(empty);
 
 		expect(resized).toEqual({
 			...empty,
-			...calcTextObjectFrameSize("", {}, FONT_FAMILY),
+			...calcTextObjectFrameSize("", {}),
 			cx: ANCHOR.x + resized.width / 2,
 			cy: ANCHOR.y + resized.height / 2,
 		});

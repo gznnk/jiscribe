@@ -2,7 +2,6 @@ import type { ObjectVisualBoundsCalculator } from "@jiscribe/canvas";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
 import type { TextSlot } from "@jiscribe/canvas/doc";
 import { readTextSlot } from "@jiscribe/canvas-sdk";
-import { CROP_MEASURE_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { calcGroupMarkerTextRegion } from "./calcGroupMarkerTextRegion";
@@ -41,11 +40,7 @@ export const calcGroupMarkerVisualBounds: ObjectVisualBoundsCalculator<
 		return marker;
 	}
 
-	// These bounds decide a crop, not the box the text is drawn in, so they measure
-	// without the host's family (see CROP_MEASURE_FONT_FAMILY).
-	const label = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID, {
-		fontFamily: CROP_MEASURE_FONT_FAMILY,
-	});
+	const label = calcGroupMarkerTextRegion(state, BODY_TEXT_SLOT_ID);
 	const left = Math.min(marker.x, label.x);
 	const top = Math.min(marker.y, label.y);
 	const right = Math.max(marker.x + marker.width, label.x + label.width);

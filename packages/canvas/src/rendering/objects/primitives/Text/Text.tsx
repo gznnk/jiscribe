@@ -7,7 +7,6 @@ import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
 import { resolveTextObjectFont } from "../../../../states/objects/primitives/text/resolveTextObjectFont";
 import type { TextState } from "../../../../states/objects/primitives/text/TextState";
 import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
 import { useObjectTextStyleDefaultsRegistry } from "../../registry/ObjectTextStyleDefaultsRegistryContext";
@@ -29,7 +28,6 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 	const bodySlot = text?.[BODY_TEXT_SLOT_ID];
 	const body = readRichTextSlot(text, BODY_TEXT_SLOT_ID);
-	const { fontFamily: themeFontFamily } = useCanvasTheme();
 	// The type's own defaults stand in for whatever the slot leaves unset, the
 	// same resolution the editing surface and the reducer's re-measure make.
 	const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
@@ -42,11 +40,11 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 		() =>
 			calcTextLineHitRects(
 				body,
-				resolveTextObjectFont(style, themeFontFamily),
+				resolveTextObjectFont(style),
 				{ width, height },
 				style.textAlign,
 			),
-		[body, style, themeFontFamily, width, height],
+		[body, style, width, height],
 	);
 
 	return (

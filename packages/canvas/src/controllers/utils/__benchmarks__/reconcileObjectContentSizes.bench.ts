@@ -6,8 +6,6 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { createCowObjects } from "../cowObjects";
 import { reconcileObjectContentSizes } from "../reconcileObjectContentSizes";
 
-type Frame = { fontFamily: string };
-
 const OBJECT_COUNT = 2000;
 
 const buildObjects = (): Record<string, ObjectState> => {
@@ -32,11 +30,8 @@ const buildObjects = (): Record<string, ObjectState> => {
 const baseObjects = buildObjects();
 const contentResizer = createObjectContentResizerRegistry();
 
-const stateOf = (
-	objects: Record<string, ObjectState>,
-	docDefaults: Frame = { fontFamily: "sans-serif" },
-): CanvasControllerState =>
-	({ objects, docDefaults }) as unknown as CanvasControllerState;
+const stateOf = (objects: Record<string, ObjectState>): CanvasControllerState =>
+	({ objects }) as unknown as CanvasControllerState;
 
 const previousState = stateOf(baseObjects);
 
@@ -50,10 +45,6 @@ const cowState = stateOf(cowView);
 // that does not hold the map as a copy-on-write view.
 const plainState = stateOf({ ...baseObjects, "obj-0": cowView["obj-0"] });
 
-// A theme swap invalidates every measurement at once, so this frame cannot take
-// the narrowed pass however little it wrote.
-const themedState = stateOf(cowView, { fontFamily: "Some Other Family" });
-
 // The pass runs on every frame of every gesture, so what matters is the cost of
 // a frame that needs no re-measuring at all — the overwhelmingly common case.
 describe(`reconcileObjectContentSizes per frame (${OBJECT_COUNT} objects)`, () => {
@@ -65,7 +56,9 @@ describe(`reconcileObjectContentSizes per frame (${OBJECT_COUNT} objects)`, () =
 		reconcileObjectContentSizes(plainState, previousState, contentResizer);
 	});
 
-	bench("COW view, theme family changed — full scan", () => {
-		reconcileObjectContentSizes(themedState, previousState, contentResizer);
+	bench("COW view, forced — full scan", () => {
+		// A web font landing invalidates every measurement at once, so this frame
+		// cannot take the narrowed pass however little it wrote.
+		reconcileObjectContentSizes(cowState, previousState, contentResizer, true);
 	});
 });

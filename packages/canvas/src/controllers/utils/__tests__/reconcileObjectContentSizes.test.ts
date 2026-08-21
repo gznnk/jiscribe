@@ -8,17 +8,11 @@ import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { createCowObjects, materializeObjects } from "../cowObjects";
 import { reconcileObjectContentSizes } from "../reconcileObjectContentSizes";
 
-const FONT_FAMILY = "Noto Sans JP";
-
 /** The real per-type wiring, so only `text` is re-measured here. */
 const contentResizer = createTestRegistries().objectContentResizer;
 
 const textObject = (id: string, text: string): ObjectState => {
-	const { width, height } = calcTextObjectFrameSize(
-		text,
-		{ fontSize: 16 },
-		FONT_FAMILY,
-	);
+	const { width, height } = calcTextObjectFrameSize(text, { fontSize: 16 });
 	return {
 		id,
 		type: "text",
@@ -70,7 +64,6 @@ const stateOf = (
 ): CanvasControllerState =>
 	({
 		objects: Object.fromEntries(objects.map((object) => [object.id, object])),
-		docDefaults: { fontFamily: FONT_FAMILY },
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -83,7 +76,7 @@ describe("reconcileObjectContentSizes", () => {
 		);
 	});
 
-	it("leaves a stale box alone while the slots and the family say nothing moved", () => {
+	it("leaves a stale box alone while the slots say nothing moved", () => {
 		const state = stateOf([withStaleBox(textObject("t1", "hello"))]);
 
 		expect(reconcileObjectContentSizes(state, state, contentResizer)).toBe(
@@ -92,9 +85,8 @@ describe("reconcileObjectContentSizes", () => {
 	});
 
 	it("re-measures that same box when forced", () => {
-		// The case neither the slots nor the family can express: a web font
-		// arriving after the first paint, so the family measures differently than
-		// it did without changing.
+		// The case the slots cannot express: a web font arriving after the first
+		// paint, so the same family measures differently than it did.
 		const state = stateOf([withStaleBox(textObject("t1", "hello"))]);
 
 		const next = reconcileObjectContentSizes(
@@ -198,21 +190,6 @@ describe("reconcileObjectContentSizes", () => {
 		);
 	});
 
-	it("re-measures every text object when the theme's family changed", () => {
-		// The slot comparison is bypassed here: no edit touched the objects, but the
-		// family they are drawn in did.
-		const stale = withStaleBox(textObject("t1", "hello"));
-		const previous = stateOf([stale], {
-			docDefaults: { fontFamily: "Some Other Family" },
-		});
-		const state = stateOf([stale]);
-
-		const next = reconcileObjectContentSizes(state, previous, contentResizer);
-
-		expect(next.objects.t1).not.toBe(stale);
-		expect(next.objects.t1).toEqual(textObject("t1", "hello"));
-	});
-
 	it("keeps the untouched objects' identity in the rewritten map", () => {
 		const previous = stateOf([]);
 		const untouched = rectObject("r1");
@@ -225,11 +202,7 @@ describe("reconcileObjectContentSizes", () => {
 	});
 
 	it("grows the frame of the group holding a re-measured text", () => {
-		const measured = calcTextObjectFrameSize(
-			"hello",
-			{ fontSize: 16 },
-			FONT_FAMILY,
-		);
+		const measured = calcTextObjectFrameSize("hello", { fontSize: 16 });
 		const previous = stateOf([]);
 		const state = stateOf([
 			{
@@ -299,21 +272,23 @@ describe("reconcileObjectContentSizes", () => {
 			expect(seenTypes).toEqual([]);
 		});
 
-		it("still re-measures everything when the theme's family changed", () => {
-			// The narrowed pass is bypassed here: the objects the frame never wrote
-			// are stale too, because the family they measure against moved.
+		it("still re-measures everything when forced", () => {
+			// The narrowing itself is bypassed here, not just the slot skip: the
+			// objects the frame never wrote are stale too, so reading only the
+			// written ids would leave them behind.
 			const stale = withStaleBox(textObject("t1", "hello"));
-			const previous = stateOf([stale], {
-				docDefaults: { fontFamily: "Some Other Family" },
-			});
-			const objects = createCowObjects(previous.objects);
+			const previous = stateOf([stale]);
 			const state = {
 				...previous,
-				objects,
-				docDefaults: { fontFamily: FONT_FAMILY },
+				objects: createCowObjects(previous.objects),
 			};
 
-			const next = reconcileObjectContentSizes(state, previous, contentResizer);
+			const next = reconcileObjectContentSizes(
+				state,
+				previous,
+				contentResizer,
+				true,
+			);
 
 			expect(next.objects.t1).toEqual(textObject("t1", "hello"));
 		});

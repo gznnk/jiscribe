@@ -25,16 +25,14 @@ describe("ObjectContentResizerRegistry", () => {
 		const registry = createObjectContentResizerRegistry();
 		registry.register("text", (state, context) => ({
 			...state,
-			id: context.fontFamily,
+			id: String(context.textStyleDefaults?.fontSize),
 		}));
 
 		const resized = registry.get("text")?.(
 			{ id: "t1", type: "text" },
-			{
-				fontFamily: "Noto Sans JP",
-			},
+			{ textStyleDefaults: { fontSize: 24 } },
 		) as ObjectState;
-		expect(resized.id).toBe("Noto Sans JP");
+		expect(resized.id).toBe("24");
 	});
 
 	it("forgets every registration on clear, so a rebuilt bundle starts empty", () => {

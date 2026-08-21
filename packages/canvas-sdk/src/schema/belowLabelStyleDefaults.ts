@@ -7,14 +7,11 @@ import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas/unstable-doc";
  * Spread into each shape's `*_DOC_DEFAULTS` as well, so a shape created from the
  * toolbar writes the same values into its doc.
  *
- * `fontSize` has to match TextOverlayFrame's own fallback (16). Those defaults
- * only reach a doc through the factory, so a doc written by hand or by an LLM
- * omits the field, and the label would then be measured with one size and drawn
- * with the other — a box too small for its text. `fontFamily` cannot be settled
- * the same way: the drawing side falls back to the theme font rather than to a
- * constant, so the family a label is measured with is handed to the calculator
- * instead (`ObjectTextRegionContext.fontFamily`) and this one only ever reaches a
- * doc through the factory.
+ * `fontSize` has to match TextOverlayFrame's own fallback (16), and `fontFamily`
+ * DEFAULT_FONT_FAMILY for the same reason: these defaults only reach a doc
+ * through the factory, so a doc written by hand or by an LLM omits the field, and
+ * the label would then be measured against one value and drawn with the other — a
+ * box too small for its text.
  */
 export const BELOW_LABEL_STYLE_DEFAULTS = {
 	textAlign: "center",

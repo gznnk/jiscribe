@@ -1,6 +1,5 @@
 ﻿import type { Point } from "@jiscribe/geometry";
 
-import { DEFAULT_FONT_FAMILY } from "../../constants/fontFamilies";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
@@ -29,17 +28,13 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * @param doc - A doc that has passed `createCanvasParser` (see above); its tree order becomes the z-order
  * @param mapper - The per-canvas object mapper registry; a doc naming a type it does not carry throws
  * @param contentResizer - The per-canvas content-resizer registry; a type registered there has its
- *   box re-derived here, which is the one place where a freshly mapped object and the host's theme
- *   meet. A registry holding nothing leaves every box exactly as the doc stored it
- * @param themeFontFamily - Family the host draws unstyled text in (`CanvasTheme.fontFamily`),
- *   handed to the resizers as their context. Defaults to the built-in family, which is
- *   right for headless callers and wrong by a few percent for a host on another font
+ *   box re-derived here from the content it holds. A registry holding nothing leaves every box
+ *   exactly as the doc stored it
  */
 export const canvasToState = (
 	doc: CanvasDoc,
 	mapper: ObjectMapperRegistry,
 	contentResizer: ObjectContentResizerRegistry,
-	themeFontFamily: string = DEFAULT_FONT_FAMILY,
 ): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
 	const rootIds: string[] = [];
@@ -55,12 +50,11 @@ export const canvasToState = (
 	// reference integrity are the validator's responsibility. Returns the ID.
 	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
 		const mappedState = mapper.toState(objDoc);
-		// Read / undo / redo / external sync all funnel through here, which makes
-		// it the one place where the theme's family and a freshly mapped object
-		// whose box is derived meet.
+		// The registration wraps each resizer with its type's own text-style
+		// defaults, so the context this hands over carries nothing of its own.
 		const resizeToContent = contentResizer.get(mappedState.type);
 		const objState = resizeToContent
-			? resizeToContent(mappedState, { fontFamily: themeFontFamily })
+			? resizeToContent(mappedState, {})
 			: mappedState;
 		objState.parentId = parentId;
 		objects[objState.id] = objState;
