@@ -1,7 +1,7 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type { Point } from "@jiscribe/geometry";
 
 import { ORIGIN_SNAP_PX } from "../../../../../constants/axisLock";
-import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,

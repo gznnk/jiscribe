@@ -1,7 +1,7 @@
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../../constants/precision";
 import {
 	isConnectorState,
 	type ConnectorState,

@@ -1,6 +1,6 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import { describe, expect, it } from "vitest";
 
-import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import { ALL_OBJECT_DEFINITIONS } from "../initializeObjectRegistry";
 
 /**

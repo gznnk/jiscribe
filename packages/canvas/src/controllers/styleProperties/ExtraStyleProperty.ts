@@ -1,9 +1,10 @@
-import { SelectionStyleProperty } from "./SelectionStyleProperty";
 import type {
 	ExtraStylePropertyDescriptor,
 	StyleValueType,
-} from "../../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+} from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+
+import { SelectionStyleProperty } from "./SelectionStyleProperty";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /** The slice of StylePropertyRegistry this handler reads (structural, avoids the import cycle). */

@@ -1,3 +1,4 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { memo, useMemo, useRef, useState } from "react";
 
 import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
@@ -6,7 +7,6 @@ import { calcFitViewport } from "./utils/calcFitViewport";
 import type { CanvasPlugin } from "../plugin/CanvasPlugin";
 import { CanvasView } from "../rendering/CanvasView";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";

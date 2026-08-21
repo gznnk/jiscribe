@@ -1,3 +1,8 @@
+import {
+	toEquivalentEdgeAnchor,
+	type EndpointRef,
+} from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import { roundToDecimal, type Point } from "@jiscribe/geometry";
 
 import {
@@ -5,11 +10,6 @@ import {
 	type AnchorExclusion,
 	type AnchorSnapContext,
 } from "./calcNearestAnchor";
-import { PRECISION } from "../../../../../../constants/precision";
-import {
-	toEquivalentEdgeAnchor,
-	type EndpointRef,
-} from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 

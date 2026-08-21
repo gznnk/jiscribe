@@ -1,10 +1,9 @@
 import styled from "@emotion/styled";
-
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
-} from "../../../../constants/textBoxPadding";
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
+} from "@jiscribe/doc/text/textBoxPadding";
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/textLineHeight";
 
 /**
  * The label body. Drawn horizontally over the line, with a background (knockout)

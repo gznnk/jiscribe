@@ -1,4 +1,4 @@
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
 /**
  * Which handles a type puts on the transform frame of a single selection.

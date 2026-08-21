@@ -1,3 +1,6 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { roundDocPoints } from "@jiscribe/doc/model/roundDocNumbers";
 import type { Point } from "@jiscribe/geometry";
 
 import type { ObjectMapperType } from "./MapperTypes";
@@ -6,9 +9,6 @@ import type { ObjectState } from "./ObjectState";
 import type { TextDocFields } from "./TextSlotsMapper";
 import { mapTextDocToState, mapTextStateToDoc } from "./TextSlotsMapper";
 import type { TextStyleState } from "./TextStyleState";
-import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import { roundDocPoints } from "../utils/roundDocNumbers";
 import { collectStyleKeys, pick } from "../utils/stylePassthrough";
 
 /**

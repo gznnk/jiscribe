@@ -1,6 +1,6 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { type Dispatch, useMemo, useReducer } from "react";
 
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";

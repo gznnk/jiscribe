@@ -1,8 +1,8 @@
-﻿import type { Point } from "@jiscribe/geometry";
+﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
+import type { Point } from "@jiscribe/geometry";
 
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";

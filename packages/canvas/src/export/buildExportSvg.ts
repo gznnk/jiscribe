@@ -1,3 +1,4 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { Rect } from "@jiscribe/geometry";
 
 import { embedCanvasSource } from "./canvasSourceMetadata";
@@ -6,7 +7,6 @@ import {
 	foreignObjectToSvgText,
 	isConnectorLabelForeignObject,
 } from "./foreignObjectToSvgText";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

@@ -1,6 +1,7 @@
+import { createFrameObjectFactory } from "@jiscribe/doc/model/objects/utils/createFrameObjectFactory";
+
 import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
-import { createFrameObjectFactory } from "../../../schemas/objects/utils/createFrameObjectFactory";
 
 /**
  * A shape placed by a single click instead of drag-drawn, i.e. one whose factory

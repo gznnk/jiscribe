@@ -1,7 +1,7 @@
+import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { describe, it, expect } from "vitest";
 
-import type { StyleValueType } from "../../../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";

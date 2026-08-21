@@ -1,4 +1,5 @@
-﻿import { isPoly } from "../../../schemas/objects/types/Poly";
+﻿import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
+
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";

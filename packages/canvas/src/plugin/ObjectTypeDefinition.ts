@@ -1,3 +1,6 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { ObjectDocDefinition } from "@jiscribe/doc/plugin/ObjectDocDefinition";
 import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
@@ -12,9 +15,6 @@ import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/
 import type { ObjectOutlineCalculator } from "../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../rendering/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsCalculator } from "../rendering/objects/registry/ObjectVisualBoundsRegistry";
-import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
-import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ObjectContentResizer } from "../states/registry/ObjectContentResizerRegistry";

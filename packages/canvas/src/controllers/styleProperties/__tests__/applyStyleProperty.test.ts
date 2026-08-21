@@ -1,14 +1,14 @@
-import { describe, it, expect } from "vitest";
-
 import {
 	ConnectorExtraStyleProperties,
 	ConnectorFeatures,
-} from "../../../schemas/objects/connector/ConnectorDoc";
-import { GroupFeatures } from "../../../schemas/objects/primitives/group/GroupDoc";
-import { PolylineFeatures } from "../../../schemas/objects/primitives/polyline/PolylineDoc";
-import { RectFeatures } from "../../../schemas/objects/primitives/rect/RectDoc";
-import type { ExtraStylePropertyDescriptor } from "../../../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { GroupFeatures } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
+import { PolylineFeatures } from "@jiscribe/doc/model/objects/primitives/polyline/PolylineDoc";
+import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
+import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { describe, it, expect } from "vitest";
+
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";

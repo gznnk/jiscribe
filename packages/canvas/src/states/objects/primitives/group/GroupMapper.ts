@@ -1,5 +1,6 @@
+import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
+
 import type { GroupState } from "./GroupState";
-import type { GroupDoc } from "../../../../schemas/objects/primitives/group/GroupDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,

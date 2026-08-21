@@ -1,4 +1,5 @@
-import type { PolylineFeatures } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
+import type { PolylineFeatures } from "@jiscribe/doc/model/objects/primitives/polyline/PolylineDoc";
+
 import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,6 +1,6 @@
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../constants/precision";
 import { ZOOM, stepZoomOut } from "../../../constants/zoom";
 import type { ExecutableCommand } from "../CommandTypes";
 

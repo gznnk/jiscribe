@@ -1,6 +1,7 @@
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+
 import type { MetaState } from "./MetaState";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
 export type ObjectState = {
 	id: string;

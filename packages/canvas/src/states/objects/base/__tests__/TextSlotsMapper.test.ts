@@ -1,9 +1,9 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
 import { describe, expect, it } from "vitest";
 
 import { createCanvasRegistries } from "../../../../controllers/registries/createCanvasRegistries";
-import type { ObjectDoc } from "../../../../schemas/objects/base/ObjectDoc";
-import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
-import { builtinObjectDocDefinitions } from "../../../../schemas/registry/builtinObjectDocDefinitions";
 import type { TextSlots } from "../../types/TextSlots";
 import type { ObjectState } from "../ObjectState";
 import { mapTextDocToState, mapTextStateToDoc } from "../TextSlotsMapper";

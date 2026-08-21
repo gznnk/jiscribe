@@ -1,11 +1,11 @@
 # States
 
 The directory that manages the application's runtime in-memory data structures (State).
-It mirrors the persistence-oriented `schemas` structure but is optimized for rendering and manipulation performance and convenience.
+It mirrors the persistence-oriented `model` structure of `@jiscribe/doc` but is optimized for rendering and manipulation performance and convenience.
 
 ## Architecture & Design
 
-For the core design principles (Type Composition, Branded Types, ObjectFeatures), see the [Schemas README](../schemas/README.md).
+For the core design principles (Type Composition, Branded Types, ObjectFeatures), see the [@jiscribe/doc README](../../../doc/README.md).
 
 **Key differences:**
 
@@ -15,26 +15,26 @@ For the core design principles (Type Composition, Branded Types, ObjectFeatures)
 
 ## Directory Structure
 
-| Directory        | Description                                                                                                     |
-| ---------------- | --------------------------------------------------------------------------------------------------------------- |
-| `canvas/`        | Defines the runtime state of the whole canvas (`CanvasState`) and its conversion to/from Doc (`CanvasMapper`).  |
-| `objects/`       | Individual object State definitions and Doc⇔State mappers (`XxxMapper`). Structurally symmetric with `schemas`. |
-| `objects/types/` | Utilities that compose State types (`CreateObjectState`). Enums are reused from `schemas/objects/types/`.       |
-| `objects/utils/` | Runtime helpers that assist State validation (`validateStateUtils`, etc.).                                      |
-| `utils/`         | Cross-object runtime geometry computations (`calculateGroupOrientedBounds`, etc.).                              |
-| `registry/`      | Registries of per-type Mappers and State validators (registration is described below).                          |
+| Directory        | Description                                                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `canvas/`        | Defines the runtime state of the whole canvas (`CanvasState`) and its conversion to/from Doc (`CanvasMapper`).            |
+| `objects/`       | Individual object State definitions and Doc⇔State mappers (`XxxMapper`). Structurally symmetric with the doc `model/`.    |
+| `objects/types/` | Utilities that compose State types (`CreateObjectState`). Enums are reused from `@jiscribe/doc`'s `model/objects/types/`. |
+| `objects/utils/` | Runtime helpers that assist State validation (`validateStateUtils`, etc.).                                                |
+| `utils/`         | Cross-object runtime geometry computations (`calculateGroupOrientedBounds`, etc.).                                        |
+| `registry/`      | Registries of per-type Mappers and State validators (registration is described below).                                    |
 
 ## Registry initialization
 
-The registries under `registry/` (`ObjectMapperRegistry` / `ObjectStateValidatorRegistry`) are registered **all at once** by `registerObject()` in `controllers/registries/initializeObjectRegistry.ts`, together with the other registries such as rendering / gestures / menu. The doc-validator registry on the `schemas` side is not part of that bundle: it is needed only at parse time, so `parser/createCanvasParser` builds one per parser instance.
+The registries under `registry/` (`ObjectMapperRegistry` / `ObjectStateValidatorRegistry`) are registered **all at once** by `registerObject()` in `controllers/registries/initializeObjectRegistry.ts`, together with the other registries such as rendering / gestures / menu. The doc-validator registry on the `@jiscribe/doc` side is not part of that bundle: it is needed only at parse time, so `createCanvasParser` builds one per parser instance.
 
 ## Usage Example
 
-Generates a State type by reusing the `ObjectFeatures` defined in `schemas`.
+Generates a State type by reusing the `ObjectFeatures` defined in `@jiscribe/doc`.
 
 ```typescript
 // Example: RectState.ts
-import type { RectFeatures } from "../../../../schemas/objects/primitives/rect/RectDoc";
+import type { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

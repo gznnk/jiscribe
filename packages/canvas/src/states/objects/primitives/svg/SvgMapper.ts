@@ -1,9 +1,10 @@
-import type { SvgState } from "./SvgState";
-import type { SvgDoc } from "../../../../schemas/objects/primitives/svg/SvgDoc";
+import type { SvgDoc } from "@jiscribe/doc/model/objects/primitives/svg/SvgDoc";
 import {
 	SVG_EXTRA_KEYS,
 	SvgFeatures,
-} from "../../../../schemas/objects/primitives/svg/SvgDoc";
+} from "@jiscribe/doc/model/objects/primitives/svg/SvgDoc";
+
+import type { SvgState } from "./SvgState";
 import { createFrameMapper } from "../../base/FrameMapper";
 
 /**

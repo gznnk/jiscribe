@@ -1,12 +1,12 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import { richTextToPlain } from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
 import type React from "react";
 import { memo } from "react";
 
 import { RichTextContent } from "./RichTextContent";
 import { TextOverlayFrame } from "./TextOverlayFrame";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import { richTextToPlain } from "../../../../schemas/objects/types/RichText";
-import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
 export type TextEditable = {
 	/** True while any slot of this object has the in-place editor open. */

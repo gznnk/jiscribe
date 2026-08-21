@@ -1,4 +1,8 @@
-﻿import { memo, useCallback, useEffect, useRef, useState } from "react";
+﻿import {
+	AUTO_COLOR,
+	isAutoColor,
+} from "@jiscribe/doc/model/objects/utils/autoColor";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import {
 	AutoButton,
@@ -8,10 +12,6 @@ import {
 	ColorSwatch,
 	ColorTextInput,
 } from "./ObjectMenuColorPickerGridStyled";
-import {
-	AUTO_COLOR,
-	isAutoColor,
-} from "../../../../../../schemas/objects/utils/autoColor";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";

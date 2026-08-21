@@ -1,3 +1,7 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
@@ -7,9 +11,6 @@ import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/Obj
 import type { ObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
 import type { ObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
-import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
-import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";

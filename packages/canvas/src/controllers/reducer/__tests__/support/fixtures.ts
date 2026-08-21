@@ -1,4 +1,4 @@
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 
 /**
  * Build a rect Doc for tests.

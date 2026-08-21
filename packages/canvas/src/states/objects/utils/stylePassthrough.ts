@@ -1,8 +1,8 @@
-import { ARROW_STYLE_KEYS } from "../../../schemas/objects/base/ArrowStyleDoc";
-import { FILL_STYLE_KEYS } from "../../../schemas/objects/base/FillStyleDoc";
-import { RADIUS_STYLE_KEYS } from "../../../schemas/objects/base/RadiusStyleDoc";
-import { STROKE_STYLE_KEYS } from "../../../schemas/objects/base/StrokeStyleDoc";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
+import { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+import { FILL_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
+import { RADIUS_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
+import { STROKE_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 
 /**
  * Collects the pass-through keys for the style groups enabled in `features`.

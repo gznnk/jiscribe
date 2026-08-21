@@ -1,14 +1,14 @@
 import styled from "@emotion/styled";
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "@jiscribe/doc/text/textBoxPadding";
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/textLineHeight";
 
 import {
 	SCROLLBAR_WIDTH,
 	scrollbarStyles,
 } from "../../../../constants/scrollbarStyles";
-import {
-	TEXT_BOX_PADDING_X,
-	TEXT_BOX_PADDING_Y,
-} from "../../../../constants/textBoxPadding";
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 
 /**
  * Wrapper that carries the shape's position/transform and aligns the editable

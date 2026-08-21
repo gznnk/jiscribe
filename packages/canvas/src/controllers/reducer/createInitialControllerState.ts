@@ -1,4 +1,5 @@
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";

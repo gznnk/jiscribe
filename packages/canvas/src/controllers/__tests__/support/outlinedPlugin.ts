@@ -1,8 +1,8 @@
+import { createFrameObjectFactory } from "@jiscribe/doc/model/objects/utils/createFrameObjectFactory";
 import type { Dimensions, Point } from "@jiscribe/geometry";
 
 import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
-import { createFrameObjectFactory } from "../../../schemas/objects/utils/createFrameObjectFactory";
 
 /**
  * Outline of the `outlined` type: the bounding box with its bottom quarter cut

@@ -4,24 +4,24 @@ import {
 	isNumber,
 	isString,
 } from "@jiscribe/basic-validators";
-
-import { isCssColor } from "./isCssColor";
-import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
-import { ARROW_STYLE_KEYS } from "../../../schemas/objects/base/ArrowStyleDoc";
-import { isArrowType } from "../../../schemas/objects/types/ArrowType";
-import { isOwnedEndpointRef } from "../../../schemas/objects/types/EndpointRef";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
-import { isPoly } from "../../../schemas/objects/types/Poly";
+import { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+import { isArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { isOwnedEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type {
 	InlineTextStyle,
 	RichText,
-} from "../../../schemas/objects/types/RichText";
-import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
-import { isTextRows } from "../../../schemas/objects/types/TextSlot";
-import { isAutoColor } from "../../../schemas/objects/utils/autoColor";
-import { validateEndpointRef } from "../../../schemas/objects/utils/validateDocUtils";
+} from "@jiscribe/doc/model/objects/types/RichText";
+import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { isAutoColor } from "@jiscribe/doc/model/objects/utils/autoColor";
+import { validateEndpointRef } from "@jiscribe/doc/model/objects/utils/validateDocUtils";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+
+import { isCssColor } from "./isCssColor";
 import { isTextStyleState } from "../base/TextStyleState";
 import { isTransformState } from "../base/TransformState";
 

@@ -1,9 +1,8 @@
-import { createContext, useContext } from "react";
-
 import {
 	type ObjectTextStyleDefaultsRegistry,
 	createObjectTextStyleDefaultsRegistry,
-} from "../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
+} from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import { createContext, useContext } from "react";
 
 /**
  * Rendering-layer context that distributes the per-canvas

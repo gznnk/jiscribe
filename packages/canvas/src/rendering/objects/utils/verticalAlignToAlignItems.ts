@@ -1,6 +1,5 @@
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
 import type React from "react";
-
-import type { VerticalAlign } from "../../../schemas/objects/types/VerticalAlign";
 
 /**
  * Maps a domain vertical-align value to the flex `align-items` value.

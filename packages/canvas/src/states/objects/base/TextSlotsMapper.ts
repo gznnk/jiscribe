@@ -1,14 +1,15 @@
-import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
-import type { TextStyleDoc } from "../../../schemas/objects/base/TextStyleDoc";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import type { RichText } from "../../../schemas/objects/types/RichText";
+import type { TextStyleDoc } from "@jiscribe/doc/model/objects/base/TextStyleDoc";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import {
 	isRichText,
 	normalizeRichText,
 	richTextToPlain,
-} from "../../../schemas/objects/types/RichText";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
-import { TEXT_SLOT_STYLE_KEYS } from "../../../schemas/objects/types/TextSlot";
+} from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+
 import {
 	isTextSlots,
 	readRichTextSlot,

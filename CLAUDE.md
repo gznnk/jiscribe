@@ -16,7 +16,8 @@ ESLint 9, Prettier. React Compiler is not used.
 
 ```
 packages/
-  canvas/            engine (rendering, gestures, commands, state, schema) + its e2e suite and the shared e2e kit
+  doc/               the document layer: model, plugin contract, parser, ops, text metrics, .jis.png/.jis.svg I/O
+  canvas/            engine (rendering, gestures, commands, state) + its e2e suite and the shared e2e kit
   canvas-sdk/        shape-authoring kit for plugin authors
   geometry/          geometry types and calculations
   markdown/          markdown rendering
@@ -24,10 +25,13 @@ packages/
   utility-types/     shared TypeScript utility types
   ai-docs/           generated JSON Schema / AI reference for the shipped shapes
   ai-tools/          the canvas tool set an AI can call, declared free of any transport
+  standard-shapes/   the shipped shape set, bundled once for every host (doc + presentation entries)
+  doc-tools/         validate / measure / diagnose over the standard set (Node text measurer included)
 plugins/             flowchart, uml, container, general, annotation, sticky, markdown, lucide-icon — each with its own e2e suite
 apps/
   canvas-examples/   integration examples (one example = one file) + the plugin-coexistence e2e suite
   vscode-extension/  the VSCode extension
+  cli/               the jiscribe CLI: validate / diagnose / measure / render (headless browser harness)
 ```
 
 Playwright e2e is spread over ten suites, one per package that owns shapes:
@@ -77,13 +81,14 @@ ESLint fails on all of these — see `eslint.config.js` for the exact patterns.
 - Packages under `plugins/` may only import `@jiscribe/canvas`,
   `@jiscribe/canvas-sdk` and their `/doc` entry points. `@jiscribe/canvas/unstable`
   and any `src/` path are rejected.
-- The headless document layer (`packages/canvas/src/doc.ts`, `schemas/`,
-  `docOps/`, and the equivalent layers in `canvas-sdk` and the plugins) must not
-  import `react`, `react-dom`, `@emotion/*`, or the presentation / controller /
-  state layers.
+- The headless document layer (`packages/doc` — the document model, plugin
+  contract, parser, ops, text metrics and file I/O — plus the equivalent layers
+  in `canvas-sdk` and the plugins) must not import `react`, `react-dom`,
+  `@emotion/*`, or `@jiscribe/canvas`. Canvas keeps `./doc` / `./unstable-doc` /
+  `./png-source` / `./svg-source` as re-export shims over `@jiscribe/doc`.
 - Import through package roots (`@jiscribe/geometry`), never `src/` paths.
-- `as unknown as` is banned under `packages/canvas/src/states` and `schemas`;
-  use `rebrand<T>()`.
+- `as unknown as` is banned under `packages/canvas/src/states` and
+  `packages/doc/src/{model,plugin,parse}`; use `rebrand<T>()`.
 
 ## Reuse `@jiscribe/geometry`
 

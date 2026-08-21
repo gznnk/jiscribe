@@ -1,7 +1,7 @@
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
 import type { Dimensions } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
-import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { calcFullTextRegion, calcTextRegion } from "../calcTextRegion";
 

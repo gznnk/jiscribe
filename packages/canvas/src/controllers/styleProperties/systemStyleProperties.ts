@@ -1,13 +1,14 @@
+import type { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+import type { FILL_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
+import type { RADIUS_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
+import type { STROKE_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import type { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/TextSlot";
+
 import { FeatureGatedStyleProperty } from "./FeatureGatedStyleProperty";
 import { LockAspectRatioProperty } from "./LockAspectRatioProperty";
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import { TextContentProperty } from "./TextContentProperty";
 import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
-import type { ARROW_STYLE_KEYS } from "../../schemas/objects/base/ArrowStyleDoc";
-import type { FILL_STYLE_KEYS } from "../../schemas/objects/base/FillStyleDoc";
-import type { RADIUS_STYLE_KEYS } from "../../schemas/objects/base/RadiusStyleDoc";
-import type { STROKE_STYLE_KEYS } from "../../schemas/objects/base/StrokeStyleDoc";
-import type { TEXT_SLOT_STYLE_KEYS } from "../../schemas/objects/types/TextSlot";
 
 /**
  * Every name a system style property may carry, taken from the style groups the doc

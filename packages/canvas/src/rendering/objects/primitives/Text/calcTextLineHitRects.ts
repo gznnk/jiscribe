@@ -1,14 +1,13 @@
-import type { Dimensions, Rect } from "@jiscribe/geometry";
-
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measureText";
+import { layoutVisualLines } from "@jiscribe/doc/text/measureText";
+import { TEXT_BLOCK_WIDTH_SLACK } from "@jiscribe/doc/text/textBlockWidthSlack";
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
-} from "../../../../constants/textBoxPadding";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import { TEXT_BLOCK_WIDTH_SLACK } from "../../../../states/objects/utils/textBlockWidthSlack";
-import type { TextMeasureFont } from "../../../../text/measureText";
-import { layoutVisualLines } from "../../../../text/measureText";
+} from "@jiscribe/doc/text/textBoxPadding";
+import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 /**
  * The bands a frameless text can be picked by: one per line, each covering only

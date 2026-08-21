@@ -1,6 +1,6 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { Dimensions } from "@jiscribe/geometry";
 
-import type { RichText } from "../../schemas/objects/types/RichText";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasGestureHandling } from "../CanvasGestureHandling";

@@ -1,6 +1,7 @@
+import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { ObjectFeatureFlag } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+
 import { SelectionStyleProperty } from "./SelectionStyleProperty";
-import type { StyleValueType } from "../../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectFeatureFlag } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**

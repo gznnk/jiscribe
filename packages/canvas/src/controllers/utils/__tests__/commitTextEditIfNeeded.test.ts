@@ -1,6 +1,6 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { describe, it, expect } from "vitest";
 
-import type { ConnectorLabel } from "../../../schemas/objects/connector/ConnectorDoc";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../commitTextEditIfNeeded";

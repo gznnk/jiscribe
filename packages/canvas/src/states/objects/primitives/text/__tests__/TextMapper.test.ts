@@ -1,6 +1,6 @@
+import type { TextDoc } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
 import { describe, expect, it } from "vitest";
 
-import type { TextDoc } from "../../../../../schemas/objects/primitives/text/TextDoc";
 import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
 import { calcTextDrawnTopLeft } from "../textDrawnTopLeft";
 import { textToDoc, textToState } from "../TextMapper";

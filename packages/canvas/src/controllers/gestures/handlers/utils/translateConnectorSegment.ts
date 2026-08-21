@@ -1,11 +1,11 @@
-import { roundToDecimal } from "@jiscribe/geometry";
-import type { Point } from "@jiscribe/geometry";
-
-import { PRECISION } from "../../../../constants/precision";
 import {
 	isFreeEndpointRef,
 	type EndpointRef,
-} from "../../../../schemas/objects/types/EndpointRef";
+} from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { PRECISION } from "@jiscribe/doc/model/precision";
+import { roundToDecimal } from "@jiscribe/geometry";
+import type { Point } from "@jiscribe/geometry";
+
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connector/isConnectorSegmentFreelyMovable";
 

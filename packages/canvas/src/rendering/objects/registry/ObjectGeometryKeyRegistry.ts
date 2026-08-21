@@ -1,4 +1,5 @@
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**

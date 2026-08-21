@@ -1,6 +1,6 @@
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/fontFamilies";
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_FONT_FAMILY } from "../../../../../constants/fontFamilies";
 import { resolveTextObjectFont } from "../resolveTextObjectFont";
 
 /**

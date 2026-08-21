@@ -1,6 +1,6 @@
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../../../constants/precision";
 import type { Viewport } from "../../../../../states/canvas/Viewport";
 
 /**

@@ -1,3 +1,5 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
@@ -12,8 +14,6 @@ import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/obj
 import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../rendering/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import type { ObjectTextStyleDefaultsRegistry } from "../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,

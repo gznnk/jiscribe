@@ -1,9 +1,9 @@
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
 import type React from "react";
 import { memo, useMemo } from "react";
 
 import { calcTextLineHitRects } from "./calcTextLineHitRects";
 import { TextHitGroup, TextHitRect } from "./TextStyled";
-import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
 import { resolveTextObjectFont } from "../../../../states/objects/primitives/text/resolveTextObjectFont";
 import type { TextState } from "../../../../states/objects/primitives/text/TextState";
 import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";

@@ -1,6 +1,6 @@
+import type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
 import { describe, expect, it } from "vitest";
 
-import type { MetaDoc } from "../../../../schemas/objects/base/MetaDoc";
 import { MetaMapper } from "../../../../states/objects/base/MetaMapper";
 import type { MetaState } from "../../../../states/objects/base/MetaState";
 

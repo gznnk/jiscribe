@@ -1,9 +1,9 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import { calcTextBlockSize } from "@jiscribe/doc/text/calcTextBlockSize";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { TextObjectTypography } from "./resolveTextObjectFont";
 import { resolveTextObjectFont } from "./resolveTextObjectFont";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import { calcTextBlockSize } from "../../utils/calcTextBlockSize";
 
 /**
  * Size of the box a `text` object occupies. The doc of a point-geometry shape

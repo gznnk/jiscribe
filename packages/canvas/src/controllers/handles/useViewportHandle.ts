@@ -1,3 +1,4 @@
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import {
 	convertRectToBoundingBox,
 	roundToDecimal,
@@ -7,7 +8,6 @@ import {
 import { type Dispatch, type RefObject, useMemo } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
-import { PRECISION } from "../../constants/precision";
 import { ZOOM } from "../../constants/zoom";
 import type { Camera, Viewport } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";

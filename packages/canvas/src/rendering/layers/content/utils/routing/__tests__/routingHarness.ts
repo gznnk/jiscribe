@@ -1,3 +1,4 @@
+import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	calcFrameBoxFeatures,
 	degreesToRadians,
@@ -7,7 +8,6 @@ import {
 } from "@jiscribe/geometry";
 
 import { routeOrthogonalConnector } from "..";
-import type { ConnectPointId } from "../../../../../../schemas/objects/types/EndpointRef";
 import {
 	calcConnectPoint,
 	calcConnectPointDirection,

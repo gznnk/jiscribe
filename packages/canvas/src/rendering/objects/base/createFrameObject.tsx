@@ -1,3 +1,8 @@
+import { joinRichTextLines } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 import type React from "react";
@@ -5,11 +10,6 @@ import type { ReactNode } from "react";
 
 import { TextOverlay } from "./TextOverlay";
 import type { TextEditable } from "./TextOverlay";
-import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
-import { joinRichTextLines } from "../../../schemas/objects/types/RichText";
-import type { RichText } from "../../../schemas/objects/types/RichText";
-import { isTextRows } from "../../../schemas/objects/types/TextSlot";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
 import type { FillStyleState } from "../../../states/objects/base/FillStyleState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";

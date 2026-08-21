@@ -1,6 +1,6 @@
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { describe, it, expect } from "vitest";
 
-import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
 import { createFrameStateValidator } from "../createFrameStateValidator";
 import type { StateRecord } from "../validateStateUtils";
 

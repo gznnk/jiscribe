@@ -4,10 +4,10 @@ import {
 	isObject,
 	isString,
 } from "@jiscribe/basic-validators";
+import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { isConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
+import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 
-import { ConnectorFeatures } from "../../../schemas/objects/connector/ConnectorDoc";
-import { isConnectorRouting } from "../../../schemas/objects/types/ConnectorRouting";
-import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
 import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
 import { createPolyStateValidator } from "../utils/createPolyStateValidator";
 import {

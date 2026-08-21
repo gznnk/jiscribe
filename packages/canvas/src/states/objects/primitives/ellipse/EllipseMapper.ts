@@ -1,6 +1,7 @@
+import type { EllipseDoc } from "@jiscribe/doc/model/objects/primitives/ellipse/EllipseDoc";
+import { EllipseFeatures } from "@jiscribe/doc/model/objects/primitives/ellipse/EllipseDoc";
+
 import type { EllipseState } from "./EllipseState";
-import type { EllipseDoc } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
-import { EllipseFeatures } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
 import { createFrameMapper } from "../../base/FrameMapper";
 
 /** EllipseDoc ↔ EllipseState conversion (Frame-family common logic generated from features). */

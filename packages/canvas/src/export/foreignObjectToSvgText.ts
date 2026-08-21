@@ -16,11 +16,12 @@
  * and border).
  */
 
+import type { TextRun } from "@jiscribe/doc/model/objects/types/RichText";
+import { sliceRichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measureText";
+import { layoutVisualLines } from "@jiscribe/doc/text/measureText";
+
 import { borderStyleToDasharray } from "./borderStyleToDasharray";
-import type { TextRun } from "../schemas/objects/types/RichText";
-import { sliceRichText } from "../schemas/objects/types/RichText";
-import type { TextMeasureFont } from "../text/measureText";
-import { layoutVisualLines } from "../text/measureText";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

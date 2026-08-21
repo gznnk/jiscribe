@@ -1,5 +1,10 @@
+import { ConnectorExtraStyleProperties } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
+import { extractTextSlotStyleDefaults } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+
 import type { CanvasRegistries } from "./CanvasRegistries";
-import { BODY_TEXT_SLOT_ID } from "../../constants/textSlotId";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
 import type {
 	AnyObjectTypeDefinition,
@@ -15,10 +20,6 @@ import { Polyline } from "../../rendering/objects/primitives/Polyline";
 import { Rect } from "../../rendering/objects/primitives/Rect";
 import { Svg } from "../../rendering/objects/primitives/Svg";
 import { Text } from "../../rendering/objects/primitives/Text";
-import { ConnectorExtraStyleProperties } from "../../schemas/objects/connector/ConnectorDoc";
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
-import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
-import { extractTextSlotStyleDefaults } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import {
 	connectorToDoc,
 	connectorToState,

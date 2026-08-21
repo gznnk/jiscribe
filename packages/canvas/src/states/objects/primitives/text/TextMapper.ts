@@ -1,11 +1,13 @@
+import type { TextStyleDoc } from "@jiscribe/doc/model/objects/base/TextStyleDoc";
+import type { TextDoc } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
+import { roundDocCoordinate } from "@jiscribe/doc/model/roundDocNumbers";
+
 import { calcTextObjectFrameSize } from "./calcTextObjectFrameSize";
 import {
 	calcTextCenterFromDrawnTopLeft,
 	calcTextDrawnTopLeft,
 } from "./textDrawnTopLeft";
 import type { TextState } from "./TextState";
-import type { TextStyleDoc } from "../../../../schemas/objects/base/TextStyleDoc";
-import type { TextDoc } from "../../../../schemas/objects/primitives/text/TextDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
@@ -20,7 +22,6 @@ import {
 	mapTransformStateToDoc,
 } from "../../base/TransformMapper";
 import { rebrand } from "../../utils/rebrand";
-import { roundDocCoordinate } from "../../utils/roundDocNumbers";
 
 /**
  * Converts TextDoc to TextState, measuring the box the doc does not store.

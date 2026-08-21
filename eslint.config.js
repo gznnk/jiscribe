@@ -141,25 +141,54 @@ export default tseslint.config(
 		},
 	},
 	{
-		// The headless (doc) layers: ban react / @emotion and relative reach into
-		// the rendering, control and state layers, so UI independence is enforced
-		// structurally (consumed through ./doc and ./unstable-doc).
-		// __tests__ is excluded because registration tests use the test helpers from
-		// controllers/registries.
+		// @jiscribe/doc is the headless (doc) layer in full. The package boundary is the
+		// primary fence — canvas depends on doc and nothing carries the reverse edge —
+		// and this block adds what a package boundary cannot say: no react / @emotion,
+		// and no reaching back into the canvas through any of its entry points.
+		files: ["packages/doc/src/**"],
+		rules: {
+			"no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["@jiscribe/*/src/*"],
+							message:
+								"Import through the package root. Reaching into src/ is not allowed.",
+						},
+						{
+							group: ["react", "react/*", "react-dom", "react-dom/*"],
+							message:
+								"Do not pull in react / react-dom; it would break the headless (doc) layer.",
+						},
+						{
+							group: ["@emotion/*"],
+							message:
+								"Do not pull in @emotion; it would break the headless (doc) layer.",
+						},
+						{
+							group: ["@jiscribe/canvas", "@jiscribe/canvas/*"],
+							message:
+								"The headless (doc) layer cannot depend on the canvas — the dependency runs the other way. Anything needed from the canvas belongs on this side of the split.",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		// The headless (doc) entry points that are not the doc package itself: the canvas
+		// re-export shims onto @jiscribe/doc, and the shipped set's headless half, whose
+		// whole point is that a Node host can take the eight plugins without a rendering
+		// layer coming with them. Each may name @jiscribe/canvas/doc, and nothing else
+		// that drags the UI in.
 		files: [
 			"packages/canvas/src/doc.ts",
 			"packages/canvas/src/unstable-doc.ts",
-			"packages/canvas/src/schemas/**",
-			"packages/canvas/src/parser/**",
-			"packages/canvas/src/docOps/**",
-			// Text measurement: needs no DOM of its own (the offscreen canvas is one of
-			// three interchangeable backends), so it stays reachable from ./unstable-doc.
-			"packages/canvas/src/text/**",
-			// The shipped set's headless half. Its whole point is that a Node host can
-			// take the eight plugins without a rendering layer coming with them.
+			"packages/canvas/src/png-source.ts",
+			"packages/canvas/src/svg-source.ts",
 			"packages/standard-shapes/src/doc.ts",
 		],
-		ignores: ["**/__tests__/**"],
 		rules: {
 			"no-restricted-imports": [
 				"error",
@@ -200,8 +229,9 @@ export default tseslint.config(
 		// When adding an exemption, write down on the spot why it cannot be checked.
 		files: [
 			"packages/canvas/src/states/**",
-			"packages/canvas/src/schemas/**",
-			"packages/canvas/src/parser/**",
+			"packages/doc/src/model/**",
+			"packages/doc/src/plugin/**",
+			"packages/doc/src/parse/**",
 		],
 		ignores: [
 			"**/__tests__/**",

@@ -1,6 +1,6 @@
+import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { describe, it, expect } from "vitest";
 
-import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { resolveEndpointOwner } from "../resolveEndpointOwner";
 

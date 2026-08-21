@@ -1,3 +1,4 @@
+import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	calcFrameBoxFeatures,
 	type Point,
@@ -10,7 +11,6 @@ import {
 	calcConnectPoint,
 	calcConnectPointDirection,
 } from "../../../../../rendering/objects/utils/calcConnectPoint";
-import type { ConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 
 /**
  * Shared harness for the slideConnectorSegment property tests: the .invariants sweep over the

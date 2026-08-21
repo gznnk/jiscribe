@@ -1,11 +1,11 @@
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import { sliceRichText } from "../../../../schemas/objects/types/RichText";
-import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { TextMeasureFont } from "../../../../text/measureText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import { sliceRichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measureText";
 import {
 	layoutVisualLines,
 	measureTextWidth,
-} from "../../../../text/measureText";
+} from "@jiscribe/doc/text/measureText";
 
 /** What the caret's place in the text is read from; see calcCaretContentOffset. */
 export type CaretContentOffsetParams = {

@@ -1,7 +1,7 @@
-import { DEFAULT_FONT_FAMILY } from "../../../../../constants/fontFamilies";
-import type { ConnectorLabel } from "../../../../../schemas/objects/connector/ConnectorDoc";
-import { calcTextBlockSize } from "../../../../../states/objects/utils/calcTextBlockSize";
-import type { TextMeasureFont } from "../../../../../text/measureText";
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { calcTextBlockSize } from "@jiscribe/doc/text/calcTextBlockSize";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/fontFamilies";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measureText";
 
 /** Default label style (fallback when the ConnectorLabel has no value). */
 export const CONNECTOR_LABEL_DEFAULTS = {

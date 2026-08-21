@@ -9,5 +9,5 @@ export type {
 	AnyObjectTypeDefinition,
 } from "./ObjectTypeDefinition";
 // Headless (doc-layer) counterparts; the canonical home is `src/doc.ts`.
-export type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
-export type { CanvasDocPlugin } from "../schemas/plugin/CanvasDocPlugin";
+export type { ObjectDocDefinition } from "@jiscribe/doc/plugin/ObjectDocDefinition";
+export type { CanvasDocPlugin } from "@jiscribe/doc/plugin/CanvasDocPlugin";

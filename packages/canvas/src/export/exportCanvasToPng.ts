@@ -1,9 +1,10 @@
+import { embedCanvasSourceInPng } from "@jiscribe/doc/file/pngCanvasSource";
+
 import {
 	buildSizedExportSvgString,
 	type BuildExportSvgOptions,
 } from "./buildExportSvg";
 import { buildTimestampedName, downloadBlob } from "./downloadBlob";
-import { embedCanvasSourceInPng } from "./pngCanvasSource";
 
 export type RasterizeSvgOptions = BuildExportSvgOptions & {
 	/**

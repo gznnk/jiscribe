@@ -1,3 +1,4 @@
+import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type React from "react";
 import { memo } from "react";
 
@@ -16,7 +17,6 @@ import { HollowCircleArrow } from "./shapes/HollowCircle";
 import { HollowDiamondArrow } from "./shapes/HollowDiamond";
 import { HollowTriangleArrow } from "./shapes/HollowTriangle";
 import { OpenArrowArrow } from "./shapes/OpenArrow";
-import type { ArrowType } from "../../../schemas/objects/types/ArrowType";
 
 /**
  * Props for Arrow component.

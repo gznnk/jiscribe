@@ -1,4 +1,5 @@
-import { TextFeatures } from "../../../../schemas/objects/primitives/text/TextDoc";
+import { TextFeatures } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
+
 import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 

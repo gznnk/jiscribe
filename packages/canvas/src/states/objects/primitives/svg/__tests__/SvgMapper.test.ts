@@ -1,6 +1,6 @@
+import type { SvgDoc } from "@jiscribe/doc/model/objects/primitives/svg/SvgDoc";
 import { describe, expect, it } from "vitest";
 
-import type { SvgDoc } from "../../../../../schemas/objects/primitives/svg/SvgDoc";
 import { svgToDoc, svgToState } from "../SvgMapper";
 import type { SvgState } from "../SvgState";
 

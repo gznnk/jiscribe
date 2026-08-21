@@ -1,7 +1,7 @@
+import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { EndpointRef } from "../../../../../../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../../../../../../states/objects/connector/ConnectorState";
 import { isSameConnectorEndpoints } from "../isSameConnectorEndpoints";
 

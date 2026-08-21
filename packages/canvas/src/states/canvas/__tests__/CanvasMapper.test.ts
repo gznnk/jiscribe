@@ -1,11 +1,11 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { ConnectorDoc } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
+import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import { describe, expect, it, beforeEach } from "vitest";
 
-import { PRECISION } from "../../../constants/precision";
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
-import type { ConnectorDoc } from "../../../schemas/objects/connector/ConnectorDoc";
-import type { GroupDoc } from "../../../schemas/objects/primitives/group/GroupDoc";
-import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import {
 	canvasToState,
 	canvasToDoc,

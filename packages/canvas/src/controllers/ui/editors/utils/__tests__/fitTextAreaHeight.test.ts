@@ -1,6 +1,6 @@
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/textLineHeight";
 import { describe, expect, it } from "vitest";
 
-import { TEXT_LINE_HEIGHT } from "../../../../../constants/textLineHeight";
 import { calcTextAreaHeight } from "../fitTextAreaHeight";
 
 /** The vertical padding TextEditorStyled / ConnectorLabelEditorStyled declare. */

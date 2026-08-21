@@ -1,4 +1,5 @@
-import type { TextFeatures } from "../../../../schemas/objects/primitives/text/TextDoc";
+import type { TextFeatures } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
+
 import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

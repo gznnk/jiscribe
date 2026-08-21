@@ -79,7 +79,7 @@ export type { AutoColorRole } from "./rendering/objects/utils/resolveAutoColor";
 // the box grows sideways with the longest line and breaks only where the author
 // typed a newline; nothing here wraps, and no caller has to reproduce the
 // display-side wrapping to find its height.
-export { calcTextBlockSize } from "./states/objects/utils/calcTextBlockSize";
+export { calcTextBlockSize } from "@jiscribe/doc/text/calcTextBlockSize";
 
 // For shapes deriving a text box's size from its content: measureTextWidth gives the
 // width of one line, calcVisualLineCount the number of lines by reproducing the
@@ -91,10 +91,13 @@ export {
 	calcVisualTextHeight,
 	layoutVisualLines,
 	measureTextWidth,
-} from "./text/measureText";
-export type { TextMeasureFont, VisualLine } from "./text/measureText";
+} from "@jiscribe/doc/text/measureText";
+export type {
+	TextMeasureFont,
+	VisualLine,
+} from "@jiscribe/doc/text/measureText";
 
-export { PRECISION } from "./constants/precision";
+export { PRECISION } from "@jiscribe/doc/model/precision";
 
 // ---------------------------------------------------------------------------
 // Phase A: type-specific selection control parts (packages/canvas/docs/12-plugin-architecture.md)

@@ -1,3 +1,7 @@
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/textStyleFallback";
 import { negativeToZero } from "@jiscribe/geometry";
 import type React from "react";
 import type { ReactNode } from "react";
@@ -7,10 +11,6 @@ import {
 	TextContent,
 	TextWrapper,
 } from "./TextOverlayFrameStyled";
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
-import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
-import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../utils/verticalAlignToAlignItems";
 

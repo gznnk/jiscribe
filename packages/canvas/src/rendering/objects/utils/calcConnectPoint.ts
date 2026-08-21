@@ -1,3 +1,9 @@
+import type {
+	ConnectPointId,
+	EdgeAnchorSide,
+	EdgeAnchorSpec,
+} from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import {
 	calcAffineTransformedPoint,
 	calcEuclideanDistance,
@@ -14,12 +20,6 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../constants/precision";
-import type {
-	ConnectPointId,
-	EdgeAnchorSide,
-	EdgeAnchorSpec,
-} from "../../../schemas/objects/types/EndpointRef";
 import type { ExtraConnectPoint } from "../registry/ObjectExtraConnectPointsRegistry";
 
 /** Outward direction of each local bounding-box edge in the shape's local space. */

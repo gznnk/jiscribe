@@ -1,3 +1,4 @@
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
@@ -5,7 +6,6 @@ import {
 } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { PRECISION } from "../../../../../constants/precision";
 import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
 import { resizeTextStateToContent } from "../resizeTextStateToContent";
 import { textToDoc, textToState } from "../TextMapper";

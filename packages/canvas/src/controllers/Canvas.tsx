@@ -1,4 +1,6 @@
-﻿import {
+﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import {
 	memo,
 	useCallback,
 	useEffect,
@@ -70,8 +72,6 @@ import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { RichText } from "../schemas/objects/types/RichText";
 import type { Camera } from "../states/canvas/Viewport";
 import type {
 	ObjectMenuPropertyUpdater,

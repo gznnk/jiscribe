@@ -1,7 +1,7 @@
+import { createObjectDoc } from "@jiscribe/doc/model/objects/utils/createObjectDoc";
 import type { Point } from "@jiscribe/geometry";
 import React, { memo } from "react";
 
-import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";

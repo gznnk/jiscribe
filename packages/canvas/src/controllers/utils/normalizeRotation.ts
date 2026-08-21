@@ -1,6 +1,5 @@
+import { PRECISION } from "@jiscribe/doc/model/precision";
 import { normalizeAngleDeg, roundToDecimal } from "@jiscribe/geometry";
-
-import { PRECISION } from "../../constants/precision";
 
 /**
  * Normalizes a rotation angle to the 0-360 degree range and rounds it to the configured precision.

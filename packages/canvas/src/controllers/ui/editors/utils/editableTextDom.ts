@@ -1,17 +1,17 @@
 import { isObject } from "@jiscribe/basic-validators";
-
-import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import type {
 	InlineTextStyle,
 	RichText,
 	TextRun,
-} from "../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
 import {
 	hasValidInlineTextStyle,
 	normalizeRichText,
 	pickDefinedInlineTextStyle,
 	richTextToPlain,
-} from "../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
+
+import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 
 /**
  * The DOM contract of the shape text editor's editable surface: how a body of

@@ -1,3 +1,10 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { TransformDoc } from "@jiscribe/doc/model/objects/base/TransformDoc";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import {
+	roundDocEllipse,
+	roundDocRect,
+} from "@jiscribe/doc/model/roundDocNumbers";
 import type { Ellipse, Frame, Rect } from "@jiscribe/geometry";
 import {
 	convertEllipseToFrame,
@@ -17,10 +24,6 @@ import {
 	mapTransformStateToDoc,
 } from "./TransformMapper";
 import type { TransformState } from "./TransformState";
-import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
-import type { TransformDoc } from "../../../schemas/objects/base/TransformDoc";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import { roundDocEllipse, roundDocRect } from "../utils/roundDocNumbers";
 import { collectStyleKeys, pick } from "../utils/stylePassthrough";
 
 /**

@@ -1,7 +1,7 @@
+import type { AnchorSpec } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { AnchorSpec } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { calcPathSignature } from "../pathSignature";
 import { resolveOrthogonalRoute } from "../resolveOrthogonalRoute";

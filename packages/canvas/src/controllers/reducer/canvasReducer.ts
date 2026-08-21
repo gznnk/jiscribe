@@ -1,11 +1,12 @@
+import {
+	normalizeRichText,
+	richTextToPlain,
+} from "@jiscribe/doc/model/objects/types/RichText";
+
 import type { CanvasAction } from "./CanvasActions";
 import { isSameCamera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { handlePaste } from "./handlers/handlePaste";
-import {
-	normalizeRichText,
-	richTextToPlain,
-} from "../../schemas/objects/types/RichText";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
