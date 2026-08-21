@@ -78,7 +78,7 @@
 			"fill": "#E8F5E9",
 			"stroke": "#2E7D32",
 			"strokeWidth": 2,
-			"text": "データ層 (schemas + states)",
+			"text": "データ層 (states + @jiscribe/doc)",
 			"textAlign": "left",
 			"verticalAlign": "top",
 			"fontSize": 14,
@@ -269,7 +269,7 @@
 			"fill": "#FFFFFF",
 			"stroke": "#2E7D32",
 			"strokeWidth": 2,
-			"text": "schemas/ — Doc 型 + 検証\n+ ObjectDocValidatorRegistry",
+			"text": "@jiscribe/doc — Doc 型 + 検証\n(model / plugin / parse / ops)",
 			"fontSize": 13,
 			"fontColor": "#1F2937"
 		},
@@ -285,7 +285,7 @@
 			"stroke": "auto",
 			"strokeWidth": 1,
 			"strokeDashType": "dashed",
-			"text": "実線: 実装・ユーティリティ参照　／　破線: 型のみの参照\nstates へ向かう線は途中で1本に合流させている（各ノード個別の依存）\nschemas の型・定数（EndpointRef / AUTO_COLOR など）と constants/ への参照は全域から存在するため省略",
+			"text": "実線: 実装・ユーティリティ参照　／　破線: 型のみの参照\nstates へ向かう線は途中で1本に合流させている（各ノード個別の依存）\n@jiscribe/doc の型・定数（EndpointRef / AUTO_COLOR など）と constants/ への参照は全域から存在するため省略",
 			"textAlign": "left",
 			"fontSize": 12,
 			"fontColor": "auto"
@@ -295,12 +295,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "ctrl-ui" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-ui"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "pres-components" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "pres-components"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -311,12 +321,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "ctrl-ui" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-ui"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "pres-utils" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "pres-utils"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -327,12 +347,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "ctrl-ui" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-ui"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "pres-contracts" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "pres-contracts"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -343,12 +373,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "ctrl-gestures" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-gestures"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "pres-utils" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "pres-utils"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -364,12 +404,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "ctrl-utils" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-utils"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "pres-utils" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "pres-utils"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -384,14 +434,29 @@
 			"id": "e6",
 			"type": "connector",
 			"routing": "straight",
-			"points": [{ "x": 135, "y": 245 }],
+			"points": [
+				{
+					"x": 135,
+					"y": 245
+				}
+			],
 			"source": {
-				"owner": { "id": "ctrl-registries" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"id": "ctrl-registries"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "pres-components" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "pres-components"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -407,12 +472,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "ctrl-registries" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-registries"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "pres-contracts" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "pres-contracts"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -423,12 +498,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "ctrl-registries" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-registries"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "plugin-vocab" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "plugin-vocab"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -444,12 +529,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "plugin-vocab" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"id": "plugin-vocab"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "pres-contracts" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"id": "pres-contracts"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -461,17 +556,36 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 1064, "y": 505 },
-				{ "x": 1064, "y": 16 },
-				{ "x": 120, "y": 16 }
+				{
+					"x": 1064,
+					"y": 505
+				},
+				{
+					"x": 1064,
+					"y": 16
+				},
+				{
+					"x": 120,
+					"y": 16
+				}
 			],
 			"source": {
-				"owner": { "id": "plugin-vocab" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"id": "plugin-vocab"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "ctrl-ui" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "ctrl-ui"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -488,17 +602,36 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 1052, "y": 505 },
-				{ "x": 1052, "y": 28 },
-				{ "x": 280, "y": 28 }
+				{
+					"x": 1052,
+					"y": 505
+				},
+				{
+					"x": 1052,
+					"y": 28
+				},
+				{
+					"x": 280,
+					"y": 28
+				}
 			],
 			"source": {
-				"owner": { "id": "plugin-vocab" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"id": "plugin-vocab"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "ctrl-gestures" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "ctrl-gestures"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -515,14 +648,29 @@
 			"id": "e12",
 			"type": "connector",
 			"routing": "straight",
-			"points": [{ "x": 900, "y": 765 }],
+			"points": [
+				{
+					"x": 900,
+					"y": 765
+				}
+			],
 			"source": {
-				"owner": { "id": "plugin-vocab" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "plugin-vocab"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -534,17 +682,36 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 900, "y": 560 },
-				{ "x": 940, "y": 560 },
-				{ "x": 940, "y": 885 }
+				{
+					"x": 900,
+					"y": 560
+				},
+				{
+					"x": 940,
+					"y": 560
+				},
+				{
+					"x": 940,
+					"y": 885
+				}
 			],
 			"source": {
-				"owner": { "id": "plugin-vocab" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "plugin-vocab"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-schemas" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"id": "data-schemas"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -556,12 +723,22 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-schemas" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "data-schemas"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -577,16 +754,32 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 120, "y": 336 },
-				{ "x": 730, "y": 336 }
+				{
+					"x": 120,
+					"y": 336
+				},
+				{
+					"x": 730,
+					"y": 336
+				}
 			],
 			"source": {
-				"owner": { "id": "ctrl-ui" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-ui"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -597,16 +790,32 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 280, "y": 348 },
-				{ "x": 730, "y": 348 }
+				{
+					"x": 280,
+					"y": 348
+				},
+				{
+					"x": 730,
+					"y": 348
+				}
 			],
 			"source": {
-				"owner": { "id": "ctrl-gestures" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-gestures"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -617,16 +826,32 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 430, "y": 360 },
-				{ "x": 730, "y": 360 }
+				{
+					"x": 430,
+					"y": 360
+				},
+				{
+					"x": 730,
+					"y": 360
+				}
 			],
 			"source": {
-				"owner": { "id": "ctrl-utils" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-utils"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -637,16 +862,32 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 555, "y": 390 },
-				{ "x": 730, "y": 390 }
+				{
+					"x": 555,
+					"y": 390
+				},
+				{
+					"x": 730,
+					"y": 390
+				}
 			],
 			"source": {
-				"owner": { "id": "ctrl-behaviors" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-behaviors"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -657,16 +898,32 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 685, "y": 372 },
-				{ "x": 730, "y": 372 }
+				{
+					"x": 685,
+					"y": 372
+				},
+				{
+					"x": 730,
+					"y": 372
+				}
 			],
 			"source": {
-				"owner": { "id": "ctrl-commands" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-commands"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -677,16 +934,32 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 835, "y": 384 },
-				{ "x": 730, "y": 384 }
+				{
+					"x": 835,
+					"y": 384
+				},
+				{
+					"x": 730,
+					"y": 384
+				}
 			],
 			"source": {
-				"owner": { "id": "ctrl-reducer" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-reducer"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -697,16 +970,32 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 760, "y": 330 },
-				{ "x": 730, "y": 330 }
+				{
+					"x": 760,
+					"y": 330
+				},
+				{
+					"x": 730,
+					"y": 330
+				}
 			],
 			"source": {
-				"owner": { "id": "ctrl-registries" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "ctrl-registries"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -723,17 +1012,36 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 135, "y": 640 },
-				{ "x": 552, "y": 640 },
-				{ "x": 552, "y": 765 }
+				{
+					"x": 135,
+					"y": 640
+				},
+				{
+					"x": 552,
+					"y": 640
+				},
+				{
+					"x": 552,
+					"y": 765
+				}
 			],
 			"source": {
-				"owner": { "id": "pres-components" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "pres-components"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
@@ -749,17 +1057,36 @@
 			"type": "connector",
 			"routing": "straight",
 			"points": [
-				{ "x": 310, "y": 652 },
-				{ "x": 564, "y": 652 },
-				{ "x": 564, "y": 765 }
+				{
+					"x": 310,
+					"y": 652
+				},
+				{
+					"x": 564,
+					"y": 652
+				},
+				{
+					"x": 564,
+					"y": 765
+				}
 			],
 			"source": {
-				"owner": { "id": "pres-utils" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"id": "pres-utils"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "id": "data-states" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"id": "data-states"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,

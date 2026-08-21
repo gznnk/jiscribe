@@ -8,7 +8,7 @@ This separation follows the "performance first" and "defense at the boundary" pr
 
 ## Doc and State
 
-|         | Doc (schemas/)                             | State (states/)                             |
+|         | Doc (`@jiscribe/doc`)                      | State (`states/`)                           |
 | ------- | ------------------------------------------ | ------------------------------------------- |
 | Purpose | Persistence / file I/O                     | Runtime editing                             |
 | Form    | Tree (`GroupDoc.children` nests its child) | Flat (`objects` is a `Record` keyed by ID)  |
@@ -40,7 +40,7 @@ is concentrated at this single point and never leaks into the individual Mappers
 
 ## Persistence Format (`.jis.json` / `CanvasDoc`)
 
-The saved format is `CanvasDoc` (`schemas/canvas/CanvasDoc.ts`).
+The saved format is `CanvasDoc` (`@jiscribe/doc`, `model/canvas/CanvasDoc.ts`).
 
 ```jsonc
 {
@@ -57,7 +57,7 @@ The saved format is `CanvasDoc` (`schemas/canvas/CanvasDoc.ts`).
 - `root` … A single array mixing shapes (rect / ellipse / diamond / polyline / polygon / group / sticky / svg) and connectors. **The array order is itself the stacking order (z-order).**
 - Connector (`type: "connector"`) … Each endpoint references its target shape via `source` / `target` using an `owner{type,id}` plus an `anchor`. Connectors are placed only directly under `root` and are never children of a group. At least one endpoint must be owned (a connector with both ends free is invalid).
 - Color fields (`stroke` / `fontColor` / `fill`) … In addition to a concrete CSS color, they may take the sentinel value `"auto"` (follow the theme). `"auto"` is resolved to the theme's foreground color at render time (see [Rendering and Theme](./08-rendering-and-theme.md)). The default `stroke` / `fontColor` for a new shape is `"auto"`.
-- Numeric fields (coordinates / sizes / rotation) … Rounded to `PRECISION` **where the State turns into a Doc**, not where a gesture or command computes them. The Doc's geometry is derived from the State's (`x = cx - width / 2`), so rounding upstream does not survive the derivation; fixing the precision at the one boundary also covers the paths that round nothing of their own (group transforms, plugin controls, docOps). See `roundDocNumbers`.
+- Numeric fields (coordinates / sizes / rotation) … Rounded to `PRECISION` **where the State turns into a Doc**, not where a gesture or command computes them. The Doc's geometry is derived from the State's (`x = cx - width / 2`), so rounding upstream does not survive the derivation; fixing the precision at the one boundary also covers the paths that round nothing of their own (group transforms, plugin controls, `createDocOps`). See `roundDocNumbers` in `@jiscribe/doc`.
 - For the full format specification, see `../../ai-docs/assets/reference.md` and `../../ai-docs/assets/jiscribe.schema.json`.
 
 ### Text Model Asymmetry (a shape's `text` vs. a connector's `label`)
@@ -93,7 +93,7 @@ action is rejected because it would duplicate these commit subtleties.
 
 ## The Parser's Two-Stage Validation (Defense at the Boundary)
 
-For JSON strings coming from outside, a parser from `createCanvasParser` (`parser/`)
+For JSON strings coming from outside, a parser from `createCanvasParser` (`@jiscribe/doc`, `parse/`)
 returns its result as a **discriminated union without throwing exceptions**. This lets the
 extension side and the Webview side share the same logic and prevents errors from slipping through.
 
@@ -124,14 +124,16 @@ The doc-validator registry used for validation is needed only at parse time, so 
 own from the definition set it is given. Nothing global is mutated, so two parsers with different plugin
 sets can coexist in one process.
 
-### A Parser-Only Entry Point
+### A Headless Package
 
-`doc.ts` is a separate headless entry point that includes no UI dependencies (react / emotion / katex).
+The whole document layer is a separate package, `@jiscribe/doc`, which includes no UI dependencies (react / emotion / katex).
 It is aimed at consumers who "just want to parse text into a `CanvasDoc`" or build one programmatically (such as the DiagnosticProvider on the Node side of the VSCode extension, or the MCP server).
 
 ```ts
-import { createCanvasParser } from "@jiscribe/canvas/doc";
+import { createCanvasParser } from "@jiscribe/doc";
 ```
+
+`@jiscribe/canvas/doc` keeps working as a re-export shim onto it, so a consumer can migrate on its own schedule.
 
 Assuming that any Doc that has passed this boundary is valid, internal functions omit defensive checks
 (principle 4 of the [Design Philosophy](./01-design-philosophy.md)). For validation at the entry point of external sync, see

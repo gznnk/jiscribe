@@ -65,22 +65,27 @@ export function App() {
 }
 ```
 
-`@jiscribe/canvas` also exposes a **headless document layer** (`@jiscribe/canvas/doc`)
-that parses, validates and transforms `.jis.json` without pulling in React or
-any DOM dependency — that is what the VSCode extension's diagnostics and the AI
-tooling are built on.
+The **document layer is a package of its own**, `@jiscribe/doc`. It parses,
+validates and transforms `.jis.json` without pulling in React or any DOM
+dependency — that is what the VSCode extension's diagnostics and the AI tooling
+are built on. `@jiscribe/canvas` re-exports it as `@jiscribe/canvas/doc` for
+consumers that already name that path.
 
 ## What is in this repository
 
 | Package                      | What it is                                                                                |
 | ---------------------------- | ----------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state, document schema                         |
+| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                          |
+| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser and its editing ops        |
 | `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API             |
 | `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)              |
 | `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                             |
 | `@jiscribe/basic-validators` | Primitive runtime validators                                                              |
 | `@jiscribe/utility-types`    | Shared TypeScript utility types                                                           |
 | `@jiscribe/ai-docs`          | Generated JSON Schema and AI-facing reference for the shipped shape set                   |
+| `@jiscribe/ai-tools`         | The canvas tool set an AI can call, declared free of any transport                        |
+| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)           |
+| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)         |
 | `plugins/*`                  | The shipped shape sets — flowchart, UML, container, general, annotation, sticky, markdown |
 | `apps/canvas-examples`       | Integration examples (one example = one file)                                             |
 | `apps/vscode-extension`      | The Jiscribe VSCode extension                                                             |

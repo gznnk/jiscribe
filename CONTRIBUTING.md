@@ -75,15 +75,19 @@ These are not style preferences — ESLint fails the build on them.
   `@jiscribe/canvas`, `@jiscribe/canvas-sdk` and their `/doc` entry points.
   Reaching into `@jiscribe/canvas/unstable` or any `src/` path is rejected.
   `@jiscribe/canvas-sdk` is the single supported surface for shape authoring.
-- **The document layer stays headless.** `packages/canvas/src/doc.ts`,
-  `schemas/`, `docOps/` and the equivalent layers in `canvas-sdk` and the
-  plugins must not import `react`, `react-dom`, `@emotion/*`, or the
-  presentation / controller / state layers. This is what lets the document layer
-  run in a VSCode extension host or a Node process.
+- **The document layer stays headless.** `packages/doc` — the document model,
+  the plugin contract, the parser, the ops, the text metrics and the file I/O —
+  and the equivalent layers in `canvas-sdk` and the plugins must not import
+  `react`, `react-dom`, `@emotion/*`, `@jiscribe/canvas`, or the presentation /
+  controller / state layers. This is what lets the document layer run in a
+  VSCode extension host or a Node process. Canvas keeps `./doc` /
+  `./unstable-doc` / `./png-source` / `./svg-source` as re-export shims over
+  `@jiscribe/doc`.
 - **Import through package roots.** `@jiscribe/geometry`, never
   `@jiscribe/geometry/src/...`.
 - **No double casts in the Doc↔State boundary.** `as unknown as` is banned under
-  `packages/canvas/src/states` and `schemas`; use `rebrand<T>()` instead.
+  `packages/canvas/src/states` and `packages/doc/src/{model,plugin,parse}`; use
+  `rebrand<T>()` instead.
 
 ## Reuse before you write
 

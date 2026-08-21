@@ -96,12 +96,16 @@ const result = parser.parse(text);
 
 ```
 @jiscribe/canvas              安定: 型の語彙・登録口・Canvas の props
-@jiscribe/canvas/doc          安定・headless
+@jiscribe/doc                 安定・headless: ドキュメントモデル・パーサー・doc ops
 @jiscribe/canvas/unstable     tier 2: ベース実装・presentation 部材
-@jiscribe/canvas/unstable-doc tier 2・headless
+@jiscribe/doc/unstable        tier 2・headless
 @jiscribe/canvas-sdk          プラグイン向けの面（unstable の再エクスポート + 量産キット）
 @jiscribe/canvas-sdk/doc      その headless 版
 ```
+
+headless な 2 つのエントリは独立したパッケージである。`@jiscribe/canvas` は
+`./doc` と `./unstable-doc` をそれらへの re-export shim として残しているので、canvas
+側のパスを名指しするプラグインや Node ツール（ESLint が今も指している先）はそのまま動く。
 
 `unstable` サブパスには frame 系のベース実装と、図形を組み立てる presentation
 部材が入っている。semver の保証外であり、そのことが import 文そのものに出る。
@@ -129,7 +133,7 @@ await canvasRef.current?.export.toSvgString();
 ある点に何が描かれているか）、`history`（undo スタック。`mark` / `revertTo` で
 一連の編集をまとめて巻き戻せる）、`interaction`（ユーザーが操作中か＝外から書き
 込むと壊れる状態か）の 3 つ。doc 自体の編集に canvas は要らないので、そちらは
-headless な `docOps` の担当。
+headless な `@jiscribe/doc` の `createDocOps` の担当。
 
 state をホストへ持ち上げる（controlled props 化）案は検討したうえで**採らない**。
 

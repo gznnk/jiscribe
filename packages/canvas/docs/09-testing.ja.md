@@ -31,8 +31,9 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
 および sociable な振る舞いテストを、対象ファイルのすぐ隣に配置する
 （[アーキテクチャ](./02-architecture.ja.md) の共配置方針）。
 
-- 対象は `schemas` / `states` / `controllers` / `rendering` 各層
-  （Mapper の往復変換、`validateXxxDoc`、Command の `execute`、変形ロジック、`canvasReducer` 経由の振る舞いなど）
+- 対象は `states` / `controllers` / `rendering` 各層
+  （Mapper の往復変換、Command の `execute`、変形ロジック、`canvasReducer` 経由の振る舞いなど）。
+  Doc モデル自体のテスト（`validateXxxDoc`・パーサー・doc ops）は `@jiscribe/doc` にあり、`pnpm --filter @jiscribe/doc test` で走る
 - `vitest.config.ts` は `environment: "node"`。DOM を介さず入力 state → 出力 state を直接検証する
 - 実行: `pnpm --filter @jiscribe/canvas test`（`vitest run`）。
   `test:coverage` / `test:ui` も用意（カバレッジは `index.ts` と `vitest.config.ts` を除外）

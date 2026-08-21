@@ -14,7 +14,7 @@ jiscribe 形式なので、VSCode 拡張または demo アプリで開くと図�
 | #   | ドキュメント                                                  | 概要                                                                                          |
 | --- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | 1   | [設計思想](./01-design-philosophy.ja.md)                      | 性能優先・純粋関数・ハンドラ責務・境界での防御という 4 つの判断基準                           |
-| 2   | [アーキテクチャ](./02-architecture.ja.md)                     | レイヤー分離（schemas/states → rendering → controllers とレジストリ群）と一方向依存           |
+| 2   | [アーキテクチャ](./02-architecture.ja.md)                     | レイヤー分離（`@jiscribe/doc` + states → rendering → controllers とレジストリ群）と一方向依存 |
 | 3   | [データモデルと永続化](./03-data-model-and-persistence.ja.md) | Doc ↔ State の Mapper 変換、`.jis.json` 仕様、parser の二段検証                               |
 | 4   | [ジェスチャシステム](./04-gesture-system.ja.md)               | GestureRecognizer、ハンドラ構成、`data-gesture` 連携属性                                      |
 | 5   | [コマンドシステム](./05-command-system.ja.md)                 | CommandRegistry、ショートカット/メニュー/ツールバーの一元化、Undo/Redo                        |
