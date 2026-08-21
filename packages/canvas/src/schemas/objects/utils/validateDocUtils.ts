@@ -250,7 +250,7 @@ function validateFreeAnchor(
 	return errors;
 }
 
-/** Validate optional transform fields: `rotation` (number), `flipX`/`flipY` (boolean). */
+/** Validate optional transform fields: `rotation` (number), `flipX`/`flipY`/`lockAspectRatio` (boolean). */
 export function validateTransformFields(
 	o: Record<string, unknown>,
 	path: string,
@@ -264,6 +264,12 @@ export function validateTransformFields(
 	}
 	if ("flipY" in o && typeof o.flipY !== "boolean") {
 		errors.push({ path: `${path}.flipY`, message: "must be a boolean" });
+	}
+	if ("lockAspectRatio" in o && typeof o.lockAspectRatio !== "boolean") {
+		errors.push({
+			path: `${path}.lockAspectRatio`,
+			message: "must be a boolean",
+		});
 	}
 	return errors;
 }
