@@ -68,6 +68,7 @@ describe("createFrameStateValidator feature gating", () => {
 		fill: "url(javascript:alert(1))",
 		text: { body: { text: "hello", fontSize: 0 } },
 		rx: -1,
+		startArrow: "NotAnArrow",
 	};
 
 	it("ignores every style group when all flags are off", () => {
@@ -81,6 +82,7 @@ describe("createFrameStateValidator feature gating", () => {
 		["fill", { fill: true }],
 		["text", { text: "body" }],
 		["radius", { radius: true }],
+		["arrow", { arrow: true }],
 	] as [string, Partial<ObjectFeatures>][])(
 		"rejects a malformed %s group once the flag is on",
 		(_flag, flags) => {
@@ -113,6 +115,7 @@ describe("createFrameStateValidator feature gating", () => {
 				fill: true,
 				text: "body",
 				radius: true,
+				arrow: true,
 			}),
 		);
 		expect(
@@ -134,6 +137,8 @@ describe("createFrameStateValidator feature gating", () => {
 					},
 				},
 				rx: 4,
+				startArrow: "OpenArrow",
+				endArrow: "None",
 			}),
 		).toBe(true);
 	});

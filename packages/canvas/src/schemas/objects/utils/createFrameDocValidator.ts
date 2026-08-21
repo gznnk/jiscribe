@@ -1,4 +1,5 @@
 import {
+	validateArrowFields,
 	validateFillStyleFields,
 	validatePolyFields,
 	validateRadiusStyleFields,
@@ -49,7 +50,7 @@ const validateGeometryFields = (
 /**
  * Builds a doc validator for Frame-based objects (geometry: "rect" | "ellipse"
  * | "point") from features. Composes geometry / transform / stroke / fill / text / radius
- * according to features, and shape-specific extra checks (such as svg's svgText)
+ * / arrow according to features, and shape-specific extra checks (such as svg's svgText)
  * are passed via `extra`.
  *
  * Knowledge of which fields to validate lives in the validateDocUtils builders;
@@ -69,5 +70,9 @@ export const createFrameDocValidator =
 		// theirs to validate, and `extra` is where they do it.
 		...(features.text === "body" ? validateTextStyleFields(o, path) : []),
 		...(features.radius ? validateRadiusStyleFields(o, path) : []),
+		// The mappers pass the arrow group through for any type declaring it
+		// (collectStyleKeys), so it must be validated here too — an unchecked
+		// startArrow would be persisted and fail only on the next open.
+		...(features.arrow ? validateArrowFields(o, path) : []),
 		...(extra ? extra(o, path) : []),
 	];

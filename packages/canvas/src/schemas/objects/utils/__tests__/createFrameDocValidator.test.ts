@@ -87,6 +87,7 @@ describe("createFrameDocValidator feature gating", () => {
 		fill: "url(javascript:alert(1))",
 		textAlign: "justify",
 		rx: -1,
+		startArrow: "NotAnArrow",
 	};
 
 	it("reports nothing beyond geometry when every flag is off", () => {
@@ -100,6 +101,7 @@ describe("createFrameDocValidator feature gating", () => {
 		["fill", { fill: true }, "root.fill"],
 		["text", { text: "body" }, "root.textAlign"],
 		["radius", { radius: true }, "root.rx"],
+		["arrow", { arrow: true }, "root.startArrow"],
 	] as [string, Partial<ObjectFeatures>, string][])(
 		"validates %s fields only when the flag is on",
 		(_flag, flags, path) => {
@@ -118,6 +120,7 @@ describe("createFrameDocValidator feature gating", () => {
 				fill: true,
 				text: "body",
 				radius: true,
+				arrow: true,
 			}),
 		);
 		expect(paths(validate({ ...geometry, ...brokenStyles }, "root"))).toEqual([
@@ -126,6 +129,7 @@ describe("createFrameDocValidator feature gating", () => {
 			"root.fill",
 			"root.textAlign",
 			"root.rx",
+			"root.startArrow",
 		]);
 	});
 });
