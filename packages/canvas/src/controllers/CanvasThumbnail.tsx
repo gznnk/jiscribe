@@ -98,7 +98,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	// the --jiscribe-* custom properties inherit into the CanvasView styles.
 	const themeCssVars = useMemo(
 		() => ({ display: "contents", ...buildThemeCssVars(theme.tokens) }),
-		[theme],
+		[theme.tokens],
 	);
 
 	return (

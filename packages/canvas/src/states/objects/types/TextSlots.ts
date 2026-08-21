@@ -86,6 +86,10 @@ export const resolveTextSlotId = (
  * side take, both of which need the styling; {@link readTextSlot} is the plain
  * counterpart.
  *
+ * The join builds a fresh value per call, so a render path that feeds the
+ * result to memoized components must hold it (e.g. `useMemo` keyed on the
+ * slot's content) rather than re-read every render.
+ *
  * @param text - The shape's slots; undefined for a shape that holds no text
  * @param slotId - Key to read; an absent key reads as ""
  * @returns The slot content as one body of text ("" when absent)
