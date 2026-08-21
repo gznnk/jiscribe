@@ -1,8 +1,8 @@
-import type { CanvasFontFamilyId } from "@jiscribe/doc/text/fontFamilies";
+import type { CanvasFontFamilyId } from "@jiscribe/doc/text/style/fontFamilies";
 import {
 	CANVAS_FONT_FAMILIES,
 	DEFAULT_FONT_FAMILY,
-} from "@jiscribe/doc/text/fontFamilies";
+} from "@jiscribe/doc/text/style/fontFamilies";
 import { memo, useEffect, useRef } from "react";
 
 import {

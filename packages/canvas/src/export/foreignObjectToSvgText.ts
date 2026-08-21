@@ -18,8 +18,8 @@
 
 import type { TextRun } from "@jiscribe/doc/model/objects/types/RichText";
 import { sliceRichText } from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextMeasureFont } from "@jiscribe/doc/text/measureText";
-import { layoutVisualLines } from "@jiscribe/doc/text/measureText";
+import { layoutVisualLines } from "@jiscribe/doc/text/layout/layoutVisualLines";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 
 import { borderStyleToDasharray } from "./borderStyleToDasharray";
 

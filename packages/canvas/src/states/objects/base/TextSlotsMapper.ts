@@ -8,7 +8,7 @@ import {
 } from "@jiscribe/doc/model/objects/types/RichText";
 import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
 import {
 	isTextSlots,

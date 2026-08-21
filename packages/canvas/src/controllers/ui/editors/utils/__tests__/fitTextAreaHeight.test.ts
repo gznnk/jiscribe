@@ -1,4 +1,4 @@
-import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/textLineHeight";
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 import { describe, expect, it } from "vitest";
 
 import { calcTextAreaHeight } from "../fitTextAreaHeight";

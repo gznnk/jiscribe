@@ -1,9 +1,9 @@
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
-import { layoutVisualLines } from "@jiscribe/doc/text/measureText";
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
-} from "@jiscribe/doc/text/textBoxPadding";
+} from "@jiscribe/doc/text/block/textBoxPadding";
+import { layoutVisualLines } from "@jiscribe/doc/text/layout/layoutVisualLines";
 import {
 	convertBoundingBoxToRect,
 	isTransformedFrame,

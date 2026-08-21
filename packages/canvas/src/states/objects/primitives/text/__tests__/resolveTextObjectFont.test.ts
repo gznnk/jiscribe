@@ -1,4 +1,4 @@
-import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/fontFamilies";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { describe, expect, it } from "vitest";
 
 import { resolveTextObjectFont } from "../resolveTextObjectFont";
@@ -45,8 +45,9 @@ describe("resolveTextObjectFont", () => {
 	});
 
 	it("leaves an unset style unset rather than naming a default", () => {
-		// measureText treats an absent fontStyle as "normal" itself; naming it here
-		// too would be a second place for the two to drift apart.
+		// The measurement treats an absent fontStyle as "normal" itself (see
+		// createTextWidthMeasurer); naming it here too would be a second place for
+		// the two to drift apart.
 		expect(resolveTextObjectFont({}).fontStyle).toBeUndefined();
 		expect(resolveTextObjectFont({ fontStyle: "italic" }).fontStyle).toBe(
 			"italic",

@@ -1,4 +1,4 @@
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import type React from "react";
 import { memo, useMemo } from "react";
 

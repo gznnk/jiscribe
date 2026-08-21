@@ -42,28 +42,34 @@ export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 // The one family an unstyled slot is drawn and measured with, and the default a
 // shape is created with. Nothing above can substitute another: only the shipped
 // families measure faithfully (CANVAS_FONT_FAMILIES).
-export { DEFAULT_FONT_FAMILY } from "./text/fontFamilies";
+export { DEFAULT_FONT_FAMILY } from "./text/style/fontFamilies";
 // The closed set a document may name, for a doc-side validator or a shape
 // choosing its own default. Carries no UI dependency, so it belongs on this
 // entry as well as the root — a plugin's `schema/**` cannot reach the root.
-export { CANVAS_FONT_FAMILIES } from "./text/fontFamilies";
-export type { CanvasFontFamily, CanvasFontFamilyId } from "./text/fontFamilies";
+export { CANVAS_FONT_FAMILIES } from "./text/style/fontFamilies";
+export type {
+	CanvasFontFamily,
+	CanvasFontFamilyId,
+} from "./text/style/fontFamilies";
 
 // What a text style field is drawn with when neither the slot nor the type
 // declares one. A host resolving a slot's typography itself — a headless
 // measurement is the case in hand — needs the same last resort the drawing uses,
 // or it measures at a size nothing is drawn at.
-export { TEXT_STYLE_FALLBACK } from "./text/textStyleFallback";
+export { TEXT_STYLE_FALLBACK } from "./text/style/textStyleFallback";
 
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows
 // drift from the rendered line height.
-export { TEXT_LINE_HEIGHT } from "./text/textLineHeight";
+export { TEXT_LINE_HEIGHT } from "./text/layout/textLineHeight";
 
 // Inner padding of the box the canvas draws text in. Shapes that size a text box
 // themselves must reserve this much, or the padding the CSS applies eats into the
 // text and clips it.
-export { TEXT_BOX_PADDING_X, TEXT_BOX_PADDING_Y } from "./text/textBoxPadding";
+export {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "./text/block/textBoxPadding";
 
 // Text measurement, which the wrapping and the box sizes both follow from. Headless
 // because it needs no DOM of its own: layoutVisualLines reproduces the display-side
@@ -71,15 +77,14 @@ export { TEXT_BOX_PADDING_X, TEXT_BOX_PADDING_Y } from "./text/textBoxPadding";
 // come from is what setTextWidthMeasurerFactory decides — a browser measures on an
 // offscreen canvas, a Node host registers a backend reading the bundled font files
 // (@jiscribe/doc-tools), and with neither the widths fall back to an estimate.
-export {
-	calcVisualLineCount,
-	calcVisualTextHeight,
-	layoutVisualLines,
-	measureTextWidth,
-} from "./text/measureText";
-export type { TextMeasureFont, VisualLine } from "./text/measureText";
-export { setTextWidthMeasurerFactory } from "./text/textWidthMeasurer";
+export { calcVisualLineCount } from "./text/layout/calcVisualLineCount";
+export { calcVisualTextHeight } from "./text/layout/calcVisualTextHeight";
+export { layoutVisualLines } from "./text/layout/layoutVisualLines";
+export { measureTextWidth } from "./text/layout/measureTextWidth";
+export type { VisualLine } from "./text/layout/VisualLine";
+export type { TextMeasureFont } from "./text/measure/TextMeasureFont";
+export { setTextWidthMeasurerFactory } from "./text/measure/textWidthMeasurer";
 export type {
 	TextWidthMeasurer,
 	TextWidthMeasurerFactory,
-} from "./text/textWidthMeasurer";
+} from "./text/measure/textWidthMeasurer";

@@ -2,8 +2,8 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
-import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/fontFamilies";
-import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/textStyleFallback";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import type { BoundingBox } from "@jiscribe/geometry";
 import {
 	calcAffineTransformedPoint,

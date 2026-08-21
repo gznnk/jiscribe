@@ -1,7 +1,7 @@
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
 import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
-import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/fontFamilies";
-import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/textStyleFallback";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import { negativeToZero } from "@jiscribe/geometry";
 import type React from "react";
 import type { ReactNode } from "react";

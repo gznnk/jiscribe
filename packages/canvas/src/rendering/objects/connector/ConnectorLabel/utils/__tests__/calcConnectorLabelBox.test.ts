@@ -1,4 +1,4 @@
-import { TEXT_BLOCK_MIN_WIDTH } from "@jiscribe/doc/text/calcTextBlockSize";
+import { TEXT_BLOCK_MIN_WIDTH } from "@jiscribe/doc/text/block/calcTextBlockSize";
 import { describe, expect, it } from "vitest";
 
 import {

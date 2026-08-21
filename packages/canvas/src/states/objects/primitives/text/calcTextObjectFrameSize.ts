@@ -1,5 +1,5 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import { calcTextBlockSize } from "@jiscribe/doc/text/calcTextBlockSize";
+import { calcTextBlockSize } from "@jiscribe/doc/text/block/calcTextBlockSize";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { TextObjectTypography } from "./resolveTextObjectFont";

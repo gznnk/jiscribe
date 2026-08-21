@@ -1,7 +1,7 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { richTextToPlain } from "@jiscribe/doc/model/objects/types/RichText";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { describe, expect, it } from "vitest";
 
 import type { TextSlots } from "../../../states/objects/types/TextSlots";

@@ -1,4 +1,4 @@
-import { DEFAULT_FONT_FAMILY } from "../../../../text/fontFamilies";
+import { DEFAULT_FONT_FAMILY } from "../../../../text/style/fontFamilies";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";

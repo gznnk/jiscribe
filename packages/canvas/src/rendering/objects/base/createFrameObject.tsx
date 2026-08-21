@@ -2,7 +2,7 @@ import { joinRichTextLines } from "@jiscribe/doc/model/objects/types/RichText";
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
 import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 import type React from "react";

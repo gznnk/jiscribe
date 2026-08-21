@@ -1,10 +1,10 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
-import { layoutVisualLines } from "./measureText";
-import type { TextMeasureFont } from "./measureText";
 import { TEXT_BLOCK_WIDTH_SLACK } from "./textBlockWidthSlack";
 import { TEXT_BOX_PADDING_X, TEXT_BOX_PADDING_Y } from "./textBoxPadding";
-import type { RichText } from "../model/objects/types/RichText";
+import type { RichText } from "../../model/objects/types/RichText";
+import { layoutVisualLines } from "../layout/layoutVisualLines";
+import type { TextMeasureFont } from "../measure/TextMeasureFont";
 
 /** Width of a box holding no text, so an empty one still has something to hit. */
 export const TEXT_BLOCK_MIN_WIDTH = 16;

@@ -2,7 +2,7 @@ import { ConnectorExtraStyleProperties } from "@jiscribe/doc/model/objects/conne
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
 import { extractTextSlotStyleDefaults } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";

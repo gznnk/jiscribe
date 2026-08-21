@@ -1,12 +1,12 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
-import type { TextMeasureFont } from "@jiscribe/doc/text/measureText";
-import { layoutVisualLines } from "@jiscribe/doc/text/measureText";
-import { TEXT_BLOCK_WIDTH_SLACK } from "@jiscribe/doc/text/textBlockWidthSlack";
+import { TEXT_BLOCK_WIDTH_SLACK } from "@jiscribe/doc/text/block/textBlockWidthSlack";
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
-} from "@jiscribe/doc/text/textBoxPadding";
+} from "@jiscribe/doc/text/block/textBoxPadding";
+import { layoutVisualLines } from "@jiscribe/doc/text/layout/layoutVisualLines";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 /**

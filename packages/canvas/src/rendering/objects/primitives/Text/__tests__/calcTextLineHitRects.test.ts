@@ -1,6 +1,6 @@
 import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
-import { calcTextBlockSize } from "@jiscribe/doc/text/calcTextBlockSize";
-import type { TextMeasureFont } from "@jiscribe/doc/text/measureText";
+import { calcTextBlockSize } from "@jiscribe/doc/text/block/calcTextBlockSize";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 import { describe, expect, it } from "vitest";
 
 import { calcTextLineHitRects } from "../calcTextLineHitRects";

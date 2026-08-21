@@ -79,23 +79,19 @@ export type { AutoColorRole } from "./rendering/objects/utils/resolveAutoColor";
 // the box grows sideways with the longest line and breaks only where the author
 // typed a newline; nothing here wraps, and no caller has to reproduce the
 // display-side wrapping to find its height.
-export { calcTextBlockSize } from "@jiscribe/doc/text/calcTextBlockSize";
+export { calcTextBlockSize } from "@jiscribe/doc/text/block/calcTextBlockSize";
 
 // For shapes deriving a text box's size from its content: measureTextWidth gives the
 // width of one line, calcVisualLineCount the number of lines by reproducing the
 // wrapping of the display-side CSS (pre-wrap + break-word), and calcVisualTextHeight
 // what those lines add up to — which is not the count times the type size once part
 // of the text is drawn larger, or in another font family (RichText).
-export {
-	calcVisualLineCount,
-	calcVisualTextHeight,
-	layoutVisualLines,
-	measureTextWidth,
-} from "@jiscribe/doc/text/measureText";
-export type {
-	TextMeasureFont,
-	VisualLine,
-} from "@jiscribe/doc/text/measureText";
+export { calcVisualLineCount } from "@jiscribe/doc/text/layout/calcVisualLineCount";
+export { calcVisualTextHeight } from "@jiscribe/doc/text/layout/calcVisualTextHeight";
+export { layoutVisualLines } from "@jiscribe/doc/text/layout/layoutVisualLines";
+export { measureTextWidth } from "@jiscribe/doc/text/layout/measureTextWidth";
+export type { VisualLine } from "@jiscribe/doc/text/layout/VisualLine";
+export type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 
 export { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 

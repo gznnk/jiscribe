@@ -5,7 +5,7 @@ import {
 	resolveTextSlotStyle,
 	TEXT_SLOT_STYLE_KEYS,
 } from "../model/objects/types/TextSlot";
-import { BODY_TEXT_SLOT_ID } from "../text/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "../text/style/textSlotId";
 
 /**
  * The style fields a type's defaults are read for.

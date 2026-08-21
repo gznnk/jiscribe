@@ -1,4 +1,4 @@
-import type { TextSlot } from "../model/objects/types/TextSlot";
+import type { TextSlot } from "../../model/objects/types/TextSlot";
 
 /**
  * What a text style field is drawn with when neither the slot nor the object's

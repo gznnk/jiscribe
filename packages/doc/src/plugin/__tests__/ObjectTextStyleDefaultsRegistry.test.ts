@@ -4,7 +4,7 @@ import {
 	TextFeatures,
 	TEXT_DOC_DEFAULTS,
 } from "../../model/objects/primitives/text/TextDoc";
-import { BODY_TEXT_SLOT_ID } from "../../text/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "../../text/style/textSlotId";
 import {
 	createObjectTextStyleDefaultsRegistry,
 	extractTextSlotStyleDefaults,

@@ -42,7 +42,7 @@ export type CanvasFontFamily = {
  * is also {@link DEFAULT_FONT_FAMILY}.
  *
  * Deliberately a closed set. A box whose size is derived from its content is
- * measured in JS against the family the doc names (`measureText`), so a family
+ * measured in JS against the family the doc names (`text/layout`), so a family
  * the viewer does not have is not a cosmetic substitution — it re-measures the
  * box. Offering only what `@jiscribe/canvas/fonts.css` ships keeps the
  * measurement and the drawing on the same face. The field itself stays a free

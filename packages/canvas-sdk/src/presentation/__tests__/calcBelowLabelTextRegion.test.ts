@@ -10,7 +10,7 @@ import {
 } from "../calcBelowLabelTextRegion";
 
 /**
- * Widths come from the non-browser fallback of measureText (characters ×
+ * Widths come from the non-browser fallback of measureTextWidth (characters ×
  * fontSize × 0.6), which is proportional rather than faithful — so the
  * assertions here are about clamps, monotonicity and placement, never about a
  * pixel-exact width.

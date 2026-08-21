@@ -19,7 +19,7 @@ import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { isAutoColor } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { validateEndpointRef } from "@jiscribe/doc/model/objects/utils/validateDocUtils";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
 import { isCssColor } from "./isCssColor";
 import { isTextStyleState } from "../base/TextStyleState";

@@ -168,12 +168,12 @@ export type {
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 // The slot id every single-text shape (`features.text: "body"`) holds, i.e. the
 // key its `state.text` carries. A shape with several slots names its own instead.
-export { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
-export { CANVAS_FONT_FAMILIES } from "@jiscribe/doc/text/fontFamilies";
+export { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
+export { CANVAS_FONT_FAMILIES } from "@jiscribe/doc/text/style/fontFamilies";
 export type {
 	CanvasFontFamily,
 	CanvasFontFamilyId,
-} from "@jiscribe/doc/text/fontFamilies";
+} from "@jiscribe/doc/text/style/fontFamilies";
 export type { ObjectTextRegionCalculator } from "./rendering/objects/registry/ObjectTextRegionRegistry";
 // Per-type, per-slot text-style defaults: the registry a canvas resolves an
 // unset text style through, reachable as
