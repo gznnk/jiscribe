@@ -21,7 +21,7 @@ type CanvasViewProps = {
 	 * full tree (export / thumbnail / any path that snapshots the DOM).
 	 */
 	visibleObjectIds?: ReadonlySet<string>;
-	/** Render the background grid (default true). See {@link GridPattern}. */
+	/** Render the background grid (default false). See {@link GridPattern}. */
 	showGrid?: boolean;
 	/** Base grid spacing in world units (default 25), passed to GridPattern. */
 	gridSize?: number;

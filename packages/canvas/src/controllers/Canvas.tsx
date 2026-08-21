@@ -137,10 +137,11 @@ type CanvasProps = {
 	 */
 	theme?: CanvasTheme;
 	/**
-	 * Background grid settings. Omit for the default grid (shown, 25 world units);
-	 * each field is optional, so `{ show: false }` alone is valid. Live: can be
-	 * changed at runtime. Since an object literal breaks `<Canvas>`'s memo, a host
-	 * rendering this inline can `useMemo` it to avoid extra re-renders.
+	 * Background grid settings. The grid is hidden by default — omit this prop
+	 * for no grid, pass `{ show: true }` to display it (25 world units unless
+	 * `size` says otherwise). Live: can be changed at runtime. Since an object
+	 * literal breaks `<Canvas>`'s memo, a host rendering this inline can
+	 * `useMemo` it to avoid extra re-renders.
 	 *
 	 * The grid line color is not a setting here — it is derived from the effective
 	 * canvas surface (theme background, or the doc's `background`) so it stays
@@ -148,7 +149,7 @@ type CanvasProps = {
 	 */
 	grid?: {
 		/**
-		 * Whether to render the grid (default `true`). The grid is a viewing aid
+		 * Whether to render the grid (default `false`). The grid is a viewing aid
 		 * only — it is already excluded from image export — so this toggles the
 		 * on-screen display without changing exported images.
 		 */
@@ -156,8 +157,8 @@ type CanvasProps = {
 		/**
 		 * Base grid spacing in world units (default `25`). Sets the medium grid
 		 * interval; bold lines fall every 4× this value and the multi-level grid
-		 * adapts to zoom (see the canvas's grid layer). Ignored when `show` is
-		 * `false`.
+		 * adapts to zoom (see the canvas's grid layer). Ignored while the grid
+		 * is hidden.
 		 */
 		size?: number;
 	};
