@@ -66,3 +66,24 @@ describe("EllipseObjectFactory", () => {
 		});
 	});
 });
+
+describe("EllipseObjectFactory nested override aliasing", () => {
+	// Overrides come from module-level stencil presets, so a nested value must be
+	// copied into each created doc, never shared (same rule as createFrameObjectFactory).
+	it("copies nested overrides instead of sharing the caller's object", () => {
+		const stencilOverrides = { meta: { name: "preset" } };
+		const first = EllipseObjectFactory.createDoc(
+			{ x: 0, y: 0 },
+			stencilOverrides,
+		) as Record<string, unknown>;
+		const second = EllipseObjectFactory.createDoc(
+			{ x: 0, y: 0 },
+			stencilOverrides,
+		) as Record<string, unknown>;
+
+		(first.meta as { name: string }).name = "edited";
+
+		expect((second.meta as { name: string }).name).toBe("preset");
+		expect(stencilOverrides.meta.name).toBe("preset");
+	});
+});

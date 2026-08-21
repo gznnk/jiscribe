@@ -12,7 +12,6 @@ import {
 	isValidStrokeStyleState,
 	isValidTextStyleState,
 	isValidTransformState,
-	isValidWaypointState,
 } from "../validateStateUtils";
 
 describe("validateStateUtils", () => {
@@ -317,16 +316,6 @@ describe("validateStateUtils", () => {
 		});
 		it("no points is false", () => {
 			expect(isValidPolyState({}, 2)).toBe(false);
-		});
-	});
-
-	describe("isValidWaypointState", () => {
-		it("empty waypoint array is also true (endpoints are held by source/target)", () => {
-			expect(isValidWaypointState({ points: [] })).toBe(true);
-			expect(isValidWaypointState({ points: [{ x: 0, y: 0 }] })).toBe(true);
-		});
-		it("no points is false", () => {
-			expect(isValidWaypointState({})).toBe(false);
 		});
 	});
 

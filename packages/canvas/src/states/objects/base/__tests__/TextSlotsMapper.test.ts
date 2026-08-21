@@ -71,6 +71,31 @@ describe("mapTextDocToState", () => {
 		).toEqual(["01", "-1", "1a"]);
 	});
 
+	it("keeps canonical numeric ids that are not array indices", () => {
+		// These stringify back to themselves but JS does not re-sort them:
+		// only integers 0 … 2^32−2 are array indices. Dropping them would
+		// lose the slot (and its text) without the reordering that justifies it.
+		const docText = {
+			name: { text: "User" },
+			"1.5": { text: "fractional" },
+			Infinity: { text: "unbounded" },
+			"4294967295": { text: "2^32-1, first non-index integer" },
+		};
+		expect(
+			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
+		).toEqual(["name", "1.5", "Infinity", "4294967295"]);
+	});
+
+	it("still drops the largest array index (2^32−2)", () => {
+		const docText = {
+			name: { text: "User" },
+			"4294967294": { text: "re-sorted to the front by JS" },
+		};
+		expect(
+			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
+		).toEqual(["name"]);
+	});
+
 	it("contributes nothing at all for a text-less type", () => {
 		expect(mapTextDocToState(undefined, { text: "hello" })).toEqual({});
 	});

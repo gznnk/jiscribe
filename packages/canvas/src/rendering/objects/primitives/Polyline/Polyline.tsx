@@ -14,14 +14,15 @@ type PolylineProps = PolylineState;
 const PolylineComponent: React.FC<PolylineProps> = ({
 	id,
 	points,
-	stroke = "black",
+	stroke,
 	strokeWidth = 1,
 	strokeDashType,
 	startArrow,
 	endArrow,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
-	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
+	// Resolve auto (theme-following) — and an unspecified stroke, like every
+	// other renderer — to the theme foreground (ink) (issue #38).
 	const strokeColor = resolveAutoColor(stroke, "ink");
 
 	// For hollow arrows, terminate the line at the arrow's base so it does not

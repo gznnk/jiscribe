@@ -99,8 +99,28 @@ function validateConnectorLabelFields(
 }
 
 /**
- * Validates a ConnectorDoc: waypoints, stroke style, arrows, label, both endpoints,
- * optional routing, and the invariant that at least one endpoint is owned.
+ * Requires an endpoint to be present before the per-ref checks. `validateEndpointRef`
+ * deliberately no-ops on a non-object, so without this gate a connector missing
+ * `source` entirely (or carrying e.g. `source: 5`) would validate clean, while
+ * `ConnectorState.source` is required — the doc would crash downstream in the
+ * schema-less consumers (webview / MCP) this validator stands alone for. Mirrors
+ * the `isObject` guard in the State-side `isValidConnectorState` and the JSON
+ * schema's `required: ["source", "target"]`.
+ */
+function validateRequiredEndpointRef(
+	ref: unknown,
+	path: string,
+): SemanticDiagnostic[] {
+	if (typeof ref !== "object" || ref === null) {
+		return [{ path, message: "must be an object" }];
+	}
+	return validateEndpointRef(ref, path);
+}
+
+/**
+ * Validates a ConnectorDoc: waypoints, stroke style, arrows, label, both endpoints
+ * (each required to be present), optional routing, and the invariant that at least
+ * one endpoint is owned.
  * `points` holds only intermediate waypoints (endpoints live on source/target), so an
  * empty array is allowed.
  */
@@ -109,8 +129,8 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 	...validateStrokeStyleFields(o, path),
 	...validateArrowFields(o, path),
 	...validateConnectorLabelFields(o, path),
-	...validateEndpointRef(o.source, `${path}.source`),
-	...validateEndpointRef(o.target, `${path}.target`),
+	...validateRequiredEndpointRef(o.source, `${path}.source`),
+	...validateRequiredEndpointRef(o.target, `${path}.target`),
 	// routing is optional; if specified, only known values are allowed.
 	...("routing" in o &&
 	o.routing !== undefined &&

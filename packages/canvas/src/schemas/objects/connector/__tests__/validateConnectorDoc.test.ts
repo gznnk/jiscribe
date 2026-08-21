@@ -35,6 +35,36 @@ describe("validateConnectorDoc", () => {
 		expect(bothFree?.beyondSchema).toBeUndefined();
 	});
 
+	it("is an error when source is missing entirely (even with an owned target)", () => {
+		const o = { points: validPoints, target: ownedRef };
+		const errors = validateConnectorDoc(o, "root");
+		expect(
+			errors.some(
+				(e) => e.path === "root.source" && e.message === "must be an object",
+			),
+		).toBe(true);
+	});
+
+	it("is an error when target is missing entirely (even with an owned source)", () => {
+		const o = { points: validPoints, source: ownedRef };
+		const errors = validateConnectorDoc(o, "root");
+		expect(
+			errors.some(
+				(e) => e.path === "root.target" && e.message === "must be an object",
+			),
+		).toBe(true);
+	});
+
+	it("is an error when source is not an object", () => {
+		const o = { points: validPoints, source: 5, target: ownedRef };
+		const errors = validateConnectorDoc(o, "root");
+		expect(
+			errors.some(
+				(e) => e.path === "root.source" && e.message === "must be an object",
+			),
+		).toBe(true);
+	});
+
 	it("yields no error when startArrow / endArrow have valid values", () => {
 		const o = {
 			points: validPoints,

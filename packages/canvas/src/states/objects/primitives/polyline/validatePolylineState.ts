@@ -1,24 +1,7 @@
-import { isObject } from "@jiscribe/basic-validators";
-
+import { PolylineFeatures } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
 import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
-import {
-	hasValidIdAndType,
-	isValidArrowFields,
-	isValidPolyState,
-	isValidStrokeStyleState,
-	type StateRecord,
-} from "../../utils/validateStateUtils";
+import { createPolyStateValidator } from "../../utils/createPolyStateValidator";
 
-/** Validates PolylineState (Poly + stroke + arrow endpoints). */
-export const isValidPolylineState: ObjectStateValidator = (value) => {
-	if (!isObject(value)) {
-		return false;
-	}
-	const o = value as StateRecord;
-	return (
-		hasValidIdAndType(o, "polyline") &&
-		isValidPolyState(o, 2) &&
-		isValidStrokeStyleState(o) &&
-		isValidArrowFields(o)
-	);
-};
+/** Validates PolylineState (Poly-family common logic generated from features; min 2 points). */
+export const isValidPolylineState: ObjectStateValidator =
+	createPolyStateValidator(PolylineFeatures, 2);

@@ -49,12 +49,16 @@ export const createPointObjectFactory = <TDefaults extends PointDefaults>(
 
 	return {
 		createDoc(position, overrides) {
-			return {
+			// Cloned because defaults and overrides are module-level constants: a nested
+			// value shared between two created objects (a record's text slots) would let
+			// an in-place edit of one rewrite the other (same rule as
+			// createFrameObjectFactory).
+			return structuredClone({
 				...mergeDefaults(overrides),
 				id: crypto.randomUUID(),
 				x: position.x,
 				y: position.y,
-			};
+			});
 		},
 
 		/**

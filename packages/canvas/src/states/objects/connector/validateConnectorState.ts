@@ -5,16 +5,14 @@ import {
 	isString,
 } from "@jiscribe/basic-validators";
 
+import { ConnectorFeatures } from "../../../schemas/objects/connector/ConnectorDoc";
 import { isConnectorRouting } from "../../../schemas/objects/types/ConnectorRouting";
 import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
 import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
+import { createPolyStateValidator } from "../utils/createPolyStateValidator";
 import {
 	hasOwnedEndpoint,
-	hasValidIdAndType,
-	isValidArrowFields,
 	isValidEndpointRefState,
-	isValidStrokeStyleState,
-	isValidWaypointState,
 	type StateRecord,
 } from "../utils/validateStateUtils";
 
@@ -58,28 +56,25 @@ export const isValidConnectorLabelState = (label: unknown): boolean => {
 };
 
 /**
- * Validates a ConnectorState (waypoints + stroke + arrow ends + source/target
- * endpoints). `points` holds only intermediate waypoints while the endpoints
- * are held by source/target, so an empty array is allowed; the invariant
- * requires at least one of the endpoints to be owned.
+ * Connector-specific checks beyond the feature-driven groups: optional routing,
+ * the label, and both endpoints (present objects, valid refs, at least one owned).
  */
-export const isValidConnectorState: ObjectStateValidator = (value) => {
-	if (!isObject(value)) {
-		return false;
-	}
-	const o = value as StateRecord;
-	return (
-		hasValidIdAndType(o, "connector") &&
-		// routing is optional. When specified, only known values (straight | orthogonal) are allowed.
-		(o.routing === undefined || isConnectorRouting(o.routing)) &&
-		isValidWaypointState(o) &&
-		isValidStrokeStyleState(o) &&
-		isValidArrowFields(o) &&
-		isValidConnectorLabelState(o.label) &&
-		isObject(o.source) &&
-		isObject(o.target) &&
-		isValidEndpointRefState(o.source) &&
-		isValidEndpointRefState(o.target) &&
-		hasOwnedEndpoint(o.source, o.target)
-	);
-};
+const isValidConnectorExtras = (o: StateRecord): boolean =>
+	// routing is optional. When specified, only known values (straight | orthogonal) are allowed.
+	(o.routing === undefined || isConnectorRouting(o.routing)) &&
+	isValidConnectorLabelState(o.label) &&
+	isObject(o.source) &&
+	isObject(o.target) &&
+	isValidEndpointRefState(o.source) &&
+	isValidEndpointRefState(o.target) &&
+	hasOwnedEndpoint(o.source, o.target);
+
+/**
+ * Validates a ConnectorState (Poly-family common logic generated from features,
+ * plus the connector extras above). `points` holds only intermediate waypoints
+ * while the endpoints are held by source/target, so an empty array is allowed
+ * (minPoints 0, corresponding to the Doc-side `validateWaypointFields`); the
+ * invariant requires at least one of the endpoints to be owned.
+ */
+export const isValidConnectorState: ObjectStateValidator =
+	createPolyStateValidator(ConnectorFeatures, 0, isValidConnectorExtras);

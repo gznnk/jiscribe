@@ -5,8 +5,7 @@ import { ContentGroup, Svg } from "./CanvasViewStyled";
 import { CanvasDefs } from "./defs/CanvasDefs";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import { deriveGridLineColor } from "./layers/background/deriveGridLineColor";
-import { GridBackground } from "./layers/background/GridBackground";
-import { GridPattern } from "./layers/background/GridPattern";
+import { Grid } from "./layers/background/Grid";
 import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
 
 type CanvasViewProps = {
@@ -21,9 +20,9 @@ type CanvasViewProps = {
 	 * full tree (export / thumbnail / any path that snapshots the DOM).
 	 */
 	visibleObjectIds?: ReadonlySet<string>;
-	/** Render the background grid (default true). See {@link GridPattern}. */
+	/** Render the background grid (default false). See {@link Grid}. */
 	showGrid?: boolean;
-	/** Base grid spacing in world units (default 25), passed to GridPattern. */
+	/** Base grid spacing in world units (default 25), passed to Grid. */
 	gridSize?: number;
 	/**
 	 * The theme surface color token (`canvasBg`). Not used directly — it is a
@@ -85,21 +84,15 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 		>
 			<CanvasDefs />
 			{showGrid && (
-				<>
-					{/* Grid pattern definition */}
-					<GridPattern
-						zoom={zoom}
-						baseGridSize={gridSize}
-						color={gridLineColor}
-					/>
-					{/* Grid background */}
-					<GridBackground
-						x={minX}
-						y={minY}
-						width={width / zoom}
-						height={height / zoom}
-					/>
-				</>
+				<Grid
+					zoom={zoom}
+					baseGridSize={gridSize}
+					color={gridLineColor}
+					x={minX}
+					y={minY}
+					width={width / zoom}
+					height={height / zoom}
+				/>
 			)}
 			<ContentGroup isDrawMode={isDrawMode}>
 				{/* Traverse rootIds (in z-order) and render objects and connectors interleaved */}
