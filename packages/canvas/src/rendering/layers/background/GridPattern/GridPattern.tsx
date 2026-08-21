@@ -5,6 +5,11 @@ type GridPatternProps = {
 	baseGridSize?: number;
 	/** Grid line color, derived from the resolved surface (see CanvasView). */
 	color: string;
+	/**
+	 * Per-canvas-instance id of the combined pattern (`url(#id)` is document-global,
+	 * see CanvasView); the medium / bold sub-patterns derive `-medium` / `-bold` from it.
+	 */
+	patternId: string;
 };
 
 /**
@@ -19,6 +24,7 @@ const GridPatternComponent = ({
 	zoom,
 	baseGridSize = 25,
 	color,
+	patternId,
 }: GridPatternProps): React.JSX.Element => {
 	const gridConfig = useMemo(() => {
 		// Fixed grid sizes in world coordinates
@@ -65,7 +71,7 @@ const GridPatternComponent = ({
 		<defs data-canvas-export="exclude">
 			{/* Medium grid pattern (20px) */}
 			<pattern
-				id="grid-medium"
+				id={`${patternId}-medium`}
 				width={gridConfig.mediumGrid}
 				height={gridConfig.mediumGrid}
 				patternUnits="userSpaceOnUse"
@@ -81,7 +87,7 @@ const GridPatternComponent = ({
 
 			{/* Bold grid pattern (100px) */}
 			<pattern
-				id="grid-bold"
+				id={`${patternId}-bold`}
 				width={gridConfig.boldGrid}
 				height={gridConfig.boldGrid}
 				patternUnits="userSpaceOnUse"
@@ -97,7 +103,7 @@ const GridPatternComponent = ({
 
 			{/* Combined grid pattern */}
 			<pattern
-				id="grid"
+				id={patternId}
 				width={gridConfig.boldGrid}
 				height={gridConfig.boldGrid}
 				patternUnits="userSpaceOnUse"
@@ -105,12 +111,12 @@ const GridPatternComponent = ({
 				<rect
 					width={gridConfig.boldGrid}
 					height={gridConfig.boldGrid}
-					fill="url(#grid-medium)"
+					fill={`url(#${patternId}-medium)`}
 				/>
 				<rect
 					width={gridConfig.boldGrid}
 					height={gridConfig.boldGrid}
-					fill="url(#grid-bold)"
+					fill={`url(#${patternId}-bold)`}
 				/>
 			</pattern>
 		</defs>

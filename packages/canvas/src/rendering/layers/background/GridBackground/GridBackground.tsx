@@ -5,6 +5,8 @@ type GridBackgroundProps = {
 	y: number;
 	width: number;
 	height: number;
+	/** Id of this canvas's GridPattern (`url(#id)` is document-global, see CanvasView). */
+	patternId: string;
 };
 
 /**
@@ -15,6 +17,7 @@ const GridBackgroundComponent = ({
 	y,
 	width,
 	height,
+	patternId,
 }: GridBackgroundProps): React.JSX.Element => {
 	return (
 		<rect
@@ -22,7 +25,7 @@ const GridBackgroundComponent = ({
 			y={y}
 			width={width}
 			height={height}
-			fill="url(#grid)"
+			fill={`url(#${patternId})`}
 			pointerEvents="none"
 			// Excluded from PNG/SVG export (like draw.io, the grid is not part of the image)
 			data-canvas-export="exclude"

@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useState } from "react";
+import { memo, useId, useLayoutEffect, useState } from "react";
 import type React from "react";
 
 import { ContentGroup, Svg } from "./CanvasViewStyled";
@@ -51,6 +51,13 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
 
+	// SVG `url(#id)` resolution is document-global, so a fixed pattern id would
+	// let two mounted canvases (multi-canvas hosts) — or any host-page element
+	// with the same id — resolve each other's grid, drawing the wrong density and
+	// color. useId is unique per React root; its delimiters are stripped so the
+	// id stays a plain funcIRI-safe token.
+	const gridPatternId = `grid-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+
 	// A doc-authored surface color paints via the SVG's own background-color
 	// (below), so image export — which reads getComputedStyle(svg).backgroundColor
 	// — follows it for free. Absent → the styled theme background stays in effect.
@@ -91,6 +98,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 						zoom={zoom}
 						baseGridSize={gridSize}
 						color={gridLineColor}
+						patternId={gridPatternId}
 					/>
 					{/* Grid background */}
 					<GridBackground
@@ -98,6 +106,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 						y={minY}
 						width={width / zoom}
 						height={height / zoom}
+						patternId={gridPatternId}
 					/>
 				</>
 			)}
