@@ -34,7 +34,7 @@ const textRect = (
 	}) as unknown as ObjectState;
 
 const measure = (object: ObjectState, slotId = "body") =>
-	measureTextSlot(object, slotId, registries, "sans-serif");
+	measureTextSlot(object, slotId, registries);
 
 describe("measureTextSlot", () => {
 	it("reports one line for a short text that fits", () => {

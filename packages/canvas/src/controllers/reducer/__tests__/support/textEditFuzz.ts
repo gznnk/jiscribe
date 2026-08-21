@@ -368,7 +368,6 @@ export const runTextEditFuzzSession = (
 		const grafted = graftTextEditDraft(
 			state.objects,
 			state.textEditState,
-			"sans-serif",
 			registries.objectContentResizer,
 		);
 		const graftedBody = readRichTextSlot(

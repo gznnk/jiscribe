@@ -72,13 +72,10 @@ describe("applyObjectDefinition: contentResizer", () => {
 
 		registries.objectContentResizer.get("measured")?.(
 			{ id: "m1", type: "measured" } as ObjectState,
-			{ fontFamily: "Noto Sans JP" },
+			{},
 		);
 
-		expect(seen).toEqual({
-			fontFamily: "Noto Sans JP",
-			textStyleDefaults: { textAlign: "left" },
-		});
+		expect(seen).toEqual({ textStyleDefaults: { textAlign: "left" } });
 	});
 
 	it("leaves types that declare nothing unregistered", () => {

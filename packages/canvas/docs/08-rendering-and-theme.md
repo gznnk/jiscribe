@@ -108,29 +108,22 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
   `theme` prop. The Canvas root injects `theme.tokens` as `--jiscribe-*` custom properties
   (`theme/themeCssVars.ts`); custom properties inherit, so every descendant style resolves them.
 - **Two delivery paths**: CSS-consumed tokens flow through the custom properties; JS-consumed values
-  (handle dimensions for zoom-adjusted geometry, `fontFamily` for canvas text measurement and
-  new-shape defaults) flow through `CanvasThemeContext` (`useCanvasTheme()`) and must be concrete
-  values, never `var(...)` strings. The default fontFamily also reaches doc creation via
-  `state.docDefaults` → `ObjectFactory` (`pickSupportedDocDefaults` applies it only to shapes whose
-  DOC_DEFAULTS declare `fontFamily`).
-  - **Why fontFamily has both a Context and a state route**: the two consumers have opposite
-    structural constraints. The rendering side must work without a reducer (`CanvasThumbnail` has
-    none, yet connector-label measurement needs a font) → Context with a default value. The creation
-    side runs outside React (gesture handlers are pure `(state, gesture) → state` functions inside
-    the reducer, where `useContext` cannot reach) → controller state. Both routes derive from the
-    same `theme` prop in Canvas.tsx (state is kept in sync via `SET_DOC_DEFAULTS`), so the source of
-    truth is single. Rejected alternatives: attaching docDefaults to every GESTURE action (leaks
-    theme concerns into the recognizer layer) and a module-level mutable default (hidden state;
-    breaks multiple Canvases with different themes on one page). Unifying the routes would mean
-    moving doc creation out of the reducer, which is not worth losing the reducer's determinism
-    and state-transition testability.
+  (handle dimensions, for zoom-adjusted geometry) flow through `CanvasThemeContext`
+  (`useCanvasTheme()`) and must be concrete values, never `var(...)` strings.
+  - **Why fonts are not on the theme**: a box derived from its content is measured in JS against the
+    family the doc names (`measureText`), so a family the canvas does not ship is one it cannot
+    measure faithfully — the box comes out sized for a face the text is not drawn in. The families a
+    document may name are therefore a closed set (`CANVAS_FONT_FAMILIES`, shipped by
+    `@jiscribe/canvas/fonts.css`), and a slot naming none falls back to `DEFAULT_FONT_FAMILY`. That
+    constant is the single fallback: every drawing and measurement site imports it directly rather
+    than being handed a family from above, and it is also what a newly created shape is written with.
   - **Why a loaded font is a second signal**: the family alone does not settle what text measures.
     Web fonts arrive after the first paint, so a box derived from its content is measured against
     the stack's generic keyword and drawn moments later in a face with other metrics.
     `useFontsLoadedNonce` watches `document.fonts` (`ready` for the first layout, `loadingdone` for
     the later unicode-range fetches a JP character triggers) and returns a counter. Canvas turns it
     into a `REMEASURE_TEXT` dispatch, which re-runs `reconcileObjectContentSizes` with its
-    `forceRemeasure` flag — the one pass neither the slots nor the family can ask for.
+    `forceRemeasure` flag — the one pass the slots cannot ask for.
     `CanvasThumbnail` has no reducer to dispatch through, so it takes the same counter as a memo key
     on `canvasToState` instead. A pass that moves no box returns the same state reference, so the
     two events overlapping costs nothing. The faces themselves are opt-in: a host imports

@@ -47,7 +47,6 @@ export const restoreHistorySnapshot = (
 		resolveDocSnapshot(history.present, mapper),
 		mapper,
 		registries.objectContentResizer,
-		state.docDefaults.fontFamily,
 	);
 
 	return {
@@ -61,7 +60,6 @@ export const restoreHistorySnapshot = (
 		saveVersion: state.saveVersion + 1,
 		saveNonce: crypto.randomUUID(),
 		historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
-		docDefaults: state.docDefaults,
 		internalClipboard: state.internalClipboard,
 		activeModal: state.activeModal, // History navigation must not close an open modal
 		history,

@@ -3,9 +3,6 @@ import { describe, it, expect } from "vitest";
 
 import { DIAMOND_INSET } from "../../../schema/diamond/DiamondDoc";
 
-/** Any family: these calculators derive their region from the box and read no context. */
-const TEXT_REGION_CONTEXT = { fontFamily: "sans-serif" };
-
 describe("diamond textRegion", () => {
 	it("returns a region half the width and height, its corners touching the edges", () => {
 		const textRegion = createInsetTextRegion({
@@ -14,11 +11,7 @@ describe("diamond textRegion", () => {
 			bottom: DIAMOND_INSET,
 			left: DIAMOND_INSET,
 		});
-		const result = textRegion(
-			{ width: 100, height: 60 },
-			"body",
-			TEXT_REGION_CONTEXT,
-		);
+		const result = textRegion({ width: 100, height: 60 }, "body");
 		expect(result).toEqual({ x: -25, y: -15, width: 50, height: 30 });
 	});
 });

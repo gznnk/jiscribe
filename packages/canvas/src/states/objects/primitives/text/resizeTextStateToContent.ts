@@ -23,20 +23,17 @@ import { readRichTextSlot } from "../../types/TextSlots";
  * leaves the doc coordinate untouched however the object is rotated or flipped.
  *
  * @param state - The text object to re-measure; its slot content, typography and transform are the only inputs read
- * @param fallbackFontFamily - Family used when the object sets none. Pass the family it is actually drawn in (the host theme's), or the box comes out a few percent narrow
  * @param textStyleDefaults - The `text` type's own text-style defaults, resolved into the slot before measuring so the box is measured with the style the overlay draws (ObjectTextStyleDefaultsRegistry). Omitted measures with the slot alone
  * @returns `state` itself when the measurement matches the box it already has, so callers can use reference equality to skip further work
  */
 export const resizeTextStateToContent = (
 	state: TextState,
-	fallbackFontFamily: string,
 	textStyleDefaults?: TextSlotStyle,
 ): TextState => {
 	const slot = state.text?.[BODY_TEXT_SLOT_ID];
 	const size = calcTextObjectFrameSize(
 		readRichTextSlot(state.text, BODY_TEXT_SLOT_ID),
 		resolveTextSlotStyle(textStyleDefaults, slot),
-		fallbackFontFamily,
 	);
 	if (size.width === state.width && size.height === state.height) {
 		return state;

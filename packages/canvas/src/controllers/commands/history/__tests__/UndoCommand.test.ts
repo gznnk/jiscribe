@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { CanvasControllerState, DocSnapshot } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
@@ -40,7 +39,6 @@ const makeState = (params: {
 		eventStartSnapshot: params.eventStartSnapshot ?? null,
 		textEditState: params.textEditState ?? null,
 		internalClipboard: null,
-		docDefaults: { fontFamily: DEFAULT_FONT_FAMILY },
 		commitVersion: 5,
 		saveVersion: 0,
 		registries,

@@ -38,9 +38,8 @@ export { TextOverlay } from "./rendering/objects/base/TextOverlay/TextOverlay";
 // disagree wherever the type's defaults differ from TEXT_STYLE_FALLBACK.
 export { useObjectTextStyleDefaultsRegistry } from "./rendering/objects/registry/ObjectTextStyleDefaultsRegistryContext";
 
-// The active theme, for a component that has to measure text the way the overlay
-// draws it: an unstyled slot is drawn in `fontFamily`, so anything sizing a box
-// from its own text has to measure with the same one (see ObjectTextRegionContext).
+// The active theme, for a component that has to read the host's handle
+// dimensions (zoom-adjusted geometry).
 export { useCanvasTheme } from "./theme/CanvasThemeContext";
 
 export { createFrameBehavior } from "./controllers/behaviors/base/FrameController";

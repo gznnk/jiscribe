@@ -3,22 +3,15 @@ import type { TextSlotStyle } from "../../schemas/objects/types/TextSlot";
 import type { ObjectState } from "../objects/base/ObjectState";
 
 /**
- * What a resizer needs beyond the object's own state: the drawing context the
- * host owns, which no doc can carry because it is a property of the viewer, not
- * of the document.
+ * What a resizer needs beyond the object's own state.
  */
 export type ObjectContentResizeContext = {
 	/**
-	 * Family the host draws unstyled text in (`CanvasTheme.fontFamily` /
-	 * `docDefaults.fontFamily`). Measuring against another family comes out a few
-	 * percent off, which shows up as a box clipping its own last characters.
-	 */
-	fontFamily: string;
-	/**
-	 * The resized type's own defaults for its body slot, filled in by the registration
-	 * (`applyObjectDefinition`) rather than by the caller: measuring against a
-	 * style other than the drawn one is the same few-percent error as the wrong
-	 * family. Undefined for a type that declares none.
+	 * The resized type's own defaults for its body slot, filled in by the
+	 * registration (`applyObjectDefinition`) rather than by the caller: measuring
+	 * against a style other than the drawn one sizes the box a few percent wrong,
+	 * which shows up as a box clipping its own last characters. Undefined for a
+	 * type that declares none.
 	 */
 	textStyleDefaults?: TextSlotStyle;
 };

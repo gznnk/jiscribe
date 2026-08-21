@@ -1,4 +1,3 @@
-import { pickSupportedDocDefaults } from "./pickSupportedDocDefaults";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectFactory } from "../types/ObjectFactory";
 
@@ -36,30 +35,26 @@ const omitDimensionOverrides = (
  * No `createDocFromBounds` is produced: a shape that does not own its box cannot
  * be drag-drawn, so it is click-placed like the other bounds-less shapes.
  *
- * @param defaults - The type's DOC_DEFAULTS; every field of the created doc but `id` and the position comes from here, `docDefaults`, and `overrides` in that order
+ * @param defaults - The type's DOC_DEFAULTS; every field of the created doc but `id` and the position comes from here and `overrides`, in that order
  * @returns A factory whose `createDoc` stores `position` verbatim as the box's drawn top-left — not its center, the way the frame family reads it, since no box is known at this layer — and whose `calcDimensions` reports zero. Both drop `width` / `height` from `overrides`, this geometry having nowhere to keep them
  */
 export const createPointObjectFactory = <TDefaults extends PointDefaults>(
 	defaults: TDefaults,
 ): ObjectFactory => {
-	const mergeDefaults = (
-		overrides?: Record<string, unknown>,
-		docDefaults?: Parameters<typeof pickSupportedDocDefaults>[1],
-	): TDefaults =>
+	const mergeDefaults = (overrides?: Record<string, unknown>): TDefaults =>
 		({
 			...defaults,
-			...pickSupportedDocDefaults(defaults, docDefaults),
 			...omitDimensionOverrides(overrides),
 		}) as TDefaults;
 
 	return {
-		createDoc(position, overrides, docDefaults) {
+		createDoc(position, overrides) {
 			// Cloned because defaults and overrides are module-level constants: a nested
 			// value shared between two created objects (a record's text slots) would let
 			// an in-place edit of one rewrite the other (same rule as
 			// createFrameObjectFactory).
 			return structuredClone({
-				...mergeDefaults(overrides, docDefaults),
+				...mergeDefaults(overrides),
 				id: crypto.randomUUID(),
 				x: position.x,
 				y: position.y,

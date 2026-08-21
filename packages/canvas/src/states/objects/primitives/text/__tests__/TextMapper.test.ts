@@ -25,11 +25,11 @@ const doc = (overrides: Record<string, unknown> = {}): TextDoc =>
 describe("textToState", () => {
 	it("measures the box the doc does not store", () => {
 		const state = textToState(doc());
-		const { width, height } = calcTextObjectFrameSize(
-			"hello",
-			{ fontSize: 16, fontFamily: "Noto Sans JP", fontWeight: "normal" },
-			"Noto Sans JP",
-		);
+		const { width, height } = calcTextObjectFrameSize("hello", {
+			fontSize: 16,
+			fontFamily: "Noto Sans JP",
+			fontWeight: "normal",
+		});
 
 		expect(state.width).toBe(width);
 		expect(state.height).toBe(height);
@@ -104,8 +104,8 @@ describe("textToDoc", () => {
 	});
 
 	it("uses the state's own size, not the text's, to recover the drawn top-left", () => {
-		// A state whose box was measured elsewhere (with the theme's family) must
-		// come back to the corner that box was anchored on.
+		// A state whose box was measured elsewhere must come back to the corner
+		// that box was anchored on.
 		const state = {
 			...textToState(doc()),
 			cx: 100,

@@ -8,6 +8,7 @@ import type React from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
+import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
@@ -16,7 +17,6 @@ import type { RichText } from "../../../../schemas/objects/types/RichText";
 import { isSameRichText } from "../../../../schemas/objects/types/RichText";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
@@ -109,7 +109,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	verticalAlign = TEXT_STYLE_FALLBACK.verticalAlign,
 	fontColor = TEXT_STYLE_FALLBACK.fontColor,
 	fontSize = TEXT_STYLE_FALLBACK.fontSize,
-	fontFamily,
+	fontFamily = DEFAULT_FONT_FAMILY,
 	fontWeight = TEXT_STYLE_FALLBACK.fontWeight,
 	fontStyle = TEXT_STYLE_FALLBACK.fontStyle,
 	textDecoration = TEXT_STYLE_FALLBACK.textDecoration,
@@ -119,11 +119,6 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	onEscape,
 	onCaretMove,
 }) => {
-	// Docs of text-bearing shapes always carry fontFamily; the theme font is a
-	// safety net for callers that omit it.
-	const { fontFamily: themeFontFamily } = useCanvasTheme();
-	const resolvedFontFamily = fontFamily ?? themeFontFamily;
-
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same
 	// resolver as the rendering-side TextOverlay so the color matches (issue #38).
 	const resolvedColor = resolveAutoColor(fontColor, "ink");
@@ -523,7 +518,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 					color: resolvedColor,
 					caretColor: resolvedColor,
 					fontSize,
-					fontFamily: resolvedFontFamily,
+					fontFamily,
 					fontWeight,
 					fontStyle,
 					textDecoration,

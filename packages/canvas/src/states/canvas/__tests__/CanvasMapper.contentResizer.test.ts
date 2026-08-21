@@ -40,25 +40,19 @@ describe("canvasToState: content resizers", () => {
 		expect(rect.height).toBe(10);
 	});
 
-	it("hands a registered type's freshly mapped state and the theme family to its resizer", () => {
+	it("re-derives a registered type's box from its freshly mapped state", () => {
 		const contentResizer = createObjectContentResizerRegistry();
-		const seen: { fontFamily: string; width: number }[] = [];
-		contentResizer.register("rect", (state, context) => {
-			seen.push({
-				fontFamily: context.fontFamily,
-				width: (state as unknown as { width: number }).width,
-			});
+		const seenWidths: number[] = [];
+		contentResizer.register("rect", (state) => {
+			seenWidths.push((state as unknown as { width: number }).width);
 			return { ...state, width: 99 } as typeof state;
 		});
 
-		const state = canvasToState(
-			rectDoc,
-			buildMapperRegistry(),
-			contentResizer,
-			"Some Host Family",
-		);
+		const state = canvasToState(rectDoc, buildMapperRegistry(), contentResizer);
 
-		expect(seen).toEqual([{ fontFamily: "Some Host Family", width: 10 }]);
+		// The doc's own box reaches the resizer, and what it returns is what the
+		// state keeps.
+		expect(seenWidths).toEqual([10]);
 		expect(
 			(state.objects["rect-1"] as unknown as { width: number }).width,
 		).toBe(99);

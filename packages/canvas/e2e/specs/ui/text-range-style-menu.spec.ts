@@ -81,6 +81,24 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 		expect((await canvas.drawnTextRuns(id))[1].fontSize).not.toBe("40px");
 	});
 
+	test("changes the family of only the selected characters", async ({
+		canvas,
+	}) => {
+		const id = await editAndSelect(canvas, "Payment failed", 7);
+
+		await canvas.openObjectMenu("font-family");
+		await canvas.page.click(selectors.objectMenuFont("mono"));
+
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id))[0]?.fontFamily)
+			.toContain("Source Code Pro");
+		expect((await canvas.drawnTextRuns(id))[1].fontFamily).not.toContain(
+			"Source Code Pro",
+		);
+		// The session survives the menu interaction, as it does for the other items.
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+	});
+
 	test("reads the selection back, so the Bold toggle turns it off again", async ({
 		canvas,
 	}) => {
