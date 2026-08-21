@@ -1,0 +1,32 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "assistant",
+			"type": "stadium",
+			"x": 40,
+			"y": 40,
+			"width": 240,
+			"height": 80,
+			"text": "チャットアシスタント",
+			"fontSize": 13
+		},
+		{
+			"id": "store",
+			"type": "db",
+			"x": 320,
+			"y": 40,
+			"width": 230,
+			"height": 80,
+			"text": "Web・書籍・コード\n数兆トークン",
+			"fontSize": 16
+		},
+		{
+			"id": "note",
+			"type": "text",
+			"x": 40,
+			"y": 160,
+			"text": "サイズを持たない図形は診断の対象外"
+		}
+	]
+}

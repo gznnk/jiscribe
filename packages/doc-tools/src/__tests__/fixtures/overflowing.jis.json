@@ -1,0 +1,25 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "cramped",
+			"type": "rect",
+			"x": 40,
+			"y": 40,
+			"width": 60,
+			"height": 40,
+			"text": "この箱には到底入りきらない長さの説明文",
+			"fontSize": 14
+		},
+		{
+			"id": "roomy",
+			"type": "rect",
+			"x": 140,
+			"y": 40,
+			"width": 260,
+			"height": 120,
+			"text": "この箱には到底入りきらない長さの説明文",
+			"fontSize": 14
+		}
+	]
+}

@@ -91,11 +91,8 @@ export {
 	calcVisualTextHeight,
 	layoutVisualLines,
 	measureTextWidth,
-} from "./states/objects/utils/measureText";
-export type {
-	TextMeasureFont,
-	VisualLine,
-} from "./states/objects/utils/measureText";
+} from "./text/measureText";
+export type { TextMeasureFont, VisualLine } from "./text/measureText";
 
 export { PRECISION } from "./constants/precision";
 

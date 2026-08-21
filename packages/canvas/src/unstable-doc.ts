@@ -52,6 +52,12 @@ export type {
 	CanvasFontFamilyId,
 } from "./constants/fontFamilies";
 
+// What a text style field is drawn with when neither the slot nor the type
+// declares one. A host resolving a slot's typography itself — a headless
+// measurement is the case in hand — needs the same last resort the drawing uses,
+// or it measures at a size nothing is drawn at.
+export { TEXT_STYLE_FALLBACK } from "./constants/textStyleFallback";
+
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows
 // drift from the rendered line height.
@@ -64,3 +70,22 @@ export {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
 } from "./constants/textBoxPadding";
+
+// Text measurement, which the wrapping and the box sizes both follow from. Headless
+// because it needs no DOM of its own: layoutVisualLines reproduces the display-side
+// CSS (pre-wrap + break-word) from character widths alone, and where those widths
+// come from is what setTextWidthMeasurerFactory decides — a browser measures on an
+// offscreen canvas, a Node host registers a backend reading the bundled font files
+// (@jiscribe/doc-tools), and with neither the widths fall back to an estimate.
+export {
+	calcVisualLineCount,
+	calcVisualTextHeight,
+	layoutVisualLines,
+	measureTextWidth,
+} from "./text/measureText";
+export type { TextMeasureFont, VisualLine } from "./text/measureText";
+export { setTextWidthMeasurerFactory } from "./text/textWidthMeasurer";
+export type {
+	TextWidthMeasurer,
+	TextWidthMeasurerFactory,
+} from "./text/textWidthMeasurer";

@@ -1,7 +1,7 @@
 import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
 import type { TextSlot } from "../../../../schemas/objects/types/TextSlot";
-import type { TextMeasureFont } from "../../utils/measureText";
+import type { TextMeasureFont } from "../../../../text/measureText";
 
 /** The styling a text object's box is measured from — the style half of a slot, all of it optional. */
 export type TextObjectTypography = Pick<

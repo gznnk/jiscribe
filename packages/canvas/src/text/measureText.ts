@@ -1,29 +1,15 @@
 import { calcMixedFamilyLineSlack } from "./mixedFamilyLineSlack";
-import { TEXT_LINE_HEIGHT } from "../../../constants/textLineHeight";
-import type {
-	RichText,
-	TextRun,
-} from "../../../schemas/objects/types/RichText";
-import { richTextToPlain } from "../../../schemas/objects/types/RichText";
+import type { TextMeasureFont } from "./TextMeasureFont";
+import type { TextWidthMeasurer } from "./textWidthMeasurer";
+import { createTextWidthMeasurer } from "./textWidthMeasurer";
+import { TEXT_LINE_HEIGHT } from "../constants/textLineHeight";
+import type { RichText, TextRun } from "../schemas/objects/types/RichText";
+import { richTextToPlain } from "../schemas/objects/types/RichText";
 
-/** The font a measurement is taken with; the values a CSS `font` shorthand needs. */
-export type TextMeasureFont = {
-	/** Type size in local pixels (the same unit the drawn box is measured in). */
-	fontSize: number;
-	/** Concrete font string (a theme's resolved family, not `inherit`). */
-	fontFamily: string;
-	/** CSS font-weight keyword or numeric string ("normal" / "bold" / "600"). */
-	fontWeight: string;
-	/** CSS font-style ("normal" / "italic"); omitted measures as "normal". */
-	fontStyle?: string;
-};
-
-/**
- * Width one character is assumed to take, as a fraction of the font size, when
- * no canvas is available (non-browser test environments). Rough on purpose: the
- * wrapping it produces is proportional, not faithful.
- */
-const FALLBACK_CHAR_WIDTH_RATIO = 0.6;
+// The font a measurement is taken with, re-exported so this module stays the one
+// place a caller needs for "measure this text": the type is its own file only
+// because the measurement backends (textWidthMeasurer) are built from it.
+export type { TextMeasureFont };
 
 /**
  * Characters a line may break between without a space, matching the CSS default
@@ -36,55 +22,6 @@ const CJK_BREAKABLE_PATTERN = /[⺀-〿ぁ-㏿㐀-䶿一-鿿가-힣豈-﫿︰-�
 /** Characters that are horizontal whitespace inside a line (a newline never reaches here). */
 const isSpaceCharacter = (char: string): boolean =>
 	char === " " || char === "\t";
-
-// Offscreen canvas dedicated to measurement (measures width without triggering DOM layout).
-let measureCanvas: HTMLCanvasElement | null = null;
-
-/**
- * Shorthand last assigned to the shared context's `font`, or null when nothing
- * has been assigned yet. Tracked beside the canvas because every measurer draws
- * on that one context, so a measurer can tell whether its font is still the one
- * in effect. Nothing ever resizes the canvas, which would reset the context's
- * state and leave this stale.
- */
-let assignedFontShorthand: string | null = null;
-
-const getMeasureContext = (): CanvasRenderingContext2D | null => {
-	if (typeof document === "undefined") {
-		return null;
-	}
-	if (!measureCanvas) {
-		measureCanvas = document.createElement("canvas");
-		assignedFontShorthand = null;
-	}
-	return measureCanvas.getContext("2d");
-};
-
-/** Measures single strings under one font, assigning `ctx.font` only when another font was measured since. */
-type TextWidthMeasurer = (text: string) => number;
-
-const createTextWidthMeasurer = (font: TextMeasureFont): TextWidthMeasurer => {
-	const ctx = getMeasureContext();
-	if (!ctx) {
-		// When measurement is unavailable (non-browser environment), fall back to a rough estimate from character count.
-		return (text) => text.length * font.fontSize * FALLBACK_CHAR_WIDTH_RATIO;
-	}
-	// Size and family are the only required parts of the CSS font shorthand, and
-	// they must come last in that order; style and weight may precede them in any
-	// order. An assignment that does not parse is dropped and ctx.font silently
-	// keeps its previous value, so a missing font.fontFamily would measure with
-	// whatever was set last rather than raising.
-	const fontShorthand = `${font.fontStyle ?? "normal"} ${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
-	return (text) => {
-		// Each assignment re-parses the shorthand, which costs more than the
-		// measurement itself where a word is measured character by character.
-		if (assignedFontShorthand !== fontShorthand) {
-			ctx.font = fontShorthand;
-			assignedFontShorthand = fontShorthand;
-		}
-		return ctx.measureText(text).width;
-	};
-};
 
 /** The font a run is drawn with: the slot's, with the run's own overrides on top. */
 const resolveRunFont = (
@@ -432,13 +369,15 @@ export type VisualLine = {
  * characters. A body styled per range is measured run by run, so a part drawn
  * larger both widens its line and makes that line's box taller.
  *
- * Measurement runs on an offscreen canvas, so this can be called every frame;
- * the result matches the drawing only while the drawn font matches `font`.
+ * In a browser, measurement runs on an offscreen canvas, so this can be called
+ * every frame; the result matches the drawing only while the drawn font matches
+ * `font`. Elsewhere it goes through whichever backend is registered
+ * (createTextWidthMeasurer).
  *
  * @param text - The whole text, authored newlines included; an empty string yields one line, as does each empty line
  * @param font - Font the slot is drawn with, which each run overrides only where it sets a field; a family other than the drawn one moves where lines break
  * @param availableWidth - Content width the text wraps in (box width minus its horizontal padding and border), in local pixels; anything below 1 is treated as 1, and `undefined` lays the text out as authored, breaking only at newlines
- * @returns One entry per drawn line, top to bottom, never empty. Outside a browser the widths are estimated (see measureTextWidth), so they are proportional rather than faithful
+ * @returns One entry per drawn line, top to bottom, never empty. With neither a canvas nor a registered measurer the widths are estimated (see measureTextWidth), so they are proportional rather than faithful
  */
 export const layoutVisualLines = (
 	text: RichText,
@@ -464,13 +403,13 @@ export const layoutVisualLines = (
 };
 
 /**
- * Rendered width of a single line, in the same local pixels as `fontSize`.
- * Measured on an offscreen canvas, so it can run every frame without triggering
- * DOM layout.
+ * Rendered width of a single line, in the same local pixels as `fontSize`. In a
+ * browser it is measured on an offscreen canvas, so it can run every frame
+ * without triggering DOM layout.
  *
  * @param text - One line; an embedded newline is measured as an ordinary character rather than starting a new line
  * @param font - Font the text is drawn with; a family other than the drawn one skews the result
- * @returns The width, or a `characters × fontSize × 0.6` estimate outside a browser
+ * @returns The width, or a `characters × fontSize × 0.6` estimate where neither a canvas nor a registered measurer can supply one
  */
 export const measureTextWidth = (
 	text: RichText,

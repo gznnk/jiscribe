@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { TextMeasureFont } from "../../../../text/measureText";
 import { calcTextBlockSize } from "../calcTextBlockSize";
-import type { TextMeasureFont } from "../measureText";
 
 /**
  * These run in the node environment, where there is no canvas to measure with:

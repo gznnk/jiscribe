@@ -1,11 +1,11 @@
 import type { RichText } from "../../../../schemas/objects/types/RichText";
 import { sliceRichText } from "../../../../schemas/objects/types/RichText";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { TextMeasureFont } from "../../../../states/objects/utils/measureText";
+import type { TextMeasureFont } from "../../../../text/measureText";
 import {
 	layoutVisualLines,
 	measureTextWidth,
-} from "../../../../states/objects/utils/measureText";
+} from "../../../../text/measureText";
 
 /** What the caret's place in the text is read from; see calcCaretContentOffset. */
 export type CaretContentOffsetParams = {

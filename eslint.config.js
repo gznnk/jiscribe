@@ -152,6 +152,9 @@ export default tseslint.config(
 			"packages/canvas/src/schemas/**",
 			"packages/canvas/src/parser/**",
 			"packages/canvas/src/docOps/**",
+			// Text measurement: needs no DOM of its own (the offscreen canvas is one of
+			// three interchangeable backends), so it stays reachable from ./unstable-doc.
+			"packages/canvas/src/text/**",
 		],
 		ignores: ["**/__tests__/**"],
 		rules: {
@@ -299,6 +302,53 @@ export default tseslint.config(
 					],
 				},
 			],
+		},
+	},
+	{
+		// doc-tools and the CLI on top of it run in Node: they must not pull in react
+		// / @emotion or the canvas UI entry points, or the CLI stops being something
+		// that can run without a browser. ./doc and ./unstable-doc are their whole
+		// contact with the canvas, and the plugins' /doc entries with the shape set.
+		files: ["packages/doc-tools/src/**", "apps/cli/src/**"],
+		rules: {
+			"no-restricted-imports": [
+				"error",
+				{
+					paths: [
+						{
+							name: "@jiscribe/canvas",
+							message:
+								"This would pull the React canvas into a Node tool. Take types and values from @jiscribe/canvas/doc.",
+						},
+						{
+							name: "@jiscribe/canvas/unstable",
+							message: "Use @jiscribe/canvas/unstable-doc instead.",
+						},
+					],
+					patterns: [
+						{
+							group: ["@jiscribe/*/src/*", "**/canvas/src/**"],
+							message:
+								"Import through the package root. Reaching into src/ is not allowed.",
+						},
+						{
+							group: ["react", "react/*", "react-dom", "react-dom/*"],
+							message: "Do not pull in react / react-dom; this is a Node tool.",
+						},
+						{
+							group: ["@emotion/*"],
+							message: "Do not pull in @emotion; this is a Node tool.",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		// Node programs, not browser ones: process / console are theirs to use.
+		files: ["packages/doc-tools/src/**", "apps/cli/src/**"],
+		languageOptions: {
+			globals: globals.node,
 		},
 	},
 	{

@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		// Node built-ins (node:fs / node:module) are this package's own; the DOM lib
+		// comes from the base config and is here only because the canvas sources this
+		// package imports are compiled into the same program.
+		"types": ["node"]
+	},
+	"include": ["src"]
+}

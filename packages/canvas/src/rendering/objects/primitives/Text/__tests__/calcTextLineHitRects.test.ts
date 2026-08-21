@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { TextAlign } from "../../../../../schemas/objects/types/TextAlign";
 import { calcTextBlockSize } from "../../../../../states/objects/utils/calcTextBlockSize";
-import type { TextMeasureFont } from "../../../../../states/objects/utils/measureText";
+import type { TextMeasureFont } from "../../../../../text/measureText";
 import { calcTextLineHitRects } from "../calcTextLineHitRects";
 
 /**

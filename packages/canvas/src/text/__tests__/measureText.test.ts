@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
+import { TEXT_LINE_HEIGHT } from "../../constants/textLineHeight";
+import type { RichText } from "../../schemas/objects/types/RichText";
 import type { TextMeasureFont } from "../measureText";
 import {
 	calcVisualLineCount,

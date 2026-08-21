@@ -14,10 +14,12 @@
 	"scripts": {
 		"dev:examples": "pnpm --filter canvas-examples dev",
 		"build:examples": "pnpm --filter canvas-examples build",
+		"build:cli": "pnpm --filter @jiscribe/cli build",
 		"build:vscode": "pnpm --filter jiscribe build",
 		"watch:vscode": "pnpm --filter jiscribe watch",
 		"lint": "pnpm -r --parallel lint",
 		"lint:canvas": "pnpm --filter @jiscribe/canvas lint",
+		"lint:cli": "pnpm --filter @jiscribe/cli lint",
 		"lint:examples": "pnpm --filter canvas-examples lint",
 		"lint:vscode": "pnpm --filter jiscribe lint",
 		"dep:check": "madge --extensions ts,tsx,js,jsx --circular packages/*/src apps/*/src plugins/*/src",

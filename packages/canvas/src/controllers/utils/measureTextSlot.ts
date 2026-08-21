@@ -16,7 +16,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import { resolveTextObjectFont } from "../../states/objects/primitives/text/resolveTextObjectFont";
 import { readRichTextSlot } from "../../states/objects/types/TextSlots";
-import { layoutVisualLines } from "../../states/objects/utils/measureText";
+import { layoutVisualLines } from "../../text/measureText";
 
 /**
  * Slack allowed before the text counts as outgrowing its region, in local px.
