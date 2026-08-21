@@ -368,6 +368,9 @@ importers:
       '@jiscribe/basic-validators':
         specifier: workspace:*
         version: link:../basic-validators
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../doc
       '@jiscribe/geometry':
         specifier: workspace:*
         version: link:../geometry
@@ -448,6 +451,31 @@ importers:
       react:
         specifier: 'catalog:'
         version: 19.2.8
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1)(vite@7.3.6(@types/node@22.20.1)(tsx@4.23.11))
+
+  packages/doc:
+    dependencies:
+      '@jiscribe/basic-validators':
+        specifier: workspace:*
+        version: link:../basic-validators
+      '@jiscribe/geometry':
+        specifier: workspace:*
+        version: link:../geometry
+      '@jiscribe/utility-types':
+        specifier: workspace:*
+        version: link:../utility-types
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.1
+      madge:
+        specifier: 'catalog:'
+        version: 8.0.0(supports-color@7.2.0)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
