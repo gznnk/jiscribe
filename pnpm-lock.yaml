@@ -208,30 +208,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
-      '@jiscribe/plugin-annotation-shapes':
+      '@jiscribe/standard-shapes':
         specifier: workspace:*
-        version: link:../../plugins/annotation-shapes
-      '@jiscribe/plugin-container-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/container-shapes
-      '@jiscribe/plugin-flowchart-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/flowchart-shapes
-      '@jiscribe/plugin-general-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/general-shapes
-      '@jiscribe/plugin-lucide-icon-shape':
-        specifier: workspace:*
-        version: link:../../plugins/lucide-icon-shape
-      '@jiscribe/plugin-markdown-shape':
-        specifier: workspace:*
-        version: link:../../plugins/markdown-shape
-      '@jiscribe/plugin-sticky-shape':
-        specifier: workspace:*
-        version: link:../../plugins/sticky-shape
-      '@jiscribe/plugin-uml-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/uml-shapes
+        version: link:../../packages/standard-shapes
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.1
@@ -268,30 +247,9 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
-      '@jiscribe/plugin-annotation-shapes':
+      '@jiscribe/standard-shapes':
         specifier: workspace:*
-        version: link:../../plugins/annotation-shapes
-      '@jiscribe/plugin-container-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/container-shapes
-      '@jiscribe/plugin-flowchart-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/flowchart-shapes
-      '@jiscribe/plugin-general-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/general-shapes
-      '@jiscribe/plugin-lucide-icon-shape':
-        specifier: workspace:*
-        version: link:../../plugins/lucide-icon-shape
-      '@jiscribe/plugin-markdown-shape':
-        specifier: workspace:*
-        version: link:../../plugins/markdown-shape
-      '@jiscribe/plugin-sticky-shape':
-        specifier: workspace:*
-        version: link:../../plugins/sticky-shape
-      '@jiscribe/plugin-uml-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/uml-shapes
+        version: link:../../packages/standard-shapes
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.1
@@ -331,30 +289,12 @@ importers:
       '@jiscribe/canvas':
         specifier: workspace:*
         version: link:../canvas
-      '@jiscribe/plugin-annotation-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/annotation-shapes
-      '@jiscribe/plugin-container-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/container-shapes
-      '@jiscribe/plugin-flowchart-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/flowchart-shapes
-      '@jiscribe/plugin-general-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/general-shapes
       '@jiscribe/plugin-lucide-icon-shape':
         specifier: workspace:*
         version: link:../../plugins/lucide-icon-shape
-      '@jiscribe/plugin-markdown-shape':
+      '@jiscribe/standard-shapes':
         specifier: workspace:*
-        version: link:../../plugins/markdown-shape
-      '@jiscribe/plugin-sticky-shape':
-        specifier: workspace:*
-        version: link:../../plugins/sticky-shape
-      '@jiscribe/plugin-uml-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/uml-shapes
+        version: link:../standard-shapes
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.1
@@ -547,30 +487,9 @@ importers:
       '@jiscribe/geometry':
         specifier: workspace:*
         version: link:../geometry
-      '@jiscribe/plugin-annotation-shapes':
+      '@jiscribe/standard-shapes':
         specifier: workspace:*
-        version: link:../../plugins/annotation-shapes
-      '@jiscribe/plugin-container-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/container-shapes
-      '@jiscribe/plugin-flowchart-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/flowchart-shapes
-      '@jiscribe/plugin-general-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/general-shapes
-      '@jiscribe/plugin-lucide-icon-shape':
-        specifier: workspace:*
-        version: link:../../plugins/lucide-icon-shape
-      '@jiscribe/plugin-markdown-shape':
-        specifier: workspace:*
-        version: link:../../plugins/markdown-shape
-      '@jiscribe/plugin-sticky-shape':
-        specifier: workspace:*
-        version: link:../../plugins/sticky-shape
-      '@jiscribe/plugin-uml-shapes':
-        specifier: workspace:*
-        version: link:../../plugins/uml-shapes
+        version: link:../standard-shapes
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -637,6 +556,40 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1)(vite@7.3.6(@types/node@22.20.1)(tsx@4.23.11))
+
+  packages/standard-shapes:
+    dependencies:
+      '@jiscribe/plugin-annotation-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/annotation-shapes
+      '@jiscribe/plugin-container-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/container-shapes
+      '@jiscribe/plugin-flowchart-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/flowchart-shapes
+      '@jiscribe/plugin-general-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/general-shapes
+      '@jiscribe/plugin-lucide-icon-shape':
+        specifier: workspace:*
+        version: link:../../plugins/lucide-icon-shape
+      '@jiscribe/plugin-markdown-shape':
+        specifier: workspace:*
+        version: link:../../plugins/markdown-shape
+      '@jiscribe/plugin-sticky-shape':
+        specifier: workspace:*
+        version: link:../../plugins/sticky-shape
+      '@jiscribe/plugin-uml-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/uml-shapes
+    devDependencies:
+      '@jiscribe/canvas':
+        specifier: workspace:*
+        version: link:../canvas
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
 
   packages/utility-types:
     devDependencies:
