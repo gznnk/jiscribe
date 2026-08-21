@@ -1,5 +1,5 @@
 // Builds the render harness: the self-contained page playwright loads, carrying the
-// Canvas and all eight shipped shape plugins.
+// Canvas and the standard shape set (@jiscribe/standard-shapes).
 //
 // Font files are deliberately NOT copied into dist. The shipped stacks are split by
 // unicode-range into some 850 files (Noto Sans JP alone is 125 subsets per weight),

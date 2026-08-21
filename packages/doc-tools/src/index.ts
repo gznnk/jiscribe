@@ -19,12 +19,9 @@ export type { ContentInset } from "./contentInsets";
 
 export { diagnoseDoc } from "./diagnoseDoc";
 
-// The shape set the two above are defined against, exposed so a host composing its
-// own parser validates against the same types the official schema was generated from.
-export {
-	SHIPPED_DOC_PLUGINS,
-	shippedObjectDocDefinitions,
-} from "./shippedDocPlugins";
+// The shape set everything above is defined against is @jiscribe/standard-shapes/doc.
+// A host composing its own parser takes `standardDocPlugins` from there, and validates
+// against the same types the official schema was generated from.
 
 // Only for a host driving @jiscribe/canvas measurement itself; every entry point
 // above installs the measurer before it measures.

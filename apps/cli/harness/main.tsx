@@ -1,13 +1,6 @@
 import { Canvas, lightCanvasTheme } from "@jiscribe/canvas";
 import type { CanvasConfig, CanvasDoc, CanvasHandle } from "@jiscribe/canvas";
-import { annotationPlugin } from "@jiscribe/plugin-annotation-shapes";
-import { containerPlugin } from "@jiscribe/plugin-container-shapes";
-import { flowchartPlugin } from "@jiscribe/plugin-flowchart-shapes";
-import { generalPlugin } from "@jiscribe/plugin-general-shapes";
-import { lucideIconPlugin } from "@jiscribe/plugin-lucide-icon-shape";
-import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
-import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
-import { umlPlugin } from "@jiscribe/plugin-uml-shapes";
+import { standardPlugins } from "@jiscribe/standard-shapes";
 import { createRoot } from "react-dom/client";
 
 import "@jiscribe/canvas/fonts.css";
@@ -20,22 +13,10 @@ import type {
 } from "./harnessBridge";
 import { HARNESS_GLOBAL } from "./harnessBridge";
 
-// The shipped set, in the order @jiscribe/doc-tools gives the parser. A shape whose
-// plugin is missing here is simply not drawn, so this list and the one the CLI
-// validates with have to be the same eight.
-const plugins = [
-	flowchartPlugin,
-	containerPlugin,
-	markdownPlugin,
-	stickyPlugin,
-	umlPlugin,
-	generalPlugin,
-	annotationPlugin,
-	lucideIconPlugin,
-];
-
-// Module scope, so re-rendering never hands Canvas a new config object.
-const initialConfig: CanvasConfig = { plugins };
+// Module scope, so re-rendering never hands Canvas a new config object. The set is
+// the one @jiscribe/doc-tools validates with, so a document the CLI accepts is a
+// document this page can draw in full.
+const initialConfig: CanvasConfig = { plugins: standardPlugins };
 
 const EMPTY_DOC: CanvasDoc = { version: 1, root: [] };
 

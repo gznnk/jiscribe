@@ -141,7 +141,7 @@ export default tseslint.config(
 		},
 	},
 	{
-		// The canvas headless (doc) layer: ban react / @emotion and relative reach into
+		// The headless (doc) layers: ban react / @emotion and relative reach into
 		// the rendering, control and state layers, so UI independence is enforced
 		// structurally (consumed through ./doc and ./unstable-doc).
 		// __tests__ is excluded because registration tests use the test helpers from
@@ -155,6 +155,9 @@ export default tseslint.config(
 			// Text measurement: needs no DOM of its own (the offscreen canvas is one of
 			// three interchangeable backends), so it stays reachable from ./unstable-doc.
 			"packages/canvas/src/text/**",
+			// The shipped set's headless half. Its whole point is that a Node host can
+			// take the eight plugins without a rendering layer coming with them.
+			"packages/standard-shapes/src/doc.ts",
 		],
 		ignores: ["**/__tests__/**"],
 		rules: {

@@ -26,7 +26,7 @@ shipped shape set (what actually opens the file). Neither contains the other: th
 schema refuses a misspelled property the parser strips silently, and the parser
 catches cross-object rules — duplicate ids, a connector pointing at nothing — that
 no schema can express. The two must be given the same plugin set or they
-disagree, which is what `shippedDocPlugins.ts` is for.
+disagree, which is why both take it from `@jiscribe/standard-shapes/doc`.
 
 ## Measurement in Node
 

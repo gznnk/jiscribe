@@ -15,7 +15,7 @@
 	},
 	"comments": {
 		"dependencies": "Everything but fontkit is bundled into dist/index.mjs. The three that stay listed are resolved by path at run time rather than imported, from dist/ upwards: @jiscribe/ai-docs holds the JSON schema, and the @fontsource packages hold the font files the Node measurer reads (see @jiscribe/doc-tools). Drop one and the bundle still builds, then fails on first use.",
-		"devDependencies": "The canvas, the eight shipped plugins, react and katex are the render harness's ingredients (harness/, bundled into dist/harness by buildHarness.mjs). Nothing under src/ imports them: the CLI itself stays headless."
+		"devDependencies": "The canvas, the standard shape set, react and katex are the render harness's ingredients (harness/, bundled into dist/harness by buildHarness.mjs). Nothing under src/ imports them: the CLI itself stays headless."
 	},
 	"dependencies": {
 		"@fontsource/caveat": "5.3.0",
@@ -32,14 +32,7 @@
 	},
 	"devDependencies": {
 		"@jiscribe/canvas": "workspace:*",
-		"@jiscribe/plugin-annotation-shapes": "workspace:*",
-		"@jiscribe/plugin-container-shapes": "workspace:*",
-		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
-		"@jiscribe/plugin-general-shapes": "workspace:*",
-		"@jiscribe/plugin-lucide-icon-shape": "workspace:*",
-		"@jiscribe/plugin-markdown-shape": "workspace:*",
-		"@jiscribe/plugin-sticky-shape": "workspace:*",
-		"@jiscribe/plugin-uml-shapes": "workspace:*",
+		"@jiscribe/standard-shapes": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",

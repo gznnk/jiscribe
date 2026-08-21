@@ -1,0 +1,36 @@
+{
+	"name": "@jiscribe/standard-shapes",
+	"version": "0.0.0",
+	"private": true,
+	"description": "The shipped shape set as one package: the eight standard shape plugins, bundled once for every host to register",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./doc": "./src/doc.ts"
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"typecheck": "tsc --noEmit"
+	},
+	"comments": {
+		"exports": "./doc is the headless half (parsing, doc-ops, schema generation) and pulls in no react; the root entry is the half a canvas is rendered with. A Node host importing the root entry would drag react into a process that has no DOM, which is what the split prevents."
+	},
+	"dependencies": {
+		"@jiscribe/plugin-annotation-shapes": "workspace:*",
+		"@jiscribe/plugin-container-shapes": "workspace:*",
+		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
+		"@jiscribe/plugin-general-shapes": "workspace:*",
+		"@jiscribe/plugin-lucide-icon-shape": "workspace:*",
+		"@jiscribe/plugin-markdown-shape": "workspace:*",
+		"@jiscribe/plugin-sticky-shape": "workspace:*",
+		"@jiscribe/plugin-uml-shapes": "workspace:*"
+	},
+	"peerDependencies": {
+		"@jiscribe/canvas": "workspace:*"
+	},
+	"devDependencies": {
+		"@jiscribe/canvas": "workspace:*",
+		"typescript": "catalog:"
+	}
+}

@@ -15,16 +15,13 @@
 		"lint": "eslint .",
 		"typecheck": "tsc --noEmit"
 	},
+	"comments": {
+		"devDependencies": "The shipped plugins come as @jiscribe/standard-shapes; plugin-lucide-icon-shape is also listed on its own because generateSchema.ts takes COMMON_ICON_GROUPS from it to fill an icon description in."
+	},
 	"devDependencies": {
 		"@jiscribe/canvas": "workspace:*",
-		"@jiscribe/plugin-annotation-shapes": "workspace:*",
-		"@jiscribe/plugin-container-shapes": "workspace:*",
-		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
-		"@jiscribe/plugin-general-shapes": "workspace:*",
 		"@jiscribe/plugin-lucide-icon-shape": "workspace:*",
-		"@jiscribe/plugin-markdown-shape": "workspace:*",
-		"@jiscribe/plugin-sticky-shape": "workspace:*",
-		"@jiscribe/plugin-uml-shapes": "workspace:*",
+		"@jiscribe/standard-shapes": "workspace:*",
 		"@types/node": "catalog:",
 		"prettier": "3.9.6",
 		"tsx": "^4.23.11",

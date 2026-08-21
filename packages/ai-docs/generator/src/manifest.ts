@@ -2,14 +2,7 @@ import {
 	builtinObjectDocDefinitions,
 	type ObjectDocDefinition,
 } from "@jiscribe/canvas/doc";
-import { annotationDocPlugin } from "@jiscribe/plugin-annotation-shapes/doc";
-import { containerDocPlugin } from "@jiscribe/plugin-container-shapes/doc";
-import { flowchartDocPlugin } from "@jiscribe/plugin-flowchart-shapes/doc";
-import { generalDocPlugin } from "@jiscribe/plugin-general-shapes/doc";
-import { lucideIconDocPlugin } from "@jiscribe/plugin-lucide-icon-shape/doc";
-import { markdownDocPlugin } from "@jiscribe/plugin-markdown-shape/doc";
-import { stickyDocPlugin } from "@jiscribe/plugin-sticky-shape/doc";
-import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
+import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 
 /**
  * Total order of the types shipped in the official schema and AI docs. The
@@ -137,7 +130,12 @@ export const DETAIL_SECTION_TYPES = [
 	"container",
 ] as const;
 
-/** Built-ins plus the shipped plugins. */
+/**
+ * Built-ins plus the standard shape set. Which plugins ship is @jiscribe/standard-shapes'
+ * to say — the schema is generated from the very list the parsers are loaded with, so a
+ * shape cannot reach one and miss the other. The source name is only for error messages,
+ * and the order only decides which of two colliding definitions is named first.
+ */
 const definitionSources: ReadonlyArray<
 	[
 		sourceName: string,
@@ -146,14 +144,10 @@ const definitionSources: ReadonlyArray<
 	]
 > = [
 	["canvas built-in", builtinObjectDocDefinitions],
-	[flowchartDocPlugin.id, flowchartDocPlugin.objects],
-	[umlDocPlugin.id, umlDocPlugin.objects],
-	[markdownDocPlugin.id, markdownDocPlugin.objects],
-	[stickyDocPlugin.id, stickyDocPlugin.objects],
-	[generalDocPlugin.id, generalDocPlugin.objects],
-	[lucideIconDocPlugin.id, lucideIconDocPlugin.objects],
-	[annotationDocPlugin.id, annotationDocPlugin.objects],
-	[containerDocPlugin.id, containerDocPlugin.objects],
+	...standardDocPlugins.map((plugin): [string, typeof plugin.objects] => [
+		plugin.id,
+		plugin.objects,
+	]),
 ];
 
 /** Merge the sources, failing on type-name collisions instead of last-wins. */

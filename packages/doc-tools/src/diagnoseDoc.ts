@@ -11,11 +11,11 @@ import {
 	TEXT_LINE_HEIGHT,
 	TEXT_STYLE_FALLBACK,
 } from "@jiscribe/canvas/unstable-doc";
+import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 
 import { contentBox } from "./contentBox";
 import type { Diagnostic } from "./Diagnostic";
 import { measureWrappedText } from "./measureWrappedText";
-import { shippedObjectDocDefinitions } from "./shippedDocPlugins";
 
 /**
  * Height a text may exceed its content box by before a reader sees anything, in
@@ -84,7 +84,7 @@ const round = (value: number): number => Math.round(value * 10) / 10;
 
 /** Every finding about one object's text, empty when it fits. */
 const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
-	const definition = shippedObjectDocDefinitions.get(object.type);
+	const definition = standardObjectDocDefinitions.get(object.type);
 	if (definition?.features.text !== "body") {
 		return [];
 	}

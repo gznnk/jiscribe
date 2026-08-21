@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 
 import type { CanvasDoc, SemanticDiagnostic } from "@jiscribe/canvas/doc";
 import { createCanvasParser } from "@jiscribe/canvas/doc";
+import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 import {
 	Ajv2020,
 	type ErrorObject,
@@ -10,7 +11,6 @@ import {
 } from "ajv/dist/2020";
 
 import type { Diagnostic } from "./Diagnostic";
-import { SHIPPED_DOC_PLUGINS } from "./shippedDocPlugins";
 
 /** What {@link validateDoc} found, plus the parsed document when nothing failed. */
 export type ValidateDocResult = {
@@ -54,7 +54,7 @@ const getSchemaValidator = (): ValidateFunction => {
 let sharedParser: ReturnType<typeof createCanvasParser> | null = null;
 
 const getParser = (): ReturnType<typeof createCanvasParser> => {
-	sharedParser ??= createCanvasParser({ plugins: [...SHIPPED_DOC_PLUGINS] });
+	sharedParser ??= createCanvasParser({ plugins: standardDocPlugins });
 	return sharedParser;
 };
 

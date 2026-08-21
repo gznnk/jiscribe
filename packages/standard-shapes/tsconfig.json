@@ -1,0 +1,9 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		// The plugin sources come into this program through the root entry, and they
+		// are React components.
+		"jsx": "react-jsx"
+	},
+	"include": ["src"]
+}
