@@ -65,16 +65,22 @@ export const createPolyMapper = <
 				points: (doc as unknown as { points?: unknown }).points ?? [],
 			}) as unknown as TState,
 
-		toDoc: (state) =>
-			({
+		toDoc: (state) => {
+			const points = (state as unknown as { points: Point[] }).points;
+			return {
 				...ObjectMapper.toDoc(state),
 				...pick(state as unknown as Record<string, unknown>, passthroughKeys),
 				...mapTextStateToDoc(features.text, (state as TextStyleState).text),
 				// Rounded here so every waypoint reaching the Doc carries the persisted
-				// precision, whichever path moved it (roundDocNumbers).
-				points: roundDocPoints(
-					(state as unknown as { points: Point[] }).points,
-				),
-			}) as unknown as TDoc,
+				// precision, whichever path moved it (roundDocNumbers). No waypoints
+				// contributes no key at all: the Doc spelling of "engine routes" is an
+				// absent `points` (ConnectorDoc), so a doc authored without it must
+				// round-trip without it — an emitted `points: []` would read as a content
+				// change (isSameCanvasDocContent) and trigger a needless external sync.
+				// Polygon / polyline are unaffected: their validators require ≥ 3 / ≥ 2
+				// points, so a valid state never reaches this with an empty array.
+				...(points.length > 0 ? { points: roundDocPoints(points) } : {}),
+			} as unknown as TDoc;
+		},
 	};
 };

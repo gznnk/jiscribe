@@ -96,6 +96,24 @@ describe("ConnectorMapper", () => {
 	});
 
 	describe("connectorToDoc", () => {
+		it("omits points entirely when there is no waypoint", () => {
+			// A doc authored without `points` (engine-routed straight connector)
+			// must round-trip without the key: `points: []` would read as a content
+			// change (isSameCanvasDocContent) and trigger a needless external sync.
+			const originalDoc = {
+				id: "connector-straight",
+				type: "connector",
+				source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
+				target: { anchor: { kind: "free", point: { x: 50, y: 50 } } },
+			} as unknown as ConnectorDoc;
+
+			const state = connectorToState(originalDoc);
+			expect(state.points).toEqual([]);
+			const convertedDoc = connectorToDoc(state);
+			expect("points" in convertedDoc).toBe(false);
+			expect(convertedDoc).toEqual(originalDoc);
+		});
+
 		it("should convert ConnectorState to ConnectorDoc with all properties", () => {
 			const state: ConnectorState = {
 				id: "connector-1",
