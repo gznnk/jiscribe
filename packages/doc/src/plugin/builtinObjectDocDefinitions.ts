@@ -1,9 +1,11 @@
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
+import { calcFullBoxTextRegion } from "./ObjectDocTextRegion";
 import {
 	CONNECTOR_EXTRA_KEYS,
 	ConnectorFeatures,
 } from "../model/objects/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../model/objects/connector/validateConnectorDoc";
+import { calcEllipseTextRegion } from "../model/objects/primitives/ellipse/calcEllipseTextRegion";
 import {
 	ELLIPSE_DOC_DEFAULTS,
 	EllipseFeatures,
@@ -47,6 +49,11 @@ import { validateTextDoc } from "../model/objects/primitives/text/validateTextDo
  * structure validation and connectability checks report it as unknown). `factory`
  * is present only for types created programmatically (group / connector / svg have none).
  *
+ * `textRegion` is declared by every type that holds text: it is what a headless
+ * overflow check measures against (`@jiscribe/doc-tools`), and the UI table
+ * registers the same calculator, so the two cannot drift. The types carrying no
+ * text at all (group / polygon / polyline / connector / svg) leave it out.
+ *
  * `description` / `summary` / `defaults` feed the generated JSON schema and AI docs
  * (`pnpm generate:ai`); types whose schema `$def` is a handwritten template
  * (group / connector / svg / polyline / polygon) carry only `summary`.
@@ -56,6 +63,7 @@ export const builtinObjectDocDefinitions = {
 		features: RectFeatures,
 		validateDoc: validateRectDoc,
 		factory: RectObjectFactory,
+		textRegion: calcFullBoxTextRegion,
 		description: "Rectangle shape.",
 		summary: "general-purpose node / label box",
 		defaults: RECT_DOC_DEFAULTS,
@@ -64,6 +72,7 @@ export const builtinObjectDocDefinitions = {
 		features: EllipseFeatures,
 		validateDoc: validateEllipseDoc,
 		factory: EllipseObjectFactory,
+		textRegion: calcEllipseTextRegion,
 		description: "Ellipse (oval) shape.",
 		summary: "ellipse / oval node (center-based geometry)",
 		defaults: ELLIPSE_DOC_DEFAULTS,
@@ -72,6 +81,9 @@ export const builtinObjectDocDefinitions = {
 		features: TextFeatures,
 		validateDoc: validateTextDoc,
 		factory: TextObjectFactory,
+		// The box is measured from the text rather than stored, so nothing can
+		// overflow it; the declaration says where the text sits in the box it comes to.
+		textRegion: calcFullBoxTextRegion,
 		description:
 			'Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, "right and down" means the shape\'s own axes, `x` / `y` staying put.',
 		summary: "bare text label / annotation",

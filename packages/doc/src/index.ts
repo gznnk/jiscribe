@@ -73,6 +73,13 @@ export type {
 	StyleValueType,
 } from "./model/objects/types/ExtraStyleProperty";
 export type { ObjectDocDefinition } from "./plugin/ObjectDocDefinition";
+// The text-region declaration a doc definition carries, and the two answers most
+// types give: the whole box, and "the box does not hold the text at all".
+export type { ObjectDocTextRegionCalculator } from "./plugin/ObjectDocTextRegion";
+export {
+	calcFullBoxTextRegion,
+	calcOutsideBoxTextRegion,
+} from "./plugin/ObjectDocTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";

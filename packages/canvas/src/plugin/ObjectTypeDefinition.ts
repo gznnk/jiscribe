@@ -28,6 +28,13 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
  * extends {@link ObjectDocDefinition}, a UI definition is structurally a doc
  * definition, and `CanvasPlugin.objects` flows into `createCanvasParser` unchanged.
  *
+ * `textRegion` is the one field taken over rather than inherited: a doc
+ * declaration may answer "the box does not hold the text at all" (`null`), which
+ * a renderer has no use for. Most shipped shapes register the very same function
+ * on both sides; the ones that cannot are those whose region is sized from the
+ * text itself (a below-label caption, a record's bands), and their doc side is
+ * exactly the one declaring `calcOutsideBoxTextRegion`.
+ *
  * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
  * type. A plugin declares a standalone definition with an explicit
  * annotation — `ObjectTypeDefinition<ContainerDoc, ContainerState>` — and needs no
@@ -38,7 +45,7 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
 export type ObjectTypeDefinition<
 	TDoc extends ObjectDoc = ObjectDoc,
 	TState extends ObjectState = ObjectState,
-> = ObjectDocDefinition & {
+> = Omit<ObjectDocDefinition, "textRegion"> & {
 	// --- Model (state) ---
 
 	/** Doc ↔ State conversion. */
@@ -71,7 +78,12 @@ export type ObjectTypeDefinition<
 	 */
 	svgDefs?: FC;
 
-	/** Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry). */
+	/**
+	 * Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry).
+	 * Register the very function the type's doc definition declares as its own
+	 * `textRegion`, unless the region is sized from the text itself (the
+	 * below-label shapes, a record's bands), which a doc cannot answer.
+	 */
 	textRegion?: ObjectTextRegionCalculator;
 
 	/**

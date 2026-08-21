@@ -89,13 +89,23 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 		return [];
 	}
 	const body = object as TextBodyDoc;
-	if (typeof body.width !== "number" || typeof body.height !== "number") {
+	const { width, height } = body;
+	if (typeof width !== "number" || typeof height !== "number") {
 		return [];
 	}
 	if (body.text === undefined || richTextToPlain(body.text) === "") {
 		return [];
 	}
-	const box = contentBox(object.type, body.width, body.height);
+	if (definition.textRegion === undefined) {
+		return [
+			{
+				severity: "warning",
+				objectId: object.id,
+				message: `${object.type} declares no text region, so its text is not checked against the shape (ObjectDocDefinition.textRegion)`,
+			},
+		];
+	}
+	const box = contentBox({ ...body, width, height });
 	if (box === null) {
 		return [];
 	}
@@ -108,7 +118,7 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 		diagnostics.push({
 			severity: "error",
 			objectId: object.id,
-			message: `text overflows ${object.type} ${body.width}x${body.height}: ${metrics.lines} line(s) need ${round(metrics.height)}px but the content box is ${round(box.height)}px tall (content box ${round(box.width)}x${round(box.height)}, font ${font.fontSize}px)`,
+			message: `text overflows ${object.type} ${width}x${height}: ${metrics.lines} line(s) need ${round(metrics.height)}px but the content box is ${round(box.height)}px tall (content box ${round(box.width)}x${round(box.height)}, font ${font.fontSize}px)`,
 		});
 	}
 	// Wrapping cannot exceed the width it wraps at, so this only fires where a
@@ -120,7 +130,7 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 		diagnostics.push({
 			severity: "error",
 			objectId: object.id,
-			message: `text is too wide for ${object.type} ${body.width}x${body.height}: the narrowest line is ${round(metrics.width)}px but the content box is ${round(box.width)}px wide (font ${font.fontSize}px)`,
+			message: `text is too wide for ${object.type} ${width}x${height}: the narrowest line is ${round(metrics.width)}px but the content box is ${round(box.width)}px wide (font ${font.fontSize}px)`,
 		});
 	}
 	return diagnostics;
@@ -140,10 +150,12 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
  * Objects the check passes over: types whose text the box does not hold (a label
  * drawn outside the outline, a `record`'s text-sized bands, a shape with no
  * text), objects with no text or no explicit size, and types outside the shipped
- * set.
+ * set. A shipped type that holds text but declares no region is reported as a
+ * warning rather than passed over silently — nothing measures it, and that is a
+ * gap in the shape set rather than a fact about the document.
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
- * @returns One error per overflowing object, in document order; empty when everything fits
+ * @returns One error per overflowing object, in document order, plus a warning per object of a text-bearing type that declares no region; empty when everything fits
  */
 export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] =>
 	flattenObjects(doc.root).flatMap(diagnoseObjectText);

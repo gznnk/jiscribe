@@ -6,10 +6,10 @@ import { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightCo
 import { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";
 import { containerDocDefinition } from "./doc";
 import { HeaderColorMenu } from "./menu/HeaderColorMenu";
-import { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
 import { Container } from "./presentation/Container";
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import { ContainerExtraStyleProperties } from "./schema/ContainerDoc";
+import { calcContainerTextRegion } from "./schema/textRegions";
 import type { ContainerState } from "./state/ContainerState";
 import { ContainerStencils } from "./stencil/ContainerStencils";
 

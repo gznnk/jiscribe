@@ -85,12 +85,12 @@ export const runMeasureCommand = (argv: readonly string[]): number => {
 		return fail(`--height is required for --shape ${shape}`);
 	}
 
-	// The stand-in height for a plain box is never read: `rect` insets nothing
+	// The stand-in height for a plain box is never read: `rect` takes nothing off
 	// vertically, and the verdict below leaves the height out when none was given.
-	const box = contentBox(shape, width, height ?? 0);
+	const box = contentBox({ type: shape, width, height: height ?? 0 });
 	if (box === null) {
 		return fail(
-			`${shape} lays its text outside its box, so there is nothing to measure it against`,
+			`${shape} has no text region to measure against: either it lays its text outside its box, or it is not a type this build ships`,
 		);
 	}
 

@@ -6,12 +6,14 @@
 // presentation / state / stencil / menu.
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { calcFullBoxTextRegion } from "@jiscribe/doc";
 
 import { STICKY_DOC_DEFAULTS, StickyFeatures } from "./schema/StickyDoc";
 
 export const stickyDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: StickyFeatures,
 	defaults: STICKY_DOC_DEFAULTS,
+	textRegion: calcFullBoxTextRegion,
 	description: "Sticky note annotation.",
 	summary: "sticky note (no stroke or `rx`)",
 	// Stickies are only center-placed on click (no bounds drawing).

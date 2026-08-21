@@ -15,7 +15,7 @@ the answers an AI gets and the answers CI gets cannot drift.
 | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `validateDoc(text)`                               | Is this a sound document? Runs both validators the format has and returns their findings together. |
 | `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                    |
-| `contentBox(type, width, height)`                 | How much of a shape's box is its text actually laid out in?                                        |
+| `contentBox(shape)`                               | How much of a shape's box is its text actually laid out in?                                        |
 | `diagnoseDoc(doc)`                                | Does any object's text overflow the shape holding it?                                              |
 
 ## Why validation is two validators
@@ -49,27 +49,28 @@ Installing is idempotent and process-wide; every entry point here does it before
 measuring. **A browser is unaffected** — nothing registers a factory there, so
 the canvas keeps measuring exactly as it did.
 
-## The content-inset table is provisional
+## Where the content box comes from
 
-`contentInsets.ts` restates, as numbers, what each shape's `textRegion`
-calculator produces. Those calculators live in each plugin's `presentation/**`,
-are registered on the React-side `ObjectTypeDefinition`, and take a resolved
-object state — none of which a Node-side diagnosis can reach. **The table is a
-copy, and a change to a shape's text region has to be repeated in it.**
+`contentBox` asks the shape's own type. Every shipped type declares where its
+text goes on its doc definition (`ObjectDocDefinition.textRegion`), as a function
+of the doc: the box, plus whatever field the outline depends on — the callout's
+`tail`, the container's `headerHeight`. The rendering layer's
+`ObjectTypeDefinition` registers **the same function**, so what a browser draws
+the text in and what a Node-side diagnosis measures against are one declaration,
+and this package restates nothing.
 
-Moving the declaration onto `ObjectDocDefinition` (where `description` and
-`textSlotStyleDefaults` already sit) would end the duplication and let
-`pnpm generate:ai` publish the same numbers to AI authors. It was not done here
-because several shapes' regions are not static ratios: `stadium` swaps axis on a
-tall box, `card` / `delay` / `note` / `file` / `multiDocument` derive from
-`min(width, height)`, `container` / `umlPackage` are absolute pixels clamped
-against the height, `callout` follows a doc field, and `record` / the pictogram
-labels are sized from their own text. A declaration would have to be a function
-mirroring `textRegion`, not a constant — a bigger change to the plugin interface
-than this package needed.
+Three answers are possible, and they mean different things:
 
-Known gap: `callout` is measured with its default downward tail, since
-`contentBox` is given a type and a size and cannot see the object's `tail.side`.
+- **a rectangle** — the region, in the shape's own coordinates. `contentBox`
+  subtracts the shared text-box padding from it and hands back the result.
+- **`null`** — the box does not hold the text: the shape draws its label outside
+  the outline (the pictograms, the group markers), or divides the box into bands
+  each sized from their own text (`record`), or carries no text at all. Nothing
+  about such a shape's size can make its text overflow, so `diagnoseDoc` passes
+  over it.
+- **no declaration** — the type is not one this build ships, or ships without
+  having declared a region. `contentBox` answers null, and `diagnoseDoc` reports
+  a warning for a text-bearing type rather than passing over it silently.
 
 ## What `diagnoseDoc` does not check
 

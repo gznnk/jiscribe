@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import type { CanvasDoc } from "@jiscribe/doc";
-import { describe, expect, it } from "vitest";
+import type { CanvasDoc, ObjectDocDefinition } from "@jiscribe/doc";
+import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";
 import { validateDoc } from "../validateDoc";
@@ -17,6 +18,10 @@ const readFixture = (name: string): CanvasDoc => {
 	}
 	return result.doc;
 };
+
+afterEach(() => {
+	vi.restoreAllMocks();
+});
 
 describe("diagnoseDoc", () => {
 	it("reports nothing for shapes their text fits in", () => {
@@ -64,5 +69,20 @@ describe("diagnoseDoc", () => {
 			],
 		};
 		expect(diagnoseDoc(doc)).toEqual([]);
+	});
+
+	it("warns rather than passes over a text-bearing type that declares no region", () => {
+		// Unreachable with the shipped set — every `text: "body"` type declares one
+		// — so the gap is staged here, which is what the warning is a guard against.
+		const rect = standardObjectDocDefinitions.get(
+			"rect",
+		) as ObjectDocDefinition;
+		vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation((type) =>
+			type === "rect" ? { ...rect, textRegion: undefined } : undefined,
+		);
+
+		const diagnostics = diagnoseDoc(readFixture("overflowing.jis.json"));
+		expect(diagnostics.every((one) => one.severity === "warning")).toBe(true);
+		expect(diagnostics[0].message).toMatch(/rect declares no text region/);
 	});
 });

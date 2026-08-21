@@ -1,4 +1,4 @@
-import { NOTE_FOLD_RATIO } from "../../schema/note/NoteDoc";
+import { NOTE_FOLD_RATIO } from "./NoteDoc";
 
 /**
  * Side length of the folded corner. Taken from the shorter side, so the fold

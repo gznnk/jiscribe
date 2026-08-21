@@ -1,6 +1,7 @@
 import type {
 	ObjectDoc,
 	ObjectDocDefinition,
+	ObjectDocTextRegionCalculator,
 	ObjectDocValidateFn,
 	ObjectFeatures,
 	ObjectTextSlotStyleDefaults,
@@ -40,6 +41,13 @@ type FrameObjectDocCommonParams = {
 	 * mapper and doc-ops both read it from there.
 	 */
 	extraKeys?: readonly string[];
+
+	/**
+	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`).
+	 * Pass the same function the UI definition registers as its `textRegion`, or
+	 * `calcOutsideBoxTextRegion` for a shape that draws its label outside the box.
+	 */
+	textRegion?: ObjectDocTextRegionCalculator;
 
 	/** AI-facing description of the shape (see `ObjectDocDefinition.description`). */
 	description?: string;
@@ -114,6 +122,7 @@ export const createFrameObjectDoc = ({
 	features,
 	defaults,
 	extraKeys,
+	textRegion,
 	description,
 	summary,
 	outlineDescription,
@@ -126,6 +135,7 @@ export const createFrameObjectDoc = ({
 	validateDoc: createFrameDocValidator(features, validateExtra),
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
+	textRegion,
 	description,
 	summary,
 	outlineDescription,

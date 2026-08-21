@@ -1,7 +1,4 @@
-import {
-	FILE_FOLD_HEIGHT_RATIO,
-	FILE_FOLD_WIDTH_RATIO,
-} from "../../schema/file/FileDoc";
+import { FILE_FOLD_HEIGHT_RATIO, FILE_FOLD_WIDTH_RATIO } from "./FileDoc";
 
 /**
  * Side length of the folded corner. The smaller of the two ratios wins, so the

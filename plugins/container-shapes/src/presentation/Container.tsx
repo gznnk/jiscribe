@@ -1,12 +1,12 @@
 import { createFrameObject, resolveAutoColor } from "@jiscribe/canvas-sdk";
 
-import { calcContainerHeaderHeight } from "./calcContainerHeaderHeight";
 import {
 	ContainerBody,
 	ContainerDivider,
 	ContainerHeader,
 	ContainerOutline,
 } from "./ContainerStyled";
+import { calcContainerHeaderHeight } from "../schema/calcContainerHeaderHeight";
 import type { ContainerState } from "../state/ContainerState";
 
 /**

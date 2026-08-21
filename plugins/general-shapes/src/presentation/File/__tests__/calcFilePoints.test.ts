@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { calcFileFoldSize } from "../calcFileFoldSize";
+import { calcFileFoldSize } from "../../../schema/file/calcFileFoldSize";
 import { calcFilePoints } from "../calcFilePoints";
 
 describe("calcFilePoints", () => {

@@ -1,5 +1,5 @@
-import { calcNoteFoldSize } from "./calcNoteFoldSize";
 import { calcNotePoints } from "./calcNotePoints";
+import { calcNoteFoldSize } from "../../schema/note/calcNoteFoldSize";
 
 /** The two `d` strings a note is drawn from, split by how they are painted. */
 export type NoteFigure = {

@@ -113,3 +113,14 @@ export const CALLOUT_DOC_DEFAULTS: Omit<CalloutDoc, "id"> = {
 	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "normal",
 } as const as CalloutDoc;
+
+/**
+ * Effective tail of a callout: what the field says, or the default where it is
+ * absent.
+ *
+ * @param shape - The callout's `tail` field, absent on a callout that has never had one set
+ * @returns The tail to draw and to measure against, never undefined
+ */
+export const resolveCalloutTail = (
+	shape: Pick<CalloutDoc, "tail">,
+): CalloutTail => shape.tail ?? CALLOUT_TAIL_DEFAULT;

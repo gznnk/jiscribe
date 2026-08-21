@@ -1,3 +1,4 @@
+import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "./ObjectDocValidatorRegistry";
 import type { ObjectTextSlotStyleDefaults } from "./ObjectTextStyleDefaultsRegistry";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
@@ -35,6 +36,24 @@ export type ObjectDocDefinition = {
 	 * no fields of its own.
 	 */
 	extraKeys?: readonly string[];
+
+	/**
+	 * Where the type lays its text out, given a doc of it: the rectangle the
+	 * rendering layer's `textRegion` resolves, answerable with no rendering layer
+	 * present. The single declaration of the shape's text region — the UI
+	 * definition registers the same calculator, so a headless overflow check
+	 * (`@jiscribe/doc-tools`) and the canvas can never disagree about it.
+	 *
+	 * `null` from the calculator means the box does not hold the text (a label
+	 * drawn outside the outline, bands sized from their own text); omitting the
+	 * field means the type has not declared one at all, which a checker reports
+	 * rather than guessing at. Every type with `features.text: "body"` should
+	 * declare one — {@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
+	 * for a plain box,
+	 * {@link import("./ObjectDocTextRegion").calcOutsideBoxTextRegion} for a label
+	 * drawn outside the outline.
+	 */
+	textRegion?: ObjectDocTextRegionCalculator;
 
 	/**
 	 * AI-facing description of the shape (1–3 sentences, English): what it draws,

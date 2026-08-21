@@ -3,7 +3,7 @@ import type {
 	ObjectState,
 } from "@jiscribe/canvas";
 
-import { resolveCalloutTail } from "./calloutTailGeometry";
+import { resolveCalloutTail } from "../../schema/callout/CalloutDoc";
 import type { CalloutState } from "../../state/callout/CalloutState";
 
 /**

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { calcNoteFoldSize } from "../../../schema/note/calcNoteFoldSize";
 import { buildNoteFigure } from "../buildNoteFigure";
-import { calcNoteFoldSize } from "../calcNoteFoldSize";
 import { calcNotePoints } from "../calcNotePoints";
 
 describe("calcNoteFoldSize", () => {

@@ -6,12 +6,14 @@
 // presentation / state / stencil.
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { calcFullBoxTextRegion } from "@jiscribe/doc";
 
 import { MARKDOWN_DOC_DEFAULTS, MarkdownFeatures } from "./schema/MarkdownDoc";
 
 export const markdownDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: MarkdownFeatures,
 	defaults: MARKDOWN_DOC_DEFAULTS,
+	textRegion: calcFullBoxTextRegion,
 	// The schema $def is a handwritten template (nearly every property description
 	// is Markdown-specific), so only summary is consumed — it fills the generated
 	// doc tables.

@@ -14,8 +14,7 @@ export { measureWrappedText } from "./measureWrappedText";
 export type { TextMeasureFont, WrappedTextMetrics } from "./measureWrappedText";
 
 export { contentBox } from "./contentBox";
-export { calcContentInset } from "./contentInsets";
-export type { ContentInset } from "./contentInsets";
+export type { ContentBoxShape } from "./contentBox";
 
 export { diagnoseDoc } from "./diagnoseDoc";
 

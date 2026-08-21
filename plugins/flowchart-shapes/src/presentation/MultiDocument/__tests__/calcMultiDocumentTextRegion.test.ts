@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
+import { calcMultiDocumentTextRegion } from "../../../schema/textRegions";
 import { calcMultiDocumentSheets } from "../calcMultiDocumentSheets";
-import { calcMultiDocumentTextRegion } from "../calcMultiDocumentTextRegion";
 
 /** The front sheet in local (centered) coordinates: the one the text belongs to. */
 const frontSheet = (width: number, height: number) =>

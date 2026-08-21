@@ -1,7 +1,6 @@
 export { BelowLabelPictogram } from "./BelowLabelPictogram";
-export { buildWindowFrame, WINDOW_TITLE_BAR_RATIO } from "./buildWindowFrame";
+export { buildWindowFrame } from "./buildWindowFrame";
 export type { WindowFrame } from "./buildWindowFrame";
-export { calcWindowTextRegion } from "./calcWindowTextRegion";
 export { Pictogram } from "./Pictogram";
 export type {
 	PictogramFigure,

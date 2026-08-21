@@ -71,6 +71,11 @@ export {
 	TEXT_BOX_PADDING_Y,
 } from "./text/block/textBoxPadding";
 
+// The slot id of a `text: "body"` type's single text, for a headless consumer
+// resolving a type's text region (`ObjectDocDefinition.textRegion`), which takes
+// a slot id as the rendering layer's does.
+export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
+
 // Text measurement, which the wrapping and the box sizes both follow from. Headless
 // because it needs no DOM of its own: layoutVisualLines reproduces the display-side
 // CSS (pre-wrap + break-word) from character widths alone, and where those widths

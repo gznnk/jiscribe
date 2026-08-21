@@ -11,10 +11,7 @@ import type {
 	ObjectTypeDefinition,
 } from "../../plugin/ObjectTypeDefinition";
 import { Connector } from "../../rendering/objects/connector/Connector";
-import {
-	Ellipse,
-	calcEllipseTextRegion,
-} from "../../rendering/objects/primitives/Ellipse";
+import { Ellipse } from "../../rendering/objects/primitives/Ellipse";
 import { Polygon } from "../../rendering/objects/primitives/Polygon";
 import { Polyline } from "../../rendering/objects/primitives/Polyline";
 import { Rect } from "../../rendering/objects/primitives/Rect";
@@ -110,6 +107,12 @@ import { TextStencils } from "../ui/objects/primitives/TextStencils";
  * Data-only description of every object type. `createCanvasRegistries` applies a
  * chosen subset of these to a fresh bundle; `initializeObjectRegistry` applies
  * all of them to its target bundle.
+ *
+ * Each entry spreads its headless definition, so a built-in's `textRegion` comes
+ * from `builtinObjectDocDefinitions` — the ellipse's inscribed rect, the box
+ * itself for the other two. The plugins' UI definitions declare theirs again
+ * instead, their doc-side declaration being allowed to say "not in the box at
+ * all", which a renderer cannot use (see createFrameObjectDefinition).
  */
 export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 	{
@@ -127,7 +130,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
 			stateValidator: isValidEllipseState,
 			component: Ellipse,
-			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			stencils: EllipseStencils,
 		}),

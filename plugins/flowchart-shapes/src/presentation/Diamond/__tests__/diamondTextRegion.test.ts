@@ -11,7 +11,7 @@ describe("diamond textRegion", () => {
 			bottom: DIAMOND_INSET,
 			left: DIAMOND_INSET,
 		});
-		const result = textRegion({ width: 100, height: 60 }, "body");
+		const result = textRegion({ width: 100, height: 60 });
 		expect(result).toEqual({ x: -25, y: -15, width: 50, height: 30 });
 	});
 });

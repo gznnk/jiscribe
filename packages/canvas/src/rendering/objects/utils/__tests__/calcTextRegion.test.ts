@@ -34,7 +34,7 @@ describe("calcTextRegion", () => {
 	});
 
 	it("passes slotId through to the calculator so it can return a region per compartment", () => {
-		const calculator = (state: ObjectState & Dimensions, slotId: string) =>
+		const calculator = (state: Dimensions, slotId: string) =>
 			slotId === "header"
 				? { x: 0, y: 0, width: state.width, height: 20 }
 				: { x: 0, y: 20, width: state.width, height: state.height - 20 };

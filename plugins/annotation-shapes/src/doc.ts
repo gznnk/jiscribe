@@ -6,6 +6,7 @@
 // presentation / state / stencil.
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
 
 import type { BraceDoc } from "./schema/brace/BraceDoc";
 import { BRACE_DOC_DEFAULTS, BraceFeatures } from "./schema/brace/BraceDoc";
@@ -31,9 +32,14 @@ import {
 	validateGroupMarkerDirection,
 	validateGroupMarkerTipFields,
 } from "./schema/shared/validateGroupMarkerFields";
+import {
+	calcCalloutTextRegion,
+	calcNoteTextRegion,
+} from "./schema/textRegions";
 
 export const braceDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: BraceFeatures,
+	textRegion: calcOutsideBoxTextRegion,
 	defaults: BRACE_DOC_DEFAULTS,
 	extraKeys: ["direction", "tipPosition"] satisfies readonly (keyof BraceDoc)[],
 	description:
@@ -45,6 +51,7 @@ export const braceDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const bracketDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: BracketFeatures,
+	textRegion: calcOutsideBoxTextRegion,
 	defaults: BRACKET_DOC_DEFAULTS,
 	extraKeys: ["direction"] satisfies readonly (keyof BracketDoc)[],
 	description:
@@ -59,6 +66,7 @@ export const bracketDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const bracketWithStemDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: BracketWithStemFeatures,
+		textRegion: calcOutsideBoxTextRegion,
 		defaults: BRACKET_WITH_STEM_DOC_DEFAULTS,
 		extraKeys: [
 			"direction",
@@ -73,6 +81,7 @@ export const bracketWithStemDocDefinition: ObjectDocDefinition =
 
 export const calloutDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: CalloutFeatures,
+	textRegion: calcCalloutTextRegion,
 	defaults: CALLOUT_DOC_DEFAULTS,
 	extraKeys: ["tail"] satisfies readonly (keyof CalloutDoc)[],
 	description:
@@ -83,6 +92,7 @@ export const calloutDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const noteDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: NoteFeatures,
+	textRegion: calcNoteTextRegion,
 	defaults: NOTE_DOC_DEFAULTS,
 	description:
 		'Note shape: a box with its top-right corner folded back, holding a comment about the diagram — the UML note. It uses the same rect geometry (x/y/width/height) as RectDoc and only swaps the drawing, so it takes text inside the box, unlike the group markers in this package. Give it a landscape box (e.g. 180x110) and left-aligned text, and attach it to what it comments on with a connector. Two shapes are easily mistaken for it, and neither is the same thing: "document" (a wavy bottom edge) is a flowchart step that produces paperwork, and "file" is a portrait pictogram standing for a file on disk. Reach for "note" when the box holds prose *about* the diagram, and for those two when the shape *is* one of the things the diagram is about. Where the comment should point at one spot on one shape, CalloutDoc (a bubble with a tail) says so more directly.',
