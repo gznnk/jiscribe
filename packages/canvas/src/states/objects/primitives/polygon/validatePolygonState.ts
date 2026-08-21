@@ -1,27 +1,10 @@
-import { isObject } from "@jiscribe/basic-validators";
-
+import { PolygonFeatures } from "../../../../schemas/objects/primitives/polygon/PolygonDoc";
 import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
-import {
-	hasValidIdAndType,
-	isValidFillStyleState,
-	isValidPolyState,
-	isValidStrokeStyleState,
-	type StateRecord,
-} from "../../utils/validateStateUtils";
+import { createPolyStateValidator } from "../../utils/createPolyStateValidator";
 
 /**
- * Validates a PolygonState (Poly + stroke + fill).
+ * Validates a PolygonState (Poly-family common logic generated from features).
  * A polygon is a closed shape, so it requires at least 3 points (unlike a polyline's 2).
  */
-export const isValidPolygonState: ObjectStateValidator = (value) => {
-	if (!isObject(value)) {
-		return false;
-	}
-	const o = value as StateRecord;
-	return (
-		hasValidIdAndType(o, "polygon") &&
-		isValidPolyState(o, 3) &&
-		isValidStrokeStyleState(o) &&
-		isValidFillStyleState(o)
-	);
-};
+export const isValidPolygonState: ObjectStateValidator =
+	createPolyStateValidator(PolygonFeatures, 3);

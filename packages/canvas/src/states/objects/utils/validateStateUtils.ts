@@ -73,12 +73,6 @@ export const isValidPolyState = (o: StateRecord, minPoints: number): boolean =>
 	isPoly(o) && o.points.length >= minPoints;
 
 /**
- * Validates a connector's intermediate waypoints. Since the endpoints are held by source / target,
- * points holds only waypoints, and an empty array is allowed too (corresponds to the Doc-side `validateWaypointFields`).
- */
-export const isValidWaypointState = (o: StateRecord): boolean => isPoly(o);
-
-/**
  * Connector invariant: at least one endpoint must be owned.
  * Both ends free (no owner) is equivalent to ink(polyline) and invalid as a connector.
  * Corresponds to the same-named rule in the Doc-side `validateConnectorDoc`.
