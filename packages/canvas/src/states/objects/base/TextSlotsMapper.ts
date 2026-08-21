@@ -38,13 +38,20 @@ const pickDefinedStyle = (
 };
 
 /**
- * Whether a slot id would be re-sorted by the JS engine. Integer-like own keys
+ * Whether a slot id would be re-sorted by the JS engine. Own keys that are
+ * canonical array indices — integers 0 … 2^32−2 in their shortest decimal form —
  * are enumerated first, in ascending numeric order, so such an id would silently
  * move within a slot map whose key order decides the default slot and the drawing
- * order (issue #231).
+ * order (issue #231). Only exactly that set is matched: ids like "1.5", "Infinity"
+ * or "4294967295" keep their insertion place, so dropping them would lose their
+ * slot (and its text) for nothing.
  */
-const isIntegerLikeSlotId = (slotId: string): boolean =>
-	String(Number(slotId)) === slotId && Number(slotId) >= 0;
+const isIntegerLikeSlotId = (slotId: string): boolean => {
+	const n = Number(slotId);
+	return (
+		Number.isInteger(n) && n >= 0 && n < 2 ** 32 - 1 && String(n) === slotId
+	);
+};
 
 /**
  * Expands a doc's text group into the state normal form (keyed slots).
