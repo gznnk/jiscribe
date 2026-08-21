@@ -12,7 +12,7 @@ const PolygonComponent: React.FC<PolygonProps> = ({
 	id,
 	points,
 	fill,
-	stroke = "black",
+	stroke,
 	strokeWidth = 1,
 	strokeDashType,
 }) => {
