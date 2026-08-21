@@ -1,4 +1,4 @@
-import type { ObjectDocDefinition } from "@jiscribe/canvas/doc";
+import type { ObjectDocDefinition } from "@jiscribe/doc";
 
 import {
 	CANONICAL_TYPE_ORDER,

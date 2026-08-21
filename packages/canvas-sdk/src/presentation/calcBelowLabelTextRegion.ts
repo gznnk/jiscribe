@@ -1,5 +1,5 @@
 import type { ObjectTextRegionCalculator } from "@jiscribe/canvas";
-import type { TextSlot } from "@jiscribe/canvas/doc";
+import type { TextSlot } from "@jiscribe/doc";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { calcLabelBoxSize } from "./calcLabelBoxSize";

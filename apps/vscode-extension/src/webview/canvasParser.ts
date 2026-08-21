@@ -2,7 +2,7 @@
 // (packages/canvas/docs/13-authoring-plugins.md). This webview already loads the whole
 // Canvas, React included, so it takes the package's root entry rather than ./doc.
 // `plugins` is shared with the `initialConfig` in index.tsx.
-import { createCanvasParser } from "@jiscribe/canvas/doc";
+import { createCanvasParser } from "@jiscribe/doc";
 import { standardPlugins } from "@jiscribe/standard-shapes";
 
 export const plugins = standardPlugins;

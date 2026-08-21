@@ -1,5 +1,5 @@
-import type { TextSlot } from "@jiscribe/canvas/doc";
 import { TEXT_LINE_HEIGHT } from "@jiscribe/canvas-sdk/doc";
+import type { TextSlot } from "@jiscribe/doc";
 import { describe, it, expect } from "vitest";
 
 import {

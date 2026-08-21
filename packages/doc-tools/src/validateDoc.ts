@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
-import type { CanvasDoc, SemanticDiagnostic } from "@jiscribe/canvas/doc";
-import { createCanvasParser } from "@jiscribe/canvas/doc";
+import type { CanvasDoc, SemanticDiagnostic } from "@jiscribe/doc";
+import { createCanvasParser } from "@jiscribe/doc";
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 import {
 	Ajv2020,

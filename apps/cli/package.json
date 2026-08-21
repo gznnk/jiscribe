@@ -32,6 +32,7 @@
 	},
 	"devDependencies": {
 		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",

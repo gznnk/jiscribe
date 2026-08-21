@@ -14,7 +14,7 @@
 		"./*": "./src/*.ts"
 	},
 	"comments": {
-		"exports./*": "The wildcard is for @jiscribe/canvas only: the canvas layers map every built-in Doc type one by one, so they reach modules no curated entry names. Nothing else declares this package as a dependency, which is what keeps ./, ./unstable, ./png-source and ./svg-source the surface everyone else sees."
+		"exports./*": "The wildcard is for @jiscribe/canvas only: the canvas layers map every built-in Doc type one by one, so they reach modules no curated entry names. Every other consumer is held to ./, ./unstable, ./png-source and ./svg-source by the docCuratedEntriesOnly fence in eslint.config.js, which exempts packages/canvas/src/** alone."
 	},
 	"scripts": {
 		"lint": "eslint .",

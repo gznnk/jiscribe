@@ -1,7 +1,7 @@
 import {
 	builtinObjectDocDefinitions,
 	type ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
+} from "@jiscribe/doc";
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 
 /**

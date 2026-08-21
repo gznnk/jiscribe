@@ -1,4 +1,4 @@
-import type { CanvasDoc } from "@jiscribe/canvas/doc";
+import type { CanvasDoc } from "@jiscribe/doc";
 
 import { createHarnessAssetHandler, HARNESS_ORIGIN } from "./harnessAssets";
 import { launchBrowser } from "./launchBrowser";

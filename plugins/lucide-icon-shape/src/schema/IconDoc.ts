@@ -1,9 +1,9 @@
+import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 import type {
 	CreateObjectType,
 	ExtraStylePropertyDescriptor,
 	ObjectFeatures,
-} from "@jiscribe/canvas/doc";
-import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+} from "@jiscribe/doc";
 
 /** Side of the grid the icon drawings are authored on, and so the box a scale of 1 fills. */
 export const ICON_GRID_SIZE = 24;

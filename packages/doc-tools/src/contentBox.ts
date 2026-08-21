@@ -1,7 +1,4 @@
-import {
-	TEXT_BOX_PADDING_X,
-	TEXT_BOX_PADDING_Y,
-} from "@jiscribe/canvas/unstable-doc";
+import { TEXT_BOX_PADDING_X, TEXT_BOX_PADDING_Y } from "@jiscribe/doc/unstable";
 import type { Rect } from "@jiscribe/geometry";
 
 import { calcContentInset } from "./contentInsets";

@@ -1,6 +1,6 @@
 import { isEnum, isNumber, isObject } from "@jiscribe/basic-validators";
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * Depth of the tail band as a fraction of the box's cross dimension (height

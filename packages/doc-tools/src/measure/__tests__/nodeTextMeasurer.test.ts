@@ -1,4 +1,4 @@
-import { layoutVisualLines } from "@jiscribe/canvas/unstable-doc";
+import { layoutVisualLines } from "@jiscribe/doc/unstable";
 import { describe, expect, it } from "vitest";
 
 import { installNodeTextMeasurer } from "../nodeTextMeasurer";

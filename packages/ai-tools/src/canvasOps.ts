@@ -23,7 +23,7 @@ import type {
 	UpdateConnectorEntry,
 	UpdateConnectorParams,
 	ZOrderPlacement,
-} from "@jiscribe/canvas/doc";
+} from "@jiscribe/doc";
 
 /**
  * A canvas operation an AI tool can ask for, split by what it takes to answer:

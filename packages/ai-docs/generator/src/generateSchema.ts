@@ -6,7 +6,7 @@ import {
 	TEXT_SLOT_STYLE_KEYS,
 	TRANSFORM_STYLE_KEYS,
 	type ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
+} from "@jiscribe/doc";
 import { COMMON_ICON_GROUPS } from "@jiscribe/plugin-lucide-icon-shape/doc";
 
 import {

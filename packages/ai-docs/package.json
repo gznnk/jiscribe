@@ -20,6 +20,7 @@
 	},
 	"devDependencies": {
 		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/plugin-lucide-icon-shape": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"@types/node": "catalog:",

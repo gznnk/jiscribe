@@ -1,8 +1,8 @@
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import {
 	AUTO_COLOR,
 	BELOW_LABEL_STYLE_DEFAULTS,
 } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * A row of cells, used for job queues and message queues.

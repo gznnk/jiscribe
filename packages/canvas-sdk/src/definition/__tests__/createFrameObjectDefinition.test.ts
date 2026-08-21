@@ -1,6 +1,6 @@
 import type { CreateObjectState } from "@jiscribe/canvas";
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
-import { AUTO_COLOR } from "@jiscribe/canvas/unstable-doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
+import { AUTO_COLOR } from "@jiscribe/doc/unstable";
 import { describe, it, expect } from "vitest";
 
 import { createFrameObjectDoc } from "../../schema/createFrameObjectDoc";

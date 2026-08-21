@@ -16,6 +16,21 @@ import tseslint from "typescript-eslint";
 // (both configs need to do so).
 const tsconfigRootDir = fileURLToPath(new URL(".", import.meta.url));
 
+// @jiscribe/doc opens a "./*" wildcard subpath in its package.json for the canvas view
+// layers alone: they map every built-in Doc type one by one and so reach ~60 internal
+// modules no curated entry names. This pattern is what holds everyone else to the four
+// curated entries; packages/canvas/src/** drops it again below.
+const docCuratedEntriesOnly = {
+	group: [
+		"@jiscribe/doc/**",
+		"!@jiscribe/doc/unstable",
+		"!@jiscribe/doc/png-source",
+		"!@jiscribe/doc/svg-source",
+	],
+	message:
+		"@jiscribe/doc has no deep import surface. Take it from @jiscribe/doc, ./unstable, ./png-source or ./svg-source.",
+};
+
 export default tseslint.config(
 	{
 		ignores: [
@@ -96,6 +111,7 @@ export default tseslint.config(
 							message:
 								"Import through the package root (for example @jiscribe/geometry). Reaching into src/ is not allowed.",
 						},
+						docCuratedEntriesOnly,
 					],
 				},
 			],
@@ -177,11 +193,33 @@ export default tseslint.config(
 		},
 	},
 	{
+		// The canvas view layers are the one place the @jiscribe/doc deep import fence is
+		// lifted: rendering / controllers / states name every built-in Doc type module
+		// individually, which is who that package's "./*" wildcard exists for. The four
+		// re-export shims are canvas files too, and the next block holds them to the
+		// curated entries again.
+		files: ["packages/canvas/src/**"],
+		rules: {
+			"no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["@jiscribe/*/src/*"],
+							message:
+								"Import through the package root (for example @jiscribe/geometry). Reaching into src/ is not allowed.",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
 		// The headless (doc) entry points that are not the doc package itself: the canvas
 		// re-export shims onto @jiscribe/doc, and the shipped set's headless half, whose
 		// whole point is that a Node host can take the eight plugins without a rendering
-		// layer coming with them. Each may name @jiscribe/canvas/doc, and nothing else
-		// that drags the UI in.
+		// layer coming with them. Each may name @jiscribe/doc, and nothing else that
+		// drags the UI in.
 		files: [
 			"packages/canvas/src/doc.ts",
 			"packages/canvas/src/unstable-doc.ts",
@@ -214,6 +252,7 @@ export default tseslint.config(
 							message:
 								"The headless (doc) layer cannot depend on the rendering / control / state layers.",
 						},
+						docCuratedEntriesOnly,
 					],
 				},
 			],
@@ -263,9 +302,7 @@ export default tseslint.config(
 						{
 							group: [
 								"@jiscribe/canvas/**",
-								"!@jiscribe/canvas/doc",
 								"!@jiscribe/canvas/unstable",
-								"!@jiscribe/canvas/unstable-doc",
 								// The ./testing/* entries are re-exported as @jiscribe/canvas-sdk/testing/*,
 								// which is the surface a plugin author writes an e2e suite against.
 								"!@jiscribe/canvas/testing",
@@ -275,13 +312,14 @@ export default tseslint.config(
 								"**/canvas/src/**",
 							],
 							message:
-								"The internals of canvas are out of reach. Only @jiscribe/canvas and ./doc, ./unstable, ./unstable-doc, ./testing/* are available.",
+								"The internals of canvas are out of reach. Only @jiscribe/canvas and ./unstable, ./testing/* are available; the headless half is @jiscribe/doc.",
 						},
 						{
 							group: ["@jiscribe/*/src/*"],
 							message:
 								"Import through the package root. Reaching into src/ is not allowed.",
 						},
+						docCuratedEntriesOnly,
 					],
 				},
 			],
@@ -303,12 +341,12 @@ export default tseslint.config(
 						{
 							name: "@jiscribe/canvas",
 							message:
-								"This would break the headless (doc) layer. Take types and values from @jiscribe/canvas/doc.",
+								"This would break the headless (doc) layer. Take types and values from @jiscribe/doc.",
 						},
 						{
 							name: "@jiscribe/canvas/unstable",
 							message:
-								"This would break the headless (doc) layer. Use @jiscribe/canvas/unstable-doc.",
+								"This would break the headless (doc) layer. Use @jiscribe/doc/unstable.",
 						},
 					],
 					patterns: [
@@ -332,6 +370,7 @@ export default tseslint.config(
 							message:
 								"The headless (doc) layer cannot depend on the presentation layer.",
 						},
+						docCuratedEntriesOnly,
 					],
 				},
 			],
@@ -340,8 +379,9 @@ export default tseslint.config(
 	{
 		// doc-tools and the CLI on top of it run in Node: they must not pull in react
 		// / @emotion or the canvas UI entry points, or the CLI stops being something
-		// that can run without a browser. ./doc and ./unstable-doc are their whole
-		// contact with the canvas, and the plugins' /doc entries with the shape set.
+		// that can run without a browser. @jiscribe/doc and its ./unstable entry are
+		// their whole contact with the document layer, and the plugins' /doc entries
+		// with the shape set.
 		files: ["packages/doc-tools/src/**", "apps/cli/src/**"],
 		rules: {
 			"no-restricted-imports": [
@@ -351,11 +391,11 @@ export default tseslint.config(
 						{
 							name: "@jiscribe/canvas",
 							message:
-								"This would pull the React canvas into a Node tool. Take types and values from @jiscribe/canvas/doc.",
+								"This would pull the React canvas into a Node tool. Take types and values from @jiscribe/doc.",
 						},
 						{
 							name: "@jiscribe/canvas/unstable",
-							message: "Use @jiscribe/canvas/unstable-doc instead.",
+							message: "Use @jiscribe/doc/unstable instead.",
 						},
 					],
 					patterns: [
@@ -372,6 +412,7 @@ export default tseslint.config(
 							group: ["@emotion/*"],
 							message: "Do not pull in @emotion; this is a Node tool.",
 						},
+						docCuratedEntriesOnly,
 					],
 				},
 			],
@@ -403,6 +444,10 @@ export default tseslint.config(
 							name: "@jiscribe/canvas/unstable-doc",
 							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
+						{
+							name: "@jiscribe/doc/unstable",
+							message: "Use @jiscribe/canvas-sdk/doc instead.",
+						},
 					],
 					patterns: [
 						{
@@ -410,6 +455,7 @@ export default tseslint.config(
 							message:
 								"Import through the package root. Reaching into src/ is not allowed.",
 						},
+						docCuratedEntriesOnly,
 					],
 				},
 			],
@@ -418,7 +464,7 @@ export default tseslint.config(
 	{
 		// The plugin headless (schema / doc) layer: ban the canvas / canvas-sdk UI entry
 		// points, react / @emotion, and relative reach into this package's own UI layer;
-		// only @jiscribe/canvas/doc and @jiscribe/canvas-sdk/doc are allowed.
+		// only @jiscribe/doc and @jiscribe/canvas-sdk/doc are allowed.
 		files: ["plugins/*/src/schema/**", "plugins/*/src/doc.ts"],
 		rules: {
 			"no-restricted-imports": [
@@ -428,7 +474,7 @@ export default tseslint.config(
 						{
 							name: "@jiscribe/canvas",
 							message:
-								"This would break the headless (doc) layer. Take types and values from @jiscribe/canvas/doc.",
+								"This would break the headless (doc) layer. Take types and values from @jiscribe/doc.",
 						},
 						{
 							name: "@jiscribe/canvas/unstable",
@@ -437,6 +483,10 @@ export default tseslint.config(
 						},
 						{
 							name: "@jiscribe/canvas/unstable-doc",
+							message: "Use @jiscribe/canvas-sdk/doc instead.",
+						},
+						{
+							name: "@jiscribe/doc/unstable",
 							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
 						{
@@ -472,6 +522,7 @@ export default tseslint.config(
 							message:
 								"The headless (doc) layer cannot depend on the presentation / state / stencil / controls / menu layers.",
 						},
+						docCuratedEntriesOnly,
 					],
 				},
 			],

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import type { CanvasDoc } from "@jiscribe/canvas/doc";
+import type { CanvasDoc } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";

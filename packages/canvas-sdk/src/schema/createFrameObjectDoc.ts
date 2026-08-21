@@ -4,13 +4,13 @@ import type {
 	ObjectDocValidateFn,
 	ObjectFeatures,
 	ObjectTextSlotStyleDefaults,
-} from "@jiscribe/canvas/doc";
+} from "@jiscribe/doc";
 import {
 	createFrameDocValidator,
 	createFrameObjectFactory,
-} from "@jiscribe/canvas/unstable-doc";
+} from "@jiscribe/doc/unstable";
 
-/** The `factory` of an {@link ObjectDocDefinition}, which `@jiscribe/canvas/doc` does not name on its own. */
+/** The `factory` of an {@link ObjectDocDefinition}, which `@jiscribe/doc` does not name on its own. */
 type ObjectFactory = NonNullable<ObjectDocDefinition["factory"]>;
 
 /** The part of {@link FrameObjectDocParams} that does not take part in the factory choice. */

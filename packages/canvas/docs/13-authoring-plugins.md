@@ -106,8 +106,8 @@ physically moving them would widen the canvas public surface instead of narrowin
 ## What the authoring kit gives you
 
 `@jiscribe/canvas-sdk` re-exports the whole of `@jiscribe/canvas/unstable`
-(and `/doc` re-exports `unstable-doc`), so it is a superset — you never need to
-reach past it. On top of that:
+(and `/doc` re-exports `@jiscribe/doc/unstable`), so it is a superset — you never
+need to reach past it. On top of that:
 
 | Export                                                                                                                  | Replaces                                                                   |
 | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -247,10 +247,10 @@ harness alone with `dev:harness` to look at it by eye. `vitest.config.ts` includ
 `eslint.config.js` fails the build on all of these.
 
 - Nothing under a plugin's `src/` may import `@jiscribe/canvas/unstable` or
-  `@jiscribe/canvas/unstable-doc`. Use `@jiscribe/canvas-sdk`, or
+  `@jiscribe/doc/unstable`. Use `@jiscribe/canvas-sdk`, or
   `@jiscribe/canvas-sdk/doc` for the headless side.
 - A plugin's `src/schema/` and `src/doc.ts` are headless. They may use
-  `@jiscribe/canvas/doc` and `@jiscribe/canvas-sdk/doc` only — not the UI entries,
+  `@jiscribe/doc` and `@jiscribe/canvas-sdk/doc` only — not the UI entries,
   not `react` / `react-dom` / `@emotion/*`, and not the package's own
   `presentation/`, `state/`, `stencil/`, `controls/` or `menu/` directories.
 - **Import through package roots.** `@jiscribe/geometry`, never
@@ -267,8 +267,8 @@ conversions and their validators.
 The playbook, from seven rounds of doing it.
 
 1. **Audit what the shape uses from the engine.** If everything is already exported,
-   no API change is needed. If not, add the missing pieces to `unstable` /
-   `unstable-doc` first, in their own commit.
+   no API change is needed. If not, add the missing pieces to canvas's `unstable` /
+   doc's `unstable` first, in their own commit.
 2. **Move the files before editing them**, so git records renames. The target
    layout is one folder per shape: `schema/<id>/`, `state/<id>/`,
    `presentation/<Pascal>/`.

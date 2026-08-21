@@ -1,7 +1,6 @@
 // Re-export shim for the stable headless API, which lives in its own package now
-// (`@jiscribe/doc`). Kept so the consumers that still name `@jiscribe/canvas/doc` —
-// the VSCode extension's DiagnosticProvider, the MCP server, doc-tools and the CLI,
-// the shape plugins through canvas-sdk — keep working while they migrate.
+// (`@jiscribe/doc`). Every in-repo consumer has migrated to `@jiscribe/doc`; this
+// entry stays for consumers outside the repo that still name `@jiscribe/canvas/doc`.
 //
 // The names are listed rather than star-exported: a `.ts` file in this package is
 // CommonJS to tsx (no `"type": "module"`), and a star re-export of another CJS module

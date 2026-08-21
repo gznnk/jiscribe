@@ -78,9 +78,10 @@ Then, by impact:
 
 ESLint fails on all of these — see `eslint.config.js` for the exact patterns.
 
-- Packages under `plugins/` may only import `@jiscribe/canvas`,
-  `@jiscribe/canvas-sdk` and their `/doc` entry points. `@jiscribe/canvas/unstable`
-  and any `src/` path are rejected.
+- Packages under `plugins/` may only import `@jiscribe/canvas`, `@jiscribe/doc`,
+  `@jiscribe/canvas-sdk` and its `/doc` entry point. `@jiscribe/canvas/unstable`,
+  `@jiscribe/doc/unstable`, deep `@jiscribe/doc/*` paths and any `src/` path are
+  rejected.
 - The headless document layer (`packages/doc` — the document model, plugin
   contract, parser, ops, text metrics and file I/O — plus the equivalent layers
   in `canvas-sdk` and the plugins) must not import `react`, `react-dom`,

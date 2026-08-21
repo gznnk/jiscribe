@@ -3,15 +3,12 @@
 // (extension.js) so activation stays light.
 //
 // `@jiscribe/standard-shapes/doc` brings the shipped shape set the same way: each
-// plugin's own headless entry, importing only `@jiscribe/canvas/doc` /
-// `@jiscribe/canvas/unstable-doc` (no React, and for markdown no markdown-it / KaTeX
+// plugin's own headless entry, importing only `@jiscribe/doc` /
+// `@jiscribe/doc/unstable` (no React, and for markdown no markdown-it / KaTeX
 // either — rendering lives in its presentation), so esbuild keeps the Node bundle small
 // even though it validates plugin shapes too
 // (packages/canvas/docs/12-plugin-architecture.md).
-import {
-	createCanvasParser,
-	type SemanticDiagnostic,
-} from "@jiscribe/canvas/doc";
+import { createCanvasParser, type SemanticDiagnostic } from "@jiscribe/doc";
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 import * as vscode from "vscode";
 

@@ -2,11 +2,8 @@
 // generator needs, with no rendering layer and no react behind it.
 //
 // e.g. `import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";`
-import type {
-	CanvasDocPlugin,
-	ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
-import { builtinObjectDocDefinitions } from "@jiscribe/canvas/doc";
+import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { builtinObjectDocDefinitions } from "@jiscribe/doc";
 import { annotationDocPlugin } from "@jiscribe/plugin-annotation-shapes/doc";
 import { containerDocPlugin } from "@jiscribe/plugin-container-shapes/doc";
 import { flowchartDocPlugin } from "@jiscribe/plugin-flowchart-shapes/doc";

@@ -26,14 +26,16 @@
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
 		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"react": "catalog:"
 	},
 	"devDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
-		"@jiscribe/canvas": "workspace:*",
 		"react": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

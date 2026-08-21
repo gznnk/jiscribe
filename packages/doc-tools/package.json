@@ -24,6 +24,7 @@
 		"@fontsource/source-serif-4": "5.3.0",
 		"@jiscribe/ai-docs": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/geometry": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"ajv": "^8.20.0",

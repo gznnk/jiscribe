@@ -1,6 +1,6 @@
-import type { RichText } from "@jiscribe/canvas/doc";
-import type { TextMeasureFont } from "@jiscribe/canvas/unstable-doc";
-import { layoutVisualLines } from "@jiscribe/canvas/unstable-doc";
+import type { RichText } from "@jiscribe/doc";
+import type { TextMeasureFont } from "@jiscribe/doc/unstable";
+import { layoutVisualLines } from "@jiscribe/doc/unstable";
 
 import { installNodeTextMeasurer } from "./measure/nodeTextMeasurer";
 

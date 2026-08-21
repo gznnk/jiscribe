@@ -27,10 +27,12 @@
 		"@jiscribe/plugin-uml-shapes": "workspace:*"
 	},
 	"peerDependencies": {
-		"@jiscribe/canvas": "workspace:*"
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*"
 	},
 	"devDependencies": {
 		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"typescript": "catalog:"
 	}
 }

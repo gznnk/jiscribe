@@ -3,14 +3,14 @@ import type {
 	ObjectDoc,
 	ObjectDocDefinition,
 	RichText,
-} from "@jiscribe/canvas/doc";
-import { richTextToPlain } from "@jiscribe/canvas/doc";
-import type { TextMeasureFont } from "@jiscribe/canvas/unstable-doc";
+} from "@jiscribe/doc";
+import { richTextToPlain } from "@jiscribe/doc";
+import type { TextMeasureFont } from "@jiscribe/doc/unstable";
 import {
 	DEFAULT_FONT_FAMILY,
 	TEXT_LINE_HEIGHT,
 	TEXT_STYLE_FALLBACK,
-} from "@jiscribe/canvas/unstable-doc";
+} from "@jiscribe/doc/unstable";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 
 import { contentBox } from "./contentBox";

@@ -11,7 +11,7 @@
 // catch is a handle member that is added and never driven, which is the one thing
 // the doc-ops check does catch.
 
-import { createDocOps } from "@jiscribe/canvas/doc";
+import { createDocOps } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 import { createCanvasToolDescriptors } from "../canvasTools";

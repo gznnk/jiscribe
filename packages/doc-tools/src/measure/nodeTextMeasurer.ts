@@ -2,8 +2,8 @@ import type {
 	TextMeasureFont,
 	TextWidthMeasurer,
 	TextWidthMeasurerFactory,
-} from "@jiscribe/canvas/unstable-doc";
-import { setTextWidthMeasurerFactory } from "@jiscribe/canvas/unstable-doc";
+} from "@jiscribe/doc/unstable";
+import { setTextWidthMeasurerFactory } from "@jiscribe/doc/unstable";
 import * as fontkit from "fontkit";
 
 import { getFontFaceIndex } from "./fontFaceIndex";

@@ -1,4 +1,4 @@
-import type { CanvasDoc } from "@jiscribe/canvas/doc";
+import type { CanvasDoc } from "@jiscribe/doc";
 
 /**
  * What the Node side asks the page to draw. Crosses `page.evaluate`, so every

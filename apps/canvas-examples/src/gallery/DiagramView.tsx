@@ -1,6 +1,6 @@
 import { Canvas } from "@jiscribe/canvas";
 import type { CanvasDoc } from "@jiscribe/canvas";
-import { createCanvasParser } from "@jiscribe/canvas/doc";
+import { createCanvasParser } from "@jiscribe/doc";
 import { flowchartPlugin } from "@jiscribe/plugin-flowchart-shapes";
 import { generalPlugin } from "@jiscribe/plugin-general-shapes";
 import { useEffect, useState } from "react";

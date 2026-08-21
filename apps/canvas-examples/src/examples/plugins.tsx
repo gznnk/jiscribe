@@ -1,6 +1,6 @@
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@jiscribe/canvas";
 import { Canvas } from "@jiscribe/canvas";
-import { createCanvasParser } from "@jiscribe/canvas/doc";
+import { createCanvasParser } from "@jiscribe/doc";
 import {
 	annotationPlugin,
 	annotationToolbarEntry,

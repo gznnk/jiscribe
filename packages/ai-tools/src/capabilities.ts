@@ -5,7 +5,7 @@ import {
 	builtinObjectDocDefinitions,
 	type CanvasDocPlugin,
 	type ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
+} from "@jiscribe/doc";
 
 /**
  * The shape types carried on the AI tool schemas. Resolving doc plugins stays on

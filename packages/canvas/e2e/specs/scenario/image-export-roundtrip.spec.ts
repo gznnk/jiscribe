@@ -1,5 +1,5 @@
 import type * as CanvasModule from "@jiscribe/canvas";
-import type * as CanvasDocModule from "@jiscribe/canvas/doc";
+import type * as CanvasDocModule from "@jiscribe/doc";
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../../fixtures";
@@ -188,7 +188,7 @@ test("exports SVG without foreignObject and restorable from its metadata", async
 			"/@id/@jiscribe/canvas" as string
 		)) as typeof CanvasModule;
 		const docMod = (await import(
-			"/@id/@jiscribe/canvas/doc" as string
+			"/@id/@jiscribe/doc" as string
 		)) as typeof CanvasDocModule;
 		const svgDoc = new DOMParser().parseFromString(text, "image/svg+xml");
 		const source = mod.extractCanvasSource(

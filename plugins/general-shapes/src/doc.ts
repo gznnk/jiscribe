@@ -2,13 +2,10 @@
 // entry point for consumers that want to take part in parse-time validation without going
 // through definition.ts (which pulls in React components) — the MCP server, the Node-side
 // diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
-// @jiscribe/canvas/doc / @jiscribe/canvas-sdk/doc, and never pulls in
+// @jiscribe/doc / @jiscribe/canvas-sdk/doc, and never pulls in
 // presentation / state / stencil.
-import type {
-	CanvasDocPlugin,
-	ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
+import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
 
 import { ACTOR_DOC_DEFAULTS, ActorFeatures } from "./schema/actor/ActorDoc";
 import {

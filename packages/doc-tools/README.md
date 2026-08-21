@@ -1,8 +1,8 @@
 # @jiscribe/doc-tools
 
 Checking, measuring and diagnosing `.jis.json` documents from Node. React- and
-DOM-free: the canvas is reached through `@jiscribe/canvas/doc` and
-`/unstable-doc` alone, so this runs in a CI job, an MCP server or a CLI without a
+DOM-free: the document layer is reached through `@jiscribe/doc` and
+`@jiscribe/doc/unstable` alone, so this runs in a CI job, an MCP server or a CLI without a
 browser anywhere.
 
 `@jiscribe/cli` is the command-line mouth on it (`jiscribe validate` /
