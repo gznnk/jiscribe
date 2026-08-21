@@ -11,7 +11,10 @@ const POLYLINE_HALF_WIDTH = 80;
 /** Shape factory for polyline objects (creation from a position or from drag bounds). */
 export const PolylineObjectFactory: ObjectFactory = {
 	createDoc(position, overrides) {
-		return {
+		// Cloned because overrides are module-level constants (stencil presets): a
+		// nested value shared between two created objects would let an in-place edit
+		// of one rewrite the other (same rule as createFrameObjectFactory).
+		return structuredClone({
 			type: "polyline",
 			stroke: POLY_STROKE,
 			strokeWidth: POLY_STROKE_WIDTH,
@@ -22,7 +25,7 @@ export const PolylineObjectFactory: ObjectFactory = {
 				{ x: position.x - POLYLINE_HALF_WIDTH, y: position.y },
 				{ x: position.x + POLYLINE_HALF_WIDTH, y: position.y },
 			],
-		} as ObjectDoc;
+		} as ObjectDoc);
 	},
 
 	calcDimensions() {
@@ -43,7 +46,8 @@ export const PolylineObjectFactory: ObjectFactory = {
 		if (dist < minSize) {
 			return null;
 		}
-		return {
+		// Cloned for the same reason as in createDoc.
+		return structuredClone({
 			type: "polyline",
 			stroke: POLY_STROKE,
 			strokeWidth: POLY_STROKE_WIDTH,
@@ -54,6 +58,6 @@ export const PolylineObjectFactory: ObjectFactory = {
 				{ x: x1, y: y1 },
 				{ x: x2, y: y2 },
 			],
-		} as ObjectDoc;
+		} as ObjectDoc);
 	},
 };

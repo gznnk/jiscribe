@@ -7,14 +7,17 @@ import { pickSupportedDocDefaults } from "../../utils/pickSupportedDocDefaults";
 
 export const EllipseObjectFactory: ObjectFactory = {
 	createDoc(position, overrides, docDefaults) {
-		return {
+		// Cloned because defaults and overrides are module-level constants: a nested
+		// value shared between two created objects would let an in-place edit of one
+		// rewrite the other (same rule as createFrameObjectFactory).
+		return structuredClone({
 			...ELLIPSE_DOC_DEFAULTS,
 			...pickSupportedDocDefaults(ELLIPSE_DOC_DEFAULTS, docDefaults),
 			...overrides,
 			id: crypto.randomUUID(),
 			cx: position.x,
 			cy: position.y,
-		} as ObjectDoc;
+		} as ObjectDoc);
 	},
 
 	calcDimensions(overrides) {
@@ -31,7 +34,8 @@ export const EllipseObjectFactory: ObjectFactory = {
 		}
 		const rx = bounds.width / 2;
 		const ry = bounds.height / 2;
-		return {
+		// Cloned for the same reason as in createDoc.
+		return structuredClone({
 			...ELLIPSE_DOC_DEFAULTS,
 			...pickSupportedDocDefaults(ELLIPSE_DOC_DEFAULTS, docDefaults),
 			...overrides,
@@ -40,6 +44,6 @@ export const EllipseObjectFactory: ObjectFactory = {
 			cy: bounds.top + ry,
 			rx,
 			ry,
-		} as ObjectDoc;
+		} as ObjectDoc);
 	},
 };

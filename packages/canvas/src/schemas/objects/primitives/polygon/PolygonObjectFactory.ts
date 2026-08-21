@@ -37,7 +37,10 @@ const buildPolygonPoints = (
  */
 export const PolygonObjectFactory: ObjectFactory = {
 	createDoc(position, overrides) {
-		return {
+		// Cloned because overrides are module-level constants (stencil presets): a
+		// nested value shared between two created objects would let an in-place edit
+		// of one rewrite the other (same rule as createFrameObjectFactory).
+		return structuredClone({
 			type: "polygon",
 			stroke: POLY_STROKE,
 			strokeWidth: POLY_STROKE_WIDTH,
@@ -51,7 +54,7 @@ export const PolygonObjectFactory: ObjectFactory = {
 				POLYGON_RADIUS,
 				POLYGON_RADIUS,
 			),
-		} as ObjectDoc;
+		} as ObjectDoc);
 	},
 
 	calcDimensions() {
@@ -65,7 +68,8 @@ export const PolygonObjectFactory: ObjectFactory = {
 		}
 		const rx = bounds.width / 2;
 		const ry = bounds.height / 2;
-		return {
+		// Cloned for the same reason as in createDoc.
+		return structuredClone({
 			type: "polygon",
 			stroke: POLY_STROKE,
 			strokeWidth: POLY_STROKE_WIDTH,
@@ -74,6 +78,6 @@ export const PolygonObjectFactory: ObjectFactory = {
 			// The id and geometry (points) are decided by the factory; not overridable via overrides.
 			id: crypto.randomUUID(),
 			points: buildPolygonPoints(bounds.left + rx, bounds.top + ry, rx, ry),
-		} as ObjectDoc;
+		} as ObjectDoc);
 	},
 };
