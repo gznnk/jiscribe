@@ -5,7 +5,10 @@ import {
 	FontFamilyOption,
 } from "./FontFamilyMenuStyled";
 import type { CanvasFontFamilyId } from "../../../../../../constants/fontFamilies";
-import { CANVAS_FONT_FAMILIES } from "../../../../../../constants/fontFamilies";
+import {
+	CANVAS_FONT_FAMILIES,
+	DEFAULT_FONT_FAMILY,
+} from "../../../../../../constants/fontFamilies";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../../messages/CanvasMessagesTypes";
@@ -88,8 +91,8 @@ const FontFamilyMenuComponent: React.FC<FontFamilyMenuProps> = ({
 
 	const { objectTextStyleDefaults } = useCanvasRegistries();
 	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
-	// An unset family draws in the theme's, so that is the entry to mark active.
-	const fontFamily = slot?.fontFamily ?? canvasState.docDefaults.fontFamily;
+	// An unset family draws in the default one, so that is the entry to mark active.
+	const fontFamily = slot?.fontFamily ?? DEFAULT_FONT_FAMILY;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

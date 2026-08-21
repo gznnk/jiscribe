@@ -4,7 +4,6 @@ import {
 	calcTextDrawnTopLeft,
 } from "./textDrawnTopLeft";
 import type { TextState } from "./TextState";
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
 import type { TextStyleDoc } from "../../../../schemas/objects/base/TextStyleDoc";
 import type { TextDoc } from "../../../../schemas/objects/primitives/text/TextDoc";
 import type {
@@ -26,19 +25,13 @@ import { roundDocCoordinate } from "../../utils/roundDocNumbers";
 /**
  * Converts TextDoc to TextState, measuring the box the doc does not store.
  *
- * The measurement here is provisional: this layer is headless and cannot reach
- * the host theme, so an object that names no fontFamily is measured with the
- * built-in default. `canvasToState` re-measures with the theme's family right
- * after, and the reducer keeps it current from then on. Headless consumers
- * (MCP / diagnostics / docOps), which only ever come through here, get a box
- * that is coherent on its own terms.
+ * The measurement resolves an unset fontFamily to DEFAULT_FONT_FAMILY, the same
+ * fallback the overlay draws it with, so the box this layer produces is the one
+ * the canvas keeps. It is reached headlessly too (MCP / diagnostics / docOps),
+ * which is why it must not depend on anything only a viewer knows.
  */
 export const textToState: DocToStateMapper<TextDoc, TextState> = (doc) => {
-	const size = calcTextObjectFrameSize(
-		doc.text ?? "",
-		doc,
-		DEFAULT_FONT_FAMILY,
-	);
+	const size = calcTextObjectFrameSize(doc.text ?? "", doc);
 	const transform = mapTransformDocToState(doc);
 	// The doc's (x, y) is the drawn top-left, so the center is that corner plus the
 	// transformed half-diagonal. Left unrounded: rounding both directions would

@@ -11,11 +11,10 @@ import {
  * The style fields a type's defaults are read for.
  *
  * `fontFamily` is deliberately left out. A type's default family is a
- * creation-time value that the factory substitutes the host theme's into
- * (`pickSupportedDocDefaults`), and an unset family is drawn and measured in the
- * theme's family throughout. Reading the built-in family here would pin every
- * shape whose author set no family to it and make a host theme's font
- * unreachable for hand-authored documents.
+ * creation-time value the factory writes into the doc, while an unset family
+ * resolves to DEFAULT_FONT_FAMILY wherever it is drawn or measured. Reading a
+ * type's own default here would make a hand-authored doc of that type resolve to
+ * a different family than every other unstyled slot on the canvas.
  */
 const TEXT_STYLE_DEFAULT_KEYS = TEXT_SLOT_STYLE_KEYS.filter(
 	(key) => key !== "fontFamily",

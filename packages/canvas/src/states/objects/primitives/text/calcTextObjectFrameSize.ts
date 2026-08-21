@@ -12,15 +12,9 @@ import { calcTextBlockSize } from "../../utils/calcTextBlockSize";
  *
  * @param text - The whole body, authored newlines included; an empty string still yields the minimum box. A part of it drawn larger grows the box around it (calcTextBlockSize)
  * @param typography - The object's own text styling; each unset field falls back to what the overlay draws with
- * @param fallbackFontFamily - Family used when `typography.fontFamily` is unset. Pass the family the text is actually drawn in (the host theme's), or the box comes out a few percent narrow and clips the last characters
  * @returns The box size in local pixels, the text padding included
  */
 export const calcTextObjectFrameSize = (
 	text: RichText,
 	typography: TextObjectTypography,
-	fallbackFontFamily: string,
-): Dimensions =>
-	calcTextBlockSize(
-		text,
-		resolveTextObjectFont(typography, fallbackFontFamily),
-	);
+): Dimensions => calcTextBlockSize(text, resolveTextObjectFont(typography));

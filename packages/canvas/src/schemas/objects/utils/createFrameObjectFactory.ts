@@ -1,6 +1,5 @@
 import { calcDrawBounds } from "./calcDrawBounds";
 import { numberOverride } from "./numberOverride";
-import { pickSupportedDocDefaults } from "./pickSupportedDocDefaults";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectFactory } from "../types/ObjectFactory";
 
@@ -44,7 +43,7 @@ export const createFrameObjectFactory = (
 	const { supportsBounds = true } = options;
 
 	const factory: ObjectFactory = {
-		createDoc(position, overrides, docDefaults) {
+		createDoc(position, overrides) {
 			const width = numberOverride(overrides?.width, defaults.width);
 			const height = numberOverride(overrides?.height, defaults.height);
 			// Cloned because defaults and overrides are module-level constants: a nested
@@ -52,7 +51,6 @@ export const createFrameObjectFactory = (
 			// an in-place edit of one rewrite the other.
 			return structuredClone({
 				...defaults,
-				...pickSupportedDocDefaults(defaults, docDefaults),
 				...overrides,
 				id: crypto.randomUUID(),
 				x: position.x - width / 2,
@@ -69,15 +67,7 @@ export const createFrameObjectFactory = (
 	};
 
 	if (supportsBounds) {
-		factory.createDocFromBounds = (
-			x1,
-			y1,
-			x2,
-			y2,
-			overrides,
-			minSize,
-			docDefaults,
-		) => {
+		factory.createDocFromBounds = (x1, y1, x2, y2, overrides, minSize) => {
 			const bounds = calcDrawBounds(x1, y1, x2, y2, minSize);
 			if (bounds === null) {
 				return null;
@@ -85,7 +75,6 @@ export const createFrameObjectFactory = (
 			// Cloned for the same reason as in createDoc.
 			return structuredClone({
 				...defaults,
-				...pickSupportedDocDefaults(defaults, docDefaults),
 				...overrides,
 				id: crypto.randomUUID(),
 				x: bounds.left,

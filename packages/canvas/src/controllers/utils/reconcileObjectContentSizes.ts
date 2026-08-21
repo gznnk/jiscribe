@@ -36,15 +36,13 @@ const holdsSameTextSlots = (
  * O(moved objects) rather than O(all objects). Maps that share no backing
  * Record fall back to the full scan, where objects holding the slots they
  * already held are skipped by the same reference comparison
- * ({@link holdsSameTextSlots}) — as does anything that invalidates every
- * measurement at once regardless of what the transition touched. A state where
- * nothing needed re-measuring comes back unchanged (same reference), so
- * re-running is free.
+ * ({@link holdsSameTextSlots}). A state where nothing needed re-measuring comes
+ * back unchanged (same reference), so re-running is free.
  *
- * @param state - The transition's resulting state; its `docDefaults.fontFamily` is the family measured with
- * @param previousState - The state the transition started from, supplying both the slots compared against and the previous theme family
+ * @param state - The transition's resulting state
+ * @param previousState - The state the transition started from, supplying the slots compared against
  * @param contentResizer - The per-canvas content-resizer registry; every type absent from it is skipped outright, so a canvas whose types all store their box does no work here
- * @param forceRemeasure - Re-measures every object even though the slots and the family are untouched. For the one case the two cannot express: the same family resolving to different faces than it did before (web fonts finishing after the first paint)
+ * @param forceRemeasure - Re-measures every object even though its slots are untouched. For the one case the slots cannot express: the same family resolving to different faces than it did before (web fonts finishing after the first paint)
  * @returns The same state reference when no box moved; otherwise a state with the re-measured objects swapped in and the ancestor groups' cached frames recomputed
  */
 export const reconcileObjectContentSizes = (
@@ -53,16 +51,12 @@ export const reconcileObjectContentSizes = (
 	contentResizer: ObjectContentResizerRegistry,
 	forceRemeasure = false,
 ): CanvasControllerState => {
-	const fontFamily = state.docDefaults.fontFamily;
-	// A new family — or the same family now resolving to a face that was not
-	// loaded yet — re-measures every object at once, so the narrowed set says
-	// nothing about what needs re-measuring and the full scan is the only correct
-	// pass.
-	const isMeasurementStillValid =
-		!forceRemeasure && fontFamily === previousState.docDefaults.fontFamily;
-	const changedIds = isMeasurementStillValid
-		? collectCowChangedKeys(state.objects, previousState.objects)
-		: null;
+	// A family now resolving to a face that was not loaded yet invalidates every
+	// measurement at once, so the narrowed set says nothing about what needs
+	// re-measuring and the full scan is the only correct pass.
+	const changedIds = forceRemeasure
+		? null
+		: collectCowChangedKeys(state.objects, previousState.objects);
 
 	let resizedObjects: Record<string, ObjectState> | null = null;
 	const resizedIds: string[] = [];
@@ -73,12 +67,12 @@ export const reconcileObjectContentSizes = (
 			return;
 		}
 		if (
-			isMeasurementStillValid &&
+			!forceRemeasure &&
 			holdsSameTextSlots(previousState.objects[object.id], object)
 		) {
 			return;
 		}
-		const resized = resizeToContent(object, { fontFamily });
+		const resized = resizeToContent(object, {});
 		if (resized === object) {
 			return;
 		}

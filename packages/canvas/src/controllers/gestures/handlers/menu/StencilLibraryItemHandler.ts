@@ -59,7 +59,6 @@ const addObjectToState = (
 		position,
 		registries.objectFactory,
 		preset.defaultOverrides,
-		state.docDefaults,
 	);
 	const objectState = registries.objectMapper.toState(doc);
 

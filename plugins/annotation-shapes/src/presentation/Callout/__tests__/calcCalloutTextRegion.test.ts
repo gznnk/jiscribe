@@ -11,17 +11,10 @@ const size = { width: 200, height: 100 };
 const bandWidth = 200 * CALLOUT_TAIL_RATIO;
 const bandHeight = 100 * CALLOUT_TAIL_RATIO;
 
-/** Any family: these calculators derive their region from the box and read no context. */
-const TEXT_REGION_CONTEXT = { fontFamily: "sans-serif" };
-
 describe("calcCalloutTextRegion", () => {
 	it("insets from the bottom for the default tail when the field is absent", () => {
 		expectRectCloseTo(
-			calcCalloutTextRegion(
-				{ ...size, tail: undefined },
-				"body",
-				TEXT_REGION_CONTEXT,
-			),
+			calcCalloutTextRegion({ ...size, tail: undefined }, "body"),
 			{
 				x: -100,
 				y: -50,
@@ -37,7 +30,6 @@ describe("calcCalloutTextRegion", () => {
 			calcCalloutTextRegion(
 				{ ...size, tail: { side: "top", position: 0.5 } },
 				"body",
-				TEXT_REGION_CONTEXT,
 			),
 			{ x: -100, y: -50 + bandHeight, width: 200, height: 100 - bandHeight },
 		);
@@ -48,7 +40,6 @@ describe("calcCalloutTextRegion", () => {
 			calcCalloutTextRegion(
 				{ ...size, tail: { side: "left", position: 0.5 } },
 				"body",
-				TEXT_REGION_CONTEXT,
 			),
 			{ x: -100 + bandWidth, y: -50, width: 200 - bandWidth, height: 100 },
 		);
@@ -62,7 +53,6 @@ describe("calcCalloutTextRegion", () => {
 					tail: { side: "right", position: 0.5 },
 				},
 				"body",
-				TEXT_REGION_CONTEXT,
 			),
 			{ x: -100, y: -50, width: 200 - bandWidth, height: 100 },
 		);
@@ -75,7 +65,6 @@ describe("calcCalloutTextRegion", () => {
 				tail: { side: "bottom", position: 0.5 },
 			},
 			"body",
-			TEXT_REGION_CONTEXT,
 		);
 		const horizontal = calcCalloutTextRegion(
 			{
@@ -83,7 +72,6 @@ describe("calcCalloutTextRegion", () => {
 				tail: { side: "left", position: 0.5 },
 			},
 			"body",
-			TEXT_REGION_CONTEXT,
 		);
 		expect(vertical.width).toBeCloseTo(200);
 		expect(horizontal.height).toBeCloseTo(100);
@@ -96,7 +84,6 @@ describe("calcCalloutTextRegion", () => {
 				tail: { side: "bottom", position: 0 },
 			},
 			"body",
-			TEXT_REGION_CONTEXT,
 		);
 		const far = calcCalloutTextRegion(
 			{
@@ -104,7 +91,6 @@ describe("calcCalloutTextRegion", () => {
 				tail: { side: "bottom", position: 1 },
 			},
 			"body",
-			TEXT_REGION_CONTEXT,
 		);
 		expect(near).toEqual(far);
 	});
@@ -117,7 +103,6 @@ describe("calcCalloutTextRegion", () => {
 					tail: { side, position: 0.5 },
 				},
 				"body",
-				TEXT_REGION_CONTEXT,
 			);
 			expect(region.x).toBeGreaterThanOrEqual(-100);
 			expect(region.x + region.width).toBeLessThanOrEqual(100);

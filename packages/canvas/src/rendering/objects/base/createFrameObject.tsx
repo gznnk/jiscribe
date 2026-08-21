@@ -14,7 +14,6 @@ import type { FillStyleState } from "../../../states/objects/base/FillStyleState
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
-import { useCanvasTheme } from "../../../theme/CanvasThemeContext";
 import { useObjectTextRegionRegistry } from "../registry/ObjectTextRegionRegistryContext";
 import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
@@ -139,14 +138,9 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		isEditing: boolean;
 	}> = ({ state, slotId, slot, transform, isEditing }) => {
 		const textRegionCalculator = useObjectTextRegionRegistry().get(state.type);
-		// A calculator sizing its region from its own text measures with the family
-		// the overlay draws unstyled text in; both read it from the theme.
-		const { fontFamily: themeFontFamily } = useCanvasTheme();
 		const textStyleDefaults = useObjectTextStyleDefaultsRegistry();
 
-		const textRegion = calcTextRegion(state, slotId, textRegionCalculator, {
-			fontFamily: themeFontFamily,
-		});
+		const textRegion = calcTextRegion(state, slotId, textRegionCalculator);
 		// The type's own defaults for this slot stand in for whatever the slot
 		// leaves unset, the same resolution the editing surface and text
 		// measurement make.

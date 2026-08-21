@@ -49,20 +49,15 @@ export const calcConnectorLabelBox = (
  *
  * @param label - Stored label; an omitted `fontSize` / `fontWeight` falls back
  *   to CONNECTOR_LABEL_DEFAULTS and an omitted `strokeWidth` means no border
- * @param fontFamily - Concrete font string used for measurement. Callers with
- *   theme access (the renderer) pass the host theme's font; callers without one
- *   (the controller-side bbox) take the default, which only skews the measured
- *   width when a host overrides `CanvasTheme.fontFamily`
  */
 export const resolveConnectorLabelBox = (
 	label: ConnectorLabel,
-	fontFamily: string = CONNECTOR_LABEL_DEFAULTS.fontFamily,
 ): ConnectorLabelBox =>
 	calcConnectorLabelBox(
 		label.text,
 		{
 			fontSize: label.fontSize ?? CONNECTOR_LABEL_DEFAULTS.fontSize,
-			fontFamily,
+			fontFamily: CONNECTOR_LABEL_DEFAULTS.fontFamily,
 			fontWeight: label.fontWeight ?? CONNECTOR_LABEL_DEFAULTS.fontWeight,
 		},
 		label.strokeWidth ?? 0,

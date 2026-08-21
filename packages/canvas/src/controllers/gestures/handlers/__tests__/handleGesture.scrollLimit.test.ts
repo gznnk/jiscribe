@@ -39,7 +39,6 @@ const createState = (
 		twoRectsDoc,
 		registries,
 		undefined,
-		undefined,
 		limited ? scrollBoundsConfig : undefined,
 	);
 	return deepFreezeState({

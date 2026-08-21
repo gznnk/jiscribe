@@ -68,7 +68,7 @@ test.describe("text styling through the ObjectMenu", () => {
 		const id = await drawLabeledRect(canvas);
 
 		const before = await canvas.textStyleOf(id);
-		// The theme's family, which is the sans entry, until the menu says otherwise.
+		// DEFAULT_FONT_FAMILY, which is the sans entry, until the menu says otherwise.
 		expect(before?.fontFamily).toContain("Source Sans 3");
 
 		await canvas.openObjectMenu("font-family");

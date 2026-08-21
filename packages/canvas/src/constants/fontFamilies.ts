@@ -12,9 +12,13 @@
 const SANS_STACK = '"Source Sans 3", "Noto Sans JP", sans-serif';
 
 /**
- * Fallback font for a doc/label with no explicit fontFamily, and the built-in
- * default for new shapes that the Canvas `theme` prop (`CanvasTheme.fontFamily`)
- * overrides. The `sans` entry of {@link CANVAS_FONT_FAMILIES}.
+ * The one fallback for a doc/label naming no fontFamily, and the default written
+ * into a newly created shape. The `sans` entry of {@link CANVAS_FONT_FAMILIES}.
+ *
+ * A constant rather than a value the host can set: every measurement has to
+ * agree with what is drawn, and only the shipped families can be measured
+ * faithfully (see {@link CANVAS_FONT_FAMILIES}). So every measurement site
+ * imports this directly instead of being handed a family from above.
  */
 export const DEFAULT_FONT_FAMILY = SANS_STACK;
 

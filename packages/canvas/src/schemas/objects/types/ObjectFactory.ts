@@ -1,6 +1,5 @@
 import type { Point } from "@jiscribe/geometry";
 
-import type { DocCreationDefaults } from "./DocCreationDefaults";
 import type { ObjectDoc } from "../base/ObjectDoc";
 
 /** Half-size of a shape for ghost display (offset from the center). */
@@ -19,14 +18,8 @@ export type ObjectFactory = {
 	 * Used for click-based center placement and drag-and-drop placement.
 	 * Point-geometry shapes read `position` as the box's drawn top-left instead:
 	 * they know no box to center, so there is nothing to offset by.
-	 * `docDefaults` are theme-derived defaults, applied between the shape's
-	 * DOC_DEFAULTS and `overrides` (only for fields the shape declares).
 	 */
-	createDoc(
-		position: Point,
-		overrides?: Record<string, unknown>,
-		docDefaults?: DocCreationDefaults,
-	): ObjectDoc;
+	createDoc(position: Point, overrides?: Record<string, unknown>): ObjectDoc;
 
 	/**
 	 * Return the half-size for ghost display (after overrides are applied).
@@ -50,6 +43,5 @@ export type ObjectFactory = {
 		y2: number,
 		overrides?: Record<string, unknown>,
 		minSize?: number,
-		docDefaults?: DocCreationDefaults,
 	): ObjectDoc | null;
 };

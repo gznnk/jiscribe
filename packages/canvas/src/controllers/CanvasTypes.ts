@@ -2,7 +2,6 @@ import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
 import type { RichText } from "../schemas/objects/types/RichText";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { Viewport } from "../states/canvas/Viewport";
@@ -470,12 +469,6 @@ export type CanvasControllerState = CanvasState & {
 
 	/** Non-null only while axis-locked; cleared on dragEnd. Drawn by AxisLockGuide */
 	axisLockFeedback: AxisLockFeedback | null;
-
-	/**
-	 * Defaults for newly created objects (e.g. fontFamily), injected from the Canvas `theme`
-	 * prop and kept in sync via SET_DOC_DEFAULTS. Read by gesture handlers creating docs.
-	 */
-	docDefaults: DocCreationDefaults;
 
 	/**
 	 * Set synchronously by CopyCommand regardless of whether the navigator.clipboard write

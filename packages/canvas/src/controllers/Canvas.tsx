@@ -323,11 +323,6 @@ const CanvasComponent = ({
 		[theme.tokens],
 	);
 
-	const docDefaults = useMemo(
-		() => ({ fontFamily: theme.fontFamily }),
-		[theme.fontFamily],
-	);
-
 	// rootRef spans toolbar + canvas area and carries pointer capture; canvasRef is the
 	// canvas area alone, which keeps edge scrolling aligned to the region below the toolbar.
 	const rootRef = useRef<HTMLDivElement>(null);
@@ -349,22 +344,15 @@ const CanvasComponent = ({
 	const [state, dispatch] = useCanvasReducer(
 		doc,
 		registries,
-		docDefaults,
 		initialConfig?.viewport,
 		initialConfig?.scrollBounds,
 	);
 
-	// Keeps docDefaults current when the host swaps themes at runtime; the reducer no-ops
-	// when the values are unchanged.
-	useEffect(() => {
-		dispatch({ type: "SET_DOC_DEFAULTS", docDefaults });
-	}, [docDefaults, dispatch]);
-
 	// Web fonts land after the first paint, so every content-derived box mapped
-	// before then was measured against a fallback face. Nothing in the doc or the
-	// theme moves when the real one arrives, which is why this needs a signal of
-	// its own; a pass that moves no box returns the same state, so the nonce
-	// firing more than once costs nothing.
+	// before then was measured against a fallback face. Nothing in the doc moves
+	// when the real one arrives, which is why this needs a signal of its own; a
+	// pass that moves no box returns the same state, so the nonce firing more
+	// than once costs nothing.
 	const fontsLoadedNonce = useFontsLoadedNonce();
 	useEffect(() => {
 		if (fontsLoadedNonce > 0) {
@@ -502,15 +490,9 @@ const CanvasComponent = ({
 			graftTextEditDraft(
 				state.objects,
 				state.textEditState,
-				state.docDefaults.fontFamily,
 				registries.objectContentResizer,
 			),
-		[
-			state.objects,
-			state.textEditState,
-			state.docDefaults.fontFamily,
-			registries,
-		],
+		[state.objects, state.textEditState, registries],
 	);
 
 	// The menu is anchored below the drawn extent, which during a text edit is the
@@ -706,10 +688,7 @@ const CanvasComponent = ({
 								zoom={state.viewport.zoom}
 								isTextEditing={!!state.textEditState}
 							/>
-							<DragGhost
-								stencilLibraryDrag={state.stencilLibraryDrag}
-								docDefaults={state.docDefaults}
-							/>
+							<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
 							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
 							<AreaSelectionRect areaSelection={state.areaSelection} />
 							<SnapGuides

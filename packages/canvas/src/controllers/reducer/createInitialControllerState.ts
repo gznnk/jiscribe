@@ -1,6 +1,4 @@
-import { DEFAULT_FONT_FAMILY } from "../../constants/fontFamilies";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
@@ -25,7 +23,6 @@ import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
 	registries: CanvasRegistries,
-	docDefaults: DocCreationDefaults = { fontFamily: DEFAULT_FONT_FAMILY },
 	initialCamera?: Camera,
 	scrollBoundsConfig?: ScrollBoundsConfig,
 ): CanvasControllerState => {
@@ -33,7 +30,6 @@ export const createInitialControllerState = (
 		initialDoc,
 		registries.objectMapper,
 		registries.objectContentResizer,
-		docDefaults.fontFamily,
 	);
 	const viewport =
 		initialCamera === undefined
@@ -55,7 +51,6 @@ export const createInitialControllerState = (
 				: { config: scrollBoundsConfig, rect: null, measuredFrom: null },
 		...resetUiState(),
 		activeModal: null,
-		docDefaults,
 		commitVersion: 0,
 		saveVersion: 0,
 		saveNonce: "",

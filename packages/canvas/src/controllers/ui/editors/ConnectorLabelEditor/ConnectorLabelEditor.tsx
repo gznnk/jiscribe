@@ -12,7 +12,6 @@ import {
 	resolveLabelFill,
 } from "../../../../rendering/objects/connector/ConnectorLabel";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
 import type { CaretLocalRect, CaretTarget } from "../utils/readCaretLocalRect";
@@ -72,9 +71,9 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	onEscape,
 	onCaretMove,
 }) => {
-	// Labels have no per-doc fontFamily; follow the host theme so the editor
-	// measures and renders with the same font as ConnectorLabel.
-	const { fontFamily } = useCanvasTheme();
+	// The label carries no family of its own, so the editor draws and measures
+	// with the same constant ConnectorLabel does.
+	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
 	const color = resolveAutoColor(fontColor, "ink");
 	const background = resolveLabelFill(fill);

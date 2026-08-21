@@ -12,7 +12,7 @@ const DEFAULTS = {
 	fill: "#fff",
 } as const;
 
-/** DOC_DEFAULTS that declares fontFamily, so theme docDefaults apply to it. */
+/** DOC_DEFAULTS carrying a plain (non-geometry) field an override can replace. */
 const TEXT_DEFAULTS = { ...DEFAULTS, fontFamily: "Noto Sans JP" } as const;
 
 /** DOC_DEFAULTS with slotted text, the shape of a uml record's defaults. */
@@ -92,35 +92,16 @@ describe("createFrameObjectFactory createDoc", () => {
 		expect(stencilOverrides.text.name.text).toBe("Class");
 	});
 
-	it("lets overrides win over the theme docDefaults", () => {
+	it("lets an override win over the built-in default", () => {
 		const doc = asRecord(
 			createFrameObjectFactory(TEXT_DEFAULTS).createDoc(
 				{ x: 0, y: 0 },
-				{ fontFamily: "Explicit" },
-				{ fontFamily: "Theme" },
+				{
+					fontFamily: "Explicit",
+				},
 			),
 		);
 		expect(doc.fontFamily).toBe("Explicit");
-	});
-
-	it("applies the theme docDefaults over the built-in defaults", () => {
-		const doc = asRecord(
-			createFrameObjectFactory(TEXT_DEFAULTS).createDoc(
-				{ x: 0, y: 0 },
-				undefined,
-				{ fontFamily: "Theme" },
-			),
-		);
-		expect(doc.fontFamily).toBe("Theme");
-	});
-
-	it("does not add fontFamily to a shape that does not declare it", () => {
-		const doc = asRecord(
-			createFrameObjectFactory(DEFAULTS).createDoc({ x: 0, y: 0 }, undefined, {
-				fontFamily: "Theme",
-			}),
-		);
-		expect("fontFamily" in doc).toBe(false);
 	});
 });
 

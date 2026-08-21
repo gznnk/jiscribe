@@ -64,16 +64,11 @@ describe("createInitialControllerState", () => {
 
 	it("seeds the viewport camera from initialCamera without touching width/height", () => {
 		const base = createInitialControllerState(docWithRect, registries);
-		const state = createInitialControllerState(
-			docWithRect,
-			registries,
-			undefined,
-			{
-				minX: 10,
-				minY: 20,
-				zoom: 2,
-			},
-		);
+		const state = createInitialControllerState(docWithRect, registries, {
+			minX: 10,
+			minY: 20,
+			zoom: 2,
+		});
 
 		// Camera adopted so the first paint lands at the host's pan/zoom (no flash).
 		expect(state.viewport).toMatchObject({ minX: 10, minY: 20, zoom: 2 });

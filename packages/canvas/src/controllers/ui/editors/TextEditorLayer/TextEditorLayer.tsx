@@ -20,7 +20,6 @@ import {
 	type TextStyleState,
 } from "../../../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
@@ -144,13 +143,10 @@ function renderTextEditor(
 	richText: RichText,
 	handlers: EditorHandlers,
 	textStyleDefaults: ObjectTextStyleDefaultsRegistry,
-	themeFontFamily: string,
 	textRegionCalculator?: ObjectTextRegionCalculator,
 	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
 ): React.ReactElement {
-	const textRegion = calcTextRegion(target, slotId, textRegionCalculator, {
-		fontFamily: themeFontFamily,
-	});
+	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
 	const style = textStyleDefaults.resolveSlotStyle(
 		target.type,
 		slotId,
@@ -220,9 +216,6 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	onToggleFormat,
 }) => {
 	const registries = useCanvasRegistries();
-	// The editor has to resolve the same region the overlay it replaces did, and a
-	// region sized from its own text is measured with the theme's family.
-	const { fontFamily: themeFontFamily } = useCanvasTheme();
 
 	if (!textEditState) {
 		return null;
@@ -274,7 +267,6 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			textEditState.text,
 			handlers,
 			registries.objectTextStyleDefaults,
-			themeFontFamily,
 			registries.objectTextRegion.get(targetObject.type),
 			registries.objectTextEditOverflow.get(targetObject.type),
 		);

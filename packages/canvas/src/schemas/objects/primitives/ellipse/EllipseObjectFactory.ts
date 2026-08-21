@@ -3,13 +3,11 @@ import type { ObjectDoc } from "../../base/ObjectDoc";
 import type { ObjectFactory } from "../../types/ObjectFactory";
 import { calcDrawBounds } from "../../utils/calcDrawBounds";
 import { numberOverride } from "../../utils/numberOverride";
-import { pickSupportedDocDefaults } from "../../utils/pickSupportedDocDefaults";
 
 export const EllipseObjectFactory: ObjectFactory = {
-	createDoc(position, overrides, docDefaults) {
+	createDoc(position, overrides) {
 		return {
 			...ELLIPSE_DOC_DEFAULTS,
-			...pickSupportedDocDefaults(ELLIPSE_DOC_DEFAULTS, docDefaults),
 			...overrides,
 			id: crypto.randomUUID(),
 			cx: position.x,
@@ -24,7 +22,7 @@ export const EllipseObjectFactory: ObjectFactory = {
 		};
 	},
 
-	createDocFromBounds(x1, y1, x2, y2, overrides, minSize, docDefaults) {
+	createDocFromBounds(x1, y1, x2, y2, overrides, minSize) {
 		const bounds = calcDrawBounds(x1, y1, x2, y2, minSize);
 		if (bounds === null) {
 			return null;
@@ -33,7 +31,6 @@ export const EllipseObjectFactory: ObjectFactory = {
 		const ry = bounds.height / 2;
 		return {
 			...ELLIPSE_DOC_DEFAULTS,
-			...pickSupportedDocDefaults(ELLIPSE_DOC_DEFAULTS, docDefaults),
 			...overrides,
 			id: crypto.randomUUID(),
 			cx: bounds.left + rx,

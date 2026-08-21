@@ -1,6 +1,5 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
-import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import type { RichText } from "../../schemas/objects/types/RichText";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { Camera } from "../../states/canvas/Viewport";
@@ -153,15 +152,6 @@ export type PasteAction = {
 };
 
 /**
- * Set doc-creation defaults action - keeps state.docDefaults in sync when the
- * host swaps themes at runtime (e.g. changing the default fontFamily).
- */
-export type SetDocDefaultsAction = {
-	type: "SET_DOC_DEFAULTS";
-	docDefaults: DocCreationDefaults;
-};
-
-/**
  * Re-measure action - re-derives every content-sized box against the fonts as
  * they now resolve. Dispatched when web fonts finish loading, which changes what
  * a family measures without changing the family (see useFontsLoadedNonce).
@@ -205,7 +195,6 @@ export type CanvasAction =
 	| EndTextEditAction
 	| MenuPropertyUpdateAction
 	| PasteAction
-	| SetDocDefaultsAction
 	| RemeasureTextAction
 	| CloseContextMenuAction
 	| CloseModalAction;

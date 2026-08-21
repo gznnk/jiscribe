@@ -7,7 +7,6 @@ import { useObjectTextRegionRegistry } from "../../../../rendering/objects/regis
 import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
 type TextSlotOutlineProps = {
 	object: ObjectState;
@@ -25,7 +24,6 @@ const TextSlotOutlineComponent: React.FC<TextSlotOutlineProps> = ({
 	slotId,
 }) => {
 	const textRegionRegistry = useObjectTextRegionRegistry();
-	const { fontFamily } = useCanvasTheme();
 
 	if (!isTransformedFrame(object)) {
 		return null;
@@ -36,9 +34,6 @@ const TextSlotOutlineComponent: React.FC<TextSlotOutlineProps> = ({
 		object,
 		slotId,
 		textRegionRegistry.get(object.type),
-		{
-			fontFamily,
-		},
 	);
 	const { cx, cy, scaleX, scaleY, rotation } = object;
 

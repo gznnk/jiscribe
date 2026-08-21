@@ -132,7 +132,7 @@ export const useMeasureHandle = (
 			},
 
 			textSlot: (id, slotId) => {
-				const { objects, docDefaults } = canvasStateRef.current;
+				const { objects } = canvasStateRef.current;
 				const object = objects[id];
 				if (!object) {
 					return null;
@@ -145,12 +145,7 @@ export const useMeasureHandle = (
 				if (resolvedSlotId === undefined) {
 					return null;
 				}
-				return measureTextSlot(
-					object,
-					resolvedSlotId,
-					registries,
-					docDefaults.fontFamily,
-				);
+				return measureTextSlot(object, resolvedSlotId, registries);
 			},
 
 			connectorPath: (id) => {

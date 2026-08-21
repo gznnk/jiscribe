@@ -23,6 +23,10 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * Implementations declare what they read via `TState` (most:
  * `ObjectVisualBoundsCalculator<Dimensions>`); the registry stores the default
  * instantiation, to which narrower readers are assignable by contravariance.
+ *
+ * Takes the state and nothing else: an implementation sizing its bounds from its
+ * own text measures with `DEFAULT_FONT_FAMILY`, the same fallback the overlay
+ * draws an unstyled slot in.
  */
 export type ObjectVisualBoundsCalculator<
 	TState extends Dimensions = ObjectState & Dimensions,

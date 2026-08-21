@@ -39,7 +39,18 @@ export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorR
 
 export { AUTO_COLOR } from "./schemas/objects/utils/autoColor";
 
+// The one family an unstyled slot is drawn and measured with, and the default a
+// shape is created with. Nothing above can substitute another: only the shipped
+// families measure faithfully (CANVAS_FONT_FAMILIES).
 export { DEFAULT_FONT_FAMILY } from "./constants/fontFamilies";
+// The closed set a document may name, for a doc-side validator or a shape
+// choosing its own default. Carries no UI dependency, so it belongs on this
+// entry as well as the root — a plugin's `schema/**` cannot reach the root.
+export { CANVAS_FONT_FAMILIES } from "./constants/fontFamilies";
+export type {
+	CanvasFontFamily,
+	CanvasFontFamilyId,
+} from "./constants/fontFamilies";
 
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows

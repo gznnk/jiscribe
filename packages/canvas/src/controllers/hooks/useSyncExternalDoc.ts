@@ -86,7 +86,6 @@ export const useSyncExternalDoc = ({
 			canvasDoc,
 			objectMapper,
 			objectContentResizer,
-			stateRef.current.docDefaults.fontFamily,
 		);
 		resetGestureState();
 		dispatch({
