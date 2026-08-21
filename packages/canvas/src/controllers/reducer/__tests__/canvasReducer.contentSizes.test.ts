@@ -1,5 +1,5 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 

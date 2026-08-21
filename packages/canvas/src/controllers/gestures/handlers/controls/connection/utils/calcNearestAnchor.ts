@@ -4,7 +4,7 @@ import {
 	type ConnectPointAnchorSpec,
 	type EdgeAnchorSpec,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import {
 	calcEuclideanDistance,
 	calcInverseAffineTransformedPoint,

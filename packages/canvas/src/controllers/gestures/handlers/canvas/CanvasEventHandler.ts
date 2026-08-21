@@ -1,5 +1,5 @@
 ﻿import { createObjectDocFromBounds } from "@jiscribe/doc/model/objects/utils/createObjectDocFromBounds";
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 
 import { calcPannedViewport } from "./utils/calcPannedViewport";
@@ -58,7 +58,7 @@ export const CanvasEventHandler: GestureHandler = {
 				...state,
 				viewport: {
 					...state.viewport,
-					zoom: roundToDecimal(newZoom, PRECISION.ZOOM),
+					zoom: roundToDecimal(newZoom, ZOOM.PRECISION),
 					minX: roundToDecimal(newMinX, PRECISION.COORDINATE),
 					minY: roundToDecimal(newMinY, PRECISION.COORDINATE),
 				},

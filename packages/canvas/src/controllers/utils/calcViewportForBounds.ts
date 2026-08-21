@@ -1,4 +1,4 @@
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
@@ -54,7 +54,7 @@ export const calcViewportForBounds = (
 	return {
 		width,
 		height,
-		zoom: roundToDecimal(zoom, PRECISION.ZOOM),
+		zoom: roundToDecimal(zoom, ZOOM.PRECISION),
 		minX: roundToDecimal(contentCx - width / (2 * zoom), PRECISION.COORDINATE),
 		minY: roundToDecimal(contentCy - height / (2 * zoom), PRECISION.COORDINATE),
 	};

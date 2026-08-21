@@ -97,7 +97,7 @@ export type {
 	VisualLine,
 } from "@jiscribe/doc/text/measureText";
 
-export { PRECISION } from "@jiscribe/doc/model/precision";
+export { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 
 // ---------------------------------------------------------------------------
 // Phase A: type-specific selection control parts (packages/canvas/docs/12-plugin-architecture.md)

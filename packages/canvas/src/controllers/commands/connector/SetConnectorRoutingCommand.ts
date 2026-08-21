@@ -1,7 +1,7 @@
 import { isSelfLoopConnector } from "@jiscribe/doc/model/objects/connector/isSelfLoopConnector";
 import { isOrthogonalRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
 import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import type { Point } from "@jiscribe/geometry";
 import { roundToDecimal } from "@jiscribe/geometry";
 

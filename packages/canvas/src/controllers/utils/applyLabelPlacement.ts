@@ -1,5 +1,5 @@
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";

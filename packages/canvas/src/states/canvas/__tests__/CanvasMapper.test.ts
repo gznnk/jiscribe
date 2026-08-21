@@ -3,7 +3,7 @@ import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import type { ConnectorDoc } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { describe, expect, it, beforeEach } from "vitest";
 
 import {

@@ -1,4 +1,4 @@
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import type { Point } from "@jiscribe/geometry";
 
 /**

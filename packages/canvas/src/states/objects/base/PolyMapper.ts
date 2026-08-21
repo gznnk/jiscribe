@@ -1,6 +1,6 @@
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
-import { roundDocPoints } from "@jiscribe/doc/model/roundDocNumbers";
+import { roundDocPoints } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
 import type { Point } from "@jiscribe/geometry";
 
 import type { ObjectMapperType } from "./MapperTypes";

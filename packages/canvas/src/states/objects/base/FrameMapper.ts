@@ -4,7 +4,7 @@ import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFea
 import {
 	roundDocEllipse,
 	roundDocRect,
-} from "@jiscribe/doc/model/roundDocNumbers";
+} from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
 import type { Ellipse, Frame, Rect } from "@jiscribe/geometry";
 import {
 	convertEllipseToFrame,

@@ -2,7 +2,7 @@ import {
 	toEquivalentEdgeAnchor,
 	type EndpointRef,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal, type Point } from "@jiscribe/geometry";
 
 import {

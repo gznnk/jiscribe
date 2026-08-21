@@ -1,6 +1,6 @@
 import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { resolveTextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { PRECISION } from "@jiscribe/doc/model/precision";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/textSlotId";
 import { roundToDecimal } from "@jiscribe/geometry";
 

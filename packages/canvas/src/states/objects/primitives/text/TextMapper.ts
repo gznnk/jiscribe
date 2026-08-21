@@ -1,6 +1,6 @@
 import type { TextStyleDoc } from "@jiscribe/doc/model/objects/base/TextStyleDoc";
 import type { TextDoc } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
-import { roundDocCoordinate } from "@jiscribe/doc/model/roundDocNumbers";
+import { roundDocCoordinate } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
 
 import { calcTextObjectFrameSize } from "./calcTextObjectFrameSize";
 import {
