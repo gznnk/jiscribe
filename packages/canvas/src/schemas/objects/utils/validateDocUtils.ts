@@ -99,7 +99,9 @@ export function validateWaypointFields(
 
 /**
  * Validate a connector EndpointRef, dispatching to owned or free endpoint validation
- * based on whether an `owner` is present. Non-object refs are treated as valid (no-op).
+ * based on whether an `owner` is present. Non-object refs are treated as valid (no-op):
+ * whether an endpoint may be absent at all is the caller's rule (`validateConnectorDoc`
+ * requires both to be present), so this checks only the shape of a ref that is there.
  */
 export function validateEndpointRef(
 	ref: unknown,
