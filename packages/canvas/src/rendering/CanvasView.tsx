@@ -1,12 +1,11 @@
-import { memo, useId, useLayoutEffect, useState } from "react";
+import { memo, useLayoutEffect, useState } from "react";
 import type React from "react";
 
 import { ContentGroup, Svg } from "./CanvasViewStyled";
 import { CanvasDefs } from "./defs/CanvasDefs";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import { deriveGridLineColor } from "./layers/background/deriveGridLineColor";
-import { GridBackground } from "./layers/background/GridBackground";
-import { GridPattern } from "./layers/background/GridPattern";
+import { Grid } from "./layers/background/Grid";
 import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
 
 type CanvasViewProps = {
@@ -21,9 +20,9 @@ type CanvasViewProps = {
 	 * full tree (export / thumbnail / any path that snapshots the DOM).
 	 */
 	visibleObjectIds?: ReadonlySet<string>;
-	/** Render the background grid (default false). See {@link GridPattern}. */
+	/** Render the background grid (default false). See {@link Grid}. */
 	showGrid?: boolean;
-	/** Base grid spacing in world units (default 25), passed to GridPattern. */
+	/** Base grid spacing in world units (default 25), passed to Grid. */
 	gridSize?: number;
 	/**
 	 * The theme surface color token (`canvasBg`). Not used directly — it is a
@@ -50,13 +49,6 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	surfaceColor,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
-
-	// SVG `url(#id)` resolution is document-global, so a fixed pattern id would
-	// let two mounted canvases (multi-canvas hosts) — or any host-page element
-	// with the same id — resolve each other's grid, drawing the wrong density and
-	// color. useId is unique per React root; its delimiters are stripped so the
-	// id stays a plain funcIRI-safe token.
-	const gridPatternId = `grid-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
 	// A doc-authored surface color paints via the SVG's own background-color
 	// (below), so image export — which reads getComputedStyle(svg).backgroundColor
@@ -92,23 +84,15 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 		>
 			<CanvasDefs />
 			{showGrid && (
-				<>
-					{/* Grid pattern definition */}
-					<GridPattern
-						zoom={zoom}
-						baseGridSize={gridSize}
-						color={gridLineColor}
-						patternId={gridPatternId}
-					/>
-					{/* Grid background */}
-					<GridBackground
-						x={minX}
-						y={minY}
-						width={width / zoom}
-						height={height / zoom}
-						patternId={gridPatternId}
-					/>
-				</>
+				<Grid
+					zoom={zoom}
+					baseGridSize={gridSize}
+					color={gridLineColor}
+					x={minX}
+					y={minY}
+					width={width / zoom}
+					height={height / zoom}
+				/>
 			)}
 			<ContentGroup isDrawMode={isDrawMode}>
 				{/* Traverse rootIds (in z-order) and render objects and connectors interleaved */}
