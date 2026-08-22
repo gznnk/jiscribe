@@ -2,6 +2,12 @@ import type { ObjectRecord } from "./objectAccess";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";
 
+/** Whether a type stores a field of this name beyond the ones its features imply. */
+export const declaresExtraKey = (
+	definition: ObjectDocDefinition,
+	key: string,
+): boolean => (definition.extraKeys ?? []).includes(key);
+
 /**
  * Copies a type's own properties — the ones no parameter of the call covers, such as
  * the lucide icon's `icon` or the callout's `tail` — onto an object.

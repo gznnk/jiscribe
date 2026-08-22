@@ -2,7 +2,7 @@ import { calcPolyBoundingBox, type Point } from "@jiscribe/geometry";
 
 import { DocOperationError } from "./errors";
 import { batchItemError } from "./utils/batchErrors";
-import { applyExtraProps } from "./utils/extraFields";
+import { applyExtraProps, declaresExtraKey } from "./utils/extraFields";
 import { generateUniqueId } from "./utils/ids";
 import type { ObjectRecord } from "./utils/objectAccess";
 import type { DocDefinitions } from "./utils/objectGeometry";
@@ -108,12 +108,6 @@ const RESERVED_PROP_KEYS: ReadonlySet<string> = new Set<string>([
 
 /** One object to create in an {@link addObjects} call. */
 export type AddObjectEntry = { type: string } & AddObjectParams;
-
-/** Whether a type stores a field of this name beyond the ones its features imply. */
-const declaresExtraKey = (
-	definition: ObjectDocDefinition,
-	key: string,
-): boolean => (definition.extraKeys ?? []).includes(key);
 
 /**
  * Check the size parameters against what the type can actually store, writing nothing.

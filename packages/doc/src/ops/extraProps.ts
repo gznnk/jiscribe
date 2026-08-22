@@ -1,8 +1,9 @@
 import { DocOperationError } from "./errors";
-import { applyExtraProps } from "./utils/extraFields";
+import { applyExtraProps, declaresExtraKey } from "./utils/extraFields";
 import { requireObject, type ObjectRecord } from "./utils/objectAccess";
 import type { DocDefinitions } from "./utils/objectGeometry";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 
 /**
  * The two names that decide what an object *is*, which a props write must never touch
@@ -11,6 +12,37 @@ import type { CanvasDoc } from "../model/canvas/CanvasDoc";
  * here everything else is bounded by the type's `extraKeys`, which names neither.
  */
 const IDENTITY_KEYS: ReadonlySet<string> = new Set(["id", "type"]);
+
+/**
+ * The names the write itself empties of meaning, which it therefore takes with it: the
+ * block layout is the one configuration a type stores a `width` for (TextLayoutDoc), so
+ * leaving that layout leaves the width behind. Creation already drops it the same way
+ * (TextObjectFactory.createDoc); without it here the document keeps a number nothing
+ * reads, waiting to come back the next time the layout is switched.
+ *
+ * Keyed on the names the type declares rather than on the type itself: a `width` reached
+ * through `extraKeys` is one the layout owns, while a box's own width comes from its
+ * features and is never a candidate here.
+ *
+ * @param previous - The object as it stands, read for the layout the write is leaving
+ * @param candidate - The object as the write would leave it
+ */
+const collectStaleLayoutKeys = (
+	previous: ObjectRecord,
+	candidate: ObjectRecord,
+	definition: ObjectDocDefinition,
+): string[] => {
+	const leftBlockLayout =
+		previous.textLayout === "block" && candidate.textLayout !== "block";
+	if (
+		!leftBlockLayout ||
+		!declaresExtraKey(definition, "width") ||
+		candidate.width === undefined
+	) {
+		return [];
+	}
+	return ["width"];
+};
 
 /**
  * Set the properties belonging to the type itself on one object — the lucide icon's
@@ -29,7 +61,8 @@ const IDENTITY_KEYS: ReadonlySet<string> = new Set(["id", "type"]);
  * @param extraProps - Property names and values to set; a value of `undefined` is dropped,
  *   and there is no way to unset a property back to its default
  * @param definitions - Type table the accepted names and the validator are read from
- * @returns The property names written, in the order `props` lists them
+ * @returns The property names written, in the order `props` lists them, minus any the
+ *   write itself made meaningless ({@link collectStaleLayoutKeys})
  * @throws {@link DocOperationError} when the id is missing, when a name is not one the
  *   type declares, or when the result fails the type's own `validateDoc`
  */
@@ -56,6 +89,11 @@ export const setExtraProps = (
 		id,
 	);
 
+	const stale = collectStaleLayoutKeys(object, candidate, definition);
+	for (const key of stale) {
+		delete candidate[key];
+	}
+
 	const diagnostics = definition.validateDoc(candidate, id);
 	if (diagnostics.length > 0) {
 		throw new DocOperationError(
@@ -66,5 +104,9 @@ export const setExtraProps = (
 	}
 
 	Object.assign(object, candidate);
-	return written;
+	// Assigning copies what the candidate holds; what it dropped has to be dropped here.
+	for (const key of stale) {
+		delete object[key];
+	}
+	return written.filter((key) => !stale.includes(key));
 };
