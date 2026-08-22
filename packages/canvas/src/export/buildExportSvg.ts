@@ -205,19 +205,32 @@ export const serializeSvg = (svg: SVGSVGElement): string => {
 };
 
 /**
- * Builds the sized, serialized export SVG plus its logical size. The single
- * place deciding the output dimensions, shared by the SVG export and the PNG
- * rasterizer so the two formats can never diverge in size.
+ * Builds the sized export SVG plus its logical size. The single place deciding
+ * the output dimensions, shared by the SVG export and the PNG rasterizer so the
+ * two formats can never diverge in size.
+ *
+ * The element form exists for the rasterizer, which adds what only a raster
+ * needs (the `@font-face` bytes) before serializing; the SVG file export takes
+ * {@link buildSizedExportSvgString} and so never carries it.
  */
-export const buildSizedExportSvgString = (
+export const buildSizedExportSvg = (
 	svg: SVGSVGElement,
 	options: BuildExportSvgOptions = {},
-): { svgXml: string; width: number; height: number } => {
+): { exportSvg: SVGSVGElement; width: number; height: number } => {
 	// With a fit-to-content viewBox the logical size is the region itself
 	// (1 world unit = 1 CSS px); otherwise export at the on-screen size.
 	const { width, height } = options.viewBox ?? getSvgSize(svg);
 	const exportSvg = buildExportSvg(svg, options);
 	exportSvg.setAttribute("width", String(width));
 	exportSvg.setAttribute("height", String(height));
+	return { exportSvg, width, height };
+};
+
+/** {@link buildSizedExportSvg} serialized, which is what the SVG file export writes. */
+export const buildSizedExportSvgString = (
+	svg: SVGSVGElement,
+	options: BuildExportSvgOptions = {},
+): { svgXml: string; width: number; height: number } => {
+	const { exportSvg, width, height } = buildSizedExportSvg(svg, options);
 	return { svgXml: serializeSvg(exportSvg), width, height };
 };
