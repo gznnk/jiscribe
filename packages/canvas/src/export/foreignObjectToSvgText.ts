@@ -216,7 +216,8 @@ const RUN_ATTRIBUTES = [
  * The lines come from the same layout the canvas draws with
  * (layoutVisualLines), so an exported line breaks where the drawn one does, and
  * a body styled per range is measured run by run. Each line is one `<tspan>`
- * placed at its baseline; a line that mixes typography holds one nested
+ * placed at its baseline and pinned to the width that layout measured (see the
+ * textLength note below); a line that mixes typography holds one nested
  * `<tspan>` per run, carrying only what that run does not inherit.
  *
  * Baseline math follows the CSS inline layout model: each line box is
@@ -274,7 +275,7 @@ const createSvgText = (
 
 	const lineBoxes = lines.map((line) => {
 		const pieces = lineRuns(runs, line.start, line.end);
-		return { pieces, ...measureLineBox(pieces) };
+		return { pieces, width: line.width, ...measureLineBox(pieces) };
 	});
 
 	// x: anchor reference position (left / center / right)
@@ -314,6 +315,17 @@ const createSvgText = (
 		tspan.setAttribute("x", String(anchorX));
 		tspan.setAttribute("y", String(lineTop + line.baseline));
 		lineTop += line.height;
+		// Nothing carries the drawn font into the exported SVG (it has no
+		// @font-face), so a renderer without the family installed substitutes one
+		// and lays the line out at another width — wider for Latin, narrower for
+		// CJK — pushing a line that fits its box past the edge. Pinning the advance
+		// to the measured width makes the substitute fit instead; with the drawn
+		// family present the two agree to a hundredth of a pixel. Zero width is the
+		// empty line handled below.
+		if (line.width > 0) {
+			tspan.setAttribute("textLength", String(line.width));
+			tspan.setAttribute("lengthAdjust", "spacingAndGlyphs");
+		}
 
 		const styledPieces = line.pieces.filter((piece) => piece.text !== "");
 		if (styledPieces.length === 0) {
