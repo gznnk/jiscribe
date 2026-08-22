@@ -109,16 +109,6 @@ import { RectStencils } from "../ui/objects/primitives/RectStencils";
 import { TextStencils } from "../ui/objects/primitives/TextStencils";
 
 /**
- * The switch between a width measured from the text and one the text wraps in,
- * offered by the `text` type alone: it is the only type whose document carries a
- * `textLayout`.
- */
-const TEXT_LAYOUT_MENU_SECTION: ObjectMenuSection = {
-	id: "text-layout",
-	items: [{ type: "textLayout" }],
-};
-
-/**
  * The handles a label text puts on its transform frame: none that resize it. Its
  * box is measured from the text in both directions, so a resize handle could
  * only contradict the measurement. Rotation stays — it is stored in the doc.
@@ -189,7 +179,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			// derived one as it is.
 			menu: [
 				...createDefaultMenu(builtinObjectDocDefinitions.text.features),
-				TEXT_LAYOUT_MENU_SECTION,
+				{ id: "text-layout", items: [{ type: "textLayout" }] },
 			],
 			stencils: TextStencils,
 		}),
