@@ -6,5 +6,5 @@
 		// and the only thing that touches the DOM.
 		"jsx": "react-jsx"
 	},
-	"include": ["src", "harness"]
+	"include": ["src", "harness", "render-tests"]
 }

@@ -11,6 +11,7 @@
 		"build": "node build.mjs",
 		"lint": "eslint .",
 		"test": "vitest run",
+		"test:render": "vitest run --config vitest.render.config.ts",
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {

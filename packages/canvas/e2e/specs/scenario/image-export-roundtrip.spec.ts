@@ -24,6 +24,8 @@ import { selectors } from "../../support/selectors";
  *   lay one down)
  * - Connector labels: written as <text> plus a <rect> box rather than a
  *   foreignObject (B1), and rasterized in PNG too
+ * - Derived geometry: a block text and a height-less shape survive the trip with
+ *   the fields they left out still left out
  *
  * The multi-slot case (record, #167) belongs to the shape that has the slots, so it
  * lives in the uml plugin's own suite (plugins/uml-shapes/e2e/specs/record-image-export).
@@ -134,6 +136,200 @@ test("restores the shapes when the exported PNG is dropped back in", async ({
 	);
 	expect(after.map((obj) => obj.transform).sort()).toEqual(
 		before.map((obj) => obj.transform).sort(),
+	);
+});
+
+/** Id of the block text: a `width` in the doc, a height measured from the wrapped lines. */
+const BLOCK_TEXT_ID = "block-text";
+
+/** Id of the shape whose doc leaves `height` out, its box following its label. */
+const AUTO_SHAPE_ID = "auto-shape";
+
+/** Id of the shape stating both dimensions, kept as the control for the two above. */
+const SIZED_SHAPE_ID = "sized-shape";
+
+/** Width the block text stores; the height it is drawn at is never stored. */
+const BLOCK_TEXT_WIDTH = 260;
+
+/** Width the height-less shape stores, and therefore the width its label wraps at. */
+const AUTO_SHAPE_WIDTH = 240;
+
+/** Both dimensions of the control shape, neither of which is derived from anything. */
+const SIZED_SHAPE_WIDTH = 200;
+const SIZED_SHAPE_HEIGHT = 90;
+
+/**
+ * A document exercising the two geometries a drawing gesture cannot produce: a
+ * `text` in the block layout, and a `rect` stating no height. Both are injected
+ * rather than drawn, and both leave a field out that the export must leave out
+ * again.
+ */
+const derivedGeometryDocText = JSON.stringify({
+	version: 1,
+	root: [
+		{
+			id: BLOCK_TEXT_ID,
+			type: "text",
+			x: 520,
+			y: 120,
+			textLayout: "block",
+			width: BLOCK_TEXT_WIDTH,
+			fontSize: 14,
+			text: "This paragraph is authored as a single line, so every break it is drawn with comes from the width the document stores.",
+		},
+		{
+			id: AUTO_SHAPE_ID,
+			type: "rect",
+			x: 160,
+			y: 120,
+			width: AUTO_SHAPE_WIDTH,
+			fontSize: 14,
+			text: "This label is one authored line, so the height the box is drawn at is the one its wrapped lines ask for.",
+		},
+		{
+			id: SIZED_SHAPE_ID,
+			type: "rect",
+			x: 160,
+			y: 420,
+			width: SIZED_SHAPE_WIDTH,
+			height: SIZED_SHAPE_HEIGHT,
+			fontSize: 14,
+			text: "sized",
+		},
+	],
+});
+
+/** Load a document into the harness canvas through the hook mountPluginHarness installs. */
+const loadHarnessDoc = async (page: Page, docText: string): Promise<void> => {
+	await page.evaluate((text) => {
+		const hook = (
+			window as unknown as { __setHarnessDoc?: (docText: string) => void }
+		).__setHarnessDoc;
+		if (!hook) {
+			throw new Error(
+				"__setHarnessDoc is undefined (harness hook not installed)",
+			);
+		}
+		hook(text);
+	}, docText);
+};
+
+/** Objects of the `.jis.json` embedded in an exported PNG, keyed by their id. */
+const readEmbeddedObjects = async (
+	page: Page,
+	base64: string,
+): Promise<Record<string, Record<string, unknown>>> => {
+	const objects = await page.evaluate(async (pngBase64) => {
+		// The Vite dev server resolves bare ids through /@id/.
+		const mod = (await import(
+			"/@id/@jiscribe/canvas" as string
+		)) as typeof CanvasModule;
+		const response = await fetch(`data:image/png;base64,${pngBase64}`);
+		const sourceText = await mod.extractCanvasSourceFromPng(
+			await response.blob(),
+		);
+		if (sourceText === null) {
+			return null;
+		}
+		return (JSON.parse(sourceText) as { root: { id: string }[] }).root;
+	}, base64);
+
+	expect(objects, "the PNG carries an embedded .jis.json").not.toBeNull();
+	return Object.fromEntries(
+		objects!.map((object) => [object.id, object as Record<string, unknown>]),
+	);
+};
+
+/**
+ * The two derived geometries as the embedded source states them, asserted
+ * against the document that was injected. Written against key presence rather
+ * than the derived numbers themselves: the height a box settles at is the text
+ * measurer's answer and moves with it, while whether it is written down at all
+ * is the contract this spec owns.
+ */
+const expectDerivedGeometryPreserved = (
+	objects: Record<string, Record<string, unknown>>,
+): void => {
+	const blockText = objects[BLOCK_TEXT_ID];
+	expect(blockText.textLayout).toBe("block");
+	expect(blockText.width).toBe(BLOCK_TEXT_WIDTH);
+	expect(Object.keys(blockText)).not.toContain("height");
+	expect(blockText.x).toBe(520);
+	expect(blockText.y).toBe(120);
+
+	const autoShape = objects[AUTO_SHAPE_ID];
+	expect(autoShape.width).toBe(AUTO_SHAPE_WIDTH);
+	expect(Object.keys(autoShape)).not.toContain("height");
+	expect(autoShape.x).toBe(160);
+	expect(autoShape.y).toBe(120);
+
+	// The control: a shape that did state a height still states it, so the two
+	// absences above are the omission travelling and not the key going missing.
+	const sizedShape = objects[SIZED_SHAPE_ID];
+	expect(sizedShape.width).toBe(SIZED_SHAPE_WIDTH);
+	expect(sizedShape.height).toBe(SIZED_SHAPE_HEIGHT);
+};
+
+test("keeps a block text and a height-less shape as they were written across the PNG round trip", async ({
+	canvas,
+	page,
+}) => {
+	await loadHarnessDoc(page, derivedGeometryDocText);
+	await expect(canvas.objectById(AUTO_SHAPE_ID)).toHaveCount(1);
+	// The height-less shape is mounted at 0 and grown by the derivation pass, so
+	// wait for the grown box rather than exporting a box mid-derivation.
+	await expect
+		.poll(async () =>
+			Number(await canvas.objectById(AUTO_SHAPE_ID).getAttribute("height")),
+		)
+		.toBeGreaterThan(0);
+
+	const png = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 900, y: 700 },
+		"png",
+	);
+	expectDerivedGeometryPreserved(await readEmbeddedObjects(page, png.base64));
+
+	// Second leg: the PNG goes back in through the drop restore, and what it draws
+	// exports to the same source again — the trip through the parser and the
+	// object states does not settle the omitted fields into stated ones.
+	await page.reload();
+	await expect.poll(async () => (await canvas.captureObjects()).length).toBe(0);
+
+	await page.evaluate(async (base64) => {
+		const res = await fetch(`data:image/png;base64,${base64}`);
+		const file = new File([await res.blob()], "exported.png", {
+			type: "image/png",
+		});
+		const dataTransfer = new DataTransfer();
+		dataTransfer.items.add(file);
+		const target = document.querySelector(".app")!;
+		target.dispatchEvent(
+			new DragEvent("drop", {
+				bubbles: true,
+				cancelable: true,
+				dataTransfer,
+			}),
+		);
+	}, png.base64);
+
+	await expect.poll(async () => (await canvas.captureObjects()).length).toBe(3);
+	await expect
+		.poll(async () =>
+			Number(await canvas.objectById(AUTO_SHAPE_ID).getAttribute("height")),
+		)
+		.toBeGreaterThan(0);
+
+	const reexported = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 900, y: 700 },
+		"png",
+	);
+	expectDerivedGeometryPreserved(
+		await readEmbeddedObjects(page, reexported.base64),
 	);
 });
 

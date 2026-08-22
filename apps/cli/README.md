@@ -72,6 +72,25 @@ Two renders of one document give byte-identical files. What it takes:
 Repeatability is per machine. A different Chromium build rasterizes glyphs
 differently, so the bytes are only ever compared against themselves.
 
+### The golden render
+
+`render-tests/` holds a document sitting on the parts of the layout the unit
+tests never look at — a shape whose `height` the document leaves out, a `text` in
+the block layout, CJK with punctuation, a connector with a label — and the image
+it draws. A run needs a build and a browser, so it is its own script rather than
+part of `pnpm test`:
+
+```bash
+pnpm build:cli
+pnpm --filter @jiscribe/cli test:render
+```
+
+The comparison is exact on the pixel size and tolerant on the pixels themselves
+(under 0.5% of them may differ by more than 32 in luminance), which is room for
+another Chromium's glyphs and not for a layout that moved — see the header of
+`render-tests/golden.test.ts` for the measurements behind the number and for how
+to regenerate the image when the drawing changes on purpose.
+
 ### Fonts are served from node_modules, not bundled
 
 The shipped stacks split into some 1700 files by unicode-range (Noto Sans JP
