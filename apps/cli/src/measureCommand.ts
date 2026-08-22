@@ -2,6 +2,8 @@ import { parseArgs } from "node:util";
 
 import { measureWrappedText, resolveContentBox } from "@jiscribe/doc-tools";
 
+import { parseCommandArgs } from "./parseCommandArgs";
+
 /**
  * The font stack a document that names none is drawn with — the `sans` entry of
  * the canvas's own list, spelled out here because a command line has no document
@@ -67,18 +69,24 @@ const fail = (message?: string): number => {
  * @returns The process exit code: 0 when the text fits and for a shape whose box does not constrain it, 1 when it does not fit and for a type outside the shipped set, 2 for a malformed command line
  */
 export const runMeasureCommand = (argv: readonly string[]): number => {
-	const { values, positionals } = parseArgs({
-		args: [...argv],
-		options: {
-			width: { type: "string" },
-			height: { type: "string" },
-			"font-size": { type: "string" },
-			shape: { type: "string", default: "rect" },
-			bold: { type: "boolean", default: false },
-			json: { type: "boolean", default: false },
-		},
-		allowPositionals: true,
-	});
+	const parsed = parseCommandArgs(USAGE, () =>
+		parseArgs({
+			args: [...argv],
+			options: {
+				width: { type: "string" },
+				height: { type: "string" },
+				"font-size": { type: "string" },
+				shape: { type: "string", default: "rect" },
+				bold: { type: "boolean", default: false },
+				json: { type: "boolean", default: false },
+			},
+			allowPositionals: true,
+		}),
+	);
+	if (parsed === null) {
+		return 2;
+	}
+	const { values, positionals } = parsed;
 
 	if (positionals.length !== 1) {
 		return fail();

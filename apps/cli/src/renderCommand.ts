@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 
 import { validateDoc } from "@jiscribe/doc-tools";
 
+import { parseCommandArgs } from "./parseCommandArgs";
 import { renderDoc } from "./render/renderDoc";
 import { resolveRenderOptions } from "./render/renderOptions";
 import { formatDiagnosticLine } from "./reportLines";
@@ -24,17 +25,23 @@ const USAGE =
 export const runRenderCommand = async (
 	argv: readonly string[],
 ): Promise<number> => {
-	const { values, positionals } = parseArgs({
-		args: [...argv],
-		options: {
-			out: { type: "string", short: "o" },
-			scale: { type: "string" },
-			region: { type: "string" },
-			background: { type: "string" },
-			browser: { type: "string" },
-		},
-		allowPositionals: true,
-	});
+	const parsed = parseCommandArgs(USAGE, () =>
+		parseArgs({
+			args: [...argv],
+			options: {
+				out: { type: "string", short: "o" },
+				scale: { type: "string" },
+				region: { type: "string" },
+				background: { type: "string" },
+				browser: { type: "string" },
+			},
+			allowPositionals: true,
+		}),
+	);
+	if (parsed === null) {
+		return 2;
+	}
+	const { values, positionals } = parsed;
 
 	const resolved = resolveRenderOptions({
 		positionals,

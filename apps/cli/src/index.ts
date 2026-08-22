@@ -15,9 +15,14 @@ import { runRenderCommand } from "./renderCommand";
 const USAGE = `usage: jiscribe <command> [options]
 
   validate <files...>   check against the official JSON schema and the canvas parser
+                        [--json]
   diagnose <files...>   validate, then report text that overflows the shape holding it
+                        [--json]
   measure  <text>       report how the text lays out in a given box
+                        --width <px> --font-size <px> [--bold] [--shape <type> --height <px>] [--json]
   render   <file>       draw the document to a .png or .svg (needs a Chromium-based browser)
+                        -o <out.png|out.svg> [--scale <n>] [--region content|viewbox]
+                        [--background <css color>] [--browser <channel|path>]
 
 Options are per command; run one with no arguments for its own usage.
 Globs are left to the shell: jiscribe validate diagrams/**/*.jis.json

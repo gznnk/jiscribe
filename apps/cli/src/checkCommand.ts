@@ -4,7 +4,11 @@ import { parseArgs } from "node:util";
 import type { Diagnostic } from "@jiscribe/doc-tools";
 import { diagnoseDoc, validateDoc } from "@jiscribe/doc-tools";
 
+import { parseCommandArgs } from "./parseCommandArgs";
 import { formatDiagnosticLine, hasError } from "./reportLines";
+
+const usageFor = (diagnose: boolean): string =>
+	`usage: jiscribe ${diagnose ? "diagnose" : "validate"} [--json] <files...>\n`;
 
 /** What one file came to, in the shape `--json` prints. */
 type FileReport = {
@@ -53,16 +57,20 @@ export const runCheckCommand = (
 	argv: readonly string[],
 	diagnose: boolean,
 ): number => {
-	const { values, positionals } = parseArgs({
-		args: [...argv],
-		options: { json: { type: "boolean", default: false } },
-		allowPositionals: true,
-	});
+	const parsed = parseCommandArgs(usageFor(diagnose), () =>
+		parseArgs({
+			args: [...argv],
+			options: { json: { type: "boolean", default: false } },
+			allowPositionals: true,
+		}),
+	);
+	if (parsed === null) {
+		return 2;
+	}
+	const { values, positionals } = parsed;
 
 	if (positionals.length === 0) {
-		process.stderr.write(
-			`usage: jiscribe ${diagnose ? "diagnose" : "validate"} [--json] <files...>\n`,
-		);
+		process.stderr.write(usageFor(diagnose));
 		return 2;
 	}
 

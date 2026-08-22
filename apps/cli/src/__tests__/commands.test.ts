@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { runCheckCommand } from "../checkCommand";
 import { runMeasureCommand } from "../measureCommand";
+import { runRenderCommand } from "../renderCommand";
 import { formatDiagnosticLine } from "../reportLines";
 
 const fixture = (name: string): string =>
@@ -29,6 +30,23 @@ const capture = (
 		return true;
 	});
 	return { code: body(), stdout, stderr };
+};
+
+/** The same capture for a command that returns its exit code as a promise. */
+const captureAsync = async (
+	body: () => Promise<number>,
+): Promise<{ code: number; stdout: string; stderr: string }> => {
+	let stdout = "";
+	let stderr = "";
+	vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+		stdout += String(chunk);
+		return true;
+	});
+	vi.spyOn(process.stderr, "write").mockImplementation((chunk) => {
+		stderr += String(chunk);
+		return true;
+	});
+	return { code: await body(), stdout, stderr };
 };
 
 afterEach(() => {
@@ -268,5 +286,52 @@ describe("measure", () => {
 		);
 		expect(code).toBe(2);
 		expect(stderr).toMatch(/--width must be a positive number/);
+	});
+});
+
+describe("a misspelled option", () => {
+	it("gives validate's usage instead of a stack trace", () => {
+		const { code, stderr } = capture(() =>
+			runCheckCommand(["--jason", "a.jis.json"], false),
+		);
+		expect(code).toBe(2);
+		expect(stderr).toMatch(/^error: .*--jason/);
+		expect(stderr).toMatch(/usage: jiscribe validate/);
+	});
+
+	it("names diagnose in the usage it prints", () => {
+		const { code, stderr } = capture(() =>
+			runCheckCommand(["--jason", "a.jis.json"], true),
+		);
+		expect(code).toBe(2);
+		expect(stderr).toMatch(/usage: jiscribe diagnose/);
+	});
+
+	it("gives measure's usage, where the option it wanted is listed", () => {
+		const { code, stdout, stderr } = capture(() =>
+			runMeasureCommand([
+				"--font-weight",
+				"bold",
+				"--width",
+				"240",
+				"--font-size",
+				"16",
+				"x",
+			]),
+		);
+		expect(code).toBe(2);
+		expect(stderr).toMatch(/^error: .*--font-weight/);
+		expect(stderr).toMatch(/usage: jiscribe measure .*\[--bold\]/);
+		expect(stderr).not.toMatch(/ {4}at /);
+		expect(stdout).toBe("");
+	});
+
+	it("gives render's usage without reaching the file", async () => {
+		const { code, stderr } = await captureAsync(() =>
+			runRenderCommand(["--dpi", "2", "a.jis.json"]),
+		);
+		expect(code).toBe(2);
+		expect(stderr).toMatch(/^error: .*--dpi/);
+		expect(stderr).toMatch(/usage: jiscribe render/);
 	});
 });
