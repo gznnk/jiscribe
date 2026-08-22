@@ -1,5 +1,5 @@
-import type { OffsetMeasurer, TextRange } from "./utils/textOffsets";
-import { createOffsetMeasurer, splitAuthoredLines } from "./utils/textOffsets";
+import type { OffsetMeasurer, TextRange } from "./textOffsets";
+import { createOffsetMeasurer, splitAuthoredLines } from "./textOffsets";
 import type { VisualLine } from "./VisualLine";
 import type { RichText } from "../../model/objects/types/RichText";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";

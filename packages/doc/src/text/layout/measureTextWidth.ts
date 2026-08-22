@@ -1,4 +1,4 @@
-import { createOffsetMeasurer } from "./utils/textOffsets";
+import { createOffsetMeasurer } from "./textOffsets";
 import type { RichText } from "../../model/objects/types/RichText";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";
 
