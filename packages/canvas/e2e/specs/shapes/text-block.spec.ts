@@ -40,8 +40,35 @@ const docText = JSON.stringify({
 	],
 });
 
-async function loadDoc(canvas: CanvasDriver) {
-	await canvas.page.evaluate((text) => {
+/** Left edge and top edge of the label text the switch is exercised on. */
+const LABEL_X = 120;
+const LABEL_Y = 200;
+
+/**
+ * The other half of the switch's input: a text carrying no layout at all, whose
+ * box is therefore measured from the text in both directions. Short enough that
+ * the box it is measured into leaves room to drag its right edge inward.
+ */
+const labelDocText = JSON.stringify({
+	version: 1,
+	root: [
+		{
+			id: "label-text",
+			type: "text",
+			x: LABEL_X,
+			y: LABEL_Y,
+			fontSize: FONT_SIZE,
+			text: "A caption of a handful of words, authored as one line.",
+		},
+	],
+});
+
+async function loadDoc(
+	canvas: CanvasDriver,
+	text = docText,
+	id = "block-text",
+) {
+	await canvas.page.evaluate((docJson) => {
 		const hook = (
 			window as unknown as { __setHarnessDoc?: (docText: string) => void }
 		).__setHarnessDoc;
@@ -50,9 +77,9 @@ async function loadDoc(canvas: CanvasDriver) {
 				"__setHarnessDoc is undefined (harness hook not installed)",
 			);
 		}
-		hook(text);
-	}, docText);
-	await expect(canvas.objectById("block-text")).toHaveCount(1);
+		hook(docJson);
+	}, text);
+	await expect(canvas.objectById(id)).toHaveCount(1);
 }
 
 /**
@@ -63,7 +90,10 @@ async function loadDoc(canvas: CanvasDriver) {
  * text out into. The hit bands cannot stand in for either: each caps its width
  * at the line it covers, and the box is wider than every wrapped line.
  */
-async function overlayBoxOf(canvas: CanvasDriver): Promise<{
+async function overlayBoxOf(
+	canvas: CanvasDriver,
+	id = "block-text",
+): Promise<{
 	width: number;
 	height: number;
 	screenLeft: number;
@@ -72,8 +102,8 @@ async function overlayBoxOf(canvas: CanvasDriver): Promise<{
 	screenHeight: number;
 	drawnHeight: number;
 }> {
-	return canvas.page.evaluate(() => {
-		const group = document.querySelector('[data-id="block-text"]');
+	return canvas.page.evaluate((objectId) => {
+		const group = document.querySelector(`[data-id="${objectId}"]`);
 		let sibling = group?.nextElementSibling ?? null;
 		while (sibling && sibling.tagName !== "foreignObject") {
 			sibling = sibling.nextElementSibling;
@@ -95,7 +125,7 @@ async function overlayBoxOf(canvas: CanvasDriver): Promise<{
 			screenHeight: box.height,
 			drawnHeight: content.getBoundingClientRect().height,
 		};
-	});
+	}, id);
 }
 
 /** Width the open editor lays its text out in, in screen px. */
@@ -169,5 +199,92 @@ test.describe("text block layout", () => {
 		expect(committed.screenLeft).toBeCloseTo(placed.screenLeft, 0);
 		expect(committed.screenTop).toBeCloseTo(placed.screenTop, 0);
 		expect(committed.drawnHeight).toBeCloseTo(committed.screenHeight, 0);
+	});
+});
+
+/** The layout switch, found by the label it carries in each of its two states. */
+const layoutSwitch = (canvas: CanvasDriver) =>
+	canvas.page.locator(selectors.objectMenuCommand("toggleTextLayout"));
+
+/** A point inside the label text's first line, which is where it is clicked. */
+const LABEL_POINT = { x: LABEL_X + 20, y: LABEL_Y + 10 };
+
+test.describe("the switch between the two layouts", () => {
+	test("wraps a measured text in the width it is already drawn at", async ({
+		canvas,
+	}) => {
+		await loadDoc(canvas, labelDocText, "label-text");
+		await canvas.selectAt(LABEL_POINT);
+		const measured = await overlayBoxOf(canvas, "label-text");
+
+		const toggle = layoutSwitch(canvas);
+		await expect(toggle).toHaveAttribute("title", "Wrap Text in Fixed Width");
+
+		// The box does not move: the width it was measured into is the width it is
+		// now told to wrap in.
+		await toggle.click();
+		await expect(toggle).toHaveAttribute("title", "Fit Width to Text");
+		const wrapped = await overlayBoxOf(canvas, "label-text");
+		expect(wrapped.width).toBeCloseTo(measured.width, 1);
+		expect(wrapped.height).toBeCloseTo(measured.height, 1);
+
+		// Only the two handles that change that width are offered.
+		await expect(
+			canvas.page.locator(selectors.transformControl("rightCenter")),
+		).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.transformControl("leftCenter")),
+		).toBeVisible();
+		for (const handle of ["bottomRight", "bottomCenter", "topLeft"] as const) {
+			await expect(
+				canvas.page.locator(selectors.transformControl(handle)),
+			).toHaveCount(0);
+		}
+
+		// Dragging the right edge inward re-wraps, and the height follows the lines.
+		await canvas.dragTransformHandle(
+			"rightCenter",
+			{ x: LABEL_X + wrapped.width / 2, y: LABEL_Y + wrapped.height / 2 },
+			{ ctrl: true },
+		);
+		const narrowed = await overlayBoxOf(canvas, "label-text");
+		expect(narrowed.width).toBeLessThan(wrapped.width);
+		expect(narrowed.height).toBeGreaterThan(wrapped.height);
+		expect(narrowed.drawnHeight).toBeCloseTo(narrowed.screenHeight, 0);
+
+		// Switched back, the box shrinks to the longest line again — the width it
+		// was dragged to was the wrap's, not the text's.
+		await toggle.click();
+		await expect(toggle).toHaveAttribute("title", "Wrap Text in Fixed Width");
+		const remeasured = await overlayBoxOf(canvas, "label-text");
+		expect(remeasured.width).toBeCloseTo(measured.width, 1);
+		expect(remeasured.height).toBeCloseTo(measured.height, 1);
+	});
+
+	test("edits at the width it was just given", async ({ canvas }) => {
+		await loadDoc(canvas, labelDocText, "label-text");
+		await canvas.selectAt(LABEL_POINT);
+		await layoutSwitch(canvas).click();
+		const wrapped = await overlayBoxOf(canvas, "label-text");
+
+		await canvas.typeTextAt(LABEL_POINT, " ");
+
+		// The editor replaces the overlay while it is open, so the width it wraps in
+		// is what says the edited text breaks where the committed one will.
+		expect(await editorSurfaceWidthOf(canvas)).toBeCloseTo(
+			wrapped.screenWidth,
+			0,
+		);
+		await canvas.page.keyboard.type(
+			"One more sentence, long enough to need a line of its own.",
+		);
+		await canvas.commitText();
+
+		const committed = await overlayBoxOf(canvas, "label-text");
+
+		expect(committed.width).toBeCloseTo(wrapped.width, 1);
+		expect(committed.height).toBeGreaterThan(wrapped.height);
+		expect(committed.screenLeft).toBeCloseTo(wrapped.screenLeft, 0);
+		expect(committed.screenTop).toBeCloseTo(wrapped.screenTop, 0);
 	});
 });

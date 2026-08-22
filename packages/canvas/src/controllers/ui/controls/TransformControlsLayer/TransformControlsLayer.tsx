@@ -25,8 +25,8 @@ type TransformControlsLayerProps = {
 
 /**
  * Renders TransformControls for objects with transform properties (Frame-based objects).
- * For single selection: shows the handles the object's type declares, provided it has
- * transform properties.
+ * For single selection: shows the handles the object's type declares for that very
+ * object, provided it has transform properties.
  * For multiple selections: shows controls for the multiSelectGroup.
  */
 const TransformControlsLayerComponent: React.FC<
@@ -78,7 +78,7 @@ const TransformControlsLayerComponent: React.FC<
 			return null;
 		}
 
-		const handles = registries.objectTransformHandles.get(selectedObject.type);
+		const handles = registries.objectTransformHandles.resolve(selectedObject);
 		const { resize, rotate } = resolveTransformHandles(handles);
 		if (!resize && !rotate) {
 			return null;

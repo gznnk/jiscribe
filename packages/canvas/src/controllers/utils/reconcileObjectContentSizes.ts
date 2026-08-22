@@ -4,22 +4,35 @@ import { collectCowChangedKeys, copyObjectsRecord } from "./cowObjects";
 import { updateAffectedGroupBounds } from "./updateAffectedGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
+import type { TextState } from "../../states/objects/primitives/text/TextState";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
+ * Whether an object's height alone is derived, its width being stated: a shape
+ * whose document leaves `height` out, and a text wrapping in a width it stores.
+ * Both wrap their content at a width they are given, which is what makes the
+ * height the only thing a re-measure can move.
+ */
+const derivesHeightAlone = (object: ObjectState): boolean =>
+	object.autoHeight === true ||
+	(object as Partial<TextState>).textLayout === "block";
+
+/**
  * Whether an object still holds everything a resizer measures: the very slots it
  * held before — content and typography, the whole of what a box is derived from —
- * at the very width it wrapped them at, and with the same answer to whether its
- * height follows them at all. Narrower than comparing the object: a move and a
- * vertical-only group resize both write cx/cy and pass all three through
- * untouched.
+ * at the very width it wrapped them at, and with the same answer to what its box
+ * follows at all. Narrower than comparing the object: a move and a vertical-only
+ * group resize both write cx/cy and pass all four through untouched.
  *
  * The width belongs here because the two derivations that wrap have one: a block
  * text keeps its stored width and grows downward, and a shape whose document
- * states no height re-wraps at whatever width it is dragged to.
+ * states no height re-wraps at whatever width it is dragged to. The layout mode
+ * belongs here for the switch between them: a text going back to a width measured
+ * from its own lines changes neither its text nor the width it is drawn at, and
+ * the box it must shrink to is exactly what the re-measure is for.
  *
- * A height that follows the text is checked against the one the last measurement
+ * A height derived on its own is checked against the one the last measurement
  * left as well, and not only against what that measurement read: every frame of a
  * drag is rebuilt from the gesture's opening snapshot, which puts the opening
  * height back under an unchanged width, and the inputs alone would call that
@@ -32,7 +45,9 @@ const holdsSameContentInputs = (
 	previousObject !== undefined &&
 	previousObject.type === object.type &&
 	previousObject.autoHeight === object.autoHeight &&
-	(object.autoHeight !== true ||
+	(previousObject as Partial<TextState>).textLayout ===
+		(object as Partial<TextState>).textLayout &&
+	(!derivesHeightAlone(object) ||
 		(previousObject as Partial<Dimensions>).height ===
 			(object as Partial<Dimensions>).height) &&
 	(previousObject as Partial<Dimensions>).width ===
@@ -41,7 +56,7 @@ const holdsSameContentInputs = (
 
 /**
  * Re-measures the box of every object whose box is derived from its content
- * (those with a registered resizer) and whose text, width or height mode changed,
+ * (those with a registered resizer) and whose text, width or box mode changed,
  * so an edit, a font-size change, a widening drag or a paste lands with a box
  * that matches what is drawn. Each box keeps its top-left corner, which is why
  * growing text never shifts what is already on screen.

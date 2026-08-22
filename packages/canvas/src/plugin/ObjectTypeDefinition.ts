@@ -4,7 +4,7 @@ import type { ObjectDocDefinition } from "@jiscribe/doc/plugin/ObjectDocDefiniti
 import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
-import type { ObjectTransformHandles } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
+import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
@@ -141,11 +141,13 @@ export type ObjectTypeDefinition<
 	/**
 	 * Which handles the transform frame offers on a single selection. Omitted =
 	 * every handle (eight resize handles + rotation knob), so leaving it out
-	 * keeps the historical behavior. Affects the handles only — the selection
-	 * outline, snapping and the bounding box are unchanged
-	 * (see ObjectTransformHandlesRegistry).
+	 * keeps the historical behavior. A function is asked per object, for a type
+	 * whose objects do not all take the same handles, and must return one of a
+	 * fixed set of values (see ObjectTransformHandlesRegistry). Affects the
+	 * handles only — the selection outline, snapping and the bounding box are
+	 * unchanged.
 	 */
-	transformHandles?: ObjectTransformHandles;
+	transformHandles?: ObjectTransformHandlesDeclaration<TState>;
 
 	// --- Style ---
 

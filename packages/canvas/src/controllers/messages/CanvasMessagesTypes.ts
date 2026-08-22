@@ -82,6 +82,8 @@ export type CanvasMessageStrings = {
 	menuUnlockAspectRatio: string;
 	menuAutoHeight: string;
 	menuFixedHeight: string;
+	menuWrapTextInWidth: string;
+	menuFitWidthToText: string;
 	menuConnectorRouting: string;
 	menuRoutingOrthogonal: string;
 	menuRoutingStraight: string;

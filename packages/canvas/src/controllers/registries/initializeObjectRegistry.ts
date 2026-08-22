@@ -61,6 +61,7 @@ import {
 	textToDoc,
 	textToState,
 } from "../../states/objects/primitives/text/TextMapper";
+import type { TextState } from "../../states/objects/primitives/text/TextState";
 import { isValidTextState } from "../../states/objects/primitives/text/validateTextState";
 import { resizeAutoHeightStateToContent } from "../../states/objects/utils/resizeAutoHeightStateToContent";
 import { createFrameBehavior } from "../behaviors/base/FrameController";
@@ -89,6 +90,7 @@ import {
 	rotateByGroup as textRotateByGroup,
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
+import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -105,6 +107,35 @@ import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
 import { RectStencils } from "../ui/objects/primitives/RectStencils";
 import { TextStencils } from "../ui/objects/primitives/TextStencils";
+
+/**
+ * The switch between a width measured from the text and one the text wraps in,
+ * offered by the `text` type alone: it is the only type whose document carries a
+ * `textLayout`.
+ */
+const TEXT_LAYOUT_MENU_SECTION: ObjectMenuSection = {
+	id: "text-layout",
+	items: [{ type: "textLayout" }],
+};
+
+/**
+ * The handles a label text puts on its transform frame: none that resize it. Its
+ * box is measured from the text in both directions, so a resize handle could
+ * only contradict the measurement. Rotation stays — it is stored in the doc.
+ */
+const TEXT_LABEL_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: false };
+
+/**
+ * The handles a block text puts on its frame: the two that change the width it
+ * wraps in. The height stays the wrapped lines' to decide, so the anchors that
+ * move a horizontal edge stay off.
+ *
+ * A module constant rather than a fresh object per call, since the frame is
+ * memoized on the declaration it is handed (ObjectTransformHandlesRegistry).
+ */
+const TEXT_BLOCK_TRANSFORM_HANDLES: ObjectTransformHandles = {
+	resize: "width",
+};
 
 /**
  * Data-only description of every object type. `createCanvasRegistries` applies a
@@ -149,9 +180,17 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				transformByGroup: textTransformByGroup,
 				rotateByGroup: textRotateByGroup,
 			},
-			// The box is measured from the text, so a resize handle could only
-			// contradict it. Rotation stays: it is stored in the doc.
-			transformHandles: { resize: false },
+			transformHandles: (state: TextState) =>
+				state.textLayout === "block"
+					? TEXT_BLOCK_TRANSFORM_HANDLES
+					: TEXT_LABEL_TRANSFORM_HANDLES,
+			// The layout switch is the one section text adds to what its features
+			// imply; every other type either declares its whole menu or takes the
+			// derived one as it is.
+			menu: [
+				...createDefaultMenu(builtinObjectDocDefinitions.text.features),
+				TEXT_LAYOUT_MENU_SECTION,
+			],
 			stencils: TextStencils,
 		}),
 

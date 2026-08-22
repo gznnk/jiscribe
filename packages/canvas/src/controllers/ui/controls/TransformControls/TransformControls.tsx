@@ -24,9 +24,10 @@ type TransformControlsProps = {
 	 */
 	zoom?: number;
 	/**
-	 * Which handles to draw, as the selected type declares them. Omitted = all.
-	 * Pass the registry's own object rather than a freshly built one, so memo
-	 * keeps holding.
+	 * Which handles to draw, as the selected type declares them for this very
+	 * object (ObjectTransformHandlesRegistry.resolve). Omitted = all. Pass the
+	 * declaration's own object rather than a freshly built one, so memo keeps
+	 * holding.
 	 */
 	handles?: ObjectTransformHandles;
 };
@@ -47,8 +48,12 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	handles,
 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
-	const { resize: drawsResizeHandles, rotate: drawsRotationHandle } =
+	const { resize, rotate: drawsRotationHandle } =
 		resolveTransformHandles(handles);
+	// The left and right anchors are the ones a "width" declaration keeps: every
+	// other anchor moves a horizontal edge too, which a derived height owns.
+	const drawsWidthHandles = resize !== false;
+	const drawsHeightHandles = resize === true;
 	const { handleDimensions } = useCanvasTheme();
 	const rotationIconSize = handleDimensions.rotationIconSize;
 
@@ -111,7 +116,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 		<g>
 			{/* Handle colors may hold var(--jiscribe-*), so they are applied via style
 			    (fill/stroke) rather than SVG presentation attributes. */}
-			{drawsResizeHandles && (
+			{drawsHeightHandles && (
 				<>
 					{/* Corner anchors */}
 					<circle
@@ -171,7 +176,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						}}
 					/>
 
-					{/* Edge midpoint anchors */}
+					{/* Horizontal edge midpoint anchors */}
 					<circle
 						cx={points.topCenter.x}
 						cy={points.topCenter.y}
@@ -187,20 +192,6 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						}}
 					/>
 					<circle
-						cx={points.rightCenter.x}
-						cy={points.rightCenter.y}
-						r={adjustedAnchorRadius}
-						strokeWidth={adjustedStrokeWidth}
-						data-kind="control"
-						data-id="transform"
-						data-part="resize:rightCenter"
-						style={{
-							fill: theme.handleFill,
-							stroke: theme.handleAccent,
-							cursor: cursors.rightCenter,
-						}}
-					/>
-					<circle
 						cx={points.bottomCenter.x}
 						cy={points.bottomCenter.y}
 						r={adjustedAnchorRadius}
@@ -212,6 +203,26 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 							fill: theme.handleFill,
 							stroke: theme.handleAccent,
 							cursor: cursors.bottomCenter,
+						}}
+					/>
+				</>
+			)}
+
+			{/* Vertical edge midpoint anchors */}
+			{drawsWidthHandles && (
+				<>
+					<circle
+						cx={points.rightCenter.x}
+						cy={points.rightCenter.y}
+						r={adjustedAnchorRadius}
+						strokeWidth={adjustedStrokeWidth}
+						data-kind="control"
+						data-id="transform"
+						data-part="resize:rightCenter"
+						style={{
+							fill: theme.handleFill,
+							stroke: theme.handleAccent,
+							cursor: cursors.rightCenter,
 						}}
 					/>
 					<circle
