@@ -33,6 +33,7 @@ import {
 import { validateSvgDoc } from "../model/objects/primitives/svg/validateSvgDoc";
 import {
 	TEXT_DOC_DEFAULTS,
+	TEXT_EXTRA_KEYS,
 	TextFeatures,
 } from "../model/objects/primitives/text/TextDoc";
 import { TextObjectFactory } from "../model/objects/primitives/text/TextObjectFactory";
@@ -81,11 +82,14 @@ export const builtinObjectDocDefinitions = {
 		features: TextFeatures,
 		validateDoc: validateTextDoc,
 		factory: TextObjectFactory,
-		// The box is measured from the text rather than stored, so nothing can
-		// overflow it; the declaration says where the text sits in the box it comes to.
+		// The box comes from the text either way — measured whole in the label
+		// layout, wrapped in the stored width in the block one — so nothing can
+		// overflow it; the declaration says where the text sits in the box it
+		// comes to.
 		textRegion: calcFullBoxTextRegion,
+		extraKeys: TEXT_EXTRA_KEYS,
 		description:
-			'Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, "right and down" means the shape\'s own axes, `x` / `y` staying put.',
+			'Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, "right and down" means the shape\'s own axes, `x` / `y` staying put. Set `textLayout: "block"` with a `width` for body copy instead: the text then wraps inside that width, and only the height stays measured.',
 		summary: "bare text label / annotation",
 		defaults: TEXT_DOC_DEFAULTS,
 	},

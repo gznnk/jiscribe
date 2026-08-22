@@ -49,6 +49,18 @@ describe("TextObjectFactory", () => {
 			expect(doc).not.toHaveProperty("height");
 		});
 
+		it("keeps the width of a block text, which is the layout's own field", () => {
+			const doc = TextObjectFactory.createDoc(
+				{ x: 0, y: 0 },
+				{ textLayout: "block", width: 200, height: 40 },
+			) as Record<string, unknown>;
+
+			expect(doc.textLayout).toBe("block");
+			expect(doc.width).toBe(200);
+			// The height stays measured from the wrapped text in either layout.
+			expect(doc).not.toHaveProperty("height");
+		});
+
 		it("assigns a different id on each creation", () => {
 			const a = TextObjectFactory.createDoc({ x: 0, y: 0 });
 			const b = TextObjectFactory.createDoc({ x: 0, y: 0 });

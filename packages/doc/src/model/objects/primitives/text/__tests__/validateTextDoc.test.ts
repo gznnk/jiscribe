@@ -56,4 +56,51 @@ describe("validateTextDoc", () => {
 			),
 		).toBe(true);
 	});
+
+	it("demands a width from the block layout, the box having none to measure", () => {
+		const errors = validateTextDoc(
+			{ ...validText, textLayout: "block" },
+			"root",
+		);
+
+		expect(errors).toEqual([
+			{ path: "root.width", message: 'is required when textLayout is "block"' },
+		]);
+	});
+
+	it("accepts a block text carrying its width", () => {
+		expect(
+			validateTextDoc(
+				{ ...validText, textLayout: "block", width: 320 },
+				"root",
+			),
+		).toEqual([]);
+	});
+
+	it("is an error when a block width is not a non-negative number", () => {
+		expect(
+			validateTextDoc(
+				{ ...validText, textLayout: "block", width: "320" },
+				"root",
+			),
+		).toEqual([{ path: "root.width", message: "must be a number" }]);
+		expect(
+			validateTextDoc({ ...validText, textLayout: "block", width: -1 }, "root"),
+		).toEqual([{ path: "root.width", message: "must be >= 0" }]);
+	});
+
+	it("is an error when the layout mode is not one of the two", () => {
+		expect(
+			validateTextDoc({ ...validText, textLayout: "flow" }, "root"),
+		).toEqual([
+			{ path: "root.textLayout", message: "must be one of: label, block" },
+		]);
+	});
+
+	it("leaves the label layout alone: it stores no width and never demanded one", () => {
+		expect(
+			validateTextDoc({ ...validText, textLayout: "label" }, "root"),
+		).toEqual([]);
+		expect(validateTextDoc(validText, "root")).toEqual([]);
+	});
 });

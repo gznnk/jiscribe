@@ -189,7 +189,7 @@ Ellipse (oval) shape. It is **connectable** like `rect`.
 
 ### `text`
 
-Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, "right and down" means the shape's own axes, `x` / `y` staying put. It is **connectable** like `rect`.
+Standalone text with no box drawn around it. `x` / `y` are the top-left of the text; its width and height are measured from the content, so they are not stored and growing text extends to the right and down. Under `rotation` or a flip, "right and down" means the shape's own axes, `x` / `y` staying put. Set `textLayout: "block"` with a `width` for body copy instead: the text then wraps inside that width, and only the height stays measured. It is **connectable** like `rect`.
 
 ```json
 {
@@ -201,10 +201,12 @@ Standalone text with no box drawn around it. `x` / `y` are the top-left of the t
 }
 ```
 
-| Field | Type     | Default | Description                                                                                                                                                                                                           |
-| ----- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `x`   | `number` | `0`     | X of the text's top-left.                                                                                                                                                                                             |
-| `y`   | `number` | `0`     | Y of the text's top-left. There is no `width` / `height` field: the box is measured from the text itself. Under `rotation` or a flip the corner is the shape's own top-left, so `x` / `y` stay put as the text grows. |
+| Field        | Type     | Default   | Description                                                                                                                                                                                                                                                           |
+| ------------ | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`          | `number` | `0`       | X of the text's top-left.                                                                                                                                                                                                                                             |
+| `y`          | `number` | `0`       | Y of the text's top-left. There is no `height` field, and no `width` either unless the block layout stores one: the box is measured from the text itself. Under `rotation` or a flip the corner is the shape's own top-left, so `x` / `y` stay put as the text grows. |
+| `textLayout` | `string` | `"label"` | How the text is laid out. `"label"` (omitted) makes the box the text's own extent — lines break at authored newlines only, so a long line widens the object. `"block"` wraps the text in the stored `width`, for body copy.                                           |
+| `width`      | `number` | —         | Box width in px that the text wraps in. Required with `textLayout: "block"`, ignored without it.                                                                                                                                                                      |
 
 ---
 

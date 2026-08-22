@@ -132,6 +132,10 @@ const EXTRA_FIELD_ROWS: Readonly<Record<string, string[]>> = {
 	lucideIcon: [
 		'| `icon` | `string` | `"star"` | Which icon to draw, as a kebab-case name from the bundled Lucide set (1767 icons; any of them, not only the ones listed in the schema). A superseded name (`"user-circle"`) or another spelling (`"fileText"`) resolves to the current one; a name that resolves to nothing is rejected with the nearest candidates named. |',
 	],
+	text: [
+		'| `textLayout` | `string` | `"label"` | How the text is laid out. `"label"` (omitted) makes the box the text\'s own extent — lines break at authored newlines only, so a long line widens the object. `"block"` wraps the text in the stored `width`, for body copy. |',
+		'| `width` | `number` | — | Box width in px that the text wraps in. Required with `textLayout: "block"`, ignored without it. |',
+	],
 	container: [
 		'| `headerFill` | `string` | `"auto"` | Header band color, independent of `fill` (the body). `"auto"` follows the theme surface color. |',
 		"| `headerHeight` | `number` | `28` | Title band height in px, measured down from the top edge (min 1, capped at `height`). |",
@@ -189,7 +193,7 @@ function buildFieldTable(
 	} else if (definition.features.geometry === "point") {
 		rows.push(
 			`| \`x\` | \`number\` | ${formatDefaultCell(defaults.x)} | X of the text's top-left. |`,
-			`| \`y\` | \`number\` | ${formatDefaultCell(defaults.y)} | Y of the text's top-left. There is no \`width\` / \`height\` field: the box is measured from the text itself. Under \`rotation\` or a flip the corner is the shape's own top-left, so \`x\` / \`y\` stay put as the text grows. |`,
+			`| \`y\` | \`number\` | ${formatDefaultCell(defaults.y)} | Y of the text's top-left. There is no \`height\` field, and no \`width\` either unless the block layout stores one: the box is measured from the text itself. Under \`rotation\` or a flip the corner is the shape's own top-left, so \`x\` / \`y\` stay put as the text grows. |`,
 		);
 	} else {
 		rows.push(

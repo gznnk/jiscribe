@@ -297,6 +297,33 @@ describe("stripUnknownContent", () => {
 			expect(result.warnings[0].path).toBe("root[0].children[0].textAlign");
 		});
 
+		it("drops an unknown textLayout, leaving the text in the label layout", () => {
+			const result = strip(
+				doc([
+					{
+						id: "t1",
+						type: "text",
+						x: 0,
+						y: 0,
+						textLayout: "flow",
+						width: 200,
+					},
+				]),
+			);
+			const stripped = rootObject(result);
+			expect("textLayout" in stripped).toBe(false);
+			// The width is inert without the mode, and stays as authored.
+			expect(stripped.width).toBe(200);
+			expect(result.warnings[0].path).toBe("root[0].textLayout");
+		});
+
+		it("keeps the block layout, which is a known mode", () => {
+			const input = doc([
+				{ id: "t1", type: "text", x: 0, y: 0, textLayout: "block", width: 200 },
+			]);
+			expect(strip(input).data).toBe(input);
+		});
+
 		it("returns the input unchanged when every enum value is valid", () => {
 			const input = doc([
 				rect("r1", { strokeDashType: "dashed", textAlign: "center" }),

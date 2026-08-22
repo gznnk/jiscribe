@@ -5,6 +5,7 @@ import { isConnectorRouting } from "../model/objects/types/ConnectorRouting";
 import { isAnchorKind } from "../model/objects/types/EndpointRef";
 import { isStrokeDashType } from "../model/objects/types/StrokeDashType";
 import { isTextAlign } from "../model/objects/types/TextAlign";
+import { isTextLayout } from "../model/objects/types/TextLayout";
 import { isVerticalAlign } from "../model/objects/types/VerticalAlign";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorRegistry";
@@ -28,6 +29,7 @@ const pureEnumFields: ReadonlyMap<string, (value: unknown) => boolean> =
 		["endArrow", isArrowType],
 		["strokeDashType", isStrokeDashType],
 		["textAlign", isTextAlign],
+		["textLayout", isTextLayout],
 		["verticalAlign", isVerticalAlign],
 		["routing", isConnectorRouting],
 	]);

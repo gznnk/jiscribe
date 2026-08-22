@@ -1,4 +1,7 @@
-import type { TextFeatures } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
+import type {
+	TextFeatures,
+	TextLayoutDoc,
+} from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
 
 import type { CreateObjectState } from "../../types/CreateObjectState";
 
@@ -8,11 +11,14 @@ declare const TextStateBrand: unique symbol;
 /**
  * Runtime state of a bare text object. A Frame like every other transformed
  * shape — the difference is only that its width/height are derived from the
- * text rather than stored (see resizeTextStateToContent).
+ * text rather than stored (see resizeTextStateToContent). The block layout keeps
+ * the width the doc stores and derives the height alone, so `width` is the doc's
+ * own value there; `textLayout` is what says which of the two the box follows.
  */
 export type TextState = CreateObjectState<
 	typeof TextFeatures,
-	typeof TextStateBrand
+	typeof TextStateBrand,
+	Pick<TextLayoutDoc, "textLayout">
 >;
 
 /**

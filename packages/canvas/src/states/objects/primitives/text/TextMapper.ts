@@ -1,6 +1,9 @@
 import type { TextStyleDoc } from "@jiscribe/doc/model/objects/base/TextStyleDoc";
 import type { TextDoc } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
-import { roundDocCoordinate } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
+import {
+	roundDocCoordinate,
+	roundDocSize,
+} from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
 
 import { calcTextObjectFrameSize } from "./calcTextObjectFrameSize";
 import {
@@ -32,7 +35,13 @@ import { rebrand } from "../../utils/rebrand";
  * which is why it must not depend on anything only a viewer knows.
  */
 export const textToState: DocToStateMapper<TextDoc, TextState> = (doc) => {
-	const size = calcTextObjectFrameSize(doc.text ?? "", doc);
+	// Only the block layout stores a width to wrap in; one missing it is measured
+	// like a label, the diagnostic for it being the parser's to report.
+	const size = calcTextObjectFrameSize(
+		doc.text ?? "",
+		doc,
+		doc.textLayout === "block" ? doc.width : undefined,
+	);
 	const transform = mapTransformDocToState(doc);
 	// The doc's (x, y) is the drawn top-left, so the center is that corner plus the
 	// transformed half-diagonal. Left unrounded: rounding both directions would
@@ -52,12 +61,15 @@ export const textToState: DocToStateMapper<TextDoc, TextState> = (doc) => {
 		cy: center.y,
 		width: size.width,
 		height: size.height,
+		...(doc.textLayout !== undefined ? { textLayout: doc.textLayout } : {}),
 	});
 };
 
 /**
  * Converts TextState to TextDoc, dropping the derived size and keeping only the
- * drawn top-left corner the box was measured around.
+ * drawn top-left corner the box was measured around. A block text keeps its
+ * width too: that one is authored rather than derived, and dropping it would
+ * turn the object into a label on the next save.
  */
 export const textToDoc: StateToDocMapper<TextState, TextDoc> = (state) => {
 	const drawnTopLeft = calcTextDrawnTopLeft(state);
@@ -75,5 +87,9 @@ export const textToDoc: StateToDocMapper<TextState, TextDoc> = (state) => {
 		// stringifies the doc to decide whether the file is dirty.
 		x: roundDocCoordinate(drawnTopLeft.x),
 		y: roundDocCoordinate(drawnTopLeft.y),
+		...(state.textLayout !== undefined ? { textLayout: state.textLayout } : {}),
+		...(state.textLayout === "block"
+			? { width: roundDocSize(state.width) }
+			: {}),
 	});
 };

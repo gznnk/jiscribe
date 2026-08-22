@@ -368,16 +368,18 @@ function buildShapeDef(
 		unappliedOverrideNames.delete(name);
 		return override;
 	};
+	const geometryProps = buildGeometryProps(features.geometry, defaults);
+	// The names this assembly emits, so a fragment for anything else (callout's
+	// tail, the block text's own fields) is placed rather than left unapplied.
+	// Taken from the geometry actually built: a field the type stores outside its
+	// geometry (`text`'s block width) shares a name with one another geometry
+	// generates, and only the emitting geometry may claim it.
 	const generatedPropNames = new Set<string>([
-		"x",
-		"y",
-		"width",
-		"height",
-		"cx",
-		"cy",
-		"rx",
-		"ry",
-		...STYLE_PROP_SOURCES.flatMap((source) => source.props),
+		...Object.keys(geometryProps),
+		...(features.radius ? ["rx"] : []),
+		...STYLE_PROP_SOURCES.filter((source) => features[source.feature]).flatMap(
+			(source) => source.props,
+		),
 	]);
 	for (const [name, node] of Object.entries(overrides)) {
 		if (!generatedPropNames.has(name)) {
@@ -386,7 +388,6 @@ function buildShapeDef(
 		}
 	}
 
-	const geometryProps = buildGeometryProps(features.geometry, defaults);
 	for (const [name, node] of Object.entries(geometryProps)) {
 		properties[name] = withOverride(name, node);
 	}

@@ -21,10 +21,11 @@ import type { Dimensions, Rect } from "@jiscribe/geometry";
  * over the whole box, or a text emptied down to nothing could no longer be
  * selected or deleted.
  *
- * @param text - The whole text, authored newlines included; lines are taken as authored and never wrapped
+ * @param text - The whole text, authored newlines included; without a wrap width the lines are taken as authored
  * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one shifts every band's width and height
- * @param boxSize - Size of the box the text was measured into (calcTextBlockSize); bands never exceed its width, and the first and last lines take its vertical padding
+ * @param boxSize - Size of the box the text was measured into (calcTextBlockSize, or calcWrappedTextBlockSize with a wrap width); bands never exceed its width, and the first and last lines take its vertical padding
  * @param textAlign - Side the drawn lines are pulled to inside the box; omitted takes TextOverlayFrame's own default, so a band always sits under the glyphs rather than where they would be if left-aligned
+ * @param wrapWidth - Content width the lines wrap in (the box minus its horizontal padding), for a box whose width is stored rather than measured (`textLayout: "block"`); omitted lays the text out as authored
  * @returns Bands top to bottom in the shape's local coordinates, the box centered on the origin (x = -width/2 is the box's left edge), never empty
  */
 export const calcTextLineHitRects = (
@@ -32,8 +33,9 @@ export const calcTextLineHitRects = (
 	font: TextMeasureFont,
 	boxSize: Dimensions,
 	textAlign: TextAlign = "center",
+	wrapWidth?: number,
 ): Rect[] => {
-	const lines = layoutVisualLines(text, font);
+	const lines = layoutVisualLines(text, font, wrapWidth);
 	const boxLeft = -boxSize.width / 2;
 	const boxTop = -boxSize.height / 2;
 	const lastLineIndex = lines.length - 1;

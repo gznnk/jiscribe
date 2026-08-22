@@ -146,6 +146,31 @@ describe("resizeTextStateToContent", () => {
 		expect(roundTripped.height).toBe(resized.height);
 	});
 
+	it("keeps a block text's stored width and re-measures its height alone", () => {
+		const blockState = {
+			...stateOf("a", { textLayout: "block" }),
+			width: 120,
+		} as TextState;
+		const typed = {
+			...blockState,
+			text: {
+				body: {
+					text: "a much longer body that has to wrap inside the stored width",
+					fontSize: 16,
+				},
+			},
+		} as TextState;
+
+		const resized = resizeTextStateToContent(typed);
+
+		expect(resized.width).toBe(120);
+		expect(resized.height).toBeGreaterThan(blockState.height);
+		// The top-left is the corner the doc stores, so growth goes downward only.
+		expect(axisAlignedTopLeftOf(resized)).toEqual(
+			axisAlignedTopLeftOf(blockState),
+		);
+	});
+
 	it("sizes an object with no slot at all to the empty box", () => {
 		const state = stateOf("hello");
 		const empty = { ...state, text: undefined } as TextState;

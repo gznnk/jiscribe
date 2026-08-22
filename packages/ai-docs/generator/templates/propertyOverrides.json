@@ -65,6 +65,26 @@
 			}
 		}
 	},
+	"text": {
+		"textLayout": {
+			"description": "How the text is laid out. \"label\" (the default when omitted) makes the box the text's own extent: lines break where the text has a newline and nowhere else, so a long line widens the object instead of wrapping. \"block\" is body copy: the box takes the stored `width`, the text wraps inside it, and the height stays measured from the wrapped lines. Use \"block\" for paragraphs, \"label\" for captions and annotations.",
+			"type": "string",
+			"enum": ["label", "block"]
+		},
+		"width": {
+			"description": "Box width in pixels, padding included, that the text wraps in. Required with `textLayout: \"block\"` and read only there — the label layout measures its own width. There is no `height` field in either layout: the height always follows from the text.",
+			"type": "number",
+			"minimum": 0
+		},
+		"x": {
+			"description": "Left-edge X coordinate. In the label layout there is no width field: the box is measured from the content and grows to the right (along the shape's own axis when rotated or flipped, so this coordinate never moves). In the block layout the box is `width` wide from this edge.",
+			"type": "number"
+		},
+		"y": {
+			"description": "Top-edge Y coordinate. There is no height field: the box is measured from the content and grows downward (along the shape's own axis when rotated or flipped, so this coordinate never moves).",
+			"type": "number"
+		}
+	},
 	"sticky": {
 		"fontColor": {
 			"description": "Font color as a CSS color string, or \"auto\" to follow the theme foreground. Sticky notes override the usual \"auto\" default with \"#000000\" (black), because a sticky is drawn on a light paper-colored background. Default: \"#000000\"",
