@@ -26,6 +26,8 @@ import { PasteCommand } from "../commands/selection/PasteCommand";
 import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
 import { SelectNextTextSlotCommand } from "../commands/selection/SelectNextTextSlotCommand";
 import { SelectPreviousTextSlotCommand } from "../commands/selection/SelectPreviousTextSlotCommand";
+import { ToggleAutoHeightCommand } from "../commands/shape/ToggleAutoHeightCommand";
+import { ToggleTextLayoutCommand } from "../commands/shape/ToggleTextLayoutCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ShortcutHelpCommand } from "../commands/view/ShortcutHelpCommand";
@@ -71,6 +73,9 @@ export const ALL_COMMANDS: Command[] = [
 	// Group commands
 	GroupCommand,
 	UngroupCommand,
+	// Shape commands
+	ToggleAutoHeightCommand,
+	ToggleTextLayoutCommand,
 	// Text commands
 	StartTextEditCommand,
 	// View commands

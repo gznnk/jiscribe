@@ -1,4 +1,4 @@
-import type { ObjectDoc, ObjectFeatures } from "@jiscribe/canvas/doc";
+import type { ObjectDoc, ObjectFeatures } from "@jiscribe/doc";
 import { describe, it, expect } from "vitest";
 
 import { createFrameObjectDoc } from "../createFrameObjectDoc";

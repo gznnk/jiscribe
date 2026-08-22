@@ -1,6 +1,5 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { FC } from "react";
-
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
 export class ObjectComponentRegistry {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

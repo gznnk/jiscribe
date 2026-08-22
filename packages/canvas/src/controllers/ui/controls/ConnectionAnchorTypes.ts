@@ -1,4 +1,4 @@
-import { ConnectPointIds } from "../../../schemas/objects/types/EndpointRef";
+import { ConnectPointIds } from "@jiscribe/doc/model/objects/types/EndpointRef";
 
 /**
  * Selectable anchor position on a shape as a single token — the geometric
@@ -12,7 +12,7 @@ import { ConnectPointIds } from "../../../schemas/objects/types/EndpointRef";
  * (`kind: "center"`), never as `{ kind: "connectPoint", id: "center" }`.
  * Callers translate the "center" handle to a CenterAnchorSpec and the rest to
  * a ConnectPointAnchorSpec. Because it never reaches the document, it lives in
- * the controllers layer rather than in `schemas/`.
+ * the controllers layer rather than in `@jiscribe/doc`.
  */
 export const AnchorHandleIds = ["center", ...ConnectPointIds] as const;
 

@@ -1,3 +1,6 @@
+import { createObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+
 import type { CanvasCapabilities, CanvasRegistries } from "./CanvasRegistries";
 import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
@@ -14,8 +17,7 @@ import { createObjectOutlineRegistry } from "../../rendering/objects/registry/Ob
 import { createObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
 import { createObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import { createObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
-import { createObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
-import { createObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
+import { createObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -51,6 +53,7 @@ export const createCanvasRegistries = (
 		objectMapper: createObjectMapperRegistry(),
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectContentResizer: createObjectContentResizerRegistry(),
+		objectAutoHeight: createObjectAutoHeightRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		objectTextRegion: createObjectTextRegionRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),

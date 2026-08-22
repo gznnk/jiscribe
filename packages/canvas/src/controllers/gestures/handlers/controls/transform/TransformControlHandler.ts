@@ -10,6 +10,7 @@ import type { TransformAnchorType } from "./TransformAnchorType";
 import { applyResizeSnap } from "./utils/applyResizeSnap";
 import { calcAnchorResize } from "./utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
+import { dropAutoHeightOnResize } from "./utils/dropAutoHeightOnResize";
 import { handleRotationDrag } from "./utils/handleRotationDrag";
 import {
 	calcMultiSelectGroupBoundsFromCache,
@@ -88,9 +89,14 @@ export class TransformControlHandler extends ControlStrategy {
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
-		_event: CanvasEvent,
+		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 	): CanvasControllerState {
+		// A drag that can move the bottom edge relative to the top one settles the
+		// height of whatever was following its text, before the snapshot below is
+		// read from for the rest of the gesture.
+		state = dropAutoHeightOnResize(state, event, anchorType);
+
 		// For a multi-select resize, cache what the per-frame bounds derivation
 		// needs so it never re-collects every leaf vertex (#215)
 		let eventStartSnapshot = state.eventStartSnapshot;

@@ -1,10 +1,10 @@
+import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connector/isConnectorDrawnOrthogonal";
+import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
 import { useResolvedConnectorPoints } from "../../../../rendering/layers/content/hooks/useResolvedConnectorPoints";
 import { resolveEndpointOwner } from "../../../../rendering/layers/content/utils/endpoints";
-import { isConnectorDrawnOrthogonal } from "../../../../schemas/objects/connector/isConnectorDrawnOrthogonal";
-import { isFreeEndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";

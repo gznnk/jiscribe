@@ -1,9 +1,10 @@
-import type { ConnectorState } from "./ConnectorState";
 import {
 	CONNECTOR_EXTRA_KEYS,
 	ConnectorFeatures,
-} from "../../../schemas/objects/connector/ConnectorDoc";
-import type { ConnectorDoc } from "../../../schemas/objects/connector/ConnectorDoc";
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import type { ConnectorDoc } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+
+import type { ConnectorState } from "./ConnectorState";
 import { createPolyMapper } from "../base/PolyMapper";
 
 /**

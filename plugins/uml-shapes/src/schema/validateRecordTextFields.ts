@@ -1,11 +1,11 @@
 import { isObject, isString } from "@jiscribe/basic-validators";
-import type { RichText, SemanticDiagnostic } from "@jiscribe/canvas/doc";
-import { richTextToPlain, TEXT_SLOT_STYLE_KEYS } from "@jiscribe/canvas/doc";
 import type { ObjectDocValidateFn } from "@jiscribe/canvas-sdk/doc";
 import {
 	validateRichTextContent,
 	validateTextSlotStyleFields,
 } from "@jiscribe/canvas-sdk/doc";
+import type { RichText, SemanticDiagnostic } from "@jiscribe/doc";
+import { richTextToPlain, TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc";
 
 import {
 	isRecordListSlotId,

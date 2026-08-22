@@ -1,9 +1,10 @@
+import { TEXT_BOX_PADDING_X } from "@jiscribe/doc/text/block/textBoxPadding";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import type React from "react";
 import { memo, useMemo } from "react";
 
 import { calcTextLineHitRects } from "./calcTextLineHitRects";
 import { TextHitGroup, TextHitRect } from "./TextStyled";
-import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
 import { resolveTextObjectFont } from "../../../../states/objects/primitives/text/resolveTextObjectFont";
 import type { TextState } from "../../../../states/objects/primitives/text/TextState";
 import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
@@ -23,6 +24,7 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 	scaleY,
 	rotation,
 	text,
+	textLayout,
 	isEditing = false,
 }) => {
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
@@ -43,8 +45,11 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 				resolveTextObjectFont(style),
 				{ width, height },
 				style.textAlign,
+				// A block text wraps in its stored width, so the bands have to follow
+				// the drawn lines rather than the authored ones.
+				textLayout === "block" ? width - TEXT_BOX_PADDING_X * 2 : undefined,
 			),
-		[body, style, width, height],
+		[body, style, width, height, textLayout],
 	);
 
 	return (

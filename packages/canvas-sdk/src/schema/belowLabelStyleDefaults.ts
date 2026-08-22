@@ -1,5 +1,5 @@
-import type { TextSlot } from "@jiscribe/canvas/doc";
-import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas/unstable-doc";
+import type { TextSlot } from "@jiscribe/doc";
+import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/doc/unstable";
 
 /**
  * Typography the label falls back to for a field its slot leaves out, shared by

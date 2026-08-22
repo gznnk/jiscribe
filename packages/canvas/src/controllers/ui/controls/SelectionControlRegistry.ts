@@ -1,5 +1,6 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+
 import type { SelectionControlDefinition } from "./SelectionControlTypes";
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import {
 	createRegisteredSelectionControl,

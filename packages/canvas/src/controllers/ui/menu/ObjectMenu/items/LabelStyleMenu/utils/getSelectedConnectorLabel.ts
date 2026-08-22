@@ -1,4 +1,5 @@
-import type { ConnectorLabel } from "../../../../../../../schemas/objects/connector/ConnectorDoc";
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 
 /**

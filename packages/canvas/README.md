@@ -41,5 +41,5 @@ pnpm --filter @jiscribe/canvas lint
 
 AI 向けリファレンス:
 
-- [Canvas Doc リファレンス](../ai-docs/assets/reference.md)
-- [AI オーサリングガイド](../ai-docs/assets/ai-guide.md)
+- [Canvas Doc リファレンス](../doc-schema/assets/reference.md)
+- [AI オーサリングガイド](../doc-schema/assets/ai-guide.md)

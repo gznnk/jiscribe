@@ -1,3 +1,4 @@
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import type { ReactNode } from "react";
 
 import type { ObjectAnchorRegionRegistry } from "./ObjectAnchorRegionRegistry";
@@ -15,7 +16,6 @@ import { ObjectSvgDefsRegistryContext } from "./ObjectSvgDefsRegistryContext";
 import type { ObjectTextRegionRegistry } from "./ObjectTextRegionRegistry";
 import { ObjectTextRegionRegistryContext } from "./ObjectTextRegionRegistryContext";
 import { ObjectTextStyleDefaultsRegistryContext } from "./ObjectTextStyleDefaultsRegistryContext";
-import type { ObjectTextStyleDefaultsRegistry } from "../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 
 type RenderingRegistriesProviderProps = {
 	objectComponent: ObjectComponentRegistry;

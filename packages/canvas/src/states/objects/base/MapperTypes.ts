@@ -1,5 +1,6 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+
 import type { ObjectState } from "./ObjectState";
-import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 
 /**
  * Function type that converts ObjectDoc to ObjectState.

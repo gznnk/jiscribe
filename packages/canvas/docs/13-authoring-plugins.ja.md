@@ -106,7 +106,7 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 ## 量産キットがくれるもの
 
 `@jiscribe/canvas-sdk` は `@jiscribe/canvas/unstable` の全面を再エクスポートする
-（`/doc` は `unstable-doc` の全面）。つまり上位集合なので、その先へ手を伸ばす必要は無い。
+（`/doc` は `@jiscribe/doc/unstable` の全面）。つまり上位集合なので、その先へ手を伸ばす必要は無い。
 そのうえで次を足している。
 
 | export                                                                                                                   | 置き換わるもの                                                  |
@@ -246,10 +246,10 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 `eslint.config.js` が以下をすべてビルドエラーにする。
 
 - プラグインの `src/` 配下からは `@jiscribe/canvas/unstable`・
-  `@jiscribe/canvas/unstable-doc` を import できない。`@jiscribe/canvas-sdk`
+  `@jiscribe/doc/unstable` を import できない。`@jiscribe/canvas-sdk`
   （headless は `@jiscribe/canvas-sdk/doc`）を使う
 - プラグインの `src/schema/` と `src/doc.ts` は headless。使えるのは
-  `@jiscribe/canvas/doc` と `@jiscribe/canvas-sdk/doc` だけで、UI 入口・
+  `@jiscribe/doc` と `@jiscribe/canvas-sdk/doc` だけで、UI 入口・
   `react` / `react-dom` / `@emotion/*`・自パッケージの `presentation/`・
   `state/`・`stencil/`・`controls/`・`menu/` へは到達できない
 - **import はパッケージルート経由。**`@jiscribe/geometry` であって
@@ -264,7 +264,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 7 回やった結果の手順。
 
 1. **その図形がエンジンから何を使っているか洗う。**すべて公開済みなら API 変更は
-   不要。足りなければ先に `unstable` / `unstable-doc` へ足し、別コミットにする
+   不要。足りなければ先に canvas の `unstable` / doc の `unstable` へ足し、別コミットにする
 2. **中身を書き換える前にファイルを移す。**git が rename として追えるようにするため。
    移送先は 1 図形 1 フォルダ（`schema/<id>/`・`state/<id>/`・`presentation/<Pascal>/`）
 3. **エンジンから除去する。**`ObjectTypes` union・`builtinObjectDocDefinitions`・
@@ -299,7 +299,7 @@ UI プラグイン（`somePlugin`）:
 headless doc プラグイン（`someDocPlugin`）:
 
 - [ ] `apps/vscode-extension/src/diagnostics/DiagnosticProvider.ts`
-- [ ] `packages/ai-docs/generator/src/manifest.ts`（`definitionSources`）
+- [ ] `packages/doc-schema/generator/src/manifest.ts`（`definitionSources`）
 
 上記各パッケージの `package.json` にも依存を足すこと。`packages/canvas` が意図的に
 入っていないのは、出荷プラグインに一切依存しないためである。足すと
@@ -318,13 +318,13 @@ headless doc プラグイン（`someDocPlugin`）:
 ```bash
 pnpm lint --fix && pnpm format && pnpm typecheck && pnpm dep:check && pnpm lint
 pnpm test
-pnpm generate:ai   # packages/ai-docs/assets を再生成する。差分はコミットする
+pnpm generate:schema   # packages/doc-schema/assets を再生成する。差分はコミットする
 pnpm build:examples && pnpm build:vscode
 pnpm --filter @jiscribe/plugin-<name> test:e2e             # その図形のスイートは全部回す
 pnpm --filter @jiscribe/canvas test:e2e specs/smoke specs/shapes/draw
 pnpm --filter canvas-examples test:e2e                     # プラグイン同居
 ```
 
-図形を**移設**したときは、`pnpm generate:ai` が**無変化**であることが doc 定義を
+図形を**移設**したときは、`pnpm generate:schema` が**無変化**であることが doc 定義を
 忠実に移せた証拠になる。図形を**追加**したときは差分が新しいスキーマそのものなので、
-コミットする（CI の `check:ai` が乖離で落ちる）。
+コミットする（CI の `check:schema` が乖離で落ちる）。

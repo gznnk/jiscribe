@@ -1,6 +1,6 @@
 import { isString } from "@jiscribe/basic-validators";
+import { SvgFeatures } from "@jiscribe/doc/model/objects/primitives/svg/SvgDoc";
 
-import { SvgFeatures } from "../../../../schemas/objects/primitives/svg/SvgDoc";
 import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 

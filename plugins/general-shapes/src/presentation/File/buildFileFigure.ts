@@ -1,5 +1,5 @@
-import { calcFileFoldSize } from "./calcFileFoldSize";
 import { calcFilePoints } from "./calcFilePoints";
+import { calcFileFoldSize } from "../../schema/file/calcFileFoldSize";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 import { buildPolygonPath } from "../shared/pictogramPaths";
 

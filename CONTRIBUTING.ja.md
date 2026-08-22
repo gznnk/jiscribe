@@ -57,8 +57,8 @@ pnpm lint
   - プラグインの登録・ツールバーの合成・`svgDefs` —
     `pnpm --filter canvas-examples test:e2e`
 - **図形または AI 向けメタデータ**（新しい図形、`ObjectFeatures`、`description`、
-  `defaults`） — `pnpm generate:ai` で AI 向けアセットを再生成してコミットする。
-  さもないと差分によって CI の `check:ai` が落ちる
+  `defaults`） — `pnpm generate:schema` で AI 向けアセットを再生成してコミットする。
+  さもないと差分によって CI の `check:schema` が落ちる
 - **アプリが利用するもの** — ビルドする: `pnpm build:examples` または
   `pnpm build:vscode`
 
@@ -72,15 +72,18 @@ e2e スイート全体は重い。`main` を対象とした Pull Request では 
   `@jiscribe/canvas`、`@jiscribe/canvas-sdk` と、それぞれの `/doc` エントリポイント
   だけ。`@jiscribe/canvas/unstable` や `src/` パスへの参照は拒否される。図形
   オーサリングでサポートされる唯一の窓口が `@jiscribe/canvas-sdk` である。
-- **ドキュメント層はヘッドレスを保つ。** `packages/canvas/src/doc.ts`、`schemas/`、
-  `docOps/`、および canvas-sdk とプラグインの同等の層は、`react`、`react-dom`、
-  `@emotion/*`、presentation / controller / state の各層を import してはならない。
-  これによってドキュメント層は VSCode 拡張ホストや Node プロセスの中でも動く。
+- **ドキュメント層はヘッドレスを保つ。** `packages/doc`（ドキュメントモデル・
+  プラグイン契約・パーサー・ops・テキスト計測・ファイル I/O）、および canvas-sdk と
+  プラグインの同等の層は、`react`、`react-dom`、`@emotion/*`、`@jiscribe/canvas`、
+  presentation / controller / state の各層を import してはならない。これによって
+  ドキュメント層は VSCode 拡張ホストや Node プロセスの中でも動く。canvas 側は
+  `./doc` / `./unstable-doc` / `./png-source` / `./svg-source` を `@jiscribe/doc`
+  への re-export shim として残している。
 - **import はパッケージルート経由で。** `@jiscribe/geometry` を使い、
   `@jiscribe/geometry/src/...` は使わない。
 - **Doc↔State 境界で二重キャストをしない。** `packages/canvas/src/states` と
-  `schemas` の配下では `as unknown as` を禁止している。代わりに `rebrand<T>()` を
-  使うこと。
+  `packages/doc/src/{model,plugin,parse}` の配下では `as unknown as` を禁止して
+  いる。代わりに `rebrand<T>()` を使うこと。
 
 ## 書く前に再利用する
 

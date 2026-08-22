@@ -1,3 +1,4 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import {
 	calcFrameCornerPoints,
 	degreesToRadians,
@@ -5,7 +6,6 @@ import {
 } from "@jiscribe/geometry";
 
 import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions";
-import { isPoly } from "../../../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../../../../../states/objects/primitives/group/GroupState";

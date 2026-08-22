@@ -1,18 +1,17 @@
 import { isObject } from "@jiscribe/basic-validators";
-
-import type { RichText } from "../../../schemas/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import {
 	joinRichTextLines,
 	normalizeRichText,
 	remapRichText,
 	richTextToPlain,
 	splitRichTextLines,
-} from "../../../schemas/objects/types/RichText";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
+} from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
 import {
 	isTextRows,
 	isTextSlot,
-} from "../../../schemas/objects/types/TextSlot";
+} from "@jiscribe/doc/model/objects/types/TextSlot";
 
 /**
  * A shape's text in its normal form: slot id → slot. These keys ARE the set of

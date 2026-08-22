@@ -3,7 +3,6 @@ import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
 	createFrameObjectDefinition,
-	createInsetTextRegion,
 	createTypeStencils,
 } from "@jiscribe/canvas-sdk";
 
@@ -31,7 +30,7 @@ import {
 } from "./presentation/BrowserWindow";
 import { Cloud, cloudOutline } from "./presentation/Cloud";
 import { Envelope, envelopeOutline } from "./presentation/Envelope";
-import { File, calcFileTextRegion, fileOutline } from "./presentation/File";
+import { File, fileOutline } from "./presentation/File";
 import { Folder, folderOutline } from "./presentation/Folder";
 import { Gear, gearOutline } from "./presentation/Gear";
 import { Laptop, laptopOutline } from "./presentation/Laptop";
@@ -39,7 +38,6 @@ import { Lock, lockOutline } from "./presentation/Lock";
 import { Package, packageOutline } from "./presentation/Package";
 import { Queue, queueOutline } from "./presentation/Queue";
 import { Server, serverOutline } from "./presentation/Server";
-import { calcWindowTextRegion } from "./presentation/shared";
 import { Shield, shieldOutline } from "./presentation/Shield";
 import { Smartphone, smartphoneOutline } from "./presentation/Smartphone";
 import {
@@ -48,31 +46,28 @@ import {
 } from "./presentation/TerminalWindow";
 import type { ActorDoc } from "./schema/actor/ActorDoc";
 import type { BrowserWindowDoc } from "./schema/browserWindow/BrowserWindowDoc";
-import { CLOUD_TEXT_INSETS } from "./schema/cloud/CloudDoc";
 import type { CloudDoc } from "./schema/cloud/CloudDoc";
 import type { EnvelopeDoc } from "./schema/envelope/EnvelopeDoc";
 import type { FileDoc } from "./schema/file/FileDoc";
-import { FOLDER_TAB_HEIGHT_RATIO } from "./schema/folder/FolderDoc";
 import type { FolderDoc } from "./schema/folder/FolderDoc";
 import type { GearDoc } from "./schema/gear/GearDoc";
-import {
-	LAPTOP_SCREEN_HEIGHT_RATIO,
-	LAPTOP_SCREEN_X_RATIO,
-} from "./schema/laptop/LaptopDoc";
 import type { LaptopDoc } from "./schema/laptop/LaptopDoc";
 import type { LockDoc } from "./schema/lock/LockDoc";
 import type { PackageDoc } from "./schema/package/PackageDoc";
 import type { QueueDoc } from "./schema/queue/QueueDoc";
 import type { ServerDoc } from "./schema/server/ServerDoc";
-import { SHIELD_SHOULDER_RATIO } from "./schema/shield/ShieldDoc";
 import type { ShieldDoc } from "./schema/shield/ShieldDoc";
-import {
-	SMARTPHONE_SCREEN_HEIGHT_RATIO,
-	SMARTPHONE_SCREEN_X_RATIO,
-	SMARTPHONE_SCREEN_Y_RATIO,
-} from "./schema/smartphone/SmartphoneDoc";
 import type { SmartphoneDoc } from "./schema/smartphone/SmartphoneDoc";
 import type { TerminalWindowDoc } from "./schema/terminalWindow/TerminalWindowDoc";
+import {
+	calcCloudTextRegion,
+	calcFileTextRegion,
+	calcFolderTextRegion,
+	calcLaptopTextRegion,
+	calcShieldTextRegion,
+	calcSmartphoneTextRegion,
+	calcWindowTextRegion,
+} from "./schema/textRegions";
 import type { ActorState } from "./state/actor/ActorState";
 import type { BrowserWindowState } from "./state/browserWindow/BrowserWindowState";
 import type { CloudState } from "./state/cloud/CloudState";
@@ -131,7 +126,7 @@ export const cloudDefinition: ObjectTypeDefinition<CloudDoc, CloudState> =
 	createFrameObjectDefinition<CloudDoc, CloudState>({
 		doc: cloudDocDefinition,
 		component: Cloud,
-		textRegion: createInsetTextRegion(CLOUD_TEXT_INSETS),
+		textRegion: calcCloudTextRegion,
 		outline: cloudOutline,
 		stencils: createTypeStencils({
 			objectType: "cloud",
@@ -187,9 +182,6 @@ export const terminalWindowDefinition: ObjectTypeDefinition<
 	}),
 });
 
-/** Gap between the silhouette and the text, as a ratio of the box. */
-const FOLDER_TEXT_PADDING_RATIO = 0.06;
-
 /**
  * `outline` puts a connector's center anchor on the tab's slanted edge.
  * `textRegion` places the text in the body below the tab, so a first line
@@ -199,12 +191,7 @@ export const folderDefinition: ObjectTypeDefinition<FolderDoc, FolderState> =
 	createFrameObjectDefinition<FolderDoc, FolderState>({
 		doc: folderDocDefinition,
 		component: Folder,
-		textRegion: createInsetTextRegion({
-			top: FOLDER_TAB_HEIGHT_RATIO + FOLDER_TEXT_PADDING_RATIO,
-			right: FOLDER_TEXT_PADDING_RATIO,
-			bottom: FOLDER_TEXT_PADDING_RATIO,
-			left: FOLDER_TEXT_PADDING_RATIO,
-		}),
+		textRegion: calcFolderTextRegion,
 		outline: folderOutline,
 		stencils: createTypeStencils({
 			objectType: "folder",
@@ -314,9 +301,6 @@ export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> =
 		}),
 	});
 
-/** Gap between the silhouette and the text, as a ratio of the box. */
-const SHIELD_TEXT_PADDING_RATIO = 0.07;
-
 /**
  * `outline` follows the taper, which leaves the bottom corners of the box empty.
  * `textRegion` keeps the text in the shield's straight-sided upper part, above
@@ -328,12 +312,7 @@ export const shieldDefinition: ObjectTypeDefinition<ShieldDoc, ShieldState> =
 	createFrameObjectDefinition<ShieldDoc, ShieldState>({
 		doc: shieldDocDefinition,
 		component: Shield,
-		textRegion: createInsetTextRegion({
-			top: SHIELD_TEXT_PADDING_RATIO,
-			right: SHIELD_TEXT_PADDING_RATIO,
-			bottom: 1 - SHIELD_SHOULDER_RATIO,
-			left: SHIELD_TEXT_PADDING_RATIO,
-		}),
+		textRegion: calcShieldTextRegion,
 		outline: shieldOutline,
 		stencils: createTypeStencils({
 			objectType: "shield",
@@ -341,9 +320,6 @@ export const shieldDefinition: ObjectTypeDefinition<ShieldDoc, ShieldState> =
 			icon: ShieldIcon,
 		}),
 	});
-
-/** Gap between the screen edge and the text, as a ratio of the box. */
-const SMARTPHONE_TEXT_PADDING_RATIO = 0.04;
 
 /**
  * Text sits on the screen, clear of the case, the speaker slit and the home bar.
@@ -354,16 +330,7 @@ export const smartphoneDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<SmartphoneDoc, SmartphoneState>({
 	doc: smartphoneDocDefinition,
 	component: Smartphone,
-	textRegion: createInsetTextRegion({
-		top: SMARTPHONE_SCREEN_Y_RATIO + SMARTPHONE_TEXT_PADDING_RATIO,
-		right: SMARTPHONE_SCREEN_X_RATIO + SMARTPHONE_TEXT_PADDING_RATIO,
-		bottom:
-			1 -
-			SMARTPHONE_SCREEN_Y_RATIO -
-			SMARTPHONE_SCREEN_HEIGHT_RATIO +
-			SMARTPHONE_TEXT_PADDING_RATIO,
-		left: SMARTPHONE_SCREEN_X_RATIO + SMARTPHONE_TEXT_PADDING_RATIO,
-	}),
+	textRegion: calcSmartphoneTextRegion,
 	outline: smartphoneOutline,
 	stencils: createTypeStencils({
 		objectType: "smartphone",
@@ -371,9 +338,6 @@ export const smartphoneDefinition: ObjectTypeDefinition<
 		icon: SmartphoneIcon,
 	}),
 });
-
-/** Gap between the screen edge and the text, as a ratio of the box. */
-const LAPTOP_TEXT_PADDING_RATIO = 0.05;
 
 /**
  * Text sits on the screen, so it stays clear of the base below it. The drawing
@@ -385,12 +349,7 @@ export const laptopDefinition: ObjectTypeDefinition<LaptopDoc, LaptopState> =
 	createFrameObjectDefinition<LaptopDoc, LaptopState>({
 		doc: laptopDocDefinition,
 		component: Laptop,
-		textRegion: createInsetTextRegion({
-			top: LAPTOP_TEXT_PADDING_RATIO,
-			right: LAPTOP_SCREEN_X_RATIO + LAPTOP_TEXT_PADDING_RATIO,
-			bottom: 1 - LAPTOP_SCREEN_HEIGHT_RATIO + LAPTOP_TEXT_PADDING_RATIO,
-			left: LAPTOP_SCREEN_X_RATIO + LAPTOP_TEXT_PADDING_RATIO,
-		}),
+		textRegion: calcLaptopTextRegion,
 		outline: laptopOutline,
 		stencils: createTypeStencils({
 			objectType: "laptop",

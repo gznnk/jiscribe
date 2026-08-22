@@ -1,3 +1,4 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
@@ -5,7 +6,6 @@ import {
 } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { PRECISION } from "../../../../../constants/precision";
 import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
 import { resizeTextStateToContent } from "../resizeTextStateToContent";
 import { textToDoc, textToState } from "../TextMapper";
@@ -144,6 +144,31 @@ describe("resizeTextStateToContent", () => {
 		expect(roundTripped.cy).toBeCloseTo(resized.cy, 3);
 		expect(roundTripped.width).toBe(resized.width);
 		expect(roundTripped.height).toBe(resized.height);
+	});
+
+	it("keeps a block text's stored width and re-measures its height alone", () => {
+		const blockState = {
+			...stateOf("a", { textLayout: "block" }),
+			width: 120,
+		} as TextState;
+		const typed = {
+			...blockState,
+			text: {
+				body: {
+					text: "a much longer body that has to wrap inside the stored width",
+					fontSize: 16,
+				},
+			},
+		} as TextState;
+
+		const resized = resizeTextStateToContent(typed);
+
+		expect(resized.width).toBe(120);
+		expect(resized.height).toBeGreaterThan(blockState.height);
+		// The top-left is the corner the doc stores, so growth goes downward only.
+		expect(axisAlignedTopLeftOf(resized)).toEqual(
+			axisAlignedTopLeftOf(blockState),
+		);
 	});
 
 	it("sizes an object with no slot at all to the empty box", () => {

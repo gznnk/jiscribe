@@ -9,7 +9,7 @@ import {
 } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { calcContainerHeaderHeight } from "../presentation/calcContainerHeaderHeight";
+import { calcContainerHeaderHeight } from "../schema/calcContainerHeaderHeight";
 import type { ContainerState } from "../state/ContainerState";
 
 /**

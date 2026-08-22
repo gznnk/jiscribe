@@ -14,13 +14,13 @@ import {
 	umlPackageDocDefinition,
 } from "./doc";
 import { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
-import { calcUmlPackageTextRegion } from "./presentation/calcUmlPackageTextRegion";
 import { RecordBox } from "./presentation/RecordBox";
 import { UmlComponentBox } from "./presentation/UmlComponentBox";
 import { UmlPackageBox } from "./presentation/UmlPackageBox";
 import { umlPackageOutline } from "./presentation/umlPackageOutline";
 import { isRecordListSlotId } from "./schema/RecordDoc";
 import type { RecordDoc } from "./schema/RecordDoc";
+import { calcUmlPackageTextRegion } from "./schema/textRegions";
 import type { UmlComponentDoc } from "./schema/UmlComponentDoc";
 import type { UmlPackageDoc } from "./schema/UmlPackageDoc";
 import { recordToDoc, recordToState } from "./state/RecordMapper";

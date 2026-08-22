@@ -1,8 +1,8 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { RichText } from "../schemas/objects/types/RichText";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";

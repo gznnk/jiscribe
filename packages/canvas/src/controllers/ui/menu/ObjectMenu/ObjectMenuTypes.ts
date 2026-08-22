@@ -10,6 +10,8 @@ export type BuiltinItemKey =
 	| "fontStyle"
 	| "textAlignment"
 	| "aspectRatio"
+	| "autoHeight"
+	| "textLayout"
 	| "stackOrder"
 	| "group"
 	| "openReference";

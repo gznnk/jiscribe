@@ -1,7 +1,8 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
+
 import { calcCaretContentOffset } from "./calcCaretContentOffset";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { TextMeasureFont } from "../../../../states/objects/utils/measureText";
 
 /** The caret as a zero-width vertical segment; see readCaretLocalRect. */
 export type CaretLocalRect = {

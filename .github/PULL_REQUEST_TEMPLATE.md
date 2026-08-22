@@ -18,4 +18,4 @@ Closes #
 - [ ] `pnpm lint --fix` / `pnpm format` / `pnpm typecheck` / `pnpm dep:check` / `pnpm lint`
 - [ ] Unit tests for the packages touched
 - [ ] Related e2e specs — behaviour or rendering changes only
-- [ ] `pnpm generate:ai` re-run and committed — shapes or AI-facing metadata only
+- [ ] `pnpm generate:schema` re-run and committed — shapes or AI-facing metadata only

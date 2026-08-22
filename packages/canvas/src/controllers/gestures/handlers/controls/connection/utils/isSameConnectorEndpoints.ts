@@ -1,4 +1,5 @@
-import { isSameEndpoint } from "../../../../../../schemas/objects/types/EndpointRef";
+import { isSameEndpoint } from "@jiscribe/doc/model/objects/types/EndpointRef";
+
 import type { ConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 
 /**

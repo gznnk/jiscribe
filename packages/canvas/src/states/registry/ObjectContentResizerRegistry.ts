@@ -1,5 +1,6 @@
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
-import type { TextSlotStyle } from "../../schemas/objects/types/TextSlot";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
+
 import type { ObjectState } from "../objects/base/ObjectState";
 
 /**

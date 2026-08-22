@@ -1,6 +1,6 @@
+import type { PolygonDoc } from "@jiscribe/doc/model/objects/primitives/polygon/PolygonDoc";
 import { describe, expect, it } from "vitest";
 
-import type { PolygonDoc } from "../../../../../schemas/objects/primitives/polygon/PolygonDoc";
 import {
 	polygonToDoc,
 	polygonToState,

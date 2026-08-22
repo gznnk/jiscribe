@@ -1,6 +1,6 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 import { createInitialControllerState } from "../createInitialControllerState";

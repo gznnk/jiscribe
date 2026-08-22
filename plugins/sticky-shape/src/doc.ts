@@ -2,19 +2,18 @@
 // entry point for consumers that want to take part in parse-time validation without going
 // through definition.ts (which pulls in React components) — the MCP server, the Node-side
 // diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
-// @jiscribe/canvas/doc / @jiscribe/canvas-sdk/doc, and never pulls in
+// @jiscribe/doc / @jiscribe/canvas-sdk/doc, and never pulls in
 // presentation / state / stencil / menu.
-import type {
-	CanvasDocPlugin,
-	ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
+import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { calcFullBoxTextRegion } from "@jiscribe/doc";
 
 import { STICKY_DOC_DEFAULTS, StickyFeatures } from "./schema/StickyDoc";
 
 export const stickyDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: StickyFeatures,
 	defaults: STICKY_DOC_DEFAULTS,
+	textRegion: calcFullBoxTextRegion,
 	description: "Sticky note annotation.",
 	summary: "sticky note (no stroke or `rx`)",
 	// Stickies are only center-placed on click (no bounds drawing).

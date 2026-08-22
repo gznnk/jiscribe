@@ -1,9 +1,10 @@
 import type {
 	ConnectorFeatures,
 	ConnectorLabel,
-} from "../../../schemas/objects/connector/ConnectorDoc";
-import type { ConnectorRouting } from "../../../schemas/objects/types/ConnectorRouting";
-import type { EndpointRef } from "../../../schemas/objects/types/EndpointRef";
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
+import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
+
 import type { CreateObjectState } from "../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

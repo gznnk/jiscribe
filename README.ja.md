@@ -63,21 +63,27 @@ export function App() {
 }
 ```
 
-`@jiscribe/canvas` は**ヘッドレスなドキュメント層**（`@jiscribe/canvas/doc`）も公開
-している。React や DOM への依存を一切持ち込まずに `.jis.json` の解析・検証・変換が
-できる層で、VSCode 拡張の診断機能と AI 向けツールはこの層の上に構築されている。
+**ドキュメント層は独立したパッケージ**の `@jiscribe/doc` である。React や DOM への
+依存を一切持ち込まずに `.jis.json` の解析・検証・変換ができる層で、VSCode 拡張の
+診断機能と AI 向けツールはこの層の上に構築されている。`@jiscribe/canvas` は
+`@jiscribe/canvas/doc` として再エクスポートしており、そのパスを使ってきた利用側は
+そのままでよい。
 
 ## リポジトリの構成
 
 | パッケージ                   | 内容                                                                                |
 | ---------------------------- | ----------------------------------------------------------------------------------- |
-| `@jiscribe/canvas`           | エンジン本体。描画、ジェスチャー、コマンド、状態、ドキュメントスキーマ              |
+| `@jiscribe/canvas`           | エンジン本体。描画、ジェスチャー、コマンド、状態                                    |
+| `@jiscribe/doc`              | ヘッドレスなドキュメント層。`CanvasDoc` モデルとそのパーサー・編集 ops              |
 | `@jiscribe/canvas-sdk`       | プラグイン作者向けの図形オーサリングキット。canvas の公開 API だけで書かれている    |
 | `@jiscribe/geometry`         | 幾何型と幾何計算（矩形、楕円、変換、交差判定）                                      |
 | `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                           |
 | `@jiscribe/basic-validators` | プリミティブの実行時バリデーター                                                    |
 | `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                  |
-| `@jiscribe/ai-docs`          | 標準図形セットの生成済み JSON Schema と AI 向けリファレンス                         |
+| `@jiscribe/doc-schema`       | 標準図形セットの生成済み JSON Schema と AI 向けリファレンス                         |
+| `@jiscribe/ai-tools`         | AI が呼べるキャンバスツールの宣言（トランスポート非依存）                           |
+| `@jiscribe/standard-shapes`  | 出荷図形セットの正本（doc 面 / presentation 面の 2 エントリ）                       |
+| `@jiscribe/doc-tools`        | 標準セットに対する検証・計測・診断（Node 計測バックエンド込み）                     |
 | `plugins/*`                  | 標準の図形セット — flowchart、UML、container、general、annotation、sticky、markdown |
 | `apps/canvas-examples`       | 統合サンプル（1 サンプル = 1 ファイル）                                             |
 | `apps/vscode-extension`      | Jiscribe の VSCode 拡張                                                             |

@@ -1,5 +1,6 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+
 import type { ObjectMenuSection } from "./ObjectMenuTypes";
-import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 
 /**
  * Registry that manages menu section definitions per object type.

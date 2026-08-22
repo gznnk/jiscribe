@@ -1,12 +1,12 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
+import type { CanvasAction } from "../CanvasActions";
 import { createTestState } from "./support/createTestState";
 import { applyActions, command } from "./support/dispatch";
 import { rectDoc } from "./support/fixtures";
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { CanvasControllerState, DocSnapshot } from "../../CanvasTypes";
 import { createDocSnapshotFromDoc } from "../../utils/resolveDocSnapshot";
-import type { CanvasAction } from "../CanvasActions";
 
 /**
  * REVERT_HISTORY stands in for however many undos it takes to reach an entry, so

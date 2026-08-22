@@ -1,3 +1,5 @@
+import type { AnchorSpec } from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { isConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	isTransformedFrame,
 	snapToDirection,
@@ -5,8 +7,6 @@ import {
 	type Point,
 } from "@jiscribe/geometry";
 
-import type { AnchorSpec } from "../../../../../schemas/objects/types/EndpointRef";
-import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
 import {

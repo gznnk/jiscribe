@@ -1,7 +1,7 @@
+import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { describe, expect, it } from "vitest";
 
 import { theme } from "../../../../../../constants/theme";
-import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
 import { resolveLabelFill } from "../resolveLabelFill";
 
 describe("resolveLabelFill", () => {

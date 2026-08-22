@@ -1,8 +1,10 @@
 import { isObject } from "@jiscribe/basic-validators";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 
 import {
 	hasValidIdAndType,
 	isValidArrowFields,
+	isValidAutoHeightState,
 	isValidFillStyleState,
 	isValidFrameState,
 	isValidRadiusStyleState,
@@ -11,7 +13,6 @@ import {
 	isValidTransformState,
 	type StateRecord,
 } from "./validateStateUtils";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
 
 /**
@@ -34,6 +35,7 @@ export const createFrameStateValidator = (
 		return (
 			hasValidIdAndType(o, features.type) &&
 			isValidFrameState(o) &&
+			isValidAutoHeightState(o, features.geometry) &&
 			(!features.transform || isValidTransformState(o)) &&
 			(!features.stroke || isValidStrokeStyleState(o)) &&
 			(!features.fill || isValidFillStyleState(o)) &&

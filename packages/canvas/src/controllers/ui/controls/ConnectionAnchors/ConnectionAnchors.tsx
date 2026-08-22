@@ -1,3 +1,4 @@
+import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { calcNonZeroSign, degreesToRadians } from "@jiscribe/geometry";
 import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
@@ -9,7 +10,6 @@ import {
 	calcExtraConnectPoint,
 	calcOutwardVector,
 } from "../../../../rendering/objects/utils/calcConnectPoint";
-import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
 // Anchor colors may hold var(--jiscribe-*), so they are applied via style

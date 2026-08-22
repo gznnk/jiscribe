@@ -1,3 +1,4 @@
+import type { AnchorSpec } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	calcFrameBoxFeatures,
 	isTransformedFrame,
@@ -8,7 +9,6 @@ import { calcEndpointDirection } from "./endpointDirection";
 import { routeOrthogonalConnector } from "./routeOrthogonalConnector";
 import { routeSelfLoop } from "./selfLoop";
 import type { OrthogonalConnectorEndpoint } from "./types";
-import type { AnchorSpec } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
 

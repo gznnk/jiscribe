@@ -1,4 +1,4 @@
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 
 const rectDoc = (id: string, x: number, y: number, size = 10): unknown => ({
 	id,

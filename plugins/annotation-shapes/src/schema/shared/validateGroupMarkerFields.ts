@@ -1,5 +1,5 @@
-import type { SemanticDiagnostic } from "@jiscribe/canvas/doc";
 import type { ObjectDocValidateFn } from "@jiscribe/canvas-sdk/doc";
+import type { SemanticDiagnostic } from "@jiscribe/doc";
 
 import {
 	GROUP_MARKER_DIRECTIONS,

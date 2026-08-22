@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"zod": "^4.4.3"
 	},
 	"devDependencies": {

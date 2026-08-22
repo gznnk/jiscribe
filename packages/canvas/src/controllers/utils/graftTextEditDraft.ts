@@ -1,4 +1,5 @@
-import { isSameRichText } from "../../schemas/objects/types/RichText";
+import { isSameRichText } from "@jiscribe/doc/model/objects/types/RichText";
+
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import {

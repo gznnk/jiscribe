@@ -1,4 +1,4 @@
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 
 /**
  * Determines whether two CanvasDocs are identical in terms of rendered content.

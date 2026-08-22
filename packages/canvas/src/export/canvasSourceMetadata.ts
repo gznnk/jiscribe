@@ -1,5 +1,8 @@
-import { SVG_SOURCE_LOCAL_NAME, SVG_SOURCE_NS } from "./svgSourceText";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import {
+	SVG_SOURCE_LOCAL_NAME,
+	SVG_SOURCE_NS,
+} from "@jiscribe/doc/file/svgSourceText";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

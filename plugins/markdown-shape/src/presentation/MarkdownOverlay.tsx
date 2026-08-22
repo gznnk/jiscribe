@@ -1,6 +1,6 @@
-import { richTextToPlain } from "@jiscribe/canvas/doc";
 import type { FrameTextOverlayProps } from "@jiscribe/canvas-sdk";
 import { TextOverlayFrame } from "@jiscribe/canvas-sdk";
+import { richTextToPlain } from "@jiscribe/doc";
 import { renderMarkdown } from "@jiscribe/markdown";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef } from "react";

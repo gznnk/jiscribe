@@ -1,7 +1,7 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import {

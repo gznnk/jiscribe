@@ -1,9 +1,9 @@
+import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { describe, expect, it } from "vitest";
 
-import { ConnectorFeatures } from "../../../../../../../schemas/objects/connector/ConnectorDoc";
-import { RectFeatures } from "../../../../../../../schemas/objects/primitives/rect/RectDoc";
-import type { ObjectFeatures } from "../../../../../../../schemas/objects/types/ObjectFeatures";
-import type { ObjectType } from "../../../../../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import { findConnectableHoverTarget } from "../findConnectableHoverTarget";
 

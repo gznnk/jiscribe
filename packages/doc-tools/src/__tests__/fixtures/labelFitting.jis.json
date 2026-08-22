@@ -1,0 +1,42 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "s2",
+			"type": "rect",
+			"x": 480,
+			"y": 264,
+			"width": 264,
+			"height": 88,
+			"text": "② マイクロタスクを\nすべて処理 — 出力: B",
+			"fontSize": 16
+		},
+		{
+			"id": "s3",
+			"type": "rect",
+			"x": 896,
+			"y": 264,
+			"width": 264,
+			"height": 88,
+			"text": "③ タスクを 1 つ処理\n出力: C",
+			"fontSize": 16
+		},
+		{
+			"id": "o2",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "s2" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"target": {
+				"owner": { "id": "s3" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"label": {
+				"text": "マイクロタスクが尽きる",
+				"fontSize": 13
+			}
+		}
+	]
+}

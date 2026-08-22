@@ -181,6 +181,9 @@ describe("createCanvasRegistries", () => {
 					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 				},
 				{ id: "transform", items: [{ type: "aspectRatio" }] },
+				// The box holds its text and nothing denies it, so the type may leave
+				// `height` out and gets the switch (supportsAutoHeightType).
+				{ id: "auto-height", items: [{ type: "autoHeight" }] },
 			]);
 		});
 

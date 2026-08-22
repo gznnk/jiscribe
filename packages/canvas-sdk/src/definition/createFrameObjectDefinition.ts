@@ -11,6 +11,7 @@ import {
 	createFrameMapper,
 	createFrameStateValidator,
 } from "@jiscribe/canvas/unstable";
+import { supportsAutoHeight } from "@jiscribe/doc";
 import type { TransformedFrame } from "@jiscribe/geometry";
 
 /** Arguments of {@link createFrameObjectDefinition}. */
@@ -19,7 +20,13 @@ export type FrameObjectDefinitionParams<
 	TState extends ObjectState & TransformedFrame & { type: TDoc["type"] },
 > = Omit<
 	ObjectTypeDefinition<TDoc, TState>,
-	keyof ObjectDocDefinition | "mapper" | "stateValidator" | "behavior"
+	// `textRegion` is excluded from the exclusion: the doc definition declares the
+	// region over a doc, and a shape whose UI region is sized from its own text
+	// (a below-label caption) passes the UI calculator here.
+	| Exclude<keyof ObjectDocDefinition, "textRegion">
+	| "mapper"
+	| "stateValidator"
+	| "behavior"
 > & {
 	/**
 	 * The shape's headless definition, usually from `createFrameObjectDoc` in
@@ -63,6 +70,10 @@ export const createFrameObjectDefinition = <
 	TDoc,
 	TState
 > => {
+	// The doc-side text region answers over a doc and may answer "not in the box
+	// at all"; the UI one answers over a state, per slot. Only the latter belongs
+	// on the result, so the doc's declaration is dropped rather than spread.
+	const { textRegion: _docTextRegion, ...docDefinition } = doc;
 	// ObjectDocDefinition widens `features`; the frame helpers are keyed to this
 	// shape's own type and rect/ellipse geometry.
 	const features = doc.features as ObjectFeatures & {
@@ -71,7 +82,13 @@ export const createFrameObjectDefinition = <
 	};
 
 	return {
-		...doc,
+		...docDefinition,
+		// The doc's verdict on whether a document of this shape may leave `height`
+		// out rides along, since the declaration it is derived from is the one being
+		// dropped above: a shape whose UI region is sized from its own text answers a
+		// rectangle here and `null` there, and re-deriving the verdict from this
+		// definition would offer the switch where the parser refuses the result.
+		...(supportsAutoHeight(doc) ? {} : { autoHeight: false as const }),
 		// The shape's own field names come from the doc definition, which is where they
 		// are declared once for the mapper and doc-ops alike.
 		mapper: createFrameMapper<TDoc, TState>(features, doc.extraKeys),

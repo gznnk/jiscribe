@@ -1,4 +1,5 @@
-import { isSelfLoopConnector } from "../../../../../../../schemas/objects/connector/isSelfLoopConnector";
+import { isSelfLoopConnector } from "@jiscribe/doc/model/objects/connector/isSelfLoopConnector";
+
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../../states/objects/connector/ConnectorState";
 

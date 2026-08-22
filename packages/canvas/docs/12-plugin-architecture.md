@@ -99,12 +99,17 @@ with no config gives the default configuration: every built-in type and nothing 
 
 ```
 @jiscribe/canvas              stable: type vocabulary, registration, Canvas props
-@jiscribe/canvas/doc          stable, headless
+@jiscribe/doc                 stable, headless: the document model, parser and doc ops
 @jiscribe/canvas/unstable     tier 2: base implementations, presentation parts
-@jiscribe/canvas/unstable-doc tier 2, headless
+@jiscribe/doc/unstable        tier 2, headless
 @jiscribe/canvas-sdk          the plugin-facing surface (re-exports unstable + kit)
 @jiscribe/canvas-sdk/doc      headless counterpart
 ```
+
+The two headless entries are a package of their own. `@jiscribe/canvas` keeps
+`./doc` and `./unstable-doc` as re-export shims onto them, so the plugins and Node
+tools that name the canvas paths — which is what ESLint still points them at — go on
+working unchanged.
 
 The `unstable` subpaths carry the frame-family base implementations and the
 presentation parts that shapes are built from. They are outside the semver
@@ -135,7 +140,8 @@ a shape draws outside its box, the route a connector took, which shapes overlap,
 what is drawn at a point), `history` (the undo stack, with `mark` / `revertTo` to
 roll a whole batch of edits back), and `interaction` (whether the user is
 mid-gesture, which is when an external write would be destructive). Editing the
-document itself needs no canvas and belongs to the headless `docOps`.
+document itself needs no canvas and belongs to `createDocOps` in the headless
+`@jiscribe/doc`.
 
 Lifting state into the host (controlled props) was considered and rejected:
 

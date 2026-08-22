@@ -1,6 +1,6 @@
+import { TEXT_BLOCK_MIN_WIDTH } from "@jiscribe/doc/text/block/calcTextBlockSize";
 import { describe, expect, it } from "vitest";
 
-import { TEXT_BLOCK_MIN_WIDTH } from "../../../../../../states/objects/utils/calcTextBlockSize";
 import {
 	calcConnectorLabelBox,
 	resolveConnectorLabelBox,

@@ -1,5 +1,6 @@
+import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
+
 import { theme } from "../../../../../constants/theme";
-import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 
 /**
  * Resolves the render color for the label background (fill).

@@ -1,7 +1,8 @@
+import type { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+
 import type { CanvasControllerState } from "../../../../../../../controllers/CanvasTypes";
 import { getEffectiveSelectedIds } from "../../../../../../../controllers/utils/getEffectiveSelectedIds";
-import type { ARROW_STYLE_KEYS } from "../../../../../../../schemas/objects/base/ArrowStyleDoc";
-import type { ArrowType } from "../../../../../../../schemas/objects/types/ArrowType";
 
 /**
  * Gets the arrow type of the selected object.

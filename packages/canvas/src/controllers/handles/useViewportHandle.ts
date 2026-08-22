@@ -1,3 +1,4 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import {
 	convertRectToBoundingBox,
 	roundToDecimal,
@@ -7,7 +8,6 @@ import {
 import { type Dispatch, type RefObject, useMemo } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
-import { PRECISION } from "../../constants/precision";
 import { ZOOM } from "../../constants/zoom";
 import type { Camera, Viewport } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -174,7 +174,7 @@ export const useViewportHandle = (
 				} = canvasStateRef.current.viewport;
 				const zoom = roundToDecimal(
 					Math.max(ZOOM.MIN, Math.min(ZOOM.MAX, options?.zoom ?? currentZoom)),
-					PRECISION.ZOOM,
+					ZOOM.PRECISION,
 				);
 				return applyCamera({
 					zoom,

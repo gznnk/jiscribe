@@ -107,7 +107,7 @@ style」という 2 方式混在を解消）。
   （ズーム補正計算に使うハンドル寸法）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、
   `var(...)` 文字列ではなく具体値でなければならない。
   - **フォントをテーマに載せない理由**: 内容から導出する箱は doc が名指すファミリで JS 計測する
-    （`measureText`）ので、canvas が同梱していないファミリは正しく計測できない — テキストが実際に
+    （`@jiscribe/doc` の `text/layout`）ので、canvas が同梱していないファミリは正しく計測できない — テキストが実際に
     描かれる字面とは別の字面で箱が決まってしまう。したがって doc が名指せるファミリは閉じた集合
     （`CANVAS_FONT_FAMILIES`。`@jiscribe/canvas/fonts.css` が同梱する）で、どれも指定しないスロット
     は `DEFAULT_FONT_FAMILY` へフォールバックする。この定数が唯一のフォールバックで、描画・計測の

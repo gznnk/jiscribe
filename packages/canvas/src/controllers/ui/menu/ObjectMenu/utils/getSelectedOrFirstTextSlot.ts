@@ -1,8 +1,9 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import { readRichTextRangeStyle } from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+
 import { getFirstSelectedWithProp } from "./getFirstSelectedWithProp";
-import type { ObjectType } from "../../../../../schemas/objects/types/ObjectType";
-import { readRichTextRangeStyle } from "../../../../../schemas/objects/types/RichText";
-import type { TextSlot } from "../../../../../schemas/objects/types/TextSlot";
-import type { ObjectTextStyleDefaultsRegistry } from "../../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../../../states/objects/base/TextStyleState";

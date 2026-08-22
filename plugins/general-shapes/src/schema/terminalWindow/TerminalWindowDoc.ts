@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * A terminal window (the same frame as the browser, with a shell prompt in the title bar instead of the buttons), used for CLIs and shell sessions.

@@ -1,6 +1,6 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { clickPlacedPlugin } from "../../../__tests__/support/clickPlacedPlugin";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";

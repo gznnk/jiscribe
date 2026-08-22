@@ -1,6 +1,6 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { type Dispatch, useEffect, useRef } from "react";
 
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";

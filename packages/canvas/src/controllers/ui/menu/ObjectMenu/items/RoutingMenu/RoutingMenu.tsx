@@ -1,9 +1,9 @@
+import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
 import { memo, useRef } from "react";
 
 import { RoutingMenuRow } from "./RoutingMenuStyled";
 import { getSelectedRouting } from "./utils/getSelectedRouting";
 import { isSelectedConnectorSelfLoop } from "./utils/isSelectedConnectorSelfLoop";
-import type { ConnectorRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";

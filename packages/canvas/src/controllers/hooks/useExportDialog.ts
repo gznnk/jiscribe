@@ -93,7 +93,8 @@ type UseExportDialogParams = {
 	 * Runs the snapshot with viewport culling suspended (full object tree in
 	 * the DOM), since every export path clones the live SVG. The synchronous
 	 * part of the snapshot must complete the clone — for the PNG path this
-	 * holds because rasterizeSvgToPng serializes before its first await.
+	 * holds because rasterizeSvgToPng builds the export SVG (clone, style
+	 * baking, text conversion) before its first await.
 	 */
 	withCullingSuspended: <T>(snapshot: () => T) => T;
 };

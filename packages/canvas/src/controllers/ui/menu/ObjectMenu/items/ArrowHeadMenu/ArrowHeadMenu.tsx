@@ -1,10 +1,10 @@
-﻿import { memo, useRef } from "react";
+﻿import { ArrowTypes } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { memo, useRef } from "react";
 
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
 import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
 import { getSelectedArrowType } from "./utils/getSelectedArrowType";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";

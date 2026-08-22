@@ -1,6 +1,5 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { FC } from "react";
-
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
 /** One registered `<defs>` contribution, paired with the type that declared it. */
 export type ObjectSvgDefsEntry = {

@@ -1,4 +1,4 @@
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 
 /**
  * Height a text editor's textarea needs for its content, in local px.

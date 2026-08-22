@@ -6,7 +6,7 @@
 // can be named.
 
 import type { CanvasHandle } from "@jiscribe/canvas";
-import type { DocOps } from "@jiscribe/canvas/doc";
+import type { DocOps } from "@jiscribe/doc";
 
 /**
  * Every member of the imperative canvas handle as one dotted path, e.g.

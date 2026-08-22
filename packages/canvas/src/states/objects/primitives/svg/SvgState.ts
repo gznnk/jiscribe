@@ -1,7 +1,8 @@
 import type {
 	SvgExtraDoc,
 	SvgFeatures,
-} from "../../../../schemas/objects/primitives/svg/SvgDoc";
+} from "@jiscribe/doc/model/objects/primitives/svg/SvgDoc";
+
 import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

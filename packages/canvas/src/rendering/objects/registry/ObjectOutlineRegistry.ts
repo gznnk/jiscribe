@@ -1,6 +1,6 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { Dimensions, Point } from "@jiscribe/geometry";
 
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**

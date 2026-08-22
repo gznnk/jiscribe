@@ -1,6 +1,6 @@
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
-import type { TextSlot } from "@jiscribe/canvas/doc";
 import { readTextSlot } from "@jiscribe/canvas/unstable";
+import type { TextSlot } from "@jiscribe/doc";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { HitAreaRect } from "./BelowLabelHitAreaStyled";

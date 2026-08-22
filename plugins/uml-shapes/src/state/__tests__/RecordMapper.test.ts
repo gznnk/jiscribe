@@ -1,5 +1,5 @@
-import type { RichText, TextSlotContent } from "@jiscribe/canvas/doc";
-import { isTextRows } from "@jiscribe/canvas/doc";
+import type { RichText, TextSlotContent } from "@jiscribe/doc";
+import { isTextRows } from "@jiscribe/doc";
 import { describe, it, expect } from "vitest";
 
 import { type RecordDoc } from "../../schema/RecordDoc";

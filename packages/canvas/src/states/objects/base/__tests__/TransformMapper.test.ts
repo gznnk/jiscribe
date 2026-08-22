@@ -1,6 +1,6 @@
+import type { TransformDoc } from "@jiscribe/doc/model/objects/base/TransformDoc";
 import { describe, expect, it } from "vitest";
 
-import type { TransformDoc } from "../../../../schemas/objects/base/TransformDoc";
 import {
 	mapTransformDocToState,
 	mapTransformStateToDoc,

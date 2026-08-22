@@ -1,8 +1,8 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import type { RichText } from "../../../schemas/objects/types/RichText";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";

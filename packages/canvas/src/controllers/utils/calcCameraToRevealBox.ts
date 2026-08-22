@@ -1,7 +1,7 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../constants/precision";
 import type { Camera, Viewport } from "../../states/canvas/Viewport";
 
 /**

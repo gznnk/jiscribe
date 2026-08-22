@@ -1,6 +1,6 @@
-import type { TextSlot } from "@jiscribe/canvas/doc";
 import type { FrameShapeProps } from "@jiscribe/canvas-sdk";
 import { BelowLabelHitArea } from "@jiscribe/canvas-sdk";
+import type { TextSlot } from "@jiscribe/doc";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import { Pictogram } from "./Pictogram";

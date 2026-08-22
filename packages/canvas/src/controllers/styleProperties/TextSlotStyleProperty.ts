@@ -1,15 +1,16 @@
+import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/RichText";
+import {
+	clearInlineStyleFromRuns,
+	TEXT_INLINE_STYLE_KEYS,
+} from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+
 import {
 	coerceStyleValue,
 	SelectionStyleProperty,
 } from "./SelectionStyleProperty";
-import type { StyleValueType } from "../../schemas/objects/types/ExtraStyleProperty";
-import type { InlineTextStyle } from "../../schemas/objects/types/RichText";
-import {
-	clearInlineStyleFromRuns,
-	TEXT_INLINE_STYLE_KEYS,
-} from "../../schemas/objects/types/RichText";
-import type { TextSlot } from "../../schemas/objects/types/TextSlot";
-import { isTextRows } from "../../schemas/objects/types/TextSlot";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../states/objects/types/TextSlots";
