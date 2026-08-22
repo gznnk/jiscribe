@@ -125,6 +125,138 @@ describe("addObject", () => {
 		expect(doc.root).toHaveLength(0);
 	});
 
+	it("creates a text in the block layout with the width it wraps in", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", {
+			x: 20,
+			y: 30,
+			width: 240,
+			textLayout: "block",
+			text: "body copy long enough to wrap",
+		});
+
+		const text = readObject(doc, id);
+		expect(text.textLayout).toBe("block");
+		expect(text.width).toBe(240);
+		// The height stays measured from the wrapped lines, block layout or not.
+		expect(text).not.toHaveProperty("height");
+		expectValid(doc);
+	});
+
+	it("throws DocOperationError for a block text with no width to wrap in", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "text", { x: 0, y: 0, textLayout: "block" }),
+		).toThrow(DocOperationError);
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("still refuses a width for a text left in the label layout", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "text", { x: 0, y: 0, width: 200 }),
+		).toThrow('object type "text" sizes itself from its content');
+		expect(() =>
+			docOps.addObject(doc, "text", {
+				x: 0,
+				y: 0,
+				width: 200,
+				textLayout: "label",
+			}),
+		).toThrow('object type "text" sizes itself from its content');
+		// The block layout stores no height either, so that one stays refused too.
+		expect(() =>
+			docOps.addObject(doc, "text", {
+				x: 0,
+				y: 0,
+				width: 200,
+				height: 80,
+				textLayout: "block",
+			}),
+		).toThrow('object type "text" sizes itself from its content');
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("throws DocOperationError for a textLayout on a type that declares none", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "rect", { x: 0, y: 0, textLayout: "block" }),
+		).toThrow('object type "rect" lays its text out one way only');
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("refuses textLayout in extraProps, it being a parameter of the call", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "text", {
+				x: 0,
+				y: 0,
+				extraProps: { textLayout: "block" },
+			}),
+		).toThrow('extraProps on "text" must not carry "textLayout"');
+	});
+
+	it("leaves the height out of the document when autoHeight is asked for", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "rect", {
+			x: 0,
+			y: 0,
+			width: 200,
+			autoHeight: true,
+			text: "a label long enough to take several lines at this width",
+		});
+
+		const rect = readObject(doc, id);
+		expect(rect).not.toHaveProperty("height");
+		expect(rect.width).toBe(200);
+		// The bounds are the derived ones, not a flat box.
+		expect(docOps.getObjectBounds(doc, id)!.height).toBeGreaterThan(0);
+		expectValid(doc);
+	});
+
+	it("writes the type's default height when autoHeight is omitted or false", () => {
+		const doc = emptyDoc();
+		const omitted = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const denied = docOps.addObject(doc, "rect", {
+			x: 0,
+			y: 200,
+			autoHeight: false,
+		});
+
+		// RECT_DOC_DEFAULTS (100x100): omitting the mode keeps writing a height.
+		expect(readObject(doc, omitted).height).toBe(100);
+		expect(readObject(doc, denied).height).toBe(100);
+	});
+
+	it("throws DocOperationError for autoHeight on a type that cannot derive one", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "ellipse", { x: 0, y: 0, autoHeight: true }),
+		).toThrow('object type "ellipse" does not lay its text out inside its box');
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("throws DocOperationError for autoHeight alongside a height", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "rect", {
+				x: 0,
+				y: 0,
+				height: 80,
+				autoHeight: true,
+			}),
+		).toThrow(
+			'object type "rect" cannot take autoHeight together with a height',
+		);
+		expect(doc.root).toHaveLength(0);
+	});
+
 	it("throws DocOperationError for an unknown type", () => {
 		const doc = emptyDoc();
 		expect(() => docOps.addObject(doc, "nope", { x: 0, y: 0 })).toThrow(

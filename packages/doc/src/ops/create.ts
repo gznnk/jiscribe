@@ -15,6 +15,9 @@ import {
 import { applyRotation, requireRotationDegrees } from "./utils/transformFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
+import type { TextLayout } from "../model/objects/types/TextLayout";
+import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
+import { supportsAutoHeight } from "../plugin/supportsAutoHeight";
 
 /**
  * Where and how big the new object is, plus any styling to give it on the spot and any
@@ -29,11 +32,13 @@ export type AddObjectParams = StyleParams & {
 	y: number;
 	/**
 	 * Bounding-box width in px; omitted falls back to the type's default dimensions.
-	 * Rejected for point-geometry types (`text`), whose box comes from the content.
+	 * A point-geometry type (`text`) has no box to size and rejects it, the one exception
+	 * being the width a `textLayout: "block"` creation wraps in, which such a type stores.
 	 */
 	width?: number;
 	/**
-	 * Bounding-box height in px; omitted falls back to the type's default dimensions.
+	 * Bounding-box height in px; omitted falls back to the type's default dimensions, which
+	 * is written into the document just the same — `autoHeight` is what leaves a height out.
 	 * Rejected for point-geometry types (`text`), whose box comes from the content.
 	 */
 	height?: number;
@@ -52,6 +57,21 @@ export type AddObjectParams = StyleParams & {
 	 * Ignored by a type that has no rotation of its own, the way styling it cannot hold is.
 	 */
 	rotation?: number;
+	/**
+	 * Create the shape with no `height` in the document, so that its height follows the text
+	 * it holds — the state {@link import("./place").setHeightMode} switches an existing shape
+	 * into with `"auto"`. Accepted only by a type whose box holds its text
+	 * (`supportsAutoHeight`), and never together with `height`, which is the opposite request.
+	 * Omitted or false writes a height as ever: the one given, or the type's default.
+	 */
+	autoHeight?: boolean;
+	/**
+	 * How the text lays itself out, for a type that offers the choice (`text`): `"block"`
+	 * wraps inside `width` and therefore needs one, `"label"` breaks at authored newlines
+	 * only. Omitted leaves the type's own default, which is `"label"` for text. Rejected by a
+	 * type that declares no layout of its own.
+	 */
+	textLayout?: TextLayout;
 	/**
 	 * Properties belonging to the type itself, which no parameter above covers — the
 	 * lucide icon's `icon`, the callout's `tail`, the container's `headerHeight`. Only
@@ -80,12 +100,77 @@ const RESERVED_PROP_KEYS: ReadonlySet<string> = new Set<string>([
 		"text",
 		"points",
 		"rotation",
+		"autoHeight",
+		"textLayout",
 	] as const satisfies readonly (keyof AddObjectParams)[]),
 	...ALL_STYLE_KEYS,
 ]);
 
 /** One object to create in an {@link addObjects} call. */
 export type AddObjectEntry = { type: string } & AddObjectParams;
+
+/** Whether a type stores a field of this name beyond the ones its features imply. */
+const declaresExtraKey = (
+	definition: ObjectDocDefinition,
+	key: string,
+): boolean => (definition.extraKeys ?? []).includes(key);
+
+/**
+ * Check the size parameters against what the type can actually store, writing nothing.
+ *
+ * A point-geometry doc has no width/height field, so honoring one is impossible; silently
+ * dropping it would hand the caller an object of a size it never asked for. The block
+ * layout is the one configuration such a type does keep a width for — the width its text
+ * wraps in ({@link AddObjectParams.textLayout}) — and it stores no height even then.
+ */
+const requireStorableSize = (
+	type: string,
+	params: AddObjectParams,
+	definition: ObjectDocDefinition,
+): void => {
+	if (definition.features.geometry !== "point") {
+		return;
+	}
+	const blockWidth =
+		params.textLayout === "block" && declaresExtraKey(definition, "width");
+	if (
+		params.height !== undefined ||
+		(params.width !== undefined && !blockWidth)
+	) {
+		throw new DocOperationError(
+			`object type "${type}" sizes itself from its content and takes no width/height`,
+		);
+	}
+};
+
+/** Check that the type can be created with the layout and height mode asked for. */
+const requireLayoutSupport = (
+	type: string,
+	params: AddObjectParams,
+	definition: ObjectDocDefinition,
+): void => {
+	if (
+		params.textLayout !== undefined &&
+		!declaresExtraKey(definition, "textLayout")
+	) {
+		throw new DocOperationError(
+			`object type "${type}" lays its text out one way only and takes no textLayout`,
+		);
+	}
+	if (params.autoHeight !== true) {
+		return;
+	}
+	if (params.height !== undefined) {
+		throw new DocOperationError(
+			`object type "${type}" cannot take autoHeight together with a height: a height that follows the text is one the document does not state`,
+		);
+	}
+	if (!supportsAutoHeight(definition)) {
+		throw new DocOperationError(
+			`object type "${type}" does not lay its text out inside its box, so its height cannot follow the text`,
+		);
+	}
+};
 
 /**
  * Build the object `addObject` would push, id included, without touching `doc`.
@@ -124,24 +209,30 @@ const buildObject = (
 			? undefined
 			: requireRotationDegrees(params.rotation);
 
-	// A point-geometry doc has no width/height field, so honoring one is impossible;
-	// silently dropping it would hand the caller an object of a size it never asked for.
-	if (
-		definition.features.geometry === "point" &&
-		(params.width !== undefined || params.height !== undefined)
-	) {
-		throw new DocOperationError(
-			`object type "${type}" sizes itself from its content and takes no width/height`,
-		);
-	}
+	requireStorableSize(type, params, definition);
+	requireLayoutSupport(type, params, definition);
 
-	const textOverride = params.text !== undefined ? { text: params.text } : {};
+	const textOverride = {
+		...(params.text !== undefined ? { text: params.text } : {}),
+		...(params.textLayout !== undefined
+			? { textLayout: params.textLayout }
+			: {}),
+	};
 
 	let created: ObjectDoc;
 	if (definition.features.geometry === "point") {
 		// The position goes in as the drawn top-left it already is: this geometry
 		// reports no dimensions to offset a center by, and stores no box to offset.
-		created = factory.createDoc({ x: params.x, y: params.y }, textOverride);
+		// A width reaches the factory as one more content field, the geometry having
+		// no box parameter to pass it as; the type keeps it only in the layout that
+		// wraps in it, and drops it otherwise.
+		created = factory.createDoc(
+			{ x: params.x, y: params.y },
+			{
+				...textOverride,
+				...(params.width !== undefined ? { width: params.width } : {}),
+			},
+		);
 	} else {
 		const sizeOverride = {
 			...(params.width !== undefined ? { width: params.width } : {}),
@@ -185,6 +276,13 @@ const buildObject = (
 			);
 		}
 		created = sized;
+	}
+
+	if (params.autoHeight === true) {
+		// A height following the text is spelled as no height at all (setHeightMode
+		// "auto"), and the factory has to be given a box to build one, so the field is
+		// dropped rather than never written.
+		delete (created as ObjectRecord).height;
 	}
 
 	created.id = generateUniqueId(doc, type, reservedIds);
@@ -234,15 +332,18 @@ const buildObject = (
  * @param type - Object type name, which must be a key of `definitions` and carry a factory
  * @param params - Top-left position and optional size/text/styling/rotation, plus
  *   `extraProps` for the type's own properties; omitted width/height fall back to `calcDimensions`'
- *   default size, and styling the type cannot hold is ignored. `points` supersedes the
- *   position and size outright
+ *   default size, which is written into the document unless `autoHeight` asks for a height
+ *   that follows the text, and styling the type cannot hold is ignored. `points` supersedes
+ *   the position and size outright
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
  * @throws {@link DocOperationError} for an unknown type, for one without a factory
  *   (group / connector / svg and the like), when width/height are given for a
  *   point-geometry type that cannot store them, when the factory rejects the given size,
  *   when `points` are given to a type not built from vertices or are too few, for a
- *   rotation that is not finite, when `extraProps` carries a name this call already takes as a
+ *   rotation that is not finite, for a `textLayout` on a type that declares none, for
+ *   `autoHeight` on a type whose height cannot follow its text or alongside a `height`,
+ *   when `extraProps` carries a name this call already takes as a
  *   parameter or one the type does not declare, or when the finished object fails the
  *   type's own `validateDoc`
  */

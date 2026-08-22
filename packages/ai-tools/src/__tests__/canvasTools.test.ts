@@ -62,6 +62,7 @@ describe("createCanvasToolDescriptors", () => {
 			"translate_objects",
 			"resize_object",
 			"resize_objects",
+			"set_height_mode",
 			"set_rotation",
 			"set_points",
 			"set_points_many",

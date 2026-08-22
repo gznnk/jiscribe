@@ -16,6 +16,7 @@ import type {
 	ObjectFilter,
 	Rect,
 	SetInlineTextStyleEntry,
+	SetHeightModeParams,
 	SetPointsEntry,
 	SetPositionEntry,
 	SetTextEntry,
@@ -189,6 +190,14 @@ export type AiDocOp =
 			height?: number;
 	  }
 	| {
+			kind: "setHeightMode";
+			ids: string[];
+			/** "auto" drops the height from the document, "fixed" writes `height` back */
+			mode: AiHeightMode;
+			/** Height in px "fixed" writes; required by it, unread by "auto" */
+			height?: number;
+	  }
+	| {
 			kind: "setRotation";
 			ids: string[];
 			/** Clockwise degrees about the shape's own centre; absolute, not a step */
@@ -268,6 +277,12 @@ export type AiInlineTextStyleParams = InlineTextStyleParams;
 
 /** One element of set_text_styles: an id and one {@link AiInlineTextStyleParams} */
 export type AiSetTextStyleEntry = SetInlineTextStyleEntry;
+
+/** Which way set_height_mode switches a height: stated by the document, or derived from the text */
+export type AiHeightMode = SetHeightModeParams["mode"];
+
+/** The text layout add_object may create a shape in; borrowed from the creation params */
+export type AiTextLayout = NonNullable<AddObjectParams["textLayout"]>;
 
 /** Arrowhead kind; canvas does not export ArrowType, so it is borrowed from ConnectParams */
 export type AiArrowType = NonNullable<ConnectParams["startArrow"]>;

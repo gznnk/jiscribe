@@ -32,10 +32,7 @@ const capabilities: AiCanvasCapabilities = {
  * today. The list is also the place a future member is argued out of the tool set;
  * deleting it would let one be added and never exposed, unnoticed.
  */
-const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {
-	setHeightMode:
-		"a height that follows the text is not drawn yet, so a tool would offer the model a mode the canvas cannot show; exposed once the canvas resolves it",
-};
+const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {};
 
 const toCamelCase = (toolName: string): string =>
 	toolName.replace(/_(.)/g, (_match, letter: string) => letter.toUpperCase());

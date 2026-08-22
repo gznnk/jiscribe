@@ -17,7 +17,9 @@ import type {
 	AiArrowType,
 	AiCanvasOp,
 	AiDistributeAxis,
+	AiHeightMode,
 	AiRouting,
+	AiTextLayout,
 	AiZOrderPlacement,
 } from "./canvasOps";
 import type { AiCanvasCapabilities } from "./capabilities";
@@ -112,6 +114,16 @@ const ROUTINGS = [
 	"straight",
 	"orthogonal",
 ] as const satisfies readonly AiRouting[];
+
+const HEIGHT_MODES = [
+	"auto",
+	"fixed",
+] as const satisfies readonly AiHeightMode[];
+
+const TEXT_LAYOUTS = [
+	"label",
+	"block",
+] as const satisfies readonly AiTextLayout[];
 
 const ARROW_TYPES = [
 	"FilledTriangle",
@@ -648,12 +660,36 @@ export const createCanvasToolDescriptors = (
 			.number()
 			.min(0)
 			.optional()
-			.describe("Width in px (default: the shape's own default)."),
+			.describe(
+				'Width in px (default: the shape\'s own default). For a text this is refused, its box being its content — unless textLayout is "block", where this is the width the text wraps in.',
+			),
 		height: z
 			.number()
 			.min(0)
 			.optional()
-			.describe("Height in px (default: the shape's own default)."),
+			.describe(
+				"Height in px (default: the shape's own default, which is written into the document all the same — autoHeight is what leaves a height out). Refused for a text, whose height is always measured.",
+			),
+		autoHeight: z
+			.boolean()
+			.optional()
+			.describe(
+				[
+					"Create the shape with no height of its own, so it is exactly as tall as the text inside it needs and stays so as the text is edited.",
+					"Only for shapes that hold their text inside their box (rect and the like; not ellipse, not a shape labelled outside its outline), and never together with height — the two are opposite requests and the call is refused.",
+					"Omitting this writes a height as ever, so a shape you want to follow its text must ask for it here or with set_height_mode afterwards.",
+				].join(" "),
+			),
+		textLayout: z
+			.enum(TEXT_LAYOUTS)
+			.optional()
+			.describe(
+				[
+					'How a text lays itself out; only the text type takes it. "block" wraps the text inside width, which it therefore requires — this is how body copy is placed in one call.',
+					'"label" (the default) breaks at the newlines you wrote and nowhere else, the box hugging the longest line.',
+					"Either way the height is measured from the lines, never stored. set_extra_props switches an existing text between the two.",
+				].join(" "),
+			),
 		text: z
 			.string()
 			.optional()
@@ -696,7 +732,7 @@ export const createCanvasToolDescriptors = (
 		[
 			"Add one object to the canvas; placing several at once is add_objects instead.",
 			"x / y are the top-left corner of the object's bounding box, in px; +x is right and +y is down.",
-			"Omitting width / height uses the shape's own default size.",
+			"Omitting width / height uses the shape's own default size, which is written into the document like any other; autoHeight is how a shape is instead left to be as tall as its text.",
 			"Style it here rather than in a second call; anything the type cannot hold is ignored.",
 			"Returns the new object id, which you need for connect and every edit.",
 		].join(" "),
@@ -879,6 +915,33 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.resizeObjects"] },
 	);
 
+	const setHeightModeTool = defineCanvasTool(
+		"set_height_mode",
+		[
+			'Switch objects between a height the document states and one that follows the text inside them: "auto" takes the height out of the document, so the shape is exactly as tall as its wrapped text needs and stays so as the text is edited; "fixed" gives it a stated height again, the one you pass.',
+			'Only shapes that hold their text inside their box take this (rect and the like; not ellipse, not a shape labelled outside its outline), and naming another is refused rather than skipped. "fixed" needs height; without one the call is refused.',
+			"Use it when a label turned out to overflow its box, instead of guessing a taller box: the shape then sizes itself. add_object takes autoHeight to create it that way in the first place.",
+			"All or nothing: if one id is rejected nothing is switched at all.",
+		].join(" "),
+		{
+			ids: z.array(z.string()).min(1).describe("ids to switch."),
+			mode: z
+				.enum(HEIGHT_MODES)
+				.describe(
+					'"auto" lets the height follow the text; "fixed" states the height in the document again.',
+				),
+			height: z
+				.number()
+				.min(1)
+				.optional()
+				.describe(
+					'New height in px, required by "fixed" and unread by "auto". Read the shape\'s current height off get_object_bounds to keep the size it is drawn at.',
+				),
+		},
+		(args) => ({ kind: "setHeightMode", ...args }),
+		{ drives: ["docOps.setHeightMode"] },
+	);
+
 	const setRotationTool = defineCanvasTool(
 		"set_rotation",
 		[
@@ -985,6 +1048,7 @@ export const createCanvasToolDescriptors = (
 			"Set the properties belonging to a shape type itself: lucideIcon's `icon`, callout's `tail`, container's `headerFill` / `headerHeight`.",
 			"One object at a time, because these names belong to a single type — read the type's own schema for the names it has.",
 			"Unlike set_style nothing is silently skipped: a name the type does not have, or a value it rejects, comes back as an error with the reason, and the object is left as it was.",
+			'This is also how an existing text is moved between its layouts — `textLayout` with the `width` a "block" wraps in — but a text you are about to create takes both on add_object instead, in one call.',
 		].join(" "),
 		{
 			id: z.string().describe("id of the object to change."),
@@ -1592,6 +1656,7 @@ export const createCanvasToolDescriptors = (
 		translateObjectsTool,
 		resizeObjectTool,
 		resizeObjectsTool,
+		setHeightModeTool,
 		setRotationTool,
 		setPointsTool,
 		setPointsManyTool,
