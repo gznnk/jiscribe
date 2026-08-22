@@ -25,7 +25,7 @@ export type WrappedTextMetrics = {
  * drawing gives, not an estimate.
  *
  * Pass the width the text really wraps at, which for text inside a shape is
- * {@link import("./contentBox").contentBox}'s width rather than the shape's own.
+ * {@link import("./resolveContentBox").resolveContentBox}'s region rather than the shape's own.
  *
  * @param text - The whole text, authored newlines included; a plain string, or the runs it is styled in where parts of it are drawn differently
  * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family outside the shipped set is estimated at 0.6em per character

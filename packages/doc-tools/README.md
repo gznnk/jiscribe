@@ -15,7 +15,7 @@ the answers an AI gets and the answers CI gets cannot drift.
 | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `validateDoc(text)`                               | Is this a sound document? Runs both validators the format has and returns their findings together. |
 | `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                    |
-| `contentBox(shape)`                               | How much of a shape's box is its text actually laid out in?                                        |
+| `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?      |
 | `diagnoseDoc(doc)`                                | Does any object's text overflow the shape holding it?                                              |
 
 ## Why validation is two validators
@@ -51,7 +51,7 @@ the canvas keeps measuring exactly as it did.
 
 ## Where the content box comes from
 
-`contentBox` asks the shape's own type. Every shipped type declares where its
+`resolveContentBox` asks the shape's own type. Every shipped type declares where its
 text goes on its doc definition (`ObjectDocDefinition.textRegion`), as a function
 of the doc: the box, plus whatever field the outline depends on — the callout's
 `tail`, the container's `headerHeight`. The rendering layer's
@@ -59,18 +59,23 @@ of the doc: the box, plus whatever field the outline depends on — the callout'
 the text in and what a Node-side diagnosis measures against are one declaration,
 and this package restates nothing.
 
-Three answers are possible, and they mean different things:
+Three answers are possible, and `resolveContentBox` keeps them apart — a caller
+that cannot tell "this shape holds no text" from "you misspelled the type" cannot
+report either one usefully:
 
-- **a rectangle** — the region, in the shape's own coordinates. `contentBox`
-  subtracts the shared text-box padding from it and hands back the result.
-- **`null`** — the box does not hold the text: the shape draws its label outside
-  the outline (the pictograms, the group markers), or divides the box into bands
-  each sized from their own text (`record`), or carries no text at all. Nothing
-  about such a shape's size can make its text overflow, so `diagnoseDoc` passes
-  over it.
-- **no declaration** — the type is not one this build ships, or ships without
-  having declared a region. `contentBox` answers null, and `diagnoseDoc` reports
-  a warning for a text-bearing type rather than passing over it silently.
+- **`{ kind: "region", rect }`** — the region, in the shape's own coordinates,
+  with the shared text-box padding already subtracted.
+- **`{ kind: "outside" }`** — the box does not hold the text: the shape draws its
+  label outside the outline (the pictograms, the group markers), or divides the
+  box into bands each sized from their own text (`record`), or carries no text at
+  all and declares no region. Nothing about such a shape's size can make its text
+  overflow, so `diagnoseDoc` passes over it and `jiscribe measure` reports the
+  text's own size with no verdict.
+- **`{ kind: "unknown" }`** — the type is not one this build ships, so nothing
+  declares anything about it. `jiscribe measure` and the MCP `measure_text` tool
+  report it as an error. Within a document the case does not arise: a type the
+  parser does not know never reaches `diagnoseDoc`, which does report a warning
+  for a shipped text-bearing type that declares no region.
 
 ## What `diagnoseDoc` does not check
 

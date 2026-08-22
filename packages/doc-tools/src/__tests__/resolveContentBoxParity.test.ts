@@ -2,12 +2,19 @@ import { TEXT_BOX_PADDING_X, TEXT_BOX_PADDING_Y } from "@jiscribe/doc/unstable";
 import type { Rect } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
-import { contentBox } from "../contentBox";
+import type { ContentBoxShape } from "../resolveContentBox";
+import { resolveContentBox } from "../resolveContentBox";
+
+/** The rectangle of a `region` answer, null for the two answers that have none. */
+const contentRectOf = (shape: ContentBoxShape): Rect | null => {
+	const resolution = resolveContentBox(shape);
+	return resolution.kind === "region" ? resolution.rect : null;
+};
 
 /**
  * The content-inset table this package used to keep, kept here as the expected
  * values of every shipped type's content box. It was a restatement, in numbers,
- * of what each shape's `textRegion` calculator produced; `contentBox` now asks
+ * of what each shape's `textRegion` calculator produced; `resolveContentBox` now asks
  * the type's own declaration (`ObjectDocDefinition.textRegion`) instead, and this
  * suite is what pins the answer to what the table said — the migration's
  * before/after, kept as the regression test of the declarations.
@@ -196,11 +203,11 @@ const expectRectCloseTo = (actual: Rect, expected: Rect): void => {
 	expect(actual.height).toBeCloseTo(expected.height, 6);
 };
 
-describe("contentBox agrees with the content-inset table it replaced", () => {
+describe("resolveContentBox agrees with the content-inset table it replaced", () => {
 	Object.keys(LEGACY_INSET_BY_TYPE).forEach((type) => {
 		it(`${type}`, () => {
 			SIZES.forEach(([width, height]) => {
-				const actual = contentBox({ type, width, height });
+				const actual = contentRectOf({ type, width, height });
 				const expected = legacyContentBox(type, width, height);
 				if (expected === null) {
 					expect(actual).toBeNull();
@@ -220,8 +227,8 @@ describe("what the declaration answers better than the table could", () => {
 	// have. The declaration reads the field.
 	it("callout: the tail band comes off whichever edge the tail sits on", () => {
 		const size = { type: "callout", width: 200, height: 100 };
-		const withDefaultTail = contentBox(size) as Rect;
-		const withLeftTail = contentBox({
+		const withDefaultTail = contentRectOf(size) as Rect;
+		const withLeftTail = contentRectOf({
 			...size,
 			tail: { side: "left", position: 0.2 },
 		}) as Rect;
@@ -244,7 +251,7 @@ describe("what the declaration answers better than the table could", () => {
 
 	// Likewise `headerHeight`: the table only knew the default 28px band.
 	it("container: the title band follows the object's own headerHeight", () => {
-		const box = contentBox({
+		const box = contentRectOf({
 			type: "container",
 			width: 240,
 			height: 160,
@@ -253,17 +260,23 @@ describe("what the declaration answers better than the table could", () => {
 		expect(box.height).toBeCloseTo(48 - TEXT_BOX_PADDING_Y * 2, 6);
 	});
 
-	// A type nothing ships declares nothing, and is now reported as unmeasurable
-	// rather than measured as though it were a plain box.
-	it("an unshipped type has no content box at all", () => {
+	// A type nothing ships declares nothing, and is now told apart from a shipped
+	// type whose box does not hold its text rather than measured as a plain box.
+	it("an unshipped type is unknown rather than unmeasurable", () => {
 		expect(
-			contentBox({ type: "somethingNobodyShips", width: 200, height: 100 }),
-		).toBeNull();
+			resolveContentBox({
+				type: "somethingNobodyShips",
+				width: 200,
+				height: 100,
+			}),
+		).toEqual({ kind: "unknown" });
 	});
 
 	// `group` carries no text, so there was never anything to measure; the table
 	// answered with the whole box because it had no entry for it.
 	it("group has no content box, carrying no text", () => {
-		expect(contentBox({ type: "group", width: 200, height: 100 })).toBeNull();
+		expect(
+			resolveContentBox({ type: "group", width: 200, height: 100 }),
+		).toEqual({ kind: "outside" });
 	});
 });

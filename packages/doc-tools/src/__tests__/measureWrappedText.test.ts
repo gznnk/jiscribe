@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { contentBox } from "../contentBox";
 import { measureWrappedText } from "../measureWrappedText";
+import { resolveContentBox } from "../resolveContentBox";
 
 const SANS_STACK = '"Source Sans 3", "Noto Sans JP", sans-serif';
 
@@ -15,7 +15,12 @@ describe("measureWrappedText", () => {
 	it("fits a stadium label that the drawn diagram fits", () => {
 		// The pill of a real diagram: 240 x 80 at 13px leaves 148px to wrap in, and
 		// the label measures 129.35px, so it stays one line.
-		const box = contentBox({ type: "stadium", width: 240, height: 80 });
+		const resolution = resolveContentBox({
+			type: "stadium",
+			width: 240,
+			height: 80,
+		});
+		const box = resolution.kind === "region" ? resolution.rect : null;
 		const metrics = measureWrappedText(
 			"チャットアシスタント",
 			sansFont(13),

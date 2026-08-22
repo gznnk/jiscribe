@@ -159,8 +159,8 @@ describe("measure", () => {
 		expect(stderr).toMatch(/--height is required for --shape stadium/);
 	});
 
-	it("refuses a shape that lays its text outside its box", () => {
-		const { code, stderr } = capture(() =>
+	it("measures a shape that lays its text outside its box, with no verdict", () => {
+		const { code, stdout } = capture(() =>
 			runMeasureCommand([
 				"--width",
 				"40",
@@ -170,11 +170,96 @@ describe("measure", () => {
 				"14",
 				"--shape",
 				"actor",
+				"利用者",
+			]),
+		);
+		expect(code).toBe(0);
+		expect(stdout).toContain("lines 1\n");
+		expect(stdout).toContain(
+			"note: shape actor draws its label outside the box; the box size does not constrain the text\n",
+		);
+		expect(stdout).not.toContain("content ");
+		expect(stdout).not.toContain("fits ");
+	});
+
+	it("lays a shape's outside label out as authored, wrapping at nothing", () => {
+		const { stdout } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"40",
+				"--height",
+				"60",
+				"--font-size",
+				"14",
+				"--shape",
+				"actor",
+				"折り返しの効かない長い名前をもつ利用者",
+			]),
+		);
+		expect(stdout).toContain("lines 1\n");
+	});
+
+	it("reports a type outside the shipped set as unknown, and exits 1", () => {
+		const { code, stderr, stdout } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"200",
+				"--height",
+				"100",
+				"--font-size",
+				"14",
+				"--shape",
+				"nosuchshape",
 				"x",
 			]),
 		);
-		expect(code).toBe(2);
-		expect(stderr).toMatch(/lays its text outside its box/);
+		expect(code).toBe(1);
+		expect(stderr).toBe(
+			'error: unknown shape type "nosuchshape" (not in the standard set)\n',
+		);
+		expect(stdout).toBe("");
+	});
+
+	it("names an unknown type before insisting on a height", () => {
+		const { code, stderr } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"200",
+				"--font-size",
+				"14",
+				"--shape",
+				"nosuchshape",
+				"x",
+			]),
+		);
+		expect(code).toBe(1);
+		expect(stderr).toMatch(/unknown shape type "nosuchshape"/);
+	});
+
+	it("reports the outside label in --json with no content box and no verdict", () => {
+		const { code, stdout } = capture(() =>
+			runMeasureCommand([
+				"--json",
+				"--width",
+				"40",
+				"--height",
+				"60",
+				"--font-size",
+				"14",
+				"--shape",
+				"actor",
+				"利用者",
+			]),
+		);
+		expect(code).toBe(0);
+		expect(JSON.parse(stdout)).toMatchObject({
+			shape: "actor",
+			lines: 1,
+			contentWidth: null,
+			contentHeight: null,
+			fits: true,
+			note: "shape actor draws its label outside the box; the box size does not constrain the text",
+		});
 	});
 
 	it("rejects a width that is not a positive number", () => {

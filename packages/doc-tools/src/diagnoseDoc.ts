@@ -13,9 +13,9 @@ import {
 } from "@jiscribe/doc/unstable";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 
-import { contentBox } from "./contentBox";
 import type { Diagnostic } from "./Diagnostic";
 import { measureWrappedText } from "./measureWrappedText";
+import { resolveContentBox } from "./resolveContentBox";
 
 /**
  * Height a text may exceed its content box by before a reader sees anything, in
@@ -105,10 +105,11 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 			},
 		];
 	}
-	const box = contentBox({ ...body, width, height });
-	if (box === null) {
+	const resolution = resolveContentBox({ ...body, width, height });
+	if (resolution.kind !== "region") {
 		return [];
 	}
+	const box = resolution.rect;
 
 	const font = resolveBodyFont(body, definition);
 	const metrics = measureWrappedText(body.text, font, box.width);
@@ -138,7 +139,8 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 
 /**
  * Checks every object's text against the space its shape actually leaves for it:
- * the text is wrapped at {@link import("./contentBox").contentBox}'s width with
+ * the text is wrapped at
+ * {@link import("./resolveContentBox").resolveContentBox}'s width with
  * {@link import("./measureWrappedText").measureWrappedText} — the canvas's own
  * line breaking, against the canvas's own font files — and the lines it comes to
  * are compared with the content box's height.

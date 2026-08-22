@@ -13,8 +13,11 @@ export type { ValidateDocResult } from "./validateDoc";
 export { measureWrappedText } from "./measureWrappedText";
 export type { TextMeasureFont, WrappedTextMetrics } from "./measureWrappedText";
 
-export { contentBox } from "./contentBox";
-export type { ContentBoxShape } from "./contentBox";
+export { resolveContentBox } from "./resolveContentBox";
+export type {
+	ContentBoxResolution,
+	ContentBoxShape,
+} from "./resolveContentBox";
 
 export { diagnoseDoc } from "./diagnoseDoc";
 
