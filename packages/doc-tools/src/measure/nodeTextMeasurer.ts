@@ -8,6 +8,7 @@ import * as fontkit from "fontkit";
 
 import { getFontFaceIndex } from "./fontFaceIndex";
 import { parseFontStack } from "./fontSourcePackages";
+import { calcPunctuationTrimEm } from "./punctuationTrim";
 
 /**
  * Width a character of an unmeasurable family is assumed to take, as a fraction
@@ -70,8 +71,10 @@ const calcRunAdvanceEm = (font: fontkit.Font, run: string): number =>
 
 /**
  * Splits the text into maximal stretches drawn from one file and adds up their
- * advances. A code point no family covers is charged the estimate, so the result
- * degrades character by character instead of all at once.
+ * advances, then takes back what the browser trims between adjacent fullwidth
+ * punctuation ({@link calcPunctuationTrimEm}). A code point no family covers is
+ * charged the estimate, so the result degrades character by character instead of
+ * all at once.
  */
 const measureWithFontStack = (
 	text: string,
@@ -110,7 +113,10 @@ const measureWithFontStack = (
 	}
 	flushRun();
 
-	return total;
+	// Applied over the whole text rather than per run: the browser trims across the
+	// boundary between two faces as readily as inside one (`、` and `「` come from
+	// different fontsource subsets), and the runs are split exactly there.
+	return total - calcPunctuationTrimEm(text) * font.fontSize;
 };
 
 /**
