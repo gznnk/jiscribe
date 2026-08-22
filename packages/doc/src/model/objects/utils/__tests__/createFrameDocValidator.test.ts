@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
 
+import {
+	calcFullBoxTextRegion,
+	calcOutsideBoxTextRegion,
+} from "../../../../plugin/ObjectDocTextRegion";
 import type { SemanticDiagnostic } from "../../../types/SemanticDiagnostic";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { createFrameDocValidator } from "../createFrameDocValidator";
@@ -154,5 +158,51 @@ describe("createFrameDocValidator extra validator", () => {
 		const doc = { x: 0, y: 0, width: 10, height: 10 };
 		expect(paths(validate(doc, "root"))).toEqual(["root.tail"]);
 		expect(validate({ ...doc, tail: null }, "root")).toEqual([]);
+	});
+});
+
+describe("createFrameDocValidator auto height", () => {
+	const textBox = features({ text: "body" });
+
+	it("lets a type whose box holds its text leave the height out", () => {
+		const validate = createFrameDocValidator(textBox, undefined, {
+			textRegion: calcFullBoxTextRegion,
+		});
+		expect(validate({ x: 0, y: 0, width: 10 }, "root")).toEqual([]);
+	});
+
+	it("still refuses a height that is there but is not a number", () => {
+		const validate = createFrameDocValidator(textBox, undefined, {
+			textRegion: calcFullBoxTextRegion,
+		});
+		expect(
+			paths(validate({ x: 0, y: 0, width: 10, height: "10px" }, "root")),
+		).toEqual(["root.height"]);
+	});
+
+	it("keeps the height required for a label drawn outside the outline", () => {
+		const validate = createFrameDocValidator(textBox, undefined, {
+			textRegion: calcOutsideBoxTextRegion,
+		});
+		expect(paths(validate({ x: 0, y: 0, width: 10 }, "root"))).toEqual([
+			"root.height",
+		]);
+	});
+
+	it("keeps the height required for a type declaring no region", () => {
+		const validate = createFrameDocValidator(textBox);
+		expect(paths(validate({ x: 0, y: 0, width: 10 }, "root"))).toEqual([
+			"root.height",
+		]);
+	});
+
+	it("keeps the height required where the type denies what its region implies", () => {
+		const validate = createFrameDocValidator(textBox, undefined, {
+			textRegion: calcFullBoxTextRegion,
+			autoHeight: false,
+		});
+		expect(paths(validate({ x: 0, y: 0, width: 10 }, "root"))).toEqual([
+			"root.height",
+		]);
 	});
 });

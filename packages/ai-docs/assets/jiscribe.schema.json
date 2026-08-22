@@ -360,7 +360,7 @@
 		"RectDoc": {
 			"description": "Rectangle shape.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -389,7 +389,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 100",
 					"type": "number",
 					"minimum": 0
 				},
@@ -749,7 +749,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -765,7 +765,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -781,7 +781,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -797,7 +797,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -813,7 +813,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -829,7 +829,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -845,7 +845,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -877,7 +877,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -893,7 +893,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -907,7 +907,7 @@
 		"SmartphoneDoc": {
 			"description": "Smartphone shape, typically used for mobile clients. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out on the screen, which is narrow — keep it to a word or two, or widen the box. A portrait aspect ratio (e.g. 70x120) looks best.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -936,7 +936,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
 					"type": "number",
 					"minimum": 0
 				},
@@ -999,7 +999,7 @@
 		"LaptopDoc": {
 			"description": "Laptop shape (screen over a splayed base), typically used for desktop and web clients. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out on the screen, so the base band at the bottom of the box stays clear. A landscape aspect ratio (e.g. 140x100) looks best.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -1028,7 +1028,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 100",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1141,7 +1141,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1157,7 +1157,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1219,7 +1219,7 @@
 		"ShieldDoc": {
 			"description": "Shield shape, typically used for security boundaries and trust zones. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out in the straight-sided upper part only, since the lower part tapers to a point — keep it short, or give the shape more height. Prefer \"lock\" for a single protected resource.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -1248,7 +1248,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1377,7 +1377,7 @@
 		"CalloutDoc": {
 			"description": "Speech-bubble callout, typically used for annotations and explanatory comments. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a bubble. The tail stays inside the bounding box, occupying a quarter of it on its side; text is laid out in the bubble body beside it. Point the tail at the annotated object via `tail` (default: bottom edge, position 0.2).",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -1425,7 +1425,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 110",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 110",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1485,7 +1485,7 @@
 		"NoteDoc": {
 			"description": "Note shape: a box with its top-right corner folded back, holding a comment about the diagram — the UML note. It uses the same rect geometry (x/y/width/height) as RectDoc and only swaps the drawing, so it takes text inside the box, unlike the group markers in this package. Give it a landscape box (e.g. 180x110) and left-aligned text, and attach it to what it comments on with a connector. Two shapes are easily mistaken for it, and neither is the same thing: \"document\" (a wavy bottom edge) is a flowchart step that produces paperwork, and \"file\" is a portrait pictogram standing for a file on disk. Reach for \"note\" when the box holds prose *about* the diagram, and for those two when the shape *is* one of the things the diagram is about. Where the comment should point at one spot on one shape, CalloutDoc (a bubble with a tail) says so more directly.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -1514,7 +1514,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 110",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 110",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1873,7 +1873,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1889,7 +1889,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1905,7 +1905,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1921,7 +1921,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1937,7 +1937,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1953,7 +1953,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1969,7 +1969,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -1985,7 +1985,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -2001,7 +2001,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -2049,7 +2049,7 @@
 			"type": "object",
 			"allOf": [
 				{
-					"$ref": "#/$defs/BoxShapeDoc"
+					"$ref": "#/$defs/AutoHeightBoxShapeDoc"
 				}
 			],
 			"properties": {
@@ -2394,7 +2394,7 @@
 		"UmlPackageDoc": {
 			"description": "UML package shape (a rectangle with a tab on its top-left corner), typically used for namespaces, modules and layers in UML package diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The rect is the outer bounds of the whole silhouette, tab included, and the text is laid out in the body below the tab. Distinct from \"package\", which is an isometric box for a build artifact or deployment unit, and from \"container\", which actually holds the objects placed inside it — this one is a plain shape with no children.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -2423,7 +2423,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 108",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 108",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2490,7 +2490,7 @@
 		"UmlComponentDoc": {
 			"description": "UML 2 component shape (a rectangle carrying the component symbol in its top-right corner), typically used for replaceable parts of a system in UML component diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out over the whole box, so keep the name short enough to clear the symbol, or widen the box. Prefer \"record\" with a <<component>> stereotype when the part needs compartments of its own.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -2519,7 +2519,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 90",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 90",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2821,7 +2821,7 @@
 		"StickyDoc": {
 			"description": "Sticky note annotation.",
 			"type": "object",
-			"required": ["id", "type", "x", "y", "width", "height"],
+			"required": ["id", "type", "x", "y", "width"],
 			"additionalProperties": false,
 			"properties": {
 				"id": {
@@ -2850,7 +2850,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
 					"type": "number",
 					"minimum": 0
 				},
@@ -3406,7 +3406,7 @@
 			}
 		},
 		"BoxShapeDoc": {
-			"description": "Shared structure of the plain box shapes: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins `type` with a const.",
+			"description": "Shared structure of the plain box shapes that always state a height: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins `type` with a const.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -3436,6 +3436,93 @@
 				},
 				"height": {
 					"description": "Bounding-box height in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"AutoHeightBoxShapeDoc": {
+			"description": "Shared structure of the plain box shapes that size themselves from their text when no height is given: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins `type` with a const.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"type": "string"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes.",
 					"type": "number",
 					"minimum": 0
 				},

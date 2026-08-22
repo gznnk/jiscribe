@@ -80,6 +80,11 @@ export {
 	calcFullBoxTextRegion,
 	calcOutsideBoxTextRegion,
 } from "./plugin/ObjectDocTextRegion";
+// Whether a type may leave `height` out of the document, which is what that
+// declaration decides: the schema generator relaxes the field for exactly these
+// types, and the doc-ops refuse to switch any other.
+export { supportsAutoHeight } from "./plugin/supportsAutoHeight";
+export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";
@@ -111,6 +116,7 @@ export {
 	type Rect,
 	type RemoveObjectsFromGroupResult,
 	type ResizeObjectParams,
+	type SetHeightModeParams,
 	type SetInlineTextStyleEntry,
 	type SetPointsEntry,
 	type SetPositionEntry,

@@ -47,13 +47,35 @@ export type ObjectDocDefinition = {
 	 * `null` from the calculator means the box does not hold the text (a label
 	 * drawn outside the outline, bands sized from their own text); omitting the
 	 * field means the type has not declared one at all, which a checker reports
-	 * rather than guessing at. Every type with `features.text: "body"` should
+	 * rather than guessing at. Declaring a rectangle is also what lets a document
+	 * leave the type's `height` out and have it follow the text
+	 * ({@link import("./supportsAutoHeight").supportsAutoHeight}), so a
+	 * `geometry: "rect"` type's declaration decides the shape of its schema too.
+	 * Every type with `features.text: "body"` should
 	 * declare one — {@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
 	 * for a plain box,
 	 * {@link import("./ObjectDocTextRegion").calcOutsideBoxTextRegion} for a label
 	 * drawn outside the outline.
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Set to `false` by a type whose box must not be sized from the text laid out
+	 * in its region, even though {@link textRegion} says it could — the one
+	 * declaration {@link import("./supportsAutoHeight").supportsAutoHeight} cannot
+	 * derive from the region, since neither reason is visible in a rectangle:
+	 *
+	 * - the height is settled by something other than the text (`container` is as
+	 *   tall as the children it frames; its region is only the title band)
+	 * - the body is not drawn by the shared text layout, so measuring it as
+	 *   wrapped plain text gives a height the shape is not drawn at (`markdown`
+	 *   renders its source)
+	 *
+	 * There is no `true`: a type may only ever deny what its region implies, never
+	 * claim what it does not — leaving this out is the normal case and lets the
+	 * region decide.
+	 */
+	autoHeight?: false;
 
 	/**
 	 * AI-facing description of the shape (1–3 sentences, English): what it draws,

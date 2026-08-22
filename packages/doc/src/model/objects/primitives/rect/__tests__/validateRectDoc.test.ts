@@ -44,9 +44,14 @@ describe("validateRectDoc", () => {
 		expect(errors.some((e) => e.path === "root.width")).toBe(true);
 	});
 
-	it("is an error when the required height is not a number", () => {
-		const errors = validateRectDoc({ ...validRect, height: undefined }, "root");
+	it("is an error when a stated height is not a number", () => {
+		const errors = validateRectDoc({ ...validRect, height: "100px" }, "root");
 		expect(errors.some((e) => e.path === "root.height")).toBe(true);
+	});
+
+	it("accepts a rect with no height, whose box follows its text", () => {
+		const errors = validateRectDoc({ ...validRect, height: undefined }, "root");
+		expect(errors.some((e) => e.path === "root.height")).toBe(false);
 	});
 
 	it("is an error when textAlign has an invalid value", () => {

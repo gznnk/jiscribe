@@ -1,4 +1,4 @@
-import type { ObjectDocDefinition } from "@jiscribe/doc";
+import { supportsAutoHeight, type ObjectDocDefinition } from "@jiscribe/doc";
 
 import {
 	CANONICAL_TYPE_ORDER,
@@ -200,7 +200,7 @@ function buildFieldTable(
 			`| \`x\` | \`number\` | ${formatDefaultCell(defaults.x)} | X of the bounding box's top-left. |`,
 			`| \`y\` | \`number\` | ${formatDefaultCell(defaults.y)} | Y of the bounding box's top-left. |`,
 			`| \`width\` | \`number\` | ${formatDefaultCell(defaults.width)} | Bounding-box width (px). |`,
-			`| \`height\` | \`number\` | ${formatDefaultCell(defaults.height)} | Bounding-box height (px). |`,
+			`| \`height\` | \`number\` | ${formatDefaultCell(defaults.height)} | Bounding-box height (px).${supportsAutoHeight(definition) ? " **Optional**: leave it out and the height follows the text — the box is sized to the smallest one the wrapped text fits in, at the `width` given." : ""} |`,
 		);
 		if (definition.features.radius) {
 			rows.push(
@@ -288,12 +288,25 @@ function buildGroupedSection(
 			: `${types.length - textless.length} of them also take Text like \`rect\`; ` +
 				`**${textless.map((type) => `\`${type}\``).join(" and ")} hold no text** ` +
 				"(they are markers — omit `text` and the font fields). ";
+	const fixedHeight = types
+		.filter((type) => !supportsAutoHeight(manifest.get(type)!))
+		.map((type) => `\`${type}\``)
+		.join(" / ");
+	// The exception clause is dropped entirely once every type sizes itself,
+	// rather than left to render as an empty list.
+	const heightNote =
+		fixedHeight === ""
+			? "On any of them `height` is **optional**: leave it out and the box is sized to the wrapped text. "
+			: `On all but ${fixedHeight} \`height\` is **optional**: ` +
+				"leave it out and the box is sized to the wrapped text. " +
+				`**${fixedHeight} always need one** ` +
+				"(they do not lay their text out inside the outline). ";
 	const intro =
 		`All ${types.length} use the **same rect-based geometry** (top-left \`x\`,\`y\` + \`width\`,\`height\`) ` +
 		`and the same Stroke / Fill / Transform styles as \`rect\`; only the drawn outline differs. ${
 			textNote
 		}They are all **connectable** like \`rect\` ` +
-		`and have **no Radius** (\`rx\`). Set \`type\` to the value below and give a bounding box.`;
+		`and have **no Radius** (\`rx\`). ${heightNote}Set \`type\` to the value below and give a bounding box.`;
 	const table = [
 		"| `type` | Outline | Default size | Typical use |",
 		"| ------ | ------- | ------------ | ----------- |",

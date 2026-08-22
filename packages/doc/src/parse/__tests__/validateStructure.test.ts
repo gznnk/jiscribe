@@ -240,9 +240,9 @@ describe("validateStructure: group children", () => {
 
 	it("surfaces a child's per-type error at the correct path", () => {
 		const errors = validateStructure(
-			doc([group("g1", [{ id: "r", type: "rect", x: 0, y: 0, width: 10 }])]),
+			doc([group("g1", [{ id: "r", type: "rect", x: 0, y: 0, height: 10 }])]),
 		);
-		expect(has(errors, "root[0].children[0].height", "must be a number")).toBe(
+		expect(has(errors, "root[0].children[0].width", "must be a number")).toBe(
 			true,
 		);
 	});
@@ -251,12 +251,12 @@ describe("validateStructure: group children", () => {
 		const errors = validateStructure(
 			doc([
 				group("g1", [
-					group("g2", [{ id: "r", type: "rect", x: 0, y: 0, width: 10 }]),
+					group("g2", [{ id: "r", type: "rect", x: 0, y: 0, height: 10 }]),
 				]),
 			]),
 		);
 		expect(
-			has(errors, "root[0].children[0].children[0].height", "must be a number"),
+			has(errors, "root[0].children[0].children[0].width", "must be a number"),
 		).toBe(true);
 	});
 

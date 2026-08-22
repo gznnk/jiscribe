@@ -274,6 +274,80 @@ describe("resizeObjects", () => {
 	});
 });
 
+describe("setHeightMode", () => {
+	it("drops the height, which is how the document says 'size this from the text'", () => {
+		const doc = twoRects();
+
+		docOps.setHeightMode(doc, ["rect-1"], { mode: "auto" });
+
+		expect(readObject(doc, "rect-1")).not.toHaveProperty("height");
+		expect(readObject(doc, "rect-1")).toMatchObject({ width: 100 });
+		expectValid(doc);
+	});
+
+	it("writes the height back, which is how it stops following the text", () => {
+		const doc = twoRects();
+		docOps.setHeightMode(doc, ["rect-1"], { mode: "auto" });
+
+		docOps.setHeightMode(doc, ["rect-1"], { mode: "fixed", height: 64 });
+
+		expect(readObject(doc, "rect-1")).toMatchObject({ height: 64 });
+		expectValid(doc);
+	});
+
+	it("switches every id given, leaving the rest alone", () => {
+		const doc = twoRects();
+
+		docOps.setHeightMode(doc, ["rect-1", "rect-2"], { mode: "auto" });
+
+		expect(readObject(doc, "rect-1")).not.toHaveProperty("height");
+		expect(readObject(doc, "rect-2")).not.toHaveProperty("height");
+	});
+
+	it("refuses a type that does not lay its text out inside its box", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 50 });
+		docOps.addObject(doc, "ellipse", { x: 200, y: 0, width: 100, height: 50 });
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.setHeightMode(doc, ["rect-1", "ellipse-1"], { mode: "auto" }),
+		).toThrow(
+			'ids[1] (ellipse-1): ellipse-1 ("ellipse") does not lay its text out inside its box, so its height cannot follow the text — the document was left unchanged',
+		);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("refuses a fixed height that is not greater than 0", () => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.setHeightMode(doc, ["rect-1"], { mode: "fixed", height: 0 }),
+		).toThrow("0 is not a height: a fixed height must be greater than 0");
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("names every missing id at once, having written nothing", () => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		expect(() =>
+			docOps.setHeightMode(doc, ["rect-1", "nope"], { mode: "auto" }),
+		).toThrow(DocOperationError);
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("is a no-op for an empty array", () => {
+		const doc = twoRects();
+		const before = JSON.stringify(doc);
+
+		docOps.setHeightMode(doc, [], { mode: "auto" });
+
+		expect(JSON.stringify(doc)).toBe(before);
+	});
+});
+
 describe("objects measured from their points", () => {
 	/** A polygon whose factory vertices are replaced by a plain 100x60 triangle. */
 	const triangleDoc = (): CanvasDoc => {

@@ -82,6 +82,12 @@ export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
 // come from is what setTextWidthMeasurerFactory decides — a browser measures on an
 // offscreen canvas, a Node host registers a backend reading the bundled font files
 // (@jiscribe/doc-tools), and with neither the widths fall back to an estimate.
+// The height a shape with no `height` in the document is drawn at, and the box
+// its text is laid out in once the padding is off the declared region. Both are
+// headless for the same reason the measurement is.
+export { calcAutoShapeHeight } from "./text/block/calcAutoShapeHeight";
+export type { AutoHeightShape } from "./text/block/calcAutoShapeHeight";
+export { calcTextContentBox } from "./text/block/calcTextContentBox";
 export { calcVisualLineCount } from "./text/layout/calcVisualLineCount";
 export { calcVisualTextHeight } from "./text/layout/calcVisualTextHeight";
 export { layoutVisualLines } from "./text/layout/layoutVisualLines";

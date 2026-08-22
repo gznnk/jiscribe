@@ -91,6 +91,8 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	}
 	const body = object as TextBodyDoc;
 	const { width, height } = body;
+	// No stored height means the box is sized from the text on every read
+	// (calcAutoShapeHeight), so there is no height for the text to overflow.
 	if (typeof width !== "number" || typeof height !== "number") {
 		return [];
 	}
@@ -183,7 +185,9 @@ const diagnoseConnectorLabel = (
  *
  * Objects the check passes over: types whose text the box does not hold (a label
  * drawn outside the outline, a `record`'s text-sized bands, a shape with no
- * text), objects with no text or no explicit size, and types outside the shipped
+ * text), objects with no text or no explicit size — a shape that states no
+ * `height` is sized from its text on every read, so nothing can overflow it —
+ * and types outside the shipped
  * set. A shipped type that holds text but declares no region is reported as a
  * warning rather than passed over silently — nothing measures it, and that is a
  * gap in the shape set rather than a fact about the document.

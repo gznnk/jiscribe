@@ -28,11 +28,14 @@ const capabilities: AiCanvasCapabilities = {
  * and written down: the exhaustiveness test below fails until the new member is
  * either driven by a tool or entered here.
  *
- * Empty is the state to keep it in — every doc-op is reachable by the model today.
- * The list stays because it is the place a future member is argued out of the tool
- * set; deleting it would let one be added and never exposed, unnoticed.
+ * Empty is the state to keep it in — every other doc-op is reachable by the model
+ * today. The list is also the place a future member is argued out of the tool set;
+ * deleting it would let one be added and never exposed, unnoticed.
  */
-const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {};
+const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {
+	setHeightMode:
+		"a height that follows the text is not drawn yet, so a tool would offer the model a mode the canvas cannot show; exposed once the canvas resolves it",
+};
 
 const toCamelCase = (toolName: string): string =>
 	toolName.replace(/_(.)/g, (_match, letter: string) => letter.toUpperCase());

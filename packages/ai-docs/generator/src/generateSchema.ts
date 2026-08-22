@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import {
 	FILL_STYLE_KEYS,
 	STROKE_STYLE_KEYS,
+	supportsAutoHeight,
 	TEXT_SLOT_STYLE_KEYS,
 	TRANSFORM_STYLE_KEYS,
 	type ObjectDocDefinition,
@@ -134,9 +135,23 @@ const RECT_GEOMETRY_DESCRIPTIONS = {
 	height: "Bounding-box height in pixels.",
 } as const;
 
-/** Properties of the rect geometry (x/y/width/height). */
+/**
+ * What a type that lays its text out inside its box adds to the `height`
+ * description: leaving the field out is how the format spells "size this from the
+ * text" (see supportsAutoHeight).
+ */
+const AUTO_HEIGHT_NOTE =
+	"Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes.";
+
+/**
+ * Properties of the rect geometry (x/y/width/height).
+ *
+ * @param defaults - The type's creation defaults, quoted in the width/height descriptions
+ * @param autoHeight - Whether this type may leave `height` out, which only changes its description here (the `required` list is where it is enforced)
+ */
 function buildRectGeometryProps(
 	defaults: Readonly<Record<string, unknown>>,
+	autoHeight: boolean,
 ): Record<string, JsonSchemaNode> {
 	return {
 		x: { description: RECT_GEOMETRY_DESCRIPTIONS.x, type: "number" },
@@ -147,7 +162,7 @@ function buildRectGeometryProps(
 			minimum: 0,
 		},
 		height: {
-			description: `${RECT_GEOMETRY_DESCRIPTIONS.height} Default when created from the palette: ${formatDefaultValue(defaults.height)}`,
+			description: `${RECT_GEOMETRY_DESCRIPTIONS.height}${autoHeight ? ` ${AUTO_HEIGHT_NOTE}` : ""} Default when created from the palette: ${formatDefaultValue(defaults.height)}`,
 			type: "number",
 			minimum: 0,
 		},
@@ -205,13 +220,27 @@ function isGeneratableGeometry(
 	return geometry in GEOMETRY_REQUIRED_PROPS;
 }
 
+/**
+ * The `required` list of a type's $def: its geometry's, minus `height` for a type
+ * that may leave it out and be sized from its text.
+ */
+function buildRequiredProps(
+	geometry: GeneratableGeometry,
+	autoHeight: boolean,
+): string[] {
+	return GEOMETRY_REQUIRED_PROPS[geometry].filter(
+		(prop) => !autoHeight || prop !== "height",
+	);
+}
+
 function buildGeometryProps(
 	geometry: GeneratableGeometry,
 	defaults: Readonly<Record<string, unknown>>,
+	autoHeight: boolean,
 ): Record<string, JsonSchemaNode> {
 	switch (geometry) {
 		case "rect":
-			return buildRectGeometryProps(defaults);
+			return buildRectGeometryProps(defaults, autoHeight);
 		case "ellipse":
 			return buildEllipseGeometryProps(defaults);
 		case "point":
@@ -219,8 +248,20 @@ function buildGeometryProps(
 	}
 }
 
-/** $def name of the structure the plain box shapes share through allOf. */
-const BOX_SHAPE_DEF_NAME = "BoxShapeDoc";
+/**
+ * $def names of the two structures the plain box shapes share through allOf: one
+ * for the types that must state a height, one for those that may leave it out and
+ * be sized from their text (see supportsAutoHeight). They differ in the `height`
+ * entry of `required` and in its description; everything else is the same.
+ */
+const BOX_SHAPE_DEF_NAMES = {
+	fixedHeight: "BoxShapeDoc",
+	autoHeight: "AutoHeightBoxShapeDoc",
+} as const;
+
+/** The shared $def a box-compatible type extends, by whether it may omit its height. */
+const boxShapeDefName = (autoHeight: boolean): string =>
+	autoHeight ? BOX_SHAPE_DEF_NAMES.autoHeight : BOX_SHAPE_DEF_NAMES.fixedHeight;
 
 /** Shared style properties of a $def, as $refs into the style definitions. */
 function buildStyleRefProps(): Record<string, JsonSchemaNode> {
@@ -235,13 +276,16 @@ function buildStyleRefProps(): Record<string, JsonSchemaNode> {
 	return properties;
 }
 
-/** Assemble the $def every plain box shape extends (see isBoxShapeCompatible). */
-function buildBoxShapeDef(): JsonSchemaNode {
+/**
+ * Assemble the $def a plain box shape extends (see isBoxShapeCompatible).
+ *
+ * @param autoHeight - Whether the shapes extending it may leave `height` out and be sized from their text
+ */
+function buildBoxShapeDef(autoHeight: boolean): JsonSchemaNode {
 	return {
-		description:
-			"Shared structure of the plain box shapes: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins `type` with a const.",
+		description: `Shared structure of the plain box shapes${autoHeight ? " that size themselves from their text when no height is given" : " that always state a height"}: rect geometry plus the Stroke / Fill / Text / Transform styles. Each concrete shape def pins \`type\` with a const.`,
 		type: "object",
-		required: [...GEOMETRY_REQUIRED_PROPS.rect],
+		required: buildRequiredProps("rect", autoHeight),
 		additionalProperties: false,
 		properties: {
 			id: { description: "Unique identifier.", type: "string" },
@@ -258,7 +302,9 @@ function buildBoxShapeDef(): JsonSchemaNode {
 				minimum: 0,
 			},
 			height: {
-				description: RECT_GEOMETRY_DESCRIPTIONS.height,
+				description: autoHeight
+					? `${RECT_GEOMETRY_DESCRIPTIONS.height} ${AUTO_HEIGHT_NOTE}`
+					: RECT_GEOMETRY_DESCRIPTIONS.height,
 				type: "number",
 				minimum: 0,
 			},
@@ -301,15 +347,22 @@ function isBoxShapeCompatible(
 	});
 }
 
-/** The thin $def of a box-compatible type: its description plus the `type` const. */
+/**
+ * The thin $def of a box-compatible type: its description plus the `type` const.
+ *
+ * @param type - The type name, pinned as the `type` const
+ * @param description - AI-facing prose of the shape, shown as the $def's own description
+ * @param autoHeight - Whether it may leave `height` out, which picks the shared $def it extends
+ */
 function buildBoxShapeRefDef(
 	type: string,
 	description: string,
+	autoHeight: boolean,
 ): JsonSchemaNode {
 	return {
 		description,
 		type: "object",
-		allOf: [{ $ref: `#/$defs/${BOX_SHAPE_DEF_NAME}` }],
+		allOf: [{ $ref: `#/$defs/${boxShapeDefName(autoHeight)}` }],
 		properties: {
 			type: {
 				description: `Must be "${type}".`,
@@ -337,8 +390,10 @@ function buildShapeDef(
 		);
 	}
 
+	const autoHeight = supportsAutoHeight(definition);
+
 	if (isBoxShapeCompatible(type, features, defaults)) {
-		return buildBoxShapeRefDef(type, description);
+		return buildBoxShapeRefDef(type, description, autoHeight);
 	}
 
 	const properties: Record<string, JsonSchemaNode> = {
@@ -368,7 +423,11 @@ function buildShapeDef(
 		unappliedOverrideNames.delete(name);
 		return override;
 	};
-	const geometryProps = buildGeometryProps(features.geometry, defaults);
+	const geometryProps = buildGeometryProps(
+		features.geometry,
+		defaults,
+		autoHeight,
+	);
 	// The names this assembly emits, so a fragment for anything else (callout's
 	// tail, the block text's own fields) is placed rather than left unapplied.
 	// Taken from the geometry actually built: a field the type stores outside its
@@ -430,10 +489,34 @@ function buildShapeDef(
 	return {
 		description,
 		type: "object",
-		required: [...GEOMETRY_REQUIRED_PROPS[features.geometry]],
+		required: buildRequiredProps(features.geometry, autoHeight),
 		additionalProperties: false,
 		properties,
 	};
+}
+
+/**
+ * Fail generation when a handwritten $def disagrees with the parser about whether
+ * the type may leave `height` out. Nothing derives a template, so the two would
+ * otherwise drift apart silently — one validator of `validateDoc` accepting a
+ * document the other rejects.
+ */
+function assertTemplateHeightRequirement(
+	type: string,
+	defName: string,
+	definition: ObjectDocDefinition,
+): void {
+	const required = handwrittenDefs[defName].required;
+	// Only a rect-geometry type stores a height for the two to disagree about.
+	if (definition.features.geometry !== "rect" || !Array.isArray(required)) {
+		return;
+	}
+	const requiresHeight = required.includes("height");
+	if (requiresHeight === supportsAutoHeight(definition)) {
+		throw new Error(
+			`The handwritten $def "${defName}" ${requiresHeight ? "requires" : "does not require"} height, but type "${type}" ${requiresHeight ? "sizes itself from its text" : "has no text region to size itself from"} (templates/handwrittenDefs.json)`,
+		);
+	}
 }
 
 const UNION_COMMENT =
@@ -471,6 +554,7 @@ export function generateSchema(
 		const defName = docDefName(type);
 		if (TEMPLATE_DEF_TYPES.has(type)) {
 			defs[defName] = handwrittenDefs[defName];
+			assertTemplateHeightRequirement(type, defName, manifest.get(type)!);
 			continue;
 		}
 		defs[defName] = buildShapeDef(type, manifest.get(type)!);
@@ -513,7 +597,8 @@ export function generateSchema(
 	for (const defName of sharedStructureDefNames) {
 		defs[defName] = handwrittenDefs[defName];
 	}
-	defs[BOX_SHAPE_DEF_NAME] = buildBoxShapeDef();
+	defs[BOX_SHAPE_DEF_NAMES.fixedHeight] = buildBoxShapeDef(false);
+	defs[BOX_SHAPE_DEF_NAMES.autoHeight] = buildBoxShapeDef(true);
 
 	const enumDefNames = [
 		"StrokeDashType",

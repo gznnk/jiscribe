@@ -13,6 +13,7 @@ export { type RemoveObjectsFromGroupResult } from "./grouping";
 export { type GetZOrderResult, type ZOrderPlacement } from "./order";
 export {
 	type ResizeObjectParams,
+	type SetHeightModeParams,
 	type SetPositionEntry,
 	type SetPositionParams,
 } from "./place";

@@ -46,6 +46,8 @@ import {
 	resizeObject,
 	resizeObjects,
 	type ResizeObjectParams,
+	setHeightMode,
+	type SetHeightModeParams,
 	setPosition,
 	type SetPositionEntry,
 	type SetPositionParams,
@@ -167,6 +169,17 @@ export type DocOps = {
 		doc: CanvasDoc,
 		ids: readonly string[],
 		params: ResizeObjectParams,
+	): void;
+	/**
+	 * Switch objects between a stated height and one that follows their text, the latter
+	 * being spelled as no `height` field at all.
+	 * Throws `DocOperationError` for a missing id, a fixed height ≤ 0, or a type that does
+	 * not lay its text out inside its box.
+	 */
+	setHeightMode(
+		doc: CanvasDoc,
+		ids: readonly string[],
+		params: SetHeightModeParams,
 	): void;
 	/**
 	 * Set styling on several objects, skipping and reporting what a type cannot hold.
@@ -407,6 +420,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 			resizeObject(doc, id, params, definitions),
 		resizeObjects: (doc, ids, params) =>
 			resizeObjects(doc, ids, params, definitions),
+		setHeightMode: (doc, ids, params) =>
+			setHeightMode(doc, ids, params, definitions),
 		setStyle: (doc, ids, style) => setStyle(doc, ids, style, definitions),
 		setExtraProps: (doc, id, extraProps) =>
 			setExtraProps(doc, id, extraProps, definitions),

@@ -24,6 +24,9 @@ export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 			"headerHeight",
 		] satisfies readonly (keyof ContainerDoc)[],
 		textRegion: calcContainerTextRegion,
+		// The region is the title band, so sizing the box from the text would give
+		// the height of the title and swallow whatever the container frames.
+		autoHeight: false,
 		description:
 			'Container ("frame") shape: a titled rectangle that marks off a region of the diagram, typically a module, subsystem or bounded context. Uses the same rect-based geometry (x/y/width/height) as RectDoc. `text` is the title and is drawn in the top header band, never in the body; the body is click-through, so objects lying over it stay directly selectable. Objects are put inside it by geometry alone: give them coordinates within the box and place them after the container in `root` so they paint on top. A container has no `children` and does not carry its contents when it moves — wrap them in a GroupDoc when they must move together. The palette entries Frame / Boundary / Zone are all this type: Boundary is a container with `strokeDashType: "dashed"`, Zone one with a tinted `fill`.',
 		summary: "titled region (module, subsystem, boundary)",

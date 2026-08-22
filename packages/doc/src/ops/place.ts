@@ -14,6 +14,7 @@ import {
 	translateObject,
 } from "./utils/objectGeometry";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import { supportsAutoHeight } from "../plugin/supportsAutoHeight";
 
 /** Position an object is moved to, as the top-left of its bounding box. */
 export type SetPositionParams = {
@@ -243,5 +244,89 @@ export const resizeObjects = (
 	});
 	for (const plan of plans) {
 		applyResize(plan, definitions);
+	}
+};
+
+/** Which way {@link setHeightMode} switches one shape's height. */
+export type SetHeightModeParams =
+	| {
+			/** The height follows the text: it is dropped from the document. */
+			mode: "auto";
+	  }
+	| {
+			/** The height is the document's again, at the value given here. */
+			mode: "fixed";
+			/** Height in px to write; must be greater than 0. */
+			height: number;
+	  };
+
+/** Reject a shape whose type has no height to switch, writing nothing. */
+const requireAutoHeightType = (
+	object: ObjectRecord,
+	definitions: DocDefinitions,
+): void => {
+	const definition = definitions.get(object.type);
+	if (definition === undefined) {
+		throw new DocOperationError(
+			`${object.id} has unknown object type "${object.type}", so its height mode cannot be changed`,
+		);
+	}
+	if (!supportsAutoHeight(definition)) {
+		throw new DocOperationError(
+			`${object.id} ("${object.type}") does not lay its text out inside its box, so its height cannot follow the text`,
+		);
+	}
+};
+
+/**
+ * Switch several objects between a height the document states and one that
+ * follows their text, mutating `doc` in place.
+ *
+ * `"auto"` deletes the `height` field, which is how the format spells "size this
+ * from the text" — the height is then derived on every read
+ * (`calcAutoShapeHeight`) rather than stored. `"fixed"` writes the height given
+ * back, which is the value the caller has just derived or the one a drag has just
+ * settled on; the mode is one property of the document either way, so the two
+ * directions are one op.
+ *
+ * Only a type whose box holds its text can be switched (`supportsAutoHeight`) —
+ * a shape labelled outside its outline, one whose bands size themselves, and one
+ * storing no height have nothing to derive from — and naming another is an error
+ * rather than a skip, since the caller asked for a mode the shape cannot be in.
+ *
+ * @param doc - Mutated in place
+ * @param ids - Ids to switch; all must exist in the root tree, and repeats are harmless (the second pass writes what the first did)
+ * @param params - The mode shared by every id, with the height to write when it is `"fixed"`
+ * @param definitions - Type table `features` and `textRegion` are read from
+ * @throws {@link DocOperationError} before touching the doc: for a missing id, naming every
+ *   missing one at once; for a `"fixed"` height not greater than 0; and for a type that
+ *   cannot size itself from its text, identified as `ids[i] (id)`
+ */
+export const setHeightMode = (
+	doc: CanvasDoc,
+	ids: readonly string[],
+	params: SetHeightModeParams,
+	definitions: DocDefinitions,
+): void => {
+	if (params.mode === "fixed" && !(params.height > 0)) {
+		throw new DocOperationError(
+			`${params.height} is not a height: a fixed height must be greater than 0`,
+		);
+	}
+	const locations = requireObjects(doc, ids);
+	// Check every type first: a mid-way failure would leave half the batch switched.
+	locations.forEach(({ object }, index) => {
+		try {
+			requireAutoHeightType(object, definitions);
+		} catch (error) {
+			throw batchItemError("ids", index, object.id, error);
+		}
+	});
+	for (const { object } of locations) {
+		if (params.mode === "auto") {
+			delete object.height;
+		} else {
+			object.height = params.height;
+		}
 	}
 };

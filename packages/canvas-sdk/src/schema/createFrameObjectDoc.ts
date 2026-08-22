@@ -46,8 +46,19 @@ type FrameObjectDocCommonParams = {
 	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`).
 	 * Pass the same function the UI definition registers as its `textRegion`, or
 	 * `calcOutsideBoxTextRegion` for a shape that draws its label outside the box.
+	 * It also reaches the derived validator, which is what lets a shape whose box
+	 * holds its text leave `height` out of the document (`supportsAutoHeight`).
 	 */
 	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Pass `false` for a shape whose box must not be sized from its text even
+	 * though its `textRegion` says it could — one whose height is settled by
+	 * something else (the children it frames), or whose body is not drawn by the
+	 * shared text layout (see `ObjectDocDefinition.autoHeight`). Omit it in every
+	 * other case and let the region decide.
+	 */
+	autoHeight?: false;
 
 	/** AI-facing description of the shape (see `ObjectDocDefinition.description`). */
 	description?: string;
@@ -123,6 +134,7 @@ export const createFrameObjectDoc = ({
 	defaults,
 	extraKeys,
 	textRegion,
+	autoHeight,
 	description,
 	summary,
 	outlineDescription,
@@ -132,10 +144,14 @@ export const createFrameObjectDoc = ({
 	textSlotStyleDefaults,
 }: FrameObjectDocParams): ObjectDocDefinition => ({
 	features,
-	validateDoc: createFrameDocValidator(features, validateExtra),
+	validateDoc: createFrameDocValidator(features, validateExtra, {
+		textRegion,
+		autoHeight,
+	}),
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
+	autoHeight,
 	description,
 	summary,
 	outlineDescription,

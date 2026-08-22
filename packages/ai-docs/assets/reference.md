@@ -148,13 +148,13 @@ Rectangle shape. It is **connectable** (see `connector`).
 }
 ```
 
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `100`   | Bounding-box width (px).          |
-| `height` | `number` | `100`   | Bounding-box height (px).         |
-| `rx`     | `number` | `0`     | Corner radius (SVG `rx`).         |
+| Field    | Type     | Default | Description                                                                                                                                                                 |
+| -------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`      | `number` | `0`     | X of the bounding box's top-left.                                                                                                                                           |
+| `y`      | `number` | `0`     | Y of the bounding box's top-left.                                                                                                                                           |
+| `width`  | `number` | `100`   | Bounding-box width (px).                                                                                                                                                    |
+| `height` | `number` | `100`   | Bounding-box height (px). **Optional**: leave it out and the height follows the text — the box is sized to the smallest one the wrapped text fits in, at the `width` given. |
+| `rx`     | `number` | `0`     | Corner radius (SVG `rx`).                                                                                                                                                   |
 
 For style fields, see [Stroke style](#stroke-style), [Fill style](#fill-style), [Text style](#text-style), and [Transform style](#transform-style).
 
@@ -259,7 +259,7 @@ Speech-bubble callout, typically used for annotations and explanatory comments. 
 | `x`      | `number` | `0`             | X of the bounding box's top-left.                                                                                                                                                                              |
 | `y`      | `number` | `0`             | Y of the bounding box's top-left.                                                                                                                                                                              |
 | `width`  | `number` | `160`           | Bounding-box width (px).                                                                                                                                                                                       |
-| `height` | `number` | `110`           | Bounding-box height (px).                                                                                                                                                                                      |
+| `height` | `number` | `110`           | Bounding-box height (px). **Optional**: leave it out and the height follows the text — the box is sized to the smallest one the wrapped text fits in, at the `width` given.                                    |
 | `tail`   | `object` | bottom at `0.2` | Tail tip placement: `{ "side": ..., "position": ... }`. `side` is the edge the tip sits on (`"top"` / `"right"` / `"bottom"` / `"left"`), `position` is 0–1 along that edge. Point it at the annotated object. |
 
 ---
@@ -280,12 +280,12 @@ Note shape: a box with its top-right corner folded back, holding a comment about
 }
 ```
 
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `180`   | Bounding-box width (px).          |
-| `height` | `number` | `110`   | Bounding-box height (px).         |
+| Field    | Type     | Default | Description                                                                                                                                                                 |
+| -------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`      | `number` | `0`     | X of the bounding box's top-left.                                                                                                                                           |
+| `y`      | `number` | `0`     | Y of the bounding box's top-left.                                                                                                                                           |
+| `width`  | `number` | `180`   | Bounding-box width (px).                                                                                                                                                    |
+| `height` | `number` | `110`   | Bounding-box height (px). **Optional**: leave it out and the height follows the text — the box is sized to the smallest one the wrapped text fits in, at the `width` given. |
 
 ---
 
@@ -398,7 +398,7 @@ Container ("frame") shape: a titled rectangle that marks off a region of the dia
 
 ### Box-shape catalog (`diamond` / `stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `db` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector`)
 
-All 20 use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`) and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. They all take Text like `rect`. They are all **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value below and give a bounding box.
+All 20 use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`) and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. They all take Text like `rect`. They are all **connectable** like `rect` and have **no Radius** (`rx`). On all but `actor` / `extract` / `cross` `height` is **optional**: leave it out and the box is sized to the wrapped text. **`actor` / `extract` / `cross` always need one** (they do not lay their text out inside the outline). Set `type` to the value below and give a bounding box.
 
 | `type`             | Outline                                                             | Default size | Typical use                               |
 | ------------------ | ------------------------------------------------------------------- | ------------ | ----------------------------------------- |
