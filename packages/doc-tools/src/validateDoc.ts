@@ -11,6 +11,12 @@ import {
 } from "ajv/dist/2020";
 
 import type { Diagnostic } from "./Diagnostic";
+import {
+	createObjectBranchResolver,
+	foldObjectOneOfErrors,
+	type ObjectBranchResolver,
+	type ObjectUnionSchema,
+} from "./foldObjectOneOfErrors";
 
 /** What {@link validateDoc} found, plus the parsed document when nothing failed. */
 export type ValidateDocResult = {
@@ -29,26 +35,35 @@ export type ValidateDocResult = {
 
 const require = createRequire(import.meta.url);
 
-let compiledSchemaValidator: ValidateFunction | null = null;
+/** The compiled schema plus the branch lookup its errors are narrowed with. */
+type SchemaValidation = {
+	validateSchema: ValidateFunction;
+	resolveBranch: ObjectBranchResolver;
+};
+
+let compiledSchemaValidation: SchemaValidation | null = null;
 
 /**
  * The official schema's validator, compiled once. Read off disk rather than
  * imported, so the one file `pnpm generate:schema` writes stays the single source
  * (`@jiscribe/doc-schema` exports it as `./schema`).
  */
-const getSchemaValidator = (): ValidateFunction => {
-	if (!compiledSchemaValidator) {
+const getSchemaValidation = (): SchemaValidation => {
+	if (!compiledSchemaValidation) {
 		const schemaPath = require.resolve("@jiscribe/doc-schema/schema");
-		const schema: object = JSON.parse(readFileSync(schemaPath, "utf8"));
+		const schema: ObjectUnionSchema = JSON.parse(
+			readFileSync(schemaPath, "utf8"),
+		);
 		// The shipped schema leans on keywords ajv reports as unknown in strict mode
 		// (it is written for editors, not for ajv), which strict mode turns into a
 		// compile-time throw rather than a document error.
-		compiledSchemaValidator = new Ajv2020({
-			allErrors: true,
-			strict: false,
-		}).compile(schema);
+		const ajv = new Ajv2020({ allErrors: true, strict: false });
+		compiledSchemaValidation = {
+			validateSchema: ajv.compile(schema),
+			resolveBranch: createObjectBranchResolver(ajv, schema),
+		};
 	}
-	return compiledSchemaValidator;
+	return compiledSchemaValidation;
 };
 
 let sharedParser: ReturnType<typeof createCanvasParser> | null = null;
@@ -113,6 +128,10 @@ const toSemanticDiagnostics = (
  * Both run even when the first fails, so one call reports everything wrong with
  * the file rather than one layer at a time.
  *
+ * Schema errors are narrowed by {@link foldObjectOneOfErrors} before they become
+ * diagnostics: the raw list carries every branch of the object union's reason for
+ * not fitting, which is ~50 wrong answers around each real one.
+ *
  * @param text - The whole file as text, not a parsed object: a JSON syntax error is one of the results, and it is reported as a single error diagnostic with no path
  * @returns `ok` false when any diagnostic is an error; `doc` is present whenever the parser accepted the text, holding the document with unknown types and enum values stripped (each strip reported as a warning)
  */
@@ -134,9 +153,14 @@ export const validateDoc = (text: string): ValidateDocResult => {
 
 	const diagnostics: Diagnostic[] = [];
 
-	const validateSchema = getSchemaValidator();
+	const { validateSchema, resolveBranch } = getSchemaValidation();
 	if (!validateSchema(data)) {
-		for (const error of validateSchema.errors ?? []) {
+		const schemaErrors = [...(validateSchema.errors ?? [])];
+		for (const error of foldObjectOneOfErrors(
+			schemaErrors,
+			data,
+			resolveBranch,
+		)) {
 			diagnostics.push({
 				severity: "error",
 				objectId: findObjectIdAtPath(data, error.instancePath),
