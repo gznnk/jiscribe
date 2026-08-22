@@ -85,6 +85,7 @@ export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
 // The height a shape with no `height` in the document is drawn at, and the box
 // its text is laid out in once the padding is off the declared region. Both are
 // headless for the same reason the measurement is.
+export { AUTO_HEIGHT_COMFORT_PADDING_EM } from "./text/block/autoHeightComfortPadding";
 export { calcAutoShapeHeight } from "./text/block/calcAutoShapeHeight";
 export type { AutoHeightShape } from "./text/block/calcAutoShapeHeight";
 export { calcTextContentBox } from "./text/block/calcTextContentBox";

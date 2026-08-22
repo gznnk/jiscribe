@@ -1,4 +1,12 @@
 import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
+import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "@jiscribe/doc/text/block/textBoxPadding";
+import { calcVisualTextHeight } from "@jiscribe/doc/text/layout/calcVisualTextHeight";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
@@ -47,6 +55,34 @@ describe("resizeAutoHeightStateToContent", () => {
 
 		expect(heightOf(resized)).toBeGreaterThan(0);
 		expect(topOf(resized)).toBe(topOf(state));
+	});
+
+	it("leaves room above and below the text, which the ObjectMenu then writes in", () => {
+		// The height this pass settles on is the one ToggleAutoHeightCommand stores
+		// when the shape is switched to a stated height, so the room has to be in it.
+		const fontSize = 16;
+		const text = "one line";
+		const state = autoHeightState({ text: { body: { text, fontSize } } });
+
+		const resized = resizeAutoHeightStateToContent(
+			state,
+			calcFullBoxTextRegion,
+		);
+
+		const textHeight = calcVisualTextHeight(
+			text,
+			{
+				fontSize,
+				fontFamily: DEFAULT_FONT_FAMILY,
+				fontWeight: TEXT_STYLE_FALLBACK.fontWeight,
+			},
+			200 - TEXT_BOX_PADDING_X * 2,
+		);
+		expect(heightOf(resized)).toBe(
+			textHeight +
+				TEXT_BOX_PADDING_Y * 2 +
+				fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM * 2,
+		);
 	});
 
 	it("returns the state itself once the height is the derived one", () => {

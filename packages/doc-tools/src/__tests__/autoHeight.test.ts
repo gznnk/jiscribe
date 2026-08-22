@@ -1,6 +1,7 @@
 import type { CanvasDoc } from "@jiscribe/doc";
 import { supportsAutoHeight } from "@jiscribe/doc";
 import {
+	AUTO_HEIGHT_COMFORT_PADDING_EM,
 	calcAutoShapeHeight,
 	DEFAULT_FONT_FAMILY,
 	TEXT_STYLE_FALLBACK,
@@ -119,7 +120,7 @@ describe("a document that states no height", () => {
 });
 
 describe("the height a shape with none is drawn at", () => {
-	it("is the smallest one the overflow check passes, near enough", () => {
+	it("clears the overflow check by the comfort band it leaves", () => {
 		// The 264x88 two-line label of scratch/2026-08-20-llm-training/overview.jis.json.
 		const width = 264;
 		const text = "大量のテキストを\n読み込ませる";
@@ -144,12 +145,19 @@ describe("the height a shape with none is drawn at", () => {
 		};
 
 		expect(diagnoseDoc(rectAt(height))).toEqual([]);
-		// The check allows half the leading before it calls the text clipped, so the
-		// smallest height it passes sits just under the derived one rather than at it.
+		// The derived height is no longer the smallest the check passes: the comfort
+		// band sits between the two, and the check itself allows half the leading on
+		// top of that before it calls the text clipped.
+		const comfortBand = fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM * 2;
 		const tolerance = (fontSize * 1.5 - fontSize) / 2;
-		expect(diagnoseDoc(rectAt(height - tolerance - 1))).toHaveLength(1);
-		// Two lines of 16px at the shared line height, plus the box's own padding.
-		expect(height).toBe(Math.ceil(fontSize * 1.5 * 2 + 2 * 2));
+		expect(diagnoseDoc(rectAt(height - comfortBand))).toEqual([]);
+		expect(
+			diagnoseDoc(rectAt(height - comfortBand - tolerance - 1)),
+		).toHaveLength(1);
+		// Two lines of 16px at the shared line height, the box's own padding, and
+		// 0.75em of room above and below.
+		expect(height).toBe(Math.ceil(fontSize * 1.5 * 2 + 2 * 2 + comfortBand));
+		expect(height).toBe(76);
 	});
 
 	it("is answered for every shipped type that may leave the field out", () => {

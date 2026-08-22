@@ -28,6 +28,12 @@ const TEXT_LINE_HEIGHT = 1.5;
 /** Vertical padding the box adds, top and bottom together (TEXT_BOX_PADDING_Y). */
 const TEXT_BOX_PADDING_Y = 4;
 
+/**
+ * Room a derived height leaves around its text, top and bottom together: 0.75em
+ * on each side (AUTO_HEIGHT_COMFORT_PADDING_EM), 21px at this type size.
+ */
+const COMFORT_PADDING = FONT_SIZE * 0.75 * 2;
+
 const docText = JSON.stringify({
 	version: 1,
 	root: [
@@ -81,7 +87,9 @@ async function selectShape(canvas: CanvasDriver) {
 
 /** The height a box holding `lineCount` lines is drawn at. */
 const boxHeightFor = (lineCount: number): number =>
-	lineCount * FONT_SIZE * TEXT_LINE_HEIGHT + TEXT_BOX_PADDING_Y;
+	lineCount * FONT_SIZE * TEXT_LINE_HEIGHT +
+	TEXT_BOX_PADDING_Y +
+	COMFORT_PADDING;
 
 /** The auto-height switch, found by the label it carries in each of its two states. */
 const autoHeightSwitch = (canvas: CanvasDriver) =>
@@ -99,9 +107,11 @@ test.describe("a height that follows the text", () => {
 		// Several lines at this width, so the box is taller than one line by the
 		// very breaks the width forces.
 		expect(box.height).toBeGreaterThan(boxHeightFor(1));
-		// Whole line boxes: the height is the wrapped lines and the padding, nothing else.
+		// Whole line boxes: the height is the wrapped lines, the box's padding and
+		// the room left around them, nothing else.
 		const lineCount =
-			(box.height - TEXT_BOX_PADDING_Y) / (FONT_SIZE * TEXT_LINE_HEIGHT);
+			(box.height - TEXT_BOX_PADDING_Y - COMFORT_PADDING) /
+			(FONT_SIZE * TEXT_LINE_HEIGHT);
 		expect(lineCount).toBe(Math.round(lineCount));
 	});
 

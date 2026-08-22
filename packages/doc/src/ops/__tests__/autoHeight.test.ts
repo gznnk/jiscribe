@@ -3,8 +3,16 @@ import { afterEach, describe, expect, it } from "vitest";
 import { docOps, emptyDoc, readObject } from "./support/docFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
+import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "../../text/block/autoHeightComfortPadding";
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "../../text/block/textBoxPadding";
+import { calcVisualTextHeight } from "../../text/layout/calcVisualTextHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
 import { setTextWidthMeasurerFactory } from "../../text/measure/textWidthMeasurer";
+import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
 
 /**
  * A doc holding one rect that states no height, so its height is the one its text
@@ -229,6 +237,32 @@ describe("setHeightMode against the derived height", () => {
 
 		expect(readObject(doc, id).height).toBe(derived);
 		expect(docOps.getObjectBounds(doc, id)!.height).toBe(derived);
+	});
+
+	it("writes the comfort band in with it, the box keeping the room it had", () => {
+		const { doc, id } = autoHeightDoc();
+		const fontSize = 16;
+		const derived = docOps.getObjectBounds(doc, id)!.height;
+
+		docOps.setHeightMode(doc, [id], { mode: "fixed", height: derived });
+
+		// Whatever the fixed height is, what it holds over the drawn lines is the
+		// box's own padding and the room the derivation leaves around them: an
+		// object switched to a stated height is drawn exactly as it was.
+		const textHeight = calcVisualTextHeight(
+			"a label long enough to take several lines at this width",
+			{
+				fontSize,
+				fontFamily: DEFAULT_FONT_FAMILY,
+				fontWeight: TEXT_STYLE_FALLBACK.fontWeight,
+			},
+			200 - TEXT_BOX_PADDING_X * 2,
+		);
+		expect(readObject(doc, id).height).toBe(
+			textHeight +
+				TEXT_BOX_PADDING_Y * 2 +
+				fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM * 2,
+		);
 	});
 
 	it("drops the height again on the way back to auto", () => {
