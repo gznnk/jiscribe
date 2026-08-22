@@ -12,6 +12,7 @@ import type { ObjectSvgDefsRegistry } from "../../rendering/objects/registry/Obj
 import type { ObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { Camera } from "../../states/canvas/Viewport";
+import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -43,6 +44,11 @@ export type CanvasRegistries = {
 	objectMapper: ObjectMapperRegistry;
 	objectStateValidator: ObjectStateValidatorRegistry;
 	objectContentResizer: ObjectContentResizerRegistry;
+	/**
+	 * Which types a document may leave `height` out of, so the canvas offers the
+	 * switch exactly where the parser accepts the result.
+	 */
+	objectAutoHeight: ObjectAutoHeightRegistry;
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	/**

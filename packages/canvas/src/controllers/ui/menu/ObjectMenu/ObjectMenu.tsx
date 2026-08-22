@@ -4,6 +4,7 @@ import { useMenuSections } from "./hooks/useMenuSections";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import { AlignmentMenu } from "./items/AlignmentMenu";
 import { ArrowHeadMenu } from "./items/ArrowHeadMenu";
+import { AutoHeightMenu } from "./items/AutoHeightMenu";
 import { BackgroundColorMenu } from "./items/BackgroundColorMenu";
 import { BorderStyleMenu } from "./items/BorderStyleMenu";
 import { FontColorMenu } from "./items/FontColorMenu";
@@ -116,6 +117,8 @@ const renderItem = (
 			return (
 				<KeepAspectRatioMenu key="aspectRatio" canvasState={canvasState} />
 			);
+		case "autoHeight":
+			return <AutoHeightMenu key="autoHeight" canvasState={canvasState} />;
 		case "stackOrder":
 			return <StackOrderMenu key="stackOrder" canvasState={canvasState} />;
 		case "group":

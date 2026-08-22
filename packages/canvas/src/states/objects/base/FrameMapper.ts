@@ -73,9 +73,15 @@ export const createFrameMapper = <
 
 	return {
 		toState: (doc) => {
+			// A rect doc stating no height is one whose height follows its text
+			// (supportsAutoHeight). The frame is built at height 0 so the box's top
+			// edge lands exactly where the doc's `y` put it, and the derivation pass
+			// grows it from there (resizeAutoHeightStateToContent).
+			const rect = doc as unknown as Rect;
+			const autoHeight = !isEllipse && rect.height === undefined;
 			const frame: Frame = isEllipse
 				? convertEllipseToFrame(doc as unknown as Ellipse)
-				: convertRectToFrame(doc as unknown as Rect);
+				: convertRectToFrame(autoHeight ? { ...rect, height: 0 } : rect);
 			const transform: Partial<TransformState> = features.transform
 				? mapTransformDocToState(doc as unknown as TransformDoc)
 				: {};
@@ -85,6 +91,7 @@ export const createFrameMapper = <
 				...mapTextDocToState(features.text, doc as TextDocFields),
 				...frame,
 				...transform,
+				...(autoHeight ? { autoHeight: true } : {}),
 			} as unknown as TState;
 		},
 
@@ -96,6 +103,12 @@ export const createFrameMapper = <
 			const geometry: Rect | Ellipse = isEllipse
 				? roundDocEllipse(convertFrameToEllipse(frame))
 				: roundDocRect(convertFrameToRect(frame));
+			// The derived height is the text's answer, not the document's, so it goes
+			// back out the way it came in: absent. `y` is unaffected — it was read off
+			// the same frame the height was.
+			if (!isEllipse && state.autoHeight === true) {
+				delete (geometry as Partial<Rect>).height;
+			}
 			const transform: Partial<TransformDoc> = features.transform
 				? mapTransformStateToDoc(state as unknown as TransformState)
 				: {};

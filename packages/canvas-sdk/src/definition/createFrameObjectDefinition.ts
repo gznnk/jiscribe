@@ -11,6 +11,7 @@ import {
 	createFrameMapper,
 	createFrameStateValidator,
 } from "@jiscribe/canvas/unstable";
+import { supportsAutoHeight } from "@jiscribe/doc";
 import type { TransformedFrame } from "@jiscribe/geometry";
 
 /** Arguments of {@link createFrameObjectDefinition}. */
@@ -82,6 +83,12 @@ export const createFrameObjectDefinition = <
 
 	return {
 		...docDefinition,
+		// The doc's verdict on whether a document of this shape may leave `height`
+		// out rides along, since the declaration it is derived from is the one being
+		// dropped above: a shape whose UI region is sized from its own text answers a
+		// rectangle here and `null` there, and re-deriving the verdict from this
+		// definition would offer the switch where the parser refuses the result.
+		...(supportsAutoHeight(doc) ? {} : { autoHeight: false as const }),
 		// The shape's own field names come from the doc definition, which is where they
 		// are declared once for the mapper and doc-ops alike.
 		mapper: createFrameMapper<TDoc, TState>(features, doc.extraKeys),

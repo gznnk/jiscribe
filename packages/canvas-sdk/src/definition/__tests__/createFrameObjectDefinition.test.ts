@@ -1,5 +1,6 @@
 import type { CreateObjectState } from "@jiscribe/canvas";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
+import { calcFullBoxTextRegion, calcOutsideBoxTextRegion } from "@jiscribe/doc";
 import { AUTO_COLOR } from "@jiscribe/doc/unstable";
 import { describe, it, expect } from "vitest";
 
@@ -77,6 +78,54 @@ describe("createFrameObjectDefinition", () => {
 		expect(definition.component).toBe(DemoComponent);
 		expect(definition.outline).toBe(outline);
 		expect(definition.stencils).toEqual([]);
+	});
+
+	it("carries the doc's verdict on a height that may follow the text", () => {
+		const inTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				textRegion: calcFullBoxTextRegion,
+			}),
+			component: DemoComponent,
+			textRegion: calcFullBoxTextRegion,
+		});
+		// The shape labelled below its outline: its doc says the box holds no text,
+		// while its UI region is the caption box it draws that label in. Only the
+		// doc's answer decides, so the UI one must not talk the canvas into offering
+		// a height the parser then refuses.
+		const belowTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				textRegion: calcOutsideBoxTextRegion,
+			}),
+			component: DemoComponent,
+			textRegion: ({ width, height }) => ({
+				x: -width / 2,
+				y: height / 2,
+				width,
+				height: 20,
+			}),
+		});
+
+		expect(inTheBox.autoHeight).toBeUndefined();
+		expect(belowTheBox.autoHeight).toBe(false);
+	});
+
+	it("carries an explicit denial across untouched", () => {
+		const denied = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				textRegion: calcFullBoxTextRegion,
+				autoHeight: false,
+			}),
+			component: DemoComponent,
+			textRegion: calcFullBoxTextRegion,
+		});
+
+		expect(denied.autoHeight).toBe(false);
 	});
 
 	it("derives a mapper that converts geometry both ways", () => {

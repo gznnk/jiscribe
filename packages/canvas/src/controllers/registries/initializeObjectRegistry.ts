@@ -10,6 +10,7 @@ import type {
 	AnyObjectTypeDefinition,
 	ObjectTypeDefinition,
 } from "../../plugin/ObjectTypeDefinition";
+import { supportsAutoHeightType } from "../../plugin/supportsAutoHeightType";
 import { Connector } from "../../rendering/objects/connector/Connector";
 import { Ellipse } from "../../rendering/objects/primitives/Ellipse";
 import { Polygon } from "../../rendering/objects/primitives/Polygon";
@@ -61,6 +62,7 @@ import {
 	textToState,
 } from "../../states/objects/primitives/text/TextMapper";
 import { isValidTextState } from "../../states/objects/primitives/text/validateTextState";
+import { resizeAutoHeightStateToContent } from "../../states/objects/utils/resizeAutoHeightStateToContent";
 import { createFrameBehavior } from "../behaviors/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
@@ -96,6 +98,7 @@ import {
 	LabelFontSizeMenu,
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
+import type { ObjectMenuSection } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
@@ -272,6 +275,17 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 	};
 
 /**
+ * The switch between a height the document states and one that follows the text,
+ * appended to the menu of every type that may take it (`supportsAutoHeightType`).
+ * One shared section value, so the merge that keeps only the sections every
+ * selected type registers matches it across a multi-type selection.
+ */
+const AUTO_HEIGHT_MENU_SECTION: ObjectMenuSection = {
+	id: "auto-height",
+	items: [{ type: "autoHeight" }],
+};
+
+/**
  * Registers a single object type described by `definition` across all registries
  * in the given bundle (mapper, component, text region, behavior, state validator,
  * menu), and optionally its factory / stencils.
@@ -295,13 +309,30 @@ export const applyObjectDefinition = (
 	if (slotStyleDefaults) {
 		registries.objectTextStyleDefaults.register(type, slotStyleDefaults);
 	}
-	if (definition.contentResizer) {
+	const supportsAutoHeight = supportsAutoHeightType(definition);
+	if (supportsAutoHeight) {
+		registries.objectAutoHeight.register(type);
+	}
+	// A type whose doc may leave `height` out gets the shared derivation, which is
+	// inert for every object of it that states one — the two are mutually
+	// exclusive anyway, a content-resized type storing no size at all
+	// (`geometry: "point"`) and an auto-height one storing a rect.
+	const resizeToContent =
+		definition.contentResizer ??
+		(supportsAutoHeight
+			? (state, context) =>
+					resizeAutoHeightStateToContent(
+						state,
+						definition.textRegion,
+						context.textStyleDefaults,
+					)
+			: undefined);
+	if (resizeToContent) {
 		// The resizer measures the text with the style it is drawn with, so the
 		// type's own defaults ride in on the context rather than each resizer
 		// reaching for a registry the states layer cannot see. Only the body slot's
 		// are passed: a content-resized type sizes its box to one text. A type with
 		// no defaults to add is registered as it is, so nothing is wrapped for nothing.
-		const resizeToContent = definition.contentResizer;
 		const textStyleDefaults = slotStyleDefaults?.[BODY_TEXT_SLOT_ID];
 		registries.objectContentResizer.register(
 			type,
@@ -349,9 +380,15 @@ export const applyObjectDefinition = (
 	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
+	const menu = definition.menu ?? createDefaultMenu(definition.features);
+	// The switch is appended rather than declared per type: it belongs to every
+	// type whose document may leave `height` out, and a type declaring its own
+	// menu would otherwise have to remember it. A multi-type selection keeps only
+	// the sections every selected type registers, so the section itself is the
+	// gate that hides the switch beside a shape that cannot take it (useMenuSections).
 	registries.objectMenu.register(
 		type,
-		definition.menu ?? createDefaultMenu(definition.features),
+		supportsAutoHeight ? [...menu, AUTO_HEIGHT_MENU_SECTION] : menu,
 	);
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
@@ -390,6 +427,7 @@ export const initializeObjectRegistry = (
 	registries.objectMapper.clear();
 	registries.objectTextStyleDefaults.clear();
 	registries.objectContentResizer.clear();
+	registries.objectAutoHeight.clear();
 	registries.objectComponent.clear();
 	registries.objectSvgDefs.clear();
 	registries.objectTextRegion.clear();

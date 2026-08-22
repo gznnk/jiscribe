@@ -4,6 +4,7 @@ import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFea
 import {
 	hasValidIdAndType,
 	isValidArrowFields,
+	isValidAutoHeightState,
 	isValidFillStyleState,
 	isValidFrameState,
 	isValidRadiusStyleState,
@@ -34,6 +35,7 @@ export const createFrameStateValidator = (
 		return (
 			hasValidIdAndType(o, features.type) &&
 			isValidFrameState(o) &&
+			isValidAutoHeightState(o, features.geometry) &&
 			(!features.transform || isValidTransformState(o)) &&
 			(!features.stroke || isValidStrokeStyleState(o)) &&
 			(!features.fill || isValidFillStyleState(o)) &&

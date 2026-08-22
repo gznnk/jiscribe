@@ -7,6 +7,7 @@ import {
 import { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
 import { isArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { isOwnedEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
+import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
@@ -64,6 +65,22 @@ export const isValidFrameState = (o: StateRecord): boolean =>
 	isNumber(o.cy) &&
 	isValidRequiredNumber(o.width, 0) &&
 	isValidRequiredNumber(o.height, 0);
+
+/**
+ * Validates the height-follows-the-text flag (ObjectState.autoHeight): true or
+ * absent for a shape whose doc stores a `height` to leave out, absent for every
+ * other geometry. This is the clipboard boundary, and the flag decides whether
+ * the mapper writes a `height` at all, so a stray one would save a doc missing a
+ * field its type requires.
+ *
+ * @param o - The state record to check
+ * @param geometry - The type's declared geometry; only `"rect"` may carry the flag
+ */
+export const isValidAutoHeightState = (
+	o: StateRecord,
+	geometry: GeometryType,
+): boolean =>
+	o.autoHeight === undefined || (geometry === "rect" && o.autoHeight === true);
 
 /**
  * Validates Poly geometry (the points array). `minPoints` is the minimum point count,

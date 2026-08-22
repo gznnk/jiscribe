@@ -3,7 +3,16 @@ import { calcPolyBoundingBox, type Point, type Rect } from "@jiscribe/geometry";
 import { type ObjectRecord } from "./objectAccess";
 import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
+import { isRichText } from "../../model/objects/types/RichText";
+import { resolveTextSlotStyle } from "../../model/objects/types/TextSlot";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
+import { extractTextSlotStyleDefaults } from "../../plugin/ObjectTextStyleDefaultsRegistry";
+import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
+import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
+import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
+import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
+import { BODY_TEXT_SLOT_ID } from "../../text/style/textSlotId";
+import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
 import { DocOperationError } from "../errors";
 
 /** Type table every geometry helper resolves `features.geometry` through. */
@@ -27,6 +36,74 @@ const readNumber = (value: unknown): number =>
 const readPoints = (value: unknown): Point[] =>
 	Array.isArray(value) ? (value as Point[]) : [];
 
+/**
+ * Font the body of `object` is measured with: the type's own body defaults
+ * resolved into whatever the object states itself, and the shared last resort
+ * for whatever neither sets. A separate resolution from the canvas's
+ * `resolveTextObjectFont` because that one reads a state's slot and this one
+ * reads the flat fields a `text: "body"` doc spells its styling out in; the two
+ * fill in the same fallbacks and must keep doing so.
+ */
+const resolveBodyFont = (
+	object: ObjectRecord,
+	definition: ObjectDocDefinition,
+): TextMeasureFont => {
+	const style = resolveTextSlotStyle(
+		extractTextSlotStyleDefaults(definition.features, definition.defaults)?.[
+			BODY_TEXT_SLOT_ID
+		],
+		{
+			fontSize:
+				typeof object.fontSize === "number" ? object.fontSize : undefined,
+			fontFamily:
+				typeof object.fontFamily === "string" ? object.fontFamily : undefined,
+			fontWeight:
+				typeof object.fontWeight === "string" ? object.fontWeight : undefined,
+			fontStyle:
+				typeof object.fontStyle === "string" ? object.fontStyle : undefined,
+		},
+	);
+	return {
+		fontSize: style.fontSize ?? TEXT_STYLE_FALLBACK.fontSize,
+		fontFamily: style.fontFamily ?? DEFAULT_FONT_FAMILY,
+		fontWeight: style.fontWeight ?? TEXT_STYLE_FALLBACK.fontWeight,
+		fontStyle: style.fontStyle,
+	};
+};
+
+/**
+ * Height of a rect-geometry object: the one the document states, or — for an
+ * object that states none, which is how the format spells "size this from the
+ * text" (`supportsAutoHeight`) — the one its text needs
+ * ({@link calcAutoShapeHeight}). Measured on every read rather than cached, the
+ * derived height being a function of the text, the width and the styling, any of
+ * which the op about to run may just have changed.
+ *
+ * A derivation that cannot answer — an unknown type, a type whose height is not
+ * the text's to decide, or a text that fits at no height at all — reads as 0,
+ * which is what a missing number read as before auto height existed.
+ */
+const readObjectHeight = (
+	object: ObjectRecord,
+	definitions: DocDefinitions,
+): number => {
+	if (object.height !== undefined) {
+		return readNumber(object.height);
+	}
+	const definition = definitions.get(object.type);
+	if (definition?.textRegion === undefined || !supportsAutoHeight(definition)) {
+		return 0;
+	}
+	return (
+		calcAutoShapeHeight(
+			{ ...object, width: readNumber(object.width), height: 0 },
+			isRichText(object.text) ? object.text : "",
+			resolveBodyFont(object, definition),
+			definition.textRegion,
+		) ?? 0
+	);
+};
+
 export const readChildren = (object: ObjectRecord): ObjectRecord[] =>
 	Array.isArray(object.children) ? (object.children as ObjectRecord[]) : [];
 
@@ -47,9 +124,14 @@ export const unionBounds = (boxes: readonly Rect[]): Rect | null => {
  * form `addObject` takes. Rotation is ignored: the doc's `rotation` turns the shape
  * around its own centre, and every placement op here works on the untransformed box.
  *
+ * A shape that states no `height` is measured at the height its text needs
+ * ({@link readObjectHeight}), so it is placed, aligned and distributed by the box it is
+ * actually drawn at rather than by a flat one.
+ *
  * @param object - Any doc object; a group is measured from its children, which is where
  *   its frame comes from (see GroupDoc)
- * @param definitions - Type table `features.geometry` is read from
+ * @param definitions - Type table `features.geometry` and, for a stated-no-height shape,
+ *   `textRegion` are read from
  * @returns The box, or null for a connector, an empty group, and a type this instance
  *   does not know
  */
@@ -66,7 +148,7 @@ export const getObjectBounds = (
 				x: readNumber(object.x),
 				y: readNumber(object.y),
 				width: readNumber(object.width),
-				height: readNumber(object.height),
+				height: readObjectHeight(object, definitions),
 			};
 		case "ellipse": {
 			const radiusX = readNumber(object.rx);
@@ -168,6 +250,10 @@ export const translateObject = (
  * Scale an object about a fixed point, mutating it in place. Only geometry is scaled —
  * stroke width and font size are styling and stay as they are.
  *
+ * A shape that states no `height` keeps stating none when `scaleY` is exactly 1, and
+ * has the height it was drawn at written in otherwise: the scale is the caller stating
+ * a height, and only a width-only change leaves the height to the text.
+ *
  * @param object - Mutated in place
  * @param origin - World point that keeps its coordinates; the bounding box's top-left
  *   for a plain resize
@@ -192,10 +278,18 @@ export const scaleObject = (
 				x: readNumber(object.x),
 				y: readNumber(object.y),
 			});
+			// Measured before the width moves, so a derived height is the one the text
+			// took at the width being scaled away from rather than at the new one.
+			const height = readObjectHeight(object, definitions);
 			object.x = topLeft.x;
 			object.y = topLeft.y;
 			object.width = readNumber(object.width) * scaleX;
-			object.height = readNumber(object.height) * scaleY;
+			// A change that leaves the vertical extent alone leaves a stated-no-height
+			// shape stating none: re-wrapping at the new width is what such a shape is
+			// for, so a width-only resize must not settle its height.
+			if (object.height !== undefined || scaleY !== 1) {
+				object.height = height * scaleY;
+			}
 			break;
 		}
 		case "ellipse": {

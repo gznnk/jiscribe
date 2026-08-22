@@ -72,6 +72,8 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuDottedLine: "Dotted line",
 	menuLockAspectRatio: "Lock Aspect Ratio",
 	menuUnlockAspectRatio: "Unlock Aspect Ratio",
+	menuAutoHeight: "Fit Height to Text",
+	menuFixedHeight: "Stop Fitting Height to Text",
 	menuConnectorRouting: "Connector Routing",
 	menuRoutingOrthogonal: "Orthogonal",
 	menuRoutingStraight: "Straight",

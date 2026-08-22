@@ -5,6 +5,7 @@ import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registr
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -37,6 +38,11 @@ export interface ICanvasRegistries {
 	 * from here, and without it a restored object would come back collapsed.
 	 */
 	objectContentResizer: ObjectContentResizerRegistry;
+	/**
+	 * Which types a document may leave `height` out of, needed by the command that
+	 * switches the selection between a stated height and one following the text.
+	 */
+	objectAutoHeight: ObjectAutoHeightRegistry;
 	/**
 	 * Per-type, per-slot text-style defaults, needed by the pure tree wherever it
 	 * reads a
