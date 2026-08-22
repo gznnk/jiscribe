@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { docOps, emptyDoc, readObject } from "./support/docFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
+import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
+import { setTextWidthMeasurerFactory } from "../../text/measure/textWidthMeasurer";
 
 /**
  * A doc holding one rect that states no height, so its height is the one its text
@@ -111,6 +113,110 @@ describe("resizing a shape that states no height", () => {
 
 		expect(readObject(doc, id)).toMatchObject({ x: 300, y: 500 });
 		expect(readObject(doc, id).height).toBeUndefined();
+	});
+});
+
+/**
+ * Counts the layout passes the block under test runs: one measurer is built per
+ * styled run per pass, and every object here carries a plain-string text of one
+ * run, so a pass is a derivation. The widths match the estimate the ops would
+ * otherwise fall back to, so registering this changes no height.
+ *
+ * @param widthRatio - Width one character is charged, as a fraction of the type size; 0.6 is the estimate's own
+ */
+const countDerivations = (widthRatio = 0.6): { read: () => number } => {
+	let passes = 0;
+	setTextWidthMeasurerFactory((font: TextMeasureFont) => {
+		passes += 1;
+		return (text) => text.length * font.fontSize * widthRatio;
+	});
+	return { read: () => passes };
+};
+
+describe("re-deriving the height of a shape that states none", () => {
+	afterEach(() => {
+		setTextWidthMeasurerFactory(null);
+	});
+
+	it("derives once for repeated reads of an object nothing has touched", () => {
+		const { doc, id } = autoHeightDoc();
+		const derivations = countDerivations();
+
+		const first = docOps.getObjectBounds(doc, id)!.height;
+		const second = docOps.getObjectBounds(doc, id)!.height;
+
+		expect(second).toBe(first);
+		expect(derivations.read()).toBe(1);
+	});
+
+	it("keeps the derived height across a move, which cannot change it", () => {
+		const { doc, id } = autoHeightDoc();
+		const derivations = countDerivations();
+		const before = docOps.getObjectBounds(doc, id)!.height;
+
+		docOps.setPosition(doc, id, { x: 900, y: 700 });
+
+		expect(docOps.getObjectBounds(doc, id)).toEqual({
+			x: 900,
+			y: 700,
+			width: 200,
+			height: before,
+		});
+		expect(derivations.read()).toBe(1);
+	});
+
+	it("derives again once the text changes", () => {
+		const { doc, id } = autoHeightDoc();
+		const derivations = countDerivations();
+		const before = docOps.getObjectBounds(doc, id)!.height;
+
+		docOps.setText(doc, id, `${"another line of text ".repeat(20)}`);
+
+		expect(docOps.getObjectBounds(doc, id)!.height).toBeGreaterThan(before);
+		expect(derivations.read()).toBe(2);
+	});
+
+	it("derives again once the width changes", () => {
+		const { doc, id } = autoHeightDoc();
+		const derivations = countDerivations();
+		const before = docOps.getObjectBounds(doc, id)!.height;
+
+		docOps.resizeObject(doc, id, { width: 600 });
+
+		expect(docOps.getObjectBounds(doc, id)!.height).toBeLessThan(before);
+		expect(derivations.read()).toBeGreaterThan(1);
+	});
+
+	it("derives again once the styling changes", () => {
+		const { doc, id } = autoHeightDoc();
+		const before = docOps.getObjectBounds(doc, id)!.height;
+
+		docOps.setStyle(doc, [id], { fontSize: 32 });
+
+		expect(docOps.getObjectBounds(doc, id)!.height).toBeGreaterThan(before);
+	});
+
+	it("derives again once a field only the type's region reads changes", () => {
+		// An unknown field is kept on the object (extraProps), and a type's region
+		// may be a function of one, so it has to count as an input like any other.
+		const { doc, id } = autoHeightDoc();
+		const derivations = countDerivations();
+
+		docOps.getObjectBounds(doc, id);
+		readObject(doc, id).headerHeight = 48;
+		docOps.getObjectBounds(doc, id);
+
+		expect(derivations.read()).toBe(2);
+	});
+
+	it("derives again once the measurement backend is swapped", () => {
+		const { doc, id } = autoHeightDoc();
+		countDerivations(0.6);
+		const narrow = docOps.getObjectBounds(doc, id)!.height;
+
+		countDerivations(1.4);
+
+		expect(docOps.getObjectBounds(doc, id)!.height).toBeGreaterThan(narrow);
 	});
 });
 

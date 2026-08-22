@@ -24,6 +24,23 @@ const FALLBACK_CHAR_WIDTH_RATIO = 0.6;
  */
 let registeredMeasurerFactory: TextWidthMeasurerFactory | null = null;
 
+/** Bumped by every {@link setTextWidthMeasurerFactory} call; read by {@link readTextWidthBackendGeneration}. */
+let backendGeneration = 0;
+
+/**
+ * How many times the measurement backend has been swapped, as a value a cache of
+ * measured results can compare against the one it was filled under. Two readings
+ * that differ mean the widths behind them came from different backends, so
+ * anything measured before the first one has to be measured again.
+ *
+ * Internal to this package: nothing outside it registers a backend more than
+ * once (`installNodeTextMeasurer`), and the tests that swap one are what makes it
+ * worth checking at all.
+ *
+ * @returns A counter starting at 0, meaningful only when compared with another reading
+ */
+export const readTextWidthBackendGeneration = (): number => backendGeneration;
+
 /**
  * Puts a measurement backend in front of the offscreen canvas, for hosts that
  * have no canvas but do have font metrics — `@jiscribe/doc-tools` reads the
@@ -42,6 +59,7 @@ export const setTextWidthMeasurerFactory = (
 	factory: TextWidthMeasurerFactory | null,
 ): void => {
 	registeredMeasurerFactory = factory;
+	backendGeneration += 1;
 };
 
 // Offscreen canvas dedicated to measurement (measures width without triggering DOM layout).

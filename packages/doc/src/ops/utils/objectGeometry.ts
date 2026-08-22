@@ -10,6 +10,7 @@ import { extractTextSlotStyleDefaults } from "../../plugin/ObjectTextStyleDefaul
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
 import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
+import { readTextWidthBackendGeneration } from "../../text/measure/textWidthMeasurer";
 import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
 import { BODY_TEXT_SLOT_ID } from "../../text/style/textSlotId";
 import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
@@ -72,12 +73,59 @@ const resolveBodyFont = (
 };
 
 /**
+ * Fields of an object that cannot move its derived height, so that changing one
+ * does not throw the derivation away ({@link calcDerivationInputs}). Its position
+ * is the whole list: the region a type declares is in the shape's own
+ * coordinates, taken from its size and the fields its outline reads, and an op
+ * that only moves the object leaves every one of those alone.
+ */
+const POSITION_FIELDS: ReadonlySet<string> = new Set(["x", "y"]);
+
+/**
+ * Everything about `object` the derivation reads, as one string to compare
+ * against the string a cached height was derived under. Every field but its
+ * position goes in, rather than the handful the shipped types happen to read:
+ * `textRegion` takes the whole doc, so a type may read any field it declares,
+ * and a field left out here would hand back a height derived before it changed.
+ */
+const calcDerivationInputs = (object: ObjectRecord): string =>
+	JSON.stringify(
+		Object.keys(object)
+			.filter((field) => !POSITION_FIELDS.has(field))
+			.sort()
+			.map((field) => [field, object[field]]),
+	);
+
+/**
+ * The last height derived for an object, kept against the object itself: the
+ * ops mutate the objects they are given in place, so the identity that survives
+ * an op is the identity to cache against. Module-level and weak, so an entry
+ * lives exactly as long as the document holding the object and no doc has to be
+ * closed for it to go.
+ *
+ * An entry is used only where every input it was derived under still reads the
+ * same — the object's own fields, the type's definition, and the measurement
+ * backend — since any of them moving moves the answer.
+ */
+const derivedHeightCache = new WeakMap<
+	ObjectRecord,
+	{
+		definition: ObjectDocDefinition;
+		backendGeneration: number;
+		inputs: string;
+		height: number;
+	}
+>();
+
+/**
  * Height of a rect-geometry object: the one the document states, or — for an
  * object that states none, which is how the format spells "size this from the
  * text" (`supportsAutoHeight`) — the one its text needs
- * ({@link calcAutoShapeHeight}). Measured on every read rather than cached, the
- * derived height being a function of the text, the width and the styling, any of
- * which the op about to run may just have changed.
+ * ({@link calcAutoShapeHeight}). The derived height is a function of the text,
+ * the width and the styling, any of which the op about to run may just have
+ * changed, so it is re-derived whenever any of them reads differently and only
+ * then ({@link derivedHeightCache}) — which is what stops a batch op from
+ * measuring the same untouched object once per pass.
  *
  * A derivation that cannot answer — an unknown type, a type whose height is not
  * the text's to decide, or a text that fits at no height at all — reads as 0,
@@ -94,14 +142,31 @@ const readObjectHeight = (
 	if (definition?.textRegion === undefined || !supportsAutoHeight(definition)) {
 		return 0;
 	}
-	return (
+	const backendGeneration = readTextWidthBackendGeneration();
+	const inputs = calcDerivationInputs(object);
+	const cached = derivedHeightCache.get(object);
+	if (
+		cached !== undefined &&
+		cached.definition === definition &&
+		cached.backendGeneration === backendGeneration &&
+		cached.inputs === inputs
+	) {
+		return cached.height;
+	}
+	const height =
 		calcAutoShapeHeight(
 			{ ...object, width: readNumber(object.width), height: 0 },
 			isRichText(object.text) ? object.text : "",
 			resolveBodyFont(object, definition),
 			definition.textRegion,
-		) ?? 0
-	);
+		) ?? 0;
+	derivedHeightCache.set(object, {
+		definition,
+		backendGeneration,
+		inputs,
+		height,
+	});
+	return height;
 };
 
 export const readChildren = (object: ObjectRecord): ObjectRecord[] =>

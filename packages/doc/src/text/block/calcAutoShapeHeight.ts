@@ -41,6 +41,12 @@ const MAX_AUTO_SHAPE_HEIGHT = 1_000_000;
  * fits in, but not necessarily the smallest one. The height that comes back is
  * never one the text overflows.
  *
+ * The search tries a dozen or so heights but lays the text out far fewer times:
+ * wrapping depends on the region's width alone, so every height leaving the same
+ * width shares one layout. A type whose region keeps its width — every
+ * constant-ratio inset, which is most of them — measures its text exactly once
+ * however many heights are tried.
+ *
  * @param shape - The shape's width and the fields its region reads; its `height` is ignored (see {@link AutoHeightShape})
  * @param text - The whole text, authored newlines included; an empty text still needs one empty line, so the answer is never below the height that holds a single line
  * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one moves where the lines break
@@ -53,6 +59,26 @@ export const calcAutoShapeHeight = (
 	font: TextMeasureFont,
 	textRegion: ObjectDocTextRegionCalculator,
 ): number | null => {
+	/**
+	 * Height the text takes when wrapped at a content width, one entry per width
+	 * the search has met. Lives for this call alone: it is the repetition within
+	 * one search that it takes out, the text and the font being fixed for it.
+	 */
+	const textHeightByWidth = new Map<number, number>();
+
+	const calcTextHeight = (contentWidth: number): number => {
+		const known = textHeightByWidth.get(contentWidth);
+		if (known !== undefined) {
+			return known;
+		}
+		const measured = layoutVisualLines(text, font, contentWidth).reduce(
+			(total, line) => total + line.height,
+			0,
+		);
+		textHeightByWidth.set(contentWidth, measured);
+		return measured;
+	};
+
 	/** Whether the text fits at this height, or null where the box holds no text. */
 	const fitsAt = (height: number): boolean | null => {
 		const region = textRegion({ ...shape, height }, BODY_TEXT_SLOT_ID);
@@ -60,8 +86,7 @@ export const calcAutoShapeHeight = (
 			return null;
 		}
 		const box = calcTextContentBox(region);
-		const lines = layoutVisualLines(text, font, box.width);
-		return lines.reduce((total, line) => total + line.height, 0) <= box.height;
+		return calcTextHeight(box.width) <= box.height;
 	};
 
 	// Climb by doubling from a single pixel, so a tall text is reached in a few
