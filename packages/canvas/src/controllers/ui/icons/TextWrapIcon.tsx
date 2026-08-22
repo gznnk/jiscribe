@@ -11,6 +11,9 @@ type TextWrapIconProps = {
  * Text-wrap icon.
  * Three lines of text between two solid walls, the last one short: the width is
  * the box's to state and the breaks are the width's to decide.
+ *
+ * Drawn on a 22×22 grid at integer coordinates with 2px strokes so the
+ * default 22px rendering lands on whole device pixels (see AutoHeightIcon).
  */
 const TextWrapIconComponent: React.FC<TextWrapIconProps> = ({
 	width = 22,
@@ -21,23 +24,23 @@ const TextWrapIconComponent: React.FC<TextWrapIconProps> = ({
 	<svg
 		width={width}
 		height={height}
-		viewBox="0 0 16 16"
+		viewBox="0 0 22 22"
 		xmlns="http://www.w3.org/2000/svg"
 		fill="none"
 	>
 		<title>{title}</title>
 		{/* The two edges the text wraps between */}
 		<path
-			d="M1.6 2.2 V13.8 M14.4 2.2 V13.8"
+			d="M3 3 V19 M19 3 V19"
 			stroke={fill}
-			strokeWidth="1.3"
+			strokeWidth="2"
 			strokeLinecap="round"
 		/>
 		{/* The lines the width breaks the text into */}
 		<path
-			d="M4.2 5.2 H11.8 M4.2 8 H11.8 M4.2 10.8 H8.6"
+			d="M6 7 H16 M6 11 H16 M6 15 H12"
 			stroke={fill}
-			strokeWidth="1.3"
+			strokeWidth="2"
 			strokeLinecap="round"
 		/>
 	</svg>
