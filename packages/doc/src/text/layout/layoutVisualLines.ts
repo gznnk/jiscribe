@@ -75,6 +75,16 @@ const unitBreakEnd = (plain: string, unit: TextRange): number => {
  * Breaks one authored line into the visual lines it occupies: units are packed
  * greedily, and a unit too long for an empty line is split between characters
  * (break-word).
+ *
+ * Every fit test measures the whole stretch from the line's start in one call
+ * rather than adding up the pieces placed so far. What a piece takes depends on
+ * its neighbours — the browser trims the space between two adjacent CJK
+ * punctuation marks (`text-spacing-trim`) and kerns across a script boundary —
+ * and none of that appears in a measurement that stops at the piece's edge, so
+ * summed pieces overstate a line by up to half an em per adjacent pair. The box
+ * a text of its own gets is measured whole (calcTextBlockSize), so measuring the
+ * fit the same way is what keeps a line that sized its own box from wrapping
+ * inside it.
  */
 const wrapLine = (
 	plain: string,
@@ -84,43 +94,36 @@ const wrapLine = (
 ): TextRange[] => {
 	const wrapped: TextRange[] = [];
 	let lineStart = line.start;
-	let filledWidth = 0;
 
 	const breakAt = (offset: number): void => {
 		wrapped.push({ start: lineStart, end: offset });
 		lineStart = offset;
-		filledWidth = 0;
 	};
 
 	const placeCharacters = (unit: TextRange): void => {
 		let offset = unit.start;
 		for (const char of plain.slice(unit.start, unit.end)) {
 			const charEnd = offset + char.length;
-			const charWidth = measurer.width(offset, charEnd);
 			if (
 				!isSpaceCharacter(char) &&
-				filledWidth > 0 &&
-				filledWidth + charWidth > availableWidth
+				offset > lineStart &&
+				measurer.width(lineStart, charEnd) > availableWidth
 			) {
 				breakAt(offset);
 			}
-			filledWidth += charWidth;
 			offset = charEnd;
 		}
 	};
 
 	for (const unit of splitIntoWrapUnits(plain, line)) {
-		const unitWidth = measurer.width(unit.start, unit.end);
 		// Trailing spaces hang past the edge under pre-wrap, so they never decide a break.
-		const breakWidth = measurer.width(unit.start, unitBreakEnd(plain, unit));
-		if (filledWidth + breakWidth <= availableWidth) {
-			filledWidth += unitWidth;
+		const breakEnd = unitBreakEnd(plain, unit);
+		if (measurer.width(lineStart, breakEnd) <= availableWidth) {
 			continue;
 		}
-		if (filledWidth > 0) {
+		if (lineStart < unit.start) {
 			breakAt(unit.start);
-			if (breakWidth <= availableWidth) {
-				filledWidth = unitWidth;
+			if (measurer.width(unit.start, breakEnd) <= availableWidth) {
 				continue;
 			}
 		}

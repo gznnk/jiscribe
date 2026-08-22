@@ -1,8 +1,37 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { setTextWidthMeasurerFactory } from "../../measure/textWidthMeasurer";
 import { layoutVisualLines } from "../layoutVisualLines";
 import { TEXT_LINE_HEIGHT } from "../textLineHeight";
 import { FALLBACK_CHAR_WIDTH, FALLBACK_FONT } from "./support/fallbackFont";
+
+/** The CJK punctuation a browser trims the space between when two of them meet. */
+const TUCKED_PUNCTUATION = "、。「」";
+
+/**
+ * Half of {@link FALLBACK_CHAR_WIDTH}: what a browser takes off a pair of
+ * adjacent CJK punctuation marks (`text-spacing-trim`, half an em).
+ */
+const TUCK_WIDTH = FALLBACK_CHAR_WIDTH / 2;
+
+/**
+ * Measures like {@link FALLBACK_FONT} does, except that two adjacent punctuation
+ * marks inside the measured string take {@link TUCK_WIDTH} less together. The
+ * tuck is a property of the pair, so it shows up only when both marks are in the
+ * same call — which is what makes measuring piece by piece overstate a line.
+ */
+const measureWithTuckedPunctuation = (text: string): number => {
+	let tucks = 0;
+	for (let index = 1; index < text.length; index += 1) {
+		if (
+			TUCKED_PUNCTUATION.includes(text[index - 1]) &&
+			TUCKED_PUNCTUATION.includes(text[index])
+		) {
+			tucks += 1;
+		}
+	}
+	return text.length * FALLBACK_CHAR_WIDTH - tucks * TUCK_WIDTH;
+};
 
 describe("layoutVisualLines", () => {
 	it("lays the text out as authored when no width is given", () => {
@@ -57,5 +86,37 @@ describe("layoutVisualLines", () => {
 				40,
 			),
 		).toHaveLength(2);
+	});
+});
+
+describe("layoutVisualLines with punctuation the font tucks", () => {
+	afterEach(() => {
+		setTextWidthMeasurerFactory(null);
+	});
+
+	it("keeps a line that fits when measured whole on one line", () => {
+		setTextWidthMeasurerFactory(() => measureWithTuckedPunctuation);
+		// Two tucked pairs (、「 and 」。), so the line measures 36 whole against
+		// the 42 its seven characters add up to one at a time.
+		const text = "あ、「い」。う";
+
+		expect(layoutVisualLines(text, FALLBACK_FONT, 36)).toEqual([
+			{
+				start: 0,
+				end: text.length,
+				width: 36,
+				height: FALLBACK_FONT.fontSize * TEXT_LINE_HEIGHT,
+			},
+		]);
+	});
+
+	it("still breaks the line the tucks do not save", () => {
+		setTextWidthMeasurerFactory(() => measureWithTuckedPunctuation);
+
+		expect(
+			layoutVisualLines("あ、「い」。う", FALLBACK_FONT, 35).map(
+				(line) => line.width,
+			),
+		).toEqual([30, 6]);
 	});
 });
