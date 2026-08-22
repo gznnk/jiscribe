@@ -613,7 +613,7 @@ export function generateSchema(
 	return {
 		...rootTemplate,
 		$comment:
-			"GENERATED FILE — shape $defs and unions are generated from the shape manifest by `pnpm generate:ai` (packages/ai-docs). Edit shape descriptions in the ObjectDocDefinition entries, and the handwritten parts under packages/ai-docs/generator/templates/.",
+			"GENERATED FILE — shape $defs and unions are generated from the shape manifest by `pnpm generate:schema` (packages/doc-schema). Edit shape descriptions in the ObjectDocDefinition entries, and the handwritten parts under packages/doc-schema/generator/templates/.",
 		$defs: defs,
 	};
 }

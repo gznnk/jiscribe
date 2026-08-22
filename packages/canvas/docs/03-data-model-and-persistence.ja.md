@@ -55,7 +55,7 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
 - コネクター（`type: "connector"`）… 端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する。`root` 直下にのみ置かれ、group の子にはならない。少なくとも一方の端点が owned であること（両端 free は不正）
 - 色フィールド（`stroke` / `fontColor` / `fill`）… 具体的な CSS 色のほか、sentinel 値 `"auto"`（テーマ追従）を取りうる。`"auto"` は描画時にテーマ前景色へ解決される（[描画・テーマ](./08-rendering-and-theme.ja.md) 参照）。新規図形の `stroke` / `fontColor` の既定値は `"auto"`
 - 数値フィールド（座標・サイズ・回転）… 丸めは **State → Doc へ変換する地点**で `PRECISION` に揃える。ジェスチャーやコマンドの計算地点では丸めない。Doc の幾何は State から導出されるため（`x = cx - width / 2`）、手前で丸めても導出でずれる。境界 1 か所で決めることで、自前では丸めない経路（グループ変換・プラグインの制御点・`createDocOps`）も同じ精度に乗る。`@jiscribe/doc` の `roundDocNumbers` 参照
-- 形式仕様の全文は `../../ai-docs/assets/reference.md` と `../../ai-docs/assets/jiscribe.schema.json` を参照
+- 形式仕様の全文は `../../doc-schema/assets/reference.md` と `../../doc-schema/assets/jiscribe.schema.json` を参照
 
 ### テキストモデルの非対称（図形の `text` とコネクターの `label`）
 
@@ -81,7 +81,7 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 **コネクター固有の配置軸**を持つ。フラットに流用すると (1) これら固有フィールドが他キーと混ざって
 帰属が読めない (2) 線の短いタグに無関係な `textAlign` / `verticalAlign` が付く、という
 歪みが出る。**違うものは違う形でよい**（無理に揃えるのは「偽の一貫性」）という判断。これは JSON を
-生成する AI から見ても、型ごとに能力が違う前提（`../../ai-docs/assets/ai-guide.md` の能力表）と整合し、混乱コストは低い。
+生成する AI から見ても、型ごとに能力が違う前提（`../../doc-schema/assets/ai-guide.md` の能力表）と整合し、混乱コストは低い。
 
 この非対称が気になった場合の指針:
 

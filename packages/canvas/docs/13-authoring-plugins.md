@@ -305,7 +305,7 @@ UI plugin (`somePlugin`):
 Headless doc plugin (`someDocPlugin`):
 
 - [ ] `apps/vscode-extension/src/diagnostics/DiagnosticProvider.ts`
-- [ ] `packages/ai-docs/generator/src/manifest.ts` (`definitionSources`)
+- [ ] `packages/doc-schema/generator/src/manifest.ts` (`definitionSources`)
 
 Add the dependency to each of those packages' `package.json` too. `packages/canvas` is
 deliberately not on the list: it depends on no shipped plugin, and adding one would bring
@@ -325,14 +325,14 @@ the shipped set means updating them as well.
 ```bash
 pnpm lint --fix && pnpm format && pnpm typecheck && pnpm dep:check && pnpm lint
 pnpm test
-pnpm generate:ai   # regenerates packages/ai-docs/assets — commit the diff
+pnpm generate:schema   # regenerates packages/doc-schema/assets — commit the diff
 pnpm build:examples && pnpm build:vscode
 pnpm --filter @jiscribe/plugin-<name> test:e2e             # the shape's own suite, in full
 pnpm --filter @jiscribe/canvas test:e2e specs/smoke specs/shapes/draw
 pnpm --filter canvas-examples test:e2e                     # plugin coexistence
 ```
 
-When a shape is _moved_ rather than added, `pnpm generate:ai` producing **no diff**
+When a shape is _moved_ rather than added, `pnpm generate:schema` producing **no diff**
 is the evidence that the doc definition came across faithfully. When a shape is
-added, the diff is the new schema and it must be committed — CI's `check:ai` fails
+added, the diff is the new schema and it must be committed — CI's `check:schema` fails
 on drift.

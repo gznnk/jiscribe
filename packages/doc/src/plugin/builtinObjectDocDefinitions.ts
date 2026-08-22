@@ -56,7 +56,7 @@ import { validateTextDoc } from "../model/objects/primitives/text/validateTextDo
  * text at all (group / polygon / polyline / connector / svg) leave it out.
  *
  * `description` / `summary` / `defaults` feed the generated JSON schema and AI docs
- * (`pnpm generate:ai`); types whose schema `$def` is a handwritten template
+ * (`pnpm generate:schema`); types whose schema `$def` is a handwritten template
  * (group / connector / svg / polyline / polygon) carry only `summary`.
  */
 export const builtinObjectDocDefinitions = {

@@ -5,7 +5,7 @@
 // @jiscribe/doc / @jiscribe/canvas-sdk/doc, and never pulls in
 // presentation / state / stencil.
 // description / summary / outlineDescription / defaults are the single source of
-// the generated JSON schema and AI docs (pnpm generate:ai).
+// the generated JSON schema and AI docs (pnpm generate:schema).
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
 import { calcOutsideBoxTextRegion } from "@jiscribe/doc";

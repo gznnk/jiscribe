@@ -29,7 +29,7 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 
 ## AI Reference
 
-Materials intended for AI, such as the format specification and authoring procedures, are located under `packages/ai-docs/assets/` (a separate track from this design documentation).
+Materials intended for AI, such as the format specification and authoring procedures, are located under `packages/doc-schema/assets/` (a separate track from this design documentation).
 
-- [Canvas Doc Reference](../../ai-docs/assets/reference.md)
-- [AI Authoring Guide](../../ai-docs/assets/ai-guide.md)
+- [Canvas Doc Reference](../../doc-schema/assets/reference.md)
+- [AI Authoring Guide](../../doc-schema/assets/ai-guide.md)

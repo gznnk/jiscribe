@@ -29,7 +29,7 @@ jiscribe 形式なので、VSCode 拡張または demo アプリで開くと図�
 
 ## AI 向けリファレンス
 
-形式仕様・オーサリング手順など AI 向けの資料は `packages/ai-docs/assets/` 配下にあります（本設計ドキュメントとは別系統）。
+形式仕様・オーサリング手順など AI 向けの資料は `packages/doc-schema/assets/` 配下にあります（本設計ドキュメントとは別系統）。
 
-- [Canvas Doc リファレンス](../../ai-docs/assets/reference.md)
-- [AI オーサリングガイド](../../ai-docs/assets/ai-guide.md)
+- [Canvas Doc リファレンス](../../doc-schema/assets/reference.md)
+- [AI オーサリングガイド](../../doc-schema/assets/ai-guide.md)

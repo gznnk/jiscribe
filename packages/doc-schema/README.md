@@ -1,4 +1,4 @@
-# @jiscribe/ai-docs
+# @jiscribe/doc-schema
 
 出荷図形セット（canvas built-in ＋ 収載プラグイン）の JSON スキーマと AI ドキュメントの
 正本パッケージ（#170）。`assets/` 配下の 3 ファイルが配布物で、図形マニフェスト
@@ -21,15 +21,15 @@ svg / connector 以外の全型）」のような能力ベースの言い回し�
 `propertyOverrides` のエントリがあれば自動的に対象外となり、従来どおり全プロパティを
 展開した `$def` が生成される。
 
-消費者は exports（`@jiscribe/ai-docs/schema` / `/guide` / `/reference`）か、ビルド
+消費者は exports（`@jiscribe/doc-schema/schema` / `/guide` / `/reference`）か、ビルド
 スクリプトからは `assets/` への相対パスで参照する（vscode-extension の `build.mjs`、
 配信側の同期など）。
 
 ## 使い方
 
 ```bash
-pnpm generate:ai   # 再生成
-pnpm check:ai      # ドリフト検知（CI で実行）
+pnpm generate:schema   # 再生成
+pnpm check:schema      # ドリフト検知（CI で実行）
 ```
 
 ## 図形を追加するとき
@@ -40,7 +40,7 @@ pnpm check:ai      # ドリフト検知（CI で実行）
    （収載プラグイン自体を増やす場合は `manifest.ts` の import に追加）
 3. reference.md の集約表に載せる型なら `outlineDescription` も書き、
    `GROUPED_REFERENCE_TYPES` に追記する
-4. `pnpm generate:ai` を実行してコミットする
+4. `pnpm generate:schema` を実行してコミットする
 
 宣言漏れ（description 無し・収載リスト未登録など）は生成時にエラーで検出される。
 

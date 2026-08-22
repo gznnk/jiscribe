@@ -9,8 +9,8 @@ import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
  * Headless (UI-independent) description of a single object type: everything the
  * parse layer needs to know a type exists, validate its doc, and create it from
  * a doc — with no React / rendering / control dependency — plus the
- * AI-facing metadata the schema/docs generator reads (`pnpm generate:ai`,
- * packages/ai-docs). The full `ObjectTypeDefinition`
+ * AI-facing metadata the schema/docs generator reads (`pnpm generate:schema`,
+ * packages/doc-schema). The full `ObjectTypeDefinition`
  * (`@jiscribe/canvas`, plugin/ObjectTypeDefinition) is this intersected with the
  * UI-side contracts, so a UI definition is structurally a doc definition.
  */

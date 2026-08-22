@@ -20,7 +20,7 @@ the answers an AI gets and the answers CI gets cannot drift.
 
 ## Why validation is two validators
 
-`validateDoc` runs the official JSON schema (`@jiscribe/ai-docs/schema`, what an
+`validateDoc` runs the official JSON schema (`@jiscribe/doc-schema/schema`, what an
 editor completes and validates against) **and** the canvas parser loaded with the
 shipped shape set (what actually opens the file). Neither contains the other: the
 schema refuses a misspelled property the parser strips silently, and the parser

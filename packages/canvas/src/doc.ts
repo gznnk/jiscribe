@@ -5,7 +5,7 @@
 // The names are listed rather than star-exported: a `.ts` file in this package is
 // CommonJS to tsx (no `"type": "module"`), and a star re-export of another CJS module
 // leaves nothing for Node's named-export detection to find, so an ESM consumer — the
-// ai-docs generator is the one in hand — gets an empty namespace. Add a name here when
+// doc-schema generator is the one in hand — gets an empty namespace. Add a name here when
 // adding one to `@jiscribe/doc`, until every consumer has moved over and this file goes
 // away.
 

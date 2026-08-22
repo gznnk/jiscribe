@@ -51,7 +51,7 @@ async function main(): Promise<void> {
 		);
 		if (stale.length > 0) {
 			console.error(
-				"❌ The generated files have drifted from the shape manifest. Run pnpm generate:ai and commit the result:",
+				"❌ The generated files have drifted from the shape manifest. Run pnpm generate:schema and commit the result:",
 			);
 			for (const output of stale) {
 				console.error(`  - ${output.path}`);

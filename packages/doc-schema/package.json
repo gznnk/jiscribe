@@ -1,5 +1,5 @@
 {
-	"name": "@jiscribe/ai-docs",
+	"name": "@jiscribe/doc-schema",
 	"version": "1.0.0",
 	"private": true,
 	"description": "Generated JSON schema and AI authoring docs for the shipped jiscribe shape set",

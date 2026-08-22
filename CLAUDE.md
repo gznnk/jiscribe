@@ -23,7 +23,7 @@ packages/
   markdown/          markdown rendering
   basic-validators/  primitive runtime validators
   utility-types/     shared TypeScript utility types
-  ai-docs/           generated JSON Schema / AI reference for the shipped shapes
+  doc-schema/        generated JSON Schema / AI reference for the shipped shapes
   ai-tools/          the canvas tool set an AI can call, declared free of any transport
   standard-shapes/   the shipped shape set, bundled once for every host (doc + presentation entries)
   doc-tools/         validate / measure / diagnose over the standard set (Node text measurer included)
@@ -70,8 +70,8 @@ Then, by impact:
   If no spec matches, cover it with a unit test instead.
 
 - **Shapes or AI-facing metadata** (new shape, `ObjectFeatures`, `description`,
-  `defaults`): run `pnpm generate:ai` and commit the regenerated
-  `packages/ai-docs/assets/`, or CI's `check:ai` fails on the drift.
+  `defaults`): run `pnpm generate:schema` and commit the regenerated
+  `packages/doc-schema/assets/`, or CI's `check:schema` fails on the drift.
 - **Anything an app consumes**: `pnpm build:examples` / `pnpm build:vscode`
 
 ## Rules that are enforced, not suggested

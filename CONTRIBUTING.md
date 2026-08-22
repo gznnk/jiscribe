@@ -60,8 +60,8 @@ Then, depending on what you touched:
   - plugin registration, toolbar composition or `svgDefs` —
     `pnpm --filter canvas-examples test:e2e`
 - **Shapes or AI-facing metadata** (a new shape, `ObjectFeatures`, `description`,
-  `defaults`) — regenerate the AI assets with `pnpm generate:ai` and commit the
-  result, or CI's `check:ai` will fail on the drift
+  `defaults`) — regenerate the AI assets with `pnpm generate:schema` and commit the
+  result, or CI's `check:schema` will fail on the drift
 - **Anything consumed by an app** — build it: `pnpm build:examples` or
   `pnpm build:vscode`
 

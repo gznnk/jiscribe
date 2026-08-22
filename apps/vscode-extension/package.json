@@ -144,7 +144,7 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"@jiscribe/ai-docs": "workspace:*",
+		"@jiscribe/doc-schema": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",

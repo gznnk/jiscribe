@@ -33,12 +33,12 @@ let compiledSchemaValidator: ValidateFunction | null = null;
 
 /**
  * The official schema's validator, compiled once. Read off disk rather than
- * imported, so the one file `pnpm generate:ai` writes stays the single source
- * (`@jiscribe/ai-docs` exports it as `./schema`).
+ * imported, so the one file `pnpm generate:schema` writes stays the single source
+ * (`@jiscribe/doc-schema` exports it as `./schema`).
  */
 const getSchemaValidator = (): ValidateFunction => {
 	if (!compiledSchemaValidator) {
-		const schemaPath = require.resolve("@jiscribe/ai-docs/schema");
+		const schemaPath = require.resolve("@jiscribe/doc-schema/schema");
 		const schema: object = JSON.parse(readFileSync(schemaPath, "utf8"));
 		// The shipped schema leans on keywords ajv reports as unknown in strict mode
 		// (it is written for editors, not for ajv), which strict mode turns into a
@@ -103,7 +103,7 @@ const toSemanticDiagnostics = (
 
 /**
  * Checks one `.jis.json` text against both validators the format has: the
- * official JSON schema (`@jiscribe/ai-docs/schema`, what an editor completes and
+ * official JSON schema (`@jiscribe/doc-schema/schema`, what an editor completes and
  * validates against) and the canvas parser loaded with the shipped shape set
  * (what actually opens the file). The two overlap but neither contains the
  * other — the schema catches a misspelled property the parser strips silently,

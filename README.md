@@ -82,7 +82,7 @@ consumers that already name that path.
 | `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                             |
 | `@jiscribe/basic-validators` | Primitive runtime validators                                                              |
 | `@jiscribe/utility-types`    | Shared TypeScript utility types                                                           |
-| `@jiscribe/ai-docs`          | Generated JSON Schema and AI-facing reference for the shipped shape set                   |
+| `@jiscribe/doc-schema`       | Generated JSON Schema and AI-facing reference for the shipped shape set                   |
 | `@jiscribe/ai-tools`         | The canvas tool set an AI can call, declared free of any transport                        |
 | `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)           |
 | `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)         |

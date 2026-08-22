@@ -80,7 +80,7 @@ export function App() {
 | `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                           |
 | `@jiscribe/basic-validators` | プリミティブの実行時バリデーター                                                    |
 | `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                  |
-| `@jiscribe/ai-docs`          | 標準図形セットの生成済み JSON Schema と AI 向けリファレンス                         |
+| `@jiscribe/doc-schema`       | 標準図形セットの生成済み JSON Schema と AI 向けリファレンス                         |
 | `@jiscribe/ai-tools`         | AI が呼べるキャンバスツールの宣言（トランスポート非依存）                           |
 | `@jiscribe/standard-shapes`  | 出荷図形セットの正本（doc 面 / presentation 面の 2 エントリ）                       |
 | `@jiscribe/doc-tools`        | 標準セットに対する検証・計測・診断（Node 計測バックエンド込み）                     |

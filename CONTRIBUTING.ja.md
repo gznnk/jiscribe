@@ -57,8 +57,8 @@ pnpm lint
   - プラグインの登録・ツールバーの合成・`svgDefs` —
     `pnpm --filter canvas-examples test:e2e`
 - **図形または AI 向けメタデータ**（新しい図形、`ObjectFeatures`、`description`、
-  `defaults`） — `pnpm generate:ai` で AI 向けアセットを再生成してコミットする。
-  さもないと差分によって CI の `check:ai` が落ちる
+  `defaults`） — `pnpm generate:schema` で AI 向けアセットを再生成してコミットする。
+  さもないと差分によって CI の `check:schema` が落ちる
 - **アプリが利用するもの** — ビルドする: `pnpm build:examples` または
   `pnpm build:vscode`
 

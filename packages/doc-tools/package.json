@@ -22,7 +22,7 @@
 		"@fontsource/source-code-pro": "5.3.0",
 		"@fontsource/source-sans-3": "5.3.0",
 		"@fontsource/source-serif-4": "5.3.0",
-		"@jiscribe/ai-docs": "workspace:*",
+		"@jiscribe/doc-schema": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/geometry": "workspace:*",

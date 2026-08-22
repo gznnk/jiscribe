@@ -299,7 +299,7 @@ UI プラグイン（`somePlugin`）:
 headless doc プラグイン（`someDocPlugin`）:
 
 - [ ] `apps/vscode-extension/src/diagnostics/DiagnosticProvider.ts`
-- [ ] `packages/ai-docs/generator/src/manifest.ts`（`definitionSources`）
+- [ ] `packages/doc-schema/generator/src/manifest.ts`（`definitionSources`）
 
 上記各パッケージの `package.json` にも依存を足すこと。`packages/canvas` が意図的に
 入っていないのは、出荷プラグインに一切依存しないためである。足すと
@@ -318,13 +318,13 @@ headless doc プラグイン（`someDocPlugin`）:
 ```bash
 pnpm lint --fix && pnpm format && pnpm typecheck && pnpm dep:check && pnpm lint
 pnpm test
-pnpm generate:ai   # packages/ai-docs/assets を再生成する。差分はコミットする
+pnpm generate:schema   # packages/doc-schema/assets を再生成する。差分はコミットする
 pnpm build:examples && pnpm build:vscode
 pnpm --filter @jiscribe/plugin-<name> test:e2e             # その図形のスイートは全部回す
 pnpm --filter @jiscribe/canvas test:e2e specs/smoke specs/shapes/draw
 pnpm --filter canvas-examples test:e2e                     # プラグイン同居
 ```
 
-図形を**移設**したときは、`pnpm generate:ai` が**無変化**であることが doc 定義を
+図形を**移設**したときは、`pnpm generate:schema` が**無変化**であることが doc 定義を
 忠実に移せた証拠になる。図形を**追加**したときは差分が新しいスキーマそのものなので、
-コミットする（CI の `check:ai` が乖離で落ちる）。
+コミットする（CI の `check:schema` が乖離で落ちる）。
