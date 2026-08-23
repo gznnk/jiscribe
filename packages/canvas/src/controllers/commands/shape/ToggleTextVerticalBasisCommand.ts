@@ -74,11 +74,13 @@ export const isSelectionTextVerticalBasisFrame = (
  * Switches the selected shapes between placing their body in the region their
  * own outline leaves clear and placing it on their whole height.
  *
- * Only where the text is drawn changes: the box stays exactly as it is, a height
- * derived from the text included, since that derivation reads the declared
- * region whatever the basis says (`calcAutoShapeHeight`). Switching back to the
- * region removes the field rather than writing `"region"` into it, that being
- * the reading of its absence.
+ * A shape with a stated height keeps it and only moves its text. One whose
+ * document leaves the height out has it derived again on the new basis by the
+ * pass the reducer runs right after this one
+ * (`reconcileObjectContentSizes` → `calcAutoShapeHeight`), which is what keeps a
+ * body switched onto the whole height inside the region its type keeps clear of
+ * its own decoration. Switching back to the region removes the field rather than
+ * writing `"region"` into it, that being the reading of its absence.
  */
 export const ToggleTextVerticalBasisCommand: ExecutableCommand = {
 	id: "toggleTextVerticalBasis",

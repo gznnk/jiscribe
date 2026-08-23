@@ -14,10 +14,10 @@ import type { TextVerticalBasis } from "../../model/objects/types/TextVerticalBa
  * spilling sideways is unreadable in a way a text riding over a cylinder's cap
  * is not.
  *
- * The height a shape with no `height` in the document is drawn at is derived
- * from the declared region alone and is unaffected by this
- * (`calcAutoShapeHeight`): the basis moves where the text is drawn, not how much
- * room the shape is given.
+ * The height a shape with no `height` in the document is drawn at follows the
+ * basis too (`calcAutoShapeHeight`): a body placed on the whole height is
+ * derived tall enough that it still sits inside the declared region, so the
+ * basis moves the room the shape is given as well as where its text lands.
  *
  * @param region - The type's declared region for the slot, in the shape's own coordinates (origin at the centre of the bounding box), as `ObjectDocDefinition.textRegion` returns it; a flipped shape's may be negative in width
  * @param shape - The shape being drawn; only `height` is read, and only for the `"frame"` basis

@@ -5,6 +5,7 @@ import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/RichText";
 import { resolveTextSlotStyle } from "../../model/objects/types/TextSlot";
+import { isTextVerticalBasis } from "../../model/objects/types/TextVerticalBasis";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { extractTextSlotStyleDefaults } from "../../plugin/ObjectTextStyleDefaultsRegistry";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
@@ -125,7 +126,8 @@ const derivedHeightCache = new WeakMap<
  * object that states none, which is how the format spells "size this from the
  * text" (`supportsAutoHeight`) — the one its text needs
  * ({@link calcAutoShapeHeight}). The derived height is a function of the text,
- * the width and the styling, any of which the op about to run may just have
+ * the width, the styling and the basis its body is placed against, any of which
+ * the op about to run may just have
  * changed, so it is re-derived whenever any of them reads differently and only
  * then ({@link derivedHeightCache}) — which is what stops a batch op from
  * measuring the same untouched object once per pass.
@@ -162,6 +164,12 @@ const readObjectHeight = (
 			isRichText(object.text) ? object.text : "",
 			resolveBodyFont(object, definition),
 			definition.textRegion,
+			// An unknown value reads as the default rather than as an error: the ops
+			// also run over objects the parser has not stripped, and the field is a
+			// pure enum there too.
+			isTextVerticalBasis(object.textVerticalBasis)
+				? object.textVerticalBasis
+				: undefined,
 		) ?? 0;
 	derivedHeightCache.set(object, {
 		definition,

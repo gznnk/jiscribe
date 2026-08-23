@@ -25,6 +25,10 @@ import { readRichTextSlot } from "../types/TextSlots";
  * declares no region is measured against its whole box, exactly as the overlay
  * draws it (`calcTextRegion`).
  *
+ * The shape's `textVerticalBasis` goes into the measurement as well, so
+ * switching a body onto the whole height grows the box that holds it rather than
+ * pushing the same box's text over the type's own decoration.
+ *
  * @param state - The shape to re-measure; one with no flag, no frame or no text is returned untouched
  * @param textRegion - The type's region calculator, the UI one the overlay resolves through; undefined measures against the whole box
  * @param textStyleDefaults - The type's own defaults for its body slot, resolved into the slot before measuring so the measured font is the drawn one; omitted measures with the slot alone
@@ -50,6 +54,7 @@ export const resizeAutoHeightStateToContent = (
 		readRichTextSlot(state.text, BODY_TEXT_SLOT_ID),
 		font,
 		textRegion ?? calcFullBoxTextRegion,
+		state.textVerticalBasis,
 	);
 	// A region that holds no text at all leaves the box as it is: the flag should
 	// not have been set for such a type, and shrinking the shape to nothing would

@@ -1,6 +1,7 @@
 import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
+import type { TextVerticalBasis } from "../../../model/objects/types/TextVerticalBasis";
 import type { ObjectDocTextRegionCalculator } from "../../../plugin/ObjectDocTextRegion";
 import {
 	calcFullBoxTextRegion,
@@ -218,6 +219,99 @@ describe("calcAutoShapeHeight", () => {
 		);
 		expect(roomy).not.toBeNull();
 		expect(pinched).toBeGreaterThan(roomy!);
+	});
+});
+
+describe("calcAutoShapeHeight on the frame basis", () => {
+	/** A db's band top and bottom, off centre because the two differ. */
+	const bandedRegion: ObjectDocTextRegionCalculator = ({ width, height }) => ({
+		x: -width / 2,
+		y: -height / 2 + height * 0.2,
+		width,
+		height: height * 0.7,
+	});
+
+	/** A card's corner cut, taken off the top alone. */
+	const cornerCutRegion: ObjectDocTextRegionCalculator = ({
+		width,
+		height,
+	}) => {
+		const cut = Math.min(width, height) * 0.2;
+		return { x: -width / 2, y: -height / 2 + cut, width, height: height - cut };
+	};
+
+	const heightOnBasis = (
+		textRegion: ObjectDocTextRegionCalculator,
+		basis: TextVerticalBasis | undefined,
+	): number | null =>
+		calcAutoShapeHeight(
+			{ width: widthFor(20), height: 0 },
+			"aaaa bbbb cccc dddd",
+			FALLBACK_FONT,
+			textRegion,
+			basis,
+		);
+
+	it("derives one height either way where the region sits on the box's centre", () => {
+		// A constant inset on top and bottom alike: the whole box and a symmetric
+		// band both centre the region, so centring the block on the frame puts it
+		// exactly where the region basis already had it.
+		const symmetricRegion: ObjectDocTextRegionCalculator = ({
+			width,
+			height,
+		}) => ({
+			x: -width / 2,
+			y: -height / 2 + height * 0.15,
+			width,
+			height: height * 0.7,
+		});
+		expect(heightOnBasis(calcFullBoxTextRegion, "frame")).toBe(
+			heightOnBasis(calcFullBoxTextRegion, undefined),
+		);
+		expect(heightOnBasis(symmetricRegion, "frame")).toBe(
+			heightOnBasis(symmetricRegion, undefined),
+		);
+	});
+
+	it.each([
+		{ name: "a band deeper at the top (db)", textRegion: bandedRegion },
+		{ name: "a corner cut off the top (card)", textRegion: cornerCutRegion },
+	])(
+		"derives a taller box where the region sits off it: $name",
+		({ textRegion }) => {
+			const onFrame = heightOnBasis(textRegion, "frame");
+			const onRegion = heightOnBasis(textRegion, undefined);
+			expect(onRegion).not.toBeNull();
+			expect(onFrame).toBeGreaterThan(onRegion!);
+		},
+	);
+
+	it("leaves the centred block inside the region with its room, and nothing shorter does", () => {
+		const text = "aaaa bbbb cccc dddd";
+		const width = widthFor(20);
+		const height = calcAutoShapeHeight(
+			{ width, height: 0 },
+			text,
+			FALLBACK_FONT,
+			bandedRegion,
+			"frame",
+		);
+		expect(height).not.toBeNull();
+		// The block is centred on the whole height and must clear the declared
+		// region's own content box by the comfort padding on both sides.
+		const clearsRegionAt = (shapeHeight: number): boolean => {
+			const region = bandedRegion({ width, height: shapeHeight }, "body")!;
+			const regionBox = calcTextContentBox(region);
+			const textHeight = heightOfTextAt(shapeHeight, text, bandedRegion, width);
+			const blockTop = -textHeight / 2;
+			return (
+				blockTop - COMFORT_PADDING / 2 >= regionBox.y &&
+				blockTop + textHeight + COMFORT_PADDING / 2 <=
+					regionBox.y + regionBox.height
+			);
+		};
+		expect(clearsRegionAt(height!)).toBe(true);
+		expect(clearsRegionAt(height! - 1)).toBe(false);
 	});
 });
 

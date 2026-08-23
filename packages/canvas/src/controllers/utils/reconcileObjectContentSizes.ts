@@ -21,9 +21,15 @@ const derivesHeightAlone = (object: ObjectState): boolean =>
 /**
  * Whether an object still holds everything a resizer measures: the very slots it
  * held before — content and typography, the whole of what a box is derived from —
- * at the very width it wrapped them at, and with the same answer to what its box
- * follows at all. Narrower than comparing the object: a move and a vertical-only
- * group resize both write cx/cy and pass all four through untouched.
+ * at the very width it wrapped them at, on the same basis it places its body
+ * against, and with the same answer to what its box follows at all. Narrower
+ * than comparing the object: a move and a vertical-only group resize both write
+ * cx/cy and pass all five through untouched.
+ *
+ * The basis belongs here because a derived height follows it
+ * (`calcAutoShapeHeight`): switching a body onto the shape's whole height is a
+ * change to nothing else on the object, so leaving it out would let the toggle
+ * land on the height the region basis derived.
  *
  * The width belongs here because the two derivations that wrap have one: a block
  * text keeps its stored width and grows downward, and a shape whose document
@@ -52,6 +58,8 @@ const holdsSameContentInputs = (
 			(object as Partial<Dimensions>).height) &&
 	(previousObject as Partial<Dimensions>).width ===
 		(object as Partial<Dimensions>).width &&
+	(previousObject as TextStyleState).textVerticalBasis ===
+		(object as TextStyleState).textVerticalBasis &&
 	(previousObject as TextStyleState).text === (object as TextStyleState).text;
 
 /**

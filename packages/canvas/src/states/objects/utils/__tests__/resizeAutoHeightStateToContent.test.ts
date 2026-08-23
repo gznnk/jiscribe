@@ -161,6 +161,52 @@ describe("resizeAutoHeightStateToContent", () => {
 		expect(heightOf(large)).toBeGreaterThan(heightOf(small));
 	});
 
+	it("grows the box for a body switched onto the whole height", () => {
+		/** A cap off the top alone, as a cylinder's declared region has. */
+		const cappedRegion = ({
+			width,
+			height,
+		}: {
+			width: number;
+			height: number;
+		}): Rect => ({
+			x: -width / 2,
+			y: -height / 2 + height * 0.25,
+			width,
+			height: height * 0.75,
+		});
+		const onRegion = resizeAutoHeightStateToContent(
+			autoHeightState(),
+			cappedRegion,
+		);
+		const onFrame = resizeAutoHeightStateToContent(
+			autoHeightState({ textVerticalBasis: "frame" }),
+			cappedRegion,
+		);
+
+		// Centred on the whole height, the block reaches the cap first, so the box
+		// has to be taller for it to stay off it.
+		expect(heightOf(onFrame)).toBeGreaterThan(heightOf(onRegion));
+	});
+
+	it("derives one height either way where the region is centred on the box", () => {
+		expect(
+			heightOf(
+				resizeAutoHeightStateToContent(
+					autoHeightState({ textVerticalBasis: "frame" }),
+					calcFullBoxTextRegion,
+				),
+			),
+		).toBe(
+			heightOf(
+				resizeAutoHeightStateToContent(
+					autoHeightState(),
+					calcFullBoxTextRegion,
+				),
+			),
+		);
+	});
+
 	it("measures against the whole box for a type declaring no region", () => {
 		const state = autoHeightState();
 

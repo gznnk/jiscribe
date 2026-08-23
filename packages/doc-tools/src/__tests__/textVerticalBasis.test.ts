@@ -1,7 +1,15 @@
-import type { CanvasDoc } from "@jiscribe/doc";
+import type { CanvasDoc, TextVerticalBasis } from "@jiscribe/doc";
+import {
+	calcAutoShapeHeight,
+	DEFAULT_FONT_FAMILY,
+	offerTextMeasurement,
+	TEXT_STYLE_FALLBACK,
+} from "@jiscribe/doc/unstable";
+import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { describe, expect, it } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";
+import { nodeTextMeasurement } from "../measure/nodeTextMeasurer";
 import { resolveContentBox } from "../resolveContentBox";
 import { validateDoc } from "../validateDoc";
 
@@ -245,5 +253,69 @@ describe("decoration overlap", () => {
 		});
 		expect(diagnostics).toHaveLength(1);
 		expect(diagnostics[0].severity).toBe("warning");
+	});
+});
+
+describe("a height derived on the frame basis", () => {
+	/** Shipped types whose declared region sits off the centre of their box. */
+	const OFF_CENTRE_TYPES = ["db", "card", "document", "multiDocument"];
+
+	/** Texts a 200px box wraps to one, two and three lines at 16px. */
+	const TEXTS = ["one", "one two three four five six", THREE_LINES];
+
+	/** Height a 200px-wide shape of this type is drawn at, holding {@link THREE_LINES}. */
+	const deriveHeight = (
+		type: string,
+		basis: TextVerticalBasis | undefined,
+	): number => {
+		offerTextMeasurement(nodeTextMeasurement());
+		const height = calcAutoShapeHeight(
+			{ width: 200, height: 0 },
+			THREE_LINES,
+			{
+				fontSize: 16,
+				fontFamily: DEFAULT_FONT_FAMILY,
+				fontWeight: TEXT_STYLE_FALLBACK.fontWeight,
+				fontStyle: TEXT_STYLE_FALLBACK.fontStyle,
+			},
+			standardObjectDocDefinitions.get(type)!.textRegion!,
+			basis,
+		);
+		expect(height, type).not.toBeNull();
+		return height!;
+	};
+
+	it.each(OFF_CENTRE_TYPES)(
+		"clears the decoration warning it would have earned at the region's height: %s",
+		(type) => {
+			for (const text of TEXTS) {
+				expect(
+					diagnose({
+						id: "shape",
+						type,
+						x: 0,
+						y: 0,
+						width: 200,
+						text,
+						fontSize: 16,
+						textVerticalBasis: "frame",
+					}),
+					`${type} holding ${JSON.stringify(text)}`,
+				).toEqual([]);
+			}
+		},
+	);
+
+	it.each(OFF_CENTRE_TYPES)(
+		"is taller than the same shape derives on the region basis: %s",
+		(type) => {
+			expect(deriveHeight(type, "frame")).toBeGreaterThan(
+				deriveHeight(type, undefined),
+			);
+		},
+	);
+
+	it("derives the same height for a symmetric type, whose two bases agree", () => {
+		expect(deriveHeight("rect", "frame")).toBe(deriveHeight("rect", undefined));
 	});
 });

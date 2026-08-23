@@ -1,8 +1,10 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
+import { applyTextVerticalBasis } from "./applyTextVerticalBasis";
 import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "./autoHeightComfortPadding";
 import { calcTextContentBox } from "./calcTextContentBox";
 import type { RichText } from "../../model/objects/types/RichText";
+import type { TextVerticalBasis } from "../../model/objects/types/TextVerticalBasis";
 import type { ObjectDocTextRegionCalculator } from "../../plugin/ObjectDocTextRegion";
 import { layoutVisualLines } from "../layout/layoutVisualLines";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";
@@ -54,10 +56,19 @@ const MAX_AUTO_SHAPE_HEIGHT = 1_000_000;
  * running another wherever those are enough to say so, which is what leaves the
  * walk cheaper than the bisection it backs up.
  *
+ * A shape placing its body on its whole height (`textVerticalBasis: "frame"`) is
+ * derived against that placement: the block is centred on the frame, and the
+ * height asked for is the one that still leaves it inside the declared region
+ * with the same room around it ({@link calcTextRoom}). Since the region need
+ * not sit on the frame's centre, the two sides are held apart and the tighter one
+ * decides — which is what makes such a shape come out taller than the same text
+ * on the region basis rather than merely placed differently in the same box.
+ *
  * @param shape - The shape's width and the fields its region reads; its `height` is ignored (see {@link AutoHeightShape})
  * @param text - The whole text, authored newlines included; an empty text still needs one empty line, so the answer is never below the height that holds a single line
  * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one moves where the lines break, and its `fontSize` is the em the comfort padding is charged in whatever the runs set
  * @param textRegion - The type's text-region calculator, called once per height the search tries
+ * @param basis - The shape's `textVerticalBasis`; `undefined` — the field absent, which is every document written before it existed — derives against the declared region, and equals `"frame"`'s answer for a region that sits on the box's centre
  * @returns The height in whole pixels, or null when the type's box does not hold the text at all (the calculator answering `null`) and when no height up to 1,000,000px fits it
  */
 export const calcAutoShapeHeight = (
@@ -65,6 +76,7 @@ export const calcAutoShapeHeight = (
 	text: RichText,
 	font: TextMeasureFont,
 	textRegion: ObjectDocTextRegionCalculator,
+	basis?: TextVerticalBasis,
 ): number | null => {
 	/**
 	 * Height the text takes when wrapped at a content width, one entry per width
@@ -135,27 +147,61 @@ export const calcAutoShapeHeight = (
 	const comfortPadding = font.fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM;
 
 	/**
-	 * Whether the text and its comfort padding fit at this height, or null where
-	 * the box holds no text. The padding is charged here rather than added to the
-	 * answer, so that the height that comes back is one whose own region — the
-	 * narrower one a stadium's caps leave at that height, say — holds the text
-	 * with the padding still around it. Added afterwards it would be room measured
-	 * against a region the shape no longer has at that height.
+	 * The room a shape of this height leaves the text block and its comfort
+	 * padding, and the width the text wraps at to fill it — or null where the box
+	 * holds no text.
+	 *
+	 * On the region basis that is the content box the region leaves, so the
+	 * padding is charged against the very region the shape has at that height —
+	 * the narrower one a stadium's caps leave, say — rather than added to the
+	 * answer afterwards, where it would be room measured against a region the
+	 * shape no longer has.
+	 *
+	 * On the frame basis the block is centred on the shape's whole height while
+	 * the room it must stay inside is still the declared region's, so the region's
+	 * two edges are measured from that centre separately and the nearer one sets
+	 * the room: a block filling it reaches neither edge, whichever side the region
+	 * sits off centre on. A region centred on the box makes the two equal and the
+	 * room the region basis's own, which is why a symmetric type derives one
+	 * height either way.
 	 */
-	const fitsAt = (height: number): boolean | null => {
+	const calcTextRoom = (height: number): Dimensions | null => {
 		const region = textRegion({ ...shape, height }, BODY_TEXT_SLOT_ID);
 		if (region === null) {
 			return null;
 		}
-		const box = calcTextContentBox(region);
+		const regionBox = calcTextContentBox(region);
+		if (basis !== "frame") {
+			return { width: regionBox.width, height: regionBox.height };
+		}
+		const frameBox = calcTextContentBox(
+			applyTextVerticalBasis(region, { ...shape, height }, basis),
+		);
+		const blockCenter = frameBox.y + frameBox.height / 2;
+		const above = blockCenter - regionBox.y;
+		const below = regionBox.y + regionBox.height - blockCenter;
+		// Negative where the region does not reach the centre at all, which is a
+		// height nothing fits at rather than a case to clamp away.
+		return { width: frameBox.width, height: Math.min(above, below) * 2 };
+	};
+
+	/**
+	 * Whether the text and its comfort padding fit at this height, or null where
+	 * the box holds no text.
+	 */
+	const fitsAt = (height: number): boolean | null => {
+		const room = calcTextRoom(height);
+		if (room === null) {
+			return null;
+		}
 		// Turned down without a layout wherever the layouts already run are enough
 		// to say so ({@link calcTextHeightFloor}). This is what keeps the walk below
 		// affordable on a region that leaves a different width at every height, and
 		// therefore shares no layout between them.
-		if (calcTextHeightFloor(box.width) + comfortPadding * 2 > box.height) {
+		if (calcTextHeightFloor(room.width) + comfortPadding * 2 > room.height) {
 			return false;
 		}
-		return calcTextHeight(box.width) + comfortPadding * 2 <= box.height;
+		return calcTextHeight(room.width) + comfortPadding * 2 <= room.height;
 	};
 
 	// Climb by doubling from a single pixel, so a tall text is reached in a few

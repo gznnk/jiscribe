@@ -37,6 +37,37 @@ export const cardDefinition: ObjectDocDefinition = {
 	validateDoc: () => [],
 };
 
+/**
+ * A body-text shape whose declared region gives up a quarter of the height at
+ * the top and nothing at the bottom, the way a cylinder's cap does. Off-centre
+ * on purpose: it is the one shape of region on which the two vertical bases
+ * derive different heights.
+ */
+export const cappedDefinition: ObjectDocDefinition = {
+	features: {
+		type: "capped",
+		geometry: "rect",
+		text: "body",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+	textRegion: ({ width, height }) => ({
+		x: -width / 2,
+		y: -height / 2 + height * 0.25,
+		width,
+		height: height * 0.75,
+	}),
+	factory: createFrameObjectFactory({
+		type: "capped",
+		width: 200,
+		height: 100,
+		fill: "transparent",
+		stroke: "auto",
+		strokeWidth: 2,
+	}),
+};
+
 /** Values the badge fixture accepts, so an unknown one has something to be measured against. */
 export const BADGE_KINDS = ["new", "beta"] as const;
 

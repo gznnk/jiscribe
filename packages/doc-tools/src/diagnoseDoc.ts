@@ -4,7 +4,11 @@ import type {
 	ObjectDocDefinition,
 	RichText,
 } from "@jiscribe/doc";
-import { richTextToPlain, supportsAutoHeight } from "@jiscribe/doc";
+import {
+	isTextVerticalBasis,
+	richTextToPlain,
+	supportsAutoHeight,
+} from "@jiscribe/doc";
 import type { TextMeasureFont, VisualLine } from "@jiscribe/doc/unstable";
 import {
 	calcAutoShapeHeight,
@@ -135,8 +139,10 @@ const resolveWrapBoxWidth = (
 
 /**
  * Height the shape is drawn at: the stored one, or the one its text comes to for
- * a type allowed to leave it out. Null where the type holds the text at no height
- * at all, there being nothing to check against then.
+ * a type allowed to leave it out — derived against the basis the shape places
+ * its body on, so a derived height is the one the canvas itself would draw. Null
+ * where the type holds the text at no height at all, there being nothing to
+ * check against then.
  *
  * @param boxWidth - The width its text wraps in, as {@link resolveWrapBoxWidth} resolved it rather than the shape's own
  */
@@ -165,6 +171,12 @@ const resolveDrawnHeight = (
 		text,
 		font,
 		definition.textRegion,
+		// An unknown value reads as the default rather than as an error, the way
+		// `resolveContentBox` reads it: this package also runs over documents the
+		// parser has not stripped.
+		isTextVerticalBasis(body.textVerticalBasis)
+			? body.textVerticalBasis
+			: undefined,
 	);
 };
 

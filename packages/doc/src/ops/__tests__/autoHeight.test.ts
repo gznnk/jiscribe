@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { docOps, emptyDoc, readObject } from "./support/docFixtures";
+import { cappedDefinition } from "./support/pluginFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "../../text/block/autoHeightComfortPadding";
@@ -17,6 +18,7 @@ import {
 } from "../../text/measure/textMeasurementSlot";
 import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
+import { createDocOps } from "../createDocOps";
 
 /**
  * A doc holding one rect that states no height, so its height is the one its text
@@ -39,6 +41,17 @@ const autoHeightDoc = (
 	} as unknown as ObjectDoc);
 	return { doc, id: "auto" };
 };
+
+/** Doc-ops that also know the off-centre region type ({@link cappedDefinition}). */
+const cappedDocOps = createDocOps({
+	plugins: [{ id: "capped-plugin", objects: { capped: cappedDefinition } }],
+});
+
+/** {@link autoHeightDoc} for a type whose region gives up the top of the box. */
+const cappedDoc = (
+	overrides: Record<string, unknown> = {},
+): { doc: CanvasDoc; id: string } =>
+	autoHeightDoc({ type: "capped", ...overrides });
 
 describe("bounds of a shape that states no height", () => {
 	it("measures the height its text needs instead of reading 0", () => {
@@ -85,6 +98,17 @@ describe("bounds of a shape that states no height", () => {
 			width: 200,
 			height,
 		});
+	});
+
+	it("measures a body placed on the whole height taller, its region being off centre", () => {
+		const onRegion = cappedDoc();
+		const onFrame = cappedDoc({ textVerticalBasis: "frame" });
+
+		expect(
+			cappedDocOps.getObjectBounds(onFrame.doc, onFrame.id)!.height,
+		).toBeGreaterThan(
+			cappedDocOps.getObjectBounds(onRegion.doc, onRegion.id)!.height,
+		);
 	});
 
 	it("aligns against the derived box, not against a flat one", () => {

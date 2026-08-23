@@ -164,6 +164,35 @@ describe("reconcileObjectContentSizes", () => {
 		expect(seenTypes).toEqual(["text"]);
 	});
 
+	it("re-measures a shape whose body moved to the other vertical basis", () => {
+		// The basis is the whole of what the toggle writes, so a pass reading only
+		// the text and the width would leave the shape at the height the other
+		// basis derived (`ToggleTextVerticalBasisCommand`).
+		const registry = createObjectContentResizerRegistry();
+		registry.register("rect", (state) => ({
+			...state,
+			height:
+				(state as { textVerticalBasis?: string }).textVerticalBasis === "frame"
+					? 200
+					: 100,
+		}));
+		const onRegion = { ...rectObject("r1"), height: 100 } as ObjectState;
+		const onFrame = {
+			...onRegion,
+			textVerticalBasis: "frame",
+		} as unknown as ObjectState;
+
+		const reconciled = reconcileObjectContentSizes(
+			stateOf([onFrame]),
+			stateOf([onRegion]),
+			registry,
+		);
+
+		expect(
+			(reconciled.objects.r1 as unknown as { height: number }).height,
+		).toBe(200);
+	});
+
 	it("re-measures nothing at all when the registry holds no resizer", () => {
 		// The state of a canvas configured without a single derived-box type: the
 		// pass must be a no-op even for the objects that would otherwise qualify.

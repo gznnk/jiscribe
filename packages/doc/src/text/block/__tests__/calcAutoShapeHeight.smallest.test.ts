@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { MATRIX_TEXTS, REGION_FAMILIES } from "./support/regionFamilies";
 import type { RichText } from "../../../model/objects/types/RichText";
+import type { TextVerticalBasis } from "../../../model/objects/types/TextVerticalBasis";
+import { TextVerticalBases } from "../../../model/objects/types/TextVerticalBasis";
 import type { ObjectDocTextRegionCalculator } from "../../../plugin/ObjectDocTextRegion";
 import { FALLBACK_FONT } from "../../layout/__tests__/support/fallbackFont";
 import { layoutVisualLines } from "../../layout/layoutVisualLines";
@@ -18,16 +20,23 @@ import { calcTextContentBox } from "../calcTextContentBox";
  * that agreeing with it says something. The one thing it does borrow is the
  * memo, which is not an assumption but the definition: the text wraps by the
  * width alone.
+ *
+ * The frame basis is spelled out as the placement it is — the block centred on
+ * the whole height, both its edges clearing the declared region by the padding —
+ * rather than as the single allowance the search reduces that to, so the two are
+ * not the same arithmetic twice.
  */
 const createFitTest = (
 	text: RichText,
 	font: TextMeasureFont,
 	textRegion: ObjectDocTextRegionCalculator,
+	basis: TextVerticalBasis,
 ): ((
 	shape: Record<string, unknown> & { width: number },
 	height: number,
 ) => boolean) => {
 	const textHeightByWidth = new Map<number, number>();
+	const comfortPadding = font.fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM;
 	return (shape, height) => {
 		const region = textRegion({ ...shape, height }, "body");
 		if (region === null) {
@@ -42,10 +51,19 @@ const createFitTest = (
 			);
 			textHeightByWidth.set(box.width, textHeight);
 		}
-		return (
-			textHeight + font.fontSize * AUTO_HEIGHT_COMFORT_PADDING_EM * 2 <=
-			box.height
-		);
+		if (basis === "region") {
+			return textHeight + comfortPadding * 2 <= box.height;
+		}
+		const frameBox = calcTextContentBox({
+			x: region.x,
+			y: -height / 2,
+			width: region.width,
+			height,
+		});
+		const blockTop =
+			frameBox.y + (frameBox.height - textHeight) / 2 - comfortPadding;
+		const blockBottom = blockTop + textHeight + comfortPadding * 2;
+		return blockTop >= box.y && blockBottom <= box.y + box.height;
 	};
 };
 
@@ -69,10 +87,15 @@ const FONT_SIZES = [10, 16, 32];
  */
 const EXHAUSTIVE_WALK_CEILING = 700;
 
+/** Every family crossed with every basis, which is the matrix each case runs. */
+const REGION_FAMILY_BASES = REGION_FAMILIES.flatMap((family) =>
+	TextVerticalBases.map((basis) => ({ ...family, basis })),
+);
+
 describe("the derived height is the smallest one the text fits in", () => {
-	it.each(REGION_FAMILIES)(
-		"is what walking every height from one pixel up answers: $name",
-		({ textRegion }) => {
+	it.each(REGION_FAMILY_BASES)(
+		"is what walking every height from one pixel up answers: $name on the $basis basis",
+		({ textRegion, basis }) => {
 			let checkedExhaustively = 0;
 			let answered = 0;
 			for (const { name, text } of MATRIX_TEXTS) {
@@ -81,8 +104,14 @@ describe("the derived height is the smallest one the text fits in", () => {
 						const font = { ...FALLBACK_FONT, fontSize };
 						const shape = { width, height: 0, headerHeight: 40 };
 						const where = `${name} at ${width}px/${fontSize}px`;
-						const holdsTextAt = createFitTest(text, font, textRegion);
-						const height = calcAutoShapeHeight(shape, text, font, textRegion);
+						const holdsTextAt = createFitTest(text, font, textRegion, basis);
+						const height = calcAutoShapeHeight(
+							shape,
+							text,
+							font,
+							textRegion,
+							basis,
+						);
 						if (height === null) {
 							// A region holding no text at all, and one whose height the box
 							// does not move: no height fits, so there is none to check.
