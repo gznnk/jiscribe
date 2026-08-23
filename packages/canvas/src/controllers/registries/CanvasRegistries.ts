@@ -16,6 +16,7 @@ import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoH
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
+import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { ScrollBoundsConfig } from "../CanvasTypes";
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
@@ -49,6 +50,11 @@ export type CanvasRegistries = {
 	 * switch exactly where the parser accepts the result.
 	 */
 	objectAutoHeight: ObjectAutoHeightRegistry;
+	/**
+	 * Which types the switch between the two vertical text bases actually moves
+	 * the body of, so the canvas offers it only where it does something.
+	 */
+	objectTextVerticalBasis: ObjectTextVerticalBasisRegistry;
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	/**
@@ -121,8 +127,13 @@ export type CanvasConfig = CanvasCapabilities & {
 	viewport?: Camera;
 	/**
 	 * Limits how far the canvas can be scrolled ({@link ScrollBoundsConfig}).
-	 * Omit for the infinite canvas; `{ mode: "content" }` keeps the view over the
-	 * area the objects occupy, growing and shrinking with them.
+	 * `{ mode: "content" }` keeps the view over the area the objects occupy,
+	 * growing and shrinking with them.
+	 *
+	 * Like `viewport`, setting it takes the decision away from the document: it
+	 * suppresses the loaded document's own `view.scroll`, and the document's
+	 * `view.padding` plays no part in the wall it puts up. Omitted, each document
+	 * decides for itself, and one that declares nothing is the infinite canvas.
 	 *
 	 * The limit applies to the deliberate view scrolls — the wheel, the
 	 * middle-/right-button grab pan and the one-finger touch pan — and to nothing

@@ -1,6 +1,6 @@
 import { isArray, isObject, isString } from "@jiscribe/basic-validators";
 
-import { isViewOpenMode } from "../model/canvas/ViewDoc";
+import { isViewOpenMode, isViewScrollMode } from "../model/canvas/ViewDoc";
 import { isArrowType } from "../model/objects/types/ArrowType";
 import { isConnectorRouting } from "../model/objects/types/ConnectorRouting";
 import { isAnchorKind } from "../model/objects/types/EndpointRef";
@@ -63,8 +63,15 @@ const findUnknownAnchorKind = (
 	return undefined;
 };
 
+/** The pure-enum fields of the document-root `view`, keyed by field name. */
+const viewEnumFields: ReadonlyMap<string, (value: unknown) => boolean> =
+	new Map<string, (value: unknown) => boolean>([
+		["open", isViewOpenMode],
+		["scroll", isViewScrollMode],
+	]);
+
 /**
- * Drops `view.open` when it names a mode outside the known set, so an older host
+ * Drops a `view` field that names a value outside its known set, so an older host
  * still opens a document written for a newer one. `view` is a document-root field
  * rather than something inside an object, so it cannot go through
  * {@link pureEnumFields}, which walks the entries of `root` only.
@@ -72,7 +79,7 @@ const findUnknownAnchorKind = (
  * @returns The input itself when nothing was removed, so callers can detect the
  *   no-change case by reference.
  */
-const stripUnknownViewOpen = (
+const stripUnknownViewFields = (
 	view: unknown,
 	warnings: SemanticDiagnostic[],
 ): unknown => {
@@ -80,16 +87,21 @@ const stripUnknownViewOpen = (
 		return view;
 	}
 	const v = view as Record<string, unknown>;
-	if (v.open === undefined || isViewOpenMode(v.open)) {
-		return view;
-	}
-	const shownValue = typeof v.open === "string" ? ` "${v.open}"` : "";
-	warnings.push({
-		path: "view.open",
-		message: `Unknown open value${shownValue}: the field was ignored and will be dropped on save.`,
+	let stripped: Record<string, unknown> | undefined;
+	viewEnumFields.forEach((isKnownValue, field) => {
+		const value = v[field];
+		if (value === undefined || isKnownValue(value)) {
+			return;
+		}
+		const shownValue = typeof value === "string" ? ` "${value}"` : "";
+		warnings.push({
+			path: `view.${field}`,
+			message: `Unknown ${field} value${shownValue}: the field was ignored and will be dropped on save.`,
+		});
+		stripped = stripped ?? { ...v };
+		delete stripped[field];
 	});
-	const { open: _droppedOpen, ...rest } = v;
-	return rest;
+	return stripped ?? view;
 };
 
 /**
@@ -101,8 +113,8 @@ const stripUnknownViewOpen = (
  *     known set, at any nesting depth (flat, connector label, text slots, …)
  *   - connectors with an endpoint anchored to an unknown kind (see
  *     {@link findUnknownAnchorKind}); the anchor is not droppable on its own
- *   - a document-root `view.open` naming a mode outside the known set (see
- *     {@link stripUnknownViewOpen})
+ *   - a document-root `view.open` / `view.scroll` naming a mode outside the known
+ *     set (see {@link stripUnknownViewFields})
  *
  * Object removal cascades to keep the remaining doc valid:
  *   - a group whose children all get removed is removed with them (an empty group
@@ -132,7 +144,7 @@ export function stripUnknownContent(
 	}
 
 	const warnings: SemanticDiagnostic[] = [];
-	const strippedView = stripUnknownViewOpen(d.view, warnings);
+	const strippedView = stripUnknownViewFields(d.view, warnings);
 	// IDs of every removed object, descendants included, for the connector cascade.
 	const removedIds = new Set<string>();
 

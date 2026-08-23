@@ -1,4 +1,5 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
@@ -210,6 +211,11 @@ export type DragKind =
  * How far the canvas may be scrolled, set once at mount through
  * `initialConfig.scrollBounds`.
  *
+ * Passing this answers for the whole surface: it outranks the loaded document's
+ * own `view.scroll` declaration, and the document's `view.padding` plays no part
+ * in the wall it puts up. Omit it to let each document decide (see
+ * `resolveScrollWallPadding`).
+ *
  * The limit applies to the deliberate view scrolls only — the wheel and the grab
  * pan. Zooming stays unrestricted (zooming out past the range still shows the
  * empty area around it), and so does every other way the view moves; a view left
@@ -278,26 +284,39 @@ export type CanvasControllerState = CanvasState & {
 	edgeScrollEnabled: boolean;
 
 	/**
-	 * How far the view may be scrolled, or null on the default infinite canvas.
-	 * Set once at mount and applied by `limitViewScroll` at the end of every
-	 * gesture (nothing else limits the view).
+	 * How far the view may be scrolled, applied by `limitViewScroll` at the end of
+	 * every gesture (nothing else limits the view). Always present: only the host
+	 * half is fixed at mount, while the document half moves with whatever document
+	 * is loaded, so there is no point at which "no wall" can be settled for good.
 	 */
 	scrollLimit: {
-		/** The host's setting, kept because the rect is re-measured from it */
-		config: ScrollBoundsConfig;
 		/**
-		 * The rect the view is kept inside, measured from `measuredFrom`; null when
-		 * the doc holds no content to bound it to.
+		 * The host's mount-time setting, or null when it left the wall to the
+		 * document. Kept because the wall is re-resolved from it on every scroll.
+		 */
+		hostConfig: ScrollBoundsConfig | null;
+		/**
+		 * The rect the view is kept inside, measured from `measuredFrom` /
+		 * `measuredView`; null when nothing walls the view in — no wall was
+		 * declared, or the doc holds no content to bound it to.
 		 */
 		rect: BoundingBox | null;
 		/**
 		 * The object map `rect` was measured from — a different reference means it
 		 * is stale. Measuring walks every object, so it is redone lazily, on the
 		 * first scroll after the objects change rather than on the change itself.
-		 * null before the first measurement.
+		 * null before the first measurement, which is what makes the first scroll
+		 * measure no matter what the other cache key says.
 		 */
 		measuredFrom: Record<string, ObjectState> | null;
-	} | null;
+		/**
+		 * The `view` `rect` was measured under, the second half of the cache key:
+		 * loading another document moves the wall even when its padding happens to
+		 * match, and `undefined` is a value here (a doc declaring no view) rather
+		 * than a "not measured" marker — `measuredFrom` carries that.
+		 */
+		measuredView: ViewDoc | undefined;
+	};
 
 	/**
 	 * Incremented when a new edit is confirmed (dragEnd, command execution, etc.).

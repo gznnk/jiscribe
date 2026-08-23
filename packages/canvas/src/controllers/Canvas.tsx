@@ -268,14 +268,16 @@ type CanvasProps = {
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
 	 * capability set (available object types, commands, plugins) plus the view
 	 * setup — the initial camera (`viewport`) and how far it may be scrolled
-	 * (`scrollBounds`, infinite unless set). Restricts what this canvas can
+	 * (`scrollBounds`, left to the document unless set). Restricts what this canvas can
 	 * create/handle (plugin-style extensibility and feature-gating), independently
 	 * of any other `<Canvas>` on the page. Omit for the full default set.
 	 *
-	 * **`viewport` outranks the document.** A doc that declares `view.open` frames
-	 * itself on open; passing a camera here overrules it. So pass one only when the
-	 * host genuinely knows better — a restored session, a deep link — and leave it
-	 * out on a first open, where the document's own intent is the better answer.
+	 * **`viewport` and `scrollBounds` outrank the document.** A doc that declares
+	 * `view.open` / `view.scroll` frames and walls itself; passing a camera or a
+	 * scroll limit here overrules it. So pass one only when the host genuinely
+	 * knows better — a restored session, a deep link, a surface that is not a
+	 * document viewer — and leave it out otherwise, where the document's own
+	 * intent is the better answer.
 	 *
 	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
 	 * whose object types remain enabled — otherwise state construction throws

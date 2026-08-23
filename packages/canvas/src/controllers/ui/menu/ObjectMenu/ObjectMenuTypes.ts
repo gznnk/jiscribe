@@ -11,6 +11,7 @@ export type BuiltinItemKey =
 	| "textAlignment"
 	| "aspectRatio"
 	| "autoHeight"
+	| "textVerticalBasis"
 	| "textLayout"
 	| "stackOrder"
 	| "group"

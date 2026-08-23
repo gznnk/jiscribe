@@ -5,6 +5,7 @@ import { extractTextSlotStyleDefaults } from "@jiscribe/doc/plugin/ObjectTextSty
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
+import { hasInsetTextRegionType } from "../../plugin/hasInsetTextRegionType";
 import { defineObject } from "../../plugin/ObjectTypeDefinition";
 import type {
 	AnyObjectTypeDefinition,
@@ -341,6 +342,48 @@ const insertAutoHeightMenuSection = (
 };
 
 /**
+ * The switch between placing a body in the region the type's outline leaves
+ * clear and placing it on the whole height, inserted into the menu of every type
+ * the switch actually moves the text of (`hasInsetTextRegionType`, placement in
+ * {@link insertTextVerticalBasisMenuSection}).
+ * One shared section value, so the merge that keeps only the sections every
+ * selected type registers matches it across a multi-type selection.
+ */
+const TEXT_VERTICAL_BASIS_MENU_SECTION: ObjectMenuSection = {
+	id: "text-vertical-basis",
+	items: [{ type: "textVerticalBasis" }],
+};
+
+/**
+ * The menu with the vertical-basis switch put right after the text section: it
+ * governs what the vertical alignment there is measured against, so the two
+ * belong to one run. A menu with no text section falls back to the place the
+ * sizing run starts — before the auto-height switch, itself sitting before the
+ * transform section — and takes the end when there is none. It stays a section
+ * of its own for the same reason auto-height does: the multi-type merge drops a
+ * section any selected type lacks, and folding the switch into "text" would take
+ * the font and alignment controls down with it whenever a plain box is in the
+ * selection.
+ */
+const insertTextVerticalBasisMenuSection = (
+	menu: readonly ObjectMenuSection[],
+): ObjectMenuSection[] => {
+	const textIndex = menu.findIndex((section) => section.id === "text");
+	const insertAt =
+		textIndex === -1
+			? menu.findIndex((section) => section.id === AUTO_HEIGHT_MENU_SECTION.id)
+			: textIndex + 1;
+	if (insertAt === -1) {
+		return [...menu, TEXT_VERTICAL_BASIS_MENU_SECTION];
+	}
+	return [
+		...menu.slice(0, insertAt),
+		TEXT_VERTICAL_BASIS_MENU_SECTION,
+		...menu.slice(insertAt),
+	];
+};
+
+/**
  * Registers a single object type described by `definition` across all registries
  * in the given bundle (mapper, component, text region, behavior, state validator,
  * menu), and optionally its factory / stencils.
@@ -367,6 +410,10 @@ export const applyObjectDefinition = (
 	const supportsAutoHeight = supportsAutoHeightType(definition);
 	if (supportsAutoHeight) {
 		registries.objectAutoHeight.register(type);
+	}
+	const hasInsetTextRegion = hasInsetTextRegionType(definition);
+	if (hasInsetTextRegion) {
+		registries.objectTextVerticalBasis.register(type);
 	}
 	// A type whose doc may leave `height` out gets the shared derivation, which is
 	// inert for every object of it that states one — the two are mutually
@@ -435,15 +482,23 @@ export const applyObjectDefinition = (
 	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
-	const menu = definition.menu ?? createDefaultMenu(definition.features);
-	// The switch is inserted rather than declared per type: it belongs to every
-	// type whose document may leave `height` out, and a type declaring its own
-	// menu would otherwise have to remember it. A multi-type selection keeps only
-	// the sections every selected type registers, so the section itself is the
-	// gate that hides the switch beside a shape that cannot take it (useMenuSections).
+	const declaredMenu =
+		definition.menu ?? createDefaultMenu(definition.features);
+	// Both switches are inserted rather than declared per type: each belongs to
+	// every type whose declarations imply it, and a type declaring its own menu
+	// would otherwise have to remember them. A multi-type selection keeps only the
+	// sections every selected type registers, so the section itself is the gate
+	// that hides a switch beside a shape that cannot take it (useMenuSections).
+	// Auto-height goes in first, so the basis switch can place itself against the
+	// sizing run when the type has no text section to follow.
+	const sizedMenu = supportsAutoHeight
+		? insertAutoHeightMenuSection(declaredMenu)
+		: declaredMenu;
 	registries.objectMenu.register(
 		type,
-		supportsAutoHeight ? insertAutoHeightMenuSection(menu) : menu,
+		hasInsetTextRegion
+			? insertTextVerticalBasisMenuSection(sizedMenu)
+			: sizedMenu,
 	);
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
@@ -483,6 +538,7 @@ export const initializeObjectRegistry = (
 	registries.objectTextStyleDefaults.clear();
 	registries.objectContentResizer.clear();
 	registries.objectAutoHeight.clear();
+	registries.objectTextVerticalBasis.clear();
 	registries.objectComponent.clear();
 	registries.objectSvgDefs.clear();
 	registries.objectTextRegion.clear();

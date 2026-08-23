@@ -23,6 +23,27 @@ export const isViewOpenMode = (value: unknown): value is ViewOpenMode =>
 	(VIEW_OPEN_MODES as readonly string[]).includes(value);
 
 /**
+ * Whether the document is a bounded page or an endless board.
+ *
+ * `"content"` walls panning in at the content bounds grown by
+ * {@link ViewDoc.padding} — the same rectangle the framing and the exported image
+ * use, so a document opened `"fit-width"` cannot be panned sideways off its own
+ * page. `"infinite"` is the endless board, and is what an omitted field means.
+ */
+export type ViewScrollMode = "content" | "infinite";
+
+const VIEW_SCROLL_MODES: readonly ViewScrollMode[] = ["content", "infinite"];
+
+/**
+ * Whether a value names one of the {@link ViewScrollMode} members.
+ *
+ * @param value - Any value; only the exact mode strings pass
+ */
+export const isViewScrollMode = (value: unknown): value is ViewScrollMode =>
+	typeof value === "string" &&
+	(VIEW_SCROLL_MODES as readonly string[]).includes(value);
+
+/**
  * Empty space in world px kept outside the content on each side. Every side is
  * optional and defaults to 0; see {@link ViewDoc} for what the padding applies to.
  */
@@ -59,27 +80,35 @@ export const resolveViewPadding = (
 
 /**
  * The document's display declaration: how much empty space belongs around the
- * drawing, and how the view should be framed when the document is opened.
+ * drawing, how the view should be framed when the document is opened, and
+ * whether it may be scrolled past its own edges.
  *
- * Both fields describe *presentation*, never geometry. The padding is not a
- * canvas boundary: objects may be placed outside it, editing is not constrained
- * by it, and it does not limit how far the view may be scrolled (that is
- * `initialConfig.scrollBounds`). What it does affect is the framing derived from
- * the content — the margin of rendered and exported images, and the box
- * `open` fits — which is why it lives in the document rather than in each host's
- * options.
+ * Every field describes *presentation*, never geometry. The padding is not a
+ * canvas boundary: objects may be placed outside it and editing is not
+ * constrained by it. What it does affect is everything derived from the content
+ * box — the margin of rendered and exported images, the box `open` fits, and the
+ * wall `scroll` puts up — which is why it lives in the document rather than in
+ * each host's options.
  *
  * The content box is re-derived every time it is needed (auto-sized shapes
  * included), so no absolute rectangle is ever stored here and editing the drawing
  * cannot leave the declaration stale.
  *
- * `open` is only an intent, and the weakest input to the initial camera: a host
- * that passes `initialConfig.viewport` outranks it, and a document that omits it
- * keeps whatever the host would have shown anyway.
+ * `open` and `scroll` are intents, and the weakest inputs of their kind: a host
+ * that passes `initialConfig.viewport` outranks `open`, a host that passes
+ * `initialConfig.scrollBounds` outranks `scroll`, and a document that omits
+ * either keeps whatever the host would have done anyway.
  */
 export type ViewDoc = {
 	/** Empty space kept outside the content; omitted means none on every side. */
 	padding?: ViewPaddingDoc;
 	/** How to frame the view on open; omitted leaves the host's own framing in force. */
 	open?: ViewOpenMode;
+	/**
+	 * Whether panning is walled in at the content grown by {@link padding} — there
+	 * is no separate margin for the wall, so the page the document frames itself
+	 * as is the page it can be panned over. Omitted means the endless board, and a
+	 * host that passes `initialConfig.scrollBounds` outranks this either way.
+	 */
+	scroll?: ViewScrollMode;
 };

@@ -74,6 +74,8 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuUnlockAspectRatio: "Unlock Aspect Ratio",
 	menuAutoHeight: "Fit Height to Text",
 	menuFixedHeight: "Stop Fitting Height to Text",
+	menuTextBasisFrame: "Align Text to Full Height",
+	menuTextBasisRegion: "Align Text to Shape Area",
 	menuWrapTextInWidth: "Wrap Text in Fixed Width",
 	menuFitWidthToText: "Fit Width to Text",
 	menuConnectorRouting: "Connector Routing",

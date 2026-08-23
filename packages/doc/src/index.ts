@@ -110,6 +110,10 @@ export {
 // types, and the doc-ops refuse to switch any other.
 export { supportsAutoHeight } from "./plugin/supportsAutoHeight";
 export type { AutoHeightDeclaration } from "./plugin/supportsAutoHeight";
+// Whether the same declaration gives up part of the box's height, which is what
+// decides whether switching `textVerticalBasis` moves the type's body at all.
+export { hasInsetTextRegion } from "./plugin/hasInsetTextRegion";
+export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";

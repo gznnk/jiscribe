@@ -390,4 +390,50 @@ describe("stripUnknownContent", () => {
 			expect(result.warnings).toHaveLength(2);
 		});
 	});
+
+	describe("view.scroll", () => {
+		it("drops an unknown scroll mode with a warning, keeping the rest of view", () => {
+			const result = strip({
+				version: 1,
+				view: { padding: { top: 8 }, open: "fit-width", scroll: "page" },
+				root: [rect("r1")],
+			});
+			const stripped = result.data as { view: Record<string, unknown> };
+			expect("scroll" in stripped.view).toBe(false);
+			expect(stripped.view.open).toBe("fit-width");
+			expect(stripped.view.padding).toEqual({ top: 8 });
+			expect(result.warnings).toHaveLength(1);
+			expect(result.warnings[0].path).toBe("view.scroll");
+			expect(result.warnings[0].message).toContain('"page"');
+		});
+
+		it("drops a non-string scroll the same way (no value quoted)", () => {
+			const result = strip({ version: 1, view: { scroll: true }, root: [] });
+			expect((result.data as { view: object }).view).toEqual({});
+			expect(result.warnings[0].message).not.toContain('"');
+		});
+
+		it.each(["content", "infinite"])(
+			"returns the input unchanged for the known scroll mode %s",
+			(scroll) => {
+				const input = { version: 1, view: { scroll }, root: [rect("r1")] };
+				const result = strip(input);
+				expect(result.data).toBe(input);
+				expect(result.warnings).toEqual([]);
+			},
+		);
+
+		it("drops an unknown open and an unknown scroll in one pass", () => {
+			const result = strip({
+				version: 1,
+				view: { open: "fit-diagonal", scroll: "page" },
+				root: [rect("r1")],
+			});
+			expect((result.data as { view: object }).view).toEqual({});
+			expect(result.warnings.map((warning) => warning.path)).toEqual([
+				"view.open",
+				"view.scroll",
+			]);
+		});
+	});
 });

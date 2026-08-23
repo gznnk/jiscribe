@@ -28,6 +28,7 @@ import { SelectNextTextSlotCommand } from "../commands/selection/SelectNextTextS
 import { SelectPreviousTextSlotCommand } from "../commands/selection/SelectPreviousTextSlotCommand";
 import { ToggleAutoHeightCommand } from "../commands/shape/ToggleAutoHeightCommand";
 import { ToggleTextLayoutCommand } from "../commands/shape/ToggleTextLayoutCommand";
+import { ToggleTextVerticalBasisCommand } from "../commands/shape/ToggleTextVerticalBasisCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ShortcutHelpCommand } from "../commands/view/ShortcutHelpCommand";
@@ -76,6 +77,7 @@ export const ALL_COMMANDS: Command[] = [
 	// Shape commands
 	ToggleAutoHeightCommand,
 	ToggleTextLayoutCommand,
+	ToggleTextVerticalBasisCommand,
 	// Text commands
 	StartTextEditCommand,
 	// View commands

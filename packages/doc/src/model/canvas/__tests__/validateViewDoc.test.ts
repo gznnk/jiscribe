@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { validateViewDoc } from "../validateViewDoc";
-import { isViewOpenMode, resolveViewPadding } from "../ViewDoc";
+import {
+	isViewOpenMode,
+	isViewScrollMode,
+	resolveViewPadding,
+} from "../ViewDoc";
 
 const paths = (view: unknown) =>
 	validateViewDoc(view, "view").map((diagnostic) => diagnostic.path);
@@ -15,6 +19,7 @@ describe("validateViewDoc", () => {
 		const view = {
 			padding: { top: 48, right: 64, bottom: 64, left: 64 },
 			open: "fit-width",
+			scroll: "content",
 		};
 		expect(validateViewDoc(view, "view")).toEqual([]);
 	});
@@ -50,6 +55,10 @@ describe("validateViewDoc", () => {
 	it("rejects an open mode outside the known set", () => {
 		expect(paths({ open: "fit-height" })).toEqual(["view.open"]);
 	});
+
+	it("rejects a scroll mode outside the known set", () => {
+		expect(paths({ scroll: "page" })).toEqual(["view.scroll"]);
+	});
 });
 
 describe("isViewOpenMode", () => {
@@ -63,6 +72,20 @@ describe("isViewOpenMode", () => {
 		expect(isViewOpenMode("")).toBe(false);
 		expect(isViewOpenMode(undefined)).toBe(false);
 		expect(isViewOpenMode(1)).toBe(false);
+	});
+});
+
+describe("isViewScrollMode", () => {
+	it("passes exactly the known modes", () => {
+		expect(isViewScrollMode("content")).toBe(true);
+		expect(isViewScrollMode("infinite")).toBe(true);
+	});
+
+	it("rejects anything else, non-strings included", () => {
+		expect(isViewScrollMode("page")).toBe(false);
+		expect(isViewScrollMode("")).toBe(false);
+		expect(isViewScrollMode(undefined)).toBe(false);
+		expect(isViewScrollMode(1)).toBe(false);
 	});
 });
 

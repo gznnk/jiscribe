@@ -19,6 +19,7 @@ import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import { TextFormatMenu } from "./items/TextFormatMenu";
 import { TextLayoutMenu } from "./items/TextLayoutMenu";
+import { TextVerticalBasisMenu } from "./items/TextVerticalBasisMenu";
 import {
 	ObjectMenuContainer,
 	ObjectMenuSectionRow,
@@ -120,6 +121,13 @@ const renderItem = (
 			);
 		case "autoHeight":
 			return <AutoHeightMenu key="autoHeight" canvasState={canvasState} />;
+		case "textVerticalBasis":
+			return (
+				<TextVerticalBasisMenu
+					key="textVerticalBasis"
+					canvasState={canvasState}
+				/>
+			);
 		case "textLayout":
 			return <TextLayoutMenu key="textLayout" canvasState={canvasState} />;
 		case "stackOrder":

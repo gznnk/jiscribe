@@ -1,0 +1,1 @@
+export { TextVerticalBasisMenu } from "./TextVerticalBasisMenu";
