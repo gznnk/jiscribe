@@ -10,7 +10,11 @@ import {
 } from "../../text/block/textBoxPadding";
 import { calcVisualTextHeight } from "../../text/layout/calcVisualTextHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
-import { setTextWidthMeasurerFactory } from "../../text/measure/textWidthMeasurer";
+import { createEstimateTextMeasurement } from "../../text/measure/TextMeasurement";
+import {
+	offerTextMeasurement,
+	resetTextMeasurementForTests,
+} from "../../text/measure/textMeasurementSlot";
 import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
 
@@ -127,23 +131,32 @@ describe("resizing a shape that states no height", () => {
 /**
  * Counts the layout passes the block under test runs: one measurer is built per
  * styled run per pass, and every object here carries a plain-string text of one
- * run, so a pass is a derivation. The widths match the estimate the ops would
- * otherwise fall back to, so registering this changes no height.
+ * run, so a pass is a derivation. At the default ratio the widths are the ones
+ * the setup's estimate gives, so counting changes no height.
+ *
+ * Empties the slot before offering, which is the only way to swap a measurement
+ * a test has already measured under — and what makes the derived-height cache
+ * miss, its key being the adopted instance.
  *
  * @param widthRatio - Width one character is charged, as a fraction of the type size; 0.6 is the estimate's own
  */
 const countDerivations = (widthRatio = 0.6): { read: () => number } => {
 	let passes = 0;
-	setTextWidthMeasurerFactory((font: TextMeasureFont) => {
-		passes += 1;
-		return (text) => text.length * font.fontSize * widthRatio;
+	resetTextMeasurementForTests();
+	offerTextMeasurement({
+		source: "estimate",
+		createMeasurer: (font: TextMeasureFont) => {
+			passes += 1;
+			return (text) => text.length * font.fontSize * widthRatio;
+		},
 	});
 	return { read: () => passes };
 };
 
 describe("re-deriving the height of a shape that states none", () => {
 	afterEach(() => {
-		setTextWidthMeasurerFactory(null);
+		resetTextMeasurementForTests();
+		offerTextMeasurement(createEstimateTextMeasurement());
 	});
 
 	it("derives once for repeated reads of an object nothing has touched", () => {

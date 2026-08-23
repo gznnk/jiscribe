@@ -79,9 +79,10 @@ export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
 // Text measurement, which the wrapping and the box sizes both follow from. Headless
 // because it needs no DOM of its own: layoutVisualLines reproduces the display-side
 // CSS (pre-wrap + break-word) from character widths alone, and where those widths
-// come from is what setTextWidthMeasurerFactory decides — a browser measures on an
-// offscreen canvas, a Node host registers a backend reading the bundled font files
-// (@jiscribe/doc-tools), and with neither the widths fall back to an estimate.
+// come from is whatever a host offered (offerTextMeasurement) — @jiscribe/canvas
+// offers its own offscreen canvas as it is imported, @jiscribe/doc-tools offers the
+// bundled font files read through fontkit, and a host that offers neither has to
+// say so with createEstimateTextMeasurement. Measuring with nothing offered throws.
 // The height a shape with no `height` in the document is drawn at, and the box
 // its text is laid out in once the padding is off the declared region. Both are
 // headless for the same reason the measurement is.
@@ -95,8 +96,13 @@ export { layoutVisualLines } from "./text/layout/layoutVisualLines";
 export { measureTextWidth } from "./text/layout/measureTextWidth";
 export type { VisualLine } from "./text/layout/VisualLine";
 export type { TextMeasureFont } from "./text/measure/TextMeasureFont";
-export { setTextWidthMeasurerFactory } from "./text/measure/textWidthMeasurer";
+export { createEstimateTextMeasurement } from "./text/measure/TextMeasurement";
 export type {
-	TextWidthMeasurer,
-	TextWidthMeasurerFactory,
-} from "./text/measure/textWidthMeasurer";
+	TextMeasurement,
+	TextMeasurementSource,
+} from "./text/measure/TextMeasurement";
+export {
+	offerTextMeasurement,
+	resetTextMeasurementForTests,
+} from "./text/measure/textMeasurementSlot";
+export type { TextWidthMeasurer } from "./text/measure/textWidthMeasurer";

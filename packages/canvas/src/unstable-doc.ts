@@ -26,7 +26,9 @@ export {
 	calcVisualTextHeight,
 	layoutVisualLines,
 	measureTextWidth,
-	setTextWidthMeasurerFactory,
+	offerTextMeasurement,
+	createEstimateTextMeasurement,
+	resetTextMeasurementForTests,
 } from "@jiscribe/doc/unstable";
 export type {
 	DrawBounds,
@@ -36,5 +38,6 @@ export type {
 	TextMeasureFont,
 	VisualLine,
 	TextWidthMeasurer,
-	TextWidthMeasurerFactory,
+	TextMeasurement,
+	TextMeasurementSource,
 } from "@jiscribe/doc/unstable";

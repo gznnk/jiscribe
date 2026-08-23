@@ -25,6 +25,7 @@ export { diagnoseDoc } from "./diagnoseDoc";
 // A host composing its own parser takes `standardDocPlugins` from there, and validates
 // against the same types the official schema was generated from.
 
-// Only for a host driving @jiscribe/canvas measurement itself; every entry point
-// above installs the measurer before it measures.
-export { installNodeTextMeasurer } from "./measure/nodeTextMeasurer";
+// Only for a host driving the document layer's measurement itself (a Node process
+// deriving heights through its own createDocOps, say); every entry point above
+// offers this before it measures.
+export { nodeTextMeasurement } from "./measure/nodeTextMeasurer";

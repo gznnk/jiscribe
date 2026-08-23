@@ -1,5 +1,5 @@
 import type { Rect } from "@jiscribe/geometry";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectDocTextRegionCalculator } from "../../../plugin/ObjectDocTextRegion";
 import {
@@ -11,8 +11,8 @@ import {
 	FALLBACK_FONT,
 } from "../../layout/__tests__/support/fallbackFont";
 import { layoutVisualLines } from "../../layout/layoutVisualLines";
+import { measureUnder } from "../../measure/__tests__/support/measureUnder";
 import type { TextMeasureFont } from "../../measure/TextMeasureFont";
-import { setTextWidthMeasurerFactory } from "../../measure/textWidthMeasurer";
 import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "../autoHeightComfortPadding";
 import { calcAutoShapeHeight } from "../calcAutoShapeHeight";
 import { calcTextContentBox } from "../calcTextContentBox";
@@ -222,18 +222,20 @@ describe("calcAutoShapeHeight", () => {
 });
 
 describe("calcAutoShapeHeight sharing one layout between heights", () => {
-	afterEach(() => {
-		setTextWidthMeasurerFactory(null);
+	// One measurer is built per styled run per layout pass, and the text below is
+	// one run, so the count is the number of passes. The widths are the estimate's
+	// own, so counting changes no height.
+	let layoutPasses = 0;
+	measureUnder({
+		source: "estimate",
+		createMeasurer: (font: TextMeasureFont) => {
+			layoutPasses += 1;
+			return (measured) => measured.length * font.fontSize * 0.6;
+		},
 	});
 
 	it("lays the text out once where the region keeps its width", () => {
-		let layoutPasses = 0;
-		// One measurer is built per styled run per layout pass, and this text is
-		// one run, so the count is the number of passes.
-		setTextWidthMeasurerFactory((font: TextMeasureFont) => {
-			layoutPasses += 1;
-			return (measured) => measured.length * font.fontSize * 0.6;
-		});
+		layoutPasses = 0;
 		let regionCalls = 0;
 		const countedFullBox: ObjectDocTextRegionCalculator = (doc) => {
 			regionCalls += 1;

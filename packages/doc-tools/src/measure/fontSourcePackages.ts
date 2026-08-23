@@ -4,7 +4,7 @@ import { dirname } from "node:path";
 /**
  * The `@fontsource` package each family the canvas can be drawn in ships as,
  * keyed by the family name exactly as a document spells it (the quoted names of
- * `CANVAS_FONT_FAMILIES` in packages/canvas/src/constants/fontFamilies.ts). Only
+ * `CANVAS_FONT_FAMILIES` in packages/doc/src/text/style/fontFamilies.ts). Only
  * these can be measured from metrics; a document naming anything else falls back
  * to the character-count estimate.
  */

@@ -9,7 +9,7 @@ import type { TextMeasureFont } from "../measure/TextMeasureFont";
  *
  * @param text - One line; an embedded newline is measured as an ordinary character rather than starting a new line
  * @param font - Font the text is drawn with; a family other than the drawn one skews the result
- * @returns The width, or a `characters × fontSize × 0.6` estimate where neither a canvas nor a registered measurer can supply one
+ * @returns The width under the adopted measurement, which throws if the host has offered none (`offerTextMeasurement`)
  */
 export const measureTextWidth = (
 	text: RichText,

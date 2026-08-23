@@ -1,8 +1,11 @@
 import type { RichText } from "@jiscribe/doc";
 import type { TextMeasureFont } from "@jiscribe/doc/unstable";
-import { layoutVisualLines } from "@jiscribe/doc/unstable";
+import {
+	layoutVisualLines,
+	offerTextMeasurement,
+} from "@jiscribe/doc/unstable";
 
-import { installNodeTextMeasurer } from "./measure/nodeTextMeasurer";
+import { nodeTextMeasurement } from "./measure/nodeTextMeasurer";
 
 export type { TextMeasureFont };
 
@@ -37,7 +40,7 @@ export const measureWrappedText = (
 	font: TextMeasureFont,
 	availableWidth?: number,
 ): WrappedTextMetrics => {
-	installNodeTextMeasurer();
+	offerTextMeasurement(nodeTextMeasurement());
 	const visualLines = layoutVisualLines(text, font, availableWidth);
 	return {
 		lines: visualLines.length,

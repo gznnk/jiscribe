@@ -10,7 +10,8 @@ import { extractTextSlotStyleDefaults } from "../../plugin/ObjectTextStyleDefaul
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
 import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
-import { readTextWidthBackendGeneration } from "../../text/measure/textWidthMeasurer";
+import type { TextMeasurement } from "../../text/measure/TextMeasurement";
+import { adoptTextMeasurement } from "../../text/measure/textMeasurementSlot";
 import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
 import { BODY_TEXT_SLOT_ID } from "../../text/style/textSlotId";
 import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
@@ -104,14 +105,16 @@ const calcDerivationInputs = (object: ObjectRecord): string =>
  * closed for it to go.
  *
  * An entry is used only where every input it was derived under still reads the
- * same — the object's own fields, the type's definition, and the measurement
- * backend — since any of them moving moves the answer.
+ * same — the object's own fields, the type's definition, and the adopted
+ * measurement — since any of them moving moves the answer. The measurement is
+ * held by identity rather than by a version number: it is sealed for the life of
+ * the process, so this only ever misses after a test has replaced it.
  */
 const derivedHeightCache = new WeakMap<
 	ObjectRecord,
 	{
 		definition: ObjectDocDefinition;
-		backendGeneration: number;
+		measurement: TextMeasurement;
 		inputs: string;
 		height: number;
 	}
@@ -142,13 +145,13 @@ const readObjectHeight = (
 	if (definition?.textRegion === undefined || !supportsAutoHeight(definition)) {
 		return 0;
 	}
-	const backendGeneration = readTextWidthBackendGeneration();
+	const measurement = adoptTextMeasurement();
 	const inputs = calcDerivationInputs(object);
 	const cached = derivedHeightCache.get(object);
 	if (
 		cached !== undefined &&
 		cached.definition === definition &&
-		cached.backendGeneration === backendGeneration &&
+		cached.measurement === measurement &&
 		cached.inputs === inputs
 	) {
 		return cached.height;
@@ -162,7 +165,7 @@ const readObjectHeight = (
 		) ?? 0;
 	derivedHeightCache.set(object, {
 		definition,
-		backendGeneration,
+		measurement,
 		inputs,
 		height,
 	});

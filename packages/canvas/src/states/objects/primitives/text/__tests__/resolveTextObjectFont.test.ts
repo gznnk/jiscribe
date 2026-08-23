@@ -46,8 +46,8 @@ describe("resolveTextObjectFont", () => {
 
 	it("leaves an unset style unset rather than naming a default", () => {
 		// The measurement treats an absent fontStyle as "normal" itself (see
-		// createTextWidthMeasurer); naming it here too would be a second place for
-		// the two to drift apart.
+		// createRendererTextMeasurement); naming it here too would be a second place
+		// for the two to drift apart.
 		expect(resolveTextObjectFont({}).fontStyle).toBeUndefined();
 		expect(resolveTextObjectFont({ fontStyle: "italic" }).fontStyle).toBe(
 			"italic",

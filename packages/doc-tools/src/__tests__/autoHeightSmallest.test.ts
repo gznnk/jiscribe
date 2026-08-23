@@ -7,12 +7,13 @@ import {
 	calcTextContentBox,
 	DEFAULT_FONT_FAMILY,
 	layoutVisualLines,
+	offerTextMeasurement,
 	TEXT_STYLE_FALLBACK,
 } from "@jiscribe/doc/unstable";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { describe, expect, it } from "vitest";
 
-import { installNodeTextMeasurer } from "../measure/nodeTextMeasurer";
+import { nodeTextMeasurement } from "../measure/nodeTextMeasurer";
 
 /** The font a body with no styling of its own is drawn with. */
 const bodyFont = (fontSize: number): TextMeasureFont => ({
@@ -106,7 +107,7 @@ describe("the derived height of every shipped type that may leave it out", () =>
 	it.each(autoHeightTypes)(
 		"is the shortest height holding the text, walked one pixel at a time: $type",
 		({ definition }) => {
-			installNodeTextMeasurer();
+			offerTextMeasurement(nodeTextMeasurement());
 			let checkedExhaustively = 0;
 			for (const { name, text } of MATRIX_TEXTS) {
 				for (const width of [120, 240, 400]) {

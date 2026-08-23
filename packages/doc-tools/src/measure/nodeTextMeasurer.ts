@@ -1,9 +1,9 @@
 import type {
 	TextMeasureFont,
+	TextMeasurement,
 	TextWidthMeasurer,
-	TextWidthMeasurerFactory,
 } from "@jiscribe/doc/unstable";
-import { setTextWidthMeasurerFactory } from "@jiscribe/doc/unstable";
+import { createEstimateTextMeasurement } from "@jiscribe/doc/unstable";
 import * as fontkit from "fontkit";
 
 import { getFontFaceIndex } from "./fontFaceIndex";
@@ -11,9 +11,9 @@ import { parseFontStack } from "./fontSourcePackages";
 import { calcPunctuationTrimEm } from "./punctuationTrim";
 
 /**
- * Width a character of an unmeasurable family is assumed to take, as a fraction
- * of the type size. The same ratio the canvas falls back to, repeated here so a
- * string mixing measurable and unmeasurable characters stays one measurement
+ * Width a character no shipped family covers is assumed to take, as a fraction of
+ * the type size. The same ratio `createEstimateTextMeasurement` charges, repeated
+ * here so a string mixing covered and uncovered characters stays one measurement
  * rather than two.
  */
 const FALLBACK_CHAR_WIDTH_RATIO = 0.6;
@@ -119,37 +119,37 @@ const measureWithFontStack = (
 	return total - calcPunctuationTrimEm(text) * font.fontSize;
 };
 
+/** What a font stack naming no shipped family falls back to, built once. */
+const estimateMeasurement = createEstimateTextMeasurement();
+
 /**
- * Builds a measurer for one font, or returns null for a font stack naming no
- * family the canvas ships — which leaves that font to the canvas's own estimate
- * rather than measuring it against a face it is not drawn in.
+ * The measurement itself, built once: the slot holds an offer by identity, so an
+ * entry point offering it on every call must offer the same object every time.
  */
-const nodeTextWidthMeasurerFactory: TextWidthMeasurerFactory = (
-	font: TextMeasureFont,
-): TextWidthMeasurer | null => {
-	const families = parseFontStack(font.fontFamily);
-	if (families.length === 0) {
-		return null;
-	}
-	return (text) => measureWithFontStack(text, font, families);
+const measurement: TextMeasurement = {
+	source: "font-metrics",
+	createMeasurer: (font: TextMeasureFont): TextWidthMeasurer => {
+		const families = parseFontStack(font.fontFamily);
+		if (families.length === 0) {
+			// A stack naming nothing the canvas ships is estimated rather than
+			// measured against a face it is not drawn in.
+			return estimateMeasurement.createMeasurer(font);
+		}
+		return (text) => measureWithFontStack(text, font, families);
+	},
 };
 
-let installed = false;
-
 /**
- * Points the canvas's text measurement at the font files this package depends on,
- * so line breaking and box sizes come out as they do in a browser rather than
- * from the character-count estimate a host without a canvas falls back to
- * (`setTextWidthMeasurerFactory`).
+ * Text measurement read from the font files this package depends on, for a Node
+ * host to offer (`offerTextMeasurement`) so that line breaking and box sizes come
+ * out as they do in a browser rather than from a character-count estimate.
  *
- * Every entry point of this package calls it before measuring, so a caller only
- * needs it when driving `@jiscribe/canvas` measurement directly. Idempotent, and
- * process-wide: there is one canvas measurement backend, not one per document.
+ * Every entry point of this package offers it before measuring, so a caller needs
+ * it only when driving the document layer's measurement directly — a host that
+ * builds its own `createDocOps` and lets it derive heights, say. Offering it in a
+ * process where `@jiscribe/canvas` is drawing is harmless: the canvas measures
+ * itself, which outranks this, so the offer is declined.
+ *
+ * @returns The one instance, on every call; re-offering it is a no-op precisely because it is the same object
  */
-export const installNodeTextMeasurer = (): void => {
-	if (installed) {
-		return;
-	}
-	setTextWidthMeasurerFactory(nodeTextWidthMeasurerFactory);
-	installed = true;
-};
+export const nodeTextMeasurement = (): TextMeasurement => measurement;

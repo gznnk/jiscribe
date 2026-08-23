@@ -144,13 +144,13 @@ const wrapLine = (
  *
  * In a browser, measurement runs on an offscreen canvas, so this can be called
  * every frame; the result matches the drawing only while the drawn font matches
- * `font`. Elsewhere it goes through whichever backend is registered
- * (createTextWidthMeasurer).
+ * `font`. Elsewhere it goes through whichever implementation the host offered
+ * (`offerTextMeasurement`).
  *
  * @param text - The whole text, authored newlines included; an empty string yields one line, as does each empty line
  * @param font - Font the slot is drawn with, which each run overrides only where it sets a field; a family other than the drawn one moves where lines break
  * @param availableWidth - Content width the text wraps in (box width minus its horizontal padding and border), in local pixels; anything below 1 is treated as 1, and `undefined` lays the text out as authored, breaking only at newlines
- * @returns One entry per drawn line, top to bottom, never empty. With neither a canvas nor a registered measurer the widths are estimated (see measureTextWidth), so they are proportional rather than faithful
+ * @returns One entry per drawn line, top to bottom, never empty. Under an estimating measurement the widths are proportional rather than faithful, so the line count is indicative and the line boxes are not
  */
 export const layoutVisualLines = (
 	text: RichText,

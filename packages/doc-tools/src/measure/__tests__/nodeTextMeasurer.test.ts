@@ -1,7 +1,10 @@
-import { layoutVisualLines } from "@jiscribe/doc/unstable";
+import {
+	layoutVisualLines,
+	offerTextMeasurement,
+} from "@jiscribe/doc/unstable";
 import { describe, expect, it } from "vitest";
 
-import { installNodeTextMeasurer } from "../nodeTextMeasurer";
+import { nodeTextMeasurement } from "../nodeTextMeasurer";
 
 /** The stack a document that names no family is drawn with (fontFamilies.ts `sans`). */
 const SANS_STACK = '"Source Sans 3", "Noto Sans JP", sans-serif';
@@ -12,11 +15,11 @@ const measureWidth = (
 	fontFamily = SANS_STACK,
 	fontWeight = "normal",
 ): number => {
-	installNodeTextMeasurer();
+	offerTextMeasurement(nodeTextMeasurement());
 	return layoutVisualLines(text, { fontSize, fontFamily, fontWeight })[0].width;
 };
 
-describe("installNodeTextMeasurer", () => {
+describe("nodeTextMeasurement", () => {
 	it("measures Latin text from Source Sans 3 rather than the 0.6em estimate", () => {
 		// "Hello" at 16px: 35.2px off the shipped face, where the estimate says 48.
 		expect(measureWidth("Hello", 16)).toBeCloseTo(35.2, 1);

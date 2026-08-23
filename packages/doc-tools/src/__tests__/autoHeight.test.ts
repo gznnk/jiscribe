@@ -4,6 +4,7 @@ import {
 	AUTO_HEIGHT_COMFORT_PADDING_EM,
 	calcAutoShapeHeight,
 	DEFAULT_FONT_FAMILY,
+	offerTextMeasurement,
 	TEXT_STYLE_FALLBACK,
 	type TextMeasureFont,
 } from "@jiscribe/doc/unstable";
@@ -11,7 +12,7 @@ import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { describe, expect, it } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";
-import { installNodeTextMeasurer } from "../measure/nodeTextMeasurer";
+import { nodeTextMeasurement } from "../measure/nodeTextMeasurer";
 import { validateDoc } from "../validateDoc";
 
 /** A shipped shape with no `height`, as a one-object document's text. */
@@ -33,7 +34,7 @@ const deriveHeight = (
 	text: string,
 	fontSize: number,
 ): number => {
-	installNodeTextMeasurer();
+	offerTextMeasurement(nodeTextMeasurement());
 	const textRegion = standardObjectDocDefinitions.get(type)?.textRegion;
 	const height = calcAutoShapeHeight(
 		{ width, height: 0 },

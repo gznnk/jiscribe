@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { setTextWidthMeasurerFactory } from "../../measure/textWidthMeasurer";
+import { measureUnder } from "../../measure/__tests__/support/measureUnder";
 import { layoutVisualLines } from "../layoutVisualLines";
 import { TEXT_LINE_HEIGHT } from "../textLineHeight";
 import { FALLBACK_CHAR_WIDTH, FALLBACK_FONT } from "./support/fallbackFont";
@@ -90,12 +90,12 @@ describe("layoutVisualLines", () => {
 });
 
 describe("layoutVisualLines with punctuation the font tucks", () => {
-	afterEach(() => {
-		setTextWidthMeasurerFactory(null);
+	measureUnder({
+		source: "estimate",
+		createMeasurer: () => measureWithTuckedPunctuation,
 	});
 
 	it("keeps a line that fits when measured whole on one line", () => {
-		setTextWidthMeasurerFactory(() => measureWithTuckedPunctuation);
 		// Two tucked pairs (、「 and 」。), so the line measures 36 whole against
 		// the 42 its seven characters add up to one at a time.
 		const text = "あ、「い」。う";
@@ -111,8 +111,6 @@ describe("layoutVisualLines with punctuation the font tucks", () => {
 	});
 
 	it("still breaks the line the tucks do not save", () => {
-		setTextWidthMeasurerFactory(() => measureWithTuckedPunctuation);
-
 		expect(
 			layoutVisualLines("あ、「い」。う", FALLBACK_FONT, 35).map(
 				(line) => line.width,

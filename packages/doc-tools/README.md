@@ -30,24 +30,25 @@ disagree, which is why both take it from `@jiscribe/standard-shapes/doc`.
 
 ## Measurement in Node
 
-The canvas measures text on an offscreen canvas and, without one, falls back to
-`characters × fontSize × 0.6` — an estimate that gets line breaking wrong by a
-wide margin for Japanese. This package installs a third backend through
-`setTextWidthMeasurerFactory`: it reads the very `.woff` files
-`@jiscribe/canvas` ships to the browser (`@fontsource/*`) and takes advances off
-them with fontkit.
+The document layer measures through whichever implementation a host has offered
+(`offerTextMeasurement`), and measuring with none offered throws rather than
+guessing. In a browser `@jiscribe/canvas` offers its own offscreen canvas; the
+only other candidate is `characters × fontSize × 0.6`, an estimate that gets line
+breaking wrong by a wide margin for Japanese. This package supplies the middle
+one, `nodeTextMeasurement()`: it reads the very `.woff` files `@jiscribe/canvas`
+ships to the browser (`@fontsource/*`) and takes advances off them with fontkit.
 
 - Fontsource splits a family into per-`unicode-range` subsets — 125 of them for
   Noto Sans JP — so `fontFaceIndex.ts` parses the `@font-face` stylesheet once and
   loads only the subsets a text actually reaches.
 - A string is split into maximal stretches drawn from one file, and each stretch
   is laid out whole, so kerning and substitutions apply as they do in a browser.
-- A family the canvas does not ship is left to the canvas's own estimate. A
+- A family the canvas does not ship is charged the 0.6em estimate instead. A
   diagnosis of such a document is approximate, and says so.
 
-Installing is idempotent and process-wide; every entry point here does it before
-measuring. **A browser is unaffected** — nothing registers a factory there, so
-the canvas keeps measuring exactly as it did.
+Offering is idempotent and process-wide; every entry point here does it before
+measuring. **A browser is unaffected** — the canvas's own measurement outranks
+this one, so an offer made in a process that draws is declined.
 
 ## Where the content box comes from
 

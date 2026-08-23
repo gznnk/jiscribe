@@ -1,7 +1,10 @@
-import { layoutVisualLines } from "@jiscribe/doc/unstable";
+import {
+	layoutVisualLines,
+	offerTextMeasurement,
+} from "@jiscribe/doc/unstable";
 import { describe, expect, it } from "vitest";
 
-import { installNodeTextMeasurer } from "../nodeTextMeasurer";
+import { nodeTextMeasurement } from "../nodeTextMeasurer";
 import { calcPunctuationTrimEm } from "../punctuationTrim";
 import fixture from "./fixtures/chromiumTextWidths.json" with { type: "json" };
 
@@ -38,7 +41,7 @@ const measureWidth = (
 	})[0].width;
 
 describe("text-spacing-trim parity with Chromium", () => {
-	installNodeTextMeasurer();
+	offerTextMeasurement(nodeTextMeasurement());
 
 	it.each(fixture.cases)(
 		"measures $group $text at $fontSize px $fontWeight as Chromium does",

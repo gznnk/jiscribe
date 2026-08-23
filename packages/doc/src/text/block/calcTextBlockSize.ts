@@ -25,7 +25,7 @@ export const TEXT_BLOCK_MIN_WIDTH = 16;
  *
  * @param text - The whole text, authored newlines included; an empty string sizes one empty line, as does each empty line
  * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one skews the width
- * @returns The box size including padding. Outside a browser the width comes from the estimate measureTextWidth falls back to, so only the height is faithful
+ * @returns The box size including padding. Under an estimating measurement only the height is faithful, the width being proportional
  */
 export const calcTextBlockSize = (
 	text: RichText,

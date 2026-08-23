@@ -3,8 +3,8 @@ import { TEXT_LINE_HEIGHT } from "./textLineHeight";
 import type { RichText, TextRun } from "../../model/objects/types/RichText";
 import { richTextToPlain } from "../../model/objects/types/RichText";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";
+import { adoptTextMeasurement } from "../measure/textMeasurementSlot";
 import type { TextWidthMeasurer } from "../measure/textWidthMeasurer";
-import { createTextWidthMeasurer } from "../measure/textWidthMeasurer";
 
 // The flattened text addressed by offset: the stretches its authored lines
 // occupy, and measuring an arbitrary stretch under the runs it falls in. Internal
@@ -152,15 +152,14 @@ const toStyledSegments = (
 ): StyledSegment[] =>
 	toStyledRanges(text, base).map((range) => ({
 		...range,
-		measureWidth: createTextWidthMeasurer(range.font),
+		measureWidth: adoptTextMeasurement().createMeasurer(range.font),
 	}));
 
 /**
  * Measures pieces of one text by offset, each piece under the font of the run it
- * falls in. Built once per layout pass, and the shared context remembers the font
- * it was given, so a piece re-parses the shorthand only where it crosses into a
- * run drawn with another font — an unstyled text parses it once however many
- * pieces are measured.
+ * falls in. One measurer is built per run per layout pass, which is what lets the
+ * adopted measurement do its per-font work (resolving a face, parsing a CSS
+ * shorthand) once for however many pieces of that run are measured.
  */
 export type OffsetMeasurer = {
 	/** Rendered width of `[start, end)`, summed over the runs it spans. */
