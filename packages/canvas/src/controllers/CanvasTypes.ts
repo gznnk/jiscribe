@@ -110,7 +110,7 @@ export type AxisLockFeedback = {
  */
 export type DocSnapshotSource = Pick<
 	CanvasState,
-	"objects" | "rootIds" | "background"
+	"objects" | "rootIds" | "background" | "view"
 >;
 
 /**

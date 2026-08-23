@@ -85,6 +85,14 @@ export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
 export type { Camera, Viewport } from "./states/canvas/Viewport";
 export type { ScrollBoundsConfig } from "./controllers/CanvasTypes";
 export type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+// A UI consumer reads `view` to decide whether to pass a camera of its own
+// (`initialConfig.viewport` overrules `view.open`), so the types belong here
+// alongside CanvasDoc rather than only on the headless entry.
+export type {
+	ViewDoc,
+	ViewOpenMode,
+	ViewPaddingDoc,
+} from "@jiscribe/doc/model/canvas/ViewDoc";
 // Headless parse/build API. `createCanvasParser` and the doc-ops live on the
 // `./doc` entry (UI-free); the root carries only the result types, so a UI consumer
 // can type a parse result without importing the parser factory itself.

@@ -26,6 +26,9 @@ import {
  *
  * The mount render establishes the baseline (the doc-derived initial camera)
  * and does not notify; the host assumes the initial view until the first change.
+ * A document's `view.open` is not part of that baseline: it needs the container
+ * measured, so useInitialViewOpen applies it in a commit of its own (still before
+ * the first paint), and the host is told about that framing as a change.
  *
  * @param viewport - The current viewport (only its camera is observed)
  * @param onViewportChange - Callback invoked with the new camera on change

@@ -1,5 +1,6 @@
 import { isArray, isObject, isString } from "@jiscribe/basic-validators";
 
+import { validateViewDoc } from "../model/canvas/validateViewDoc";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorRegistry";
 
@@ -119,6 +120,12 @@ export function validateStructure(
 	// omitted means "follow the theme background" (see CanvasDoc.background).
 	if (d.background !== undefined && !isString(d.background)) {
 		errors.push({ path: "background", message: "must be a string" });
+	}
+
+	// Optional display declaration; omitted means "frame it however the host would"
+	// (see CanvasDoc.view).
+	if (d.view !== undefined) {
+		errors.push(...validateViewDoc(d.view, "view"));
 	}
 
 	if (!isArray(d.root)) {

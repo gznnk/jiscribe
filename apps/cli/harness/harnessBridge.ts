@@ -12,8 +12,12 @@ export type HarnessRenderRequest = {
 	format: "png" | "svg";
 	/** `content` fits the drawing, `viewport` takes the harness's own 1280x800 view. */
 	region: "content" | "viewport";
-	/** Margin in world px kept around the drawing; ignored by the `viewport` region. */
-	margin: number;
+	/**
+	 * Margin in world px kept around the drawing; ignored by the `viewport`
+	 * region. Left out when the document declares a `view.padding` of its own,
+	 * which the canvas then frames the image with instead.
+	 */
+	margin?: number;
 	/** Output pixels per logical px. PNG only; an SVG has no raster to scale. */
 	scale: number;
 	/** Whether to leave the background unpainted, producing an alpha-transparent image. */

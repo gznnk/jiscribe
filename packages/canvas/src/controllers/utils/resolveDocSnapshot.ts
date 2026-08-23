@@ -13,6 +13,7 @@ export const createDocSnapshotFromState = (
 		objects: source.objects,
 		rootIds: source.rootIds,
 		background: source.background,
+		view: source.view,
 	},
 });
 

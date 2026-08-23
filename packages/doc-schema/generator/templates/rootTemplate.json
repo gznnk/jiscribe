@@ -20,6 +20,45 @@
 			"description": "Canvas surface color as a literal CSS color string (a concrete color, not a var(...), so the file stays portable). Omit to follow the theme background. When set it is the surface for both display and image export, and the grid line color is derived from it.",
 			"type": "string"
 		},
+		"view": {
+			"description": "Display declaration: how much empty space belongs around the drawing, and how the view is framed when the document is opened. Presentation only — objects may sit outside the padding, editing is not constrained by it, and it does not limit scrolling. Omit it entirely to leave the framing to whatever opens the document.",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"padding": {
+					"description": "Empty space in world px kept outside the content on each side. Each side is optional and defaults to 0. This is the margin of rendered and exported images, and the box the initial view is fitted to — declare it here instead of baking the margin into object coordinates.",
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"top": {
+							"description": "Space above the content's top edge. Default: 0",
+							"type": "number",
+							"minimum": 0
+						},
+						"right": {
+							"description": "Space right of the content's right edge. Default: 0",
+							"type": "number",
+							"minimum": 0
+						},
+						"bottom": {
+							"description": "Space below the content's bottom edge. Default: 0",
+							"type": "number",
+							"minimum": 0
+						},
+						"left": {
+							"description": "Space left of the content's left edge. Default: 0",
+							"type": "number",
+							"minimum": 0
+						}
+					}
+				},
+				"open": {
+					"description": "How to frame the view when the document is opened. Both modes fit the content bounds grown by 'padding'; the axis that is not fitted starts at that axis's start edge. \"fit-width\" fits the width and starts at the top (a document read top to bottom); \"fit-all\" fits the whole drawing and centers it (a diagram taken in at a glance). Omit it to leave the framing alone. It is an intent, not a command: a host that sets its own camera wins, and the zoom is clamped to the canvas's own range.",
+					"type": "string",
+					"enum": ["fit-width", "fit-all"]
+				}
+			}
+		},
 		"root": {
 			"description": "All objects on the canvas (shapes, polylines, groups, connectors) in z-order (back to front). Connectors are mixed in among the objects; array order is the stacking order.",
 			"type": "array",

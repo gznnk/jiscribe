@@ -113,6 +113,10 @@ export type CanvasConfig = CanvasCapabilities & {
 	 * Initial camera (pan + zoom) applied once at mount, so the first paint lands
 	 * at the host's view (restore a saved view, …) instead of the doc default. To
 	 * move the view after mount, use `ref.current.viewport.setViewport` — not this.
+	 *
+	 * Setting it also suppresses the document's own `view.open` framing, which is
+	 * why a host with nothing better than a default should leave it out rather than
+	 * pass one: omitted, the document decides; set, it does not get to.
 	 */
 	viewport?: Camera;
 	/**

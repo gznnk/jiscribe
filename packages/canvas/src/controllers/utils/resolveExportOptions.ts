@@ -1,3 +1,5 @@
+import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
+import { resolveViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
 import { convertRectToBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Rect } from "@jiscribe/geometry";
 
@@ -11,9 +13,11 @@ import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 
 /**
- * Default margin (world px) kept around the content in exported images. Also
- * absorbs extents the content bounds do not account for (stroke widths, arrow
- * heads). The export dialog and {@link CanvasExportOptions} can override it.
+ * Fallback margin (world px) kept around the content in exported images, used
+ * where neither the caller nor the document says otherwise. Also absorbs extents
+ * the content bounds do not account for (stroke widths, arrow heads). A
+ * document's `view.padding`, the export dialog and {@link CanvasExportOptions}
+ * all take precedence over it.
  */
 export const EXPORT_FIT_PADDING = 16;
 
@@ -43,9 +47,10 @@ export type CanvasExportOptions = {
 	 */
 	region?: CanvasExportRegion;
 	/**
-	 * Margin (world px) kept around the content, replacing the default (16).
-	 * Only applies to the regions derived from objects (`"content"`, `{ ids }`);
-	 * a region given as a rect or as the viewport is taken exactly.
+	 * Margin (world px) kept around the content, on every side, replacing both the
+	 * document's `view.padding` and the default (16). Only applies to the regions
+	 * derived from objects (`"content"`, `{ ids }`); a region given as a rect or as
+	 * the viewport is taken exactly.
 	 */
 	margin?: number;
 	/**
@@ -68,12 +73,28 @@ export type CanvasExportOptions = {
 export type CanvasPngExportOptions = CanvasExportOptions &
 	Pick<RasterizeSvgOptions, "scale" | "maxPixelSize">;
 
+/** No margin at all, for the regions given exactly (rect / viewport). */
+const NO_MARGIN: ResolvedViewPadding = {
+	top: 0,
+	right: 0,
+	bottom: 0,
+	left: 0,
+};
+
+/** The same margin on all four sides, as an explicit `margin` option asks for. */
+const uniformMargin = (margin: number): ResolvedViewPadding => ({
+	top: margin,
+	right: margin,
+	bottom: margin,
+	left: margin,
+});
+
 /** The bounds an export region resolves to, with the margin that still applies to it. */
 type ResolvedExportRegion = {
 	/** Null only for an object-derived region that matched nothing to measure. */
 	bounds: BoundingBox | null;
-	/** The requested margin, or 0 for a region given exactly (rect / viewport). */
-	margin: number;
+	/** The requested margin, or zero on every side for a region given exactly (rect / viewport). */
+	margin: ResolvedViewPadding;
 };
 
 /** Resolves a {@link CanvasExportRegion} against the state it is measured in. */
@@ -81,7 +102,7 @@ const resolveExportRegion = (
 	state: Pick<CanvasState, "objects" | "viewport">,
 	visualBounds: Pick<ObjectVisualBoundsRegistry, "get"> | null | undefined,
 	region: CanvasExportRegion,
-	margin: number,
+	margin: ResolvedViewPadding,
 ): ResolvedExportRegion => {
 	if (region === "content") {
 		return { bounds: calcContentBounds(state.objects, visualBounds), margin };
@@ -89,7 +110,7 @@ const resolveExportRegion = (
 	if (region === "viewport") {
 		return {
 			bounds: convertRectToBoundingBox(calcVisibleWorldRect(state.viewport)),
-			margin: 0,
+			margin: NO_MARGIN,
 		};
 	}
 	if ("ids" in region) {
@@ -98,7 +119,7 @@ const resolveExportRegion = (
 			margin,
 		};
 	}
-	return { bounds: convertRectToBoundingBox(region), margin: 0 };
+	return { bounds: convertRectToBoundingBox(region), margin: NO_MARGIN };
 };
 
 /**
@@ -108,13 +129,18 @@ const resolveExportRegion = (
  * measure — an empty canvas, ids that are all missing — falls back to exporting
  * the current view.
  *
+ * The margin comes from the first of these that is set: the caller's `margin`
+ * (uniform), the document's `view.padding` (per side), the 16px default. So an
+ * image gets the framing the document declared unless whoever asked for it named
+ * a margin of their own.
+ *
  * The single seam the two export entries share: the imperative handle
  * (`ref.current.export`) and the export dialog's submit both build their
  * `BuildExportSvgOptions` here, so an image is the same image however it was
  * asked for.
  *
- * @param state - The objects to export, their z-order, and the camera a
- *   `"viewport"` region is read from
+ * @param state - The objects to export, their z-order, the camera a `"viewport"`
+ *   region is read from, and the `view` whose padding frames a content region
  * @param objectMapper - Per-canvas ObjectMapperRegistry, used to serialize the
  *   embedded `.jis.json` source
  * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; without it the
@@ -123,24 +149,39 @@ const resolveExportRegion = (
  * @param options - Region / margin / source embedding / background overrides
  */
 export const resolveExportOptions = (
-	state: Pick<CanvasState, "objects" | "rootIds" | "viewport">,
+	state: Pick<CanvasState, "objects" | "rootIds" | "viewport" | "view">,
 	objectMapper: ObjectMapperRegistry,
 	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
 	{
 		region = "content",
-		margin = EXPORT_FIT_PADDING,
+		margin,
 		includeSource = true,
 		transparentBackground = false,
 	}: CanvasExportOptions = {},
 ): BuildExportSvgOptions => {
-	const resolved = resolveExportRegion(state, visualBounds, region, margin);
+	const requestedMargin =
+		margin !== undefined
+			? uniformMargin(margin)
+			: state.view?.padding !== undefined
+				? resolveViewPadding(state.view.padding)
+				: uniformMargin(EXPORT_FIT_PADDING);
+	const resolved = resolveExportRegion(
+		state,
+		visualBounds,
+		region,
+		requestedMargin,
+	);
 	const bounds = resolved.bounds;
 	const appliedMargin = resolved.margin;
 	// Content that is only a horizontal or vertical line degenerates to zero width or height,
 	// and with margin 0 the viewBox would collapse and export an empty image. Guarantee at
 	// least 1 world px, centering the content in the band it gains.
-	const rawWidth = bounds ? bounds.right - bounds.left + appliedMargin * 2 : 0;
-	const rawHeight = bounds ? bounds.bottom - bounds.top + appliedMargin * 2 : 0;
+	const rawWidth = bounds
+		? bounds.right - bounds.left + appliedMargin.left + appliedMargin.right
+		: 0;
+	const rawHeight = bounds
+		? bounds.bottom - bounds.top + appliedMargin.top + appliedMargin.bottom
+		: 0;
 	const width = Math.max(rawWidth, 1);
 	const height = Math.max(rawHeight, 1);
 	return {
@@ -150,8 +191,8 @@ export const resolveExportOptions = (
 		background: transparentBackground ? "transparent" : undefined,
 		viewBox: bounds
 			? {
-					x: bounds.left - appliedMargin - (width - rawWidth) / 2,
-					y: bounds.top - appliedMargin - (height - rawHeight) / 2,
+					x: bounds.left - appliedMargin.left - (width - rawWidth) / 2,
+					y: bounds.top - appliedMargin.top - (height - rawHeight) / 2,
 					width,
 					height,
 				}

@@ -25,7 +25,8 @@ export type RenderOptions = {
 };
 
 /**
- * Margin in world px kept around the drawing by `--region content`.
+ * Margin in world px kept around the drawing by `--region content`, for
+ * documents that declare no `view.padding` of their own.
  *
  * Wider than the canvas's own export default (16), because a rendered file is
  * looked at on its own rather than inside an editor: the drawing needs room to

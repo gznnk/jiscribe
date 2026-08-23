@@ -112,7 +112,13 @@ export const renderDoc = async (
 			doc: docToDraw,
 			format: options.format,
 			region: options.region === "content" ? "content" : "viewport",
-			margin: RENDER_CONTENT_MARGIN,
+			// The CLI's own margin is only a fallback: a document that declares
+			// view.padding has already said how it wants to be framed, and naming a
+			// margin here would silently overrule it.
+			margin:
+				docToDraw.view?.padding === undefined
+					? RENDER_CONTENT_MARGIN
+					: undefined,
 			scale: options.scale,
 			transparentBackground: transparent,
 			includeSource: true,

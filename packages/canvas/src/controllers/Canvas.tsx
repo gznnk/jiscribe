@@ -37,6 +37,7 @@ import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
 import { useExportDialog } from "./hooks/useExportDialog";
 import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
+import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
@@ -271,6 +272,11 @@ type CanvasProps = {
 	 * create/handle (plugin-style extensibility and feature-gating), independently
 	 * of any other `<Canvas>` on the page. Omit for the full default set.
 	 *
+	 * **`viewport` outranks the document.** A doc that declares `view.open` frames
+	 * itself on open; passing a camera here overrules it. So pass one only when the
+	 * host genuinely knows better — a restored session, a deep link — and leave it
+	 * out on a first open, where the document's own intent is the better answer.
+	 *
 	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
 	 * whose object types remain enabled — otherwise state construction throws
 	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
@@ -408,6 +414,18 @@ const CanvasComponent = ({
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
 	useContainerResize(canvasRef, dispatch);
+
+	// The document's own framing intent, applied only where the host expressed
+	// none: `initialConfig.viewport` is a camera the host already decided on, and
+	// it outranks whatever the document would have asked for.
+	useInitialViewOpen({
+		view: initialConfig?.viewport === undefined ? state.view : undefined,
+		containerRef: canvasRef,
+		viewportSize: state.viewport,
+		objects: state.objects,
+		visualBounds: registries.objectVisualBounds,
+		dispatch,
+	});
 
 	const handlePaste = useClipboardPaste(
 		state.internalClipboard,

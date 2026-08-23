@@ -324,6 +324,19 @@ describe("stripUnknownContent", () => {
 			expect(strip(input).data).toBe(input);
 		});
 
+		it("drops an unknown textVerticalBasis, leaving the body on its region", () => {
+			const result = strip(doc([rect("r1", { textVerticalBasis: "outline" })]));
+			const stripped = rootObject(result);
+			expect("textVerticalBasis" in stripped).toBe(false);
+			expect(result.warnings[0].path).toBe("root[0].textVerticalBasis");
+			expect(result.warnings[0].message).toContain('"outline"');
+		});
+
+		it("keeps the frame basis, which is a known one", () => {
+			const input = doc([rect("r1", { textVerticalBasis: "frame" })]);
+			expect(strip(input).data).toBe(input);
+		});
+
 		it("returns the input unchanged when every enum value is valid", () => {
 			const input = doc([
 				rect("r1", { strokeDashType: "dashed", textAlign: "center" }),
@@ -331,6 +344,50 @@ describe("stripUnknownContent", () => {
 			const result = strip(input);
 			expect(result.data).toBe(input);
 			expect(result.warnings).toEqual([]);
+		});
+	});
+
+	describe("view.open", () => {
+		it("drops an unknown open mode with a warning, keeping the rest of view", () => {
+			const result = strip({
+				version: 1,
+				view: { padding: { top: 8 }, open: "fit-diagonal" },
+				root: [rect("r1")],
+			});
+			const stripped = result.data as { view: Record<string, unknown> };
+			expect("open" in stripped.view).toBe(false);
+			expect(stripped.view.padding).toEqual({ top: 8 });
+			expect(result.warnings).toHaveLength(1);
+			expect(result.warnings[0].path).toBe("view.open");
+			expect(result.warnings[0].message).toContain('"fit-diagonal"');
+		});
+
+		it("drops a non-string open the same way (no value quoted)", () => {
+			const result = strip({ version: 1, view: { open: 3 }, root: [] });
+			expect((result.data as { view: object }).view).toEqual({});
+			expect(result.warnings[0].message).not.toContain('"');
+		});
+
+		it("returns the input unchanged for a known open mode", () => {
+			const input = {
+				version: 1,
+				view: { open: "fit-width" },
+				root: [rect("r1")],
+			};
+			const result = strip(input);
+			expect(result.data).toBe(input);
+			expect(result.warnings).toEqual([]);
+		});
+
+		it("keeps a view stripped of its open when a root object is also removed", () => {
+			const result = strip({
+				version: 1,
+				view: { open: "nope" },
+				root: [rect("r1"), unknownShape("u1")],
+			});
+			expect((result.data as { view: object }).view).toEqual({});
+			expect(rootIds(result.data)).toEqual(["r1"]);
+			expect(result.warnings).toHaveLength(2);
 		});
 	});
 });

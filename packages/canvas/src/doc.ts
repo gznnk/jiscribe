@@ -28,6 +28,8 @@ export {
 	sliceRichText,
 	styleRichTextRange,
 	TEXT_INLINE_STYLE_KEYS,
+	isViewOpenMode,
+	resolveViewPadding,
 	createCanvasParser,
 	builtinObjectDocDefinitions,
 	createDocOps,
@@ -35,6 +37,10 @@ export {
 } from "@jiscribe/doc";
 export type {
 	CanvasDoc,
+	ViewDoc,
+	ViewOpenMode,
+	ViewPaddingDoc,
+	ResolvedViewPadding,
 	ObjectDoc,
 	ObjectType,
 	ObjectFeatures,

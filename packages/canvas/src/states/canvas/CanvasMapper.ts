@@ -107,17 +107,19 @@ export const canvasToState = (
 			zoom: 1,
 		},
 		background: doc.background,
+		view: doc.view,
 	};
 };
 
 /**
  * Converts CanvasState (flat structure) to CanvasDoc (tree structure).
  * This reconstructs the tree for serialization/storage.
- * Only the object map, root order, and surface background are read, so any
- * state carrying those fields (e.g. a DocSnapshot source) can be converted.
+ * Only the object map, root order, surface background and display declaration
+ * are read, so any state carrying those fields (e.g. a DocSnapshot source) can
+ * be converted.
  */
 export const canvasToDoc = (
-	state: Pick<CanvasState, "objects" | "rootIds" | "background">,
+	state: Pick<CanvasState, "objects" | "rootIds" | "background" | "view">,
 	mapper: ObjectMapperRegistry,
 ): CanvasDoc => {
 	// Helper to reconstruct an object tree from an ID.
@@ -148,6 +150,9 @@ export const canvasToDoc = (
 		// Only emitted when set, so a doc that never had a background round-trips
 		// byte-identically (absent = follow theme).
 		...(state.background !== undefined ? { background: state.background } : {}),
+		// Same rule as background: a doc that never declared a view round-trips
+		// byte-identically.
+		...(state.view !== undefined ? { view: state.view } : {}),
 		// root is a single array mixing objects and connectors in z-order.
 		root: state.rootIds.map((id) => reconstructObject(id)),
 	};

@@ -172,6 +172,40 @@ describe("CanvasMapper", () => {
 			);
 			expect("background" in roundTripped).toBe(false);
 		});
+
+		it("carries a doc-authored view through the round trip", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				view: { padding: { top: 48, left: 64 }, open: "fit-width" },
+				root: [createRectDoc("rect-1")],
+			} as unknown as CanvasDoc;
+
+			const state = canvasToState(
+				doc,
+				objectMapperRegistry,
+				contentResizerRegistry,
+			);
+			expect(state.view).toEqual({
+				padding: { top: 48, left: 64 },
+				open: "fit-width",
+			});
+
+			const roundTripped = canvasToDoc(state, objectMapperRegistry);
+			expect(roundTripped.view).toEqual(doc.view);
+		});
+
+		it("omits view when the doc has none", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [createRectDoc("rect-1")],
+			} as unknown as CanvasDoc;
+
+			const roundTripped = canvasToDoc(
+				canvasToState(doc, objectMapperRegistry, contentResizerRegistry),
+				objectMapperRegistry,
+			);
+			expect("view" in roundTripped).toBe(false);
+		});
 	});
 
 	describe("canvasToState", () => {

@@ -2,7 +2,7 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { Camera } from "../../states/canvas/Viewport";
+import type { Camera, Viewport } from "../../states/canvas/Viewport";
 import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
@@ -45,6 +45,21 @@ export type SyncExternalAction = {
 export type SetViewportAction = {
 	type: "SET_VIEWPORT";
 	camera: Camera;
+};
+
+/**
+ * Apply-initial-view action - installs the camera derived from the document's
+ * `view.open`, together with the container size it was derived from. Dispatched
+ * once at mount by useInitialViewOpen, and only when the host passed no
+ * `initialConfig.viewport`.
+ *
+ * The size travels with the camera because the two must land in the same commit:
+ * a fit is only correct against the viewport it was measured for, and the
+ * ResizeObserver's own CONTAINER_RESIZE arrives after the first paint.
+ */
+export type ApplyInitialViewAction = {
+	type: "APPLY_INITIAL_VIEW";
+	viewport: Viewport;
 };
 
 /**
@@ -186,6 +201,7 @@ export type CanvasAction =
 	| ContainerResizeAction
 	| SyncExternalAction
 	| SetViewportAction
+	| ApplyInitialViewAction
 	| SetSelectionAction
 	| CommandAction
 	| RevertHistoryAction

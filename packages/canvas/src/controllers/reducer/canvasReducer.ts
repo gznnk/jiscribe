@@ -143,6 +143,11 @@ export const createCanvasReducer =
 				};
 			}
 
+			case "APPLY_INITIAL_VIEW": {
+				// Camera and measured size land together; see ApplyInitialViewAction.
+				return { ...state, viewport: action.viewport };
+			}
+
 			case "SET_VIEWPORT": {
 				// No-op when the camera is unchanged so a repeated imperative
 				// setViewport with the same camera does not churn state.
@@ -246,6 +251,7 @@ export const createCanvasReducer =
 					objects: action.payload.objects,
 					rootIds: action.payload.rootIds,
 					background: action.payload.background,
+					view: action.payload.view,
 					...resetUiState(),
 					// An external change is a history boundary. Since past is pushed directly without going
 					// through recordHistoryIfNeeded, explicitly reset the coalesce state here (do not carry

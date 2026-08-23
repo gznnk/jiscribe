@@ -23,5 +23,6 @@ const stringifyDocContent = (doc: CanvasDoc): string =>
 	JSON.stringify({
 		version: doc.version,
 		background: doc.background,
+		view: doc.view,
 		root: doc.root,
 	});

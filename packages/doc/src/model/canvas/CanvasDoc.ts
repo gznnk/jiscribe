@@ -1,3 +1,4 @@
+import type { ViewDoc } from "./ViewDoc";
 import type { ObjectDoc } from "../objects/base/ObjectDoc";
 
 export type CanvasDoc = CanvasDocV1;
@@ -31,5 +32,12 @@ export type CanvasDocV1 = {
 	 * stays readable on any background (see `deriveGridLineColor`).
 	 */
 	background?: string;
+	/**
+	 * Display declaration: the empty space that belongs around the drawing and how
+	 * the view is framed on open (see {@link ViewDoc}). Presentation only — it
+	 * frames rendered images and the initial camera, and constrains neither the
+	 * geometry nor the editing.
+	 */
+	view?: ViewDoc;
 	root: ObjectDoc[];
 };
