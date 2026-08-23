@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 
+import { RENDER_CONTENT_MARGIN } from "../render/renderOptions";
 import { runRenderCommand } from "../renderCommand";
 
 const fixture = (name: string): string =>
@@ -14,6 +15,10 @@ const fixture = (name: string): string =>
 			import.meta.url,
 		),
 	);
+
+/** A document this suite owns, as opposed to one borrowed from doc-tools. */
+const localFixture = (name: string): string =>
+	fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 
 const distHarness = join(
 	dirname(fileURLToPath(import.meta.url)),
@@ -186,6 +191,76 @@ describe.skipIf(!isHarnessBuilt)("render in a browser", () => {
 		expect((await runOnce(second)).code).toBe(0);
 		expect(readFileSync(first).equals(readFileSync(second))).toBe(true);
 	}, 240_000);
+
+	describe("the margin around a content render", () => {
+		/**
+		 * Both fixtures hold the same two rects, spanning 40,40..420,140 — 380 x 100
+		 * of content, with nothing drawn outside a geometry box to widen it. Only
+		 * one of them declares a `view`, so the pixel sizes below differ by exactly
+		 * the margins being compared.
+		 *
+		 * This is what the `view.padding` branch in `renderDoc` amounts to, and
+		 * nothing else covers it: the golden image is one document rendered one way,
+		 * so a branch that stopped passing `margin: undefined` would put all six
+		 * migrated articles back on 40px with no test going red.
+		 */
+		const CONTENT_WIDTH = 380;
+		const CONTENT_HEIGHT = 100;
+
+		/** Pixel size of the PNG at `path`, read out of its IHDR chunk. */
+		const readPixelSize = (path: string): { width: number; height: number } => {
+			const png = readFileSync(path);
+			expect(png.subarray(0, 8)).toEqual(
+				Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+			);
+			return { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
+		};
+
+		it("frames the image with the padding the document declared, scale included", async (ctx) => {
+			const output = join(workDir, "view-padding.png");
+			const { code, stderr } = await capture(() =>
+				runRenderCommand([
+					localFixture("viewPadding.jis.json"),
+					"-o",
+					output,
+					"--scale",
+					"2",
+				]),
+			);
+			if (code === 1 && /needs a Chromium-based browser/.test(stderr)) {
+				ctx.skip();
+				return;
+			}
+			expect(code).toBe(0);
+			// left 40 + right 20 across, top 10 + bottom 30 down, at 2 px per px.
+			expect(readPixelSize(output)).toEqual({
+				width: (CONTENT_WIDTH + 40 + 20) * 2,
+				height: (CONTENT_HEIGHT + 10 + 30) * 2,
+			});
+		}, 120_000);
+
+		it("falls back to its own 40px margin for a document that declares none", async (ctx) => {
+			const output = join(workDir, "view-padding-absent.png");
+			const { code, stderr } = await capture(() =>
+				runRenderCommand([
+					localFixture("viewPaddingAbsent.jis.json"),
+					"-o",
+					output,
+					"--scale",
+					"2",
+				]),
+			);
+			if (code === 1 && /needs a Chromium-based browser/.test(stderr)) {
+				ctx.skip();
+				return;
+			}
+			expect(code).toBe(0);
+			expect(readPixelSize(output)).toEqual({
+				width: (CONTENT_WIDTH + RENDER_CONTENT_MARGIN * 2) * 2,
+				height: (CONTENT_HEIGHT + RENDER_CONTENT_MARGIN * 2) * 2,
+			});
+		}, 120_000);
+	});
 
 	it("reports the browser it was told to use when it cannot be launched", async () => {
 		const { code, stderr } = await capture(() =>

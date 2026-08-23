@@ -176,7 +176,14 @@ describe("CanvasMapper", () => {
 		it("carries a doc-authored view through the round trip", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				view: { padding: { top: 48, left: 64 }, open: "fit-width" },
+				view: {
+					padding: { top: 48, left: 64 },
+					open: "fit-width",
+					// The one field with no UI to write it: a document keeps its wall
+					// only because the round trip carries it, so it is asserted on its
+					// own rather than left to the whole-object comparison below.
+					scroll: "content",
+				},
 				root: [createRectDoc("rect-1")],
 			} as unknown as CanvasDoc;
 
@@ -188,9 +195,11 @@ describe("CanvasMapper", () => {
 			expect(state.view).toEqual({
 				padding: { top: 48, left: 64 },
 				open: "fit-width",
+				scroll: "content",
 			});
 
 			const roundTripped = canvasToDoc(state, objectMapperRegistry);
+			expect(roundTripped.view?.scroll).toBe("content");
 			expect(roundTripped.view).toEqual(doc.view);
 		});
 

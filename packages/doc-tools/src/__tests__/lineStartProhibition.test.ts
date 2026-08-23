@@ -161,6 +161,67 @@ describe("line-start prohibition", () => {
 		).toEqual([]);
 	});
 
+	describe("the same authored break, in a text and in a connector label", () => {
+		/** A hand-typed newline that opens the next line with a full stop. */
+		const HAND_BROKEN_TEXT = "手で折り返した行\n。続きの行";
+
+		it("passes over a text whose width nothing stores, break and all", () => {
+			// A `text` in its label layout is measured from its own content, so it
+			// has no wrap width and `diagnoseObjectText` returns before it reaches
+			// the line-start check — the break the author typed included, which no
+			// width would have changed.
+			expect(
+				diagnoseDoc(
+					docOf({
+						id: "note",
+						type: "text",
+						x: 0,
+						y: 0,
+						text: HAND_BROKEN_TEXT,
+						fontSize: 16,
+					}),
+				),
+			).toEqual([]);
+		});
+
+		it("warns about the very same break in a connector label", () => {
+			// Nothing wraps a label either, and it is checked anyway: the two paths
+			// disagree about whether an authored break is worth a remark, which is
+			// pinned here rather than argued with.
+			const result = validateDoc(
+				JSON.stringify({
+					version: 1,
+					root: [
+						{ id: "s", type: "rect", x: 0, y: 0, width: 100, height: 60 },
+						{ id: "t", type: "rect", x: 400, y: 0, width: 100, height: 60 },
+						{
+							id: "edge",
+							type: "connector",
+							points: [],
+							source: {
+								owner: { id: "s" },
+								anchor: { kind: "connectPoint", id: "rightCenter" },
+							},
+							target: {
+								owner: { id: "t" },
+								anchor: { kind: "connectPoint", id: "leftCenter" },
+							},
+							label: { text: HAND_BROKEN_TEXT, fontSize: 12 },
+						},
+					],
+				}),
+			);
+			expect(result.diagnostics).toEqual([]);
+			const diagnostics = diagnoseDoc(result.doc as CanvasDoc);
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0]).toMatchObject({
+				severity: "warning",
+				objectId: "edge",
+			});
+			expect(diagnostics[0].message).toMatch(/line 2 starts with "。"/);
+		});
+	});
+
 	it("warns about a connector label broken before a closing bracket", () => {
 		const result = validateDoc(
 			JSON.stringify({

@@ -50,7 +50,8 @@ export type SetViewportAction = {
 /**
  * Apply-initial-view action - installs the camera derived from the document's
  * `view.open`, together with the container size it was derived from. Dispatched
- * once at mount by useInitialViewOpen, and only when the host passed no
+ * by useInitialViewOpen once per document loaded — at mount, and again whenever
+ * another document is swapped in — and only when the host passed no
  * `initialConfig.viewport`.
  *
  * The size travels with the camera because the two must land in the same commit:

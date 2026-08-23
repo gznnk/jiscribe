@@ -35,13 +35,21 @@ type InitialViewOpenOptions = {
 };
 
 /**
- * Applies the document's `view.open` as the canvas's starting camera, once.
+ * Applies the document's `view.open` as the canvas's starting camera, once per
+ * document.
  *
  * A fit needs the container's real size, which nothing knows at mount — the
  * mapper seeds a placeholder and the ResizeObserver corrects it after the first
  * paint. So the box is measured here in a layout effect and dispatched together
  * with the camera (APPLY_INITIAL_VIEW), which puts both into the commit that
  * precedes the first paint instead of leaving the drawing to jump afterwards.
+ *
+ * "Once" is counted per document, not per canvas: loading another document
+ * (SYNC_EXTERNAL) frames it the way *it* asked to be framed, the same reading of
+ * `view` that moves the scroll wall with whatever document is loaded
+ * (`resolveScrollWallPadding`). Editing the document does not re-frame it — the
+ * `view` a document was mapped with is carried through edits, undo and redo by
+ * reference, so its identity is what tells a new document from a changed one.
  *
  * A container with no extent yet (a hidden tab, a parent still resolving its
  * layout) is not guessed at: nothing is applied and nothing is marked done, so
@@ -60,11 +68,16 @@ export const useInitialViewOpen = ({
 	visualBounds,
 	dispatch,
 }: InitialViewOpenOptions): void => {
-	const appliedRef = useRef(false);
+	// The `view` the intent was already answered for; null until the first one is.
+	const appliedViewRef = useRef<ViewDoc | null>(null);
 
 	useLayoutEffect(() => {
 		const open = view?.open;
-		if (appliedRef.current || open === undefined) {
+		if (
+			view === undefined ||
+			open === undefined ||
+			appliedViewRef.current === view
+		) {
 			return;
 		}
 		const container = containerRef.current;
@@ -79,8 +92,8 @@ export const useInitialViewOpen = ({
 		// Marked done even when there is nothing to fit (an empty document, a
 		// degenerate extent): the declaration was read and answered with "keep the
 		// default camera", and re-reading it on every later resize would turn a
-		// mount-time intent into a standing override.
-		appliedRef.current = true;
+		// document's intent into a standing override.
+		appliedViewRef.current = view;
 
 		const bounds = calcContentBounds(objects, visualBounds);
 		if (!bounds) {
@@ -88,7 +101,7 @@ export const useInitialViewOpen = ({
 		}
 		const camera = calcInitialCameraFromView(
 			bounds,
-			view?.padding,
+			view.padding,
 			open,
 			{ width, height },
 			{ min: ZOOM.MIN, max: ZOOM.MAX },

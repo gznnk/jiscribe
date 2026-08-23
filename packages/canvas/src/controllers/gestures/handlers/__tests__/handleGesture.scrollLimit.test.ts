@@ -340,6 +340,52 @@ describe("handleGesture - scroll limit declared by the document", () => {
 		expect(apply(state, wheel(9999, 0)).viewport.minX).toBe(10);
 	});
 
+	it("re-measures the wall after a history restore put the objects back", () => {
+		// Undo swaps the objects out through restoreHistorySnapshot, which carries
+		// the measured wall over untouched — so what puts it right is the identity
+		// check in limitViewScroll, and only a scroll after a restore exercises it.
+		const reducer = createCanvasReducer(registries);
+		const scroll = (
+			state: CanvasControllerState,
+			...gestures: Gesture[]
+		): CanvasControllerState =>
+			gestures.reduce(
+				(current, gesture) => reducer(current, { type: "GESTURE", gesture }),
+				state,
+			);
+
+		const state = createStateFrom(
+			twoRectsDocWith({ scroll: "content" }),
+			undefined,
+			0,
+			0,
+			10,
+		);
+		// Dragging rect-2 200 units right extends the content to 310, and with it
+		// the wall; the scroll that follows is what measures it there.
+		const widened = scroll(
+			state,
+			dragRect2("dragStart", { x: 0, y: 0 }),
+			dragRect2("drag", { x: 200, y: 0 }),
+			dragRect2("dragEnd", { x: 200, y: 0 }),
+			wheel(9999, 0),
+		);
+		expect(widened.viewport.minX).toBe(210);
+		expect(widened.scrollLimit.rect).toMatchObject({ right: 310 });
+
+		// Back inside the wall, so the restore below is judged from a camera the
+		// narrowed wall still holds.
+		const returned = scroll(widened, wheel(-9999, 0));
+		expect(returned.viewport.minX).toBe(0);
+
+		const undone = reducer(returned, { type: "COMMAND", commandId: "undo" });
+		expect(undone.objects["rect-2"]).toMatchObject({ cx: 105 });
+		// The carried-over measurement still describes the wider document.
+		expect(undone.scrollLimit.rect).toMatchObject({ right: 310 });
+
+		expect(scroll(undone, wheel(9999, 0)).viewport.minX).toBe(10);
+	});
+
 	it("moves the wall with the document when another one is loaded", () => {
 		const reducer = createCanvasReducer(registries);
 		const walled = apply(

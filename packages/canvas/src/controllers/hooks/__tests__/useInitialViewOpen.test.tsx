@@ -45,10 +45,11 @@ const roots: { unmount: () => void }[] = [];
 
 /**
  * Mounts the hook on a div whose measured box is fixed at `size`, and returns
- * the dispatch spy plus a way to re-render with a different size.
+ * the dispatch spy plus ways to re-render with a different size, another
+ * document, or the same document edited.
  */
 const mountWithContainerSize = (
-	view: ViewDoc | undefined,
+	initialView: ViewDoc | undefined,
 	size: Dimensions,
 ) => {
 	const dispatch = vi.fn<(action: CanvasAction) => void>();
@@ -61,33 +62,69 @@ const mountWithContainerSize = (
 		({ width: measured.width, height: measured.height }) as DOMRect;
 	containerRef.current = container;
 
-	const Probe = ({ reportedSize }: { reportedSize: Dimensions }) => {
+	const Probe = ({
+		view,
+		reportedSize,
+		mappedObjects,
+	}: {
+		view: ViewDoc | undefined;
+		reportedSize: Dimensions;
+		mappedObjects: Record<string, ObjectState>;
+	}) => {
 		useInitialViewOpen({
 			view,
 			containerRef,
 			viewportSize: reportedSize,
-			objects,
+			objects: mappedObjects,
 			visualBounds,
 			dispatch,
 		});
 		return null;
 	};
 
+	let currentView = initialView;
+	let currentSize = size;
+	let currentObjects = objects;
 	const host = document.createElement("div");
 	const root = createRoot(host);
 	roots.push(root);
-	act(() => {
-		root.render(<Probe reportedSize={size} />);
-	});
+	const rerender = () => {
+		act(() => {
+			root.render(
+				<Probe
+					view={currentView}
+					reportedSize={currentSize}
+					mappedObjects={currentObjects}
+				/>,
+			);
+		});
+	};
+	rerender();
 
 	return {
 		dispatch,
 		/** Re-renders with a new measured box, the way a CONTAINER_RESIZE does. */
 		remeasure: (next: Dimensions) => {
 			measured = next;
-			act(() => {
-				root.render(<Probe reportedSize={next} />);
-			});
+			currentSize = next;
+			rerender();
+		},
+		/**
+		 * Re-renders with another document loaded, the way SYNC_EXTERNAL does:
+		 * fresh objects and a `view` that is a different object however it reads.
+		 */
+		loadDocument: (nextView: ViewDoc | undefined) => {
+			currentView = nextView;
+			currentObjects = { r1: rectAt(0, 0, 800, 400) };
+			rerender();
+		},
+		/**
+		 * Re-renders the same document after an edit: the objects are rewritten and
+		 * the very same `view` object is carried through, as the reducer does.
+		 */
+		editDocument: () => {
+			currentObjects = { r1: rectAt(0, 0, 400, 200) };
+			rerender();
 		},
 	};
 };
@@ -152,6 +189,74 @@ describe("useInitialViewOpen", () => {
 			type: "APPLY_INITIAL_VIEW",
 			viewport: { width: 1000, height: 500, zoom: 1.25, minX: 0, minY: 0 },
 		});
+	});
+
+	describe("when another document is loaded", () => {
+		it("frames the new one, whether or not the old one asked to be framed", () => {
+			const { dispatch, loadDocument } = mountWithContainerSize(
+				{ open: "fit-all" },
+				{ width: 1000, height: 500 },
+			);
+			expect(dispatch).toHaveBeenCalledTimes(1);
+
+			loadDocument({ padding: { left: 100, right: 100 }, open: "fit-width" });
+
+			expect(dispatch).toHaveBeenCalledTimes(2);
+			expect(dispatch.mock.calls[1][0]).toEqual({
+				type: "APPLY_INITIAL_VIEW",
+				viewport: { width: 1000, height: 500, zoom: 1, minX: -100, minY: 0 },
+			});
+		});
+
+		it("frames one that asks to be, after one that did not", () => {
+			const { dispatch, loadDocument } = mountWithContainerSize(
+				{ padding: { top: 48 } },
+				{ width: 1000, height: 500 },
+			);
+			expect(dispatch).not.toHaveBeenCalled();
+
+			loadDocument({ open: "fit-all" });
+
+			expect(dispatch).toHaveBeenCalledTimes(1);
+		});
+
+		it("leaves the camera where the user left it when the new one asks for nothing", () => {
+			const { dispatch, loadDocument } = mountWithContainerSize(
+				{ open: "fit-all" },
+				{ width: 1000, height: 500 },
+			);
+			expect(dispatch).toHaveBeenCalledTimes(1);
+
+			loadDocument(undefined);
+			loadDocument({ padding: { top: 48 } });
+
+			expect(dispatch).toHaveBeenCalledTimes(1);
+		});
+
+		it("re-frames a document that reads the same as the last one but is not it", () => {
+			// Identity is what tells the two apart: reopening the same file is
+			// another document, and it is framed like one.
+			const { dispatch, loadDocument } = mountWithContainerSize(
+				{ open: "fit-all" },
+				{ width: 1000, height: 500 },
+			);
+			loadDocument({ open: "fit-all" });
+
+			expect(dispatch).toHaveBeenCalledTimes(2);
+			expect(dispatch.mock.calls[1][0]).toEqual(dispatch.mock.calls[0][0]);
+		});
+	});
+
+	it("does not re-frame the document being edited, its view travelling with it", () => {
+		const { dispatch, editDocument } = mountWithContainerSize(
+			{ open: "fit-all" },
+			{ width: 1000, height: 500 },
+		);
+		expect(dispatch).toHaveBeenCalledTimes(1);
+
+		editDocument();
+
+		expect(dispatch).toHaveBeenCalledTimes(1);
 	});
 
 	it("leaves the camera alone when there is no content to fit", () => {
