@@ -1,4 +1,5 @@
 import type { ObjectDoc } from "@jiscribe/doc";
+import type { TextMeasureFont } from "@jiscribe/doc/unstable";
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/unstable";
 import type { Rect } from "@jiscribe/geometry";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
@@ -141,16 +142,42 @@ const calcFacingGap = (a: Rect, b: Rect): number | null => {
 	return null;
 };
 
-/** Width of the label's longest line, laid out as authored (nothing wraps it). */
-const measureLabelTextWidth = (
-	label: ConnectorLabelDoc,
-	fontSize: number,
-): number =>
-	measureWrappedText(label.text, {
-		fontSize,
-		fontFamily: DEFAULT_FONT_FAMILY,
-		fontWeight: label.fontWeight ?? CONNECTOR_LABEL_FALLBACK.fontWeight,
-	}).width;
+/** A connector's label as it is drawn, which is what any measurement of it needs. */
+export type ConnectorLabelText = {
+	/** The label string, as authored (newlines included). */
+	text: string;
+	/** Font the canvas draws it in, the renderer's fallbacks already resolved. */
+	font: TextMeasureFont;
+};
+
+/**
+ * The label a connector is drawn with, or null where there is nothing drawn: an
+ * object of another type, no label, or an empty one. The font is resolved here
+ * rather than by each caller, so every reading of a label — its width, its line
+ * breaks — is taken against the same type the canvas uses.
+ *
+ * @param connector - The object to look at; anything but a `connector` type answers null
+ * @returns The label's text beside the font it is laid out in, the family being the canvas-wide default (a label states no family of its own)
+ */
+export const resolveConnectorLabel = (
+	connector: ObjectDoc,
+): ConnectorLabelText | null => {
+	if (connector.type !== "connector") {
+		return null;
+	}
+	const { label } = connector as ConnectorFitDoc;
+	if (label === undefined || label.text === "") {
+		return null;
+	}
+	return {
+		text: label.text,
+		font: {
+			fontSize: label.fontSize ?? CONNECTOR_LABEL_FALLBACK.fontSize,
+			fontFamily: DEFAULT_FONT_FAMILY,
+			fontWeight: label.fontWeight ?? CONNECTOR_LABEL_FALLBACK.fontWeight,
+		},
+	};
+};
 
 /**
  * How wide a connector's label is drawn against how much room there is between
@@ -173,14 +200,12 @@ export const calcConnectorLabelFit = (
 	connector: ObjectDoc,
 	objectsById: ReadonlyMap<string, ObjectDoc>,
 ): ConnectorLabelFit | null => {
-	if (connector.type !== "connector") {
+	const drawnLabel = resolveConnectorLabel(connector);
+	if (drawnLabel === null) {
 		return null;
 	}
 	const { label, points, source, target } = connector as ConnectorFitDoc;
-	if (label === undefined || label.text === "") {
-		return null;
-	}
-	if (label.offset !== undefined && label.offset !== 0) {
+	if (label?.offset !== undefined && label.offset !== 0) {
 		return null;
 	}
 	if (points !== undefined && points.length > 0) {
@@ -205,11 +230,11 @@ export const calcConnectorLabelFit = (
 	if (gap === null) {
 		return null;
 	}
-	const fontSize = label.fontSize ?? CONNECTOR_LABEL_FALLBACK.fontSize;
 	return {
-		text: label.text,
-		fontSize,
-		textWidth: measureLabelTextWidth(label, fontSize),
+		text: drawnLabel.text,
+		fontSize: drawnLabel.font.fontSize,
+		// Laid out as authored: nothing wraps a label, so its widest line is its width.
+		textWidth: measureWrappedText(drawnLabel.text, drawnLabel.font).width,
 		gap,
 		sourceId,
 		targetId,
