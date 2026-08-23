@@ -23,6 +23,16 @@
 //
 // e.g. `import { createCanvasParser, createDocOps } from "@jiscribe/doc";`
 export type { CanvasDoc } from "./model/canvas/CanvasDoc";
+// The document's display declaration (padding + how to frame the view on open).
+// `resolveViewPadding` is what every consumer of the padding shares, so the
+// "each side defaults to 0" rule is applied in exactly one place.
+export type {
+	ViewDoc,
+	ViewOpenMode,
+	ViewPaddingDoc,
+	ResolvedViewPadding,
+} from "./model/canvas/ViewDoc";
+export { isViewOpenMode, resolveViewPadding } from "./model/canvas/ViewDoc";
 export type { ObjectDoc } from "./model/objects/base/ObjectDoc";
 export type { ObjectType } from "./model/objects/types/ObjectType";
 export type { ObjectFeatures } from "./model/objects/types/ObjectFeatures";

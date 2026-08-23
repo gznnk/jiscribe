@@ -305,13 +305,39 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 
 /**
  * The switch between a height the document states and one that follows the text,
- * appended to the menu of every type that may take it (`supportsAutoHeightType`).
+ * inserted into the menu of every type that may take it (`supportsAutoHeightType`,
+ * placement in {@link insertAutoHeightMenuSection}).
  * One shared section value, so the merge that keeps only the sections every
  * selected type registers matches it across a multi-type selection.
  */
 const AUTO_HEIGHT_MENU_SECTION: ObjectMenuSection = {
 	id: "auto-height",
 	items: [{ type: "autoHeight" }],
+};
+
+/**
+ * The menu with the auto-height switch put right before the transform section:
+ * the switch and the aspect-ratio lock both govern how the shape resizes, so
+ * they read as one sizing run with the more-used switch first. A menu with no
+ * transform section takes it at the end. It stays a section of its own rather
+ * than an item inside "transform" — the multi-type merge drops a section any
+ * selected type lacks, and folding the switch in would take the aspect lock
+ * down with it whenever a type that cannot take auto height is in the selection.
+ */
+const insertAutoHeightMenuSection = (
+	menu: readonly ObjectMenuSection[],
+): ObjectMenuSection[] => {
+	const transformIndex = menu.findIndex(
+		(section) => section.id === "transform",
+	);
+	if (transformIndex === -1) {
+		return [...menu, AUTO_HEIGHT_MENU_SECTION];
+	}
+	return [
+		...menu.slice(0, transformIndex),
+		AUTO_HEIGHT_MENU_SECTION,
+		...menu.slice(transformIndex),
+	];
 };
 
 /**
@@ -410,14 +436,14 @@ export const applyObjectDefinition = (
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
 	const menu = definition.menu ?? createDefaultMenu(definition.features);
-	// The switch is appended rather than declared per type: it belongs to every
+	// The switch is inserted rather than declared per type: it belongs to every
 	// type whose document may leave `height` out, and a type declaring its own
 	// menu would otherwise have to remember it. A multi-type selection keeps only
 	// the sections every selected type registers, so the section itself is the
 	// gate that hides the switch beside a shape that cannot take it (useMenuSections).
 	registries.objectMenu.register(
 		type,
-		supportsAutoHeight ? [...menu, AUTO_HEIGHT_MENU_SECTION] : menu,
+		supportsAutoHeight ? insertAutoHeightMenuSection(menu) : menu,
 	);
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);

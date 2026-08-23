@@ -1,5 +1,6 @@
 import { isArray, isObject, isString } from "@jiscribe/basic-validators";
 
+import { isViewOpenMode } from "../model/canvas/ViewDoc";
 import { isArrowType } from "../model/objects/types/ArrowType";
 import { isConnectorRouting } from "../model/objects/types/ConnectorRouting";
 import { isAnchorKind } from "../model/objects/types/EndpointRef";
@@ -61,6 +62,35 @@ const findUnknownAnchorKind = (
 };
 
 /**
+ * Drops `view.open` when it names a mode outside the known set, so an older host
+ * still opens a document written for a newer one. `view` is a document-root field
+ * rather than something inside an object, so it cannot go through
+ * {@link pureEnumFields}, which walks the entries of `root` only.
+ *
+ * @returns The input itself when nothing was removed, so callers can detect the
+ *   no-change case by reference.
+ */
+const stripUnknownViewOpen = (
+	view: unknown,
+	warnings: SemanticDiagnostic[],
+): unknown => {
+	if (!isObject(view)) {
+		return view;
+	}
+	const v = view as Record<string, unknown>;
+	if (v.open === undefined || isViewOpenMode(v.open)) {
+		return view;
+	}
+	const shownValue = typeof v.open === "string" ? ` "${v.open}"` : "";
+	warnings.push({
+		path: "view.open",
+		message: `Unknown open value${shownValue}: the field was ignored and will be dropped on save.`,
+	});
+	const { open: _droppedOpen, ...rest } = v;
+	return rest;
+};
+
+/**
  * Removes unknown content from a candidate document before structure validation, so
  * the rest of the document still displays, and since saving re-serializes the
  * stripped doc, the removed content disappears on save. Unknown means:
@@ -69,6 +99,8 @@ const findUnknownAnchorKind = (
  *     known set, at any nesting depth (flat, connector label, text slots, …)
  *   - connectors with an endpoint anchored to an unknown kind (see
  *     {@link findUnknownAnchorKind}); the anchor is not droppable on its own
+ *   - a document-root `view.open` naming a mode outside the known set (see
+ *     {@link stripUnknownViewOpen})
  *
  * Object removal cascades to keep the remaining doc valid:
  *   - a group whose children all get removed is removed with them (an empty group
@@ -98,6 +130,7 @@ export function stripUnknownContent(
 	}
 
 	const warnings: SemanticDiagnostic[] = [];
+	const strippedView = stripUnknownViewOpen(d.view, warnings);
 	// IDs of every removed object, descendants included, for the connector cascade.
 	const removedIds = new Set<string>();
 
@@ -320,5 +353,14 @@ export function stripUnknownContent(
 		strippedRoot.push(node);
 	});
 
-	return { data: { ...d, root: strippedRoot }, warnings };
+	return {
+		// `view` is already carried by the spread; it is re-set only when the strip
+		// above actually replaced it.
+		data: {
+			...d,
+			...(strippedView !== d.view ? { view: strippedView } : {}),
+			root: strippedRoot,
+		},
+		warnings,
+	};
 }

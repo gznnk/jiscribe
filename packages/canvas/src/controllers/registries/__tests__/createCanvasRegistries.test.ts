@@ -180,10 +180,11 @@ describe("createCanvasRegistries", () => {
 					id: "text",
 					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 				},
-				{ id: "transform", items: [{ type: "aspectRatio" }] },
 				// The box holds its text and nothing denies it, so the type may leave
-				// `height` out and gets the switch (supportsAutoHeightType).
+				// `height` out and gets the switch (supportsAutoHeightType), placed
+				// before the aspect lock so the two sizing toggles read as one run.
 				{ id: "auto-height", items: [{ type: "autoHeight" }] },
+				{ id: "transform", items: [{ type: "aspectRatio" }] },
 			]);
 		});
 
