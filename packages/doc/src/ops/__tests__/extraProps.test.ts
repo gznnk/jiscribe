@@ -169,10 +169,40 @@ describe("setExtraProps", () => {
 
 	it("refuses any prop on a type that declares none", () => {
 		const doc = emptyDoc();
-		const id = badgedDocOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const id = badgedDocOps.addObject(doc, "polygon", { x: 0, y: 0 });
 
 		expect(() => badgedDocOps.setExtraProps(doc, id, { badge: "new" })).toThrow(
 			/no properties of its own/,
 		);
+	});
+
+	it("sets the body placement every single-body type carries, undeclared", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+
+		expect(
+			docOps.setExtraProps(doc, id, { textVerticalBasis: "frame" }),
+		).toEqual(["textVerticalBasis"]);
+		expect(readObject(doc, id).textVerticalBasis).toBe("frame");
+		expectValid(doc);
+	});
+
+	it("refuses a basis outside the two the format has", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+
+		expect(() =>
+			docOps.setExtraProps(doc, id, { textVerticalBasis: "outline" }),
+		).toThrow(/must be one of: region, frame/);
+		expect(readObject(doc, id).textVerticalBasis).toBeUndefined();
+	});
+
+	it("refuses the placement on a type that holds no single body", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "polygon", { x: 0, y: 0 });
+
+		expect(() =>
+			docOps.setExtraProps(doc, id, { textVerticalBasis: "frame" }),
+		).toThrow(/no properties of its own/);
 	});
 });

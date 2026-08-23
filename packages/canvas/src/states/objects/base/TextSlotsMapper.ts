@@ -10,6 +10,7 @@ import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
+import type { TextStyleState } from "./TextStyleState";
 import {
 	isTextSlots,
 	readRichTextSlot,
@@ -66,14 +67,18 @@ const isIntegerLikeSlotId = (slotId: string): boolean => {
  * every type shares: an integer-like slot id is dropped here, since the key order
  * would not survive it (see {@link isIntegerLikeSlotId}).
  *
+ * The body's own placement fields (TEXT_BODY_KEYS) ride along on the object
+ * rather than entering the slot, and only for a `"body"` type: they place the one
+ * body against the shape, which a keyed slot has no counterpart for.
+ *
  * @param textShape - The type's `features.text`; undefined yields no `text` key at all
  * @param doc - The doc being converted; only its text group is read
- * @returns `{}` for a text-less type, otherwise `{ text }` with a fresh slot map
+ * @returns `{}` for a text-less type, otherwise `{ text }` with a fresh slot map, plus `textVerticalBasis` when a single-body doc sets one
  */
 export const mapTextDocToState = (
 	textShape: ObjectFeatures["text"],
 	doc: TextDocFields,
-): { text?: TextSlots } => {
+): Partial<TextStyleState> => {
 	if (textShape === "body") {
 		// Normalized on the way in, so the slots the canvas works with are always in
 		// the canonical form and an unstyled body stays the plain string it was.
@@ -82,6 +87,9 @@ export const mapTextDocToState = (
 			text: {
 				[BODY_TEXT_SLOT_ID]: { text: content, ...pickDefinedStyle(doc) },
 			},
+			...(doc.textVerticalBasis !== undefined
+				? { textVerticalBasis: doc.textVerticalBasis }
+				: {}),
 		};
 	}
 	if (textShape === "slots") {
@@ -105,16 +113,19 @@ export const mapTextDocToState = (
  *
  * A `"body"` type flattens its one slot: an empty content and unset styling each
  * drop out, which is exactly what an absent doc field expands back to, making
- * doc → state → doc the identity. A `"slots"` type is emitted unchanged.
+ * doc → state → doc the identity. The body's placement fields (TEXT_BODY_KEYS)
+ * come back off the object under the same rule. A `"slots"` type is emitted
+ * unchanged.
  *
  * @param textShape - The type's `features.text`; undefined yields no fields at all
- * @param text - The state's slots; undefined for a shape that holds no text
+ * @param state - The state's text group: its slots, and the body placement fields that sit beside them
  * @returns The text group's doc fields, each key present only when it has a value
  */
 export const mapTextStateToDoc = (
 	textShape: ObjectFeatures["text"],
-	text: TextSlots | undefined,
+	state: TextStyleState,
 ): TextDocFields => {
+	const text = state.text;
 	if (textShape === "body") {
 		const content = normalizeRichText(
 			readRichTextSlot(text, BODY_TEXT_SLOT_ID),
@@ -125,6 +136,9 @@ export const mapTextStateToDoc = (
 			// it is in, so it drops out exactly like an absent doc field.
 			...(richTextToPlain(content) === "" ? {} : { text: content }),
 			...(slot ? pickDefinedStyle(slot) : {}),
+			...(state.textVerticalBasis !== undefined
+				? { textVerticalBasis: state.textVerticalBasis }
+				: {}),
 		};
 	}
 	if (textShape === "slots") {

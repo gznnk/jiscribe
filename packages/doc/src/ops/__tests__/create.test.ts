@@ -517,12 +517,23 @@ describe("addObject with a type's own extraProps", () => {
 	it("refuses any prop on a type that declares none", () => {
 		const doc = emptyDoc();
 		expect(() =>
-			docOps.addObject(doc, "rect", {
+			docOps.addObject(doc, "polygon", {
 				x: 0,
 				y: 0,
 				extraProps: { badge: "new" },
 			}),
 		).toThrow(/no properties of its own/);
+	});
+
+	it("accepts the body placement every single-body type carries, undeclared", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "rect", {
+			x: 0,
+			y: 0,
+			extraProps: { textVerticalBasis: "frame" },
+		});
+		expect(readObject(doc, id).textVerticalBasis).toBe("frame");
+		expectValid(doc);
 	});
 
 	it("refuses a name the call already takes as a parameter", () => {

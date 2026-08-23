@@ -61,6 +61,8 @@ const flattenObjects = (objects: readonly ObjectDoc[]): ObjectDoc[] =>
 type TextBodyDoc = ObjectDoc & {
 	text?: RichText;
 	textLayout?: string;
+	textVerticalBasis?: string;
+	verticalAlign?: string;
 	width?: number;
 	height?: number;
 	fontSize?: number;
@@ -95,6 +97,19 @@ const resolveBodyFont = (
 			TEXT_STYLE_FALLBACK.fontStyle,
 	};
 };
+
+/**
+ * Where in its box the object's body sits: what the document sets, over what its
+ * type declares for its body slot, over the canvas-wide last resort — the same
+ * three-step resolution the overlay makes (`resolveTextSlotStyle`).
+ */
+const resolveBodyVerticalAlign = (
+	object: TextBodyDoc,
+	definition: ObjectDocDefinition,
+): string =>
+	object.verticalAlign ??
+	definition.textSlotStyleDefaults?.body?.verticalAlign ??
+	TEXT_STYLE_FALLBACK.verticalAlign;
 
 const round = (value: number): number => Math.round(value * 10) / 10;
 
@@ -186,6 +201,80 @@ const diagnoseTextOverflow = (
 };
 
 /**
+ * Top edge of the drawn text block inside its content box, in the shape's own
+ * coordinates. The numeric form of what the overlay leaves to CSS
+ * (`verticalAlignToAlignItems`), which is why the three cases spell out
+ * flex-start / center / flex-end rather than deriving one from another.
+ *
+ * @param box - The content box the block is placed in, as `resolveContentBox` returns it
+ * @param blockHeight - Total height of the laid-out lines, leading included
+ * @param verticalAlign - The slot's resolved alignment; an unknown value is placed as the canvas-wide fallback does ("middle")
+ */
+const calcTextBlockTop = (
+	box: Rect,
+	blockHeight: number,
+	verticalAlign: string,
+): number => {
+	if (verticalAlign === "top") {
+		return box.y;
+	}
+	if (verticalAlign === "bottom") {
+		return box.y + box.height - blockHeight;
+	}
+	return box.y + (box.height - blockHeight) / 2;
+};
+
+/**
+ * What placing a body on the shape's whole height costs it, empty while the
+ * block still sits inside the region its type declares.
+ *
+ * The oracle is the declared region and nothing else: a type's `textRegion` is
+ * where its author promises the shape's own decoration is not — a cylinder's
+ * caps, a document's wavy foot — so leaving it is exactly the fact worth
+ * reporting. No outline path is intersected, deliberately: the outlines are
+ * arbitrary curves per type, and a geometric test against them would answer a
+ * question the region already answers, in a way each new shape would have to
+ * re-earn.
+ *
+ * A warning rather than an error: the text is still fully drawn and still
+ * readable over most decoration, and the basis was asked for on purpose.
+ *
+ * @param box - The content box the body is actually drawn in, the whole shape minus the padding for the basis this check exists for
+ * @param declaredRegion - The type's own region, padding still on it, as `resolveContentBox` reports it beside the box
+ * @param verticalAlign - The slot's resolved alignment, which decides where in `box` the block sits
+ */
+const diagnoseDecorationOverlap = (
+	object: ObjectDoc,
+	box: Rect,
+	declaredRegion: Rect,
+	font: TextMeasureFont,
+	lines: readonly VisualLine[],
+	verticalAlign: string,
+): Diagnostic[] => {
+	const blockHeight = calcWrappedTextMetrics(lines).height;
+	const blockTop = calcTextBlockTop(box, blockHeight, verticalAlign);
+	const blockBottom = blockTop + blockHeight;
+	const regionBottom = declaredRegion.y + declaredRegion.height;
+	// The same half-leading the overflow check allows: a block's first and last
+	// line boxes carry it as whitespace, so that much past an edge is not ink.
+	const tolerance = calcOverflowTolerance(font.fontSize);
+	const overshoot = Math.max(
+		declaredRegion.y - blockTop,
+		blockBottom - regionBottom,
+	);
+	if (overshoot <= tolerance) {
+		return [];
+	}
+	return [
+		{
+			severity: "warning",
+			objectId: object.id,
+			message: `text in ${object.type} is placed on the whole shape (textVerticalBasis "frame") and reaches ${round(overshoot)}px past the region ${object.type} keeps clear of its own decoration, so the two may overlap (text spans ${round(blockTop)}..${round(blockBottom)}, region ${round(declaredRegion.y)}..${round(regionBottom)}, font ${font.fontSize}px)`,
+		},
+	];
+};
+
+/**
  * The finding about where an object's body breaks, empty when every break falls
  * somewhere Japanese typesetting allows. One diagnostic however many lines
  * offend: they are all the same remark about the same text, and the author fixes
@@ -268,6 +357,18 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 					lines,
 				)
 			: []),
+		// Only the frame basis has anything to check: a body placed on the declared
+		// region is laid out inside that very region and cannot leave it.
+		...(body.textVerticalBasis === "frame"
+			? diagnoseDecorationOverlap(
+					object,
+					box,
+					resolution.declaredRegion,
+					font,
+					lines,
+					resolveBodyVerticalAlign(body, definition),
+				)
+			: []),
 		...diagnoseObjectTextLineStarts(object, text, box, font, lines),
 	];
 };
@@ -348,6 +449,12 @@ const diagnoseConnectorLabelLineStarts = (
  * this is an appearance the author changes in the wording or the width rather
  * than a fault the drawing could fix.
  *
+ * A body placed on the shape's whole height (`textVerticalBasis: "frame"`) is
+ * additionally checked against the region its type declares: a block reaching
+ * past it is a warning, the declared region being where the type's author
+ * promises the shape's own decoration is not
+ * ({@link diagnoseDecorationOverlap}).
+ *
  * Only text that cannot be read where it is drawn is reported as an error.
  * Spacing, aspect ratio and the other matters of style are deliberately left out:
  * the errors answer "would a reader see the text cut off", which is a fact about
@@ -365,7 +472,7 @@ const diagnoseConnectorLabelLineStarts = (
  * about the document.
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
- * @returns One error per overflowing object, in document order, plus a warning per text whose lines start where typesetting forbids, per connector whose label does not fit between its shapes, and per object of a text-bearing type that declares no region; empty when everything fits
+ * @returns One error per overflowing object, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, and per object of a text-bearing type that declares no region; empty when everything fits
  */
 export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	const objects = flattenObjects(doc.root);

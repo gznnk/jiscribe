@@ -78,7 +78,7 @@ export const textToDoc: StateToDocMapper<TextState, TextDoc> = (state) => {
 		...ObjectMapper.toDoc(state),
 		// A "body" type's text folds back to a plain string; the union that covers
 		// keyed types too cannot be narrowed from the argument.
-		...(mapTextStateToDoc("body", state.text) as TextStyleDoc),
+		...(mapTextStateToDoc("body", state) as TextStyleDoc),
 		...mapTransformStateToDoc(state),
 		type: "text",
 		// Rounded because the transform makes the round trip exact only to a float

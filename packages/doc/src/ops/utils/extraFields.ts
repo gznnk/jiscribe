@@ -1,4 +1,5 @@
 import type { ObjectRecord } from "./objectAccess";
+import { TEXT_BODY_KEYS } from "../../model/objects/base/TextStyleDoc";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";
 
@@ -7,6 +8,19 @@ export const declaresExtraKey = (
 	definition: ObjectDocDefinition,
 	key: string,
 ): boolean => (definition.extraKeys ?? []).includes(key);
+
+/**
+ * Every name a props write may set on one type: what the type declares for
+ * itself, plus what carrying a single body implies (TEXT_BODY_KEYS). The second
+ * group is shared by every `text: "body"` type rather than declared by each, so
+ * it is added here instead of being copied into as many `extraKeys` lists.
+ */
+const collectWritableKeys = (
+	definition: ObjectDocDefinition,
+): readonly string[] => [
+	...(definition.extraKeys ?? []),
+	...(definition.features.text === "body" ? TEXT_BODY_KEYS : []),
+];
 
 /**
  * Copies a type's own properties — the ones no parameter of the call covers, such as
@@ -22,8 +36,9 @@ export const declaresExtraKey = (
  * @param target - The object being built or edited, mutated in place
  * @param extraProps - Property names and values as given; a value of `undefined` is dropped,
  *   so an optional argument that was never filled in reads as absent
- * @param definition - The type's doc definition, whose `extraKeys` says which names it
- *   has; a type declaring none accepts no extra props at all
+ * @param definition - The type's doc definition, whose `extraKeys` and text feature say
+ *   which names it has (see {@link collectWritableKeys}); a type with neither accepts no
+ *   extra props at all
  * @param reserved - Names the call takes as parameters of its own, which differ per op
  *   (a creation call owns the geometry, an edit call does not)
  * @param subjectName - What to call the offender in the error: the object type when
@@ -49,7 +64,7 @@ export const applyExtraProps = (
 		);
 	}
 
-	const allowed = definition.extraKeys ?? [];
+	const allowed = collectWritableKeys(definition);
 	const unknown = names.filter((key) => !allowed.includes(key));
 	if (unknown.length > 0) {
 		throw new DocOperationError(

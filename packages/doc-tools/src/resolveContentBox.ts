@@ -1,4 +1,9 @@
-import { BODY_TEXT_SLOT_ID, calcTextContentBox } from "@jiscribe/doc/unstable";
+import { isTextVerticalBasis } from "@jiscribe/doc";
+import {
+	applyTextVerticalBasis,
+	BODY_TEXT_SLOT_ID,
+	calcTextContentBox,
+} from "@jiscribe/doc/unstable";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 
@@ -25,9 +30,18 @@ export type ContentBoxResolution =
 			kind: "region";
 			/**
 			 * The content rectangle in the shape's own coordinates (origin at the
-			 * centre of the bounding box), width and height clamped at 0.
+			 * centre of the bounding box), width and height clamped at 0. Vertically
+			 * this is the box the shape's `textVerticalBasis` names, so a `"frame"`
+			 * shape's is the whole height rather than the declared region's.
 			 */
 			rect: Rect;
+			/**
+			 * The type's declared region as it comes out of `textRegion`: padding
+			 * still on it and the basis not applied. The safe area the type promises
+			 * its own decoration stays out of, which is what tells a `"frame"` body
+			 * riding over a cylinder's cap from one that does not.
+			 */
+			declaredRegion: Rect;
 	  }
 	| {
 			/**
@@ -44,19 +58,20 @@ export type ContentBoxResolution =
 	  };
 
 /**
- * Where a shape's text is actually laid out: the region its type declares
- * (`ObjectDocDefinition.textRegion`, the same calculator the canvas draws and
- * edits in), minus the padding every text box has ({@link calcTextContentBox}).
- * A `region`'s rectangle is the width to wrap at and
- * the height to fit into — the pair {@link import("./diagnoseDoc").diagnoseDoc}
- * compares a measurement against.
+ * Where a shape's text is actually laid out: the box its `textVerticalBasis`
+ * names — the region its type declares (`ObjectDocDefinition.textRegion`, the
+ * same calculator the canvas draws and edits in), or the shape's whole height
+ * with that region's width ({@link applyTextVerticalBasis}) — minus the padding
+ * every text box has ({@link calcTextContentBox}). A `region`'s rectangle is the
+ * width to wrap at and the height to fit into — the pair
+ * {@link import("./diagnoseDoc").diagnoseDoc} compares a measurement against.
  *
  * The rectangle is in the shape's own coordinates, whose origin is the centre of
  * the bounding box (the convention the shipped regions use), so a shape whose
  * region is the whole box resolves to `{ x: -width / 2 + 6, y: -height / 2 + 2, … }`.
  *
- * @param shape - The object to measure: its `type`, its `width` / `height`, and any field its type's region reads (see {@link ContentBoxShape})
- * @returns `{ kind: "region", rect }` for a type whose box holds its text, `{ kind: "outside" }` for one whose box does not (a label drawn outside the outline, bands sized from their own text, no text at all, or a shipped type that declares no region), and `{ kind: "unknown" }` for a type name outside the shipped set
+ * @param shape - The object to measure: its `type`, its `width` / `height`, its `textVerticalBasis` if it sets one, and any field its type's region reads (see {@link ContentBoxShape})
+ * @returns `{ kind: "region", rect, declaredRegion }` for a type whose box holds its text, `{ kind: "outside" }` for one whose box does not (a label drawn outside the outline, bands sized from their own text, no text at all, or a shipped type that declares no region), and `{ kind: "unknown" }` for a type name outside the shipped set
  */
 export const resolveContentBox = <TShape extends ContentBoxShape>(
 	shape: TShape,
@@ -69,5 +84,15 @@ export const resolveContentBox = <TShape extends ContentBoxShape>(
 	if (region === null) {
 		return { kind: "outside" };
 	}
-	return { kind: "region", rect: calcTextContentBox(region) };
+	// An unknown value reads as the default rather than as an error: this package
+	// also runs over documents the parser has not stripped (a hand-built shape,
+	// `measure`'s size probes), and the field is a pure enum there too.
+	const basis = isTextVerticalBasis(shape.textVerticalBasis)
+		? shape.textVerticalBasis
+		: undefined;
+	return {
+		kind: "region",
+		rect: calcTextContentBox(applyTextVerticalBasis(region, shape, basis)),
+		declaredRegion: region,
+	};
 };

@@ -61,6 +61,15 @@ export {
 	TEXT_BLOCK_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
 } from "./model/objects/types/TextSlot";
+// What a single-body doc carries on the object itself rather than in its slot:
+// where the one body is placed against the shape. The schema generator lists
+// these beside the slot's own keys.
+export { TEXT_BODY_KEYS } from "./model/objects/base/TextStyleDoc";
+export type { TextVerticalBasis } from "./model/objects/types/TextVerticalBasis";
+export {
+	isTextVerticalBasis,
+	TextVerticalBases,
+} from "./model/objects/types/TextVerticalBasis";
 // One body of a slot's text: the plain string it is until part of it is styled on
 // its own, and the runs it is written as once it is.
 export type {

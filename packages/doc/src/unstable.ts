@@ -90,6 +90,9 @@ export { AUTO_HEIGHT_COMFORT_PADDING_EM } from "./text/block/autoHeightComfortPa
 export { calcAutoShapeHeight } from "./text/block/calcAutoShapeHeight";
 export type { AutoHeightShape } from "./text/block/calcAutoShapeHeight";
 export { calcTextContentBox } from "./text/block/calcTextContentBox";
+// The one place the two vertical bases are told apart, shared so that the
+// overlay, the editor, image export and the fit checks place a body alike.
+export { applyTextVerticalBasis } from "./text/block/applyTextVerticalBasis";
 export { calcVisualLineCount } from "./text/layout/calcVisualLineCount";
 export { calcVisualTextHeight } from "./text/layout/calcVisualTextHeight";
 export { layoutVisualLines } from "./text/layout/layoutVisualLines";

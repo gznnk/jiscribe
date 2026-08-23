@@ -115,7 +115,7 @@ export const createFrameMapper = <
 			return {
 				...ObjectMapper.toDoc(state),
 				...pick(state as unknown as Record<string, unknown>, passthroughKeys),
-				...mapTextStateToDoc(features.text, (state as TextStyleState).text),
+				...mapTextStateToDoc(features.text, state as TextStyleState),
 				...geometry,
 				...transform,
 			} as unknown as TDoc;

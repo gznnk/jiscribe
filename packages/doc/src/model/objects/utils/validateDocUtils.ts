@@ -12,6 +12,7 @@ import { isEdgeAnchorSide } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { isTextAlign } from "../types/TextAlign";
+import { isTextVerticalBasis } from "../types/TextVerticalBasis";
 import { isVerticalAlign } from "../types/VerticalAlign";
 
 /**
@@ -457,6 +458,12 @@ export function validateTextStyleFields(
 	const errors: SemanticDiagnostic[] = [];
 	if ("text" in o) {
 		errors.push(...validateRichTextContent(o.text, `${path}.text`));
+	}
+	if ("textVerticalBasis" in o && !isTextVerticalBasis(o.textVerticalBasis)) {
+		errors.push({
+			path: `${path}.textVerticalBasis`,
+			message: "must be one of: region, frame",
+		});
 	}
 	errors.push(...validateTextSlotStyleFields(o, path));
 	return errors;

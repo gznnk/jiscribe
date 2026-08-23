@@ -70,7 +70,7 @@ export const createPolyMapper = <
 			return {
 				...ObjectMapper.toDoc(state),
 				...pick(state as unknown as Record<string, unknown>, passthroughKeys),
-				...mapTextStateToDoc(features.text, (state as TextStyleState).text),
+				...mapTextStateToDoc(features.text, state as TextStyleState),
 				// Rounded here so every waypoint reaching the Doc carries the persisted
 				// precision, whichever path moved it (roundDocNumbers). No waypoints
 				// contributes no key at all: the Doc spelling of "engine routes" is an

@@ -99,6 +99,9 @@
 			"textDecoration": {
 				"$ref": "#/$defs/TextStyle/properties/textDecoration"
 			},
+			"textVerticalBasis": {
+				"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
+			},
 			"rotation": {
 				"$ref": "#/$defs/TransformStyle/properties/rotation"
 			},
@@ -1010,6 +1013,15 @@
 				"description": "Text decoration lines: \"underline\", \"line-through\", or \"underline line-through\" for both. \"none\" or omitted means no decoration. Default: \"none\"",
 				"type": "string",
 				"default": "none"
+			},
+			"textVerticalBasis": {
+				"description": "Which box `verticalAlign` measures against. \"region\" (the default) uses the area the shape keeps clear of its own decoration — a cylinder's caps, a document's wavy foot — which differs per shape, so shapes of different types drawn at one height put their text on different centres. \"frame\" uses the whole height instead, so a row of mixed types drawn at one height reads as one line of text; the text may then run over the shape's own decoration, which `diagnose` warns about. Horizontal placement is unaffected either way. Default: \"region\"",
+				"allOf": [
+					{
+						"$ref": "#/$defs/TextVerticalBasis"
+					}
+				],
+				"default": "region"
 			}
 		}
 	},
@@ -1053,6 +1065,11 @@
 		"description": "Vertical text alignment.",
 		"type": "string",
 		"enum": ["top", "middle", "bottom"]
+	},
+	"TextVerticalBasis": {
+		"description": "Box a body text's vertical alignment is measured against.",
+		"type": "string",
+		"enum": ["region", "frame"]
 	},
 	"ArrowType": {
 		"description": "Arrow shape at a connector endpoint. Includes UML relationship markers and ER crow's foot cardinality marks.",

@@ -4,6 +4,7 @@ import {
 	FILL_STYLE_KEYS,
 	STROKE_STYLE_KEYS,
 	supportsAutoHeight,
+	TEXT_BODY_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
 	TRANSFORM_STYLE_KEYS,
 	type ObjectDocDefinition,
@@ -89,10 +90,12 @@ const STYLE_PROP_SOURCES: ReadonlyArray<{
 	{ feature: "fill", styleDef: "FillStyle", props: FILL_STYLE_KEYS },
 	{
 		// The content first, then the styling of it: "text" is the body, which the slot
-		// keys deliberately leave out (they are `Omit<TextSlot, "text">`).
+		// keys deliberately leave out (they are `Omit<TextSlot, "text">`). Last come
+		// the fields that place the body against the shape rather than style it
+		// (TEXT_BODY_KEYS), which sit on the object beside the slot's own.
 		feature: "text",
 		styleDef: "TextStyle",
-		props: ["text", ...TEXT_SLOT_STYLE_KEYS],
+		props: ["text", ...TEXT_SLOT_STYLE_KEYS, ...TEXT_BODY_KEYS],
 	},
 	{
 		feature: "transform",
@@ -604,6 +607,7 @@ export function generateSchema(
 		"StrokeDashType",
 		"TextAlign",
 		"VerticalAlign",
+		"TextVerticalBasis",
 		"ArrowType",
 	];
 	for (const defName of enumDefNames) {
