@@ -68,6 +68,36 @@ export const cappedDefinition: ObjectDocDefinition = {
 	}),
 };
 
+/**
+ * A body-text shape whose label hangs below its outline, the way a pictogram's
+ * does: its declared region lies outside the box, so a body placement
+ * (`textVerticalBasis`) has nothing to move on it.
+ */
+export const belowLabelDefinition: ObjectDocDefinition = {
+	features: {
+		type: "below-label",
+		geometry: "rect",
+		text: "body",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+	textRegion: ({ width, height }) => ({
+		x: -width / 2,
+		y: height / 2,
+		width,
+		height: 20,
+	}),
+	factory: createFrameObjectFactory({
+		type: "below-label",
+		width: 80,
+		height: 80,
+		fill: "transparent",
+		stroke: "auto",
+		strokeWidth: 2,
+	}),
+};
+
 /** Values the badge fixture accepts, so an unknown one has something to be measured against. */
 export const BADGE_KINDS = ["new", "beta"] as const;
 

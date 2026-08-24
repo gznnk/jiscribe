@@ -39,7 +39,8 @@ export type TextLayoutDoc = {
 	textLayout?: TextLayout;
 	/**
 	 * Box width the text wraps in, in px, padding included. Required by — and
-	 * read only in — the block layout; the height stays measured from the wrapped
+	 * allowed only in — the block layout (`validateTextDoc` refuses it on a
+	 * label, where nothing reads it); the height stays measured from the wrapped
 	 * lines and is never stored.
 	 */
 	width?: number;

@@ -8,7 +8,10 @@ import {
 	expectValid,
 	readObject,
 } from "./support/docFixtures";
-import { badgeDefinition } from "./support/pluginFixtures";
+import {
+	badgeDefinition,
+	belowLabelDefinition,
+} from "./support/pluginFixtures";
 
 const badgedDocOps = createDocOps({
 	plugins: [{ id: "badged-plugin", objects: { badged: badgeDefinition } }],
@@ -139,15 +142,17 @@ describe("setExtraProps", () => {
 		expectValid(doc);
 	});
 
-	it("leaves the width alone for a text that was never in the block layout", () => {
+	it("refuses a width for a text that is no block, where nothing reads one", () => {
+		// A width on the label layout would sleep in the document and silently
+		// become the wrap width the day the layout is switched, so the write is
+		// refused with the layout that stores one named (validateTextDoc).
 		const doc = emptyDoc();
 		const id = docOps.addObject(doc, "text", { x: 0, y: 0, text: "label" });
 
-		expect(docOps.setExtraProps(doc, id, { width: 200 })).toEqual(["width"]);
-		expect(readObject(doc, id).width).toBe(200);
-
-		docOps.setExtraProps(doc, id, { textLayout: "label" });
-		expect(readObject(doc, id).width).toBe(200);
+		expect(() => docOps.setExtraProps(doc, id, { width: 200 })).toThrow(
+			/textLayout "block" alone/,
+		);
+		expect(readObject(doc, id).width).toBeUndefined();
 	});
 
 	it("leaves the layout — and the width — where they are for an undefined value", () => {
@@ -204,5 +209,36 @@ describe("setExtraProps", () => {
 		expect(() =>
 			docOps.setExtraProps(doc, id, { textVerticalBasis: "frame" }),
 		).toThrow(/no properties of its own/);
+	});
+
+	it("refuses the placement on a body drawn outside its box, saying why", () => {
+		// Accepting it would write a knob nothing ever reads; the reason names the
+		// actual mismatch rather than pretending the property does not exist.
+		const belowLabelDocOps = createDocOps({
+			plugins: [
+				{
+					id: "below-plugin",
+					objects: { "below-label": belowLabelDefinition },
+				},
+			],
+		});
+		const doc = emptyDoc();
+		const id = belowLabelDocOps.addObject(doc, "below-label", { x: 0, y: 0 });
+
+		expect(() =>
+			belowLabelDocOps.setExtraProps(doc, id, { textVerticalBasis: "frame" }),
+		).toThrow(/draws its label outside its box/);
+		expect(readObject(doc, id).textVerticalBasis).toBeUndefined();
+	});
+
+	it("moves a label into the block layout with its width, in the one write", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", { x: 0, y: 0, text: "hi" });
+
+		expect(
+			docOps.setExtraProps(doc, id, { textLayout: "block", width: 300 }),
+		).toEqual(["textLayout", "width"]);
+		expect(readObject(doc, id).width).toBe(300);
+		expectValid(doc);
 	});
 });

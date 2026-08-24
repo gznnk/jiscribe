@@ -1048,8 +1048,8 @@ export const createCanvasToolDescriptors = (
 			"Set the properties belonging to a shape type itself: lucideIcon's `icon`, callout's `tail`, container's `headerFill` / `headerHeight`.",
 			"One object at a time, because these names belong to a single type — read the type's own schema for the names it has.",
 			"Unlike set_style nothing is silently skipped: a name the type does not have, or a value it rejects, comes back as an error with the reason, and the object is left as it was.",
-			'This is also how an existing text is moved between its layouts — `textLayout` with the `width` a "block" wraps in — but a text you are about to create takes both on add_object instead, in one call.',
-			'One name belongs to every labelled shape rather than to a single type: `textVerticalBasis` ("region" / "frame") decides whether the label is placed in the area the shape keeps clear of its own decoration or on its whole height — set "frame" on a row of mixed shapes drawn at one height so their labels line up.',
+			'This is also how an existing text is moved between its layouts — `textLayout` with the `width` a "block" wraps in, always together: a `width` on a text that is not being a block is refused, nothing reading it there. A text you are about to create takes both on add_object instead, in one call.',
+			'One name is shared by every shape holding its label inside its box rather than belonging to a single type: `textVerticalBasis` ("region" / "frame") decides whether the label is placed in the area the shape keeps clear of its own decoration or on its whole height — set "frame" on a row of mixed shapes drawn at one height so their labels line up. A shape drawing its label outside its box (actor and the like) refuses it: there is nothing for the placement to move.',
 		].join(" "),
 		{
 			id: z.string().describe("id of the object to change."),

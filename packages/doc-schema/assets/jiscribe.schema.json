@@ -732,7 +732,7 @@
 					"enum": ["label", "block"]
 				},
 				"width": {
-					"description": "Box width in pixels, padding included, that the text wraps in. Required with `textLayout: \"block\"` and read only there — the label layout measures its own width. There is no `height` field in either layout: the height always follows from the text.",
+					"description": "Box width in pixels, padding included, that the text wraps in. Required with `textLayout: \"block\"` and allowed only there — the label layout measures its own width, and a width on it is invalid. There is no `height` field in either layout: the height always follows from the text.",
 					"type": "number",
 					"minimum": 0
 				},

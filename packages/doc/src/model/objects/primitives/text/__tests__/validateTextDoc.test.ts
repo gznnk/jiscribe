@@ -103,4 +103,29 @@ describe("validateTextDoc", () => {
 		).toEqual([]);
 		expect(validateTextDoc(validText, "root")).toEqual([]);
 	});
+
+	it("refuses a width outside the block layout, where nothing reads it", () => {
+		// A number sitting there would silently become the wrap width the day the
+		// layout is switched; a non-number would break the file only on its next
+		// open. Both are stopped where they are written.
+		const widthRefused = [
+			{
+				path: "root.width",
+				message:
+					'is stored by textLayout "block" alone; set that layout with it, or drop the width',
+			},
+		];
+		expect(validateTextDoc({ ...validText, width: 300 }, "root")).toEqual(
+			widthRefused,
+		);
+		expect(validateTextDoc({ ...validText, width: "wide" }, "root")).toEqual(
+			widthRefused,
+		);
+		expect(
+			validateTextDoc(
+				{ ...validText, textLayout: "label", width: 300 },
+				"root",
+			),
+		).toEqual(widthRefused);
+	});
 });

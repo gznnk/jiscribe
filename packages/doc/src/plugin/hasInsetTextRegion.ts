@@ -29,6 +29,36 @@ const INSET_TEXT_REGION_PROBE_BOXES: readonly Dimensions[] = [
 ];
 
 /**
+ * Whether the type places its one body inside its own box at all: its declared
+ * region answers a rect that sits within the box vertically at every sampled
+ * size. Weaker than {@link hasInsetTextRegion} — a full-box region passes here
+ * (asking for the frame basis on it is already satisfied, not ignored) — and
+ * false for a type that draws its label outside its outline or declares no
+ * region, where a basis has nothing to place and a write of one could only sit
+ * in the document looking as though it took effect.
+ *
+ * @param definition - The type's declarations (see {@link InsetTextRegionDeclaration}); sampled at the same boxes as {@link hasInsetTextRegion}
+ * @returns True when the declared region stays within the box vertically at every sampled size
+ */
+export const holdsBodyInsideBox = (
+	definition: InsetTextRegionDeclaration,
+): boolean => {
+	const { features, textRegion } = definition;
+	if (features.text !== "body" || textRegion === undefined) {
+		return false;
+	}
+	return INSET_TEXT_REGION_PROBE_BOXES.every((box) => {
+		const region = textRegion(box, BODY_TEXT_SLOT_ID);
+		if (region === null) {
+			return false;
+		}
+		return (
+			region.y >= -box.height / 2 && region.y + region.height <= box.height / 2
+		);
+	});
+};
+
+/**
  * Whether the type gives up part of its own height to its outline: its declared
  * region (`ObjectDocDefinition.textRegion`) sits **inside** the box vertically —
  * a cylinder's caps, a document's wavy foot, a container's header band.
