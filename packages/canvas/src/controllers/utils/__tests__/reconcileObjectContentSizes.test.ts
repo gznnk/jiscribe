@@ -119,9 +119,9 @@ describe("reconcileObjectContentSizes", () => {
 	});
 
 	it("skips an object that kept its slots, however else it was rewritten", () => {
-		// A move writes cx/cy and passes the slots through, so it cannot have
-		// changed what the box measures to — the comparison is on the slots, not on
-		// the object, so a per-frame drag re-measures nothing.
+		// A move writes cx/cy alone, which the comparison leaves out (a region is
+		// declared before the position applies), so a per-frame drag re-measures
+		// nothing.
 		const stale = withStaleBox(textObject("t1", "hello"));
 		const previous = stateOf([stale]);
 		const moved = {
@@ -191,6 +191,60 @@ describe("reconcileObjectContentSizes", () => {
 		expect(
 			(reconciled.objects.r1 as unknown as { height: number }).height,
 		).toBe(200);
+	});
+
+	it("re-measures a shape whose region reads a field of the type's own", () => {
+		// A text region may read any field its type declares — the callout's tail
+		// takes a quarter of the box off one side — so the comparison is on the
+		// whole object, not on a list of the fields the shipped types happen to
+		// read. Dragging the tail must re-derive the height it changed the room for.
+		const registry = createObjectContentResizerRegistry();
+		registry.register(
+			"rect",
+			(state) =>
+				({
+					...state,
+					height:
+						(state as unknown as { tail: { side: string } }).tail.side ===
+						"right"
+							? 80
+							: 40,
+				}) as ObjectState,
+		);
+		const tailBelow = {
+			...rectObject("r1"),
+			autoHeight: true,
+			height: 40,
+			tail: { side: "bottom", position: 0.5 },
+		} as unknown as ObjectState;
+		const tailRight = {
+			...tailBelow,
+			tail: { side: "right", position: 0.5 },
+		} as unknown as ObjectState;
+
+		const reconciled = reconcileObjectContentSizes(
+			stateOf([tailRight]),
+			stateOf([tailBelow]),
+			registry,
+		);
+
+		expect(
+			(reconciled.objects.r1 as unknown as { height: number }).height,
+		).toBe(80);
+	});
+
+	it("skips an object that was only rotated or flipped", () => {
+		// The transform is applied after the local box a region is declared in, so
+		// it cannot move a derived height — and a rotate drag must not re-measure
+		// on every frame.
+		const stale = withStaleBox(textObject("t1", "hello"));
+		const previous = stateOf([stale]);
+		const rotated = { ...stale, rotation: 45, scaleX: -1 } as ObjectState;
+		const state = stateOf([rotated]);
+
+		expect(reconcileObjectContentSizes(state, previous, contentResizer)).toBe(
+			state,
+		);
 	});
 
 	it("re-measures nothing at all when the registry holds no resizer", () => {

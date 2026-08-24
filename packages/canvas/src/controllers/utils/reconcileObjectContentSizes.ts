@@ -19,12 +19,39 @@ const derivesHeightAlone = (object: ObjectState): boolean =>
 	(object as Partial<TextState>).textLayout === "block";
 
 /**
- * Whether an object still holds everything a resizer measures: the very slots it
- * held before — content and typography, the whole of what a box is derived from —
- * at the very width it wrapped them at, on the same basis it places its body
- * against, and with the same answer to what its box follows at all. Narrower
- * than comparing the object: a move and a vertical-only group resize both write
- * cx/cy and pass all five through untouched.
+ * Fields the wholesale comparison in {@link holdsSameContentInputs} leaves out.
+ * The position and the transform are applied after the local box a text region
+ * is declared in, so no derivation reads them — a move or a rotation must not
+ * re-measure every frame of its drag. The rest are compared on their own terms
+ * above them: height only where it alone is derived, since a label text's
+ * derived box would otherwise fight the group resize that scaled it.
+ */
+const FIELDS_COMPARED_APART: ReadonlySet<string> = new Set([
+	"cx",
+	"cy",
+	"rotation",
+	"scaleX",
+	"scaleY",
+	"type",
+	"autoHeight",
+	"textLayout",
+	"height",
+	"width",
+	"textVerticalBasis",
+	"text",
+]);
+
+/**
+ * Whether an object still holds everything a resizer measures: the slots a
+ * derivation certainly reads — content and typography at the width they wrapped
+ * at, on the same basis, with the same answer to what the box follows — and,
+ * wholesale, every other field of the object. The wholesale half is there
+ * because a text region may read any field its type declares (the callout's
+ * tail narrows the box on one side), so a list of the fields the shipped types
+ * happen to read would hand back a stale height the moment a type reads one
+ * more — the same choice doc-ops' calcDerivationInputs makes. Only the position
+ * and the transform stay out ({@link FIELDS_COMPARED_APART}), so a per-frame
+ * drag still re-measures nothing.
  *
  * The basis belongs here because a derived height follows it
  * (`calcAutoShapeHeight`): switching a body onto the shape's whole height is a
@@ -47,20 +74,47 @@ const derivesHeightAlone = (object: ObjectState): boolean =>
 const holdsSameContentInputs = (
 	previousObject: ObjectState | undefined,
 	object: ObjectState,
-): boolean =>
-	previousObject !== undefined &&
-	previousObject.type === object.type &&
-	previousObject.autoHeight === object.autoHeight &&
-	(previousObject as Partial<TextState>).textLayout ===
-		(object as Partial<TextState>).textLayout &&
-	(!derivesHeightAlone(object) ||
-		(previousObject as Partial<Dimensions>).height ===
-			(object as Partial<Dimensions>).height) &&
-	(previousObject as Partial<Dimensions>).width ===
-		(object as Partial<Dimensions>).width &&
-	(previousObject as TextStyleState).textVerticalBasis ===
-		(object as TextStyleState).textVerticalBasis &&
-	(previousObject as TextStyleState).text === (object as TextStyleState).text;
+): boolean => {
+	if (
+		previousObject === undefined ||
+		previousObject.type !== object.type ||
+		previousObject.autoHeight !== object.autoHeight ||
+		(previousObject as Partial<TextState>).textLayout !==
+			(object as Partial<TextState>).textLayout ||
+		(derivesHeightAlone(object) &&
+			(previousObject as Partial<Dimensions>).height !==
+				(object as Partial<Dimensions>).height) ||
+		(previousObject as Partial<Dimensions>).width !==
+			(object as Partial<Dimensions>).width ||
+		(previousObject as TextStyleState).textVerticalBasis !==
+			(object as TextStyleState).textVerticalBasis ||
+		(previousObject as TextStyleState).text !== (object as TextStyleState).text
+	) {
+		return false;
+	}
+	// By reference, like the slots above: a rewrite that kept a value but not its
+	// object re-measures for nothing, which is the safe direction.
+	const previousRecord = previousObject as unknown as Record<string, unknown>;
+	const record = object as unknown as Record<string, unknown>;
+	for (const field of Object.keys(record)) {
+		if (
+			!FIELDS_COMPARED_APART.has(field) &&
+			previousRecord[field] !== record[field]
+		) {
+			return false;
+		}
+	}
+	for (const field of Object.keys(previousRecord)) {
+		if (
+			!FIELDS_COMPARED_APART.has(field) &&
+			!(field in record) &&
+			previousRecord[field] !== undefined
+		) {
+			return false;
+		}
+	}
+	return true;
+};
 
 /**
  * Re-measures the box of every object whose box is derived from its content
