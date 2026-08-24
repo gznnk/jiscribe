@@ -1,7 +1,7 @@
+import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
+import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, it, expect } from "vitest";
 
-import { RectFeatures } from "../../../schemas/objects/primitives/rect/RectDoc";
-import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import {
 	rectToDoc,
 	rectToState,

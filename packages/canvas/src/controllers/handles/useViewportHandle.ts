@@ -1,3 +1,4 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import {
 	convertRectToBoundingBox,
 	roundToDecimal,
@@ -7,7 +8,6 @@ import {
 import { type Dispatch, type RefObject, useMemo } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
-import { PRECISION } from "../../constants/precision";
 import { ZOOM } from "../../constants/zoom";
 import type { Camera, Viewport } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -136,7 +136,7 @@ const toCamera = ({ minX, minY, zoom }: Viewport): Camera => ({
  * Builds the stable viewport sub-handle assembled into the Canvas handle.
  *
  * @param dispatch - The canvas reducer's dispatch; every method here goes
- *   through SET_VIEWPORT
+ *   through SET_CAMERA
  * @param canvasState - Current controller state, read at call time (not at
  *   render time) so the handle stays referentially stable
  * @param registries - The canvas's registry bundle; its visual bounds decide how
@@ -154,15 +154,14 @@ export const useViewportHandle = (
 
 	return useMemo(() => {
 		const applyCamera = (camera: Camera): Camera => {
-			dispatch({ type: "SET_VIEWPORT", camera });
+			dispatch({ type: "SET_CAMERA", camera });
 			return camera;
 		};
 		const applyFitted = (fitted: Viewport | null): Camera | null =>
 			fitted === null ? null : applyCamera(toCamera(fitted));
 
 		return {
-			setViewport: (camera: Camera) =>
-				dispatch({ type: "SET_VIEWPORT", camera }),
+			setViewport: (camera: Camera) => dispatch({ type: "SET_CAMERA", camera }),
 
 			getViewport: () => canvasStateRef.current.viewport,
 
@@ -174,7 +173,7 @@ export const useViewportHandle = (
 				} = canvasStateRef.current.viewport;
 				const zoom = roundToDecimal(
 					Math.max(ZOOM.MIN, Math.min(ZOOM.MAX, options?.zoom ?? currentZoom)),
-					PRECISION.ZOOM,
+					ZOOM.PRECISION,
 				);
 				return applyCamera({
 					zoom,

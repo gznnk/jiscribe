@@ -1,3 +1,4 @@
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { calcPolyBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 
@@ -10,7 +11,6 @@ import { resolveConnectorLabelBox } from "../../rendering/objects/connector/Conn
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
-import type { ConnectorLabel } from "../../schemas/objects/connector/ConnectorDoc";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 

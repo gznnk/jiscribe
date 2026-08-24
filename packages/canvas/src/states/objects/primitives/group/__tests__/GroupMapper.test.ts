@@ -1,7 +1,7 @@
+import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
+import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, expect, it } from "vitest";
 
-import type { GroupDoc } from "../../../../../schemas/objects/primitives/group/GroupDoc";
-import type { RectDoc } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import {
 	groupToDoc,
 	groupToState,

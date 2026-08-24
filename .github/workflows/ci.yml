@@ -59,4 +59,4 @@ jobs:
         run: pnpm test
 
       - name: AI schema/docs drift check
-        run: pnpm check:ai
+        run: pnpm check:schema

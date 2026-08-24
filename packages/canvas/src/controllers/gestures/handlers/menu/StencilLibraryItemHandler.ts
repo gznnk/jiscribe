@@ -1,7 +1,7 @@
+import { createObjectDoc } from "@jiscribe/doc/model/objects/utils/createObjectDoc";
+import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
-import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
-import type { ObjectFactoryRegistry } from "../../../../schemas/registry/ObjectFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import type { Stencil } from "../../../ui/objects/Stencil";

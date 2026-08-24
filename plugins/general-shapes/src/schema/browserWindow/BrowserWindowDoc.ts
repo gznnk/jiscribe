@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * A browser window (a frame with a title bar carrying three buttons), used for web UIs and screens.

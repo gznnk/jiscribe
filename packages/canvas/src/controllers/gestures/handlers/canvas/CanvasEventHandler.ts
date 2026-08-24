@@ -1,10 +1,10 @@
-﻿import { roundToDecimal } from "@jiscribe/geometry";
+﻿import { createObjectDocFromBounds } from "@jiscribe/doc/model/objects/utils/createObjectDocFromBounds";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
+import { roundToDecimal } from "@jiscribe/geometry";
 
 import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
-import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
-import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
@@ -58,7 +58,7 @@ export const CanvasEventHandler: GestureHandler = {
 				...state,
 				viewport: {
 					...state.viewport,
-					zoom: roundToDecimal(newZoom, PRECISION.ZOOM),
+					zoom: roundToDecimal(newZoom, ZOOM.PRECISION),
 					minX: roundToDecimal(newMinX, PRECISION.COORDINATE),
 					minY: roundToDecimal(newMinY, PRECISION.COORDINATE),
 				},

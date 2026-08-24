@@ -1,9 +1,12 @@
+import { embedCanvasSourceInPng } from "@jiscribe/doc/file/pngCanvasSource";
+
 import {
-	buildSizedExportSvgString,
+	buildSizedExportSvg,
+	serializeSvg,
 	type BuildExportSvgOptions,
 } from "./buildExportSvg";
 import { buildTimestampedName, downloadBlob } from "./downloadBlob";
-import { embedCanvasSourceInPng } from "./pngCanvasSource";
+import { embedLoadedFontFaces } from "./embedFontFaces";
 
 export type RasterizeSvgOptions = BuildExportSvgOptions & {
 	/**
@@ -69,9 +72,11 @@ export type RasterizedPng = {
  * mapping image pixels back onto the exported region cannot derive it up front.
  *
  * The export SVG being drawn has its text already converted to native
- * `<text>`, so no foreignObject-induced canvas taint occurs. When
- * `options.source` is given, the `.jis.json` is embedded as an `iTXt`
- * chunk so the PNG can be reopened for editing (draw.io-style round-trip).
+ * `<text>`, so no foreignObject-induced canvas taint occurs. Its faces are
+ * embedded into this copy alone (see {@link embedLoadedFontFaces}) — the file
+ * the SVG export writes stays free of them. When `options.source` is given, the
+ * `.jis.json` is embedded as an `iTXt` chunk so the PNG can be reopened for
+ * editing (draw.io-style round-trip).
  *
  * @param svg - The live canvas `<svg>` to snapshot
  * @param options - Region / source embedding / background, plus the pixel scale
@@ -82,9 +87,10 @@ export const rasterizeSvgToPng = async (
 	svg: SVGSVGElement,
 	options: RasterizeSvgOptions = {},
 ): Promise<RasterizedPng> => {
-	const { svgXml, width, height } = buildSizedExportSvgString(svg, options);
+	const { exportSvg, width, height } = buildSizedExportSvg(svg, options);
 	const scale = resolveScale(options, width, height);
-	const image = await loadSvgImage(svgXml);
+	await embedLoadedFontFaces(exportSvg);
+	const image = await loadSvgImage(serializeSvg(exportSvg));
 
 	const canvas = document.createElement("canvas");
 	canvas.width = Math.max(1, Math.ceil(width * scale));

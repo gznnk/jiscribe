@@ -1,3 +1,9 @@
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import {
+	TEXT_BOX_PADDING_X,
+	TEXT_BOX_PADDING_Y,
+} from "@jiscribe/doc/text/block/textBoxPadding";
+import { layoutVisualLines } from "@jiscribe/doc/text/layout/layoutVisualLines";
 import {
 	convertBoundingBoxToRect,
 	isTransformedFrame,
@@ -5,18 +11,12 @@ import {
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import { calcTransformedRectBounds } from "./calcTransformedRectBounds";
-import {
-	TEXT_BOX_PADDING_X,
-	TEXT_BOX_PADDING_Y,
-} from "../../constants/textBoxPadding";
 import type { ObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../rendering/objects/utils/calcTextRegion";
-import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import { resolveTextObjectFont } from "../../states/objects/primitives/text/resolveTextObjectFont";
 import { readRichTextSlot } from "../../states/objects/types/TextSlots";
-import { layoutVisualLines } from "../../states/objects/utils/measureText";
 
 /**
  * Slack allowed before the text counts as outgrowing its region, in local px.

@@ -1,4 +1,5 @@
-import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
+import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
+
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**

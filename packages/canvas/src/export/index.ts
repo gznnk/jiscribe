@@ -12,5 +12,5 @@ export { embedCanvasSource, extractCanvasSource } from "./canvasSourceMetadata";
 export {
 	embedCanvasSourceInPng,
 	extractCanvasSourceFromPng,
-} from "./pngCanvasSource";
+} from "@jiscribe/doc/file/pngCanvasSource";
 export { downloadBlob } from "./downloadBlob";

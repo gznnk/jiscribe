@@ -1,9 +1,9 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
-import { PRECISION } from "../../../constants/precision";
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text/calcTextObjectFrameSize";
 import type { CanvasControllerState } from "../../CanvasTypes";

@@ -1,9 +1,9 @@
-import type React from "react";
-
 import type {
 	RichText,
 	TextRun,
-} from "../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
+import type React from "react";
+
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 /**

@@ -1,6 +1,7 @@
-import type { TransformDoc } from "../../../schemas/objects/base/TransformDoc";
+import type { TransformDoc } from "@jiscribe/doc/model/objects/base/TransformDoc";
+import { roundDocRotation } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
+
 import type { TransformState } from "../../../states/objects/base/TransformState";
-import { roundDocRotation } from "../utils/roundDocNumbers";
 
 /**
  * Maps TransformDoc to TransformState.

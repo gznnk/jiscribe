@@ -2,15 +2,13 @@
 // entry point for consumers that want to take part in parse-time validation without going
 // through definitions.ts (which pulls in React components) — the MCP server, the Node-side
 // diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
-// @jiscribe/canvas/doc / @jiscribe/canvas-sdk/doc, and never pulls in
+// @jiscribe/doc / @jiscribe/canvas-sdk/doc, and never pulls in
 // presentation / state / stencil.
 // description / summary / outlineDescription / defaults are the single source of
-// the generated JSON schema and AI docs (pnpm generate:ai).
-import type {
-	CanvasDocPlugin,
-	ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
+// the generated JSON schema and AI docs (pnpm generate:schema).
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
+import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
 
 import { CARD_DOC_DEFAULTS, CardFeatures } from "./schema/card/CardDoc";
 import { CROSS_DOC_DEFAULTS, CrossFeatures } from "./schema/cross/CrossDoc";
@@ -69,12 +67,31 @@ import {
 	SubroutineFeatures,
 } from "./schema/subroutine/SubroutineDoc";
 import {
+	calcCardTextRegion,
+	calcDbTextRegion,
+	calcDelayTextRegion,
+	calcDiamondTextRegion,
+	calcDisplayTextRegion,
+	calcDocumentTextRegion,
+	calcHexagonTextRegion,
+	calcLoopLimitTextRegion,
+	calcManualInputTextRegion,
+	calcMultiDocumentTextRegion,
+	calcOffPageConnectorTextRegion,
+	calcParallelogramTextRegion,
+	calcStadiumTextRegion,
+	calcStoredDataTextRegion,
+	calcSubroutineTextRegion,
+	calcTrapezoidTextRegion,
+} from "./schema/textRegions";
+import {
 	TRAPEZOID_DOC_DEFAULTS,
 	TrapezoidFeatures,
 } from "./schema/trapezoid/TrapezoidDoc";
 
 export const cardDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: CardFeatures,
+	textRegion: calcCardTextRegion,
 	defaults: CARD_DOC_DEFAULTS,
 	description:
 		"Card: a rectangle with the top-left corner cut off, used for punched-card style data in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
@@ -84,6 +101,7 @@ export const cardDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const crossDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: CrossFeatures,
+	textRegion: calcOutsideBoxTextRegion,
 	defaults: CROSS_DOC_DEFAULTS,
 	description:
 		"Cross (plus) marker, used to mark junctions and for emphasis. Uses the same rect-based geometry (x/y/width/height) as RectDoc. The arms fill the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long note, and leaving the text out keeps a bare marker.",
@@ -93,6 +111,7 @@ export const crossDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const dbDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: DbFeatures,
+	textRegion: calcDbTextRegion,
 	defaults: DB_DOC_DEFAULTS,
 	description:
 		"Database cylinder shape, typically used for data stores in architecture or ER diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cylinder. Text is laid out in the body region below the top cap ellipse (not the full bounding box).",
@@ -102,6 +121,7 @@ export const dbDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const delayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: DelayFeatures,
+	textRegion: calcDelayTextRegion,
 	defaults: DELAY_DOC_DEFAULTS,
 	description:
 		"Delay shape: a rectangle whose right edge is a semicircular bulge, used for wait/delay steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
@@ -111,6 +131,7 @@ export const delayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const diamondDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: DiamondFeatures,
+	textRegion: calcDiamondTextRegion,
 	defaults: DIAMOND_DOC_DEFAULTS,
 	description:
 		"Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond. Text is laid out within the full bounding box (not clipped to the diamond interior).",
@@ -120,6 +141,7 @@ export const diamondDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const displayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: DisplayFeatures,
+	textRegion: calcDisplayTextRegion,
 	defaults: DISPLAY_DOC_DEFAULTS,
 	description:
 		"Display shape with a pointed left edge and a rounded right cap, used for output-to-display steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
@@ -129,6 +151,7 @@ export const displayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const documentDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: DocumentFeatures,
+	textRegion: calcDocumentTextRegion,
 	defaults: DOCUMENT_DOC_DEFAULTS,
 	description:
 		"Document shape (rect with a wavy bottom edge), typically used for reports/files in flowcharts or deliverables in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a document. Text is laid out above the bottom wave band.",
@@ -138,6 +161,7 @@ export const documentDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const extractDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: ExtractFeatures,
+	textRegion: calcOutsideBoxTextRegion,
 	defaults: EXTRACT_DOC_DEFAULTS,
 	description:
 		'The flowchart "extract" symbol — an upward triangle (apex at the top), used for extract/merge/marker nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc. The triangle fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and leaving the text out keeps a bare marker.',
@@ -147,6 +171,7 @@ export const extractDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 
 export const hexagonDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: HexagonFeatures,
+	textRegion: calcHexagonTextRegion,
 	defaults: HEXAGON_DOC_DEFAULTS,
 	description:
 		"Hexagon shape with pointed left/right caps, typically used for preparation steps in flowcharts or emphasis nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a hexagon. Text is laid out with a small horizontal inset to stay inside the caps.",
@@ -157,6 +182,7 @@ export const hexagonDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const loopLimitDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 	{
 		features: LoopLimitFeatures,
+		textRegion: calcLoopLimitTextRegion,
 		defaults: LOOP_LIMIT_DOC_DEFAULTS,
 		description:
 			'Loop-limit shape (a rectangle with both top corners cut off), marking the start of a loop in flowcharts; set "flipY": true to mark the loop end. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text sits below the top bevels.',
@@ -168,6 +194,7 @@ export const loopLimitDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 export const manualInputDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: ManualInputFeatures,
+		textRegion: calcManualInputTextRegion,
 		defaults: MANUAL_INPUT_DOC_DEFAULTS,
 		description:
 			"Manual-input shape whose top edge slopes up toward the right, used for keyed/manual entry steps. Uses the same rect-based geometry (x/y/width/height) as RectDoc; text sits below the sloping top edge.",
@@ -178,6 +205,7 @@ export const manualInputDocDefinition: ObjectDocDefinition =
 export const multiDocumentDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: MultiDocumentFeatures,
+		textRegion: calcMultiDocumentTextRegion,
 		defaults: MULTI_DOCUMENT_DOC_DEFAULTS,
 		description:
 			"Multi-document shape (three stacked document sheets), used for report batches / file sets in flowcharts. The front sheet sits at the bottom-left and the two back sheets step toward the top-right. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is confined to the front sheet, above its bottom wave band.",
@@ -188,6 +216,7 @@ export const multiDocumentDocDefinition: ObjectDocDefinition =
 export const offPageConnectorDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: OffPageConnectorFeatures,
+		textRegion: calcOffPageConnectorTextRegion,
 		defaults: OFF_PAGE_CONNECTOR_DOC_DEFAULTS,
 		description:
 			"Off-page connector: a home-plate pentagon (rectangle tapering to a downward point) marking a jump to another page/section of a flowchart, usually paired with an on-page connector by a short label. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a pentagon. Text sits in the rectangular band above the point.",
@@ -198,6 +227,7 @@ export const offPageConnectorDocDefinition: ObjectDocDefinition =
 export const parallelogramDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: ParallelogramFeatures,
+		textRegion: calcParallelogramTextRegion,
 		defaults: PARALLELOGRAM_DOC_DEFAULTS,
 		description:
 			"Parallelogram shape (top edge shifted right), typically used for input/output steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a parallelogram. Text is laid out with a small horizontal inset to stay inside the slanted sides.",
@@ -207,6 +237,7 @@ export const parallelogramDocDefinition: ObjectDocDefinition =
 
 export const stadiumDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: StadiumFeatures,
+	textRegion: calcStadiumTextRegion,
 	defaults: STADIUM_DOC_DEFAULTS,
 	description:
 		"Stadium (pill) shape with fully rounded ends, typically used for start/end terminators in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a stadium. Text is laid out within the full bounding box.",
@@ -217,6 +248,7 @@ export const stadiumDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const storedDataDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: StoredDataFeatures,
+		textRegion: calcStoredDataTextRegion,
 		defaults: STORED_DATA_DOC_DEFAULTS,
 		description:
 			"Stored-data shape (a rectangle whose left/right edges are arcs both bowing left, like a drum segment) — the generic storage symbol for files / caches that are not specifically a database (use DbDoc for databases). Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out between the two side arcs.",
@@ -227,6 +259,7 @@ export const storedDataDocDefinition: ObjectDocDefinition =
 export const subroutineDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: SubroutineFeatures,
+		textRegion: calcSubroutineTextRegion,
 		defaults: SUBROUTINE_DOC_DEFAULTS,
 		description:
 			"Predefined-process (subroutine) box: a rectangle with a vertical bar near each side, for calls to a defined sub-procedure. Uses the same rect-based geometry (x/y/width/height) as RectDoc; text is inset horizontally to stay between the bars.",
@@ -237,6 +270,7 @@ export const subroutineDocDefinition: ObjectDocDefinition =
 export const trapezoidDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 	{
 		features: TrapezoidFeatures,
+		textRegion: calcTrapezoidTextRegion,
 		defaults: TRAPEZOID_DOC_DEFAULTS,
 		description:
 			"Trapezoid (wide top, narrow bottom), typically used for manual-operation steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a trapezoid.",

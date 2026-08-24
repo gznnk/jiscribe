@@ -1,5 +1,6 @@
-import { isOrthogonalRouting } from "../../../../../../../schemas/objects/types/ConnectorRouting";
-import type { ConnectorRouting } from "../../../../../../../schemas/objects/types/ConnectorRouting";
+import { isOrthogonalRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
+import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
+
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 
 /**

@@ -9,7 +9,7 @@ describe("hexagon textRegion", () => {
 			left: HEXAGON_CAP_RATIO,
 			right: HEXAGON_CAP_RATIO,
 		});
-		const result = textRegion({ width: 100, height: 60 }, "body");
+		const result = textRegion({ width: 100, height: 60 });
 		expect(result).toEqual({ x: -30, y: -30, width: 60, height: 60 });
 	});
 });

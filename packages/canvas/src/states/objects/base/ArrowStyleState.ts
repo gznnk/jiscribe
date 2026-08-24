@@ -1,4 +1,4 @@
-import type { ArrowType } from "../../../schemas/objects/types/ArrowType";
+import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 
 /**
  * Properties related to arrowheads (runtime state). Identical to the doc side, which is

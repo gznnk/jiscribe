@@ -1,8 +1,8 @@
+import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connector/isConnectorDrawnOrthogonal";
 import { isTransformedFrame, type Point, type Rect } from "@jiscribe/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
-import { isConnectorDrawnOrthogonal } from "../../../../../schemas/objects/connector/isConnectorDrawnOrthogonal";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type { ObjectAnchorRegionRegistry } from "../../../../objects/registry/ObjectAnchorRegionRegistry";

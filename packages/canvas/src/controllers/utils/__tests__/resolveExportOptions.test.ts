@@ -1,7 +1,7 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import {
@@ -199,5 +199,87 @@ describe("resolveExportOptions", () => {
 		expect(
 			resolveExportOptions(emptyState, registries.objectMapper).background,
 		).toBeUndefined();
+	});
+
+	describe("view.padding", () => {
+		const createStateWithViewPadding = (padding: Record<string, number>) => ({
+			...createStateWithRect(),
+			view: { padding },
+		});
+
+		it("frames a content region with the document's per-side padding", () => {
+			const state = createStateWithViewPadding({
+				top: 48,
+				right: 64,
+				bottom: 64,
+				left: 64,
+			});
+			// The rect is 0,0..10,10.
+			expect(
+				resolveExportOptions(
+					state,
+					registries.objectMapper,
+					registries.objectVisualBounds,
+				).viewBox,
+			).toEqual({ x: -64, y: -48, width: 138, height: 122 });
+		});
+
+		it("treats a side the document left out as 0", () => {
+			const state = createStateWithViewPadding({ left: 20 });
+			expect(
+				resolveExportOptions(
+					state,
+					registries.objectMapper,
+					registries.objectVisualBounds,
+				).viewBox,
+			).toEqual({ x: -20, y: 0, width: 30, height: 10 });
+		});
+
+		it("lets an explicit margin option override the document's padding", () => {
+			const state = createStateWithViewPadding({ top: 48, left: 64 });
+			expect(
+				resolveExportOptions(
+					state,
+					registries.objectMapper,
+					registries.objectVisualBounds,
+					{ margin: 5 },
+				).viewBox,
+			).toEqual({ x: -5, y: -5, width: 20, height: 20 });
+		});
+
+		it("ignores the document's padding for a region taken exactly", () => {
+			const state = createStateWithViewPadding({ top: 48, left: 64 });
+			expect(
+				resolveExportOptions(
+					state,
+					registries.objectMapper,
+					registries.objectVisualBounds,
+					{ region: "viewport" },
+				).viewBox,
+			).toEqual({ x: 20, y: 10, width: 400, height: 300 });
+		});
+
+		it("keeps EXPORT_FIT_PADDING for a document that declares no view", () => {
+			const state = createStateWithRect();
+			expect(state.view).toBeUndefined();
+			expect(
+				resolveExportOptions(state, registries.objectMapper).viewBox,
+			).toEqual({
+				x: -EXPORT_FIT_PADDING,
+				y: -EXPORT_FIT_PADDING,
+				width: 10 + EXPORT_FIT_PADDING * 2,
+				height: 10 + EXPORT_FIT_PADDING * 2,
+			});
+		});
+
+		it("keeps EXPORT_FIT_PADDING for a view that declares only an open mode", () => {
+			const state = {
+				...createStateWithRect(),
+				view: { open: "fit-all" as const },
+			};
+			expect(
+				resolveExportOptions(state, registries.objectMapper).viewBox?.x,
+			).toBe(-EXPORT_FIT_PADDING);
+		});
 	});
 });

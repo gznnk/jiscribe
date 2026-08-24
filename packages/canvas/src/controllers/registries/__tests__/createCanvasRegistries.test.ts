@@ -180,7 +180,67 @@ describe("createCanvasRegistries", () => {
 					id: "text",
 					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 				},
+				// The box holds its text and nothing denies it, so the type may leave
+				// `height` out and gets the switch (supportsAutoHeightType), placed
+				// before the aspect lock so the two sizing toggles read as one run.
+				{ id: "auto-height", items: [{ type: "autoHeight" }] },
 				{ id: "transform", items: [{ type: "aspectRatio" }] },
+			]);
+			// The whole box is the region, so both vertical bases name it and the
+			// basis switch is left out (hasInsetTextRegionType).
+			expect(
+				sections.some((section) => section.id === "text-vertical-basis"),
+			).toBe(false);
+		});
+
+		it("adds the vertical-basis switch after the text section for a type that insets its region", () => {
+			const plugin: CanvasPlugin = {
+				id: "capped-plugin",
+				objects: {
+					capped: defineObject({
+						features: {
+							type: "capped",
+							geometry: "rect",
+							transform: true,
+							stroke: true,
+							fill: true,
+							text: "body",
+						},
+						// A cap band the text stays below, as a cylinder has.
+						textRegion: ({ width, height }) => ({
+							x: -width / 2,
+							y: -height / 2 + height * 0.2,
+							width,
+							height: height * 0.8,
+						}),
+						validateDoc: () => [],
+						mapper: {
+							toDoc: (state) => ({ id: state.id, type: "capped" }),
+							toState: (doc) => ({ id: doc.id, type: "capped" }),
+						},
+						stateValidator: () => true,
+						component: () => null,
+						behavior: {
+							moveByDelta: (state) => state,
+							transformByGroup: (state) => state,
+							rotateByGroup: (state) => state,
+						},
+					}),
+				},
+			};
+			const registries = createCanvasRegistries({ plugins: [plugin] });
+			expect(
+				registries.objectMenu
+					.getSections("capped")
+					.map((section) => section.id),
+			).toEqual([
+				"style",
+				"text",
+				// The basis switch governs what the vertical alignment above it is
+				// measured against, so it follows the text run rather than the sizing one.
+				"text-vertical-basis",
+				"auto-height",
+				"transform",
 			]);
 		});
 

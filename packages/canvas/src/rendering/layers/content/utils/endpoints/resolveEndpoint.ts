@@ -1,3 +1,5 @@
+import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { isConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	isCenterPoint,
 	isTransformedFrame,
@@ -5,8 +7,6 @@ import {
 	type Rect,
 } from "@jiscribe/geometry";
 
-import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
-import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
 import {

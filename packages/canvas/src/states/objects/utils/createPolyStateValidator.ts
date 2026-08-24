@@ -1,4 +1,5 @@
 import { isObject } from "@jiscribe/basic-validators";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 
 import {
 	hasValidIdAndType,
@@ -11,7 +12,6 @@ import {
 	isValidTransformState,
 	type StateRecord,
 } from "./validateStateUtils";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
 
 /**

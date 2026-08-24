@@ -53,8 +53,9 @@ export const restoreHistorySnapshot = (
 		...restoredState,
 		...resetUiState(),
 		viewport: state.viewport, // Preserve viewport
-		// Restoring different objects moves the wall; limitViewScroll notices the
-		// swapped objects and re-measures on the next view scroll.
+		// Only the host's half of the wall is carried over; the rest of the entry is
+		// the measurement cache, and limitViewScroll notices the swapped objects and
+		// `view` and re-measures on the next view scroll.
 		scrollLimit: state.scrollLimit,
 		commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 		saveVersion: state.saveVersion + 1,

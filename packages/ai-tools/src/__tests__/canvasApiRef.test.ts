@@ -11,7 +11,7 @@
 // catch is a handle member that is added and never driven, which is the one thing
 // the doc-ops check does catch.
 
-import { createDocOps } from "@jiscribe/canvas/doc";
+import { createDocOps } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 import { createCanvasToolDescriptors } from "../canvasTools";
@@ -28,9 +28,9 @@ const capabilities: AiCanvasCapabilities = {
  * and written down: the exhaustiveness test below fails until the new member is
  * either driven by a tool or entered here.
  *
- * Empty is the state to keep it in — every doc-op is reachable by the model today.
- * The list stays because it is the place a future member is argued out of the tool
- * set; deleting it would let one be added and never exposed, unnoticed.
+ * Empty is the state to keep it in — every other doc-op is reachable by the model
+ * today. The list is also the place a future member is argued out of the tool set;
+ * deleting it would let one be added and never exposed, unnoticed.
  */
 const UNEXPOSED_DOC_OPS: Readonly<Record<string, string>> = {};
 

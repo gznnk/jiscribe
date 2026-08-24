@@ -23,11 +23,10 @@ import { Bracket } from "./presentation/Bracket";
 import { BracketWithStem } from "./presentation/BracketWithStem";
 import {
 	Callout,
-	calcCalloutTextRegion,
 	calloutGeometryKey,
 	calloutOutline,
 } from "./presentation/Callout";
-import { Note, calcNoteTextRegion, noteOutline } from "./presentation/Note";
+import { Note, noteOutline } from "./presentation/Note";
 import {
 	calcGroupMarkerConnectPoints,
 	calcGroupMarkerTextRegion,
@@ -44,6 +43,10 @@ import {
 	GROUP_MARKER_DIRECTION_STYLE_PROPERTY,
 	GROUP_MARKER_TIP_STYLE_PROPERTIES,
 } from "./schema/shared/GroupMarkerFields";
+import {
+	calcCalloutTextRegion,
+	calcNoteTextRegion,
+} from "./schema/textRegions";
 import type { BraceState } from "./state/brace/BraceState";
 import type { BracketState } from "./state/bracket/BracketState";
 import type { BracketWithStemState } from "./state/bracketWithStem/BracketWithStemState";

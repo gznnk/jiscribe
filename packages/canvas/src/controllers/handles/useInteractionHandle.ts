@@ -1,6 +1,6 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { useMemo } from "react";
 
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type {
 	CanvasControllerState,
 	CanvasModalKind,

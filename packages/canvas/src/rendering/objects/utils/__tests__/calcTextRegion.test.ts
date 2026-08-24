@@ -1,13 +1,35 @@
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import type { Dimensions } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 
-import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { calcFullTextRegion, calcTextRegion } from "../calcTextRegion";
 
-const makeState = (width: number, height: number): ObjectState & Dimensions =>
-	({ id: "obj-1", type: "rect", width, height }) as unknown as ObjectState &
-		Dimensions;
+type TextRegionState = ObjectState &
+	Dimensions &
+	Pick<TextStyleState, "textVerticalBasis">;
+
+const makeState = (
+	width: number,
+	height: number,
+	textVerticalBasis?: TextStyleState["textVerticalBasis"],
+): TextRegionState =>
+	({
+		id: "obj-1",
+		type: "rect",
+		width,
+		height,
+		...(textVerticalBasis === undefined ? {} : { textVerticalBasis }),
+	}) as unknown as TextRegionState;
+
+/** A cylinder's region: clear of its top cap and its bottom bulge, so vertically off-centre. */
+const cylinderRegion = ({ width, height }: Dimensions) => ({
+	x: -width / 2,
+	y: -height / 2 + height * 0.24,
+	width,
+	height: height - height * 0.36,
+});
 
 describe("calcTextRegion", () => {
 	it("returns the whole bbox in center-origin local coordinates when no calculator is registered", () => {
@@ -34,7 +56,7 @@ describe("calcTextRegion", () => {
 	});
 
 	it("passes slotId through to the calculator so it can return a region per compartment", () => {
-		const calculator = (state: ObjectState & Dimensions, slotId: string) =>
+		const calculator = (state: Dimensions, slotId: string) =>
 			slotId === "header"
 				? { x: 0, y: 0, width: state.width, height: 20 }
 				: { x: 0, y: 20, width: state.width, height: state.height - 20 };
@@ -51,6 +73,28 @@ describe("calcTextRegion", () => {
 			width: 100,
 			height: 40,
 		});
+	});
+
+	it("places the body on the declared region when the state names no basis", () => {
+		expect(
+			calcTextRegion(makeState(100, 100), BODY_TEXT_SLOT_ID, cylinderRegion),
+		).toEqual({ x: -50, y: -26, width: 100, height: 64 });
+	});
+
+	it("places the body on the whole height for the frame basis, keeping the region's width", () => {
+		expect(
+			calcTextRegion(
+				makeState(100, 100, "frame"),
+				BODY_TEXT_SLOT_ID,
+				cylinderRegion,
+			),
+		).toEqual({ x: -50, y: -50, width: 100, height: 100 });
+	});
+
+	it("leaves a type whose region is the whole box untouched by the frame basis", () => {
+		expect(
+			calcTextRegion(makeState(100, 60, "frame"), BODY_TEXT_SLOT_ID, undefined),
+		).toEqual(calcTextRegion(makeState(100, 60), BODY_TEXT_SLOT_ID, undefined));
 	});
 });
 

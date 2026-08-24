@@ -1,7 +1,8 @@
+import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+
 import { ExtraStyleProperty } from "./ExtraStyleProperty";
 import type { StylePropertyHandler } from "./StylePropertyHandler";
-import type { ExtraStylePropertyDescriptor } from "../../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**

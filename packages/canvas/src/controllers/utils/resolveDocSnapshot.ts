@@ -1,4 +1,5 @@
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { DocSnapshot, DocSnapshotSource } from "../CanvasTypes";
@@ -12,6 +13,7 @@ export const createDocSnapshotFromState = (
 		objects: source.objects,
 		rootIds: source.rootIds,
 		background: source.background,
+		view: source.view,
 	},
 });
 

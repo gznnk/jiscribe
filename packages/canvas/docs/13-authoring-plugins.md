@@ -106,8 +106,8 @@ physically moving them would widen the canvas public surface instead of narrowin
 ## What the authoring kit gives you
 
 `@jiscribe/canvas-sdk` re-exports the whole of `@jiscribe/canvas/unstable`
-(and `/doc` re-exports `unstable-doc`), so it is a superset — you never need to
-reach past it. On top of that:
+(and `/doc` re-exports `@jiscribe/doc/unstable`), so it is a superset — you never
+need to reach past it. On top of that:
 
 | Export                                                                                                                  | Replaces                                                                   |
 | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -247,10 +247,10 @@ harness alone with `dev:harness` to look at it by eye. `vitest.config.ts` includ
 `eslint.config.js` fails the build on all of these.
 
 - Nothing under a plugin's `src/` may import `@jiscribe/canvas/unstable` or
-  `@jiscribe/canvas/unstable-doc`. Use `@jiscribe/canvas-sdk`, or
+  `@jiscribe/doc/unstable`. Use `@jiscribe/canvas-sdk`, or
   `@jiscribe/canvas-sdk/doc` for the headless side.
 - A plugin's `src/schema/` and `src/doc.ts` are headless. They may use
-  `@jiscribe/canvas/doc` and `@jiscribe/canvas-sdk/doc` only — not the UI entries,
+  `@jiscribe/doc` and `@jiscribe/canvas-sdk/doc` only — not the UI entries,
   not `react` / `react-dom` / `@emotion/*`, and not the package's own
   `presentation/`, `state/`, `stencil/`, `controls/` or `menu/` directories.
 - **Import through package roots.** `@jiscribe/geometry`, never
@@ -267,8 +267,8 @@ conversions and their validators.
 The playbook, from seven rounds of doing it.
 
 1. **Audit what the shape uses from the engine.** If everything is already exported,
-   no API change is needed. If not, add the missing pieces to `unstable` /
-   `unstable-doc` first, in their own commit.
+   no API change is needed. If not, add the missing pieces to canvas's `unstable` /
+   doc's `unstable` first, in their own commit.
 2. **Move the files before editing them**, so git records renames. The target
    layout is one folder per shape: `schema/<id>/`, `state/<id>/`,
    `presentation/<Pascal>/`.
@@ -305,7 +305,7 @@ UI plugin (`somePlugin`):
 Headless doc plugin (`someDocPlugin`):
 
 - [ ] `apps/vscode-extension/src/diagnostics/DiagnosticProvider.ts`
-- [ ] `packages/ai-docs/generator/src/manifest.ts` (`definitionSources`)
+- [ ] `packages/doc-schema/generator/src/manifest.ts` (`definitionSources`)
 
 Add the dependency to each of those packages' `package.json` too. `packages/canvas` is
 deliberately not on the list: it depends on no shipped plugin, and adding one would bring
@@ -325,14 +325,14 @@ the shipped set means updating them as well.
 ```bash
 pnpm lint --fix && pnpm format && pnpm typecheck && pnpm dep:check && pnpm lint
 pnpm test
-pnpm generate:ai   # regenerates packages/ai-docs/assets — commit the diff
+pnpm generate:schema   # regenerates packages/doc-schema/assets — commit the diff
 pnpm build:examples && pnpm build:vscode
 pnpm --filter @jiscribe/plugin-<name> test:e2e             # the shape's own suite, in full
 pnpm --filter @jiscribe/canvas test:e2e specs/smoke specs/shapes/draw
 pnpm --filter canvas-examples test:e2e                     # plugin coexistence
 ```
 
-When a shape is _moved_ rather than added, `pnpm generate:ai` producing **no diff**
+When a shape is _moved_ rather than added, `pnpm generate:schema` producing **no diff**
 is the evidence that the doc definition came across faithfully. When a shape is
-added, the diff is the new schema and it must be committed — CI's `check:ai` fails
+added, the diff is the new schema and it must be committed — CI's `check:schema` fails
 on drift.

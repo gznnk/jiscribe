@@ -1,8 +1,14 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import { canvasToState } from "../../../../states/canvas/CanvasMapper";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	ScrollBoundsConfig,
+} from "../../../CanvasTypes";
+import { createCanvasReducer } from "../../../reducer/canvasReducer";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
@@ -14,13 +20,18 @@ const registries = createTestRegistries();
 // doc's extent itself: rect-1 (0,0)-(10,10) and rect-2 (100,100)-(110,110).
 const scrollBoundsConfig = { mode: "content", padding: 0 } as const;
 
-const twoRectsDoc: CanvasDoc = {
-	version: 1,
-	root: [
-		{ id: "rect-1", type: "rect", x: 0, y: 0, width: 10, height: 10 },
-		{ id: "rect-2", type: "rect", x: 100, y: 100, width: 10, height: 10 },
-	],
-} as unknown as CanvasDoc;
+/** A doc of two rects spanning (0,0)-(110,110), optionally declaring a `view`. */
+const twoRectsDocWith = (view?: ViewDoc): CanvasDoc =>
+	({
+		version: 1,
+		...(view !== undefined ? { view } : {}),
+		root: [
+			{ id: "rect-1", type: "rect", x: 0, y: 0, width: 10, height: 10 },
+			{ id: "rect-2", type: "rect", x: 100, y: 100, width: 10, height: 10 },
+		],
+	}) as unknown as CanvasDoc;
+
+const twoRectsDoc = twoRectsDocWith();
 
 /**
  * State over twoRectsDoc with the camera placed by hand.
@@ -34,12 +45,28 @@ const createState = (
 	minY: number,
 	zoom: number,
 	limited = true,
+): CanvasControllerState =>
+	createStateFrom(
+		twoRectsDoc,
+		limited ? scrollBoundsConfig : undefined,
+		minX,
+		minY,
+		zoom,
+	);
+
+/** {@link createState} with the doc and the host setting spelled out. */
+const createStateFrom = (
+	doc: CanvasDoc,
+	hostConfig: ScrollBoundsConfig | undefined,
+	minX: number,
+	minY: number,
+	zoom: number,
 ): CanvasControllerState => {
 	const state = createInitialControllerState(
-		twoRectsDoc,
+		doc,
 		registries,
 		undefined,
-		limited ? scrollBoundsConfig : undefined,
+		hostConfig,
 	);
 	return deepFreezeState({
 		...state,
@@ -214,7 +241,7 @@ describe("handleGesture - scroll limit", () => {
 		const again = apply(scrolled, wheel(10, 0));
 
 		expect(again.scrollLimit).toBe(measured);
-		expect(measured?.rect).toEqual({
+		expect(measured.rect).toEqual({
 			left: 0,
 			top: 0,
 			right: 110,
@@ -225,7 +252,163 @@ describe("handleGesture - scroll limit", () => {
 	it("leaves the view alone on an unbounded canvas", () => {
 		const next = apply(createState(5, 5, 10, false), wheel(9999, 9999));
 
-		expect(next.scrollLimit).toBeNull();
+		// Nothing walls the view in, so nothing was ever measured either.
+		expect(next.scrollLimit.rect).toBeNull();
+		expect(next.scrollLimit.measuredFrom).toBeNull();
 		expect(next.viewport.minX).toBe(1004.9);
+	});
+});
+
+describe("handleGesture - scroll limit declared by the document", () => {
+	// Content (0,0)-(110,110) with these sides makes the wall (-64,-32)-(174,134).
+	const pagePadding = { top: 32, right: 64, bottom: 24, left: 64 };
+
+	it("walls the view in at the content grown by view.padding", () => {
+		const state = createStateFrom(
+			twoRectsDocWith({ padding: pagePadding, scroll: "content" }),
+			undefined,
+			0,
+			0,
+			10,
+		);
+
+		// zoom 10: the view is 100 x 80 world units, so minX may run -64..74.
+		expect(apply(state, wheel(9999, 0)).viewport.minX).toBe(74);
+		expect(apply(state, wheel(-9999, 0)).viewport.minX).toBe(-64);
+		expect(apply(state, wheel(0, -9999)).viewport.minY).toBe(-32);
+	});
+
+	it("puts the wall flush on the content when the document declares no padding", () => {
+		const state = createStateFrom(
+			twoRectsDocWith({ scroll: "content" }),
+			undefined,
+			0,
+			0,
+			10,
+		);
+
+		expect(apply(state, wheel(9999, 0)).viewport.minX).toBe(10);
+	});
+
+	it("leaves the view alone when the document declares infinite", () => {
+		const state = createStateFrom(
+			twoRectsDocWith({ padding: pagePadding, scroll: "infinite" }),
+			undefined,
+			0,
+			0,
+			10,
+		);
+
+		expect(apply(state, wheel(9999, 0)).viewport.minX).toBe(999.9);
+	});
+
+	it("leaves the view alone when the document declares no scroll at all", () => {
+		const state = createStateFrom(
+			twoRectsDocWith({ padding: pagePadding, open: "fit-width" }),
+			undefined,
+			0,
+			0,
+			10,
+		);
+
+		expect(apply(state, wheel(9999, 0)).viewport.minX).toBe(999.9);
+	});
+
+	it("is outranked by a host that asks for no wall", () => {
+		const state = createStateFrom(
+			twoRectsDocWith({ padding: pagePadding, scroll: "content" }),
+			{ mode: "infinite" },
+			0,
+			0,
+			10,
+		);
+
+		expect(apply(state, wheel(9999, 0)).viewport.minX).toBe(999.9);
+	});
+
+	it("is outranked by a host that asks for its own wall, view.padding included", () => {
+		const state = createStateFrom(
+			twoRectsDocWith({ padding: pagePadding, scroll: "content" }),
+			// padding 0 on every side, where the doc asks for 64 on the left.
+			{ mode: "content", padding: 0 },
+			0,
+			0,
+			10,
+		);
+
+		expect(apply(state, wheel(-9999, 0)).viewport.minX).toBe(0);
+		expect(apply(state, wheel(9999, 0)).viewport.minX).toBe(10);
+	});
+
+	it("re-measures the wall after a history restore put the objects back", () => {
+		// Undo swaps the objects out through restoreHistorySnapshot, which carries
+		// the measured wall over untouched — so what puts it right is the identity
+		// check in limitViewScroll, and only a scroll after a restore exercises it.
+		const reducer = createCanvasReducer(registries);
+		const scroll = (
+			state: CanvasControllerState,
+			...gestures: Gesture[]
+		): CanvasControllerState =>
+			gestures.reduce(
+				(current, gesture) => reducer(current, { type: "GESTURE", gesture }),
+				state,
+			);
+
+		const state = createStateFrom(
+			twoRectsDocWith({ scroll: "content" }),
+			undefined,
+			0,
+			0,
+			10,
+		);
+		// Dragging rect-2 200 units right extends the content to 310, and with it
+		// the wall; the scroll that follows is what measures it there.
+		const widened = scroll(
+			state,
+			dragRect2("dragStart", { x: 0, y: 0 }),
+			dragRect2("drag", { x: 200, y: 0 }),
+			dragRect2("dragEnd", { x: 200, y: 0 }),
+			wheel(9999, 0),
+		);
+		expect(widened.viewport.minX).toBe(210);
+		expect(widened.scrollLimit.rect).toMatchObject({ right: 310 });
+
+		// Back inside the wall, so the restore below is judged from a camera the
+		// narrowed wall still holds.
+		const returned = scroll(widened, wheel(-9999, 0));
+		expect(returned.viewport.minX).toBe(0);
+
+		const undone = reducer(returned, { type: "COMMAND", commandId: "undo" });
+		expect(undone.objects["rect-2"]).toMatchObject({ cx: 105 });
+		// The carried-over measurement still describes the wider document.
+		expect(undone.scrollLimit.rect).toMatchObject({ right: 310 });
+
+		expect(scroll(undone, wheel(9999, 0)).viewport.minX).toBe(10);
+	});
+
+	it("moves the wall with the document when another one is loaded", () => {
+		const reducer = createCanvasReducer(registries);
+		const walled = apply(
+			createStateFrom(
+				twoRectsDocWith({ padding: pagePadding, scroll: "content" }),
+				undefined,
+				0,
+				0,
+				10,
+			),
+			wheel(9999, 0),
+		);
+		expect(walled.viewport.minX).toBe(74);
+
+		const unwalled = reducer(walled, {
+			type: "SYNC_EXTERNAL",
+			payload: canvasToState(
+				twoRectsDocWith({ padding: pagePadding }),
+				registries.objectMapper,
+				registries.objectContentResizer,
+			),
+		});
+
+		expect(apply(unwalled, wheel(9999, 0)).viewport.minX).toBe(1073.9);
 	});
 });

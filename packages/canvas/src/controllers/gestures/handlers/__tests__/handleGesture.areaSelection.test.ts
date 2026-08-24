@@ -1,7 +1,7 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
 import { MULTI_SELECT_GROUP } from "../../../../constants/multiSelectGroup";
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";

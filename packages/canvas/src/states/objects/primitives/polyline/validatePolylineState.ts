@@ -1,4 +1,5 @@
-import { PolylineFeatures } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
+import { PolylineFeatures } from "@jiscribe/doc/model/objects/primitives/polyline/PolylineDoc";
+
 import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import { createPolyStateValidator } from "../../utils/createPolyStateValidator";
 

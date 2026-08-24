@@ -1,4 +1,5 @@
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";

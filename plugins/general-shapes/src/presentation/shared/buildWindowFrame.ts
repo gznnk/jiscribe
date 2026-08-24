@@ -2,13 +2,7 @@ import {
 	buildHorizontalLinePath,
 	buildRoundedRectPath,
 } from "./pictogramPaths";
-
-/**
- * Height of the title bar as a fraction of the window height. Shared by the
- * browser and the terminal — the two differ only in what sits in the bar, so a
- * change here must keep them looking like one family.
- */
-export const WINDOW_TITLE_BAR_RATIO = 0.24;
+import { WINDOW_TITLE_BAR_RATIO } from "../../schema/shared/windowFrameRatios";
 
 /**
  * Corner radius as a fraction of the shorter side. Exported because both window

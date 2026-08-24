@@ -1,3 +1,9 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import { isSameRichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import type { BoundingBox } from "@jiscribe/geometry";
 import {
 	calcAffineTransformedPoint,
@@ -8,15 +14,9 @@ import type React from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
-import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../rendering/objects/utils/verticalAlignToAlignItems";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import { isSameRichText } from "../../../../schemas/objects/types/RichText";
-import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";

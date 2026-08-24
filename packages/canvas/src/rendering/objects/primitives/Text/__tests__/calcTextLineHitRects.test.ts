@@ -1,8 +1,8 @@
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import { calcTextBlockSize } from "@jiscribe/doc/text/block/calcTextBlockSize";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 import { describe, expect, it } from "vitest";
 
-import type { TextAlign } from "../../../../../schemas/objects/types/TextAlign";
-import { calcTextBlockSize } from "../../../../../states/objects/utils/calcTextBlockSize";
-import type { TextMeasureFont } from "../../../../../states/objects/utils/measureText";
 import { calcTextLineHitRects } from "../calcTextLineHitRects";
 
 /**
@@ -135,6 +135,24 @@ describe("calcTextLineHitRects", () => {
 			height: 19,
 		});
 		expect(bands[0].width).toBe(20);
+	});
+
+	it("bands the wrapped lines when a wrap width is given (block layout)", () => {
+		// Ten characters of room, four words of four: two words per line.
+		const boxWidth = 10 * CHAR_WIDTH + 6 * 2;
+		const boxHeight = 2 * LINE_HEIGHT + EDGE_PADDING * 2;
+		const bands = calcTextLineHitRects(
+			"aaaa bbbb cccc dddd",
+			font,
+			{ width: boxWidth, height: boxHeight },
+			"left",
+			boxWidth - 6 * 2,
+		);
+
+		expect(bands).toHaveLength(2);
+		expect(bands[1].y).toBe(-boxHeight / 2 + EDGE_PADDING + LINE_HEIGHT);
+		// The band of a wrapped line covers its own glyphs, trailing space included.
+		expect(bands[0].width).toBeLessThanOrEqual(boxWidth);
 	});
 
 	it("scales the bands with the font size", () => {

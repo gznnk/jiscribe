@@ -7,15 +7,8 @@ import type {
 import {
 	CALLOUT_TAIL_BASE_RATIO,
 	CALLOUT_TAIL_BASE_SLOTS,
-	CALLOUT_TAIL_DEFAULT,
 	CALLOUT_TAIL_RATIO,
 } from "../../schema/callout/CalloutDoc";
-import type { CalloutState } from "../../state/callout/CalloutState";
-
-/** Effective tail (field absent = default). */
-export const resolveCalloutTail = (
-	state: Pick<CalloutState, "tail">,
-): CalloutTail => state.tail ?? CALLOUT_TAIL_DEFAULT;
 
 const clamp = (value: number, min: number, max: number): number =>
 	Math.min(Math.max(value, min), max);

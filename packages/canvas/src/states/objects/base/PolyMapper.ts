@@ -1,3 +1,6 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { roundDocPoints } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
 import type { Point } from "@jiscribe/geometry";
 
 import type { ObjectMapperType } from "./MapperTypes";
@@ -6,9 +9,6 @@ import type { ObjectState } from "./ObjectState";
 import type { TextDocFields } from "./TextSlotsMapper";
 import { mapTextDocToState, mapTextStateToDoc } from "./TextSlotsMapper";
 import type { TextStyleState } from "./TextStyleState";
-import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import { roundDocPoints } from "../utils/roundDocNumbers";
 import { collectStyleKeys, pick } from "../utils/stylePassthrough";
 
 /**
@@ -70,7 +70,7 @@ export const createPolyMapper = <
 			return {
 				...ObjectMapper.toDoc(state),
 				...pick(state as unknown as Record<string, unknown>, passthroughKeys),
-				...mapTextStateToDoc(features.text, (state as TextStyleState).text),
+				...mapTextStateToDoc(features.text, state as TextStyleState),
 				// Rounded here so every waypoint reaching the Doc carries the persisted
 				// precision, whichever path moved it (roundDocNumbers). No waypoints
 				// contributes no key at all: the Doc spelling of "engine routes" is an

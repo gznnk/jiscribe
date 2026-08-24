@@ -1,4 +1,5 @@
-import type { RectFeatures } from "../../../../schemas/objects/primitives/rect/RectDoc";
+import type { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
+
 import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

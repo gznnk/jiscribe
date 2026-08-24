@@ -3,7 +3,6 @@ import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
 	createFrameObjectDefinition,
-	createInsetTextRegion,
 	createTypeStencils,
 } from "@jiscribe/canvas-sdk";
 
@@ -27,10 +26,10 @@ import {
 	subroutineDocDefinition,
 	trapezoidDocDefinition,
 } from "./doc";
-import { Card, calcCardTextRegion, cardOutline } from "./presentation/Card";
+import { Card, cardOutline } from "./presentation/Card";
 import { Cross, crossOutline } from "./presentation/Cross";
 import { Db, dbOutline } from "./presentation/Db";
-import { Delay, calcDelayTextRegion, delayOutline } from "./presentation/Delay";
+import { Delay, delayOutline } from "./presentation/Delay";
 import { Diamond, diamondOutline } from "./presentation/Diamond";
 import { Display, displayOutline } from "./presentation/Display";
 import { Document, documentOutline } from "./presentation/Document";
@@ -39,13 +38,11 @@ import { Hexagon, hexagonOutline } from "./presentation/Hexagon";
 import {
 	LoopLimit,
 	calcLoopLimitAnchorRegion,
-	calcLoopLimitTextRegion,
 	loopLimitOutline,
 } from "./presentation/LoopLimit";
 import { ManualInput, manualInputOutline } from "./presentation/ManualInput";
 import {
 	MultiDocument,
-	calcMultiDocumentTextRegion,
 	multiDocumentOutline,
 } from "./presentation/MultiDocument";
 import {
@@ -57,45 +54,45 @@ import {
 	Parallelogram,
 	parallelogramOutline,
 } from "./presentation/Parallelogram";
-import {
-	Stadium,
-	calcStadiumTextRegion,
-	stadiumOutline,
-} from "./presentation/Stadium";
+import { Stadium, stadiumOutline } from "./presentation/Stadium";
 import { StoredData, storedDataOutline } from "./presentation/StoredData";
 import { Subroutine } from "./presentation/Subroutine";
 import { Trapezoid, trapezoidOutline } from "./presentation/Trapezoid";
 import type { CardDoc } from "./schema/card/CardDoc";
 import type { CrossDoc } from "./schema/cross/CrossDoc";
-import { DB_CAP_RATIO } from "./schema/db/DbDoc";
 import type { DbDoc } from "./schema/db/DbDoc";
 import type { DelayDoc } from "./schema/delay/DelayDoc";
-import { DIAMOND_INSET } from "./schema/diamond/DiamondDoc";
 import type { DiamondDoc } from "./schema/diamond/DiamondDoc";
-import {
-	DISPLAY_CAP_RATIO,
-	DISPLAY_LEFT_RATIO,
-} from "./schema/display/DisplayDoc";
 import type { DisplayDoc } from "./schema/display/DisplayDoc";
-import { DOCUMENT_WAVE_RATIO } from "./schema/document/DocumentDoc";
 import type { DocumentDoc } from "./schema/document/DocumentDoc";
 import type { ExtractDoc } from "./schema/extract/ExtractDoc";
-import { HEXAGON_CAP_RATIO } from "./schema/hexagon/HexagonDoc";
 import type { HexagonDoc } from "./schema/hexagon/HexagonDoc";
 import type { LoopLimitDoc } from "./schema/loopLimit/LoopLimitDoc";
-import { MANUAL_INPUT_SLOPE_RATIO } from "./schema/manualInput/ManualInputDoc";
 import type { ManualInputDoc } from "./schema/manualInput/ManualInputDoc";
 import type { MultiDocumentDoc } from "./schema/multiDocument/MultiDocumentDoc";
-import { OFF_PAGE_CONNECTOR_TIP_RATIO } from "./schema/offPageConnector/OffPageConnectorDoc";
 import type { OffPageConnectorDoc } from "./schema/offPageConnector/OffPageConnectorDoc";
-import { PARALLELOGRAM_SKEW_RATIO } from "./schema/parallelogram/ParallelogramDoc";
 import type { ParallelogramDoc } from "./schema/parallelogram/ParallelogramDoc";
 import type { StadiumDoc } from "./schema/stadium/StadiumDoc";
-import { STORED_DATA_CAP_RATIO } from "./schema/storedData/StoredDataDoc";
 import type { StoredDataDoc } from "./schema/storedData/StoredDataDoc";
-import { SUBROUTINE_BAR_RATIO } from "./schema/subroutine/SubroutineDoc";
 import type { SubroutineDoc } from "./schema/subroutine/SubroutineDoc";
-import { TRAPEZOID_SLOPE_RATIO } from "./schema/trapezoid/TrapezoidDoc";
+import {
+	calcCardTextRegion,
+	calcDbTextRegion,
+	calcDelayTextRegion,
+	calcDiamondTextRegion,
+	calcDisplayTextRegion,
+	calcDocumentTextRegion,
+	calcHexagonTextRegion,
+	calcLoopLimitTextRegion,
+	calcManualInputTextRegion,
+	calcMultiDocumentTextRegion,
+	calcOffPageConnectorTextRegion,
+	calcParallelogramTextRegion,
+	calcStadiumTextRegion,
+	calcStoredDataTextRegion,
+	calcSubroutineTextRegion,
+	calcTrapezoidTextRegion,
+} from "./schema/textRegions";
 import type { TrapezoidDoc } from "./schema/trapezoid/TrapezoidDoc";
 import type { CardState } from "./state/card/CardState";
 import type { CrossState } from "./state/cross/CrossState";
@@ -142,6 +139,12 @@ import { TrapezoidIcon } from "./stencil/TrapezoidIcon";
  * core's registration entries (ALL_OBJECT_DEFINITIONS in initializeObjectRegistry.ts),
  * with nothing left out on purpose. No menu is declared, so the default menu is derived
  * from features (packages/canvas/docs/12-plugin-architecture.md).
+ *
+ * `textRegion` is taken from `./schema/textRegions`, the same module the doc
+ * definitions declare theirs from, so what a headless overflow check measures
+ * against and what the overlay draws in are one function. The two shapes whose
+ * label is sized from its own text (cross / extract) are the exception: their doc
+ * side declares no region at all.
  */
 export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
 	createFrameObjectDefinition<CardDoc, CardState>({
@@ -179,13 +182,7 @@ export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> =
 	createFrameObjectDefinition<DbDoc, DbState>({
 		doc: dbDocDefinition,
 		component: Db,
-		// Restricts to the straight-sided cylinder body: below the full top cap
-		// ellipse (2 * DB_CAP_RATIO) and above the bottom bulge (DB_CAP_RATIO), so
-		// text never spills over the curved bottom at any aspect ratio.
-		textRegion: createInsetTextRegion({
-			top: DB_CAP_RATIO * 2,
-			bottom: DB_CAP_RATIO,
-		}),
+		textRegion: calcDbTextRegion,
 		outline: dbOutline,
 		stencils: createTypeStencils({
 			objectType: "db",
@@ -211,12 +208,7 @@ export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
 	createFrameObjectDefinition<DiamondDoc, DiamondState>({
 		doc: diamondDocDefinition,
 		component: Diamond,
-		textRegion: createInsetTextRegion({
-			top: DIAMOND_INSET,
-			right: DIAMOND_INSET,
-			bottom: DIAMOND_INSET,
-			left: DIAMOND_INSET,
-		}),
+		textRegion: calcDiamondTextRegion,
 		outline: diamondOutline,
 		stencils: createTypeStencils({
 			objectType: "diamond",
@@ -231,11 +223,7 @@ export const displayDefinition: ObjectTypeDefinition<DisplayDoc, DisplayState> =
 	createFrameObjectDefinition<DisplayDoc, DisplayState>({
 		doc: displayDocDefinition,
 		component: Display,
-		// Insets the pointed left and rounded right so text sits in the flat middle band.
-		textRegion: createInsetTextRegion({
-			left: DISPLAY_LEFT_RATIO,
-			right: DISPLAY_CAP_RATIO,
-		}),
+		textRegion: calcDisplayTextRegion,
 		outline: displayOutline,
 		stencils: createTypeStencils({
 			objectType: "display",
@@ -250,9 +238,7 @@ export const documentDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<DocumentDoc, DocumentState>({
 	doc: documentDocDefinition,
 	component: Document,
-	// Stops the region above the wavy bottom edge (the wave swings one
-	// amplitude around its centerline).
-	textRegion: createInsetTextRegion({ bottom: DOCUMENT_WAVE_RATIO * 2 }),
+	textRegion: calcDocumentTextRegion,
 	outline: documentOutline,
 	stencils: createTypeStencils({
 		objectType: "document",
@@ -284,12 +270,7 @@ export const hexagonDefinition: ObjectTypeDefinition<HexagonDoc, HexagonState> =
 	createFrameObjectDefinition<HexagonDoc, HexagonState>({
 		doc: hexagonDocDefinition,
 		component: Hexagon,
-		// Insets by a full cap on both sides so the region aligns with the
-		// top/bottom edges between the pointed caps.
-		textRegion: createInsetTextRegion({
-			left: HEXAGON_CAP_RATIO,
-			right: HEXAGON_CAP_RATIO,
-		}),
+		textRegion: calcHexagonTextRegion,
 		outline: hexagonOutline,
 		stencils: createTypeStencils({
 			objectType: "hexagon",
@@ -320,8 +301,7 @@ export const manualInputDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<ManualInputDoc, ManualInputState>({
 	doc: manualInputDocDefinition,
 	component: ManualInput,
-	// Insets the top by the full slope so text stays below the sloping top edge.
-	textRegion: createInsetTextRegion({ top: MANUAL_INPUT_SLOPE_RATIO }),
+	textRegion: calcManualInputTextRegion,
 	outline: manualInputOutline,
 	stencils: createTypeStencils({
 		objectType: "manualInput",
@@ -351,9 +331,7 @@ export const offPageConnectorDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<OffPageConnectorDoc, OffPageConnectorState>({
 	doc: offPageConnectorDocDefinition,
 	component: OffPageConnector,
-	// Insets the bottom by a full tip height so text stays in the rectangular
-	// band above the point.
-	textRegion: createInsetTextRegion({ bottom: OFF_PAGE_CONNECTOR_TIP_RATIO }),
+	textRegion: calcOffPageConnectorTextRegion,
 	outline: offPageConnectorOutline,
 	anchorRegion: calcOffPageConnectorAnchorRegion,
 	stencils: createTypeStencils({
@@ -369,12 +347,7 @@ export const parallelogramDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<ParallelogramDoc, ParallelogramState>({
 	doc: parallelogramDocDefinition,
 	component: Parallelogram,
-	// Insets by a full skew on both sides so the region aligns with the
-	// slanted left/right edges.
-	textRegion: createInsetTextRegion({
-		left: PARALLELOGRAM_SKEW_RATIO,
-		right: PARALLELOGRAM_SKEW_RATIO,
-	}),
+	textRegion: calcParallelogramTextRegion,
 	outline: parallelogramOutline,
 	stencils: createTypeStencils({
 		objectType: "parallelogram",
@@ -402,12 +375,7 @@ export const storedDataDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<StoredDataDoc, StoredDataState>({
 	doc: storedDataDocDefinition,
 	component: StoredData,
-	// Insets both sides by the arc depth: the region starts where the straight
-	// top/bottom edges begin (left) and stops at the concave right arc's apex.
-	textRegion: createInsetTextRegion({
-		left: STORED_DATA_CAP_RATIO,
-		right: STORED_DATA_CAP_RATIO,
-	}),
+	textRegion: calcStoredDataTextRegion,
 	outline: storedDataOutline,
 	stencils: createTypeStencils({
 		objectType: "storedData",
@@ -422,11 +390,7 @@ export const subroutineDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<SubroutineDoc, SubroutineState>({
 	doc: subroutineDocDefinition,
 	component: Subroutine,
-	// Insets by one bar width on each side so text sits between the two vertical bars.
-	textRegion: createInsetTextRegion({
-		left: SUBROUTINE_BAR_RATIO,
-		right: SUBROUTINE_BAR_RATIO,
-	}),
+	textRegion: calcSubroutineTextRegion,
 	stencils: createTypeStencils({
 		objectType: "subroutine",
 		label: { en: "Subroutine", ja: "サブルーチン" },
@@ -440,12 +404,7 @@ export const trapezoidDefinition: ObjectTypeDefinition<
 > = createFrameObjectDefinition<TrapezoidDoc, TrapezoidState>({
 	doc: trapezoidDocDefinition,
 	component: Trapezoid,
-	// Insets each side by the full slope so the region matches the narrow
-	// bottom edge and text never crosses the slanted sides.
-	textRegion: createInsetTextRegion({
-		left: TRAPEZOID_SLOPE_RATIO,
-		right: TRAPEZOID_SLOPE_RATIO,
-	}),
+	textRegion: calcTrapezoidTextRegion,
 	outline: trapezoidOutline,
 	stencils: createTypeStencils({
 		objectType: "trapezoid",

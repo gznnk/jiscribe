@@ -1,0 +1,48 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "intake",
+			"type": "rect",
+			"x": 40,
+			"y": 40,
+			"width": 240,
+			"fontSize": 14,
+			"text": "受付（フォーム送信）。ここは高さを書いていないので、行数のぶんだけ箱が伸びる。"
+		},
+		{
+			"id": "review",
+			"type": "stadium",
+			"x": 400,
+			"y": 40,
+			"width": 220,
+			"height": 96,
+			"fontSize": 14,
+			"text": "審査 / Review"
+		},
+		{
+			"id": "handoff",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "intake" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"target": {
+				"owner": { "id": "review" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"label": { "text": "承認", "fontSize": 13 }
+		},
+		{
+			"id": "note",
+			"type": "text",
+			"x": 40,
+			"y": 240,
+			"textLayout": "block",
+			"width": 580,
+			"fontSize": 14,
+			"text": "この段落は改行を一つも持たない一行として書かれており、「約物」（かっこ・読点、句点。）を含む。だから折り返しは、ドキュメントが持つ width だけが決める — ASCII words are mixed in as well."
+		}
+	]
+}

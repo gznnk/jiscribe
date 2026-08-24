@@ -1,3 +1,4 @@
+import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	isTransformedFrame,
 	snapToDirection,
@@ -7,7 +8,6 @@ import {
 import { resolveEndpoint } from "../../../../../../rendering/layers/content/utils/endpoints/resolveEndpoint";
 import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { calcEdgeAnchorDirection } from "../../../../../../rendering/objects/utils/calcConnectPoint";
-import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 
 /**

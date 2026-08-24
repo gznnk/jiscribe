@@ -1,6 +1,6 @@
+import { GroupFeatures } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import { describe, expect, it } from "vitest";
 
-import { GroupFeatures } from "../../../../schemas/objects/primitives/group/GroupDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";

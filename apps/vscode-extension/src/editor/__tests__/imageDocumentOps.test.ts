@@ -1,7 +1,7 @@
 import {
 	insertPngTextChunk,
 	PNG_SOURCE_KEYWORD,
-} from "@jiscribe/canvas/png-source";
+} from "@jiscribe/doc/png-source";
 import { describe, expect, it, vi } from "vitest";
 
 import {

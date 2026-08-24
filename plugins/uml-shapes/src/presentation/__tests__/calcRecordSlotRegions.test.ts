@@ -1,5 +1,5 @@
-import type { TextSlot } from "@jiscribe/canvas/doc";
 import { TEXT_LINE_HEIGHT } from "@jiscribe/canvas-sdk/doc";
+import type { TextSlot } from "@jiscribe/doc";
 import { describe, it, expect } from "vitest";
 
 import {
@@ -12,11 +12,11 @@ import { calcRecordTextRegion } from "../calcRecordTextRegion";
 
 /**
  * A text band's slot (the stereotype, the title). Its height is derived through
- * the shared text measurement, which has no canvas in the node environment and
- * falls back to `characters × fontSize × 0.6` (see measureText) — the fallback
- * ignores fontWeight, so the bold title measures as the regular one here. At the
- * default fontSize 14 that is 8.4px per character, and a 180px box wraps at
- * 168px = 20 characters — what the wrapping cases below are written against.
+ * the text measurement this suite offers — `createEstimateTextMeasurement()`,
+ * characters × fontSize × 0.6 (vitest.setup.ts) — which ignores fontWeight, so the
+ * bold title measures as the regular one here. At the default fontSize 14 that is
+ * 8.4px per character, and a 180px box wraps at 168px = 20 characters — what the
+ * wrapping cases below are written against.
  */
 const bandSlot = (text: string, style: Partial<TextSlot> = {}): TextSlot => ({
 	...RECORD_SLOT_STYLE_DEFAULTS,

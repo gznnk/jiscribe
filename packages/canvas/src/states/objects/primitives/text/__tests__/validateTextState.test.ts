@@ -44,6 +44,16 @@ describe("isValidTextState", () => {
 		).toBe(false);
 	});
 
+	it("accepts both layouts and an absent one, and rejects anything else", () => {
+		// The mapper writes textLayout back to the document unchecked, so a value
+		// the doc validator refuses must be stopped here at the clipboard boundary
+		// — or a paste saves a file that cannot be reopened.
+		expect(isValidTextState({ ...validText, textLayout: "label" })).toBe(true);
+		expect(isValidTextState({ ...validText, textLayout: "block" })).toBe(true);
+		expect(isValidTextState({ ...validText, textLayout: "bogus" })).toBe(false);
+		expect(isValidTextState({ ...validText, textLayout: 1 })).toBe(false);
+	});
+
 	it("rejects a non-object", () => {
 		expect(isValidTextState(null)).toBe(false);
 		expect(isValidTextState("text")).toBe(false);

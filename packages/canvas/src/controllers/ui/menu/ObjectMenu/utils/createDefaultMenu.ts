@@ -1,4 +1,5 @@
-import type { ObjectFeatures } from "../../../../../schemas/objects/types/ObjectFeatures";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
 
 /**

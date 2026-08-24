@@ -2,19 +2,17 @@
 // entry point for consumers that want to take part in parse-time validation without going
 // through definition.ts (which pulls in React components) — the MCP server, the Node-side
 // diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
-// @jiscribe/canvas/doc / @jiscribe/canvas-sdk/doc, and never pulls in
+// @jiscribe/doc / @jiscribe/canvas-sdk/doc, and never pulls in
 // presentation / state / stencil.
-import type {
-	CanvasDocPlugin,
-	ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
+import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
 
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import {
 	CONTAINER_DOC_DEFAULTS,
 	ContainerFeatures,
 } from "./schema/ContainerDoc";
+import { calcContainerTextRegion } from "./schema/textRegions";
 import { validateContainerHeaderFields } from "./schema/validateContainerHeaderFields";
 
 export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
@@ -25,6 +23,10 @@ export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 			"headerFill",
 			"headerHeight",
 		] satisfies readonly (keyof ContainerDoc)[],
+		textRegion: calcContainerTextRegion,
+		// The region is the title band, so sizing the box from the text would give
+		// the height of the title and swallow whatever the container frames.
+		autoHeight: false,
 		description:
 			'Container ("frame") shape: a titled rectangle that marks off a region of the diagram, typically a module, subsystem or bounded context. Uses the same rect-based geometry (x/y/width/height) as RectDoc. `text` is the title and is drawn in the top header band, never in the body; the body is click-through, so objects lying over it stay directly selectable. Objects are put inside it by geometry alone: give them coordinates within the box and place them after the container in `root` so they paint on top. A container has no `children` and does not carry its contents when it moves — wrap them in a GroupDoc when they must move together. The palette entries Frame / Boundary / Zone are all this type: Boundary is a container with `strokeDashType: "dashed"`, Zone one with a tinted `fill`.',
 		summary: "titled region (module, subsystem, boundary)",

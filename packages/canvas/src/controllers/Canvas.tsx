@@ -1,4 +1,6 @@
-﻿import {
+﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import {
 	memo,
 	useCallback,
 	useEffect,
@@ -35,6 +37,7 @@ import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
 import { useExportDialog } from "./hooks/useExportDialog";
 import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
+import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
@@ -70,8 +73,6 @@ import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { RichText } from "../schemas/objects/types/RichText";
 import type { Camera } from "../states/canvas/Viewport";
 import type {
 	ObjectMenuPropertyUpdater,
@@ -267,9 +268,16 @@ type CanvasProps = {
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
 	 * capability set (available object types, commands, plugins) plus the view
 	 * setup — the initial camera (`viewport`) and how far it may be scrolled
-	 * (`scrollBounds`, infinite unless set). Restricts what this canvas can
+	 * (`scrollBounds`, left to the document unless set). Restricts what this canvas can
 	 * create/handle (plugin-style extensibility and feature-gating), independently
 	 * of any other `<Canvas>` on the page. Omit for the full default set.
+	 *
+	 * **`viewport` and `scrollBounds` outrank the document.** A doc that declares
+	 * `view.open` / `view.scroll` frames and walls itself; passing a camera or a
+	 * scroll limit here overrules it. So pass one only when the host genuinely
+	 * knows better — a restored session, a deep link, a surface that is not a
+	 * document viewer — and leave it out otherwise, where the document's own
+	 * intent is the better answer.
 	 *
 	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
 	 * whose object types remain enabled — otherwise state construction throws
@@ -408,6 +416,18 @@ const CanvasComponent = ({
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
 	useContainerResize(canvasRef, dispatch);
+
+	// The document's own framing intent, applied only where the host expressed
+	// none: `initialConfig.viewport` is a camera the host already decided on, and
+	// it outranks whatever the document would have asked for.
+	useInitialViewOpen({
+		view: initialConfig?.viewport === undefined ? state.view : undefined,
+		containerRef: canvasRef,
+		viewportSize: state.viewport,
+		objects: state.objects,
+		visualBounds: registries.objectVisualBounds,
+		dispatch,
+	});
 
 	const handlePaste = useClipboardPaste(
 		state.internalClipboard,

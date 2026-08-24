@@ -1,11 +1,12 @@
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/RichText";
+import { readRichTextRangeStyle } from "@jiscribe/doc/model/objects/types/RichText";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+
 import {
 	resolveTextEditSelection,
 	styleTextEditSelection,
 } from "./styleTextEditSelection";
 import { toggleTextDecorationToken } from "./toggleTextDecorationToken";
-import type { InlineTextStyle } from "../../schemas/objects/types/RichText";
-import { readRichTextRangeStyle } from "../../schemas/objects/types/RichText";
-import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /** The formats a keystroke can turn on and off over the selected text. */

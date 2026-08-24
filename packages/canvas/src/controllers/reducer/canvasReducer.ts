@@ -1,11 +1,12 @@
+import {
+	normalizeRichText,
+	richTextToPlain,
+} from "@jiscribe/doc/model/objects/types/RichText";
+
 import type { CanvasAction } from "./CanvasActions";
 import { isSameCamera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { handlePaste } from "./handlers/handlePaste";
-import {
-	normalizeRichText,
-	richTextToPlain,
-} from "../../schemas/objects/types/RichText";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
@@ -143,6 +144,11 @@ export const createCanvasReducer =
 			}
 
 			case "SET_VIEWPORT": {
+				// Camera and measured size land together; see SetViewportAction.
+				return { ...state, viewport: action.viewport };
+			}
+
+			case "SET_CAMERA": {
 				// No-op when the camera is unchanged so a repeated imperative
 				// setViewport with the same camera does not churn state.
 				if (isSameCamera(state.viewport, action.camera)) {
@@ -245,6 +251,7 @@ export const createCanvasReducer =
 					objects: action.payload.objects,
 					rootIds: action.payload.rootIds,
 					background: action.payload.background,
+					view: action.payload.view,
 					...resetUiState(),
 					// An external change is a history boundary. Since past is pushed directly without going
 					// through recordHistoryIfNeeded, explicitly reset the coalesce state here (do not carry

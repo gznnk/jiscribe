@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>jiscribe render harness</title>
+		<link rel="stylesheet" href="./harness.css" />
+		<style>
+			/*
+			 * The page is never looked at — it exists so the canvas has a box to lay
+			 * itself out in. The size is fixed rather than the window's, so a
+			 * `--region viewbox` render does not depend on how the browser was
+			 * launched; `--region content` ignores it entirely.
+			 */
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				background: #ffffff;
+			}
+			#root {
+				width: 1280px;
+				height: 800px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="./harness.js"></script>
+	</body>
+</html>

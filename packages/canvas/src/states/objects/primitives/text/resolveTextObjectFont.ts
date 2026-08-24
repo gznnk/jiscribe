@@ -1,7 +1,7 @@
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/fontFamilies";
-import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
-import type { TextSlot } from "../../../../schemas/objects/types/TextSlot";
-import type { TextMeasureFont } from "../../utils/measureText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 
 /** The styling a text object's box is measured from — the style half of a slot, all of it optional. */
 export type TextObjectTypography = Pick<

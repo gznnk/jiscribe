@@ -1,66 +1,43 @@
-/**
- * Headless (UI-independent) implementation-detail layer of `@jiscribe/canvas`,
- * exposed for plugin authors building frame-family object types (#144 tier 2).
- *
- * The counterpart to `./unstable`, split off so the schema-side helpers a plugin's
- * `schema/**` and `doc.ts` need (doc factory / doc validator / doc-default
- * constants) carry no react / @emotion / rendering / control dependency, and
- * a Node-side consumer (VSCode DiagnosticProvider) can pull a plugin's doc entry
- * without dragging the React UI into its bundle. Like `./unstable`, this is NOT
- * covered by semver compatibility guarantees.
- */
+// Re-export shim for the headless implementation-detail layer, which lives in its own
+// package now (`@jiscribe/doc/unstable`). Kept so plugin authors reaching it through
+// `@jiscribe/canvas-sdk/doc` keep working while they migrate. Like the entry it
+// forwards to, this is NOT covered by semver guarantees.
+//
+// Listed rather than star-exported, for the reason spelled out in ./doc.ts.
 
-export { createFrameObjectFactory } from "./schemas/objects/utils/createFrameObjectFactory";
-
-// The point-geometry counterpart: a doc storing a drawn top-left position only, the
-// box being derived from the content by the type's `contentResizer` in the state layer.
-export { createPointObjectFactory } from "./schemas/objects/utils/createPointObjectFactory";
-
-// The bounds+minSize guard every `createDocFromBounds` needs, for shapes that
-// cannot use createFrameObjectFactory (center origin, vertex lists).
 export {
+	createFrameObjectFactory,
+	createPointObjectFactory,
 	calcDrawBounds,
 	DEFAULT_MIN_DRAW_SIZE,
-} from "./schemas/objects/utils/calcDrawBounds";
-export type { DrawBounds } from "./schemas/objects/utils/calcDrawBounds";
-
-export { createFrameDocValidator } from "./schemas/objects/utils/createFrameDocValidator";
-export {
+	createFrameDocValidator,
 	validateOptionalNumber,
-	// A `text: "slots"` type validates its own slots, and their styling is the
-	// same six fields the single-body form has, checked by the same rules.
 	validateTextSlotStyleFields,
-	// A slot whose content is one body of text validates it with these: the runs
-	// it may be styled in, and the styling one run can carry.
 	validateInlineTextStyleFields,
 	validateRichTextContent,
-} from "./schemas/objects/utils/validateDocUtils";
-export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorRegistry";
-
-export { AUTO_COLOR } from "./schemas/objects/utils/autoColor";
-
-// The one family an unstyled slot is drawn and measured with, and the default a
-// shape is created with. Nothing above can substitute another: only the shipped
-// families measure faithfully (CANVAS_FONT_FAMILIES).
-export { DEFAULT_FONT_FAMILY } from "./constants/fontFamilies";
-// The closed set a document may name, for a doc-side validator or a shape
-// choosing its own default. Carries no UI dependency, so it belongs on this
-// entry as well as the root — a plugin's `schema/**` cannot reach the root.
-export { CANVAS_FONT_FAMILIES } from "./constants/fontFamilies";
-export type {
-	CanvasFontFamily,
-	CanvasFontFamilyId,
-} from "./constants/fontFamilies";
-
-// line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
-// carry their own per-row dimensions must derive row height from this value, or their rows
-// drift from the rendered line height.
-export { TEXT_LINE_HEIGHT } from "./constants/textLineHeight";
-
-// Inner padding of the box the canvas draws text in. Shapes that size a text box
-// themselves must reserve this much, or the padding the CSS applies eats into the
-// text and clips it.
-export {
+	AUTO_COLOR,
+	DEFAULT_FONT_FAMILY,
+	CANVAS_FONT_FAMILIES,
+	TEXT_STYLE_FALLBACK,
+	TEXT_LINE_HEIGHT,
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
-} from "./constants/textBoxPadding";
+	calcVisualLineCount,
+	calcVisualTextHeight,
+	layoutVisualLines,
+	measureTextWidth,
+	offerTextMeasurement,
+	createEstimateTextMeasurement,
+	resetTextMeasurementForTests,
+} from "@jiscribe/doc/unstable";
+export type {
+	DrawBounds,
+	ObjectDocValidateFn,
+	CanvasFontFamily,
+	CanvasFontFamilyId,
+	TextMeasureFont,
+	VisualLine,
+	TextWidthMeasurer,
+	TextMeasurement,
+	TextMeasurementSource,
+} from "@jiscribe/doc/unstable";

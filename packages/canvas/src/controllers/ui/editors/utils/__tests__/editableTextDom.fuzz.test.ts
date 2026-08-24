@@ -1,16 +1,16 @@
 // @vitest-environment jsdom
 
-import { describe, it } from "vitest";
-
 import type {
 	InlineTextStyle,
 	RichText,
-} from "../../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
 import {
 	isSameRichText,
 	normalizeRichText,
 	richTextToPlain,
-} from "../../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
+import { describe, it } from "vitest";
+
 import {
 	hasUnexpectedMarkup,
 	readEditableRichText,

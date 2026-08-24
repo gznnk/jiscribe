@@ -1,6 +1,6 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { type Dispatch, useMemo, useReducer } from "react";
 
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
@@ -19,8 +19,9 @@ import type { CanvasRegistries } from "../registries/CanvasRegistries";
  *   the host's pan/zoom instead of flashing the default (only read at mount time;
  *   later programmatic changes go through `ref.current.viewport.setViewport`).
  * @param scrollBoundsConfig - How far the view may be scrolled; omitted leaves
- *   the canvas infinite. Only read at mount time — it goes into the initial
- *   state, which is what `limitViewScroll` reads it from.
+ *   it to whatever document is loaded (`view.scroll`). Only read at mount time —
+ *   it goes into the initial state, which is what `limitViewScroll` reads it
+ *   from; the document half is re-read there per scroll.
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,

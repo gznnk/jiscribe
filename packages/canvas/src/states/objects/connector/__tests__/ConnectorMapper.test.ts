@@ -1,6 +1,6 @@
+import type { ConnectorDoc } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { describe, expect, it } from "vitest";
 
-import type { ConnectorDoc } from "../../../../schemas/objects/connector/ConnectorDoc";
 import {
 	connectorToDoc,
 	connectorToState,

@@ -2,19 +2,18 @@
 // entry point for consumers that want to take part in parse-time validation without going
 // through definition.ts (which pulls in React components) — the MCP server, the Node-side
 // diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
-// @jiscribe/canvas/doc / @jiscribe/canvas-sdk/doc, and never pulls in
+// @jiscribe/doc / @jiscribe/canvas-sdk/doc, and never pulls in
 // presentation / state / stencil.
-import type {
-	CanvasDocPlugin,
-	ObjectDocDefinition,
-} from "@jiscribe/canvas/doc";
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
+import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { calcFullBoxTextRegion, calcOutsideBoxTextRegion } from "@jiscribe/doc";
 
 import {
 	RECORD_DOC_DEFAULTS,
 	RECORD_SLOT_STYLE_DEFAULTS_BY_ID,
 	RecordFeatures,
 } from "./schema/RecordDoc";
+import { calcUmlPackageTextRegion } from "./schema/textRegions";
 import {
 	UML_COMPONENT_DOC_DEFAULTS,
 	UmlComponentFeatures,
@@ -35,6 +34,7 @@ const RECT_GEOMETRY_NOTE =
 
 export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: RecordFeatures,
+	textRegion: calcOutsideBoxTextRegion,
 	defaults: RECORD_DOC_DEFAULTS,
 	// The schema $def is a handwritten template (text is a slotted object), so
 	// only summary is consumed — it fills the generated doc tables.
@@ -48,6 +48,7 @@ export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 export const umlPackageDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: UmlPackageFeatures,
+		textRegion: calcUmlPackageTextRegion,
 		defaults: UML_PACKAGE_DOC_DEFAULTS,
 		description: `UML package shape (a rectangle with a tab on its top-left corner), typically used for namespaces, modules and layers in UML package diagrams. ${RECT_GEOMETRY_NOTE} The rect is the outer bounds of the whole silhouette, tab included, and the text is laid out in the body below the tab. Distinct from "package", which is an isometric box for a build artifact or deployment unit, and from "container", which actually holds the objects placed inside it — this one is a plain shape with no children.`,
 		summary: "namespace, module, layer",
@@ -56,6 +57,7 @@ export const umlPackageDocDefinition: ObjectDocDefinition =
 export const umlComponentDocDefinition: ObjectDocDefinition =
 	createFrameObjectDoc({
 		features: UmlComponentFeatures,
+		textRegion: calcFullBoxTextRegion,
 		defaults: UML_COMPONENT_DOC_DEFAULTS,
 		description: `UML 2 component shape (a rectangle carrying the component symbol in its top-right corner), typically used for replaceable parts of a system in UML component diagrams. ${RECT_GEOMETRY_NOTE} Text is laid out over the whole box, so keep the name short enough to clear the symbol, or widen the box. Prefer "record" with a <<component>> stereotype when the part needs compartments of its own.`,
 		summary: "component, replaceable part",

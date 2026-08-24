@@ -2,8 +2,8 @@ import type {
 	CanvasDocPlugin,
 	CanvasParseResult,
 	SemanticDiagnostic,
-} from "@jiscribe/canvas/doc";
-import { createCanvasParser } from "@jiscribe/canvas/doc";
+} from "@jiscribe/doc";
+import { createCanvasParser } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
 /** A doc as it is written in a test, before `JSON.stringify` hands it to the parser. */

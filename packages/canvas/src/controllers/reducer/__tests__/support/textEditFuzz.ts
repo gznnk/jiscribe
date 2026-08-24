@@ -1,16 +1,17 @@
-import { createTestState } from "./createTestState";
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type {
 	InlineTextStyle,
 	RichText,
-} from "../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
 import {
 	isSameInlineTextStyle,
 	normalizeRichText,
 	pickDefinedInlineTextStyle,
 	remapRichText,
 	richTextToPlain,
-} from "../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
+
+import { createTestState } from "./createTestState";
 import type { TextSlots } from "../../../../states/objects/types/TextSlots";
 import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";

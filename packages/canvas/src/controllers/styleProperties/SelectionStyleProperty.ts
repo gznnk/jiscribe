@@ -1,5 +1,6 @@
+import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+
 import type { StylePropertyHandler } from "./StylePropertyHandler";
-import type { StyleValueType } from "../../schemas/objects/types/ExtraStyleProperty";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { collectDescendantIds } from "../utils/collectDescendantIds";

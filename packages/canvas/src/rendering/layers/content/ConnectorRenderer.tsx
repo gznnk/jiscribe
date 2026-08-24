@@ -1,9 +1,9 @@
+import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connector/isConnectorDrawnOrthogonal";
+import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { memo, useMemo } from "react";
 
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
 import { calcConnectorLabelAnchor } from "./utils/label/calcConnectorLabelAnchor";
-import { isConnectorDrawnOrthogonal } from "../../../schemas/objects/connector/isConnectorDrawnOrthogonal";
-import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import {

@@ -1,3 +1,4 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import {
 	calcDistanceToSegment,
 	calcInverseAffineTransformedPoint,
@@ -19,7 +20,6 @@ import { sortObjectIdsByZOrder } from "./sortObjectIdsByZOrder";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
-import { isPoly } from "../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";

@@ -10,11 +10,13 @@ export default defineConfig({
 			// (Playwright). See docs/09-testing.md for the details.
 			"src/**/__tests__/**/*.{test,spec}.{ts,tsx}",
 		],
+		setupFiles: ["./vitest.setup.ts"],
 		coverage: {
 			exclude: [
 				...coverageConfigDefaults.exclude,
 				"src/**/index.ts",
 				"vitest.config.ts",
+				"vitest.setup.ts",
 			],
 		},
 	},

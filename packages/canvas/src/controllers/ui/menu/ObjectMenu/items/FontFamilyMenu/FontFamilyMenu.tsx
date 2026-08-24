@@ -1,14 +1,14 @@
+import type { CanvasFontFamilyId } from "@jiscribe/doc/text/style/fontFamilies";
+import {
+	CANVAS_FONT_FAMILIES,
+	DEFAULT_FONT_FAMILY,
+} from "@jiscribe/doc/text/style/fontFamilies";
 import { memo, useEffect, useRef } from "react";
 
 import {
 	FontFamilyMenuWrapper,
 	FontFamilyOption,
 } from "./FontFamilyMenuStyled";
-import type { CanvasFontFamilyId } from "../../../../../../constants/fontFamilies";
-import {
-	CANVAS_FONT_FAMILIES,
-	DEFAULT_FONT_FAMILY,
-} from "../../../../../../constants/fontFamilies";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../../messages/CanvasMessagesTypes";

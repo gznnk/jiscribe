@@ -4,24 +4,25 @@ import {
 	isNumber,
 	isString,
 } from "@jiscribe/basic-validators";
-
-import { isCssColor } from "./isCssColor";
-import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
-import { ARROW_STYLE_KEYS } from "../../../schemas/objects/base/ArrowStyleDoc";
-import { isArrowType } from "../../../schemas/objects/types/ArrowType";
-import { isOwnedEndpointRef } from "../../../schemas/objects/types/EndpointRef";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
-import { isPoly } from "../../../schemas/objects/types/Poly";
+import { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+import { isArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { isOwnedEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
+import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type {
 	InlineTextStyle,
 	RichText,
-} from "../../../schemas/objects/types/RichText";
-import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
-import { isTextRows } from "../../../schemas/objects/types/TextSlot";
-import { isAutoColor } from "../../../schemas/objects/utils/autoColor";
-import { validateEndpointRef } from "../../../schemas/objects/utils/validateDocUtils";
+} from "@jiscribe/doc/model/objects/types/RichText";
+import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { isAutoColor } from "@jiscribe/doc/model/objects/utils/autoColor";
+import { validateEndpointRef } from "@jiscribe/doc/model/objects/utils/validateDocUtils";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
+
+import { isCssColor } from "./isCssColor";
 import { isTextStyleState } from "../base/TextStyleState";
 import { isTransformState } from "../base/TransformState";
 
@@ -64,6 +65,22 @@ export const isValidFrameState = (o: StateRecord): boolean =>
 	isNumber(o.cy) &&
 	isValidRequiredNumber(o.width, 0) &&
 	isValidRequiredNumber(o.height, 0);
+
+/**
+ * Validates the height-follows-the-text flag (ObjectState.autoHeight): true or
+ * absent for a shape whose doc stores a `height` to leave out, absent for every
+ * other geometry. This is the clipboard boundary, and the flag decides whether
+ * the mapper writes a `height` at all, so a stray one would save a doc missing a
+ * field its type requires.
+ *
+ * @param o - The state record to check
+ * @param geometry - The type's declared geometry; only `"rect"` may carry the flag
+ */
+export const isValidAutoHeightState = (
+	o: StateRecord,
+	geometry: GeometryType,
+): boolean =>
+	o.autoHeight === undefined || (geometry === "rect" && o.autoHeight === true);
 
 /**
  * Validates Poly geometry (the points array). `minPoints` is the minimum point count,

@@ -1,3 +1,4 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import {
 	calcFrameKeyPoints,
 	calcPolyKeyPoints,
@@ -5,7 +6,6 @@ import {
 } from "@jiscribe/geometry";
 import type { FrameKeyPoints, TransformedFrame } from "@jiscribe/geometry";
 
-import { isPoly } from "../../../schemas/objects/types/Poly";
 import type { CanvasGestureHandling } from "../../CanvasGestureHandling";
 import type {
 	CanvasControllerState,

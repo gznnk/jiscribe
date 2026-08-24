@@ -1,7 +1,7 @@
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { describe, it, expect } from "vitest";
 
-import { BODY_TEXT_SLOT_ID } from "../../../../../../constants/textSlotId";
-import { createObjectTextStyleDefaultsRegistry } from "../../../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { TextSlots } from "../../../../../../states/objects/types/TextSlots";

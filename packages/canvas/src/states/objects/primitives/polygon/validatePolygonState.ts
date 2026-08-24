@@ -1,4 +1,5 @@
-import { PolygonFeatures } from "../../../../schemas/objects/primitives/polygon/PolygonDoc";
+import { PolygonFeatures } from "@jiscribe/doc/model/objects/primitives/polygon/PolygonDoc";
+
 import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import { createPolyStateValidator } from "../../utils/createPolyStateValidator";
 

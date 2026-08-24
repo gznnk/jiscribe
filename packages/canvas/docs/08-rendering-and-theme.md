@@ -111,7 +111,7 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
   (handle dimensions, for zoom-adjusted geometry) flow through `CanvasThemeContext`
   (`useCanvasTheme()`) and must be concrete values, never `var(...)` strings.
   - **Why fonts are not on the theme**: a box derived from its content is measured in JS against the
-    family the doc names (`measureText`), so a family the canvas does not ship is one it cannot
+    family the doc names (`@jiscribe/doc`'s `text/layout`), so a family the canvas does not ship is one it cannot
     measure faithfully — the box comes out sized for a face the text is not drawn in. The families a
     document may name are therefore a closed set (`CANVAS_FONT_FAMILIES`, shipped by
     `@jiscribe/canvas/fonts.css`), and a slot naming none falls back to `DEFAULT_FONT_FAMILY`. That

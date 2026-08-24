@@ -1,3 +1,5 @@
+import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import { calcVectorAngleRad, type Point } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
@@ -5,8 +7,6 @@ import { memo } from "react";
 import { ConnectorElement, ConnectorHitArea } from "./ConnectorStyled";
 import { dedupePoints } from "./utils/dedupePoints";
 import { toPointsAttr } from "./utils/toPointsAttr";
-import type { ArrowType } from "../../../../schemas/objects/types/ArrowType";
-import type { StrokeDashType } from "../../../../schemas/objects/types/StrokeDashType";
 import { Arrow, getArrowLineInset } from "../../arrows";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { insetPolylineEnds } from "../../utils/insetPolylineEnds";

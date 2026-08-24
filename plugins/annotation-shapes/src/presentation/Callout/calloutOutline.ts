@@ -1,7 +1,8 @@
 import type { ObjectOutlineCalculator } from "@jiscribe/canvas";
 import type { Dimensions } from "@jiscribe/geometry";
 
-import { calcCalloutPolygon, resolveCalloutTail } from "./calloutTailGeometry";
+import { calcCalloutPolygon } from "./calloutTailGeometry";
+import { resolveCalloutTail } from "../../schema/callout/CalloutDoc";
 import type { CalloutState } from "../../state/callout/CalloutState";
 
 /**

@@ -1,6 +1,6 @@
+import type { EllipseDoc } from "@jiscribe/doc/model/objects/primitives/ellipse/EllipseDoc";
 import { describe, expect, it } from "vitest";
 
-import type { EllipseDoc } from "../../../../../schemas/objects/primitives/ellipse/EllipseDoc";
 import {
 	ellipseToDoc,
 	ellipseToState,

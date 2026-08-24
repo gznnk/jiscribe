@@ -1,9 +1,9 @@
-import type { Point } from "@jiscribe/geometry";
-
 import {
 	isFreeEndpointRef,
 	type EndpointRef,
-} from "../../schemas/objects/types/EndpointRef";
+} from "@jiscribe/doc/model/objects/types/EndpointRef";
+import type { Point } from "@jiscribe/geometry";
+
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";

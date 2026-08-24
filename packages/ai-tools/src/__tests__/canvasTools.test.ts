@@ -62,6 +62,7 @@ describe("createCanvasToolDescriptors", () => {
 			"translate_objects",
 			"resize_object",
 			"resize_objects",
+			"set_height_mode",
 			"set_rotation",
 			"set_points",
 			"set_points_many",
@@ -259,7 +260,7 @@ describe("createCanvasToolDescriptors", () => {
 		).inputSchema;
 
 		expect(z.safeParse(zoom, 1).success).toBe(true);
-		// SET_VIEWPORT itself clamps nothing, so the schema is where a broken
+		// SET_CAMERA itself clamps nothing, so the schema is where a broken
 		// magnification is stopped
 		expect(z.safeParse(zoom, 0.05).success).toBe(false);
 		expect(z.safeParse(zoom, 20).success).toBe(false);

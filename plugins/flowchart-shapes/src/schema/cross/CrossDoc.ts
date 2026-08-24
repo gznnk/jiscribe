@@ -1,8 +1,8 @@
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import {
 	AUTO_COLOR,
 	BELOW_LABEL_STYLE_DEFAULTS,
 } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * A cross (plus) marker, used to mark junctions and for emphasis. The arms fill

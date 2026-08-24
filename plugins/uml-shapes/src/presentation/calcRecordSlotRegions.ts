@@ -1,8 +1,8 @@
-import type { RichText, TextSlot } from "@jiscribe/canvas/doc";
-import { isRichText, isTextRows } from "@jiscribe/canvas/doc";
 import type { TextMeasureFont } from "@jiscribe/canvas-sdk";
 import { calcVisualTextHeight } from "@jiscribe/canvas-sdk";
 import { TEXT_LINE_HEIGHT } from "@jiscribe/canvas-sdk/doc";
+import { isRichText, isTextRows } from "@jiscribe/doc";
+import type { RichText, TextSlot } from "@jiscribe/doc";
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
 import {

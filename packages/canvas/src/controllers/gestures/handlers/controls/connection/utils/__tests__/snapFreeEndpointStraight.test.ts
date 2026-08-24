@@ -1,6 +1,6 @@
+import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { describe, expect, it } from "vitest";
 
-import type { EndpointRef } from "../../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import { snapFreeEndpointStraight } from "../snapFreeEndpointStraight";
 

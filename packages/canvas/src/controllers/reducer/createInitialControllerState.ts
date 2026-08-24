@@ -1,4 +1,5 @@
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
@@ -16,9 +17,9 @@ import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
  * paint lands at the host's camera instead of the doc default (0,0). Width/height
  * stay at the mapper default and are corrected by the ResizeObserver.
  *
- * The seeded camera is left as given even when `scrollBoundsConfig` limits
- * scrolling: only a view scroll of the user's own is limited, so wherever the
- * host starts the view is where it starts.
+ * The seeded camera is left as given even when the wall limits scrolling: only a
+ * view scroll of the user's own is limited, so wherever the host starts the view
+ * is where it starts.
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
@@ -45,10 +46,12 @@ export const createInitialControllerState = (
 		viewport,
 		// The rect is left unmeasured: nothing needs it until the first view
 		// scroll, and limitViewScroll measures it there.
-		scrollLimit:
-			scrollBoundsConfig === undefined
-				? null
-				: { config: scrollBoundsConfig, rect: null, measuredFrom: null },
+		scrollLimit: {
+			hostConfig: scrollBoundsConfig ?? null,
+			rect: null,
+			measuredFrom: null,
+			measuredView: undefined,
+		},
 		...resetUiState(),
 		activeModal: null,
 		commitVersion: 0,

@@ -1,3 +1,5 @@
+import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+
 import { CIRCLE_INSET } from "./shapes/Circle";
 import { CONCAVE_TRIANGLE_INSET } from "./shapes/ConcaveTriangle";
 import { CROSS_INSET } from "./shapes/Cross";
@@ -11,7 +13,6 @@ import { FILLED_TRIANGLE_INSET } from "./shapes/FilledTriangle";
 import { HOLLOW_CIRCLE_INSET } from "./shapes/HollowCircle";
 import { HOLLOW_DIAMOND_INSET } from "./shapes/HollowDiamond";
 import { HOLLOW_TRIANGLE_INSET } from "./shapes/HollowTriangle";
-import type { ArrowType } from "../../../schemas/objects/types/ArrowType";
 
 /**
  * The distance (in local units) up to the "root where the line should terminate" for each arrow type.

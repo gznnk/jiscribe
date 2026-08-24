@@ -1,3 +1,4 @@
+import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
 import {
 	calcOutlinePointTowardForPolygon,
 	calcOutlinePointTowardForRotatedEllipse,
@@ -8,7 +9,6 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import type { GeometryType } from "../../../../../schemas/objects/types/GeometryType";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /** Snaps onto the outline the shape's box implies, returning null where the line misses it. */

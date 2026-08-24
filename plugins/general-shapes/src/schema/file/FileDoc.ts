@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * A file with a folded top-right corner, used for source files and configuration.

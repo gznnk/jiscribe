@@ -1,6 +1,6 @@
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 import { describe, expect, it } from "vitest";
 
-import { TEXT_LINE_HEIGHT } from "../../../constants/textLineHeight";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";
 import { measureTextSlot } from "../measureTextSlot";
