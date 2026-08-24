@@ -94,6 +94,19 @@ describe("the text measurement slot once something has measured", () => {
 			/offered after "estimate" had already measured/,
 		);
 	});
+
+	it("declines another instance of the same standing in silence, unlike before the seal", () => {
+		// The pre-seal throw exists to surface two hosts contending; after the seal
+		// the answer is settled, and a late arrival of the losing twin (a second
+		// test file's setup, say) changes nothing worth crashing over.
+		const renderer = measurementOf("renderer");
+		offerTextMeasurement(renderer);
+		adoptTextMeasurement();
+
+		offerTextMeasurement(measurementOf("renderer"));
+
+		expect(adoptTextMeasurement()).toBe(renderer);
+	});
 });
 
 describe("the text measurement slot with nothing offered", () => {

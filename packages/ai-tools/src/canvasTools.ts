@@ -676,7 +676,7 @@ export const createCanvasToolDescriptors = (
 			.describe(
 				[
 					"Create the shape with no height of its own, so it is exactly as tall as the text inside it needs and stays so as the text is edited.",
-					"Only for shapes that hold their text inside their box (rect and the like; not ellipse, not a shape labelled outside its outline), and never together with height — the two are opposite requests and the call is refused.",
+					"Only for box shapes that hold one body of text inside their box (rect and the like; not ellipse, not a shape labelled outside its outline, and a few types opt out even so — markdown, container), and never together with height — the two are opposite requests and the call is refused.",
 					"Omitting this writes a height as ever, so a shape you want to follow its text must ask for it here or with set_height_mode afterwards.",
 				].join(" "),
 			),
@@ -919,7 +919,7 @@ export const createCanvasToolDescriptors = (
 		"set_height_mode",
 		[
 			'Switch objects between a height the document states and one that follows the text inside them: "auto" takes the height out of the document, so the shape is exactly as tall as its wrapped text needs and stays so as the text is edited; "fixed" gives it a stated height again, the one you pass.',
-			'Only shapes that hold their text inside their box take this (rect and the like; not ellipse, not a shape labelled outside its outline), and naming another is refused rather than skipped. "fixed" needs height; without one the call is refused.',
+			'Only box shapes that hold one body of text inside their box take this (rect and the like; not ellipse, not a shape labelled outside its outline, and a few types opt out even so — markdown, container), and naming another is refused rather than skipped. "fixed" needs height; without one the call is refused.',
 			"Use it when a label turned out to overflow its box, instead of guessing a taller box: the shape then sizes itself. add_object takes autoHeight to create it that way in the first place.",
 			"All or nothing: if one id is rejected nothing is switched at all.",
 		].join(" "),
@@ -932,7 +932,7 @@ export const createCanvasToolDescriptors = (
 				),
 			height: z
 				.number()
-				.min(1)
+				.positive()
 				.optional()
 				.describe(
 					'New height in px, required by "fixed" and unread by "auto". Read the shape\'s current height off get_object_bounds to keep the size it is drawn at.',

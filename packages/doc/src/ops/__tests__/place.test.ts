@@ -304,7 +304,7 @@ describe("setHeightMode", () => {
 		expect(readObject(doc, "rect-2")).not.toHaveProperty("height");
 	});
 
-	it("refuses a type that does not lay its text out inside its box", () => {
+	it("refuses a type that supports no text-derived height", () => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 50 });
 		docOps.addObject(doc, "ellipse", { x: 200, y: 0, width: 100, height: 50 });
@@ -313,7 +313,7 @@ describe("setHeightMode", () => {
 		expect(() =>
 			docOps.setHeightMode(doc, ["rect-1", "ellipse-1"], { mode: "auto" }),
 		).toThrow(
-			'ids[1] (ellipse-1): ellipse-1 ("ellipse") does not lay its text out inside its box, so its height cannot follow the text — the document was left unchanged',
+			'ids[1] (ellipse-1): ellipse-1 ("ellipse") does not support a text-derived height; only box shapes holding one body of text inside their box, and not opted out of it, do — the document was left unchanged',
 		);
 		expect(JSON.stringify(doc)).toBe(before);
 	});

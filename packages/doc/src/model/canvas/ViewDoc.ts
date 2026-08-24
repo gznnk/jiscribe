@@ -26,9 +26,12 @@ export const isViewOpenMode = (value: unknown): value is ViewOpenMode =>
  * Whether the document is a bounded page or an endless board.
  *
  * `"content"` walls panning in at the content bounds grown by
- * {@link ViewDoc.padding} — the same rectangle the framing and the exported image
- * use, so a document opened `"fit-width"` cannot be panned sideways off its own
- * page. `"infinite"` is the endless board, and is what an omitted field means.
+ * {@link ViewDoc.padding} — the same rectangle the framing uses, so a document
+ * opened `"fit-width"` cannot be panned sideways off its own page. The exported
+ * image covers that same rectangle too when a padding is declared; a document
+ * declaring none keeps the exporter's own default margin, which is wider than
+ * the zero-padding wall. `"infinite"` is the endless board, and is what an
+ * omitted field means.
  */
 export type ViewScrollMode = "content" | "infinite";
 

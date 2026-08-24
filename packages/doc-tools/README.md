@@ -11,12 +11,12 @@ the answers an AI gets and the answers CI gets cannot drift.
 
 ## API
 
-| Function                                          | What it answers                                                                                                                                       |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `validateDoc(text)`                               | Is this a sound document? Runs both validators the format has and returns their findings together.                                                    |
-| `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                       |
-| `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                         |
-| `diagnoseDoc(doc)`                                | Does any text land where it cannot be read — a body overflowing its shape, a connector label wider than the space between the shapes it runs between? |
+| Function                                          | What it answers                                                                                                                                                                                                       |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validateDoc(text)`                               | Is this a sound document? Runs both validators the format has and returns their findings together.                                                                                                                    |
+| `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                                                                                       |
+| `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                                                                                         |
+| `diagnoseDoc(doc)`                                | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? |
 
 ## Why validation is two validators
 
@@ -94,6 +94,10 @@ they are background, and a shape's own margin has room for them.
 
 ## What `diagnoseDoc` does not check
 
-Only text that cannot be read where it is drawn — a fact about the document.
+Only facts about the document's own text — where it cannot be read (overflow, a
+label drawn over the shapes) and where its typography breaks a convention every
+document shares (a line opening on a closing punctuation mark, a frame-based
+body running over the shape's decoration). Those latter two are warnings: the
+text stays readable, and the remark is what a careful author would make.
 Spacing, aspect ratio and the rest of the layout rules in a project's own design
 guide are matters of taste and belong in a rule file, not in the default check.

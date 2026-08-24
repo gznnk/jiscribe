@@ -13,7 +13,10 @@ import { calcContentBounds } from "../calcContentBounds";
 import { calcInitialCameraFromView } from "../calcInitialCameraFromView";
 import { calcScrollBounds } from "../calcScrollBounds";
 import { calcVisibleWorldRect } from "../calcVisibleWorldRect";
-import { resolveExportOptions } from "../resolveExportOptions";
+import {
+	EXPORT_FIT_PADDING,
+	resolveExportOptions,
+} from "../resolveExportOptions";
 import { resolveScrollWallPadding } from "../resolveScrollWallPadding";
 
 /**
@@ -76,12 +79,13 @@ const view: ViewDoc = {
 const calcPaddedBox = (
 	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
 	objects: Parameters<typeof calcContentBounds>[0],
+	declaredPadding: ViewDoc["padding"],
 ): BoundingBox => {
 	const bounds = calcContentBounds(objects, visualBounds);
 	if (bounds === null) {
 		throw new Error("the fixture has no content to measure");
 	}
-	const padding = resolveViewPadding(pagePadding);
+	const padding = resolveViewPadding(declaredPadding);
 	return {
 		left: bounds.left - padding.left,
 		top: bounds.top - padding.top,
@@ -100,13 +104,18 @@ const calcPaddedBox = (
  */
 const measureThreeWays = (
 	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
+	measuredView: ViewDoc = view,
 ) => {
 	const state = canvasToState(
-		twoRectsDocWith(view),
+		twoRectsDocWith(measuredView),
 		registries.objectMapper,
 		registries.objectContentResizer,
 	);
-	const paddedBox = calcPaddedBox(visualBounds, state.objects);
+	const paddedBox = calcPaddedBox(
+		visualBounds,
+		state.objects,
+		measuredView.padding,
+	);
 	const viewportSize = {
 		width: paddedBox.right - paddedBox.left,
 		height: paddedBox.bottom - paddedBox.top,
@@ -203,6 +212,35 @@ describe("the box view.padding names, across its three consumers", () => {
 			expect(measured.framed).toEqual(measured.paddedBox);
 			expect(measured.wall).toEqual(measured.paddedBox);
 			expect(measured.exported).toEqual(measured.paddedBox);
+		});
+	});
+
+	describe("with a scroll declared but no padding", () => {
+		const measured = measureThreeWays(geometryOnlyVisualBounds, {
+			open: "fit-all",
+			scroll: "content",
+		});
+
+		it("opens and walls at the bare content box", () => {
+			expect(measured.paddedBox).toEqual({
+				left: 0,
+				top: 0,
+				right: 400,
+				bottom: 240,
+			});
+			expect(measured.framed).toEqual(measured.paddedBox);
+			expect(measured.wall).toEqual(measured.paddedBox);
+		});
+
+		it("exports wider, on the exporter's own default margin — the one box the parity does not cover", () => {
+			// A document declaring no padding keeps the export default (see ViewDoc's
+			// ViewScrollMode doc): the wall hugs the ink while the image breathes.
+			expect(measured.exported).toEqual({
+				left: -EXPORT_FIT_PADDING,
+				top: -EXPORT_FIT_PADDING,
+				right: 400 + EXPORT_FIT_PADDING,
+				bottom: 240 + EXPORT_FIT_PADDING,
+			});
 		});
 	});
 });

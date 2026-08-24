@@ -73,8 +73,9 @@ const GEOMETRY_CELLS: Readonly<
 		reference: "`cx`, `cy`, `rx`, `ry`",
 	},
 	point: {
-		guide: "`x`,`y` (no `width`/`height`)",
-		reference: "`x`, `y` (no `width` / `height`)",
+		guide: '`x`,`y` (no `height`; `width` only with `textLayout: "block"`)',
+		reference:
+			'`x`, `y` (no `height`; `width` only with `textLayout: "block"`)',
 	},
 };
 

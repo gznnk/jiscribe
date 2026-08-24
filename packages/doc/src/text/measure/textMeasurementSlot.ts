@@ -24,9 +24,13 @@ let sealed = false;
 
 const NOTHING_OFFERED_MESSAGE =
 	"No text measurement has been offered. A browser host gets one by importing " +
-	"@jiscribe/canvas; a Node host offers nodeTextMeasurement() from " +
-	"@jiscribe/doc-tools, or createEstimateTextMeasurement() where a proportional " +
-	"answer will do. Offer it before anything measures.";
+	"@jiscribe/canvas — in a DOM-less test environment (jsdom) that import " +
+	"abstains, so offer createEstimateTextMeasurement() in the test setup " +
+	"instead. A Node host offers nodeTextMeasurement() from @jiscribe/doc-tools; " +
+	"createEstimateTextMeasurement() will do where a proportional answer is " +
+	"enough AND the process never calls @jiscribe/doc-tools, whose entry points " +
+	"offer their stronger measurement and would then throw. Offer it before " +
+	"anything measures.";
 
 /**
  * Puts an implementation forward as the process's text measurement. The

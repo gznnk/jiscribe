@@ -237,7 +237,7 @@ describe("addObject", () => {
 
 		expect(() =>
 			docOps.addObject(doc, "ellipse", { x: 0, y: 0, autoHeight: true }),
-		).toThrow('object type "ellipse" does not lay its text out inside its box');
+		).toThrow('object type "ellipse" does not support a text-derived height');
 		expect(doc.root).toHaveLength(0);
 	});
 

@@ -161,7 +161,7 @@ const requireLayoutSupport = (
 	}
 	if (!supportsAutoHeight(definition)) {
 		throw new DocOperationError(
-			`object type "${type}" does not lay its text out inside its box, so its height cannot follow the text`,
+			`object type "${type}" does not support a text-derived height; only box shapes holding one body of text inside their box, and not opted out of it, do`,
 		);
 	}
 };

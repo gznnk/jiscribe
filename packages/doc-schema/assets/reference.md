@@ -53,61 +53,61 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 
 <!-- AUTOGEN:BEGIN object-types -->
 
-| `type`             | Description                                           | Geometry                                | Styles                                |
-| ------------------ | ----------------------------------------------------- | --------------------------------------- | ------------------------------------- |
-| `rect`             | General-purpose node / label box                      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
-| `markdown`         | Markdown-rendered document card                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
-| `ellipse`          | Ellipse / oval node (center-based geometry)           | `cx`, `cy`, `rx`, `ry`                  | Stroke, Fill, Text, Transform         |
-| `text`             | Bare text label / annotation                          | `x`, `y` (no `width` / `height`)        | Text, Transform (no Stroke)           |
-| `diamond`          | Decision / branch node                                | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `stadium`          | Start / end terminator                                | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `parallelogram`    | Input / output                                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `hexagon`          | Preparation                                           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `cloud`            | External system, fuzzy concept                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `document`         | Report, file                                          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `multiDocument`    | Report batch / file set                               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `actor`            | User, role, stakeholder                               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `browserWindow`    | Web UI, screen                                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `terminalWindow`   | CLI, shell session                                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `smartphone`       | Mobile client                                         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `laptop`           | Desktop client, web client                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `server`           | Host, node, running process                           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `gear`             | Service, batch job, daemon                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `package`          | Library, artifact, deployment unit                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `folder`           | Directory, grouping                                   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `file`             | Source file, configuration                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `envelope`         | Message, event                                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `queue`            | Job queue, message queue                              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `lock`             | Authentication, protected resource                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `shield`           | Security boundary, trust zone                         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `lucideIcon`       | Decorative Lucide icon (no text, not connectable)     | `x`, `y`, `width`, `height`             | Stroke, Transform (no text)           |
-| `callout`          | Annotation bubble                                     | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `note`             | Comment box, UML note                                 | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `brace`            | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
-| `bracketWithStem`  | Group marker with a pointer, grouping annotation      | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
-| `bracket`          | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
-| `db`               | Data store                                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `storedData`       | Generic stored data (file / cache)                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `subroutine`       | Predefined process / call                             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `trapezoid`        | Manual operation                                      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `manualInput`      | Manual / keyed input                                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `card`             | Punched-card style data                               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `delay`            | Wait / delay                                          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `loopLimit`        | Loop start (`"flipY": true` for the end)              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `display`          | Output to a display                                   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `extract`          | Extract / merge marker                                | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `cross`            | Junction / emphasis marker                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `offPageConnector` | Off-page connector (jump to another page)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `record`           | Titled box + row compartments (UML class / ER entity) | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
-| `umlPackage`       | Namespace, module, layer                              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `umlComponent`     | Component, replaceable part                           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `polyline`         | Open line                                             | `points`                                | Stroke                                |
-| `polygon`          | Closed shape from points                              | `points`                                | Stroke, Fill                          |
-| `group`            | Container of child objects                            | none                                    | Transform                             |
-| `container`        | Titled region (module, subsystem, boundary)           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `sticky`           | Sticky note (no stroke or `rx`)                       | `x`, `y`, `width`, `height`             | Fill, Text, Transform (no Stroke)     |
-| `svg`              | Raw SVG escape hatch (opaque box)                     | `x`, `y`, `width`, `height` + `svgText` | Transform only (rotation/flip)        |
-| `connector`        | Edge / arrow between objects                          | `points`                                | Stroke                                |
+| `type`             | Description                                           | Geometry                                                        | Styles                                |
+| ------------------ | ----------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------- |
+| `rect`             | General-purpose node / label box                      | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform, Radius |
+| `markdown`         | Markdown-rendered document card                       | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform, Radius |
+| `ellipse`          | Ellipse / oval node (center-based geometry)           | `cx`, `cy`, `rx`, `ry`                                          | Stroke, Fill, Text, Transform         |
+| `text`             | Bare text label / annotation                          | `x`, `y` (no `height`; `width` only with `textLayout: "block"`) | Text, Transform (no Stroke)           |
+| `diamond`          | Decision / branch node                                | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `stadium`          | Start / end terminator                                | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `parallelogram`    | Input / output                                        | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `hexagon`          | Preparation                                           | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `cloud`            | External system, fuzzy concept                        | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `document`         | Report, file                                          | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `multiDocument`    | Report batch / file set                               | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `actor`            | User, role, stakeholder                               | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `browserWindow`    | Web UI, screen                                        | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `terminalWindow`   | CLI, shell session                                    | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `smartphone`       | Mobile client                                         | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `laptop`           | Desktop client, web client                            | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `server`           | Host, node, running process                           | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `gear`             | Service, batch job, daemon                            | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `package`          | Library, artifact, deployment unit                    | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `folder`           | Directory, grouping                                   | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `file`             | Source file, configuration                            | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `envelope`         | Message, event                                        | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `queue`            | Job queue, message queue                              | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `lock`             | Authentication, protected resource                    | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `shield`           | Security boundary, trust zone                         | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `lucideIcon`       | Decorative Lucide icon (no text, not connectable)     | `x`, `y`, `width`, `height`                                     | Stroke, Transform (no text)           |
+| `callout`          | Annotation bubble                                     | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `note`             | Comment box, UML note                                 | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `brace`            | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`                                     | Stroke, Text, Transform               |
+| `bracketWithStem`  | Group marker with a pointer, grouping annotation      | `x`, `y`, `width`, `height`                                     | Stroke, Text, Transform               |
+| `bracket`          | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`                                     | Stroke, Text, Transform               |
+| `db`               | Data store                                            | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `storedData`       | Generic stored data (file / cache)                    | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `subroutine`       | Predefined process / call                             | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `trapezoid`        | Manual operation                                      | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `manualInput`      | Manual / keyed input                                  | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `card`             | Punched-card style data                               | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `delay`            | Wait / delay                                          | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `loopLimit`        | Loop start (`"flipY": true` for the end)              | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `display`          | Output to a display                                   | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `extract`          | Extract / merge marker                                | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `cross`            | Junction / emphasis marker                            | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `offPageConnector` | Off-page connector (jump to another page)             | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `record`           | Titled box + row compartments (UML class / ER entity) | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text (keyed), Transform |
+| `umlPackage`       | Namespace, module, layer                              | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `umlComponent`     | Component, replaceable part                           | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `polyline`         | Open line                                             | `points`                                                        | Stroke                                |
+| `polygon`          | Closed shape from points                              | `points`                                                        | Stroke, Fill                          |
+| `group`            | Container of child objects                            | none                                                            | Transform                             |
+| `container`        | Titled region (module, subsystem, boundary)           | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `sticky`           | Sticky note (no stroke or `rx`)                       | `x`, `y`, `width`, `height`                                     | Fill, Text, Transform (no Stroke)     |
+| `svg`              | Raw SVG escape hatch (opaque box)                     | `x`, `y`, `width`, `height` + `svgText`                         | Transform only (rotation/flip)        |
+| `connector`        | Edge / arrow between objects                          | `points`                                                        | Stroke                                |
 
 <!-- AUTOGEN:END object-types -->
 

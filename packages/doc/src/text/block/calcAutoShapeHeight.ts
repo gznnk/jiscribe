@@ -164,6 +164,12 @@ export const calcAutoShapeHeight = (
 	 * sits off centre on. A region centred on the box makes the two equal and the
 	 * room the region basis's own, which is why a symmetric type derives one
 	 * height either way.
+	 *
+	 * Centred means `verticalAlign: "middle"`, which this derivation assumes: a
+	 * frame-basis body aligned `"top"` or `"bottom"` starts at the frame's edge, a
+	 * fixed distance past the region's, so no height keeps it inside the region
+	 * and none is derived for it here — `diagnose` is what reports that placement
+	 * (its decoration-overlap check reads the alignment).
 	 */
 	const calcTextRoom = (height: number): Dimensions | null => {
 		const region = textRegion({ ...shape, height }, BODY_TEXT_SLOT_ID);

@@ -9,7 +9,7 @@ It focuses on the essentials. For the full field-level specification, see [`refe
 
 - The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
 - Coordinate values are arbitrary (**negatives are allowed**). The origin `(0, 0)` is **not** pinned to the top-left of the screen (the view pans and zooms).
-- Each shape has its own reference point: **every box shape except `ellipse` uses its top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (per-type geometry is in "Object quick reference"). "Box shape" here and below means every object type except `text` / `polyline` / `polygon` / `group` / `svg` / `connector`. `text` also anchors at its top-left `(x, y)`, but it is not a box shape: it has no `width` / `height` at all.
+- Each shape has its own reference point: **every box shape except `ellipse` uses its top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (per-type geometry is in "Object quick reference"). "Box shape" here and below means every object type except `text` / `polyline` / `polygon` / `group` / `svg` / `connector`. `text` also anchors at its top-left `(x, y)`, but it is not a box shape: it never stores a `height`, and stores a `width` only in its `textLayout: "block"` form (see the text type below).
 - Stacking order (z-order) follows the **order of the `root` array** — later entries are drawn on top. Overlapping is allowed.
 - There is no auto-layout. You compute coordinates yourself (see "Layout conventions").
 
@@ -48,7 +48,7 @@ The top level must always have `version` / `root` (the array may be empty).
 - Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only the intermediate vertices (usually empty).
 - Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Every box shape is connectable, and so is `text`; for those five non-connectable types, use a `free` endpoint to point near them.
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
-- Do not give a `text` `width`,`height` — it has no such fields. Its box is measured from the text itself; `fontSize` is what makes it bigger.
+- Do not give a `text` a `height` — its height is always measured from the text itself. `width` belongs to its `textLayout: "block"` form alone, where it is required and is the width the text wraps in; the default label form measures its width too, and `fontSize` is what makes it bigger.
 - Do not reuse the same `id`.
 - Do not put a `connector` inside a group's `children` (connectors live at the top level of `root` only).
 
@@ -56,61 +56,61 @@ The top level must always have `version` / `root` (the array may be empty).
 
 <!-- AUTOGEN:BEGIN object-quick-reference -->
 
-| `type`                  | Required geometry                    | Main styles                                      | Use                                                   |
-| ----------------------- | ------------------------------------ | ------------------------------------------------ | ----------------------------------------------------- |
-| `rect`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / `rx` / rotation           | general-purpose node / label box                      |
-| `markdown`              | `x`,`y`,`width`,`height`             | stroke / fill / text / `rx` / rotation           | Markdown-rendered document card                       |
-| `ellipse`               | `cx`,`cy`,`rx`,`ry`                  | stroke / fill / text / rotation                  | ellipse / oval node (center-based geometry)           |
-| `text`                  | `x`,`y` (no `width`/`height`)        | text / rotation                                  | bare text label / annotation                          |
-| `diamond`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | decision / branch node                                |
-| `stadium`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | start / end terminator                                |
-| `parallelogram`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | input / output                                        |
-| `hexagon`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | preparation                                           |
-| `cloud`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | external system, fuzzy concept                        |
-| `document`              | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | report, file                                          |
-| `multiDocument`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | report batch / file set                               |
-| `actor`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | user, role, stakeholder                               |
-| `browserWindow`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | web UI, screen                                        |
-| `terminalWindow`        | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | CLI, shell session                                    |
-| `smartphone`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | mobile client                                         |
-| `laptop`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | desktop client, web client                            |
-| `server`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | host, node, running process                           |
-| `gear`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | service, batch job, daemon                            |
-| `package`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | library, artifact, deployment unit                    |
-| `folder`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | directory, grouping                                   |
-| `file`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | source file, configuration                            |
-| `envelope`              | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | message, event                                        |
-| `queue`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | job queue, message queue                              |
-| `lock`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | authentication, protected resource                    |
-| `shield`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | security boundary, trust zone                         |
-| `lucideIcon`            | `x`,`y`,`width`,`height`             | stroke / rotation                                | decorative Lucide icon (no text, not connectable)     |
-| `callout`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | annotation bubble                                     |
-| `note`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | comment box, UML note                                 |
-| `brace`                 | `x`,`y`,`width`,`height`             | stroke / text / rotation                         | group marker, grouping annotation                     |
-| `bracketWithStem`       | `x`,`y`,`width`,`height`             | stroke / text / rotation                         | group marker with a pointer, grouping annotation      |
-| `bracket`               | `x`,`y`,`width`,`height`             | stroke / text / rotation                         | group marker, grouping annotation                     |
-| `db`                    | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | data store                                            |
-| `storedData`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | generic stored data (file / cache)                    |
-| `subroutine`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | predefined process / call                             |
-| `trapezoid`             | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | manual operation                                      |
-| `manualInput`           | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | manual / keyed input                                  |
-| `card`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | punched-card style data                               |
-| `delay`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | wait / delay                                          |
-| `loopLimit`             | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | loop start (`"flipY": true` for the end)              |
-| `display`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | output to a display                                   |
-| `extract`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | extract / merge marker                                |
-| `cross`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | junction / emphasis marker                            |
-| `offPageConnector`      | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | off-page connector (jump to another page)             |
-| `record`                | `x`,`y`,`width`,`height`             | stroke / fill / **keyed** text / rotation        | titled box + row compartments (UML class / ER entity) |
-| `umlPackage`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | namespace, module, layer                              |
-| `umlComponent`          | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | component, replaceable part                           |
-| `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                   | open line                                             |
-| `polygon`               | `points` (auto-closed)               | stroke / fill                                    | closed shape from points                              |
-| `group`                 | `children`                           | rotation / flipX / flipY                         | container of child objects                            |
-| `container`             | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | titled region (module, subsystem, boundary)           |
-| `sticky`                | `x`,`y`,`width`,`height`             | fill / text / rotation                           | sticky note (no stroke or `rx`)                       |
-| `svg`                   | `x`,`y`,`width`,`height` + `svgText` | rotation only                                    | raw SVG escape hatch (opaque box)                     |
-| `connector` (in `root`) | `source`,`target`,`points:[]`        | stroke / startArrow / endArrow / routing / label | edge / arrow between objects                          |
+| `type`                  | Required geometry                                              | Main styles                                      | Use                                                   |
+| ----------------------- | -------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------- |
+| `rect`                  | `x`,`y`,`width`,`height`                                       | stroke / fill / text / `rx` / rotation           | general-purpose node / label box                      |
+| `markdown`              | `x`,`y`,`width`,`height`                                       | stroke / fill / text / `rx` / rotation           | Markdown-rendered document card                       |
+| `ellipse`               | `cx`,`cy`,`rx`,`ry`                                            | stroke / fill / text / rotation                  | ellipse / oval node (center-based geometry)           |
+| `text`                  | `x`,`y` (no `height`; `width` only with `textLayout: "block"`) | text / rotation                                  | bare text label / annotation                          |
+| `diamond`               | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | decision / branch node                                |
+| `stadium`               | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | start / end terminator                                |
+| `parallelogram`         | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | input / output                                        |
+| `hexagon`               | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | preparation                                           |
+| `cloud`                 | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | external system, fuzzy concept                        |
+| `document`              | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | report, file                                          |
+| `multiDocument`         | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | report batch / file set                               |
+| `actor`                 | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | user, role, stakeholder                               |
+| `browserWindow`         | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | web UI, screen                                        |
+| `terminalWindow`        | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | CLI, shell session                                    |
+| `smartphone`            | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | mobile client                                         |
+| `laptop`                | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | desktop client, web client                            |
+| `server`                | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | host, node, running process                           |
+| `gear`                  | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | service, batch job, daemon                            |
+| `package`               | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | library, artifact, deployment unit                    |
+| `folder`                | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | directory, grouping                                   |
+| `file`                  | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | source file, configuration                            |
+| `envelope`              | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | message, event                                        |
+| `queue`                 | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | job queue, message queue                              |
+| `lock`                  | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | authentication, protected resource                    |
+| `shield`                | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | security boundary, trust zone                         |
+| `lucideIcon`            | `x`,`y`,`width`,`height`                                       | stroke / rotation                                | decorative Lucide icon (no text, not connectable)     |
+| `callout`               | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | annotation bubble                                     |
+| `note`                  | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | comment box, UML note                                 |
+| `brace`                 | `x`,`y`,`width`,`height`                                       | stroke / text / rotation                         | group marker, grouping annotation                     |
+| `bracketWithStem`       | `x`,`y`,`width`,`height`                                       | stroke / text / rotation                         | group marker with a pointer, grouping annotation      |
+| `bracket`               | `x`,`y`,`width`,`height`                                       | stroke / text / rotation                         | group marker, grouping annotation                     |
+| `db`                    | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | data store                                            |
+| `storedData`            | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | generic stored data (file / cache)                    |
+| `subroutine`            | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | predefined process / call                             |
+| `trapezoid`             | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | manual operation                                      |
+| `manualInput`           | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | manual / keyed input                                  |
+| `card`                  | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | punched-card style data                               |
+| `delay`                 | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | wait / delay                                          |
+| `loopLimit`             | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | loop start (`"flipY": true` for the end)              |
+| `display`               | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | output to a display                                   |
+| `extract`               | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | extract / merge marker                                |
+| `cross`                 | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | junction / emphasis marker                            |
+| `offPageConnector`      | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | off-page connector (jump to another page)             |
+| `record`                | `x`,`y`,`width`,`height`                                       | stroke / fill / **keyed** text / rotation        | titled box + row compartments (UML class / ER entity) |
+| `umlPackage`            | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | namespace, module, layer                              |
+| `umlComponent`          | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | component, replaceable part                           |
+| `polyline`              | `points` (open line)                                           | stroke / startArrow / endArrow                   | open line                                             |
+| `polygon`               | `points` (auto-closed)                                         | stroke / fill                                    | closed shape from points                              |
+| `group`                 | `children`                                                     | rotation / flipX / flipY                         | container of child objects                            |
+| `container`             | `x`,`y`,`width`,`height`                                       | stroke / fill / text / rotation                  | titled region (module, subsystem, boundary)           |
+| `sticky`                | `x`,`y`,`width`,`height`                                       | fill / text / rotation                           | sticky note (no stroke or `rx`)                       |
+| `svg`                   | `x`,`y`,`width`,`height` + `svgText`                           | rotation only                                    | raw SVG escape hatch (opaque box)                     |
+| `connector` (in `root`) | `source`,`target`,`points:[]`                                  | stroke / startArrow / endArrow / routing / label | edge / arrow between objects                          |
 
 <!-- AUTOGEN:END object-quick-reference -->
 
@@ -120,7 +120,7 @@ The top level must always have `version` / `root` (the array may be empty).
 - Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
 - Fill: `fill` (default `"transparent"`)
 - Text (every box shape, and `text`): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). For `diamond` and `stadium`, text is placed within the full bounding box (not clipped to the shape interior). For `db`, text is placed in the body region below the top cap ellipse. For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height. For `document` and `callout`, text sits above the bottom wave/tail band. For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size. For `actor`, `server`, `package`, `envelope`, `queue`, `gear`, `lock`, `extract` and `cross`, the drawing fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and omitting `text` leaves a bare figure. **`record` is the exception: its `text` is a keyed object, and the typography lives inside each slot rather than on the shape** (see the record entry below).
-- Bare text (`text` only): a label with no box, outline or fill around it — titles, captions, free annotations. It takes `x`,`y` (top-left of the text) plus the Text and Transform fields and **nothing else**: no `width` / `height`, because the box is measured from the content and grows right and down as the text gets longer, so `fontSize` (and `fontWeight`) is how you size it. With `rotation` or a flip set, "right and down" means the shape's own axes, so `x`,`y` stay put whatever the text does. Since the box hugs the text, `textAlign` shows up only across the lines of a multi-line `text`, and `verticalAlign` has nothing to move within. It is **connectable**: its four edge midpoints sit on the measured box, so a connector attached to it follows the text as it grows.
+- Bare text (`text` only): a label with no box, outline or fill around it — titles, captions, free annotations. It takes `x`,`y` (top-left of the text) plus the Text and Transform fields; in its default label form **nothing else**: no `width` / `height`, because the box is measured from the content and grows right and down as the text gets longer, so `fontSize` (and `fontWeight`) is how you size it. Its `textLayout: "block"` form instead stores a required `width` and wraps in it (for body copy); the height stays measured in both forms. With `rotation` or a flip set, "right and down" means the shape's own axes, so `x`,`y` stay put whatever the text does. Since the box hugs the text, `textAlign` shows up only across the lines of a multi-line `text`, and `verticalAlign` has nothing to move within. It is **connectable**: its four edge midpoints sit on the measured box, so a connector attached to it follows the text as it grows.
 - Markdown body (`markdown` only): `text` holds **Markdown source** and is rendered as HTML — headings, lists, tables, code fences, links, and math (`$...$` inline, `$$...$$` block). Every other shape draws `text` as plain text, so reach for `markdown` whenever the content needs structure (notes, specs, summaries), and keep `rect` for one-line labels. Defaults suit a document: 300x200, `textAlign` `"left"`, `verticalAlign` `"top"`, `fill` `"auto"`. Content taller than `height` is clipped, so leave headroom. Image export flattens it to plain text.
 - Connector label (edge label, e.g. `"Yes"`/`"No"`): a connector has **no** top-level `text`. Put the annotation in a nested `label` object: `"label": { "text": "Yes" }`. Optional fields: `position` (0–1 along the path, default 0.5 = midpoint), `offset` (perpendicular shift, default 0), `fontColor` (default `"auto"`), `fontSize` (default 16), `fontWeight`, plus background/border — `fill` (default canvas background = masks the line; `"transparent"` to show the line), `stroke` (border color), `strokeWidth` (border width, default 0 = no border), `strokeDashType` (border line style: `"solid"`/`"dashed"`/`"dotted"`). Plain text only; the label is drawn horizontally at the midpoint by default. Omit `label` for no label.
 - Arrows `startArrow`/`endArrow`: `"None"` / `"FilledTriangle"` (standard arrow) / `"OpenArrow"` / `"HollowTriangle"` / `"FilledDiamond"` / `"HollowDiamond"` / `"ConcaveTriangle"` / `"Circle"` / `"HollowCircle"` / `"Cross"`

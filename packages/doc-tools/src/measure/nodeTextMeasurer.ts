@@ -148,7 +148,11 @@ const measurement: TextMeasurement = {
  * it only when driving the document layer's measurement directly — a host that
  * builds its own `createDocOps` and lets it derive heights, say. Offering it in a
  * process where `@jiscribe/canvas` is drawing is harmless: the canvas measures
- * itself, which outranks this, so the offer is declined.
+ * itself, which outranks this, so the offer is declined. The other direction is
+ * not: a host that sealed `createEstimateTextMeasurement()` by measuring under it
+ * cannot call this package's entry points afterwards — their offer is then a
+ * stronger one arriving after the seal, which throws. A host that uses this
+ * package offers this measurement, not the estimate.
  *
  * @returns The one instance, on every call; re-offering it is a no-op precisely because it is the same object
  */
