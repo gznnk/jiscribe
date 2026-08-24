@@ -137,12 +137,26 @@ const resolveWrapBoxWidth = (
 	return body.textLayout === "block" ? body.width : null;
 };
 
+/** What {@link resolveDrawnHeight} answers about a shape's vertical extent. */
+type DrawnHeight = {
+	/** Height in the shape's own px; 0 for the stand-in nobody measured. */
+	height: number;
+	/**
+	 * False for the stand-in of a type storing no height at all (`text` in
+	 * either layout): only the region's *width* is meaningful then, and a check
+	 * that reads the height off the region — the decoration overlap — must not
+	 * run against it, or a heightless shape reads as overflowing a 0-tall region.
+	 */
+	heightIsDrawn: boolean;
+};
+
 /**
  * Height the shape is drawn at: the stored one, or the one its text comes to for
  * a type allowed to leave it out — derived against the basis the shape places
- * its body on, so a derived height is the one the canvas itself would draw. Null
- * where the type holds the text at no height at all, there being nothing to
- * check against then.
+ * its body on, so a derived height is the one the canvas itself would draw. A
+ * type storing no height at all gets the 0 stand-in, marked `heightIsDrawn:
+ * false` (see {@link DrawnHeight}). Null when a derivation ran and found no
+ * fitting height, there being no drawn shape to check then.
  *
  * @param boxWidth - The width its text wraps in, as {@link resolveWrapBoxWidth} resolved it rather than the shape's own
  */
@@ -152,21 +166,17 @@ const resolveDrawnHeight = (
 	boxWidth: number,
 	text: RichText,
 	font: TextMeasureFont,
-): number | null => {
+): DrawnHeight | null => {
 	if (typeof body.height === "number") {
-		return body.height;
+		return { height: body.height, heightIsDrawn: true };
 	}
 	if (definition.textRegion === undefined || !supportsAutoHeight(definition)) {
-		// A type storing no height at all (`text` in its block layout) has none to
-		// derive. Only the region's width is read from here on, and no shipped
-		// region takes a width from the height, so 0 stands in for the height
-		// nobody has measured.
-		return 0;
+		return { height: 0, heightIsDrawn: false };
 	}
 	// The search lays text out through the doc layer rather than through this
 	// package's measurer, so the font files have to be on offer before it runs.
 	offerNodeTextMeasurement();
-	return calcAutoShapeHeight(
+	const derivedHeight = calcAutoShapeHeight(
 		{ ...body, width: boxWidth, height: 0 },
 		text,
 		font,
@@ -178,6 +188,9 @@ const resolveDrawnHeight = (
 			? body.textVerticalBasis
 			: undefined,
 	);
+	return derivedHeight === null
+		? null
+		: { height: derivedHeight, heightIsDrawn: true };
 };
 
 /** What the drawn lines say about the text fitting the box, empty when it does. */
@@ -350,7 +363,7 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	const resolution = resolveContentBox({
 		...body,
 		width: boxWidth,
-		height: drawnHeight,
+		height: drawnHeight.height,
 	});
 	if (resolution.kind !== "region") {
 		return [];
@@ -370,8 +383,10 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 				)
 			: []),
 		// Only the frame basis has anything to check: a body placed on the declared
-		// region is laid out inside that very region and cannot leave it.
-		...(body.textVerticalBasis === "frame"
+		// region is laid out inside that very region and cannot leave it. And only
+		// against a height something drew — the stand-in's 0-tall region would
+		// read as overflowed by any text at all (see DrawnHeight).
+		...(body.textVerticalBasis === "frame" && drawnHeight.heightIsDrawn
 			? diagnoseDecorationOverlap(
 					object,
 					box,

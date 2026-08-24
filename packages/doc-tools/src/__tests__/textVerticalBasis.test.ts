@@ -254,6 +254,26 @@ describe("decoration overlap", () => {
 		expect(diagnostics).toHaveLength(1);
 		expect(diagnostics[0].severity).toBe("warning");
 	});
+
+	it("reports nothing for a text, which stores no height for the check to read", () => {
+		// A block text may carry the basis (the schema allows it on every body
+		// type) but has no decoration and no stored height: the drawn-height
+		// stand-in is 0, and a check reading it would call any text at all an
+		// overhang. Pinned against a schema-valid document, not a contrived one.
+		expect(
+			diagnose({
+				id: "copy",
+				type: "text",
+				x: 0,
+				y: 0,
+				width: 240,
+				textLayout: "block",
+				text: "本文が三行ぶん続く。本文が三行ぶん続く。本文が三行ぶん続く。",
+				fontSize: 16,
+				textVerticalBasis: "frame",
+			}),
+		).toEqual([]);
+	});
 });
 
 describe("a height derived on the frame basis", () => {
