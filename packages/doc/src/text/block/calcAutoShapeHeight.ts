@@ -19,10 +19,11 @@ import { BODY_TEXT_SLOT_ID } from "../style/textSlotId";
 export type AutoHeightShape = Dimensions & Readonly<Record<string, unknown>>;
 
 /**
- * Tallest box the search will consider, in local pixels. Reaching it means the
- * text never fits however tall the shape is drawn — a region whose height does
- * not grow with the box (the container's header band) is the case in hand — and
- * the search gives up rather than climbing forever.
+ * Tallest box the search will consider, in local pixels. Reaching it means no
+ * probed height fit however tall the shape is drawn — a region whose height
+ * does not grow with the box (the container's header band) is the case in hand
+ * — and the climb stops rather than doubling forever; what remains after it is
+ * the band rescue, not more climbing.
  */
 const MAX_AUTO_SHAPE_HEIGHT = 1_000_000;
 
@@ -46,7 +47,10 @@ const MAX_AUTO_SHAPE_HEIGHT = 1_000_000;
  * of heights rather than from one height upwards, so the bisected height is
  * taken as a ceiling and every height below it is walked from the bottom. The
  * first that fits is the shortest whatever the region does, which is what makes
- * the answer the smallest one rather than merely one the text fits in.
+ * the answer the smallest one rather than merely one the text fits in. A band
+ * lying wholly between two of the climb's probes never brackets a ceiling at
+ * all, and is rescued instead by searching beside the probe that came closest
+ * ({@link rescueBandBetweenProbes} inside).
  *
  * The heights are far more numerous than the layouts they cost. Wrapping depends
  * on the region's width alone, so every height leaving the same width shares one
@@ -69,7 +73,7 @@ const MAX_AUTO_SHAPE_HEIGHT = 1_000_000;
  * @param font - Font the text is drawn with, which each run overrides only where it sets a field; a family other than the drawn one moves where the lines break, and its `fontSize` is the em the comfort padding is charged in whatever the runs set
  * @param textRegion - The type's text-region calculator, called once per height the search tries
  * @param basis - The shape's `textVerticalBasis`; `undefined` — the field absent, which is every document written before it existed — derives against the declared region, and equals `"frame"`'s answer for a region that sits on the box's centre
- * @returns The height in whole pixels, or null when the type's box does not hold the text at all (the calculator answering `null`) and when no height up to 1,000,000px fits it
+ * @returns The height in whole pixels, or null when no height up to 1,000,000px fits the text — a height at which the calculator answers `null` merely does not fit, so a region existing only above some minimum height is searched through rather than given up on
  */
 export const calcAutoShapeHeight = (
 	shape: AutoHeightShape,
@@ -192,49 +196,145 @@ export const calcAutoShapeHeight = (
 	};
 
 	/**
-	 * Whether the text and its comfort padding fit at this height, or null where
-	 * the box holds no text.
+	 * How far the text and its comfort padding overshoot the room at this height:
+	 * at or below zero the height fits. Infinity where the calculator answers no
+	 * region — a height that does not fit rather than a verdict on the type (a
+	 * plugin's region may answer null below its minimum height and a box above
+	 * it). A region squeezed to no width is *not* Infinity: the layout still
+	 * answers there (a character per line, an empty text its one line), and an
+	 * empty text genuinely fits a width nothing else would.
+	 *
+	 * The sign is exact either way; `exact` decides the positive magnitudes.
+	 * Without it a positive answer may be the lower bound
+	 * {@link calcTextHeightFloor} settles the sign with, skipping a layout —
+	 * right wherever only the sign is read (the bisection, the walk), and wrong
+	 * wherever shortfalls are *compared*: the climb feeds the rescue's
+	 * closest-probe choice, which a lower bound of 0 + padding at a tiny height
+	 * would win over the genuinely nearest miss.
 	 */
-	const fitsAt = (height: number): boolean | null => {
+	const calcFitShortfall = (height: number, exact = false): number => {
 		const room = calcTextRoom(height);
 		if (room === null) {
+			return Infinity;
+		}
+		if (!exact) {
+			const floorShortfall =
+				calcTextHeightFloor(room.width) + comfortPadding * 2 - room.height;
+			if (floorShortfall > 0) {
+				return floorShortfall;
+			}
+		}
+		return calcTextHeight(room.width) + comfortPadding * 2 - room.height;
+	};
+
+	/**
+	 * The rescue for a band of fitting heights the doubling stepped over whole:
+	 * every probe failed, yet a height between two of them may fit (a region that
+	 * loses width as the box grows — a delay's cap — holds its text over a band,
+	 * not from one height upwards). On the one-band reading of that shape — the
+	 * shortfall falls, bottoms out and rises again — the band lies beside the
+	 * probe that came closest, so that neighbourhood is narrowed onto the dip
+	 * and, where the dip reaches zero, bisected back for the band's low edge. A
+	 * shortfall shaped in more bands than one can still hide from this, and the
+	 * answer is then null exactly as it was before the rescue existed.
+	 *
+	 * @param climbShortfalls - Every probe the climb tried with the shortfall it answered, in climbing order
+	 */
+	const rescueBandBetweenProbes = (
+		climbShortfalls: readonly [height: number, shortfall: number][],
+	): number | null => {
+		let closestProbe: [number, number] | null = null;
+		for (const probe of climbShortfalls) {
+			if (
+				Number.isFinite(probe[1]) &&
+				(closestProbe === null || probe[1] < closestProbe[1])
+			) {
+				closestProbe = probe;
+			}
+		}
+		// Nowhere did the box hold text at all; there is no dip to look beside.
+		if (closestProbe === null) {
 			return null;
 		}
-		// Turned down without a layout wherever the layouts already run are enough
-		// to say so ({@link calcTextHeightFloor}). This is what keeps the walk below
-		// affordable on a region that leaves a different width at every height, and
-		// therefore shares no layout between them.
-		if (calcTextHeightFloor(room.width) + comfortPadding * 2 > room.height) {
-			return false;
+		// The neighbouring probes both failed, so they anchor the search — every
+		// move below keeps both ends at heights known not to fit.
+		let unfitLow = Math.max(1, Math.floor(closestProbe[0] / 2));
+		let unfitHigh = Math.min(closestProbe[0] * 2, MAX_AUTO_SHAPE_HEIGHT);
+		let fittingHeight: number | null = null;
+		while (unfitHigh - unfitLow > 2) {
+			const third = Math.floor((unfitHigh - unfitLow) / 3);
+			const lowProbe = unfitLow + third;
+			const highProbe = unfitHigh - third;
+			// Exact, as in the climb: the narrowing compares magnitudes.
+			const lowShortfall = calcFitShortfall(lowProbe, true);
+			if (lowShortfall <= 0) {
+				fittingHeight = lowProbe;
+				break;
+			}
+			const highShortfall = calcFitShortfall(highProbe, true);
+			if (highShortfall <= 0) {
+				fittingHeight = highProbe;
+				break;
+			}
+			if (lowShortfall < highShortfall) {
+				unfitHigh = highProbe;
+			} else {
+				unfitLow = lowProbe;
+			}
 		}
-		return calcTextHeight(room.width) + comfortPadding * 2 <= room.height;
+		if (fittingHeight === null) {
+			for (let height = unfitLow + 1; height < unfitHigh; height += 1) {
+				if (calcFitShortfall(height) <= 0) {
+					fittingHeight = height;
+					break;
+				}
+			}
+		}
+		if (fittingHeight === null) {
+			return null;
+		}
+		// The band's low edge: on the falling flank the fit predicate is monotone,
+		// so it is bisected the way the primary search bisects its ceiling.
+		let tooShort = unfitLow;
+		let fitting = fittingHeight;
+		while (fitting - tooShort > 1) {
+			const middle = Math.floor((tooShort + fitting) / 2);
+			if (calcFitShortfall(middle) <= 0) {
+				fitting = middle;
+			} else {
+				tooShort = middle;
+			}
+		}
+		return fitting;
 	};
 
 	// Climb by doubling from a single pixel, so a tall text is reached in a few
-	// tries, and bisect what that brackets.
+	// tries, and bisect what that brackets. Exact shortfalls (a couple dozen
+	// layouts at most), because a missed bracket hands them to the rescue's
+	// closest-probe comparison.
+	const climbShortfalls: [height: number, shortfall: number][] = [];
 	let tooShort = 0;
 	let fitting = 1;
+	let bracketed = false;
 	for (;;) {
-		const fits = fitsAt(fitting);
-		if (fits === null) {
-			return null;
-		}
-		if (fits) {
+		const shortfall = calcFitShortfall(fitting, true);
+		if (shortfall <= 0) {
+			bracketed = true;
 			break;
 		}
+		climbShortfalls.push([fitting, shortfall]);
 		if (fitting >= MAX_AUTO_SHAPE_HEIGHT) {
-			return null;
+			break;
 		}
 		tooShort = fitting;
 		fitting = Math.min(fitting * 2, MAX_AUTO_SHAPE_HEIGHT);
 	}
+	if (!bracketed) {
+		return rescueBandBetweenProbes(climbShortfalls);
+	}
 	while (fitting - tooShort > 1) {
 		const middle = Math.floor((tooShort + fitting) / 2);
-		const fits = fitsAt(middle);
-		if (fits === null) {
-			return null;
-		}
-		if (fits) {
+		if (calcFitShortfall(middle) <= 0) {
 			fitting = middle;
 		} else {
 			tooShort = middle;
@@ -247,11 +347,7 @@ export const calcAutoShapeHeight = (
 	// where the region narrows as the box grows, the walk is what finds the band
 	// of fitting heights the doubling stepped over.
 	for (let height = 1; height < fitting; height += 1) {
-		const fits = fitsAt(height);
-		if (fits === null) {
-			return null;
-		}
-		if (fits) {
+		if (calcFitShortfall(height) <= 0) {
 			return height;
 		}
 	}

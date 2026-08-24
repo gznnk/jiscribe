@@ -161,6 +161,26 @@ describe("resizeAutoHeightStateToContent", () => {
 		expect(heightOf(large)).toBeGreaterThan(heightOf(small));
 	});
 
+	it("gives a fresh seed a one-line box where no height holds the text", () => {
+		// A region too thin for any text: the derivation answers null. A shape
+		// that was measured before keeps that measurement, but the mapper's fresh
+		// seed is 0 — a reloaded document must not draw the shape invisible, so
+		// the seed alone falls back to a one-line box, top edge kept.
+		const thinBand = (): Rect => ({ x: -100, y: 0, width: 200, height: 1 });
+
+		const fromSeed = resizeAutoHeightStateToContent(
+			autoHeightState({ height: 0 }),
+			thinBand,
+		);
+		expect(heightOf(fromSeed)).toBe(48);
+		expect(topOf(fromSeed)).toBe(20);
+
+		const measuredBefore = autoHeightState({ height: 80 });
+		expect(resizeAutoHeightStateToContent(measuredBefore, thinBand)).toBe(
+			measuredBefore,
+		);
+	});
+
 	it("grows the box for a body switched onto the whole height", () => {
 		/** A cap off the top alone, as a cylinder's declared region has. */
 		const cappedRegion = ({

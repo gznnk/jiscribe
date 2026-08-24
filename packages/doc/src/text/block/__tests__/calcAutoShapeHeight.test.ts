@@ -192,6 +192,63 @@ describe("calcAutoShapeHeight", () => {
 		);
 	});
 
+	it("finds a band of fitting heights lying wholly between two of the climb's probes", () => {
+		// A delay-like cap that keeps eating width as the box grows: the text fits
+		// only over a band of heights, and the fixture places that band strictly
+		// inside the (256, 512) probe gap — the doubling alone never sees it, and
+		// the rescue beside the closest probe is what answers.
+		const width = 400;
+		const text = "a".repeat(740);
+		const shrinkingBox: ObjectDocTextRegionCalculator = (doc) => ({
+			x: -(doc.width as number) / 2,
+			y: -(doc.height as number) / 2,
+			width: Math.max(0, (doc.width as number) - (doc.height as number) / 2),
+			height: doc.height as number,
+		});
+		const fitsMirror = (shapeHeight: number): boolean =>
+			heightOfTextAt(shapeHeight, text, shrinkingBox, width) +
+				COMFORT_PADDING <=
+			shapeHeight - VERTICAL_PADDING;
+		// The regression's precondition: both probes around the band fail, so the
+		// old search would have exhausted its climb and answered null.
+		expect(fitsMirror(256)).toBe(false);
+		expect(fitsMirror(512)).toBe(false);
+
+		const height = calcAutoShapeHeight(
+			{ width, height: 0 },
+			text,
+			FALLBACK_FONT,
+			shrinkingBox,
+		);
+
+		expect(height).not.toBeNull();
+		expect(fitsMirror(height!)).toBe(true);
+		expect(fitsMirror(height! - 1)).toBe(false);
+	});
+
+	it("searches through a region that only exists above a minimum height", () => {
+		// A plugin may answer null below the height its drawing needs: null at one
+		// height is that height not fitting, not a verdict on the type.
+		const aboveMinimumOnly: ObjectDocTextRegionCalculator = (doc) =>
+			(doc.height as number) >= 150
+				? {
+						x: -(doc.width as number) / 2,
+						y: -(doc.height as number) / 2,
+						width: doc.width as number,
+						height: doc.height as number,
+					}
+				: null;
+
+		expect(
+			calcAutoShapeHeight(
+				{ width: 200, height: 0 },
+				"abc",
+				FALLBACK_FONT,
+				aboveMinimumOnly,
+			),
+		).toBe(150);
+	});
+
 	it("reads the fields the region depends on off the shape it is given", () => {
 		// A shape whose region is inset by a field of its own: a wider inset leaves
 		// less room to wrap in, so it must reach the answer.
