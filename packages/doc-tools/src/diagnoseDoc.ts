@@ -404,7 +404,7 @@ const diagnoseConnectorLabel = (
 		{
 			severity: "warning",
 			objectId: connector.id,
-			message: `label "${fit.text}" is ${round(fit.textWidth)}px wide but only ${round(fit.gap)}px is free between ${fit.sourceId} and ${fit.targetId}, so the label is drawn over them (font ${fit.fontSize}px)`,
+			message: `label "${fit.text}" is ${round(fit.textWidth)}px wide but only ${round(fit.gap)}px is free between ${fit.sourceId} and ${fit.targetId}, so the label is drawn over them (font ${fit.fontSize}px); set label.offset to push it off the line, or widen the gap`,
 		},
 	];
 };
