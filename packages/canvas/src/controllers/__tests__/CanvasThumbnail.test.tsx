@@ -13,7 +13,7 @@ import { calcFitViewport } from "../utils/calcFitViewport";
 
 /**
  * A thumbnail is a fit and nothing else: it has no reducer, so no
- * APPLY_INITIAL_VIEW ever reaches it, and its own `padding` prop is the only
+ * SET_VIEWPORT ever reaches it, and its own `padding` prop is the only
  * margin it knows. A document's `view` is therefore ignored — its framing, its
  * padding and its wall alike — which is deliberate (a gallery wants every tile
  * framed the same way) but is stated nowhere and has never been checked.

@@ -143,12 +143,12 @@ export const createCanvasReducer =
 				};
 			}
 
-			case "APPLY_INITIAL_VIEW": {
-				// Camera and measured size land together; see ApplyInitialViewAction.
+			case "SET_VIEWPORT": {
+				// Camera and measured size land together; see SetViewportAction.
 				return { ...state, viewport: action.viewport };
 			}
 
-			case "SET_VIEWPORT": {
+			case "SET_CAMERA": {
 				// No-op when the camera is unchanged so a repeated imperative
 				// setViewport with the same camera does not churn state.
 				if (isSameCamera(state.viewport, action.camera)) {

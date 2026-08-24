@@ -145,7 +145,7 @@ describe("useInitialViewOpen", () => {
 		);
 		expect(dispatch).toHaveBeenCalledTimes(1);
 		expect(dispatch).toHaveBeenCalledWith({
-			type: "APPLY_INITIAL_VIEW",
+			type: "SET_VIEWPORT",
 			viewport: { width: 1000, height: 500, zoom: 1, minX: -100, minY: 0 },
 		});
 	});
@@ -186,7 +186,7 @@ describe("useInitialViewOpen", () => {
 		remeasure({ width: 1000, height: 500 });
 		expect(dispatch).toHaveBeenCalledTimes(1);
 		expect(dispatch.mock.calls[0][0]).toEqual({
-			type: "APPLY_INITIAL_VIEW",
+			type: "SET_VIEWPORT",
 			viewport: { width: 1000, height: 500, zoom: 1.25, minX: 0, minY: 0 },
 		});
 	});
@@ -203,7 +203,7 @@ describe("useInitialViewOpen", () => {
 
 			expect(dispatch).toHaveBeenCalledTimes(2);
 			expect(dispatch.mock.calls[1][0]).toEqual({
-				type: "APPLY_INITIAL_VIEW",
+				type: "SET_VIEWPORT",
 				viewport: { width: 1000, height: 500, zoom: 1, minX: -100, minY: 0 },
 			});
 		});

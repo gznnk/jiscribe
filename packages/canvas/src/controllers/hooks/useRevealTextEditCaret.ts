@@ -50,7 +50,7 @@ export const useRevealTextEditCaret = ({
 			if (!camera) {
 				return;
 			}
-			dispatch({ type: "SET_VIEWPORT", camera });
+			dispatch({ type: "SET_CAMERA", camera });
 		},
 		[dispatch],
 	);

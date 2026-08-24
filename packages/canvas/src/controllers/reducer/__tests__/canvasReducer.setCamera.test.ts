@@ -12,17 +12,17 @@ const canvasReducer = createCanvasReducer(createTestRegistries());
 const createState = (): CanvasControllerState => createTestState(twoRectsDoc);
 
 // Camera shape inlined (minX/minY/zoom) to keep this test's import set aligned
-// with the sibling reducer tests; SET_VIEWPORT carries exactly this.
-const setViewport = (camera: {
+// with the sibling reducer tests; SET_CAMERA carries exactly this.
+const setCamera = (camera: {
 	minX: number;
 	minY: number;
 	zoom: number;
 }): CanvasAction => ({
-	type: "SET_VIEWPORT",
+	type: "SET_CAMERA",
 	camera,
 });
 
-describe("canvasReducer / SET_VIEWPORT", () => {
+describe("canvasReducer / SET_CAMERA", () => {
 	it("adopts the host camera while keeping the container-measured width/height", () => {
 		const state = createState();
 		// Baseline from CanvasMapper: width/height are internally measured.
@@ -31,7 +31,7 @@ describe("canvasReducer / SET_VIEWPORT", () => {
 
 		const next = canvasReducer(
 			state,
-			setViewport({ minX: 10, minY: 20, zoom: 2 }),
+			setCamera({ minX: 10, minY: 20, zoom: 2 }),
 		);
 
 		expect(next.viewport).toEqual({
@@ -49,12 +49,12 @@ describe("canvasReducer / SET_VIEWPORT", () => {
 		// so re-issuing the current view does not churn state.
 		const state = canvasReducer(
 			createState(),
-			setViewport({ minX: 10, minY: 20, zoom: 2 }),
+			setCamera({ minX: 10, minY: 20, zoom: 2 }),
 		);
 
 		const echoed = canvasReducer(
 			state,
-			setViewport({ minX: 10, minY: 20, zoom: 2 }),
+			setCamera({ minX: 10, minY: 20, zoom: 2 }),
 		);
 
 		expect(echoed).toBe(state);
@@ -65,7 +65,7 @@ describe("canvasReducer / SET_VIEWPORT", () => {
 
 		const next = canvasReducer(
 			state,
-			setViewport({ minX: 5, minY: 5, zoom: 0.5 }),
+			setCamera({ minX: 5, minY: 5, zoom: 0.5 }),
 		);
 
 		expect(next.history).toBe(state.history);

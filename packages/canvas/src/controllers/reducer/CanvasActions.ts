@@ -38,28 +38,28 @@ export type SyncExternalAction = {
 };
 
 /**
- * Set viewport action - applies a camera (pan/zoom), keeping the measured
+ * Set camera action - moves the pan/zoom alone, keeping the measured
  * width/height. Dispatched by the imperative `ref.current.viewport.setViewport`
  * (useViewportHandle) so a host can move the view programmatically.
  */
-export type SetViewportAction = {
-	type: "SET_VIEWPORT";
+export type SetCameraAction = {
+	type: "SET_CAMERA";
 	camera: Camera;
 };
 
 /**
- * Apply-initial-view action - installs the camera derived from the document's
- * `view.open`, together with the container size it was derived from. Dispatched
- * by useInitialViewOpen once per document loaded — at mount, and again whenever
- * another document is swapped in — and only when the host passed no
- * `initialConfig.viewport`.
+ * Set viewport action - installs a camera together with the container size it
+ * was derived from, replacing the whole viewport. Its one dispatcher is
+ * useInitialViewOpen, applying the document's `view.open` once per document
+ * loaded — at mount, and again whenever another document is swapped in — and
+ * only when the host passed no `initialConfig.viewport`.
  *
  * The size travels with the camera because the two must land in the same commit:
  * a fit is only correct against the viewport it was measured for, and the
  * ResizeObserver's own CONTAINER_RESIZE arrives after the first paint.
  */
-export type ApplyInitialViewAction = {
-	type: "APPLY_INITIAL_VIEW";
+export type SetViewportAction = {
+	type: "SET_VIEWPORT";
 	viewport: Viewport;
 };
 
@@ -201,8 +201,8 @@ export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
+	| SetCameraAction
 	| SetViewportAction
-	| ApplyInitialViewAction
 	| SetSelectionAction
 	| CommandAction
 	| RevertHistoryAction

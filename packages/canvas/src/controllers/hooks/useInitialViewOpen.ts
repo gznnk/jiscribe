@@ -41,7 +41,7 @@ type InitialViewOpenOptions = {
  * A fit needs the container's real size, which nothing knows at mount — the
  * mapper seeds a placeholder and the ResizeObserver corrects it after the first
  * paint. So the box is measured here in a layout effect and dispatched together
- * with the camera (APPLY_INITIAL_VIEW), which puts both into the commit that
+ * with the camera (SET_VIEWPORT), which puts both into the commit that
  * precedes the first paint instead of leaving the drawing to jump afterwards.
  *
  * "Once" is counted per document, not per canvas: loading another document
@@ -115,7 +115,7 @@ export const useInitialViewOpen = ({
 			return;
 		}
 		dispatch({
-			type: "APPLY_INITIAL_VIEW",
+			type: "SET_VIEWPORT",
 			viewport: { width, height, ...camera },
 		});
 		// viewportSize is a re-run trigger, not an input; see its option doc.
