@@ -101,6 +101,7 @@ function renderConnectorLabelEditor(
 			anchor={anchor}
 			text={text}
 			fontColor={connector.label?.fontColor}
+			fontFamily={connector.label?.fontFamily}
 			fontSize={connector.label?.fontSize}
 			fontWeight={connector.label?.fontWeight}
 			fill={connector.label?.fill}

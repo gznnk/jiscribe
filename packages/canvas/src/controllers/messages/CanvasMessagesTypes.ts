@@ -94,6 +94,7 @@ export type CanvasMessageStrings = {
 	menuSwapArrows: string;
 	menuLabelBold: string;
 	menuLabelFontSize: string;
+	menuLabelFontFamily: string;
 	menuLabelFontColor: string;
 	menuLabelBackgroundColor: string;
 	menuLabelBorderColor: string;

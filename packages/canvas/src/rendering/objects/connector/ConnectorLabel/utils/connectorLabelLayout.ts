@@ -47,8 +47,8 @@ export const calcConnectorLabelBox = (
  * connector extent (calcConnectorBoundingBox), so the drawn box and the box the
  * bbox reserves cannot drift apart.
  *
- * @param label - Stored label; an omitted `fontSize` / `fontWeight` falls back
- *   to CONNECTOR_LABEL_DEFAULTS and an omitted `strokeWidth` means no border
+ * @param label - Stored label; an omitted `fontFamily` / `fontSize` / `fontWeight`
+ *   falls back to CONNECTOR_LABEL_DEFAULTS and an omitted `strokeWidth` means no border
  */
 export const resolveConnectorLabelBox = (
 	label: ConnectorLabel,
@@ -57,7 +57,7 @@ export const resolveConnectorLabelBox = (
 		label.text,
 		{
 			fontSize: label.fontSize ?? CONNECTOR_LABEL_DEFAULTS.fontSize,
-			fontFamily: CONNECTOR_LABEL_DEFAULTS.fontFamily,
+			fontFamily: label.fontFamily ?? CONNECTOR_LABEL_DEFAULTS.fontFamily,
 			fontWeight: label.fontWeight ?? CONNECTOR_LABEL_DEFAULTS.fontWeight,
 		},
 		label.strokeWidth ?? 0,

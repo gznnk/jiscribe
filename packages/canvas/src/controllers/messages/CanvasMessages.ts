@@ -86,6 +86,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuSwapArrows: "Swap arrows",
 	menuLabelBold: "Label Bold",
 	menuLabelFontSize: "Label Font Size",
+	menuLabelFontFamily: "Label Font",
 	menuLabelFontColor: "Label Font Color",
 	menuLabelBackgroundColor: "Label Background Color",
 	menuLabelBorderColor: "Label Border Color",

@@ -270,6 +270,7 @@ describe("validateConnectorDoc", () => {
 				position: 0.25,
 				offset: 8,
 				fontColor: "#2E7D32",
+				fontFamily: '"Source Serif 4", "Noto Serif JP", serif',
 				fontSize: 14,
 				fontWeight: "bold",
 			},
@@ -319,6 +320,20 @@ describe("validateConnectorDoc", () => {
 		};
 		const errors = validateConnectorDoc(o, "root");
 		expect(errors.some((e) => e.path === "root.label.fontSize")).toBe(true);
+	});
+
+	it("is an error (beyondSchema) when label.fontFamily contains a CSS breakout string", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", fontFamily: "serif; } html {" },
+		};
+		const hit = validateConnectorDoc(o, "root").find(
+			(e) => e.path === "root.label.fontFamily",
+		);
+		expect(hit).toBeDefined();
+		expect(hit?.beyondSchema).toBe(true);
 	});
 
 	it("is an error when label is not an object", () => {

@@ -1,9 +1,8 @@
-import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { memo, useRef } from "react";
 
-import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
+import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../rendering/objects/connector/ConnectorLabel";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import {
@@ -15,35 +14,38 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
+import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
 
-const SECTION_ID = "font-family";
-
-type FontFamilyMenuProps = {
-	canvasState: CanvasControllerState;
-};
+const SECTION_ID = "label-font-family";
 
 /**
- * Font family menu.
- * Picks the font of the selected text object from the closed set the canvas
- * ships faces for (CANVAS_FONT_FAMILIES).
+ * Font family menu for the label (the same rows as the shape's Font, drawn from
+ * CANVAS_FONT_FAMILIES). The value is the nested `label.fontFamily`.
  */
-const FontFamilyMenuComponent: React.FC<FontFamilyMenuProps> = ({
-	canvasState,
+const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
+	objects,
+	selectedConnectorId,
+	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
 	usePreviewFonts(messages);
 	const menuItemRef = useRef<HTMLDivElement>(null);
-	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
+	const isOpen = openSectionId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
+	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
+
+	// Early-return only after all hooks have been called (to keep hook order stable).
+	// No label text: render nothing, and the emptied section collapses via `:empty`.
+	if (!label?.text) {
+		return null;
+	}
+
 	// An unset family draws in the default one, so that is the entry to mark active.
-	const fontFamily = slot?.fontFamily ?? DEFAULT_FONT_FAMILY;
+	const fontFamily = label.fontFamily ?? CONNECTOR_LABEL_DEFAULTS.fontFamily;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
@@ -52,9 +54,9 @@ const FontFamilyMenuComponent: React.FC<FontFamilyMenuProps> = ({
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`toggle:${SECTION_ID}`}
-				title={messages.menuFontFamily}
+				title={messages.menuLabelFontFamily}
 			>
-				<FontFamilyIcon title={messages.menuFontFamily} />
+				<FontFamilyIcon title={messages.menuLabelFontFamily} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<ObjectMenuDropdownPanel
@@ -64,7 +66,7 @@ const FontFamilyMenuComponent: React.FC<FontFamilyMenuProps> = ({
 				>
 					<ObjectMenuFontFamilyList
 						activeFontFamily={fontFamily}
-						property="fontFamily"
+						property="label.fontFamily"
 					/>
 				</ObjectMenuDropdownPanel>
 			)}
@@ -72,4 +74,4 @@ const FontFamilyMenuComponent: React.FC<FontFamilyMenuProps> = ({
 	);
 };
 
-export const FontFamilyMenu = memo(FontFamilyMenuComponent);
+export const LabelFontFamilyMenu = memo(LabelFontFamilyMenuComponent);

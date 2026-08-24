@@ -67,7 +67,7 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
   **スロット ID キーのオブジェクト**で持つ（`text: { name: {…}, rows: {…} }`。各スロットは
   `TextSlot` = 内容＋タイポグラフィで、スロット集合は型ごとにクローズド）。
 - **コネクター** … 注記を
-  `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
+  `label: { text, position, offset, fontColor, fontFamily, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
   の **ネストした 1 オブジェクト**で持つ（`features.text` は立てない）。背景 `fill`・枠線
   `stroke`/`strokeWidth`/`strokeDashType` は図形と同じ語彙を借りるが、`label` の中にネストする点が異なる。
 

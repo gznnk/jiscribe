@@ -97,6 +97,7 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 					anchor={labelAnchor}
 					text={label.text}
 					fontColor={label.fontColor}
+					fontFamily={label.fontFamily}
 					fontSize={label.fontSize}
 					fontWeight={label.fontWeight}
 					fill={label.fill}

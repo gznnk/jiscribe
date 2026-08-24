@@ -67,7 +67,7 @@ The storage shape of the text-bearing fields is **intentionally asymmetric** bet
 - **Single-body shapes (rect / ellipse / diamond / sticky, …)** … hold `text` / `textAlign` / `fontColor` … **flat at the top level** (`features.text: "body"` composes `TextStyleDoc`).
 - **Multi-slot shapes (e.g. the uml-shapes record)** … declare `features.text: "slots"` and hold `text` as an **object keyed by slot id** (`text: { name: {…}, rows: {…} }`; each slot is a `TextSlot` = content plus typography, and the slot set is closed per type).
 - **Connectors** … hold their annotation as a **single nested object**
-  `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
+  `label: { text, position, offset, fontColor, fontFamily, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
   (no `features.text`). The background `fill` and border `stroke` / `strokeWidth` / `strokeDashType` borrow the same vocabulary as shapes, but differ in that they are nested inside `label`.
 
 On the State side both shape forms normalize to the **one keyed-slot form** (a `"body"` type's mapper expands it into the single `body` slot and folds it back on save; see `TextSlotsMapper`). The rendering / editing / styling consumers read only this normal form and never branch on the doc's shape.

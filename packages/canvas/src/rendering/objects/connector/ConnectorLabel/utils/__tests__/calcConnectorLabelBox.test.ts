@@ -69,6 +69,7 @@ describe("resolveConnectorLabelBox", () => {
 	it("styled values from the label win over the defaults", () => {
 		const styled = resolveConnectorLabelBox({
 			text: "Yes",
+			fontFamily: "Courier New",
 			fontSize: 32,
 			fontWeight: "bold",
 			strokeWidth: 3,
@@ -79,7 +80,7 @@ describe("resolveConnectorLabelBox", () => {
 				"Yes",
 				{
 					fontSize: 32,
-					fontFamily: CONNECTOR_LABEL_DEFAULTS.fontFamily,
+					fontFamily: "Courier New",
 					fontWeight: "bold",
 				},
 				3,

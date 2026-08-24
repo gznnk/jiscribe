@@ -98,6 +98,7 @@ import {
 	LabelBorderColorMenu,
 	LabelBorderStyleMenu,
 	LabelFontColorMenu,
+	LabelFontFamilyMenu,
 	LabelFontSizeMenu,
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
@@ -277,6 +278,11 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				{
 					id: "label-text",
 					items: [
+						{
+							type: "custom",
+							id: "label-font-family",
+							component: LabelFontFamilyMenu,
+						},
 						{
 							type: "custom",
 							id: "label-font-size",

@@ -45,6 +45,7 @@ type ConnectorLabelEditorProps = {
 	anchor: Point;
 	text: string;
 	fontColor?: string;
+	fontFamily?: string;
 	fontSize?: number;
 	fontWeight?: string;
 	fill?: string;
@@ -61,6 +62,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	anchor,
 	text,
 	fontColor,
+	fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily,
 	fontSize = CONNECTOR_LABEL_DEFAULTS.fontSize,
 	fontWeight = CONNECTOR_LABEL_DEFAULTS.fontWeight,
 	fill,
@@ -71,9 +73,6 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	onEscape,
 	onCaretMove,
 }) => {
-	// The label carries no family of its own, so the editor draws and measures
-	// with the same constant ConnectorLabel does.
-	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
 	const color = resolveAutoColor(fontColor, "ink");
 	const background = resolveLabelFill(fill);
@@ -113,7 +112,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 			return;
 		}
 		fitTextAreaHeight(el, fontSize);
-	}, [text, width, fontSize, fontWeight, surfaceRef]);
+	}, [text, width, fontFamily, fontSize, fontWeight, surfaceRef]);
 
 	// After the height fit above, so the caret is measured against the laid-out box.
 	useLayoutEffect(reportCaret);

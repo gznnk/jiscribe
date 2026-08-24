@@ -17,6 +17,7 @@ type ConnectorLabelProps = {
 	anchor: Point;
 	text: string;
 	fontColor?: string;
+	fontFamily?: string;
 	fontSize?: number;
 	fontWeight?: string;
 	/** Background color (omitted/auto uses the canvas background = knockout). */
@@ -35,6 +36,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	anchor,
 	text,
 	fontColor,
+	fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily,
 	fontSize = CONNECTOR_LABEL_DEFAULTS.fontSize,
 	fontWeight = CONNECTOR_LABEL_DEFAULTS.fontWeight,
 	fill,
@@ -46,8 +48,15 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	// Memoized so dragging the connector (anchor changes every frame, text does not)
 	// skips the per-line measureText.
 	const { width, height } = useMemo(
-		() => resolveConnectorLabelBox({ text, fontSize, fontWeight, strokeWidth }),
-		[text, fontSize, fontWeight, strokeWidth],
+		() =>
+			resolveConnectorLabelBox({
+				text,
+				fontFamily,
+				fontSize,
+				fontWeight,
+				strokeWidth,
+			}),
+		[text, fontFamily, fontSize, fontWeight, strokeWidth],
 	);
 
 	if (text === "") {
@@ -79,7 +88,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 				style={{
 					color,
 					fontSize,
-					fontFamily: CONNECTOR_LABEL_DEFAULTS.fontFamily,
+					fontFamily,
 					fontWeight,
 					background,
 					border:

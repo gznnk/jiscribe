@@ -43,6 +43,7 @@ export const isValidConnectorLabelState = (label: unknown): boolean => {
 		(l.offset === undefined || isNumber(l.offset)) &&
 		// Style strings must be CSS-injection-safe, not merely strings.
 		(l.fontColor === undefined || isCssSafeValue(l.fontColor)) &&
+		(l.fontFamily === undefined || isCssSafeValue(l.fontFamily)) &&
 		// fontSize has minimum: 1 in the schema.
 		(l.fontSize === undefined || (isNumber(l.fontSize) && l.fontSize >= 1)) &&
 		(l.fontWeight === undefined || isCssSafeValue(l.fontWeight)) &&

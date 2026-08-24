@@ -16,7 +16,7 @@ import {
 /**
  * Validates a connector's `label` (a nested annotation).
  * Unlike a shape body's TextStyleDoc, the fields are narrowed for a short tag placed on
- * the line (`text` required, placement `position`/`offset`, and only color/size/weight
+ * the line (`text` required, placement `position`/`offset`, and only color/family/size/weight
  * styling). Unspecified (no key) is allowed as "no label". Kept alongside its caller
  * since it is connector-specific.
  */
@@ -62,6 +62,13 @@ function validateConnectorLabelFields(
 		errors.push({
 			path: `${labelPath}.fontColor`,
 			message: "must be a safe CSS color value",
+			beyondSchema: true,
+		});
+	}
+	if ("fontFamily" in l && !isCssSafeValue(l.fontFamily)) {
+		errors.push({
+			path: `${labelPath}.fontFamily`,
+			message: "must be a safe CSS font-family value",
 			beyondSchema: true,
 		});
 	}

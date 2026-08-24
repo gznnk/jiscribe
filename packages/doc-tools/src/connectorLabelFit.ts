@@ -22,6 +22,7 @@ const CONNECTOR_LABEL_FALLBACK = {
 /** A connector's label as it sits on the doc (see ConnectorDoc's ConnectorLabel). */
 type ConnectorLabelDoc = {
 	text: string;
+	fontFamily?: string;
 	fontSize?: number;
 	fontWeight?: string;
 	offset?: number;
@@ -157,7 +158,7 @@ export type ConnectorLabelText = {
  * breaks — is taken against the same type the canvas uses.
  *
  * @param connector - The object to look at; anything but a `connector` type answers null
- * @returns The label's text beside the font it is laid out in, the family being the canvas-wide default (a label states no family of its own)
+ * @returns The label's text beside the font it is laid out in, the family being the label's own or the canvas-wide default where it states none
  */
 export const resolveConnectorLabel = (
 	connector: ObjectDoc,
@@ -173,7 +174,7 @@ export const resolveConnectorLabel = (
 		text: label.text,
 		font: {
 			fontSize: label.fontSize ?? CONNECTOR_LABEL_FALLBACK.fontSize,
-			fontFamily: DEFAULT_FONT_FAMILY,
+			fontFamily: label.fontFamily ?? DEFAULT_FONT_FAMILY,
 			fontWeight: label.fontWeight ?? CONNECTOR_LABEL_FALLBACK.fontWeight,
 		},
 	};

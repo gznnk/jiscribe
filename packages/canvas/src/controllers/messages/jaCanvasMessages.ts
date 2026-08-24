@@ -80,6 +80,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuSwapArrows: "矢印を入れ替え",
 	menuLabelBold: "ラベルを太字",
 	menuLabelFontSize: "ラベルのフォントサイズ",
+	menuLabelFontFamily: "ラベルのフォント",
 	menuLabelFontColor: "ラベルの文字色",
 	menuLabelBackgroundColor: "ラベルの背景色",
 	menuLabelBorderColor: "ラベルの枠線色",

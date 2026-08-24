@@ -289,6 +289,20 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			).toBe("bold");
 		});
 
+		it("label.fontFamily keeps the stack it is given, commas and quotes included", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			const stack = '"Source Serif 4", "Noto Serif JP", serif';
+			const result = applyStyleProperty(state, "label.fontFamily", stack);
+			const updated = result.objects["c1"] as unknown as {
+				label: { fontFamily: string };
+			};
+			expect(updated.label.fontFamily).toBe(stack);
+		});
+
 		it("label.strokeWidth is numeric-converted and updated", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({

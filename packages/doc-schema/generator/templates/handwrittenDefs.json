@@ -683,7 +683,7 @@
 				"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 			},
 			"label": {
-				"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign, verticalAlign, or fontFamily — do not add those keys here.",
+				"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontFamily, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign or verticalAlign — do not add those keys here.",
 				"type": "object",
 				"required": ["text"],
 				"additionalProperties": false,
@@ -704,6 +704,9 @@
 					},
 					"fontColor": {
 						"$ref": "#/$defs/TextStyle/properties/fontColor"
+					},
+					"fontFamily": {
+						"$ref": "#/$defs/TextStyle/properties/fontFamily"
 					},
 					"fontSize": {
 						"$ref": "#/$defs/TextStyle/properties/fontSize"

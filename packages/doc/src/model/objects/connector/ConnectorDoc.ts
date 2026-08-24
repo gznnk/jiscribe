@@ -30,6 +30,7 @@ export const ConnectorExtraStyleProperties = {
 	"label.strokeWidth": { valueType: "number" },
 	"label.strokeDashType": { valueType: "string" },
 	"label.fontColor": { valueType: "string" },
+	"label.fontFamily": { valueType: "string" },
 	"label.fontSize": { valueType: "number" },
 	"label.fontWeight": { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
@@ -40,8 +41,8 @@ export const ConnectorExtraStyleProperties = {
  * Held as a **single nested object**, distinct from a shape's body text (the flat TextStyleDoc at
  * features.text). The reasons are: (1) `position` / `offset`, which describe placement along the
  * path, are connector-specific and we want the structure to make ownership explicit; (2) a short
- * tag on a line needs no alignment. Only color, size, and weight are borrowed from
- * TextStyleDoc for the style (no alignment).
+ * tag on a line needs no alignment. Only color, family, size, and weight are borrowed
+ * from TextStyleDoc for the style (no alignment).
  *
  * A label whose `text` is an empty string is equivalent to "none" and is removed on save.
  *
@@ -51,7 +52,7 @@ export const ConnectorExtraStyleProperties = {
  */
 export type ConnectorLabel = Pick<
 	TextStyleDoc,
-	"fontColor" | "fontSize" | "fontWeight"
+	"fontColor" | "fontFamily" | "fontSize" | "fontWeight"
 > &
 	Pick<FillStyleDoc, "fill"> &
 	Pick<StrokeStyleDoc, "stroke" | "strokeWidth" | "strokeDashType"> & {

@@ -115,6 +115,7 @@ describe("isValidConnectorLabelState", () => {
 				position: 0.25,
 				offset: -8,
 				fontColor: "#2E7D32",
+				fontFamily: '"Source Serif 4", "Noto Serif JP", serif',
 				fontSize: 14,
 				fontWeight: "bold",
 			}),
@@ -179,7 +180,7 @@ describe("isValidConnectorLabelState", () => {
 		);
 	});
 
-	it("CSS-injection strings in color fields are false", () => {
+	it("CSS-injection strings in the style fields are false", () => {
 		const injection = "red;} body { display: none }";
 		expect(isValidConnectorLabelState({ text: "x", stroke: injection })).toBe(
 			false,
@@ -192,6 +193,9 @@ describe("isValidConnectorLabelState", () => {
 		).toBe(false);
 		expect(
 			isValidConnectorLabelState({ text: "x", fontWeight: injection }),
+		).toBe(false);
+		expect(
+			isValidConnectorLabelState({ text: "x", fontFamily: injection }),
 		).toBe(false);
 	});
 
