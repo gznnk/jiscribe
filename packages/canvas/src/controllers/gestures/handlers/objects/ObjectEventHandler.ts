@@ -40,6 +40,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
+import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 
 /**
  * Handles a click on an object.
@@ -141,10 +142,10 @@ function handleTextSlotClick(
  */
 function handleObjectDrag(
 	canvasState: CanvasControllerState,
-	delta: Point,
-	mods: Mods,
+	event: CanvasEvent,
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
+	const { delta, mods } = event;
 	const eventStartSnapshot = canvasState.eventStartSnapshot;
 	if (!eventStartSnapshot) {
 		return canvasState;
@@ -195,7 +196,7 @@ function handleObjectDrag(
 		? eventStartSnapshot.keyPoints[snapSourceId]
 		: undefined;
 
-	if (snapSourceKeyPoints && !mods.ctrl && !snapToOrigin) {
+	if (snapSourceKeyPoints && !isSnapSuppressed(event) && !snapToOrigin) {
 		const bbox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
 		const selectedBBox = {
 			left: bbox.left + constrainedDelta.x,
@@ -293,11 +294,11 @@ function handleObjectDrag(
 function handleObjectDragStart(
 	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
-	delta: Point,
-	mods: Mods,
+	event: CanvasEvent,
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	const { id } = targetObject;
+	const { mods } = event;
 
 	// Determine the selection state
 	const isCurrentlySelected = canvasState.selectedIds.includes(id);
@@ -381,7 +382,7 @@ function handleObjectDragStart(
 	};
 
 	// Run the drag handling
-	return handleObjectDrag(nextState, delta, mods, registries);
+	return handleObjectDrag(nextState, event, registries);
 }
 
 /**
@@ -389,8 +390,7 @@ function handleObjectDragStart(
  */
 function handleObjectDragEnd(
 	canvasState: CanvasControllerState,
-	delta: Point,
-	mods: Mods,
+	event: CanvasEvent,
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	// Disable edge scrolling
@@ -400,7 +400,7 @@ function handleObjectDragEnd(
 	};
 
 	// Final drag handling
-	const resultState = handleObjectDrag(nextState, delta, mods, registries);
+	const resultState = handleObjectDrag(nextState, event, registries);
 
 	// Update the parent groups' bounding boxes
 	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
@@ -508,19 +508,13 @@ export const ObjectEventHandler: GestureHandler = {
 			return handleObjectDragStart(
 				nextState,
 				objectStartState,
-				event.delta,
-				event.mods,
+				event,
 				registries,
 			);
 		} else if (event.type === "drag") {
-			return handleObjectDrag(nextState, event.delta, event.mods, registries);
+			return handleObjectDrag(nextState, event, registries);
 		} else if (event.type === "dragEnd") {
-			return handleObjectDragEnd(
-				nextState,
-				event.delta,
-				event.mods,
-				registries,
-			);
+			return handleObjectDragEnd(nextState, event, registries);
 		}
 
 		return nextState;

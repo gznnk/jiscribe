@@ -16,6 +16,7 @@ import {
 	buildSnapFeedback,
 	findSnap,
 } from "../utils/snap/findSnap";
+import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 
 /**
  * Extracts the preset ID from a targetPart.
@@ -184,7 +185,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 				const snapCandidates = state.eventStartSnapshot?.snapCandidates;
 				const drag = state.stencilLibraryDrag;
 
-				if (!snapCandidates || !drag || event.mods.ctrl) {
+				if (!snapCandidates || !drag || isSnapSuppressed(event)) {
 					return {
 						...state,
 						stencilLibraryDrag: drag

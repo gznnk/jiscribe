@@ -17,6 +17,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
+import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 import {
 	getConnectorSegmentEnds,
 	translateConnectorSegment,
@@ -54,7 +55,7 @@ const handleDrag = (
 	let snapFeedback: SnapFeedback = { x: [], y: [] };
 	const snapCandidates = snapshot.snapCandidates;
 
-	if (snapCandidates && !event.mods.ctrl) {
+	if (snapCandidates && !isSnapSuppressed(event)) {
 		const movedXs = [ends.start.x + delta.x, ends.end.x + delta.x];
 		const movedYs = [ends.start.y + delta.y, ends.end.y + delta.y];
 		const result = findSnap(

@@ -23,6 +23,7 @@ import type {
 } from "../../registry/GestureHandlerTypes";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { SNAP_THRESHOLD_PX } from "../utils/snap/findSnap";
+import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 import { snapLabelOffsetToLine } from "../utils/snapLabelOffsetToLine";
 
 type LabeledConnector = { connector: ConnectorState; label: ConnectorLabel };
@@ -91,8 +92,8 @@ const handleDragStart = (
  * polyline the cursor is measured against is the one on screen, outline shapes
  * included.
  *
- * A near-zero offset snaps onto the line unless Ctrl is held, the same bypass
- * the object-move and transform snaps use.
+ * A near-zero offset snaps onto the line unless isSnapSuppressed says
+ * otherwise, the same bypass the object-move and transform snaps use.
  */
 const handleDrag = (
 	state: CanvasControllerState,
@@ -139,7 +140,7 @@ const handleDrag = (
 		return state;
 	}
 
-	const placement = event.mods.ctrl
+	const placement = isSnapSuppressed(event)
 		? rawPlacement
 		: snapLabelOffsetToLine(
 				rawPlacement,
@@ -186,8 +187,8 @@ const handleDragEnd = (
 		isSamePlacement(started.label, finished.label);
 	// The last drag frame is not guaranteed to hold the same placement as the
 	// dragEnd frame: the final move can coalesce into the dragEnd frame, and the
-	// Ctrl bypass can be released between the two, so only the dragEnd frame
-	// reaches the snap. Dropping `dragResult` there would strand the label on the
+	// snap bypass can lift between the two (Ctrl released, or the last drag frame
+	// was one that edge-scrolled), so only the dragEnd frame reaches the snap. Dropping `dragResult` there would strand the label on the
 	// intermediate placement with no commitVersion bump — no history, no save,
 	// and silent persistence on the next unrelated edit. So the shortcut is taken
 	// only when the live state is already back at the start; otherwise the

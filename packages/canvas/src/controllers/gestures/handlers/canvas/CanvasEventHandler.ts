@@ -15,6 +15,7 @@ import {
 	buildSnapFeedback,
 	findSnap,
 } from "../utils/snap/findSnap";
+import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 
 /**
  * Handles events that occur on the canvas.
@@ -201,7 +202,7 @@ export const CanvasEventHandler: GestureHandler = {
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 				const snapCandidates = nextState.eventStartSnapshot?.snapCandidates;
-				if (snapCandidates && !event.mods.ctrl) {
+				if (snapCandidates && !isSnapSuppressed(event)) {
 					const result = findSnap(
 						snapCandidates,
 						SNAP_THRESHOLD_PX / nextState.viewport.zoom,

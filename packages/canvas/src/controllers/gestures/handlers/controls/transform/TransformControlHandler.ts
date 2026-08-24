@@ -31,6 +31,7 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 
 /**
  * Handles transform-control operations (resize and rotation).
@@ -230,7 +231,7 @@ export class TransformControlHandler extends ControlStrategy {
 		// Snap correction
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-		if (eventStartSnapshot.snapCandidates && !event.mods.ctrl) {
+		if (eventStartSnapshot.snapCandidates && !isSnapSuppressed(event)) {
 			// Snap candidates use the cached set of all objects from dragStart by reference only;
 			// exclusions (selection + all descendants) are passed to findSnap as a Set and filtered internally.
 			const snapped = applyResizeSnap({
