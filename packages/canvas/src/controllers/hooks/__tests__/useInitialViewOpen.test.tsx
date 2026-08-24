@@ -245,6 +245,29 @@ describe("useInitialViewOpen", () => {
 			expect(dispatch).toHaveBeenCalledTimes(2);
 			expect(dispatch.mock.calls[1][0]).toEqual(dispatch.mock.calls[0][0]);
 		});
+
+		it("does not re-frame a view it already answered when history brings it back", () => {
+			// Undo across a document load restores the earlier document's `view` by
+			// reference. The restore preserves the camera on purpose, so an
+			// already-answered view must stay answered — in both directions, or
+			// undo/redo would re-frame on every crossing.
+			const firstView: ViewDoc = { open: "fit-all" };
+			const { dispatch, loadDocument } = mountWithContainerSize(firstView, {
+				width: 1000,
+				height: 500,
+			});
+			const secondView: ViewDoc = {
+				padding: { left: 100, right: 100 },
+				open: "fit-width",
+			};
+			loadDocument(secondView);
+			expect(dispatch).toHaveBeenCalledTimes(2);
+
+			loadDocument(firstView);
+			loadDocument(secondView);
+
+			expect(dispatch).toHaveBeenCalledTimes(2);
+		});
 	});
 
 	it("does not re-frame the document being edited, its view travelling with it", () => {

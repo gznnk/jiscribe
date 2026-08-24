@@ -50,6 +50,10 @@ type InitialViewOpenOptions = {
  * (`resolveScrollWallPadding`). Editing the document does not re-frame it — the
  * `view` a document was mapped with is carried through edits, undo and redo by
  * reference, so its identity is what tells a new document from a changed one.
+ * Every `view` ever answered stays answered (a set, not the latest one alone):
+ * undo across a document load brings a *previously framed* `view` back, and
+ * re-framing it would overwrite the camera the history restore deliberately
+ * preserves. The camera moves only for a genuinely new arrival.
  *
  * A container with no extent yet (a hidden tab, a parent still resolving its
  * layout) is not guessed at: nothing is applied and nothing is marked done, so
@@ -68,15 +72,16 @@ export const useInitialViewOpen = ({
 	visualBounds,
 	dispatch,
 }: InitialViewOpenOptions): void => {
-	// The `view` the intent was already answered for; null until the first one is.
-	const appliedViewRef = useRef<ViewDoc | null>(null);
+	// Every `view` whose intent was already answered — held weakly, so views
+	// released with their history entries do not accumulate.
+	const appliedViewsRef = useRef<WeakSet<ViewDoc>>(new WeakSet());
 
 	useLayoutEffect(() => {
 		const open = view?.open;
 		if (
 			view === undefined ||
 			open === undefined ||
-			appliedViewRef.current === view
+			appliedViewsRef.current.has(view)
 		) {
 			return;
 		}
@@ -93,7 +98,7 @@ export const useInitialViewOpen = ({
 		// degenerate extent): the declaration was read and answered with "keep the
 		// default camera", and re-reading it on every later resize would turn a
 		// document's intent into a standing override.
-		appliedViewRef.current = view;
+		appliedViewsRef.current.add(view);
 
 		const bounds = calcContentBounds(objects, visualBounds);
 		if (!bounds) {
