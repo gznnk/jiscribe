@@ -54,6 +54,29 @@ test.describe("styling through the ObjectMenu", () => {
 		);
 	});
 
+	test("leaves the keyboard shortcuts working right after a slider drag", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape(
+			"Rectangle",
+			{ x: 400, y: 200 },
+			{ x: 600, y: 320 },
+		);
+		const rect = canvas.objectById(id);
+		const before = await rect.getAttribute("stroke-width");
+
+		await canvas.openObjectMenu("border-style");
+		await canvas.dragSliderBy("strokeWidth", 40);
+		await expect.poll(() => rect.getAttribute("stroke-width")).not.toBe(before);
+
+		// Shortcuts are skipped while a form element has the focus, so the slider
+		// gives it up on the pointer release rather than holding it until something
+		// else is clicked: the undo lands without a detour.
+		await canvas.undo();
+
+		await expect.poll(() => rect.getAttribute("stroke-width")).toBe(before);
+	});
+
 	test("keeps the submenu open when its background is clicked", async ({
 		canvas,
 	}) => {

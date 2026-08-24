@@ -216,7 +216,8 @@ const buildSystemSections = (
  * Keeps the press from taking the focus off an open text editor: the selection
  * the text items style lives in that editor, and a blur would also drop the
  * caret the user types back into. The controls that need the focus themselves —
- * the font-size input, the sliders — keep the default.
+ * the font-size input, the sliders — keep the default, and the editor takes the
+ * focus back when they are done with it (TextEditor).
  */
 const keepTextEditorFocus = (event: React.PointerEvent<HTMLElement>): void => {
 	if (
