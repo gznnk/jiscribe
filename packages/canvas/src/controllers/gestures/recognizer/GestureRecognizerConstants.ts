@@ -16,21 +16,11 @@ export const DRAG_THRESHOLD_TOUCH = 10 * 10;
 export const AUTO_SCROLL_THRESHOLD = 20;
 
 /**
- * Edge-scroll amount per reference frame (screen pixels). A tick scales it by
- * the time it actually covers, so this is a speed (10px per 60fps frame =
- * 600px/s), not a fixed per-tick step — slower frames scroll the same distance.
+ * Edge-scroll amount per tick (screen pixels). Ticks run once per RAF batch, so
+ * this is a per-frame step, not a speed: 600px/s at 60fps, proportionally faster
+ * on a display with a higher refresh rate.
  */
 export const AUTO_SCROLL_STEP_SIZE = 10;
-
-/** Frame duration AUTO_SCROLL_STEP_SIZE is quoted against (milliseconds, 60fps). */
-export const AUTO_SCROLL_REFERENCE_FRAME_MS = 1000 / 60;
-
-/**
- * Longest time span a single edge-scroll tick may cover (milliseconds). Ticks
- * stop while the main thread stalls, and without the clamp the first tick
- * afterwards would jump the view by the whole stall.
- */
-export const AUTO_SCROLL_MAX_TICK_MS = 64;
 
 /**
  * Hold duration for a touch long press (milliseconds). The press must stay

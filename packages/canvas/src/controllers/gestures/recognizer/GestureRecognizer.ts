@@ -2,8 +2,6 @@ import type { Point } from "@jiscribe/geometry";
 import type React from "react";
 
 import {
-	AUTO_SCROLL_MAX_TICK_MS,
-	AUTO_SCROLL_REFERENCE_FRAME_MS,
 	DRAG_THRESHOLD,
 	DRAG_THRESHOLD_TOUCH,
 	FLING_DECAY_PER_FRAME,
@@ -168,13 +166,6 @@ export type Pressed = {
 	 * touches the edge starts inside the zone, so scrolling must not fire until then.
 	 */
 	edgeScrollArmed: boolean;
-	/**
-	 * Time of the previous edge-scroll tick (performance.now() base), or null before
-	 * the first tick of a stay in the edge zone. Each tick scrolls by the time
-	 * elapsed since this stamp, so the speed stays constant however unevenly the
-	 * ticks arrive; leaving the zone resets it to null.
-	 */
-	edgeScrollLastTime: number | null;
 	/**
 	 * The state viewport's minX/minY captured when the last edge-scroll tick was
 	 * emitted, or null when no tick is outstanding. While the viewport still
@@ -546,7 +537,6 @@ export class GestureRecognizer {
 				dragging: false,
 				button: e.button,
 				edgeScrollArmed: false,
-				edgeScrollLastTime: null,
 				edgeScrollPendingViewport: null,
 				isNativePointerTarget: isNativePointer,
 			};
@@ -632,10 +622,6 @@ export class GestureRecognizer {
 
 					if (!edgeProximity.isNearEdge) {
 						this.pressed.edgeScrollArmed = true;
-						// The next stay in the zone starts its timing fresh: measuring from
-						// the previous stay would bill its first tick for the time spent
-						// outside the zone.
-						this.pressed.edgeScrollLastTime = null;
 						this.pressed.edgeScrollPendingViewport = null;
 					}
 
@@ -649,8 +635,7 @@ export class GestureRecognizer {
 							// position still derives from the old view, and the dragged shape
 							// would fall behind the cursor and snap back on the catch-up frame
 							// — visible trembling. Hold the tick instead: no gesture fires,
-							// and edgeScrollLastTime stays on the last emitted tick so the
-							// next one covers the whole wait (clamped).
+							// and the stay simply loses this frame's step.
 							this.enqueue({
 								...e,
 								timeStamp: performance.now(),
@@ -658,23 +643,14 @@ export class GestureRecognizer {
 							return;
 						}
 
-						// Scroll by elapsed time, not per tick: ticks arrive once per frame,
-						// so a fixed step sagged with the frame rate and bunched after a
-						// dropped frame. The first tick of a stay has no interval yet and is
-						// billed one reference frame; the clamp keeps a long stall from
-						// jumping the view by the whole absence.
-						const elapsedMs = Math.min(
-							this.pressed.edgeScrollLastTime === null
-								? AUTO_SCROLL_REFERENCE_FRAME_MS
-								: Math.max(0, time - this.pressed.edgeScrollLastTime),
-							AUTO_SCROLL_MAX_TICK_MS,
-						);
-						this.pressed.edgeScrollLastTime = time;
+						// The step is fixed per tick, not scaled by the measured interval:
+						// ticks already arrive once per RAF batch, so an even step is what
+						// the view moves by each frame (scaling it put the measurement's
+						// own jitter on screen as a tremble).
 						this.pressed.edgeScrollPendingViewport = { x: minX, y: minY };
 						scrollDelta = calculateScrollDelta(
 							edgeProximity.horizontal,
 							edgeProximity.vertical,
-							elapsedMs,
 						);
 
 						// Keeps scrolling while the cursor is held still at the edge; move

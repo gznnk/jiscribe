@@ -1,11 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GestureRecognizer } from "../GestureRecognizer";
-import {
-	AUTO_SCROLL_MAX_TICK_MS,
-	AUTO_SCROLL_REFERENCE_FRAME_MS,
-	FLING_VELOCITY_WINDOW_MS,
-} from "../GestureRecognizerConstants";
+import { FLING_VELOCITY_WINDOW_MS } from "../GestureRecognizerConstants";
 import type {
 	Gesture,
 	GestureRecognizerConfig,
@@ -36,10 +32,10 @@ const CLIENT_X = 790; // Client X of the cursor held at the edge (near the right
 const CLIENT_X_INTERIOR = 400;
 
 // Mutable viewport shared between the getWorldPoint mock and canvasStateRef.
-// scrollTickIntervals records the elapsedMs each tick hands calculateScrollDelta.
+// scrollTickDeltas records the deltaX each emitted tick scrolls by.
 const sim = vi.hoisted(() => ({
 	viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 2 },
-	scrollTickIntervals: [] as number[],
+	scrollTickDeltas: [] as number[],
 }));
 
 vi.mock("../utils", () => ({
@@ -74,8 +70,8 @@ vi.mock("../utils", () => ({
 			vertical: null,
 		};
 	},
-	calculateScrollDelta: (_h: unknown, _v: unknown, elapsedMs: number) => {
-		sim.scrollTickIntervals.push(elapsedMs);
+	calculateScrollDelta: () => {
+		sim.scrollTickDeltas.push(STEP);
 		return { deltaX: STEP, deltaY: 0 };
 	},
 }));
@@ -95,7 +91,7 @@ const flushRaf = (): void => {
 beforeEach(() => {
 	rafCallbacks = [];
 	sim.viewport = { minX: 0, minY: 0, width: 800, height: 600, zoom: 2 };
-	sim.scrollTickIntervals = [];
+	sim.scrollTickDeltas = [];
 	vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback): number => {
 		rafCallbacks.push(cb);
 		return rafCallbacks.length;
@@ -484,13 +480,12 @@ describe("GestureRecognizer edge-scroll ticks carry the current time", () => {
 });
 
 /**
- * Each tick scrolls by the time elapsed since the previous tick, so the speed
- * stays constant however unevenly frames arrive. The elapsedMs each tick hands
- * calculateScrollDelta is recorded via sim.scrollTickIntervals; the tick's
- * timeStamp is set at enqueue (the previous frame), so a frame gap surfaces in
- * the interval one tick later.
+ * Every emitted tick scrolls by the same fixed step. Ticks already arrive once
+ * per RAF batch, so the per-frame step is what the view moves by; scaling it by
+ * the measured interval put that measurement's noise on screen as a tremble.
+ * The step each tick scrolls by is recorded via sim.scrollTickDeltas.
  */
-describe("GestureRecognizer edge-scroll ticks scroll by elapsed time", () => {
+describe("GestureRecognizer edge-scroll ticks scroll by a fixed step", () => {
 	const FRAME_MS = 16;
 	let clock = 0;
 
@@ -507,10 +502,10 @@ describe("GestureRecognizer edge-scroll ticks scroll by elapsed time", () => {
 	const frame = (): void => {
 		clock += FRAME_MS;
 		flushRaf();
-		// Reducer-equivalent viewport update per emitted tick (one interval is
-		// recorded per emission); without it the pending-viewport hold in feed
-		// would stop the loop after one tick.
-		while (applied < sim.scrollTickIntervals.length) {
+		// Reducer-equivalent viewport update per emitted tick (one step is recorded
+		// per emission); without it the pending-viewport hold in feed would stop the
+		// loop after one tick.
+		while (applied < sim.scrollTickDeltas.length) {
 			sim.viewport.minX += 5;
 			applied++;
 		}
@@ -530,50 +525,50 @@ describe("GestureRecognizer edge-scroll ticks scroll by elapsed time", () => {
 		return { events, dispatch };
 	};
 
-	it("bills the first tick one reference frame and later ticks the measured interval", () => {
+	it("scrolls by the same step on every frame of a hold", () => {
 		startEdgeHold();
 		for (let i = 0; i < 5; i++) {
 			frame();
 		}
 
-		const [first, ...rest] = sim.scrollTickIntervals;
-		expect(first).toBeCloseTo(AUTO_SCROLL_REFERENCE_FRAME_MS);
-		expect(rest.length).toBeGreaterThanOrEqual(3);
-		for (const interval of rest) {
-			expect(interval).toBeCloseTo(FRAME_MS);
+		expect(sim.scrollTickDeltas.length).toBeGreaterThanOrEqual(4);
+		for (const delta of sim.scrollTickDeltas) {
+			expect(delta).toBe(STEP);
 		}
 	});
 
-	it("clamps the tick after a stalled frame instead of jumping by the whole stall", () => {
+	it("keeps the step after a stalled frame instead of covering the stall", () => {
 		startEdgeHold();
 		frame();
 		frame();
 
-		// The main thread stalls for 500ms; the tick enqueued after it carries the
-		// late stamp, so the following tick sees the gap — clamped.
+		// The main thread stalls for 500ms. A step billed by elapsed time would
+		// jump the view by the whole absence; a fixed step just loses the frames.
 		clock += 500;
 		frame();
 		frame();
 
-		const last = sim.scrollTickIntervals[sim.scrollTickIntervals.length - 1];
-		expect(last).toBe(AUTO_SCROLL_MAX_TICK_MS);
+		for (const delta of sim.scrollTickDeltas) {
+			expect(delta).toBe(STEP);
+		}
 	});
 
-	it("restarts timing when the cursor re-enters the zone, not from the previous stay", () => {
+	it("scrolls by the same step when the cursor re-enters the zone", () => {
 		const { dispatch } = startEdgeHold();
 		frame();
 		frame();
 
-		// Leave the zone (interval bookkeeping resets), linger, and come back.
+		// Leave the zone (arming and the pending viewport reset), linger, come back.
 		dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR, 100, clock));
 		frame();
 		frame();
 		frame();
+		const before = sim.scrollTickDeltas.length;
 		dispatch(makeEvent("pointermove", CLIENT_X, 100, clock));
 		frame();
 
-		const last = sim.scrollTickIntervals[sim.scrollTickIntervals.length - 1];
-		expect(last).toBeCloseTo(AUTO_SCROLL_REFERENCE_FRAME_MS);
+		expect(sim.scrollTickDeltas.length).toBeGreaterThan(before);
+		expect(sim.scrollTickDeltas[sim.scrollTickDeltas.length - 1]).toBe(STEP);
 	});
 });
 
