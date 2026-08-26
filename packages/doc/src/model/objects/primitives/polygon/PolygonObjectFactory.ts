@@ -1,13 +1,11 @@
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 
+import { POLYGON_DOC_DEFAULTS } from "./PolygonDoc";
 import type { ObjectDoc } from "../../base/ObjectDoc";
 import type { ObjectFactory } from "../../types/ObjectFactory";
-import { AUTO_COLOR } from "../../utils/autoColor";
 import { calcDrawBounds } from "../../utils/calcDrawBounds";
 
-const POLY_STROKE = AUTO_COLOR;
-const POLY_STROKE_WIDTH = 2;
 // Default circumscribed-circle radius and vertex count for a polygon
 const POLYGON_RADIUS = 60;
 const POLYGON_SIDES = 5;
@@ -37,14 +35,11 @@ const buildPolygonPoints = (
  */
 export const PolygonObjectFactory: ObjectFactory = {
 	createDoc(position, overrides) {
-		// Cloned because overrides are module-level constants (stencil presets): a
-		// nested value shared between two created objects would let an in-place edit
-		// of one rewrite the other (same rule as createFrameObjectFactory).
+		// Cloned because defaults and overrides are module-level constants (stencil
+		// presets): a nested value shared between two created objects would let an
+		// in-place edit of one rewrite the other (same rule as createFrameObjectFactory).
 		return structuredClone({
-			type: "polygon",
-			stroke: POLY_STROKE,
-			strokeWidth: POLY_STROKE_WIDTH,
-			fill: "transparent",
+			...POLYGON_DOC_DEFAULTS,
 			...overrides,
 			// The id and geometry (points) are decided by the factory; not overridable via overrides.
 			id: crypto.randomUUID(),
@@ -70,10 +65,7 @@ export const PolygonObjectFactory: ObjectFactory = {
 		const ry = bounds.height / 2;
 		// Cloned for the same reason as in createDoc.
 		return structuredClone({
-			type: "polygon",
-			stroke: POLY_STROKE,
-			strokeWidth: POLY_STROKE_WIDTH,
-			fill: "transparent",
+			...POLYGON_DOC_DEFAULTS,
 			...overrides,
 			// The id and geometry (points) are decided by the factory; not overridable via overrides.
 			id: crypto.randomUUID(),
