@@ -148,12 +148,6 @@ const readTextSlots = (object: ObjectRecord): Record<string, unknown>[] => {
  * @throws {@link DocOperationError} naming every property that cannot be written, before
  *   anything is
  */
-const NUMERIC_STYLE_KEYS = [
-	"strokeWidth",
-	"fontSize",
-	"rx",
-] as const satisfies readonly (keyof StyleParams)[];
-
 const requireValidStyle = (style: StyleParams): void => {
 	const requested: Record<string, unknown> = {};
 	for (const key of requestedStyleKeys(style)) {
@@ -166,13 +160,6 @@ const requireValidStyle = (style: StyleParams): void => {
 		...validateRadiusStyleFields(requested, ""),
 		...validateArrowFields(requested, ""),
 		...validateTextSlotStyleFields(requested, ""),
-		// The doc validators take an infinity for a number, since `isNumber` only rules out
-		// NaN and every bound it checks is one-sided. JSON has no infinity either, so one
-		// written here becomes `null` on save and fails to re-parse — for a host holding the
-		// document in memory it is never caught at all
-		...NUMERIC_STYLE_KEYS.filter(
-			(key) => requested[key] !== undefined && !Number.isFinite(requested[key]),
-		).map((key) => ({ path: `.${key}`, message: "must be a finite number" })),
 	];
 	if (diagnostics.length === 0) {
 		return;

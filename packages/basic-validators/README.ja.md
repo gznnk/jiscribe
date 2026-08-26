@@ -47,7 +47,9 @@ const isLabel = (value: unknown): value is Label =>
 
 このパッケージを使う前に押さえておく契約は3つ:
 
-- **`isNumber` は `NaN` を弾く**が `Infinity` は通す。絞り込んだ値は必ず比較できる。
+- **`isNumber` が通すのは有限の数値だけ**で、`NaN` も無限大も弾く。絞り込んだ値は
+  比較でき、計算でき、ドキュメントへ書き込める。JSON に無限大を書く方法は無いので、
+  ドキュメントへ入った無限大は保存時に `null` になって読み戻せなくなる。
   `isPositiveNumber` / `isNonNegativeNumber` / `isNumberInRange` はこれを土台にして
   いるため同じ挙動を引き継ぐ。
 - **`isCssSafeValue` が見るのは安全性であって妥当性ではない。** CSS 宣言からの抜け出しに
