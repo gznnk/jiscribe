@@ -1042,6 +1042,90 @@ export const createCanvasToolDescriptors = (
 		{ drives: ["docOps.setStyle"] },
 	);
 
+	const setBackgroundTool = defineCanvasTool(
+		"set_background",
+		[
+			"Paint the canvas surface itself — the area behind every shape, not any one shape's fill.",
+			"Use it to set the tone of a whole drawing: a warm off-white for a printed handout, a dark surface for a diagram shown on a projector, a tinted board to separate one canvas from another at a glance.",
+			"The color is written into the document as you give it, so pass a literal CSS color and never a var(...): the file is read by hosts that do not share your theme.",
+			"Pass null to remove it again, which is not the same as painting it white — it hands the surface back to whatever theme the host draws in, light or dark.",
+			"The grid line color is derived from whatever you set, so the grid stays readable on any surface.",
+		].join(" "),
+		{
+			color: z
+				.string()
+				.nullable()
+				.describe(
+					'A literal CSS color ("#fafafa", "rgb(250 250 250)", "transparent"), or null to clear it and follow the host theme.',
+				),
+		},
+		({ color }) => ({ kind: "setBackground", color }),
+		{ drives: ["docOps.setBackground"] },
+	);
+
+	const setDocumentViewTool = defineCanvasTool(
+		"set_document_view",
+		[
+			"Declare how the document should be presented: the empty space kept around the drawing, how the view is framed when someone opens it, and whether panning is walled in at the page.",
+			"This is what turns a canvas into a document that opens the same way for everyone — a poster framed whole, a long note opened at the top and read downwards — instead of wherever the last person left the camera.",
+			"The padding is also the margin of exported images, so declare it here rather than pushing every shape inwards to fake a margin.",
+			"The three parts are independent: pass only what you want to change, and null for a part you want to stop declaring (which hands that decision back to the host, and is not the same as declaring zero).",
+			"None of it constrains editing — shapes may sit outside the padding, and a host that sets its own camera or scroll limit outranks what you declare here.",
+			"This writes the document, not the screen: it says how the drawing should open for whoever reads it next. To move the camera that is on screen right now, use set_view or fit_view instead.",
+		].join(" "),
+		{
+			padding: z
+				.object({
+					top: z
+						.number()
+						.min(0)
+						.optional()
+						.describe("Space above the content, in world px."),
+					right: z
+						.number()
+						.min(0)
+						.optional()
+						.describe("Space right of the content, in world px."),
+					bottom: z
+						.number()
+						.min(0)
+						.optional()
+						.describe("Space below the content, in world px."),
+					left: z
+						.number()
+						.min(0)
+						.optional()
+						.describe("Space left of the content, in world px."),
+				})
+				.nullable()
+				.optional()
+				.describe(
+					"Empty space kept outside the drawing on each side; a side left out is 0. Pass null to declare no padding at all. Sides you do give replace the whole padding, so pass every side you want kept.",
+				),
+			open: z
+				.enum(["fit-width", "fit-all"])
+				.nullable()
+				.optional()
+				.describe(
+					'How to frame the view on open. "fit-width" fits the width and starts at the top — a document read downwards; "fit-all" fits the whole drawing and centers it — a diagram taken in at a glance. Pass null to leave the framing to the host.',
+				),
+			scroll: z
+				.enum(["content", "infinite"])
+				.nullable()
+				.optional()
+				.describe(
+					'"content" walls panning in at the padded content, making the document a bounded page; "infinite" is the endless board. Pass null to stop declaring it, which also means the endless board.',
+				),
+		},
+		({ padding, open, scroll }) => ({
+			kind: "setDocumentView",
+			...(padding === undefined ? {} : { padding }),
+			...(open === undefined ? {} : { open }),
+			...(scroll === undefined ? {} : { scroll }),
+		}),
+		{ drives: ["docOps.setView"] },
+	);
+
 	const setExtraPropsTool = defineCanvasTool(
 		"set_extra_props",
 		[
@@ -1663,6 +1747,8 @@ export const createCanvasToolDescriptors = (
 		setPointsManyTool,
 		reorderObjectsTool,
 		setStyleTool,
+		setBackgroundTool,
+		setDocumentViewTool,
 		setExtraPropsTool,
 		setTextTool,
 		setTextsTool,

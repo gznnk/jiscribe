@@ -69,6 +69,7 @@ import {
 	type SetRotationResult,
 } from "./reshape";
 import { setStyle, type SetStyleResult } from "./style";
+import { setBackground, setView, type SetViewParams } from "./surface";
 import {
 	getText,
 	setText,
@@ -82,6 +83,7 @@ import {
 import { listTypes, type ObjectTypeSummary } from "./types";
 import type { StyleParams } from "./utils/styleFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import type { ViewDoc } from "../model/canvas/ViewDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
 import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
@@ -90,6 +92,8 @@ import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
  * The whole set of programmatic edits to a CanvasDoc: building it up (`addObject` /
  * `connect`) and reworking what is already there (delete / move / resize / rotate / reshape /
  * restack / style / retext / re-route / align / group), plus reading back what is there.
+ * A few ops address the document itself rather than the drawing inside it — `setBackground`
+ * writes the surface the shapes are drawn on, `setView` how the document is presented.
  * Built-in and plugin types alike are handled uniformly, following the factory / features
  * passed to `createDocOps`.
  *
@@ -190,6 +194,21 @@ export type DocOps = {
 		ids: readonly string[],
 		style: StyleParams,
 	): SetStyleResult;
+	/**
+	 * Set the canvas surface color, or clear it with null so the surface follows the host
+	 * theme again. A literal CSS color, never a `var(...)`, so the file stays portable.
+	 * Throws `DocOperationError` for a blank color.
+	 */
+	setBackground(doc: CanvasDoc, color: string | null): void;
+	/**
+	 * Write the document's display declaration — padding around the drawing, how the view
+	 * is framed on open, whether panning is walled in. Only the parts given are written,
+	 * and a part given as null is dropped; the field goes away once nothing is left.
+	 * Returns the declaration as it now stands (null once nothing is), which is not always
+	 * what was asked for — an all-zero padding declares nothing.
+	 * Throws `DocOperationError` when no part is given, or a value is out of range.
+	 */
+	setView(doc: CanvasDoc, params: SetViewParams): ViewDoc | null;
 	/**
 	 * Set the properties belonging to the type itself on one object (the callout's `tail`,
 	 * the container's `headerHeight`), and return the names written. One object at a time,
@@ -423,6 +442,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 		setHeightMode: (doc, ids, params) =>
 			setHeightMode(doc, ids, params, definitions),
 		setStyle: (doc, ids, style) => setStyle(doc, ids, style, definitions),
+		setBackground,
+		setView,
 		setExtraProps: (doc, id, extraProps) =>
 			setExtraProps(doc, id, extraProps, definitions),
 		setInlineTextStyle: (doc, id, params) =>

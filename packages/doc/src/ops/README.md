@@ -28,6 +28,7 @@ and ESLint both enforce it (see `eslint.config.js`). It reads and writes the pla
 | `ops/`            | The ops. Named for the group they belong to, not for one op, so adding an op does not make a file name a lie               |
 | `ops/query.ts`    | The reads that answer about the doc as a whole rather than about one group of ops                                          |
 | `ops/types.ts`    | `listTypes`, the one op that answers from the definitions instead of from a doc                                            |
+| `ops/surface.ts`  | The ops writing the document's own properties rather than the drawing in `root` (background, view declaration)             |
 | `utils/`          | What the ops share: id allocation, object lookup, geometry, endpoint building, style/transform field writing               |
 | `__tests__/`      | One suite per `ops/` file plus `createDocOps.test.ts`, with shared fixtures in `__tests__/support/`                        |
 

@@ -152,6 +152,7 @@ export {
 	type SetPositionParams,
 	type SetRotationResult,
 	type SetStyleResult,
+	type SetViewParams,
 	type SetTextEntry,
 	type StyleParams,
 	type UpdateConnectorEntry,

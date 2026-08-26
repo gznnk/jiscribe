@@ -85,6 +85,20 @@ export type AiHandleOp =
 	// World coordinates, converted the other way
 	| { kind: "toClient"; x: number; y: number };
 
+/** Empty space kept outside the drawing, in world px; every side optional and 0 when omitted */
+export type AiViewPadding = {
+	top?: number;
+	right?: number;
+	bottom?: number;
+	left?: number;
+};
+
+/** How the view is framed when the document is opened */
+export type AiViewOpen = "fit-width" | "fit-all";
+
+/** Whether panning is walled in at the padded content, or endless */
+export type AiViewScroll = "content" | "infinite";
+
 /** What fitView frames when it is not given a rect: the whole drawing, or the current selection */
 export type AiFitTarget = "all" | "selection";
 
@@ -218,6 +232,18 @@ export type AiDocOp =
 			placement: AiZOrderPlacement;
 	  }
 	| { kind: "setStyle"; ids: string[]; style: AiStyle }
+	/** キャンバス面そのものの色。null で document から外し、ホストのテーマへ戻す */
+	| { kind: "setBackground"; color: string | null }
+	/**
+	 * 表示の宣言（余白・開いたときの寄せ方・スクロールの壁）。渡した部分だけ書き、
+	 * null を渡した部分は宣言から外す
+	 */
+	| {
+			kind: "setDocumentView";
+			padding?: AiViewPadding | null;
+			open?: AiViewOpen | null;
+			scroll?: AiViewScroll | null;
+	  }
 	/** 型が自分で持つプロパティ（lucideIcon の icon、callout の tail）の書き換え */
 	| {
 			kind: "setExtraProps";
