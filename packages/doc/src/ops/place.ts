@@ -2,6 +2,7 @@ import type { Rect } from "@jiscribe/geometry";
 
 import { DocOperationError } from "./errors";
 import { batchItemError } from "./utils/batchErrors";
+import { requireFiniteNumber } from "./utils/numberArgs";
 import {
 	type ObjectRecord,
 	requireObject,
@@ -43,6 +44,12 @@ export const setPosition = (
 	params: SetPositionParams,
 	definitions: DocDefinitions,
 ): void => {
+	if (params.x !== undefined) {
+		requireFiniteNumber(params.x, "x");
+	}
+	if (params.y !== undefined) {
+		requireFiniteNumber(params.y, "y");
+	}
 	const { object } = requireObject(doc, id);
 	const bounds = requireObjectBounds(object, definitions);
 	translateObject(
@@ -119,6 +126,8 @@ export const translateObjects = (
 	deltaY: number,
 	definitions: DocDefinitions,
 ): void => {
+	requireFiniteNumber(deltaX, "deltaX");
+	requireFiniteNumber(deltaY, "deltaY");
 	const locations = requireObjects(doc, ids);
 	// Measure every object first: a mid-way failure would leave half the cluster moved.
 	locations.forEach(({ object }) => requireObjectBounds(object, definitions));
@@ -167,6 +176,10 @@ const planResize = (
 	const bounds = requireObjectBounds(object, definitions);
 	const width = params.width ?? bounds.width;
 	const height = params.height ?? bounds.height;
+	// Before the comparison below: NaN fails every comparison, so it would read as a
+	// size greater than 0 and be written as the object's extent
+	requireFiniteNumber(width, "width");
+	requireFiniteNumber(height, "height");
 	if (width <= 0 || height <= 0) {
 		throw new DocOperationError(
 			`${object.id} cannot be resized to ${width}x${height}: both sides must be greater than 0`,

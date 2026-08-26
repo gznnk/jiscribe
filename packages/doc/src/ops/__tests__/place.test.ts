@@ -398,3 +398,53 @@ describe("objects measured from their points", () => {
 		);
 	});
 });
+
+describe("place: numbers that are not numbers", () => {
+	// NaN and the infinities pass `typeof value === "number"` and fail every comparison,
+	// so without an explicit guard they are written as a position or an extent and the
+	// document only fails when it is next parsed.
+	it.each([
+		["NaN", Number.NaN],
+		["Infinity", Number.POSITIVE_INFINITY],
+		["-Infinity", Number.NEGATIVE_INFINITY],
+	])(
+		"setPosition refuses %s, leaving the object where it was",
+		(_label, value) => {
+			const doc = emptyDoc();
+			docOps.addObject(doc, "rect", { x: 10, y: 20, width: 100, height: 50 });
+			const before = structuredClone(doc.root);
+
+			expect(() => docOps.setPosition(doc, "rect-1", { x: value })).toThrow(
+				DocOperationError,
+			);
+			expect(doc.root).toEqual(before);
+		},
+	);
+
+	it("translateObjects refuses a delta that is not finite", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 10, y: 20 });
+		const before = structuredClone(doc.root);
+
+		expect(() =>
+			docOps.translateObjects(doc, ["rect-1"], Number.NaN, 0),
+		).toThrow(DocOperationError);
+		expect(doc.root).toEqual(before);
+	});
+
+	it("resizeObject refuses an extent that is not finite", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 50 });
+		const before = structuredClone(doc.root);
+
+		expect(() =>
+			docOps.resizeObject(doc, "rect-1", { width: Number.NaN }),
+		).toThrow(DocOperationError);
+		expect(() =>
+			docOps.resizeObject(doc, "rect-1", {
+				width: Number.POSITIVE_INFINITY,
+			}),
+		).toThrow(DocOperationError);
+		expect(doc.root).toEqual(before);
+	});
+});

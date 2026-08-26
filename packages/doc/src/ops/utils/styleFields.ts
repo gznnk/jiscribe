@@ -27,7 +27,15 @@ import {
 	TEXT_SLOT_STYLE_KEYS,
 	type TextSlot,
 } from "../../model/objects/types/TextSlot";
+import {
+	validateArrowFields,
+	validateFillStyleFields,
+	validateRadiusStyleFields,
+	validateStrokeStyleFields,
+	validateTextSlotStyleFields,
+} from "../../model/objects/utils/validateDocUtils";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
+import { DocOperationError } from "../errors";
 
 /**
  * Every styling property the doc-ops can set, gathered from the same style groups the
@@ -124,6 +132,61 @@ const readTextSlots = (object: ObjectRecord): Record<string, unknown>[] => {
 };
 
 /**
+ * Refuses a style whose values the document could not hold, before anything is written.
+ *
+ * The constraints are not restated here: the same functions the parser validates a written
+ * document with are run against the requested properties. Anything that passes is therefore
+ * something a re-parse accepts, and a constraint that changes there changes here too.
+ *
+ * Without this, a malformed value reaches the object and is only caught when the document is
+ * next parsed — which is a save away for a host that writes files, and never for one that
+ * holds a document in memory. It also breaks what every op promises: that a call which
+ * throws leaves the document exactly as it was.
+ *
+ * @param style - The requested properties; only the ones actually asked for are examined,
+ *   an explicit `undefined` counting as not asked for
+ * @throws {@link DocOperationError} naming every property that cannot be written, before
+ *   anything is
+ */
+const NUMERIC_STYLE_KEYS = [
+	"strokeWidth",
+	"fontSize",
+	"rx",
+] as const satisfies readonly (keyof StyleParams)[];
+
+const requireValidStyle = (style: StyleParams): void => {
+	const requested: Record<string, unknown> = {};
+	for (const key of requestedStyleKeys(style)) {
+		requested[key] = style[key as keyof StyleParams];
+	}
+
+	const diagnostics = [
+		...validateFillStyleFields(requested, ""),
+		...validateStrokeStyleFields(requested, ""),
+		...validateRadiusStyleFields(requested, ""),
+		...validateArrowFields(requested, ""),
+		...validateTextSlotStyleFields(requested, ""),
+		// The doc validators take an infinity for a number, since `isNumber` only rules out
+		// NaN and every bound it checks is one-sided. JSON has no infinity either, so one
+		// written here becomes `null` on save and fails to re-parse — for a host holding the
+		// document in memory it is never caught at all
+		...NUMERIC_STYLE_KEYS.filter(
+			(key) => requested[key] !== undefined && !Number.isFinite(requested[key]),
+		).map((key) => ({ path: `.${key}`, message: "must be a finite number" })),
+	];
+	if (diagnostics.length === 0) {
+		return;
+	}
+	// Paths are built as `${path}.${name}` and the path here is the style itself, so the
+	// leading dot is what is left of the empty prefix
+	throw new DocOperationError(
+		diagnostics
+			.map(({ path, message }) => `${path.replace(/^\./, "")}: ${message}`)
+			.join("; "),
+	);
+};
+
+/**
  * Write the styling an object supports and report the rest, mutating the object in place.
  * Shared by `setStyle` and by `addObject`, which styles what the factory just built.
  *
@@ -144,6 +207,7 @@ export const applyStyle = (
 	style: StyleParams,
 	definition: ObjectDocDefinition | undefined,
 ): string[] => {
+	requireValidStyle(style);
 	const appliedKeys = new Set<string>();
 
 	if (isConnectorObject(object)) {

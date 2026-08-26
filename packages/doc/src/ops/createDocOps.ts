@@ -98,7 +98,10 @@ import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
  * passed to `createDocOps`.
  *
  * Every editing op mutates `doc` in place and checks its arguments before it writes, so a
- * call that throws `DocOperationError` leaves the document exactly as it was.
+ * call that throws `DocOperationError` leaves the document exactly as it was. What counts as
+ * a checkable argument is not only the shape the types state: a number that is not finite
+ * and a style value the document could not hold are both refused here rather than left for
+ * the parser, which a host holding its document in memory never reaches.
  *
  * Most ops come in a single and a batch form. The batch form is not a loop the caller could
  * write for itself: it holds the same all-or-nothing guarantee across the whole list, so a

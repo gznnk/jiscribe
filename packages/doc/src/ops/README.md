@@ -20,17 +20,17 @@ and ESLint both enforce it (see `eslint.config.js`). It reads and writes the pla
 
 ## Directory structure
 
-| Path              | Description                                                                                                                |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `createDocOps.ts` | The `DocOps` type and its factory. Every op is bound to the resolved definitions here, and this is where a new op is wired |
-| `index.ts`        | What the directory exports, re-exported in turn by `src/index.ts`                                                          |
-| `errors.ts`       | `DocOperationError` — the only exception these ops throw                                                                   |
-| `ops/`            | The ops. Named for the group they belong to, not for one op, so adding an op does not make a file name a lie               |
-| `ops/query.ts`    | The reads that answer about the doc as a whole rather than about one group of ops                                          |
-| `ops/types.ts`    | `listTypes`, the one op that answers from the definitions instead of from a doc                                            |
-| `ops/surface.ts`  | The ops writing the document's own properties rather than the drawing in `root` (background, view declaration)             |
-| `utils/`          | What the ops share: id allocation, object lookup, geometry, endpoint building, style/transform field writing               |
-| `__tests__/`      | One suite per `ops/` file plus `createDocOps.test.ts`, with shared fixtures in `__tests__/support/`                        |
+| Path              | Description                                                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `createDocOps.ts` | The `DocOps` type and its factory. Every op is bound to the resolved definitions here, and this is where a new op is wired    |
+| `index.ts`        | What the directory exports, re-exported in turn by `src/index.ts`                                                             |
+| `errors.ts`       | `DocOperationError` — the only exception these ops throw                                                                      |
+| `ops/`            | The ops. Named for the group they belong to, not for one op, so adding an op does not make a file name a lie                  |
+| `ops/query.ts`    | The reads that answer about the doc as a whole rather than about one group of ops                                             |
+| `ops/types.ts`    | `listTypes`, the one op that answers from the definitions instead of from a doc                                               |
+| `ops/surface.ts`  | The ops writing the document's own properties rather than the drawing in `root` (background, view declaration)                |
+| `utils/`          | What the ops share: id allocation, object lookup, geometry, endpoint building, style/transform field writing, argument checks |
+| `__tests__/`      | One suite per `ops/` file plus `createDocOps.test.ts`, with shared fixtures in `__tests__/support/`                           |
 
 ## The contract every op holds
 
@@ -145,6 +145,11 @@ them together tells the caller more than pointing at the first index would.
 
 ## Adding an op
 
+0. Decide what its arguments have to satisfy, and check that before writing anything. A
+   value that only fails when the document is re-parsed is caught a save away for a host
+   writing files, and never for one holding a document in memory. `utils/numberArgs.ts`
+   rejects a coordinate or measurement that is not finite; `utils/styleFields.ts` runs the
+   doc validators themselves over a requested style, so the constraints are never restated.
 1. Put it in the `ops/` file for its group, beside the single or batch form it pairs with.
    Do not add a file per op
 2. Follow the two-phase rule above if it is a batch op, reusing `requireObjects` from
