@@ -203,7 +203,7 @@ function validateEdgeAnchor(
 			message: "must be one of: top, right, bottom, left",
 		});
 	}
-	if (!isNumber(a.t) || !Number.isFinite(a.t) || a.t < 0 || a.t > 1) {
+	if (!isNumber(a.t) || a.t < 0 || a.t > 1) {
 		errors.push({
 			path: `${path}.anchor.t`,
 			message: "must be a number between 0 and 1",
