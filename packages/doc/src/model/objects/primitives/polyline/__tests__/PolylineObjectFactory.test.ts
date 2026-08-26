@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { POLYLINE_DOC_DEFAULTS } from "../PolylineDoc";
 import { PolylineObjectFactory } from "../PolylineObjectFactory";
 
 type Pt = { x: number; y: number };
@@ -19,6 +20,16 @@ describe("PolylineObjectFactory", () => {
 				{ x: 20, y: 50 }, // 100 - 80
 				{ x: 180, y: 50 }, // 100 + 80
 			]);
+		});
+
+		// The definition advertises POLYLINE_DOC_DEFAULTS to the schema and AI docs,
+		// so creation has to be the thing they describe.
+		it("carries every field of the registered creation defaults", () => {
+			const doc = PolylineObjectFactory.createDoc({ x: 100, y: 50 });
+
+			expect(doc).toMatchObject(
+				POLYLINE_DOC_DEFAULTS as Record<string, unknown>,
+			);
 		});
 
 		it("can replace stroke via overrides", () => {

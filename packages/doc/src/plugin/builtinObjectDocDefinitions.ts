@@ -14,10 +14,16 @@ import { EllipseObjectFactory } from "../model/objects/primitives/ellipse/Ellips
 import { validateEllipseDoc } from "../model/objects/primitives/ellipse/validateEllipseDoc";
 import { GroupFeatures } from "../model/objects/primitives/group/GroupDoc";
 import { validateGroupDoc } from "../model/objects/primitives/group/validateGroupDoc";
-import { PolygonFeatures } from "../model/objects/primitives/polygon/PolygonDoc";
+import {
+	POLYGON_DOC_DEFAULTS,
+	PolygonFeatures,
+} from "../model/objects/primitives/polygon/PolygonDoc";
 import { PolygonObjectFactory } from "../model/objects/primitives/polygon/PolygonObjectFactory";
 import { validatePolygonDoc } from "../model/objects/primitives/polygon/validatePolygonDoc";
-import { PolylineFeatures } from "../model/objects/primitives/polyline/PolylineDoc";
+import {
+	POLYLINE_DOC_DEFAULTS,
+	PolylineFeatures,
+} from "../model/objects/primitives/polyline/PolylineDoc";
 import { PolylineObjectFactory } from "../model/objects/primitives/polyline/PolylineObjectFactory";
 import { validatePolylineDoc } from "../model/objects/primitives/polyline/validatePolylineDoc";
 import {
@@ -103,12 +109,14 @@ export const builtinObjectDocDefinitions = {
 		validateDoc: validatePolygonDoc,
 		factory: PolygonObjectFactory,
 		summary: "closed shape from points",
+		defaults: POLYGON_DOC_DEFAULTS,
 	},
 	polyline: {
 		features: PolylineFeatures,
 		validateDoc: validatePolylineDoc,
 		factory: PolylineObjectFactory,
 		summary: "open line",
+		defaults: POLYLINE_DOC_DEFAULTS,
 	},
 	connector: {
 		features: ConnectorFeatures,
