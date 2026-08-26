@@ -4,6 +4,9 @@ import { describe, it, expect } from "vitest";
 import { createFrameStateValidator } from "../createFrameStateValidator";
 import type { StateRecord } from "../validateStateUtils";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the paste e2e.
 /**
  * Tests the generator itself rather than any one shape: per-shape suites
  * (validateRectState, ...) pin down one features combination each, so the
@@ -124,10 +127,10 @@ describe("createFrameStateValidator feature gating", () => {
 				rotation: 45,
 				scaleX: 1,
 				scaleY: -1,
-				stroke: "#000",
+				stroke: "auto",
 				strokeWidth: 2,
 				strokeDashType: "dashed",
-				fill: "#fff",
+				fill: "auto",
 				text: {
 					body: {
 						text: "hello",

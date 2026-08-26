@@ -5,6 +5,9 @@ import {
 	isValidConnectorState,
 } from "../validateConnectorState";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the paste e2e.
 const ownedRef = {
 	owner: { id: "r1" },
 	anchor: { kind: "center" },
@@ -15,7 +18,7 @@ const validConnector = {
 	id: "c1",
 	type: "connector",
 	points: [],
-	stroke: "#000",
+	stroke: "auto",
 	source: ownedRef,
 	target: freeRef,
 };
@@ -114,7 +117,7 @@ describe("isValidConnectorLabelState", () => {
 				text: "Success",
 				position: 0.25,
 				offset: -8,
-				fontColor: "#2E7D32",
+				fontColor: "auto",
 				fontFamily: '"Source Serif 4", "Noto Serif JP", serif',
 				fontSize: 14,
 				fontWeight: "bold",
@@ -126,7 +129,7 @@ describe("isValidConnectorLabelState", () => {
 		expect(
 			isValidConnectorLabelState({
 				text: "Yes",
-				fill: "#ffffff",
+				fill: "auto",
 				stroke: "auto",
 				strokeWidth: 2,
 				strokeDashType: "dashed",

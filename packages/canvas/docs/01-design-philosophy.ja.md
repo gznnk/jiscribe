@@ -77,5 +77,12 @@ execute: (state: CanvasState) => CanvasState; // 副作用なし
 >
 > **CSS インジェクション**（stroke / fill / fontColor / fontFamily / fontWeight）も同じ
 > 方針で境界に寄せる。doc 経路は `validateDocUtils` の `isCssSafeValue`、クリップボード経路は
-> state 検証（`validateStateUtils` / `isCssColor`）で弾く。presentation（emotion styled）側の
+> state 検証（`validateStateUtils`）で弾く。presentation（emotion styled）側の
 > sink 防御は重複のため設けない。
+>
+> 2 つの境界は厳しさが揃っていない。これは意図的なもので、色にはもう 1 つ「色であるか」
+> という問いがあり、それに答える `isCssColor`（`CSS.supports`）がブラウザ専用だから。
+> クリップボード経路（`isValidColorValue`）からは使えるが、Node でも動く doc 経路からは
+> 使えない。したがって doc では通る色が貼り付けで断られることはあるが、逆は起きない
+> ——厳しい側が通したものは再パースでも生き残る。ブラウザ専用ということは node の
+> ユニットテストからも踏めないということで、色は貼り付けの e2e が担保する。

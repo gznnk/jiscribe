@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { isValidRectState } from "../validateRectState";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the paste e2e.
 const validRect = {
 	id: "r1",
 	type: "rect",
@@ -12,9 +15,9 @@ const validRect = {
 	rotation: 0,
 	scaleX: 1,
 	scaleY: 1,
-	stroke: "#000",
+	stroke: "auto",
 	strokeWidth: 2,
-	fill: "#fff",
+	fill: "auto",
 	text: { body: { text: "label", fontSize: 16 } },
 	rx: 4,
 };

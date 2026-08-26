@@ -128,6 +128,36 @@ describe("validateStructure: legacy connectors field", () => {
 	});
 });
 
+// ─── Canvas surface background ───────────────────────────
+describe("validateStructure: background", () => {
+	it.each([
+		["a declaration breakout", "red; } body { background: black"],
+		["a url()", "url(http://evil.example/x)"],
+	])("an unsafe background (%s) is an error", (_label, background) => {
+		const errors = validateStructure(doc([], { background }));
+		expect(has(errors, "background", "safe CSS color value")).toBe(true);
+	});
+
+	it.each([
+		["hex", "#fdf6e3"],
+		["rgb()", "rgb(20 22 26)"],
+		["keyword", "transparent"],
+	])("an ordinary color (%s) is not an error", (_label, background) => {
+		expect(validateStructure(doc([], { background }))).toEqual([]);
+	});
+
+	it("an omitted background is not an error (it means follow the theme)", () => {
+		expect(
+			validateStructure(doc([])).some((e) => e.path === "background"),
+		).toBe(false);
+	});
+
+	it("a non-string background is an error", () => {
+		const errors = validateStructure(doc([], { background: 42 }));
+		expect(has(errors, "background", "safe CSS color value")).toBe(true);
+	});
+});
+
 // ─── Common node fields (validateObjectNode) ───────────────────
 describe("validateStructure: common node fields", () => {
 	it.each([

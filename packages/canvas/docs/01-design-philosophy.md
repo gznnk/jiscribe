@@ -93,6 +93,14 @@ internals can be written cheaply on the assumption that "only valid state ever a
 >
 > **CSS injection** (stroke / fill / fontColor / fontFamily / fontWeight) is handled at the
 > boundary under the same policy. The doc path is rejected by `isCssSafeValue` in
-> `validateDocUtils`, and the clipboard path by state validation
-> (`validateStateUtils` / `isCssColor`). No sink-side defense is added on the presentation
-> (emotion styled) side, as it would be redundant.
+> `validateDocUtils`, and the clipboard path by state validation (`validateStateUtils`).
+> No sink-side defense is added on the presentation (emotion styled) side, as it would be
+> redundant.
+>
+> The two boundaries are not equally strict, and deliberately so. Colors additionally have
+> to _be_ colors, which `isCssColor` answers through `CSS.supports` — browser-only, so it
+> is reachable from the clipboard path (`isValidColorValue`) and not from the doc path,
+> which also runs in Node. A color the doc path lets through can therefore be refused on
+> paste; the reverse never happens, so anything accepted at the stricter boundary still
+> survives a re-parse. Being browser-only also means colors cannot be exercised from the
+> node unit suite: the paste e2e covers them.

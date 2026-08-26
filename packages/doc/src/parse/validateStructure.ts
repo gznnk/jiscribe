@@ -1,4 +1,9 @@
-import { isArray, isObject, isString } from "@jiscribe/basic-validators";
+import {
+	isArray,
+	isCssSafeValue,
+	isObject,
+	isString,
+} from "@jiscribe/basic-validators";
 
 import { validateViewDoc } from "../model/canvas/validateViewDoc";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
@@ -118,8 +123,14 @@ export function validateStructure(
 
 	// Optional canvas surface color. When present it must be a color string;
 	// omitted means "follow the theme background" (see CanvasDoc.background).
-	if (d.background !== undefined && !isString(d.background)) {
-		errors.push({ path: "background", message: "must be a string" });
+	// The value reaches a CSS context, so it goes through the same sanitization
+	// as an object's fill/stroke (validateFillStyleFields).
+	if (d.background !== undefined && !isCssSafeValue(d.background)) {
+		errors.push({
+			path: "background",
+			message: "must be a safe CSS color value",
+			beyondSchema: true,
+		});
 	}
 
 	// Optional display declaration; omitted means "frame it however the host would"

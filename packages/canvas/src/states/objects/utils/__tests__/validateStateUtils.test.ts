@@ -67,8 +67,11 @@ describe("validateStateUtils", () => {
 	});
 
 	describe("isValidStrokeStyleState", () => {
-		it("valid stroke has no errors", () => {
-			expect(isValidStrokeStyleState({ stroke: "#000", strokeWidth: 2 })).toBe(
+		// A real colour would reach isCssColor (CSS.supports), which this node
+		// environment has no CSS for; the "auto" sentinel is checked before that.
+		// Whether an actual colour passes is covered by the paste e2e.
+		it("the auto sentinel and an omitted stroke have no errors", () => {
+			expect(isValidStrokeStyleState({ stroke: "auto", strokeWidth: 2 })).toBe(
 				true,
 			);
 			expect(isValidStrokeStyleState({})).toBe(true);
@@ -88,8 +91,8 @@ describe("validateStateUtils", () => {
 	});
 
 	describe("isValidFillStyleState", () => {
-		it("valid fill / omitted is true", () => {
-			expect(isValidFillStyleState({ fill: "transparent" })).toBe(true);
+		it("the auto sentinel and an omitted fill are true", () => {
+			expect(isValidFillStyleState({ fill: "auto" })).toBe(true);
 			expect(isValidFillStyleState({})).toBe(true);
 		});
 		it("fill containing injection is false", () => {

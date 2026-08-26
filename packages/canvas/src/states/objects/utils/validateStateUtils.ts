@@ -31,9 +31,16 @@ import { isTransformState } from "../base/TransformState";
  * by type. They use the type-guard style returning boolean, consistent with the state layer's
  * existing guards (`isTransformState` / `isTextStyleState` / `isGroupState`, etc.).
  *
- * Step 1's `isCssSafeValue` is applied to style strings (stroke / fill / fontFamily / fontWeight)
- * to reject CSS injection at the boundary. Strict color validity (`isCssColor` = `CSS.supports`)
- * is browser-only, so it lives here rather than in the schema-layer guards.
+ * Two checks are applied to style strings, and they answer different questions.
+ * `isCssSafeValue` rejects CSS injection; `isValidColorValue` additionally asks whether the
+ * value is a color at all. The latter is browser-only (`CSS.supports`), which is why it can
+ * be used here and not in the schema-layer guards: everything below runs behind
+ * `isClipboardData`, i.e. only where a paste happens.
+ *
+ * That browser dependency also means a color cannot be exercised from the node test suite —
+ * calling into `isCssColor` there throws. Colors are covered by the paste e2e instead; the
+ * unit tests here stay on what node can reach (ranges, enums, the `"auto"` sentinel, and
+ * injection strings, which `isCssSafeValue` rejects before `CSS` is ever touched).
  */
 export type StateRecord = Record<string, unknown>;
 
@@ -97,13 +104,29 @@ export const isValidPolyState = (o: StateRecord, minPoints: number): boolean =>
 export const hasOwnedEndpoint = (source: unknown, target: unknown): boolean =>
 	isOwnedEndpointRef(source) || isOwnedEndpointRef(target);
 
+/**
+ * Validates a value used as a color: safe to put in a CSS context, and a color the CSS
+ * parser recognises. The two are independent — `"notacolor"` is safe but not a color,
+ * `"red; } body {"` is a color-ish prefix but not safe — so both have to hold.
+ *
+ * The `"auto"` sentinel (theme-following, issue #38) is checked first: `CSS.supports` does
+ * not know it, and it is what several shapes carry by default, so reaching `isCssColor`
+ * with it would reject ordinary documents.
+ *
+ * Browser-only, through `isCssColor`. Every caller sits behind `isClipboardData`.
+ *
+ * @param value - Value to check; non-strings fail at `isCssSafeValue` without reaching `CSS`
+ */
+export const isValidColorValue = (value: unknown): boolean =>
+	isCssSafeValue(value) && (isAutoColor(value) || isCssColor(value));
+
 /** Validates TransformState (rotation / scaleX / scaleY are numbers). */
 export const isValidTransformState = (o: StateRecord): boolean =>
 	isTransformState(o);
 
 /** Validates StrokeStyleState's optional fields for type/safety when present. */
 export const isValidStrokeStyleState = (o: StateRecord): boolean => {
-	if ("stroke" in o && o.stroke !== undefined && !isCssSafeValue(o.stroke)) {
+	if ("stroke" in o && o.stroke !== undefined && !isValidColorValue(o.stroke)) {
 		return false;
 	}
 	// strokeWidth has minimum: 0 in the schema
@@ -120,9 +143,9 @@ export const isValidStrokeStyleState = (o: StateRecord): boolean => {
 	return true;
 };
 
-/** Validates FillStyleState's fill for CSS safety when present. */
+/** Validates FillStyleState's fill as a color when present. */
 export const isValidFillStyleState = (o: StateRecord): boolean =>
-	!("fill" in o) || o.fill === undefined || isCssSafeValue(o.fill);
+	!("fill" in o) || o.fill === undefined || isValidColorValue(o.fill);
 
 /**
  * Validates one styling group beyond its declared types: CSS-injection safety for
@@ -147,13 +170,7 @@ const isValidInlineTextStyle = (style: InlineTextStyle): boolean => {
 	) {
 		return false;
 	}
-	// The sentinel "auto" (theme-following, issue #38) is checked first so the
-	// browser-only isCssColor (CSS.supports) is skipped for it.
-	if (
-		style.fontColor !== undefined &&
-		!isAutoColor(style.fontColor) &&
-		!isCssColor(style.fontColor)
-	) {
+	if (style.fontColor !== undefined && !isValidColorValue(style.fontColor)) {
 		return false;
 	}
 	// fontSize has minimum: 1 in the schema (isTextSlot only checks up to number)

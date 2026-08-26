@@ -12,6 +12,7 @@ import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRe
 import { createPolyStateValidator } from "../utils/createPolyStateValidator";
 import {
 	hasOwnedEndpoint,
+	isValidColorValue,
 	isValidEndpointRefState,
 	type StateRecord,
 } from "../utils/validateStateUtils";
@@ -21,11 +22,15 @@ import {
  * allowed and treated as no label. `text` is a required string; position and
  * style fields are type-checked only when present.
  *
- * The constraints mirror the Doc-side `validateConnectorLabelFields` exactly: this
- * is the clipboard boundary, so anything it accepts must also survive re-parse. A
+ * The constraints are those of the Doc-side `validateConnectorLabelFields` or tighter:
+ * this is the clipboard boundary, so anything it accepts must also survive re-parse. A
  * looser check here (plain `isString` on colors, unbounded `position`) would let a
  * pasted label carry `stroke: "red;}…"` (CSS injection) or `position: 5` through
  * `commit`, producing a `.jis.json` that fails the Doc validator on the next open.
+ *
+ * Colors are the one place this is tighter rather than equal: `isValidColorValue` also
+ * asks whether the value is a color, which the Doc side cannot (it runs in Node too).
+ * Tighter is safe here — it can only refuse a paste, never produce a doc that fails.
  */
 export const isValidConnectorLabelState = (label: unknown): boolean => {
 	if (label === undefined) {
@@ -41,14 +46,15 @@ export const isValidConnectorLabelState = (label: unknown): boolean => {
 		(l.position === undefined ||
 			(isNumber(l.position) && l.position >= 0 && l.position <= 1)) &&
 		(l.offset === undefined || isNumber(l.offset)) &&
-		// Style strings must be CSS-injection-safe, not merely strings.
-		(l.fontColor === undefined || isCssSafeValue(l.fontColor)) &&
+		// Colors must be colors; the other style strings only have to be
+		// CSS-injection-safe (see isValidColorValue).
+		(l.fontColor === undefined || isValidColorValue(l.fontColor)) &&
 		(l.fontFamily === undefined || isCssSafeValue(l.fontFamily)) &&
 		// fontSize has minimum: 1 in the schema.
 		(l.fontSize === undefined || (isNumber(l.fontSize) && l.fontSize >= 1)) &&
 		(l.fontWeight === undefined || isCssSafeValue(l.fontWeight)) &&
-		(l.fill === undefined || isCssSafeValue(l.fill)) &&
-		(l.stroke === undefined || isCssSafeValue(l.stroke)) &&
+		(l.fill === undefined || isValidColorValue(l.fill)) &&
+		(l.stroke === undefined || isValidColorValue(l.stroke)) &&
 		// strokeWidth has minimum: 0 in the schema.
 		(l.strokeWidth === undefined ||
 			(isNumber(l.strokeWidth) && l.strokeWidth >= 0)) &&

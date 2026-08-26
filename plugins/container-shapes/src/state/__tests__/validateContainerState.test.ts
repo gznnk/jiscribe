@@ -7,10 +7,18 @@ import { CONTAINER_DOC_DEFAULTS } from "../../schema/ContainerDoc";
 const { toState: containerToState } = containerDefinition.mapper;
 const isValidContainerState = containerDefinition.stateValidator;
 
-const baseState = containerToState({
-	...CONTAINER_DOC_DEFAULTS,
-	id: "container-1",
-} as ContainerDoc);
+// Colours are overridden with the "auto" sentinel: a real colour reaches
+// isCssColor (CSS.supports), which the node test environment has no CSS for.
+// That the shipped defaults are valid colours is covered by the canvas e2e.
+const baseState = {
+	...containerToState({
+		...CONTAINER_DOC_DEFAULTS,
+		id: "container-1",
+	} as ContainerDoc),
+	stroke: "auto",
+	fill: "auto",
+	headerFill: "auto",
+};
 
 describe("isValidContainerState - headerHeight", () => {
 	it("accepts a state without headerHeight", () => {

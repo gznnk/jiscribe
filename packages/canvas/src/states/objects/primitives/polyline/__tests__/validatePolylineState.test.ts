@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { isValidPolylineState } from "../validatePolylineState";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the paste e2e.
 const pts = (n: number) =>
 	Array.from({ length: n }, (_v, i) => ({ x: i, y: i }));
 
@@ -9,7 +12,7 @@ const validPolyline = {
 	id: "p1",
 	type: "polyline",
 	points: pts(2),
-	stroke: "#000",
+	stroke: "auto",
 	strokeWidth: 1,
 	startArrow: "None",
 };

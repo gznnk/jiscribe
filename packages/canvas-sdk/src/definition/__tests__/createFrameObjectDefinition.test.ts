@@ -7,6 +7,9 @@ import { describe, it, expect } from "vitest";
 import { createFrameObjectDoc } from "../../schema/createFrameObjectDoc";
 import { createFrameObjectDefinition } from "../createFrameObjectDefinition";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the canvas paste e2e.
 const DemoFeatures = {
 	type: "sdkDemo",
 	geometry: "rect",
@@ -23,8 +26,8 @@ const DEMO_DOC_DEFAULTS = {
 	width: 120,
 	height: 80,
 	variant: "plain",
-	fill: "transparent",
-	stroke: "#000000",
+	fill: "auto",
+	stroke: "auto",
 	strokeWidth: 2,
 	text: "",
 	textAlign: "center",

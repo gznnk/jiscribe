@@ -7,10 +7,17 @@ import { CALLOUT_DOC_DEFAULTS } from "../../../schema/callout/CalloutDoc";
 const { toState: calloutToState } = calloutDefinition.mapper;
 const isValidCalloutState = calloutDefinition.stateValidator;
 
-const baseState = calloutToState({
-	...CALLOUT_DOC_DEFAULTS,
-	id: "callout-1",
-} as CalloutDoc);
+// Colours are overridden with the "auto" sentinel: the shipped defaults carry real
+// colours, which reach isCssColor (CSS.supports) — the node test environment has no
+// CSS. That the defaults are valid colours is covered by the canvas paste e2e.
+const baseState = {
+	...calloutToState({
+		...CALLOUT_DOC_DEFAULTS,
+		id: "callout-1",
+	} as CalloutDoc),
+	stroke: "auto",
+	fill: "auto",
+};
 
 describe("isValidCalloutState - tail", () => {
 	it("accepts a state without tail", () => {
