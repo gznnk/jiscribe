@@ -26,7 +26,7 @@ For the core design principles (Type Composition, Branded Types, ObjectFeatures)
 
 ## Registry initialization
 
-The registries under `registry/` (`ObjectMapperRegistry` / `ObjectStateValidatorRegistry`) are registered **all at once** by `registerObject()` in `controllers/registries/initializeObjectRegistry.ts`, together with the other registries such as rendering / gestures / menu. The doc-validator registry on the `@jiscribe/doc` side is not part of that bundle: it is needed only at parse time, so `createCanvasParser` builds one per parser instance.
+The registries under `registry/` (`ObjectMapperRegistry` / `ObjectStateValidatorRegistry`) are registered **all at once** by `initializeObjectRegistry()` in `controllers/registries/initializeObjectRegistry.ts`, which walks every type's definition through `applyObjectDefinition()` and fills the other registries — rendering / gestures / menu — in the same pass. The doc-validator registry on the `@jiscribe/doc` side is not part of that bundle: it is needed only at parse time, so `createCanvasParser` builds one per parser instance.
 
 ## Usage Example
 

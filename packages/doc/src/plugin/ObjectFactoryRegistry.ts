@@ -3,10 +3,11 @@ import type { ObjectType } from "../model/objects/types/ObjectType";
 
 /**
  * Registry that manages the `ObjectFactory` for each object type.
- * Registration happens via `registerObject()` in `initializeObjectRegistry()`.
+ * Registration happens via `applyObjectDefinition()` in `initializeObjectRegistry()`.
  *
- * To add a new object type, just create an `ObjectFactory` in that type's folder
- * and register it with `registerObject(..., { objectFactory })`. Callers such as
+ * To add a new object type, create an `ObjectFactory` in that type's folder and
+ * declare it as the `factory` of that type's definition (`builtinObjectDocDefinitions`
+ * for a built-in, the shape definition for a plugin). Callers such as
  * `createObjectDoc` support the new type without any edits.
  */
 export class ObjectFactoryRegistry {
