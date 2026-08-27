@@ -2,6 +2,7 @@ import { calcPolyBoundingBox, type Point } from "@jiscribe/geometry";
 
 import { DocOperationError } from "./errors";
 import { batchItemError } from "./utils/batchErrors";
+import { quoteNames } from "./utils/errorText";
 import { applyExtraProps, declaresExtraKey } from "./utils/extraFields";
 import { generateUniqueId } from "./utils/ids";
 import type { ObjectRecord } from "./utils/objectAccess";
@@ -9,7 +10,9 @@ import type { DocDefinitions } from "./utils/objectGeometry";
 import { requirePolyPoints } from "./utils/polyFields";
 import {
 	ALL_STYLE_KEYS,
+	applicableStyleKeys,
 	applyStyle,
+	requestedStyleKeys,
 	type StyleParams,
 } from "./utils/styleFields";
 import { applyRotation, requireRotationDegrees } from "./utils/transformFields";
@@ -22,8 +25,8 @@ import { supportsAutoHeight } from "../plugin/supportsAutoHeight";
 /**
  * Where and how big the new object is, plus any styling to give it on the spot and any
  * property belonging to the type itself. The styling is the same set
- * {@link import("./style").setStyle} takes, and a property the type has no place for is
- * ignored the same way.
+ * {@link import("./style").setStyle} takes, but a property the type has no place for is
+ * refused here rather than reported as ignored.
  */
 export type AddObjectParams = StyleParams & {
 	/** Left edge in px; the bounding box is top-left based, not center based. */
@@ -54,7 +57,7 @@ export type AddObjectParams = StyleParams & {
 	points?: readonly Point[];
 	/**
 	 * Clockwise rotation in degrees about the shape's own centre, normalized to [0, 360).
-	 * Ignored by a type that has no rotation of its own, the way styling it cannot hold is.
+	 * Ignored by a type that has no rotation of its own.
 	 */
 	rotation?: number;
 	/**
@@ -167,6 +170,32 @@ const requireLayoutSupport = (
 };
 
 /**
+ * Refuse styling the type's features do not admit, writing nothing. `setStyle` reports the
+ * same misses instead of refusing: it spreads one style over many ids of mixed types,
+ * where this call names the single type it is creating.
+ */
+const requireApplicableStyle = (
+	type: string,
+	params: AddObjectParams,
+	definition: ObjectDocDefinition,
+): void => {
+	const applicable = applicableStyleKeys(definition);
+	const inapplicable = requestedStyleKeys(params).filter(
+		(key) => !applicable.includes(key),
+	);
+	if (inapplicable.length === 0) {
+		return;
+	}
+	throw new DocOperationError(
+		`object type "${type}" cannot be styled with ${quoteNames(inapplicable)}: ${
+			applicable.length === 0
+				? "this type takes no styling at all"
+				: `the styling it takes is ${quoteNames(applicable)}`
+		}`,
+	);
+};
+
+/**
  * Build the object `addObject` would push, id included, without touching `doc`.
  *
  * @param reservedIds - Ids already handed out to objects staged but not yet pushed
@@ -205,6 +234,7 @@ const buildObject = (
 
 	requireStorableSize(type, params, definition);
 	requireLayoutSupport(type, params, definition);
+	requireApplicableStyle(type, params, definition);
 
 	const textOverride = {
 		...(params.text !== undefined ? { text: params.text } : {}),
@@ -327,7 +357,7 @@ const buildObject = (
  * @param params - Top-left position and optional size/text/styling/rotation, plus
  *   `extraProps` for the type's own properties; omitted width/height fall back to `calcDimensions`'
  *   default size, which is written into the document unless `autoHeight` asks for a height
- *   that follows the text, and styling the type cannot hold is ignored. `points` supersedes
+ *   that follows the text, and styling the type cannot hold is refused. `points` supersedes
  *   the position and size outright
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
@@ -337,9 +367,10 @@ const buildObject = (
  *   when `points` are given to a type not built from vertices or are too few, for a
  *   rotation that is not finite, for a `textLayout` on a type that declares none, for
  *   `autoHeight` on a type whose height cannot follow its text or alongside a `height`,
- *   when `extraProps` carries a name this call already takes as a
- *   parameter or one the type does not declare, or when the finished object fails the
- *   type's own `validateDoc`
+ *   for a styling property the type's features do not admit (a `rx` on an ellipse, a
+ *   `fontSize` on a type holding no text) or one whose value is malformed, when
+ *   `extraProps` carries a name this call already takes as a parameter or one the type
+ *   does not declare, or when the finished object fails the type's own `validateDoc`
  */
 export const addObject = (
 	doc: CanvasDoc,

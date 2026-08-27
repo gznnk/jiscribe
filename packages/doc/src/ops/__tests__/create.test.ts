@@ -296,6 +296,36 @@ describe("addObject with styling", () => {
 		});
 		expectValid(doc);
 	});
+
+	it("rounds the corners of a type that has the radius feature", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0, rx: 8 });
+
+		expect(readObject(doc, "rect-1")).toMatchObject({ rx: 8 });
+		expectValid(doc);
+	});
+
+	// rx is a real style key, so it passes every schema; only the type's features say
+	// an ellipse has no corners to round.
+	it("refuses a corner radius on a type with no radius feature", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "ellipse", { x: 0, y: 0, rx: 8 }),
+		).toThrow(/object type "ellipse" cannot be styled with "rx"/);
+		expect(doc.root).toHaveLength(0);
+	});
+
+	it("refuses typography on a type that holds no text", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObject(doc, "polygon", { x: 0, y: 0, fontSize: 20 }),
+		).toThrow(
+			'object type "polygon" cannot be styled with "fontSize": the styling it takes is "fill", "stroke", "strokeWidth", "strokeDashType"',
+		);
+		expect(doc.root).toHaveLength(0);
+	});
 });
 
 describe("addObject with arrowheads", () => {
@@ -315,15 +345,17 @@ describe("addObject with arrowheads", () => {
 		expectValid(doc);
 	});
 
-	it("ignores arrowheads on a type that has no arrow feature", () => {
+	it("refuses arrowheads on a type that has no arrow feature", () => {
 		const doc = emptyDoc();
-		const id = docOps.addObject(doc, "rect", {
-			x: 0,
-			y: 0,
-			endArrow: "FilledTriangle",
-		});
+		expect(() =>
+			docOps.addObject(doc, "rect", {
+				x: 0,
+				y: 0,
+				endArrow: "FilledTriangle",
+			}),
+		).toThrow(/cannot be styled with "endArrow"/);
 
-		expect(readObject(doc, id)).not.toHaveProperty("endArrow");
+		expect(doc.root).toHaveLength(0);
 	});
 
 	it("refuses an arrowhead written through extraProps, now that it is a style", () => {
@@ -631,6 +663,20 @@ describe("addObjects", () => {
 			'entries[1] (text): object type "text" sizes itself from its content and takes no width/height — the document was left unchanged',
 		);
 		expect(JSON.stringify(doc)).toBe(before);
+	});
+
+	it("adds nothing when a later entry asks for styling its type cannot hold", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObjects(doc, [
+				{ type: "rect", x: 0, y: 0 },
+				{ type: "ellipse", x: 200, y: 0, rx: 5 },
+			]),
+		).toThrow(
+			/entries\[1\] \(ellipse\): object type "ellipse" cannot be styled with "rx"/,
+		);
+		expect(doc.root).toHaveLength(0);
 	});
 
 	it("is a no-op returning no ids for an empty array", () => {

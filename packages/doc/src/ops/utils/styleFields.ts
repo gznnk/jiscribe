@@ -16,6 +16,7 @@ import {
 	STROKE_STYLE_KEYS,
 	type StrokeStyleDoc,
 } from "../../model/objects/base/StrokeStyleDoc";
+import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
 import type { InlineTextStyle } from "../../model/objects/types/RichText";
 import {
 	clearInlineStyleFromRuns,
@@ -72,6 +73,33 @@ export const ALL_STYLE_KEYS = [
 /** The property names `style` actually asks for, in declaration order. */
 export const requestedStyleKeys = (style: StyleParams): string[] =>
 	ALL_STYLE_KEYS.filter((key) => style[key] !== undefined);
+
+/** The non-typographic style keys `features` admits, in declaration order. */
+const shapeStyleKeys = (
+	features: ObjectFeatures | undefined,
+): (keyof StyleParams)[] => [
+	...(features?.fill === true ? FILL_STYLE_KEYS : []),
+	...(features?.stroke === true ? STROKE_STYLE_KEYS : []),
+	...(features?.radius === true ? RADIUS_STYLE_KEYS : []),
+	...(features?.arrow === true ? ARROW_STYLE_KEYS : []),
+];
+
+/**
+ * The style property names an object of this type can be given, in declaration order.
+ * Read off the same `features` {@link applyStyle} writes by, so a caller refusing what
+ * would be dropped cannot drift from what is actually written.
+ *
+ * @param definition - The type's own definition; `undefined` admits nothing. A connector
+ *   is not described by this — {@link applyStyle} styles one as the line it is, from the
+ *   object rather than from its features
+ * @returns The admitted names, empty for a type whose features carry no styling
+ */
+export const applicableStyleKeys = (
+	definition: ObjectDocDefinition | undefined,
+): string[] => [
+	...shapeStyleKeys(definition?.features),
+	...(definition?.features.text !== undefined ? TEXT_SLOT_STYLE_KEYS : []),
+];
 
 /** Copy the requested subset of `keys` onto `target`, returning the keys written. */
 const applyKeys = (
@@ -213,13 +241,9 @@ export const applyStyle = (
 		}
 	} else {
 		const features = definition?.features;
-		const shapeKeys = [
-			...(features?.fill === true ? FILL_STYLE_KEYS : []),
-			...(features?.stroke === true ? STROKE_STYLE_KEYS : []),
-			...(features?.radius === true ? RADIUS_STYLE_KEYS : []),
-			...(features?.arrow === true ? ARROW_STYLE_KEYS : []),
-		];
-		applyKeys(object, style, shapeKeys).forEach((key) => appliedKeys.add(key));
+		applyKeys(object, style, shapeStyleKeys(features)).forEach((key) =>
+			appliedKeys.add(key),
+		);
 
 		if (features?.text === "body") {
 			const written = applyKeys(object, style, TEXT_SLOT_STYLE_KEYS);

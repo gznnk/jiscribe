@@ -1,3 +1,4 @@
+import { quoteNames } from "./errorText";
 import type { ObjectRecord } from "./objectAccess";
 import { TEXT_BODY_KEYS } from "../../model/objects/base/TextStyleDoc";
 import { holdsBodyInsideBox } from "../../plugin/hasInsetTextRegion";
@@ -67,7 +68,7 @@ export const applyExtraProps = (
 	const shadowed = names.filter((key) => reserved.has(key));
 	if (shadowed.length > 0) {
 		throw new DocOperationError(
-			`extraProps on "${subjectName}" must not carry ${quote(shadowed)}: ${
+			`extraProps on "${subjectName}" must not carry ${quoteNames(shadowed)}: ${
 				shadowed.length === 1 ? "that name is" : "those names are"
 			} a parameter of the call itself, so pass ${shadowed.length === 1 ? "it" : "them"} there`,
 		);
@@ -86,14 +87,14 @@ export const applyExtraProps = (
 		);
 		if (inertBodyKeys.length > 0) {
 			throw new DocOperationError(
-				`extraProps on "${subjectName}" must not carry ${quote(inertBodyKeys)}: this type draws its label outside its box, so there is nothing for a body placement to move`,
+				`extraProps on "${subjectName}" must not carry ${quoteNames(inertBodyKeys)}: this type draws its label outside its box, so there is nothing for a body placement to move`,
 			);
 		}
 		throw new DocOperationError(
-			`extraProps on "${subjectName}" must not carry ${quote(unknown)}: ${
+			`extraProps on "${subjectName}" must not carry ${quoteNames(unknown)}: ${
 				allowed.length === 0
 					? "this type has no properties of its own"
-					: `this type's own properties are ${quote(allowed)}`
+					: `this type's own properties are ${quoteNames(allowed)}`
 			}`,
 		);
 	}
@@ -108,6 +109,3 @@ export const applyExtraProps = (
 	}
 	return written;
 };
-
-const quote = (names: readonly string[]): string =>
-	names.map((name) => `"${name}"`).join(", ");

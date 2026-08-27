@@ -180,7 +180,7 @@ const styleSchema = {
 		.enum(ARROW_TYPES)
 		.optional()
 		.describe(
-			"Arrowhead at the start of the line. Only for polyline and connector; every other type ignores it. A connector's arrowheads can also be set as it is drawn, by connect.",
+			"Arrowhead at the start of the line. Only for polyline and connector; no other type takes it. A connector's arrowheads can also be set as it is drawn, by connect.",
 		),
 	endArrow: z
 		.enum(ARROW_TYPES)
@@ -746,7 +746,7 @@ export const createCanvasToolDescriptors = (
 			"Add one object to the canvas; placing several at once is add_objects instead.",
 			"x / y are the top-left corner of the object's bounding box, in px; +x is right and +y is down.",
 			"Omitting width / height uses the shape's own default size, which is written into the document like any other; autoHeight is how a shape is instead left to be as tall as its text.",
-			"Style it here rather than in a second call; anything the type cannot hold is ignored.",
+			"Style it here rather than in a second call, but only with styling the type actually has: a property outside its features (a corner radius on an ellipse, a font size on a shape holding no text) is refused, and the error names the ones it does take.",
 			"Returns the new object id, which you need for connect and every edit.",
 		].join(" "),
 		{ type: objectTypeSchema, ...newObjectSchema },
