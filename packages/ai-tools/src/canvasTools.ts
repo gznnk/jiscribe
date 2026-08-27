@@ -191,7 +191,21 @@ const styleSchema = {
 	rx: z.number().min(0).optional().describe("Corner radius in px; rect only."),
 	fontColor: z.string().optional().describe("Text color, any CSS color."),
 	fontSize: z.number().min(1).optional().describe("Text size in px."),
+	fontFamily: z
+		.string()
+		.optional()
+		.describe(
+			'Font family for the whole body, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace), \'Caveat, "Klee One", cursive\' (handwriting). A family outside those is drawn by whatever the viewer has, and measured by estimate.',
+		),
 	fontWeight: z.enum(["normal", "bold"]).optional().describe("Text weight."),
+	fontStyle: z
+		.enum(["normal", "italic"])
+		.optional()
+		.describe('Slant of the whole body; "normal" stands it upright again.'),
+	textDecoration: z
+		.enum(["none", "underline", "line-through", "underline line-through"])
+		.optional()
+		.describe('Line drawn on the whole body; "none" removes it.'),
 	textAlign: z
 		.enum(["left", "center", "right"])
 		.optional()
