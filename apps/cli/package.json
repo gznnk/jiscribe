@@ -10,6 +10,7 @@
 	"scripts": {
 		"build": "node build.mjs",
 		"lint": "eslint .",
+		"measure:tolerance": "node --experimental-strip-types render-tests/measureTolerance.ts",
 		"test": "vitest run",
 		"test:render": "vitest run --config vitest.render.config.ts",
 		"typecheck": "tsc --noEmit"

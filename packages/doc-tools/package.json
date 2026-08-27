@@ -6,6 +6,7 @@
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"scripts": {
+		"generate:text-widths": "node scripts/buildChromiumTextWidths.mjs",
 		"lint": "eslint .",
 		"test": "vitest run",
 		"test:watch": "vitest --watch",
@@ -33,6 +34,7 @@
 	"devDependencies": {
 		"@types/fontkit": "^2.0.9",
 		"@types/node": "catalog:",
+		"playwright-core": "^1.62.1",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	}

@@ -65,7 +65,8 @@ const LUMINANCE_THRESHOLD = 32;
  * Share of the image allowed to disagree.
  *
  * Measured on the fixture rather than guessed
- * (scratch/2026-08-23-test-gaps/measure-tolerance.mjs). Re-rendering it moves
+ * (`pnpm --filter @jiscribe/cli measure:tolerance`, render-tests/measureTolerance.ts).
+ * Re-rendering it moves
  * 0.000% of the pixels; the smallest regression it exists to catch — a derived
  * height off by 8px, one step of the comfort padding — moves 2.669%, five times
  * this. The headroom is for another Chromium build rasterizing glyphs
