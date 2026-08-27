@@ -37,7 +37,12 @@ export type CanvasToolDescriptor = {
 	name: string;
 	/** The description the model reads to decide when to call this tool */
 	description: string;
-	/** The argument schema as a zod raw shape (the properties, not a z.object) */
+	/**
+	 * The argument schema as a zod raw shape (the properties, not a z.object).
+	 * Every object nested in it is closed with `.strict()`, so a name the tool does
+	 * not have is refused rather than dropped; closing the top level falls to the
+	 * host, which alone knows the arguments it adds of its own
+	 */
 	inputSchema: z.ZodRawShape;
 	/** Turns validated arguments into the operation to run */
 	toOp: (args: CanvasToolArgs) => AiCanvasOp;
@@ -197,10 +202,12 @@ const styleSchema = {
 		.describe("Vertical text alignment inside the shape."),
 };
 
-const pointSchema = z.object({
-	x: z.number().describe("World x in px."),
-	y: z.number().describe("World y in px."),
-});
+const pointSchema = z
+	.object({
+		x: z.number().describe("World x in px."),
+		y: z.number().describe("World y in px."),
+	})
+	.strict();
 
 /**
  * The typography a stretch of characters carries on its own; set_text_style and
@@ -398,12 +405,14 @@ const connectorChangeSchema = {
 		),
 };
 
-const rectSchema = z.object({
-	x: z.number().describe("Top-left x in px."),
-	y: z.number().describe("Top-left y in px."),
-	width: z.number().min(0).describe("Width in px, rightwards from x."),
-	height: z.number().min(0).describe("Height in px, downwards from y."),
-});
+const rectSchema = z
+	.object({
+		x: z.number().describe("Top-left x in px."),
+		y: z.number().describe("Top-left y in px."),
+		width: z.number().min(0).describe("Width in px, rightwards from x."),
+		height: z.number().min(0).describe("Height in px, downwards from y."),
+	})
+	.strict();
 
 /**
  * Declares the whole canvas tool set.
@@ -654,21 +663,25 @@ export const createCanvasToolDescriptors = (
 			: z.enum([firstType, ...restTypes]).describe("Object type to add.");
 
 	const newObjectSchema = {
-		x: z.number().describe("Top-left x in px."),
-		y: z.number().describe("Top-left y in px."),
+		x: z
+			.number()
+			.describe(
+				"Top-left x of the object's bounding box in px. Every type is placed by that box, ellipse included — the cx / cy / rx / ry a document stores for one are derived from it and are not arguments here.",
+			),
+		y: z.number().describe("Top-left y of the bounding box in px; +y is down."),
 		width: z
 			.number()
 			.min(0)
 			.optional()
 			.describe(
-				'Width in px (default: the shape\'s own default). For a text this is refused, its box being its content — unless textLayout is "block", where this is the width the text wraps in.',
+				'Width of the bounding box in px (default: the shape\'s own default); on an ellipse that is the whole width, twice the rx a document stores. For a text this is refused, its box being its content — unless textLayout is "block", where this is the width the text wraps in.',
 			),
 		height: z
 			.number()
 			.min(0)
 			.optional()
 			.describe(
-				"Height in px (default: the shape's own default, which is written into the document all the same — autoHeight is what leaves a height out). Refused for a text, whose height is always measured.",
+				"Height of the bounding box in px (default: the shape's own default, which is written into the document all the same — autoHeight is what leaves a height out); on an ellipse that is the whole height, twice the ry. Refused for a text, whose height is always measured.",
 			),
 		autoHeight: z
 			.boolean()
@@ -751,7 +764,9 @@ export const createCanvasToolDescriptors = (
 		].join(" "),
 		{
 			objects: z
-				.array(z.object({ type: objectTypeSchema, ...newObjectSchema }))
+				.array(
+					z.object({ type: objectTypeSchema, ...newObjectSchema }).strict(),
+				)
 				.min(1)
 				.describe("The objects to add, in creation order."),
 			groupNewObjects: z
@@ -807,7 +822,7 @@ export const createCanvasToolDescriptors = (
 		].join(" "),
 		{
 			entries: z
-				.array(z.object(connectorDrawSchema))
+				.array(z.object(connectorDrawSchema).strict())
 				.min(1)
 				.describe("The connectors to draw, in drawing order."),
 		},
@@ -848,11 +863,13 @@ export const createCanvasToolDescriptors = (
 		{
 			entries: z
 				.array(
-					z.object({
-						id: z.string().describe("id of the object to move."),
-						x: z.number().optional().describe("New top-left x in px."),
-						y: z.number().optional().describe("New top-left y in px."),
-					}),
+					z
+						.object({
+							id: z.string().describe("id of the object to move."),
+							x: z.number().optional().describe("New top-left x in px."),
+							y: z.number().optional().describe("New top-left y in px."),
+						})
+						.strict(),
 				)
 				.min(1)
 				.describe("Where each object goes, one entry per object."),
@@ -992,15 +1009,17 @@ export const createCanvasToolDescriptors = (
 		{
 			entries: z
 				.array(
-					z.object({
-						id: z
-							.string()
-							.describe("id of the polygon or polyline to reshape."),
-						points: z
-							.array(pointSchema)
-							.min(2)
-							.describe("The whole new outline, in drawing order."),
-					}),
+					z
+						.object({
+							id: z
+								.string()
+								.describe("id of the polygon or polyline to reshape."),
+							points: z
+								.array(pointSchema)
+								.min(2)
+								.describe("The whole new outline, in drawing order."),
+						})
+						.strict(),
 				)
 				.min(1)
 				.describe("One outline per shape."),
@@ -1177,20 +1196,22 @@ export const createCanvasToolDescriptors = (
 		{
 			entries: z
 				.array(
-					z.object({
-						id: z.string().describe("id of the object to retext."),
-						text: z
-							.string()
-							.describe(
-								'The new text; "" clears it (and drops a connector label).',
-							),
-						slot: z
-							.string()
-							.optional()
-							.describe(
-								'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one to write. The slot must already exist.',
-							),
-					}),
+					z
+						.object({
+							id: z.string().describe("id of the object to retext."),
+							text: z
+								.string()
+								.describe(
+									'The new text; "" clears it (and drops a connector label).',
+								),
+							slot: z
+								.string()
+								.optional()
+								.describe(
+									'For shapes that keep several named texts (record: "name" / "attributes" / "operations"), which one to write. The slot must already exist.',
+								),
+						})
+						.strict(),
 				)
 				.min(1)
 				.describe("One text per object, written in the order given."),
@@ -1228,13 +1249,15 @@ export const createCanvasToolDescriptors = (
 		{
 			entries: z
 				.array(
-					z.object({
-						id: z
-							.string()
-							.describe("id of the object whose text is decorated."),
-						...textStretchSchema,
-						...inlineTextStyleSchema,
-					}),
+					z
+						.object({
+							id: z
+								.string()
+								.describe("id of the object whose text is decorated."),
+							...textStretchSchema,
+							...inlineTextStyleSchema,
+						})
+						.strict(),
 				)
 				.min(1)
 				.describe("One stretch per entry, decorated in the order given."),
@@ -1271,10 +1294,12 @@ export const createCanvasToolDescriptors = (
 		{
 			entries: z
 				.array(
-					z.object({
-						id: z.string().describe("id of the connector to change."),
-						...connectorChangeSchema,
-					}),
+					z
+						.object({
+							id: z.string().describe("id of the connector to change."),
+							...connectorChangeSchema,
+						})
+						.strict(),
 				)
 				.min(1)
 				.describe("The connectors to change, one entry each."),

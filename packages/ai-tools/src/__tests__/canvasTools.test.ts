@@ -341,3 +341,174 @@ describe("CanvasToolDescriptor.toOp", () => {
 		});
 	});
 });
+
+describe("CanvasToolDescriptor.inputSchema", () => {
+	const parseArgs = (name: string, args: unknown) =>
+		z
+			.object(
+				findDescriptor(createCanvasToolDescriptors(capabilities), name)
+					.inputSchema,
+			)
+			.safeParse(args);
+
+	it("refuses the geometry a document stores when it is written on an add_objects entry", () => {
+		// The tools place every type by its bounding box, so cx / cy / ry used to be
+		// dropped in silence: four ellipses landed at the origin in the default size.
+		// rx is missing from the rejected keys because the style set has one of its
+		// own (a rect's corner radius), which is the worse half of the same trap
+		const result = parseArgs("add_objects", {
+			objects: [{ type: "ellipse", x: 0, y: 0, cx: 39, cy: 126, rx: 5, ry: 5 }],
+		});
+
+		expect(result.success).toBe(false);
+		expect(result.error?.issues[0]).toMatchObject({
+			code: "unrecognized_keys",
+			keys: ["cx", "cy", "ry"],
+			path: ["objects", 0],
+		});
+	});
+
+	// One unknown key per schema closed with .strict(). Losing any of them lets the
+	// argument through in silence again, which is why every one is listed here
+	const unknownKeyCases: readonly {
+		tool: string;
+		args: Record<string, unknown>;
+		path: readonly (string | number)[];
+	}[] = [
+		{
+			tool: "set_points",
+			args: {
+				id: "poly-1",
+				points: [
+					{ x: 0, y: 0, z: 0 },
+					{ x: 10, y: 10 },
+				],
+			},
+			path: ["points", 0],
+		},
+		{
+			tool: "find_objects",
+			args: { within: { x: 0, y: 0, width: 10, height: 10, right: 10 } },
+			path: ["within"],
+		},
+		{
+			tool: "connect_many",
+			args: { entries: [{ sourceId: "a", targetId: "b", arrow: "end" }] },
+			path: ["entries", 0],
+		},
+		{
+			tool: "set_positions",
+			args: { entries: [{ id: "a", x: 10, deltaY: 5 }] },
+			path: ["entries", 0],
+		},
+		{
+			tool: "set_points_many",
+			args: {
+				entries: [
+					{
+						id: "a",
+						points: [
+							{ x: 0, y: 0 },
+							{ x: 10, y: 10 },
+						],
+						closed: true,
+					},
+				],
+			},
+			path: ["entries", 0],
+		},
+		{
+			tool: "set_texts",
+			args: { entries: [{ id: "a", text: "hello", slotName: "name" }] },
+			path: ["entries", 0],
+		},
+		{
+			tool: "set_text_styles",
+			args: { entries: [{ id: "a", match: "hello", bold: true }] },
+			path: ["entries", 0],
+		},
+		{
+			tool: "update_connectors",
+			args: { entries: [{ id: "c", curve: "arc" }] },
+			path: ["entries", 0],
+		},
+	];
+
+	it.each(unknownKeyCases)(
+		"refuses an unknown key on $tool at $path",
+		({ tool, args, path }) => {
+			const result = parseArgs(tool, args);
+
+			expect(result.success).toBe(false);
+			expect(result.error?.issues[0]).toMatchObject({
+				code: "unrecognized_keys",
+				path,
+			});
+		},
+	);
+
+	it("still takes the arguments the closed schemas declare", () => {
+		expect(
+			parseArgs("add_objects", {
+				objects: [
+					{ type: "ellipse", x: 39, y: 126, width: 10, height: 10 },
+					{ type: "rect", x: 0, y: 0, text: "box", fill: "#fff" },
+				],
+				groupNewObjects: true,
+			}).success,
+		).toBe(true);
+		expect(
+			parseArgs("connect_many", {
+				entries: [
+					{ sourceId: "a", targetId: "b", endArrow: "FilledTriangle" },
+					{ sourceId: "b", targetPoint: { x: 10, y: 20 } },
+				],
+			}).success,
+		).toBe(true);
+		expect(
+			parseArgs("set_text_styles", {
+				entries: [
+					{ id: "a", match: "hello", occurrence: 1, fontWeight: "bold" },
+				],
+			}).success,
+		).toBe(true);
+	});
+
+	it("leaves extraProps open, the names being the type's own and checked downstream", () => {
+		const result = parseArgs("add_objects", {
+			objects: [
+				{
+					type: "rect",
+					x: 0,
+					y: 0,
+					extraProps: { headerFill: "#eee", headerHeight: 24 },
+				},
+			],
+		});
+
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual({
+			objects: [
+				{
+					type: "rect",
+					x: 0,
+					y: 0,
+					extraProps: { headerFill: "#eee", headerHeight: 24 },
+				},
+			],
+		});
+	});
+
+	it("marks the closed entries additionalProperties: false, so the model reads the contract first", () => {
+		const jsonSchema = z.toJSONSchema(
+			z.object(
+				findDescriptor(createCanvasToolDescriptors(capabilities), "add_objects")
+					.inputSchema,
+			),
+		);
+
+		expect(jsonSchema).toMatchObject({
+			properties: { objects: { items: { additionalProperties: false } } },
+		});
+	});
+});
