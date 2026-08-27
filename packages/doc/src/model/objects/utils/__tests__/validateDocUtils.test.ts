@@ -211,7 +211,16 @@ describe("validateEndpointRef", () => {
 		});
 
 		it("errors for an edge anchor ratio outside 0..1 or not a finite number", () => {
-			for (const t of [-0.1, 1.1, NaN, Infinity, "0.5", null, undefined]) {
+			for (const t of [
+				-0.1,
+				1.1,
+				NaN,
+				Infinity,
+				-Infinity,
+				"0.5",
+				null,
+				undefined,
+			]) {
 				const ref = {
 					owner: { id: "rect-1" },
 					anchor: { kind: "edge", side: "top", t },
