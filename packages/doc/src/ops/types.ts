@@ -25,6 +25,16 @@ export type ObjectTypeSummary = {
 	 * coming from the content), or "none" for a type measured from its children.
 	 */
 	geometry: string;
+	/**
+	 * What the type is for, in one line, as its definition states it; absent for a type
+	 * whose definition says nothing.
+	 *
+	 * The fields above say what a type *can* do and none of them says what it *means*,
+	 * which is what a caller picking a shape is actually choosing on. Without this a
+	 * pictogram is picked off its name alone — `browserWindow` reads like a frame to lay a
+	 * screen out inside, which it is not.
+	 */
+	summary?: string;
 };
 
 /** The text shape a caller sees; `features.text` names the doc's shape rather than that. */
@@ -61,4 +71,7 @@ export const listTypes = (definitions: DocDefinitions): ObjectTypeSummary[] =>
 		connectable: definition.features.connectable === true,
 		text: textKindOf(definition),
 		geometry: definition.features.geometry,
+		...(definition.summary === undefined
+			? {}
+			: { summary: definition.summary }),
 	}));

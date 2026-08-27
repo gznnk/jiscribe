@@ -93,8 +93,8 @@ export const browserWindowDocDefinition: ObjectDocDefinition =
 		features: BrowserWindowFeatures,
 		textRegion: calcWindowTextRegion,
 		defaults: BROWSER_WINDOW_DOC_DEFAULTS,
-		description: `Browser window shape (a frame with a title bar carrying three window buttons), typically used for web UIs and screens, e.g. to show which screen calls which service. ${RECT_GEOMETRY_NOTE} Text is laid out in the content area below the title bar, so a landscape aspect ratio (e.g. 160x110) suits it.`,
-		summary: "web UI, screen",
+		description: `Browser window shape (a frame with a title bar carrying three window buttons): the symbol that stands for a web UI, e.g. to show which screen calls which service. Its title bar and buttons are fractions of the box, so it reads at around its default size and turns into a giant bar with giant buttons when blown up — it is a node to point at, not a frame to lay a screen out inside. For a screen mockup, draw the regions with rect (or container for a titled one). ${RECT_GEOMETRY_NOTE} Text is laid out in the content area below the title bar, so a landscape aspect ratio (e.g. 160x110) suits it.`,
+		summary: "web UI node (a symbol, not a frame to lay a screen out in)",
 	});
 
 export const terminalWindowDocDefinition: ObjectDocDefinition =

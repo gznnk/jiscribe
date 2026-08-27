@@ -36,21 +36,21 @@ describe("listTypes", () => {
 			docOps.listTypes().map((summary) => [summary.type, summary]),
 		);
 
-		expect(summaries.get("rect")).toEqual({
+		expect(summaries.get("rect")).toMatchObject({
 			type: "rect",
 			creatable: true,
 			connectable: true,
 			text: "single",
 			geometry: "rect",
 		});
-		expect(summaries.get("text")).toEqual({
+		expect(summaries.get("text")).toMatchObject({
 			type: "text",
 			creatable: true,
 			connectable: true,
 			text: "single",
 			geometry: "point",
 		});
-		expect(summaries.get("polygon")).toEqual({
+		expect(summaries.get("polygon")).toMatchObject({
 			type: "polygon",
 			creatable: true,
 			connectable: false,
@@ -69,7 +69,9 @@ describe("listTypes", () => {
 	});
 
 	it("calls a group's geometry none, since it is measured from its children", () => {
-		expect(docOps.listTypes().find(({ type }) => type === "group")).toEqual({
+		expect(
+			docOps.listTypes().find(({ type }) => type === "group"),
+		).toMatchObject({
 			type: "group",
 			creatable: false,
 			connectable: false,
@@ -136,5 +138,31 @@ describe("listTypes", () => {
 				.filter(([, definition]) => definition.features.connectable === true)
 				.map(([type]) => type),
 		);
+	});
+});
+
+describe("listTypes: what a type means", () => {
+	// The structural fields say what a type can do, never what it is for. A caller
+	// picking a shape chooses on the latter, and without it goes by the name alone —
+	// which is how a pictogram ends up used as a frame to lay a screen out inside.
+	it("carries the definition's one-line summary", () => {
+		const summaries = new Map(
+			docOps.listTypes().map((summary) => [summary.type, summary]),
+		);
+
+		expect(summaries.get("rect")?.summary).toBe(
+			"general-purpose node / label box",
+		);
+	});
+
+	it("omits the field for a type whose definition states nothing", () => {
+		// The plugin fixtures state no summary, which is what a definition written
+		// without one looks like: the field is absent rather than empty
+		const withoutSummary = pluginOps
+			.listTypes()
+			.find(({ type }) => type === "star");
+
+		expect(withoutSummary).toBeDefined();
+		expect(Object.hasOwn(withoutSummary ?? {}, "summary")).toBe(false);
 	});
 });
