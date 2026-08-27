@@ -1,20 +1,27 @@
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { createHarnessAssetHandler } from "../harnessAssets";
+import {
+	createHarnessAssetHandler,
+	HARNESS_DIR_CANDIDATES,
+} from "../harnessAssets";
 
-const isHarnessBuilt = existsSync(
-	join(
-		dirname(fileURLToPath(import.meta.url)),
-		"../../../dist/harness/fonts.json",
-	),
+// The same candidates the handler resolves against, so the two cannot disagree about
+// whether the harness is built (a build into src/render/harness used to read as unbuilt).
+const isHarnessBuilt = HARNESS_DIR_CANDIDATES.some((dir) =>
+	existsSync(join(dir, "fonts.json")),
 );
 
 describe.skipIf(!isHarnessBuilt)("createHarnessAssetHandler", () => {
-	const serve = createHarnessAssetHandler();
+	// Built in a hook, not in the describe body: vitest runs the body to collect the
+	// tests even when skipIf skips them, so constructing here throws on an unbuilt
+	// harness before the skip can apply, and the suite fails to collect.
+	let serve: ReturnType<typeof createHarnessAssetHandler>;
+	beforeAll(() => {
+		serve = createHarnessAssetHandler();
+	});
 
 	it("serves the page and its script with the content types a browser needs", () => {
 		expect(serve("/index.html")?.contentType).toBe("text/html; charset=utf-8");

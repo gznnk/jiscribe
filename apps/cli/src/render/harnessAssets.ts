@@ -20,7 +20,7 @@ export const HARNESS_ORIGIN = "https://harness.jiscribe.invalid";
  * TypeScript source under `src/render`, which the tests run from and which has to
  * reach across to `dist`. Whichever holds `fonts.json` is the built one.
  */
-const HARNESS_DIR_CANDIDATES = [
+export const HARNESS_DIR_CANDIDATES = [
 	join(dirname(fileURLToPath(import.meta.url)), "harness"),
 	join(dirname(fileURLToPath(import.meta.url)), "..", "..", "dist", "harness"),
 ];

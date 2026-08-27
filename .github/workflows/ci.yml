@@ -50,10 +50,13 @@ jobs:
       - name: Circular dependency check
         run: pnpm dep:check
 
-      - name: Build (examples + vscode)
+      # cli の build は render harness も作る。作っていないと harnessAssets の
+      # スイートが自分でスキップするので、赤にはならないが検証もされない。
+      - name: Build (examples + vscode + cli)
         run: |
           pnpm build:examples
           pnpm build:vscode
+          pnpm build:cli
 
       - name: Unit tests
         run: pnpm test
