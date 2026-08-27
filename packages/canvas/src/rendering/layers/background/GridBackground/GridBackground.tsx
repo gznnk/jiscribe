@@ -29,6 +29,9 @@ const GridBackgroundComponent = ({
 			pointerEvents="none"
 			// Excluded from PNG/SVG export (like draw.io, the grid is not part of the image)
 			data-canvas-export="exclude"
+			// The only stable handle on this rect: its fill carries the per-instance
+			// pattern id (see GridProps.patternId), so it cannot be selected by value.
+			data-testid="grid-background"
 		/>
 	);
 };

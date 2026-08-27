@@ -2,7 +2,7 @@ import type { Stencil } from "./Stencil";
 
 /**
  * Registry that manages the stencils shown in the StencilLibrary (toolbar).
- * Registration happens via `registerObject()` in `initializeObjectRegistry()`.
+ * Registration happens via `applyObjectDefinition()` in `initializeObjectRegistry()`.
  *
  * It answers only "what exists"; display order (top level and within category
  * flyouts) is owned by the toolbar layout, which resolves presets by id via `get`.

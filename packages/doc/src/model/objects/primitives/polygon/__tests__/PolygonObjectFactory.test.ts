@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { POLYGON_DOC_DEFAULTS } from "../PolygonDoc";
 import { PolygonObjectFactory } from "../PolygonObjectFactory";
 
 type Pt = { x: number; y: number };
@@ -19,6 +20,16 @@ describe("PolygonObjectFactory", () => {
 			// The first vertex is at -90° (straight up) → x is the center, y is center - radius(60)
 			expect(points[0].x).toBe(100);
 			expect(points[0].y).toBe(40);
+		});
+
+		// The definition advertises POLYGON_DOC_DEFAULTS to the schema and AI docs,
+		// so creation has to be the thing they describe.
+		it("carries every field of the registered creation defaults", () => {
+			const doc = PolygonObjectFactory.createDoc({ x: 100, y: 100 });
+
+			expect(doc).toMatchObject(
+				POLYGON_DOC_DEFAULTS as Record<string, unknown>,
+			);
 		});
 
 		it("can replace fill/stroke via overrides", () => {

@@ -41,13 +41,13 @@ It leverages TypeScript's type system to automatically compose object types base
 
 **Note:** Branded Types are used to distinguish Doc types from State types. This prevents direct mutual assignment and forces conversion through explicit mapper functions (`@jiscribe/canvas`, `states/objects/**/XxxMapper.ts`).
 
-| Directory        | Description                                                                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `canvas/`        | Defines the root structure of the entire canvas (`CanvasDoc`).                                                                                          |
-| `objects/`       | Individual object definitions, classified into `base` (common), `primitives` (basic shapes), `connector` (lines/arrows), `annotations`, etc.            |
-| `objects/types/` | Defines the enums and shared types used by objects (`ObjectType`, `GeometryType`, etc.) and the type-composition utility (`CreateObjectType`).          |
-| `objects/utils/` | Runtime helpers that assist in generating and validating Docs (`createObjectDoc`, `autoColor`, `validateDocUtils`, etc.).                               |
-| `types/`         | Vocabulary shared across the whole doc layer: `SemanticDiagnostic`, the diagnostic every `validateXxxDoc` returns and the currency of the parse result. |
+| Directory        | Description                                                                                                                                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas/`        | Defines the root structure of the entire canvas (`CanvasDoc`).                                                                                                                                        |
+| `objects/`       | Individual object definitions, classified into `base` (field groups shared across types), `primitives` (basic shapes), and `connector` (lines/arrows). Shapes beyond these ship as plugins, not here. |
+| `objects/types/` | Defines the enums and shared types used by objects (`ObjectType`, `GeometryType`, etc.) and the type-composition utility (`CreateObjectType`).                                                        |
+| `objects/utils/` | Runtime helpers that assist in generating and validating Docs (`createObjectDoc`, `autoColor`, `validateDocUtils`, etc.).                                                                             |
+| `types/`         | Vocabulary shared across the whole doc layer: `SemanticDiagnostic`, the diagnostic every `validateXxxDoc` returns and the currency of the parse result.                                               |
 
 Turning a text into a `CanvasDoc` is not here but in `../parse/`, which composes a
 registry from these definitions and runs the staged validation. This layer only defines

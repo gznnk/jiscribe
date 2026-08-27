@@ -14,6 +14,12 @@ export type ObjectSvgDefsEntry = {
  * inside the single `<defs>` element (see CanvasDefs), not once per object, so a
  * type declares here whatever its instances reference by `url(#…)`.
  *
+ * At most one contribution per type: registering a type again replaces what it
+ * held, as every other object registry does. Keeping both would emit the same
+ * `type` twice in CanvasDefs, where it is the React key — the duplicate costs one
+ * of the two subtrees, and the ids the drawn objects point at may be the ones
+ * that went missing.
+ *
  * Entries render unconditionally — whether or not an object of that type is
  * currently on the canvas — so a reference never resolves against a node torn
  * down by the last instance being deleted. Restricting `objectTypes` still drops
@@ -23,19 +29,23 @@ export type ObjectSvgDefsEntry = {
  * contributions must prefix theirs with their own type (`sticky-blur`).
  */
 export class ObjectSvgDefsRegistry {
-	private readonly entries: ObjectSvgDefsEntry[] = [];
+	private readonly entries = new Map<ObjectType, FC>();
 
 	register(type: ObjectType, Component: FC): void {
-		this.entries.push({ type, Component });
+		this.entries.set(type, Component);
 	}
 
-	/** All contributions in registration order (built-ins first, then plugins in declared order). */
+	/**
+	 * All contributions in registration order (built-ins first, then plugins in
+	 * declared order). A type that is registered again keeps the place it first
+	 * took, so what a canvas draws does not depend on how often a type was applied.
+	 */
 	all(): readonly ObjectSvgDefsEntry[] {
-		return [...this.entries];
+		return [...this.entries].map(([type, Component]) => ({ type, Component }));
 	}
 
 	clear(): void {
-		this.entries.length = 0;
+		this.entries.clear();
 	}
 }
 

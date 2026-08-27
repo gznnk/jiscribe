@@ -41,6 +41,10 @@ test.describe("icon picker", () => {
 		const cells = canvas.page.locator(
 			`[data-testid="icon-picker-grid"] [data-part^="set:icon:"]`,
 		);
+		// count() does not auto-wait, so it has to follow a wait for the panel: taken
+		// straight after the toggle click it reads 0 cells and the comparison below is
+		// against an empty grid.
+		await expect(canvas.page.locator(GRID)).toBeVisible();
 		const commonCount = await cells.count();
 		expect(commonCount).toBeGreaterThan(20);
 
