@@ -1,10 +1,11 @@
 import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { resolveTextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { roundToDecimal } from "@jiscribe/geometry";
 
-import { calcTextObjectFrameSize } from "./calcTextObjectFrameSize";
+import { resolveTextObjectFont } from "./resolveTextObjectFont";
 import {
 	calcTextCenterFromDrawnTopLeft,
 	calcTextDrawnTopLeft,
@@ -36,7 +37,7 @@ export const resizeTextStateToContent = (
 	// so typing into one grows it downward and never sideways.
 	const size = calcTextObjectFrameSize(
 		readRichTextSlot(state.text, BODY_TEXT_SLOT_ID),
-		resolveTextSlotStyle(textStyleDefaults, slot),
+		resolveTextObjectFont(resolveTextSlotStyle(textStyleDefaults, slot)),
 		state.textLayout === "block" ? state.width : undefined,
 	);
 	if (size.width === state.width && size.height === state.height) {

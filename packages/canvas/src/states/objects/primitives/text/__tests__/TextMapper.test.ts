@@ -1,7 +1,8 @@
 import type { TextDoc } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import { describe, expect, it } from "vitest";
 
-import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
+import { resolveTextObjectFont } from "../resolveTextObjectFont";
 import { calcTextDrawnTopLeft } from "../textDrawnTopLeft";
 import { textToDoc, textToState } from "../TextMapper";
 import type { TextState } from "../TextState";
@@ -25,11 +26,14 @@ const doc = (overrides: Record<string, unknown> = {}): TextDoc =>
 describe("textToState", () => {
 	it("measures the box the doc does not store", () => {
 		const state = textToState(doc());
-		const { width, height } = calcTextObjectFrameSize("hello", {
-			fontSize: 16,
-			fontFamily: "Noto Sans JP",
-			fontWeight: "normal",
-		});
+		const { width, height } = calcTextObjectFrameSize(
+			"hello",
+			resolveTextObjectFont({
+				fontSize: 16,
+				fontFamily: "Noto Sans JP",
+				fontWeight: "normal",
+			}),
+		);
 
 		expect(state.width).toBe(width);
 		expect(state.height).toBe(height);
@@ -95,7 +99,11 @@ describe("textToState", () => {
 		expect(state.height).toBe(
 			calcTextObjectFrameSize(
 				"a much longer body that has to wrap inside the stored width",
-				{ fontSize: 16, fontFamily: "Noto Sans JP", fontWeight: "normal" },
+				resolveTextObjectFont({
+					fontSize: 16,
+					fontFamily: "Noto Sans JP",
+					fontWeight: "normal",
+				}),
 				120,
 			).height,
 		);

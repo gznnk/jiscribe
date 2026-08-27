@@ -4,8 +4,9 @@ import {
 	roundDocCoordinate,
 	roundDocSize,
 } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 
-import { calcTextObjectFrameSize } from "./calcTextObjectFrameSize";
+import { resolveTextObjectFont } from "./resolveTextObjectFont";
 import {
 	calcTextCenterFromDrawnTopLeft,
 	calcTextDrawnTopLeft,
@@ -39,7 +40,7 @@ export const textToState: DocToStateMapper<TextDoc, TextState> = (doc) => {
 	// like a label, the diagnostic for it being the parser's to report.
 	const size = calcTextObjectFrameSize(
 		doc.text ?? "",
-		doc,
+		resolveTextObjectFont(doc),
 		doc.textLayout === "block" ? doc.width : undefined,
 	);
 	const transform = mapTransformDocToState(doc);

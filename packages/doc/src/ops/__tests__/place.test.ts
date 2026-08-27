@@ -448,3 +448,64 @@ describe("place: numbers that are not numbers", () => {
 		expect(doc.root).toEqual(before);
 	});
 });
+
+describe("place: a point-geometry shape", () => {
+	// A text stores where it is drawn from and nothing about its size. Until the
+	// bounds could be measured from its content it had no box, and every op that
+	// works off one refused it: it could be created at a position and then never
+	// moved, while the canvas moved it by dragging just fine.
+	it("has a box measured from its content", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", { x: 100, y: 200, text: "hello" });
+
+		const bounds = docOps.getObjectBounds(doc, id);
+
+		expect(bounds).toMatchObject({ x: 100, y: 200 });
+		expect(bounds?.width).toBeGreaterThan(0);
+		expect(bounds?.height).toBeGreaterThan(0);
+	});
+
+	it("moves to a stated position", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", { x: 100, y: 200, text: "hello" });
+
+		docOps.setPosition(doc, id, { x: 300, y: 400 });
+
+		expect(readObject(doc, id)).toMatchObject({ x: 300, y: 400 });
+		expectValid(doc);
+	});
+
+	it("moves by a delta", () => {
+		const doc = emptyDoc();
+		const id = docOps.addObject(doc, "text", { x: 100, y: 200, text: "hello" });
+
+		docOps.translateObjects(doc, [id], 10, 20);
+
+		expect(readObject(doc, id)).toMatchObject({ x: 110, y: 220 });
+	});
+
+	it("lines up with a shape that states its size", () => {
+		const doc = emptyDoc();
+		const textId = docOps.addObject(doc, "text", {
+			x: 100,
+			y: 200,
+			text: "hi",
+		});
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 50 });
+
+		docOps.alignObjects(doc, [textId, "rect-1"], "top");
+
+		expect(readObject(doc, textId)).toMatchObject({ y: 0 });
+	});
+
+	it("contributes its measured box to a combined one", () => {
+		const doc = emptyDoc();
+		const textId = docOps.addObject(doc, "text", { x: 300, y: 0, text: "hi" });
+		docOps.addObject(doc, "rect", { x: 0, y: 0, width: 100, height: 50 });
+
+		const combined = docOps.getCombinedBounds(doc, [textId, "rect-1"]);
+
+		// The text sits to the right of the rect, so the union has to reach past it
+		expect(combined?.width).toBeGreaterThan(300);
+	});
+});

@@ -1,7 +1,8 @@
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text/calcTextObjectFrameSize";
+import { resolveTextObjectFont } from "../../../states/objects/primitives/text/resolveTextObjectFont";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
@@ -117,7 +118,10 @@ describe("graftTextEditDraft", () => {
 	});
 
 	it("re-measures the box of an object whose size is derived from its text", () => {
-		const { width, height } = calcTextObjectFrameSize("a", { fontSize: 16 });
+		const { width, height } = calcTextObjectFrameSize(
+			"a",
+			resolveTextObjectFont({ fontSize: 16 }),
+		);
 		const objects = {
 			t1: {
 				id: "t1",

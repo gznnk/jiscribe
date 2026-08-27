@@ -1,7 +1,8 @@
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text/calcTextObjectFrameSize";
+import { resolveTextObjectFont } from "../../../states/objects/primitives/text/resolveTextObjectFont";
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
@@ -12,7 +13,10 @@ import { reconcileObjectContentSizes } from "../reconcileObjectContentSizes";
 const contentResizer = createTestRegistries().objectContentResizer;
 
 const textObject = (id: string, text: string): ObjectState => {
-	const { width, height } = calcTextObjectFrameSize(text, { fontSize: 16 });
+	const { width, height } = calcTextObjectFrameSize(
+		text,
+		resolveTextObjectFont({ fontSize: 16 }),
+	);
 	return {
 		id,
 		type: "text",
@@ -285,7 +289,10 @@ describe("reconcileObjectContentSizes", () => {
 	});
 
 	it("grows the frame of the group holding a re-measured text", () => {
-		const measured = calcTextObjectFrameSize("hello", { fontSize: 16 });
+		const measured = calcTextObjectFrameSize(
+			"hello",
+			resolveTextObjectFont({ fontSize: 16 }),
+		);
 		const previous = stateOf([]);
 		const state = stateOf([
 			{

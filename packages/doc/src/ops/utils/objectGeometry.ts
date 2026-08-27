@@ -13,6 +13,7 @@ import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
 import type { TextMeasurement } from "../../text/measure/TextMeasurement";
 import { adoptTextMeasurement } from "../../text/measure/textMeasurementSlot";
+import { calcTextObjectFrameSize } from "../../text/object/calcTextObjectFrameSize";
 import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
 import { BODY_TEXT_SLOT_ID } from "../../text/style/textSlotId";
 import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
@@ -247,6 +248,30 @@ export const getObjectBounds = (
 						height: box.bottom - box.top,
 					};
 		}
+		case "point": {
+			// A point shape stores where it is drawn from and nothing about its size, so
+			// the box is measured from the content every time — through the same layout
+			// rule the canvas maps one into a frame with, so both agree on where it ends.
+			// A type this instance does not know has no font to measure with; it falls
+			// through to null the way an unknown geometry does.
+			const definition = definitions.get(object.type);
+			if (definition === undefined) {
+				return null;
+			}
+			const size = calcTextObjectFrameSize(
+				isRichText(object.text) ? object.text : "",
+				resolveBodyFont(object, definition),
+				object.textLayout === "block" && typeof object.width === "number"
+					? object.width
+					: undefined,
+			);
+			return {
+				x: readNumber(object.x),
+				y: readNumber(object.y),
+				width: size.width,
+				height: size.height,
+			};
+		}
 		case "none":
 			return unionBounds(
 				readChildren(object).flatMap((child) => {
@@ -298,6 +323,8 @@ export const translateObject = (
 	definitions: DocDefinitions,
 ): void => {
 	switch (geometryOf(object, definitions)) {
+		// A point shape is placed by the same pair as a rect; only its size differs
+		case "point":
 		case "rect":
 			object.x = readNumber(object.x) + deltaX;
 			object.y = readNumber(object.y) + deltaY;

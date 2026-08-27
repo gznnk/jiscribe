@@ -1,11 +1,12 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import { roundToDecimal } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { createTestState } from "./support/createTestState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text/calcTextObjectFrameSize";
+import { resolveTextObjectFont } from "../../../states/objects/primitives/text/resolveTextObjectFont";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
@@ -44,7 +45,7 @@ const docWithText = (text: string): CanvasDoc =>
 
 /** Box a text of this content is measured to. */
 const measuredBoxOf = (text: string) =>
-	calcTextObjectFrameSize(text, { fontSize: 16 });
+	calcTextObjectFrameSize(text, resolveTextObjectFont({ fontSize: 16 }));
 
 /**
  * The size and stored corner of a text object, the two things a derivation

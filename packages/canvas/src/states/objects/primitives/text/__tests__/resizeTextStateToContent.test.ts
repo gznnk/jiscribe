@@ -1,4 +1,5 @@
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
@@ -6,13 +7,16 @@ import {
 } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
 import { resizeTextStateToContent } from "../resizeTextStateToContent";
+import { resolveTextObjectFont } from "../resolveTextObjectFont";
 import { textToDoc, textToState } from "../TextMapper";
 import type { TextState } from "../TextState";
 
 const stateOf = (text: string, overrides: Record<string, unknown> = {}) => {
-	const { width, height } = calcTextObjectFrameSize(text, { fontSize: 16 });
+	const { width, height } = calcTextObjectFrameSize(
+		text,
+		resolveTextObjectFont({ fontSize: 16 }),
+	);
 	return {
 		id: "t1",
 		type: "text",
@@ -178,7 +182,7 @@ describe("resizeTextStateToContent", () => {
 
 		expect(resized).toEqual({
 			...empty,
-			...calcTextObjectFrameSize("", {}),
+			...calcTextObjectFrameSize("", resolveTextObjectFont({})),
 			cx: ANCHOR.x + resized.width / 2,
 			cy: ANCHOR.y + resized.height / 2,
 		});
