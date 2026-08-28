@@ -86,6 +86,7 @@ export function App() {
 | `@jiscribe/doc-tools`        | 標準セットに対する検証・計測・診断（Node 計測バックエンド込み）                     |
 | `plugins/*`                  | 標準の図形セット — flowchart、UML、container、general、annotation、sticky、markdown |
 | `apps/canvas-examples`       | 統合サンプル（1 サンプル = 1 ファイル）                                             |
+| `apps/mcp`                   | MCP サーバー。stdio でツールを配り、ローカルにキャンバスビューアを立てる            |
 | `apps/vscode-extension`      | Jiscribe の VSCode 拡張                                                             |
 
 `plugins/` ディレクトリは意図的に*外部*として扱っている。これらのパッケージは

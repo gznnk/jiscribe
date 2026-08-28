@@ -16,6 +16,7 @@
 		"build:examples": "pnpm --filter canvas-examples build",
 		"build:cli": "pnpm --filter @jiscribe/cli build",
 		"build:vscode": "pnpm --filter jiscribe build",
+		"build:mcp": "pnpm --filter jiscribe-mcp build",
 		"watch:vscode": "pnpm --filter jiscribe watch",
 		"lint": "pnpm -r --parallel lint",
 		"lint:canvas": "pnpm --filter @jiscribe/canvas lint",

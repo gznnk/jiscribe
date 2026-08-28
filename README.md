@@ -83,11 +83,12 @@ consumers that already name that path.
 | `@jiscribe/basic-validators` | Primitive runtime validators                                                              |
 | `@jiscribe/utility-types`    | Shared TypeScript utility types                                                           |
 | `@jiscribe/doc-schema`       | Generated JSON Schema and AI-facing reference for the shipped shape set                   |
-| `@jiscribe/ai-tools`         | The canvas tool set an AI can call, declared free of any transport                        |
+| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied          |
 | `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)           |
 | `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)         |
 | `plugins/*`                  | The shipped shape sets — flowchart, UML, container, general, annotation, sticky, markdown |
 | `apps/canvas-examples`       | Integration examples (one example = one file)                                             |
+| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                           |
 | `apps/vscode-extension`      | The Jiscribe VSCode extension                                                             |
 
 The `plugins/` directory is deliberately treated as _external_: those packages

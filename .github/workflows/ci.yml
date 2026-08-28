@@ -52,11 +52,12 @@ jobs:
 
       # cli の build は render harness も作る。作っていないと harnessAssets の
       # スイートが自分でスキップするので、赤にはならないが検証もされない。
-      - name: Build (examples + vscode + cli)
+      - name: Build (examples + vscode + cli + mcp)
         run: |
           pnpm build:examples
           pnpm build:vscode
           pnpm build:cli
+          pnpm build:mcp
 
       - name: Unit tests
         run: pnpm test

@@ -24,7 +24,7 @@ packages/
   basic-validators/  primitive runtime validators
   utility-types/     shared TypeScript utility types
   doc-schema/        generated JSON Schema / AI reference for the shipped shapes
-  ai-tools/          the canvas tool set an AI can call, declared free of any transport
+  ai-tools/          the canvas tool set an AI can call: the declaration, and the applying side under ./apply (node) and ./client (browser)
   standard-shapes/   the shipped shape set, bundled once for every host (doc + presentation entries)
   doc-tools/         validate / measure / diagnose over the standard set (Node text measurer included)
 plugins/             flowchart, uml, container, general, annotation, sticky, markdown, lucide-icon — each with its own e2e suite
@@ -32,6 +32,7 @@ apps/
   canvas-examples/   integration examples (one example = one file) + the plugin-coexistence e2e suite
   vscode-extension/  the VSCode extension
   cli/               the jiscribe CLI: validate / diagnose / measure / render (headless browser harness)
+  mcp/               the MCP server: the tool set over stdio, plus a local canvas viewer people can edit in
 ```
 
 Playwright e2e is spread over ten suites, one per package that owns shapes:

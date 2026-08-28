@@ -1,7 +1,7 @@
 # @jiscribe/ai-tools
 
-The canvas tool set an AI model can call, declared once and independently of how
-it is transported.
+The canvas tool set an AI model can call — declared once, independently of how it
+is transported, and applied through the same package.
 
 ## What lives here
 
@@ -13,6 +13,16 @@ it is transported.
   shape, and `toOp`, which turns validated arguments into an operation.
 - `toCanvasCapabilities(docPlugins)` — the shape types the descriptors may name,
   derived from a doc plugin set.
+
+Two subpaths carry the applying side, split by what each half needs to run:
+
+- `@jiscribe/ai-tools/apply` — `applyCanvasOp`, which runs an `AiDocOp` against
+  whatever holds the document (`AiDocBridge`), plus the undo history that lets an
+  operation be taken back while the AI's own edit is still the latest one. No
+  React, no DOM, so a server that owns a file can run it.
+- `@jiscribe/ai-tools/client` — the half that only a mounted canvas can answer:
+  `applyHandleOp` (capture, camera, selection, measurement), the `CanvasHandle`
+  adapter behind it, and `captureCanvasImage`. Browser only.
 
 ## Which canvas API a tool drives
 
@@ -39,8 +49,12 @@ possible.
 ## What does not live here
 
 Everything about reaching a model: wrapping a descriptor in an SDK `tool()`,
-naming an MCP server, shaping a tool result, running the operation, and keeping a
-session. Those belong to the host that owns the transport.
+naming an MCP server, shaping a tool result for the wire, and keeping a session.
+Those belong to the host that owns the transport.
+
+Applying an operation used to be on that list, on the grounds that it belonged to
+the same host. It does not: every host applies it the same way, so the one
+implementation lives here beside the declaration it mirrors.
 
 ## Usage
 

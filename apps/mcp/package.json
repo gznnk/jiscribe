@@ -1,0 +1,55 @@
+{
+	"name": "jiscribe-mcp",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"main": "src/index.ts",
+	"bin": {
+		"jiscribe-mcp": "dist/index.mjs"
+	},
+	"scripts": {
+		"build": "tsc --noEmit && vite build && node build.mjs",
+		"watch": "node build.mjs --watch",
+		"lint": "eslint .",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"dev:viewer": "vite"
+	},
+	"comments": {
+		"dependencies": "@jiscribe/doc-schema と @fontsource/* はコードから import されない。doc-tools が実行時に node の解決規則で読むもので（validateDoc の require.resolve と fontSourcePackages の resolveFontSourceDir）、build.mjs が必要なファイルだけ dist/node_modules へ写す。外すとビルドは通り、validate_canvas が落ち、日本語の計測だけが黙って推定へ落ちる。"
+	},
+	"dependencies": {
+		"@fontsource/caveat": "5.3.0",
+		"@fontsource/klee-one": "5.3.0",
+		"@fontsource/noto-sans-jp": "5.3.0",
+		"@fontsource/noto-serif-jp": "5.3.0",
+		"@fontsource/source-code-pro": "5.3.0",
+		"@fontsource/source-sans-3": "5.3.0",
+		"@fontsource/source-serif-4": "5.3.0",
+		"@jiscribe/ai-tools": "workspace:*",
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
+		"@jiscribe/doc-schema": "workspace:*",
+		"@jiscribe/doc-tools": "workspace:*",
+		"@jiscribe/standard-shapes": "workspace:*",
+		"@modelcontextprotocol/sdk": "^1.30.0",
+		"highlight.js": "^11.11.1",
+		"katex": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"ws": "^8.21.3",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@types/ws": "^8.18.1",
+		"@vitejs/plugin-react-swc": "catalog:",
+		"esbuild": "catalog:",
+		"tsx": "^4.23.11",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	}
+}
