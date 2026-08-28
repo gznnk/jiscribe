@@ -26,24 +26,25 @@ body {
 	height: 100%;
 }
 
-.viewer-status-bar {
+/* Sits in the toolbar's host slot, so its colors come from the canvas theme */
+.viewer-file-label {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	padding: 6px 12px;
-	border-bottom: 1px solid #3a3d40;
-	font-size: 12px;
-	color: #8a8d90;
+	gap: 8px;
+	font-size: 11px;
 }
 
-.viewer-path {
+.viewer-file-name {
+	/* Fixed, so a deep path cannot push the shape tools off the bar */
+	width: 140px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	color: var(--app-foreground-muted, currentColor);
 }
 
 .viewer-disconnected {
-	color: #ffb74d;
+	color: var(--app-error-foreground, currentColor);
 }
 
 .viewer-error {

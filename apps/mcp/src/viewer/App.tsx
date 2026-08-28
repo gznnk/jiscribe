@@ -353,17 +353,13 @@ export function App() {
 
 	return (
 		<div className="viewer-root">
-			<div className="viewer-status-bar">
-				<span className="viewer-path">{openPath ?? "（未指定）"}</span>
-				{!isConnected && (
-					<span className="viewer-disconnected">ホストと切断されました</span>
-				)}
-			</div>
 			{errorMessage !== null && (
 				<div className="viewer-error">{errorMessage}</div>
 			)}
 			<CanvasSurface
 				doc={doc}
+				relPath={openPath}
+				isConnected={isConnected}
 				onCommit={handleCommit}
 				onOpenReference={handleOpenReference}
 				onRegisterCanvas={registerCanvas}
