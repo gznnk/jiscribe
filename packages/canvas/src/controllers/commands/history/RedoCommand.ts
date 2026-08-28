@@ -46,6 +46,9 @@ export const RedoCommand: ExecutableCommand = {
 				future: future.slice(1),
 			},
 			registries,
+			// Redo crosses the same edge undo did, from the other side: the commit
+			// being reapplied is the one that produced the entry being restored.
+			future[0].changedIds,
 		);
 	},
 };

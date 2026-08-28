@@ -161,4 +161,58 @@ test.describe("undo / redo history integrity", () => {
 			})
 			.toBe("matrix(1, 0, 0, 1, 700, 300)");
 	});
+
+	test("scrolls a change back into view when undo would land it off screen", async ({
+		canvas,
+	}) => {
+		// The camera is the user's and history navigation keeps it (#23), so an undo
+		// whose change is outside the visible rect has to bring the change to the
+		// camera — otherwise nothing on screen reacts to the keystroke.
+		const id = await canvas.drawShape(
+			"Rectangle",
+			{ x: 400, y: 200 },
+			{ x: 600, y: 320 },
+		);
+		await canvas.drag({ x: 500, y: 260 }, { x: 560, y: 300 });
+
+		// Pan until the shape is well off the right edge of the visible rect.
+		await canvas.wheel({ x: 400, y: 300 }, { deltaX: 2400 });
+		const panned = await readViewBox(canvas);
+		expect(
+			panned.minX,
+			"the shape must be off screen for the reveal to have anything to do",
+		).toBeGreaterThan(600);
+
+		await canvas.undo();
+
+		await expect
+			.poll(async () => (await readViewBox(canvas)).minX, {
+				message: "undo brings the view back to the change",
+			})
+			.toBeLessThan(500);
+		const revealed = await readViewBox(canvas);
+		// The shape is back at its pre-move position and inside the visible rect.
+		expect(revealed.minX).toBeLessThan(440);
+		expect(revealed.minX + revealed.width).toBeGreaterThan(560);
+		expect(revealed.zoomKept).toBe(panned.zoomKept);
+		expect(await canvas.objectById(id).getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 500, 260)",
+		);
+	});
 });
+
+/**
+ * The visible world rect, read off the SVG. `zoomKept` is the viewBox width,
+ * which stands in for the zoom: a reveal that only panned leaves it as it was.
+ */
+const readViewBox = async (canvas: {
+	getViewBox: () => Promise<string | null>;
+}): Promise<{
+	minX: number;
+	width: number;
+	zoomKept: number;
+}> => {
+	const viewBox = await canvas.getViewBox();
+	const [minX, , width] = (viewBox ?? "").split(/\s+/).map(Number);
+	return { minX, width, zoomKept: width };
+};

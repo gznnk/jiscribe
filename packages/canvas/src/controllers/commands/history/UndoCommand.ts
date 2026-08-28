@@ -37,6 +37,9 @@ export const UndoCommand: ExecutableCommand = {
 				future: [present, ...future],
 			},
 			registries,
+			// The edge being crossed is the commit that produced the entry being
+			// left, so what to reveal is recorded on `present`, not on the target.
+			present.changedIds,
 		);
 	},
 };

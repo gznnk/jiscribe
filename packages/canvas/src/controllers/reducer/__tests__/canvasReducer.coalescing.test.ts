@@ -37,6 +37,19 @@ describe("canvasReducer (integration)", () => {
 			expect(state.history.past).toHaveLength(0);
 		});
 
+		it("a merged entry carries the ids of every nudge in the chain", () => {
+			let state = createState();
+			state = runCommands(state, "move-right", "move-right");
+
+			// Both nudges moved rect-1, and the merged entry stands for the whole
+			// chain, so undoing it has exactly that one object to reveal.
+			expect(state.history.present.changedIds).toEqual(["rect-1"]);
+
+			state = { ...state, selectedIds: ["rect-2"] };
+			state = runCommands(state, "move-right");
+			expect(state.history.present.changedIds).toEqual(["rect-2"]);
+		});
+
 		it("interposing another operation (delete) becomes a coalescing boundary, producing a separate entry", () => {
 			let state = createState();
 			state = runCommands(state, "move-right", "move-right");

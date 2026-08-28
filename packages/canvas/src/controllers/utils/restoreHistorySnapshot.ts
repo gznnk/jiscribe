@@ -1,3 +1,4 @@
+import { calcHistoryRevealCamera } from "./calcHistoryRevealCamera";
 import { resetUiState } from "./resetUiState";
 import { resolveDocSnapshot } from "./resolveDocSnapshot";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
@@ -29,11 +30,19 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  * pairing that is easy to get wrong in three places and impossible to get wrong
  * in one.
  *
+ * The camera stays the user's: it is carried over untouched unless what was
+ * restored is off screen, in which case the smallest move that shows it is made
+ * (`calcHistoryRevealCamera`) — the change is revealed rather than a recorded
+ * viewpoint restored, so the camera never has to live in the history.
+ *
  * @param state - The state being navigated away from
  * @param history - The stacks to end up with; its `present` is the entry
  *   restored, and the caller is what decides where the other entries went
  * @param registries - The canvas's registries; the mapper materializes the
  *   snapshot and the content resizer re-measures what is sized from its content
+ * @param changedIds - What the crossed history edge touched, which the caller
+ *   reads off the entries it moved (`DocSnapshot.changedIds`) since only it knows
+ *   which way it went; the reveal targets exactly these objects
  * @returns The restored state. The entries that merely moved between stacks stay
  *   unresolved snapshots, so only the one being restored costs a rebuild
  */
@@ -41,6 +50,7 @@ export const restoreHistorySnapshot = (
 	state: CanvasControllerState,
 	history: HistoryState,
 	registries: ICanvasRegistries,
+	changedIds: readonly string[],
 ): CanvasControllerState => {
 	const mapper = registries.objectMapper;
 	const restoredState = canvasToState(
@@ -49,10 +59,20 @@ export const restoreHistorySnapshot = (
 		registries.objectContentResizer,
 	);
 
+	const revealCamera = calcHistoryRevealCamera({
+		changedIds,
+		before: state.objects,
+		after: restoredState.objects,
+		viewport: state.viewport,
+		visualBounds: registries.objectVisualBounds,
+	});
+
 	return {
 		...restoredState,
 		...resetUiState(),
-		viewport: state.viewport, // Preserve viewport
+		// The user's camera, moved only far enough to put an off-screen change on
+		// screen (null = it was visible already, so nothing moves).
+		viewport: { ...state.viewport, ...revealCamera },
 		// Only the host's half of the wall is carried over; the rest of the entry is
 		// the measurement cache, and limitViewScroll notices the swapped objects and
 		// `view` and re-measures on the next view scroll.

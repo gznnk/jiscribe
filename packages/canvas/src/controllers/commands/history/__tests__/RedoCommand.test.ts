@@ -11,8 +11,8 @@ import { RedoCommand } from "../RedoCommand";
 
 const registries = createTestRegistries();
 
-const rect = (id: string) =>
-	({ id, type: "rect", x: 0, y: 0, width: 100, height: 100 }) as never;
+const rect = (id: string, x = 0, y = 0) =>
+	({ id, type: "rect", x, y, width: 100, height: 100 }) as never;
 
 const docPrev = { version: 1, root: [rect("r1")] } as unknown as CanvasDoc;
 const docNext = {
@@ -38,6 +38,7 @@ const makeState = (params: {
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		eventStartSnapshot: params.eventStartSnapshot ?? null,
 		textEditState: params.textEditState ?? null,
+		objects: {},
 		internalClipboard: null,
 		commitVersion: 5,
 		saveVersion: 0,
@@ -74,6 +75,28 @@ describe("RedoCommand", () => {
 		expect(next.selectedIds).toEqual([]);
 		expect(next.saveVersion).toBe(1);
 		expect(next.commitVersion).toBe(5);
+	});
+
+	it("reveals a reapplied change that would land off screen", () => {
+		// Redo crosses the same edge from the other side, so the ids come off the
+		// entry being restored rather than the one being left.
+		const offScreenDoc = {
+			version: 1,
+			root: [rect("r1"), rect("r2", 5000, 5000)],
+		} as unknown as CanvasDoc;
+		const state = makeState({
+			past: [],
+			present: snapshotPrev,
+			future: [
+				{ ...createDocSnapshotFromDoc(offScreenDoc), changedIds: ["r2"] },
+			],
+		});
+
+		const { viewport } = RedoCommand.execute(state, registries);
+
+		expect(viewport.zoom).toBe(1);
+		expect(viewport.minX).toBeGreaterThan(4000);
+		expect(viewport.minY).toBeGreaterThan(4000);
 	});
 
 	it("returns the state unchanged when future is empty", () => {
