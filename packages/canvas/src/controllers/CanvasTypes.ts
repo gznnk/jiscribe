@@ -124,7 +124,9 @@ export type DocSnapshotSource = Pick<
  *
  * Invariant: neither ObjectState contents nor a resolved Doc may ever be
  * mutated in place — mappers share inner arrays (e.g. Poly `points`) by
- * reference between the two representations.
+ * reference between the two representations, and `canvasToDoc` shares the doc
+ * node of an object an edit left alone between every snapshot holding it, so a
+ * node written to would be written to in all of them at once.
  */
 export type DocSnapshot = {
 	/** Resolved Doc (memoized). null until first resolution. */

@@ -1,23 +1,23 @@
 /**
  * Measures what one history entry actually costs in memory, for the three ways
- * the history layer can hold its snapshots:
+ * the history layer can end up holding its snapshots:
  *
  * - `lazy`      — the entry stays an unresolved DocSnapshot (references into the
  *                 committed state; unchanged ObjectStates are shared).
  * - `resolved`  — the entry's Doc is materialized, which is what really happens
- *                 today: useNotifySaveRequest resolves `history.present` on every
- *                 commit when the host passes `onCommit`, and resolveDocSnapshot
- *                 then drops `source`.
- * - `memoized`  — same, but `canvasToDoc` reuses the ObjectDoc it already built
- *                 for an unchanged ObjectState (the proposed fix).
+ *                 whenever the host passes `onCommit`: useNotifySaveRequest
+ *                 resolves `history.present` on every commit, and
+ *                 resolveDocSnapshot then drops `source`.
+ * - `unshared`  — the same, with `canvasToDoc`'s node sharing defeated (every
+ *                 conversion gets a mapper that has never seen these objects).
+ *                 This is what `resolved` cost before the sharing, and what it
+ *                 would cost again if the sharing were dropped.
  *
  * Run with:
  *   node --expose-gc --import tsx src/controllers/utils/__benchmarks__/historyMemory.ts
  */
 
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
-import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
-import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import { RECT_DOC_DEFAULTS } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import {
 	createEstimateTextMeasurement,
@@ -25,13 +25,8 @@ import {
 } from "@jiscribe/doc/unstable";
 
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
-import type { CanvasState } from "../../../states/canvas/CanvasState";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import type { ObjectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 import type { DocSnapshot, DocSnapshotSource } from "../../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../../gestures/registry/ObjectBehaviorRegistry";
-import type { CanvasRegistries } from "../../registries/CanvasRegistries";
 import { createCanvasRegistries } from "../../registries/createCanvasRegistries";
 import { materializeObjects } from "../cowObjects";
 import { moveSelection } from "../moveSelection";
@@ -119,80 +114,27 @@ const commitOneMove = (
 	return { ...state, objects: materializeObjects(objects) };
 };
 
-/**
- * `canvasToDoc` with the ObjectDoc it built for an ObjectState remembered, so a
- * later conversion of a state that shares that object reuses the node instead of
- * building an equal one.
- *
- * Groups cannot be keyed on their own state alone: a child moving leaves the
- * parent's GroupState untouched, so the entry is reused only when every child
- * doc came back identical too.
- */
-const createMemoizedCanvasToDoc = (): ((
-	state: DocSnapshotSource,
-	mapper: ObjectMapperRegistry,
-) => CanvasDoc) => {
-	const leafDocs = new WeakMap<ObjectState, ObjectDoc>();
-	const groupDocs = new WeakMap<
-		ObjectState,
-		{ doc: GroupDoc; children: ObjectDoc[] }
-	>();
-
-	return (state, mapper) => {
-		const reconstruct = (id: string): ObjectDoc => {
-			const objState = state.objects[id];
-
-			if (objState.type === "group") {
-				const children = (objState as GroupState).childIds.map(reconstruct);
-				const memoized = groupDocs.get(objState);
-				if (
-					memoized &&
-					memoized.children.length === children.length &&
-					memoized.children.every((child, at) => child === children[at])
-				) {
-					return memoized.doc;
-				}
-				const groupDoc = mapper.toDoc(objState) as GroupDoc;
-				groupDoc.children = children;
-				groupDocs.set(objState, { doc: groupDoc, children });
-				return groupDoc;
-			}
-
-			const memoized = leafDocs.get(objState);
-			if (memoized) {
-				return memoized;
-			}
-			const objDoc = mapper.toDoc(objState);
-			leafDocs.set(objState, objDoc);
-			return objDoc;
-		};
-
-		return {
-			version: 1,
-			...(state.background !== undefined
-				? { background: state.background }
-				: {}),
-			...(state.view !== undefined ? { view: state.view } : {}),
-			root: state.rootIds.map(reconstruct),
-		} as CanvasDoc;
-	};
-};
-
-type Mode = "lazy" | "resolved" | "memoized";
+type Mode = "lazy" | "resolved" | "unshared";
 
 /**
  * Builds `HISTORY_DEPTH` entries the way `recordHistoryIfNeeded` does, one
  * single-object move per commit, and returns everything the canvas would still
  * be holding afterwards.
+ *
+ * The registries are built here rather than handed in so each run starts with an
+ * empty doc-node cache — one shared between runs would bill the first run for
+ * nodes the later ones then get for free.
  */
 const buildHistory = (
-	initial: CanvasState,
+	count: number,
 	mode: Mode,
-	registries: CanvasRegistries,
 ): { past: DocSnapshot[]; present: DocSnapshot; live: DocSnapshotSource } => {
-	const mapper = registries.objectMapper;
-	const memoizedCanvasToDoc =
-		mode === "memoized" ? createMemoizedCanvasToDoc() : null;
+	const registries = createCanvasRegistries();
+	const initial = canvasToState(
+		buildDoc(count),
+		registries.objectMapper,
+		registries.objectContentResizer,
+	);
 
 	let live: DocSnapshotSource = {
 		objects: initial.objects,
@@ -208,30 +150,27 @@ const buildHistory = (
 		live = commitOneMove(live, commit, registries.objectBehavior);
 		present = createDocSnapshotFromState(live);
 
-		// What useNotifySaveRequest does on every commit when the host saves.
-		if (mode === "resolved") {
-			resolveDocSnapshot(present, mapper);
+		if (mode === "lazy") {
+			continue;
 		}
-		if (mode === "memoized" && memoizedCanvasToDoc) {
-			present.doc = memoizedCanvasToDoc(
-				present.source as DocSnapshotSource,
-				mapper,
-			);
-			present.source = null;
-		}
+		// What useNotifySaveRequest does on every commit when the host saves. A
+		// mapper of its own has no cached node to offer, which is how `unshared`
+		// pays the full conversion every time without a second implementation.
+		resolveDocSnapshot(
+			present,
+			mode === "unshared"
+				? createCanvasRegistries().objectMapper
+				: registries.objectMapper,
+		);
 	}
 
-	return { past: past.slice(-HISTORY_DEPTH), present, live };
+	return { past, present, live };
 };
 
-const measure = (
-	initial: CanvasState,
-	mode: Mode,
-	registries: CanvasRegistries,
-): number => {
+const measure = (count: number, mode: Mode): number => {
 	gc();
 	const before = heapUsed();
-	const held = buildHistory(initial, mode, registries);
+	const held = buildHistory(count, mode);
 	gc();
 	const after = heapUsed();
 	// Keep the history reachable across the measurement.
@@ -247,24 +186,17 @@ const formatMb = (bytes: number): string =>
 const formatKb = (bytes: number): string => `${(bytes / 1024).toFixed(1)} KB`;
 
 const main = (): void => {
-	const registries = createCanvasRegistries();
-	const { objectMapper, objectContentResizer } = registries;
-
 	console.log(`history depth ${HISTORY_DEPTH}, one object moved per commit\n`);
-	console.log("objects | mode     | history heap | per entry | doc build");
-	console.log("--------|----------|--------------|-----------|----------");
+	console.log("objects | mode     | history heap | per entry | build");
+	console.log("--------|----------|--------------|-----------|--------");
 
 	for (const count of OBJECT_COUNTS) {
-		const doc = buildDoc(count);
-		const initial = canvasToState(doc, objectMapper, objectContentResizer);
-
-		for (const mode of ["lazy", "resolved", "memoized"] as const) {
-			const bytes = measure(initial, mode, registries);
-
-			// Wall clock of the conversions the mode performs, measured separately
-			// so the heap figure is not inflated by timing instrumentation.
+		for (const mode of ["lazy", "resolved", "unshared"] as const) {
+			// The heap figure comes from its own run so the timing below cannot
+			// inflate it, and the timing from another so it measures a warm process.
+			const bytes = measure(count, mode);
 			const started = performance.now();
-			buildHistory(initial, mode, registries);
+			buildHistory(count, mode);
 			const elapsed = performance.now() - started;
 
 			console.log(
@@ -272,7 +204,7 @@ const main = (): void => {
 					bytes,
 				).padStart(12)} | ${formatKb(bytes / HISTORY_DEPTH).padStart(
 					9,
-				)} | ${`${elapsed.toFixed(0)} ms`.padStart(9)}`,
+				)} | ${`${elapsed.toFixed(0)} ms`.padStart(7)}`,
 			);
 		}
 	}

@@ -14,11 +14,25 @@ type MapperEntry = {
 export class ObjectMapperRegistry {
 	private readonly entries = new Map<ObjectType, MapperEntry>();
 
+	private revision = 0;
+
+	/**
+	 * Counter bumped by every change to the registrations.
+	 *
+	 * What a conversion produced is only reusable while the mappers that produced
+	 * it still stand, and nothing else tells a cache that they were swapped —
+	 * hence a number to compare rather than a subscription (see `canvasToDoc`).
+	 */
+	get registrationRevision(): number {
+		return this.revision;
+	}
+
 	register<TDoc extends ObjectDoc, TState extends ObjectState>(
 		type: ObjectType,
 		mapper: ObjectMapperType<TDoc, TState>,
 		features: ObjectFeatures,
 	): void {
+		this.revision++;
 		this.entries.set(type, {
 			// Stamp the type's declaration descriptor onto every state (as a shared
 			// reference, never a copy) so consumers can read per-type specs from the
@@ -56,6 +70,7 @@ export class ObjectMapperRegistry {
 	}
 
 	clear(): void {
+		this.revision++;
 		this.entries.clear();
 	}
 }
