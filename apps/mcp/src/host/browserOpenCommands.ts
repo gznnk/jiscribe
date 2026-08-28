@@ -1,14 +1,18 @@
-/** spawn に渡す 1 コマンド。先頭が実行ファイル、以降が引数 */
+/** One command to hand to spawn. The head is the executable, the rest its arguments */
 export type BrowserOpenCommand = readonly [string, ...string[]];
 
 /**
- * ビューアの開き方。
- * - `app`: Chromium 系の `--app=` で、タブもアドレスバーも無い窓に開く
- * - `tab`: 既定ブラウザのタブに開く
+ * How the viewer is opened.
+ * - `app`: through a Chromium-family `--app=`, in a window with no tabs and no
+ *   address bar
+ * - `tab`: in a tab of the default browser
  */
 export type BrowserOpenMode = "app" | "tab";
 
-/** WSL から叩ける Windows 側の Chromium。Chrome を先に、無ければ必ずある Edge */
+/**
+ * Windows-side Chromium reachable from WSL. Chrome first, then Edge, which is
+ * always there
+ */
 const WINDOWS_CHROMIUM_PATHS = [
 	"/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
 	"/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -16,7 +20,7 @@ const WINDOWS_CHROMIUM_PATHS = [
 	"/mnt/c/Program Files/Microsoft/Edge/Application/msedge.exe",
 ] as const;
 
-/** Linux（WSL 含む）で試す Chromium の実行ファイル名 */
+/** Chromium executable names tried on Linux (WSL included) */
 const LINUX_CHROMIUM_COMMANDS = [
 	"google-chrome",
 	"google-chrome-stable",
@@ -25,29 +29,32 @@ const LINUX_CHROMIUM_COMMANDS = [
 	"microsoft-edge",
 ] as const;
 
-/** macOS の `open -na <app>`。--args 以降がブラウザ本体へ渡る */
+/** macOS's `open -na <app>`. What follows --args reaches the browser itself */
 const MACOS_CHROMIUM_APPS = ["Google Chrome", "Microsoft Edge"] as const;
 
 /**
- * 既定ブラウザのタブで URL を開くコマンドの候補を、試す順に返す。
+ * The candidate commands for opening a URL in a tab of the default browser, in the
+ * order they are tried.
  *
- * @param url 開く URL。コマンドの最後の引数として渡る
- * @param platform `process.platform` の値。win32 / darwin 以外は Linux 扱い
- * @returns 空にはならない。試す順に並んだコマンドの配列
+ * @param url The URL to open. It goes in as the command's last argument
+ * @param platform The value of `process.platform`. Anything but win32 / darwin is
+ *   treated as Linux
+ * @returns Never empty. The commands in the order they are tried
  */
 const calcTabOpenCommands = (
 	url: string,
 	platform: NodeJS.Platform,
 ): readonly BrowserOpenCommand[] => {
 	if (platform === "win32") {
-		// start は cmd の組み込み。第一引数はウィンドウタイトル扱いなので空を渡す
+		// start is a cmd builtin. Its first argument is taken as a window title, so
+		// an empty one is passed
 		return [["cmd", "/c", "start", "", url]];
 	}
 	if (platform === "darwin") {
 		return [["open", url]];
 	}
-	// WSL には xdg-open が入っていないことが多い。wslu の wslview を挟み、
-	// 最後は Windows 側の PowerShell（WSL なら追加インストール無しで通る）
+	// WSL often has no xdg-open. wslu's wslview goes in between, and last comes the
+	// Windows-side PowerShell (which on WSL works with nothing extra installed)
 	return [
 		["xdg-open", url],
 		["wslview", url],
@@ -56,13 +63,17 @@ const calcTabOpenCommands = (
 };
 
 /**
- * `--app=` で開くコマンドの候補を、試す順に返す。既定ブラウザが何かは問わず、
- * 見つかった Chromium を名指しで起動する（アプリモードは Chromium 系にしか無い）。
+ * The candidate commands for opening with `--app=`, in the order they are tried.
+ * Whatever the default browser is, this names the Chromium it found and launches
+ * that (app mode exists only in the Chromium family).
  *
- * @param url 開く URL
- * @param platform `process.platform` の値。win32 / darwin 以外は Linux 扱い
- * @param browserCommand 名指しする実行ファイル。省略時は既知の Chromium を順に試す
- * @returns 試す順に並んだコマンドの配列。候補が 1 つも無ければ空
+ * @param url The URL to open
+ * @param platform The value of `process.platform`. Anything but win32 / darwin is
+ *   treated as Linux
+ * @param browserCommand The executable to name. When omitted, the known Chromiums
+ *   are tried in order
+ * @returns The commands in the order they are tried. Empty when there is not one
+ *   candidate
  */
 const calcAppOpenCommands = (
 	url: string,
@@ -74,8 +85,9 @@ const calcAppOpenCommands = (
 		return [[browserCommand, appArg]];
 	}
 	if (platform === "win32") {
-		// chrome / msedge は PATH ではなく App Paths に載っているので、
-		// CreateProcess で直に叩けない。ShellExecute を通す start に任せる
+		// chrome / msedge are listed under App Paths rather than on PATH, so
+		// CreateProcess cannot invoke them directly. Leave it to start, which goes
+		// through ShellExecute
 		return [
 			["cmd", "/c", "start", "", "chrome", appArg],
 			["cmd", "/c", "start", "", "msedge", appArg],
@@ -86,8 +98,9 @@ const calcAppOpenCommands = (
 			(app) => ["open", "-na", app, "--args", appArg] as const,
 		);
 	}
-	// WSL からは Windows 側の .exe をパスで直に起動できる。実在しなければ
-	// ENOENT で次の候補へ落ちるので、素の Linux でも候補に混ぜたままでよい
+	// From WSL a Windows-side .exe can be launched directly by path. When one is not
+	// there, ENOENT drops through to the next candidate, so leaving them in the list
+	// on plain Linux is fine
 	return [
 		...LINUX_CHROMIUM_COMMANDS.map((command) => [command, appArg] as const),
 		...WINDOWS_CHROMIUM_PATHS.map((path) => [path, appArg] as const),
@@ -95,14 +108,18 @@ const calcAppOpenCommands = (
 };
 
 /**
- * URL を開くコマンドの候補を、試す順に返す。
- * 先頭から順に spawn し、失敗（実行ファイルが無い・異常終了）なら次へ落ちる想定。
+ * The candidate commands for opening a URL, in the order they are tried.
+ * They are meant to be spawned from the head down, dropping to the next on failure
+ * (no such executable, or an abnormal exit).
  *
- * @param url 開く URL
- * @param platform `process.platform` の値。win32 / darwin 以外は Linux 扱い
- * @param mode `app` なら枠の無い窓を優先し、尽きたらタブへ落ちる。`tab` は既定ブラウザのみ
- * @param browserCommand app モードで名指しする実行ファイル。省略時は既知の Chromium を探す
- * @returns 空にはならない。末尾には必ずタブで開く候補が並ぶ
+ * @param url The URL to open
+ * @param platform The value of `process.platform`. Anything but win32 / darwin is
+ *   treated as Linux
+ * @param mode With `app`, a window with no frame is preferred and, once those run
+ *   out, it drops to a tab. `tab` is the default browser only
+ * @param browserCommand The executable to name in app mode. When omitted, the known
+ *   Chromiums are looked for
+ * @returns Never empty. The tail always holds the candidates that open a tab
  */
 export const calcBrowserOpenCommands = (
 	url: string,
@@ -121,11 +138,12 @@ export const calcBrowserOpenCommands = (
 };
 
 /**
- * 環境変数 `JISCRIBE_MCP_BROWSER` を開き方へ読み替える。
- * 空なら app（既定）、`tab` / `default` でタブ、それ以外は app モードで使う実行ファイル名。
+ * Reads the environment variable `JISCRIBE_MCP_BROWSER` as a way of opening.
+ * Empty means app (the default), `tab` / `default` mean a tab, and anything else is
+ * the name of the executable to use in app mode.
  *
- * @param value 環境変数の値。未設定なら undefined
- * @returns mode と、名指しされた実行ファイル（無ければ undefined）
+ * @param value The environment variable's value, or undefined when it is not set
+ * @returns The mode, and the executable named (undefined when there is none)
  */
 export const calcBrowserOpenPreference = (
 	value: string | undefined,

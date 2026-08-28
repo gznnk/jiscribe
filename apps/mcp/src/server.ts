@@ -37,47 +37,61 @@ import { CanvasHostError } from "./host/canvasHostError";
 import { createPathLock, type PathLock } from "./pathLock";
 
 /**
- * Jiscribe MCP サーバーのツール定義。stdio での起動は `./index` が受け持つ。
+ * The tool definitions of the Jiscribe MCP server. Starting it over stdio is
+ * `./index`'s job.
  *
- * 公開するツールは 3 系統ある。
+ * The tools it exposes come in three groups.
  *
- * 1. このサーバー独自のもの（下に直接書いてある）
- *    - `open_canvas`: ローカルにビューアを立ててブラウザで開く。以後は同じファイルを
- *      AI が書き換え、人が画面で直す共同作業の場になる
- *    - `close_canvas`: その窓を閉じ、サーバーも畳む。人が窓を閉じたときも同じところへ
- *      行き着く（最後の窓が消えたらホストを畳む）
- *    - `validate_canvas` / `diagnose_canvas`: 検証と、はみ出しなど描画上の診断
- *    - `measure_text`: 図を持たずに、文字列が指定サイズの図形に収まるかを測る
- *    - `add_rect` / `add_ellipse`: 使用頻度の高い 2 つに既定サイズを与えた入口
- * 2. `@jiscribe/ai-tools` が宣言する、doc だけで答えられるもの（`registerDocTools`）。
- *    追加・移動・整列・グループ化・スタイル・キャンバス面の色・表示の宣言・読み取り・
- *    undo など。
- *    宣言は「今開いている
- *    doc」を前提に書かれているので、対象を選ぶ `path` を足してファイル操作に読み替える
- * 3. 同じく ai-tools の、マウント済みキャンバスが要るもの（`registerHandleTools`）。
- *    撮影・カメラ・選択・計測。実行は open_canvas で立てたビューアへの往復になる
+ * 1. The ones this server has of its own (written out directly below)
+ *    - `open_canvas`: starts a viewer locally and opens it in a browser. From
+ *      then on the same file is where the AI rewriting it and a person correcting
+ *      it on screen work together
+ *    - `close_canvas`: closes that window and folds the server up too. A person
+ *      closing the window ends up in the same place (the host is folded up once
+ *      the last window is gone)
+ *    - `validate_canvas` / `diagnose_canvas`: validation, and diagnosis of
+ *      drawing problems such as overflow
+ *    - `measure_text`: without holding a diagram, measures whether a string fits
+ *      a shape of a given size
+ *    - `add_rect` / `add_ellipse`: entry points giving default sizes to the two
+ *      most frequently used shapes
+ * 2. The ones `@jiscribe/ai-tools` declares that a document alone can answer
+ *    (`registerDocTools`). Adding, moving, aligning, grouping, style, the colour
+ *    of the canvas surface, declaring the view, reading, undo and so on.
+ *    The declarations are written assuming "the document
+ *    currently open", so a `path` that picks the target is added to read them as
+ *    file operations
+ * 3. The ones from ai-tools that need a mounted canvas (`registerHandleTools`).
+ *    Capture, camera, selection, measurement. Running them becomes a round trip
+ *    to the viewer open_canvas started
  *
- * 1 と 2・3 で名前がぶつかると後勝ちで片方が黙って消えるため、登録は `registerName`
- * を通して起動時に落とす。
+ * A name collision between 1 and 2 or 3 makes the later registration win and one
+ * of them silently disappear, so registration goes through `registerName`, which
+ * throws at startup.
  *
- * 引数スキーマはどれも `.strict()` で閉じる。zod は既定で未知のキーを黙って捨てるので、
- * ellipse を `cx` / `rx` で置こうとした呼び出しが、原点の既定サイズの図形として成功して
- * しまう。`additionalProperties: false` は JSON Schema にも出るため、AI は呼ぶ前に読める。
+ * Every argument schema is closed with `.strict()`. zod drops unknown keys
+ * silently by default, so a call trying to place an ellipse with `cx` / `rx`
+ * would succeed as a default-sized shape at the origin.
+ * `additionalProperties: false` shows up in the JSON Schema too, so the AI can
+ * read it before calling.
  *
- * 扱う図形の集合は `./canvasDefinitions` の 1 箇所（組み込み＋プラグイン）で決まる。
+ * The set of shapes handled is decided in one place, `./canvasDefinitions`
+ * (built-ins plus plugins).
  */
 
-// ツール既定の寸法。addObject は factory 既定（rect 100x100 等）へ落ちるので、
-// これまでのツール挙動を保つため境界で明示する。add_ellipse は中心基準
-// （cx/cy/rx/ry）入力を保ち、addObject の左上基準へ変換する。
+// The tools' default dimensions. addObject falls through to the factory defaults
+// (rect 100x100 and so on), so they are stated explicitly at the boundary to keep
+// the tool behaviour as it has been. add_ellipse keeps its center-based
+// (cx/cy/rx/ry) input and converts it to addObject's top-left basis.
 const DEFAULT_RECT_WIDTH = 160;
 const DEFAULT_RECT_HEIGHT = 80;
 const DEFAULT_ELLIPSE_RX = 80;
 const DEFAULT_ELLIPSE_RY = 50;
 
 /**
- * フォント指定の無い文書が描かれるフォントスタック（キャンバスの sans と同じ）。
- * measure_text は文書を持たないので、ここに書き下すしかない。
+ * The font stack a document with no font specified is drawn in (the same sans as
+ * the canvas). measure_text holds no document, so there is nothing to do but
+ * write it out here.
  */
 const DEFAULT_FONT_FAMILY = '"Source Sans 3", "Noto Sans JP", sans-serif';
 
@@ -86,10 +100,10 @@ const pathArg = z
 	.describe("Absolute path to the target .jis.json file.");
 
 /**
- * ツールを登録済みの MCP サーバーを組み立てる。
+ * Build an MCP server with the tools registered.
  *
- * 呼び出しごとに新しいインスタンスを返す。McpServer は 1 つのトランスポートしか
- * 束ねられないため、接続先が別なら別インスタンスが要る。
+ * Returns a new instance per call. An McpServer can bind only one transport, so a
+ * different connection needs a different instance.
  */
 export function createJiscribeMcpServer(): McpServer {
 	const server = new McpServer({
@@ -97,22 +111,24 @@ export function createJiscribeMcpServer(): McpServer {
 		version: "0.1.0",
 	});
 
-	// ビューアは最初に open_canvas が呼ばれたときだけ立ち上げ、以後は使い回す。
-	// 寿命は窓に合わせ、最後の窓が閉じたら畳んでポートを返す
+	// The viewer is started only when open_canvas is first called, and reused after
+	// that. Its lifetime follows the windows: once the last one closes it is folded
+	// up and the port given back
 	let host: CanvasHost | null = null;
 
 	/**
-	 * ホストを立て、窓が全て閉じたら畳むよう仕込む。
+	 * Start the host, arranging for it to be folded up once every window is closed.
 	 *
-	 * @param workspaceRoot ファイル API の基準ディレクトリ（絶対パス）
-	 * @returns 起動済みのホスト。表示対象は未指定なので、続けて openFile を呼ぶこと
+	 * @param workspaceRoot The base directory of the file API (absolute path)
+	 * @returns The started host. It has nothing to show yet, so call openFile next
 	 */
 	const startHost = async (workspaceRoot: string): Promise<CanvasHost> => {
 		const started: CanvasHost = await startCanvasHost({
 			workspaceRoot,
 			onViewersGone: () => {
 				void (async () => {
-					// 既に別のホストへ入れ替わっていたら、こちらは用済みで畳まれている
+					// If another host has already taken over, this one is done with and
+					// has been folded up
 					if (host !== started) {
 						return;
 					}
@@ -124,12 +140,14 @@ export function createJiscribeMcpServer(): McpServer {
 		return started;
 	};
 
-	// 自前のツールと ai-tools 由来のツールで名前がぶつかっていないかを起動時に見る。
-	// 同名を二度登録すると後勝ちで片方が黙って消えるので、通る前に落とす
-	// 同じファイルへの手を 1 つずつ流す。読み込み → 変更 → 書き戻しの間に割り込まれると、
-	// 後の書き戻しが先の変更ごと捨てるため
+	// Let operations on the same file through one at a time. Being cut in on
+	// between load → modify → write back makes the later write-back discard the
+	// earlier change along with it
 	const withPathLock = createPathLock();
 
+	// Check at startup that the built-in tools and the ai-tools ones do not collide
+	// by name. Registering the same name twice makes the later one win and one of
+	// them silently disappear, so it is thrown before it gets through
 	const registeredNames = new Set<string>();
 	const registerName = (name: string): string => {
 		if (registeredNames.has(name)) {
@@ -163,8 +181,9 @@ export function createJiscribeMcpServer(): McpServer {
 				);
 				const workspaceRoot = resolve(dirname(path));
 
-				// ファイル API はワークスペースの外へ出られないので、別ディレクトリを
-				// 指されたらそのディレクトリで立て直す（ビューアは自力で繋ぎ直す）
+				// The file API cannot get outside the workspace, so being pointed at
+				// another directory restarts the host on that directory (the viewer
+				// reconnects on its own)
 				if (host !== null && host.workspaceRoot !== workspaceRoot) {
 					await host.close();
 					host = null;
@@ -194,8 +213,9 @@ export function createJiscribeMcpServer(): McpServer {
 				}
 				const { closedCount, remainingCount } = await host.closeViewers();
 				if (remainingCount > 0) {
-					// 窓が残るのにサーバーを止めると、その窓は繋ぎ直す先を探し続ける。
-					// 次にこのポートを取ったホストへ合流してしまうので、止めない
+					// Stopping the server while a window remains leaves that window
+					// looking for somewhere to reconnect. It would join whichever host
+					// takes this port next, so it is not stopped
 					return `error: ${remainingCount} viewer window(s) refused to close, so the local server is left running; close the window(s) by hand`;
 				}
 				await host.close();
@@ -313,7 +333,8 @@ export function createJiscribeMcpServer(): McpServer {
 		},
 		async ({ path, ...params }) =>
 			runMutation(withPathLock, path, (doc) => {
-				// ツール既定の 160x80 を境界で補い、addObject の factory 既定へは落とさない。
+				// Fill in the tool's default 160x80 at the boundary, rather than falling
+				// through to addObject's factory defaults.
 				const id = docOps.addObject(doc, "rect", {
 					x: params.x,
 					y: params.y,
@@ -367,7 +388,8 @@ export function createJiscribeMcpServer(): McpServer {
 			}),
 	);
 
-	// undo は「AI が置いたまま」のときだけ戻せるので、履歴は編集対象ごとに持つ
+	// undo can only go back while things are "as the AI left them", so the history
+	// is held per edited file
 	const historyByPath = new Map<string, CanvasOpHistory>();
 	const takeHistory = (filePath: string): CanvasOpHistory => {
 		const existing = historyByPath.get(filePath);
@@ -380,8 +402,9 @@ export function createJiscribeMcpServer(): McpServer {
 	};
 
 	/**
-	 * ファイル 1 つを doc として操作へ渡す。読み取りだけの操作では replaceDoc が
-	 * 呼ばれないので、そのときは書き戻しもしない（無用な更新でビューアを揺らさない）。
+	 * Hand one file to an operation as a document. A read-only operation does not
+	 * call replaceDoc, and then nothing is written back either (so the viewer is
+	 * not shaken by a pointless update).
 	 */
 	const applyDocOpToFile = async (
 		filePath: string,
@@ -416,15 +439,16 @@ export function createJiscribeMcpServer(): McpServer {
 }
 
 /**
- * ai-tools が宣言するツールのうち、doc だけで答えられるものを登録する。
+ * Register the tools ai-tools declares that a document alone can answer.
  *
- * 宣言側は「今開いている doc」を前提に書かれているので、対象を選ぶ `path` を足して
- * ファイルへの操作に読み替える。宣言に `path` を持つツールは無いので、この追加が
- * 既存の引数と衝突することはない。
+ * The declaring side is written assuming "the document currently open", so a
+ * `path` that picks the target is added to read them as operations on a file. No
+ * declared tool has a `path`, so this addition never collides with an existing
+ * argument.
  *
- * @param server 登録先
- * @param registerName 名前の重複を弾く登録口
- * @param applyToFile 1 ファイルへ 1 操作を適用する実体
+ * @param server Where the tools are registered
+ * @param registerName The registration entry that rejects duplicate names
+ * @param applyToFile What actually applies one operation to one file
  */
 function registerDocTools(
 	server: McpServer,
@@ -447,7 +471,8 @@ function registerDocTools(
 				runTool(async () => {
 					const op = descriptor.toOp(args);
 					if (!isAiDocOp(op)) {
-						// drives の宣言と toOp の行き先が食い違ったときだけ起きる
+						// Only happens when the `drives` declaration and where toOp goes
+						// disagree
 						return `internal error: ${descriptor.name} is declared to need only a document but produced a canvas-handle operation`;
 					}
 					const outcome = await applyToFile(path, op);
@@ -458,28 +483,43 @@ function registerDocTools(
 }
 
 /**
- * `measure_text` は自前のもの（図に置く前に、寸法だけで測る）と ai-tools のもの
- * （画面に描かれたスロットを測る）で名前がぶつかる。別物なので、後から入る方を
- * 改名して両方残す。
+ * `measure_text` collides by name between the built-in one (measuring from
+ * dimensions alone, before anything is placed in a diagram) and the ai-tools one
+ * (measuring a slot drawn on screen). They are different things, so the one that
+ * comes in later is renamed and both are kept.
  */
 const HANDLE_TOOL_RENAMES: Readonly<Record<string, string>> = {
 	measure_text: "measure_rendered_text",
 };
 
-/** 改名したツールに、どちらを使えばよいか分かる一文を足す */
+/**
+ * A sentence added to every tool that needs the screen. The declarations are
+ * written assuming "the document currently open" and never mention where the
+ * target lives, so the difference in address — document operations pick a file
+ * with `path`, while these look only at the one canvas on screen — cannot be read
+ * off the tool list
+ */
+const HANDLE_TOOL_SCOPE_NOTE =
+	"This acts on the canvas open in the viewer rather than on a file, which is why it takes no path: call open_canvas first, and note that the editing tools write to the path they are given, not to whatever is on screen.";
+
+/** Adds a sentence to a renamed tool making clear which of the two to use */
 const HANDLE_TOOL_DESCRIPTION_NOTES: Readonly<Record<string, string>> = {
 	measure_text:
-		"This measures a slot as it is actually drawn on the open canvas; to size a shape before putting it in the document, use measure_text instead.",
+		"To size a shape before putting it in the document, use measure_text instead.",
 };
 
 /**
- * ai-tools が宣言するツールのうち、マウント済みキャンバスが要るものを登録する。
+ * Register the tools ai-tools declares that need a mounted canvas.
  *
- * 引数スキーマも説明文も宣言をそのまま使い、実行だけをビューアへの往復に差し替える。
- * 対象は `drives` が canvas ハンドルを名指しするもの（宣言なので引数を組まずに判る）。
+ * The argument schema is the declaration as it stands, and the description gains
+ * a sentence saying the target is the screen. Only running them is swapped for a
+ * round trip to the viewer.
+ * The targets are the ones whose `drives` names a canvas handle (a declaration,
+ * so it is known without building the arguments).
  *
- * @param registerTool 名前の重複を弾く登録口
- * @param getHost 現在のホスト。open_canvas より前に呼ばれると null
+ * @param server The server to register on
+ * @param registerName The registration entry that rejects duplicate names
+ * @param getHost The current host. null when called before open_canvas
  */
 function registerHandleTools(
 	server: McpServer,
@@ -496,8 +536,8 @@ function registerHandleTools(
 			{
 				description:
 					note === undefined
-						? descriptor.description
-						: `${descriptor.description} ${note}`,
+						? `${descriptor.description} ${HANDLE_TOOL_SCOPE_NOTE}`
+						: `${descriptor.description} ${HANDLE_TOOL_SCOPE_NOTE} ${note}`,
 				inputSchema: z.object(descriptor.inputSchema).strict(),
 			},
 			async (args: CanvasToolArgs) => {
@@ -509,7 +549,8 @@ function registerHandleTools(
 				}
 				const op = descriptor.toOp(args);
 				if (isAiDocOp(op)) {
-					// drives の宣言と toOp の行き先が食い違ったときだけ起きる
+					// Only happens when the `drives` declaration and where toOp goes
+					// disagree
 					return textResult(
 						`internal error: ${descriptor.name} is declared to drive the canvas handle but produced a document operation`,
 					);
@@ -533,17 +574,22 @@ function registerHandleTools(
 	}
 }
 
-/** 表示上の桁を 0.1px に丸める。px 未満の差は AI にとって判断材料にならない。 */
+/**
+ * Round a displayed figure to 0.1px. A difference below a px is nothing the AI
+ * can act on.
+ */
 function round(value: number): number {
 	return Math.round(value * 10) / 10;
 }
 
 /**
- * 1 つの文字列を指定型・指定サイズの図形へ流し込んだ結果を測る。CLI の
- * `jiscribe measure` と同じ意味論（width / height は図形自身の外形、判定は
- * content box に対して行い、height 未指定なら高さは判定しない）。文言も CLI と
- * 揃える（engine/apps/cli/src/measureCommand.ts）: 箱の外に描く型は測るだけで
- * 収まり判定を出さず、出荷セットに無い型はエラーとして返す。
+ * Measure the result of pouring one string into a shape of a given type and size.
+ * Same semantics as the CLI's `jiscribe measure` (width / height are the shape's
+ * own outline, the verdict is made against the content box, and with no height
+ * given the height is not judged). The wording is kept in line with the CLI too
+ * (engine/apps/cli/src/measureCommand.ts): a type that draws outside its box is
+ * only measured and gets no fit verdict, and a type outside the shipped set comes
+ * back as an error.
  */
 function measureTextInShape(params: {
 	text: string;
@@ -569,7 +615,8 @@ function measureTextInShape(params: {
 		fontWeight: bold ? "bold" : "normal",
 	};
 
-	// 箱が文字を縛らないので、折り返さずそのまま測る（図形が自動サイズで描く姿）。
+	// The box does not constrain the text, so it is measured as it is without
+	// wrapping (the shape as it is drawn at its automatic size).
 	if (resolution.kind === "outside") {
 		const metrics = measureWrappedText(text, font);
 		return [
@@ -580,15 +627,17 @@ function measureTextInShape(params: {
 		].join("\n");
 	}
 
-	// rect 以外の外形は上下からも削られるため、高さ無しでは誰も指定していない箱を
-	// 測ることになる。rect だけは高さが content 幅に効かないので省略を許す。
+	// Every outline but rect is eaten into from top and bottom as well, so without a
+	// height this would measure a box nobody specified. rect alone allows omitting
+	// it, since its height does not bear on the content width.
 	if (shape !== "rect" && height === undefined) {
 		return `error: height is required for shape ${shape}`;
 	}
 
 	const box = resolution.rect;
 	const metrics = measureWrappedText(text, font, box.width);
-	// 折り返し幅を超えるのは 1 文字が箱より広いときだけ。丸め差 0.5px を許容する。
+	// The wrap width is only exceeded when a single character is wider than the box.
+	// A rounding difference of 0.5px is tolerated.
 	const fits =
 		metrics.width <= box.width + 0.5 &&
 		(height === undefined || metrics.height <= box.height);
@@ -602,24 +651,25 @@ function measureTextInShape(params: {
 	].join("\n");
 }
 
-/** ツールが返せる内容。テキストと、撮影が返す PNG */
+/** What a tool can return: text, and the PNG a capture returns */
 type ToolContent =
 	| { type: "text"; text: string }
 	| { type: "image"; data: string; mimeType: string };
 
-/** ツール 1 回分の応答 */
+/** One tool call's reply */
 type ToolReply = { content: ToolContent[] };
 
-/** MCP ツールの戻り値（テキスト 1 件）を組み立てる。 */
+/** Build an MCP tool's return value (a single piece of text). */
 function textResult(text: string): ToolReply {
 	return { content: [{ type: "text", text }] };
 }
 
 /**
- * ツール本体を実行し、例外を AI へ返せるテキストへ落とす共通処理。
+ * The shared path that runs a tool body and reduces an exception to text that can
+ * be returned to the AI.
  *
- * CanvasFileError・CanvasHostError・DocOperationError は利用者向けメッセージとして
- * そのまま返し、それ以外は内部エラーとして整形する。
+ * CanvasFileError, CanvasHostError and DocOperationError are returned as they are
+ * as user-facing messages; anything else is formatted as an internal error.
  */
 async function runTool(
 	handler: () => Promise<string>,
@@ -640,9 +690,10 @@ async function runTool(
 }
 
 /**
- * 「読み込み → 変更 → 検証付き書き戻し」の共通処理。
+ * The shared path for "load → modify → validated write-back".
  *
- * `mutate` は doc を直接変更し、AI へ返す短い要約を返す。
+ * `mutate` modifies the document directly and returns the short summary handed
+ * back to the AI.
  */
 async function runMutation(
 	withPathLock: PathLock,

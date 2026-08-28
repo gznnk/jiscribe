@@ -1,41 +1,44 @@
-// キャンバスホスト（MCP プロセス）とビューア（ブラウザ）が WebSocket 1 本で
-// 交わすメッセージ定義。
+// The messages the canvas host (the MCP process) and the viewer (the browser)
+// exchange over their single WebSocket.
 //
-// 運ぶものは 2 種類ある。
+// There are two kinds of thing to carry.
 //
-// 1. ファイルの同期。正本はワークスペース上の .jis.json で、AI は MCP ツールで
-//    それを書き換え、人はビューアで直して保存する。ここは片方向の通知で足りる。
-// 2. マウント済みのキャンバスが要る操作（撮影・カメラ・選択・計測）。ファイルには
-//    答えが無いのでビューアに聞きに行くしかなく、requestId を振った往復になる。
+// 1. File synchronisation. The source of truth is the .jis.json in the workspace;
+//    the AI rewrites it through the MCP tools, and a person fixes it in the viewer
+//    and saves. A one-way notification is enough here.
+// 2. Operations that need a mounted canvas (capture, camera, selection,
+//    measurement). The file holds no answer, so there is nothing for it but to ask
+//    the viewer, which makes it a round trip under a requestId.
 
 import type { AiHandleOp } from "@jiscribe/ai-tools";
 
-/** サーバー → ビューア */
+/** Server to viewer */
 export type CanvasHostServerMessage =
-	// 接続直後と、開く対象が変わったときに届く
+	// Arrives right after connecting, and whenever the file to open changes
 	| { type: "openCanvas"; relPath: string; docText: string }
-	// 開いているファイルが外（AI のツール・別のエディタ）から書き換わった
+	// The open file was rewritten from outside (an AI tool, another editor)
 	| { type: "docChanged"; relPath: string; docText: string }
-	// ファイルが読めない・壊れている。ビューアはメッセージを出すだけ
+	// The file cannot be read, or is broken. The viewer only shows the message
 	| { type: "docError"; relPath: string; message: string }
-	// 描かれた結果への問い合わせ。requestId を付けて返してもらう
+	// A query about the drawn result, to be answered with the requestId attached
 	| { type: "handleOpRequest"; requestId: string; op: AiHandleOp }
-	// 窓を閉じてほしい。閉じられたかどうかは接続が切れるかで分かるので、
-	// これに対する返事は無い
+	// A request to close the window. Whether it closed shows in the connection being
+	// cut, so there is no reply to this one
 	| { type: "closeViewer" };
 
-/** ビューア → サーバー */
+/** Viewer to server */
 export type CanvasHostClientMessage =
-	// 人がキャンバスを編集し、ビューアが保存し終えた。サーバーはこの本文を
-	// 「自分が知っている最新」として控え、監視の自己エコーを打ち消す
+	// A person edited the canvas and the viewer finished saving. The server keeps
+	// this text as the latest it knows of, cancelling out the watch's self-echo
 	| { type: "saved"; relPath: string; docText: string }
-	// handleOpRequest への答え。ok=false のとき text はそのまま AI への失敗理由
+	// The answer to a handleOpRequest. With ok=false, text is the failure reason as
+	// it goes to the AI
 	| {
 			type: "handleOpResult";
 			requestId: string;
 			ok: boolean;
 			text: string;
-			/** capture_canvas のときだけ入る PNG（base64、データ URL 接頭辞なし） */
+			/** The PNG (base64, no data-URL prefix), present only for capture_canvas */
 			imagePngBase64?: string;
 	  };
 
@@ -43,10 +46,12 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null;
 
 /**
- * 受信フレームがビューアからのメッセージの形かを検査する。ネットワーク越しの
- * 入力なので、type ごとに必須プロパティの存在と型まで確認する。
+ * Checks whether a received frame has the shape of a message from the viewer. The
+ * input comes over the network, so for each type the required properties are checked
+ * for presence and type.
  *
- * @param value JSON.parse 済みのフレーム。パースに失敗したものは呼び出し側で捨てること
+ * @param value A frame that has already been through JSON.parse; the caller is to
+ *   throw away anything that failed to parse
  */
 export function isCanvasHostClientMessage(
 	value: unknown,

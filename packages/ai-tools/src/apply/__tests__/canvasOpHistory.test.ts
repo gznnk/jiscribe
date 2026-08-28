@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { createCanvasOpHistory } from "../canvasOpHistory";
 
-/** 中身の違いだけが分かればよいので、id 1 個の doc を並べて手を表す */
+/** Telling the contents apart is all that matters, so a step is stood for by a document of ids lined up */
 const docWith = (...ids: string[]): CanvasDoc =>
 	({
 		version: 1,
@@ -11,7 +11,7 @@ const docWith = (...ids: string[]): CanvasDoc =>
 	}) as unknown as CanvasDoc;
 
 describe("createCanvasOpHistory", () => {
-	it("直前の 1 手ぶん、操作前の doc を返す", () => {
+	it("returns the document from before the last step", () => {
 		const history = createCanvasOpHistory();
 		const before = docWith();
 		const after = docWith("rect-1");
@@ -21,11 +21,11 @@ describe("createCanvasOpHistory", () => {
 		expect(history.depth()).toBe(0);
 	});
 
-	it("何も積まれていなければ null を返す", () => {
+	it("returns null when nothing has been pushed", () => {
 		expect(createCanvasOpHistory().pop(docWith())).toBeNull();
 	});
 
-	it("積んだ順の逆に戻していける", () => {
+	it("walks back in the reverse of the order it was pushed", () => {
 		const history = createCanvasOpHistory();
 		const [empty, one, two] = [
 			docWith(),
@@ -40,17 +40,19 @@ describe("createCanvasOpHistory", () => {
 		expect(history.depth()).toBe(0);
 	});
 
-	it("AI が置いたあとにユーザーが編集していたら戻さない", () => {
+	it("refuses to go back when the user edited after the AI left it", () => {
 		const history = createCanvasOpHistory();
 		history.push(docWith(), docWith("rect-1"));
 
-		// ユーザーが図形を足した doc。AI の手だけを戻すと、この追加まで消えてしまう
+		// A document the user added a shape to; going back the AI's step alone would
+		// take this addition with it
 		expect(history.pop(docWith("rect-1", "rect-2"))).toBeNull();
-		// 判断材料として履歴は残す（呼び出し元が「履歴切れ」と区別できるように）
+		// The history stays, as something to judge on (so that the caller can tell
+		// this apart from a history that has run out)
 		expect(history.depth()).toBe(1);
 	});
 
-	it("同じ中身なら実体が違っても戻せる（doc は毎回作り直される）", () => {
+	it("goes back on matching contents even when the object differs (a document is rebuilt every time)", () => {
 		const history = createCanvasOpHistory();
 		const before = docWith();
 		history.push(before, docWith("rect-1"));
@@ -58,7 +60,7 @@ describe("createCanvasOpHistory", () => {
 		expect(history.pop(docWith("rect-1"))).toBe(before);
 	});
 
-	it("上限を超えたら古い手から捨てる", () => {
+	it("drops the oldest steps once it is over the limit", () => {
 		const history = createCanvasOpHistory();
 		const ids: string[] = [];
 		for (let step = 0; step < 25; step += 1) {

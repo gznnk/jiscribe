@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { captureCanvasImage } from "../captureCanvasImage";
 
-/** 撮影結果を模した PNG バイト列（実データである必要はない） */
+/** PNG bytes standing in for a capture (they need not be real data) */
 const fakePngBytes = Uint8Array.from(
 	{ length: 20_000 },
 	(_, index) => index % 256,
 );
 
 describe("captureCanvasImage", () => {
-	it("PNG を base64 にして返す（分割エンコードで壊れない）", async () => {
+	it("returns the PNG as base64 (encoding it in chunks does not break it)", async () => {
 		const result = await captureCanvasImage(
 			async () => new Blob([fakePngBytes]),
 		);
@@ -21,7 +21,7 @@ describe("captureCanvasImage", () => {
 		);
 	});
 
-	it("撮影オプションは等倍・最長辺の上限つき・source 埋め込み無しで渡す", async () => {
+	it("passes capture options of 1:1 scale, a cap on the longest edge, and no embedded source", async () => {
 		let passedOptions: unknown;
 		await captureCanvasImage(async (options) => {
 			passedOptions = options;
@@ -35,14 +35,14 @@ describe("captureCanvasImage", () => {
 		});
 	});
 
-	it("キャンバス未マウント（null）は ok:false で返す", async () => {
+	it("returns ok:false while the canvas is not mounted (null)", async () => {
 		const result = await captureCanvasImage(async () => null);
 
 		expect(result.ok).toBe(false);
 		expect(result.imagePngBase64).toBeUndefined();
 	});
 
-	it("書き出しが投げても ok:false に落とす（ターンを落とさない）", async () => {
+	it("turns an export that throws into ok:false, rather than losing the turn", async () => {
 		const result = await captureCanvasImage(async () => {
 			throw new Error("2D context unavailable");
 		});

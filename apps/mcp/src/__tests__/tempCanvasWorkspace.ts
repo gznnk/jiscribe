@@ -3,25 +3,35 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 /**
- * ツールが読み書きする `.jis.json` の中身。個々のフィールドまで型を付けず、
- * 書かれた/消えたを見るための緩い形にしてある。
+ * The contents of the `.jis.json` the tools read and write. The individual
+ * fields are left untyped: the shape is loose on purpose, for seeing what was
+ * written or removed.
  */
 export type CanvasFileContent = {
 	version: number;
 	root: Record<string, unknown>[];
 };
 
-/** path-based ツールに渡す実ファイルを置く一時ディレクトリ。 */
+/**
+ * The temporary directory holding the real files handed to the path-based
+ * tools.
+ */
 export type TempCanvasWorkspace = {
-	/** `.jis.json` を書き、その絶対パスを返す（ツールは相対パスを拒む）。 */
+	/**
+	 * Writes a `.jis.json` and returns its absolute path (the tools refuse a
+	 * relative one).
+	 */
 	writeDoc: (fileName: string, doc: CanvasFileContent) => Promise<string>;
-	/** 書き戻された `.jis.json` を読み直す。 */
+	/** Re-reads a `.jis.json` that was written back. */
 	readDoc: (path: string) => Promise<CanvasFileContent>;
-	/** ディレクトリごと消す。存在しなくても失敗しない。 */
+	/** Removes the whole directory. Does not fail if it is not there. */
 	remove: () => Promise<void>;
 };
 
-/** 一時ディレクトリを作り、その中で `.jis.json` を出し入れする窓口を返す。 */
+/**
+ * Creates a temporary directory and returns the handle for moving `.jis.json`
+ * files in and out of it.
+ */
 export async function createTempCanvasWorkspace(): Promise<TempCanvasWorkspace> {
 	const dir = await mkdtemp(join(tmpdir(), "jiscribe-mcp-"));
 	return {

@@ -1,11 +1,12 @@
 import type { Diagnostic } from "@jiscribe/doc-tools";
 
 /**
- * doc-tools の診断一覧を AI へ返すテキストへ整形する。
+ * Format a doc-tools diagnostic list into the text returned to the AI.
  *
- * 1 件も無ければ `valid: true` の 1 行。あれば件数に続けて 1 行 1 件で並べ、
- * error が 1 件でもあれば `valid: false` にする（warning だけなら true のまま）。
- * 位置は id・path の順に使い、どちらも無い文書全体の指摘は `-` で埋める。
+ * With none at all, a single `valid: true` line. Otherwise the count followed by
+ * one line per diagnostic, with `valid: false` as soon as one of them is an error
+ * (warnings alone leave it true). The location uses id then path, and a
+ * whole-document finding that has neither is filled in with `-`.
  */
 export function formatDiagnostics(diagnostics: readonly Diagnostic[]): string {
 	const hasError = diagnostics.some(

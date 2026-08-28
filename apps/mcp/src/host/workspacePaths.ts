@@ -1,6 +1,9 @@
 import path from "node:path";
 
-/** ワークスペース外へのアクセス要求を表すエラー。HTTP 層では 400 に写す */
+/**
+ * An error standing for a request to reach outside the workspace. The HTTP layer
+ * maps it to 400
+ */
 export class WorkspacePathError extends Error {
 	constructor(message: string) {
 		super(message);
@@ -8,20 +11,25 @@ export class WorkspacePathError extends Error {
 	}
 }
 
-/** win32 はパスの大文字小文字を区別しないため、境界判定も同じ規則で行う */
+/**
+ * win32 does not distinguish case in paths, so the boundary check follows the same
+ * rule
+ */
 const normalizeForComparison = (value: string): string =>
 	process.platform === "win32" ? value.toLowerCase() : value;
 
 /**
- * ワークスペース相対パスを絶対パスに解決する。ワークスペース外へ出る
- * 入力（絶対パス・`..` による脱出・ドライブ相対パス）は WorkspacePathError で拒否する。
+ * Resolves a workspace-relative path to an absolute one. Input that leads outside
+ * the workspace (an absolute path, an escape through `..`, a drive-relative path) is
+ * rejected with a WorkspacePathError.
  *
- * ブラウザから届くパスをそのまま結合するわけにいかないため、書き込み・配信の
- * どちらもここを通す。
+ * A path arriving from the browser cannot simply be joined on, so both writing and
+ * serving go through here.
  *
- * @param workspaceRoot ワークスペースのルート（絶対パス）
- * @param relPath ワークスペースルートからの相対パス。空文字はルート自身を指す
- * @returns 解決済みの絶対パス。`relPath` が空ならルートそのもの
+ * @param workspaceRoot The workspace root (absolute path)
+ * @param relPath Path relative to the workspace root. An empty string points at the
+ *   root itself
+ * @returns The resolved absolute path, or the root itself when `relPath` is empty
  */
 export function resolveWorkspacePath(
 	workspaceRoot: string,
@@ -38,8 +46,8 @@ export function resolveWorkspacePath(
 	if (comparableTarget === comparableRoot) {
 		return resolvedTarget;
 	}
-	// "/work" と "/work2" のような前方一致の別ディレクトリを弾くため、
-	// 必ずセパレータ境界付きで比較する
+	// Always compare with the separator on the boundary, to reject a different
+	// directory that matches on the prefix, such as "/work" against "/work2"
 	if (!comparableTarget.startsWith(comparableRoot + path.sep)) {
 		throw new WorkspacePathError(`path escapes workspace: ${relPath}`);
 	}

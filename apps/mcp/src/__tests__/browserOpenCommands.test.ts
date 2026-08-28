@@ -8,7 +8,7 @@ import {
 const URL = "http://localhost:5190";
 
 describe("calcBrowserOpenCommands", () => {
-	it("tab モードは既定ブラウザの候補だけを返す", () => {
+	it("returns only the default browser's candidates in tab mode", () => {
 		expect(calcBrowserOpenCommands(URL, "win32", "tab")).toEqual([
 			["cmd", "/c", "start", "", URL],
 		]);
@@ -21,7 +21,7 @@ describe("calcBrowserOpenCommands", () => {
 		]);
 	});
 
-	it("app モードは --app= を先に並べ、最後はタブへ落ちる", () => {
+	it("puts --app= first in app mode and falls back to a tab last", () => {
 		const commands = calcBrowserOpenCommands(URL, "linux", "app");
 		expect(commands[0]).toEqual(["google-chrome", `--app=${URL}`]);
 		expect(commands.some(([command]) => command.endsWith("msedge.exe"))).toBe(
@@ -36,13 +36,13 @@ describe("calcBrowserOpenCommands", () => {
 		]);
 	});
 
-	it("app モードで実行ファイルを名指しすると、その 1 つだけを試してタブへ落ちる", () => {
+	it("tries only the named executable in app mode, then falls back to a tab", () => {
 		const commands = calcBrowserOpenCommands(URL, "linux", "app", "msedge.exe");
 		expect(commands[0]).toEqual(["msedge.exe", `--app=${URL}`]);
 		expect(commands[1]).toEqual(["xdg-open", URL]);
 	});
 
-	it("win32 の app モードは App Paths を通すため start に任せる", () => {
+	it("leaves win32's app mode to start, so that App Paths is consulted", () => {
 		expect(calcBrowserOpenCommands(URL, "win32", "app")[0]).toEqual([
 			"cmd",
 			"/c",
@@ -53,7 +53,7 @@ describe("calcBrowserOpenCommands", () => {
 		]);
 	});
 
-	it("darwin の app モードは open -na で --args 以降を渡す", () => {
+	it("passes everything after --args through open -na in darwin's app mode", () => {
 		expect(calcBrowserOpenCommands(URL, "darwin", "app")[0]).toEqual([
 			"open",
 			"-na",
@@ -65,18 +65,18 @@ describe("calcBrowserOpenCommands", () => {
 });
 
 describe("calcBrowserOpenPreference", () => {
-	it("未設定・空・app はアプリモード", () => {
+	it("reads unset, empty and app as app mode", () => {
 		expect(calcBrowserOpenPreference(undefined)).toEqual({ mode: "app" });
 		expect(calcBrowserOpenPreference("  ")).toEqual({ mode: "app" });
 		expect(calcBrowserOpenPreference("app")).toEqual({ mode: "app" });
 	});
 
-	it("tab / default は既定ブラウザのタブ", () => {
+	it("reads tab / default as a tab in the default browser", () => {
 		expect(calcBrowserOpenPreference("tab")).toEqual({ mode: "tab" });
 		expect(calcBrowserOpenPreference("default")).toEqual({ mode: "tab" });
 	});
 
-	it("それ以外は app モードで使う実行ファイルの名指しとして読む", () => {
+	it("reads anything else as naming the executable to use in app mode", () => {
 		expect(
 			calcBrowserOpenPreference(
 				" /mnt/c/Program Files/Google/Chrome/Application/chrome.exe ",

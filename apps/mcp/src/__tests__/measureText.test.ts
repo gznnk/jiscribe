@@ -14,7 +14,7 @@ afterAll(async () => {
 });
 
 describe("measure_text", () => {
-	it("箱が文字を縛る型は content box と収まり判定まで返す", async () => {
+	it("returns the content box and whether it fits for a type whose box constrains its text", async () => {
 		const result = await client.callTool("measure_text", {
 			text: "とても長い説明文をわざと狭い矩形に押し込む",
 			shape: "rect",
@@ -31,7 +31,7 @@ describe("measure_text", () => {
 		]);
 	});
 
-	it("箱に収まるなら fits yes を返す", async () => {
+	it("returns fits yes when it fits in the box", async () => {
 		const result = await client.callTool("measure_text", {
 			text: "チャットアシスタント",
 			shape: "stadium",
@@ -43,7 +43,7 @@ describe("measure_text", () => {
 		expect(result.text).toContain("fits yes");
 	});
 
-	it("箱の外にラベルを描く型は判定を出さず note を添える", async () => {
+	it("gives no verdict and adds a note for a type that draws its label outside the box", async () => {
 		const result = await client.callTool("measure_text", {
 			text: "分岐点のラベル",
 			shape: "cross",
@@ -60,7 +60,7 @@ describe("measure_text", () => {
 		expect(result.text).not.toContain("fits");
 	});
 
-	it("rect 以外で height を省くとエラーにする", async () => {
+	it("makes an omitted height an error for anything but a rect", async () => {
 		const result = await client.callTool("measure_text", {
 			text: "ラベル",
 			shape: "stadium",
@@ -70,7 +70,7 @@ describe("measure_text", () => {
 		expect(result.text).toBe("error: height is required for shape stadium");
 	});
 
-	it("rect は height を省いても幅だけで測れる", async () => {
+	it("measures a rect from its width alone even with the height omitted", async () => {
 		const result = await client.callTool("measure_text", {
 			text: "ラベル",
 			shape: "rect",
@@ -82,7 +82,7 @@ describe("measure_text", () => {
 		expect(result.text).toContain("fits yes");
 	});
 
-	it("出荷図形セットに無い型はエラーにする", async () => {
+	it("makes a type outside the standard shape set an error", async () => {
 		const result = await client.callTool("measure_text", {
 			text: "x",
 			shape: "nosuchshape",

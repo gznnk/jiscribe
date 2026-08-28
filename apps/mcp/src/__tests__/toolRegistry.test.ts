@@ -10,6 +10,13 @@ import { connectMcpTestClient } from "./mcpTestClient";
 
 let client: McpTestClient;
 
+/**
+ * Whether the tool needs a canvas on screen. The declaration's `drives` says so
+ * on its own, so they can be sorted without building any arguments
+ */
+const needsCanvas = (descriptor: CanvasToolDescriptor): boolean =>
+	descriptor.drives.some((ref) => ref.startsWith("handle."));
+
 beforeAll(async () => {
 	client = await connectMcpTestClient();
 });
@@ -19,9 +26,11 @@ afterAll(async () => {
 });
 
 describe("createJiscribeMcpServer", () => {
-	it("このサーバー独自のツールを、順序込みで登録する", async () => {
-		// 登録漏れは AI 側から見た機能欠落そのものなので、自前のものは順序まで固定する。
-		// ai-tools 由来のものは向こうの増減で変わるため、下の 2 つで数と重複だけを見る
+	it("registers this server's own tools, in order", async () => {
+		// A missing registration is a missing feature as far as the AI is
+		// concerned, so the ones we own are pinned down to their order. The
+		// ai-tools ones move as that side grows or shrinks, so the two tests below
+		// only look at their count and at duplicates
 		const names = await client.listToolNames();
 		expect(names.slice(0, 7)).toEqual([
 			"open_canvas",
@@ -34,13 +43,11 @@ describe("createJiscribeMcpServer", () => {
 		]);
 	});
 
-	it("ai-tools の宣言を doc 側・画面側とも取りこぼさず登録する", async () => {
+	it("registers every ai-tools declaration, doc-side and screen-side alike", async () => {
 		const names = await client.listToolNames();
 		const descriptors = createCanvasToolDescriptors(canvasCapabilities);
-		const needsCanvas = (descriptor: CanvasToolDescriptor): boolean =>
-			descriptor.drives.some((ref) => ref.startsWith("handle."));
 
-		// 自前と名前がぶつかる measure_text だけは改名して入る
+		// measure_text alone clashes with one of our own and goes in renamed
 		const expectedNames = descriptors.map((descriptor) =>
 			descriptor.name === "measure_text" && needsCanvas(descriptor)
 				? "measure_rendered_text"
@@ -50,12 +57,47 @@ describe("createJiscribeMcpServer", () => {
 		expect(descriptors.filter(needsCanvas)).toHaveLength(16);
 	});
 
-	it("同じ名前のツールを二度登録しない", async () => {
+	it("never registers the same tool name twice", async () => {
 		const names = await client.listToolNames();
 		expect(new Set(names).size).toBe(names.length);
 	});
 
-	it("add_object は 1 手作成の引数（autoHeight / textLayout）まで公開する", async () => {
+	it("says of a tool that needs a canvas that its target is the open one", async () => {
+		// The doc operations pick a file by path, while these only ever look at
+		// the single open one. That difference in addressing is not in the
+		// declaration's own description and shows up only as the presence or
+		// absence of an argument, so it is filled in here
+		const descriptors = createCanvasToolDescriptors(canvasCapabilities);
+		const handleNames = descriptors
+			.filter(needsCanvas)
+			.map((descriptor) =>
+				descriptor.name === "measure_text"
+					? "measure_rendered_text"
+					: descriptor.name,
+			);
+		const descriptions = await Promise.all(
+			handleNames.map((name) => client.getToolDescription(name)),
+		);
+		for (const description of descriptions) {
+			expect(description).toContain("it takes no path");
+		}
+	});
+
+	it("does not add that sentence to a tool a document alone can answer", async () => {
+		expect(await client.getToolDescription("add_object")).not.toContain(
+			"it takes no path",
+		);
+	});
+
+	it("goes on to tell measure_rendered_text apart from our own measure_text", async () => {
+		const description = await client.getToolDescription(
+			"measure_rendered_text",
+		);
+		expect(description).toContain("it takes no path");
+		expect(description).toContain("use measure_text instead");
+	});
+
+	it("exposes the one-shot creation arguments (autoHeight / textLayout) on add_object", async () => {
 		const schema = await client.getToolInputProperties("add_object");
 		expect(Object.keys(schema)).toEqual(
 			expect.arrayContaining([

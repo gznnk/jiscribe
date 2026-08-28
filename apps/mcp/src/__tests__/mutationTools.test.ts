@@ -1,9 +1,11 @@
-// ファイルを書き換えるツールが、実ファイルに対して期待どおり働くかを見る。
+// Checks that the tools which rewrite a file work as expected against real
+// files.
 //
-// add_object / set_height_mode の中身は @jiscribe/ai-tools の宣言と
-// canvas-agent の applyCanvasOp が持つ（このサーバーは path を足して繋いでいるだけ）。
-// そのため応答の文言までは固定せず、成否とファイルの中身で判定する。
-// add_rect はこのサーバー自身のツールなので、既定サイズまで見る。
+// What add_object / set_height_mode do is held by the @jiscribe/ai-tools
+// declarations and by canvas-agent's applyCanvasOp (this server only adds a
+// path and joins the two). So the wording of the reply is not pinned down;
+// success or failure and the contents of the file decide.
+// add_rect is this server's own tool, so its default size is checked too.
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -17,7 +19,10 @@ import { createTempCanvasWorkspace } from "./tempCanvasWorkspace";
 
 const emptyDoc: CanvasFileContent = { version: 1, root: [] };
 
-/** 自動高さに切り替えられる rect と、切り替えられない ellipse を 1 つずつ持つ文書。 */
+/**
+ * A document holding one rect that can be switched to an automatic height, and
+ * one ellipse that cannot.
+ */
 const heightModeDoc: CanvasFileContent = {
 	version: 1,
 	root: [
@@ -44,7 +49,10 @@ const heightModeDoc: CanvasFileContent = {
 
 let client: McpTestClient;
 let workspace: TempCanvasWorkspace;
-/** テストごとに書き直す変更対象。名前を分けるのは書き戻し先を取り違えないため。 */
+/**
+ * The target rewritten by each test. The names are kept apart so that no test
+ * writes back to another's file.
+ */
 let targetPath: string;
 let testIndex = 0;
 
@@ -66,7 +74,7 @@ describe("add_object", () => {
 		);
 	});
 
-	it("width / height を渡した図形はその寸法のまま書き込まれる", async () => {
+	it("writes a shape given a width / height at exactly those dimensions", async () => {
 		const result = await client.callTool("add_object", {
 			path: targetPath,
 			type: "rect",
@@ -90,7 +98,7 @@ describe("add_object", () => {
 		});
 	});
 
-	it("autoHeight: true なら height をファイルに書かない", async () => {
+	it("writes no height to the file for autoHeight: true", async () => {
 		await client.callTool("add_object", {
 			path: targetPath,
 			type: "rect",
@@ -106,7 +114,7 @@ describe("add_object", () => {
 		expect(object).not.toHaveProperty("height");
 	});
 
-	it('textLayout: "block" の text は折り返し幅として width を持つ', async () => {
+	it('gives a textLayout: "block" text a width, which is its wrapping width', async () => {
 		await client.callTool("add_object", {
 			path: targetPath,
 			type: "text",
@@ -124,11 +132,12 @@ describe("add_object", () => {
 			textLayout: "block",
 			width: 260,
 		});
-		// text の高さは常に実測なので、文書には書かれない。
+		// The height of a text is always measured, so it is never written to the
+		// document.
 		expect(object).not.toHaveProperty("height");
 	});
 
-	it("箱の外に描く型への autoHeight は断り、ファイルを変えない", async () => {
+	it("refuses autoHeight for a type that draws outside its box, and leaves the file alone", async () => {
 		const result = await client.callTool("add_object", {
 			path: targetPath,
 			type: "ellipse",
@@ -153,7 +162,7 @@ describe("add_rect", () => {
 		);
 	});
 
-	it("width / height を省くとツール既定の 160x80 になる", async () => {
+	it("falls back to the tool's default 160x80 when width / height are omitted", async () => {
 		const result = await client.callTool("add_rect", {
 			path: targetPath,
 			x: 400,
@@ -174,20 +183,21 @@ describe("set_height_mode", () => {
 		);
 	});
 
-	it('"auto" は height をファイルから消す', async () => {
+	it('"auto" removes the height from the file', async () => {
 		const result = await client.callTool("set_height_mode", {
 			path: targetPath,
 			ids: ["box"],
 			mode: "auto",
 		});
-		// 文言は ai-tools の宣言側が持つので、ここでは成否とファイルの中身だけ見る
+		// The wording belongs to the ai-tools declaration, so only success or
+		// failure and the contents of the file are checked here
 		expect(result.text).not.toMatch(/^error:/);
 
 		const [box] = (await workspace.readDoc(targetPath)).root;
 		expect(box).not.toHaveProperty("height");
 	});
 
-	it('"fixed" は渡した height を書き戻す', async () => {
+	it('"fixed" writes back the height it was given', async () => {
 		const result = await client.callTool("set_height_mode", {
 			path: targetPath,
 			ids: ["box"],
@@ -200,7 +210,7 @@ describe("set_height_mode", () => {
 		expect(box).toMatchObject({ id: "box", height: 120 });
 	});
 
-	it('"fixed" で height を欠くと doc へ触れる前に断る', async () => {
+	it('"fixed" without a height is refused before the doc is touched', async () => {
 		const result = await client.callTool("set_height_mode", {
 			path: targetPath,
 			ids: ["box"],
@@ -210,7 +220,7 @@ describe("set_height_mode", () => {
 		expect(await workspace.readDoc(targetPath)).toEqual(heightModeDoc);
 	});
 
-	it("対象外の型が 1 つでも混ざれば全体を断り、ファイルを変えない", async () => {
+	it("refuses the whole call when even one unsupported type is mixed in, and leaves the file alone", async () => {
 		const result = await client.callTool("set_height_mode", {
 			path: targetPath,
 			ids: ["box", "oval"],
@@ -222,7 +232,7 @@ describe("set_height_mode", () => {
 		expect(await workspace.readDoc(targetPath)).toEqual(heightModeDoc);
 	});
 
-	it("存在しない id はエラーにして、ファイルを変えない", async () => {
+	it("makes an id that does not exist an error, and leaves the file alone", async () => {
 		const result = await client.callTool("set_height_mode", {
 			path: targetPath,
 			ids: ["nope"],

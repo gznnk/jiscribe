@@ -4,7 +4,7 @@ import { MAX_SVG_CHARS } from "../../canvasOps";
 import { applyHandleOp } from "../applyHandleOp";
 import type { AiHandleControl } from "../types";
 
-/** 呼ばれた内容を控える窓口。返り値だけテストごとに差し替える */
+/** A way in that notes down what it was called with; only the return values are swapped per test */
 const createFakeHandleControl = (
 	overrides: Partial<AiHandleControl> = {},
 ): AiHandleControl => ({
@@ -43,7 +43,7 @@ const createFakeHandleControl = (
 });
 
 describe("applyHandleOp", () => {
-	it("キャンバスが出ていなければ失敗として返す", () => {
+	it("fails when no canvas is on screen", () => {
 		const result = applyHandleOp(
 			{ kind: "fitView", target: "all" },
 			createFakeHandleControl({ isAvailable: () => false }),
@@ -53,7 +53,7 @@ describe("applyHandleOp", () => {
 		expect(result.text).toContain("no canvas");
 	});
 
-	it("選択した id を結果に並べる", () => {
+	it("lists the ids it selected in the result", () => {
 		const result = applyHandleOp(
 			{ kind: "selectObjects", ids: ["rect-1", "rect-2"] },
 			createFakeHandleControl(),
@@ -63,7 +63,7 @@ describe("applyHandleOp", () => {
 		expect(result.text).toBe('selected "rect-1", "rect-2"');
 	});
 
-	it("選べなかった id を理由つきで添える", () => {
+	it("adds the ids it could not select, with the reason", () => {
 		const result = applyHandleOp(
 			{ kind: "selectObjects", ids: ["rect-1", "gone"] },
 			createFakeHandleControl({
@@ -78,7 +78,7 @@ describe("applyHandleOp", () => {
 		expect(result.text).toContain('"gone"');
 	});
 
-	it("1 つも選べなければ失敗として返す", () => {
+	it("fails when it could select nothing at all", () => {
 		const result = applyHandleOp(
 			{ kind: "selectObjects", ids: ["gone"] },
 			createFakeHandleControl({
@@ -90,7 +90,7 @@ describe("applyHandleOp", () => {
 		expect(result.text).toContain('"gone"');
 	});
 
-	it("空配列は選択解除として成功する", () => {
+	it("takes an empty array as clearing the selection, and succeeds", () => {
 		const result = applyHandleOp(
 			{ kind: "selectObjects", ids: [] },
 			createFakeHandleControl(),
@@ -99,7 +99,7 @@ describe("applyHandleOp", () => {
 		expect(result).toEqual({ ok: true, text: "cleared the selection" });
 	});
 
-	it("centerView は適用後のカメラを数値で返す", () => {
+	it("reports the camera left by centerView as numbers", () => {
 		const result = applyHandleOp(
 			{ kind: "centerView", x: 100, y: 200, zoom: 2 },
 			createFakeHandleControl({
@@ -113,7 +113,7 @@ describe("applyHandleOp", () => {
 		expect(result.text).toContain("200% zoom");
 	});
 
-	it("フィットする対象が無ければ、どちらの対象かを添えて失敗させる", () => {
+	it("fails naming which target it was asked for when there is nothing to fit to", () => {
 		const handleControl = createFakeHandleControl({ fitView: () => null });
 
 		const all = applyHandleOp(
@@ -131,7 +131,7 @@ describe("applyHandleOp", () => {
 		expect(selection.text).toContain("nothing is selected");
 	});
 
-	it("fitView は対象を渡す", () => {
+	it("passes the target straight on to fitView", () => {
 		const receivedTargets: string[] = [];
 		const handleControl = createFakeHandleControl({
 			fitView: (target) => {
@@ -151,8 +151,8 @@ describe("applyHandleOp", () => {
 	});
 });
 
-describe("applyHandleOp（計測）", () => {
-	it("収まっているテキストは寸法と行数を返す", () => {
+describe("applyHandleOp (measuring)", () => {
+	it("reports the size and the line count of text that fits", () => {
 		const result = applyHandleOp(
 			{ kind: "measureText", id: "rect-1" },
 			createFakeHandleControl({
@@ -176,7 +176,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(result.text).toContain("it fits");
 	});
 
-	it("はみ出したテキストは足りない量と直し方を返す", () => {
+	it("reports how much room overflowing text is short of, and how to fix it", () => {
 		const result = applyHandleOp(
 			{ kind: "measureText", id: "rect-1" },
 			createFakeHandleControl({
@@ -199,7 +199,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(result.text).toContain("set_text");
 	});
 
-	it("測れる対象が無いテキストは、理由を並べて失敗させる", () => {
+	it("fails listing every reason when there is no text to measure", () => {
 		const result = applyHandleOp(
 			{ kind: "measureText", id: "gone", slot: "title" },
 			createFakeHandleControl(),
@@ -211,7 +211,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(result.text).toContain("describe_canvas");
 	});
 
-	it("重なりは組・矩形・包含の別を添えて返す", () => {
+	it("reports overlaps with the pair, the rect, and whether one contains the other", () => {
 		const result = applyHandleOp(
 			{ kind: "findOverlaps" },
 			createFakeHandleControl({
@@ -240,7 +240,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(result.text).toContain("translate_objects");
 	});
 
-	it("重なり 0 件は成功として返し、比べていない相手を添える", () => {
+	it("succeeds on no overlaps at all, and names what it never compared", () => {
 		const all = applyHandleOp(
 			{ kind: "findOverlaps" },
 			createFakeHandleControl(),
@@ -260,7 +260,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(named.text).toContain("check the ids");
 	});
 
-	it("コネクターの経路は頂点列を順に返す", () => {
+	it("returns a connector route as its vertices in order", () => {
 		const result = applyHandleOp(
 			{ kind: "measureConnectorPath", id: "c-1" },
 			createFakeHandleControl({
@@ -277,7 +277,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(result.text).toContain("(10, 20) -> (60, 20) -> (60, 90)");
 	});
 
-	it("辿れないコネクターは理由を並べて失敗させる", () => {
+	it("fails listing every reason on a connector it cannot trace", () => {
 		const result = applyHandleOp(
 			{ kind: "measureConnectorPath", id: "rect-1" },
 			createFakeHandleControl(),
@@ -288,7 +288,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(result.text).toContain("not a connector");
 	});
 
-	it("描画範囲は右端・下端まで添えて返す", () => {
+	it("reports what is drawn down to its right and bottom edges", () => {
 		const result = applyHandleOp(
 			{ kind: "measureVisualBounds", ids: ["box-a", "box-b"] },
 			createFakeHandleControl({
@@ -304,7 +304,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(result.text).toContain("bottom edge y 160");
 	});
 
-	it("描画範囲が取れなければ失敗として返す", () => {
+	it("fails when nothing drawn can be measured", () => {
 		const result = applyHandleOp(
 			{ kind: "measureVisualBounds", ids: ["gone"] },
 			createFakeHandleControl(),
@@ -315,7 +315,7 @@ describe("applyHandleOp（計測）", () => {
 		expect(result.text).toContain("none of those ids is on the canvas");
 	});
 
-	it("計測もキャンバスが出ていなければ失敗として返す", () => {
+	it("fails on a measurement too when no canvas is on screen", () => {
 		const result = applyHandleOp(
 			{ kind: "findOverlaps" },
 			createFakeHandleControl({ isAvailable: () => false }),
@@ -326,8 +326,8 @@ describe("applyHandleOp（計測）", () => {
 	});
 });
 
-describe("applyHandleOp（表示の読み書き）", () => {
-	it("getView はカメラ・画面の大きさ・可視範囲を返す", () => {
+describe("applyHandleOp (reading and writing the view)", () => {
+	it("reports the camera, the size of the screen and the visible region on getView", () => {
 		const result = applyHandleOp(
 			{ kind: "getView" },
 			createFakeHandleControl({
@@ -347,7 +347,7 @@ describe("applyHandleOp（表示の読み書き）", () => {
 		expect(result.text).toContain("set_view");
 	});
 
-	it("setView は渡したカメラをそのまま適用する", () => {
+	it("applies the camera given to setView as it is", () => {
 		const receivedCameras: unknown[] = [];
 		const result = applyHandleOp(
 			{ kind: "setView", minX: 100, minY: 200, zoom: 0.5 },
@@ -365,7 +365,7 @@ describe("applyHandleOp（表示の読み書き）", () => {
 		expect(result.text).toContain("50% zoom");
 	});
 
-	it("fitView は矩形も受け、合わせた矩形と実際の可視範囲が別であることを添える", () => {
+	it("takes a rect on fitView too, and says the rect fitted and what actually shows are different", () => {
 		const receivedRects: unknown[] = [];
 		const result = applyHandleOp(
 			{ kind: "fitView", rect: { x: 0, y: 0, width: 400, height: 300 } },
@@ -383,7 +383,7 @@ describe("applyHandleOp（表示の読み書き）", () => {
 		expect(result.text).toContain("get_view");
 	});
 
-	it("広がりの無い矩形は失敗として返す", () => {
+	it("fails on a rect with no extent", () => {
 		const result = applyHandleOp(
 			{ kind: "fitView", rect: { x: 10, y: 10, width: 0, height: 0 } },
 			createFakeHandleControl({ fitViewToRect: () => null }),
@@ -393,7 +393,7 @@ describe("applyHandleOp（表示の読み書き）", () => {
 		expect(result.text).toContain("no extent");
 	});
 
-	it("fitView は target と rect の両方・どちらも無しを弾く", () => {
+	it("refuses fitView given both a target and a rect, and given neither", () => {
 		const handleControl = createFakeHandleControl();
 
 		const both = applyHandleOp(
@@ -413,8 +413,8 @@ describe("applyHandleOp（表示の読み書き）", () => {
 	});
 });
 
-describe("applyHandleOp（当たり判定・選択・状況）", () => {
-	it("当たった id を手前から並べる", () => {
+describe("applyHandleOp (hit testing, selection, status)", () => {
+	it("lists the ids hit from the front back", () => {
 		const receivedTargets: unknown[] = [];
 		const result = applyHandleOp(
 			{ kind: "hitTest", point: { x: 120, y: 80 }, tolerance: 8 },
@@ -436,7 +436,7 @@ describe("applyHandleOp（当たり判定・選択・状況）", () => {
 		);
 	});
 
-	it("矩形指定は矩形の書式で返す", () => {
+	it("writes a rect target in the rect form", () => {
 		const result = applyHandleOp(
 			{ kind: "hitTest", rect: { x: 0, y: 0, width: 200, height: 100 } },
 			createFakeHandleControl({ hitTest: () => ["rect-1"] }),
@@ -445,7 +445,7 @@ describe("applyHandleOp（当たり判定・選択・状況）", () => {
 		expect(result.text).toContain("(0, 0) 200 x 100 px");
 	});
 
-	it("何も無い座標は成功として返す（0 件は失敗ではない）", () => {
+	it("succeeds at a coordinate with nothing there (no results is not a failure)", () => {
 		const result = applyHandleOp(
 			{ kind: "hitTest", point: { x: 900, y: 900 } },
 			createFakeHandleControl(),
@@ -456,7 +456,7 @@ describe("applyHandleOp（当たり判定・選択・状況）", () => {
 		expect(result.text).toContain("free");
 	});
 
-	it("点も矩形も無い当たり判定は失敗として返す", () => {
+	it("fails on a hit test given neither a point nor a rect", () => {
 		const result = applyHandleOp(
 			{ kind: "hitTest" },
 			createFakeHandleControl(),
@@ -466,7 +466,7 @@ describe("applyHandleOp（当たり判定・選択・状況）", () => {
 		expect(result.text).toContain("nothing was given to test");
 	});
 
-	it("選択中の id を件数つきで返す", () => {
+	it("reports the selected ids together with how many there are", () => {
 		const result = applyHandleOp(
 			{ kind: "getSelection" },
 			createFakeHandleControl({ getSelectedIds: () => ["rect-1", "rect-2"] }),
@@ -477,7 +477,7 @@ describe("applyHandleOp（当たり判定・選択・状況）", () => {
 		expect(result.text).toContain('"rect-1", "rect-2"');
 	});
 
-	it("未選択は成功として返し、次の手を添える", () => {
+	it("succeeds on nothing selected, and adds what to do next", () => {
 		const result = applyHandleOp(
 			{ kind: "getSelection" },
 			createFakeHandleControl(),
@@ -488,7 +488,7 @@ describe("applyHandleOp（当たり判定・選択・状況）", () => {
 		expect(result.text).toContain("select_objects");
 	});
 
-	it("操作状況は編集中テキストとドラッグを名指しする", () => {
+	it("names the text being edited and the drag in the interaction status", () => {
 		const result = applyHandleOp(
 			{ kind: "getInteractionStatus" },
 			createFakeHandleControl({
@@ -509,7 +509,7 @@ describe("applyHandleOp（当たり判定・選択・状況）", () => {
 		expect(result.text).toContain("busy");
 	});
 
-	it("何もしていなければ、書き込んでよいと分かる形で返す", () => {
+	it("says outright that it is safe to write when nothing is going on", () => {
 		const result = applyHandleOp(
 			{ kind: "getInteractionStatus" },
 			createFakeHandleControl(),
@@ -522,8 +522,8 @@ describe("applyHandleOp（当たり判定・選択・状況）", () => {
 	});
 });
 
-describe("applyHandleOp（SVG・座標変換）", () => {
-	it("上限内の SVG はそのまま返す", () => {
+describe("applyHandleOp (SVG, coordinate conversion)", () => {
+	it("returns SVG within the budget as it is", () => {
 		const result = applyHandleOp(
 			{ kind: "toSvg" },
 			createFakeHandleControl({ toSvgString: () => "<svg><rect /></svg>" }),
@@ -532,7 +532,7 @@ describe("applyHandleOp（SVG・座標変換）", () => {
 		expect(result).toEqual({ ok: true, text: "<svg><rect /></svg>" });
 	});
 
-	it("上限を超えた SVG は先頭だけを返し、代わりの読み方を添える", () => {
+	it("returns only the start of SVG over the budget, and adds what to read instead", () => {
 		const svg = "<svg>".padEnd(MAX_SVG_CHARS + 100, "x");
 		const result = applyHandleOp(
 			{ kind: "toSvg" },
@@ -545,7 +545,7 @@ describe("applyHandleOp（SVG・座標変換）", () => {
 		expect(result.text).not.toContain(svg);
 	});
 
-	it("client 座標をワールド座標へ変換する", () => {
+	it("converts a client coordinate into a world coordinate", () => {
 		const result = applyHandleOp(
 			{ kind: "toWorld", x: 320, y: 240 },
 			createFakeHandleControl({ toWorld: () => ({ x: 100, y: 50 }) }),
@@ -555,7 +555,7 @@ describe("applyHandleOp（SVG・座標変換）", () => {
 		expect(result.text).toContain("client (320, 240) is world (100, 50)");
 	});
 
-	it("未マウントの変換は、キャンバス不在とは別の理由を返す", () => {
+	it("gives a different reason for a conversion before mounting than for no canvas at all", () => {
 		const result = applyHandleOp(
 			{ kind: "toWorld", x: 320, y: 240 },
 			createFakeHandleControl({ toWorld: () => null }),
@@ -566,7 +566,7 @@ describe("applyHandleOp（SVG・座標変換）", () => {
 		expect(result.text).not.toContain("no canvas");
 	});
 
-	it("ワールド座標を client 座標へ変換し、すぐ古くなることを添える", () => {
+	it("converts a world coordinate into a client one, and adds that it goes stale at once", () => {
 		const result = applyHandleOp(
 			{ kind: "toClient", x: 100, y: 50 },
 			createFakeHandleControl({ toClient: () => ({ x: 320, y: 240 }) }),
@@ -577,7 +577,7 @@ describe("applyHandleOp（SVG・座標変換）", () => {
 		expect(result.text).toContain("pan and zoom");
 	});
 
-	it("未マウントの逆変換も同じ理由を返す", () => {
+	it("gives that same reason for the conversion back before mounting", () => {
 		const result = applyHandleOp(
 			{ kind: "toClient", x: 100, y: 50 },
 			createFakeHandleControl(),

@@ -1,11 +1,13 @@
-// キャンバスビューア。MCP プロセスが立てたホストへ WebSocket で繋ぎ、AI が
-// 書き換えたファイルを映し、人が直した結果を書き戻す。
+// The canvas viewer. It connects over WebSocket to the host the MCP process brought
+// up, mirrors the file the AI rewrote, and writes back what a person fixed.
 //
-// 正本はファイルなので、ここは doc を握らない。届いた本文をパースして描き、
-// 人が編集したらワークスペースへ保存し直す。
+// The file is the source of truth, so nothing here owns the doc. The text that
+// arrives is parsed and drawn, and once a person edits it, it is saved back to the
+// workspace.
 //
-// もう 1 つの役目が、描かれた結果にしか答えの無い問い合わせ（撮影・カメラ・選択・
-// 計測）に答えること。ファイルを読んでも分からないので AI はここへ聞きに来る。
+// Its other job is answering the queries only the drawn result can answer (capture,
+// camera, selection, measurement). Reading the file does not tell the AI those, so
+// it comes here to ask.
 
 import type { AiHandleOp } from "@jiscribe/ai-tools";
 import {
@@ -32,12 +34,16 @@ import type {
 } from "../shared/canvasHostProtocol";
 
 /**
- * 編集が落ち着いてから書き出すまでの待ち。ドラッグ 1 回ごとに書くと、AI 側が
- * 読んだ瞬間に中途半端な姿を掴みうるので、短く溜めてからにする
+ * How long to wait after the edits settle before writing out. Writing on every
+ * single drag would let the AI catch a half-finished shape the moment it reads, so
+ * they are buffered briefly first
  */
 const SAVE_DEBOUNCE_MS = 500;
 
-/** 再接続の間隔。ホストの立て直しを跨いで復帰できればよいので控えめに伸ばす */
+/**
+ * The reconnect interval. Coming back across a host restart is all it has to do, so
+ * it grows modestly
+ */
 const RECONNECT_BASE_DELAY_MS = 1_000;
 const RECONNECT_MAX_DELAY_MS = 5_000;
 
@@ -45,7 +51,10 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
 const EXTERNAL_URL_PATTERN = /^https?:\/\//i;
 
-/** ホスト側の書き戻し（canvasStore の serializeCanvasFile）と同じ整形にする */
+/**
+ * Formats it the same way the host's write-back does (canvasStore's
+ * serializeCanvasFile)
+ */
 const serializeDoc = (doc: CanvasDoc): string =>
 	`${JSON.stringify(doc, null, "\t")}\n`;
 
@@ -102,7 +111,8 @@ export function App() {
 
 	const latestDocRef = useRef<CanvasDoc>(emptyDoc);
 	const openPathRef = useRef<string | null>(null);
-	// 自分とホストが同じだと分かっている最後の本文。保存のこだまで再描画しないための控え
+	// The last text known to be the same here as on the host. Kept so a save's echo
+	// does not cause a redraw
 	const syncedTextRef = useRef<string | null>(null);
 	const socketRef = useRef<WebSocket | null>(null);
 	const saveTimerRef = useRef<number | null>(null);
@@ -124,8 +134,8 @@ export function App() {
 	);
 
 	/**
-	 * 描かれた結果への問い合わせに答える。撮影だけは非同期で画像を伴うため、
-	 * canvas-agent 側でも経路が分かれている
+	 * Answers the queries about the drawn result. Capture alone is asynchronous and
+	 * carries an image, so its path is separate on the canvas-agent side as well
 	 */
 	const runHandleOp = useCallback(
 		async (op: AiHandleOp) => {
@@ -134,8 +144,8 @@ export function App() {
 					? await captureCanvasImage(capturePng)
 					: applyHandleOp(op, handleControl);
 			} catch (error) {
-				// 投げたまま返さないと、ホストは 15 秒待って時間切れにするしかなく、
-				// AI には理由が何も残らない
+				// Throwing without answering would leave the host with nothing to do but
+				// wait 15 seconds and time out, and the AI with no reason at all
 				return {
 					ok: false,
 					text: `the canvas viewer failed to run ${op.kind}: ${error instanceof Error ? error.message : String(error)}`,
@@ -174,15 +184,16 @@ export function App() {
 		if (text === syncedTextRef.current) {
 			return;
 		}
-		// 保存の前に控えておく。ホストの監視がこの書き込みを拾って送り返しても、
-		// 一致で弾けるようにする
+		// Record it before saving, so that if the host's watch picks this write up and
+		// sends it back, it can be rejected on the match
 		const previousSyncedText = syncedTextRef.current;
 		syncedTextRef.current = text;
 		try {
 			await saveFile(targetPath, text);
 			setErrorMessage(null);
 		} catch (error) {
-			// 控えたままだと、同じ内容で保存し直しても冒頭で弾かれて二度と書けない
+			// Left recorded, saving the same content again would be rejected at the top
+			// and never written
 			syncedTextRef.current = previousSyncedText;
 			setErrorMessage(`保存に失敗しました: ${String(error)}`);
 			return;
@@ -215,8 +226,9 @@ export function App() {
 	);
 
 	/**
-	 * 溜めている編集を書き出してから窓を閉じる。close_canvas はここで閉じたかどうかを
-	 * 接続が切れるかで見ているので、閉じられなくても何も返さない
+	 * Writes out the buffered edits, then closes the window. close_canvas reads
+	 * whether it closed here from the connection being cut, so nothing is returned
+	 * even when it could not close
 	 */
 	const closeWindow = useCallback(async (): Promise<void> => {
 		if (saveTimerRef.current !== null) {
@@ -322,8 +334,9 @@ export function App() {
 		};
 	}, [applyIncomingDoc, closeWindow, runHandleOp]);
 
-	// 溜めている編集を、タブを閉じる前に書き出す。破棄されるページからの
-	// 書き込みなので届く保証は無く、デバウンス待ちのぶんを拾えれば上出来という扱い
+	// Write out the buffered edits before the tab closes. It is a write from a page
+	// on its way out, so there is no guarantee it arrives; catching what was waiting
+	// on the debounce is treated as the best that can be hoped for
 	useEffect(() => {
 		const handleBeforeUnload = (): void => {
 			if (saveTimerRef.current !== null) {

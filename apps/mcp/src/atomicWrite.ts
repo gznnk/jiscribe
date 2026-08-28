@@ -3,30 +3,35 @@ import { chmod, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 
 /**
- * ファイルを、書きかけの姿を誰にも見せずに置き換える。
+ * Replace a file without letting anyone see it half written.
  *
- * 同じディレクトリの一時ファイルへ書いてから rename する。同一ファイルシステム内の
- * rename は不可分なので、読む側からはファイルが古い内容か新しい内容のどちらかにしか
- * 見えない。`writeFile` で直接上書きすると、書いている途中の長さで読まれうる。
+ * Writes to a temporary file in the same directory and then renames it. A rename
+ * within one filesystem is atomic, so a reader only ever sees the file with
+ * either the old contents or the new ones. Overwriting directly with `writeFile`
+ * can be read at whatever length it has reached mid-write.
  *
- * これは pathLock（src/pathLock.ts）とは守る相手が違う。あちらはツール同士の
- * 割り込みを防ぐもので、ホストのファイル監視や外部のエディタは通らない。こちらは
- * 経路を問わず、読む側すべてに効く。
+ * What this guards is not what pathLock (src/pathLock.ts) guards. That one
+ * prevents tools from cutting in on each other, and the host's file watcher and
+ * outside editors do not go through it. This one holds for every reader, by
+ * whichever route.
  *
- * 一時ファイルはドットで始まる名前にして、書き出しに失敗したときは消す。プロセスが
- * 強制終了した場合だけ残るが、その残骸が本物と取り違えられることはない
- * （`.jis.json` で終わらないので、キャンバスとして拾われない）。
+ * The temporary file is given a name starting with a dot, and is removed when the
+ * write fails. It is left behind only when the process is killed, and that
+ * leftover cannot be mistaken for the real thing (it does not end in `.jis.json`,
+ * so it is not picked up as a canvas).
  *
- * 置き換え先が既にあれば、そのパーミッションを引き継ぐ。引き継がないと、新しく作った
- * 側の既定モード（umask 由来）になり、元より緩くなりうる。
+ * When the destination already exists, its permissions are carried over. Without
+ * that, the newly created file keeps the default mode (from umask), which can be
+ * looser than the original.
  *
- * 置き換え先がシンボリックリンクのときは、リンク自体が普通のファイルに置き換わる
- * （直接上書きならリンク先が書き換わる）。`.jis.json` をリンクにする使い方は想定して
- * いないので、解決までは踏み込んでいない。
+ * When the destination is a symbolic link, the link itself is replaced by an
+ * ordinary file (overwriting directly would rewrite what the link points at).
+ * Using a link for a `.jis.json` is not an intended use, so resolving it is not
+ * taken on.
  *
- * @param filePath 置き換える先。親ディレクトリは存在していること
- * @param contents 書き込む内容
- * @throws 書き込みか置き換えに失敗した理由。そのとき filePath は元のまま
+ * @param filePath The destination to replace. Its parent directory must exist
+ * @param contents The contents to write
+ * @throws The reason the write or the replacement failed; filePath is left as it was
  */
 export async function writeFileAtomically(
 	filePath: string,
@@ -36,7 +41,7 @@ export async function writeFileAtomically(
 		dirname(filePath),
 		`.${basename(filePath)}.${randomUUID()}.tmp`,
 	);
-	// 置き換え先が無ければ新規作成なので、既定のモードのままでよい
+	// With no destination file this is a fresh creation, so the default mode stands
 	const previousMode = await stat(filePath)
 		.then((stats) => stats.mode)
 		.catch(() => null);

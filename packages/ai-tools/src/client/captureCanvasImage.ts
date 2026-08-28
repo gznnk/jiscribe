@@ -1,6 +1,8 @@
-// AI の capture_canvas ツール向けに、現在のキャンバスを PNG にして base64 で返す。
-// doc を読み書きしない点は他のキャンバス操作（applyHandleOp）と同じだが、撮影だけは
-// 非同期なので、そちらにも applyCanvasOp にも混ぜず独立した経路にしてある。
+// Turns the current canvas into a PNG and returns it as base64, for the AI's
+// capture_canvas tool. It neither reads nor writes the document, the same as
+// the other canvas operations (applyHandleOp), but capturing alone is async, so
+// it is kept on a route of its own rather than mixed into either that or
+// applyCanvasOp.
 
 import type { CanvasPngExportOptions } from "@jiscribe/canvas";
 
@@ -8,14 +10,17 @@ import type { AiCanvasOpOutcome } from "../canvasOps";
 import type { CapturePng } from "./types";
 
 /**
- * AI へ渡す画像の最長辺（px）。base64 で IPC を通り、さらにモデルの入力に
- * 載るため、読み取れる程度に抑える（API 側も長辺 1568px 程度へ縮小する）
+ * The longest edge (px) of the image handed to the AI. It travels over IPC as
+ * base64 and then rides into the model's input, so it is held down to what is
+ * still readable (the API scales the long edge to some 1568px of its own)
  */
 const MAX_CAPTURE_PIXEL_SIZE = 1400;
 
 /**
- * 撮影オプション。等倍＋最長辺の上限でサイズを抑え、再編集用の .jis.json 埋め込みは
- * 外す（AI は describe_canvas で doc を読めるので二重に運ぶ意味がない）
+ * The capture options. Size is held down by drawing at 1:1 with a cap on the
+ * longest edge, and the .jis.json embedded for re-editing is left out (the AI
+ * can read the document with describe_canvas, so carrying it twice buys
+ * nothing)
  */
 const CAPTURE_OPTIONS: CanvasPngExportOptions = {
 	includeSource: false,
@@ -23,7 +28,7 @@ const CAPTURE_OPTIONS: CanvasPngExportOptions = {
 	maxPixelSize: MAX_CAPTURE_PIXEL_SIZE,
 };
 
-/** 一度に btoa へ渡す byte 数。スプレッドの引数上限に触れない大きさ */
+/** How many bytes go to btoa at a time; small enough not to touch the argument limit on a spread */
 const BASE64_CHUNK_SIZE = 0x2000;
 
 const toBase64 = (bytes: Uint8Array): string => {
@@ -39,10 +44,11 @@ const toBase64 = (bytes: Uint8Array): string => {
 };
 
 /**
- * キャンバスを撮影し、ツール結果に載せる PNG（base64）を組み立てる。
+ * Captures the canvas and builds the PNG (base64) the tool result carries.
  *
- * @param capturePng - ホストアプリから受け取った画像化関数。未マウント時は null を返す
- * @returns ツール結果。ok=true なら imagePngBase64 が入る
+ * @param capturePng - The image-making function received from the host
+ *   application; it returns null while the canvas is not mounted
+ * @returns The tool result; imagePngBase64 is filled in when ok=true
  */
 export const captureCanvasImage = async (
 	capturePng: CapturePng,

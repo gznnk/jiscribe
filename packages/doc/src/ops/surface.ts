@@ -144,7 +144,7 @@ export const setView = (
 		);
 	}
 
-	// 検証を先に済ませてから書く。途中で投げても doc は元のまま
+	// Validate before writing anything, so a throw partway through leaves the doc as it was.
 	const nextView: ViewDoc = { ...doc.view };
 	if (params.padding !== undefined) {
 		const stored =

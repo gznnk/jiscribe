@@ -11,32 +11,35 @@ import { useEffect, useRef } from "react";
 
 import { plugins } from "./canvasPlugins";
 
-// モジュールスコープの定数にして、再レンダリングのたびに Canvas を作り直させない
+// A module-scope constant, so that Canvas is not rebuilt on every re-render
 const initialConfig: CanvasConfig = { plugins };
 
-// annotation / flowchart / container / general / icon カテゴリと markdown プリセットは
-// core の既定 layout に含まれない（プラグイン供給）。図形セットが提案する並びを使う
+// The annotation / flowchart / container / general / icon categories and the
+// markdown preset are not in core's default layout (the plugins supply them). Use
+// the arrangement the shape set proposes
 const toolbarLayout: ToolbarEntry[] = standardToolbarLayout;
 
 export type CanvasSurfaceProps = {
-	/** 描く doc。差し替えるたびに描き直る */
+	/** The doc to draw. Every replacement redraws it */
 	doc: CanvasDoc;
-	/** 人が編集を確定したときに呼ばれる。ドラッグ途中では呼ばれない */
+	/** Called when a person commits an edit. Not called mid-drag */
 	onCommit: (committedDoc: CanvasDoc) => void;
-	/** オブジェクトの meta.reference を開く要求。解決はホスト側の責務 */
+	/** A request to open an object's meta.reference. Resolving it is the host's job */
 	onOpenReference: (payload: OpenReferencePayload) => void;
 	/**
-	 * 撮影・カメラ・選択・計測に要る Canvas のハンドルを親へ預ける。マウント中だけ
-	 * 有効で、アンマウント時は null で解除する（キャンバスが無い間に AI が
-	 * 触りにきたら「画面が無い」と答えられるように）
+	 * Hands the parent the Canvas handle that capture, camera, selection and
+	 * measurement need. It is valid only while mounted, and is released with null on
+	 * unmount (so that an AI reaching in while there is no canvas can be told "there
+	 * is no screen")
 	 */
 	onRegisterCanvas: (handle: CanvasHandle | null) => void;
 };
 
 /**
- * キャンバス 1 枚を親いっぱいに描くだけの面。
+ * A surface that does nothing but draw one canvas filling its parent.
  *
- * ファイルの読み書きは持たない（doc は WebSocket で降ってきて、保存は App が行う）。
+ * It holds no file reading or writing (the doc comes down over the WebSocket, and
+ * App does the saving).
  */
 export function CanvasSurface({
 	doc,

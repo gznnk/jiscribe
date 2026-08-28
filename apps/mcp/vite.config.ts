@@ -1,15 +1,15 @@
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 
-// キャンバスビューア（src/viewer）だけをビルドする。MCP サーバー本体は
-// build.mjs（esbuild）が dist/index.mjs へバンドルする。
+// Builds only the canvas viewer (src/viewer). The MCP server itself is bundled
+// into dist/index.mjs by build.mjs (esbuild).
 export default defineConfig({
 	root: "src/viewer",
 	plugins: [react()],
 	server: {
 		port: 5196,
 		proxy: {
-			// ファイル API は MCP プロセスが立てるホスト（既定 5190）へ流す
+			// The file API is sent to the host the MCP process starts (5190 by default)
 			"/api": "http://localhost:5190",
 			"/ws": {
 				target: "ws://localhost:5190",
@@ -18,7 +18,7 @@ export default defineConfig({
 		},
 	},
 	build: {
-		// バンドル済みサーバー（dist/index.mjs）の隣に置き、静的配信させる
+		// Placed next to the bundled server (dist/index.mjs), which serves it statically
 		outDir: "../../dist/client",
 		emptyOutDir: true,
 	},

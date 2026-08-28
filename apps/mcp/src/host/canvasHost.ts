@@ -1,14 +1,15 @@
-// AI が描いた図をその場で見せ、人がその上で直せるようにするための
-// ローカルホスト。MCP プロセスの中で HTTP + WebSocket を立て、ブラウザで
-// ビューアを開く。
+// A local host that shows the diagram the AI drew, on the spot, and lets a person
+// fix it there. It brings up HTTP + WebSocket inside the MCP process and opens the
+// viewer in a browser.
 //
-// 正本はワークスペース上の .jis.json ファイル 1 点に置く。AI は path ベースの
-// ツール（add_rect ほか）でそれを書き換え、ホストはファイルの変化を監視して
-// ビューアへ写す。人がビューアで直せば保存され、次に AI がファイルを読んだときには
-// 人の手が入った姿が返る。
+// The single source of truth is one .jis.json file in the workspace. The AI
+// rewrites it through the path-based tools (add_rect and the rest), and the host
+// watches the file and mirrors it into the viewer. A fix a person makes in the
+// viewer is saved back, so the next time the AI reads the file it gets the shape
+// the person left it in.
 //
-// ファイルに答えの無い問い合わせ（撮影・カメラ・選択・計測）だけは、ビューアへ
-// requestId を振って聞きに行く（runHandleOp）。
+// Only the queries the file has no answer for (capture, camera, selection,
+// measurement) are put to the viewer under a requestId (runHandleOp).
 
 import { randomUUID } from "node:crypto";
 import { unwatchFile, watchFile } from "node:fs";
@@ -28,110 +29,128 @@ import {
 	type CanvasHostServerMessage,
 } from "../shared/canvasHostProtocol";
 
-/** 最初に試すポート。studio の 5180 とは分けてある */
+/** The port tried first. Kept apart from studio's 5180 */
 const DEFAULT_PORT = 5190;
 
-/** 使用中だったときに 1 つずつ上へ譲る回数 */
+/** How many times to step one port up when the port is already in use */
 const PORT_ATTEMPT_COUNT = 20;
 
 /**
- * 対象ファイルの監視間隔。ポーリングなのは WSL やネットワーク越しの
- * ファイルシステムで inotify が届かないことがあるため。見るのは常に 1 ファイル
- * だけなので、この間隔でも負荷は無視できる
+ * Interval at which the target file is watched. Polling, because inotify does not
+ * always arrive on WSL or across a network file system. Only ever one file is
+ * being watched, so the load at this interval is negligible
  */
 const WATCH_INTERVAL_MS = 300;
 
 /**
- * ビューアが handleOpRequest に答えるのを諦めるまでの時間。人がドラッグしている
- * 最中でも答えは返るので、これに掛かるのはタブが固まっているときだけ
+ * How long to wait before giving up on the viewer answering a handleOpRequest. The
+ * answer comes back even while a person is mid-drag, so the only thing this catches
+ * is a frozen tab
  */
 const HANDLE_OP_TIMEOUT_MS = 15_000;
 
 /**
- * closeViewer を送ってから、窓が閉じたかを判定するまでの待ち。ビューアは溜めていた
- * 編集を書き出してから閉じるので、その 1 往復ぶんの余裕を見る
+ * How long to wait, after sending closeViewer, before judging whether the window
+ * closed. The viewer writes out the edits it has buffered before closing, so this
+ * allows for that one round trip
  */
 const VIEWER_CLOSE_TIMEOUT_MS = 5_000;
 
 /**
- * 最後のビューアが去ってから onViewersGone を呼ぶまでの猶予。再読み込みの一瞬の
- * 切断で畳んでしまわないための待ちで、ビューアの再接続間隔（1 秒から）の数回ぶん
+ * The grace period between the last viewer leaving and onViewersGone being called.
+ * It is there so a momentary disconnect on reload does not tear the host down, and
+ * it is a few times the viewer's reconnect interval (which starts at 1 second)
  */
 const IDLE_SHUTDOWN_DELAY_MS = 5_000;
 
-/** handleOpRequest の答え。canvas-agent の AiCanvasOpResult から requestId を落とした形 */
+/**
+ * The answer to a handleOpRequest. canvas-agent's AiCanvasOpResult with the
+ * requestId dropped
+ */
 export type HandleOpOutcome = {
 	ok: boolean;
-	/** AI へ返す本文。失敗時は理由そのもの */
+	/** The body returned to the AI. On failure, the reason itself */
 	text: string;
-	/** capture_canvas のときだけ入る PNG（base64） */
+	/** The PNG (base64), present only for capture_canvas */
 	imagePngBase64?: string;
 };
 
-/** closeViewers の結果。閉じられなかった窓は残ったまま動き続ける */
+/** The result of closeViewers. A window that could not be closed keeps running */
 export type ViewerCloseOutcome = {
-	/** 閉じた窓の数 */
+	/** How many windows closed */
 	closedCount: number;
-	/** ブラウザに拒まれるなどして開いたままの窓の数 */
+	/** How many windows stayed open, refused by the browser or otherwise */
 	remainingCount: number;
 };
 
 export type CanvasHost = {
-	/** ビューアの URL。AI へ返して人に開かせる */
+	/** The viewer's URL, returned to the AI for a person to open */
 	readonly url: string;
-	/** ファイル API とパス解決の基準になるディレクトリ（絶対パス） */
+	/** The directory the file API and path resolution are relative to (absolute path) */
 	readonly workspaceRoot: string;
 	/**
-	 * 表示するファイルを切り替える。接続中のビューアには即座に届き、
-	 * 未接続なら次に繋いだビューアがこれを開く
+	 * Switches the file on display. A connected viewer gets it immediately; with
+	 * none connected, the next viewer to connect opens it
 	 *
-	 * @param relPath workspaceRoot からの相対パス
+	 * @param relPath Path relative to workspaceRoot
 	 */
 	openFile: (relPath: string) => Promise<void>;
-	/** 現在表示中のファイル（workspaceRoot からの相対パス）。未指定なら null */
+	/**
+	 * The file currently on display (relative to workspaceRoot), or null when none
+	 * is set
+	 */
 	getOpenPath: () => string | null;
 	/**
-	 * 描かれた結果にしか答えの無い操作（撮影・カメラ・選択・計測）をビューアへ聞く。
+	 * Asks the viewer for an operation only the drawn result can answer (capture,
+	 * camera, selection, measurement).
 	 *
-	 * @param op 実行する操作
-	 * @returns AI へそのまま返せる結果。ビューアが繋がっていない・答えないときも
-	 *   投げずに ok=false で返す（AI には理由が読めればよい）
+	 * @param op The operation to run
+	 * @returns A result that can be handed to the AI as it is. Even when no viewer
+	 *   is connected, or none answers, it returns ok=false rather than throwing (all
+	 *   the AI needs is a readable reason)
 	 */
 	runHandleOp: (op: AiHandleOp) => Promise<HandleOpOutcome>;
 	/**
-	 * 開いているビューアの窓を閉じさせる。
+	 * Makes the open viewer windows close.
 	 *
-	 * @returns 閉じた数と残った数。Chromium は「スクリプトが開いた窓」以外を
-	 *   閉じさせないことがあり、そのときは remainingCount に出る
+	 * @returns How many closed and how many remain. Chromium sometimes refuses to
+	 *   close a window other than one "a script opened", and those show up in
+	 *   remainingCount
 	 */
 	closeViewers: () => Promise<ViewerCloseOutcome>;
-	/** 監視・WebSocket・HTTP を畳む。二重呼び出しは無害 */
+	/**
+	 * Tears down the watch, the WebSocket and the HTTP server. Calling it twice is
+	 * harmless
+	 */
 	close: () => Promise<void>;
 };
 
 export type CanvasHostOptions = {
-	/** ファイル API の基準ディレクトリ（絶対パス） */
+	/** The directory the file API is relative to (absolute path) */
 	workspaceRoot: string;
-	/** 最初に試すポート（既定 5190）。埋まっていれば 1 つずつ上へ譲る */
+	/** The port tried first (default 5190). While it is taken, steps one port up */
 	port?: number;
 	/**
-	 * false なら URL を返すだけでブラウザを開かない。省略時は環境変数
-	 * `JISCRIBE_MCP_NO_OPEN` に何か入っていれば開かない（ブラウザの無い環境で
-	 * MCP を動かすための逃げ道。値は問わないので "1" でも "true" でも効く）。
-	 * 開き方の選択は `JISCRIBE_MCP_BROWSER`（openBrowser 参照）
+	 * With false, only the URL is returned and no browser is opened. When omitted,
+	 * nothing is opened if the environment variable `JISCRIBE_MCP_NO_OPEN` holds
+	 * anything (an escape hatch for running the MCP where there is no browser; the
+	 * value does not matter, so "1" and "true" both work). How it is opened is
+	 * chosen by `JISCRIBE_MCP_BROWSER` (see openBrowser)
 	 */
 	shouldOpenBrowser?: boolean;
 	/**
-	 * 繋がっていたビューアが全て去り、猶予のあいだ 1 つも戻らなかったときに呼ばれる。
-	 * ホストは自分では畳まないので、呼び出し側が close して参照を捨てること。
-	 * 一度もビューアが繋がらないうちは呼ばれない（ブラウザの立ち上がりを待つ間や、
-	 * そもそも開かない設定のときに畳まないため）
+	 * Called once every viewer that was connected has left and none has come back
+	 * within the grace period. The host does not tear itself down, so the caller
+	 * must close it and drop the reference. It is not called until at least one
+	 * viewer has connected (so that nothing is torn down while a browser is still
+	 * starting up, or when the setting is not to open one at all)
 	 */
 	onViewersGone?: () => void;
 	/**
-	 * 最後のビューアが去ってから onViewersGone を呼ぶまでの猶予（ミリ秒、既定 5000）。
-	 * 再読み込みの一瞬の切断で畳まないための待ちなので、縮めてよいのは待てない
-	 * 事情があるとき（テスト）だけ
+	 * The grace period between the last viewer leaving and onViewersGone being
+	 * called (milliseconds, default 5000). It is there so a momentary disconnect on
+	 * reload does not tear the host down, so shorten it only when there is a reason
+	 * not to wait (tests)
 	 */
 	idleShutdownDelayMs?: number;
 };
@@ -143,11 +162,11 @@ const isAddressInUseError = (error: unknown): boolean =>
 	(error as { code?: unknown }).code === "EADDRINUSE";
 
 /**
- * 空いているポートが見つかるまで listen を試す。
+ * Tries to listen until a free port is found.
  *
- * @param server listen させる HTTP サーバー
- * @param startPort 最初に試すポート
- * @returns 実際に listen できたポート
+ * @param server The HTTP server to listen with
+ * @param startPort The port tried first
+ * @returns The port it actually managed to listen on
  */
 const listenOnAvailablePort = async (
 	server: http.Server,
@@ -182,10 +201,10 @@ const listenOnAvailablePort = async (
 };
 
 /**
- * 渡した接続が全て閉じるまで待つ。
+ * Waits until every connection passed in has closed.
  *
- * @param sockets 待つ対象。既に閉じているものが混ざっていても構わない
- * @param timeoutMs これを過ぎたら、開いたままの接続を残して打ち切る
+ * @param sockets What to wait on; already-closed ones mixed in are fine
+ * @param timeoutMs Past this, gives up and leaves any still-open connection as it is
  */
 const waitForSocketsToClose = async (
 	sockets: readonly WebSocket[],
@@ -220,12 +239,13 @@ const waitForSocketsToClose = async (
 };
 
 /**
- * キャンバスホストを起動する。HTTP + WebSocket を立て、ブラウザでビューアを開く
- * （既定は Chromium の `--app=`。枠もタブも無い窓になる）。
+ * Starts the canvas host. It brings up HTTP + WebSocket and opens the viewer in a
+ * browser (by default Chromium's `--app=`, which gives a window with no frame and
+ * no tabs).
  *
- * @param options workspaceRoot は絶対パスであること。ビューアはこのディレクトリの
- *   外のファイルには触れない
- * @returns 起動済みのホスト。表示対象は未指定なので、続けて openFile を呼ぶこと
+ * @param options workspaceRoot must be an absolute path; the viewer never touches a
+ *   file outside that directory
+ * @returns The started host. Nothing is on display yet, so call openFile next
  */
 export async function startCanvasHost(
 	options: CanvasHostOptions,
@@ -247,8 +267,9 @@ export async function startCanvasHost(
 	const sockets = new Set<WebSocket>();
 	const webSocketServer = new WebSocketServer({ server, path: "/ws" });
 
-	// 窓の寿命にホストを合わせるための状態。一度も繋がっていないうちに畳むと、
-	// 立ち上がりかけのブラウザが繋ぎに来る先を失う
+	// State for tying the host's lifetime to the windows'. Tearing down before
+	// anything has ever connected leaves a browser that is still starting up with
+	// nowhere to connect to
 	let hasEverConnected = false;
 	let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -273,13 +294,16 @@ export async function startCanvasHost(
 	};
 
 	/**
-	 * 答え待ちの handleOpRequest。聞いた相手を全部持つのは、その全員が黙って
-	 * 去ったときに待ちっぱなしにせず畳むため
+	 * handleOpRequests awaiting an answer. Every socket asked is kept so that, when
+	 * all of them leave without a word, the wait is ended instead of hanging
 	 */
 	const pendingHandleOps = new Map<
 		string,
 		{
-			/** まだ答えを待っている接続。閉じるたびに減り、空になったら失敗で畳む */
+			/**
+			 * The connections still expected to answer. Each close removes one; once
+			 * it is empty, the request settles as a failure
+			 */
 			askedSockets: Set<WebSocket>;
 			settle: (outcome: HandleOpOutcome) => void;
 			timer: ReturnType<typeof setTimeout>;
@@ -299,8 +323,9 @@ export async function startCanvasHost(
 		pending.settle(outcome);
 	};
 
-	// 表示中のファイルと、その中身として最後に配った本文。監視が拾った変化が
-	// 自分（または人の保存）の書き込みそのものだったときに黙るための控え
+	// The file on display, and the text last handed out as its content. Kept so that
+	// nothing is said when the change the watcher picked up is our own write (or a
+	// person's save) coming back
 	let openPath: string | null = null;
 	let lastKnownText: string | null = null;
 	let watchedFile: string | null = null;
@@ -315,8 +340,9 @@ export async function startCanvasHost(
 	};
 
 	/**
-	 * 表示中のファイルを読む。読めなければ null を返し、理由をビューアへ伝える
-	 * （AI 側にはツールの戻り値で別途伝わるので、ここでは投げない）。
+	 * Reads the file on display. Returns null when it cannot be read, and tells the
+	 * viewer why (the AI side hears it separately through the tool's return value,
+	 * so nothing is thrown here).
 	 */
 	const readOpenFileText = async (relPath: string): Promise<string | null> => {
 		try {
@@ -341,7 +367,7 @@ export async function startCanvasHost(
 		watchedFile = absolutePath;
 		watchFile(absolutePath, { interval: WATCH_INTERVAL_MS }, () => {
 			void (async () => {
-				// 切り替え直後の発火が古い対象を指すことがある
+				// A firing right after a switch can still point at the old target
 				if (openPath !== relPath) {
 					return;
 				}
@@ -379,7 +405,8 @@ export async function startCanvasHost(
 				});
 				return;
 			}
-			// 人の保存を「知っている最新」として控え、監視の自己エコーを止める
+			// Record a person's save as the latest text we know of, stopping the watch
+			// from echoing it back to us
 			if (frame.relPath === openPath) {
 				lastKnownText = frame.docText;
 			}
@@ -389,7 +416,7 @@ export async function startCanvasHost(
 			if (sockets.size === 0) {
 				scheduleIdleShutdown();
 			}
-			// 聞いた相手が全員去ったら、その問い合わせにはもう誰も答えない
+			// Once every socket asked has left, nobody is left to answer that request
 			for (const [requestId, pending] of pendingHandleOps) {
 				if (
 					pending.askedSockets.delete(socket) &&
@@ -402,7 +429,8 @@ export async function startCanvasHost(
 				}
 			}
 		});
-		// 接続の順序は問わない。開く対象が決まっていれば、その場で送る
+		// The order connections arrive in does not matter: if a file to open is
+		// already chosen, send it right away
 		if (openPath !== null && lastKnownText !== null) {
 			socket.send(
 				JSON.stringify({
@@ -426,12 +454,13 @@ export async function startCanvasHost(
 		workspaceRoot,
 		getOpenPath: () => openPath,
 		runHandleOp: async (op) => {
-			// 開いているタブ全部に聞いて、最初の答えを採る。
+			// Ask every open tab and take the first answer.
 			//
-			// 1 つに絞らないのは、繋いでいる相手が「今見ている画面」とは限らないため。
-			// ビューアは切れたら勝手に繋ぎ直すので、前のセッションで開いたまま忘れられた
-			// タブが、新しいホストへ後から合流してくる。そういうタブは古い版で
-			// handleOpRequest を知らないこともあり、そこだけに聞くと黙って時間切れになる。
+			// Not narrowing it to one, because the socket on the other end is not
+			// necessarily "the screen being looked at". The viewer reconnects on its
+			// own once cut off, so a tab left open and forgotten in an earlier session
+			// joins the new host later. Such a tab may be an old build that does not
+			// know handleOpRequest, and asking only that one times out silently.
 			const askedSockets = [...sockets].filter(
 				(candidate) => candidate.readyState === candidate.OPEN,
 			);
@@ -478,7 +507,8 @@ export async function startCanvasHost(
 				socket.send(frame);
 			}
 			await waitForSocketsToClose(targets, VIEWER_CLOSE_TIMEOUT_MS);
-			// 窓が消えれば接続も消える。残っているものは閉じるのを拒まれた窓
+			// A window going away takes its connection with it, so what is left is a
+			// window that refused to close
 			const remainingCount = targets.filter(
 				(candidate) => candidate.readyState === candidate.OPEN,
 			).length;
@@ -509,8 +539,9 @@ export async function startCanvasHost(
 					text: "the canvas host was shut down before the viewer answered",
 				});
 			}
-			// 閉じ握手を待たずに切る。畳む判断は済んでいるので、相手（もう閉じた窓や、
-			// 応答の無いタブ）の都合で待たされる意味がない
+			// Cut without waiting for the closing handshake. The decision to tear down
+			// is already made, so there is no point being held up by the other end (a
+			// window that has already closed, or a tab that does not respond)
 			for (const socket of sockets) {
 				socket.terminate();
 			}
@@ -524,8 +555,8 @@ export async function startCanvasHost(
 				server.close(() => {
 					resolve();
 				});
-				// close() は繋がっている接続が切れるまで返らない。ブラウザは
-				// keep-alive を握ったままなので、待つと畳めない
+				// close() does not return until the connections still up are cut. The
+				// browser holds keep-alive open, so waiting means never tearing down
 				server.closeAllConnections();
 			});
 		},

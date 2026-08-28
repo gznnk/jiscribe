@@ -1,5 +1,6 @@
-// 窓の寿命にホストを合わせる部分の確認。ブラウザは要らないので、ビューアの
-// 代わりに ws のクライアントを繋ぎ、closeViewer フレームへの応じ方だけを変える。
+// Covers the part that matches the host's lifetime to the windows'. No browser
+// is needed: a ws client is connected in place of a viewer, and only its answer
+// to the closeViewer frame changes.
 
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import net from "node:net";
@@ -11,10 +12,16 @@ import WebSocket from "ws";
 
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 
-/** テストが使うポートの起点。埋まっていればホストが 1 つずつ上へ譲る */
+/**
+ * Where the ports these tests use start. If one is taken the host gives way
+ * upward, one at a time
+ */
 const TEST_PORT = 5290;
 
-/** 猶予は既定 5 秒だが、ここでは畳むこと自体が見たいので詰める */
+/**
+ * The grace period is 5 seconds by default; it is shortened here because the
+ * shutdown itself is what we want to see
+ */
 const TEST_IDLE_DELAY_MS = 50;
 
 let viewerRoot: string;
@@ -23,7 +30,10 @@ let workspaceRoot: string;
 const openHosts: CanvasHost[] = [];
 const openSockets: WebSocket[] = [];
 
-/** ビルド済みビューアの代わり。resolveViewerAssets は index.html があれば通る */
+/**
+ * Stands in for the built viewer. resolveViewerAssets passes as long as
+ * index.html is there
+ */
 beforeAll(async () => {
 	viewerRoot = await mkdtemp(join(tmpdir(), "jiscribe-mcp-viewer-"));
 	await writeFile(join(viewerRoot, "index.html"), "<!doctype html>", "utf8");
@@ -66,8 +76,9 @@ const startTestHost = async (
 };
 
 /**
- * ビューアの代わりに繋ぐ。closeViewer が届いたときの振る舞いを呼び出し側が決める
- * （窓を閉じる = 接続を切る、閉じない = 何もしない）。
+ * Connects in place of a viewer. The caller decides what happens when
+ * closeViewer arrives (closing the window = dropping the connection, not
+ * closing it = doing nothing).
  */
 const connectFakeViewer = async (
 	host: CanvasHost,
@@ -92,7 +103,10 @@ const connectFakeViewer = async (
 	return socket;
 };
 
-/** 条件が満たされるまで短い間隔で見に行く。満たされないまま時間切れなら投げる */
+/**
+ * Polls at a short interval until the condition holds. Throws if it runs out of
+ * time with the condition unmet
+ */
 const waitFor = async (
 	isSatisfied: () => boolean,
 	timeoutMs = 2_000,
@@ -107,7 +121,7 @@ const waitFor = async (
 };
 
 describe("closeViewers", () => {
-	it("窓が閉じたら、閉じた数として数える", async () => {
+	it("counts a window that closed as closed", async () => {
 		const host = await startTestHost();
 		await connectFakeViewer(host, (socket) => {
 			socket.close();
@@ -119,9 +133,10 @@ describe("closeViewers", () => {
 		});
 	});
 
-	it("閉じるのを拒まれた窓は、閉じたことにせず残った数で返す", async () => {
+	it("reports a window that refused to close as remaining, not as closed", async () => {
 		const host = await startTestHost();
-		// ブラウザに window.close() を拒まれ、窓が生き残った場合
+		// The case where the browser refused window.close() and the window
+		// survived
 		await connectFakeViewer(host, () => {});
 
 		expect(await host.closeViewers()).toEqual({
@@ -130,7 +145,7 @@ describe("closeViewers", () => {
 		});
 	}, 15_000);
 
-	it("そもそもビューアが繋がっていなければ 0 を返す", async () => {
+	it("returns 0 when no viewer is connected in the first place", async () => {
 		const host = await startTestHost();
 
 		expect(await host.closeViewers()).toEqual({
@@ -141,15 +156,17 @@ describe("closeViewers", () => {
 });
 
 describe("close", () => {
-	it("読みかけの接続を掴まれたままでも畳める", async () => {
-		// server.close() は処理中の接続が終わるまで返らない。ブラウザは畳む合図を
-		// 知らないので、これを待つと畳めないまま止まる
+	it("shuts down even while a half-read connection is held open", async () => {
+		// server.close() does not return until the connections it is handling
+		// finish. The browser knows no signal to shut down, so waiting on this
+		// stalls without ever shutting down
 		const host = await startTestHost();
 		const port = Number(new URL(host.url).port);
 		const socket = net.connect(port, "127.0.0.1");
 		await new Promise<void>((resolve, reject) => {
 			socket.once("connect", () => {
-				// 締めの空行を送らない = サーバーから見ればまだ読んでいる途中
+				// Not sending the closing blank line = still mid-read as far as the
+				// server is concerned
 				socket.write("GET / HTTP/1.1\r\nHost: localhost\r\n");
 				resolve();
 			});
@@ -163,7 +180,7 @@ describe("close", () => {
 });
 
 describe("onViewersGone", () => {
-	it("最後のビューアが去り、猶予のあいだ戻らなければ呼ばれる", async () => {
+	it("is called once the last viewer leaves and does not come back within the grace period", async () => {
 		let goneCount = 0;
 		const host = await startTestHost({
 			onViewersGone: () => {
@@ -176,7 +193,7 @@ describe("onViewersGone", () => {
 		await waitFor(() => goneCount === 1);
 	});
 
-	it("1 つも繋がらないうちは呼ばれない", async () => {
+	it("is not called while nothing has ever connected", async () => {
 		let goneCount = 0;
 		await startTestHost({
 			onViewersGone: () => {
@@ -188,7 +205,7 @@ describe("onViewersGone", () => {
 		expect(goneCount).toBe(0);
 	});
 
-	it("猶予のうちに繋ぎ直されたら呼ばない", async () => {
+	it("is not called when something reconnects within the grace period", async () => {
 		let goneCount = 0;
 		const host = await startTestHost({
 			onViewersGone: () => {
@@ -197,7 +214,7 @@ describe("onViewersGone", () => {
 		});
 		const socket = await connectFakeViewer(host, () => {});
 		socket.close();
-		// 再読み込みで一瞬切れただけ、という筋
+		// The story where a reload dropped the connection for an instant
 		await connectFakeViewer(host, () => {});
 
 		await new Promise((resolve) => setTimeout(resolve, TEST_IDLE_DELAY_MS * 4));

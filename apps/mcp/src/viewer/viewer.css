@@ -54,7 +54,7 @@ body {
 	white-space: pre-wrap;
 }
 
-/* キャンバスは親いっぱいに広がるので、明示的な高さを与える */
+/* The canvas spreads to fill its parent, so give it an explicit height */
 .viewer-canvas-host {
 	flex: 1;
 	min-height: 0;

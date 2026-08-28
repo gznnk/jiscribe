@@ -1,12 +1,13 @@
 /**
- * 人が直したキャンバスをワークスペースへ書き戻す。
+ * Writes the canvas a person fixed back to the workspace.
  *
- * 読み出しの相手方は無い。ビューアが表示する内容は WebSocket で届くので、
- * HTTP でファイルを読む必要がない。
+ * There is no counterpart for reading. What the viewer displays arrives over the
+ * WebSocket, so there is no need to read a file over HTTP.
  *
- * @param relPath ワークスペースルートからの相対パス。外へ出るパスはサーバーが拒む
- * @param text 書き込む本文（`.jis.json` の全文）
- * @throws サーバーが返したエラーメッセージを持つ Error
+ * @param relPath Path relative to the workspace root. A path leading outside is
+ *   rejected by the server
+ * @param text The text to write (the whole `.jis.json`)
+ * @throws An Error carrying the error message the server returned
  */
 export async function saveFile(relPath: string, text: string): Promise<void> {
 	const response = await fetch(
@@ -28,7 +29,7 @@ export async function saveFile(relPath: string, text: string): Promise<void> {
 			message = body.error;
 		}
 	} catch {
-		// JSON でないエラーボディはステータス行のまま伝える
+		// An error body that is not JSON is reported as the status line it came as
 	}
 	throw new Error(message);
 }

@@ -1,18 +1,20 @@
-// Canvas の imperative ハンドルを AiHandleControl に写すアダプター。
-// キャンバスを載せているホスト（studio / editor-shell）が同じ配線を書かずに
-// 済むよう、ここ 1 か所に置く。
+// An adapter that maps Canvas's imperative handle onto AiHandleControl. It sits
+// here, in one place, so that the hosts carrying a canvas (studio,
+// editor-shell) do not each write the same wiring.
 
 import type { CanvasHandle } from "@jiscribe/canvas";
 
 import type { AiHandleControl } from "./types";
 
 /**
- * 表示中の Canvas を、マウント済みキャンバスが要る AI ツールへつなぐ窓口を作る。
+ * Builds the way in that joins the Canvas on screen to the AI tools needing a
+ * mounted canvas.
  *
- * @param getCanvas - 表示中の Canvas ハンドルを返す関数。キャンバスを出していない
- *   間は null を返すこと（AI にはその旨がツール結果として返る）
- * @returns パネルへ渡す窓口。返り値は毎回同じ実体ではないので、ホスト側で
- *   useMemo などに包んで固定すること
+ * @param getCanvas - A function returning the handle of the Canvas on screen; it
+ *   must return null while no canvas is up (the AI is told as much in the tool
+ *   result)
+ * @returns The way in to hand to the panel. It is not the same object on every
+ *   call, so pin it on the host side with useMemo or the like
  */
 export const createCanvasHandleControl = (
 	getCanvas: () => CanvasHandle | null,
@@ -26,8 +28,8 @@ export const createCanvasHandleControl = (
 		}
 		const { selectedIds, selectedConnectorId, ignoredIds } =
 			canvas.selection.select(ids);
-		// 選択チャンネルの分かれ方はキャンバス内部の都合なので、AI へは
-		// 「選べた id」1 本に均して返す
+		// How the selection is split into channels is the canvas's own business, so
+		// the AI gets it levelled into one list of "the ids that were selected"
 		return {
 			selectedIds:
 				selectedConnectorId === null
@@ -48,8 +50,9 @@ export const createCanvasHandleControl = (
 			return null;
 		}
 		viewport.setViewport(camera);
-		// SET_CAMERA は渡したカメラをそのまま採るが、反映は次のレンダーなので
-		// getViewport を読み直すと 1 フレーム前が返る。渡した値を適用結果とする
+		// SET_CAMERA takes the camera given as it is, but it lands on the next
+		// render, so reading getViewport back returns the frame before. The value
+		// passed in is what counts as applied
 		return camera;
 	},
 
@@ -79,21 +82,22 @@ export const createCanvasHandleControl = (
 	measureText: (id, slotId) =>
 		getCanvas()?.measure.textSlot(id, slotId) ?? null,
 
-	// キャンバスが無いときの [] は「重なり 0 件」と読めてしまうが、その手前で
-	// isAvailable が false として弾かれる（applyHandleOp）
+	// With no canvas the [] here reads as "no overlaps at all", but isAvailable
+	// turns it away as false before it gets that far (applyHandleOp)
 	findOverlaps: (ids) => getCanvas()?.measure.findOverlaps(ids) ?? [],
 
 	measureConnectorPath: (id) => getCanvas()?.measure.connectorPath(id) ?? null,
 
 	measureVisualBounds: (ids) => getCanvas()?.measure.visualBounds(ids) ?? null,
 
-	// findOverlaps と同じく、キャンバスが無いときの [] は applyHandleOp の
-	// isAvailable で先に弾かれる
+	// As with findOverlaps, the [] returned when there is no canvas is turned away
+	// first by isAvailable in applyHandleOp
 	hitTest: (target, tolerance) =>
 		getCanvas()?.measure.hitTest(target, { tolerance }) ?? [],
 
-	// AI が読むのは描かれ方そのものなので、再編集用の .jis.json は埋めない
-	// （埋めると文字数の大半が doc の写しになり、上限が先に来る）
+	// What the AI reads is how it is drawn, so the .jis.json for re-editing is not
+	// embedded (it would make most of the characters a copy of the document, and
+	// the budget would run out first)
 	toSvgString: () =>
 		getCanvas()?.export.toSvgString({ includeSource: false }) ?? null,
 

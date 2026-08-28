@@ -232,11 +232,12 @@ export type AiDocOp =
 			placement: AiZOrderPlacement;
 	  }
 	| { kind: "setStyle"; ids: string[]; style: AiStyle }
-	/** キャンバス面そのものの色。null で document から外し、ホストのテーマへ戻す */
+	/** The colour of the canvas surface itself; null drops it from the document, handing the surface back to the host's theme */
 	| { kind: "setBackground"; color: string | null }
 	/**
-	 * 表示の宣言（余白・開いたときの寄せ方・スクロールの壁）。渡した部分だけ書き、
-	 * null を渡した部分は宣言から外す
+	 * What the document declares about presentation: the padding, how it is framed
+	 * when opened, and the wall panning stops at. Only the parts given are
+	 * written, and a part given as null is dropped from the declaration
 	 */
 	| {
 			kind: "setDocumentView";
@@ -244,7 +245,7 @@ export type AiDocOp =
 			open?: AiViewOpen | null;
 			scroll?: AiViewScroll | null;
 	  }
-	/** 型が自分で持つプロパティ（lucideIcon の icon、callout の tail）の書き換え */
+	/** Writes the properties a type holds of its own (lucideIcon's icon, callout's tail) */
 	| {
 			kind: "setExtraProps";
 			id: string;

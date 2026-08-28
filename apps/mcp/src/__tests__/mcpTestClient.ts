@@ -3,48 +3,73 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
 import { createJiscribeMcpServer } from "../server";
 
-/** 1 回の `tools/call` の結果。テキストは content の text ブロックを改行で継いだもの。 */
+/**
+ * The result of one `tools/call`. The text is the content's text blocks joined
+ * with newlines.
+ */
 export type ToolCallResult = {
-	/** ツールが返した本文。エラー時も本文に `error: 〜` として載る。 */
+	/**
+	 * The body the tool returned. An error, too, rides in the body as
+	 * `error: ...`.
+	 */
 	text: string;
-	/** プロトコル層がエラーとして返したか（引数の型違反など）。 */
+	/**
+	 * Whether the protocol layer returned it as an error (an argument of the
+	 * wrong type, and the like).
+	 */
 	isError: boolean;
 };
 
-/** サーバーへ繋いだテストクライアント。使い終わったら `close` すること。 */
+/**
+ * A test client connected to the server. Call `close` when you are done with
+ * it.
+ */
 export type McpTestClient = {
 	/**
-	 * ツールを 1 つ呼ぶ。
+	 * Calls one tool.
 	 *
-	 * @param name - ツール名（`validate_canvas` など）
-	 * @param args - 引数オブジェクト。zod スキーマの検証を通るので、型違反は isError で返る
+	 * @param name - The tool name (`validate_canvas`, for instance)
+	 * @param args - The argument object. It goes through the zod schema's
+	 *   validation, so a type violation comes back as isError
 	 */
 	callTool: (
 		name: string,
 		args: Record<string, unknown>,
 	) => Promise<ToolCallResult>;
-	/** 登録されているツール名の一覧を、登録順のまま返す。 */
+	/**
+	 * Returns the names of the registered tools, in the order they were
+	 * registered.
+	 */
 	listToolNames: () => Promise<string[]>;
 	/**
-	 * 1 ツールの入力スキーマ（JSON Schema）を丸ごと返す。
+	 * Returns one tool's description. A tool holding no description gives an
+	 * empty string.
 	 *
-	 * @param name - ツール名。未登録なら例外を投げる
+	 * @param name - The tool name. Throws if it is not registered
+	 */
+	getToolDescription: (name: string) => Promise<string>;
+	/**
+	 * Returns one tool's whole input schema (JSON Schema).
+	 *
+	 * @param name - The tool name. Throws if it is not registered
 	 */
 	getToolInputSchema: (name: string) => Promise<Record<string, unknown>>;
 	/**
-	 * 1 ツールの入力スキーマのプロパティ表を返す。
+	 * Returns the property table of one tool's input schema.
 	 *
-	 * @param name - ツール名。未登録なら例外を投げる
+	 * @param name - The tool name. Throws if it is not registered
 	 */
 	getToolInputProperties: (name: string) => Promise<Record<string, unknown>>;
 	close: () => Promise<void>;
 };
 
 /**
- * 本番と同じ `createJiscribeMcpServer()` を in-memory トランスポートで繋ぐ。
+ * Connects the same `createJiscribeMcpServer()` production uses over an
+ * in-memory transport.
  *
- * 子プロセスを立てないぶん速いが、通るのは stdio と同じ JSON-RPC 経路なので
- * ツール登録と zod による引数検証はそのまま効く。
+ * It is faster for standing up no child process, but what it goes through is
+ * the same JSON-RPC path as stdio, so tool registration and zod's argument
+ * validation still apply as they are.
  */
 export async function connectMcpTestClient(): Promise<McpTestClient> {
 	const [clientTransport, serverTransport] =
@@ -81,6 +106,8 @@ export async function connectMcpTestClient(): Promise<McpTestClient> {
 		},
 		listToolNames: async () =>
 			(await client.listTools()).tools.map((tool) => tool.name),
+		getToolDescription: async (name) =>
+			(await findTool(name)).description ?? "",
 		getToolInputSchema: async (name) => (await findTool(name)).inputSchema,
 		getToolInputProperties: async (name) =>
 			(await findTool(name)).inputSchema.properties ?? {},

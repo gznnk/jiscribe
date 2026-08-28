@@ -3,13 +3,13 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createJiscribeMcpServer } from "./server";
 
 /**
- * jiscribe-mcp の実行エントリ（PoC）。stdio で動く独立プロセスとして
- * `./server` のツール群を AI クライアントへ公開する。
+ * The jiscribe-mcp executable entry point (PoC). Exposes the tools in `./server`
+ * to AI clients as a standalone process running over stdio.
  */
 async function main(): Promise<void> {
 	const transport = new StdioServerTransport();
 	await createJiscribeMcpServer().connect(transport);
-	// stdio サーバーは接続後、stdin が閉じるまで動き続ける。
+	// Once connected, a stdio server keeps running until stdin closes.
 }
 
 main().catch((error: unknown) => {

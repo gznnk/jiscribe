@@ -40,7 +40,10 @@ const overflowingDoc: CanvasFileContent = {
 	],
 };
 
-/** ラベルが 2 図形の隙間より広いコネクター（doc-tools の labelOverflowing 相当）。 */
+/**
+ * A connector whose label is wider than the gap between the two shapes
+ * (doc-tools' labelOverflowing).
+ */
 const labelOverflowingDoc: CanvasFileContent = {
 	version: 1,
 	root: [
@@ -95,14 +98,14 @@ afterAll(async () => {
 });
 
 describe("validate_canvas", () => {
-	it("正しい文書は valid: true の 1 行だけを返す", async () => {
+	it("returns the single line valid: true for a correct document", async () => {
 		const result = await client.callTool("validate_canvas", {
 			content: JSON.stringify(fittingDoc),
 		});
 		expect(result.text).toBe("valid: true");
 	});
 
-	it("スキーマ違反は valid: false と欠けたプロパティを返す", async () => {
+	it("returns valid: false and the missing property for a schema violation", async () => {
 		const result = await client.callTool("validate_canvas", {
 			content: JSON.stringify({
 				version: 1,
@@ -113,7 +116,7 @@ describe("validate_canvas", () => {
 		expect(result.text).toContain("must have required property 'width'");
 	});
 
-	it("JSON として壊れていれば構文エラーとして返す", async () => {
+	it("returns a syntax error when it is broken as JSON", async () => {
 		const result = await client.callTool("validate_canvas", { content: "{" });
 		expect(result.text).toMatch(/^valid: false\n/);
 		expect(result.text).toContain("JSON syntax error");
@@ -121,13 +124,13 @@ describe("validate_canvas", () => {
 });
 
 describe("diagnose_canvas", () => {
-	it("収まっている文書には何も報告しない", async () => {
+	it("reports nothing for a document that fits", async () => {
 		const path = await workspace.writeDoc("fitting.jis.json", fittingDoc);
 		const result = await client.callTool("diagnose_canvas", { path });
 		expect(result.text).toBe("valid: true");
 	});
 
-	it("あふれた図形を error として 1 件だけ挙げる", async () => {
+	it("lists an overflowing shape as a single error", async () => {
 		const path = await workspace.writeDoc(
 			"overflowing.jis.json",
 			overflowingDoc,
@@ -137,7 +140,7 @@ describe("diagnose_canvas", () => {
 		expect(result.text).toContain("- error narrow: text overflows rect 60x40");
 	});
 
-	it("コネクターのラベルあふれは warning なので valid: true のまま挙げる", async () => {
+	it("lists an overflowing connector label while staying valid: true, it being a warning", async () => {
 		const path = await workspace.writeDoc(
 			"labelOverflowing.jis.json",
 			labelOverflowingDoc,
@@ -149,7 +152,7 @@ describe("diagnose_canvas", () => {
 		);
 	});
 
-	it("読めないファイルはエラー本文として返す（例外にしない）", async () => {
+	it("returns a file it cannot read as error text, not as an exception", async () => {
 		const result = await client.callTool("diagnose_canvas", {
 			path: "/nonexistent/jiscribe-mcp/missing.jis.json",
 		});

@@ -1,7 +1,9 @@
-// 引数スキーマが未知のキーを黙って捨てないことを、実際の `tools/call` の往復で見る。
+// Checks over a real `tools/call` round trip that the argument schemas do not
+// silently drop unknown keys.
 //
-// zod の既定（strip）に戻ると、綴りを間違えた引数も、その型が持たない引数も、
-// 成功したという応答とともに消える。ここが落ちるときは strict が外れている。
+// Back on zod's default (strip), a misspelled argument and an argument the type
+// does not have both vanish, along with a reply saying it succeeded. When this
+// file fails, strict has come off.
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -15,7 +17,10 @@ import { createTempCanvasWorkspace } from "./tempCanvasWorkspace";
 
 const emptyDoc: CanvasFileContent = { version: 1, root: [] };
 
-/** 断り文句が挙げうるスタイルキーごとの、宣言を満たす見本の値。 */
+/**
+ * A sample value satisfying the declaration, for each style key a refusal
+ * message may name.
+ */
 const STYLE_SAMPLE_VALUES: Record<string, unknown> = {
 	fill: "#e3f2fd",
 	stroke: "#1565c0",
@@ -33,7 +38,10 @@ const STYLE_SAMPLE_VALUES: Record<string, unknown> = {
 
 let client: McpTestClient;
 let workspace: TempCanvasWorkspace;
-/** テストごとに書き直す変更対象。名前を分けるのは書き戻し先を取り違えないため。 */
+/**
+ * The target rewritten by each test. The names are kept apart so that no test
+ * writes back to another's file.
+ */
 let targetPath: string;
 let testIndex = 0;
 
@@ -54,10 +62,11 @@ beforeEach(async () => {
 	);
 });
 
-describe("配列要素の未知キー", () => {
-	it("add_objects の要素に文書側の座標を書くと、図形を作らずに落ちる", async () => {
-		// 実際に起きた事故そのもの。ツールは全型を外接矩形で置くので cx / cy / ry は
-		// 黙って捨てられ、楕円 4 つが原点に既定サイズで積み上がった
+describe("unknown keys on an array element", () => {
+	it("fails without creating a shape when an add_objects entry carries the document's own coordinates", async () => {
+		// The accident that actually happened. The tool places every type by its
+		// bounding rect, so cx / cy / ry were silently dropped and four ellipses
+		// piled up at the origin at the default size
 		const result = await client.callTool("add_objects", {
 			path: targetPath,
 			objects: [{ type: "ellipse", x: 0, y: 0, cx: 39, cy: 126, rx: 5, ry: 5 }],
@@ -69,7 +78,7 @@ describe("配列要素の未知キー", () => {
 		expect(await workspace.readDoc(targetPath)).toEqual(emptyDoc);
 	});
 
-	it("connect_many の要素の未知キーも同じく落ちる", async () => {
+	it("fails the same way for an unknown key on a connect_many entry", async () => {
 		const result = await client.callTool("connect_many", {
 			path: targetPath,
 			entries: [{ sourceId: "a", targetId: "b", arrow: "end" }],
@@ -80,10 +89,11 @@ describe("配列要素の未知キー", () => {
 	});
 });
 
-describe("型が持てないスタイルキー", () => {
-	it("add_objects で楕円に rx を書くと、図形を作らずに落ちる", async () => {
-		// rx は styleSchema の正規のキーなので strict を素通りする。楕円に丸める角が
-		// 無いと言えるのは、型の features を知っている doc 層だけ
+describe("a style key the type cannot hold", () => {
+	it("fails without creating a shape when add_objects writes rx on an ellipse", async () => {
+		// rx is a proper key of styleSchema, so it passes strict untouched. Only
+		// the doc layer, which knows the type's features, can say an ellipse has
+		// no corners to round
 		const result = await client.callTool("add_objects", {
 			path: targetPath,
 			objects: [
@@ -92,17 +102,19 @@ describe("型が持てないスタイルキー", () => {
 			],
 		});
 
-		// スキーマは通るので、断るのは doc 層。応答は isError ではなく "error:" で返る
+		// The schema lets it through, so the doc layer is what refuses. The reply
+		// comes back as "error:" rather than as isError
 		expect(result.text).toContain(
 			'entries[1] (ellipse): object type "ellipse" cannot be styled with "rx"',
 		);
 		expect(await workspace.readDoc(targetPath)).toEqual(emptyDoc);
 	});
 
-	// doc は ai-tools より広いスタイル語彙を持つので、断り文句が挙げる名前が
-	// ツールに無いということが起こりうる。そうなると AI は言われたとおりに
-	// 書き直して二度落ちる。断り文句は導線なので、名指しした名前は必ず通ること
-	it("断り文句が挙げる名前は、どれもそのまま渡せる", async () => {
+	// The doc layer has a wider style vocabulary than ai-tools, so a name the
+	// refusal message lists may not exist on the tool. The AI then rewrites the
+	// call as it was told to and fails a second time. The refusal is a signpost,
+	// so every name it points at must go through
+	it("takes every name the refusal message lists, exactly as given", async () => {
 		const refused = await client.callTool("add_object", {
 			path: targetPath,
 			type: "ellipse",
@@ -117,7 +129,8 @@ describe("型が持てないスタイルキー", () => {
 
 		for (const name of advertised) {
 			const value = STYLE_SAMPLE_VALUES[name];
-			// 見本の無い名前はテストの穴。doc に増えたキーをここで気付くための失敗
+			// A name with no sample is a hole in the test. This failure is how a key
+			// newly added to doc gets noticed
 			expect(value, `no sample value for "${name}"`).toBeDefined();
 			const result = await client.callTool("add_object", {
 				path: targetPath,
@@ -133,8 +146,8 @@ describe("型が持てないスタイルキー", () => {
 	});
 });
 
-describe("トップレベルの未知キー", () => {
-	it("自前のツールでも落ちる", async () => {
+describe("unknown keys at the top level", () => {
+	it("fails on our own tools", async () => {
 		const result = await client.callTool("add_rect", {
 			path: targetPath,
 			x: 0,
@@ -147,7 +160,7 @@ describe("トップレベルの未知キー", () => {
 		expect(await workspace.readDoc(targetPath)).toEqual(emptyDoc);
 	});
 
-	it("ai-tools 由来の doc ツールでも落ちる", async () => {
+	it("fails on the doc tools that come from ai-tools", async () => {
 		const result = await client.callTool("add_object", {
 			path: targetPath,
 			type: "rect",
@@ -161,7 +174,7 @@ describe("トップレベルの未知キー", () => {
 		expect(await workspace.readDoc(targetPath)).toEqual(emptyDoc);
 	});
 
-	it("画面が要るツールでも、ビューアの有無より先に落ちる", async () => {
+	it("fails on a tool that needs a canvas before it ever looks for a viewer", async () => {
 		const result = await client.callTool("capture_canvas", { zoom: 2 });
 
 		expect(result.isError).toBe(true);
@@ -169,8 +182,8 @@ describe("トップレベルの未知キー", () => {
 	});
 });
 
-describe("正しい引数", () => {
-	it("宣言どおりの引数はこれまでどおり通る", async () => {
+describe("arguments that are correct", () => {
+	it("lets arguments that match the declaration through as before", async () => {
 		const added = await client.callTool("add_objects", {
 			path: targetPath,
 			objects: [
@@ -191,7 +204,7 @@ describe("正しい引数", () => {
 		});
 	});
 
-	it("型が自分で宣言するプロパティは extraProps を通って届く", async () => {
+	it("carries the properties a type declares for itself through extraProps", async () => {
 		const added = await client.callTool("add_object", {
 			path: targetPath,
 			type: "lucideIcon",
@@ -211,7 +224,7 @@ describe("正しい引数", () => {
 });
 
 describe("JSON Schema", () => {
-	it("additionalProperties: false を載せるので、AI は呼ぶ前に契約を読める", async () => {
+	it("carries additionalProperties: false, so the AI reads the contract before calling", async () => {
 		expect(await client.getToolInputSchema("add_objects")).toMatchObject({
 			additionalProperties: false,
 			properties: { objects: { items: { additionalProperties: false } } },

@@ -18,7 +18,7 @@ describe("setBackground", () => {
 
 		docOps.setBackground(doc, "rgb(20 22 26)");
 
-		// ホスト側で解釈させるため、正規化も検証もせずそのまま持つ
+		// Held as written, neither normalised nor validated, because the host is what interprets it.
 		expect(doc.background).toBe("rgb(20 22 26)");
 		expectValid(doc);
 	});
@@ -38,7 +38,7 @@ describe("setBackground", () => {
 
 		docOps.setBackground(doc, null);
 
-		// 「白にする」ではなく「ホストのテーマへ返す」なので、キーごと消える
+		// Not "paint it white" but "hand it back to the host's theme", so the key goes altogether.
 		expect(Object.hasOwn(doc, "background")).toBe(false);
 		expectValid(doc);
 	});
@@ -75,7 +75,7 @@ describe("setView", () => {
 
 		docOps.setView(doc, { padding: { top: 40, right: 0, bottom: 40 } });
 
-		// 0 は「省いた」と同義なので書かない
+		// A 0 says the same thing as leaving the side out, so it is not written.
 		expect(doc.view).toEqual({ padding: { top: 40, bottom: 40 } });
 		expectValid(doc);
 	});
@@ -116,8 +116,8 @@ describe("setView", () => {
 		});
 
 		expect(Object.hasOwn(doc, "view")).toBe(false);
-		// 頼んだ内容をそのまま返すと、呼び出し側が「0 の padding を宣言した」と
-		// 言ってしまう。書かれた宣言そのものを返す
+		// Echoing back what was asked for would have the caller say a padding of 0 was
+		// declared. What comes back is the declaration as it was written.
 		expect(declaration).toBeNull();
 	});
 

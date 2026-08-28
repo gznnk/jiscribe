@@ -1,11 +1,13 @@
-// キャンバスビューアを配り、人の編集を受け取るだけの HTTP 層。
+// The HTTP layer, which does nothing but serve the canvas viewer and take in a
+// person's edits.
 //
-// 配るものは 2 つしかない。ビルド時に 1 枚へまとめたビューアの HTML と、
-// その CSS が参照するフォント（unicode-range で分割されているので、ブラウザは
-// 実際に描く範囲だけ取りに来る）。加えて、人が直した結果を書き戻す口を持つ。
+// There are only two things it serves: the viewer's HTML, folded into one file at
+// build time, and the fonts its CSS refers to (split by unicode-range, so the
+// browser only fetches the ranges it actually draws). On top of that it has an
+// endpoint for writing back what a person fixed.
 //
-// 読み出しの口を持たないのは、ビューアが doc を WebSocket で受け取るため
-// （HTTP でファイルを読む必要がない）。
+// It has no endpoint for reading because the viewer receives the doc over the
+// WebSocket (there is no need to read a file over HTTP).
 
 import { createReadStream } from "node:fs";
 import { mkdir, stat } from "node:fs/promises";
@@ -15,7 +17,7 @@ import path from "node:path";
 import { resolveWorkspacePath, WorkspacePathError } from "./workspacePaths";
 import { writeFileAtomically } from "../atomicWrite";
 
-/** フォントの配信に要る分だけ。ここに無い拡張子は配らない */
+/** Only what serving the fonts needs. An extension not listed here is not served */
 const assetContentTypes: Record<string, string> = {
 	".woff": "font/woff",
 	".woff2": "font/woff2",
@@ -76,7 +78,8 @@ const handleWriteFile = async (
 	}
 	const resolvedFile = resolveWorkspacePath(workspaceRoot, relPath);
 	const body = await readRequestBody(request);
-	// 親ディレクトリはワークスペース内に解決済みなので作成してよい
+	// The parent directory has already resolved inside the workspace, so it is safe
+	// to create
 	await mkdir(path.dirname(resolvedFile), { recursive: true });
 	await writeFileAtomically(resolvedFile, body);
 	sendJson(response, 200, { ok: true });
@@ -109,7 +112,8 @@ const serveAsset = async (
 		response.writeHead(200, {
 			"Content-Type": contentType,
 			"Content-Length": fileStat.size,
-			// 内容ごとにファイル名が変わる（vite のハッシュ付き）ので、長く持たせてよい
+			// The file name changes with the content (vite's hash), so it can be held
+			// for a long time
 			"Cache-Control": "public, max-age=31536000, immutable",
 		});
 		createReadStream(resolvedFile).pipe(response);
@@ -119,18 +123,22 @@ const serveAsset = async (
 };
 
 export type ViewerHttpServerOptions = {
-	/** ファイルの書き込み先の基準（絶対パス）。この外へは書けない */
+	/**
+	 * What file writes are relative to (absolute path). Nothing outside it can be
+	 * written
+	 */
 	workspaceRoot: string;
-	/** 1 枚にまとめたビューアの HTML。ビルド時に埋め込まれたもの */
+	/** The viewer's HTML, folded into one file and embedded at build time */
 	viewerHtml: string;
-	/** フォントなど、HTML から参照される資産のディレクトリ（絶対パス） */
+	/** The directory of assets the HTML refers to, such as the fonts (absolute path) */
 	assetRootPath: string;
 };
 
 /**
- * ビューアを配る HTTP サーバーを作る。listen は呼び出し側が行う。
+ * Creates the HTTP server that serves the viewer. Listening is left to the caller.
  *
- * @param options workspaceRoot の外へは書けない。viewerHtml はそのまま `/` で返る
+ * @param options Nothing outside workspaceRoot can be written. viewerHtml is
+ *   returned as it is at `/`
  */
 export function createViewerHttpServer(
 	options: ViewerHttpServerOptions,

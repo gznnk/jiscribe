@@ -57,12 +57,14 @@ describe("writeFileAtomically", () => {
 
 		await writeFileAtomically(target, "new");
 
-		// 引き継がないと umask 由来の既定モードになり、元より緩くなりうる
+		// Without carrying them over the mode falls back to umask's default, which
+		// can be looser than the original
 		expect((await stat(target)).mode & 0o777).toBe(0o600);
 	});
 
 	it("leaves the original alone when the write fails", async () => {
-		// 親が存在しないので一時ファイルの作成から失敗する
+		// The parent does not exist, so it fails from the creation of the
+		// temporary file onward
 		const target = join(dir, "missing-dir", "file.jis.json");
 
 		await expect(writeFileAtomically(target, "hello")).rejects.toThrow();
@@ -71,12 +73,14 @@ describe("writeFileAtomically", () => {
 
 	it("never shows a half-written file to a reader", async () => {
 		const target = join(dir, "big.jis.json");
-		// 長さを変えておく。同じ長さだと、途中まで書かれた姿と完成品を見分けられない
+		// The lengths differ. At the same length a half-written file cannot be
+		// told from a finished one
 		const shortContents = "s".repeat(400_000);
 		const longContents = "l".repeat(900_000);
 		await writeFile(target, shortContents, "utf8");
 
-		// 書き換えている最中に読み続ける。直接上書きなら途中の長さで読めてしまう
+		// Keeps reading while the rewrite is in flight. A direct overwrite would
+		// let an intermediate length be read
 		const seen = new Set<number>();
 		let keepReading = true;
 		const reader = (async () => {
@@ -84,7 +88,8 @@ describe("writeFileAtomically", () => {
 				try {
 					seen.add((await readFile(target, "utf8")).length);
 				} catch {
-					// 置き換えの隙間で開けないことは有りうる。長さの確認が目的なので無視する
+					// The file may not open in the gap during the replacement. Lengths
+					// are what we are after, so this is ignored
 				}
 			}
 		})();
@@ -98,7 +103,8 @@ describe("writeFileAtomically", () => {
 		keepReading = false;
 		await reader;
 
-		// 読めたのは完成品の 2 種類だけで、途中の長さは 1 度も現れないこと
+		// Only the two finished forms were ever read; no intermediate length ever
+		// appeared
 		expect([...seen].sort((a, b) => a - b)).toEqual([
 			shortContents.length,
 			longContents.length,

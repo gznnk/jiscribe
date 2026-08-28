@@ -1,8 +1,9 @@
-// ビルド済みビューアの在り処を解く。
+// Resolves where the built viewer is.
 //
-// vite build が出すのは 2 つだけ。JS と CSS を 1 枚に畳んだ index.html と、
-// その CSS が参照するフォント（assets/）。前者は起動時に読み切ってメモリに載せ、
-// 後者はディレクトリのまま配る（全部で 50MB あり、畳める量ではない）。
+// vite build emits only two things: an index.html with the JS and CSS folded into
+// it, and the fonts its CSS refers to (assets/). The former is read in full at
+// startup and held in memory; the latter is served as the directory it is (50MB in
+// total, far more than can be folded in).
 
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -11,18 +12,18 @@ import { fileURLToPath } from "node:url";
 import { CanvasHostError } from "./canvasHostError";
 
 export type ViewerAssets = {
-	/** `/` で返す HTML の全文 */
+	/** The whole HTML returned at `/` */
 	viewerHtml: string;
-	/** `/assets/` 以下で配るディレクトリ（絶対パス） */
+	/** The directory served under `/assets/` (absolute path) */
 	assetRootPath: string;
 };
 
 /**
- * ビューアの置き場の候補を、探す順に返す。
+ * The candidate locations of the viewer, in the order they are looked for.
  *
- * バンドル後は dist/index.mjs の隣の client/。tsx で src から起動したときは
- * そこに何も無いので、パッケージの dist/client へ落ちる（ビルド済みなら
- * 開発起動でも画面が出る）。
+ * Once bundled it is the client/ beside dist/index.mjs. Started from src with tsx
+ * there is nothing there, so it drops to the package's dist/client (which means a
+ * development start shows a screen too, as long as a build exists).
  */
 const calcViewerRootCandidates = (): readonly string[] => {
 	const override = process.env.JISCRIBE_MCP_VIEWER_ROOT;
@@ -36,11 +37,11 @@ const calcViewerRootCandidates = (): readonly string[] => {
 };
 
 /**
- * ビューアの HTML を読み、アセットの置き場と併せて返す。
+ * Reads the viewer's HTML and returns it along with where the assets are.
  *
- * @returns 読み込み済みの HTML と、フォントを配るディレクトリ
- * @throws CanvasHostError ビルドされていないとき。黙って 404 を返し続けると
- *   「画面が真っ白」としか分からないので、起動時に落とす
+ * @returns The HTML already read in, and the directory the fonts are served from
+ * @throws CanvasHostError When it has not been built. Quietly going on returning
+ *   404s tells nobody anything beyond "the screen is blank", so it fails at startup
  */
 export function resolveViewerAssets(): ViewerAssets {
 	const candidates = calcViewerRootCandidates();
@@ -54,6 +55,6 @@ export function resolveViewerAssets(): ViewerAssets {
 		}
 	}
 	throw new CanvasHostError(
-		`canvas viewer is not built (looked for index.html in ${candidates.join(", ")}). Run \`pnpm --filter @workspace/mcp build\`, or set JISCRIBE_MCP_VIEWER_ROOT to a directory holding one.`,
+		`canvas viewer is not built (looked for index.html in ${candidates.join(", ")}). Run \`pnpm --filter jiscribe-mcp build\`, or set JISCRIBE_MCP_VIEWER_ROOT to a directory holding one.`,
 	);
 }

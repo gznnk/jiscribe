@@ -4,23 +4,30 @@ import { offerTextMeasurement } from "@jiscribe/doc/unstable";
 import { nodeTextMeasurement } from "@jiscribe/doc-tools";
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 
-/** 読み込み・書き戻しが共有するパーサー。図形の集合は出荷図形セットが正本。 */
+/**
+ * The parser shared by loading and writing back. The shipped shape set is the
+ * source of truth for which shapes exist.
+ */
 export const canvasParser = createCanvasParser({ plugins: standardDocPlugins });
 
-// docOps は height 省略の図形の高さをテキストから導くため、計測を要求する。
-// このモジュールの評価時に名乗り出ておかないと、ツールの呼び出し順によって
-// 最初の計測が未提示のまま走って落ちる。
+// docOps asks for text measurement, since it derives the height of a shape that
+// omits one from that shape's text. Unless it is offered while this module is
+// evaluated, the first measurement can run with none offered — depending on the
+// order the tools are called — and throw.
 offerTextMeasurement(nodeTextMeasurement());
 
 /**
- * 自前の追加ツールと、ai-tools 由来の doc 操作（applyCanvasOp）が共有する doc-ops。
- * パーサーと同じプラグイン集合でないと、プラグイン図形を追加した直後の書き戻し・
- * 次回読み込みが unknown type で失敗する。
+ * The doc-ops shared by the built-in add tools and the ai-tools doc operations
+ * (applyCanvasOp). With a plugin set other than the parser's, the write-back
+ * right after adding a plugin shape — and the next load — fail with an unknown
+ * type.
  */
 export const docOps = createDocOps({ plugins: standardDocPlugins });
 
 /**
- * ai-tools のツール宣言が図形型の enum を埋めるのに使う能力表。パーサー・docOps と
- * 同じプラグイン集合から導くので、宣言に載る型と実際に追加できる型が食い違わない。
+ * The capability table the ai-tools tool declarations use to fill in the shape
+ * type enums. Derived from the same plugin set as the parser and docOps, so the
+ * types a declaration lists cannot disagree with the types that can actually be
+ * added.
  */
 export const canvasCapabilities = toCanvasCapabilities(standardDocPlugins);

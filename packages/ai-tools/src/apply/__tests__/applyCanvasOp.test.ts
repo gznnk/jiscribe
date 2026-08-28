@@ -16,7 +16,7 @@ import { applyCanvasOp } from "../applyCanvasOp";
 import { createCanvasOpHistory } from "../canvasOpHistory";
 import type { AiDocBridge } from "../docBridge";
 
-/** 出荷構成（desktop / web）と同じ 4 プラグインで docOps を組む */
+/** Builds docOps with the same four plugins as the shipping set (desktop / web) */
 const docPlugins: readonly CanvasDocPlugin[] = [
 	flowchartDocPlugin,
 	containerDocPlugin,
@@ -26,7 +26,7 @@ const docPlugins: readonly CanvasDocPlugin[] = [
 
 const docOps = createDocOps({ plugins: docPlugins });
 
-/** ホストの docBridge を模した最小実装。差し替え結果を保持して検査する */
+/** The smallest stand-in for a host's docBridge; it keeps what was replaced so the test can inspect it */
 const createFakeDocBridge = (
 	initialDoc: CanvasDoc = { version: 1, root: [] },
 ) => {
@@ -49,7 +49,7 @@ const createFakeDocBridge = (
 	};
 };
 
-/** doc から 1 オブジェクトを引く。グループの中までは辿らない */
+/** Looks one object up in the document; it does not follow into groups */
 const rootObject = (doc: CanvasDoc, id: string): Record<string, unknown> =>
 	doc.root.find((object) => object.id === id) as unknown as Record<
 		string,
@@ -57,7 +57,7 @@ const rootObject = (doc: CanvasDoc, id: string): Record<string, unknown> =>
 	>;
 
 describe("applyCanvasOp", () => {
-	it("describeCanvas は doc を変更せず JSON を返す", () => {
+	it("returns JSON from describeCanvas without changing the document", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
 		const result = apply({ kind: "describeCanvas" });
@@ -67,7 +67,7 @@ describe("applyCanvasOp", () => {
 		expect(replacedDocs).toHaveLength(0);
 	});
 
-	it("addObject は新しい doc 実体を渡す（同一実体だと Canvas が同期しない）", () => {
+	it("hands a new document object back from addObject (given the same object, Canvas never syncs)", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 		const docBeforeOp = currentDoc();
 
@@ -82,13 +82,14 @@ describe("applyCanvasOp", () => {
 		expect(result.ok).toBe(true);
 		expect(replacedDocs).toHaveLength(1);
 		expect(replacedDocs[0]).not.toBe(docBeforeOp);
-		// 元の doc は破壊されない（docOps は in-place なので複製が要る）
+		// The original document is left intact (docOps works in place, so a clone is
+		// needed)
 		expect(docBeforeOp.root).toHaveLength(0);
 		expect(currentDoc().root).toHaveLength(1);
 		expect(result.text).toContain("rect-1");
 	});
 
-	it("addObject はスタイル指定をそのまま反映する", () => {
+	it("writes the style given to addObject through as it stands", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 
 		apply({
@@ -106,7 +107,7 @@ describe("applyCanvasOp", () => {
 		});
 	});
 
-	it("プラグイン図形も追加できる（doc プラグインの登録漏れ検出）", () => {
+	it("adds a plugin shape too, catching a doc plugin left unregistered", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 
 		const result = apply({ kind: "addObject", type: "diamond", x: 0, y: 0 });
@@ -115,7 +116,7 @@ describe("applyCanvasOp", () => {
 		expect(currentDoc().root[0]?.type).toBe("diamond");
 	});
 
-	it("addObjects は全件を 1 度に追加し、id を順番どおり返す", () => {
+	it("adds every addObjects entry at once, and returns the ids in order", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 
 		const result = apply({
@@ -131,7 +132,8 @@ describe("applyCanvasOp", () => {
 		expect(result.text).toBe(
 			'added 3 objects: stadium "stadium-1", diamond "diamond-1", rect "rect-1"',
 		);
-		// 追加の数によらず doc の差し替えは 1 回（＝ undo 1 手で戻せる）
+		// However many are added, the document is replaced once (so one undo step
+		// takes it back)
 		expect(replacedDocs).toHaveLength(1);
 		expect(currentDoc().root).toHaveLength(3);
 		expect(rootObject(currentDoc(), "diamond-1")).toMatchObject({
@@ -139,7 +141,7 @@ describe("applyCanvasOp", () => {
 		});
 	});
 
-	it("addObjects は 1 件でも失敗したら何も追加しない", () => {
+	it("adds nothing at all when a single addObjects entry fails", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 
 		const result = apply({
@@ -151,13 +153,14 @@ describe("applyCanvasOp", () => {
 		});
 
 		expect(result.ok).toBe(false);
-		// docOps.addObjects が全件不採用にした旨を、要素の位置つきで返す
+		// docOps.addObjects reports that it turned every entry down, naming the
+		// position of the entry at fault
 		expect(result.text).toContain("entries[1]");
 		expect(replacedDocs).toHaveLength(0);
 		expect(currentDoc().root).toHaveLength(0);
 	});
 
-	it("addObjects は groupNewObjects で追加ぶんをそのままグループにする", () => {
+	it("makes what it added into a group of its own with groupNewObjects", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 
 		const result = apply({
@@ -171,12 +174,13 @@ describe("applyCanvasOp", () => {
 
 		expect(result.ok).toBe(true);
 		expect(result.text).toContain('group "group-1"');
-		// 追加とグループ化で doc の差し替えは 1 回（＝ undo 1 手で戻せる）
+		// Adding and grouping replace the document once between them (so one undo
+		// step takes it back)
 		expect(replacedDocs).toHaveLength(1);
 		expect(currentDoc().root.map((object) => object.id)).toEqual(["group-1"]);
 	});
 
-	it("addObjects は parentGroupId で既存グループの中に追加する", () => {
+	it("adds inside an existing group with parentGroupId", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
 			kind: "addObjects",
@@ -202,7 +206,7 @@ describe("applyCanvasOp", () => {
 		).toEqual(["rect-1", "rect-2", "rect-3"]);
 	});
 
-	it("addObjects は行き先の指定が 2 つあると ok:false で返す", () => {
+	it("returns ok:false when addObjects is given two homes to add into", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
 		const result = apply({
@@ -216,7 +220,7 @@ describe("applyCanvasOp", () => {
 		expect(replacedDocs).toHaveLength(0);
 	});
 
-	it("addToGroup / removeFromGroup はグループの出し入れをする", () => {
+	it("moves objects into and out of a group with addToGroup / removeFromGroup", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
 			kind: "addObjects",
@@ -244,7 +248,7 @@ describe("applyCanvasOp", () => {
 		]);
 	});
 
-	it("最後の 1 つを取り出すとグループごと消えたことを結果文で知らせる", () => {
+	it("says in the result sentence that taking the last one out took the group with it", () => {
 		const { apply } = createFakeDocBridge();
 		apply({
 			kind: "addObjects",
@@ -264,7 +268,7 @@ describe("applyCanvasOp", () => {
 		expect(result.text).toContain("group-1");
 	});
 
-	it("connect は追加済みの 2 つを結ぶ", () => {
+	it("joins two objects that were already added", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
 		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
@@ -285,7 +289,7 @@ describe("applyCanvasOp", () => {
 		});
 	});
 
-	it("未知の型は ok:false で返し、doc を変更しない", () => {
+	it("returns ok:false on a type it does not know, and leaves the document alone", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
 		const result = apply({
@@ -300,9 +304,10 @@ describe("applyCanvasOp", () => {
 		expect(replacedDocs).toHaveLength(0);
 	});
 
-	// AI が作った doc はファイル保存・下書き復元でパーサーを通る。
-	// ここが落ちると「描けたのに開き直せない」になる
-	it("AI が組み立てた doc はパーサーを通る", () => {
+	// A document the AI made goes through the parser when it is saved to a file
+	// and when a draft is restored. Break this and the result is a drawing that
+	// was drawn but cannot be opened again
+	it("builds a document that goes through the parser", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "stadium", x: 0, y: 0, text: "開始" });
 		apply({ kind: "addObject", type: "diamond", x: 0, y: 200 });
@@ -326,7 +331,7 @@ describe("applyCanvasOp", () => {
 		expect(parseResult.kind).toBe("ok");
 	});
 
-	it("存在しない id への connect は ok:false で返す", () => {
+	it("returns ok:false for a connect to an id that does not exist", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
 		const result = apply({
@@ -340,7 +345,7 @@ describe("applyCanvasOp", () => {
 		expect(replacedDocs).toHaveLength(0);
 	});
 
-	it("deleteObjects は巻き添えで消えたコネクターも結果文に載せる", () => {
+	it("puts the connectors that went with them into the deleteObjects result sentence", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
 		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
@@ -353,7 +358,7 @@ describe("applyCanvasOp", () => {
 		expect(currentDoc().root.map((object) => object.id)).toEqual(["rect-1"]);
 	});
 
-	it("setStyle は型が受け取れなかったプロパティを結果文で知らせる", () => {
+	it("names in the result sentence the properties the type would not take", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
 		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
@@ -373,8 +378,8 @@ describe("applyCanvasOp", () => {
 	});
 });
 
-describe("配置を変える操作", () => {
-	/** 100x100 の rect を 3 つ、横に間を空けて置いた doc */
+describe("operations that change where things sit", () => {
+	/** A document with three 100x100 rects laid out across, with gaps between them */
 	const threeRects = () => {
 		const fake = createFakeDocBridge();
 		for (const x of [0, 200, 500]) {
@@ -390,7 +395,7 @@ describe("配置を変える操作", () => {
 		return fake;
 	};
 
-	it("setPosition は省いた軸を「そのまま」と結果文に書く", () => {
+	it("writes an axis left out of setPosition as unchanged in the result sentence", () => {
 		const { apply, currentDoc } = threeRects();
 
 		const result = apply({ kind: "setPosition", id: "rect-1", y: 300 });
@@ -399,7 +404,7 @@ describe("配置を変える操作", () => {
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({ x: 0, y: 300 });
 	});
 
-	it("translateObjects はまとめてずらし、図形どうしの間隔を保つ", () => {
+	it("shifts them together and keeps the gaps between the shapes", () => {
 		const { apply, currentDoc } = threeRects();
 
 		const result = apply({
@@ -417,7 +422,7 @@ describe("配置を変える操作", () => {
 		});
 	});
 
-	it("resizeObject は省いた軸を「そのまま」と結果文に書く", () => {
+	it("writes an axis left out of resizeObject as unchanged in the result sentence", () => {
 		const { apply, currentDoc } = threeRects();
 
 		const result = apply({ kind: "resizeObject", id: "rect-1", width: 240 });
@@ -429,7 +434,7 @@ describe("配置を変える操作", () => {
 		});
 	});
 
-	it("setHeightMode auto は height を doc から外す", () => {
+	it("drops height from the document on setHeightMode auto", () => {
 		const { apply, currentDoc } = threeRects();
 
 		const result = apply({
@@ -442,7 +447,7 @@ describe("配置を変える操作", () => {
 		expect(rootObject(currentDoc(), "rect-1")).not.toHaveProperty("height");
 	});
 
-	it("setHeightMode fixed は渡された height を書き戻す", () => {
+	it("writes the height given back on setHeightMode fixed", () => {
 		const { apply, currentDoc } = threeRects();
 		apply({ kind: "setHeightMode", ids: ["rect-1"], mode: "auto" });
 
@@ -457,8 +462,9 @@ describe("配置を変える操作", () => {
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({ height: 160 });
 	});
 
-	// ツール宣言では height が任意なので、fixed で欠けたときの断り方を固定する
-	it("setHeightMode fixed は height 無しを断る", () => {
+	// The tool declaration leaves height optional, so this pins down how a fixed
+	// mode missing one is refused
+	it("refuses setHeightMode fixed with no height", () => {
 		const { apply } = threeRects();
 
 		const result = apply({
@@ -471,7 +477,7 @@ describe("配置を変える操作", () => {
 		expect(result.text).toContain("a fixed height needs the height to write");
 	});
 
-	it("alignObjects / distributeObjects は片方の軸だけを動かす", () => {
+	it("moves one axis only with alignObjects / distributeObjects", () => {
 		const { apply, currentDoc } = threeRects();
 		apply({ kind: "setPosition", id: "rect-2", y: 40 });
 
@@ -492,7 +498,7 @@ describe("配置を変える操作", () => {
 		expect(rootObject(currentDoc(), "rect-3")).toMatchObject({ x: 240 });
 	});
 
-	it("失敗した操作は doc を差し替えない（描きかけが残らない）", () => {
+	it("never replaces the document on a failed operation, so nothing half-drawn is left behind", () => {
 		const { apply, replacedDocs } = threeRects();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -509,7 +515,7 @@ describe("配置を変える操作", () => {
 	});
 });
 
-describe("テキストとコネクターを直す操作", () => {
+describe("operations that fix up text and connectors", () => {
 	const connectedPair = () => {
 		const fake = createFakeDocBridge();
 		fake.apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
@@ -518,7 +524,7 @@ describe("テキストとコネクターを直す操作", () => {
 		return fake;
 	};
 
-	it("setText は空文字での消去を書き分ける", () => {
+	it("tells clearing with an empty string apart in what it writes", () => {
 		const { apply } = connectedPair();
 
 		expect(apply({ kind: "setText", id: "rect-1", text: "開始" }).text).toBe(
@@ -529,7 +535,7 @@ describe("テキストとコネクターを直す操作", () => {
 		);
 	});
 
-	it("updateConnector は端の付け替えを doc に反映する", () => {
+	it("writes a re-attached end into the document", () => {
 		const { apply, currentDoc } = connectedPair();
 		apply({ kind: "addObject", type: "rect", x: 600, y: 0 });
 
@@ -546,7 +552,7 @@ describe("テキストとコネクターを直す操作", () => {
 		});
 	});
 
-	it("コネクター以外への updateConnector は ok:false で返す", () => {
+	it("returns ok:false for an updateConnector aimed at something that is not a connector", () => {
 		const { apply, replacedDocs } = connectedPair();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -561,8 +567,8 @@ describe("テキストとコネクターを直す操作", () => {
 	});
 });
 
-describe("回転・頂点・重なり順を変える操作", () => {
-	/** rect と polyline を 1 つずつ持つ doc。polyline は回らない型の代表 */
+describe("operations that change rotation, vertices and stacking order", () => {
+	/** A document holding one rect and one polyline; the polyline stands for the types that do not turn */
 	const rectAndPolyline = () => {
 		const fake = createFakeDocBridge();
 		fake.apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
@@ -570,7 +576,7 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		return fake;
 	};
 
-	it("setRotation は回した id と角度を結果文に書く", () => {
+	it("writes the ids it turned and the angle into the result sentence", () => {
 		const { apply, currentDoc } = rectAndPolyline();
 
 		const result = apply({
@@ -584,8 +590,8 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({ rotation: 45 });
 	});
 
-	// 「回したつもりで回っていない」を AI に気付かせる
-	it("setRotation は回らなかった id を結果文に載せる", () => {
+	// Lets the AI notice that it meant to turn something and nothing turned
+	it("puts the ids that did not turn into the result sentence", () => {
 		const { apply, currentDoc } = rectAndPolyline();
 
 		const result = apply({
@@ -603,7 +609,7 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		);
 	});
 
-	it("setRotation は 1 つも回らなかったらそう書く", () => {
+	it("says as much when nothing turned at all", () => {
 		const { apply } = rectAndPolyline();
 
 		const result = apply({
@@ -618,7 +624,7 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		);
 	});
 
-	it("角度でない値の setRotation は ok:false で返す", () => {
+	it("returns ok:false for a setRotation given something that is not an angle", () => {
 		const { apply, replacedDocs } = rectAndPolyline();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -633,7 +639,7 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		expect(replacedDocs).toHaveLength(replacedCountBeforeFailure);
 	});
 
-	it("setPoints は頂点を丸ごと差し替える", () => {
+	it("replaces the vertices wholesale", () => {
 		const { apply, currentDoc } = rectAndPolyline();
 
 		const result = apply({
@@ -655,7 +661,7 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		]);
 	});
 
-	it("頂点を持たない型への setPoints は ok:false で返す", () => {
+	it("returns ok:false for a setPoints aimed at a type that has no vertices", () => {
 		const { apply, replacedDocs } = rectAndPolyline();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -673,7 +679,7 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		expect(replacedDocs).toHaveLength(replacedCountBeforeFailure);
 	});
 
-	it("addObject は points で好きな形の poly を作る", () => {
+	it("makes a poly of whatever shape is wanted from points on addObject", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 
 		const result = apply({
@@ -690,19 +696,19 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		});
 
 		expect(result.ok).toBe(true);
-		// x / y は無視され、頂点がそのまま形になる
+		// x / y are ignored, and the vertices are the shape as they stand
 		expect(rootObject(currentDoc(), "polygon-1").points).toEqual([
 			{ x: 0, y: 0 },
 			{ x: 60, y: 0 },
 			{ x: 30, y: 50 },
 		]);
-		// poly は回らないので rotation は書かれない
+		// A poly does not turn, so no rotation is written
 		expect(rootObject(currentDoc(), "polygon-1")).not.toHaveProperty(
 			"rotation",
 		);
 	});
 
-	it("reorderObjects は行き先を結果文に書き、親の中で並べ替える", () => {
+	it("writes where they went into the result sentence, and restacks them within their parent", () => {
 		const { apply, currentDoc } = rectAndPolyline();
 		apply({ kind: "addObject", type: "rect", x: 600, y: 0 });
 
@@ -734,7 +740,7 @@ describe("回転・頂点・重なり順を変える操作", () => {
 		]);
 	});
 
-	it("存在しない id の reorderObjects は ok:false で返す", () => {
+	it("returns ok:false for a reorderObjects on an id that does not exist", () => {
 		const { apply, replacedDocs } = rectAndPolyline();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -750,8 +756,8 @@ describe("回転・頂点・重なり順を変える操作", () => {
 	});
 });
 
-describe("自由端のコネクター", () => {
-	it("片端を座標にした connect は結果文に座標を書く", () => {
+describe("connectors with a free end", () => {
+	it("writes the coordinate into the result sentence when one end of connect is one", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
 
@@ -770,8 +776,9 @@ describe("自由端のコネクター", () => {
 		});
 	});
 
-	// 両端が浮いた線は polyline の仕事。doc モデルがコネクターとして拒む
-	it("両端とも座標の connect は ok:false で返す", () => {
+	// A line with both ends loose is a polyline's job; the document model refuses
+	// it as a connector
+	it("returns ok:false for a connect with a coordinate at both ends", () => {
 		const { apply, replacedDocs } = createFakeDocBridge();
 
 		const result = apply({
@@ -785,7 +792,7 @@ describe("自由端のコネクター", () => {
 		expect(replacedDocs).toHaveLength(0);
 	});
 
-	it("updateConnector は付いていた端を座標へ外す", () => {
+	it("detaches an end that was attached, onto a coordinate", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
 		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
@@ -804,7 +811,7 @@ describe("自由端のコネクター", () => {
 	});
 });
 
-describe("グループを組み替える操作", () => {
+describe("operations that rearrange groups", () => {
 	const twoRects = () => {
 		const fake = createFakeDocBridge();
 		fake.apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
@@ -812,7 +819,7 @@ describe("グループを組み替える操作", () => {
 		return fake;
 	};
 
-	it("groupObjects と dissolveGroup は互いを打ち消す", () => {
+	it("has groupObjects and dissolveGroup cancel each other out", () => {
 		const { apply, currentDoc } = twoRects();
 
 		const grouped = apply({
@@ -832,7 +839,7 @@ describe("グループを組み替える操作", () => {
 		]);
 	});
 
-	it("addObjects は行き先を指定しなければ最前面へ足す", () => {
+	it("adds at the front when addObjects is given no home", () => {
 		const { apply, currentDoc } = twoRects();
 
 		const result = apply({
@@ -850,8 +857,8 @@ describe("グループを組み替える操作", () => {
 	});
 });
 
-describe("図を読む操作", () => {
-	/** rect 2 つとその間のコネクター、別に group 1 つを持つ doc */
+describe("operations that read the drawing", () => {
+	/** A document with two rects and a connector between them, plus one group apart from those */
 	const readableDoc = () => {
 		const fake = createFakeDocBridge();
 		fake.apply({
@@ -874,13 +881,14 @@ describe("図を読む操作", () => {
 	};
 
 	/**
-	 * 結果テキストの末尾に付いた JSON 本体を読み直す。JSON は必ず 1 行なので、
-	 * 見出しや打ち切りの断り書きが何行あっても最後の改行から後ろで取れる
+	 * Reads back the JSON body on the end of a result text. The JSON is always one
+	 * line, so however many lines of heading or truncation note come before it, it
+	 * can be taken from after the last newline
 	 */
 	const parseTrailingJson = (text: string): unknown =>
 		JSON.parse(text.slice(text.lastIndexOf("\n") + 1));
 
-	it("listObjects はグループの中まで平らに並べ、doc を差し替えない", () => {
+	it("lists what is inside groups flat as well, and does not replace the document", () => {
 		const { apply, replacedDocs } = readableDoc();
 		const replacedCountBeforeRead = replacedDocs.length;
 
@@ -896,11 +904,11 @@ describe("図を読む操作", () => {
 			{ id: "ellipse-1", parentId: "group-1" },
 			{ id: "ellipse-2", parentId: "group-1" },
 		]);
-		// 読み取りは undo 履歴にも doc にも触らない
+		// A read touches neither the undo history nor the document
 		expect(replacedDocs).toHaveLength(replacedCountBeforeRead);
 	});
 
-	it("listObjects は空のキャンバスを「空」と言い切る", () => {
+	it("says outright that an empty canvas is empty", () => {
 		const { apply } = createFakeDocBridge();
 
 		const result = apply({ kind: "listObjects" });
@@ -909,8 +917,9 @@ describe("図を読む操作", () => {
 		expect(result.text).toBe("the canvas is empty: it holds no objects at all");
 	});
 
-	// 要約が大きくなりすぎたときに、AI が読み直せる JSON のまま切ること
-	it("listObjects は上限を超えたら件数を減らし、絞り込みへ誘導する", () => {
+	// When the summaries grow too big, the cut has to leave JSON the AI can still
+	// read back
+	it("shows fewer entries once it is over the budget, and points at narrowing the search", () => {
 		const { apply } = createFakeDocBridge();
 		apply({
 			kind: "addObjects",
@@ -935,7 +944,7 @@ describe("図を読む操作", () => {
 		expect((shown as unknown[]).length).toBeLessThan(400);
 	});
 
-	it("findObjects は条件に合うものだけを返す", () => {
+	it("returns only what meets the conditions", () => {
 		const { apply } = readableDoc();
 
 		const result = apply({ kind: "findObjects", type: "rect", text: "login" });
@@ -945,8 +954,8 @@ describe("図を読む操作", () => {
 		expect(parseTrailingJson(result.text)).toMatchObject([{ id: "rect-1" }]);
 	});
 
-	// 0 件は「条件に合うものが無い」であって失敗ではない
-	it("findObjects の 0 件は ok:true で、条件の緩め方を添える", () => {
+	// No results means nothing meets the conditions, which is not a failure
+	it("returns ok:true on no findObjects results, and adds how to loosen the conditions", () => {
 		const { apply, replacedDocs } = readableDoc();
 		const replacedCountBeforeRead = replacedDocs.length;
 
@@ -959,7 +968,7 @@ describe("図を読む操作", () => {
 		expect(replacedDocs).toHaveLength(replacedCountBeforeRead);
 	});
 
-	it("findObjects は inGroup がグループでなければ ok:false で返す", () => {
+	it("returns ok:false when the inGroup of findObjects is not a group", () => {
 		const { apply } = readableDoc();
 
 		const result = apply({ kind: "findObjects", inGroup: "rect-1" });
@@ -968,7 +977,7 @@ describe("図を読む操作", () => {
 		expect(result.text).toContain("rect-1");
 	});
 
-	it("getObject は 1 つを丸ごと JSON で返す", () => {
+	it("returns one object whole, as JSON", () => {
 		const { apply } = readableDoc();
 
 		const result = apply({ kind: "getObject", id: "rect-1" });
@@ -984,8 +993,9 @@ describe("図を読む操作", () => {
 		});
 	});
 
-	// id が doc に無いのは失敗。0 件・null と区別が付くこと
-	it("存在しない id の getObject は ok:false で返す", () => {
+	// An id that is not in the document is a failure, and has to be tellable apart
+	// from no results and from null
+	it("returns ok:false for a getObject on an id that does not exist", () => {
 		const { apply } = readableDoc();
 
 		const result = apply({ kind: "getObject", id: "rect-9" });
@@ -994,7 +1004,7 @@ describe("図を読む操作", () => {
 		expect(result.text).toContain("rect-9");
 	});
 
-	it("getObjectBounds は右端・下端まで書き、測れない型はそう断る", () => {
+	it("writes down to the right and bottom edges, and says so for a type it cannot measure", () => {
 		const { apply } = readableDoc();
 
 		expect(apply({ kind: "getObjectBounds", id: "rect-2" }).text).toBe(
@@ -1007,7 +1017,7 @@ describe("図を読む操作", () => {
 		expect(connector.text).toContain("no box of its own");
 	});
 
-	it("getCombinedBounds は ids を省くと図全体を測る", () => {
+	it("measures the whole drawing when getCombinedBounds is given no ids", () => {
 		const { apply } = readableDoc();
 
 		const whole = apply({ kind: "getCombinedBounds" });
@@ -1023,7 +1033,7 @@ describe("図を読む操作", () => {
 		);
 	});
 
-	it("getText は空のテキストを「無い」と書き分ける", () => {
+	it("reports an object with no text as holding none, not as holding an empty string", () => {
 		const { apply } = readableDoc();
 
 		expect(apply({ kind: "getText", id: "rect-1" }).text).toBe(
@@ -1034,7 +1044,7 @@ describe("図を読む操作", () => {
 		);
 	});
 
-	it("getZOrder は既に最前面なら並べ替えても変わらないと言う", () => {
+	it("says reordering would change nothing when it is already at the front", () => {
 		const { apply } = readableDoc();
 
 		const front = apply({ kind: "getZOrder", id: "group-1" });
@@ -1047,8 +1057,8 @@ describe("図を読む操作", () => {
 		);
 	});
 
-	// root 直下の null は「グループに入っていない」であって失敗ではない
-	it("getParentGroup は root 直下を ok:true で返す", () => {
+	// A null directly under root means it is in no group, not a failure
+	it("returns ok:true from getParentGroup for something directly under root", () => {
 		const { apply } = readableDoc();
 
 		const atRoot = apply({ kind: "getParentGroup", id: "rect-1" });
@@ -1062,7 +1072,7 @@ describe("図を読む操作", () => {
 		);
 	});
 
-	it("getGroupMembers は直下の子だけを描画順で返す", () => {
+	it("returns only the direct children, in drawing order", () => {
 		const { apply } = readableDoc();
 
 		const result = apply({ kind: "getGroupMembers", groupId: "group-1" });
@@ -1074,7 +1084,7 @@ describe("図を読む操作", () => {
 		);
 	});
 
-	it("getConnectors / getConnectedObjects は 0 件を ok:true で返す", () => {
+	it("returns ok:true on no results from getConnectors / getConnectedObjects", () => {
 		const { apply } = readableDoc();
 
 		expect(apply({ kind: "getConnectors", id: "rect-1" }).text).toContain(
@@ -1093,7 +1103,7 @@ describe("図を読む操作", () => {
 		).toContain("reaches no other object");
 	});
 
-	it("listTypes は doc を持たずに型の一覧を返す", () => {
+	it("lists the types with no document to go on", () => {
 		const { apply } = createFakeDocBridge();
 
 		const result = apply({ kind: "listTypes" });
@@ -1110,8 +1120,8 @@ describe("図を読む操作", () => {
 	});
 });
 
-describe("一括版の操作", () => {
-	/** 100x100 の rect を 3 つ横に並べた doc */
+describe("the batch operations", () => {
+	/** A document with three 100x100 rects lined up across */
 	const threeRects = () => {
 		const fake = createFakeDocBridge();
 		fake.apply({
@@ -1127,7 +1137,7 @@ describe("一括版の操作", () => {
 		return fake;
 	};
 
-	it("connectMany は全件を 1 度に引き、id を順番どおり返す", () => {
+	it("draws every connectMany entry at once, and returns the ids in order", () => {
 		const { apply, replacedDocs, currentDoc } = threeRects();
 		const replacedCountBeforeOp = replacedDocs.length;
 
@@ -1143,12 +1153,13 @@ describe("一括版の操作", () => {
 		expect(result.text).toBe(
 			'connected 2 connector(s): "rect-1" → "rect-2" as "connector-1", "rect-2" → (900, 50) as "connector-2"',
 		);
-		// 本数によらず doc の差し替えは 1 回（＝ undo 1 手で戻せる）
+		// However many are drawn, the document is replaced once (so one undo step
+		// takes it back)
 		expect(replacedDocs).toHaveLength(replacedCountBeforeOp + 1);
 		expect(currentDoc().root).toHaveLength(5);
 	});
 
-	it("connectMany は 1 件でも弾かれたら 1 本も引かない", () => {
+	it("draws not one line when a single connectMany entry is turned away", () => {
 		const { apply, replacedDocs, currentDoc } = threeRects();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -1166,7 +1177,7 @@ describe("一括版の操作", () => {
 		expect(currentDoc().root).toHaveLength(3);
 	});
 
-	it("setPositions は要素ごとの絶対座標へ置き、省いた軸を書き分ける", () => {
+	it("puts each entry at its own absolute coordinate, and tells an axis left out apart in what it writes", () => {
 		const { apply, currentDoc } = threeRects();
 
 		const result = apply({
@@ -1187,7 +1198,7 @@ describe("一括版の操作", () => {
 		});
 	});
 
-	it("setPositions は 1 件でも弾かれたら 1 つも動かさない", () => {
+	it("moves not one object when a single setPositions entry is turned away", () => {
 		const { apply, replacedDocs, currentDoc } = threeRects();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -1205,7 +1216,7 @@ describe("一括版の操作", () => {
 		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({ x: 0, y: 0 });
 	});
 
-	it("resizeObjects は ids 全体へ同じサイズを与え、省いた軸は各自のまま", () => {
+	it("gives every id the same size, leaving an axis left out as each object's own", () => {
 		const { apply, currentDoc } = threeRects();
 		apply({ kind: "resizeObject", id: "rect-2", height: 40 });
 
@@ -1228,7 +1239,7 @@ describe("一括版の操作", () => {
 		});
 	});
 
-	it("setPointsMany は形ごとに別の輪郭を入れる", () => {
+	it("puts a different outline into each shape", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
 			kind: "addObjects",
@@ -1265,7 +1276,7 @@ describe("一括版の操作", () => {
 		expect(rootObject(currentDoc(), "polygon-1").points).toHaveLength(3);
 	});
 
-	it("setPointsMany は 1 件でも弾かれたら 1 つも変形しない", () => {
+	it("reshapes not one shape when a single setPointsMany entry is turned away", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "polyline", x: 0, y: 0 });
 		apply({ kind: "addObject", type: "rect", x: 0, y: 300 });
@@ -1282,7 +1293,7 @@ describe("一括版の操作", () => {
 						{ x: 40, y: 80 },
 					],
 				},
-				// 頂点を持たない型。ここで弾かれる
+				// A type with no vertices; this is what gets turned away
 				{
 					id: "rect-1",
 					points: [
@@ -1301,7 +1312,7 @@ describe("一括版の操作", () => {
 		);
 	});
 
-	it("setTexts はスロットと空文字での消去を書き分ける", () => {
+	it("tells slots and clearing with an empty string apart in what it writes", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
 			kind: "addObjects",
@@ -1328,7 +1339,7 @@ describe("一括版の操作", () => {
 		expect(rootObject(currentDoc(), "rect-2").text).toBe("");
 	});
 
-	it("setTexts は 1 件でも弾かれたら 1 つも書き換えない", () => {
+	it("writes not one object when a single setTexts entry is turned away", () => {
 		const { apply, replacedDocs, currentDoc } = threeRects();
 		const replacedCountBeforeFailure = replacedDocs.length;
 
@@ -1346,7 +1357,7 @@ describe("一括版の操作", () => {
 		expect(rootObject(currentDoc(), "rect-1").text).toBe("");
 	});
 
-	it("updateConnectors は全件の端をまとめて付け替える", () => {
+	it("re-attaches the ends of every entry in one go", () => {
 		const { apply, currentDoc } = threeRects();
 		apply({
 			kind: "connectMany",
@@ -1372,7 +1383,7 @@ describe("一括版の操作", () => {
 		});
 	});
 
-	it("同じ id を 2 度出した updateConnectors は ok:false で返す", () => {
+	it("returns ok:false for an updateConnectors naming the same id twice", () => {
 		const { apply, replacedDocs } = threeRects();
 		apply({
 			kind: "connectMany",
@@ -1393,7 +1404,7 @@ describe("一括版の操作", () => {
 		expect(replacedDocs).toHaveLength(replacedCountBeforeFailure);
 	});
 
-	it("dissolveGroups は入れ子のグループもまとめて解き、解放された id を返す", () => {
+	it("dissolves nested groups together too, and returns the ids released", () => {
 		const { apply, currentDoc } = threeRects();
 		apply({ kind: "groupObjects", ids: ["rect-1", "rect-2"] });
 		apply({ kind: "groupObjects", ids: ["group-1", "rect-3"] });
@@ -1413,7 +1424,7 @@ describe("一括版の操作", () => {
 		]);
 	});
 
-	it("グループでない id を混ぜた dissolveGroups は 1 つも解かない", () => {
+	it("dissolves not one group when a dissolveGroups mixes in an id that is not one", () => {
 		const { apply, replacedDocs, currentDoc } = threeRects();
 		apply({ kind: "groupObjects", ids: ["rect-1", "rect-2"] });
 		const replacedCountBeforeFailure = replacedDocs.length;
@@ -1432,7 +1443,7 @@ describe("一括版の操作", () => {
 		]);
 	});
 
-	it("setTextStyle は本文の一致した箇所だけを装飾する", () => {
+	it("decorates only where the body text matches", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
 			kind: "addObject",
@@ -1458,7 +1469,7 @@ describe("一括版の操作", () => {
 		]);
 	});
 
-	it("一致が無い setTextStyle は ok:false で doc を変えない", () => {
+	it("returns ok:false on a setTextStyle that matches nothing, and leaves the document alone", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0, text: "hello" });
 		const replacedCountBeforeFailure = replacedDocs.length;
@@ -1476,7 +1487,7 @@ describe("一括版の操作", () => {
 		expect(rootObject(currentDoc(), "rect-1").text).toBe("hello");
 	});
 
-	it("setTextStyles は 1 件でも一致が無ければ 1 つも装飾しない", () => {
+	it("decorates not one stretch when a single setTextStyles entry matches nothing", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 		apply({
 			kind: "addObjects",
@@ -1501,7 +1512,7 @@ describe("一括版の操作", () => {
 		expect(rootObject(currentDoc(), "rect-1").text).toBe("hello world");
 	});
 
-	it("setTextStyles は同じ id を並べて 1 本の文中の複数箇所を装飾する", () => {
+	it("decorates several places in one body of text by listing the same id more than once", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({
 			kind: "addObject",
@@ -1531,7 +1542,7 @@ describe("一括版の操作", () => {
 });
 
 describe("undo", () => {
-	it("直前の 1 手を戻し、履歴が尽きたら ok:false で返す", () => {
+	it("undoes the last step, and returns ok:false once the history has run out", () => {
 		const { apply, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
 		apply({ kind: "addObject", type: "rect", x: 300, y: 0 });
@@ -1547,8 +1558,9 @@ describe("undo", () => {
 		expect(exhausted.text).toContain("nothing");
 	});
 
-	// ユーザーの編集を AI に消させない。ここが緩むと手作業が黙って消える
-	it("AI の適用後にユーザーが編集していたら戻さない", () => {
+	// The AI must not wipe out the user's edits; loosen this and hand work
+	// disappears silently
+	it("refuses to undo when the user edited after the AI applied something", () => {
 		const { apply, bridge, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
 

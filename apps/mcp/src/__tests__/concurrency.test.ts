@@ -34,10 +34,11 @@ afterEach(async () => {
 
 const emptyDoc = { version: 1, root: [] };
 
-describe("同じファイルへの同時呼び出し", () => {
-	it("並んで届いた追加を 1 つも取りこぼさない", async () => {
-		// ツールは読み込み → 変更 → 書き戻しでファイルを更新する。間に別の手が
-		// 割り込むと、後の書き戻しが先の変更ごと消す（lost update）。
+describe("concurrent calls against one file", () => {
+	it("drops not one of the additions that arrived side by side", async () => {
+		// The tools update a file by reading it, changing it and writing it back.
+		// Another call cutting in between makes the later write-back erase the
+		// earlier change along with it (lost update).
 		const targetPath = await workspace.writeDoc("parallel.jis.json", emptyDoc);
 		const callCount = 8;
 
@@ -59,7 +60,7 @@ describe("同じファイルへの同時呼び出し", () => {
 		expect(doc.root).toHaveLength(callCount);
 	});
 
-	it("追加と移動が混ざっても、最後の姿に全部の手が残る", async () => {
+	it("keeps every call in the final state even with additions and a move mixed together", async () => {
 		const targetPath = await workspace.writeDoc("mixed.jis.json", {
 			version: 1,
 			root: [{ id: "seed", type: "rect", x: 0, y: 0, width: 100, height: 50 }],
@@ -94,7 +95,7 @@ describe("同じファイルへの同時呼び出し", () => {
 		});
 	});
 
-	it("別々のファイルへの手は互いを待たない（直列化はパスごと）", async () => {
+	it("lets calls on separate files run without waiting on each other, the serialisation being per path", async () => {
 		const first = await workspace.writeDoc("a.jis.json", emptyDoc);
 		const second = await workspace.writeDoc("b.jis.json", emptyDoc);
 

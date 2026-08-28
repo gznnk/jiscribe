@@ -124,9 +124,9 @@ say: units, coordinate space, allowed range, default, edge behaviour (`NaN`,
 property — two properties sharing one comment means the editor shows nothing for
 one of them. Verify any edge-case claim you write by actually evaluating it.
 
-Comments in this repository are written in Japanese. Contributions in English
-are welcome; do not machine-translate existing comments as part of an unrelated
-change.
+Comments in this repository are written in English. A few older files still
+carry Japanese ones; leave them where they are, since translating a file is a
+change of its own and does not belong inside an unrelated one.
 
 ## Commits and pull requests
 

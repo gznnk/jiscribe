@@ -1,6 +1,7 @@
-// UI 側（パネル・撮影・表示操作・計測）がホストアプリから注入してもらう契約。
-// doc の読み書き口は UI 専用ではない（サーバーがファイルを持つこともある）ため、
-// ../canvasOps/docBridge に置いてある。
+// The contract the UI side (the panel, capturing, moving the view, measuring)
+// has the host application inject. The way in and out of the document is not
+// UI-only — a server may be the one holding the file — so it sits in
+// ../apply/docBridge instead.
 
 import type {
 	Camera,
@@ -15,162 +16,185 @@ import type { Point, Rect } from "@jiscribe/geometry";
 import type { AiFitTarget } from "../canvasOps";
 
 /**
- * 現在のキャンバスを PNG に焼く関数。既定では図形全体にフィットしたもので、
- * 表示中のパン・ズームには依存しない（`options.region` を渡せば表示範囲や特定の
- * 図形だけを切り出せる）。キャンバス未マウント時は null を返す。
+ * Burns the current canvas into a PNG. By default it is fitted to the whole
+ * drawing and owes nothing to the pan and zoom on screen (pass `options.region`
+ * to cut out the visible area or particular shapes instead). Returns null while
+ * the canvas is not mounted.
  */
 export type CapturePng = (
 	options?: CanvasPngExportOptions,
 ) => Promise<Blob | null>;
 
-/** selectObjects の結果。要求した id のうち何が通り、何が落ちたか */
+/** The result of selectObjects: which of the ids asked for got through, and which were dropped */
 export type AiSelectionResult = {
-	/** 実際に選択された id */
+	/** The ids actually selected */
 	selectedIds: readonly string[];
-	/** 選択できなかった id（キャンバスに無い、コネクターを他と一緒に指した等） */
+	/** The ids that could not be selected (not on the canvas, a connector named together with something else, and so on) */
 	ignoredIds: readonly string[];
 };
 
-/** getView の結果。カメラそのものと、そこから決まる可視範囲を 1 回で読む */
+/** The result of getView: the camera itself and the visible region it decides, read in one go */
 export type AiViewSnapshot = {
-	/** カメラ（左上のワールド座標・倍率）と、実測された描画領域の画面上の大きさ */
+	/** The camera (top-left world coordinate and zoom) together with the measured on-screen size of the drawing area */
 	viewport: Viewport;
-	/** 今画面に映っているワールド座標の矩形。ここに置いた図形はユーザーの目の前に出る */
+	/** The world rect on screen right now; a shape placed inside it lands in front of the user */
 	visibleWorldRect: Rect;
 };
 
 /**
- * doc だけでは答えられず、マウント済みのキャンバスが要る操作の窓口。ホストが
- * Canvas の imperative ハンドル（viewport / selection / measure / export /
- * interaction）から組み立てて渡す。キャンバスが無いホストでは注入できないため、
- * AiHandleOp はここを通る。
+ * The way in for the operations a document alone cannot answer, the ones that
+ * need a mounted canvas. The host builds it from Canvas's imperative handle
+ * (viewport / selection / measure / export / interaction) and passes it in. A
+ * host with no canvas cannot inject it, which is why every AiHandleOp comes
+ * through here.
  */
 export type AiHandleControl = {
 	/**
-	 * キャンバスが表示されていて操作できるか。false のとき他のメソッドは呼ばれない
-	 * （ビューを切り替えている間は動かす相手そのものが居ない）
+	 * Whether a canvas is on screen and can be worked on. While this is false the
+	 * other methods are not called (with the view switched away there is nothing
+	 * to act on at all)
 	 */
 	isAvailable: () => boolean;
 	/**
-	 * 選択を差し替える。空配列で解除。
-	 * 実際に選ばれた id と落ちた id を返す（存在しない id は落ちる）
+	 * Replaces the selection; an empty array clears it.
+	 * Returns the ids actually selected and the ones dropped (an id that does not
+	 * exist is dropped)
 	 */
 	selectObjects: (ids: readonly string[]) => AiSelectionResult;
 	/**
-	 * 今選択されている id を読む。
+	 * Reads the ids selected right now.
 	 *
-	 * @returns 選択中の id（図形と、選択中のコネクター）。未選択なら空配列で、
-	 *   それは失敗ではなく「何も選ばれていない」という答え
+	 * @returns The selected ids (the shapes, and the connector when one is
+	 *   selected). Nothing selected gives an empty array, which is not a failure
+	 *   but the answer "nothing is selected"
 	 */
 	getSelectedIds: () => readonly string[];
 	/**
-	 * ワールド座標の点を画面中央へ移動する。
+	 * Moves a world point to the centre of the screen.
 	 *
-	 * @param point - 中央に置くワールド座標
-	 * @param zoom - 倍率。省略すると現在の倍率のまま（範囲外は丸められる）
-	 * @returns 適用後のカメラ。動かす相手が居なければ null
+	 * @param point - The world coordinate to put at the centre
+	 * @param zoom - The zoom; omitted keeps the current one (a value outside the
+	 *   range is clamped)
+	 * @returns The camera after applying; null when there is nothing to move
 	 */
 	centerView: (point: { x: number; y: number }, zoom?: number) => Camera | null;
 	/**
-	 * カメラ（左上のワールド座標と倍率）を直接差し替える。倍率は丸められないので、
-	 * 妥当な範囲であることは呼び出し側（ツールのスキーマ）が保証する。
+	 * Replaces the camera (the top-left world coordinate and the zoom) outright.
+	 * The zoom is not clamped, so it is the caller (the tool's schema) that
+	 * guarantees it is in a sensible range.
 	 *
-	 * @param camera - 適用するカメラ。画面の大きさはコンテナ実測のままで変わらない
-	 * @returns 適用したカメラ。動かす相手が居なければ null
+	 * @param camera - The camera to apply; the size of the screen stays as the
+	 *   container measures it and does not change
+	 * @returns The camera applied; null when there is nothing to move
 	 */
 	setView: (camera: Camera) => Camera | null;
 	/**
-	 * 今のカメラと、それが映しているワールド座標の範囲を 1 回で読む。
+	 * Reads the camera as it stands and the world region it shows, in one go.
 	 *
-	 * @returns カメラと可視範囲。キャンバスが無ければ null
+	 * @returns The camera and the visible region; null when there is no canvas
 	 */
 	getView: () => AiViewSnapshot | null;
 	/**
-	 * 全体または選択中のオブジェクトが収まるように表示を合わせる。
+	 * Frames the view so that the whole drawing, or the selected objects, fits.
 	 *
-	 * @param target - 合わせる対象
-	 * @returns 適用後のカメラ。対象が無い（空のキャンバス・未選択）ときは null で、
-	 *   表示は動かない
+	 * @param target - What to frame
+	 * @returns The camera after applying; null when there is nothing to frame (an
+	 *   empty canvas, nothing selected), and the view does not move
 	 */
 	fitView: (target: AiFitTarget) => Camera | null;
 	/**
-	 * 指定したワールド矩形が収まるように表示を合わせる。
+	 * Frames the view so that the world rect given fits.
 	 *
-	 * @param rect - 収める範囲。画面の縦横比の都合で、実際にはこれより広く映る軸が
-	 *   出る（映る範囲は getView で読み直す）
-	 * @returns 適用後のカメラ。どちらの軸にも広がりが無い矩形（点）なら null で、
-	 *   表示は動かない
+	 * @param rect - The region to fit; the proportions of the screen leave one
+	 *   axis showing more than this (read what actually shows back with getView)
+	 * @returns The camera after applying; null for a rect with no extent on either
+	 *   axis (a point), and the view does not move
 	 */
 	fitViewToRect: (rect: Rect) => Camera | null;
 	/**
-	 * テキストスロット 1 つの描画結果（描かれる箱・折り返し後の寸法・行数・
-	 * はみ出しの有無）を測る。
+	 * Measures what one text slot draws: the box it is drawn in, its size once
+	 * wrapped, the number of lines, and whether it overflows.
 	 *
-	 * @param id - スロットを持つオブジェクトの id
-	 * @param slotId - 測るスロット。省略すると先頭のスロット（編集時に開くもの）
-	 * @returns 計測結果。id が無い・テキスト領域を持たない型（コネクター・poly 系）・
-	 *   そのスロットが無いときは null
+	 * @param id - The id of the object holding the slot
+	 * @param slotId - The slot to measure; omitted takes the first one (the one
+	 *   editing opens)
+	 * @returns The measurement; null when there is no such id, when the type has
+	 *   no text region (connectors, the poly shapes), or when it holds no such
+	 *   slot
 	 */
 	measureText: (id: string, slotId?: string) => TextSlotMeasurement | null;
 	/**
-	 * 重なっている図形の組を、重なりの広い順に返す。
+	 * Returns the pairs of shapes that overlap, widest overlap first.
 	 *
-	 * @param ids - 比べる図形。省略するとキャンバス上の全オブジェクト。
-	 *   キャンバスに無い id・コネクター・グループは黙って除かれる
-	 * @returns 重なった組の一覧。重なりが無ければ空配列（失敗ではない）
+	 * @param ids - The shapes to compare; omitted takes every object on the
+	 *   canvas. Ids that are not on the canvas, connectors and groups are dropped
+	 *   silently
+	 * @returns The overlapping pairs; an empty array when nothing overlaps (which
+	 *   is not a failure)
 	 */
 	findOverlaps: (ids?: readonly string[]) => readonly ObjectOverlap[];
 	/**
-	 * コネクターが実際に描かれている経路を、始点から終点の順に返す。
+	 * Returns the route a connector is actually drawn along, from its source end
+	 * to its target end.
 	 *
-	 * @param id - 辿るコネクターの id
-	 * @returns 端点と曲がり角の頂点列。id が無い・コネクターでない・端点を解決
-	 *   できない（接続先が消えている）ときは null
+	 * @param id - The id of the connector to trace
+	 * @returns The vertices of the ends and the corners; null when there is no
+	 *   such id, when it is not a connector, or when an end cannot be resolved
+	 *   (what it hangs on is gone)
 	 */
 	measureConnectorPath: (id: string) => readonly Point[] | null;
 	/**
-	 * 装飾込みで実際に描かれている範囲を、指定した全 id の合成矩形で返す。
+	 * Returns what is actually drawn, decoration included, as one rect combining
+	 * every id given.
 	 *
-	 * @param ids - 測る対象。複数渡すと 1 つの矩形に合成される
-	 * @returns 合成矩形。描画範囲を持つ id が 1 つも無ければ null
+	 * @param ids - What to measure; pass several and they are combined into a
+	 *   single rect
+	 * @returns The combined rect; null when not one of the ids draws anything
 	 */
 	measureVisualBounds: (ids: readonly string[]) => Rect | null;
 	/**
-	 * ワールド座標の点・矩形に描かれているオブジェクトを手前から返す。
+	 * Returns the objects drawn at a world point or rect, front-most first.
 	 *
-	 * @param target - 点なら実際の輪郭で、矩形ならバウンディングボックスの重なりで
-	 *   判定する
-	 * @param tolerance - 線状の図形（コネクター・ポリライン）が線からどれだけ離れて
-	 *   いても当たりとするか（ワールド px）。省略するとキャンバスの既定値
-	 * @returns 手前から順の id。何も無ければ空配列（失敗ではない）。グループは
-	 *   返らず、メンバーが個別に判定される
+	 * @param target - A point is tested against the real outlines, a rect against
+	 *   the overlap of bounding boxes
+	 * @param tolerance - How far from the line a line-like shape (a connector, a
+	 *   polyline) still counts as hit, in world px; omitted takes the canvas
+	 *   default
+	 * @returns The ids from the front back; an empty array when there is nothing
+	 *   (which is not a failure). Groups are never returned — their members are
+	 *   tested one by one
 	 */
 	hitTest: (target: Point | Rect, tolerance?: number) => readonly string[];
 	/**
-	 * 現在のキャンバスを SVG 文字列にする。
+	 * Turns the current canvas into an SVG string.
 	 *
-	 * @returns SVG 文字列。キャンバス未マウント時は null
+	 * @returns The SVG string; null while the canvas is not mounted
 	 */
 	toSvgString: () => string | null;
 	/**
-	 * ユーザーが今キャンバスに対して何をしているか（ドラッグ中か・どのテキストを
-	 * 編集中か・モーダルが開いているか）を読む。
+	 * Reads what the user is doing to the canvas at this moment: whether a drag is
+	 * under way, which text is open for editing, whether a modal is open.
 	 *
-	 * @returns その瞬間のスナップショット。キャンバスが無ければ null
+	 * @returns A snapshot of that instant; null when there is no canvas
 	 */
 	getInteractionStatus: () => CanvasInteractionStatus | null;
 	/**
-	 * client 座標（PointerEvent.clientX/Y と同じ空間）をワールド座標へ変換する。
+	 * Converts a client coordinate (the same space PointerEvent.clientX/Y is in)
+	 * into a world coordinate.
 	 *
-	 * @param clientPoint - ウィンドウ左上を原点とする画面上の点
-	 * @returns ワールド座標の点。キャンバスが `<svg>` をマウントする前は null
+	 * @param clientPoint - A point on screen, with the top-left of the window as
+	 *   its origin
+	 * @returns The point in world coordinates; null before the canvas has mounted
+	 *   its `<svg>`
 	 */
 	toWorld: (clientPoint: Point) => Point | null;
 	/**
-	 * {@link toWorld} の逆。パン・ズームのたびに答えが変わる。
+	 * The other way round from {@link toWorld}. The answer changes with every pan
+	 * and zoom.
 	 *
-	 * @param worldPoint - ワールド座標の点
-	 * @returns client 座標の点。キャンバスが `<svg>` をマウントする前は null
+	 * @param worldPoint - A point in world coordinates
+	 * @returns The point in client coordinates; null before the canvas has mounted
+	 *   its `<svg>`
 	 */
 	toClient: (worldPoint: Point) => Point | null;
 };

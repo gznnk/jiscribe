@@ -1,5 +1,6 @@
-// doc を実際に持っている側（ブラウザのキャンバス／ワークスペースのファイル）向けの
-// 公開面。React にも DOM にも依存しないので Node からも読める。
+// The surface for whoever actually holds the document (the canvas in a browser,
+// a file in a workspace). It depends on neither React nor the DOM, so Node can
+// read it too.
 
 export { applyCanvasOp } from "./apply/applyCanvasOp";
 export {

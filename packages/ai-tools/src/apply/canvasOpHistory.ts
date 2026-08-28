@@ -1,35 +1,41 @@
-// AI の編集を 1 手ずつ巻き戻すための履歴。キャンバス自身の undo（Ctrl+Z）とは
-// 別物で、AI が自分の直前の手だけを取り消すために使う。
+// A history for rewinding the AI's edits one step at a time. It is a separate
+// thing from the canvas's own undo (Ctrl+Z), and is there for the AI to take
+// back its own last step and nothing else.
 //
-// 取り消して良いのは「AI が置いた doc のまま」のときだけなので、適用後の doc も
-// 一緒に覚えておき、現在の doc と一致しない＝ユーザーが触った場合は巻き戻さない。
+// A step may only be taken back while the document is still as the AI left it,
+// so the document after the operation is remembered alongside it, and one that
+// does not match the current document — meaning the user has touched it — is
+// not rewound.
 
 import type { CanvasDoc } from "@jiscribe/doc";
 
-/** 保持する手数。これを超えた古い手から捨てる */
+/** How many steps are kept; the oldest steps beyond this are dropped */
 const MAX_HISTORY_DEPTH = 20;
 
 export type CanvasOpHistory = {
 	/**
-	 * 1 手分を覚える。
+	 * Remembers one step.
 	 *
-	 * @param before - 操作前の doc。undo で復元する実体
-	 * @param after - 操作後の doc。undo 時にユーザーの編集が挟まっていないかの照合に使う
+	 * @param before - The document before the operation; the very object undo
+	 *   restores
+	 * @param after - The document after the operation; used at undo time to check
+	 *   that no user edit slipped in
 	 */
 	push: (before: CanvasDoc, after: CanvasDoc) => void;
 	/**
-	 * 直前の 1 手を取り出す。
+	 * Takes the last step back out.
 	 *
-	 * @param currentDoc - 現在編集中の doc
-	 * @returns 復元すべき doc。履歴が無い場合と、現在の doc が最後に AI が置いたもの
-	 *   から変わっている（ユーザーが編集した）場合は null
+	 * @param currentDoc - The document being edited right now
+	 * @returns The document to restore; null when there is no history, and when
+	 *   the current document has changed from the one the AI last left (the user
+	 *   edited it)
 	 */
 	pop: (currentDoc: CanvasDoc) => CanvasDoc | null;
-	/** 残っている手数 */
+	/** How many steps are left */
 	depth: () => number;
 };
 
-/** AI 操作の履歴を作る。編集対象（チャットパネルの doc・編集中のファイル）ごとに 1 つ持つ */
+/** Creates a history of AI operations; hold one per thing being edited (the chat panel's document, the file open for editing) */
 export const createCanvasOpHistory = (): CanvasOpHistory => {
 	const entries: { before: CanvasDoc; afterJson: string }[] = [];
 

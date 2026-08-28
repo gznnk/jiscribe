@@ -1,19 +1,22 @@
-// doc を持つ側（ブラウザのキャンバス、あるいはファイルを読み書きするサーバー）が
-// 操作の適用側へ渡す契約。editor-shell の EditorDocBridge と同形だが、
-// エージェント層から UI シェルへ依存しないよう、あえて独立に定義する。
+// The contract whoever holds the document (the canvas in a browser, or a server
+// reading and writing files) hands to the side that applies operations. It has
+// the same shape as editor-shell's EditorDocBridge, but is deliberately defined
+// on its own so that the agent layer does not depend on the UI shell.
 
 import type { CanvasDoc } from "@jiscribe/canvas";
 
 /**
- * 編集対象ドキュメントへのハンドル。キャンバス外から doc を読み書きする唯一の
- * 窓口で、UI が持つ場合はパネルのマウント中 同一実体を保つこと（購読の張り直しを避ける）。
+ * A handle on the document being edited. It is the only way to read and write
+ * the document from outside the canvas, and when the UI holds it, keep it the
+ * same object for as long as the panel is mounted (to avoid re-subscribing).
  */
 export type AiDocBridge = {
-	/** 最後にコミットされた doc。編集途中のドラッグ状態は含まない */
+	/** The last committed document; a drag still under way is not in it */
 	getDoc: () => CanvasDoc;
 	/**
-	 * doc を丸ごと差し替える。UI が持つ場合はユーザー編集と同じ扱い（下書き保存・
-	 * dirty 表示）になるため、呼び出し側は必ず新しいオブジェクトを渡すこと
+	 * Replaces the document wholesale. When the UI holds it this counts as a user
+	 * edit (draft saving, the dirty marker), so the caller must always pass a new
+	 * object
 	 */
 	replaceDoc: (doc: CanvasDoc) => void;
 };

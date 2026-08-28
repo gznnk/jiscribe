@@ -8,7 +8,10 @@ import type { TempCanvasWorkspace } from "./tempCanvasWorkspace";
 import { createTempCanvasWorkspace } from "./tempCanvasWorkspace";
 
 let workspace: TempCanvasWorkspace;
-/** 一時ディレクトリの中の、まだ存在しないパスを得るための足場 */
+/**
+ * A foothold for deriving a path inside the temporary directory that does not
+ * exist yet
+ */
 let anchorPath: string;
 
 beforeEach(async () => {
@@ -27,7 +30,7 @@ const siblingPath = (fileName: string): string =>
 	join(dirname(anchorPath), fileName);
 
 describe("ensureCanvasFile", () => {
-	it("無いファイルは空のキャンバスとして作る", async () => {
+	it("creates a file that is not there as an empty canvas", async () => {
 		const path = siblingPath("new.jis.json");
 
 		expect(await ensureCanvasFile(path)).toBe(true);
@@ -36,14 +39,14 @@ describe("ensureCanvasFile", () => {
 		);
 	});
 
-	it("親ディレクトリが無くても作る", async () => {
+	it("creates one even when the parent directory is missing", async () => {
 		const path = siblingPath(join("nested", "deep", "new.jis.json"));
 
 		expect(await ensureCanvasFile(path)).toBe(true);
 		expect(await readFile(path, "utf8")).toContain('"version": 1');
 	});
 
-	it("既にあるファイルは中身を触らない", async () => {
+	it("leaves the contents of a file that already exists untouched", async () => {
 		const path = await workspace.writeDoc("existing.jis.json", {
 			version: 1,
 			root: [{ id: "rect-1", type: "rect", x: 0, y: 0, width: 10, height: 10 }],
@@ -54,7 +57,7 @@ describe("ensureCanvasFile", () => {
 		expect(await readFile(path, "utf8")).toBe(before);
 	});
 
-	it("壊れたファイルは黙って開かず、診断付きで落ちる", async () => {
+	it("does not open a broken file silently, and fails with a diagnostic", async () => {
 		const path = await workspace.writeDoc("broken.jis.json", {
 			version: 1,
 			root: [{ id: "rect-1", type: "rect", x: "not a number" }],
@@ -65,7 +68,7 @@ describe("ensureCanvasFile", () => {
 		);
 	});
 
-	it("相対パスは拒む", async () => {
+	it("refuses a relative path", async () => {
 		await expect(ensureCanvasFile("relative.jis.json")).rejects.toBeInstanceOf(
 			CanvasFileError,
 		);

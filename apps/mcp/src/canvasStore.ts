@@ -6,14 +6,18 @@ import type { CanvasDoc, CanvasParseResult } from "@jiscribe/doc";
 import { writeFileAtomically } from "./atomicWrite";
 import { canvasParser } from "./canvasDefinitions";
 
-/** ファイル読み書きや検証で投げる、AI へそのまま返せるメッセージ付きエラー。 */
+/**
+ * An error thrown by file I/O and validation, carrying a message that can be
+ * returned to the AI as it is.
+ */
 export class CanvasFileError extends Error {}
 
 /**
- * 絶対パスのファイルを文字列として読み込む。
+ * Read the file at an absolute path as a string.
  *
- * stdio サーバーの cwd はワークスペースと一致する保証がないため、相対パスは拒否する。
- * 検証は行わないので、壊れたファイルを診断したい呼び出し側はこちらを使う。
+ * A stdio server's cwd is not guaranteed to match the workspace, so a relative
+ * path is rejected. No validation is performed, so a caller that wants to
+ * diagnose a broken file uses this one.
  */
 export async function readCanvasFileText(path: string): Promise<string> {
 	if (!isAbsolute(path)) {
@@ -31,10 +35,12 @@ export async function readCanvasFileText(path: string): Promise<string> {
 }
 
 /**
- * 絶対パスの `.jis.json` を読み込み、検証済みの CanvasDoc として返す。
+ * Read the `.jis.json` at an absolute path and return it as a validated
+ * CanvasDoc.
  *
- * 読み込み時点で `canvasParser`（UI 非依存・プラグイン図形込みの正検証器）に通し、不正な
- * ファイルには加工処理を行わせない（壊れた doc に追記して壊れ方を広げないため）。
+ * It goes through `canvasParser` (the authoritative validator, UI-independent and
+ * plugin shapes included) at load time, so no modification is let near an invalid
+ * file (appending to a broken doc would only spread how it is broken).
  */
 export async function loadCanvasFile(path: string): Promise<CanvasDoc> {
 	const text = await readCanvasFileText(path);
@@ -50,16 +56,17 @@ export async function loadCanvasFile(path: string): Promise<CanvasDoc> {
 }
 
 /**
- * CanvasDoc を検証してからファイルへ書き戻す。
+ * Validate a CanvasDoc and then write it back to the file.
  *
- * 加工後のドキュメントを再度 `canvasParser` に通し、不正なら書き込まずに診断付きで
- * 失敗させる。壊れた `.jis.json` を残さないため。
+ * The modified document goes through `canvasParser` again, and an invalid one
+ * fails with diagnostics instead of being written. This is what keeps a broken
+ * `.jis.json` from being left behind.
  *
- * 置き換えは不可分（`./atomicWrite`）なので、監視しているホストや外部のエディタから
- * 書きかけの姿が見えることはない。
+ * The replacement is atomic (`./atomicWrite`), so the watching host and outside
+ * editors never see it half written.
  *
- * @param path 書き出し先の絶対パス。親ディレクトリが無ければ作る
- * @param doc 書き出す CanvasDoc
+ * @param path Absolute path to write to. The parent directory is created when missing
+ * @param doc The CanvasDoc to write out
  */
 export async function saveCanvasFile(
 	path: string,
@@ -84,14 +91,15 @@ export async function saveCanvasFile(
 }
 
 /**
- * 対象の `.jis.json` を、開ける状態にして返す。無ければ空のキャンバスとして作り、
- * 既にあれば検証だけして中身は触らない。
+ * Bring the target `.jis.json` into a state where it can be opened. A missing one
+ * is created as an empty canvas; an existing one is only validated, its contents
+ * untouched.
  *
- * 壊れたファイルをそのまま開くと画面には何も出ず、原因も分からないので、既存
- * ファイルはここで `canvasParser` に通して落とす。
+ * Opening a broken file as it is shows nothing on screen and gives no clue why,
+ * so an existing file is put through `canvasParser` here and made to throw.
  *
- * @param path 対象ファイルの絶対パス。親ディレクトリが無ければ作る
- * @returns 新しく作ったなら true、既にあったなら false
+ * @param path Absolute path to the target file. The parent directory is created when missing
+ * @returns true when newly created, false when it already existed
  */
 export async function ensureCanvasFile(path: string): Promise<boolean> {
 	if (!isAbsolute(path)) {
@@ -111,20 +119,25 @@ export async function ensureCanvasFile(path: string): Promise<boolean> {
 	return false;
 }
 
-/** CanvasDoc を整形済み JSON 文字列（タブインデント・末尾改行）へ直列化する。 */
+/**
+ * Serialize a CanvasDoc into formatted JSON text (tab indentation, trailing
+ * newline).
+ */
 export function serializeCanvasFile(doc: CanvasDoc): string {
 	return `${JSON.stringify(doc, null, "\t")}\n`;
 }
 
-/** パース結果を人間/AI 可読のテキストへ整形する。 */
+/** Format a parse result into text readable by a human or an AI. */
 export function formatParseResult(result: CanvasParseResult): string {
 	switch (result.kind) {
 		case "ok": {
 			if (result.warnings.length === 0) {
 				return "valid: true";
 			}
-			// 未知 type・未知 enum 値の除去は表示・保存経路では黙認だが、AI には診断として
-			// 渡して自己修正させる（エンジン自動補正でなく診断で直させる方針）。
+			// Dropping unknown types and unknown enum values passes silently on the
+			// display and save routes, but is handed to the AI as a diagnostic so it
+			// corrects itself (the policy is to have it fixed through diagnostics rather
+			// than by the engine correcting it automatically).
 			const lines = result.warnings.map(
 				(warning) => `- ${warning.path}: ${warning.message}`,
 			);

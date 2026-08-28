@@ -1,6 +1,7 @@
-// エージェントの AI ツールから届いたキャンバス操作を、編集中の CanvasDoc に
-// 適用する。docOps は doc を破壊的に変更するので、必ず複製してから適用し、
-// 新しい実体をホストへ返す（同一実体だと Canvas 側の同期判定が走らない）。
+// Applies a canvas operation that arrived from an agent's AI tool to the
+// CanvasDoc being edited. docOps changes a document destructively, so it is
+// always cloned before applying and the new object is what goes back to the
+// host (given the same object, Canvas never decides it has to sync).
 
 import {
 	DocOperationError,
@@ -33,8 +34,10 @@ const describeCanvas = (doc: CanvasDoc): string => {
 };
 
 /**
- * 要約一覧の JSON。上限を超えたら図形の途中で切らず、収まる件数だけを返して
- * 絞り込みへ誘導する（AI が JSON として読み直せる形を保つ）
+ * The summary list as JSON. Over the budget it does not cut through the middle
+ * of a shape: it returns as many whole entries as fit and points at narrowing
+ * the search instead (keeping the result in a form the AI can read back as
+ * JSON)
  */
 const describeSummaries = (summaries: readonly ObjectSummary[]): string => {
 	const json = JSON.stringify(summaries);
@@ -56,25 +59,25 @@ const describeSummaries = (summaries: readonly ObjectSummary[]): string => {
 	].join("\n");
 };
 
-/** getText の結果文で読んだテキストを指す語。スロット無指定なら本文 */
+/** How the getText result sentence names the text it read; with no slot given it is the body */
 const slotLabel = (id: string, slot: string | undefined): string =>
 	slot === undefined ? `"${id}"` : `slot "${slot}" of "${id}"`;
 
-/** コネクターの端を結果文で指す語。図形に付いた端は id、自由端は座標 */
+/** How a result sentence names a connector end: the id for an end attached to a shape, the coordinates for a free one */
 const endpointLabel = (
 	ownerId: string | undefined,
 	point: AiPoint | undefined,
 ): string =>
-	// 適用が成功した後にだけ呼ぶので、id の無い端には必ず座標がある
+	// Only called once applying has succeeded, so an end with no id always has a point
 	ownerId !== undefined ? `"${ownerId}"` : `(${point?.x}, ${point?.y})`;
 
-/** 部分装飾の対象を結果文で指す語。occurrence 省略は一致した全箇所 */
+/** How a result sentence names what an inline decoration covers; omitting occurrence means every match */
 const matchLabel = (match: string, occurrence: number | undefined): string =>
 	occurrence === undefined
 		? `every occurrence of "${match}"`
 		: `occurrence ${occurrence} of "${match}"`;
 
-/** reorderObjects の placement を結果文の言い回しへ */
+/** The reorderObjects placement, in the wording a result sentence uses */
 const PLACEMENT_PHRASES: Record<AiZOrderPlacement, string> = {
 	front: "to the front",
 	back: "to the back",
@@ -82,18 +85,20 @@ const PLACEMENT_PHRASES: Record<AiZOrderPlacement, string> = {
 	backward: "one step backward",
 };
 
-/** グループの出し入れで空になり、消えたグループの断り書き */
+/** The note for groups that were emptied by moving objects in or out, and so went away */
 const emptiedGroupsNote = (droppedGroupIds: readonly string[]): string =>
 	droppedGroupIds.length === 0
 		? ""
 		: ` (${quoteIds(droppedGroupIds)} went with them: a group with nothing left in it is dropped)`;
 
 /**
- * doc を読むだけの操作を適用し、AI へ返す結果テキストを組み立てる。
- * 0 件・該当なし・null は失敗ではないので、そうと分かる文で返す（id が doc に
- * 無いときだけ docOps が投げ、呼び出し元が ok:false へ落とす）。
+ * Applies an operation that only reads the document, and builds the result text
+ * to hand back to the AI. Zero results, no match and null are not failures, so
+ * they come back as a sentence that says so (docOps throws only when an id is
+ * not in the document, and the caller turns that into ok:false).
  *
- * @returns 結果テキスト。読み取り以外の操作なら null（呼び出し元が変更系へ回す）
+ * @returns The result text; null for anything that is not a read (the caller
+ *   then sends it on to the changing side)
  */
 const applyDocRead = (
 	op: AiDocOp,
@@ -181,8 +186,9 @@ const applyDocRead = (
 };
 
 /**
- * doc を変更する操作を適用し、AI へ返す結果テキストを組み立てる。
- * 失敗時は DocOperationError を投げ、呼び出し元が ok:false へ落とす。
+ * Applies an operation that changes the document, and builds the result text to
+ * hand back to the AI. On failure it throws DocOperationError, which the caller
+ * turns into ok:false.
  */
 const applyDocChange = (
 	op: AiDocOp,
@@ -281,8 +287,8 @@ const applyDocChange = (
 				docOps.setHeightMode(draftDoc, op.ids, { mode: "auto" });
 				return `${quoteIds(op.ids)}: the height now follows the text`;
 			}
-			// ツール宣言では height を任意にしてある（auto では読まない）ので、
-			// fixed に無いときはここで断る
+			// The tool declaration leaves height optional (auto never reads it), so a
+			// fixed height that has none is refused here
 			if (op.height === undefined) {
 				throw new DocOperationError(
 					'a fixed height needs the height to write: pass height, or mode "auto" to let it follow the text',
@@ -325,7 +331,8 @@ const applyDocChange = (
 		}
 		case "setBackground": {
 			docOps.setBackground(draftDoc, op.color);
-			// 「白にした」と「テーマに戻した」は別物なので、返す文でも区別する
+			// "painted it white" and "handed it back to the theme" are different
+			// things, so the sentence returned tells them apart
 			return op.color === null
 				? "cleared the canvas background, so the surface follows the viewer's theme again"
 				: `painted the canvas background ${op.color}`;
@@ -336,8 +343,9 @@ const applyDocChange = (
 				...(op.open === undefined ? {} : { open: op.open }),
 				...(op.scroll === undefined ? {} : { scroll: op.scroll }),
 			});
-			// 頼んだ内容ではなく、書かれた宣言を読んで返す。全辺 0 の padding のように
-			// 「頼んだが宣言にならない」ものがあるため
+			// Reads back the declaration as written rather than what was asked for,
+			// because some requests do not become a declaration at all, such as
+			// padding that is 0 on every side
 			if (declaration === null) {
 				return "the document now declares nothing about how it is presented, so each host frames it its own way";
 			}
@@ -372,7 +380,7 @@ const applyDocChange = (
 		}
 		case "setExtraProps": {
 			const written = docOps.setExtraProps(draftDoc, op.id, op.extraProps);
-			// 空になるのは値が全部 undefined だったときだけ。書き込みは起きていない
+			// It only comes back empty when every value was undefined; nothing was written
 			return written.length === 0
 				? `nothing to set on "${op.id}": every value was empty`
 				: `set ${written.join(" / ")} on "${op.id}"`;
@@ -457,13 +465,13 @@ const applyDocChange = (
 			return `took ${quoteIds(releasedIds)} out of their group${emptiedGroupsNote(droppedGroupIds)}`;
 		}
 		default:
-			// describeCanvas / undo と読み取り系は doc を変更しないので、
-			// applyCanvasOp がここへ来る前に処理する
+			// describeCanvas, undo and the reads do not change the document, so
+			// applyCanvasOp deals with them before reaching here
 			throw new DocOperationError(`unsupported operation: ${op.kind}`);
 	}
 };
 
-/** 適用中の失敗を AI 向けの ok:false へ均す。docOps の言い分はそのまま渡す */
+/** Levels a failure during applying into an ok:false for the AI; what docOps had to say is passed through as it is */
 const toFailureOutcome = (error: unknown): AiCanvasOpOutcome => {
 	if (error instanceof DocOperationError) {
 		return { ok: false, text: error.message };
@@ -475,19 +483,9 @@ const toFailureOutcome = (error: unknown): AiCanvasOpOutcome => {
 };
 
 /**
- * 操作を適用して AI へ返す結果テキストを組み立てる。
- *
- * @param op - ホスト側のツールハンドラが組み立てた操作
- * @param docBridge - 編集中ドキュメントへのハンドル。適用は複製に対して行い、
- *   成功した操作だけが replaceDoc で反映される
- * @param history - AI 自身の undo 用履歴。doc を変更する操作のたびに 1 手積む
- * @param docOps - 操作の適用に使う doc-ops。ツールに載せた capabilities と同じ
- *   プラグイン構成で作ったものを渡すこと
- * @returns 適用結果。ok=false のとき text は AI 向けエラー文
- */
-/**
- * 余白の全辺。型のキーから引くので、辺が増えたらここが型エラーになる
- * （並べ忘れた辺は読み手に届かないまま消える）
+ * Every side of the padding. It is keyed off the type, so a side added to it
+ * makes this a type error (a side left off the list would disappear without
+ * ever reaching the reader)
  */
 const PADDING_SIDES: Readonly<Record<keyof AiViewPadding, true>> = {
 	top: true,
@@ -496,12 +494,25 @@ const PADDING_SIDES: Readonly<Record<keyof AiViewPadding, true>> = {
 	left: true,
 };
 
-/** 省いた辺は 0 なので、読み手が全辺を把握できるよう埋めて並べる */
+/** A side left out is 0, so every side is filled in and listed for the reader to take them all in */
 const describePadding = (padding: AiViewPadding): string =>
 	`${(Object.keys(PADDING_SIDES) as (keyof AiViewPadding)[])
 		.map((side) => `${side} ${formatNumber(padding[side] ?? 0)}`)
 		.join(" / ")} px`;
 
+/**
+ * Applies an operation and builds the result text to hand back to the AI.
+ *
+ * @param op - The operation the host's own tool handler built
+ * @param docBridge - A handle on the document being edited; applying happens on
+ *   a clone, and only an operation that succeeded reaches replaceDoc
+ * @param history - The AI's own undo history; one step is pushed for every
+ *   operation that changes the document
+ * @param docOps - The doc-ops applying goes through; pass one built with the
+ *   same plugin set as the capabilities the tools were given
+ * @returns The outcome of applying; when ok=false, text is the error message
+ *   written for the AI
+ */
 export const applyCanvasOp = (
 	op: AiDocOp,
 	docBridge: AiDocBridge,
@@ -529,7 +540,7 @@ export const applyCanvasOp = (
 		return { ok: true, text: "undid your last change" };
 	}
 
-	// 読み取りは doc を差し替えないので、複製も undo 履歴も要らない
+	// A read never replaces the document, so it needs neither a clone nor an undo entry
 	try {
 		const readText = applyDocRead(op, currentDoc, docOps);
 		if (readText !== null) {

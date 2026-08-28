@@ -1,10 +1,14 @@
-// AI ツールから届いた、マウント済みのキャンバスが要る操作（選択・カメラ・計測・
-// SVG 化・操作状況の読み取り）を表示中のキャンバスへ適用する。doc を変えないので undo 履歴には積まず、
-// applyCanvasOp とは別経路にしてある（撮影も同じ理由で captureCanvasImage が持つ。
-// あちらは非同期という違いもある）。
+// Applies the operations that arrived from an AI tool and need a mounted canvas
+// (selection, the camera, measuring, turning into SVG, reading the interaction
+// status) to the canvas on screen. They do not change the document, so nothing
+// is pushed onto the undo history and this is a route apart from applyCanvasOp
+// (capturing is held by captureCanvasImage for the same reason, with the
+// further difference that it is async).
 //
-// 結果テキストは AI がそのまま次の指示に写せる形で書く。計測系は数値そのものが
-// 成果物なので、丸め方と単位、そして 0 件と対象なしの区別に責任を持つ。
+// Result text is written in a form the AI can copy straight into its next
+// instruction. For the measurements the numbers themselves are the deliverable,
+// so this is answerable for how they are rounded, for their units, and for
+// telling zero results apart from nothing to measure.
 
 import type {
 	Camera,
@@ -28,15 +32,15 @@ import {
 const NO_CANVAS_TEXT =
 	"no canvas is on screen right now, so there is nothing to select, move the view on, measure, or read the view of";
 
-/** 座標変換が答えられないのは `<svg>` 未マウントの間だけ。窓口が居ないのとは別 */
+/** A coordinate conversion goes unanswered only while the `<svg>` is not mounted; that is a different thing from having no way in */
 const NOT_MOUNTED_TEXT =
 	"the canvas has not finished mounting its drawing surface, so there is no coordinate system to convert through yet; try again in a moment";
 
-/** AI が次の指示を組み立てられるよう、結果のカメラを数値で添える */
+/** Adds the resulting camera as numbers, so that the AI can build its next instruction */
 const describeCamera = ({ minX, minY, zoom }: Camera): string =>
 	`the view now starts at (${minX}, ${minY}) at ${Math.round(zoom * 100)}% zoom`;
 
-/** はみ出している軸だけを並べる。両軸に収まっていれば空文字 */
+/** Lists only the axes that overflow; the empty string when it fits on both */
 const describeMissingRoom = ({
 	textSize,
 	regionSize,
@@ -52,7 +56,7 @@ const describeMissingRoom = ({
 		.filter((missing) => missing !== null)
 		.join(" and ");
 
-/** 計測したスロットの寸法。収まっているかに関わらず同じ数値を出す */
+/** The size of the slot measured; the same numbers whether or not it fits */
 const describeTextSlotSize = ({
 	lineCount,
 	textSize,
@@ -74,13 +78,14 @@ const describeTextSlot = (
 	return `${head}; the shape is clipping it.${missingNote} Fix it by growing the object with resize_object, by lowering fontSize with set_style, or by shortening the text with set_text.`;
 };
 
-/** hit_test の対象。点か矩形かで書き分ける（矩形は width を持つ方） */
+/** What hit_test was aimed at, written one way for a point and another for a rect (the rect is the one with a width) */
 const formatHitTarget = (target: Point | Rect): string =>
 	"width" in target ? formatRect(target) : formatPoint(target);
 
 /**
- * SVG 文字列。上限を超えたら先頭だけを返し、残りがこのツールでは取れないことと
- * 代わりの読み方を明言する（describe_canvas の切り詰めと同じ書き方）
+ * The SVG string. Over the budget it returns only the start and says outright
+ * that the rest cannot be had this way, along with what to read instead
+ * (written the same way as the describe_canvas truncation)
  */
 const describeSvg = (svg: string): string =>
 	svg.length <= MAX_SVG_CHARS
@@ -91,8 +96,9 @@ const describeSvg = (svg: string): string =>
 			].join("\n");
 
 /**
- * ユーザーの操作状況。AI が気にするのは「触ってはいけない対象」と「書き込みが
- * 弾かれる理由」なので、編集中テキストとドラッグを先に、残りは立っていれば添える
+ * The user's interaction status. What the AI cares about is what it must not
+ * touch and why a write of its own may be turned away, so the text being edited
+ * and the drag come first, and the rest is added only where it is on
  */
 const describeInteractionStatus = ({
 	drag,
@@ -123,7 +129,7 @@ const describeInteractionStatus = ({
 	return `${parts.join("; ")}. ${busyNote}`;
 };
 
-/** fit_view の矩形指定ぶん。合わせた矩形と実際に映る範囲は別物なので、その旨を添える */
+/** The rect form of fit_view. The rect fitted and what actually shows are two different things, so the result says as much */
 const applyFitToRect = (
 	rect: AiRect,
 	handleControl: AiHandleControl,
@@ -141,7 +147,7 @@ const applyFitToRect = (
 	};
 };
 
-/** 1 組ぶんの重なり。包含は意図的なことが多いので、その別を必ず添える */
+/** One overlapping pair. Containment is usually deliberate, so which of the two this is always comes with it */
 const describeOverlap = ({ ids, overlap, covers }: ObjectOverlap): string => {
 	const [first, second] = ids;
 	const coverNote =
@@ -152,12 +158,16 @@ const describeOverlap = ({ ids, overlap, covers }: ObjectOverlap): string => {
 };
 
 /**
- * マウント済みのキャンバスが要る操作を適用し、AI へ返す結果テキストを組み立てる。
+ * Applies an operation that needs a mounted canvas, and builds the result text
+ * to hand back to the AI.
  *
- * @param op - 撮影を除く操作（撮影は非同期なので呼び出し元が先に捌く）
- * @param handleControl - 表示中のキャンバスへの窓口。ホストが注入する
- * @returns 適用結果。ok=false のとき text は AI 向けエラー文。計測が 0 件でも
- *   対象が居る限り ok=true で、対象そのものが無いときだけ ok=false になる
+ * @param op - Any operation but capturing (capturing is async, so the caller
+ *   deals with it first)
+ * @param handleControl - The way in to the canvas on screen; the host injects it
+ * @returns The outcome of applying; when ok=false, text is the error message
+ *   written for the AI. A measurement of zero results is still ok=true as long
+ *   as there was something to measure, and only nothing to measure at all makes
+ *   it ok=false
  */
 export const applyHandleOp = (
 	op: Exclude<AiHandleOp, { kind: "captureCanvas" }>,

@@ -1,15 +1,16 @@
-// ビューアが扱う図形セット。UI プラグイン（Canvas 描画用）と doc プラグイン
-// （パース用）を 1 箇所から出す。
+// The shape set the viewer handles. The UI plugins (for Canvas rendering) and the
+// doc plugins (for parsing) come out of one place.
 //
-// **サーバー側の canvasDefinitions.ts と同じ集合であること。**ずれると、AI が
-// ツールで足した図形をビューアが unknown type として弾き、画面が更新されなくなる。
+// **It must be the same set as the server's canvasDefinitions.ts.** Once they drift,
+// the viewer rejects a shape the AI added through a tool as an unknown type, and the
+// screen stops updating.
 
 import { createCanvasParser } from "@jiscribe/doc";
 import { standardPlugins } from "@jiscribe/standard-shapes";
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 
-/** Canvas の initialConfig に渡す UI プラグイン一式 */
+/** The full set of UI plugins handed to Canvas's initialConfig */
 export const plugins = standardPlugins;
 
-/** WebSocket で届いた本文を doc に起こすためのパーサー */
+/** The parser that turns the text arriving over the WebSocket into a doc */
 export const canvasParser = createCanvasParser({ plugins: standardDocPlugins });
