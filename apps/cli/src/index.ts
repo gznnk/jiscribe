@@ -5,11 +5,13 @@
 //
 // `render` is the exception to "headless": it drives a real browser over the real
 // Canvas, which is what makes the image faithful. It is also the only command
-// that loads playwright, and it does so on demand — the other three run with no
-// browser on the machine.
+// that loads playwright, and it does so on demand — the other four run with no
+// browser on the machine. `preview` reaches the same canvas the other way round:
+// it writes it into a file for a browser elsewhere to run.
 
 import { runCheckCommand } from "./checkCommand";
 import { runMeasureCommand } from "./measureCommand";
+import { runPreviewCommand } from "./previewCommand";
 import { runRenderCommand } from "./renderCommand";
 
 const USAGE = `usage: jiscribe <command> [options]
@@ -23,6 +25,8 @@ const USAGE = `usage: jiscribe <command> [options]
   render   <file>       draw the document to a .png or .svg (needs a Chromium-based browser)
                         -o <out.png|out.svg> [--scale <n>] [--region content|viewbox]
                         [--background <css color>] [--browser <channel|path>]
+  preview  <file>       write the document into one HTML file that draws it in a real canvas
+                        -o <out.html>
 
 Options are per command; run one with no arguments for its own usage.
 Globs are left to the shell: jiscribe validate diagrams/**/*.jis.json
@@ -39,6 +43,8 @@ const run = async (argv: readonly string[]): Promise<number> => {
 			return runMeasureCommand(rest);
 		case "render":
 			return runRenderCommand(rest);
+		case "preview":
+			return runPreviewCommand(rest);
 		case "--help":
 		case "-h":
 		case undefined:

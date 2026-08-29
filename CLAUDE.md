@@ -31,7 +31,7 @@ plugins/             flowchart, uml, container, general, annotation, sticky, mar
 apps/
   canvas-examples/   integration examples (one example = one file) + the plugin-coexistence e2e suite
   vscode-extension/  the VSCode extension
-  cli/               the jiscribe CLI: validate / diagnose / measure / render (headless browser harness)
+  cli/               the jiscribe CLI: validate / diagnose / measure / render (headless browser harness) / preview (one self-contained HTML)
   mcp/               the MCP server: the tool set over stdio, plus a local canvas viewer people can edit in
 ```
 

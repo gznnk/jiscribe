@@ -17,6 +17,7 @@ jiscribe validate <files...>   schema + parser; exit 1 on any error
 jiscribe diagnose <files...>   validate, then report text overflowing its shape
 jiscribe measure  <text>       how a string lays out in a given box
 jiscribe render   <file>       draw the document to a .png or .svg
+jiscribe preview  <file>       write the document into one HTML file that draws it
 ```
 
 `validate` / `diagnose` / `measure` print one finding per line
@@ -104,6 +105,42 @@ The consequence is the same one `@jiscribe/doc-tools` carries: **the repository'
 `node_modules` has to be present**. A standalone distributable is not supported
 yet.
 
+## preview
+
+```
+jiscribe preview <file> -o <out.html>
+```
+
+One HTML file holding the document, the canvas, the eight shipped shape plugins
+and the toolbar — so the drawing can be panned, zoomed and edited by whoever
+opens it, with no server, no install and no checkout. Nothing is saved: the file
+is a copy of the document at the moment it was written, and closing the tab
+discards whatever was done to it.
+
+Where `render` sends the canvas a document and takes a picture back, `preview`
+writes the canvas into a file and lets a browser elsewhere run it. It needs no
+browser itself, which is what makes it usable from a machine that has none — a
+CI job, a container, an agent working in the cloud.
+
+### What travels, and what does not
+
+The page is assembled at build time, not at preview time: `buildPreview.mjs`
+bundles `preview/main.tsx` into `dist/preview/`, and the command wraps a
+validated document around it. Everything is inlined — react, the canvas, the
+shape set, katex's stylesheet with its faces as data URIs — with one exception.
+
+The shipped font stacks are the exception, for the reason they are served from
+`node_modules` for `render`: 1700 subset files do not fit in a file meant to be
+mailed. The page asks Google Fonts for the same seven families instead
+(`preview/previewBridge.ts`), which is the one stylesheet host a page can rely on
+reaching. A machine that cannot reach it still gets the drawing, on the fallback
+faces each stack ends in — and, because a box derived from its content is
+measured against the family the document names, a slightly different one.
+
+That single external request is also what keeps the file publishable as-is on a
+host that forbids everything else: the output loads no script, no image and no
+stylesheet from anywhere but `fonts.googleapis.com`.
+
 ## Known limits
 
 - `--region viewbox` means the harness page's own 1280x800 view, not a camera
@@ -113,3 +150,7 @@ yet.
   with a strongly tinted colour leaves the labels sitting on white. That is the
   canvas's drawing, not the render's.
 - `--scale` is refused for SVG rather than ignored: an SVG carries no pixels.
+- A `preview` cannot save. The canvas's own PNG / SVG export is in the toolbar
+  and works, but a page served under a sandbox that blocks downloads (an artifact
+  host, for one) will let the click do nothing — that is the host's rule, not the
+  page's.

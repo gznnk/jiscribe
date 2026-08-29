@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
 
 import { buildHarness } from "./buildHarness.mjs";
+import { buildPreview } from "./buildPreview.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outfile = join(__dirname, "dist", "index.mjs");
@@ -19,6 +20,11 @@ mkdirSync(join(__dirname, "dist"), { recursive: true });
 const harness = await buildHarness();
 console.log(
 	`Built ${harness.outDir} (${harness.fontCount} font files served from node_modules)`,
+);
+
+const preview = await buildPreview();
+console.log(
+	`Built ${preview.outDir} (${Math.round(preview.scriptBytes / 1024)} KB script, ${Math.round(preview.styleBytes / 1024)} KB stylesheet, inlined into each preview)`,
 );
 
 await esbuild.build({
