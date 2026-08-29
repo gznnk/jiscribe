@@ -108,7 +108,7 @@ const pathArg = z
 export function createJiscribeMcpServer(): McpServer {
 	const server = new McpServer({
 		name: "jiscribe",
-		version: "0.1.0",
+		version: "0.9.0",
 	});
 
 	// The viewer is started only when open_canvas is first called, and reused after

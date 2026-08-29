@@ -300,7 +300,7 @@ const config = {
 	outfile: join(__dirname, "dist", "index.mjs"),
 	platform: "node",
 	format: "esm",
-	target: "node18",
+	target: "node22",
 	// npx / bin から直接実行できるように shebang を付ける。
 	// 併せて CJS 由来の依存（ws）が `require("events")` などを呼べるよう、
 	// ESM バンドル内に createRequire ベースの require を定義しておく

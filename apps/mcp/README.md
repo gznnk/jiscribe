@@ -4,6 +4,27 @@ An MCP server that hands the Jiscribe canvas tool set to an AI over stdio, and
 opens a local viewer so a person can watch the drawing take shape and edit it by
 hand while the AI works.
 
+## Install
+
+```bash
+claude mcp add jiscribe -- npx -y jiscribe-mcp
+```
+
+Or register it by hand with any MCP client that speaks stdio:
+
+```jsonc
+{
+	"mcpServers": {
+		"jiscribe": { "command": "npx", "args": ["-y", "jiscribe-mcp"] },
+	},
+}
+```
+
+Node 22 or newer is required. Nothing else is: the published package carries the
+server, the viewer, and the files the text measurement needs at runtime.
+
+> Early days — the tool set and the viewer still move between 0.x releases.
+
 ## What it is
 
 The workspace `.jis.json` file is the single source of truth. The AI edits it
@@ -21,17 +42,6 @@ Three families of tools, 69 in all:
 - 16 more from the same declarations that only a mounted canvas can answer —
   capture, camera, selection, measurement — run over the viewer's WebSocket
 
-## Running it
-
-```bash
-pnpm --filter jiscribe-mcp build   # required: the viewer is served from dist/
-node apps/mcp/dist/index.mjs       # stdio; register this with an MCP client
-```
-
-The build output stands alone — `dist/index.mjs` (the server), `dist/client/`
-(the viewer), and `dist/node_modules/` (the JSON schema and the fonts the text
-measurement needs at runtime). No repository checkout is required to run it.
-
 ## The viewer
 
 `open_canvas` starts an HTTP + WebSocket host inside the MCP process (port 5190,
@@ -46,3 +56,19 @@ found.
 
 The host's lifetime follows the window: once the last viewer closes and none
 comes back within a few seconds, it shuts down and releases the port.
+
+## Developing
+
+```bash
+pnpm --filter jiscribe-mcp build   # required: the viewer is served from dist/
+node apps/mcp/dist/index.mjs       # stdio; register this path with your client
+```
+
+Run pnpm from the repository root, never with the working directory inside
+`engine/`. The build output stands alone — `dist/index.mjs` (the server),
+`dist/client/` (the viewer), and `dist/node_modules/` (the JSON schema and the
+fonts the text measurement needs at runtime) — which is what gets published, so
+a checkout is not needed to run it.
+
+To work on the viewer alone, `pnpm --filter jiscribe-mcp dev:viewer` serves it
+from vite on 5196 and proxies to the host on 5190.

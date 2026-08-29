@@ -1,14 +1,37 @@
 {
 	"name": "jiscribe-mcp",
-	"version": "0.0.0",
-	"private": true,
+	"version": "0.9.0",
+	"description": "An MCP server that gives an AI the Jiscribe canvas tool set, with a local viewer a person can edit alongside it.",
+	"keywords": [
+		"mcp",
+		"model-context-protocol",
+		"diagram",
+		"canvas",
+		"svg",
+		"claude"
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gznnk/jiscribe.git",
+		"directory": "apps/mcp"
+	},
+	"homepage": "https://github.com/gznnk/jiscribe/tree/main/apps/mcp#readme",
+	"bugs": "https://github.com/gznnk/jiscribe/issues",
 	"type": "module",
-	"main": "src/index.ts",
+	"engines": {
+		"node": ">=22"
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.map"
+	],
 	"bin": {
 		"jiscribe-mcp": "dist/index.mjs"
 	},
 	"scripts": {
 		"build": "tsc --noEmit && vite build && node build.mjs",
+		"prepublishOnly": "node verifyDist.mjs",
 		"watch": "node build.mjs --watch",
 		"lint": "eslint .",
 		"typecheck": "tsc --noEmit",
@@ -16,9 +39,9 @@
 		"dev:viewer": "vite"
 	},
 	"comments": {
-		"dependencies": "@jiscribe/doc-schema と @fontsource/* はコードから import されない。doc-tools が実行時に node の解決規則で読むもので（validateDoc の require.resolve と fontSourcePackages の resolveFontSourceDir）、build.mjs が必要なファイルだけ dist/node_modules へ写す。外すとビルドは通り、validate_canvas が落ち、日本語の計測だけが黙って推定へ落ちる。"
+		"devDependencies": "実行時の依存は無い。esbuild が external 無しで dist/index.mjs へ全部バンドルするため、ここに並ぶものは全てビルド時にしか要らない。@jiscribe/doc-schema と @fontsource/* だけは事情が違い、コードから import されない。doc-tools が実行時に node の解決規則で読むもので（validateDoc の require.resolve と fontSourcePackages の resolveFontSourceDir）、build.mjs が必要なファイルだけ dist/node_modules へ写して配布物に載せる。外すとビルドは通り、validate_canvas が落ち、日本語の計測だけが黙って推定へ落ちる。"
 	},
-	"dependencies": {
+	"devDependencies": {
 		"@fontsource/caveat": "5.3.0",
 		"@fontsource/klee-one": "5.3.0",
 		"@fontsource/noto-sans-jp": "5.3.0",
@@ -33,23 +56,21 @@
 		"@jiscribe/doc-tools": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"@modelcontextprotocol/sdk": "^1.30.0",
-		"highlight.js": "^11.11.1",
-		"katex": "catalog:",
-		"react": "catalog:",
-		"react-dom": "catalog:",
-		"ws": "^8.21.3",
-		"zod": "^4.4.3"
-	},
-	"devDependencies": {
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@types/ws": "^8.18.1",
 		"@vitejs/plugin-react-swc": "catalog:",
 		"esbuild": "catalog:",
+		"highlight.js": "^11.11.1",
+		"katex": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:",
 		"tsx": "^4.23.11",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vitest": "catalog:"
+		"vitest": "catalog:",
+		"ws": "^8.21.3",
+		"zod": "^4.4.3"
 	}
 }
