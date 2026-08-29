@@ -501,10 +501,35 @@ export class CanvasDriver {
 		return created.id;
 	}
 
-	/** Click a shape to select it and wait for the ObjectMenu. */
+	/**
+	 * Wait until the gesture recognizer has consumed the pointer events a click just queued.
+	 *
+	 * GestureRecognizer batches pointer input into one requestAnimationFrame run, while
+	 * keyboard shortcuts are handled synchronously on keydown. A keystroke sent right after
+	 * a click therefore reaches the canvas first: Enter opens the text editor, and the
+	 * click's batch a frame later reselects the shape and closes it again. Two frames,
+	 * because the batch runs in the first and React commits its update before the second.
+	 *
+	 * Not a timed wait — it rests on the frame boundary the recognizer schedules against.
+	 * A click that changes the DOM is followed by an assertion on that change; this covers
+	 * the clicks whose effect is invisible, such as re-clicking an already-selected shape.
+	 */
+	private async waitForGestureBatch() {
+		await this.page.evaluate(
+			() =>
+				new Promise((resolve) =>
+					requestAnimationFrame(() =>
+						requestAnimationFrame(() => resolve(null)),
+					),
+				),
+		);
+	}
+
+	/** Click a shape to select it and wait for its control handles. */
 	async selectAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y);
+		await this.waitForGestureBatch();
 		await expect(this.page.locator(selectors.control).first()).toBeVisible();
 	}
 
@@ -515,6 +540,7 @@ export class CanvasDriver {
 	async clickAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y);
+		await this.waitForGestureBatch();
 	}
 
 	/**
@@ -526,6 +552,7 @@ export class CanvasDriver {
 		await this.page.keyboard.down("Control");
 		await this.page.mouse.click(screen.x, screen.y);
 		await this.page.keyboard.up("Control");
+		await this.waitForGestureBatch();
 	}
 
 	/** Click empty space to deselect, committing any text edit in progress. */
