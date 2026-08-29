@@ -129,17 +129,6 @@ export type DocSnapshotSource = Pick<
  * node written to would be written to in all of them at once.
  */
 export type DocSnapshot = {
-	/**
-	 * Ids the commit that produced this entry added, removed or changed — the
-	 * difference between this entry and the one before it, recorded while both
-	 * object maps are still on the same edit chain and a reference comparison can
-	 * see it (`diffChangedObjectIds`). Undo and redo cross this same edge from
-	 * either side, so one list per entry answers both.
-	 *
-	 * Empty for an entry that arrived as a whole document (the initial doc, an
-	 * external sync): nothing about it is "what just changed".
-	 */
-	changedIds: readonly string[];
 	/** Resolved Doc (memoized). null until first resolution. */
 	doc: CanvasDoc | null;
 	/** Committed-state references for lazy conversion. null once resolved (or when created from a Doc). */

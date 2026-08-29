@@ -13,7 +13,6 @@ import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
 import { createMultiSelectGroup } from "../utils/createMultiSelectGroup";
-import { diffChangedObjectIds } from "../utils/diffChangedObjectIds";
 import {
 	reconcileConnectorVertices,
 	reconcileConnectorVerticesIfCommitted,
@@ -104,12 +103,6 @@ export const createCanvasReducer =
 						future: [...past.slice(markIndex + 1), present, ...future],
 					},
 					registries,
-					// One reveal for the whole rewind: every edge the undos it stands
-					// in for would have crossed, which is each entry left behind plus
-					// the one being left now.
-					[...past.slice(markIndex + 1), present].flatMap(
-						(entry) => entry.changedIds,
-					),
 				);
 				// The same reconciliation the undos it stands in for would have run,
 				// so the two cannot diverge. recordHistoryIfNeeded is deliberately not
@@ -454,18 +447,6 @@ const recordHistoryIfNeeded = (
 		? state.history.past
 		: [...state.history.past, state.history.present].slice(-50);
 
-	// What this commit touched, found while both maps are still on the same edit
-	// chain (diffChangedObjectIds). A coalescing commit replaces `present` rather
-	// than growing `past`, so the entry it replaces takes its ids along: the edge
-	// the merged entry sits on is the whole chain, not just its last keystroke.
-	const committedIds = diffChangedObjectIds(
-		previousState.objects,
-		state.objects,
-	);
-	const changedIds = canMerge
-		? [...new Set([...state.history.present.changedIds, ...committedIds])]
-		: committedIds;
-
 	return {
 		...state,
 		saveVersion: state.saveVersion + 1,
@@ -480,7 +461,7 @@ const recordHistoryIfNeeded = (
 			// Lazy snapshot: the Doc tree is not rebuilt here. During a coalesce
 			// merge past is untouched too, so a key-repeat commit does zero
 			// O(N) conversion work.
-			present: createDocSnapshotFromState(state, changedIds),
+			present: createDocSnapshotFromState(state),
 			future: [],
 		},
 	};

@@ -11,8 +11,8 @@ import { UndoCommand } from "../UndoCommand";
 
 const registries = createTestRegistries();
 
-const rect = (id: string, x = 0, y = 0) =>
-	({ id, type: "rect", x, y, width: 100, height: 100 }) as never;
+const rect = (id: string) =>
+	({ id, type: "rect", x: 0, y: 0, width: 100, height: 100 }) as never;
 
 const docPrev = { version: 1, root: [rect("r1")] } as unknown as CanvasDoc;
 const docCurrent = {
@@ -38,7 +38,6 @@ const makeState = (params: {
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		eventStartSnapshot: params.eventStartSnapshot ?? null,
 		textEditState: params.textEditState ?? null,
-		objects: {},
 		internalClipboard: null,
 		commitVersion: 5,
 		saveVersion: 0,
@@ -78,7 +77,7 @@ describe("UndoCommand", () => {
 		expect(next.commitVersion).toBe(5);
 	});
 
-	it("leaves the viewport alone when the restored change is already on screen", () => {
+	it("preserves the viewport", () => {
 		const state = makeState({
 			past: [snapshotPrev],
 			present: snapshotCurrent,
@@ -87,26 +86,6 @@ describe("UndoCommand", () => {
 		expect(UndoCommand.execute(state, registries).viewport).toEqual(
 			state.viewport,
 		);
-	});
-
-	it("reveals a restored change that would land off screen", () => {
-		// The ids come off the entry being left, since that is the commit undo is
-		// taking back — r1 is where the restore puts it, far outside the viewport.
-		const offScreenDoc = {
-			version: 1,
-			root: [rect("r1", 5000, 5000)],
-		} as unknown as CanvasDoc;
-		const state = makeState({
-			past: [createDocSnapshotFromDoc(offScreenDoc)],
-			present: { ...snapshotCurrent, changedIds: ["r1"] },
-			future: [],
-		});
-
-		const { viewport } = UndoCommand.execute(state, registries);
-
-		expect(viewport.zoom).toBe(1);
-		expect(viewport.minX).toBeGreaterThan(4000);
-		expect(viewport.minY).toBeGreaterThan(4000);
 	});
 
 	it("returns the state unchanged when past is empty", () => {

@@ -383,14 +383,7 @@ describe("handleGesture - scroll limit declared by the document", () => {
 		// The carried-over measurement still describes the wider document.
 		expect(undone.scrollLimit.rect).toMatchObject({ right: 310 });
 
-		// The restore put rect-2 back just outside the visible rect, so the reveal
-		// panned to it. Put the camera back where the scroll below is measured from;
-		// what this test is about is the wall, not where the reveal left the view.
-		const rewound = reducer(undone, {
-			type: "SET_CAMERA",
-			camera: returned.viewport,
-		});
-		expect(scroll(rewound, wheel(9999, 0)).viewport.minX).toBe(10);
+		expect(scroll(undone, wheel(9999, 0)).viewport.minX).toBe(10);
 	});
 
 	it("moves the wall with the document when another one is loaded", () => {

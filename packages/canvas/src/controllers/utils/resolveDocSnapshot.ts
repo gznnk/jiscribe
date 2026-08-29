@@ -4,19 +4,10 @@ import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { DocSnapshot, DocSnapshotSource } from "../CanvasTypes";
 
-/**
- * Creates a snapshot from a committed state; the Doc is built lazily on first resolve.
- *
- * @param source - The committed state the entry stands for
- * @param changedIds - What the commit touched, for the reveal on the way back
- *   through this entry (see `DocSnapshot.changedIds`); an entry that stands for a
- *   whole document rather than an edit records none
- */
+/** Creates a snapshot from a committed state; the Doc is built lazily on first resolve. */
 export const createDocSnapshotFromState = (
 	source: DocSnapshotSource,
-	changedIds: readonly string[] = [],
 ): DocSnapshot => ({
-	changedIds,
 	doc: null,
 	source: {
 		objects: source.objects,
@@ -28,7 +19,6 @@ export const createDocSnapshotFromState = (
 
 /** Wraps an existing Doc (e.g. the initial document) as an already-resolved snapshot. */
 export const createDocSnapshotFromDoc = (doc: CanvasDoc): DocSnapshot => ({
-	changedIds: [],
 	doc,
 	source: null,
 });
