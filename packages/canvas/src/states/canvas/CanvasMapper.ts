@@ -112,81 +112,16 @@ export const canvasToState = (
 };
 
 /**
- * The ObjectDocs already built for an object map, so a later conversion of a
- * state sharing those objects reuses the nodes instead of building equal ones.
- *
- * Leaves are keyed by their ObjectState alone: `toDoc` reads nothing but the
- * object's own properties, so the same state always converts to the same doc.
- * Groups cannot be — a child moving replaces the child's state but leaves the
- * parent GroupState untouched — so their entry remembers the children it was
- * built from and is reused only when every one of them came back identical.
- */
-type DocNodeCache = {
-	/** The registrations the cached nodes were built by; see `registrationRevision`. */
-	revision: number;
-	leaves: WeakMap<ObjectState, ObjectDoc>;
-	groups: WeakMap<ObjectState, { doc: GroupDoc; children: ObjectDoc[] }>;
-};
-
-/**
- * One {@link DocNodeCache} per mapper registry, which is one per canvas.
- *
- * Keyed by the mapper rather than global because a doc node is only
- * interchangeable with another built by the same registrations: two canvases
- * can register different types under the same name (a plugin), and their
- * conversions must not be confused for each other. Both maps are weak, so a
- * canvas that goes away, and every object edited away from, take their entries
- * with them.
- */
-const docNodeCaches = new WeakMap<ObjectMapperRegistry, DocNodeCache>();
-
-/** Whether a group's children came back as the very nodes it was built from. */
-const isSameChildren = (
-	cached: readonly ObjectDoc[],
-	rebuilt: readonly ObjectDoc[],
-): boolean =>
-	cached.length === rebuilt.length &&
-	cached.every((child, index) => child === rebuilt[index]);
-
-const getDocNodeCache = (mapper: ObjectMapperRegistry): DocNodeCache => {
-	const cached = docNodeCaches.get(mapper);
-	// A registration swapped since these nodes were built makes every one of them
-	// suspect (a type's toDoc may now produce something else), so the cache is
-	// started over rather than consulted.
-	if (cached && cached.revision === mapper.registrationRevision) {
-		return cached;
-	}
-	const created: DocNodeCache = {
-		revision: mapper.registrationRevision,
-		leaves: new WeakMap(),
-		groups: new WeakMap(),
-	};
-	docNodeCaches.set(mapper, created);
-	return created;
-};
-
-/**
  * Converts CanvasState (flat structure) to CanvasDoc (tree structure).
  * This reconstructs the tree for serialization/storage.
  * Only the object map, root order, surface background and display declaration
  * are read, so any state carrying those fields (e.g. a DocSnapshot source) can
  * be converted.
- *
- * The doc nodes of objects an earlier conversion already saw are reused rather
- * than rebuilt (see {@link DocNodeCache}). Editing replaces only the objects it
- * touches, so converting the state after a commit costs the changed objects and
- * the arrays above them, not the whole document — which is what keeps 50 history
- * entries from each holding a full copy of the drawing. It makes the "a resolved
- * Doc is never mutated in place" invariant (see `DocSnapshot`) load-bearing
- * across snapshots: a node written to would now be written to in every doc
- * sharing it.
  */
 export const canvasToDoc = (
 	state: Pick<CanvasState, "objects" | "rootIds" | "background" | "view">,
 	mapper: ObjectMapperRegistry,
 ): CanvasDoc => {
-	const cache = getDocNodeCache(mapper);
-
 	// Helper to reconstruct an object tree from an ID.
 	// The flat state is always internally consistent (index matches objects,
 	// childIds are acyclic), so it carries no defense against missing IDs or
@@ -194,33 +129,19 @@ export const canvasToDoc = (
 	const reconstructObject = (id: string): ObjectDoc => {
 		const objState = state.objects[id];
 
+		// Each mapper converts only its own properties; child recursion is
+		// managed centrally here (docs/02-architecture.md).
+		const objDoc = mapper.toDoc(objState);
+
 		if (objState.type === "group") {
 			const groupState = objState as GroupState;
-			// Built before the cache is consulted: whether the entry may be reused
-			// is a question about the children, so they have to exist to answer it.
-			const children = groupState.childIds.map((childId) =>
+			const groupDoc = objDoc as GroupDoc;
+
+			groupDoc.children = groupState.childIds.map((childId) =>
 				reconstructObject(childId),
 			);
-			const cachedGroup = cache.groups.get(objState);
-			if (cachedGroup && isSameChildren(cachedGroup.children, children)) {
-				return cachedGroup.doc;
-			}
-
-			// Each mapper converts only its own properties; child recursion is
-			// managed centrally here (docs/02-architecture.md).
-			const groupDoc = mapper.toDoc(objState) as GroupDoc;
-			groupDoc.children = children;
-			cache.groups.set(objState, { doc: groupDoc, children });
-			return groupDoc;
 		}
 
-		const cachedLeaf = cache.leaves.get(objState);
-		if (cachedLeaf) {
-			return cachedLeaf;
-		}
-
-		const objDoc = mapper.toDoc(objState);
-		cache.leaves.set(objState, objDoc);
 		return objDoc;
 	};
 
