@@ -11,12 +11,8 @@ import {
 	type ImageDocState,
 	type JiscribeImageKind,
 } from "./imageDocumentOps";
-import { saveExportedImage } from "./saveExportedImage";
-import { getCanvasWebviewHtml } from "./webviewHtml";
-import type {
-	ExtensionToWebviewMessage,
-	WebviewToExtensionMessage,
-} from "../types/messages";
+import { resolveCanvasWebview } from "./resolveCanvasWebview";
+import type { ExtensionToWebviewMessage } from "../types/messages";
 
 /**
  * Max wait for the Webview's image-generation response. Responses normally
@@ -132,83 +128,55 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	): Promise<void> {
 		this.panels.set(document, webviewPanel);
 
-		webviewPanel.webview.options = { enableScripts: true };
-		webviewPanel.webview.html = getCanvasWebviewHtml(
-			webviewPanel.webview,
-			this.context.extensionUri,
-		);
+		resolveCanvasWebview(webviewPanel, {
+			extensionUri: this.context.extensionUri,
+			documentUri: document.uri,
 
-		const messageListener = webviewPanel.webview.onDidReceiveMessage(
-			(message: WebviewToExtensionMessage) => {
-				switch (message.type) {
-					case "ready":
-						this.updateWebview(webviewPanel, document);
-						break;
+			onReady: () => this.updateWebview(webviewPanel, document),
 
-					case "undo":
-						vscode.commands.executeCommand("undo");
-						break;
-
-					case "redo":
-						vscode.commands.executeCommand("redo");
-						break;
-
-					case "update": {
-						// Canvas edit. Unlike the text editor, don't write to the file;
-						// just mark dirty via the edit event (the actual write happens at
-						// save). undo/redo are called back by VSCode, so capture the
-						// before/after source in the closure to revert / re-apply.
-						const beforeText = document.sourceText;
-						const afterText = message.data;
+			onUpdate: (data) => {
+				// Canvas edit. Unlike the text editor, don't write to the file; just
+				// mark dirty via the edit event (the actual write happens at save).
+				// undo/redo are called back by VSCode, so capture the before/after
+				// source in the closure to revert / re-apply.
+				const beforeText = document.sourceText;
+				const afterText = data;
+				document.sourceText = afterText;
+				this.changeEmitter.fire({
+					document,
+					label: "Canvas edit",
+					undo: () => {
+						document.sourceText = beforeText;
+						this.pushSourceToWebview(document);
+					},
+					redo: () => {
 						document.sourceText = afterText;
-						this.changeEmitter.fire({
-							document,
-							label: "Canvas edit",
-							undo: () => {
-								document.sourceText = beforeText;
-								this.pushSourceToWebview(document);
-							},
-							redo: () => {
-								document.sourceText = afterText;
-								this.pushSourceToWebview(document);
-							},
-						});
-						break;
-					}
+						this.pushSourceToWebview(document);
+					},
+				});
+			},
 
-					case "imageExportResult": {
-						const resolve = this.pendingExports.get(message.requestId);
-						if (resolve) {
-							this.pendingExports.delete(message.requestId);
-							resolve(message.data);
-						}
-						break;
-					}
-
-					case "rendered":
-						// The canvas is mounted and can export now. If a prior hidden-tab
-						// save left a stale image on disk (#179), re-render and rewrite it.
-						void reconcileImageDocument(document, this.makeSeams(document));
-						break;
-
-					case "exportImage":
-						// Save the exported image to the workspace (save dialog → write → notify).
-						void saveExportedImage(
-							document.uri,
-							message.format,
-							message.base64,
-							message.includesSource,
-						);
-						break;
+			onImageExportResult: (requestId, data) => {
+				const resolve = this.pendingExports.get(requestId);
+				if (resolve) {
+					this.pendingExports.delete(requestId);
+					resolve(data);
 				}
 			},
-		);
 
-		webviewPanel.onDidDispose(() => {
-			messageListener.dispose();
-			if (this.panels.get(document) === webviewPanel) {
-				this.panels.delete(document);
-			}
+			onRendered: () => {
+				// The canvas is mounted and can export now. If a prior hidden-tab save
+				// left a stale image on disk (#179), re-render and rewrite it.
+				void reconcileImageDocument(document, this.makeSeams(document));
+			},
+
+			// Drop the panel only if it is still the one registered; a reopened tab
+			// may already have replaced it.
+			onDispose: () => {
+				if (this.panels.get(document) === webviewPanel) {
+					this.panels.delete(document);
+				}
+			},
 		});
 	}
 
