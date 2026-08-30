@@ -943,21 +943,41 @@ Applies to every box shape, plus `polygon`. For `actor`, the fill paints the hea
 
 Applies to every box shape, plus `text` (see its section: it has these fields and no box). A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
 
-| Field            | Type            | Default          | Description                                                                       |
-| ---------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
-| `text`           | `RichText`      | `""`             | Text content: a plain string, or runs (see [Rich text](#rich-text-text-as-runs)). |
-| `textAlign`      | `TextAlign`     | `"center"`       | Horizontal alignment.                                                             |
-| `verticalAlign`  | `VerticalAlign` | `"middle"`       | Vertical alignment.                                                               |
-| `fontColor`      | `string`        | `"auto"`         | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`). |
-| `fontSize`       | `number`        | `16`             | Font size (px).                                                                   |
-| `fontFamily`     | `string`        | `"Noto Sans JP"` | Font family.                                                                      |
-| `fontWeight`     | `string`        | `"normal"`       | Font weight.                                                                      |
-| `fontStyle`      | `string`        | `"normal"`       | Font style: `"normal"` or `"italic"`.                                             |
-| `textDecoration` | `string`        | `"none"`         | Decoration lines: `"underline"`, `"line-through"`, or `"underline line-through"`. |
+| Field               | Type                | Default                                       | Description                                                                                                                 |
+| ------------------- | ------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `text`              | `RichText`          | `""`                                          | Text content: a plain string, or runs (see [Rich text](#rich-text-text-as-runs)).                                           |
+| `textAlign`         | `TextAlign`         | `"center"`                                    | Horizontal alignment.                                                                                                       |
+| `verticalAlign`     | `VerticalAlign`     | `"middle"`                                    | Vertical alignment.                                                                                                         |
+| `textVerticalBasis` | `TextVerticalBasis` | `"region"`                                    | Which box `verticalAlign` measures against (see below). Only meaningful on types whose text region is inset from the frame. |
+| `fontColor`         | `string`            | `"auto"`                                      | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`).                                           |
+| `fontSize`          | `number`            | `16`                                          | Font size (px).                                                                                                             |
+| `fontFamily`        | `string`            | `"Source Sans 3", "Noto Sans JP", sans-serif` | Font family. One of the four stacks listed below; any other value is drawn only if the viewer has that font.                |
+| `fontWeight`        | `string`            | `"normal"`                                    | Font weight.                                                                                                                |
+| `fontStyle`         | `string`            | `"normal"`                                    | Font style: `"normal"` or `"italic"`.                                                                                       |
+| `textDecoration`    | `string`            | `"none"`                                      | Decoration lines: `"underline"`, `"line-through"`, or `"underline line-through"`.                                           |
 
 `TextAlign`: `"left"` / `"center"` / `"right"`
 
 `VerticalAlign`: `"top"` / `"middle"` / `"bottom"`
+
+`TextVerticalBasis`: `"region"` / `"frame"`. `"region"` measures against the area
+the shape keeps clear of its own decoration — a cylinder's caps, a document's
+wavy foot — which differs per type, so shapes of different types drawn at one
+height put their text on different centres. `"frame"` measures against the whole
+height instead, so a row of mixed types drawn at one height reads as one line of
+text; the text may then run over the shape's own decoration, which `diagnose`
+warns about. Horizontal placement is unaffected either way.
+
+The four font stacks the canvas ships faces for:
+
+- sans (the default): `"Source Sans 3", "Noto Sans JP", sans-serif`
+- serif: `"Source Serif 4", "Noto Serif JP", serif`
+- monospace: `"Source Code Pro", "Noto Sans JP", monospace`
+- handwriting: `Caveat, "Klee One", cursive`
+
+Any other `fontFamily` still loads, but is drawn only if the viewer happens to
+have that font, and the shape's box is measured against whatever it falls back
+to.
 
 ### Rich text (`text` as runs)
 
