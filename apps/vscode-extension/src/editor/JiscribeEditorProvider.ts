@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { resolveCanvasWebview } from "./resolveCanvasWebview";
+import { toWebviewDocSource } from "../canvasDocSource";
 import type { ExtensionToWebviewMessage } from "../types/messages";
 
 /**
@@ -127,17 +128,9 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		document: vscode.TextDocument,
 		saveNonce?: string,
 	) {
-		const text = document.getText();
-		let data: string;
-		try {
-			data = JSON.stringify(JSON.parse(text), null, 2);
-		} catch {
-			// On parse failure, send the raw text and let the Webview show its error.
-			data = text;
-		}
 		const message: ExtensionToWebviewMessage = {
 			type: "update",
-			data,
+			data: toWebviewDocSource(document.getText()),
 			saveNonce,
 			docType: "json",
 		};

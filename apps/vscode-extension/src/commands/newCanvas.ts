@@ -1,20 +1,12 @@
 import * as vscode from "vscode";
 
+import { EMPTY_CANVAS_DOC_JSON } from "../canvasDocSource";
 import {
 	CANVAS_FILE_EXTENSIONS,
 	DEFAULT_CANVAS_FILE_EXTENSION,
 	isCanvasFileName,
 	stripCanvasFileExtension,
 } from "../canvasFileExtensions";
-
-const EMPTY_CONTENT = JSON.stringify(
-	{
-		version: 1,
-		root: [],
-	},
-	null,
-	2,
-);
 
 async function findAvailableFileName(
 	folder: vscode.Uri,
@@ -110,7 +102,7 @@ async function createCanvas(folderUri: vscode.Uri | undefined): Promise<void> {
 
 		await vscode.workspace.fs.writeFile(
 			fileUri,
-			new TextEncoder().encode(EMPTY_CONTENT),
+			new TextEncoder().encode(EMPTY_CANVAS_DOC_JSON),
 		);
 		await vscode.commands.executeCommand(
 			"vscode.openWith",
