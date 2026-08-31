@@ -57,11 +57,7 @@ Say goodbye to context-switching between external drawing apps and your editor. 
 
 ### Creating a New Canvas
 
-**From the Explorer sidebar** — Right-click any folder and select **New Jiscribe Canvas**.
-
-**From the Command Palette** — Press `Ctrl+Shift+P` (`Cmd+Shift+P` on macOS), type **Jiscribe: New Jiscribe Canvas**, and press Enter.
-
-You'll be prompted for a file name. The canvas opens automatically once the file is created.
+Create an empty file with a `.jis` extension (e.g. `diagram.jis`) — from the Explorer's **New File...**, the `File > New File...` menu, or `touch` in a terminal. Opening it shows a blank canvas, ready to draw.
 
 ### Letting AI Generate a Canvas
 

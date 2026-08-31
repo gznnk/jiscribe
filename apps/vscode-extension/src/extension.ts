@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 
-import { registerNewCanvasCommands } from "./commands/newCanvas";
 import { registerSetupAiCommand } from "./commands/setupAi";
 import { DiagnosticProvider } from "./diagnostics/DiagnosticProvider";
 import { JiscribeEditorProvider } from "./editor/JiscribeEditorProvider";
@@ -51,7 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 	context.subscriptions.push(imageRegistration);
 
-	registerNewCanvasCommands(context);
 	registerSetupAiCommand(context);
 }
 

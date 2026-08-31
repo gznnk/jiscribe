@@ -104,28 +104,13 @@
 		],
 		"commands": [
 			{
-				"command": "jiscribe.newEmptyCanvas",
-				"title": "New Jiscribe Canvas",
-				"category": "Jiscribe"
-			},
-			{
 				"command": "jiscribe.setupAi",
 				"title": "Set up AI",
 				"category": "Jiscribe"
 			}
 		],
 		"menus": {
-			"explorer/context": [
-				{
-					"command": "jiscribe.newEmptyCanvas",
-					"when": "explorerResourceIsFolder",
-					"group": "jiscribe@1"
-				}
-			],
 			"commandPalette": [
-				{
-					"command": "jiscribe.newEmptyCanvas"
-				},
 				{
 					"command": "jiscribe.setupAi"
 				}
