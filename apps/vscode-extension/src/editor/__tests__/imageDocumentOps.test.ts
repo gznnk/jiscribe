@@ -1,12 +1,15 @@
 import {
 	insertPngTextChunk,
 	PNG_SOURCE_KEYWORD,
+	readPngTextChunk,
 } from "@jiscribe/doc/png-source";
 import { describe, expect, it, vi } from "vitest";
 
+import { EMPTY_CANVAS_DOC_JSON } from "../../canvasDocSource";
 import {
 	computeExportBytes,
 	embedCurrentSource,
+	readSourceFromImageFile,
 	reconcileImageDocument,
 	revertImageDocument,
 	saveImageDocument,
@@ -287,5 +290,46 @@ describe("embedCurrentSource", () => {
 	it("throws on a cross-format request (would corrupt the file)", () => {
 		const doc = makeDoc("png", pngWithSource("SRC"), "SRC");
 		expect(() => embedCurrentSource(doc, "svg")).toThrow(/Cannot save as/);
+	});
+
+	it("embeds into a blank placeholder when the file holds no image yet", () => {
+		// A file created empty in the Explorer has nothing to embed into; without a
+		// placeholder the save would write 0 bytes and drop the edits.
+		const svgDoc = makeDoc("svg", new Uint8Array(), "DRAWN");
+		expect(decodeUtf8(embedCurrentSource(svgDoc))).toContain(
+			">DRAWN</jiscribe:source>",
+		);
+
+		const pngDoc = makeDoc("png", new Uint8Array(), "DRAWN");
+		expect(
+			readPngTextChunk(embedCurrentSource(pngDoc), PNG_SOURCE_KEYWORD),
+		).toBe("DRAWN");
+	});
+});
+
+// --- readSourceFromImageFile ------------------------------------------------
+
+describe("readSourceFromImageFile", () => {
+	it("treats a file with no bytes as a new empty document", () => {
+		// A file created empty in the Explorer must open as a blank canvas, not as
+		// the uneditable "no embedded source" display.
+		expect(readSourceFromImageFile("png", new Uint8Array())).toBe(
+			EMPTY_CANVAS_DOC_JSON,
+		);
+		expect(readSourceFromImageFile("svg", new Uint8Array())).toBe(
+			EMPTY_CANVAS_DOC_JSON,
+		);
+	});
+
+	it("reads the embedded source of a real image", () => {
+		expect(readSourceFromImageFile("png", pngWithSource("SRC"))).toBe("SRC");
+		expect(readSourceFromImageFile("svg", svgBytes(svgWithSource("SRC")))).toBe(
+			"SRC",
+		);
+	});
+
+	it("returns null for an image carrying no source", () => {
+		expect(readSourceFromImageFile("png", tinyPng())).toBeNull();
+		expect(readSourceFromImageFile("svg", svgBytes(svgNoSource()))).toBeNull();
 	});
 });

@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import {
 	computeExportBytes,
 	embedCurrentSource,
-	extractSourceFromImage,
+	readSourceFromImageFile,
 	reconcileImageDocument,
 	revertImageDocument,
 	saveImageDocument,
@@ -67,7 +67,8 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
  *
  * Data flow:
  *   open:  read file → extract embedded source JSON (png: iTXt / svg:
- *          <metadata>) → send to Webview
+ *          <metadata>; a file created empty opens as a new document) → send to
+ *          Webview
  *   edit:  doc JSON arrives from Webview → fire edit event (dirty / undo / redo)
  *   save:  ask Webview to render (fit-to-content re-render + re-embed source) →
  *          write file. If the Webview can't respond, fall back to "existing
@@ -116,7 +117,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			uri,
 			kind,
 			bytes,
-			extractSourceFromImage(kind, bytes),
+			readSourceFromImageFile(kind, bytes),
 		);
 	}
 
