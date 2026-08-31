@@ -260,14 +260,66 @@ export async function reconcileImageDocument(
 	}
 }
 
+/**
+ * Make the on-disk bytes the document's truth: revert, and adopting an external
+ * change. Unlike the save-time re-sync (adoptSavedBytes), this also accepts a
+ * file with no embedded source — the editor then shows it as uneditable, the
+ * same as opening that file fresh.
+ *
+ * @param doc - document state to overwrite
+ * @param bytes - the file's current on-disk bytes
+ */
+export function adoptDiskBytes(doc: ImageDocState, bytes: Uint8Array): void {
+	doc.savedBytes = bytes;
+	doc.sourceText = readSourceFromImageFile(doc.kind, bytes);
+	// Disk image and source are now consistent, so drop any pending reconcile (#179).
+	doc.needsImageReconcile = false;
+}
+
 /** Revert File: roll back the state to the file's on-disk contents. */
 export async function revertImageDocument(
 	doc: ImageDocState,
 	seams: ImageDocSeams,
 ): Promise<void> {
-	const bytes = await seams.readFile();
-	doc.savedBytes = bytes;
-	doc.sourceText = readSourceFromImageFile(doc.kind, bytes);
-	// Disk image and source are now consistent, so drop any pending reconcile (#179).
-	doc.needsImageReconcile = false;
+	adoptDiskBytes(doc, await seams.readFile());
+}
+
+/**
+ * What a file-watcher event on the document's file means for the editor.
+ *
+ * - "own-echo": the bytes are what this editor last wrote; nothing to do
+ * - "adopt": a real external change and the document has no unsaved edits;
+ *   follow the disk silently (adoptDiskBytes), like a text editor does
+ * - "conflict": a real external change while the document is dirty; the user
+ *   must choose between reloading and keeping the unsaved edits
+ */
+export type ExternalChangeKind = "own-echo" | "adopt" | "conflict";
+
+const areBytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>
+	a.length === b.length && a.every((byte, i) => byte === b[i]);
+
+/**
+ * Classify a file-watcher event by comparing the disk bytes with what the
+ * editor believes is on disk.
+ *
+ * @param doc - document state; savedBytes is one of the "our own write" baselines
+ * @param diskBytes - the file's bytes read after the watcher fired
+ * @param lastOwnWrite - bytes of the editor's most recent write, recorded before
+ *   the write lands so a watcher event racing adoptSavedBytes still matches;
+ *   null when this editor has not written yet
+ * @param isDirty - whether the document has unsaved edits (VSCode's dirty flag)
+ */
+export function classifyExternalChange(
+	doc: ImageDocState,
+	diskBytes: Uint8Array,
+	lastOwnWrite: Uint8Array | null,
+	isDirty: boolean,
+): ExternalChangeKind {
+	if (
+		areBytesEqual(diskBytes, doc.savedBytes) ||
+		(lastOwnWrite !== null && areBytesEqual(diskBytes, lastOwnWrite))
+	) {
+		return "own-echo";
+	}
+	return isDirty ? "conflict" : "adopt";
 }

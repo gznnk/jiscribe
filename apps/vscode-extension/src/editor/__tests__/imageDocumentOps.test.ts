@@ -7,6 +7,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { EMPTY_CANVAS_DOC_JSON } from "../../canvasDocSource";
 import {
+	adoptDiskBytes,
+	classifyExternalChange,
 	computeExportBytes,
 	embedCurrentSource,
 	readSourceFromImageFile,
@@ -331,5 +333,69 @@ describe("readSourceFromImageFile", () => {
 	it("returns null for an image carrying no source", () => {
 		expect(readSourceFromImageFile("png", tinyPng())).toBeNull();
 		expect(readSourceFromImageFile("svg", svgBytes(svgNoSource()))).toBeNull();
+	});
+});
+
+// --- classifyExternalChange ---------------------------------------------------
+
+describe("classifyExternalChange", () => {
+	const saved = svgBytes(svgWithSource("SAVED"));
+
+	it("recognizes the saved bytes as our own echo", () => {
+		const doc = makeDoc("svg", saved, "SAVED");
+		expect(
+			classifyExternalChange(
+				doc,
+				svgBytes(svgWithSource("SAVED")),
+				null,
+				false,
+			),
+		).toBe("own-echo");
+	});
+
+	it("recognizes an in-flight write via lastOwnWrite", () => {
+		// The watcher can fire after writeFile but before adoptSavedBytes updates
+		// savedBytes; the pre-recorded write bytes must still match.
+		const doc = makeDoc("svg", saved, "NEW");
+		const inFlight = svgBytes(svgWithSource("NEW", "re-rendered"));
+		expect(classifyExternalChange(doc, inFlight, inFlight, true)).toBe(
+			"own-echo",
+		);
+	});
+
+	it("adopts an external change while the document is clean", () => {
+		const doc = makeDoc("svg", saved, "SAVED");
+		const external = svgBytes(svgWithSource("EXTERNAL"));
+		expect(classifyExternalChange(doc, external, null, false)).toBe("adopt");
+	});
+
+	it("reports a conflict for an external change while the document is dirty", () => {
+		const doc = makeDoc("svg", saved, "UNSAVED");
+		const external = svgBytes(svgWithSource("EXTERNAL"));
+		expect(classifyExternalChange(doc, external, saved, true)).toBe("conflict");
+	});
+});
+
+// --- adoptDiskBytes -----------------------------------------------------------
+
+describe("adoptDiskBytes", () => {
+	it("takes over the disk state and drops a pending reconcile", () => {
+		const doc = makeDoc("svg", svgBytes(svgWithSource("OURS")), "OURS");
+		doc.needsImageReconcile = true;
+		const external = svgWithSource("EXTERNAL");
+
+		adoptDiskBytes(doc, svgBytes(external));
+
+		expect(doc.sourceText).toBe("EXTERNAL");
+		expect(decodeUtf8(doc.savedBytes)).toBe(external);
+		expect(doc.needsImageReconcile).toBe(false);
+	});
+
+	it("accepts a file without an embedded source as uneditable", () => {
+		const doc = makeDoc("svg", svgBytes(svgWithSource("OURS")), "OURS");
+
+		adoptDiskBytes(doc, svgBytes(svgNoSource()));
+
+		expect(doc.sourceText).toBeNull();
 	});
 });

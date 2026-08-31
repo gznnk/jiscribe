@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 
 import {
+	adoptDiskBytes,
+	classifyExternalChange,
 	computeExportBytes,
 	embedCurrentSource,
 	readSourceFromImageFile,
@@ -20,6 +22,12 @@ import type { ExtensionToWebviewMessage } from "../types/messages";
  * and fall back.
  */
 const IMAGE_EXPORT_TIMEOUT_MS = 10_000;
+
+/**
+ * Wait after a file-watcher event before reading the file, so a burst of events
+ * from one external write (or a non-atomic writer) coalesces into one check.
+ */
+const EXTERNAL_CHANGE_DEBOUNCE_MS = 200;
 
 /**
  * CustomDocument for `.jis.png` / `.jis.svg`.
@@ -49,8 +57,25 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	public needsImageReconcile = false;
 	public reconcileInFlight = false;
 
+	/**
+	 * Bytes of this editor's most recent write to the file, recorded before the
+	 * write lands so a watcher event racing the save still recognizes it as our
+	 * own; null until the first write.
+	 */
+	public lastOwnWrite: Uint8Array | null = null;
+
+	/** Guards against stacking conflict prompts while one is already open. */
+	public conflictPromptOpen = false;
+
+	/** Debounce timer for coalescing file-watcher events (one check per burst). */
+	public externalCheckTimer: ReturnType<typeof setTimeout> | undefined;
+
+	/** Watches the document's file for external changes; lives with the document. */
+	public fileWatcher: vscode.FileSystemWatcher | undefined;
+
 	dispose(): void {
-		// Only in-memory bytes are held, so no explicit cleanup is needed.
+		clearTimeout(this.externalCheckTimer);
+		this.fileWatcher?.dispose();
 	}
 }
 
@@ -74,6 +99,10 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
  *          write file. If the Webview can't respond, fall back to "existing
  *          image + re-embedded latest source" (image looks as it did at the last
  *          save, but the source isn't lost); see imageDocumentOps.
+ *
+ * A file watcher follows external changes to the file: adopted silently while
+ * the document is clean, resolved via a prompt while it is dirty (see
+ * checkExternalChange).
  */
 export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<JiscribeImageDocument> {
 	constructor(private readonly context: vscode.ExtensionContext) {}
@@ -113,12 +142,152 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			: uri;
 		const kind = kindFromPath(uri.path);
 		const bytes = await vscode.workspace.fs.readFile(readUri);
-		return new JiscribeImageDocument(
+		const document = new JiscribeImageDocument(
 			uri,
 			kind,
 			bytes,
 			readSourceFromImageFile(kind, bytes),
 		);
+		this.watchExternalChanges(document);
+		return document;
+	}
+
+	/**
+	 * Watch the document's file so a change made outside this editor (MCP, git,
+	 * another tool) is picked up instead of being clobbered by the next save. The
+	 * watcher is disposed with the document.
+	 */
+	private watchExternalChanges(document: JiscribeImageDocument): void {
+		const fileName = document.uri.path.split("/").pop();
+		if (!fileName) {
+			return;
+		}
+		const watcher = vscode.workspace.createFileSystemWatcher(
+			new vscode.RelativePattern(
+				vscode.Uri.joinPath(document.uri, ".."),
+				fileName,
+			),
+		);
+		// Create covers replace-by-rename writers, whose change may surface as a
+		// re-creation of the path.
+		watcher.onDidChange(() => this.scheduleExternalCheck(document));
+		watcher.onDidCreate(() => this.scheduleExternalCheck(document));
+		document.fileWatcher = watcher;
+	}
+
+	/** Debounced entry: one checkExternalChange per burst of watcher events. */
+	private scheduleExternalCheck(document: JiscribeImageDocument): void {
+		clearTimeout(document.externalCheckTimer);
+		document.externalCheckTimer = setTimeout(() => {
+			void this.checkExternalChange(document);
+		}, EXTERNAL_CHANGE_DEBOUNCE_MS);
+	}
+
+	/**
+	 * Read the file back after a watcher event and react per its classification:
+	 * ignore our own write's echo, silently follow the disk while the document
+	 * has no unsaved edits (like a text editor), and ask the user when it does.
+	 */
+	private async checkExternalChange(
+		document: JiscribeImageDocument,
+	): Promise<void> {
+		let diskBytes: Uint8Array;
+		try {
+			diskBytes = await vscode.workspace.fs.readFile(document.uri);
+		} catch {
+			// Deleted or unreadable; there is no disk state to follow.
+			return;
+		}
+		const changeKind = classifyExternalChange(
+			document,
+			diskBytes,
+			document.lastOwnWrite,
+			this.isDocumentDirty(document),
+		);
+		if (changeKind === "own-echo") {
+			return;
+		}
+		if (changeKind === "adopt") {
+			adoptDiskBytes(document, diskBytes);
+			this.pushSourceToWebview(document);
+			return;
+		}
+		await this.promptExternalConflict(document);
+	}
+
+	/**
+	 * Ask the user to resolve a dirty-document external change. "Reload from
+	 * Disk" adopts the disk state as an undoable edit (the document stays dirty,
+	 * but its content matches the file and Ctrl+Z brings the edits back);
+	 * keeping the edits changes nothing, so the next save overwrites the
+	 * external change — that is the choice being made.
+	 */
+	private async promptExternalConflict(
+		document: JiscribeImageDocument,
+	): Promise<void> {
+		if (document.conflictPromptOpen) {
+			return;
+		}
+		document.conflictPromptOpen = true;
+		try {
+			const fileName = document.uri.path.split("/").pop() ?? document.uri.path;
+			const reloadChoice = "Reload from Disk";
+			const choice = await vscode.window.showWarningMessage(
+				`"${fileName}" changed on disk, and this editor has unsaved edits. ` +
+					`Saving will overwrite the changes on disk.`,
+				reloadChoice,
+				"Keep My Edits",
+			);
+			if (choice !== reloadChoice) {
+				return;
+			}
+			// Re-read at resolution time: the file may have changed again while the
+			// prompt was open.
+			let diskBytes: Uint8Array;
+			try {
+				diskBytes = await vscode.workspace.fs.readFile(document.uri);
+			} catch {
+				return;
+			}
+			const beforeText = document.sourceText;
+			adoptDiskBytes(document, diskBytes);
+			const afterText = document.sourceText;
+			this.changeEmitter.fire({
+				document,
+				label: "Reload from disk",
+				undo: () => {
+					document.sourceText = beforeText;
+					this.pushSourceToWebview(document);
+				},
+				redo: () => {
+					document.sourceText = afterText;
+					this.pushSourceToWebview(document);
+				},
+			});
+			this.pushSourceToWebview(document);
+		} finally {
+			document.conflictPromptOpen = false;
+		}
+	}
+
+	/**
+	 * Whether the document's tab shows unsaved edits. VSCode owns the dirty flag
+	 * (we only fire edit events), so read it off the tab; a document whose tab is
+	 * already gone counts as clean.
+	 */
+	private isDocumentDirty(document: JiscribeImageDocument): boolean {
+		const documentKey = document.uri.toString();
+		for (const tabGroup of vscode.window.tabGroups.all) {
+			for (const tab of tabGroup.tabs) {
+				if (
+					tab.input instanceof vscode.TabInputCustom &&
+					tab.input.uri.toString() === documentKey
+				) {
+					return tab.isDirty;
+				}
+			}
+		}
+		return false;
 	}
 
 	/** Initialize the editor (Webview) and wire up its messaging with the document. */
@@ -208,6 +377,11 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		if (token.isCancellationRequested) {
 			return;
 		}
+		// Save As over the document's own file is still our write, not an external
+		// change for the watcher.
+		if (destination.toString() === document.uri.toString()) {
+			document.lastOwnWrite = bytes;
+		}
 		await vscode.workspace.fs.writeFile(destination, bytes);
 	}
 
@@ -256,8 +430,12 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		return {
 			render: (kind) => this.renderViaWebview(document, kind),
 			readFile: async () => vscode.workspace.fs.readFile(document.uri),
-			writeFile: async (bytes) =>
-				vscode.workspace.fs.writeFile(document.uri, bytes),
+			writeFile: async (bytes) => {
+				// Record before the write lands so the watcher event can never see the
+				// new bytes without us remembering having written them.
+				document.lastOwnWrite = bytes;
+				await vscode.workspace.fs.writeFile(document.uri, bytes);
+			},
 			isCancelled: token ? () => token.isCancellationRequested : undefined,
 		};
 	}
