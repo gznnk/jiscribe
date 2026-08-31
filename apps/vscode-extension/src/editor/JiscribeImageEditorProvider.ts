@@ -507,7 +507,11 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	}
 }
 
-/** Determine the image kind from the URI path (anything but `.jis.svg` is png). */
+/**
+ * Determine the image kind from the URI path (anything but `.svg` is png).
+ * A Save As destination is free text, so a plain `.svg` (no `.jis.`) must
+ * still get SVG bytes.
+ */
 function kindFromPath(path: string): JiscribeImageKind {
-	return path.endsWith(".jis.svg") ? "svg" : "png";
+	return path.toLowerCase().endsWith(".svg") ? "svg" : "png";
 }
