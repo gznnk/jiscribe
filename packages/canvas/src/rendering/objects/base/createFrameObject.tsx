@@ -1,3 +1,4 @@
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import { joinRichTextLines } from "@jiscribe/doc/model/objects/types/RichText";
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
@@ -33,7 +34,8 @@ export type FrameShapeProps = {
 	strokeColor: string;
 	/** Resolved fill color (auto is resolved to the theme surface). */
 	fillColor: string;
-	strokeWidth?: number;
+	/** Resolved stroke width (an absent document value is resolved to DEFAULT_STROKE_WIDTH). */
+	strokeWidth: number;
 	strokeDasharray?: string;
 };
 
@@ -189,7 +191,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			rotation,
 			fill,
 			stroke,
-			strokeWidth,
+			strokeWidth = DEFAULT_STROKE_WIDTH,
 			strokeDashType,
 			text,
 			isEditing = false,

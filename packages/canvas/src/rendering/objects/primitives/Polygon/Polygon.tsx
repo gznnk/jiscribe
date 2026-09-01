@@ -1,3 +1,4 @@
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import type React from "react";
 import { memo } from "react";
 
@@ -13,7 +14,7 @@ const PolygonComponent: React.FC<PolygonProps> = ({
 	points,
 	fill,
 	stroke,
-	strokeWidth = 1,
+	strokeWidth = DEFAULT_STROKE_WIDTH,
 	strokeDashType,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");

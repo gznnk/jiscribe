@@ -1,4 +1,5 @@
 import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type {
 	CreateObjectType,
 	ExtraStylePropertyDescriptor,
@@ -10,13 +11,6 @@ export const ICON_GRID_SIZE = 24;
 
 /** Icon drawn when a shape is created without naming one. */
 export const DEFAULT_ICON_NAME = "star";
-
-/**
- * Line weight an icon is drawn with when the document names none. The Lucide set is
- * authored at this width on its 24px grid; the renderer keeps it visually constant
- * however far the grid is scaled.
- */
-export const DEFAULT_ICON_STROKE_WIDTH = 2;
 
 /**
  * A named pictogram from the bundled Lucide set, drawn as line art at whatever size
@@ -76,5 +70,5 @@ export const ICON_DOC_DEFAULTS: Omit<IconDoc, "id"> = {
 	// it can do here; the menu's lock is still there to be turned off deliberately.
 	lockAspectRatio: true,
 	stroke: AUTO_COLOR,
-	strokeWidth: DEFAULT_ICON_STROKE_WIDTH,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 } as const as IconDoc;

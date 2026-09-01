@@ -2,6 +2,13 @@ import type { StrokeDashType } from "../types/StrokeDashType";
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /**
+ * Width a stroke is drawn with when `strokeWidth` is omitted — the default the
+ * JSON schema documents. Renderers resolve the absent field with this, so a
+ * document that leaves the width out draws the same as one that writes 2.
+ */
+export const DEFAULT_STROKE_WIDTH = 2;
+
+/**
  * Properties related to stroke (outline) styling.
  */
 export type StrokeStyleDoc = {

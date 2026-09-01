@@ -48,7 +48,10 @@ export type { CreateObjectType } from "./model/objects/types/CreateObjectType";
 // the AI schema generator's property table is the one outside this package — build
 // their lists from these rather than spelling the names again.
 export { FILL_STYLE_KEYS } from "./model/objects/base/FillStyleDoc";
-export { STROKE_STYLE_KEYS } from "./model/objects/base/StrokeStyleDoc";
+export {
+	DEFAULT_STROKE_WIDTH,
+	STROKE_STYLE_KEYS,
+} from "./model/objects/base/StrokeStyleDoc";
 export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
 export { TRANSFORM_STYLE_KEYS } from "./model/objects/base/TransformDoc";

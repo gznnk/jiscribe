@@ -1,3 +1,4 @@
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import { calcVectorAngleRad, type Point } from "@jiscribe/geometry";
@@ -28,7 +29,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	id,
 	points,
 	stroke = "auto",
-	strokeWidth = 1,
+	strokeWidth = DEFAULT_STROKE_WIDTH,
 	strokeDashType,
 	startArrow,
 	endArrow,

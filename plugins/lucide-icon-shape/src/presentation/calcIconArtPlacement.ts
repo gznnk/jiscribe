@@ -28,7 +28,7 @@ export type IconArtPlacement = {
  * @param width - Box width in local pixels; 0 or negative means nothing is drawn
  * @param height - Box height in local pixels; 0 or negative means nothing is drawn
  * @param strokeWidth - Line weight asked for, as it should appear on screen; the
- *   caller resolves an absent document value to DEFAULT_ICON_STROKE_WIDTH first,
+ *   frame renderer resolves an absent document value to the shared default first,
  *   so 0 here is an explicit request for unstroked art
  * @returns The placement; `scale` 0 marks the degenerate box a renderer skips
  */

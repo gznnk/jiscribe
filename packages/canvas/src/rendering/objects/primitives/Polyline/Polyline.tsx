@@ -1,3 +1,4 @@
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import { calcVectorAngleRad } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
@@ -15,7 +16,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	id,
 	points,
 	stroke,
-	strokeWidth = 1,
+	strokeWidth = DEFAULT_STROKE_WIDTH,
 	strokeDashType,
 	startArrow,
 	endArrow,

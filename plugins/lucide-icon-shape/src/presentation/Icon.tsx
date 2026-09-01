@@ -4,11 +4,7 @@ import { createElement } from "react";
 import { calcIconArtPlacement } from "./calcIconArtPlacement";
 import { IconArtGroup, IconHitArea, IconPlaceholderRect } from "./IconStyled";
 import { readIconNodes } from "../schema/icon/resolveIconName";
-import {
-	DEFAULT_ICON_NAME,
-	DEFAULT_ICON_STROKE_WIDTH,
-	ICON_GRID_SIZE,
-} from "../schema/IconDoc";
+import { DEFAULT_ICON_NAME, ICON_GRID_SIZE } from "../schema/IconDoc";
 import type { IconState } from "../state/IconState";
 
 /**
@@ -21,12 +17,10 @@ import type { IconState } from "../state/IconState";
  * all would leave an invisible, still-selectable object.
  */
 export const Icon = createFrameObject<IconState>((state, shape) => {
-	// An absent strokeWidth means the document's default weight, not 0 — left
-	// unresolved, the art would be drawn with invisible strokes.
 	const { scale, offset, artStrokeWidth } = calcIconArtPlacement(
 		state.width,
 		state.height,
-		shape.strokeWidth ?? DEFAULT_ICON_STROKE_WIDTH,
+		shape.strokeWidth,
 	);
 	const artSize = ICON_GRID_SIZE * scale;
 	const nodes = readIconNodes(state.icon ?? DEFAULT_ICON_NAME);
