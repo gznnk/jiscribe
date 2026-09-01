@@ -198,10 +198,10 @@ const styleSchema = {
 			'Font family for the whole body, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace), \'Caveat, "Klee One", cursive\' (handwriting). A family outside those is drawn by whatever the viewer has, and measured by estimate.',
 		),
 	fontWeight: z
-		.enum(["normal", "500", "600", "bold"])
+		.enum(["normal", "400", "500", "600", "700", "bold"])
 		.optional()
 		.describe(
-			'Text weight, from the ladder the canvas ships faces for: "normal" (400), "500", "600", "bold" (700).',
+			'Text weight, from the ladder the canvas ships faces for: "normal" (400), "500", "600", "bold" (700). "400" and "700" are the same two rungs written as a design token would spell them, and are stored as "normal" and "bold".',
 		),
 	fontStyle: z
 		.enum(["normal", "italic"])
@@ -252,10 +252,10 @@ const inlineTextStyleSchema = {
 			'Font family for the matched characters, from the four the canvas ships faces for: \'"Source Sans 3", "Noto Sans JP", sans-serif\' (sans), \'"Source Serif 4", "Noto Serif JP", serif\' (serif), \'"Source Code Pro", "Noto Sans JP", monospace\' (monospace, e.g. for a code term inside a sentence), \'Caveat, "Klee One", cursive\' (handwriting).',
 		),
 	fontWeight: z
-		.enum(["normal", "500", "600", "bold"])
+		.enum(["normal", "400", "500", "600", "700", "bold"])
 		.optional()
 		.describe(
-			'Weight of the matched characters, from the shipped ladder "normal" (400) / "500" / "600" / "bold" (700); "normal" takes the emphasis off again.',
+			'Weight of the matched characters, from the shipped ladder "normal" (400) / "500" / "600" / "bold" (700); "400" and "700" are those two rungs written as a design token would spell them, and are stored as "normal" and "bold". "normal" takes the emphasis off again.',
 		),
 	fontStyle: z
 		.enum(["normal", "italic"])

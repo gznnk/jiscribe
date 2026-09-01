@@ -2,6 +2,7 @@ import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/RichText
 import { readRichTextRangeStyle } from "@jiscribe/doc/model/objects/types/RichText";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 
+import { isBoldFontWeight } from "./isBoldFontWeight";
 import {
 	resolveTextEditSelection,
 	styleTextEditSelection,
@@ -23,7 +24,9 @@ const toggledStyle = (
 	current: InlineTextStyle,
 ): InlineTextStyle => {
 	if (format === "bold") {
-		return { fontWeight: current.fontWeight === "bold" ? "normal" : "bold" };
+		return {
+			fontWeight: isBoldFontWeight(current.fontWeight) ? "normal" : "bold",
+		};
 	}
 	if (format === "italic") {
 		return { fontStyle: current.fontStyle === "italic" ? "normal" : "italic" };

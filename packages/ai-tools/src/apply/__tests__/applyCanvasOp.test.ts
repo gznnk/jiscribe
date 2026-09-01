@@ -1469,6 +1469,73 @@ describe("the batch operations", () => {
 		]);
 	});
 
+	it("stores the numeric weights under the names the document keeps", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({
+			kind: "addObjects",
+			objects: [
+				{ type: "rect", x: 0, y: 0, text: "heavy", fontWeight: "700" },
+				{ type: "rect", x: 300, y: 0, text: "plain", fontWeight: "400" },
+			],
+		});
+
+		expect(rootObject(currentDoc(), "rect-1").fontWeight).toBe("bold");
+		expect(rootObject(currentDoc(), "rect-2").fontWeight).toBe("normal");
+
+		apply({ kind: "setStyle", ids: ["rect-1"], style: { fontWeight: "400" } });
+		apply({ kind: "setStyle", ids: ["rect-2"], style: { fontWeight: "700" } });
+
+		expect(rootObject(currentDoc(), "rect-1").fontWeight).toBe("normal");
+		expect(rootObject(currentDoc(), "rect-2").fontWeight).toBe("bold");
+	});
+
+	it("leaves the middle rungs of the ladder as they were written", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({
+			kind: "addObject",
+			type: "rect",
+			x: 0,
+			y: 0,
+			text: "medium",
+			fontWeight: "500",
+		});
+		expect(rootObject(currentDoc(), "rect-1").fontWeight).toBe("500");
+
+		apply({ kind: "setStyle", ids: ["rect-1"], style: { fontWeight: "600" } });
+		expect(rootObject(currentDoc(), "rect-1").fontWeight).toBe("600");
+	});
+
+	it("stores the numeric weights under the document's names on a decorated run too", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({
+			kind: "addObject",
+			type: "rect",
+			x: 0,
+			y: 0,
+			text: "warning: check it",
+		});
+
+		apply({
+			kind: "setTextStyle",
+			id: "rect-1",
+			match: "warning",
+			fontWeight: "700",
+		});
+		expect(rootObject(currentDoc(), "rect-1").text).toEqual([
+			{ text: "warning", fontWeight: "bold" },
+			{ text: ": check it" },
+		]);
+
+		apply({
+			kind: "setTextStyles",
+			entries: [{ id: "rect-1", match: "warning", fontWeight: "400" }],
+		});
+		expect(rootObject(currentDoc(), "rect-1").text).toEqual([
+			{ text: "warning", fontWeight: "normal" },
+			{ text: ": check it" },
+		]);
+	});
+
 	it("returns ok:false on a setTextStyle that matches nothing, and leaves the document alone", () => {
 		const { apply, replacedDocs, currentDoc } = createFakeDocBridge();
 		apply({ kind: "addObject", type: "rect", x: 0, y: 0, text: "hello" });

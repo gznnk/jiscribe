@@ -499,6 +499,39 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 		});
 	});
 
+	it("takes a weight as a number as well as a word, both spellings of the ladder being real arguments", () => {
+		for (const fontWeight of ["normal", "400", "500", "600", "700", "bold"]) {
+			expect(
+				parseArgs("add_object", { type: "rect", x: 0, y: 0, fontWeight })
+					.success,
+				`add_object should take fontWeight ${fontWeight}`,
+			).toBe(true);
+			expect(
+				parseArgs("set_text_style", { id: "a", match: "hi", fontWeight })
+					.success,
+				`set_text_style should take fontWeight ${fontWeight}`,
+			).toBe(true);
+		}
+	});
+
+	it("refuses a weight off the shipped ladder, numeric or not", () => {
+		expect(
+			parseArgs("add_object", {
+				type: "rect",
+				x: 0,
+				y: 0,
+				fontWeight: "800",
+			}).success,
+		).toBe(false);
+		expect(
+			parseArgs("set_text_style", {
+				id: "a",
+				match: "hi",
+				fontWeight: "bolder",
+			}).success,
+		).toBe(false);
+	});
+
 	it("marks the closed entries additionalProperties: false, so the model reads the contract first", () => {
 		const jsonSchema = z.toJSONSchema(
 			z.object(

@@ -18,6 +18,7 @@ import type {
 	AiViewPadding,
 	AiZOrderPlacement,
 } from "../canvasOps";
+import { canonicalizeFontWeights } from "./canonicalFontWeight";
 import type { CanvasOpHistory } from "./canvasOpHistory";
 import { describeRectEdges, formatNumber, quoteIds } from "../resultText";
 import type { AiDocBridge } from "./docBridge";
@@ -552,7 +553,7 @@ export const applyCanvasOp = (
 
 	const draftDoc = structuredClone(currentDoc);
 	try {
-		const text = applyDocChange(op, draftDoc, docOps);
+		const text = applyDocChange(canonicalizeFontWeights(op), draftDoc, docOps);
 		history.push(currentDoc, draftDoc);
 		docBridge.replaceDoc(draftDoc);
 		return { ok: true, text };
