@@ -1,7 +1,7 @@
 {
 	"name": "jiscribe",
 	"displayName": "Jiscribe Beta",
-	"description": "An AI-friendly, Git-manageable JSON canvas editor. Draw diagrams directly in VS Code and collaborate visually with AI.",
+	"description": "An AI-friendly JSON canvas editor. Draw diagrams directly in VS Code and collaborate visually with AI agents.",
 	"publisher": "gznnk",
 	"author": {
 		"name": "gznnk"
@@ -43,6 +43,7 @@
 		"flowchart",
 		"architecture",
 		"drawing",
+		"jis",
 		"jis.json"
 	],
 	"activationEvents": [],
