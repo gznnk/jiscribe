@@ -5,9 +5,6 @@ node_modules/
 # Vite / TS build
 dist/
 build/
-# packages/canvas/build/ is source, not output: the bundler plugins hosts add to keep
-# the legacy font formats out of their own builds (@jiscribe/canvas/build/woff2-only).
-!packages/canvas/build/
 *.tsbuildinfo
 
 # Test coverage

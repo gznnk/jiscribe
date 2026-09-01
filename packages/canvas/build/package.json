@@ -1,4 +1,0 @@
-{
-	"comment": "Scopes build/ as ESM on its own. The subpath here is a .ts file that node itself loads (the esbuild-based build scripts import it), and without a package.json naming the module type node reparses it and warns on every build. Kept out of the package root so that playwright's CommonJS transpilation of the e2e config, which resolves against the root, is unaffected.",
-	"type": "module"
-}
