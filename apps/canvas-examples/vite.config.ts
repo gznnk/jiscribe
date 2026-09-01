@@ -1,5 +1,6 @@
 import { execSync } from "child_process";
 
+import { woff2OnlyVitePlugin } from "@jiscribe/canvas/build/woff2-only";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 
@@ -13,7 +14,9 @@ const gitBranch = (() => {
 
 // https://vite.dev/config/
 export default defineConfig({
-	plugins: [react()],
+	// The shipped font set and katex name every face as woff2 and woff (katex ttf too);
+	// only the woff2 is carried into dist.
+	plugins: [react(), woff2OnlyVitePlugin()],
 	define: {
 		__GIT_BRANCH__: JSON.stringify(gitBranch),
 	},

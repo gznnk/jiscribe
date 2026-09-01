@@ -12,6 +12,7 @@ import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { woff2OnlyEsbuildPlugin } from "@jiscribe/canvas/build/woff2-only";
 import * as esbuild from "esbuild";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -69,7 +70,10 @@ export const buildHarness = async ({ minify = true } = {}) => {
 		// React would only make the harness slower and noisier.
 		define: { "process.env.NODE_ENV": '"production"' },
 		loader: { ".css": "css" },
-		plugins: [createAssetPlugin(fontManifest)],
+		// woff2 first, so the manifest records one file per face instead of the two or
+		// three the stylesheets declare, and the render command never serves a format
+		// the Chromium it drives would not pick.
+		plugins: [woff2OnlyEsbuildPlugin(), createAssetPlugin(fontManifest)],
 	});
 
 	writeFileSync(

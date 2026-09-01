@@ -12,6 +12,7 @@
 		"./unstable-doc": "./src/unstable-doc.ts",
 		"./png-source": "./src/png-source.ts",
 		"./svg-source": "./src/svg-source.ts",
+		"./build/woff2-only": "./build/woff2Only.ts",
 		"./testing": "./e2e/testing.ts",
 		"./testing/playwright-config": "./e2e/testing-playwright-config.ts",
 		"./testing/vite-config": "./e2e/testing-vite-config.ts",

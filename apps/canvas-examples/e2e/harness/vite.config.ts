@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import { sep } from "node:path";
 
+import { woff2OnlyVitePlugin } from "@jiscribe/canvas/build/woff2-only";
 import { createPluginHarnessViteConfig } from "@jiscribe/canvas/testing/vite-config";
 
 /**
@@ -20,7 +21,14 @@ const packageStoreRoot = createRequire(
 	.resolve("@fontsource/source-sans-3/400.css")
 	.split(`${sep}node_modules${sep}`)[0];
 
+const harnessConfig = createPluginHarnessViteConfig();
+
 export default {
-	...createPluginHarnessViteConfig(),
+	...harnessConfig,
+	// This is the harness that pulls in the font set, so it is the one that gets the
+	// rewrite; the shared kit stays free of it. Nothing is copied by a dev server, so
+	// what this buys is the browser being offered the same single format the built
+	// apps carry.
+	plugins: [...(harnessConfig.plugins ?? []), woff2OnlyVitePlugin()],
 	server: { fs: { allow: [packageStoreRoot] } },
 };

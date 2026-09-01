@@ -1,3 +1,4 @@
+import { woff2OnlyVitePlugin } from "@jiscribe/canvas/build/woff2-only";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 
@@ -5,7 +6,9 @@ import { defineConfig } from "vite";
 // into dist/index.mjs by build.mjs (esbuild).
 export default defineConfig({
 	root: "src/viewer",
-	plugins: [react()],
+	// The shipped font set names every face as woff2 and woff; the viewer runs in a
+	// browser that reads woff2, so only that one is carried into dist/client.
+	plugins: [react(), woff2OnlyVitePlugin()],
 	server: {
 		port: 5196,
 		proxy: {
