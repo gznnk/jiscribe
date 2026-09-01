@@ -35,12 +35,21 @@ type PreviewFace = {
  * measured against the face the editor would have used.
  */
 const PREVIEW_FACES: readonly PreviewFace[] = [
-	{ family: "Source Sans 3", axes: "ital,wght@0,400;0,700;1,400;1,700" },
-	{ family: "Source Serif 4", axes: "ital,wght@0,400;0,700;1,400;1,700" },
-	{ family: "Source Code Pro", axes: "ital,wght@0,400;0,700;1,400;1,700" },
-	{ family: "Noto Sans JP", axes: "wght@400;700" },
-	{ family: "Noto Serif JP", axes: "wght@400;700" },
-	{ family: "Caveat", axes: "wght@400;700" },
+	{
+		family: "Source Sans 3",
+		axes: "ital,wght@0,400;0,500;0,600;0,700;1,400;1,700",
+	},
+	{
+		family: "Source Serif 4",
+		axes: "ital,wght@0,400;0,500;0,600;0,700;1,400;1,700",
+	},
+	{
+		family: "Source Code Pro",
+		axes: "ital,wght@0,400;0,500;0,600;0,700;1,400;1,700",
+	},
+	{ family: "Noto Sans JP", axes: "wght@400;500;600;700" },
+	{ family: "Noto Serif JP", axes: "wght@400;500;600;700" },
+	{ family: "Caveat", axes: "wght@400;500;600;700" },
 	// Klee One's heaviest drawn weight is 600, which "bold" resolves to.
 	{ family: "Klee One", axes: "wght@400;600" },
 ];

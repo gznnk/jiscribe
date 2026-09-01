@@ -90,16 +90,21 @@ const require = createRequire(import.meta.url);
 const stagedModulesDir = join(__dirname, "dist", "node_modules");
 
 /**
- * doc-tools が要求しうる font-weight の全体。ドキュメントが持てる `fontWeight` は
- * normal / bold の 2 つだけで、doc-tools の parseFontWeight がそれを 400 / 700 に
- * 写す。**調整値ではなく仕様**なので、写す量を減らす目的で削らないこと（下の検証は
- * この配列を基準に staging を測るため、ここを削ると検証も一緒に緩む）。
- *
- * ブラウザ側で同じ 7 families が実際にどのウェイトで出荷されるかは
- * packages/canvas/build/generateFontsCss.ts の SHIPPED_FONT_STACKS が正本。
- * あちらを動かしたら、ここが選ぶ最寄りのウェイトも合わせて見直すこと。
+ * doc-tools が要求しうる font-weight の全体。ブラウザ側が出荷するウェイトの梯子
+ * （packages/canvas/build/generateFontsCss.ts の SHIPPED_FONT_STACKS が正本）と
+ * 同じ 400/500/600/700。ここが欠けると、その段だけ計測が最寄りへ寄って描画と
+ * ずれる。**調整値ではなく仕様**なので、写す量を減らす目的で削らないこと
+ * （下の検証はこの配列を基準に staging を測るため、ここを削ると検証も一緒に緩む）。
  */
-const REQUESTABLE_WEIGHTS = [400, 700];
+const REQUESTABLE_WEIGHTS = [400, 500, 600, 700];
+
+/**
+ * イタリックを写すウェイト。ブラウザ側の fonts.css はイタリックを 400/700 しか
+ * 出荷しないので、staging も同じ 2 段に絞る。500/600 のイタリックまで写すと、
+ * 配布版の計測だけが本物の中間イタリックで測り、描画（最寄りの 400-italic）と
+ * ずれる。
+ */
+const ITALIC_WEIGHTS = [400, 700];
 
 /** 計測できる families の @fontsource パッケージ（doc-tools の PACKAGE_BY_FAMILY と同じ集合） */
 const FONT_PACKAGES = [
@@ -146,7 +151,10 @@ const stageFontPackage = async (packageName) => {
 
 	let woffCount = 0;
 	for (const weight of stagedWeights) {
-		for (const cssName of [`${weight}.css`, `${weight}-italic.css`]) {
+		const cssNames = ITALIC_WEIGHTS.includes(weight)
+			? [`${weight}.css`, `${weight}-italic.css`]
+			: [`${weight}.css`];
+		for (const cssName of cssNames) {
 			if (!entries.includes(cssName)) {
 				continue;
 			}

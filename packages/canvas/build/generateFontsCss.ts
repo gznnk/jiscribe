@@ -92,11 +92,13 @@ interface ShippedFontStack {
 /**
  * What `fonts.css` ships, and the only place that is decided.
  *
- * Weights are limited to the two `fontWeight` exposes (normal/bold) because a document
- * cannot ask for a third, and italics to the Latin faces, which are the ones with a
- * drawn italic — the JP faces are left to the browser's synthetic oblique. Anything
- * added here lands in every bundle that imports the stylesheet, at roughly 3 MB per JP
- * weight and 100 KB per Latin one.
+ * Upright weights run 400/500/600/700 — the ladder a document's `fontWeight` can name
+ * and have drawn as written (`normal` is 400, `bold` 700; Klee One tops out at its
+ * drawn 600, which is what `bold` resolves to there). Italics stay at 400/700 on the
+ * Latin faces alone: they are the ones with a drawn italic, a medium italic is asked
+ * for rarely enough to be left to the nearest drawn one, and the JP faces are left to
+ * the browser's synthetic oblique. Anything added here lands in every bundle that
+ * imports the stylesheet, at roughly 3 MB per JP weight and 100 KB per Latin one.
  *
  * Two other places restate this list against a different host and have to be moved with
  * it: `apps/cli/preview/previewBridge.ts` asks Google Fonts for the same faces, and
@@ -109,12 +111,12 @@ const SHIPPED_FONT_STACKS: readonly ShippedFontStack[] = [
 		families: [
 			{
 				packageName: "@fontsource/source-sans-3",
-				weights: [400, 700],
+				weights: [400, 500, 600, 700],
 				italicWeights: [400, 700],
 			},
 			{
 				packageName: "@fontsource/noto-sans-jp",
-				weights: [400, 700],
+				weights: [400, 500, 600, 700],
 				italicWeights: [],
 			},
 		],
@@ -125,12 +127,12 @@ const SHIPPED_FONT_STACKS: readonly ShippedFontStack[] = [
 		families: [
 			{
 				packageName: "@fontsource/source-serif-4",
-				weights: [400, 700],
+				weights: [400, 500, 600, 700],
 				italicWeights: [400, 700],
 			},
 			{
 				packageName: "@fontsource/noto-serif-jp",
-				weights: [400, 700],
+				weights: [400, 500, 600, 700],
 				italicWeights: [],
 			},
 		],
@@ -141,7 +143,7 @@ const SHIPPED_FONT_STACKS: readonly ShippedFontStack[] = [
 		families: [
 			{
 				packageName: "@fontsource/source-code-pro",
-				weights: [400, 700],
+				weights: [400, 500, 600, 700],
 				italicWeights: [400, 700],
 			},
 		],
@@ -152,7 +154,7 @@ const SHIPPED_FONT_STACKS: readonly ShippedFontStack[] = [
 		families: [
 			{
 				packageName: "@fontsource/caveat",
-				weights: [400, 700],
+				weights: [400, 500, 600, 700],
 				italicWeights: [],
 			},
 			{
@@ -183,9 +185,10 @@ const GENERATED_HEADER = `/*
  *
  * Each face below is one weight split by unicode-range, so a page fetches only the
  * ranges it actually draws; the JP faces cost nothing until JP text is on screen.
- * Weights are limited to the two \`fontWeight\` exposes (normal/bold), and italics to the
- * Latin faces, which are the ones with a drawn italic — the JP faces are left to the
- * browser's synthetic oblique.
+ * Upright weights run 400/500/600/700 (\`normal\` / \`bold\` are 400 / 700; Klee One's
+ * heaviest drawn weight is 600, which is what bold resolves to there). Italics ship at
+ * 400/700 on the Latin faces alone — a face between them, or any JP italic, falls to
+ * the nearest drawn one or the browser's synthetic oblique.
  */`;
 
 /** Matches one `url(./files/<name>)` as `@fontsource` writes it, either quote style or none. */
