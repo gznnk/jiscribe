@@ -14,7 +14,9 @@ are no longer whatever the viewer happens to have installed — four families sh
 with the extension and are what measurement uses, which is also what makes the
 first three possible. A document can declare how it wants to be opened,
 `lucideIcon` draws any of Lucide's 1767 icons by name, and the shape set is now
-51 drawable types.
+51 drawable types. Starting a canvas is now just creating an empty file — the
+New Jiscribe Canvas command is gone — and an image document open in a tab
+follows edits made to the file from outside.
 
 ### Added
 
@@ -82,6 +84,21 @@ first three possible. A document can declare how it wants to be opened,
   The padding is also the margin of an exported image. A document without a
   `view` behaves exactly as before and is still saved without one.
 
+#### Files
+
+- **A new canvas is just an empty file.** Create a file with a canvas
+  extension — from the Explorer's **New File...** or `touch` — and open it: an
+  empty `.jis` / `.jis.json` shows a blank canvas instead of a JSON syntax
+  error, and an empty `.jis.png` / `.jis.svg` a blank image document instead of
+  "no embedded source". The file stays empty on disk until the first edit
+  (text) or the first save (image) writes it.
+- **An open `.jis.png` / `.jis.svg` follows the file on disk.** A change made
+  outside the editor — a git checkout, an AI writing the file, another
+  program — used to go unseen until the tab was reopened, and the next save
+  overwrote it. Now an editor with no unsaved edits adopts the disk state
+  silently, the way a text editor does; one with unsaved edits asks whether to
+  reload (undoable) or keep the edits.
+
 #### Canvas
 
 - **Exported PNGs carry the fonts they were drawn with.** The rasterizer renders
@@ -116,8 +133,19 @@ first three possible. A document can declare how it wants to be opened,
   and the schema grew from 111 KB to 127 KB. If you use AI authoring, re-run the
   **Set up AI** command to refresh the assets under `.jiscribe/`.
 
+### Removed
+
+- **The New Jiscribe Canvas command.** Creating an empty file (see _Files_
+  above) replaces it: any way you already create files — the Explorer, a
+  terminal, an AI agent — now starts a canvas, without a command of its own.
+
 ### Fixed
 
+- **Saving As writes the format the file name says.** Saving a canvas image
+  under a plain `.svg` name (no `.jis.`) used to write PNG bytes into it,
+  because only `.jis.svg` was recognized as SVG.
+- **Closing a file clears its entry in the Problems panel.** Validation errors
+  used to outlive the tab that produced them.
 - **Changing a font size no longer throws you out of the text you are editing.**
   Touching the size field or slider blurred the editing surface, losing the
   caret and the highlight even though the change itself applied. Dragging the
