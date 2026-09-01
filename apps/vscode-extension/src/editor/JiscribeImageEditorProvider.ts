@@ -158,20 +158,22 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	 * watcher is disposed with the document.
 	 */
 	private watchExternalChanges(document: JiscribeImageDocument): void {
-		const fileName = document.uri.path.split("/").pop();
-		if (!fileName) {
-			return;
-		}
+		// Watch the parent directory with `*` and filter by URI. The pattern is a
+		// glob with no escape syntax, so putting the file name into it would make
+		// a name containing a metacharacter (`[`, `{`, ...) silently never match.
 		const watcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(
-				vscode.Uri.joinPath(document.uri, ".."),
-				fileName,
-			),
+			new vscode.RelativePattern(vscode.Uri.joinPath(document.uri, ".."), "*"),
 		);
+		const documentKey = document.uri.toString();
+		const onFileEvent = (uri: vscode.Uri) => {
+			if (uri.toString() === documentKey) {
+				this.scheduleExternalCheck(document);
+			}
+		};
 		// Create covers replace-by-rename writers, whose change may surface as a
 		// re-creation of the path.
-		watcher.onDidChange(() => this.scheduleExternalCheck(document));
-		watcher.onDidCreate(() => this.scheduleExternalCheck(document));
+		watcher.onDidChange(onFileEvent);
+		watcher.onDidCreate(onFileEvent);
 		document.fileWatcher = watcher;
 	}
 
