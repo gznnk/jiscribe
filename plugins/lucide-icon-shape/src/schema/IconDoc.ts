@@ -12,6 +12,13 @@ export const ICON_GRID_SIZE = 24;
 export const DEFAULT_ICON_NAME = "star";
 
 /**
+ * Line weight an icon is drawn with when the document names none. The Lucide set is
+ * authored at this width on its 24px grid; the renderer keeps it visually constant
+ * however far the grid is scaled.
+ */
+export const DEFAULT_ICON_STROKE_WIDTH = 2;
+
+/**
  * A named pictogram from the bundled Lucide set, drawn as line art at whatever size
  * the box gives it.
  *
@@ -69,7 +76,5 @@ export const ICON_DOC_DEFAULTS: Omit<IconDoc, "id"> = {
 	// it can do here; the menu's lock is still there to be turned off deliberately.
 	lockAspectRatio: true,
 	stroke: AUTO_COLOR,
-	// The icon set draws at this width on its own grid, and the renderer keeps it
-	// visually constant regardless of how far the grid is scaled.
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_ICON_STROKE_WIDTH,
 } as const as IconDoc;

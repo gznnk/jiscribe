@@ -27,14 +27,15 @@ export type IconArtPlacement = {
  *
  * @param width - Box width in local pixels; 0 or negative means nothing is drawn
  * @param height - Box height in local pixels; 0 or negative means nothing is drawn
- * @param strokeWidth - Line weight asked for, as it should appear on screen; omitted
- *   or 0 leaves the art unstroked
+ * @param strokeWidth - Line weight asked for, as it should appear on screen; the
+ *   caller resolves an absent document value to DEFAULT_ICON_STROKE_WIDTH first,
+ *   so 0 here is an explicit request for unstroked art
  * @returns The placement; `scale` 0 marks the degenerate box a renderer skips
  */
 export const calcIconArtPlacement = (
 	width: number,
 	height: number,
-	strokeWidth: number | undefined,
+	strokeWidth: number,
 ): IconArtPlacement => {
 	const scale = Math.min(width, height) / ICON_GRID_SIZE;
 	if (!(scale > 0)) {
@@ -43,6 +44,6 @@ export const calcIconArtPlacement = (
 	return {
 		scale,
 		offset: -(ICON_GRID_SIZE * scale) / 2,
-		artStrokeWidth: (strokeWidth ?? 0) / scale,
+		artStrokeWidth: strokeWidth / scale,
 	};
 };

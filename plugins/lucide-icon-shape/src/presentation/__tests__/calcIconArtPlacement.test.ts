@@ -21,8 +21,8 @@ describe("calcIconArtPlacement", () => {
 		expect(artStrokeWidth * scale).toBe(2);
 	});
 
-	it("treats an unset stroke width as unstroked", () => {
-		expect(calcIconArtPlacement(48, 48, undefined).artStrokeWidth).toBe(0);
+	it("treats an explicit stroke width of 0 as unstroked", () => {
+		expect(calcIconArtPlacement(48, 48, 0).artStrokeWidth).toBe(0);
 	});
 
 	it("reports a scale of 0 for a box with no area, which draws nothing", () => {
