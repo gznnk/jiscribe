@@ -32,7 +32,8 @@ const canvasParser = createCanvasParser({ plugins: standardDocPlugins });
  *     with beyondSchema). Without these the file would be unopenable yet show
  *     no error.
  *
- * Runs when a file is opened, saved, or already open at activation.
+ * Runs when a file is opened, saved, or already open at activation; a file's
+ * diagnostics are removed when it closes.
  */
 export class DiagnosticProvider {
 	/** Diagnostics shown in VSCode's Problems panel. */
@@ -51,7 +52,12 @@ export class DiagnosticProvider {
 		const openListener = vscode.workspace.onDidOpenTextDocument((doc) => {
 			this.validateDocument(doc);
 		});
-		context.subscriptions.push(saveListener, openListener);
+		// Drop a file's diagnostics when it closes, or a broken file's entry
+		// would sit in the Problems panel until the window reloads.
+		const closeListener = vscode.workspace.onDidCloseTextDocument((doc) => {
+			this.collection.delete(doc.uri);
+		});
+		context.subscriptions.push(saveListener, openListener, closeListener);
 
 		// Validate tabs already open at activation.
 		vscode.workspace.textDocuments.forEach((doc) => {
