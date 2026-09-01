@@ -94,6 +94,10 @@ const stagedModulesDir = join(__dirname, "dist", "node_modules");
  * normal / bold の 2 つだけで、doc-tools の parseFontWeight がそれを 400 / 700 に
  * 写す。**調整値ではなく仕様**なので、写す量を減らす目的で削らないこと（下の検証は
  * この配列を基準に staging を測るため、ここを削ると検証も一緒に緩む）。
+ *
+ * ブラウザ側で同じ 7 families が実際にどのウェイトで出荷されるかは
+ * packages/canvas/build/generateFontsCss.ts の SHIPPED_FONT_STACKS が正本。
+ * あちらを動かしたら、ここが選ぶ最寄りのウェイトも合わせて見直すこと。
  */
 const REQUESTABLE_WEIGHTS = [400, 700];
 

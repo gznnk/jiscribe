@@ -64,3 +64,6 @@ jobs:
 
       - name: AI schema/docs drift check
         run: pnpm check:schema
+
+      - name: Shipped fonts.css drift check
+        run: pnpm check:fonts

@@ -24,3 +24,8 @@ pnpm-lock.yaml
 
 # Logs
 *.log
+
+# Generated verbatim from the @fontsource stylesheets by build/generateFontsCss.ts.
+# Reformatting it would cost the line-for-line diff against upstream; its shape is the
+# generator's alone, and check:fonts catches any drift.
+packages/canvas/src/fonts.css

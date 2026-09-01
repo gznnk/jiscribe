@@ -25,7 +25,8 @@ type PreviewFace = {
 
 /**
  * The seven families behind `CANVAS_FONT_FAMILIES`, at the weights and styles
- * `@jiscribe/canvas/fonts.css` imports.
+ * `@jiscribe/canvas/fonts.css` ships — decided by SHIPPED_FONT_STACKS in
+ * `packages/canvas/build/generateFontsCss.ts`, which this list has to follow.
  *
  * The preview does not use that stylesheet: it names some 850 subset files (50MB
  * against a 2MB page), none of which a single file can carry. Google Fonts serves

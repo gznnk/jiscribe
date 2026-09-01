@@ -9,7 +9,7 @@
 // node_modules through playwright's request interception (see harnessAssets.ts).
 
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import * as esbuild from "esbuild";
@@ -31,8 +31,24 @@ const toPackageSpecifier = (absolutePath) => {
 const createAssetPlugin = (manifest) => ({
 	name: "externalize-font-assets",
 	setup(build) {
-		build.onResolve({ filter: /\.(woff2?|ttf|otf|eot)$/ }, (args) => {
-			const absolutePath = resolve(args.resolveDir, args.path.split("?")[0]);
+		build.onResolve({ filter: /\.(woff2?|ttf|otf|eot)$/ }, async (args) => {
+			// A url() naming a package rather than a sibling file (`@fontsource/…/files/
+			// x.woff2`, which is how the shipped fonts.css writes them) only becomes a
+			// path through the resolver; joining it onto resolveDir would invent one
+			// under the stylesheet's own directory. pluginData marks the resolver's own
+			// call so this callback does not answer it and recurse.
+			if (args.pluginData?.resolvingFontAsset === true) {
+				return null;
+			}
+			const resolved = await build.resolve(args.path.split("?")[0], {
+				kind: args.kind,
+				resolveDir: args.resolveDir,
+				pluginData: { resolvingFontAsset: true },
+			});
+			if (resolved.errors.length > 0) {
+				return { errors: resolved.errors };
+			}
+			const absolutePath = resolved.path;
 			const specifier = toPackageSpecifier(absolutePath);
 			const name = absolutePath.split("/").pop();
 			const servedPath = `/fonts/${name}`;
@@ -69,6 +85,9 @@ export const buildHarness = async ({ minify = true } = {}) => {
 		// React would only make the harness slower and noisier.
 		define: { "process.env.NODE_ENV": '"production"' },
 		loader: { ".css": "css" },
+		// woff2 first, so the manifest records one file per face instead of the two or
+		// three the stylesheets declare, and the render command never serves a format
+		// the Chromium it drives would not pick.
 		plugins: [createAssetPlugin(fontManifest)],
 	});
 

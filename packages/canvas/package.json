@@ -20,6 +20,8 @@
 	"scripts": {
 		"lint": "eslint .",
 		"dev:harness": "vite e2e/harness",
+		"generate:fonts": "node build/generateFontsCss.ts",
+		"check:fonts": "node build/generateFontsCss.ts --check",
 		"test": "vitest run",
 		"test:e2e": "playwright test",
 		"test:e2e:headed": "playwright test --headed",
