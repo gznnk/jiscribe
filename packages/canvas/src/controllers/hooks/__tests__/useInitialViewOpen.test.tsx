@@ -233,24 +233,36 @@ describe("useInitialViewOpen", () => {
 			expect(dispatch).toHaveBeenCalledTimes(1);
 		});
 
-		it("re-frames a document that reads the same as the last one but is not it", () => {
-			// Identity is what tells the two apart: reopening the same file is
-			// another document, and it is framed like one.
+		it("does not re-frame one whose framing reads the same, even as another object", () => {
+			// Content is what tells intents apart: a host that keeps the document
+			// outside the canvas (the VSCode extension delegates undo/redo to the
+			// editor) re-parses and resends the doc on every change, so an unchanged
+			// declaration arrives as a fresh `view` object. It must not move the
+			// camera the sync deliberately preserved.
 			const { dispatch, loadDocument } = mountWithContainerSize(
 				{ open: "fit-all" },
 				{ width: 1000, height: 500 },
 			);
 			loadDocument({ open: "fit-all" });
 
-			expect(dispatch).toHaveBeenCalledTimes(2);
-			expect(dispatch.mock.calls[1][0]).toEqual(dispatch.mock.calls[0][0]);
+			expect(dispatch).toHaveBeenCalledTimes(1);
+		});
+
+		it("reads explicit zero padding as the same intent as no padding", () => {
+			const { dispatch, loadDocument } = mountWithContainerSize(
+				{ open: "fit-all" },
+				{ width: 1000, height: 500 },
+			);
+			loadDocument({ open: "fit-all", padding: { top: 0, left: 0 } });
+
+			expect(dispatch).toHaveBeenCalledTimes(1);
 		});
 
 		it("does not re-frame a view it already answered when history brings it back", () => {
-			// Undo across a document load restores the earlier document's `view` by
-			// reference. The restore preserves the camera on purpose, so an
-			// already-answered view must stay answered — in both directions, or
-			// undo/redo would re-frame on every crossing.
+			// Undo across a document load restores the earlier document's `view`.
+			// The restore preserves the camera on purpose, so an already-answered
+			// declaration must stay answered — in both directions, or undo/redo
+			// would re-frame on every crossing.
 			const firstView: ViewDoc = { open: "fit-all" };
 			const { dispatch, loadDocument } = mountWithContainerSize(firstView, {
 				width: 1000,
