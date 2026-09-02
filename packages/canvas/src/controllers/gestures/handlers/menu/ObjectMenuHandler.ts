@@ -18,7 +18,8 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * Events handled:
  * - click / doubleClick: menu item activation (equivalent; see the comment at the branch),
  *   or a commit of the slider value the native track click already produced
- * - drag: real-time slider update (no history recording)
+ * - pressed / dragStart / drag: real-time slider update (no history recording; pressed and
+ *   dragStart cover the native value changes made before the drag slop is crossed)
  * - dragEnd: commit the slider's final value + record history
  *
  * targetPart formats (absent = the menu chrome itself, e.g. bar / panel background):
@@ -44,13 +45,8 @@ export const ObjectMenuHandler: GestureHandler = {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
-		// Slider interaction: drag / dragEnd / click
+		// Slider interaction: pressed / dragStart / drag / dragEnd / click
 		if (event.targetPart?.startsWith("slider:")) {
-			// pressed and dragStart do nothing and keep the state (values update on drag / dragEnd / click)
-			if (event.type === "pressed" || event.type === "dragStart") {
-				return nextState;
-			}
-
 			// Do nothing if there is no input value
 			if (event.inputValue === undefined) {
 				console.warn("[ObjectMenuHandler] No input value found");
@@ -64,10 +60,19 @@ export const ObjectMenuHandler: GestureHandler = {
 				return state;
 			}
 
-			// drag event: real-time update (no history recording, menu stays open)
-			if (event.type === "drag") {
+			// pressed / dragStart / drag: real-time update (no history recording, menu
+			// stays open). pressed and dragStart must apply too: the browser writes the
+			// value natively from the moment of the pointerdown (the thumb jumps to the
+			// press point, then steps under the drag slop), and the first drag only fires
+			// on the pointermove after the slop is crossed — without applying here the
+			// canvas lags those first steps for as long as the pointer is held.
+			if (
+				event.type === "pressed" ||
+				event.type === "dragStart" ||
+				event.type === "drag"
+			) {
 				const newState = registries.styleProperty.apply(
-					state,
+					nextState,
 					property,
 					event.inputValue,
 				);

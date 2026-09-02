@@ -151,7 +151,11 @@ export type Pressed = {
 	targetPart?: string;
 	/** Modifier snapshot at pointerdown. Fired gestures use the current event's mods; this copy is what the synthesized long press replays. */
 	mods: Mods;
-	/** Whether the move has exceeded the drag threshold (per pointerType, in screen px) and been confirmed as a drag */
+	/**
+	 * Whether the move has exceeded the drag threshold (per pointerType, in screen px)
+	 * and been confirmed as a drag. A native-pointer press confirms on the first move
+	 * instead (no slop; see the threshold check).
+	 */
 	dragging: boolean;
 	/** DOM button number fixed at pointerdown (0 left / 1 middle / 2 right), reported by every gesture of the press including the lift. */
 	button: number;
@@ -579,12 +583,21 @@ export class GestureRecognizer {
 			if (!this.pressed.dragging) {
 				// Screen-space distance: a world-based check would scale with zoom.
 				// Touch gets a wider slop — finger jitter easily exceeds the mouse value.
+				// A native-pointer press (slider) confirms on the first move instead: the
+				// browser owns the drag and steps the input's value from the step midpoint
+				// (~2px out, inside the slop), so a one-step nudge held under the slop
+				// would otherwise never reach the doc while the pointer is down. Nothing
+				// is lost by skipping the slop — the handlers commit dragEnd and click
+				// identically for sliders.
 				const distanceSquared = clientDelta.x ** 2 + clientDelta.y ** 2;
 				const dragThreshold =
 					this.pressed.pointerType === "touch"
 						? DRAG_THRESHOLD_TOUCH
 						: DRAG_THRESHOLD;
-				if (distanceSquared >= dragThreshold) {
+				if (
+					this.pressed.isNativePointerTarget ||
+					distanceSquared >= dragThreshold
+				) {
 					this.pressed.dragging = true;
 					this.clearLongPress();
 					this.fireGestureFromPressed(this.pressed, {
