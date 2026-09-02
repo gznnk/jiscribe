@@ -5,7 +5,7 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.0] - 2026-09-02
 
 Text now decides its own box. A shape can let its height follow what is typed
 into it, a `text` shape can be given a fixed width to wrap in, and body text can
@@ -116,6 +116,14 @@ follows edits made to the file from outside.
   heights, and the measured size of anything sized from its content — a `text`
   shape, a hanging label, a connector label — along with the connectors attached
   to them.
+- **Font weights 500 and 600 are now drawn as written.** Only 400 and 700 were
+  bundled, so a document asking for a weight in between was drawn at the nearest
+  bundled face while measurement used the real one — the box and the glyphs
+  inside it disagreed. Every bundled face now carries 400, 500, 600 and 700
+  upright — bar the Japanese handwriting face, which only draws 400 and 600 —
+  which adds about 14 MB to the fonts the extension carries. Italic still ships
+  at 400 and 700 only, so an italic weight in between falls back to the nearer
+  of those.
 - **Text is re-measured when the fonts finish loading**, so a document may settle
   once shortly after it opens instead of keeping the boxes it measured against a
   fallback face.
@@ -150,6 +158,9 @@ follows edits made to the file from outside.
   Touching the size field or slider blurred the editing surface, losing the
   caret and the highlight even though the change itself applied. Dragging the
   slider also left Ctrl+Z inert until you clicked back into the canvas.
+- **Nudging a size slider by one step takes effect while you hold it.** One step
+  moves the thumb about 2 px, short of the 3 px it took to be read as a drag, so
+  a font size or a line width stayed as it was until you released the button.
 - **The text editor no longer grows a scrollbar when sizes are mixed.** A newline
   that ends a line was measured at the shape's size rather than at the size of
   the run it opens, so a box could come up a whole line short of its own text.
@@ -175,6 +186,14 @@ follows edits made to the file from outside.
 - **Undo and redo no longer move the camera.** A document coming back through
   history looked new enough to re-apply its `view`, overwriting the position the
   history had preserved.
+- **A shape that omits `strokeWidth` is drawn at the documented default of 2.**
+  The schema and the reference both say 2, but drawing fell back to 1 — and a
+  `lucideIcon` to no stroke at all, so it came out invisible. Shapes created in
+  the editor always write the value out, so this only showed on documents
+  written by hand or by an AI.
+- **The Bold toggle reflects a `fontWeight` of `"700"`.** Only the literal string
+  `"bold"` counted, so a document that spells the weight numerically drew bold
+  while the toggle showed off. 500 and 600 are not counted as bold.
 - **A `polygon` or `polyline` without a `stroke` follows the theme's ink colour**
   instead of being drawn literally black — invisible against a dark theme.
 - **A `record` no longer loses a compartment's text.** Slot names that look like
