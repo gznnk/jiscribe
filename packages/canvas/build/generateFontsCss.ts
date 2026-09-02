@@ -150,7 +150,7 @@ const SHIPPED_FONT_STACKS: readonly ShippedFontStack[] = [
 	},
 	{
 		id: "hand",
-		note: "Klee One's heaviest drawn weight is 600, which \"bold\" resolves to",
+		note: 'Klee One\'s heaviest drawn weight is 600, which "bold" resolves to',
 		families: [
 			{
 				packageName: "@fontsource/caveat",
