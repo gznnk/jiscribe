@@ -28,8 +28,6 @@ Run **Jiscribe: Set up AI** once, and your AI assistant (Claude Code, Cursor, Gi
 - Ask the AI for an architecture diagram and watch it take shape on the open canvas, then tweak the layout by hand.
 - Sketch a rough layout on the canvas and have the AI write the specifications based on it.
 
-<!-- ai-workflow.gif: split view — an AI agent (e.g. Claude Code) writing a .jis file in the terminal on one side, the open canvas tab on the other re-rendering live as the shapes appear one by one -->
-
 ![An AI agent drawing on the canvas in real time](https://beta.jiscribe.dev/images/vscode/ai-workflow.gif)
 
 ---
