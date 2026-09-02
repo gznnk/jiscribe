@@ -1,6 +1,6 @@
 # Jiscribe (Beta)
 
-![Jiscribe Canvas Editor](https://beta.jiscribe.dev/images/vscode/hero-showcase.png)
+![An architecture diagram drawn in Jiscribe, open in VS Code](https://beta.jiscribe.dev/images/vscode/hero-architecture.png)
 
 **A VS Code-native canvas editor for visual communication between AI and humans.**
 
