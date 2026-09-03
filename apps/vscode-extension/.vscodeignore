@@ -2,6 +2,8 @@
 .vscode-test/**
 src/**
 build.mjs
+scripts/**
+vitest.config.ts
 **/node_modules/**
 **/*.map
 tsconfig.json
