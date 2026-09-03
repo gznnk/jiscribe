@@ -5,7 +5,7 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.0] - 2026-09-02
+## [0.9.0] - 2026-09-03
 
 Text now decides its own box. A shape can let its height follow what is typed
 into it, a `text` shape can be given a fixed width to wrap in, and body text can
