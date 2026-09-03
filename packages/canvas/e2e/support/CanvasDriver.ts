@@ -846,7 +846,10 @@ export class CanvasDriver {
 	 */
 	async setColor(sectionId: ColorSectionId, cssColor: string) {
 		await this.openObjectMenu(sectionId);
-		const input = this.page.locator(selectors.cssColorInput);
+		// Scoped to the section: the panel being closed keeps its input until the frame
+		// that processes the toggle click, and filling that one writes the color to the
+		// property of the previous section.
+		const input = this.page.locator(selectors.objectMenuColorInput(sectionId));
 		await input.fill(cssColor);
 		await input.press("Enter");
 	}

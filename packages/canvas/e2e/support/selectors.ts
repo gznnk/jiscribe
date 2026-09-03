@@ -31,6 +31,9 @@ export type AnchorId = EdgeAnchorId | (string & {});
 export type ColorSectionId =
 	"bg-color" | "stroke-color" | "line-color" | "font-color" | (string & {});
 
+/** Shared by the unscoped and the section-scoped color input selectors below. */
+const CSS_COLOR_INPUT = 'input[placeholder="CSS color"]';
+
 export const selectors = {
 	/** Toolbar tool button. */
 	toolButton: (tool: ToolTitle) => `button[title="${tool}"]`,
@@ -120,7 +123,17 @@ export const selectors = {
 	objectMenuSlider: (property: string) => `[data-part="slider:${property}"]`,
 
 	/** CSS color text input in the color picker, committed with Enter. */
-	cssColorInput: 'input[placeholder="CSS color"]',
+	cssColorInput: CSS_COLOR_INPUT,
+
+	/**
+	 * CSS color text input of one named section, scoped through the positioner that
+	 * holds both the section's toggle and its panel. Gesture events are processed one
+	 * animation frame after the click, so the section being closed keeps its own input
+	 * in the DOM until that frame lands; scoping makes a locator wait for the panel
+	 * that belongs to the section instead of matching the outgoing one.
+	 */
+	objectMenuColorInput: (sectionId: string) =>
+		`div:has(> [data-part="toggle:${sectionId}"]) ${CSS_COLOR_INPUT}`,
 
 	/** TEXTAREA shown while editing text. */
 	textEditor: '[data-testid="text-editor"]',

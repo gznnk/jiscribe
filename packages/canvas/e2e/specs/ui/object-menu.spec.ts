@@ -14,13 +14,16 @@ test.describe("styling through the ObjectMenu", () => {
 		await canvas.setColor("bg-color", "#6366f1");
 		await canvas.setColor("stroke-color", "#4f46e5");
 
-		// Colors come from emotion CSS rather than SVG attributes, so check the computed style
-		expect(await canvas.computedColor(id, "fill")).toBe(
-			await canvas.normalizeColor("#6366f1"),
-		);
-		expect(await canvas.computedColor(id, "stroke")).toBe(
-			await canvas.normalizeColor("#4f46e5"),
-		);
+		// Colors come from emotion CSS rather than SVG attributes, so check the computed
+		// style. Polled because the commit reaches the render on a later frame.
+		const expectedFill = await canvas.normalizeColor("#6366f1");
+		const expectedStroke = await canvas.normalizeColor("#4f46e5");
+		await expect
+			.poll(() => canvas.computedColor(id, "fill"))
+			.toBe(expectedFill);
+		await expect
+			.poll(() => canvas.computedColor(id, "stroke"))
+			.toBe(expectedStroke);
 	});
 
 	test("sets transparent as well", async ({ canvas }) => {
