@@ -122,6 +122,8 @@
 		"vscode:prepublish": "pnpm run build",
 		"build": "node build.mjs",
 		"watch": "node build.mjs --watch",
+		"generate:notices": "node scripts/generateNotices.mjs",
+		"check:notices": "node scripts/generateNotices.mjs --check",
 		"package": "vsce package --no-dependencies",
 		"publish-ext": "vsce publish --no-dependencies",
 		"lint": "eslint .",

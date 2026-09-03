@@ -65,5 +65,9 @@ jobs:
       - name: AI schema/docs drift check
         run: pnpm check:schema
 
+      # Reads dist/, so it has to come after the build step above.
+      - name: Third-party notices drift check
+        run: pnpm check:notices
+
       - name: Shipped fonts.css drift check
         run: pnpm check:fonts

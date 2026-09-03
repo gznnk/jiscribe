@@ -73,6 +73,11 @@ Then, by impact:
 - **Shapes or AI-facing metadata** (new shape, `ObjectFeatures`, `description`,
   `defaults`): run `pnpm generate:schema` and commit the regenerated
   `packages/doc-schema/assets/`, or CI's `check:schema` fails on the drift.
+- **Anything the VSCode extension ships** (a bundled dependency's version, a
+  font family, the Lucide icon set): run `pnpm build:vscode` and then
+  `pnpm generate:notices`, and commit the regenerated
+  `apps/vscode-extension/THIRD-PARTY-NOTICES.txt`, or CI's `check:notices`
+  fails on the drift. It reads the built bundle, so the build has to come first.
 - **Anything an app consumes**: `pnpm build:examples` / `pnpm build:vscode`
 
 ## Rules that are enforced, not suggested

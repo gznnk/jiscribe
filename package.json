@@ -28,6 +28,8 @@
 		"check:schema": "pnpm --filter @jiscribe/doc-schema check",
 		"generate:fonts": "pnpm --filter @jiscribe/canvas generate:fonts",
 		"check:fonts": "pnpm --filter @jiscribe/canvas check:fonts",
+		"generate:notices": "pnpm --filter jiscribe generate:notices",
+		"check:notices": "pnpm --filter jiscribe check:notices",
 		"typecheck": "pnpm -r --parallel typecheck",
 		"typecheck:packages": "pnpm -r --parallel --filter './packages/*' --filter './plugins/*' typecheck",
 		"format": "prettier --ignore-path .prettierignore --write .",
