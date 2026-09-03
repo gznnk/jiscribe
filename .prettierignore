@@ -1,3 +1,9 @@
+# prettier は既定で .gitignore も ignore として読むが、format / format:check は
+# --ignore-path でこのファイルだけを見るようにしてある（private 側ルートと同じ）。
+# あちらの .gitignore の `build/` が packages/canvas/build/（出力ではなくソース）を
+# 巻き込み、あちらからの pnpm format がそこを整形しないまま、こちらの CI だけが
+# 落ちていたため。整形対象から外すものは、生成物であってもここに書く。
+
 # Build outputs
 dist/
 
@@ -24,6 +30,13 @@ pnpm-lock.yaml
 
 # Logs
 *.log
+
+# Playwright
+test-results/
+playwright-report/
+
+# Claude Code local settings
+.claude/settings.local.json
 
 # Generated verbatim from the @fontsource stylesheets by build/generateFontsCss.ts.
 # Reformatting it would cost the line-for-line diff against upstream; its shape is the
