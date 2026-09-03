@@ -77,7 +77,11 @@ Then, by impact:
   font family, the Lucide icon set): run `pnpm build:vscode` and then
   `pnpm generate:notices`, and commit the regenerated
   `apps/vscode-extension/THIRD-PARTY-NOTICES.txt`, or CI's `check:notices`
-  fails on the drift. It reads the built bundle, so the build has to come first.
+  fails on the drift. It reads the built bundle, so the build has to come
+  first — and it has to run in a standalone clone or worktree of this
+  repository. Mounted as a submodule the tree is installed by the outer
+  workspace, whose lockfile resolves some ranges to other versions; the script
+  refuses there rather than writing those.
 - **Anything an app consumes**: `pnpm build:examples` / `pnpm build:vscode`
 
 ## Rules that are enforced, not suggested

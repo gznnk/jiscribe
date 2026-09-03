@@ -23,21 +23,38 @@ const extensionDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const repoRoot = dirname(dirname(extensionDir));
 
 /**
- * The pnpm store sits at the workspace root, which is this repository when it
- * stands alone and the private repository when it is mounted there as a
- * submodule. Walk up rather than assuming either.
+ * The pnpm store sits at the root of the workspace that installed the tree.
+ * That is this repository when it stands alone, and the private repository when
+ * this one is mounted there as a submodule — the two resolve the same
+ * dependency ranges to different versions, so which one is in play decides what
+ * this script would write.
  */
-const storeDir = (() => {
+const storeRoot = (() => {
 	for (let dir = repoRoot; dir !== parse(dir).root; dir = dirname(dir)) {
-		const candidate = join(dir, "node_modules", ".pnpm");
-		if (existsSync(candidate)) {
-			return candidate;
+		if (existsSync(join(dir, "node_modules", ".pnpm"))) {
+			return dir;
 		}
 	}
 	throw new Error(
 		"no node_modules/.pnpm above the extension; run pnpm install",
 	);
 })();
+
+// The notices describe the release build, which is made from this repository on
+// its own lockfile, and CI checks them there. Refusing to run under an outer
+// workspace is the point: it would quietly write a file naming that workspace's
+// versions, which the check would then reject.
+if (storeRoot !== repoRoot) {
+	console.error(
+		`❌ this tree is installed by the workspace at ${storeRoot}, not by ${repoRoot}.\n` +
+			"   The notices name the versions of the release build, which resolves from\n" +
+			"   this repository's own lockfile. Run this in a standalone clone or worktree\n" +
+			"   of the engine repository (pnpm install there first).",
+	);
+	process.exit(1);
+}
+
+const storeDir = join(storeRoot, "node_modules", ".pnpm");
 const noticesPath = join(extensionDir, "THIRD-PARTY-NOTICES.txt");
 const distDir = join(extensionDir, "dist");
 
@@ -298,13 +315,47 @@ function generate() {
 	return `${out.join("\n")}\n`;
 }
 
+/**
+ * Reports how the two package lists differ, as lines the reader can act on.
+ * Falls back to saying so when the lists agree and the license bodies are what
+ * moved.
+ *
+ * @param committed - Contents of the tracked THIRD-PARTY-NOTICES.txt
+ * @param generated - What this run produced
+ */
+function printListDifference(committed, generated) {
+	const listOf = (text) =>
+		new Set(text.split("\n").filter((line) => line.startsWith("  - ")));
+	const before = listOf(committed);
+	const after = listOf(generated);
+	const removed = [...before].filter((one) => !after.has(one));
+	const added = [...after].filter((one) => !before.has(one));
+	if (removed.length === 0 && added.length === 0) {
+		console.error(
+			"   The package list is unchanged, so a license text moved. Diff the file after regenerating.",
+		);
+		return;
+	}
+	for (const line of removed) {
+		console.error(`   committed: ${line.trim()}`);
+	}
+	for (const line of added) {
+		console.error(`   this build: ${line.trim()}`);
+	}
+}
+
 const generated = generate();
 
 if (process.argv.includes("--check")) {
-	if (readFileSync(noticesPath, "utf8") !== generated) {
+	const committed = readFileSync(noticesPath, "utf8");
+	if (committed !== generated) {
 		console.error(
 			"❌ THIRD-PARTY-NOTICES.txt has drifted from what the build ships. Run pnpm generate:notices and commit the result.",
 		);
+		// The package list is where a drift is legible; a bare "they differ" leaves
+		// the reader to install and diff by hand, and the usual cause is one
+		// dependency resolving differently than in the tree the file was written in.
+		printListDifference(committed, generated);
 		process.exit(1);
 	}
 	console.log("✅ THIRD-PARTY-NOTICES.txt matches what the build ships");
