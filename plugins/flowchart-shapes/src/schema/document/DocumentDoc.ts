@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
  * Amplitude of the bottom wave as a fraction of the height. The wave band

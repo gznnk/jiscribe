@@ -33,7 +33,7 @@ import {
 	type FlingSample,
 	getGestureTarget,
 	getInputValue,
-	getSvgPoint,
+	getWorldPoint,
 	isDoubleClick,
 	isGestureOptedOut,
 	isNativePointerTarget,
@@ -42,7 +42,7 @@ import {
 
 /** Fields every queued event carries, whatever produced it (DOM event, wheel conversion, long-press timer). */
 type InternalEventBase = {
-	/** Client / screen X in px; feed converts it to world coordinates with getSvgPoint. */
+	/** Client / screen X in px; feed converts it to world coordinates with getWorldPoint. */
 	clientX: number;
 	/** Client / screen Y in px, measured from the viewport top — not the canvas origin. */
 	clientY: number;
@@ -151,7 +151,11 @@ export type Pressed = {
 	targetPart?: string;
 	/** Modifier snapshot at pointerdown. Fired gestures use the current event's mods; this copy is what the synthesized long press replays. */
 	mods: Mods;
-	/** Whether the move has exceeded the drag threshold (per pointerType, in screen px) and been confirmed as a drag */
+	/**
+	 * Whether the move has exceeded the drag threshold (per pointerType, in screen px)
+	 * and been confirmed as a drag. A native-pointer press confirms on the first move
+	 * instead (no slop; see the threshold check).
+	 */
 	dragging: boolean;
 	/** DOM button number fixed at pointerdown (0 left / 1 middle / 2 right), reported by every gesture of the press including the lift. */
 	button: number;
@@ -166,6 +170,14 @@ export type Pressed = {
 	 * touches the edge starts inside the zone, so scrolling must not fire until then.
 	 */
 	edgeScrollArmed: boolean;
+	/**
+	 * The state viewport's minX/minY captured when the last edge-scroll tick was
+	 * emitted, or null when no tick is outstanding. While the viewport still
+	 * shows these values the emitted scroll has not come back through the state
+	 * (the commit is running late, or a scroll bound swallowed it), and the next
+	 * tick holds instead of scrolling again — see the hold branch in feed.
+	 */
+	edgeScrollPendingViewport: Point | null;
 };
 
 /**
@@ -189,15 +201,15 @@ type Pinch = {
 };
 
 /**
- * Held state for a glide in progress: the momentum a released pan drag carries
- * until it decays below FLING_STOP_SPEED. Null when nothing is gliding. No
+ * Held state for a fling in progress: the momentum a released pan drag carries
+ * until it decays below FLING_STOP_SPEED. Null when no fling is under way. No
  * pointer is involved — the pointer that started it lifted at fling entry.
  */
 type Fling = {
 	/** Current velocity in screen px per millisecond, decayed on every frame. */
 	velocity: Point;
 	/**
-	 * Client position the pointer was released at, held fixed for the whole glide.
+	 * Client position the pointer was released at, held fixed for the whole fling.
 	 * Only supplies the emitted gesture's coordinates (the pan itself is driven by
 	 * scrollDelta), so a stale point is harmless — nothing tracks a cursor here.
 	 */
@@ -206,14 +218,14 @@ type Fling = {
 	lastTime: number;
 };
 
-/** Modifier snapshot for gestures that no key state belongs to (the glide has no live event). */
+/** Modifier snapshot for gestures that no key state belongs to (the fling has no live event). */
 const NO_MODS: Mods = { shift: false, alt: false, ctrl: false, meta: false };
 
 /**
  * Converts raw DOM pointer / wheel events into gestures (pressed / dragStart / drag /
  * dragEnd / click / doubleClick / wheel / pinch / longPress), delivered one at a time
  * via gestureCallback. Two of them outlive their input: after a flingable pan drag is
- * released, inertialScroll fires frame by frame until the glide decays away, closed by
+ * released, inertialScroll fires frame by frame until the fling decays away, closed by
  * a single inertialScrollEnd (see startFlingIfNeeded / stopFling).
  *
  * Events are queued by `enqueue` and handled once per frame by `processBatch` (a RAF
@@ -241,10 +253,8 @@ export class GestureRecognizer {
 	private pinch: Pinch | null = null;
 
 	// Event context of pinch moves accumulated during the current RAF batch, fired
-	// as a single pinch gesture at settleBatch. One gesture per frame is not only
-	// thinning: the zoom anchor (the midpoint in world coordinates) is derived from
-	// the DOM viewBox, which reflects at most one viewport update per frame — a second
-	// gesture in the same batch would anchor against a stale viewBox and drift.
+	// as a single pinch gesture at settleBatch: both fingers may move within one
+	// batch, and their combined effect should zoom/pan the view once per frame.
 	private pinchPending: {
 		mods: Mods;
 		time: number;
@@ -262,13 +272,13 @@ export class GestureRecognizer {
 	// so an undefined baseline would make the very first click match itself as a doubleClick.
 	private lastClick: ClickSnapshot | null = null;
 
-	// Glide left behind by a released pan drag, advanced by its own RAF (independent
+	// Fling left behind by a released pan drag, advanced by its own RAF (independent
 	// of the batch scheduler above: it produces gestures rather than consuming events).
 	private fling: Fling | null = null;
 	private flingRafId: number | null = null;
 
 	// Raw positions of the pressed pointer, trimmed to FLING_VELOCITY_WINDOW_MS and
-	// read once at the release to estimate the glide velocity. Recorded in enqueue
+	// read once at the release to estimate the fling velocity. Recorded in enqueue
 	// rather than feed on purpose: feed sees at most one move per frame (enqueue thins
 	// the rest), which is too coarse to measure a flick with.
 	private flingSamples: FlingSample[] = [];
@@ -290,7 +300,7 @@ export class GestureRecognizer {
 
 	/** Add an event to the queue and schedule processing. */
 	private enqueue(e: InternalEvent): void {
-		// Fresh input takes the view back from a glide in progress. Checked here, not
+		// Fresh input takes the view back from a fling in progress. Checked here, not
 		// in feed, so the takeover does not wait for the next frame's batch.
 		if (e.type === "pointerdown" || e.type === "wheel") {
 			this.stopFling();
@@ -353,7 +363,12 @@ export class GestureRecognizer {
 	 * modifiers at this event's moment, then fire the Gesture its type calls for.
 	 */
 	private feed(e: InternalEvent): void {
-		const currentPos = getSvgPoint(this.svgRef.current, e.clientX, e.clientY);
+		const currentPos = getWorldPoint(
+			this.svgRef.current,
+			this.canvasStateRef.current?.viewport,
+			e.clientX,
+			e.clientY,
+		);
 		const currentClientPos = { x: e.clientX, y: e.clientY };
 		const mods: Mods = {
 			shift: e.shiftKey,
@@ -526,6 +541,7 @@ export class GestureRecognizer {
 				dragging: false,
 				button: e.button,
 				edgeScrollArmed: false,
+				edgeScrollPendingViewport: null,
 				isNativePointerTarget: isNativePointer,
 			};
 
@@ -567,12 +583,21 @@ export class GestureRecognizer {
 			if (!this.pressed.dragging) {
 				// Screen-space distance: a world-based check would scale with zoom.
 				// Touch gets a wider slop — finger jitter easily exceeds the mouse value.
+				// A native-pointer press (slider) confirms on the first move instead: the
+				// browser owns the drag and steps the input's value from the step midpoint
+				// (~2px out, inside the slop), so a one-step nudge held under the slop
+				// would otherwise never reach the doc while the pointer is down. Nothing
+				// is lost by skipping the slop — the handlers commit dragEnd and click
+				// identically for sliders.
 				const distanceSquared = clientDelta.x ** 2 + clientDelta.y ** 2;
 				const dragThreshold =
 					this.pressed.pointerType === "touch"
 						? DRAG_THRESHOLD_TOUCH
 						: DRAG_THRESHOLD;
-				if (distanceSquared >= dragThreshold) {
+				if (
+					this.pressed.isNativePointerTarget ||
+					distanceSquared >= dragThreshold
+				) {
 					this.pressed.dragging = true;
 					this.clearLongPress();
 					this.fireGestureFromPressed(this.pressed, {
@@ -610,18 +635,47 @@ export class GestureRecognizer {
 
 					if (!edgeProximity.isNearEdge) {
 						this.pressed.edgeScrollArmed = true;
+						this.pressed.edgeScrollPendingViewport = null;
 					}
 
 					if (this.pressed.edgeScrollArmed && edgeProximity.isNearEdge) {
+						const { minX, minY } = canvasState.viewport;
+						const pending = this.pressed.edgeScrollPendingViewport;
+						if (pending !== null && pending.x === minX && pending.y === minY) {
+							// The previous tick's scroll has not come back through the state
+							// yet: the commit is running late, or a scroll bound swallowed it.
+							// Scrolling again now would step the viewport twice while the drag
+							// position still derives from the old view, and the dragged shape
+							// would fall behind the cursor and snap back on the catch-up frame
+							// — visible trembling. Hold the tick instead: no gesture fires,
+							// and the stay simply loses this frame's step.
+							this.enqueue({
+								...e,
+								timeStamp: performance.now(),
+							});
+							return;
+						}
+
+						// The step is fixed per tick, not scaled by the measured interval:
+						// ticks already arrive once per RAF batch, so an even step is what
+						// the view moves by each frame (scaling it put the measurement's
+						// own jitter on screen as a tremble).
+						this.pressed.edgeScrollPendingViewport = { x: minX, y: minY };
 						scrollDelta = calculateScrollDelta(
 							edgeProximity.horizontal,
 							edgeProximity.vertical,
 						);
 
 						// Keeps scrolling while the cursor is held still at the edge; move
-						// coalescing holds this to one tick per frame.
+						// coalescing holds this to one tick per frame. The stamp must be
+						// this frame's, not the copied one: every consumer of the tick reads
+						// it as the moment it happened. Reusing the original froze the
+						// emitted Gesture.time for the whole hold, and left the velocity
+						// window unable to advance — so it never trimmed and grew by one
+						// sample per frame.
 						this.enqueue({
 							...e,
+							timeStamp: performance.now(),
 						});
 					}
 				}
@@ -838,7 +892,12 @@ export class GestureRecognizer {
 			pinch.lastDist < PINCH_MIN_DISTANCE || dist < PINCH_MIN_DISTANCE
 				? 1
 				: dist / pinch.lastDist;
-		const midWorld = getSvgPoint(this.svgRef.current, mid.x, mid.y);
+		const midWorld = getWorldPoint(
+			this.svgRef.current,
+			this.canvasStateRef.current?.viewport,
+			mid.x,
+			mid.y,
+		);
 
 		this.gestureCallback({
 			type: "pinch",
@@ -926,10 +985,10 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Start a glide from the drag just released, when the injected
+	 * Start a fling from the drag just released, when the injected
 	 * shouldFlingFromDrag policy claims it as a pan and the release was fast enough
 	 * (FLING_MIN_SPEED). Called after the dragEnd has fired, so the consumer's drag
-	 * lifecycle has already closed and the glide is purely additional movement.
+	 * lifecycle has already closed and the fling is purely additional movement.
 	 */
 	private startFlingIfNeeded(pressed: Pressed, releaseTime: number): void {
 		if (!(this.shouldFlingFromDrag?.(pressed.button) ?? false)) {
@@ -949,7 +1008,7 @@ export class GestureRecognizer {
 		this.scheduleFlingFrame();
 	}
 
-	/** Book the next glide frame; advanceFling decides whether one follows it. */
+	/** Book the next fling frame; advanceFling decides whether one follows it. */
 	private scheduleFlingFrame(): void {
 		this.flingRafId = requestAnimationFrame((time) => {
 			this.flingRafId = null;
@@ -958,12 +1017,12 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Advance the glide by one frame: fire the distance covered since the previous
+	 * Advance the fling by one frame: fire the distance covered since the previous
 	 * one as an inertialScroll gesture, then decay the velocity and either book the
 	 * next frame or come to rest.
 	 *
 	 * @param time - The RAF timestamp, on the same time base as the pointer events
-	 *   the glide started from.
+	 *   the fling started from.
 	 */
 	private advanceFling(time: number): void {
 		const fling = this.fling;
@@ -971,7 +1030,7 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// A frame timestamp may predate the pointerup that started the glide (it
+		// A frame timestamp may predate the pointerup that started the fling (it
 		// marks the frame's start, not its callback), hence the lower bound.
 		const elapsed = Math.min(
 			Math.max(time - fling.lastTime, 0),
@@ -980,7 +1039,7 @@ export class GestureRecognizer {
 		fling.lastTime = time;
 
 		if (elapsed > 0) {
-			this.fireGlideGesture("inertialScroll", fling, time, {
+			this.fireFlingGesture("inertialScroll", fling, time, {
 				// Negated: the content keeps travelling the way the drag was going,
 				// which moves the viewport the opposite way (as a wheel scroll does).
 				deltaX: -fling.velocity.x * elapsed,
@@ -988,7 +1047,7 @@ export class GestureRecognizer {
 			});
 
 			// The callback runs the consumer's reducer synchronously, and that may
-			// abort the glide (an external sync calls cancelPendingGesture). Booking
+			// abort the fling (an external sync calls cancelPendingGesture). Booking
 			// another frame past that point would resurrect it.
 			if (this.fling !== fling) {
 				return;
@@ -1010,25 +1069,30 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Fire one gesture of a glide in progress. The coordinates are the release
+	 * Fire one gesture of a fling in progress. The coordinates are the release
 	 * position for every frame — the pan is driven by scrollDelta alone, and no
 	 * pointer is there to track.
 	 *
-	 * @param type - Which of the glide's two gestures to fire; only inertialScroll
+	 * @param type - Which of the fling's two gestures to fire; only inertialScroll
 	 *   carries a scrollDelta.
-	 * @param fling - The glide being reported, supplying the client position.
+	 * @param fling - The fling being reported, supplying the client position.
 	 * @param time - Value for the gesture's `time`, on the performance.now() base.
 	 * @param scrollDelta - Screen-px distance covered since the previous frame;
 	 *   omitted for the end gesture, which moves nothing.
 	 */
-	private fireGlideGesture(
+	private fireFlingGesture(
 		type: "inertialScroll" | "inertialScrollEnd",
 		fling: Fling,
 		time: number,
 		scrollDelta?: ScrollDelta,
 	): void {
 		const clientPos = fling.clientPos;
-		const worldPos = getSvgPoint(this.svgRef.current, clientPos.x, clientPos.y);
+		const worldPos = getWorldPoint(
+			this.svgRef.current,
+			this.canvasStateRef.current?.viewport,
+			clientPos.x,
+			clientPos.y,
+		);
 		this.gestureCallback({
 			type,
 			target: null,
@@ -1049,10 +1113,10 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Bring any glide to an immediate stop, cancelling its pending frame and
-	 * announcing the end. Every way a glide can end routes through here — decayed
+	 * Bring any fling to an immediate stop, cancelling its pending frame and
+	 * announcing the end. Every way a fling can end routes through here — decayed
 	 * away, interrupted by fresh input, aborted — so inertialScrollEnd fires
-	 * exactly once per glide.
+	 * exactly once per fling.
 	 */
 	private stopFling(): void {
 		if (this.flingRafId !== null) {
@@ -1064,7 +1128,7 @@ export class GestureRecognizer {
 			return;
 		}
 		this.fling = null;
-		this.fireGlideGesture("inertialScrollEnd", fling, performance.now());
+		this.fireFlingGesture("inertialScrollEnd", fling, performance.now());
 	}
 
 	/**
@@ -1180,7 +1244,7 @@ export class GestureRecognizer {
 
 	/**
 	 * Abort the in-progress gesture: cancel the pending RAF batch, discard queued events,
-	 * release pointer capture, clear pressed / pinch, and stop any glide. Called on
+	 * release pointer capture, clear pressed / pinch, and stop any fling. Called on
 	 * external state swaps (SYNC_EXTERNAL) and from useGestureRecognizer's effect
 	 * cleanup (#14).
 	 *

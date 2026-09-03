@@ -1,6 +1,6 @@
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { describe, it, expect } from "vitest";
 
-import type { ObjectFeatures } from "../../../../../../schemas/objects/types/ObjectFeatures";
 import { createDefaultMenu } from "../createDefaultMenu";
 
 const features = (extra: Partial<ObjectFeatures>): ObjectFeatures => ({

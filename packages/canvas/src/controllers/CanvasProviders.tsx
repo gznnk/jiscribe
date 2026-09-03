@@ -6,7 +6,7 @@ import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { CanvasRegistries } from "./registries";
 import { CanvasRegistriesContext } from "./registries/CanvasRegistriesContext";
-import { PresentationRegistriesProvider } from "../presentations/objects/registry/PresentationRegistriesProvider";
+import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 
@@ -21,7 +21,7 @@ type CanvasProvidersProps = {
 
 /**
  * Aggregates the context providers a live `<Canvas>` needs (theme, locale,
- * messages, the registry bundle, its three presentation registries, and the
+ * messages, the registry bundle, its three rendering registries, and the
  * viewport element ref) into one node, so Canvas.tsx renders its tree without
  * the deep provider nesting.
  */
@@ -38,7 +38,7 @@ export function CanvasProviders({
 			<CanvasLocaleContext value={locale}>
 				<CanvasMessagesContext value={messages}>
 					<CanvasRegistriesContext value={registries}>
-						<PresentationRegistriesProvider
+						<RenderingRegistriesProvider
 							objectComponent={registries.objectComponent}
 							objectTextRegion={registries.objectTextRegion}
 							objectTextStyleDefaults={registries.objectTextStyleDefaults}
@@ -51,7 +51,7 @@ export function CanvasProviders({
 							<CanvasViewportElementRefContext value={viewportElementRef}>
 								{children}
 							</CanvasViewportElementRefContext>
-						</PresentationRegistriesProvider>
+						</RenderingRegistriesProvider>
 					</CanvasRegistriesContext>
 				</CanvasMessagesContext>
 			</CanvasLocaleContext>

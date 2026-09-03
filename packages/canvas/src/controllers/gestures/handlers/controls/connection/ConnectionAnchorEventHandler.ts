@@ -1,3 +1,10 @@
+import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { defaultRoutingForAnchors } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
+import {
+	isFreeEndpointRef,
+	isSameEndpoint,
+} from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { isTransformedFrame, type Point } from "@jiscribe/geometry";
 
 import type { AnchorSnapContext } from "./utils/calcNearestAnchor";
@@ -6,17 +13,10 @@ import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
-import { resolveEndpointOwner } from "../../../../../presentations/layers/content/utils/endpoints/resolveEndpointOwner";
-import type { ExtraConnectPoint } from "../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
-import { defaultRoutingForAnchors } from "../../../../../schemas/objects/types/ConnectorRouting";
-import {
-	isFreeEndpointRef,
-	isSameEndpoint,
-} from "../../../../../schemas/objects/types/EndpointRef";
-import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
+import { resolveEndpointOwner } from "../../../../../rendering/layers/content/utils/endpoints/resolveEndpointOwner";
+import type { ExtraConnectPoint } from "../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";

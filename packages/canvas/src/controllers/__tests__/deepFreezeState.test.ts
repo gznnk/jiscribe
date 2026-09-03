@@ -1,14 +1,14 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
 import { deepFreezeState } from "./support/deepFreezeState";
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import {
-	createDocSnapshotFromState,
-	resolveDocSnapshot,
-} from "../../states/canvas/DocSnapshot";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
 import { createTestRegistries } from "../registries/createCanvasRegistries";
+import {
+	createDocSnapshotFromState,
+	resolveDocSnapshot,
+} from "../utils/resolveDocSnapshot";
 
 const registries = createTestRegistries();
 

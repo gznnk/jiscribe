@@ -1,9 +1,12 @@
+import { embedCanvasSourceInPng } from "@jiscribe/doc/file/pngCanvasSource";
+
 import {
-	buildSizedExportSvgString,
+	buildSizedExportSvg,
+	serializeSvg,
 	type BuildExportSvgOptions,
 } from "./buildExportSvg";
 import { buildTimestampedName, downloadBlob } from "./downloadBlob";
-import { embedCanvasSourceInPng } from "./pngCanvasSource";
+import { embedLoadedFontFaces } from "./embedFontFaces";
 
 export type RasterizeSvgOptions = BuildExportSvgOptions & {
 	/**
@@ -53,21 +56,41 @@ const loadSvgImage = (svgXml: string): Promise<HTMLImageElement> => {
 	});
 };
 
+/** A rasterized canvas image: the encoded bytes and the pixel grid they were drawn on. */
+export type RasterizedPng = {
+	/** The encoded PNG. */
+	blob: Blob;
+	/** Output width in px, after `scale` and any `maxPixelSize` cap. */
+	width: number;
+	/** Output height in px, under the same scaling as `width`. */
+	height: number;
+};
+
 /**
- * Rasterizes the Canvas `<svg>` into a PNG Blob.
+ * Rasterizes the Canvas `<svg>` into a PNG, reporting the pixel size it came
+ * out at — which `scale` and `maxPixelSize` decide together, so a caller
+ * mapping image pixels back onto the exported region cannot derive it up front.
  *
  * The export SVG being drawn has its text already converted to native
- * `<text>`, so no foreignObject-induced canvas taint occurs. When
- * `options.source` is given, the `.jis.json` is embedded as an `iTXt`
- * chunk so the PNG can be reopened for editing (draw.io-style round-trip).
+ * `<text>`, so no foreignObject-induced canvas taint occurs. Its faces are
+ * embedded into this copy alone (see {@link embedLoadedFontFaces}) — the file
+ * the SVG export writes stays free of them. When `options.source` is given, the
+ * `.jis.json` is embedded as an `iTXt` chunk so the PNG can be reopened for
+ * editing (draw.io-style round-trip).
+ *
+ * @param svg - The live canvas `<svg>` to snapshot
+ * @param options - Region / source embedding / background, plus the pixel scale
+ *   and its cap (see {@link RasterizeSvgOptions})
+ * @returns The encoded PNG and its pixel dimensions
  */
-export const rasterizeSvgToPngBlob = async (
+export const rasterizeSvgToPng = async (
 	svg: SVGSVGElement,
 	options: RasterizeSvgOptions = {},
-): Promise<Blob> => {
-	const { svgXml, width, height } = buildSizedExportSvgString(svg, options);
+): Promise<RasterizedPng> => {
+	const { exportSvg, width, height } = buildSizedExportSvg(svg, options);
 	const scale = resolveScale(options, width, height);
-	const image = await loadSvgImage(svgXml);
+	await embedLoadedFontFaces(exportSvg);
+	const image = await loadSvgImage(serializeSvg(exportSvg));
 
 	const canvas = document.createElement("canvas");
 	canvas.width = Math.max(1, Math.ceil(width * scale));
@@ -89,9 +112,13 @@ export const rasterizeSvgToPngBlob = async (
 		}, "image/png");
 	});
 
-	return options.source
-		? embedCanvasSourceInPng(encoded, options.source)
-		: encoded;
+	return {
+		blob: options.source
+			? await embedCanvasSourceInPng(encoded, options.source)
+			: encoded,
+		width: canvas.width,
+		height: canvas.height,
+	};
 };
 
 export type ExportCanvasToPngOptions = RasterizeSvgOptions & {
@@ -114,7 +141,7 @@ export const exportCanvasToPng = async (
 	svg: SVGSVGElement,
 	options: ExportCanvasToPngOptions = {},
 ): Promise<void> => {
-	const blob = await rasterizeSvgToPngBlob(svg, options);
+	const { blob } = await rasterizeSvgToPng(svg, options);
 	const extension = options.source ? ".jis.png" : ".png";
 	downloadBlob(
 		blob,

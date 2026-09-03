@@ -1,6 +1,6 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { ComponentType } from "react";
 
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import type { LocaleMessages } from "../../messages/resolveLocaleMessages";
 
 /** Props received by a StencilLibrary icon component. */
@@ -17,7 +17,12 @@ export type StencilIconProps = {
  * `ObjectFactory`, passing defaultOverrides.
  */
 export type Stencil = {
-	/** Stable identifier; the lookup key for label overrides and toolbar layout. */
+	/**
+	 * Stable identifier; the lookup key for label overrides and toolbar layout. Shared by
+	 * every plugin a host applies, so a plugin offering several presets of one type
+	 * prefixes them (`lucideIconFileText`). No colon: it separates the id from the `item`
+	 * token in the DOM (`data-part="item:{id}"`), and StencilRegistry refuses one that has it.
+	 */
 	id: string;
 	/** Object type this preset creates through (presets are not 1:1 with types). */
 	objectType: ObjectType;

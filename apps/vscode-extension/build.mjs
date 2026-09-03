@@ -3,7 +3,8 @@
 // Normal build: node build.mjs
 // Watch mode:   node build.mjs --watch
 
-import { copyFileSync, mkdirSync, rmSync } from "fs";
+import { copyFileSync, mkdirSync, readdirSync, rmSync } from "fs";
+import { readFile } from "fs/promises";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -41,6 +42,42 @@ const extensionConfig = {
 	minify: !isWatch,
 };
 
+// ── Keeping only the woff2 of each face ──────────────────────────────────
+// @fontsource and KaTeX name every face more than once, newest format first:
+// `src: url(...woff2) format('woff2'), url(...woff) format('woff')`. esbuild's file
+// loader copies whatever a url() names, so all of them land in dist/fonts/ — 28 MB of
+// legacy woff for the bundled font set alone, none of it ever fetched, because a VSCode
+// webview is Chromium and Chromium has read woff2 since 2014.
+//
+// The rewrite happens before esbuild reads the file, which is what keeps the copies out:
+// dropping them from dist/ afterwards would leave the url() in webview.css pointing at
+// nothing. A face that offers no woff2 is left as it is, so a dependency shipping only
+// woff or ttf still resolves.
+const woff2OnlyPlugin = {
+	name: "woff2-only",
+	setup(build) {
+		build.onLoad({ filter: /\.css$/ }, async (args) => {
+			const source = await readFile(args.path, "utf8");
+			// The split leaves commas inside url(...) alone; unicode-range is a declaration
+			// of its own, so bounding the value at ; or } keeps its commas out of reach.
+			const contents = source.replace(
+				/src:\s*([^;}]+)/g,
+				(declaration, list) => {
+					const sources = list.split(/,(?![^(]*\))/);
+					const woff2 = sources.filter((one) =>
+						/format\(\s*['"]woff2['"]\s*\)/.test(one),
+					);
+					if (woff2.length === 0 || woff2.length === sources.length) {
+						return declaration;
+					}
+					return `src: ${woff2.map((one) => one.trim()).join(", ")}`;
+				},
+			);
+			return { contents, loader: "css", resolveDir: dirname(args.path) };
+		});
+	},
+};
+
 // ── Webview build (runs in a browser environment) ────────────────────────
 // The UI shown inside the VSCode panel (the SVG canvas) runs in a webview.
 // A webview is a browser environment, so it needs a browser-targeted bundle.
@@ -67,9 +104,11 @@ const webviewConfig = {
 	// css: KaTeX styles (required, since math is laid out as KaTeX HTML + CSS).
 	//      esbuild collects CSS imported from JS into dist/webview.css, named
 	//      after outfile. The <link> in webviewHtml.ts loads it.
-	// woff2/woff/ttf: the font files referenced by @font-face in katex.min.css.
-	//      The file loader copies them into dist/fonts/ and rewrites url() in the
-	//      CSS to a relative path (the webview CSP already allows cspSource for font-src).
+	// woff2/woff/ttf: the font files referenced by @font-face in the canvas font set
+	//      and in katex.min.css. The file loader copies them into dist/fonts/ and
+	//      rewrites url() in the CSS to a relative path (the webview CSP already allows
+	//      cspSource for font-src). Only the woff2 of a face survives woff2OnlyPlugin;
+	//      the other two loaders are what a face offering no woff2 falls back on.
 	loader: {
 		".tsx": "tsx",
 		".ts": "ts",
@@ -79,20 +118,50 @@ const webviewConfig = {
 		".ttf": "file",
 	},
 	assetNames: "fonts/[name]-[hash]",
+	plugins: [woff2OnlyPlugin],
 };
 
+// ── Guarding the woff2-only rewrite ──────────────────────────────────────
+// The rewrite above is silent by nature: word `src` differently in a future @fontsource
+// release and the plugin stops matching, the legacy copies come back, and nothing says so
+// — which is exactly how 28 MB of them got into the package unnoticed. So the build fails
+// on the one condition the plugin exists to prevent: the same face copied as woff2 *and*
+// as a legacy format. A face that offers no woff2 is the case the plugin deliberately
+// leaves alone, and it passes.
+function assertNoRedundantFontFormats() {
+	const fileNames = readdirSync(join(__dirname, "dist", "fonts"));
+	// assetNames appends "-[hash]" to every copied file, so the face is what is left of the
+	// name once that suffix and the extension are gone.
+	const faceOf = (fileName) => fileName.replace(/-[A-Z0-9]+\.[a-z0-9]+$/, "");
+	const woff2Faces = new Set(
+		fileNames.filter((name) => name.endsWith(".woff2")).map(faceOf),
+	);
+	const redundant = fileNames.filter(
+		(name) =>
+			(name.endsWith(".woff") || name.endsWith(".ttf")) &&
+			woff2Faces.has(faceOf(name)),
+	);
+	if (redundant.length > 0) {
+		throw new Error(
+			`woff2OnlyPlugin stopped stripping the legacy src: ${redundant.length} file(s) ` +
+				`duplicate a face that also ships woff2, starting with ${redundant[0]}. ` +
+				`Check how the @font-face src is written in the CSS it comes from.`,
+		);
+	}
+}
+
 // ── Copying the AI assets ────────────────────────────────────────────────
-// Place the ai-docs package's distributable assets (assets/) into dist/.
+// Place the doc-schema package's distributable assets (assets/) into dist/.
 // - jiscribe.schema.json: referenced by VSCode's jsonValidation to provide
 //   completion and validation for .jis.json.
 // - ai-guide.md: the AI authoring guide (entry point) that "Set up AI" writes
 //   into the workspace.
 // - reference.md: the detailed reference that ai-guide links to (it lands in the
 //   same .jiscribe/ directory, so the link resolves).
-// The source is packages/ai-docs/assets/ (the canonical distributable assets,
-// generated by pnpm generate:ai).
+// The source is packages/doc-schema/assets/ (the canonical distributable assets,
+// generated by pnpm generate:schema).
 function copyAiAssets() {
-	const aiDir = join(__dirname, "../../packages/ai-docs/assets");
+	const aiDir = join(__dirname, "../../packages/doc-schema/assets");
 	const distDir = join(__dirname, "dist");
 	mkdirSync(distDir, { recursive: true });
 
@@ -132,6 +201,7 @@ async function build() {
 			// The extension host and the webview are built in sequence.
 			await esbuild.build(extensionConfig);
 			await esbuild.build(webviewConfig);
+			assertNoRedundantFontFormats();
 
 			console.log("Build completed successfully");
 		}

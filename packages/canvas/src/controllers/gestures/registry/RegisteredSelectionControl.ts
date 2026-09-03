@@ -1,8 +1,8 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { FC } from "react";
 
 import { ControlStrategy } from "./ControlStrategy";
 import type { CanvasEvent } from "./GestureHandlerTypes";
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type {

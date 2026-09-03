@@ -1,9 +1,12 @@
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { describe, it, expect } from "vitest";
 
-import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
 import { createFrameStateValidator } from "../createFrameStateValidator";
 import type { StateRecord } from "../validateStateUtils";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the paste e2e.
 /**
  * Tests the generator itself rather than any one shape: per-shape suites
  * (validateRectState, ...) pin down one features combination each, so the
@@ -68,6 +71,7 @@ describe("createFrameStateValidator feature gating", () => {
 		fill: "url(javascript:alert(1))",
 		text: { body: { text: "hello", fontSize: 0 } },
 		rx: -1,
+		startArrow: "NotAnArrow",
 	};
 
 	it("ignores every style group when all flags are off", () => {
@@ -81,6 +85,7 @@ describe("createFrameStateValidator feature gating", () => {
 		["fill", { fill: true }],
 		["text", { text: "body" }],
 		["radius", { radius: true }],
+		["arrow", { arrow: true }],
 	] as [string, Partial<ObjectFeatures>][])(
 		"rejects a malformed %s group once the flag is on",
 		(_flag, flags) => {
@@ -113,6 +118,7 @@ describe("createFrameStateValidator feature gating", () => {
 				fill: true,
 				text: "body",
 				radius: true,
+				arrow: true,
 			}),
 		);
 		expect(
@@ -121,10 +127,10 @@ describe("createFrameStateValidator feature gating", () => {
 				rotation: 45,
 				scaleX: 1,
 				scaleY: -1,
-				stroke: "#000",
+				stroke: "auto",
 				strokeWidth: 2,
 				strokeDashType: "dashed",
-				fill: "#fff",
+				fill: "auto",
 				text: {
 					body: {
 						text: "hello",
@@ -134,6 +140,8 @@ describe("createFrameStateValidator feature gating", () => {
 					},
 				},
 				rx: 4,
+				startArrow: "OpenArrow",
+				endArrow: "None",
 			}),
 		).toBe(true);
 	});

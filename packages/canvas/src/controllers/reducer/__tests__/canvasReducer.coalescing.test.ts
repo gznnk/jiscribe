@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
 import { runCommands, testReducerRegistries } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
+import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 
 // Start with rect-1 selected (cx=5, cy=5)
 const createState = (): CanvasControllerState =>

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
 

@@ -1,11 +1,11 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../../constants/precision";
 import {
 	isConnectorState,
 	type ConnectorState,
-} from "../../../../states/objects/connections/connector/ConnectorState";
+} from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
@@ -22,6 +22,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
+import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 
 const TARGET_PART_PREFIX = "segment-slide:";
 
@@ -102,7 +103,7 @@ const handleDrag = (
 	let snapFeedback: SnapFeedback = { x: [], y: [] };
 	const snapCandidates = snapshot.snapCandidates;
 
-	if (snapCandidates && !event.mods.ctrl) {
+	if (snapCandidates && !isSnapSuppressed(event)) {
 		const result = findSnap(
 			snapCandidates,
 			SNAP_THRESHOLD_PX / state.viewport.zoom,

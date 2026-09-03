@@ -15,7 +15,8 @@ import { BELOW_LABEL_STYLE_DEFAULTS } from "../schema/belowLabelStyleDefaults";
  * hangs off (calcBelowLabelTextRegion, calcGroupMarkerTextRegion): a placement
  * only has to decide where to put the box this returns. The typography it is
  * measured with is BELOW_LABEL_STYLE_DEFAULTS under the slot's own fields, which
- * is what the drawing side resolves too.
+ * is what the drawing side resolves too, the family included: both fall back to
+ * BELOW_LABEL_STYLE_DEFAULTS, which is DEFAULT_FONT_FAMILY.
  *
  * @param text - The shape's text slots, keyed by slot id; undefined for a shape holding no text, which sizes an empty label
  * @param slotId - Which slot to measure; an absent slot measures as empty, yielding the minimum box rather than nothing

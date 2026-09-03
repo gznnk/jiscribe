@@ -1,15 +1,13 @@
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { calcTextObjectFrameSize } from "../../../states/objects/primitives/text/calcTextObjectFrameSize";
+import { resolveTextObjectFont } from "../../../states/objects/primitives/text/resolveTextObjectFont";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import { createObjectContentResizerRegistry } from "../../../states/registry/ObjectContentResizerRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { graftTextEditDraft } from "../graftTextEditDraft";
-
-/** Family the derived-box path would measure with; irrelevant to every rect below. */
-const FONT_FAMILY = "Noto Sans JP";
 
 /** The real per-type wiring, so only `text` is re-measured here. */
 const contentResizer = createTestRegistries().objectContentResizer;
@@ -34,9 +32,7 @@ const shapeEdit = (
 describe("graftTextEditDraft", () => {
 	it("returns the same reference when nothing is being edited", () => {
 		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
-		expect(graftTextEditDraft(objects, null, FONT_FAMILY, contentResizer)).toBe(
-			objects,
-		);
+		expect(graftTextEditDraft(objects, null, contentResizer)).toBe(objects);
 	});
 
 	it("returns the same reference while a connector label is being edited", () => {
@@ -49,7 +45,6 @@ describe("graftTextEditDraft", () => {
 					objectId: "c1",
 					text: "calls",
 				},
-				FONT_FAMILY,
 				contentResizer,
 			),
 		).toBe(objects);
@@ -61,7 +56,6 @@ describe("graftTextEditDraft", () => {
 			graftTextEditDraft(
 				objects,
 				shapeEdit("r1", "name", "User"),
-				FONT_FAMILY,
 				contentResizer,
 			),
 		).toBe(objects);
@@ -73,17 +67,11 @@ describe("graftTextEditDraft", () => {
 			graftTextEditDraft(
 				objects,
 				shapeEdit("gone", "name", "X"),
-				FONT_FAMILY,
 				contentResizer,
 			),
 		).toBe(objects);
 		expect(
-			graftTextEditDraft(
-				objects,
-				shapeEdit("r1", "rows", "X"),
-				FONT_FAMILY,
-				contentResizer,
-			),
+			graftTextEditDraft(objects, shapeEdit("r1", "rows", "X"), contentResizer),
 		).toBe(objects);
 	});
 
@@ -99,7 +87,6 @@ describe("graftTextEditDraft", () => {
 		const grafted = graftTextEditDraft(
 			objects,
 			shapeEdit("r1", "name", "User\nAccount"),
-			FONT_FAMILY,
 			contentResizer,
 		);
 
@@ -123,7 +110,6 @@ describe("graftTextEditDraft", () => {
 		const grafted = graftTextEditDraft(
 			objects,
 			shapeEdit("r1", "rows", "id\nname"),
-			FONT_FAMILY,
 			contentResizer,
 		);
 
@@ -134,8 +120,7 @@ describe("graftTextEditDraft", () => {
 	it("re-measures the box of an object whose size is derived from its text", () => {
 		const { width, height } = calcTextObjectFrameSize(
 			"a",
-			{ fontSize: 16 },
-			FONT_FAMILY,
+			resolveTextObjectFont({ fontSize: 16 }),
 		);
 		const objects = {
 			t1: {
@@ -155,7 +140,6 @@ describe("graftTextEditDraft", () => {
 		const grafted = graftTextEditDraft(
 			objects,
 			shapeEdit("t1", "body", "a much longer draft"),
-			FONT_FAMILY,
 			contentResizer,
 		) as unknown as Record<string, { cx: number; width: number }>;
 
@@ -178,7 +162,6 @@ describe("graftTextEditDraft", () => {
 		const grafted = graftTextEditDraft(
 			objects,
 			shapeEdit("r1", "name", "Account"),
-			FONT_FAMILY,
 			registry,
 		);
 
@@ -194,7 +177,6 @@ describe("graftTextEditDraft", () => {
 			graftTextEditDraft(
 				objects,
 				shapeEdit("r1", "name", "User"),
-				FONT_FAMILY,
 				contentResizer,
 			),
 		).toBe(objects);

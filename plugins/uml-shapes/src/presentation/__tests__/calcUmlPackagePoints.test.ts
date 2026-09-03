@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { calcUmlPackageTextRegion } from "../../schema/textRegions";
 import { calcUmlPackagePoints } from "../calcUmlPackagePoints";
-import { calcUmlPackageTextRegion } from "../calcUmlPackageTextRegion";
 import { umlPackageOutline } from "../umlPackageOutline";
 
 /**
@@ -51,7 +51,7 @@ describe("umlPackageOutline", () => {
 
 describe("calcUmlPackageTextRegion", () => {
 	it("spans the body below the tab, in full", () => {
-		expect(calcUmlPackageTextRegion(DEFAULT_SIZE, "text")).toEqual({
+		expect(calcUmlPackageTextRegion(DEFAULT_SIZE)).toEqual({
 			x: -80,
 			y: -38,
 			width: 160,
@@ -60,7 +60,7 @@ describe("calcUmlPackageTextRegion", () => {
 	});
 
 	it("follows the clamped tab on a short box", () => {
-		expect(calcUmlPackageTextRegion(SHORT_SIZE, "text")).toEqual({
+		expect(calcUmlPackageTextRegion(SHORT_SIZE)).toEqual({
 			x: -80,
 			y: -10,
 			width: 160,

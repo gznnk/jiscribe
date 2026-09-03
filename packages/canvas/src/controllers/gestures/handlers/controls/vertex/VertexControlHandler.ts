@@ -1,7 +1,7 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type { Point } from "@jiscribe/geometry";
 
 import { ORIGIN_SNAP_PX } from "../../../../../constants/axisLock";
-import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,
@@ -16,6 +16,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../../utils/snap/findSnap";
+import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 
 /**
  * Handles vertex control interactions (moving a vertex).
@@ -165,7 +166,7 @@ export class VertexControlHandler extends ControlStrategy {
 		const snapCandidates = eventStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-		if (snapCandidates && !event.mods.ctrl && !snapToOrigin) {
+		if (snapCandidates && !isSnapSuppressed(event) && !snapToOrigin) {
 			const result = findSnap(
 				snapCandidates,
 				SNAP_THRESHOLD_PX / zoom,

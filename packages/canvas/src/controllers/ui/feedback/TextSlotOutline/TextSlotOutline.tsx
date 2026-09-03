@@ -3,9 +3,9 @@ import { memo } from "react";
 
 import { SELECTION_OUTLINE_WIDTH } from "../../../../constants/selectionOutline";
 import { theme } from "../../../../constants/theme";
-import { useObjectTextRegionRegistry } from "../../../../presentations/objects/registry/ObjectTextRegionRegistryContext";
-import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
-import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
+import { useObjectTextRegionRegistry } from "../../../../rendering/objects/registry/ObjectTextRegionRegistryContext";
+import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
+import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
 type TextSlotOutlineProps = {

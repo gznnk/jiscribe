@@ -8,8 +8,8 @@ const { toDoc: calloutToDoc, toState: calloutToState } =
 	calloutDefinition.mapper;
 
 /**
- * Callout is the only builtin that passes `extraKeys` to createFrameMapper, so
- * the tail's survival through the allow-list pass-through is specific to it:
+ * Callout is the only shape in this package whose own field reaches the mapper's
+ * allow-list, so the tail's survival through the pass-through is specific to it:
  * a tail dropped here would silently reset every callout to the default tail.
  */
 const doc = {

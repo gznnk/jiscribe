@@ -1,23 +1,49 @@
+// Side-effect first: importing this package is what tells the document layer to
+// measure text the way this package draws it (see the module for why it is not
+// deferred to mount time).
+import "./text/offerRendererTextMeasurement";
+
 export { Canvas } from "./controllers/Canvas";
-export type { CanvasHandle } from "./controllers/Canvas";
 export type { CanvasGestureHandling } from "./controllers/CanvasGestureHandling";
+// The imperative handle and its namespaces (controllers/handles): the whole
+// surface a host drives a mounted canvas through.
+export type { CanvasHandle } from "./controllers/handles/CanvasHandle";
 export type {
 	CanvasExportHandle,
-	CanvasExportImagePayload,
-	CanvasExportOptions,
-	CanvasPngExportOptions,
-} from "./controllers/hooks/useCanvasExport";
+	CanvasPngCapture,
+} from "./controllers/handles/useExportHandle";
 export type {
 	CanvasFitOptions,
 	CanvasViewportHandle,
-} from "./controllers/hooks/useViewportHandle";
-export type { CanvasSelectionHandle } from "./controllers/hooks/useSelectionHandle";
+} from "./controllers/handles/useViewportHandle";
+export type { CanvasSelectionHandle } from "./controllers/handles/useSelectionHandle";
+export type {
+	CanvasHitTestOptions,
+	CanvasMeasureHandle,
+} from "./controllers/handles/useMeasureHandle";
+export type {
+	CanvasHistoryHandle,
+	CanvasHistoryMark,
+} from "./controllers/handles/useHistoryHandle";
+export type {
+	CanvasInteractionHandle,
+	CanvasInteractionStatus,
+} from "./controllers/handles/useInteractionHandle";
+export type {
+	CanvasExportOptions,
+	CanvasExportRegion,
+	CanvasPngExportOptions,
+} from "./controllers/utils/resolveExportOptions";
+export type { CanvasExportImagePayload } from "./controllers/hooks/useExportDialog";
+export type { TextSlotMeasurement } from "./controllers/utils/measureTextSlot";
+export type { ObjectOverlap } from "./controllers/utils/findObjectOverlaps";
+export type { CanvasModalKind, DragKind } from "./controllers/CanvasTypes";
 export type { ResolvedSelection } from "./controllers/utils/resolveRequestedSelection";
 export { CanvasThumbnail } from "./controllers/CanvasThumbnail";
 export {
 	exportCanvasToPng,
 	exportCanvasToSvg,
-	rasterizeSvgToPngBlob,
+	rasterizeSvgToPng,
 	canvasToSvgString,
 	buildExportSvg,
 	serializeSvg,
@@ -30,6 +56,7 @@ export {
 export type {
 	ExportCanvasToPngOptions,
 	ExportCanvasToSvgOptions,
+	RasterizedPng,
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
 } from "./export";
@@ -56,16 +83,23 @@ export type {
 } from "./theme/CanvasTheme";
 export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
 export type { Camera, Viewport } from "./states/canvas/Viewport";
-export type { ScrollBoundsConfig } from "./states/canvas/ScrollBounds";
-export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
+export type { ScrollBoundsConfig } from "./controllers/CanvasTypes";
+export type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+// A UI consumer reads `view` to decide whether to pass settings of its own
+// (`initialConfig.viewport` overrules `view.open`, `initialConfig.scrollBounds`
+// overrules `view.scroll`), so the types belong here alongside CanvasDoc rather
+// than only on the headless entry.
+export type {
+	ViewDoc,
+	ViewOpenMode,
+	ViewScrollMode,
+	ViewPaddingDoc,
+} from "@jiscribe/doc/model/canvas/ViewDoc";
 // Headless parse/build API. `createCanvasParser` and the doc-ops live on the
 // `./doc` entry (UI-free); the root carries only the result types, so a UI consumer
 // can type a parse result without importing the parser factory itself.
-export type {
-	SemanticDiagnostic,
-	CanvasParseResult,
-	CanvasParser,
-} from "./schemas/canvas/validators";
+export type { SemanticDiagnostic } from "@jiscribe/doc/model/types/SemanticDiagnostic";
+export type { CanvasParseResult, CanvasParser } from "@jiscribe/doc/parse";
 
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
 // Pass a `CanvasConfig` (capability set + view setup) to `<Canvas initialConfig={...}>`;
@@ -95,25 +129,24 @@ export type {
 	ObjectDocDefinition,
 	CanvasDocPlugin,
 } from "./plugin";
-export { ObjectTypes } from "./schemas/objects/types/ObjectType";
-export type { ObjectType } from "./schemas/objects/types/ObjectType";
-export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
-export type { MetaDoc } from "./schemas/objects/base/MetaDoc";
+export { ObjectTypes } from "@jiscribe/doc/model/objects/types/ObjectType";
+export type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+export type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+export type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
 export type { ObjectState } from "./states/objects/base/ObjectState";
 export type { MetaState } from "./states/objects/base/MetaState";
-export type { CreateObjectType } from "./schemas/objects/types/CreateObjectType";
+export type { CreateObjectType } from "@jiscribe/doc/model/objects/types/CreateObjectType";
 export type { CreateObjectState } from "./states/objects/types/CreateObjectState";
-export type { ObjectFeatures } from "./schemas/objects/types/ObjectFeatures";
-export type { GeometryType } from "./schemas/objects/types/GeometryType";
+export type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+export type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
 export type {
 	ExtraStylePropertyDescriptor,
 	StyleValueType,
-} from "./schemas/objects/types/ExtraStyleProperty";
+} from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
 export type {
 	ObjectFactory,
 	ObjectDimensions,
-} from "./schemas/objects/types/ObjectFactory";
-export type { DocCreationDefaults } from "./schemas/objects/types/DocCreationDefaults";
+} from "@jiscribe/doc/model/objects/types/ObjectFactory";
 export type {
 	ObjectMapperType,
 	DocToStateMapper,
@@ -150,30 +183,38 @@ export type {
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 // The slot id every single-text shape (`features.text: "body"`) holds, i.e. the
 // key its `state.text` carries. A shape with several slots names its own instead.
-export { BODY_TEXT_SLOT_ID } from "./constants/textSlotId";
-export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
+export { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
+export { CANVAS_FONT_FAMILIES } from "@jiscribe/doc/text/style/fontFamilies";
+export type {
+	CanvasFontFamily,
+	CanvasFontFamilyId,
+} from "@jiscribe/doc/text/style/fontFamilies";
+export type { ObjectTextRegionCalculator } from "./rendering/objects/registry/ObjectTextRegionRegistry";
 // Per-type, per-slot text-style defaults: the registry a canvas resolves an
 // unset text style through, reachable as
 // `CanvasRegistries["objectTextStyleDefaults"]`.
-export type { TextSlotStyle } from "./schemas/objects/types/TextSlot";
-export { resolveTextSlotStyle } from "./schemas/objects/types/TextSlot";
+export type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
+export { resolveTextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
 export type {
 	ObjectTextSlotStyleDefaults,
 	ObjectTextStyleDefaultsRegistry,
-} from "./schemas/registry/ObjectTextStyleDefaultsRegistry";
+} from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,
 } from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
-export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
-export type { ObjectAnchorRegionCalculator } from "./presentations/objects/registry/ObjectAnchorRegionRegistry";
+export type { ObjectOutlineCalculator } from "./rendering/objects/registry/ObjectOutlineRegistry";
+export type { ObjectAnchorRegionCalculator } from "./rendering/objects/registry/ObjectAnchorRegionRegistry";
 export type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsCalculator,
-} from "./presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-export type { ObjectGeometryKeyCalculator } from "./presentations/objects/registry/ObjectGeometryKeyRegistry";
-export type { ObjectVisualBoundsCalculator } from "./presentations/objects/registry/ObjectVisualBoundsRegistry";
-export type { ObjectTransformHandles } from "./controllers/ui/controls/ObjectTransformHandlesRegistry";
+} from "./rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+export type { ObjectGeometryKeyCalculator } from "./rendering/objects/registry/ObjectGeometryKeyRegistry";
+export type { ObjectVisualBoundsCalculator } from "./rendering/objects/registry/ObjectVisualBoundsRegistry";
+export type {
+	ObjectTransformHandles,
+	ObjectTransformHandlesDeclaration,
+} from "./controllers/ui/controls/ObjectTransformHandlesRegistry";
 export type {
 	Stencil,
 	StencilIconProps,

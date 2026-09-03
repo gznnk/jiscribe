@@ -21,6 +21,7 @@
 		"@emotion/styled": "catalog:",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/canvas-sdk": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"react": "catalog:"
 	},
 	"devDependencies": {
@@ -28,6 +29,7 @@
 		"@emotion/styled": "catalog:",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/canvas-sdk": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
 		"@playwright/test": "^1.62.1",
 		"@types/react": "catalog:",
 		"react": "catalog:",

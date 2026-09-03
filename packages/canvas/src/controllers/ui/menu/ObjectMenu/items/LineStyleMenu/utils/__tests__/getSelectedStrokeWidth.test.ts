@@ -1,11 +1,9 @@
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import { describe, it, expect } from "vitest";
 
 import type { CanvasControllerState } from "../../../../../../../../controllers/CanvasTypes";
 import type { ObjectState } from "../../../../../../../../states/objects/base/ObjectState";
-import {
-	DEFAULT_STROKE_WIDTH,
-	getSelectedStrokeWidth,
-} from "../getSelectedStrokeWidth";
+import { getSelectedStrokeWidth } from "../getSelectedStrokeWidth";
 
 const obj = (id: string, extra?: Record<string, unknown>): ObjectState =>
 	({ id, type: "rect", ...extra }) as unknown as ObjectState;

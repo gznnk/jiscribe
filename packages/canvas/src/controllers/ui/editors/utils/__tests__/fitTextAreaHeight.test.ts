@@ -1,6 +1,6 @@
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 import { describe, expect, it } from "vitest";
 
-import { TEXT_LINE_HEIGHT } from "../../../../../constants/textLineHeight";
 import { calcTextAreaHeight } from "../fitTextAreaHeight";
 
 /** The vertical padding TextEditorStyled / ConnectorLabelEditorStyled declare. */
@@ -28,6 +28,13 @@ describe("calcTextAreaHeight", () => {
 	it("recovers the line count whichever way the measurement was rounded", () => {
 		expect(calcTextAreaHeight(26, 15, PADDING)).toBe(displayHeight(1, 15));
 		expect(calcTextAreaHeight(27, 15, PADDING)).toBe(displayHeight(1, 15));
+	});
+
+	it("takes the measurement when the content stands above whole line boxes", () => {
+		// A line drawn in two font families is about a pixel taller than
+		// fontSize × 1.5; rebuilding from the line count would round that away and
+		// leave the editor scrolling inside it.
+		expect(calcTextAreaHeight(29, 16, PADDING)).toBe(29);
 	});
 
 	it("keeps one line when the measurement is only the padding", () => {

@@ -1,9 +1,9 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
 import { describe, expect, it } from "vitest";
 
 import { createCanvasRegistries } from "../../../../controllers/registries/createCanvasRegistries";
-import type { ObjectDoc } from "../../../../schemas/objects/base/ObjectDoc";
-import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
-import { builtinObjectDocDefinitions } from "../../../../schemas/registry/builtinObjectDocDefinitions";
 import type { TextSlots } from "../../types/TextSlots";
 import type { ObjectState } from "../ObjectState";
 import { mapTextDocToState, mapTextStateToDoc } from "../TextSlotsMapper";
@@ -71,6 +71,53 @@ describe("mapTextDocToState", () => {
 		).toEqual(["01", "-1", "1a"]);
 	});
 
+	it("keeps canonical numeric ids that are not array indices", () => {
+		// These stringify back to themselves but JS does not re-sort them:
+		// only integers 0 … 2^32−2 are array indices. Dropping them would
+		// lose the slot (and its text) without the reordering that justifies it.
+		const docText = {
+			name: { text: "User" },
+			"1.5": { text: "fractional" },
+			Infinity: { text: "unbounded" },
+			"4294967295": { text: "2^32-1, first non-index integer" },
+		};
+		expect(
+			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
+		).toEqual(["name", "1.5", "Infinity", "4294967295"]);
+	});
+
+	it("still drops the largest array index (2^32−2)", () => {
+		const docText = {
+			name: { text: "User" },
+			"4294967294": { text: "re-sorted to the front by JS" },
+		};
+		expect(
+			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
+		).toEqual(["name"]);
+	});
+
+	it("carries a body doc's vertical basis onto the object, not into the slot", () => {
+		expect(
+			mapTextDocToState("body", { text: "hello", textVerticalBasis: "frame" }),
+		).toEqual({
+			text: { body: { text: "hello" } },
+			textVerticalBasis: "frame",
+		});
+	});
+
+	it("gives a body doc that names no basis none, rather than the default spelled out", () => {
+		expect("textVerticalBasis" in mapTextDocToState("body", {})).toBe(false);
+	});
+
+	it("keeps the vertical basis off a slots type, which has no shape-wide box", () => {
+		expect(
+			mapTextDocToState("slots", {
+				text: { name: { text: "User" } },
+				textVerticalBasis: "frame",
+			}),
+		).toEqual({ text: { name: { text: "User" } } });
+	});
+
 	it("contributes nothing at all for a text-less type", () => {
 		expect(mapTextDocToState(undefined, { text: "hello" })).toEqual({});
 	});
@@ -79,30 +126,54 @@ describe("mapTextDocToState", () => {
 describe("mapTextStateToDoc", () => {
 	it("flattens the body slot back onto the doc root", () => {
 		expect(
-			mapTextStateToDoc("body", { body: { text: "hello", fontColor: "auto" } }),
+			mapTextStateToDoc("body", {
+				text: { body: { text: "hello", fontColor: "auto" } },
+			}),
 		).toEqual({ text: "hello", fontColor: "auto" });
 	});
 
 	it("contributes no text key for an empty body slot or an absent text", () => {
-		expect(mapTextStateToDoc("body", { body: { text: "" } })).toEqual({});
-		expect(mapTextStateToDoc("body", undefined)).toEqual({});
+		expect(mapTextStateToDoc("body", { text: { body: { text: "" } } })).toEqual(
+			{},
+		);
+		expect(mapTextStateToDoc("body", {})).toEqual({});
 	});
 
 	it("keeps the styling of an emptied body slot, only the content dropping out", () => {
 		expect(
-			mapTextStateToDoc("body", { body: { text: "", fontSize: 20 } }),
+			mapTextStateToDoc("body", { text: { body: { text: "", fontSize: 20 } } }),
 		).toEqual({ fontSize: 20 });
 	});
 
 	it("emits a slots shape's map unchanged, including empty contents", () => {
 		const slots = { name: { text: "" }, rows: { text: [] } };
-		expect(mapTextStateToDoc("slots", slots)).toEqual({ text: slots });
+		expect(mapTextStateToDoc("slots", { text: slots })).toEqual({
+			text: slots,
+		});
+	});
+
+	it("folds the vertical basis back onto the doc root", () => {
+		expect(
+			mapTextStateToDoc("body", {
+				text: { body: { text: "hello" } },
+				textVerticalBasis: "frame",
+			}),
+		).toEqual({ text: "hello", textVerticalBasis: "frame" });
+	});
+
+	it("keeps the vertical basis of a body whose text was emptied, that being placement rather than styling", () => {
+		expect(
+			mapTextStateToDoc("body", {
+				text: { body: { text: "" } },
+				textVerticalBasis: "frame",
+			}),
+		).toEqual({ textVerticalBasis: "frame" });
 	});
 
 	it("contributes nothing at all for a text-less type", () => {
-		expect(mapTextStateToDoc(undefined, { body: { text: "hello" } })).toEqual(
-			{},
-		);
+		expect(
+			mapTextStateToDoc(undefined, { text: { body: { text: "hello" } } }),
+		).toEqual({});
 	});
 });
 
@@ -110,7 +181,7 @@ describe("doc ↔ state text round-trip", () => {
 	it("is the identity from the state side, for both shapes", () => {
 		const bodySlots: TextSlots = { body: { text: "hello", fontSize: 20 } };
 		expect(
-			mapTextDocToState("body", mapTextStateToDoc("body", bodySlots)),
+			mapTextDocToState("body", mapTextStateToDoc("body", { text: bodySlots })),
 		).toEqual({ text: bodySlots });
 
 		const keyedSlots: TextSlots = {
@@ -118,24 +189,21 @@ describe("doc ↔ state text round-trip", () => {
 			rows: { text: ["id"] },
 		};
 		expect(
-			mapTextDocToState("slots", mapTextStateToDoc("slots", keyedSlots)),
+			mapTextDocToState(
+				"slots",
+				mapTextStateToDoc("slots", { text: keyedSlots }),
+			),
 		).toEqual({ text: keyedSlots });
 	});
 
 	it("is idempotent from the doc side, normalizing an empty text to absent", () => {
 		for (const doc of [{}, { text: "" }, { text: "hello", fontSize: 20 }]) {
-			const once = mapTextStateToDoc(
-				"body",
-				mapTextDocToState("body", doc).text,
-			);
-			const twice = mapTextStateToDoc(
-				"body",
-				mapTextDocToState("body", once).text,
-			);
+			const once = mapTextStateToDoc("body", mapTextDocToState("body", doc));
+			const twice = mapTextStateToDoc("body", mapTextDocToState("body", once));
 			expect(twice).toEqual(once);
 		}
 		expect(
-			mapTextStateToDoc("body", mapTextDocToState("body", { text: "" }).text),
+			mapTextStateToDoc("body", mapTextDocToState("body", { text: "" })),
 		).toEqual({});
 	});
 });

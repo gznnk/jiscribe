@@ -9,11 +9,13 @@ export default defineConfig({
 			// This follows the canvas classification policy (docs/09-testing.md).
 			"src/**/__tests__/**/*.{test,spec}.{ts,tsx}",
 		],
+		setupFiles: ["./vitest.setup.ts"],
 		coverage: {
 			exclude: [
 				...coverageConfigDefaults.exclude,
 				"src/**/index.ts",
 				"vitest.config.ts",
+				"vitest.setup.ts",
 			],
 		},
 	},

@@ -1,16 +1,16 @@
+import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import {
 	calcFrameBoxFeatures,
 	type Point,
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import { alignVertexPath } from "../../../../../presentations/layers/content/utils/routing";
-import type { OrthogonalConnectorEndpoint } from "../../../../../presentations/layers/content/utils/routing";
+import { alignVertexPath } from "../../../../../rendering/layers/content/utils/routing";
+import type { OrthogonalConnectorEndpoint } from "../../../../../rendering/layers/content/utils/routing";
 import {
 	calcConnectPoint,
 	calcConnectPointDirection,
-} from "../../../../../presentations/objects/utils/calcConnectPoint";
-import type { ConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
+} from "../../../../../rendering/objects/utils/calcConnectPoint";
 
 /**
  * Shared harness for the slideConnectorSegment property tests: the .invariants sweep over the

@@ -1,11 +1,11 @@
-import { roundToDecimal } from "@jiscribe/geometry";
+import { isSelfLoopConnector } from "@jiscribe/doc/model/objects/connector/isSelfLoopConnector";
+import { isOrthogonalRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
+import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import type { Point } from "@jiscribe/geometry";
+import { roundToDecimal } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../constants/precision";
-import { isSelfLoopConnector } from "../../../schemas/objects/connections/connector/isSelfLoopConnector";
-import { isOrthogonalRouting } from "../../../schemas/objects/types/ConnectorRouting";
-import type { ConnectorRouting } from "../../../schemas/objects/types/ConnectorRouting";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../utils/calcConnectorBoundingBox";

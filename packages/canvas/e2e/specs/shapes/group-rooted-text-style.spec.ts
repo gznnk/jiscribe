@@ -33,11 +33,22 @@ test.describe("<g>-rooted shape text style", () => {
 		await canvas.setColor("font-color", "#0ea5e9");
 		await canvas.setTextFormat("fontWeight", "bold");
 
+		// The three settings reach the render on separate frames, and fontWeight is set
+		// last, so wait on all three together rather than on fontSize alone.
+		const expectedColor = await canvas.normalizeColor("#0ea5e9");
 		await expect
-			.poll(async () => (await canvas.textStyleOf(id))?.fontSize)
-			.toBe("36px");
-		const style = await canvas.textStyleOf(id);
-		expect(style?.color).toBe(await canvas.normalizeColor("#0ea5e9"));
-		expect(style?.fontWeight).toBe("700");
+			.poll(async () => {
+				const style = await canvas.textStyleOf(id);
+				return {
+					fontSize: style?.fontSize,
+					color: style?.color,
+					fontWeight: style?.fontWeight,
+				};
+			})
+			.toEqual({
+				fontSize: "36px",
+				color: expectedColor,
+				fontWeight: "700",
+			});
 	});
 });

@@ -1,13 +1,13 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 
 import { collectConnectorPoints } from "./calcConnectorBoundingBox";
-import { PRECISION } from "../../constants/precision";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	isConnectorState,
 	type ConnectorState,
-} from "../../states/objects/connections/connector/ConnectorState";
+} from "../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- ホストは / と /assets/ しか返さないので、別ファイルではなく data URI で持つ
+		     （図柄は canvas-examples の public/favicon.svg と同じ） -->
+		<link
+			rel="icon"
+			type="image/svg+xml"
+			href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%230f9e8f'/><stop offset='1' stop-color='%23075e56'/></linearGradient></defs><rect width='240' height='240' rx='54' fill='url(%23g)'/><g fill='none' stroke='%23ecfffb' stroke-width='10' stroke-linejoin='round' stroke-linecap='round' transform='translate(116 116) scale(1.12) translate(-115 -117)'><circle cx='118' cy='92' r='46'/><path d='M82 96 L38 176 L130 176 Z'/><rect x='112' y='108' width='80' height='80' rx='8'/></g></svg>"
+		/>
+		<title>jiscribe canvas</title>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="./main.tsx"></script>
+	</body>
+</html>

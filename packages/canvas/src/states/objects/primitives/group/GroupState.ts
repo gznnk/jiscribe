@@ -1,7 +1,7 @@
+import type { GroupFeatures } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import type { Frame } from "@jiscribe/geometry";
 import type { Prettify } from "@jiscribe/utility-types";
 
-import type { GroupFeatures } from "../../../../schemas/objects/primitives/group/GroupDoc";
 import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

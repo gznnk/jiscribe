@@ -18,8 +18,8 @@ export * from "./schema/ContainerDoc";
 export * from "./state/ContainerState";
 
 export { Container } from "./presentation/Container";
-export { calcContainerHeaderHeight } from "./presentation/calcContainerHeaderHeight";
-export { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
+export { calcContainerHeaderHeight } from "./schema/calcContainerHeaderHeight";
+export { calcContainerTextRegion } from "./schema/textRegions";
 
 export { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
 export { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";

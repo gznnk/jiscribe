@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { diamondDefinition } from "../../../definitions";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the canvas paste e2e.
 const isValidDiamondState = diamondDefinition.stateValidator;
 
 const validDiamond = {
@@ -14,8 +17,8 @@ const validDiamond = {
 	rotation: 0,
 	scaleX: 1,
 	scaleY: 1,
-	stroke: "#000",
-	fill: "#fff",
+	stroke: "auto",
+	fill: "auto",
 	text: { body: { text: "label", fontSize: 16 } },
 };
 

@@ -1,9 +1,9 @@
-import type { CanvasAction } from "./CanvasActions";
 import {
 	normalizeRichText,
 	richTextToPlain,
-} from "../../schemas/objects/types/RichText";
-import { createDocSnapshotFromState } from "../../states/canvas/DocSnapshot";
+} from "@jiscribe/doc/model/objects/types/RichText";
+
+import type { CanvasAction } from "./CanvasActions";
 import { isSameCamera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { handlePaste } from "./handlers/handlePaste";
@@ -19,7 +19,12 @@ import {
 } from "../utils/reconcileConnectorVertices";
 import { reconcileObjectContentSizes } from "../utils/reconcileObjectContentSizes";
 import { resetUiState } from "../utils/resetUiState";
+import { createDocSnapshotFromState } from "../utils/resolveDocSnapshot";
 import { resolveRequestedSelection } from "../utils/resolveRequestedSelection";
+import {
+	canNavigateHistory,
+	restoreHistorySnapshot,
+} from "../utils/restoreHistorySnapshot";
 import { toggleTextEditFormat } from "../utils/toggleTextEditFormat";
 
 /**
@@ -79,20 +84,51 @@ export const createCanvasReducer =
 				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
-			case "SET_DOC_DEFAULTS": {
-				// No-op when unchanged so the mount-time sync dispatch does not
-				// produce a new state object.
-				if (state.docDefaults.fontFamily === action.docDefaults.fontFamily) {
+			case "REVERT_HISTORY": {
+				const { past, present, future } = state.history;
+				const markIndex = past.findIndex((entry) => entry === action.entry);
+				// Off the stack, or already the present one: either way there is
+				// nothing to undo back to (see RevertHistoryAction).
+				if (markIndex < 0 || !canNavigateHistory(state)) {
 					return state;
 				}
-				// The family decides how wide text measures, so every derived box is
-				// stale the moment the host swaps themes. Not a commit: the doc stores
-				// no size, so nothing about it changed.
-				const themedState = { ...state, docDefaults: action.docDefaults };
-				return reconcileObjectContentSizes(
-					themedState,
+				// The stacks the same number of undos would have left: everything
+				// after the target moves to the redo stack, oldest first, with the
+				// state being left behind on top of it.
+				const revertedResult = restoreHistorySnapshot(
+					state,
+					{
+						past: past.slice(0, markIndex),
+						present: past[markIndex],
+						future: [...past.slice(markIndex + 1), present, ...future],
+					},
+					registries,
+				);
+				// The same reconciliation the undos it stands in for would have run,
+				// so the two cannot diverge. recordHistoryIfNeeded is deliberately not
+				// called: restoring is not a commit, and it would no-op on the
+				// unchanged commitVersion anyway.
+				const resizedResult = reconcileObjectContentSizes(
+					revertedResult,
 					state,
 					registries.objectContentResizer,
+				);
+				return reconcileConnectorVerticesIfCommitted(
+					resizedResult,
+					state,
+					registries,
+				);
+			}
+
+			case "REMEASURE_TEXT": {
+				// Web fonts arrive after the first paint, so every box derived before
+				// then was measured against a fallback face. Not a commit: the doc
+				// stores no size, so nothing about it changed.
+				return reconcileObjectContentSizes(
+					state,
+					state,
+					registries.objectContentResizer,
+					true,
 				);
 			}
 
@@ -108,6 +144,11 @@ export const createCanvasReducer =
 			}
 
 			case "SET_VIEWPORT": {
+				// Camera and measured size land together; see SetViewportAction.
+				return { ...state, viewport: action.viewport };
+			}
+
+			case "SET_CAMERA": {
 				// No-op when the camera is unchanged so a repeated imperative
 				// setViewport with the same camera does not churn state.
 				if (isSameCamera(state.viewport, action.camera)) {
@@ -210,6 +251,7 @@ export const createCanvasReducer =
 					objects: action.payload.objects,
 					rootIds: action.payload.rootIds,
 					background: action.payload.background,
+					view: action.payload.view,
 					...resetUiState(),
 					// An external change is a history boundary. Since past is pushed directly without going
 					// through recordHistoryIfNeeded, explicitly reset the coalesce state here (do not carry

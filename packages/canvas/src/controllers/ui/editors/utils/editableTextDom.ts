@@ -1,17 +1,17 @@
 import { isObject } from "@jiscribe/basic-validators";
-
-import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import type {
 	InlineTextStyle,
 	RichText,
 	TextRun,
-} from "../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
 import {
 	hasValidInlineTextStyle,
 	normalizeRichText,
 	pickDefinedInlineTextStyle,
 	richTextToPlain,
-} from "../../../../schemas/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/RichText";
+
+import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 
 /**
  * The DOM contract of the shape text editor's editable surface: how a body of
@@ -433,8 +433,8 @@ const toDomPosition = (
  * reads back. Used to restore what was selected after the surface is rebuilt, and
  * to put the caret at the end when editing starts.
  *
- * @param surface - The editable div; the document's selection is moved into it,
- *   so this is only called while it has the focus
+ * @param surface - The editable div; the document's selection is moved into it, so
+ *   the focus is either already on it or taken right after (focusEditableAtEnd)
  * @param start - First selected offset; clamped to the text
  * @param end - First offset past the selection; equal to `start` collapses the
  *   selection into a caret, and a value below `start` is clamped up to it

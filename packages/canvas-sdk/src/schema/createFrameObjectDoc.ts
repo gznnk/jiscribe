@@ -1,16 +1,17 @@
 import type {
 	ObjectDoc,
 	ObjectDocDefinition,
+	ObjectDocTextRegionCalculator,
 	ObjectDocValidateFn,
 	ObjectFeatures,
 	ObjectTextSlotStyleDefaults,
-} from "@jiscribe/canvas/doc";
+} from "@jiscribe/doc";
 import {
 	createFrameDocValidator,
 	createFrameObjectFactory,
-} from "@jiscribe/canvas/unstable-doc";
+} from "@jiscribe/doc/unstable";
 
-/** The `factory` of an {@link ObjectDocDefinition}, which `@jiscribe/canvas/doc` does not name on its own. */
+/** The `factory` of an {@link ObjectDocDefinition}, which `@jiscribe/doc` does not name on its own. */
 type ObjectFactory = NonNullable<ObjectDocDefinition["factory"]>;
 
 /** The part of {@link FrameObjectDocParams} that does not take part in the factory choice. */
@@ -31,6 +32,33 @@ type FrameObjectDocCommonParams = {
 		width: number;
 		height: number;
 	} & Record<string, unknown>;
+
+	/**
+	 * Names of the doc fields this shape carries beyond the ones `features` implies
+	 * (see `ObjectDocDefinition.extraKeys`). Declare it as
+	 * `["tail"] satisfies readonly (keyof CalloutDoc)[]` so the list cannot drift from
+	 * the doc type. The definition this builds is the single place it is declared: the
+	 * mapper and doc-ops both read it from there.
+	 */
+	extraKeys?: readonly string[];
+
+	/**
+	 * Where the shape lays its text out (see `ObjectDocDefinition.textRegion`).
+	 * Pass the same function the UI definition registers as its `textRegion`, or
+	 * `calcOutsideBoxTextRegion` for a shape that draws its label outside the box.
+	 * It also reaches the derived validator, which is what lets a shape whose box
+	 * holds its text leave `height` out of the document (`supportsAutoHeight`).
+	 */
+	textRegion?: ObjectDocTextRegionCalculator;
+
+	/**
+	 * Pass `false` for a shape whose box must not be sized from its text even
+	 * though its `textRegion` says it could — one whose height is settled by
+	 * something else (the children it frames), or whose body is not drawn by the
+	 * shared text layout (see `ObjectDocDefinition.autoHeight`). Omit it in every
+	 * other case and let the region decide.
+	 */
+	autoHeight?: false;
 
 	/** AI-facing description of the shape (see `ObjectDocDefinition.description`). */
 	description?: string;
@@ -104,6 +132,9 @@ export type FrameObjectDocParams = FrameObjectDocCommonParams &
 export const createFrameObjectDoc = ({
 	features,
 	defaults,
+	extraKeys,
+	textRegion,
+	autoHeight,
 	description,
 	summary,
 	outlineDescription,
@@ -113,8 +144,14 @@ export const createFrameObjectDoc = ({
 	textSlotStyleDefaults,
 }: FrameObjectDocParams): ObjectDocDefinition => ({
 	features,
-	validateDoc: createFrameDocValidator(features, validateExtra),
+	validateDoc: createFrameDocValidator(features, validateExtra, {
+		textRegion,
+		autoHeight,
+	}),
+	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
+	textRegion,
+	autoHeight,
 	description,
 	summary,
 	outlineDescription,

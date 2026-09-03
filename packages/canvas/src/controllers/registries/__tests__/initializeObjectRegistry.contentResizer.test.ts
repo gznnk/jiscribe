@@ -72,13 +72,10 @@ describe("applyObjectDefinition: contentResizer", () => {
 
 		registries.objectContentResizer.get("measured")?.(
 			{ id: "m1", type: "measured" } as ObjectState,
-			{ fontFamily: "Noto Sans JP" },
+			{},
 		);
 
-		expect(seen).toEqual({
-			fontFamily: "Noto Sans JP",
-			textStyleDefaults: { textAlign: "left" },
-		});
+		expect(seen).toEqual({ textStyleDefaults: { textAlign: "left" } });
 	});
 
 	it("leaves types that declare nothing unregistered", () => {
@@ -88,12 +85,12 @@ describe("applyObjectDefinition: contentResizer", () => {
 		expect(registries.objectContentResizer.get("plain")).toBeUndefined();
 	});
 
-	it("registers exactly one built-in: the only stock type whose doc stores no size", () => {
+	it("registers the two built-ins whose box can be derived: the one storing no size, and the one whose doc may leave its height out", () => {
 		const registries = createTestRegistries();
 
 		expect(registries.objectContentResizer.get("text")).toBeDefined();
+		expect(registries.objectContentResizer.get("rect")).toBeDefined();
 		for (const type of [
-			"rect",
 			"ellipse",
 			"group",
 			"polygon",
@@ -103,5 +100,21 @@ describe("applyObjectDefinition: contentResizer", () => {
 		]) {
 			expect(registries.objectContentResizer.get(type)).toBeUndefined();
 		}
+	});
+
+	it("leaves the derivation inert for an object of an auto-height type that states its height", () => {
+		const registries = createTestRegistries();
+		const stated = {
+			id: "r1",
+			type: "rect",
+			cx: 50,
+			cy: 50,
+			width: 100,
+			height: 40,
+		} as unknown as ObjectState;
+
+		expect(registries.objectContentResizer.get("rect")?.(stated, {})).toBe(
+			stated,
+		);
 	});
 });

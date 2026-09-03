@@ -5,7 +5,216 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.0] - 2026-09-03
+
+Text now decides its own box. A shape can let its height follow what is typed
+into it, a `text` shape can be given a fixed width to wrap in, and body text can
+be anchored to the whole shape instead of the region its type carves out. Fonts
+are no longer whatever the viewer happens to have installed — four families ship
+with the extension and are what measurement uses, which is also what makes the
+first three possible. A document can declare how it wants to be opened,
+`lucideIcon` draws any of Lucide's 1767 icons by name, and the shape set is now
+51 drawable types. Starting a canvas is now just creating an empty file — the
+New Jiscribe Canvas command is gone — and an image document open in a tab
+follows edits made to the file from outside.
+
+### Added
+
+#### Text
+
+- **A shape's height can follow its text.** **Fit height to text**, in its own
+  section just above Transform in the object menu, drops `height` from the
+  document and derives it from the content instead — as you type, as you widen
+  the shape, across undo and across an edit made in the JSON editor. Dragging a
+  vertical resize handle turns it back off; the horizontal handles keep it on, so
+  widening a shape to lose a line is a single drag. The derived height leaves
+  0.75em of breathing room above and below the text (24 px at the default 16 px),
+  so a `stadium` no longer has to be tall to be round. Available on the types
+  that draw their text inside the box; a type that hangs its label outside
+  (`actor`, `brace`, …) still needs an explicit height.
+- **A `text` shape can wrap at a fixed width.** **Wrap at a fixed width**, at the
+  end of the text shape's menu, saves `width` and wraps to it; **Fit width to
+  text** goes back to measuring. In fixed-width mode the shape grows side resize
+  handles — `text` had no resize handles at all before. Switching over records
+  the width it was already drawn at, so nothing moves at the moment you switch.
+  The height is always measured and is never written to the file.
+- **Body text can be anchored to the whole shape.** **Fit text to the full
+  height** appears right after the text section for the types whose text region
+  bites into the box vertically (`db`, `document`, `card`, `ellipse`, …). With it
+  on, vertical alignment is computed against the whole height, so a row of
+  differently shaped boxes of the same height lines its text up instead of each
+  type drifting by its own cap or wave. Auto height follows the same basis.
+- **A font picker.** Sans, serif, monospace and handwriting, at the top of the
+  text section, each row drawn in its own face. The faces are bundled with the
+  extension rather than requested from the network, and Japanese is split by
+  unicode-range so only the ranges a document actually draws are loaded.
+- **Connector labels get the same four fonts**, at the top of the label text
+  section.
+
+#### Shapes
+
+- **`lucideIcon` draws any of Lucide's 1767 icons by name**, in the new **Icon**
+  flyout at the end of the toolbar. The flyout carries 20 common icons for
+  clicking straight onto the canvas, and the object menu opens a searchable grid
+  — 149 icons ordered by use before you type, all 1767 once you do. Old names
+  (`user-circle`) and alternative spellings (`fileText`) resolve to the current
+  name, and a name that cannot be resolved comes back with near misses rather
+  than an empty box. The shape holds no text and is not a connector endpoint; it
+  keeps its aspect ratio by default. The shape set is now 51 drawable types.
+
+#### Documents
+
+- **A document can declare how it wants to be opened.** A new `view` object next
+  to `root` carries a frame around the drawing (`padding`), how to fit it on open
+  (`open`: `fit-width` or `fit-all`), and whether panning is fenced to the
+  content (`scroll`: `content` or `infinite`).
+
+  ```json
+  {
+  	"version": 1,
+  	"view": {
+  		"padding": { "top": 48, "right": 64, "bottom": 64, "left": 64 },
+  		"open": "fit-width",
+  		"scroll": "content"
+  	},
+  	"root": []
+  }
+  ```
+
+  The padding is also the margin of an exported image. A document without a
+  `view` behaves exactly as before and is still saved without one.
+
+#### Files
+
+- **A new canvas is just an empty file.** Create a file with a canvas
+  extension — from the Explorer's **New File...** or `touch` — and open it: an
+  empty `.jis` / `.jis.json` shows a blank canvas instead of a JSON syntax
+  error, and an empty `.jis.png` / `.jis.svg` a blank image document instead of
+  "no embedded source". The file stays empty on disk until the first edit
+  (text) or the first save (image) writes it.
+- **An open `.jis.png` / `.jis.svg` follows the file on disk.** A change made
+  outside the editor — a git checkout, an AI writing the file, another
+  program — used to go unseen until the tab was reopened, and the next save
+  overwrote it. Now an editor with no unsaved edits adopts the disk state
+  silently, the way a text editor does; one with unsaved edits asks whether to
+  reload (undoable) or keep the edits.
+
+#### Canvas
+
+- **Exported PNGs carry the fonts they were drawn with.** The rasterizer renders
+  the SVG in a document of its own, which does not inherit the page's fonts, so
+  the export used to fall back to whatever the host had and came out wider than
+  what was on screen.
+
+### Changed
+
+- **Text is drawn and measured in fonts that ship with the extension.** The
+  default used to name `Noto Sans JP`, which was never actually loaded — the real
+  glyphs were whatever the viewer had, and measurement could disagree with
+  drawing. The default is now `"Source Sans 3", "Noto Sans JP", sans-serif` from
+  the bundled set. **Existing documents can look different**: glyph shapes, line
+  heights, and the measured size of anything sized from its content — a `text`
+  shape, a hanging label, a connector label — along with the connectors attached
+  to them.
+- **Font weights 500 and 600 are now drawn as written.** Only 400 and 700 were
+  bundled, so a document asking for a weight in between was drawn at the nearest
+  bundled face while measurement used the real one — the box and the glyphs
+  inside it disagreed. Every bundled face now carries 400, 500, 600 and 700
+  upright — bar the Japanese handwriting face, which only draws 400 and 600 —
+  which adds about 14 MB to the fonts the extension carries. Italic still ships
+  at 400 and 700 only, so an italic weight in between falls back to the nearer
+  of those.
+- **Text is re-measured when the fonts finish loading**, so a document may settle
+  once shortly after it opens instead of keeping the boxes it measured against a
+  fallback face.
+- **A document saved by this version does not open cleanly in 0.8.0.** A shape
+  that omits `height` is rejected outright; a `lucideIcon` is dropped as an
+  unknown type and is gone once that older version saves; a fixed-width `text`
+  opens as one long unwrapped line and loses `textLayout` and `width` on save.
+  Reading older documents is unaffected.
+- **Snapping stops while the canvas is auto-scrolling at an edge.** Holding a
+  drag against the edge used to walk the shape across one snap candidate after
+  another while only the view was moving. The tick the viewport drives itself is
+  now treated like holding Ctrl; releasing still snaps.
+- **The bundled AI authoring assets cover the new declarations** — auto height,
+  fixed-width text, the vertical basis, `view`, `lucideIcon` and the font set —
+  and the schema grew from 111 KB to 127 KB. If you use AI authoring, re-run the
+  **Set up AI** command to refresh the assets under `.jiscribe/`.
+
+### Removed
+
+- **The New Jiscribe Canvas command.** Creating an empty file (see _Files_
+  above) replaces it: any way you already create files — the Explorer, a
+  terminal, an AI agent — now starts a canvas, without a command of its own.
+
+### Fixed
+
+- **Saving As writes the format the file name says.** Saving a canvas image
+  under a plain `.svg` name (no `.jis.`) used to write PNG bytes into it,
+  because only `.jis.svg` was recognized as SVG.
+- **Closing a file clears its entry in the Problems panel.** Validation errors
+  used to outlive the tab that produced them.
+- **Changing a font size no longer throws you out of the text you are editing.**
+  Touching the size field or slider blurred the editing surface, losing the
+  caret and the highlight even though the change itself applied. Dragging the
+  slider also left Ctrl+Z inert until you clicked back into the canvas.
+- **Nudging a size slider by one step takes effect while you hold it.** One step
+  moves the thumb about 2 px, short of the 3 px it took to be read as a drag, so
+  a font size or a line width stayed as it was until you released the button.
+- **The text editor no longer grows a scrollbar when sizes are mixed.** A newline
+  that ends a line was measured at the shape's size rather than at the size of
+  the run it opens, so a box could come up a whole line short of its own text.
+- **An empty line keeps the size of the line it was opened from**, instead of
+  collapsing to the shape's default — 36 px short on a 40 px line.
+- **Shapes no longer shudder while the canvas auto-scrolls at an edge.** A
+  dropped frame let the viewport advance twice while the dragged shape was still
+  positioned against the old one, so it lagged and snapped back by 10–20 px.
+- **The view no longer leaps after you rest at an edge and move again.** The
+  self-driven scroll ticks were being recorded as pointer movement, so forty
+  frames of resting piled up momentum that all ran in one frame.
+- **Straight connectors no longer collect `"points": []` on every save.** The
+  empty array made the document compare as changed, which cost you a redundant
+  external sync — dropping any gesture in progress and adding a history entry —
+  besides the noise in the file.
+- **Exported text no longer overflows the width it was given.** Lines now pin
+  their own advance width in the exported SVG.
+- **A shape can no longer vanish after a reload** because the search for a height
+  that fits its text stepped over the band that would have worked.
+- **Changing a callout's tail re-measures its text region.** Re-derivation only
+  watched the fields the built-in types read, so a change to a type's own field
+  left what you saw and what was saved disagreeing.
+- **Undo and redo no longer move the camera.** A document coming back through
+  history looked new enough to re-apply its `view`, overwriting the position the
+  history had preserved.
+- **A shape that omits `strokeWidth` is drawn at the documented default of 2.**
+  The schema and the reference both say 2, but drawing fell back to 1 — and a
+  `lucideIcon` to no stroke at all, so it came out invisible. Shapes created in
+  the editor always write the value out, so this only showed on documents
+  written by hand or by an AI.
+- **The Bold toggle reflects a `fontWeight` of `"700"`.** Only the literal string
+  `"bold"` counted, so a document that spells the weight numerically drew bold
+  while the toggle showed off. 500 and 600 are not counted as bold.
+- **A `polygon` or `polyline` without a `stroke` follows the theme's ink colour**
+  instead of being drawn literally black — invisible against a dark theme.
+- **A `record` no longer loses a compartment's text.** Slot names that look like
+  numbers but are not real array indices (`1.5`, `Infinity`, `4294967295`) were
+  being deleted along with their content.
+- **Two shapes made from the same stencil no longer share their nested values**,
+  where editing one rewrote the other.
+- **A document that is actually broken now says so instead of loading quietly.**
+  A connector missing its `source` or `target`, a non-boolean
+  `lockAspectRatio`, a background that is not a colour, a non-finite number, and
+  an out-of-range `textLayout` arriving through a paste all used to pass the
+  reader; the last two could be saved and only rejected the next time the file
+  was opened.
+
+### Performance
+
+- Deriving an auto height lays the text out once rather than per probe, and reads
+  a shape's bounds from a memo.
+- Values that were being rebuilt every render — and so defeating the memoization
+  meant to prevent re-renders — are stable again, on the text editing path in
+  particular.
 
 ## [0.8.0] - 2026-08-16
 

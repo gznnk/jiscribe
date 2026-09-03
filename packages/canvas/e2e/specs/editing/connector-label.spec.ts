@@ -559,6 +559,24 @@ test.describe("connector label", () => {
 		);
 	});
 
+	test("changes the label font family from the styling UI (label.fontFamily)", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const labelBox = labelBoxOf(canvas, connectorId);
+		// The sans stack, which is what a label with no family of its own draws in.
+		await expect(labelBox).toHaveCSS("font-family", /Source Sans 3/);
+
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-font-family");
+		await canvas.page.click(selectors.objectMenuFont("mono"));
+
+		await expect(labelBox).toHaveCSS("font-family", /Source Code Pro/);
+	});
+
 	test("changes the label font size from the styling UI (label.fontSize)", async ({
 		canvas,
 	}) => {

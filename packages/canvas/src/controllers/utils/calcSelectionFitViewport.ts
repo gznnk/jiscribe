@@ -1,6 +1,6 @@
 import { calcSelectionBounds } from "./calcSelectionBounds";
 import { calcViewportForBounds } from "./calcViewportForBounds";
-import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../states/canvas/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 

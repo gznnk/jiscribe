@@ -1,4 +1,4 @@
-import { isConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { isConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 

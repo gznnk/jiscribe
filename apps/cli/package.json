@@ -1,0 +1,49 @@
+{
+	"name": "@jiscribe/cli",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Command-line checking, measuring and diagnosing of jiscribe documents",
+	"bin": {
+		"jiscribe": "dist/index.mjs"
+	},
+	"scripts": {
+		"build": "node build.mjs",
+		"lint": "eslint .",
+		"measure:tolerance": "node --experimental-strip-types render-tests/measureTolerance.ts",
+		"test": "vitest run",
+		"test:render": "vitest run --config vitest.render.config.ts",
+		"typecheck": "tsc --noEmit"
+	},
+	"comments": {
+		"dependencies": "Everything but fontkit is bundled into dist/index.mjs. The three that stay listed are resolved by path at run time rather than imported, from dist/ upwards: @jiscribe/doc-schema holds the JSON schema, and the @fontsource packages hold the font files the Node measurer reads (see @jiscribe/doc-tools). Drop one and the bundle still builds, then fails on first use.",
+		"devDependencies": "The canvas, the standard shape set, react and katex are the ingredients of the two browser pages: the render harness (harness/ -> dist/harness) and the preview page (preview/ -> dist/preview). Nothing under src/ imports them: the CLI itself stays headless."
+	},
+	"dependencies": {
+		"@fontsource/caveat": "5.3.0",
+		"@fontsource/klee-one": "5.3.0",
+		"@fontsource/noto-sans-jp": "5.3.0",
+		"@fontsource/noto-serif-jp": "5.3.0",
+		"@fontsource/source-code-pro": "5.3.0",
+		"@fontsource/source-sans-3": "5.3.0",
+		"@fontsource/source-serif-4": "5.3.0",
+		"@jiscribe/doc-schema": "workspace:*",
+		"@jiscribe/doc-tools": "workspace:*",
+		"fontkit": "^2.0.4",
+		"playwright-core": "^1.62.1"
+	},
+	"devDependencies": {
+		"@jiscribe/canvas": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
+		"@jiscribe/standard-shapes": "workspace:*",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"esbuild": "catalog:",
+		"katex": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

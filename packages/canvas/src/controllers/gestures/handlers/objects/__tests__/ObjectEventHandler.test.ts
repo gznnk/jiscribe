@@ -1,6 +1,6 @@
+import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, expect, it } from "vitest";
 
-import { RectFeatures } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
@@ -537,5 +537,75 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			expect(movedRect(next)).toMatchObject({ cx: 24, cy: 33 });
 			expect(next.axisLockFeedback).toBeNull();
 		});
+	});
+});
+
+/** State with one snap candidate on x, at `coordinate`, belonging to another object. */
+const makeSnapDragState = (coordinate: number): CanvasControllerState => {
+	const state = makeDragState();
+	return {
+		...state,
+		eventStartSnapshot: {
+			...state.eventStartSnapshot,
+			snapCandidates: {
+				x: [
+					{
+						objectId: "rect-2",
+						coordinate,
+						edge: "hCenter",
+						perpendicularMin: -100,
+						perpendicularMax: 100,
+					},
+				],
+				y: [],
+			},
+		},
+	} as unknown as CanvasControllerState;
+};
+
+const makeScrollingDragEvent = (
+	type: "drag" | "dragEnd",
+	delta: { x: number; y: number },
+	scrollDelta?: { deltaX: number; deltaY: number },
+): CanvasEvent =>
+	({
+		type,
+		targetKind: "object",
+		targetId: "rect-1",
+		button: 0,
+		delta,
+		scrollDelta,
+		mods: { shift: false, alt: false, ctrl: false, meta: false },
+	}) as unknown as CanvasEvent;
+
+describe("ObjectEventHandler - snap during edge scroll", () => {
+	// The dragged center lands on 20; the candidate at 22 is inside the threshold.
+	it("snaps to the candidate on an ordinary drag tick", () => {
+		const next = ObjectEventHandler.handle(
+			makeSnapDragState(22),
+			makeScrollingDragEvent("drag", { x: 20, y: 0 }),
+			registries,
+		);
+		expect(movedRect(next)).toMatchObject({ cx: 22, cy: 0 });
+		expect(next.snapFeedback?.x).toHaveLength(1);
+	});
+
+	it("leaves the position uncorrected on a tick that scrolled the viewport", () => {
+		const next = ObjectEventHandler.handle(
+			makeSnapDragState(22),
+			makeScrollingDragEvent("drag", { x: 20, y: 0 }, { deltaX: 8, deltaY: 0 }),
+			registries,
+		);
+		expect(movedRect(next)).toMatchObject({ cx: 20, cy: 0 });
+		expect(next.snapFeedback?.x).toHaveLength(0);
+	});
+
+	it("snaps again on dragEnd, which carries no scroll of its own", () => {
+		const next = ObjectEventHandler.handle(
+			makeSnapDragState(22),
+			makeScrollingDragEvent("dragEnd", { x: 20, y: 0 }),
+			registries,
+		);
+		expect(movedRect(next)).toMatchObject({ cx: 22, cy: 0 });
 	});
 });

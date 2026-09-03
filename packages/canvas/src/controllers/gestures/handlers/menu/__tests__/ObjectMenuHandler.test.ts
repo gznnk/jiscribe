@@ -1,6 +1,6 @@
+import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, expect, it } from "vitest";
 
-import { RectFeatures } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
@@ -40,7 +40,7 @@ const makeState = (): CanvasControllerState =>
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
-	type: "pressed" | "click" | "doubleClick" | "drag" | "dragEnd",
+	type: "pressed" | "click" | "doubleClick" | "dragStart" | "drag" | "dragEnd",
 	targetPart: string | undefined,
 	inputValue?: string,
 	targetKind = "menu",
@@ -174,14 +174,30 @@ describe("ObjectMenuHandler", () => {
 			expect(next.commitVersion).toBe(6);
 		});
 
-		it("a pressed on the slider changes no property (the value is committed on release)", () => {
-			const state = makeState();
+		it("a pressed previews the native jump value without bumping commitVersion", () => {
 			const next = ObjectMenuHandler.handle(
-				state,
+				makeState(),
 				makeEvent("pressed", "slider:strokeWidth", "7"),
 				registries,
 			);
-			expect(next.objects).toBe(state.objects);
+			expect(
+				(next.objects["rect-1"] as unknown as { strokeWidth: number })
+					.strokeWidth,
+			).toBe(7);
+			expect(next.commitVersion).toBe(5);
+			expect(next.contextMenuPosition).toBeNull();
+		});
+
+		it("a dragStart previews the value reached under the drag slop", () => {
+			const next = ObjectMenuHandler.handle(
+				makeState(),
+				makeEvent("dragStart", "slider:strokeWidth", "8"),
+				registries,
+			);
+			expect(
+				(next.objects["rect-1"] as unknown as { strokeWidth: number })
+					.strokeWidth,
+			).toBe(8);
 			expect(next.commitVersion).toBe(5);
 		});
 	});

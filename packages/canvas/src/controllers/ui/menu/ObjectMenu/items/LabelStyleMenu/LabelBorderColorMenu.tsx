@@ -1,8 +1,8 @@
+import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
-import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
-import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
+import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";

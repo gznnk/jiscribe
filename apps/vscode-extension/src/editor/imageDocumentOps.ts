@@ -2,11 +2,13 @@ import {
 	insertPngTextChunk,
 	PNG_SOURCE_KEYWORD,
 	readPngTextChunk,
-} from "@jiscribe/canvas/png-source";
+} from "@jiscribe/doc/png-source";
 import {
 	extractCanvasSourceFromSvgText,
 	replaceCanvasSourceInSvgText,
-} from "@jiscribe/canvas/svg-source";
+} from "@jiscribe/doc/svg-source";
+
+import { EMPTY_CANVAS_DOC_JSON } from "../canvasDocSource";
 
 /**
  * Save-time orchestration for `.jis.png` / `.jis.svg` documents, extracted from
@@ -25,7 +27,10 @@ export type JiscribeImageKind = "png" | "svg";
  */
 export interface ImageDocState {
 	readonly kind: JiscribeImageKind;
-	/** Image bytes last written to (or read from) the file; base for the embed fallback. */
+	/**
+	 * Image bytes last written to (or read from) the file; base for the embed
+	 * fallback. Empty while the file holds no image yet (created empty, unsaved).
+	 */
 	savedBytes: Uint8Array;
 	/** Current `.jis.json` source; null means no embedded source (uneditable error). */
 	sourceText: string | null;
@@ -51,13 +56,62 @@ export interface ImageDocSeams {
 }
 
 /** Extract the embedded source JSON from image bytes (null if absent). */
-export function extractSourceFromImage(
+function extractSourceFromImage(
 	kind: JiscribeImageKind,
 	bytes: Uint8Array,
 ): string | null {
 	return kind === "png"
 		? readPngTextChunk(bytes, PNG_SOURCE_KEYWORD)
 		: extractCanvasSourceFromSvgText(Buffer.from(bytes).toString("utf8"));
+}
+
+/**
+ * Read the editable source out of a canvas image file's bytes.
+ *
+ * A file created empty in the Explorer (or by `touch`) holds no image to read a
+ * source from. Reporting "no editable source" there would make "create the file,
+ * then draw" a dead end, so treat it as a new document. Nothing is written back
+ * for it: the file stays empty on disk until the first save.
+ *
+ * @param kind - image kind, deciding which embedding is read
+ * @param bytes - the file's current bytes; empty yields EMPTY_CANVAS_DOC_JSON
+ * @returns the embedded source JSON, or null when the image carries none (an
+ *   image not exported from jiscribe), which the editor shows as uneditable
+ */
+export function readSourceFromImageFile(
+	kind: JiscribeImageKind,
+	bytes: Uint8Array,
+): string | null {
+	if (bytes.length === 0) {
+		return EMPTY_CANVAS_DOC_JSON;
+	}
+	return extractSourceFromImage(kind, bytes);
+}
+
+/** 1x1 transparent PNG (real encoder output), the placeholder image's bytes. */
+const PLACEHOLDER_PNG_BASE64 =
+	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+/** Empty SVG carrying the source element replaceCanvasSourceInSvgText rewrites. */
+const PLACEHOLDER_SVG_TEXT =
+	`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1">` +
+	`<metadata><jiscribe:source xmlns:jiscribe="https://jiscribe.dev/ns/canvas" ` +
+	`data-jiscribe-version="1"></jiscribe:source></metadata></svg>`;
+
+/**
+ * Blank image to embed the source into when the file holds no image yet (created
+ * empty in the Explorer and not yet saved from a visible tab). Without it the
+ * embed below has nothing to write into and the save would drop the edits.
+ *
+ * What lands on disk is a blank picture with the real source, which is the same
+ * bargain the fallback already makes with a stale picture — and the same repair:
+ * saveImageDocument flags a reconcile, so the picture is re-rendered and
+ * rewritten once the tab is visible again (#179).
+ */
+function placeholderImageBytes(kind: JiscribeImageKind): Uint8Array {
+	return kind === "png"
+		? new Uint8Array(Buffer.from(PLACEHOLDER_PNG_BASE64, "base64"))
+		: new Uint8Array(Buffer.from(PLACEHOLDER_SVG_TEXT, "utf8"));
 }
 
 /** Decode a webview render response (base64 image bytes) into bytes. */
@@ -68,7 +122,9 @@ function decodeRenderResult(data: string): Uint8Array {
 /**
  * Save fallback: re-embed the current source into the last saved image bytes.
  * The image looks as of the last save, but the source (edits) isn't lost. If
- * there's no source or the image is corrupt, return the image unchanged.
+ * there's no source or the image is corrupt, return the image unchanged. A file
+ * with no image yet embeds into a blank placeholder instead
+ * ({@link placeholderImageBytes}).
  *
  * The base `savedBytes` is in `doc.kind` format, so a different format (a
  * cross-format Save As where `targetKind` differs) can't be produced here.
@@ -88,23 +144,23 @@ export function embedCurrentSource(
 	if (doc.sourceText === null) {
 		return doc.savedBytes;
 	}
+	const baseBytes =
+		doc.savedBytes.length === 0
+			? placeholderImageBytes(doc.kind)
+			: doc.savedBytes;
 	if (doc.kind === "png") {
 		try {
-			return insertPngTextChunk(
-				doc.savedBytes,
-				PNG_SOURCE_KEYWORD,
-				doc.sourceText,
-			);
+			return insertPngTextChunk(baseBytes, PNG_SOURCE_KEYWORD, doc.sourceText);
 		} catch {
-			return doc.savedBytes;
+			return baseBytes;
 		}
 	}
 	const replacedText = replaceCanvasSourceInSvgText(
-		Buffer.from(doc.savedBytes).toString("utf8"),
+		Buffer.from(baseBytes).toString("utf8"),
 		doc.sourceText,
 	);
 	return replacedText === null
-		? doc.savedBytes
+		? baseBytes
 		: new Uint8Array(Buffer.from(replacedText, "utf8"));
 }
 
@@ -204,14 +260,66 @@ export async function reconcileImageDocument(
 	}
 }
 
+/**
+ * Make the on-disk bytes the document's truth: revert, and adopting an external
+ * change. Unlike the save-time re-sync (adoptSavedBytes), this also accepts a
+ * file with no embedded source — the editor then shows it as uneditable, the
+ * same as opening that file fresh.
+ *
+ * @param doc - document state to overwrite
+ * @param bytes - the file's current on-disk bytes
+ */
+export function adoptDiskBytes(doc: ImageDocState, bytes: Uint8Array): void {
+	doc.savedBytes = bytes;
+	doc.sourceText = readSourceFromImageFile(doc.kind, bytes);
+	// Disk image and source are now consistent, so drop any pending reconcile (#179).
+	doc.needsImageReconcile = false;
+}
+
 /** Revert File: roll back the state to the file's on-disk contents. */
 export async function revertImageDocument(
 	doc: ImageDocState,
 	seams: ImageDocSeams,
 ): Promise<void> {
-	const bytes = await seams.readFile();
-	doc.savedBytes = bytes;
-	doc.sourceText = extractSourceFromImage(doc.kind, bytes);
-	// Disk image and source are now consistent, so drop any pending reconcile (#179).
-	doc.needsImageReconcile = false;
+	adoptDiskBytes(doc, await seams.readFile());
+}
+
+/**
+ * What a file-watcher event on the document's file means for the editor.
+ *
+ * - "own-echo": the bytes are what this editor last wrote; nothing to do
+ * - "adopt": a real external change and the document has no unsaved edits;
+ *   follow the disk silently (adoptDiskBytes), like a text editor does
+ * - "conflict": a real external change while the document is dirty; the user
+ *   must choose between reloading and keeping the unsaved edits
+ */
+export type ExternalChangeKind = "own-echo" | "adopt" | "conflict";
+
+const areBytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>
+	a.length === b.length && a.every((byte, i) => byte === b[i]);
+
+/**
+ * Classify a file-watcher event by comparing the disk bytes with what the
+ * editor believes is on disk.
+ *
+ * @param doc - document state; savedBytes is one of the "our own write" baselines
+ * @param diskBytes - the file's bytes read after the watcher fired
+ * @param lastOwnWrite - bytes of the editor's most recent write, recorded before
+ *   the write lands so a watcher event racing adoptSavedBytes still matches;
+ *   null when this editor has not written yet
+ * @param isDirty - whether the document has unsaved edits (VSCode's dirty flag)
+ */
+export function classifyExternalChange(
+	doc: ImageDocState,
+	diskBytes: Uint8Array,
+	lastOwnWrite: Uint8Array | null,
+	isDirty: boolean,
+): ExternalChangeKind {
+	if (
+		areBytesEqual(diskBytes, doc.savedBytes) ||
+		(lastOwnWrite !== null && areBytesEqual(diskBytes, lastOwnWrite))
+	) {
+		return "own-echo";
+	}
+	return isDirty ? "conflict" : "adopt";
 }

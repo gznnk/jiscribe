@@ -1,13 +1,14 @@
 name: CI
 
-# - push: lightweight checks only, on every branch. Not run for tags.
 # - pull_request: only for pull requests targeting main, and only checks (the full e2e
 #   suite is run separately by e2e.yml on those pull requests).
+# - workflow_dispatch: manual runs, for checking a branch without opening a pull request.
+# Pushes do not trigger this workflow: running it on every branch push burns CI minutes
+# on work in progress that is checked again on the pull request anyway.
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: ["**"]
+  workflow_dispatch:
 
 # Cancel superseded runs for the same ref automatically, to save CI minutes.
 concurrency:
@@ -49,13 +50,24 @@ jobs:
       - name: Circular dependency check
         run: pnpm dep:check
 
-      - name: Build (examples + vscode)
+      # cli の build は render harness も作る。作っていないと harnessAssets の
+      # スイートが自分でスキップするので、赤にはならないが検証もされない。
+      - name: Build (examples + vscode + cli + mcp)
         run: |
           pnpm build:examples
           pnpm build:vscode
+          pnpm build:cli
+          pnpm build:mcp
 
       - name: Unit tests
         run: pnpm test
 
       - name: AI schema/docs drift check
-        run: pnpm check:ai
+        run: pnpm check:schema
+
+      # Reads dist/, so it has to come after the build step above.
+      - name: Third-party notices drift check
+        run: pnpm check:notices
+
+      - name: Shipped fonts.css drift check
+        run: pnpm check:fonts

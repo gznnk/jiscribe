@@ -1,53 +1,25 @@
-// Headless (UI-independent) entry point — the stable API for parsing, validating,
-// and programmatically building and editing a CanvasDoc without any React / @emotion
-// dependency.
+// Re-export shim for the stable headless API, which lives in its own package now
+// (`@jiscribe/doc`). Every in-repo consumer has migrated to `@jiscribe/doc`; this
+// entry stays for consumers outside the repo that still name `@jiscribe/canvas/doc`.
 //
-// The root index.ts exports Canvas (a React component), so importing it pulls in
-// react / @emotion / katex. Node-side consumers that only work with the doc model —
-// the VSCode extension's DiagnosticProvider, the MCP server, Function Calling
-// handlers — use this entry to keep those UI dependencies out of their bundle.
-//
-// The doc-ops are definition-driven: `createDocOps({ presetDefinitions?, plugins? })`
-// resolves the same ObjectDocDefinition set as the parser. `create` is the factory prefix
-// (as in createCanvasParser) — the DocOps it returns covers the whole edit vocabulary, not
-// only creation: building (`addObject` / `connect`) and reworking what is already there
-// (delete / move / resize / rotate / reshape / restack / style / retext / re-route /
-// align / group) handle built-in and plugin types uniformly, following each type's
-// `features`.
-// They take already-typed params (no zod; tool-input validation is the
-// adapter's responsibility) and reuse the same ObjectFactory as the canvas, producing
-// correct ObjectDocs down to the style defaults. Every editing op mutates the doc in place
-// and checks its arguments first, so a call that throws leaves the doc untouched.
-//
-// e.g. `import { createCanvasParser, createDocOps } from "@jiscribe/canvas/doc";`
-export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
-export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
-export type { ObjectType } from "./schemas/objects/types/ObjectType";
-export type { ObjectFeatures } from "./schemas/objects/types/ObjectFeatures";
-export type { CreateObjectType } from "./schemas/objects/types/CreateObjectType";
-// A text slot is the unit of text in both layers, so a type that spells out its
-// own slots (features.text: "slots") declares them with this in its Doc and reuses
-// the very same values in its State.
-export type {
-	TextSlot,
-	TextSlotContent,
-	TextSlotStyle,
-} from "./schemas/objects/types/TextSlot";
+// The names are listed rather than star-exported: a `.ts` file in this package is
+// CommonJS to tsx (no `"type": "module"`), and a star re-export of another CJS module
+// leaves nothing for Node's named-export detection to find, so an ESM consumer — the
+// doc-schema generator is the one in hand — gets an empty namespace. Add a name here when
+// adding one to `@jiscribe/doc`, until every consumer has moved over and this file goes
+// away.
+
 export {
+	FILL_STYLE_KEYS,
+	STROKE_STYLE_KEYS,
+	RADIUS_STYLE_KEYS,
+	ARROW_STYLE_KEYS,
+	TRANSFORM_STYLE_KEYS,
 	isTextRows,
 	isTextSlot,
 	resolveTextSlotStyle,
 	TEXT_BLOCK_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
-} from "./schemas/objects/types/TextSlot";
-// One body of a slot's text: the plain string it is until part of it is styled on
-// its own, and the runs it is written as once it is.
-export type {
-	InlineTextStyle,
-	RichText,
-	TextRun,
-} from "./schemas/objects/types/RichText";
-export {
 	isRichText,
 	isTextRun,
 	normalizeRichText,
@@ -56,45 +28,68 @@ export {
 	sliceRichText,
 	styleRichTextRange,
 	TEXT_INLINE_STYLE_KEYS,
-} from "./schemas/objects/types/RichText";
+	isViewOpenMode,
+	isViewScrollMode,
+	resolveViewPadding,
+	createCanvasParser,
+	builtinObjectDocDefinitions,
+	createDocOps,
+	DocOperationError,
+} from "@jiscribe/doc";
 export type {
+	CanvasDoc,
+	ViewDoc,
+	ViewOpenMode,
+	ViewScrollMode,
+	ViewPaddingDoc,
+	ResolvedViewPadding,
+	ObjectDoc,
+	ObjectType,
+	ObjectFeatures,
+	CreateObjectType,
+	TextSlot,
+	TextSlotContent,
+	TextSlotStyle,
+	InlineTextStyle,
+	RichText,
+	TextRun,
 	ExtraStylePropertyDescriptor,
 	StyleValueType,
-} from "./schemas/objects/types/ExtraStyleProperty";
-export type { ObjectDocDefinition } from "./schemas/plugin/ObjectDocDefinition";
-// The per-slot text-style defaults a `text: "slots"` type declares on its doc
-// definition (`ObjectDocDefinition.textSlotStyleDefaults`).
-export type { ObjectTextSlotStyleDefaults } from "./schemas/registry/ObjectTextStyleDefaultsRegistry";
-export type { CanvasDocPlugin } from "./schemas/plugin/CanvasDocPlugin";
-export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorRegistry";
-export type {
+	ObjectDocDefinition,
+	ObjectTextSlotStyleDefaults,
+	CanvasDocPlugin,
+	ObjectDocValidateFn,
+	SemanticDiagnostic,
 	CanvasParser,
 	CanvasParseResult,
-	SemanticDiagnostic,
-} from "./schemas/canvas/validators";
-export { createCanvasParser } from "./schemas/canvas/validators";
-export { builtinObjectDocDefinitions } from "./schemas/registry/builtinObjectDocDefinitions";
-export {
-	createDocOps,
-	type DocOps,
-	type AddObjectParams,
-	type AlignEdge,
-	type ConnectParams,
-	type AnchorHandleId,
-	type DeleteObjectsResult,
-	type DistributeAxis,
-	type EdgeAnchorHandle,
-	type EdgeAnchorSide,
-	type RemoveFromGroupResult,
-	type MoveObjectParams,
-	type Point,
-	type Rect,
-	type ResizeObjectParams,
-	type SetRotationResult,
-	type SetStyleResult,
-	type StyleParams,
-	type StyleTextParams,
-	type UpdateConnectorParams,
-	type ZOrderPlacement,
-	DocOperationError,
-} from "./docOps";
+	AddObjectEntry,
+	AddObjectParams,
+	AlignEdge,
+	AnchorHandleId,
+	ConnectParams,
+	DeleteObjectsResult,
+	DistributeAxis,
+	DocOps,
+	GetZOrderResult,
+	EdgeAnchorHandle,
+	EdgeAnchorSide,
+	InlineTextStyleParams,
+	ObjectFilter,
+	ObjectSummary,
+	ObjectTypeSummary,
+	Point,
+	Rect,
+	RemoveObjectsFromGroupResult,
+	ResizeObjectParams,
+	SetInlineTextStyleEntry,
+	SetPointsEntry,
+	SetPositionEntry,
+	SetPositionParams,
+	SetRotationResult,
+	SetStyleResult,
+	SetTextEntry,
+	StyleParams,
+	UpdateConnectorEntry,
+	UpdateConnectorParams,
+	ZOrderPlacement,
+} from "@jiscribe/doc";

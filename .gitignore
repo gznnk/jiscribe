@@ -5,6 +5,9 @@ node_modules/
 # Vite / TS build
 dist/
 build/
+# packages/canvas/build/ is source, not output: the generator behind the shipped
+# src/fonts.css (build/generateFontsCss.ts).
+!packages/canvas/build/
 *.tsbuildinfo
 
 # Test coverage

@@ -4,9 +4,11 @@ import { useMenuSections } from "./hooks/useMenuSections";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import { AlignmentMenu } from "./items/AlignmentMenu";
 import { ArrowHeadMenu } from "./items/ArrowHeadMenu";
+import { AutoHeightMenu } from "./items/AutoHeightMenu";
 import { BackgroundColorMenu } from "./items/BackgroundColorMenu";
 import { BorderStyleMenu } from "./items/BorderStyleMenu";
 import { FontColorMenu } from "./items/FontColorMenu";
+import { FontFamilyMenu } from "./items/FontFamilyMenu";
 import { FontSizeMenu } from "./items/FontSizeMenu";
 import { GroupMenu } from "./items/GroupMenu";
 import { KeepAspectRatioMenu } from "./items/KeepAspectRatioMenu";
@@ -16,6 +18,8 @@ import { OpenReferenceMenu } from "./items/OpenReferenceMenu";
 import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import { TextFormatMenu } from "./items/TextFormatMenu";
+import { TextLayoutMenu } from "./items/TextLayoutMenu";
+import { TextVerticalBasisMenu } from "./items/TextVerticalBasisMenu";
 import {
 	ObjectMenuContainer,
 	ObjectMenuSectionRow,
@@ -91,6 +95,7 @@ const renderItem = (
 		case "fontStyle":
 			return (
 				<React.Fragment key="fontStyle">
+					<FontFamilyMenu canvasState={canvasState} />
 					<FontSizeMenu
 						canvasState={canvasState}
 						onPropertyUpdate={onPropertyUpdate}
@@ -114,6 +119,17 @@ const renderItem = (
 			return (
 				<KeepAspectRatioMenu key="aspectRatio" canvasState={canvasState} />
 			);
+		case "autoHeight":
+			return <AutoHeightMenu key="autoHeight" canvasState={canvasState} />;
+		case "textVerticalBasis":
+			return (
+				<TextVerticalBasisMenu
+					key="textVerticalBasis"
+					canvasState={canvasState}
+				/>
+			);
+		case "textLayout":
+			return <TextLayoutMenu key="textLayout" canvasState={canvasState} />;
 		case "stackOrder":
 			return <StackOrderMenu key="stackOrder" canvasState={canvasState} />;
 		case "group":
@@ -200,7 +216,8 @@ const buildSystemSections = (
  * Keeps the press from taking the focus off an open text editor: the selection
  * the text items style lives in that editor, and a blur would also drop the
  * caret the user types back into. The controls that need the focus themselves —
- * the font-size input, the sliders — keep the default.
+ * the font-size input, the sliders — keep the default, and the editor takes the
+ * focus back when they are done with it (TextEditor).
  */
 const keepTextEditorFocus = (event: React.PointerEvent<HTMLElement>): void => {
 	if (

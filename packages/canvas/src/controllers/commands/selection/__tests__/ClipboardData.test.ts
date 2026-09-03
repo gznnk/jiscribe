@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { isValidConnectorState } from "../../../../states/objects/connections/connector/validateConnectorState";
+import { isValidConnectorState } from "../../../../states/objects/connector/validateConnectorState";
 import { isValidGroupState } from "../../../../states/objects/primitives/group/validateGroupState";
 import { isValidRectState } from "../../../../states/objects/primitives/rect/validateRectState";
 import { createObjectStateValidatorRegistry } from "../../../../states/registry/ObjectStateValidatorRegistry";

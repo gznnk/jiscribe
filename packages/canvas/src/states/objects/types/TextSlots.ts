@@ -1,18 +1,17 @@
 import { isObject } from "@jiscribe/basic-validators";
-
-import type { RichText } from "../../../schemas/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import {
 	joinRichTextLines,
 	normalizeRichText,
 	remapRichText,
 	richTextToPlain,
 	splitRichTextLines,
-} from "../../../schemas/objects/types/RichText";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
+} from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
 import {
 	isTextRows,
 	isTextSlot,
-} from "../../../schemas/objects/types/TextSlot";
+} from "@jiscribe/doc/model/objects/types/TextSlot";
 
 /**
  * A shape's text in its normal form: slot id → slot. These keys ARE the set of
@@ -85,6 +84,10 @@ export const resolveTextSlotId = (
  * slot styled per range keeps its runs. The form the drawing and the measuring
  * side take, both of which need the styling; {@link readTextSlot} is the plain
  * counterpart.
+ *
+ * The join builds a fresh value per call, so a render path that feeds the
+ * result to memoized components must hold it (e.g. `useMemo` keyed on the
+ * slot's content) rather than re-read every render.
  *
  * @param text - The shape's slots; undefined for a shape that holds no text
  * @param slotId - Key to read; an absent key reads as ""

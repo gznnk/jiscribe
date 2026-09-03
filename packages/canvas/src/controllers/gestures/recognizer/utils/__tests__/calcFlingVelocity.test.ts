@@ -18,7 +18,7 @@ const sample = (
 });
 
 describe("calcFlingVelocity", () => {
-	describe("nothing to glide from", () => {
+	describe("nothing to fling from", () => {
 		it("returns zero for no samples", () => {
 			expect(calcFlingVelocity([], 100)).toEqual({ x: 0, y: 0 });
 		});
@@ -36,7 +36,7 @@ describe("calcFlingVelocity", () => {
 			expect(calcFlingVelocity(samples, releaseTime)).toEqual({ x: 0, y: 0 });
 		});
 
-		it("still glides when the release is exactly at the idle limit", () => {
+		it("still flings when the release is exactly at the idle limit", () => {
 			const samples = [sample(0, 0, 0), sample(80, 0, 40)];
 			const releaseTime = 40 + FLING_RELEASE_IDLE_MS;
 			expect(calcFlingVelocity(samples, releaseTime).x).toBeCloseTo(2, 10);

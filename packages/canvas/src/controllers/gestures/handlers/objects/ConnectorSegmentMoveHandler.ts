@@ -3,7 +3,7 @@ import type { Point } from "@jiscribe/geometry";
 import {
 	isConnectorState,
 	type ConnectorState,
-} from "../../../../states/objects/connections/connector/ConnectorState";
+} from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
@@ -17,6 +17,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
+import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 import {
 	getConnectorSegmentEnds,
 	translateConnectorSegment,
@@ -54,7 +55,7 @@ const handleDrag = (
 	let snapFeedback: SnapFeedback = { x: [], y: [] };
 	const snapCandidates = snapshot.snapCandidates;
 
-	if (snapCandidates && !event.mods.ctrl) {
+	if (snapCandidates && !isSnapSuppressed(event)) {
 		const movedXs = [ends.start.x + delta.x, ends.end.x + delta.x];
 		const movedYs = [ends.start.y + delta.y, ends.end.y + delta.y];
 		const result = findSnap(

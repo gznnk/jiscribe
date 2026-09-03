@@ -1,8 +1,15 @@
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
- * A browser window (a frame with a title bar carrying three buttons), used for web UIs and screens.
+ * A browser window: the pictogram that stands for a web UI in a diagram.
+ *
+ * Like every pictogram its details are drawn as fractions of the box — the title bar
+ * takes WINDOW_TITLE_BAR_RATIO of the height and the three buttons a fraction of that —
+ * so it reads at around its default size and turns into a giant bar with giant buttons
+ * when blown up to the size of an actual screen. It is a symbol to point at, not a frame
+ * to lay a screen out inside: for a mockup, draw the regions with `rect` (or `container`
+ * for a titled one) and leave this to the node that means "the web UI".
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering. This
  * lets it reuse Frame-based transforms and connector outline connections with

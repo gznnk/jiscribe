@@ -9,7 +9,7 @@ describe("parallelogram textRegion", () => {
 			left: PARALLELOGRAM_SKEW_RATIO,
 			right: PARALLELOGRAM_SKEW_RATIO,
 		});
-		const result = textRegion({ width: 100, height: 60 }, "body");
+		const result = textRegion({ width: 100, height: 60 });
 		expect(result).toEqual({ x: -28, y: -30, width: 56, height: 60 });
 	});
 });

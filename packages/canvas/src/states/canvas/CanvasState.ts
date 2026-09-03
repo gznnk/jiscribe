@@ -1,3 +1,5 @@
+import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
+
 import type { Viewport } from "./Viewport";
 import type { ObjectState } from "../objects/base/ObjectState";
 
@@ -32,4 +34,12 @@ export type CanvasState = {
 	 * Undefined means "follow the theme background" (see CanvasDoc.background).
 	 */
 	background?: string;
+
+	/**
+	 * Display declaration (doc content, round-tripped through save/history): the
+	 * padding image exports frame the drawing with, and the open mode the initial
+	 * camera was derived from. Undefined means the document declared none (see
+	 * CanvasDoc.view).
+	 */
+	view?: ViewDoc;
 };

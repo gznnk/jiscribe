@@ -1,5 +1,6 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+
 import { MetaMapper } from "./MetaMapper";
-import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**

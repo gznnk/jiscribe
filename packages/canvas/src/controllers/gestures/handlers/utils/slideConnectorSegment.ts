@@ -1,6 +1,5 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import type { Point } from "@jiscribe/geometry";
-
-import { PRECISION } from "../../../../constants/precision";
 
 /**
  * Two coordinates this close apart lie on the same drawn line. Stored vertices settle onto

@@ -10,6 +10,8 @@ export const ZOOM = {
 	IN_FACTOR: 1.1,
 	/** Zoom step factor when zooming out (continuous zoom for the mouse wheel) */
 	OUT_FACTOR: 0.9,
+	/** Decimal places the zoom factor is rounded to before it enters the viewport */
+	PRECISION: 4,
 } as const;
 
 /**

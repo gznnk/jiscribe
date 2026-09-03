@@ -47,8 +47,10 @@ it. The rest take the value directly.
 
 Three contracts are worth knowing before writing against this package:
 
-- **`isNumber` rejects `NaN`** but accepts `Infinity`, so the narrowed value is always
-  comparable. `isPositiveNumber` / `isNonNegativeNumber` / `isNumberInRange` all build on
+- **`isNumber` accepts only a finite number**, rejecting `NaN` and the infinities, so a
+  narrowed value can be compared, done arithmetic on, and written into a document. JSON
+  cannot spell an infinity, so one that reaches a document becomes `null` on save and fails
+  to parse back. `isPositiveNumber` / `isNonNegativeNumber` / `isNumberInRange` all build on
   it and inherit that behavior.
 - **`isCssSafeValue` checks safety, not validity.** It rejects the sequences that break out
   of a CSS declaration (`;` `{` `}` `<` `>` `\`, `url(`, `expression(`, comment delimiters),

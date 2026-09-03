@@ -10,6 +10,7 @@ import type { TransformAnchorType } from "./TransformAnchorType";
 import { applyResizeSnap } from "./utils/applyResizeSnap";
 import { calcAnchorResize } from "./utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
+import { dropAutoHeightOnResize } from "./utils/dropAutoHeightOnResize";
 import { handleRotationDrag } from "./utils/handleRotationDrag";
 import {
 	calcMultiSelectGroupBoundsFromCache,
@@ -30,6 +31,7 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 
 /**
  * Handles transform-control operations (resize and rotation).
@@ -88,9 +90,14 @@ export class TransformControlHandler extends ControlStrategy {
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
-		_event: CanvasEvent,
+		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 	): CanvasControllerState {
+		// A drag that can move the bottom edge relative to the top one settles the
+		// height of whatever was following its text, before the snapshot below is
+		// read from for the rest of the gesture.
+		state = dropAutoHeightOnResize(state, event, anchorType);
+
 		// For a multi-select resize, cache what the per-frame bounds derivation
 		// needs so it never re-collects every leaf vertex (#215)
 		let eventStartSnapshot = state.eventStartSnapshot;
@@ -224,7 +231,7 @@ export class TransformControlHandler extends ControlStrategy {
 		// Snap correction
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-		if (eventStartSnapshot.snapCandidates && !event.mods.ctrl) {
+		if (eventStartSnapshot.snapCandidates && !isSnapSuppressed(event)) {
 			// Snap candidates use the cached set of all objects from dragStart by reference only;
 			// exclusions (selection + all descendants) are passed to findSnap as a Set and filtered internally.
 			const snapped = applyResizeSnap({

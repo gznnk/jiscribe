@@ -1,5 +1,5 @@
-import type { ObjectDoc } from "@jiscribe/canvas/doc";
 import { createFrameObjectFactory } from "@jiscribe/canvas-sdk/doc";
+import type { ObjectDoc } from "@jiscribe/doc";
 
 import type { GroupMarkerDirection } from "./GroupMarkerFields";
 
@@ -32,7 +32,7 @@ export const createGroupMarkerObjectFactory = (
 
 	const createDocFromBounds: NonNullable<
 		typeof frameFactory.createDocFromBounds
-	> = (x1, y1, x2, y2, overrides, minSize, docDefaults) => {
+	> = (x1, y1, x2, y2, overrides, minSize) => {
 		const drawn = frameFactory.createDocFromBounds?.(
 			x1,
 			y1,
@@ -40,7 +40,6 @@ export const createGroupMarkerObjectFactory = (
 			y2,
 			overrides,
 			minSize,
-			docDefaults,
 		) as (ObjectDoc & { width: number; height: number }) | null | undefined;
 		if (drawn === undefined || drawn === null) {
 			return null;

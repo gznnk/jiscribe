@@ -7,8 +7,8 @@ import {
 	twoRectsWithConnectorDoc,
 } from "./support/fixtures";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
-import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import { isConnectorState } from "../../../states/objects/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";

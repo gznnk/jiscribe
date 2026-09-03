@@ -10,9 +10,8 @@ import {
 	calcConnectorLabelBox,
 	CONNECTOR_LABEL_DEFAULTS,
 	resolveLabelFill,
-} from "../../../../presentations/objects/connections/ConnectorLabel";
-import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+} from "../../../../rendering/objects/connector/ConnectorLabel";
+import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
 import type { CaretLocalRect, CaretTarget } from "../utils/readCaretLocalRect";
@@ -46,6 +45,7 @@ type ConnectorLabelEditorProps = {
 	anchor: Point;
 	text: string;
 	fontColor?: string;
+	fontFamily?: string;
 	fontSize?: number;
 	fontWeight?: string;
 	fill?: string;
@@ -62,6 +62,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	anchor,
 	text,
 	fontColor,
+	fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily,
 	fontSize = CONNECTOR_LABEL_DEFAULTS.fontSize,
 	fontWeight = CONNECTOR_LABEL_DEFAULTS.fontWeight,
 	fill,
@@ -72,9 +73,6 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	onEscape,
 	onCaretMove,
 }) => {
-	// Labels have no per-doc fontFamily; follow the host theme so the editor
-	// measures and renders with the same font as ConnectorLabel.
-	const { fontFamily } = useCanvasTheme();
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
 	const color = resolveAutoColor(fontColor, "ink");
 	const background = resolveLabelFill(fill);
@@ -114,7 +112,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 			return;
 		}
 		fitTextAreaHeight(el, fontSize);
-	}, [text, width, fontSize, fontWeight, surfaceRef]);
+	}, [text, width, fontFamily, fontSize, fontWeight, surfaceRef]);
 
 	// After the height fit above, so the caret is measured against the laid-out box.
 	useLayoutEffect(reportCaret);

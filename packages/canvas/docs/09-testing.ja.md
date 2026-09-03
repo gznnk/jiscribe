@@ -31,8 +31,9 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
 および sociable な振る舞いテストを、対象ファイルのすぐ隣に配置する
 （[アーキテクチャ](./02-architecture.ja.md) の共配置方針）。
 
-- 対象は `schemas` / `states` / `controllers` / `presentations` 各層
-  （Mapper の往復変換、`validateXxxDoc`、Command の `execute`、変形ロジック、`canvasReducer` 経由の振る舞いなど）
+- 対象は `states` / `controllers` / `rendering` 各層
+  （Mapper の往復変換、Command の `execute`、変形ロジック、`canvasReducer` 経由の振る舞いなど）。
+  Doc モデル自体のテスト（`validateXxxDoc`・パーサー・doc ops）は `@jiscribe/doc` にあり、`pnpm --filter @jiscribe/doc test` で走る
 - `vitest.config.ts` は `environment: "node"`。DOM を介さず入力 state → 出力 state を直接検証する
 - 実行: `pnpm --filter @jiscribe/canvas test`（`vitest run`）。
   `test:coverage` / `test:ui` も用意（カバレッジは `index.ts` と `vitest.config.ts` を除外）
@@ -73,13 +74,13 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 ## E2E（Playwright）
 
 実ブラウザ・実 UI 操作での非回帰テスト。図形を持つパッケージがその spec を持つため、
-**9 つのスイート**に分散している。
+**10 個のスイート**に分散している。
 
 | スイート         | 置き場所                    | 守備範囲                                                                                         |
 | ---------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
 | canvas           | `packages/canvas/e2e/`      | コアの振る舞い（ジェスチャー・選択・変形・テキスト編集・コネクター・整列・ツールバーとメニュー） |
 | 各図形プラグイン | `plugins/<name>/e2e/`       | そのパッケージの図形だけ                                                                         |
-| プラグイン同居   | `apps/canvas-examples/e2e/` | spec 1 本。出荷 7 プラグインを 1 つのキャンバスに同居させる                                      |
+| プラグイン同居   | `apps/canvas-examples/e2e/` | spec 1 本。出荷 8 プラグインを 1 つのキャンバスに同居させる                                      |
 
 どのスイートも構成は同じで、後述の共有キットに乗っている。
 
@@ -102,9 +103,9 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
   出荷図形を題材にしていたコアの spec はこちらを叩く
 - **プラグインのハーネスはそのプラグインだけを載せる。**単独ロードで通ること自体が、
   他プラグインへの暗黙依存が無いことの検証になる
-- **canvas-examples のハーネスは 7 つ全部を載せる。**spec は「全部載せたときに初めて
+- **canvas-examples のハーネスは 8 つ全部を載せる。**spec は「全部載せたときに初めて
   壊れるもの」（ObjectType の登録衝突・ツールバーの重複・`<defs>` の id 衝突）だけを見る。
-  ここに置いて循環が生まれないのは、canvas と 7 プラグインすべてに依存していて、かつ
+  ここに置いて循環が生まれないのは、canvas と 8 プラグインすべてに依存していて、かつ
   どこからも依存されていない（依存グラフの頂点）から
 - `support/CanvasDriver.ts` … 描画・選択・テキスト・色・コネクター操作の API。
   `support/selectors.ts` … `data-kind` / `data-id` セレクタ定数。`fixtures.ts` が CanvasDriver を注入。

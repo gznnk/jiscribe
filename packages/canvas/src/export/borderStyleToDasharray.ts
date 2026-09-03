@@ -1,5 +1,6 @@
-import { getStrokeDasharray } from "../presentations/objects/utils/getStrokeDasharray";
-import { isStrokeDashType } from "../schemas/objects/types/StrokeDashType";
+import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
+
+import { getStrokeDasharray } from "../rendering/objects/utils/getStrokeDasharray";
 
 /**
  * Maps a CSS `border-*-style` to the `stroke-dasharray` of the `<rect>` that

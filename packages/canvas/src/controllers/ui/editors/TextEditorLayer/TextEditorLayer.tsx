@@ -1,25 +1,25 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../../../presentations/layers/content/utils/endpoints";
-import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
-import type { ConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsRegistry } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
-import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
-import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import type { ObjectTextStyleDefaultsRegistry } from "../../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
+} from "../../../../rendering/layers/content/utils/endpoints";
+import { calcConnectorLabelAnchor } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelAnchor";
+import type { ConnectorLabelPlacement } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ObjectTextRegionCalculator } from "../../../../rendering/objects/registry/ObjectTextRegionRegistry";
+import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
 	type TextStyleState,
 } from "../../../../states/objects/base/TextStyleState";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
@@ -101,6 +101,7 @@ function renderConnectorLabelEditor(
 			anchor={anchor}
 			text={text}
 			fontColor={connector.label?.fontColor}
+			fontFamily={connector.label?.fontFamily}
 			fontSize={connector.label?.fontSize}
 			fontWeight={connector.label?.fontWeight}
 			fill={connector.label?.fill}

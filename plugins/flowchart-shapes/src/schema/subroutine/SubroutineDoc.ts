@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
 import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /** Width of each inner vertical bar as a fraction of the width (shared by renderer and text region). */
 export const SUBROUTINE_BAR_RATIO = 0.12;

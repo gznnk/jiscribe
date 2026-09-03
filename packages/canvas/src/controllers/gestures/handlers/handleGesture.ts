@@ -1,3 +1,4 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import {
 	calcFrameKeyPoints,
 	calcPolyKeyPoints,
@@ -5,7 +6,6 @@ import {
 } from "@jiscribe/geometry";
 import type { FrameKeyPoints, TransformedFrame } from "@jiscribe/geometry";
 
-import { isPoly } from "../../../schemas/objects/types/Poly";
 import type { CanvasGestureHandling } from "../../CanvasGestureHandling";
 import type {
 	CanvasControllerState,
@@ -50,7 +50,7 @@ export const handleGesture = (
 	registries: CanvasRegistries,
 	gestureHandling?: CanvasGestureHandling,
 ): CanvasControllerState => {
-	// The end of a glide is a pure state transition — nothing to route, and no
+	// The end of a fling is a pure state transition — nothing to route, and no
 	// handler could tell it apart from a frame that merely moved zero pixels.
 	if (gesture.type === "inertialScrollEnd") {
 		return state.inertialScrolling
@@ -80,7 +80,7 @@ export const handleGesture = (
 			canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
 		}
 	} else if (gesture.type === "inertialScroll") {
-		// The glide after a released pan moves the view exactly as a wheel scroll
+		// The fling after a released pan moves the view exactly as a wheel scroll
 		// does, with no modifier branch: it comes from no device event, so nothing
 		// about it may mean zoom.
 		canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
@@ -182,8 +182,8 @@ export const handleGesture = (
 		};
 	}
 
-	// Raised by every glide frame (idempotent) and lowered by the end gesture
-	// above, so it spans the whole glide however many frames it takes.
+	// Raised by every fling frame (idempotent) and lowered by the end gesture
+	// above, so it spans the whole fling however many frames it takes.
 	if (gesture.type === "inertialScroll" && !nextState.inertialScrolling) {
 		nextState = { ...nextState, inertialScrolling: true };
 	}

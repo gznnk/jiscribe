@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectVisualBoundsRegistry } from "../../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { calcSelectionBounds } from "../calcSelectionBounds";
 

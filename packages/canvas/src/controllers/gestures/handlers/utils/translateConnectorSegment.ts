@@ -1,13 +1,13 @@
-import { roundToDecimal } from "@jiscribe/geometry";
-import type { Point } from "@jiscribe/geometry";
-
-import { PRECISION } from "../../../../constants/precision";
 import {
 	isFreeEndpointRef,
 	type EndpointRef,
-} from "../../../../schemas/objects/types/EndpointRef";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
-import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connections/connector/isConnectorSegmentFreelyMovable";
+} from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
+import { roundToDecimal } from "@jiscribe/geometry";
+import type { Point } from "@jiscribe/geometry";
+
+import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
+import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connector/isConnectorSegmentFreelyMovable";
 
 /** The fields a translation rewrites, ready to spread onto the connector. */
 export type TranslatedConnectorSegment = {

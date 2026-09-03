@@ -1,4 +1,5 @@
-import type { PolygonFeatures } from "../../../../schemas/objects/primitives/polygon/PolygonDoc";
+import type { PolygonFeatures } from "@jiscribe/doc/model/objects/primitives/polygon/PolygonDoc";
+
 import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

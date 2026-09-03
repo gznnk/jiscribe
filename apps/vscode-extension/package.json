@@ -1,7 +1,7 @@
 {
 	"name": "jiscribe",
 	"displayName": "Jiscribe Beta",
-	"description": "An AI-friendly, Git-manageable JSON canvas editor. Draw diagrams directly in VS Code and collaborate visually with AI.",
+	"description": "An AI-friendly JSON canvas editor. Draw diagrams directly in VS Code and collaborate visually with AI agents.",
 	"publisher": "gznnk",
 	"author": {
 		"name": "gznnk"
@@ -16,7 +16,7 @@
 		"url": "https://github.com/gznnk/jiscribe/issues"
 	},
 	"icon": "icon.png",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"private": true,
 	"preview": true,
 	"engines": {
@@ -43,6 +43,7 @@
 		"flowchart",
 		"architecture",
 		"drawing",
+		"jis",
 		"jis.json"
 	],
 	"activationEvents": [],
@@ -104,28 +105,13 @@
 		],
 		"commands": [
 			{
-				"command": "jiscribe.newEmptyCanvas",
-				"title": "New Jiscribe Canvas",
-				"category": "Jiscribe"
-			},
-			{
 				"command": "jiscribe.setupAi",
 				"title": "Set up AI",
 				"category": "Jiscribe"
 			}
 		],
 		"menus": {
-			"explorer/context": [
-				{
-					"command": "jiscribe.newEmptyCanvas",
-					"when": "explorerResourceIsFolder",
-					"group": "jiscribe@1"
-				}
-			],
 			"commandPalette": [
-				{
-					"command": "jiscribe.newEmptyCanvas"
-				},
 				{
 					"command": "jiscribe.setupAi"
 				}
@@ -136,6 +122,8 @@
 		"vscode:prepublish": "pnpm run build",
 		"build": "node build.mjs",
 		"watch": "node build.mjs --watch",
+		"generate:notices": "node scripts/generateNotices.mjs",
+		"check:notices": "node scripts/generateNotices.mjs --check",
 		"package": "vsce package --no-dependencies",
 		"publish-ext": "vsce publish --no-dependencies",
 		"lint": "eslint .",
@@ -144,15 +132,10 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"@jiscribe/ai-docs": "workspace:*",
+		"@jiscribe/doc-schema": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
-		"@jiscribe/plugin-annotation-shapes": "workspace:*",
-		"@jiscribe/plugin-container-shapes": "workspace:*",
-		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
-		"@jiscribe/plugin-general-shapes": "workspace:*",
-		"@jiscribe/plugin-markdown-shape": "workspace:*",
-		"@jiscribe/plugin-sticky-shape": "workspace:*",
-		"@jiscribe/plugin-uml-shapes": "workspace:*",
+		"@jiscribe/doc": "workspace:*",
+		"@jiscribe/standard-shapes": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",

@@ -1,7 +1,7 @@
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
-import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 

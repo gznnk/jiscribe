@@ -1,7 +1,7 @@
+import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import { describe, it, expect } from "vitest";
 
-import type { StyleValueType } from "../../../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
@@ -159,11 +159,12 @@ describe("shape-declared extra properties (registry-driven)", () => {
 
 describe("registry consistency", () => {
 	it("shape-declared property names do not shadow system properties", () => {
+		const systemNames = new Set<string>(Object.keys(SYSTEM_STYLE_PROPERTIES));
 		for (const { property } of EXTRA_DECLARATIONS) {
 			expect(
-				SYSTEM_STYLE_PROPERTIES[property],
+				systemNames.has(property),
 				`"${property}" is declared as a shape extra but already exists as a system property`,
-			).toBeUndefined();
+			).toBe(false);
 		}
 	});
 

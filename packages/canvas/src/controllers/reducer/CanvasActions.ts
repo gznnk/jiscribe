@@ -1,9 +1,8 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { Dimensions } from "@jiscribe/geometry";
 
-import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
-import type { RichText } from "../../schemas/objects/types/RichText";
 import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { Camera } from "../../states/canvas/Viewport";
+import type { Camera, Viewport } from "../../states/canvas/Viewport";
 import type { CanvasGestureHandling } from "../CanvasGestureHandling";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
@@ -39,13 +38,29 @@ export type SyncExternalAction = {
 };
 
 /**
- * Set viewport action - applies a camera (pan/zoom), keeping the measured
+ * Set camera action - moves the pan/zoom alone, keeping the measured
  * width/height. Dispatched by the imperative `ref.current.viewport.setViewport`
  * (useViewportHandle) so a host can move the view programmatically.
  */
+export type SetCameraAction = {
+	type: "SET_CAMERA";
+	camera: Camera;
+};
+
+/**
+ * Set viewport action - installs a camera together with the container size it
+ * was derived from, replacing the whole viewport. Its one dispatcher is
+ * useInitialViewOpen, applying the document's `view.open` once per document
+ * loaded — at mount, and again whenever another document is swapped in — and
+ * only when the host passed no `initialConfig.viewport`.
+ *
+ * The size travels with the camera because the two must land in the same commit:
+ * a fit is only correct against the viewport it was measured for, and the
+ * ResizeObserver's own CONTAINER_RESIZE arrives after the first paint.
+ */
 export type SetViewportAction = {
 	type: "SET_VIEWPORT";
-	camera: Camera;
+	viewport: Viewport;
 };
 
 /**
@@ -64,6 +79,29 @@ export type SetSelectionAction = {
 export type CommandAction = {
 	type: "COMMAND";
 	commandId: string;
+};
+
+/**
+ * Undoes back to one specific history entry in a single step, however many
+ * entries lie in between (`ref.current.history.revertTo`).
+ *
+ * Not the undo command repeated: each undo materializes the document it lands on,
+ * so repeating it would rebuild the whole object tree once per entry when only
+ * the last one is ever seen. This lands on the target directly and moves the
+ * entries it passed over to the redo stack in one go, leaving exactly the stacks
+ * the repeated undos would have.
+ */
+export type RevertHistoryAction = {
+	type: "REVERT_HISTORY";
+	/**
+	 * The history entry to make present again. Compared by identity against the
+	 * undo stack and never read, which is why it is typed as `object`: the public
+	 * mark (`CanvasHistoryMark`) carries one of these without the internal
+	 * DocSnapshot type having to become part of the API. An entry that is no
+	 * longer on the stack — already undone past, or dropped by the 50-entry cap —
+	 * leaves the document where it is.
+	 */
+	entry: object;
 };
 
 /**
@@ -130,12 +168,12 @@ export type PasteAction = {
 };
 
 /**
- * Set doc-creation defaults action - keeps state.docDefaults in sync when the
- * host swaps themes at runtime (e.g. changing the default fontFamily).
+ * Re-measure action - re-derives every content-sized box against the fonts as
+ * they now resolve. Dispatched when web fonts finish loading, which changes what
+ * a family measures without changing the family (see useFontsLoadedNonce).
  */
-export type SetDocDefaultsAction = {
-	type: "SET_DOC_DEFAULTS";
-	docDefaults: DocCreationDefaults;
+export type RemeasureTextAction = {
+	type: "REMEASURE_TEXT";
 };
 
 /**
@@ -163,15 +201,17 @@ export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
+	| SetCameraAction
 	| SetViewportAction
 	| SetSelectionAction
 	| CommandAction
+	| RevertHistoryAction
 	| UpdateTextEditAction
 	| UpdateTextEditSelectionAction
 	| ToggleTextFormatAction
 	| EndTextEditAction
 	| MenuPropertyUpdateAction
 	| PasteAction
-	| SetDocDefaultsAction
+	| RemeasureTextAction
 	| CloseContextMenuAction
 	| CloseModalAction;

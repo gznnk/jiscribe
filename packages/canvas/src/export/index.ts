@@ -1,6 +1,7 @@
-export { exportCanvasToPng, rasterizeSvgToPngBlob } from "./exportCanvasToPng";
+export { exportCanvasToPng, rasterizeSvgToPng } from "./exportCanvasToPng";
 export type {
 	ExportCanvasToPngOptions,
+	RasterizedPng,
 	RasterizeSvgOptions,
 } from "./exportCanvasToPng";
 export { exportCanvasToSvg, canvasToSvgString } from "./exportCanvasToSvg";
@@ -11,5 +12,5 @@ export { embedCanvasSource, extractCanvasSource } from "./canvasSourceMetadata";
 export {
 	embedCanvasSourceInPng,
 	extractCanvasSourceFromPng,
-} from "./pngCanvasSource";
+} from "@jiscribe/doc/file/pngCanvasSource";
 export { downloadBlob } from "./downloadBlob";

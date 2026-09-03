@@ -1,4 +1,4 @@
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
 /**
  * Per-type `ObjectState` validation function. Takes an untrusted object (e.g. from
@@ -9,7 +9,7 @@ export type ObjectStateValidator = (value: unknown) => boolean;
 /**
  * Registry for per-type `ObjectState` validators.
  * This is the state-side counterpart of the schema-side `ObjectDocValidatorRegistry`;
- * registration happens via `registerObject()` inside `initializeObjectRegistry()`.
+ * registration happens via `applyObjectDefinition()` inside `initializeObjectRegistry()`.
  *
  * Its main use is strict clipboard-data validation in `isClipboardData`.
  */

@@ -1,5 +1,6 @@
-import { GroupFeatures } from "../../../schemas/objects/primitives/group/GroupDoc";
-import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import { GroupFeatures } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
+
+import { isConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateOrientedBoundsFromChildIds } from "../../../states/utils/calculateGroupOrientedBounds";
 import type { CanvasControllerState } from "../../CanvasTypes";

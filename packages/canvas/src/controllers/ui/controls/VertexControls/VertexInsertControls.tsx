@@ -45,7 +45,7 @@ type VertexInsertControlsProps = {
 /**
  * VertexInsertControls component for inserting new vertices on Polyline segments.
  *
- * This is a pure presentation component that renders a simple blue dot at each segment
+ * This is a pure render-only component that draws a simple blue dot at each segment
  * midpoint (matching the connector ConnectionAnchors / Miro style), signalling that a
  * new vertex can be added there. All interaction logic should be handled by the
  * insert handler matching `insertPartSubtype`.

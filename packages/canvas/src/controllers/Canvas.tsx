@@ -1,4 +1,6 @@
-﻿import {
+﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import {
 	memo,
 	useCallback,
 	useEffect,
@@ -19,11 +21,8 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
-import { useCanvasExport, EXPORT_FIT_PADDING } from "./hooks/useCanvasExport";
-import type {
-	CanvasExportHandle,
-	CanvasExportImagePayload,
-} from "./hooks/useCanvasExport";
+import type { CanvasHandle } from "./handles/CanvasHandle";
+import { useCanvasHandle } from "./handles/useCanvasHandle";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
@@ -34,24 +33,24 @@ import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
 import { useErrorNotification } from "./hooks/useErrorNotification";
+import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
+import { useExportDialog } from "./hooks/useExportDialog";
+import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
+import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
-import type { CanvasSelectionHandle } from "./hooks/useSelectionHandle";
-import { useSelectionHandle } from "./hooks/useSelectionHandle";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
-import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
-import { useViewportHandle } from "./hooks/useViewportHandle";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import { CanvasView } from "../presentations/CanvasView";
+import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
@@ -71,7 +70,9 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
+import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { Camera } from "../states/canvas/Viewport";
 import type {
 	ObjectMenuPropertyUpdater,
@@ -82,8 +83,7 @@ import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
-import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
-import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
+import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
 type CanvasProps = {
 	// ── Model & persistence (the core contract) ──
@@ -140,10 +140,11 @@ type CanvasProps = {
 	 */
 	theme?: CanvasTheme;
 	/**
-	 * Background grid settings. Omit for the default grid (shown, 25 world units);
-	 * each field is optional, so `{ show: false }` alone is valid. Live: can be
-	 * changed at runtime. Since an object literal breaks `<Canvas>`'s memo, a host
-	 * rendering this inline can `useMemo` it to avoid extra re-renders.
+	 * Background grid settings. The grid is hidden by default — omit this prop
+	 * for no grid, pass `{ show: true }` to display it (25 world units unless
+	 * `size` says otherwise). Live: can be changed at runtime. Since an object
+	 * literal breaks `<Canvas>`'s memo, a host rendering this inline can
+	 * `useMemo` it to avoid extra re-renders.
 	 *
 	 * The grid line color is not a setting here — it is derived from the effective
 	 * canvas surface (theme background, or the doc's `background`) so it stays
@@ -151,7 +152,7 @@ type CanvasProps = {
 	 */
 	grid?: {
 		/**
-		 * Whether to render the grid (default `true`). The grid is a viewing aid
+		 * Whether to render the grid (default `false`). The grid is a viewing aid
 		 * only — it is already excluded from image export — so this toggles the
 		 * on-screen display without changing exported images.
 		 */
@@ -159,8 +160,8 @@ type CanvasProps = {
 		/**
 		 * Base grid spacing in world units (default `25`). Sets the medium grid
 		 * interval; bold lines fall every 4× this value and the multi-level grid
-		 * adapts to zoom (see the canvas's grid layer). Ignored when `show` is
-		 * `false`.
+		 * adapts to zoom (see the canvas's grid layer). Ignored while the grid
+		 * is hidden.
 		 */
 		size?: number;
 	};
@@ -267,9 +268,16 @@ type CanvasProps = {
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
 	 * capability set (available object types, commands, plugins) plus the view
 	 * setup — the initial camera (`viewport`) and how far it may be scrolled
-	 * (`scrollBounds`, infinite unless set). Restricts what this canvas can
+	 * (`scrollBounds`, left to the document unless set). Restricts what this canvas can
 	 * create/handle (plugin-style extensibility and feature-gating), independently
 	 * of any other `<Canvas>` on the page. Omit for the full default set.
+	 *
+	 * **`viewport` and `scrollBounds` outrank the document.** A doc that declares
+	 * `view.open` / `view.scroll` frames and walls itself; passing a camera or a
+	 * scroll limit here overrules it. So pass one only when the host genuinely
+	 * knows better — a restored session, a deep link, a surface that is not a
+	 * document viewer — and leave it out otherwise, where the document's own
+	 * intent is the better answer.
 	 *
 	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
 	 * whose object types remain enabled — otherwise state construction throws
@@ -286,25 +294,12 @@ type CanvasProps = {
 	 * Receives the imperative Canvas handle ({@link CanvasHandle}), grouping every
 	 * imperative API by subsystem: `ref.current.viewport` to move pan/zoom
 	 * (fit-to-content, jump-to-node, a scripted intro), `ref.current.selection` to
-	 * select objects programmatically, and `ref.current.export.toSvgString()` /
-	 * `toPngBlob()` to get the exported image. Imperative by design so the view
-	 * cannot feed back into a render loop the way a controlled value prop would.
+	 * select objects programmatically, `ref.current.export` to get the exported
+	 * image, and `ref.current.measure` / `history` / `interaction` to read back how
+	 * the canvas drew what it was given. Imperative by design so the view cannot
+	 * feed back into a render loop the way a controlled value prop would.
 	 */
 	ref?: React.Ref<CanvasHandle>;
-};
-
-/**
- * Imperative Canvas API delivered through the component `ref`. Each subsystem
- * owns a namespace; new imperative capabilities are added as new namespaces
- * rather than new props.
- */
-export type CanvasHandle = {
-	/** Pan/zoom control (see {@link CanvasViewportHandle}). */
-	viewport: CanvasViewportHandle;
-	/** Selection control (see {@link CanvasSelectionHandle}). */
-	selection: CanvasSelectionHandle;
-	/** Image export (see {@link CanvasExportHandle}). */
-	export: CanvasExportHandle;
 };
 
 const CanvasComponent = ({
@@ -332,11 +327,9 @@ const CanvasComponent = ({
 		[locale, messages],
 	);
 
-	const themeCssVars = useMemo(() => buildThemeCssVars(theme.tokens), [theme]);
-
-	const docDefaults = useMemo(
-		() => ({ fontFamily: theme.fontFamily }),
-		[theme.fontFamily],
+	const themeCssVars = useMemo(
+		() => buildThemeCssVars(theme.tokens),
+		[theme.tokens],
 	);
 
 	// rootRef spans toolbar + canvas area and carries pointer capture; canvasRef is the
@@ -360,16 +353,21 @@ const CanvasComponent = ({
 	const [state, dispatch] = useCanvasReducer(
 		doc,
 		registries,
-		docDefaults,
 		initialConfig?.viewport,
 		initialConfig?.scrollBounds,
 	);
 
-	// Keeps docDefaults current when the host swaps themes at runtime; the reducer no-ops
-	// when the values are unchanged.
+	// Web fonts land after the first paint, so every content-derived box mapped
+	// before then was measured against a fallback face. Nothing in the doc moves
+	// when the real one arrives, which is why this needs a signal of its own; a
+	// pass that moves no box returns the same state, so the nonce firing more
+	// than once costs nothing.
+	const fontsLoadedNonce = useFontsLoadedNonce();
 	useEffect(() => {
-		dispatch({ type: "SET_DOC_DEFAULTS", docDefaults });
-	}, [docDefaults, dispatch]);
+		if (fontsLoadedNonce > 0) {
+			dispatch({ type: "REMEASURE_TEXT" });
+		}
+	}, [fontsLoadedNonce, dispatch]);
 
 	// Single toast slot shared by every error source (clipboard, export).
 	const { errorNotification, notifyError } = useErrorNotification();
@@ -396,11 +394,6 @@ const CanvasComponent = ({
 		onSelectionChange,
 	);
 
-	// The canvas stays authoritative for the live camera and selection: the host reads them
-	// out and pushes changes back imperatively, with no controlled prop that could fight a
-	// gesture.
-	const viewportHandle = useViewportHandle(dispatch, state, registries);
-	const selectionHandle = useSelectionHandle(dispatch, state);
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
@@ -424,10 +417,29 @@ const CanvasComponent = ({
 
 	useContainerResize(canvasRef, dispatch);
 
+	// The document's own framing intent, applied only where the host expressed
+	// none: `initialConfig.viewport` is a camera the host already decided on, and
+	// it outranks whatever the document would have asked for.
+	useInitialViewOpen({
+		view: initialConfig?.viewport === undefined ? state.view : undefined,
+		containerRef: canvasRef,
+		viewportSize: state.viewport,
+		objects: state.objects,
+		visualBounds: registries.objectVisualBounds,
+		dispatch,
+	});
+
 	const handlePaste = useClipboardPaste(
 		state.internalClipboard,
 		dispatch,
 		registries,
+	);
+
+	// Held stable so the wrapper object does not defeat ContextMenu's memo;
+	// an inline literal would fail its shallow compare on every render.
+	const contextMenuCallbacks = useMemo(
+		() => ({ paste: handlePaste }),
+		[handlePaste],
 	);
 
 	// Scoped to the focusable canvas root, so with several Canvases on a page only the
@@ -499,15 +511,9 @@ const CanvasComponent = ({
 			graftTextEditDraft(
 				state.objects,
 				state.textEditState,
-				state.docDefaults.fontFamily,
 				registries.objectContentResizer,
 			),
-		[
-			state.objects,
-			state.textEditState,
-			state.docDefaults.fontFamily,
-			registries,
-		],
+		[state.objects, state.textEditState, registries],
 	);
 
 	// The menu is anchored below the drawn extent, which during a text edit is the
@@ -526,6 +532,31 @@ const CanvasComponent = ({
 		dispatch,
 	});
 
+	// Editor handlers with stable identities: TextEditorLayer is memoized, and
+	// TextEditor keys its native-listener effects on these, so inline literals
+	// here would re-attach those listeners on every canvas dispatch mid-edit.
+	const handleTextEditChange = useCallback(
+		(text: RichText) => {
+			dispatch({ type: "UPDATE_TEXT_EDIT", text });
+		},
+		[dispatch],
+	);
+	const handleTextEditEscape = useCallback(() => {
+		dispatch({ type: "END_TEXT_EDIT", commit: false });
+	}, [dispatch]);
+	const handleTextEditSelectionChange = useCallback(
+		(selection: { start: number; end: number }) => {
+			dispatch({ type: "UPDATE_TEXT_EDIT_SELECTION", selection });
+		},
+		[dispatch],
+	);
+	const handleTextEditToggleFormat = useCallback(
+		(format: TextEditFormat) => {
+			dispatch({ type: "TOGGLE_TEXT_FORMAT", format });
+		},
+		[dispatch],
+	);
+
 	// Only objects intersecting the visible world rect are rendered (#212). Export clones
 	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.
 	const { visibleObjectIds, withCullingSuspended } = useViewportCulling(
@@ -536,7 +567,16 @@ const CanvasComponent = ({
 		registries.objectVisualBounds,
 	);
 
-	const { exportHandle, handleExportSubmit } = useCanvasExport({
+	// Built here rather than beside the other state-derived hooks because the
+	// export namespace needs the culling suspension declared just above.
+	const canvasHandle = useCanvasHandle({
+		dispatch,
+		canvasState: state,
+		registries,
+		svgRef,
+		withCullingSuspended,
+	});
+	const handleExportSubmit = useExportDialog({
 		svgRef,
 		canvasState: state,
 		registries,
@@ -546,15 +586,7 @@ const CanvasComponent = ({
 		withCullingSuspended,
 	});
 
-	useImperativeHandle(
-		ref,
-		() => ({
-			viewport: viewportHandle,
-			selection: selectionHandle,
-			export: exportHandle,
-		}),
-		[viewportHandle, selectionHandle, exportHandle],
-	);
+	useImperativeHandle(ref, () => canvasHandle, [canvasHandle]);
 
 	// The camera the scene is drawn with. It is the committed one moved onto the
 	// device pixel grid, so text stops creeping inside its shape as the viewport
@@ -677,10 +709,7 @@ const CanvasComponent = ({
 								zoom={state.viewport.zoom}
 								isTextEditing={!!state.textEditState}
 							/>
-							<DragGhost
-								stencilLibraryDrag={state.stencilLibraryDrag}
-								docDefaults={state.docDefaults}
-							/>
+							<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
 							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
 							<AreaSelectionRect areaSelection={state.areaSelection} />
 							<SnapGuides
@@ -703,19 +732,11 @@ const CanvasComponent = ({
 							<TextEditorLayer
 								textEditState={state.textEditState}
 								objects={draftObjects}
-								onTextChange={(text) =>
-									dispatch({ type: "UPDATE_TEXT_EDIT", text })
-								}
-								onEscape={() =>
-									dispatch({ type: "END_TEXT_EDIT", commit: false })
-								}
+								onTextChange={handleTextEditChange}
+								onEscape={handleTextEditEscape}
 								onCaretMove={revealCaret}
-								onSelectionChange={(selection) =>
-									dispatch({ type: "UPDATE_TEXT_EDIT_SELECTION", selection })
-								}
-								onToggleFormat={(format) =>
-									dispatch({ type: "TOGGLE_TEXT_FORMAT", format })
-								}
+								onSelectionChange={handleTextEditSelectionChange}
+								onToggleFormat={handleTextEditToggleFormat}
 							/>
 						</ZoomScaledOverlay>
 						{/* HTML whose position follows zoom but whose size does not */}
@@ -734,7 +755,7 @@ const CanvasComponent = ({
 						<ContextMenu
 							position={state.contextMenuPosition}
 							canvasState={state}
-							callbacks={{ paste: handlePaste }}
+							callbacks={contextMenuCallbacks}
 						/>
 					</ViewportOverlay>
 				</Viewport>

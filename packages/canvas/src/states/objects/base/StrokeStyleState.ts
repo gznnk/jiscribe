@@ -1,4 +1,4 @@
-import type { StrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
+import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 
 /**
  * Properties related to stroke (outline) styling (runtime state).

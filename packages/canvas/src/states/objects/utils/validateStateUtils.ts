@@ -4,23 +4,25 @@ import {
 	isNumber,
 	isString,
 } from "@jiscribe/basic-validators";
-
-import { isCssColor } from "./isCssColor";
-import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
-import { isArrowType } from "../../../schemas/objects/types/ArrowType";
-import { isOwnedEndpointRef } from "../../../schemas/objects/types/EndpointRef";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
-import { isPoly } from "../../../schemas/objects/types/Poly";
+import { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+import { isArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
+import { isOwnedEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
+import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type {
 	InlineTextStyle,
 	RichText,
-} from "../../../schemas/objects/types/RichText";
-import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
-import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
-import { isTextRows } from "../../../schemas/objects/types/TextSlot";
-import { isAutoColor } from "../../../schemas/objects/utils/autoColor";
-import { validateEndpointRef } from "../../../schemas/objects/utils/validateDocUtils";
+} from "@jiscribe/doc/model/objects/types/RichText";
+import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { isAutoColor } from "@jiscribe/doc/model/objects/utils/autoColor";
+import { validateEndpointRef } from "@jiscribe/doc/model/objects/utils/validateDocUtils";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
+
+import { isCssColor } from "./isCssColor";
 import { isTextStyleState } from "../base/TextStyleState";
 import { isTransformState } from "../base/TransformState";
 
@@ -29,9 +31,16 @@ import { isTransformState } from "../base/TransformState";
  * by type. They use the type-guard style returning boolean, consistent with the state layer's
  * existing guards (`isTransformState` / `isTextStyleState` / `isGroupState`, etc.).
  *
- * Step 1's `isCssSafeValue` is applied to style strings (stroke / fill / fontFamily / fontWeight)
- * to reject CSS injection at the boundary. Strict color validity (`isCssColor` = `CSS.supports`)
- * is browser-only, so it lives here rather than in the schema-layer guards.
+ * Two checks are applied to style strings, and they answer different questions.
+ * `isCssSafeValue` rejects CSS injection; `isValidColorValue` additionally asks whether the
+ * value is a color at all. The latter is browser-only (`CSS.supports`), which is why it can
+ * be used here and not in the schema-layer guards: everything below runs behind
+ * `isClipboardData`, i.e. only where a paste happens.
+ *
+ * That browser dependency also means a color cannot be exercised from the node test suite —
+ * calling into `isCssColor` there throws. Colors are covered by the paste e2e instead; the
+ * unit tests here stay on what node can reach (ranges, enums, the `"auto"` sentinel, and
+ * injection strings, which `isCssSafeValue` rejects before `CSS` is ever touched).
  */
 export type StateRecord = Record<string, unknown>;
 
@@ -65,17 +74,27 @@ export const isValidFrameState = (o: StateRecord): boolean =>
 	isValidRequiredNumber(o.height, 0);
 
 /**
+ * Validates the height-follows-the-text flag (ObjectState.autoHeight): true or
+ * absent for a shape whose doc stores a `height` to leave out, absent for every
+ * other geometry. This is the clipboard boundary, and the flag decides whether
+ * the mapper writes a `height` at all, so a stray one would save a doc missing a
+ * field its type requires.
+ *
+ * @param o - The state record to check
+ * @param geometry - The type's declared geometry; only `"rect"` may carry the flag
+ */
+export const isValidAutoHeightState = (
+	o: StateRecord,
+	geometry: GeometryType,
+): boolean =>
+	o.autoHeight === undefined || (geometry === "rect" && o.autoHeight === true);
+
+/**
  * Validates Poly geometry (the points array). `minPoints` is the minimum point count,
  * corresponding to minPoints of the Doc-side `validatePolyFields` (polyline: 2 / polygon: 3).
  */
 export const isValidPolyState = (o: StateRecord, minPoints: number): boolean =>
 	isPoly(o) && o.points.length >= minPoints;
-
-/**
- * Validates a connector's intermediate waypoints. Since the endpoints are held by source / target,
- * points holds only waypoints, and an empty array is allowed too (corresponds to the Doc-side `validateWaypointFields`).
- */
-export const isValidWaypointState = (o: StateRecord): boolean => isPoly(o);
 
 /**
  * Connector invariant: at least one endpoint must be owned.
@@ -85,13 +104,29 @@ export const isValidWaypointState = (o: StateRecord): boolean => isPoly(o);
 export const hasOwnedEndpoint = (source: unknown, target: unknown): boolean =>
 	isOwnedEndpointRef(source) || isOwnedEndpointRef(target);
 
+/**
+ * Validates a value used as a color: safe to put in a CSS context, and a color the CSS
+ * parser recognises. The two are independent — `"notacolor"` is safe but not a color,
+ * `"red; } body {"` is a color-ish prefix but not safe — so both have to hold.
+ *
+ * The `"auto"` sentinel (theme-following, issue #38) is checked first: `CSS.supports` does
+ * not know it, and it is what several shapes carry by default, so reaching `isCssColor`
+ * with it would reject ordinary documents.
+ *
+ * Browser-only, through `isCssColor`. Every caller sits behind `isClipboardData`.
+ *
+ * @param value - Value to check; non-strings fail at `isCssSafeValue` without reaching `CSS`
+ */
+export const isValidColorValue = (value: unknown): boolean =>
+	isCssSafeValue(value) && (isAutoColor(value) || isCssColor(value));
+
 /** Validates TransformState (rotation / scaleX / scaleY are numbers). */
 export const isValidTransformState = (o: StateRecord): boolean =>
 	isTransformState(o);
 
 /** Validates StrokeStyleState's optional fields for type/safety when present. */
 export const isValidStrokeStyleState = (o: StateRecord): boolean => {
-	if ("stroke" in o && o.stroke !== undefined && !isCssSafeValue(o.stroke)) {
+	if ("stroke" in o && o.stroke !== undefined && !isValidColorValue(o.stroke)) {
 		return false;
 	}
 	// strokeWidth has minimum: 0 in the schema
@@ -108,9 +143,9 @@ export const isValidStrokeStyleState = (o: StateRecord): boolean => {
 	return true;
 };
 
-/** Validates FillStyleState's fill for CSS safety when present. */
+/** Validates FillStyleState's fill as a color when present. */
 export const isValidFillStyleState = (o: StateRecord): boolean =>
-	!("fill" in o) || o.fill === undefined || isCssSafeValue(o.fill);
+	!("fill" in o) || o.fill === undefined || isValidColorValue(o.fill);
 
 /**
  * Validates one styling group beyond its declared types: CSS-injection safety for
@@ -135,13 +170,7 @@ const isValidInlineTextStyle = (style: InlineTextStyle): boolean => {
 	) {
 		return false;
 	}
-	// The sentinel "auto" (theme-following, issue #38) is checked first so the
-	// browser-only isCssColor (CSS.supports) is skipped for it.
-	if (
-		style.fontColor !== undefined &&
-		!isAutoColor(style.fontColor) &&
-		!isCssColor(style.fontColor)
-	) {
+	if (style.fontColor !== undefined && !isValidColorValue(style.fontColor)) {
 		return false;
 	}
 	// fontSize has minimum: 1 in the schema (isTextSlot only checks up to number)
@@ -205,20 +234,13 @@ export const isValidTextStyleState = (
 export const isValidRadiusStyleState = (o: StateRecord): boolean =>
 	isValidOptionalNumber(o.rx, 0);
 
-/** Validates arrow ends (startArrow / endArrow) as ArrowType when present. */
-export const isValidArrowFields = (o: StateRecord): boolean => {
-	if (
-		"startArrow" in o &&
-		o.startArrow !== undefined &&
-		!isArrowType(o.startArrow)
-	) {
-		return false;
-	}
-	if ("endArrow" in o && o.endArrow !== undefined && !isArrowType(o.endArrow)) {
-		return false;
-	}
-	return true;
-};
+/**
+ * Validates arrow ends (startArrow / endArrow) as ArrowType when present. The fields are
+ * taken from ARROW_STYLE_KEYS, so a field added to the group is checked without editing
+ * this, the same as the doc-side `validateArrowFields`.
+ */
+export const isValidArrowFields = (o: StateRecord): boolean =>
+	ARROW_STYLE_KEYS.every((key) => o[key] === undefined || isArrowType(o[key]));
 
 /**
  * Validates that childIds is a non-empty array of strings.

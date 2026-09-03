@@ -1,14 +1,12 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import type { CanvasControllerState, DocSnapshot } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import {
 	createDocSnapshotFromDoc,
 	resolveDocSnapshot,
-	type DocSnapshot,
-} from "../../../../states/canvas/DocSnapshot";
-import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+} from "../../../utils/resolveDocSnapshot";
 import { UndoCommand } from "../UndoCommand";
 
 const registries = createTestRegistries();
@@ -41,7 +39,6 @@ const makeState = (params: {
 		eventStartSnapshot: params.eventStartSnapshot ?? null,
 		textEditState: params.textEditState ?? null,
 		internalClipboard: null,
-		docDefaults: { fontFamily: DEFAULT_FONT_FAMILY },
 		commitVersion: 5,
 		saveVersion: 0,
 		registries,

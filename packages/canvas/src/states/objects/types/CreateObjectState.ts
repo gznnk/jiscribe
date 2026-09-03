@@ -1,8 +1,9 @@
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import type { Poly } from "@jiscribe/doc/model/objects/types/Poly";
 import type { Frame } from "@jiscribe/geometry";
 import type { Brand, Prettify } from "@jiscribe/utility-types";
 
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
-import type { Poly } from "../../../schemas/objects/types/Poly";
+import type { ArrowStyleState } from "../base/ArrowStyleState";
 import type { FillStyleState } from "../base/FillStyleState";
 import type { ObjectState } from "../base/ObjectState";
 import type { RadiusStyleState } from "../base/RadiusStyleState";
@@ -78,6 +79,7 @@ export type CreateObjectState<
 		(T["fill"] extends true ? FillStyleState : object) &
 		(T["text"] extends "body" | "slots" ? TextStyleState : object) &
 		(T["radius"] extends true ? RadiusStyleState : object) &
+		(T["arrow"] extends true ? ArrowStyleState : object) &
 		Brand<S> &
 		P
 >;

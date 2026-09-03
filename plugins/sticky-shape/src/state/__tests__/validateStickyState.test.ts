@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { stickyDefinition } from "../../definition";
 
+// Colours are overridden with the "auto" sentinel: a real colour reaches
+// isCssColor (CSS.supports), which the node test environment has no CSS for.
+// That the shipped defaults are valid colours is covered by the canvas e2e.
 const isValidStickyState = stickyDefinition.stateValidator;
 
 const validSticky = {
@@ -14,7 +17,7 @@ const validSticky = {
 	rotation: 0,
 	scaleX: 1,
 	scaleY: 1,
-	fill: "#ffeb3b",
+	fill: "auto",
 	text: { body: { text: "note", fontSize: 14 } },
 };
 

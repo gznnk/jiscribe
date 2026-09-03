@@ -1,5 +1,5 @@
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { isConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 
 /** What a requested selection turns into, split by the state's two channels */
 export type ResolvedSelection = {

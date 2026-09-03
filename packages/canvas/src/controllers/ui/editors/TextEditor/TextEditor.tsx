@@ -1,3 +1,9 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import { isSameRichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import type { BoundingBox } from "@jiscribe/geometry";
 import {
 	calcAffineTransformedPoint,
@@ -8,15 +14,9 @@ import type React from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { EditableTextSurface, TextEditorWrapper } from "./TextEditorStyled";
-import { TEXT_STYLE_FALLBACK } from "../../../../constants/textStyleFallback";
-import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
-import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
-import { verticalAlignToAlignItems } from "../../../../presentations/objects/utils/verticalAlignToAlignItems";
-import type { RichText } from "../../../../schemas/objects/types/RichText";
-import { isSameRichText } from "../../../../schemas/objects/types/RichText";
-import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
-import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
+import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
+import { verticalAlignToAlignItems } from "../../../../rendering/objects/utils/verticalAlignToAlignItems";
 import type { TextEditFormat } from "../../../utils/toggleTextEditFormat";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
@@ -50,6 +50,14 @@ const FORMAT_INPUT_TYPES: Record<string, TextEditFormat | undefined> = {
 
 /** A stretch of the edited text, in UTF-16 offsets; what the editor reports and restores. */
 type TextSelection = { start: number; end: number };
+
+/**
+ * The ObjectMenu, matched on the id its own gesture handling is addressed by. It
+ * holds the only controls allowed to take the focus off an open editor — the ones
+ * that need it themselves, the font-size input and its slider (keepTextEditorFocus
+ * prevents the press for every other one).
+ */
+const OBJECT_MENU_SELECTOR = '[data-id="object-menu"]';
 
 type TextEditorProps = {
 	objectId: string;
@@ -109,7 +117,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	verticalAlign = TEXT_STYLE_FALLBACK.verticalAlign,
 	fontColor = TEXT_STYLE_FALLBACK.fontColor,
 	fontSize = TEXT_STYLE_FALLBACK.fontSize,
-	fontFamily,
+	fontFamily = DEFAULT_FONT_FAMILY,
 	fontWeight = TEXT_STYLE_FALLBACK.fontWeight,
 	fontStyle = TEXT_STYLE_FALLBACK.fontStyle,
 	textDecoration = TEXT_STYLE_FALLBACK.textDecoration,
@@ -119,11 +127,6 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	onEscape,
 	onCaretMove,
 }) => {
-	// Docs of text-bearing shapes always carry fontFamily; the theme font is a
-	// safety net for callers that omit it.
-	const { fontFamily: themeFontFamily } = useCanvasTheme();
-	const resolvedFontFamily = fontFamily ?? themeFontFamily;
-
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same
 	// resolver as the rendering-side TextOverlay so the color matches (issue #38).
 	const resolvedColor = resolveAutoColor(fontColor, "ink");
@@ -163,6 +166,9 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	// runs in the reducer, which cannot reach the DOM. Only changes are sent: this
 	// also runs on every render, and a dispatch per render would not settle.
 	const reportedSelection = useRef<TextSelection | null>(null);
+	// The frame the focus is taken back on, held so it can be dropped when the
+	// session ends before it runs.
+	const refocusFrame = useRef<number | null>(null);
 
 	const readCaretTarget = useCallback(
 		(surface: HTMLDivElement): CaretTarget | null => {
@@ -276,6 +282,66 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	// After the content above, so the caret is measured against the laid-out box.
 	useLayoutEffect(reportCaret);
 	useLayoutEffect(reportSelection);
+
+	// A menu control keeps the focus until it is done with it: the font-size input
+	// until Enter blurs it, its slider until the dropdown that holds it closes.
+	// Focus then lands nowhere, leaving the open session without a caret, so it is
+	// taken back here — with the stretch the styling landed on selected again, so
+	// the next value styles the same characters and the user sees which.
+	useEffect(() => {
+		const surface = surfaceRef.current;
+		if (!surface) {
+			return;
+		}
+		const ownerDocument = surface.ownerDocument;
+		const handleFocusOut = (event: FocusEvent) => {
+			const from = event.target;
+			if (
+				event.relatedTarget !== null ||
+				!(from instanceof HTMLElement) ||
+				from.closest(OBJECT_MENU_SELECTOR) === null
+			) {
+				return;
+			}
+			if (refocusFrame.current !== null) {
+				cancelAnimationFrame(refocusFrame.current);
+			}
+			// One frame later, not here: the keystroke that gave the control up still
+			// has its default action to run, and that runs on whatever holds the focus
+			// by then — an editable surface answers the Enter committing the font size
+			// by replacing the selection with a newline.
+			refocusFrame.current = requestAnimationFrame(() => {
+				refocusFrame.current = null;
+				// Anything else that took the focus in the meantime keeps it: the press
+				// that ended the session is one of them. The canvas root is not one —
+				// it reclaims whatever falls to the body to keep the shortcuts alive
+				// (useCanvasFocusScope), and holding an ancestor is the state this is
+				// here to resolve.
+				const active = ownerDocument.activeElement;
+				if (
+					active === surface ||
+					(active !== null &&
+						active !== ownerDocument.body &&
+						!active.contains(surface))
+				) {
+					return;
+				}
+				const selection = reportedSelection.current;
+				if (selection !== null) {
+					setEditableSelection(surface, selection.start, selection.end);
+				}
+				surface.focus({ preventScroll: true });
+			});
+		};
+		ownerDocument.addEventListener("focusout", handleFocusOut);
+		return () => {
+			ownerDocument.removeEventListener("focusout", handleFocusOut);
+			if (refocusFrame.current !== null) {
+				cancelAnimationFrame(refocusFrame.current);
+				refocusFrame.current = null;
+			}
+		};
+	}, [surfaceRef]);
 
 	const handleInput = useCallback(() => {
 		const surface = surfaceRef.current;
@@ -523,7 +589,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 					color: resolvedColor,
 					caretColor: resolvedColor,
 					fontSize,
-					fontFamily: resolvedFontFamily,
+					fontFamily,
 					fontWeight,
 					fontStyle,
 					textDecoration,

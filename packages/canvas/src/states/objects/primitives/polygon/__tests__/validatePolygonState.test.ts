@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { isValidPolygonState } from "../validatePolygonState";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the paste e2e.
 const pts = (n: number) =>
 	Array.from({ length: n }, (_v, i) => ({ x: i, y: i }));
 
@@ -9,8 +12,8 @@ const validPolygon = {
 	id: "pg1",
 	type: "polygon",
 	points: pts(3),
-	stroke: "#000",
-	fill: "#eee",
+	stroke: "auto",
+	fill: "auto",
 };
 
 describe("isValidPolygonState", () => {

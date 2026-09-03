@@ -1,8 +1,8 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 import { createInitialControllerState } from "../createInitialControllerState";
 
 const registries = createTestRegistries();
@@ -64,16 +64,11 @@ describe("createInitialControllerState", () => {
 
 	it("seeds the viewport camera from initialCamera without touching width/height", () => {
 		const base = createInitialControllerState(docWithRect, registries);
-		const state = createInitialControllerState(
-			docWithRect,
-			registries,
-			undefined,
-			{
-				minX: 10,
-				minY: 20,
-				zoom: 2,
-			},
-		);
+		const state = createInitialControllerState(docWithRect, registries, {
+			minX: 10,
+			minY: 20,
+			zoom: 2,
+		});
 
 		// Camera adopted so the first paint lands at the host's pan/zoom (no flash).
 		expect(state.viewport).toMatchObject({ minX: 10, minY: 20, zoom: 2 });

@@ -1,6 +1,6 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, it, expect } from "vitest";
 
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { isSameCanvasDocContent } from "../isSameCanvasDocContent";
 
 // Match the real input path (file -> JSON.parse) by building the doc from a JSON string.

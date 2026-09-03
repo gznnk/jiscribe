@@ -32,6 +32,7 @@ const mockUtil = vi.hoisted(() => ({
 	} as RecognizerUtils.GestureTarget | null,
 	optedOut: false,
 	inputValue: undefined as string | undefined,
+	nativePointer: false,
 	// world = client / zoom, letting tests verify screen-based decisions under zoom
 	zoom: 1,
 }));
@@ -43,7 +44,12 @@ vi.mock("../utils", async (importActual) => {
 	const actual = await importActual<typeof RecognizerUtils>();
 	return {
 		...actual,
-		getSvgPoint: (_svg: unknown, clientX: number, clientY: number) => ({
+		getWorldPoint: (
+			_svg: unknown,
+			_viewport: unknown,
+			clientX: number,
+			clientY: number,
+		) => ({
 			x: clientX / mockUtil.zoom,
 			y: clientY / mockUtil.zoom,
 		}),
@@ -52,7 +58,7 @@ vi.mock("../utils", async (importActual) => {
 		getInputValue: () => mockUtil.inputValue,
 		readInputValue: () => mockUtil.inputValue,
 		isGestureOptedOut: () => mockUtil.optedOut,
-		isNativePointerTarget: () => false,
+		isNativePointerTarget: () => mockUtil.nativePointer,
 		detectEdgeProximity: () => ({ isNearEdge: false }),
 		calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
 	};
@@ -75,6 +81,7 @@ beforeEach(() => {
 	mockUtil.gestureTarget = { id: "obj-1", kind: "rect" };
 	mockUtil.optedOut = false;
 	mockUtil.inputValue = undefined;
+	mockUtil.nativePointer = false;
 	mockUtil.zoom = 1;
 	vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback): number => {
 		rafCallbacks.push(cb);
@@ -608,6 +615,25 @@ describe("GestureRecognizer drag threshold (per pointerType, screen px)", () => 
 		flushRaf();
 
 		expect(types()).toEqual(["pressed", "dragStart"]);
+	});
+
+	it("a native-pointer press confirms on the first move, inside the slop (the browser owns the drag)", () => {
+		mockUtil.nativePointer = true;
+		mockUtil.inputValue = "16";
+		const { dispatch, types, events } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 2, 0, 1016)); // 2px < 3px mouse slop
+		flushRaf();
+		dispatch(makeEvent("pointermove", 2, 0, 1032));
+		flushRaf();
+		dispatch(makeEvent("pointerup", 2, 0, 1048));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "dragStart", "drag", "dragEnd"]);
+		// The value the browser already wrote rides on every gesture of the press
+		expect(events.every((event) => event.inputValue === "16")).toBe(true);
 	});
 
 	it("the decision is screen-based: a 4px screen move confirms even when zoom shrinks it to 1 world px", () => {

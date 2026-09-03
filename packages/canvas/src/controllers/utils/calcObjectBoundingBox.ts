@@ -1,17 +1,16 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import {
-	calcAffineTransformedPoint,
 	calcBoundingBox,
 	calcPolyBoundingBox,
-	degreesToRadians,
 	isTransformedFrame,
 } from "@jiscribe/geometry";
 import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 
 import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
-import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
-import { isPoly } from "../../schemas/objects/types/Poly";
+import { calcTransformedRectBounds } from "./calcTransformedRectBounds";
+import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { isConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import { isConnectorState } from "../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
 /**
@@ -31,32 +30,12 @@ const unionVisualBounds = (
 		return geometryBox;
 	}
 
-	const rect = calculator(obj);
-	const radians = degreesToRadians(obj.rotation ?? 0);
-	const corners = [
-		[rect.x, rect.y],
-		[rect.x + rect.width, rect.y],
-		[rect.x + rect.width, rect.y + rect.height],
-		[rect.x, rect.y + rect.height],
-	].map(([localX, localY]) =>
-		calcAffineTransformedPoint(
-			localX,
-			localY,
-			obj.scaleX ?? 1,
-			obj.scaleY ?? 1,
-			radians,
-			obj.cx,
-			obj.cy,
-		),
-	);
-
-	const xs = corners.map((corner) => corner.x);
-	const ys = corners.map((corner) => corner.y);
+	const decoration = calcTransformedRectBounds(calculator(obj), obj);
 	return {
-		left: Math.min(geometryBox.left, ...xs),
-		top: Math.min(geometryBox.top, ...ys),
-		right: Math.max(geometryBox.right, ...xs),
-		bottom: Math.max(geometryBox.bottom, ...ys),
+		left: Math.min(geometryBox.left, decoration.left),
+		top: Math.min(geometryBox.top, decoration.top),
+		right: Math.max(geometryBox.right, decoration.right),
+		bottom: Math.max(geometryBox.bottom, decoration.bottom),
 	};
 };
 

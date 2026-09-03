@@ -1,21 +1,19 @@
+import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcContentBounds } from "./calcContentBounds";
-import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
-import type { ScrollBoundsConfig } from "../../states/canvas/ScrollBounds";
+import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-
-/** Margin left outside the content when `padding` is omitted (world units). */
-const DEFAULT_SCROLL_BOUNDS_PADDING = 100;
 
 /**
  * The rect panning is limited to, derived from the content extent.
  *
  * Walks every object, so callers keep the result and recompute it only when the
- * objects change — never per drag frame (see canvasReducer's scroll-bounds pass).
+ * objects change — never per drag frame (see limitViewScroll's lazy re-measure).
  *
- * @param config - Mount-time setting; `undefined` and `mode: "infinite"` both
- *   mean unrestricted
+ * @param padding - The wall's per-side margin as
+ *   {@link resolveScrollWallPadding} decided it; null (panning unrestricted)
+ *   returns null without measuring anything
  * @param objects - The object map the extent is measured over
  * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry, so the wall
  *   accounts for whatever a shape draws outside its geometry box; omitting it
@@ -24,11 +22,11 @@ const DEFAULT_SCROLL_BOUNDS_PADDING = 100;
  *   either by setting or because the doc has no content to bound it to
  */
 export const calcScrollBounds = (
-	config: ScrollBoundsConfig | undefined,
+	padding: ResolvedViewPadding | null,
 	objects: Record<string, ObjectState>,
 	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
 ): BoundingBox | null => {
-	if (config?.mode !== "content") {
+	if (padding === null) {
 		return null;
 	}
 
@@ -37,11 +35,10 @@ export const calcScrollBounds = (
 		return null;
 	}
 
-	const padding = config.padding ?? DEFAULT_SCROLL_BOUNDS_PADDING;
 	return {
-		left: contentBounds.left - padding,
-		top: contentBounds.top - padding,
-		right: contentBounds.right + padding,
-		bottom: contentBounds.bottom + padding,
+		left: contentBounds.left - padding.left,
+		top: contentBounds.top - padding.top,
+		right: contentBounds.right + padding.right,
+		bottom: contentBounds.bottom + padding.bottom,
 	};
 };

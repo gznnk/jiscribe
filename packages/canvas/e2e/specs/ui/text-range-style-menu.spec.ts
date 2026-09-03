@@ -10,7 +10,8 @@ import { selectors } from "../../support/selectors";
  *
  * What has to hold for that to work: the menu press neither commits the edit nor
  * takes the focus off the editing surface, so the selection it styles is still
- * there afterwards.
+ * there afterwards. The font size is the exception — its input and slider need the
+ * focus themselves — so the editor takes it back once they are done with it.
  */
 test.describe("styling a stretch of text from the ObjectMenu", () => {
 	const SHAPE_CENTER = { x: 520, y: 270 };
@@ -81,6 +82,24 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 		expect((await canvas.drawnTextRuns(id))[1].fontSize).not.toBe("40px");
 	});
 
+	test("changes the family of only the selected characters", async ({
+		canvas,
+	}) => {
+		const id = await editAndSelect(canvas, "Payment failed", 7);
+
+		await canvas.openObjectMenu("font-family");
+		await canvas.page.click(selectors.objectMenuFont("mono"));
+
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id))[0]?.fontFamily)
+			.toContain("Source Code Pro");
+		expect((await canvas.drawnTextRuns(id))[1].fontFamily).not.toContain(
+			"Source Code Pro",
+		);
+		// The session survives the menu interaction, as it does for the other items.
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+	});
+
 	test("reads the selection back, so the Bold toggle turns it off again", async ({
 		canvas,
 	}) => {
@@ -105,6 +124,49 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 				),
 			)
 			.toBe("set:fontWeight:bold");
+	});
+
+	test("takes the focus back with the same stretch selected once the size is committed", async ({
+		canvas,
+	}) => {
+		const id = await editAndSelect(canvas, "Payment failed", 7);
+
+		await canvas.openObjectMenu("font-size");
+		await canvas.setNumberInput("fontSize", 40);
+
+		// Enter blurs the input, leaving the focus nowhere; the editor takes it back
+		// so the session can be typed into again, and the stretch that was styled is
+		// selected once more — typing replaces exactly it.
+		await expect
+			.poll(async () => await canvas.isTextEditorFocused())
+			.toBe(true);
+		expect(await canvas.textEditorSelection()).toEqual({ start: 0, end: 7 });
+
+		await canvas.page.keyboard.type("Charge");
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id)).map((run) => run.text))
+			.toEqual(["Charge", " failed"]);
+	});
+
+	test("takes the focus back when the slider drag that took it ends", async ({
+		canvas,
+	}) => {
+		const id = await editAndSelect(canvas, "Payment failed", 7);
+
+		await canvas.openObjectMenu("font-size");
+		await canvas.dragSliderBy("fontSize", 60);
+
+		// The slider gives the focus up on the pointer release rather than holding it
+		// until the dropdown closes, so the session has its caret back straight away.
+		await expect
+			.poll(async () => await canvas.isTextEditorFocused())
+			.toBe(true);
+		expect(await canvas.textEditorSelection()).toEqual({ start: 0, end: 7 });
+
+		await canvas.page.keyboard.type("Charge");
+		await expect
+			.poll(async () => (await canvas.drawnTextRuns(id)).map((run) => run.text))
+			.toEqual(["Charge", " failed"]);
 	});
 
 	test("leaves one undo entry behind a slider drag, not one per frame", async ({

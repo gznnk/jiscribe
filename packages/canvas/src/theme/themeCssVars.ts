@@ -43,7 +43,7 @@ export const THEME_TOKEN_CSS_VARS: Record<keyof CanvasThemeTokens, string> = {
  * Converts theme tokens into an inline-style object of `--jiscribe-*` CSS
  * custom property declarations, applied to the Canvas root element.
  * Custom properties inherit, so every descendant (menus, overlays, SVG
- * presentations) resolves the same theme without prop drilling.
+ * rendering) resolves the same theme without prop drilling.
  */
 export const buildThemeCssVars = (
 	tokens: CanvasThemeTokens,

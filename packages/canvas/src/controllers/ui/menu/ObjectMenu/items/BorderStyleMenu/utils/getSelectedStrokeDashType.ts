@@ -1,5 +1,6 @@
+import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
+
 import type { CanvasControllerState } from "../../../../../../../controllers/CanvasTypes";
-import type { StrokeDashType } from "../../../../../../../schemas/objects/types/StrokeDashType";
 import { getFirstSelectedWithProp } from "../../../utils/getFirstSelectedWithProp";
 
 /**

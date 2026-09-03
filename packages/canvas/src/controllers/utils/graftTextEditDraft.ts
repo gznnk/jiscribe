@@ -1,4 +1,5 @@
-import { isSameRichText } from "../../schemas/objects/types/RichText";
+import { isSameRichText } from "@jiscribe/doc/model/objects/types/RichText";
+
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import {
@@ -23,10 +24,6 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * @param objects - The committed objects map
  * @param textEditState - The active editing session; null (or a connector label,
  *   whose editor is already live off its own measurement) grafts nothing
- * @param fontFamily - Family the host draws unstyled text in
- *   (`docDefaults.fontFamily`). Only read for objects whose box is measured from
- *   their text, which are re-measured against the draft so the box follows every
- *   keystroke instead of jumping at commit
  * @param contentResizer - The per-canvas content-resizer registry; the edited
  *   object's type is looked up there, and one absent from it is grafted with its
  *   stored box untouched
@@ -36,7 +33,6 @@ import type { CanvasControllerState } from "../CanvasTypes";
 export const graftTextEditDraft = (
 	objects: Record<string, ObjectState>,
 	textEditState: CanvasControllerState["textEditState"],
-	fontFamily: string,
 	contentResizer: ObjectContentResizerRegistry,
 ): Record<string, ObjectState> => {
 	if (textEditState?.kind !== "shape") {
@@ -77,7 +73,7 @@ export const graftTextEditDraft = (
 	return {
 		...objects,
 		[textEditState.objectId]: resizeToContent
-			? resizeToContent(grafted, { fontFamily })
+			? resizeToContent(grafted, {})
 			: grafted,
 	};
 };

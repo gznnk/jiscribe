@@ -1,13 +1,13 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import { canvasToState } from "../../../states/canvas/CanvasMapper";
-import type { CanvasControllerState } from "../../CanvasTypes";
-import type { CanvasAction } from "../CanvasActions";
-import { createCanvasReducer } from "../canvasReducer";
 import { createTestState } from "./support/createTestState";
 import { rectDoc, twoRectsDoc } from "./support/fixtures";
+import { canvasToState } from "../../../states/canvas/CanvasMapper";
+import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import type { CanvasAction } from "../CanvasActions";
+import { createCanvasReducer } from "../canvasReducer";
 
 const registries = createTestRegistries();
 

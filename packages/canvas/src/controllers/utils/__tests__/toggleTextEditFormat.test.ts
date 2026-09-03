@@ -1,9 +1,9 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import { richTextToPlain } from "@jiscribe/doc/model/objects/types/RichText";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { describe, expect, it } from "vitest";
 
-import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
-import type { RichText } from "../../../schemas/objects/types/RichText";
-import { richTextToPlain } from "../../../schemas/objects/types/RichText";
-import { createObjectTextStyleDefaultsRegistry } from "../../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { TextSlots } from "../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { toggleTextEditFormat } from "../toggleTextEditFormat";

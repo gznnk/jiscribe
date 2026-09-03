@@ -1,6 +1,6 @@
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/canvas";
-import type { TextSlot } from "@jiscribe/canvas/doc";
-import { TEXT_LINE_HEIGHT } from "@jiscribe/canvas/unstable-doc";
+import type { TextSlot } from "@jiscribe/doc";
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/unstable";
 import { describe, it, expect } from "vitest";
 
 import { BELOW_LABEL_STYLE_DEFAULTS } from "../../schema/belowLabelStyleDefaults";
@@ -10,7 +10,7 @@ import {
 } from "../calcBelowLabelTextRegion";
 
 /**
- * Widths come from the non-browser fallback of measureText (characters ×
+ * Widths come from the non-browser fallback of measureTextWidth (characters ×
  * fontSize × 0.6), which is proportional rather than faithful — so the
  * assertions here are about clamps, monotonicity and placement, never about a
  * pixel-exact width.

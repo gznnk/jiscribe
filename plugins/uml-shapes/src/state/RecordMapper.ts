@@ -1,13 +1,9 @@
 import { isObject } from "@jiscribe/basic-validators";
 import type { ObjectMapperType } from "@jiscribe/canvas";
-import type { RichText, TextSlot } from "@jiscribe/canvas/doc";
-import {
-	isRichText,
-	isTextSlot,
-	normalizeRichText,
-} from "@jiscribe/canvas/doc";
 import { createFrameMapper } from "@jiscribe/canvas-sdk";
 import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import type { RichText, TextSlot } from "@jiscribe/doc";
+import { isRichText, isTextSlot, normalizeRichText } from "@jiscribe/doc";
 
 import type { RecordState, RecordTextState } from "./RecordState";
 import {

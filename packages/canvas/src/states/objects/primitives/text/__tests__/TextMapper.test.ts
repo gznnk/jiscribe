@@ -1,7 +1,8 @@
+import type { TextDoc } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import { describe, expect, it } from "vitest";
 
-import type { TextDoc } from "../../../../../schemas/objects/primitives/text/TextDoc";
-import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
+import { resolveTextObjectFont } from "../resolveTextObjectFont";
 import { calcTextDrawnTopLeft } from "../textDrawnTopLeft";
 import { textToDoc, textToState } from "../TextMapper";
 import type { TextState } from "../TextState";
@@ -27,8 +28,11 @@ describe("textToState", () => {
 		const state = textToState(doc());
 		const { width, height } = calcTextObjectFrameSize(
 			"hello",
-			{ fontSize: 16, fontFamily: "Noto Sans JP", fontWeight: "normal" },
-			"Noto Sans JP",
+			resolveTextObjectFont({
+				fontSize: 16,
+				fontFamily: "Noto Sans JP",
+				fontWeight: "normal",
+			}),
 		);
 
 		expect(state.width).toBe(width);
@@ -81,6 +85,53 @@ describe("textToState", () => {
 		expect(long.width).toBeGreaterThan(short.width);
 		expect(long.cx - long.width / 2).toBe(short.cx - short.width / 2);
 	});
+
+	it("takes the stored width of a block text and measures only its height", () => {
+		const blockDoc = doc({
+			textLayout: "block",
+			width: 120,
+			text: "a much longer body that has to wrap inside the stored width",
+		});
+		const state = textToState(blockDoc);
+
+		expect(state.textLayout).toBe("block");
+		expect(state.width).toBe(120);
+		expect(state.height).toBe(
+			calcTextObjectFrameSize(
+				"a much longer body that has to wrap inside the stored width",
+				resolveTextObjectFont({
+					fontSize: 16,
+					fontFamily: "Noto Sans JP",
+					fontWeight: "normal",
+				}),
+				120,
+			).height,
+		);
+	});
+
+	it("heightens a block text instead of widening it as the body grows", () => {
+		const short = textToState(
+			doc({ textLayout: "block", width: 120, text: "a" }),
+		);
+		const long = textToState(
+			doc({
+				textLayout: "block",
+				width: 120,
+				text: "a much longer body that has to wrap inside the stored width",
+			}),
+		);
+
+		expect(long.width).toBe(short.width);
+		expect(long.height).toBeGreaterThan(short.height);
+		// The drawn top-left is the doc coordinate in either layout.
+		expect(long.cy - long.height / 2).toBe(short.cy - short.height / 2);
+	});
+
+	it("measures a block text missing its width like a label", () => {
+		const withoutWidth = textToState(doc({ textLayout: "block" }));
+
+		expect(withoutWidth.width).toBe(textToState(doc()).width);
+	});
 });
 
 describe("textToDoc", () => {
@@ -104,8 +155,8 @@ describe("textToDoc", () => {
 	});
 
 	it("uses the state's own size, not the text's, to recover the drawn top-left", () => {
-		// A state whose box was measured elsewhere (with the theme's family) must
-		// come back to the corner that box was anchored on.
+		// A state whose box was measured elsewhere must come back to the corner
+		// that box was anchored on.
 		const state = {
 			...textToState(doc()),
 			cx: 100,
@@ -137,6 +188,22 @@ describe("textToDoc", () => {
 });
 
 describe("doc round trip", () => {
+	it("keeps the block layout and its width, which the text does not measure", () => {
+		const authored = {
+			id: "t1",
+			type: "text",
+			x: 10,
+			y: 20,
+			text: "a much longer body that has to wrap inside the stored width",
+			textLayout: "block",
+			width: 120,
+		} as unknown as TextDoc;
+
+		const roundTripped = textToDoc(textToState(authored));
+
+		expect(JSON.parse(JSON.stringify(roundTripped))).toEqual(authored);
+	});
+
 	it("gives back a doc that gained none of the style fields its author omitted", () => {
 		// The type's defaults are resolved per read (ObjectTextStyleDefaultsRegistry)
 		// rather than filled into the doc, so a file keeps saying nothing about the

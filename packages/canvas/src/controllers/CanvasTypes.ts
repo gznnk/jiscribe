@@ -1,16 +1,15 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
-import type { ConnectorLabelPlacement } from "../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
-import type { RichText } from "../schemas/objects/types/RichText";
+import type { ConnectorLabelPlacement } from "../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { CanvasState } from "../states/canvas/CanvasState";
-import type { DocSnapshot } from "../states/canvas/DocSnapshot";
-import type { ScrollBoundsConfig } from "../states/canvas/ScrollBounds";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { Stencil } from "./ui/objects/Stencil";
 import type { ObjectState } from "../states/objects/base/ObjectState";
-import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../states/objects/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
 
 // ---------------------------------------------------------------------------
@@ -106,6 +105,35 @@ export type AxisLockFeedback = {
 };
 
 /**
+ * The slice of CanvasState a snapshot needs to rebuild its CanvasDoc later.
+ * Holding these references is safe because every state update path replaces
+ * objects immutably; the committed map can never change under the snapshot.
+ */
+export type DocSnapshotSource = Pick<
+	CanvasState,
+	"objects" | "rootIds" | "background" | "view"
+>;
+
+/**
+ * A history entry whose CanvasDoc is materialized lazily.
+ *
+ * Rebuilding the Doc tree (`canvasToDoc`) is O(N) over all objects, which is
+ * too expensive to run on every commit during key-repeat nudges. Instead the
+ * history stack stores either an already-resolved Doc or a reference to the
+ * committed state, and `resolveDocSnapshot` converts on first read only.
+ *
+ * Invariant: neither ObjectState contents nor a resolved Doc may ever be
+ * mutated in place — mappers share inner arrays (e.g. Poly `points`) by
+ * reference between the two representations.
+ */
+export type DocSnapshot = {
+	/** Resolved Doc (memoized). null until first resolution. */
+	doc: CanvasDoc | null;
+	/** Committed-state references for lazy conversion. null once resolved (or when created from a Doc). */
+	source: DocSnapshotSource | null;
+};
+
+/**
  * State of the history stack. Entries are lazy DocSnapshots: the Doc tree is materialized
  * only when an entry is read (undo/redo restore, save notification, external-sync comparison).
  */
@@ -180,6 +208,36 @@ export type DragKind =
 	| "other";
 
 /**
+ * How far the canvas may be scrolled, set once at mount through
+ * `initialConfig.scrollBounds`.
+ *
+ * Passing this answers for the whole surface: it outranks the loaded document's
+ * own `view.scroll` declaration, and the document's `view.padding` plays no part
+ * in the wall it puts up. Omit it to let each document decide (see
+ * `resolveScrollWallPadding`).
+ *
+ * The limit applies to the deliberate view scrolls only — the wheel and the grab
+ * pan. Zooming stays unrestricted (zooming out past the range still shows the
+ * empty area around it), and so does every other way the view moves; a view left
+ * outside the range that way scrolls back at its own pace rather than snapping.
+ */
+export type ScrollBoundsConfig = {
+	/**
+	 * `"infinite"` (the default when the whole setting is omitted) leaves the
+	 * canvas unbounded; `"content"` limits panning to the extent of the objects
+	 * currently in the doc, so an empty doc is unbounded either way.
+	 */
+	mode: "infinite" | "content";
+	/**
+	 * Margin in world units kept outside the content extent (default `100`, four
+	 * cells of the default grid). Ignored when `mode` is `"infinite"`. `0` puts
+	 * the wall exactly on the outermost object's edge, which leaves that object
+	 * flush against the window edge.
+	 */
+	padding?: number;
+};
+
+/**
  * Canvas state extended with undo/redo history for the controller layer.
  *
  * Pure state only: the per-canvas registry bundle is a dependency rather than data, so it is
@@ -205,7 +263,7 @@ export type CanvasControllerState = CanvasState & {
 	 * Whether the view is still coasting from a released pan (inertial scrolling).
 	 * Deliberately not folded into activeDragKind: no pointer is down and no
 	 * eventStartSnapshot is open, so the two would stop being set as a pair.
-	 * handleGesture owns the lifecycle — up on every glide frame, down on the
+	 * handleGesture owns the lifecycle — up on every fling frame, down on the
 	 * recognizer's inertialScrollEnd.
 	 */
 	inertialScrolling: boolean;
@@ -226,26 +284,39 @@ export type CanvasControllerState = CanvasState & {
 	edgeScrollEnabled: boolean;
 
 	/**
-	 * How far the view may be scrolled, or null on the default infinite canvas.
-	 * Set once at mount and applied by `limitViewScroll` at the end of every
-	 * gesture (nothing else limits the view).
+	 * How far the view may be scrolled, applied by `limitViewScroll` at the end of
+	 * every gesture (nothing else limits the view). Always present: only the host
+	 * half is fixed at mount, while the document half moves with whatever document
+	 * is loaded, so there is no point at which "no wall" can be settled for good.
 	 */
 	scrollLimit: {
-		/** The host's setting, kept because the rect is re-measured from it */
-		config: ScrollBoundsConfig;
 		/**
-		 * The rect the view is kept inside, measured from `measuredFrom`; null when
-		 * the doc holds no content to bound it to.
+		 * The host's mount-time setting, or null when it left the wall to the
+		 * document. Kept because the wall is re-resolved from it on every scroll.
+		 */
+		hostConfig: ScrollBoundsConfig | null;
+		/**
+		 * The rect the view is kept inside, measured from `measuredFrom` /
+		 * `measuredView`; null when nothing walls the view in — no wall was
+		 * declared, or the doc holds no content to bound it to.
 		 */
 		rect: BoundingBox | null;
 		/**
 		 * The object map `rect` was measured from — a different reference means it
 		 * is stale. Measuring walks every object, so it is redone lazily, on the
 		 * first scroll after the objects change rather than on the change itself.
-		 * null before the first measurement.
+		 * null before the first measurement, which is what makes the first scroll
+		 * measure no matter what the other cache key says.
 		 */
 		measuredFrom: Record<string, ObjectState> | null;
-	} | null;
+		/**
+		 * The `view` `rect` was measured under, the second half of the cache key:
+		 * loading another document moves the wall even when its padding happens to
+		 * match, and `undefined` is a value here (a doc declaring no view) rather
+		 * than a "not measured" marker — `measuredFrom` carries that.
+		 */
+		measuredView: ViewDoc | undefined;
+	};
 
 	/**
 	 * Incremented when a new edit is confirmed (dragEnd, command execution, etc.).
@@ -417,12 +488,6 @@ export type CanvasControllerState = CanvasState & {
 
 	/** Non-null only while axis-locked; cleared on dragEnd. Drawn by AxisLockGuide */
 	axisLockFeedback: AxisLockFeedback | null;
-
-	/**
-	 * Defaults for newly created objects (e.g. fontFamily), injected from the Canvas `theme`
-	 * prop and kept in sync via SET_DOC_DEFAULTS. Read by gesture handlers creating docs.
-	 */
-	docDefaults: DocCreationDefaults;
 
 	/**
 	 * Set synchronously by CopyCommand regardless of whether the navigator.clipboard write

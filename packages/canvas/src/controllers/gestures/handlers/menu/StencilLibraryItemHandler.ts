@@ -1,7 +1,7 @@
+import { createObjectDoc } from "@jiscribe/doc/model/objects/utils/createObjectDoc";
+import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
-import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
-import type { ObjectFactoryRegistry } from "../../../../schemas/registry/ObjectFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import type { Stencil } from "../../../ui/objects/Stencil";
@@ -16,10 +16,14 @@ import {
 	buildSnapFeedback,
 	findSnap,
 } from "../utils/snap/findSnap";
+import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
 
 /**
  * Extracts the preset ID from a targetPart.
  * Format: "item:<presetId>"
+ *
+ * Splitting is enough because a preset id holds no colon of its own — StencilRegistry
+ * refuses one that does, rather than letting it reach here and resolve to nothing.
  */
 const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
 
@@ -56,7 +60,6 @@ const addObjectToState = (
 		position,
 		registries.objectFactory,
 		preset.defaultOverrides,
-		state.docDefaults,
 	);
 	const objectState = registries.objectMapper.toState(doc);
 
@@ -182,7 +185,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 				const snapCandidates = state.eventStartSnapshot?.snapCandidates;
 				const drag = state.stencilLibraryDrag;
 
-				if (!snapCandidates || !drag || event.mods.ctrl) {
+				if (!snapCandidates || !drag || isSnapSuppressed(event)) {
 					return {
 						...state,
 						stencilLibraryDrag: drag

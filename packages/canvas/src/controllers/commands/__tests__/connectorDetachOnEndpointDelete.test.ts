@@ -1,3 +1,4 @@
+import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { describe, expect, it } from "vitest";
 
 import { createCommandState } from "./support/createCommandState";
@@ -7,8 +8,7 @@ import {
 	threeRectsWithConnectorDoc,
 	twoRectsWithConnectorDoc,
 } from "./support/fixtures";
-import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 
 const connectorOf = (

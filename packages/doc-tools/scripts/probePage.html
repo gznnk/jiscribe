@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="utf-8" />
+		<title>Chromium text width probe</title>
+		<!--
+			The faces the Node measurer reads off disk, loaded here the way the canvas
+			loads them in a browser. Served from this package's own node_modules so the
+			probe and the measurer can never drift onto different files.
+		-->
+		<link
+			rel="stylesheet"
+			href="/node_modules/@fontsource/source-sans-3/400.css"
+		/>
+		<link
+			rel="stylesheet"
+			href="/node_modules/@fontsource/source-sans-3/700.css"
+		/>
+		<link
+			rel="stylesheet"
+			href="/node_modules/@fontsource/noto-sans-jp/400.css"
+		/>
+		<link
+			rel="stylesheet"
+			href="/node_modules/@fontsource/noto-sans-jp/700.css"
+		/>
+		<style>
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				background: #fff;
+			}
+			/* Laid out the way the canvas lays out a text box, so a glyph that only
+			   loads under a real layout is loaded before anything is measured. */
+			.probe {
+				display: inline-block;
+				white-space: pre;
+				line-height: 1.4;
+				box-sizing: border-box;
+				font-family: "Source Sans 3", "Noto Sans JP", sans-serif;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="stage"></div>
+	</body>
+</html>

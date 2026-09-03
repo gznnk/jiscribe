@@ -1,6 +1,6 @@
+import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { describe, expect, it } from "vitest";
 
-import type { RectDoc } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import {
 	rectToDoc,
 	rectToState,

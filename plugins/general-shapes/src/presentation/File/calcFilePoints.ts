@@ -1,6 +1,6 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { calcFileFoldSize } from "./calcFileFoldSize";
+import { calcFileFoldSize } from "../../schema/file/calcFileFoldSize";
 
 /**
  * Corners of the file silhouette for a bounding box whose top-left corner is at

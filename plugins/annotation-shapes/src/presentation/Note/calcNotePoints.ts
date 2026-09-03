@@ -1,6 +1,6 @@
 import type { Point } from "@jiscribe/geometry";
 
-import { calcNoteFoldSize } from "./calcNoteFoldSize";
+import { calcNoteFoldSize } from "../../schema/note/calcNoteFoldSize";
 
 /**
  * Corners of the note silhouette for a bounding box whose top-left corner is at

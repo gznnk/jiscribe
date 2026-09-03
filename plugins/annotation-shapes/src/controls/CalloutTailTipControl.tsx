@@ -9,8 +9,8 @@ import { memo } from "react";
 import {
 	calcCalloutTailTipPoint,
 	isVerticalTailSide,
-	resolveCalloutTail,
 } from "../presentation/Callout";
+import { resolveCalloutTail } from "../schema/callout/CalloutDoc";
 import type { CalloutState } from "../state/callout/CalloutState";
 
 /**

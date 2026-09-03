@@ -3,12 +3,13 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
 import { calcScrollBounds } from "../../../utils/calcScrollBounds";
 import { clampScrolledCamera } from "../../../utils/clampScrolledCamera";
+import { resolveScrollWallPadding } from "../../../utils/resolveScrollWallPadding";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 
 /**
  * Whether this gesture is one of the deliberate view scrolls the limit applies
  * to: the wheel (Ctrl held makes it a zoom, which is never limited), the grab
- * pan of a middle-/right-button drag, the one-finger touch pan, and the glide a
+ * pan of a middle-/right-button drag, the one-finger touch pan, and the fling a
  * released pan leaves behind.
  *
  * Every other way the view moves is left alone — the scroll a drag carries with
@@ -42,10 +43,14 @@ const isViewScroll = (gesture: Gesture): boolean => {
  * the limit applies to and it actually moved the view.
  *
  * The last step of handleGesture, so every gesture that moves the camera passes
- * through one limit rather than each handler carrying its own. The limit rect is
- * re-measured here when the objects have changed since it was last measured —
- * lazily, because a drag rewrites `objects` every frame while no view scroll can
- * be in progress, and measuring walks every object.
+ * through one limit rather than each handler carrying its own. Both halves of the
+ * wall are settled here rather than at mount: which wall applies is re-resolved
+ * per scroll (the host's setting is fixed, but the document's declaration travels
+ * with whatever document is loaded), and the rect is re-measured when the objects
+ * or the `view` have changed since it was last measured — lazily, because a drag
+ * rewrites `objects` every frame while no view scroll can be in progress, and
+ * measuring walks every object. Resolving is reads only, so the unwalled canvas
+ * leaves without measuring anything.
  *
  * @param nextState - State as the gesture's handlers left it
  * @param previousState - State before the gesture: tells whether the camera
@@ -63,24 +68,33 @@ export const limitViewScroll = (
 ): CanvasControllerState => {
 	const { scrollLimit } = nextState;
 	if (
-		scrollLimit === null ||
 		!isViewScroll(gesture) ||
 		isSameCamera(nextState.viewport, previousState.viewport)
 	) {
 		return nextState;
 	}
 
+	const wallPadding = resolveScrollWallPadding(
+		scrollLimit.hostConfig,
+		nextState.view,
+	);
+	if (wallPadding === null) {
+		return nextState;
+	}
+
 	const measured =
-		scrollLimit.measuredFrom === nextState.objects
+		scrollLimit.measuredFrom === nextState.objects &&
+		scrollLimit.measuredView === nextState.view
 			? scrollLimit
 			: {
-					config: scrollLimit.config,
+					hostConfig: scrollLimit.hostConfig,
 					rect: calcScrollBounds(
-						scrollLimit.config,
+						wallPadding,
 						nextState.objects,
 						registries.objectVisualBounds,
 					),
 					measuredFrom: nextState.objects,
+					measuredView: nextState.view,
 				};
 
 	const camera = clampScrolledCamera(

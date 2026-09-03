@@ -1,8 +1,9 @@
+import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
+
 import type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,
 } from "./ObjectTextEditOverflowTypes";
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
 /**
  * Per-type registry of text-edit overflow resolvers (see

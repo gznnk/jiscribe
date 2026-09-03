@@ -16,23 +16,29 @@ ESLint 9, Prettier. React Compiler is not used.
 
 ```
 packages/
-  canvas/            engine (rendering, gestures, commands, state, schema) + its e2e suite and the shared e2e kit
+  doc/               the document layer: model, plugin contract, parser, ops, text metrics, .jis.png/.jis.svg I/O
+  canvas/            engine (rendering, gestures, commands, state) + its e2e suite and the shared e2e kit
   canvas-sdk/        shape-authoring kit for plugin authors
   geometry/          geometry types and calculations
   markdown/          markdown rendering
   basic-validators/  primitive runtime validators
   utility-types/     shared TypeScript utility types
-  ai-docs/           generated JSON Schema / AI reference for the shipped shapes
-plugins/             flowchart, uml, container, general, annotation, sticky, markdown — each with its own e2e suite
+  doc-schema/        generated JSON Schema / AI reference for the shipped shapes
+  ai-tools/          the canvas tool set an AI can call: the declaration, and the applying side under ./apply (node) and ./client (browser)
+  standard-shapes/   the shipped shape set, bundled once for every host (doc + presentation entries)
+  doc-tools/         validate / measure / diagnose over the standard set (Node text measurer included)
+plugins/             flowchart, uml, container, general, annotation, sticky, markdown, lucide-icon — each with its own e2e suite
 apps/
   canvas-examples/   integration examples (one example = one file) + the plugin-coexistence e2e suite
   vscode-extension/  the VSCode extension
+  cli/               the jiscribe CLI: validate / diagnose / measure / render (headless browser harness) / preview (one self-contained HTML)
+  mcp/               the MCP server: the tool set over stdio, plus a local canvas viewer people can edit in
 ```
 
-Playwright e2e is spread over nine suites, one per package that owns shapes:
+Playwright e2e is spread over ten suites, one per package that owns shapes:
 `packages/canvas/e2e/` (core, on a harness registering no shipped plugin),
 `plugins/<name>/e2e/` (that plugin alone), and `apps/canvas-examples/e2e/` (one spec:
-all seven plugins on a single canvas). Each has its own `playwright.config.ts` and runs
+all eight plugins on a single canvas). Each has its own `playwright.config.ts` and runs
 as `pnpm --filter <package> test:e2e`. They share canvas's kit, which plugins reach
 through `@jiscribe/canvas-sdk/testing/*` — see `packages/canvas/docs/09-testing.md`.
 
@@ -53,7 +59,7 @@ Then, by impact:
 - **Unit tests for what you touched**: `pnpm --filter @jiscribe/canvas test`
 - **Behaviour or rendering**: run e2e from the suite that owns what you touched, and
   only the related specs.
-  - `packages/canvas/src/{gestures,controllers,presentations,states}`: select by
+  - `packages/canvas/src/{gestures,controllers,rendering,states}`: select by
     keyword, e.g. `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`.
     Do not run that suite in full (160+ spec files); CI does it on pull requests to
     `main`.
@@ -65,24 +71,35 @@ Then, by impact:
   If no spec matches, cover it with a unit test instead.
 
 - **Shapes or AI-facing metadata** (new shape, `ObjectFeatures`, `description`,
-  `defaults`): run `pnpm generate:ai` and commit the regenerated
-  `packages/ai-docs/assets/`, or CI's `check:ai` fails on the drift.
+  `defaults`): run `pnpm generate:schema` and commit the regenerated
+  `packages/doc-schema/assets/`, or CI's `check:schema` fails on the drift.
+- **Anything the VSCode extension ships** (a bundled dependency's version, a
+  font family, the Lucide icon set): run `pnpm build:vscode` and then
+  `pnpm generate:notices`, and commit the regenerated
+  `apps/vscode-extension/THIRD-PARTY-NOTICES.txt`, or CI's `check:notices`
+  fails on the drift. It reads the built bundle, so the build has to come
+  first — and it has to run in a standalone clone or worktree of this
+  repository. Mounted as a submodule the tree is installed by the outer
+  workspace, whose lockfile resolves some ranges to other versions; the script
+  refuses there rather than writing those.
 - **Anything an app consumes**: `pnpm build:examples` / `pnpm build:vscode`
 
 ## Rules that are enforced, not suggested
 
 ESLint fails on all of these — see `eslint.config.js` for the exact patterns.
 
-- Packages under `plugins/` may only import `@jiscribe/canvas`,
-  `@jiscribe/canvas-sdk` and their `/doc` entry points. `@jiscribe/canvas/unstable`
-  and any `src/` path are rejected.
-- The headless document layer (`packages/canvas/src/doc.ts`, `schemas/`,
-  `docOps/`, and the equivalent layers in `canvas-sdk` and the plugins) must not
-  import `react`, `react-dom`, `@emotion/*`, or the presentation / controller /
-  state layers.
+- Packages under `plugins/` may only import `@jiscribe/canvas`, `@jiscribe/doc`,
+  `@jiscribe/canvas-sdk` and its `/doc` entry point. `@jiscribe/canvas/unstable`,
+  `@jiscribe/doc/unstable`, deep `@jiscribe/doc/*` paths and any `src/` path are
+  rejected.
+- The headless document layer (`packages/doc` — the document model, plugin
+  contract, parser, ops, text metrics and file I/O — plus the equivalent layers
+  in `canvas-sdk` and the plugins) must not import `react`, `react-dom`,
+  `@emotion/*`, or `@jiscribe/canvas`. Canvas keeps `./doc` / `./unstable-doc` /
+  `./png-source` / `./svg-source` as re-export shims over `@jiscribe/doc`.
 - Import through package roots (`@jiscribe/geometry`), never `src/` paths.
-- `as unknown as` is banned under `packages/canvas/src/states` and `schemas`;
-  use `rebrand<T>()`.
+- `as unknown as` is banned under `packages/canvas/src/states` and
+  `packages/doc/src/{model,plugin,parse}`; use `rebrand<T>()`.
 
 ## Reuse `@jiscribe/geometry`
 

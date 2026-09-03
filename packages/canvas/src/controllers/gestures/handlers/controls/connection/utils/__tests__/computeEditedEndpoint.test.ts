@@ -1,8 +1,8 @@
+import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { describe, expect, it } from "vitest";
 
-import type { EndpointRef } from "../../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../../../../../states/objects/connector/ConnectorState";
 import { computeEditedEndpoint } from "../computeEditedEndpoint";
 
 const free = (x: number, y: number): EndpointRef => ({

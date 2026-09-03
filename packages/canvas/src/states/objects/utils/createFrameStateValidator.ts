@@ -1,7 +1,10 @@
 import { isObject } from "@jiscribe/basic-validators";
+import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 
 import {
 	hasValidIdAndType,
+	isValidArrowFields,
+	isValidAutoHeightState,
 	isValidFillStyleState,
 	isValidFrameState,
 	isValidRadiusStyleState,
@@ -10,12 +13,11 @@ import {
 	isValidTransformState,
 	type StateRecord,
 } from "./validateStateUtils";
-import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
 
 /**
  * Builds a state validator for Frame-type objects (geometry: "rect" | "ellipse")
- * from its features. Validates id/type, Frame, transform, and stroke/fill/text/radius
+ * from its features. Validates id/type, Frame, transform, and stroke/fill/text/radius/arrow
  * according to the features. Shape-specific extra validation (e.g. svg's svgText)
  * is passed via `isExtraValid` (a boolean-returning predicate).
  *
@@ -33,12 +35,17 @@ export const createFrameStateValidator = (
 		return (
 			hasValidIdAndType(o, features.type) &&
 			isValidFrameState(o) &&
+			isValidAutoHeightState(o, features.geometry) &&
 			(!features.transform || isValidTransformState(o)) &&
 			(!features.stroke || isValidStrokeStyleState(o)) &&
 			(!features.fill || isValidFillStyleState(o)) &&
 			(features.text === undefined ||
 				isValidTextStyleState(o, features.text)) &&
 			(!features.radius || isValidRadiusStyleState(o)) &&
+			// The mapper passes the arrow group through for any type declaring it
+			// (collectStyleKeys); this is the clipboard boundary, so an unchecked
+			// startArrow would reach the doc and fail only on the next open.
+			(!features.arrow || isValidArrowFields(o)) &&
 			(isExtraValid === undefined || isExtraValid(o))
 		);
 	};

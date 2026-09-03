@@ -1,4 +1,11 @@
 import {
+	ConnectPointIds,
+	type CenterAnchorSpec,
+	type ConnectPointAnchorSpec,
+	type EdgeAnchorSpec,
+} from "@jiscribe/doc/model/objects/types/EndpointRef";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
+import {
 	calcEuclideanDistance,
 	calcInverseAffineTransformedPoint,
 	degreesToRadians,
@@ -9,20 +16,13 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../../../../../constants/precision";
-import type { ExtraConnectPoint } from "../../../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcEdgeAnchorFromPoint,
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
-} from "../../../../../../presentations/objects/utils/calcConnectPoint";
-import {
-	ConnectPointIds,
-	type CenterAnchorSpec,
-	type ConnectPointAnchorSpec,
-	type EdgeAnchorSpec,
-} from "../../../../../../schemas/objects/types/EndpointRef";
+} from "../../../../../../rendering/objects/utils/calcConnectPoint";
 
 /**
  * How near the cursor has to be to a named anchor — the center, an edge midpoint

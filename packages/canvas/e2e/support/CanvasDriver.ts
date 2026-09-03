@@ -30,7 +30,7 @@ export const AUTO_SCROLL_MARGIN = 25;
  * carries no velocity and the view stops where the drag stopped
  * (FLING_RELEASE_IDLE_MS is 50). Not a synchronization wait: it is part of the
  * input being performed — steps dispatched back to back and released mid-motion
- * are a flick, and the view would glide past the target.
+ * are a flick, and the view would fling past the target.
  */
 const PAN_SETTLE_MS = 120;
 
@@ -263,9 +263,9 @@ export class CanvasDriver {
 	 * (see {@link PAN_SETTLE_MS}), so the pan ends exactly where the drag did.
 	 *
 	 * @param options.fling - Skip the rest, letting the release keep its velocity so
-	 *   the view glides on (inertial scrolling). The steps are dispatched back to
+	 *   a fling follows (inertial scrolling). The steps are dispatched back to
 	 *   back, so the resulting speed is not a controlled quantity — a spec that
-	 *   measures the glide should drive the mouse itself.
+	 *   measures the fling should drive the mouse itself.
 	 */
 	async rightDrag(
 		from: { x: number; y: number },
@@ -466,10 +466,70 @@ export class CanvasDriver {
 		return created.id;
 	}
 
-	/** Click a shape to select it and wait for the ObjectMenu. */
+	/**
+	 * Add a click-placed shape from a category flyout and return the new data-id. The
+	 * flyout counterpart of placeShape: a preset whose type is created without a bounds
+	 * drag (`supportsBounds: false`) is placed by the click that picks it, so there is no
+	 * crosshair to wait for and nothing to drag.
+	 */
+	async placeShapeFromFlyout(
+		categoryId: string,
+		presetId: string,
+	): Promise<string> {
+		const before = await this.captureObjects();
+		const beforeIds = new Set(before.map((obj) => obj.id));
+
+		await this.page.click(selectors.categoryButton(categoryId));
+		const item = this.page.locator(selectors.shapeItem(presetId));
+		await expect(item).toBeVisible();
+		await item.click();
+
+		await expect
+			.poll(async () => (await this.captureObjects()).length, {
+				message: `${presetId} places a new shape`,
+			})
+			.toBe(before.length + 1);
+
+		const created = (await this.captureObjects()).find(
+			(obj) => !beforeIds.has(obj.id),
+		);
+		if (!created?.id) {
+			throw new Error(
+				`cannot read the data-id of the shape placed by ${presetId}`,
+			);
+		}
+		return created.id;
+	}
+
+	/**
+	 * Wait until the gesture recognizer has consumed the pointer events a click just queued.
+	 *
+	 * GestureRecognizer batches pointer input into one requestAnimationFrame run, while
+	 * keyboard shortcuts are handled synchronously on keydown. A keystroke sent right after
+	 * a click therefore reaches the canvas first: Enter opens the text editor, and the
+	 * click's batch a frame later reselects the shape and closes it again. Two frames,
+	 * because the batch runs in the first and React commits its update before the second.
+	 *
+	 * Not a timed wait — it rests on the frame boundary the recognizer schedules against.
+	 * A click that changes the DOM is followed by an assertion on that change; this covers
+	 * the clicks whose effect is invisible, such as re-clicking an already-selected shape.
+	 */
+	private async waitForGestureBatch() {
+		await this.page.evaluate(
+			() =>
+				new Promise((resolve) =>
+					requestAnimationFrame(() =>
+						requestAnimationFrame(() => resolve(null)),
+					),
+				),
+		);
+	}
+
+	/** Click a shape to select it and wait for its control handles. */
 	async selectAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y);
+		await this.waitForGestureBatch();
 		await expect(this.page.locator(selectors.control).first()).toBeVisible();
 	}
 
@@ -480,6 +540,7 @@ export class CanvasDriver {
 	async clickAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y);
+		await this.waitForGestureBatch();
 	}
 
 	/**
@@ -491,6 +552,7 @@ export class CanvasDriver {
 		await this.page.keyboard.down("Control");
 		await this.page.mouse.click(screen.x, screen.y);
 		await this.page.keyboard.up("Control");
+		await this.waitForGestureBatch();
 	}
 
 	/** Click empty space to deselect, committing any text edit in progress. */
@@ -722,6 +784,7 @@ export class CanvasDriver {
 			text: string;
 			color: string;
 			fontSize: string;
+			fontFamily: string;
 			fontWeight: string;
 			fontStyle: string;
 		}[]
@@ -762,6 +825,7 @@ export class CanvasDriver {
 						text: part.textContent ?? "",
 						color: style.color,
 						fontSize: style.fontSize,
+						fontFamily: style.fontFamily,
 						fontWeight: style.fontWeight,
 						fontStyle: style.fontStyle,
 					};
@@ -782,7 +846,10 @@ export class CanvasDriver {
 	 */
 	async setColor(sectionId: ColorSectionId, cssColor: string) {
 		await this.openObjectMenu(sectionId);
-		const input = this.page.locator(selectors.cssColorInput);
+		// Scoped to the section: the panel being closed keeps its input until the frame
+		// that processes the toggle click, and filling that one writes the color to the
+		// property of the previous section.
+		const input = this.page.locator(selectors.objectMenuColorInput(sectionId));
 		await input.fill(cssColor);
 		await input.press("Enter");
 	}
@@ -1268,6 +1335,7 @@ export class CanvasDriver {
 	 */
 	async textStyleOf(id: string): Promise<{
 		fontSize: string;
+		fontFamily: string;
 		color: string;
 		fontWeight: string;
 		fontStyle: string;
@@ -1298,6 +1366,7 @@ export class CanvasDriver {
 			const textStyle = getComputedStyle(textDiv);
 			return {
 				fontSize: textStyle.fontSize,
+				fontFamily: textStyle.fontFamily,
 				color: textStyle.color,
 				fontWeight: textStyle.fontWeight,
 				fontStyle: textStyle.fontStyle,

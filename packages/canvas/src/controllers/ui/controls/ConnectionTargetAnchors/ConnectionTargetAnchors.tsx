@@ -1,13 +1,13 @@
+import type { ConnectPointId } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
-import type { ExtraConnectPoint } from "../../../../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcExtraConnectPoint,
-} from "../../../../presentations/objects/utils/calcConnectPoint";
-import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
+} from "../../../../rendering/objects/utils/calcConnectPoint";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
 type ConnectionTargetAnchorsProps = {

@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		// Only for CanvasHandle, whose declaration lives in the canvas root entry and
+		// drags the .tsx files around it into this program. Nothing here is a component
+		// and nothing here imports react at run time (see canvasApiRef.ts).
+		"jsx": "react-jsx"
+	},
+	"include": ["src"]
+}

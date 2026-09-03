@@ -1,11 +1,8 @@
 import * as vscode from "vscode";
 
-import { saveExportedImage } from "./saveExportedImage";
-import { getCanvasWebviewHtml } from "./webviewHtml";
-import type {
-	ExtensionToWebviewMessage,
-	WebviewToExtensionMessage,
-} from "../types/messages";
+import { resolveCanvasWebview } from "./resolveCanvasWebview";
+import { toWebviewDocSource } from "../canvasDocSource";
+import type { ExtensionToWebviewMessage } from "../types/messages";
 
 /**
  * Custom editor provider that shows the Canvas UI when a .jis.json file opens.
@@ -34,13 +31,6 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		webviewPanel: vscode.WebviewPanel,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
-		// Enable script execution in the Webview (disabled by default).
-		webviewPanel.webview.options = { enableScripts: true };
-		webviewPanel.webview.html = getCanvasWebviewHtml(
-			webviewPanel.webview,
-			this.context.extensionUri,
-		);
-
 		// Count of in-flight applyEdit() calls from Webview edits. While > 0, the
 		// resulting onDidChangeTextDocument events are our own write echoing back
 		// and must not be re-sent to the Webview, or Webview → Extension → file
@@ -74,70 +64,44 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 			},
 		);
 
-		// Retain the message listener's Disposable and dispose it in onDidDispose;
-		// dropping it leaks a listener per editor open.
-		const messageListener = webviewPanel.webview.onDidReceiveMessage(
-			(message: WebviewToExtensionMessage) => {
-				switch (message.type) {
-					case "ready":
-						// Webview is initialized; send the initial file contents.
-						this.updateWebview(webviewPanel, document);
-						break;
+		resolveCanvasWebview(webviewPanel, {
+			extensionUri: this.context.extensionUri,
+			documentUri: document.uri,
 
-					case "undo":
-						vscode.commands.executeCommand("undo");
-						break;
+			// Webview is initialized; send the initial file contents.
+			onReady: () => this.updateWebview(webviewPanel, document),
 
-					case "redo":
-						vscode.commands.executeCommand("redo");
-						break;
-
-					case "update": {
-						// Write the canvas edit back to the file. Mark a Webview-origin
-						// write as in flight; applyEdit() is async and
-						// onDidChangeTextDocument may fire before it resolves, so a counter
-						// tracks it. The two-arg .then(onFulfilled, onRejected) is used so an
-						// exception thrown inside onFulfilled does not reach onRejected.
-						lastSaveNonce = message.saveNonce;
-						pendingWebviewUpdates++;
-						this.updateTextDocument(document, message.data).then(
-							(applied) => {
-								pendingWebviewUpdates--;
-								// applyEdit() can resolve false instead of rejecting (e.g. the
-								// document is already closed); either way, notify the user it
-								// wasn't saved.
-								if (!applied) {
-									this.notifySaveFailure(document, undefined);
-								}
-							},
-							(err: unknown) => {
-								// Always restore the counter on failure; otherwise it never
-								// returns to 0 and all later external changes stop reaching the
-								// Webview.
-								pendingWebviewUpdates--;
-								this.notifySaveFailure(document, err);
-							},
-						);
-						break;
-					}
-
-					case "exportImage":
-						// Save the exported image to the workspace (save dialog → write → notify).
-						void saveExportedImage(
-							document.uri,
-							message.format,
-							message.base64,
-							message.includesSource,
-						);
-						break;
-				}
+			onUpdate: (data, saveNonce) => {
+				// Write the canvas edit back to the file. Mark a Webview-origin
+				// write as in flight; applyEdit() is async and
+				// onDidChangeTextDocument may fire before it resolves, so a counter
+				// tracks it. The two-arg .then(onFulfilled, onRejected) is used so an
+				// exception thrown inside onFulfilled does not reach onRejected.
+				lastSaveNonce = saveNonce;
+				pendingWebviewUpdates++;
+				this.updateTextDocument(document, data).then(
+					(applied) => {
+						pendingWebviewUpdates--;
+						// applyEdit() can resolve false instead of rejecting (e.g. the
+						// document is already closed); either way, notify the user it
+						// wasn't saved.
+						if (!applied) {
+							this.notifySaveFailure(document, undefined);
+						}
+					},
+					(err: unknown) => {
+						// Always restore the counter on failure; otherwise it never
+						// returns to 0 and all later external changes stop reaching the
+						// Webview.
+						pendingWebviewUpdates--;
+						this.notifySaveFailure(document, err);
+					},
+				);
 			},
-		);
 
-		// Dispose both subscriptions when the panel closes, or the listeners leak.
-		webviewPanel.onDidDispose(() => {
-			changeDocumentSubscription.dispose();
-			messageListener.dispose();
+			// The Webview's own listener is disposed by resolveCanvasWebview; this
+			// one is ours and leaks without it.
+			onDispose: () => changeDocumentSubscription.dispose(),
 		});
 	}
 
@@ -164,17 +128,9 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		document: vscode.TextDocument,
 		saveNonce?: string,
 	) {
-		const text = document.getText();
-		let data: string;
-		try {
-			data = JSON.stringify(JSON.parse(text), null, 2);
-		} catch {
-			// On parse failure, send the raw text and let the Webview show its error.
-			data = text;
-		}
 		const message: ExtensionToWebviewMessage = {
 			type: "update",
-			data,
+			data: toWebviewDocSource(document.getText()),
 			saveNonce,
 			docType: "json",
 		};

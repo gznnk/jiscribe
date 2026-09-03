@@ -1,4 +1,5 @@
-import { EllipseFeatures } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
+import { EllipseFeatures } from "@jiscribe/doc/model/objects/primitives/ellipse/EllipseDoc";
+
 import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 

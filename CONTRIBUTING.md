@@ -49,10 +49,10 @@ Then, depending on what you touched:
 
 - **Any package** — run its unit tests: `pnpm --filter @jiscribe/canvas test`
 - **Behaviour or rendering** — run e2e from the suite that owns what you touched.
-  Playwright is spread over nine suites: `packages/canvas/e2e/` (core),
+  Playwright is spread over ten suites: `packages/canvas/e2e/` (core),
   `plugins/<name>/e2e/` (that plugin alone) and `apps/canvas-examples/e2e/`
-  (all seven plugins on one canvas).
-  - `packages/canvas/src/{gestures,controllers,presentations,states}` — select the
+  (all eight plugins on one canvas).
+  - `packages/canvas/src/{gestures,controllers,rendering,states}` — select the
     related specs by keyword rather than running the suite in full:
     `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
   - a plugin's shapes — run its whole suite, which is a handful of specs:
@@ -60,8 +60,8 @@ Then, depending on what you touched:
   - plugin registration, toolbar composition or `svgDefs` —
     `pnpm --filter canvas-examples test:e2e`
 - **Shapes or AI-facing metadata** (a new shape, `ObjectFeatures`, `description`,
-  `defaults`) — regenerate the AI assets with `pnpm generate:ai` and commit the
-  result, or CI's `check:ai` will fail on the drift
+  `defaults`) — regenerate the AI assets with `pnpm generate:schema` and commit the
+  result, or CI's `check:schema` will fail on the drift
 - **Anything consumed by an app** — build it: `pnpm build:examples` or
   `pnpm build:vscode`
 
@@ -75,15 +75,19 @@ These are not style preferences — ESLint fails the build on them.
   `@jiscribe/canvas`, `@jiscribe/canvas-sdk` and their `/doc` entry points.
   Reaching into `@jiscribe/canvas/unstable` or any `src/` path is rejected.
   `@jiscribe/canvas-sdk` is the single supported surface for shape authoring.
-- **The document layer stays headless.** `packages/canvas/src/doc.ts`,
-  `schemas/`, `docOps/` and the equivalent layers in `canvas-sdk` and the
-  plugins must not import `react`, `react-dom`, `@emotion/*`, or the
-  presentation / controller / state layers. This is what lets the document layer
-  run in a VSCode extension host or a Node process.
+- **The document layer stays headless.** `packages/doc` — the document model,
+  the plugin contract, the parser, the ops, the text metrics and the file I/O —
+  and the equivalent layers in `canvas-sdk` and the plugins must not import
+  `react`, `react-dom`, `@emotion/*`, `@jiscribe/canvas`, or the presentation /
+  controller / state layers. This is what lets the document layer run in a
+  VSCode extension host or a Node process. Canvas keeps `./doc` /
+  `./unstable-doc` / `./png-source` / `./svg-source` as re-export shims over
+  `@jiscribe/doc`.
 - **Import through package roots.** `@jiscribe/geometry`, never
   `@jiscribe/geometry/src/...`.
 - **No double casts in the Doc↔State boundary.** `as unknown as` is banned under
-  `packages/canvas/src/states` and `schemas`; use `rebrand<T>()` instead.
+  `packages/canvas/src/states` and `packages/doc/src/{model,plugin,parse}`; use
+  `rebrand<T>()` instead.
 
 ## Reuse before you write
 
@@ -120,9 +124,9 @@ say: units, coordinate space, allowed range, default, edge behaviour (`NaN`,
 property — two properties sharing one comment means the editor shows nothing for
 one of them. Verify any edge-case claim you write by actually evaluating it.
 
-Comments in this repository are written in Japanese. Contributions in English
-are welcome; do not machine-translate existing comments as part of an unrelated
-change.
+Comments in this repository are written in English. A few older files still
+carry Japanese ones; leave them where they are, since translating a file is a
+change of its own and does not belong inside an unrelated one.
 
 ## Commits and pull requests
 

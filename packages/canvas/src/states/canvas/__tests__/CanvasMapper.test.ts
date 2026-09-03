@@ -1,11 +1,11 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { ConnectorDoc } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
+import type { RectDoc } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { describe, expect, it, beforeEach } from "vitest";
 
-import { PRECISION } from "../../../constants/precision";
-import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
-import type { ConnectorDoc } from "../../../schemas/objects/connections/connector/ConnectorDoc";
-import type { GroupDoc } from "../../../schemas/objects/primitives/group/GroupDoc";
-import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import {
 	canvasToState,
 	canvasToDoc,
@@ -15,7 +15,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import {
 	connectorToState,
 	connectorToDoc,
-} from "../../../states/objects/connections/connector/ConnectorMapper";
+} from "../../../states/objects/connector/ConnectorMapper";
 import {
 	groupToState,
 	groupToDoc,
@@ -171,6 +171,49 @@ describe("CanvasMapper", () => {
 				objectMapperRegistry,
 			);
 			expect("background" in roundTripped).toBe(false);
+		});
+
+		it("carries a doc-authored view through the round trip", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				view: {
+					padding: { top: 48, left: 64 },
+					open: "fit-width",
+					// The one field with no UI to write it: a document keeps its wall
+					// only because the round trip carries it, so it is asserted on its
+					// own rather than left to the whole-object comparison below.
+					scroll: "content",
+				},
+				root: [createRectDoc("rect-1")],
+			} as unknown as CanvasDoc;
+
+			const state = canvasToState(
+				doc,
+				objectMapperRegistry,
+				contentResizerRegistry,
+			);
+			expect(state.view).toEqual({
+				padding: { top: 48, left: 64 },
+				open: "fit-width",
+				scroll: "content",
+			});
+
+			const roundTripped = canvasToDoc(state, objectMapperRegistry);
+			expect(roundTripped.view?.scroll).toBe("content");
+			expect(roundTripped.view).toEqual(doc.view);
+		});
+
+		it("omits view when the doc has none", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [createRectDoc("rect-1")],
+			} as unknown as CanvasDoc;
+
+			const roundTripped = canvasToDoc(
+				canvasToState(doc, objectMapperRegistry, contentResizerRegistry),
+				objectMapperRegistry,
+			);
+			expect("view" in roundTripped).toBe(false);
 		});
 	});
 

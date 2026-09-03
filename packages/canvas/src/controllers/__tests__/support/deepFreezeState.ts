@@ -28,7 +28,7 @@ const freezeRecursively = (value: unknown, seen: WeakSet<object>): void => {
  * state handed to a test turns a violation into an immediate strict-mode TypeError.
  *
  * Everything under `history` is left unfrozen: resolveDocSnapshot updates DocSnapshot in
- * place on purpose, as write-once memoization (see the invariant in DocSnapshot.ts).
+ * place on purpose, as write-once memoization (see the invariant on DocSnapshot in CanvasTypes.ts).
  */
 export const deepFreezeState = (
 	state: CanvasControllerState,

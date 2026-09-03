@@ -1,6 +1,6 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal, type BoundingBox } from "@jiscribe/geometry";
 
-import { PRECISION } from "../../constants/precision";
 import type { Camera, Viewport } from "../../states/canvas/Viewport";
 
 /**
@@ -39,8 +39,8 @@ const clampBetween = (
  * @param from - The camera the scroll started at; the range is widened to include
  *   it, so a scroll that starts outside the bounds is limited to what it already was
  * @param bounds - The rect the visible world rect must stay inside, in world
- *   coordinates; null (the infinite canvas, or a doc with no content) returns the
- *   camera untouched
+ *   coordinates; null (no wall in force, or a doc with no content to build one
+ *   from) returns the camera untouched
  * @returns The clamped camera, rounded to PRECISION.COORDINATE so it matches what
  *   the viewport-moving handlers round to
  */

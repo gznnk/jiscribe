@@ -1,0 +1,62 @@
+:root {
+	color-scheme: dark;
+}
+
+html,
+body,
+#root {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	background: #202124;
+	color: #e8eaed;
+	font-family:
+		system-ui,
+		-apple-system,
+		"Segoe UI",
+		"Noto Sans JP",
+		sans-serif;
+}
+
+.viewer-root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+/* Sits in the toolbar's host slot, so its colors come from the canvas theme */
+.viewer-file-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 11px;
+}
+
+.viewer-file-name {
+	/* Fixed, so a deep path cannot push the shape tools off the bar */
+	width: 140px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--app-foreground-muted, currentColor);
+}
+
+.viewer-disconnected {
+	color: var(--app-error-foreground, currentColor);
+}
+
+.viewer-error {
+	padding: 8px 12px;
+	border-bottom: 1px solid #3a3d40;
+	color: #ff8a80;
+	font-size: 13px;
+	white-space: pre-wrap;
+}
+
+/* The canvas spreads to fill its parent, so give it an explicit height */
+.viewer-canvas-host {
+	flex: 1;
+	min-height: 0;
+}

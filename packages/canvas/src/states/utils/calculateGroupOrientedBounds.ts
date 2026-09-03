@@ -1,3 +1,4 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import {
 	calcFrameCornerPoints,
 	calcOrientedFrameFromPoints,
@@ -6,7 +7,6 @@ import {
 import type { Point, Transform, TransformedFrame } from "@jiscribe/geometry";
 
 import { MIN_GROUP_DIMENSION } from "../../constants/groupDimensions";
-import { isPoly } from "../../schemas/objects/types/Poly";
 import type { ObjectState } from "../objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
 

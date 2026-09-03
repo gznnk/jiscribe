@@ -1,11 +1,15 @@
 import type { CreateObjectState } from "@jiscribe/canvas";
-import type { CreateObjectType, ObjectFeatures } from "@jiscribe/canvas/doc";
-import { AUTO_COLOR } from "@jiscribe/canvas/unstable-doc";
+import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
+import { calcFullBoxTextRegion, calcOutsideBoxTextRegion } from "@jiscribe/doc";
+import { AUTO_COLOR } from "@jiscribe/doc/unstable";
 import { describe, it, expect } from "vitest";
 
 import { createFrameObjectDoc } from "../../schema/createFrameObjectDoc";
 import { createFrameObjectDefinition } from "../createFrameObjectDefinition";
 
+// Colours are the "auto" sentinel: a real colour would reach isCssColor
+// (CSS.supports), which the node test environment has no CSS for. Real colours
+// are covered by the canvas paste e2e.
 const DemoFeatures = {
 	type: "sdkDemo",
 	geometry: "rect",
@@ -22,8 +26,8 @@ const DEMO_DOC_DEFAULTS = {
 	width: 120,
 	height: 80,
 	variant: "plain",
-	fill: "transparent",
-	stroke: "#000000",
+	fill: "auto",
+	stroke: "auto",
 	strokeWidth: 2,
 	text: "",
 	textAlign: "center",
@@ -79,6 +83,54 @@ describe("createFrameObjectDefinition", () => {
 		expect(definition.stencils).toEqual([]);
 	});
 
+	it("carries the doc's verdict on a height that may follow the text", () => {
+		const inTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				textRegion: calcFullBoxTextRegion,
+			}),
+			component: DemoComponent,
+			textRegion: calcFullBoxTextRegion,
+		});
+		// The shape labelled below its outline: its doc says the box holds no text,
+		// while its UI region is the caption box it draws that label in. Only the
+		// doc's answer decides, so the UI one must not talk the canvas into offering
+		// a height the parser then refuses.
+		const belowTheBox = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				textRegion: calcOutsideBoxTextRegion,
+			}),
+			component: DemoComponent,
+			textRegion: ({ width, height }) => ({
+				x: -width / 2,
+				y: height / 2,
+				width,
+				height: 20,
+			}),
+		});
+
+		expect(inTheBox.autoHeight).toBeUndefined();
+		expect(belowTheBox.autoHeight).toBe(false);
+	});
+
+	it("carries an explicit denial across untouched", () => {
+		const denied = createFrameObjectDefinition<DemoDoc, DemoState>({
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				textRegion: calcFullBoxTextRegion,
+				autoHeight: false,
+			}),
+			component: DemoComponent,
+			textRegion: calcFullBoxTextRegion,
+		});
+
+		expect(denied.autoHeight).toBe(false);
+	});
+
 	it("derives a mapper that converts geometry both ways", () => {
 		const { mapper } = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: demoDocDefinition,
@@ -90,15 +142,19 @@ describe("createFrameObjectDefinition", () => {
 		expect(mapper.toDoc(state)).toMatchObject({ x: 0, y: 0 });
 	});
 
-	it("passes extraKeys through the mapper", () => {
+	it("takes the shape's own field names from the doc definition", () => {
 		const withoutExtraKeys = createFrameObjectDefinition<DemoDoc, DemoState>({
 			doc: demoDocDefinition,
 			component: DemoComponent,
 		});
 		const withExtraKeys = createFrameObjectDefinition<DemoDoc, DemoState>({
-			doc: demoDocDefinition,
+			doc: createFrameObjectDoc({
+				features: DemoFeatures,
+				defaults: DEMO_DOC_DEFAULTS,
+				description: "Demo shape.",
+				extraKeys: ["variant"],
+			}),
 			component: DemoComponent,
-			extraKeys: ["variant"],
 		});
 
 		expect(withoutExtraKeys.mapper.toState(demoDoc)).not.toHaveProperty(

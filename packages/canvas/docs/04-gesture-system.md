@@ -42,18 +42,18 @@ Key points:
   fires `longPress` and consumes the gesture (the lift fires no click). It routes to CanvasEventHandler
   wherever it lands — per-target handlers reject it via `isPerTargetInteraction`, like middle/right
   buttons — and opens the context menu, mirroring the right-button click.
-- **Inertial scrolling**: A middle-/right-button pan released while still moving keeps gliding. The
+- **Inertial scrolling**: A middle-/right-button pan released while still moving leaves a fling behind. The
   recognizer records raw pointer samples in `enqueue` (`feed` sees at most one move per frame, too coarse
   to measure a flick), estimates the release velocity over `FLING_VELOCITY_WINDOW_MS` (`calcFlingVelocity`),
   and then emits one `inertialScroll` per frame from its own RAF until the exponentially decayed speed
-  falls below `FLING_STOP_SPEED`. Which drags glide is the consumer's knowledge, injected as
+  falls below `FLING_STOP_SPEED`. Which drags fling is the consumer's knowledge, injected as
   `shouldFlingFromDrag` (middle/right buttons) the way `shouldPinchFromDrag` is. A pointer coming to rest
   before it lifts (`FLING_RELEASE_IDLE_MS`) means "stop here", and any new pointerdown or wheel stops a
-  glide in progress at once.
-  However it ends, the glide closes with a single `inertialScrollEnd` (every exit routes through
+  fling in progress at once.
+  However it ends, the fling closes with a single `inertialScrollEnd` (every exit routes through
   `stopFling`). No frame reveals that it was the last one, so that gesture is what lets the state know:
   `handleGesture` keeps `inertialScrolling` up across the frames and takes it down there, and the
-  ObjectMenu stays hidden for the whole glide instead of reappearing at `dragEnd` and flying across the
+  ObjectMenu stays hidden for the whole fling instead of reappearing at `dragEnd` and flying across the
   screen with the selection.
 - **Touch panning**: Gestures carry `pointerType`, and CanvasEventHandler routes a one-finger touch drag on
   the canvas background to viewport panning (the GrabScroll path) instead of area selection. Area selection
@@ -92,11 +92,11 @@ told apart overwrites the kind in its own `dragStart` — `ObjectEventHandler` s
 connection anchors while a selection is moved, the anchors while it is transformed, and the
 ObjectMenu for every kind of drag.
 
-`inertialScrolling` is the glide's counterpart and deliberately a separate field: no pointer is down
-and no `eventStartSnapshot` is open during a glide, so folding it into `activeDragKind` would break
-the pair those two form. Only the ObjectMenu reads it, hiding for the glide the way it hides for the
+`inertialScrolling` is the fling's counterpart and deliberately a separate field: no pointer is down
+and no `eventStartSnapshot` is open during a fling, so folding it into `activeDragKind` would break
+the pair those two form. Only the ObjectMenu reads it, hiding for the fling the way it hides for the
 pan that preceded it. Being two states, they hand over with a gap of a frame or more where neither is
-set — as do a glide and the pan that interrupts it — so the menu's own condition is run through
+set — as do a fling and the pan that interrupts it — so the menu's own condition is run through
 `useLingeringFlag`: it hides at once and only comes back once the view has been still for
 `REAPPEAR_DELAY_MS`, which is what keeps those handovers from flashing it.
 

@@ -1,0 +1,75 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
+	"title": "CanvasDoc",
+	"description": "Root document format for a .jis file used by canvas.\n\nCoordinate system: every position and size (x/y, cx/cy, width/height, rx/ry, points, waypoints) is expressed in CSS pixels (px) within a single shared world-coordinate space. The origin (0,0) is the top-left corner; X increases to the right and Y increases downward (screen convention, NOT math convention). Angles (rotation) are in degrees and turn clockwise. There is no fixed canvas boundary and coordinates may be negative, but for a new document keep the primary content near the origin — roughly x in [0, 1600] and y in [0, 1200] — so it lands inside the initial viewport.",
+	"type": "object",
+	"required": ["version", "root"],
+	"additionalProperties": false,
+	"properties": {
+		"$schema": {
+			"description": "JSON Schema URL for this document.",
+			"type": "string"
+		},
+		"version": {
+			"description": "Schema version. Must be 1 for this version of the format.",
+			"type": "integer",
+			"const": 1
+		},
+		"background": {
+			"description": "Canvas surface color as a literal CSS color string (a concrete color, not a var(...), so the file stays portable). Omit to follow the theme background. When set it is the surface for both display and image export, and the grid line color is derived from it.",
+			"type": "string"
+		},
+		"view": {
+			"description": "Display declaration: how much empty space belongs around the drawing, how the view is framed when the document is opened, and whether it may be scrolled past its own edges. Presentation only — objects may sit outside the padding and editing is not constrained by it. Omit it entirely to leave all three to whatever opens the document.",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"padding": {
+					"description": "Empty space in world px kept outside the content on each side. Each side is optional and defaults to 0. This is the margin of rendered and exported images, and the box the initial view is fitted to — declare it here instead of baking the margin into object coordinates.",
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"top": {
+							"description": "Space above the content's top edge. Default: 0",
+							"type": "number",
+							"minimum": 0
+						},
+						"right": {
+							"description": "Space right of the content's right edge. Default: 0",
+							"type": "number",
+							"minimum": 0
+						},
+						"bottom": {
+							"description": "Space below the content's bottom edge. Default: 0",
+							"type": "number",
+							"minimum": 0
+						},
+						"left": {
+							"description": "Space left of the content's left edge. Default: 0",
+							"type": "number",
+							"minimum": 0
+						}
+					}
+				},
+				"open": {
+					"description": "How to frame the view when the document is opened. Both modes fit the content bounds grown by 'padding'; the axis that is not fitted starts at that axis's start edge. \"fit-width\" fits the width and starts at the top (a document read top to bottom); \"fit-all\" fits the whole drawing and centers it (a diagram taken in at a glance). Omit it to leave the framing alone. It is an intent, not a command: a host that sets its own camera wins, and the zoom is clamped to the canvas's own range.",
+					"type": "string",
+					"enum": ["fit-width", "fit-all"]
+				},
+				"scroll": {
+					"description": "Whether the document is a bounded page or an endless board. \"content\" walls panning in at the content bounds grown by 'padding' \u2014 the same box 'open' frames and an exported image gets, so there is no separate margin to set and a document opened \"fit-width\" cannot be panned sideways off its own page. \"infinite\" is the endless board, and is also what omitting the field means. Like 'open' it is an intent: a host that sets its own scroll limit wins. Only deliberate scrolling is walled in \u2014 zooming out still shows the area around the page.",
+					"type": "string",
+					"enum": ["content", "infinite"]
+				}
+			}
+		},
+		"root": {
+			"description": "All objects on the canvas (shapes, polylines, groups, connectors) in z-order (back to front). Connectors are mixed in among the objects; array order is the stacking order.",
+			"type": "array",
+			"items": {
+				"$ref": "#/$defs/AnyObjectDoc"
+			}
+		}
+	}
+}

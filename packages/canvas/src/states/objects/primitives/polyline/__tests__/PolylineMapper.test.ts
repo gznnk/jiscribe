@@ -1,6 +1,6 @@
+import type { PolylineDoc } from "@jiscribe/doc/model/objects/primitives/polyline/PolylineDoc";
 import { describe, expect, it } from "vitest";
 
-import type { PolylineDoc } from "../../../../../schemas/objects/primitives/polyline/PolylineDoc";
 import {
 	polylineToDoc,
 	polylineToState,

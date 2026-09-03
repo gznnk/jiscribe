@@ -7,13 +7,10 @@ import {
 	type CanvasHandle,
 	type ToolbarEntry,
 } from "@jiscribe/canvas";
-import { annotationToolbarEntry } from "@jiscribe/plugin-annotation-shapes";
-import { containerToolbarEntry } from "@jiscribe/plugin-container-shapes";
-import { flowchartToolbarEntry } from "@jiscribe/plugin-flowchart-shapes";
-import { generalToolbarEntry } from "@jiscribe/plugin-general-shapes";
-import { umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
+import { standardToolbarLayout } from "@jiscribe/standard-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import "@jiscribe/canvas/fonts.css";
 import "katex/dist/katex.min.css";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";
@@ -24,27 +21,14 @@ import type {
 	WebviewToExtensionMessage,
 } from "../types/messages";
 
-// The container shape is supplied by @jiscribe/plugin-container-shapes
+// The shipped shapes are supplied by @jiscribe/standard-shapes
 // (packages/canvas/docs/13-authoring-plugins.md).
 const initialConfig: CanvasConfig = { plugins };
 
-// The annotation / flowchart / container / general categories and the markdown preset are
-// not part of core's default layout (they come from plugins). The host decides their order
-// and inserts them.
-const toolbarLayout: ToolbarEntry[] = [
-	{ kind: "preset", presetId: "rect" },
-	{ kind: "preset", presetId: "ellipse" },
-	{ kind: "preset", presetId: "polyline" },
-	{ kind: "preset", presetId: "polygon" },
-	{ kind: "preset", presetId: "text" },
-	{ kind: "preset", presetId: "sticky" },
-	{ kind: "preset", presetId: "markdown" },
-	flowchartToolbarEntry,
-	umlToolbarEntry,
-	containerToolbarEntry,
-	generalToolbarEntry,
-	annotationToolbarEntry,
-];
+// The annotation / flowchart / container / general / icon categories and the markdown preset are
+// not part of core's default layout (they come from plugins), so the host inserts them —
+// here in the arrangement the shape set itself proposes.
+const toolbarLayout: ToolbarEntry[] = standardToolbarLayout;
 
 /**
  * Type of the API available only in the VSCode Webview environment.
@@ -305,8 +289,8 @@ function App() {
 						break;
 					}
 					handle
-						.toPngBlob()
-						.then((blob) => (blob ? blobToBase64(blob) : null))
+						.capturePng()
+						.then((capture) => (capture ? blobToBase64(capture.blob) : null))
 						.then(respond, (err: unknown) => {
 							console.error("[Jiscribe] PNG export failed:", err);
 							respond(null);

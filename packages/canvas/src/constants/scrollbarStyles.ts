@@ -13,6 +13,10 @@ export const SCROLLBAR_WIDTH = 8;
  * Custom scrollbar styles for webkit-based browsers.
  * Apply to any styled component that has overflow: auto or overflow: scroll.
  *
+ * Published to plugins through `@jiscribe/canvas/unstable` (and so `@jiscribe/canvas-sdk`),
+ * because a plugin panel that scrolls beside the canvas's own has no other way to wear the
+ * same scrollbar.
+ *
  * Usage:
  *   import { scrollbarStyles } from "../../constants/scrollbarStyles";
  *

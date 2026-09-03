@@ -1,11 +1,12 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { memo, useMemo, useRef, useState } from "react";
 
+import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import type { CanvasPlugin } from "../plugin/CanvasPlugin";
-import { CanvasView } from "../presentations/CanvasView";
-import { PresentationRegistriesProvider } from "../presentations/objects/registry/PresentationRegistriesProvider";
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import { CanvasView } from "../rendering/CanvasView";
+import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
@@ -58,15 +59,23 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 		plugins ? createCanvasRegistries({ plugins }) : defaultCanvasRegistries,
 	);
 
+	// Content-derived boxes are measured against the fonts loaded at the time of
+	// mapping, and a thumbnail has no reducer to re-measure through — so the nonce
+	// is a memo key rather than an effect: a web font landing after the first paint
+	// re-maps the doc against the face it is actually drawn in. It is an
+	// invalidation signal, not an argument, which is why the dependency is one the
+	// callback does not read.
+	const fontsLoadedNonce = useFontsLoadedNonce();
+
 	const { objects, rootIds, background } = useMemo(
 		() =>
 			canvasToState(
 				canvasDoc,
 				registries.objectMapper,
 				registries.objectContentResizer,
-				theme.fontFamily,
 			),
-		[canvasDoc, registries, theme.fontFamily],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[canvasDoc, registries, fontsLoadedNonce],
 	);
 
 	const viewport = useMemo(
@@ -89,12 +98,12 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	// the --jiscribe-* custom properties inherit into the CanvasView styles.
 	const themeCssVars = useMemo(
 		() => ({ display: "contents", ...buildThemeCssVars(theme.tokens) }),
-		[theme],
+		[theme.tokens],
 	);
 
 	return (
 		<CanvasThemeContext value={theme}>
-			<PresentationRegistriesProvider
+			<RenderingRegistriesProvider
 				objectComponent={registries.objectComponent}
 				objectTextRegion={registries.objectTextRegion}
 				objectTextStyleDefaults={registries.objectTextStyleDefaults}
@@ -114,7 +123,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 						surfaceColor={theme.tokens.canvasBg}
 					/>
 				</div>
-			</PresentationRegistriesProvider>
+			</RenderingRegistriesProvider>
 		</CanvasThemeContext>
 	);
 };

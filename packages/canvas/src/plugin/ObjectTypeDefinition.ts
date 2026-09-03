@@ -1,20 +1,20 @@
+import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { ExtraStylePropertyDescriptor } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
+import type { ObjectDocDefinition } from "@jiscribe/doc/plugin/ObjectDocDefinition";
 import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
-import type { ObjectTransformHandles } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
+import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
-import type { ObjectAnchorRegionCalculator } from "../presentations/objects/registry/ObjectAnchorRegionRegistry";
-import type { ObjectExtraConnectPointsCalculator } from "../presentations/objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectGeometryKeyCalculator } from "../presentations/objects/registry/ObjectGeometryKeyRegistry";
-import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
-import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
-import type { ObjectVisualBoundsCalculator } from "../presentations/objects/registry/ObjectVisualBoundsRegistry";
-import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
-import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
+import type { ObjectAnchorRegionCalculator } from "../rendering/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectGeometryKeyCalculator } from "../rendering/objects/registry/ObjectGeometryKeyRegistry";
+import type { ObjectOutlineCalculator } from "../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ObjectTextRegionCalculator } from "../rendering/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectVisualBoundsCalculator } from "../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ObjectContentResizer } from "../states/registry/ObjectContentResizerRegistry";
@@ -28,6 +28,13 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
  * extends {@link ObjectDocDefinition}, a UI definition is structurally a doc
  * definition, and `CanvasPlugin.objects` flows into `createCanvasParser` unchanged.
  *
+ * `textRegion` is the one field taken over rather than inherited: a doc
+ * declaration may answer "the box does not hold the text at all" (`null`), which
+ * a renderer has no use for. Most shipped shapes register the very same function
+ * on both sides; the ones that cannot are those whose region is sized from the
+ * text itself (a below-label caption, a record's bands), and their doc side is
+ * exactly the one declaring `calcOutsideBoxTextRegion`.
+ *
  * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
  * type. A plugin declares a standalone definition with an explicit
  * annotation — `ObjectTypeDefinition<ContainerDoc, ContainerState>` — and needs no
@@ -38,7 +45,7 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
 export type ObjectTypeDefinition<
 	TDoc extends ObjectDoc = ObjectDoc,
 	TState extends ObjectState = ObjectState,
-> = ObjectDocDefinition & {
+> = Omit<ObjectDocDefinition, "textRegion"> & {
 	// --- Model (state) ---
 
 	/** Doc ↔ State conversion. */
@@ -56,7 +63,7 @@ export type ObjectTypeDefinition<
 	 */
 	contentResizer?: ObjectContentResizer<TState>;
 
-	// --- Render (presentation) ---
+	// --- Rendering layer ---
 
 	/** SVG renderer for the shape. Editable types read `isEditing` by self-declaring `FC<TState & TextEditable>`. */
 	component: FC<TState>;
@@ -71,7 +78,12 @@ export type ObjectTypeDefinition<
 	 */
 	svgDefs?: FC;
 
-	/** Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry). */
+	/**
+	 * Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry).
+	 * Register the very function the type's doc definition declares as its own
+	 * `textRegion`, unless the region is sized from the text itself (the
+	 * below-label shapes, a record's bands), which a doc cannot answer.
+	 */
 	textRegion?: ObjectTextRegionCalculator;
 
 	/**
@@ -129,11 +141,13 @@ export type ObjectTypeDefinition<
 	/**
 	 * Which handles the transform frame offers on a single selection. Omitted =
 	 * every handle (eight resize handles + rotation knob), so leaving it out
-	 * keeps the historical behavior. Affects the handles only — the selection
-	 * outline, snapping and the bounding box are unchanged
-	 * (see ObjectTransformHandlesRegistry).
+	 * keeps the historical behavior. A function is asked per object, for a type
+	 * whose objects do not all take the same handles, and must return one of a
+	 * fixed set of values (see ObjectTransformHandlesRegistry). Affects the
+	 * handles only — the selection outline, snapping and the bounding box are
+	 * unchanged.
 	 */
-	transformHandles?: ObjectTransformHandles;
+	transformHandles?: ObjectTransformHandlesDeclaration<TState>;
 
 	// --- Style ---
 

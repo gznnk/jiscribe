@@ -1,11 +1,13 @@
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/RichText";
+import { readRichTextRangeStyle } from "@jiscribe/doc/model/objects/types/RichText";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+
+import { isBoldFontWeight } from "./isBoldFontWeight";
 import {
 	resolveTextEditSelection,
 	styleTextEditSelection,
 } from "./styleTextEditSelection";
 import { toggleTextDecorationToken } from "./toggleTextDecorationToken";
-import type { InlineTextStyle } from "../../schemas/objects/types/RichText";
-import { readRichTextRangeStyle } from "../../schemas/objects/types/RichText";
-import type { ObjectTextStyleDefaultsRegistry } from "../../schemas/registry/ObjectTextStyleDefaultsRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /** The formats a keystroke can turn on and off over the selected text. */
@@ -22,7 +24,9 @@ const toggledStyle = (
 	current: InlineTextStyle,
 ): InlineTextStyle => {
 	if (format === "bold") {
-		return { fontWeight: current.fontWeight === "bold" ? "normal" : "bold" };
+		return {
+			fontWeight: isBoldFontWeight(current.fontWeight) ? "normal" : "bold",
+		};
 	}
 	if (format === "italic") {
 		return { fontStyle: current.fontStyle === "italic" ? "normal" : "italic" };

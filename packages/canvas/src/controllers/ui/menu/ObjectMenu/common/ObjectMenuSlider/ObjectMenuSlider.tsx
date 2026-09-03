@@ -88,6 +88,20 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 		isKeyboardEditing.current = true;
 	};
 
+	/**
+	 * Gives the focus up once the drag (or the track click) that took it is over.
+	 * Holding it keeps every canvas shortcut disabled — they are skipped while a
+	 * form element has the focus (useKeyboardShortcuts) — and, with a text editor
+	 * open, leaves the session without the caret and selection the menu was styling
+	 * (TextEditor takes both back as soon as the focus falls free). Nothing on
+	 * screen says the slider holds it either: it draws no focus ring. Editing from
+	 * the keyboard is unaffected — a press on the slider focuses it again, and the
+	 * arrow keys arrive before any pointerup.
+	 */
+	const handleSliderPointerUp = (e: React.PointerEvent<HTMLInputElement>) => {
+		e.currentTarget.blur();
+	};
+
 	// Commits on key release, or on blur when focus leaves before a keyup arrives.
 	// A held key thus becomes many previews plus one commit, matching drag/dragEnd.
 	const commitKeyboardEdit = () => {
@@ -179,6 +193,7 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 				onKeyDown={handleSliderKeyDown}
 				onKeyUp={commitKeyboardEdit}
 				onBlur={commitKeyboardEdit}
+				onPointerUp={handleSliderPointerUp}
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`slider:${property}`}

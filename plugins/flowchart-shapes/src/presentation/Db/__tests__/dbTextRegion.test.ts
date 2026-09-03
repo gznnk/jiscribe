@@ -9,7 +9,7 @@ describe("db textRegion", () => {
 			top: DB_CAP_RATIO * 2,
 			bottom: DB_CAP_RATIO,
 		});
-		const result = textRegion({ width: 120, height: 100 }, "body");
+		const result = textRegion({ width: 120, height: 100 });
 		const capRy = 100 * DB_CAP_RATIO;
 		expect(result.x).toBe(-60);
 		expect(result.width).toBe(120);

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 import { DEFAULT_TOOLBAR_LAYOUT, type ToolbarEntry } from "./toolbarLayout";
 import {
@@ -12,8 +12,18 @@ import {
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
+import type { Stencil } from "../../objects/Stencil";
 import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
+
+/** A layout entry with its presets looked up in the registry, ready to draw. */
+type ResolvedToolbarEntry =
+	| { kind: "preset"; preset: Stencil }
+	| {
+			kind: "category";
+			entry: Extract<ToolbarEntry, { kind: "category" }>;
+			presets: Stencil[];
+	  };
 
 type ToolbarProps = {
 	/** ID of the stencil currently being drawn (for the tool's active state) */
@@ -56,6 +66,27 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	const messages = useCanvasMessages();
 	const { stencil } = useCanvasRegistries();
 
+	// Resolved once per (layout, registry) pair, not inline in the render map:
+	// the bar re-renders on every zoom step, and a per-render `presets` array
+	// would defeat StencilCategoryMenu's memo. Resolution also drops what has
+	// nothing to show — a preset that isn't registered (e.g. a plugin not
+	// applied) is silently skipped, and a category left with no resolvable
+	// presets loses its button/flyout entirely rather than rendering empty.
+	const resolvedEntries = useMemo(
+		() =>
+			layout.flatMap((entry): ResolvedToolbarEntry[] => {
+				if (entry.kind === "preset") {
+					const preset = stencil.get(entry.presetId);
+					return preset ? [{ kind: "preset", preset }] : [];
+				}
+				const presets = entry.presetIds
+					.map((id) => stencil.get(id))
+					.filter((preset) => preset !== undefined);
+				return presets.length > 0 ? [{ kind: "category", entry, presets }] : [];
+			}),
+		[layout, stencil],
+	);
+
 	// The open category flyout (`openCategoryId`) lives in reducer state; the
 	// toggle goes through StencilCategoryToggleHandler and dismissal through the
 	// handlers/commands that clear it, so the Toolbar is stateless here and
@@ -76,42 +107,25 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						<ToolbarDivider />
 					</>
 				)}
-				{layout.map((entry) => {
-					if (entry.kind === "preset") {
-						const preset = stencil.get(entry.presetId);
-						if (!preset) {
-							return null;
-						}
-						return (
-							<StencilLibraryItem
-								key={`preset:${entry.presetId}`}
-								preset={preset}
-								isActive={activePresetId === preset.id}
-							/>
-						);
-					}
-					// Resolve the layout's presetIds in order; a preset that isn't
-					// registered (e.g. a plugin not applied) is silently skipped.
-					const presets = entry.presetIds
-						.map((id) => stencil.get(id))
-						.filter((preset) => preset !== undefined);
-					// A category with no resolvable presets has nothing to show, so
-					// skip the button/flyout entirely rather than rendering an empty one.
-					if (presets.length === 0) {
-						return null;
-					}
-					return (
+				{resolvedEntries.map((resolved) =>
+					resolved.kind === "preset" ? (
+						<StencilLibraryItem
+							key={`preset:${resolved.preset.id}`}
+							preset={resolved.preset}
+							isActive={activePresetId === resolved.preset.id}
+						/>
+					) : (
 						<StencilCategoryMenu
-							key={`category:${entry.id}`}
-							id={entry.id}
-							label={entry.label}
-							icon={entry.icon}
-							presets={presets}
-							isOpen={openCategoryId === entry.id}
+							key={`category:${resolved.entry.id}`}
+							id={resolved.entry.id}
+							label={resolved.entry.label}
+							icon={resolved.entry.icon}
+							presets={resolved.presets}
+							isOpen={openCategoryId === resolved.entry.id}
 							activePresetId={activePresetId}
 						/>
-					);
-				})}
+					),
+				)}
 			</ToolbarGroup>
 
 			{/* Right: zoom readout and help */}

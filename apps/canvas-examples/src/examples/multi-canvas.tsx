@@ -1,6 +1,6 @@
 import { Canvas } from "@jiscribe/canvas";
 import type { CanvasDoc } from "@jiscribe/canvas";
-import { createCanvasParser } from "@jiscribe/canvas/doc";
+import { createCanvasParser } from "@jiscribe/doc";
 
 // This example ships no plugin, so the default parser (every built-in type) is enough.
 const canvasParser = createCanvasParser();

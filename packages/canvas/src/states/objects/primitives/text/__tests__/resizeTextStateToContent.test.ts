@@ -1,3 +1,5 @@
+import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
+import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import {
 	calcAffineTransformedPoint,
 	degreesToRadians,
@@ -5,19 +7,15 @@ import {
 } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { PRECISION } from "../../../../../constants/precision";
-import { calcTextObjectFrameSize } from "../calcTextObjectFrameSize";
 import { resizeTextStateToContent } from "../resizeTextStateToContent";
+import { resolveTextObjectFont } from "../resolveTextObjectFont";
 import { textToDoc, textToState } from "../TextMapper";
 import type { TextState } from "../TextState";
-
-const FONT_FAMILY = "Noto Sans JP";
 
 const stateOf = (text: string, overrides: Record<string, unknown> = {}) => {
 	const { width, height } = calcTextObjectFrameSize(
 		text,
-		{ fontSize: 16 },
-		FONT_FAMILY,
+		resolveTextObjectFont({ fontSize: 16 }),
 	);
 	return {
 		id: "t1",
@@ -68,17 +66,15 @@ const typedLonger = (transform: Record<string, unknown>) => {
 	const state = stateOf("hello", transform);
 	const typed = {
 		...state,
-		text: {
-			body: { text: "hello world", fontSize: 16, fontFamily: FONT_FAMILY },
-		},
+		text: { body: { text: "hello world", fontSize: 16 } },
 	} as TextState;
-	return { state, resized: resizeTextStateToContent(typed, FONT_FAMILY) };
+	return { state, resized: resizeTextStateToContent(typed) };
 };
 
 describe("resizeTextStateToContent", () => {
 	it("returns the same reference when the box already matches the text", () => {
 		const state = stateOf("hello");
-		expect(resizeTextStateToContent(state, FONT_FAMILY)).toBe(state);
+		expect(resizeTextStateToContent(state)).toBe(state);
 	});
 
 	it("keeps the top-left where it was when the text grows", () => {
@@ -88,7 +84,7 @@ describe("resizeTextStateToContent", () => {
 			text: { body: { text: "hello world", fontSize: 16 } },
 		} as TextState;
 
-		const resized = resizeTextStateToContent(typed, FONT_FAMILY);
+		const resized = resizeTextStateToContent(typed);
 
 		expect(resized.width).toBeGreaterThan(state.width);
 		expect(axisAlignedTopLeftOf(resized)).toEqual(ANCHOR);
@@ -101,7 +97,7 @@ describe("resizeTextStateToContent", () => {
 			text: { body: { text: "h", fontSize: 16 } },
 		} as TextState;
 
-		const resized = resizeTextStateToContent(typed, FONT_FAMILY);
+		const resized = resizeTextStateToContent(typed);
 
 		expect(resized.width).toBeLessThan(state.width);
 		expect(axisAlignedTopLeftOf(resized)).toEqual(ANCHOR);
@@ -109,13 +105,10 @@ describe("resizeTextStateToContent", () => {
 
 	it("grows the height by a line for each authored newline", () => {
 		const oneLine = stateOf("a");
-		const twoLines = resizeTextStateToContent(
-			{
-				...oneLine,
-				text: { body: { text: "a\nb", fontSize: 16 } },
-			} as TextState,
-			FONT_FAMILY,
-		);
+		const twoLines = resizeTextStateToContent({
+			...oneLine,
+			text: { body: { text: "a\nb", fontSize: 16 } },
+		} as TextState);
 
 		expect(twoLines.height).toBeGreaterThan(oneLine.height);
 		expect(axisAlignedTopLeftOf(twoLines).y).toBe(ANCHOR.y);
@@ -157,14 +150,39 @@ describe("resizeTextStateToContent", () => {
 		expect(roundTripped.height).toBe(resized.height);
 	});
 
+	it("keeps a block text's stored width and re-measures its height alone", () => {
+		const blockState = {
+			...stateOf("a", { textLayout: "block" }),
+			width: 120,
+		} as TextState;
+		const typed = {
+			...blockState,
+			text: {
+				body: {
+					text: "a much longer body that has to wrap inside the stored width",
+					fontSize: 16,
+				},
+			},
+		} as TextState;
+
+		const resized = resizeTextStateToContent(typed);
+
+		expect(resized.width).toBe(120);
+		expect(resized.height).toBeGreaterThan(blockState.height);
+		// The top-left is the corner the doc stores, so growth goes downward only.
+		expect(axisAlignedTopLeftOf(resized)).toEqual(
+			axisAlignedTopLeftOf(blockState),
+		);
+	});
+
 	it("sizes an object with no slot at all to the empty box", () => {
 		const state = stateOf("hello");
 		const empty = { ...state, text: undefined } as TextState;
-		const resized = resizeTextStateToContent(empty, FONT_FAMILY);
+		const resized = resizeTextStateToContent(empty);
 
 		expect(resized).toEqual({
 			...empty,
-			...calcTextObjectFrameSize("", {}, FONT_FAMILY),
+			...calcTextObjectFrameSize("", resolveTextObjectFont({})),
 			cx: ANCHOR.x + resized.width / 2,
 			cy: ANCHOR.y + resized.height / 2,
 		});

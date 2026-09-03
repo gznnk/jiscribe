@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import {
 	ObjectMenuButton,
@@ -26,7 +27,7 @@ const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		return null;
 	}
 
-	const isBold = label.fontWeight === "bold";
+	const isBold = isBoldFontWeight(label.fontWeight);
 
 	return (
 		<ObjectMenuItemPositioner>

@@ -1,10 +1,10 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { useConstant } from "./useConstant";
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
+import { resolveDocSnapshot } from "../utils/resolveDocSnapshot";
 import { createNonceDeliveryGuard } from "./support/createNonceDeliveryGuard";
 import { createSaveRequestScheduler } from "./support/createSaveRequestScheduler";
 import type { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";

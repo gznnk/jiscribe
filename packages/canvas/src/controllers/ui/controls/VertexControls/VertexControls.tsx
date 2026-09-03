@@ -32,7 +32,7 @@ type VertexControlsProps = {
 /**
  * VertexControls component for Polyline vertex editing.
  *
- * This is a pure presentation component that renders visual vertex handles.
+ * This is a pure render-only component that draws visual vertex handles.
  * All interaction logic should be handled by the VertexControlHandler.
  *
  * Each vertex has:

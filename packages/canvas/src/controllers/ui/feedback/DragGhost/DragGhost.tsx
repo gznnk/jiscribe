@@ -1,8 +1,7 @@
+import { createObjectDoc } from "@jiscribe/doc/model/objects/utils/createObjectDoc";
 import type { Point } from "@jiscribe/geometry";
 import React, { memo } from "react";
 
-import type { DocCreationDefaults } from "../../../../schemas/objects/types/DocCreationDefaults";
-import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
@@ -10,7 +9,6 @@ import type { Stencil } from "../../objects/Stencil";
 
 type DragGhostProps = {
 	stencilLibraryDrag: CanvasControllerState["stencilLibraryDrag"];
-	docDefaults: DocCreationDefaults;
 };
 
 const GHOST_ID = "drag-ghost";
@@ -23,7 +21,6 @@ const createGhostElement = (
 	preset: Stencil,
 	position: Point,
 	registries: CanvasRegistries,
-	docDefaults: DocCreationDefaults,
 ): React.ReactNode => {
 	const component = registries.objectComponent.get(preset.objectType);
 	if (!component) {
@@ -35,7 +32,6 @@ const createGhostElement = (
 		position,
 		registries.objectFactory,
 		preset.defaultOverrides,
-		docDefaults,
 	);
 	const ghostState = registries.objectMapper.toState(doc);
 	ghostState.id = GHOST_ID;
@@ -49,7 +45,6 @@ const createGhostElement = (
  */
 const DragGhostComponent: React.FC<DragGhostProps> = ({
 	stencilLibraryDrag,
-	docDefaults,
 }) => {
 	const registries = useCanvasRegistries();
 
@@ -63,7 +58,6 @@ const DragGhostComponent: React.FC<DragGhostProps> = ({
 				stencilLibraryDrag.preset,
 				stencilLibraryDrag.ghostPosition,
 				registries,
-				docDefaults,
 			)}
 		</g>
 	);

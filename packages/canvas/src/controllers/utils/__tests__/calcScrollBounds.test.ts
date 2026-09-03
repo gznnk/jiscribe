@@ -22,21 +22,25 @@ const objects: Record<string, ObjectState> = {
 	b: rect("b", 200, 200),
 };
 
-describe("calcScrollBounds", () => {
-	it("is unrestricted without a setting", () => {
-		expect(calcScrollBounds(undefined, objects)).toBeNull();
-	});
+/** The uniform padding a host's `scrollBounds` resolves to. */
+const uniform = (value: number) => ({
+	top: value,
+	right: value,
+	bottom: value,
+	left: value,
+});
 
-	it("is unrestricted in infinite mode", () => {
-		expect(calcScrollBounds({ mode: "infinite" }, objects)).toBeNull();
+describe("calcScrollBounds", () => {
+	it("is unrestricted without a wall", () => {
+		expect(calcScrollBounds(null, objects)).toBeNull();
 	});
 
 	it("is unrestricted when there is no content to bound it to", () => {
-		expect(calcScrollBounds({ mode: "content" }, {})).toBeNull();
+		expect(calcScrollBounds(uniform(100), {})).toBeNull();
 	});
 
-	it("pads the content extent by 100 world units by default", () => {
-		expect(calcScrollBounds({ mode: "content" }, objects)).toEqual({
+	it("grows the content extent by a uniform padding", () => {
+		expect(calcScrollBounds(uniform(100), objects)).toEqual({
 			left: -150,
 			top: -150,
 			right: 350,
@@ -45,11 +49,22 @@ describe("calcScrollBounds", () => {
 	});
 
 	it("puts the wall on the content edge at padding 0", () => {
-		expect(calcScrollBounds({ mode: "content", padding: 0 }, objects)).toEqual({
+		expect(calcScrollBounds(uniform(0), objects)).toEqual({
 			left: -50,
 			top: -50,
 			right: 250,
 			bottom: 250,
+		});
+	});
+
+	it("grows each side by its own padding", () => {
+		expect(
+			calcScrollBounds({ top: 32, right: 64, bottom: 24, left: 16 }, objects),
+		).toEqual({
+			left: -66,
+			top: -82,
+			right: 314,
+			bottom: 274,
 		});
 	});
 });

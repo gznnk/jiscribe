@@ -1,10 +1,11 @@
+import type { FreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
+
 import { getRootConnectorIds } from "./getRootConnectorIds";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../presentations/layers/content/utils/endpoints";
-import type { FreeEndpointRef } from "../../schemas/objects/types/EndpointRef";
-import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+} from "../../rendering/layers/content/utils/endpoints";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 

@@ -1,13 +1,13 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { type Dispatch, useEffect, useRef } from "react";
 
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
-import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import type { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";
 import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
+import { resolveDocSnapshot } from "../utils/resolveDocSnapshot";
 
 export type UseSyncExternalDocParams = {
 	/** The latest CanvasDoc passed from the parent */
@@ -86,7 +86,6 @@ export const useSyncExternalDoc = ({
 			canvasDoc,
 			objectMapper,
 			objectContentResizer,
-			stateRef.current.docDefaults.fontFamily,
 		);
 		resetGestureState();
 		dispatch({

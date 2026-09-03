@@ -9,10 +9,14 @@
  *   `var(...)` expressions — that is how a host maps its own variables onto
  *   the neutral tokens (e.g. VSCode maps `--vscode-editor-background` to
  *   `canvasBg`).
- * - {@link CanvasHandleDimensions} and {@link CanvasTheme.fontFamily} are
- *   consumed in JS (zoom-adjusted geometry, canvas text measurement, doc
- *   creation defaults), so they are concrete values distributed via
- *   `CanvasThemeContext` — never `var(...)` strings.
+ * - {@link CanvasHandleDimensions} are consumed in JS (zoom-adjusted geometry),
+ *   so they are concrete values distributed via `CanvasThemeContext` — never
+ *   `var(...)` strings.
+ *
+ * Fonts are deliberately not part of a theme: the canvas measures text against
+ * the families it ships (`CANVAS_FONT_FAMILIES`), so a family the host names is
+ * one nothing can measure. An unstyled slot falls back to `DEFAULT_FONT_FAMILY`
+ * everywhere instead.
  */
 
 /**
@@ -107,10 +111,4 @@ export type CanvasHandleDimensions = {
 export type CanvasTheme = {
 	tokens: CanvasThemeTokens;
 	handleDimensions: CanvasHandleDimensions;
-	/**
-	 * Default font for newly created shapes and the fallback for labels without
-	 * an explicit font. Used for canvas text measurement in JS, so this must be
-	 * a concrete font-family list, not a `var(...)` expression.
-	 */
-	fontFamily: string;
 };

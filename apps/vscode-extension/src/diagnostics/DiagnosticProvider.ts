@@ -1,41 +1,22 @@
-// Import the headless `./doc` entry, not the root entry (which pulls in the Canvas
+// Import the headless `./doc` entries, not the root ones (which pull in the Canvas
 // component). This keeps UI deps (react / @emotion / katex) out of the Node bundle
 // (extension.js) so activation stays light.
 //
-// The flowchart / container / markdown / sticky / general / annotation plugins are wired in through their own headless
-// `./doc` entries: those import only `@jiscribe/canvas/doc` / `@jiscribe/canvas/unstable-doc`
-// (no React, and for markdown no markdown-it / KaTeX either — rendering lives in its
-// presentation), so esbuild keeps the Node bundle small even though it now validates
-// plugin shapes too (packages/canvas/docs/12-plugin-architecture.md).
-import {
-	createCanvasParser,
-	type SemanticDiagnostic,
-} from "@jiscribe/canvas/doc";
-import { annotationDocPlugin } from "@jiscribe/plugin-annotation-shapes/doc";
-import { containerDocPlugin } from "@jiscribe/plugin-container-shapes/doc";
-import { flowchartDocPlugin } from "@jiscribe/plugin-flowchart-shapes/doc";
-import { generalDocPlugin } from "@jiscribe/plugin-general-shapes/doc";
-import { markdownDocPlugin } from "@jiscribe/plugin-markdown-shape/doc";
-import { stickyDocPlugin } from "@jiscribe/plugin-sticky-shape/doc";
-import { umlDocPlugin } from "@jiscribe/plugin-uml-shapes/doc";
+// `@jiscribe/standard-shapes/doc` brings the shipped shape set the same way: each
+// plugin's own headless entry, importing only `@jiscribe/doc` /
+// `@jiscribe/doc/unstable` (no React, and for markdown no markdown-it / KaTeX
+// either — rendering lives in its presentation), so esbuild keeps the Node bundle small
+// even though it validates plugin shapes too
+// (packages/canvas/docs/12-plugin-architecture.md).
+import { createCanvasParser, type SemanticDiagnostic } from "@jiscribe/doc";
+import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 import * as vscode from "vscode";
 
 import { isCanvasFileName } from "../canvasFileExtensions";
 
-// Plugin-aware parser: built-in types plus the flowchart / container / markdown / sticky /
-// general / annotation plugin shapes, so canvas files using those shapes validate instead of reporting them
-// unknown.
-const canvasParser = createCanvasParser({
-	plugins: [
-		flowchartDocPlugin,
-		containerDocPlugin,
-		markdownDocPlugin,
-		stickyDocPlugin,
-		umlDocPlugin,
-		generalDocPlugin,
-		annotationDocPlugin,
-	],
-});
+// Plugin-aware parser: built-in types plus the shipped set, so canvas files using those
+// shapes validate instead of reporting them unknown.
+const canvasParser = createCanvasParser({ plugins: standardDocPlugins });
 
 /**
  * Surfaces canvas file semantic errors in VSCode's Problems panel.
@@ -51,7 +32,8 @@ const canvasParser = createCanvasParser({
  *     with beyondSchema). Without these the file would be unopenable yet show
  *     no error.
  *
- * Runs when a file is opened, saved, or already open at activation.
+ * Runs when a file is opened, saved, or already open at activation; a file's
+ * diagnostics are removed when it closes.
  */
 export class DiagnosticProvider {
 	/** Diagnostics shown in VSCode's Problems panel. */
@@ -70,7 +52,12 @@ export class DiagnosticProvider {
 		const openListener = vscode.workspace.onDidOpenTextDocument((doc) => {
 			this.validateDocument(doc);
 		});
-		context.subscriptions.push(saveListener, openListener);
+		// Drop a file's diagnostics when it closes, or a broken file's entry
+		// would sit in the Problems panel until the window reloads.
+		const closeListener = vscode.workspace.onDidCloseTextDocument((doc) => {
+			this.collection.delete(doc.uri);
+		});
+		context.subscriptions.push(saveListener, openListener, closeListener);
 
 		// Validate tabs already open at activation.
 		vscode.workspace.textDocuments.forEach((doc) => {

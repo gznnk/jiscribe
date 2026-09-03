@@ -1,8 +1,8 @@
+import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { describe, it, expect } from "vitest";
 
 import { theme } from "../../../../../constants/theme";
-import { resolveAutoColor } from "../../../../../presentations/objects/utils/resolveAutoColor";
-import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
+import { resolveAutoColor } from "../../../../../rendering/objects/utils/resolveAutoColor";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import { ghostifyPreviewState } from "../ghostifyPreviewState";
 

@@ -1,6 +1,6 @@
+import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
-import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
@@ -24,7 +24,7 @@ const baseState = (zoom = 1): CanvasControllerState => {
 };
 
 /**
- * A glide frame as the recognizer emits it: canvas-targeted, no pointer, and
+ * A fling frame as the recognizer emits it: canvas-targeted, no pointer, and
  * carrying only the screen-px distance covered since the previous frame.
  */
 const inertialScroll = (deltaX: number, deltaY: number): Gesture =>
@@ -43,7 +43,7 @@ const inertialScroll = (deltaX: number, deltaY: number): Gesture =>
 		scrollDelta: { deltaX, deltaY },
 	}) as unknown as Gesture;
 
-/** The recognizer's one-shot "the glide is over"; moves nothing. */
+/** The recognizer's one-shot "the fling is over"; moves nothing. */
 const inertialScrollEnd = (): Gesture =>
 	({
 		type: "inertialScrollEnd",
@@ -94,8 +94,8 @@ describe("handleGesture - inertialScroll moves the view like a wheel scroll", ()
 	});
 });
 
-describe("handleGesture - the glide raises and lowers inertialScrolling", () => {
-	it("raises it on a glide frame and keeps it up across frames", () => {
+describe("handleGesture - the fling raises and lowers inertialScrolling", () => {
+	it("raises it on a fling frame and keeps it up across frames", () => {
 		const first = handleGesture(
 			baseState(),
 			inertialScroll(-40, 0),
@@ -108,26 +108,26 @@ describe("handleGesture - the glide raises and lowers inertialScrolling", () => 
 	});
 
 	it("lowers it on the end gesture", () => {
-		const gliding = handleGesture(
+		const flinging = handleGesture(
 			baseState(),
 			inertialScroll(-40, 0),
 			registries,
 		);
-		const next = handleGesture(gliding, inertialScrollEnd(), registries);
+		const next = handleGesture(flinging, inertialScrollEnd(), registries);
 
 		expect(next.inertialScrolling).toBe(false);
 	});
 
 	it("moves nothing on the end gesture, and leaves an idle state untouched", () => {
-		const gliding = handleGesture(
+		const flinging = handleGesture(
 			baseState(),
 			inertialScroll(-40, 0),
 			registries,
 		);
-		const ended = handleGesture(gliding, inertialScrollEnd(), registries);
-		expect(ended.viewport).toEqual(gliding.viewport);
+		const ended = handleGesture(flinging, inertialScrollEnd(), registries);
+		expect(ended.viewport).toEqual(flinging.viewport);
 
-		// A stray end with no glide under way is not even a new state object.
+		// A stray end with no fling under way is not even a new state object.
 		const idle = baseState();
 		expect(handleGesture(idle, inertialScrollEnd(), registries)).toBe(idle);
 	});

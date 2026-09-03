@@ -1,8 +1,8 @@
+import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { memo } from "react";
 
-import { Arrow } from "../../../../../../presentations/objects/arrows/Arrow";
-import { getArrowLineInset } from "../../../../../../presentations/objects/arrows/getArrowLineInset";
-import type { ArrowType } from "../../../../../../schemas/objects/types/ArrowType";
+import { Arrow } from "../../../../../../rendering/objects/arrows/Arrow";
+import { getArrowLineInset } from "../../../../../../rendering/objects/arrows/getArrowLineInset";
 
 type ArrowHeadIconPreviewProps = {
 	arrowType: ArrowType | undefined;

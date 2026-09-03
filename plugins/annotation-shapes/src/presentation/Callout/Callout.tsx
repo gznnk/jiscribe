@@ -1,7 +1,7 @@
 import { createFrameObject, ShapeBodyPath } from "@jiscribe/canvas-sdk";
 
 import { buildCalloutPath } from "./buildCalloutPath";
-import { resolveCalloutTail } from "./calloutTailGeometry";
+import { resolveCalloutTail } from "../../schema/callout/CalloutDoc";
 import type { CalloutState } from "../../state/callout/CalloutState";
 
 /** Callout presentation (shared Frame logic lives in createFrameObject; only the shape is swapped in). */

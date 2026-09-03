@@ -22,13 +22,14 @@ export type GestureType =
 	// Touch only: a press held for LONG_PRESS_DURATION_MS within the drag slop.
 	// Ends the gesture — the pointerup that follows fires nothing (no click).
 	| "longPress"
-	// One per frame while a released pan drag glides to a stop (shouldFlingFromDrag).
+	// One per frame while the fling left by a released pan drag decays
+	// (shouldFlingFromDrag).
 	// No pointer is down: it carries scrollDelta only, and handleGesture converts
 	// it to a scroll canvas event.
 	| "inertialScroll"
-	// Fired once when the glide ends, however it ends (decayed away, interrupted by
+	// Fired once when the fling ends, however it ends (decayed away, interrupted by
 	// fresh input, aborted). Moves nothing — it exists so consumers can tell the
-	// glide is over, which no single frame reveals. Never becomes a CanvasEvent.
+	// fling is over, which no single frame reveals. Never becomes a CanvasEvent.
 	| "inertialScrollEnd";
 
 export type HoveredElement = {
@@ -102,7 +103,12 @@ export type PointerEventHandlers = {
  * pass their existing ref unchanged.
  */
 export type RecognizerCanvasState = {
-	/** Current pan/zoom; supplies the rect for edge-proximity detection and the zoom that divides screen-px scroll deltas into SVG units. */
+	/**
+	 * Current pan/zoom; the client→world conversion (getWorldPoint), edge-proximity
+	 * detection and the zoom that divides screen-px scroll deltas into SVG units
+	 * all read it, so every gesture is derived from the same state the scroll
+	 * handlers increment — not from the rendered DOM, which may lag a frame.
+	 */
 	viewport: Viewport;
 	/** Whether a drag near the container edge auto-scrolls the viewport; false makes the drag stop at the edge. */
 	edgeScrollEnabled: boolean;
@@ -129,9 +135,8 @@ export type GestureRecognizerConfig = {
 	shouldPinchFromDrag?: (targetKind: string | undefined) => boolean;
 	/**
 	 * Policy consulted when a confirmed drag is released: return true when it was
-	 * a viewport pan that should keep gliding (inertialScroll gestures until the
-	 * speed decays away), false to stop where it was released. Omitted = never
-	 * glide. Keeps "which drags are pans" with the consumer's routing, like
+	 * a viewport pan that should fling on (inertialScroll gestures until the speed
+	 * decays away), false to stop where it was released. Omitted = never fling. Keeps "which drags are pans" with the consumer's routing, like
 	 * shouldPinchFromDrag (the canvas injects its middle-/right-button test in
 	 * useGestureRecognizer).
 	 *

@@ -1,10 +1,9 @@
 import styled from "@emotion/styled";
-
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,
-} from "../../../../constants/textBoxPadding";
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
+} from "@jiscribe/doc/text/block/textBoxPadding";
+import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 
 /**
  * Wrapper centered on the anchor (the label position along the route).

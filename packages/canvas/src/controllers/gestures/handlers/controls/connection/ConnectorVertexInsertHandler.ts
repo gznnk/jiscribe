@@ -1,6 +1,6 @@
+import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type { Point } from "@jiscribe/geometry";
 
-import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type {
 	CanvasControllerState,
 	SnapFeedback,
@@ -14,6 +14,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../../utils/snap/findSnap";
+import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
 import { startConnectorLabelEdit } from "../../utils/startConnectorLabelEdit";
 
 /**
@@ -182,7 +183,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		const snapCandidates = eventStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-		if (snapCandidates && !event.mods.ctrl) {
+		if (snapCandidates && !isSnapSuppressed(event)) {
 			const zoom = state.viewport.zoom;
 			const result = findSnap(
 				snapCandidates,

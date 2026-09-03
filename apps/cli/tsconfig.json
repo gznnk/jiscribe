@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"types": ["node"],
+		// The render harness (harness/) and the preview page (preview/) are browser
+		// pages: they are the only JSX here, and the only things touching the DOM.
+		"jsx": "react-jsx"
+	},
+	"include": ["src", "harness", "preview", "render-tests"]
+}
