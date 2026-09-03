@@ -122,7 +122,8 @@ export type FrameTextOverlayRenderer = (
  * Out of scope for types whose draw structure differs: a shadowed shape drawing a
  * group of its own (the sticky in `@jiscribe/plugin-sticky-shape`), and svg
  * wrapped by DOMPurify. Those hand-write the component and reach for
- * `calcTextRegion` / `createSvgTransform` directly.
+ * `calcTextRegion` / `createSvgTransform` / `resolveAutoColor` directly — every
+ * derivation below is theirs to repeat.
  */
 export const createFrameObject = <TState extends FrameRenderState>(
 	draw: (state: TState, shape: FrameShapeProps) => ReactNode,

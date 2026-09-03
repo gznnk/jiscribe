@@ -125,6 +125,13 @@ and the bounds as its `visualBounds` — without the latter, zoom-to-fit and the
 export viewBox crop the label away — and place the hit area inside the shape's own
 `data-kind="object"` group so the label can be grabbed.
 
+A shape that hand-draws instead of going through `createFrameObject` has to redo
+what that helper resolved (the sticky is the example). Colors above all: resolve
+them with `resolveAutoColor(fill, "surface")` and **apply the result through CSS,
+not the SVG `fill` attribute** — `"auto"` resolves to a `var(--jiscribe-*)` token
+that presentation attributes do not evaluate, so an attribute leaves the shape
+painted black (#38 / #206).
+
 `./testing` is a separate entry so vitest never reaches a runtime bundle.
 
 ## Giving the package an e2e suite

@@ -5,11 +5,19 @@ import {
 	calcFullTextRegion,
 	createSvgTransform,
 	readRichTextSlot,
+	resolveAutoColor,
 	useObjectTextStyleDefaultsRegistry,
 } from "@jiscribe/canvas-sdk";
 import type React from "react";
 import { memo } from "react";
 
+import {
+	STICKY_SHADOW_DROP,
+	STICKY_SHADOW_FILL,
+	STICKY_SHADOW_FILTER_ID,
+	STICKY_SHADOW_TAPER,
+} from "./StickyShadowConstants";
+import { StickyBody } from "./StickyStyled";
 import type { StickyState } from "../state/StickyState";
 
 type StickyProps = StickyState & TextEditable;
@@ -17,7 +25,9 @@ type StickyProps = StickyState & TextEditable;
 /**
  * Drawn by hand rather than through `createFrameObject`: the paper sits under a
  * blurred offset shadow, so the type owns a group of two polygons instead of the
- * single styled shape that helper draws.
+ * single styled shape that helper draws. Everything that helper resolves has to
+ * be resolved here instead — the paper's `"auto"` fill as much as the text-style
+ * defaults below.
  */
 const StickyComponent: React.FC<StickyProps> = (props) => {
 	const {
@@ -64,10 +74,10 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		.join(" ");
 
 	const shadowPoints = [
-		[left + 3, top],
-		[right - 3, top],
-		[right + 3, bottom + 5],
-		[left - 3, bottom + 5],
+		[left + STICKY_SHADOW_TAPER, top],
+		[right - STICKY_SHADOW_TAPER, top],
+		[right + STICKY_SHADOW_TAPER, bottom + STICKY_SHADOW_DROP],
+		[left - STICKY_SHADOW_TAPER, bottom + STICKY_SHADOW_DROP],
 	]
 		.map(([px, py]) => `${px},${py}`)
 		.join(" ");
@@ -77,15 +87,15 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 			{/* Shadow */}
 			<polygon
 				points={shadowPoints}
-				fill="rgba(0,0,0,0.08)"
+				fill={STICKY_SHADOW_FILL}
 				transform={transformAttr}
 				pointerEvents="none"
-				filter="url(#sticky-blur)"
+				filter={`url(#${STICKY_SHADOW_FILTER_ID})`}
 			/>
 			{/* Main sticky note */}
-			<polygon
+			<StickyBody
 				points={points}
-				fill={fill ?? "#fef9c3"}
+				fillColor={resolveAutoColor(fill, "surface")}
 				transform={transformAttr}
 			/>
 			<TextOverlay
