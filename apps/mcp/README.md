@@ -33,10 +33,10 @@ file and mirrors it into the viewer. When a person moves or retypes something in
 the viewer, it is written back, so the next read shows what they changed. No
 canvas state is kept in the tools themselves.
 
-Three families of tools, 69 in all:
+Three families of tools, 68 in all:
 
-- Seven of its own: `open_canvas` / `close_canvas` / `validate_canvas` /
-  `diagnose_canvas` / `measure_text` / `add_rect` / `add_ellipse`
+- Six of its own: `open_canvas` / `close_canvas` / `diagnose_canvas` /
+  `measure_text` / `add_rect` / `add_ellipse`
 - 46 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
   align, group, style, read, undo — each given a `path` so it names a file
 - 16 more from the same declarations that only a mounted canvas can answer —

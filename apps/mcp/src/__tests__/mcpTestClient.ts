@@ -28,7 +28,7 @@ export type McpTestClient = {
 	/**
 	 * Calls one tool.
 	 *
-	 * @param name - The tool name (`validate_canvas`, for instance)
+	 * @param name - The tool name (`diagnose_canvas`, for instance)
 	 * @param args - The argument object. It goes through the zod schema's
 	 *   validation, so a type violation comes back as isError
 	 */

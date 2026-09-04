@@ -39,7 +39,7 @@
 		"dev:viewer": "vite"
 	},
 	"comments": {
-		"devDependencies": "実行時の依存は無い。esbuild が external 無しで dist/index.mjs へ全部バンドルするため、ここに並ぶものは全てビルド時にしか要らない。@jiscribe/doc-schema と @fontsource/* だけは事情が違い、コードから import されない。doc-tools が実行時に node の解決規則で読むもので（validateDoc の require.resolve と fontSourcePackages の resolveFontSourceDir）、build.mjs が必要なファイルだけ dist/node_modules へ写して配布物に載せる。外すとビルドは通り、validate_canvas が落ち、日本語の計測だけが黙って推定へ落ちる。"
+		"devDependencies": "実行時の依存は無い。esbuild が external 無しで dist/index.mjs へ全部バンドルするため、ここに並ぶものは全てビルド時にしか要らない。@jiscribe/doc-schema と @fontsource/* だけは事情が違い、コードから import されない。doc-tools が実行時に node の解決規則で読むもので（validateDoc の require.resolve と fontSourcePackages の resolveFontSourceDir）、build.mjs が必要なファイルだけ dist/node_modules へ写して配布物に載せる。外すとビルドは通り、diagnose_canvas が落ち、日本語の計測だけが黙って推定へ落ちる。"
 	},
 	"devDependencies": {
 		"@fontsource/caveat": "5.3.0",

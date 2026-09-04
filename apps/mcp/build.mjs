@@ -283,7 +283,7 @@ const verifyStagedRuntimeDependencies = async () => {
 		throw new Error(
 			[
 				"Staged runtime dependencies are incomplete. Shipping this would make",
-				"validate_canvas fail and silently degrade text measurement to estimates.",
+				"diagnose_canvas fail and silently degrade text measurement to estimates.",
 				...problems.map((problem) => `  - ${problem}`),
 			].join("\n"),
 		);

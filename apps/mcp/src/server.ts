@@ -49,8 +49,8 @@ import { createPathLock, type PathLock } from "./pathLock";
  *    - `close_canvas`: closes that window and folds the server up too. A person
  *      closing the window ends up in the same place (the host is folded up once
  *      the last window is gone)
- *    - `validate_canvas` / `diagnose_canvas`: validation, and diagnosis of
- *      drawing problems such as overflow
+ *    - `diagnose_canvas`: validation, plus diagnosis of drawing problems such
+ *      as overflow
  *    - `measure_text`: without holding a diagram, measures whether a string fits
  *      a shape of a given size
  *    - `add_rect` / `add_ellipse`: entry points giving default sizes to the two
@@ -227,30 +227,11 @@ export function createJiscribeMcpServer(): McpServer {
 	);
 
 	server.registerTool(
-		registerName("validate_canvas"),
-		{
-			description:
-				"Validate a Jiscribe .jis.json document against both the official JSON schema and the canvas parser. Returns whether it is valid and any diagnostics.",
-			inputSchema: z
-				.object({
-					content: z
-						.string()
-						.describe(
-							"The .jis.json document text (CanvasDoc JSON) to validate.",
-						),
-				})
-				.strict(),
-		},
-		async ({ content }) =>
-			textResult(formatDiagnostics(validateDoc(content).diagnostics)),
-	);
-
-	server.registerTool(
 		registerName("diagnose_canvas"),
 		{
 			description: [
 				"Check an existing .jis.json file: validation (schema + parser) plus a diagnosis of whether each shape's text actually fits inside it.",
-				"Takes a path rather than the document text, so a large diagram never has to be sent through the conversation.",
+				"Names the file by path, so a large diagram never has to be sent through the conversation; this is the only validation entry point, and it reports JSON syntax errors too.",
 				"Overflow is only diagnosed when the file itself validates, since a shape with an invalid size has no meaningful content box.",
 				"Returns one line per finding, or valid: true when there is nothing to report.",
 			].join(" "),

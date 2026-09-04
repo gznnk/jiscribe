@@ -97,32 +97,6 @@ afterAll(async () => {
 	await workspace.remove();
 });
 
-describe("validate_canvas", () => {
-	it("returns the single line valid: true for a correct document", async () => {
-		const result = await client.callTool("validate_canvas", {
-			content: JSON.stringify(fittingDoc),
-		});
-		expect(result.text).toBe("valid: true");
-	});
-
-	it("returns valid: false and the missing property for a schema violation", async () => {
-		const result = await client.callTool("validate_canvas", {
-			content: JSON.stringify({
-				version: 1,
-				root: [{ id: "r", type: "rect", x: 0, y: 0 }],
-			}),
-		});
-		expect(result.text).toMatch(/^valid: false\n/);
-		expect(result.text).toContain("must have required property 'width'");
-	});
-
-	it("returns a syntax error when it is broken as JSON", async () => {
-		const result = await client.callTool("validate_canvas", { content: "{" });
-		expect(result.text).toMatch(/^valid: false\n/);
-		expect(result.text).toContain("JSON syntax error");
-	});
-});
-
 describe("diagnose_canvas", () => {
 	it("reports nothing for a document that fits", async () => {
 		const path = await workspace.writeDoc("fitting.jis.json", fittingDoc);
@@ -150,6 +124,23 @@ describe("diagnose_canvas", () => {
 		expect(result.text).toContain(
 			'- warning o2: label "マイクロタスクが尽きる" is 142.5px wide but only 120px is free between s2 and s3',
 		);
+	});
+
+	it("returns valid: false and the missing property for a schema violation", async () => {
+		const path = await workspace.writeDoc("incomplete.jis.json", {
+			version: 1,
+			root: [{ id: "r", type: "rect", x: 0, y: 0 }],
+		});
+		const result = await client.callTool("diagnose_canvas", { path });
+		expect(result.text).toMatch(/^valid: false\n/);
+		expect(result.text).toContain("must have required property 'width'");
+	});
+
+	it("returns a syntax error when the file is broken as JSON", async () => {
+		const path = await workspace.writeText("broken.jis.json", "{");
+		const result = await client.callTool("diagnose_canvas", { path });
+		expect(result.text).toMatch(/^valid: false\n/);
+		expect(result.text).toContain("JSON syntax error");
 	});
 
 	it("returns a file it cannot read as error text, not as an exception", async () => {
