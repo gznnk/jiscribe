@@ -184,7 +184,7 @@ vocabulary — a duplicate id against a built-in or another plugin throws.
 declared on the definition and rendered into the canvas-wide `<defs>` **once per
 type**, even when zero objects of that type exist, so the reference target never
 disappears. SVG ids are document-global and the registry cannot scope them, so
-**prefix the id with the type name** (`sticky-blur`). Hosts that narrow
+**prefix the id with the type name** (`sticky-shadow`). Hosts that narrow
 `objectTypes` drop the corresponding `svgDefs` too. Export clones the live SVG, so
 plugin-provided defs are included automatically.
 

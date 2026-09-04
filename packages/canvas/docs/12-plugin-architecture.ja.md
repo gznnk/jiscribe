@@ -172,7 +172,7 @@ CodeMirror の `EditorView`）。
 キャンバス全体の `<defs>` に**型ごと 1 回**描画される。その型のオブジェクトが 0 個
 でも描画されるので、参照先が消えることはない。SVG の id は document グローバルで
 レジストリ側でスコープを付けられないため、**id は型名を接頭辞にする**
-（`sticky-blur`）。ホストが `objectTypes` で型を絞れば、その `svgDefs` も登録され
+（`sticky-shadow`）。ホストが `objectTypes` で型を絞れば、その `svgDefs` も登録され
 ない。エクスポートは live SVG の `cloneNode` なので、プラグイン提供分も自動で入る。
 
 **テキストスロット**（`features.text: "slots"`）。整数風のスロット ID（`"0"` /

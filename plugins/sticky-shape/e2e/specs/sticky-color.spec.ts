@@ -8,8 +8,8 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
  * (StickyColorMenu, presets only), and it was the only one left uncovered. Pressing a
  * preset swatch changes the body fill, and it survives deselect -> reselect.
  *
- * The Sticky body is the second polygon inside the <g> (the first is the shadow), and
- * the fill is applied through CSS (so that an "auto" fill can resolve to a theme
+ * The Sticky body is the one polygon inside the <g> (the shadow is rects), and the
+ * fill is applied through CSS (so that an "auto" fill can resolve to a theme
  * token), hence the computed value rather than the attribute.
  */
 async function stickyFill(
@@ -17,11 +17,8 @@ async function stickyFill(
 	id: string,
 ): Promise<string | null> {
 	return canvas.page.evaluate((stickyId) => {
-		const group = document.querySelector(`[data-id="${stickyId}"]`);
-		const polygons = group ? [...group.querySelectorAll("polygon")] : [];
-		// The first polygon is the shadow, the second one is the body.
-		const main = polygons[1] ?? polygons[0];
-		return main ? getComputedStyle(main).fill : null;
+		const body = document.querySelector(`[data-id="${stickyId}"] polygon`);
+		return body ? getComputedStyle(body).fill : null;
 	}, id);
 }
 

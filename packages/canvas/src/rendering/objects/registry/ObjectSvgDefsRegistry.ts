@@ -26,7 +26,7 @@ export type ObjectSvgDefsEntry = {
  * the contribution, since the type is then never applied.
  *
  * SVG element ids are document-global and cannot be scoped by the registry, so
- * contributions must prefix theirs with their own type (`sticky-blur`).
+ * contributions must prefix theirs with their own type (`sticky-shadow`).
  */
 export class ObjectSvgDefsRegistry {
 	private readonly entries = new Map<ObjectType, FC>();

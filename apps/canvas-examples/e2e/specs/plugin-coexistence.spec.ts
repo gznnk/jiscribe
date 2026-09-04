@@ -207,12 +207,14 @@ test.describe("plugin coexistence", () => {
 
 	test("keeps every SVG id in the canvas unique", async ({ canvas }) => {
 		await drawOneShapePerPlugin(canvas);
-		// A second sticky: `svgDefs` is registered per type, so the shared filter has
-		// to stay a single element however many instances reference it.
+		// A second sticky: `svgDefs` is registered per type, so its shared gradients
+		// have to stay one set however many instances reference them.
 		await canvas.placeShape("Sticky");
 		await canvas.deselect();
 
-		await expect(canvas.page.locator("defs > #sticky-blur")).toHaveCount(1);
+		await expect(
+			canvas.page.locator("defs > #sticky-shadow-bottom"),
+		).toHaveCount(1);
 
 		// SVG ids are document-global, so core, the plugins and the per-object defs
 		// all draw from one namespace and a clash silently rebinds a url(#…).
@@ -221,7 +223,7 @@ test.describe("plugin coexistence", () => {
 			.evaluateAll((elements) => elements.map((element) => element.id));
 		// A query that reached nothing would pass the duplicate check for free, so
 		// pin one id known to be down there.
-		expect(svgIds).toContain("sticky-blur");
+		expect(svgIds).toContain("sticky-shadow-bottom");
 		expect(findDuplicates(svgIds)).toEqual([]);
 	});
 });
