@@ -13,8 +13,13 @@ import { createRoot } from "react-dom/client";
 import "@jiscribe/canvas/fonts.css";
 import "katex/dist/katex.min.css";
 
-import { CanvasErrorNotice } from "./CanvasErrorNotice";
 import { canvasParser, plugins } from "./canvasParser";
+import { DocErrorBanner, DocErrorNotice } from "./DocErrorNotice";
+import {
+	applyParseResult,
+	type DocViewState,
+	initialDocViewState,
+} from "./docViewState";
 import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
@@ -109,33 +114,32 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
  * Root component of the Canvas editor.
  *
  * State:
- *   - canvasDoc: validated CanvasDoc (shows the Canvas when valid)
- *   - hasSemanticError: whether there are validation errors (shows the error
- *     notice instead of the Canvas UI)
- *   - parseError: JSON syntax error message (shown when the JSON is broken)
+ *   - docView: last document that parsed clean plus the current text's error
+ *     (see {@link DocViewState}; the canvas stays mounted while an error stands)
  *   - missingEmbeddedSource: image (.jis.svg / .jis.png) has no embedded source
  *
  * Error details are surfaced in the Problems panel by the Extension
- * (DiagnosticProvider), so the Webview only holds whether errors exist. These
- * states are mutually exclusive.
+ * (DiagnosticProvider), so the Webview only holds what it needs to name the
+ * failure.
  */
 function App() {
-	const [canvasDoc, setCanvasDoc] = useState<CanvasDoc | null>(null);
-	const [syncNonce, setSyncNonce] = useState<string | undefined>(undefined);
-	const [hasSemanticError, setHasSemanticError] = useState(false);
-	const [parseError, setParseError] = useState<string>("");
+	const [docView, setDocView] = useState<DocViewState>(initialDocViewState);
 	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
 
 	// Canvas's imperative handle (its `export` namespace renders the image when
 	// saving .jis.svg / .jis.png).
 	const canvasRef = useRef<CanvasHandle>(null);
 
-	// Camera restored from persisted state, read once at mount to seed the canvas
-	// via `initialConfig.viewport` (undefined on first open → Canvas uses its doc-derived
+	// Mount-time canvas configuration, built once: `viewport` seeds the camera from
+	// persisted state (undefined on first open → Canvas uses its doc-derived
 	// default). The canvas owns the live camera after mount; we only persist what
 	// it reports, never drive it back — so a tab-hide reload restores the last
-	// view with no feedback into the canvas.
-	const [initialCamera] = useState<Camera | undefined>(readPersistedCamera);
+	// view with no feedback into the canvas. Held in state rather than rebuilt per
+	// render so the mounted canvas sees a stable prop.
+	const [mountConfig] = useState<CanvasConfig>(() => ({
+		...initialConfig,
+		viewport: readPersistedCamera(),
+	}));
 
 	// Persist pan/zoom so the view survives a tab-hide reload (#138,
 	// retainContextWhenHidden: false). A read-only mirror — no setState, no
@@ -189,7 +193,7 @@ function App() {
 		 * Handler for messages from the Extension.
 		 *
 		 * An "update" message arrives whenever the file contents change; parse and
-		 * validate in two stages and switch the display based on the result.
+		 * validate it, then fold the result into the view state.
 		 */
 		const messageHandler = (event: MessageEvent) => {
 			if (!isExtensionToWebviewMessage(event.data)) {
@@ -207,9 +211,7 @@ function App() {
 					const jsonText = message.data;
 					if (docType !== "json" && jsonText === "") {
 						setMissingEmbeddedSource(true);
-						setCanvasDoc(null);
-						setHasSemanticError(false);
-						setParseError("");
+						setDocView(initialDocViewState);
 						break;
 					}
 					setMissingEmbeddedSource(false);
@@ -217,33 +219,13 @@ function App() {
 					// Delegate JSON syntax → CanvasDoc semantic checks to the shared
 					// parser. It returns a discriminated union without throwing, so the
 					// same logic as the Extension (DiagnosticProvider) covers every case.
+					// A failing result keeps the last valid document mounted and only
+					// records the error, so mid-edit text (which is broken most of the
+					// time) neither rebuilds the canvas nor drops the viewport (#136).
 					const result = canvasParser.parse(jsonText);
-					switch (result.kind) {
-						case "ok":
-							setSyncNonce(message.saveNonce);
-							setCanvasDoc(result.doc);
-							setHasSemanticError(false);
-							setParseError("");
-							break;
-
-						case "structure-error":
-						case "semantic-error":
-							// Structure errors (types, required fields) and semantic errors
-							// (duplicate IDs, etc.) show the error notice. Details go to the
-							// Problems panel, so hold only whether errors exist here.
-							setHasSemanticError(true);
-							setCanvasDoc(null);
-							setParseError("");
-							break;
-
-						case "syntax-error":
-						case "internal-error":
-							// JSON syntax errors and unexpected errors are shown as a message.
-							setParseError(result.message);
-							setHasSemanticError(false);
-							setCanvasDoc(null);
-							break;
-					}
+					setDocView((prev) =>
+						applyParseResult(prev, result, message.saveNonce),
+					);
 					break;
 				}
 
@@ -317,13 +299,13 @@ function App() {
 	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
 	// save (#179).
 	useEffect(() => {
-		if (canvasDoc) {
+		if (docView.doc) {
 			vscode.postMessage({ type: "rendered" });
 		}
-	}, [canvasDoc]);
+	}, [docView.doc]);
 
 	// Display priority:
-	// missing source > JSON syntax error > semantic error > Canvas > loading
+	// missing source > Canvas (with the error as an overlay) > error notice > loading
 
 	if (missingEmbeddedSource) {
 		return (
@@ -353,41 +335,13 @@ function App() {
 		);
 	}
 
-	if (parseError) {
+	if (docView.doc) {
 		return (
-			<div
-				style={{
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					justifyContent: "center",
-					width: "100%",
-					height: "100vh",
-					color: "#dc2626",
-					fontFamily: "monospace",
-					padding: "20px",
-					boxSizing: "border-box",
-				}}
-			>
-				<div style={{ fontWeight: "bold", marginBottom: "8px" }}>
-					JSON Parse Error
-				</div>
-				<div style={{ fontSize: "12px", color: "#6b7280" }}>{parseError}</div>
-			</div>
-		);
-	}
-
-	if (hasSemanticError) {
-		return <CanvasErrorNotice />;
-	}
-
-	if (canvasDoc) {
-		return (
-			<div style={{ width: "100%", height: "100vh" }}>
+			<div style={{ width: "100%", height: "100vh", position: "relative" }}>
 				<Canvas
-					doc={canvasDoc}
-					syncNonce={syncNonce}
-					initialConfig={{ ...initialConfig, viewport: initialCamera }}
+					doc={docView.doc}
+					syncNonce={docView.syncNonce}
+					initialConfig={mountConfig}
 					toolbar={{ layout: toolbarLayout }}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}
@@ -397,8 +351,15 @@ function App() {
 					ref={canvasRef}
 					onExportImage={handleExportImage}
 				/>
+				{docView.error && <DocErrorBanner error={docView.error} />}
 			</div>
 		);
+	}
+
+	// No document has parsed clean yet, so there is nothing to keep on screen
+	// behind the error.
+	if (docView.error) {
+		return <DocErrorNotice error={docView.error} />;
 	}
 
 	return (
