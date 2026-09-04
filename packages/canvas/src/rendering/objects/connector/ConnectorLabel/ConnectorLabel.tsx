@@ -8,6 +8,7 @@ import {
 	CONNECTOR_LABEL_DEFAULTS,
 } from "./utils/connectorLabelLayout";
 import { resolveLabelFill } from "./utils/resolveLabelFill";
+import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type ConnectorLabelProps = {
@@ -45,6 +46,10 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	strokeDashType = "solid",
 	disablePointerEvents = false,
 }) => {
+	// An invalidation signal, not an argument: the box was measured against
+	// whatever face was loaded at the time, so a later arrival has to re-run this
+	// even though nothing the callback reads has changed.
+	const fontsLoadedNonce = useFontsLoadedNonceContext();
 	// Memoized so dragging the connector (anchor changes every frame, text does not)
 	// skips the per-line measureText.
 	const { width, height } = useMemo(
@@ -56,7 +61,8 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 				fontWeight,
 				strokeWidth,
 			}),
-		[text, fontFamily, fontSize, fontWeight, strokeWidth],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[text, fontFamily, fontSize, fontWeight, strokeWidth, fontsLoadedNonce],
 	);
 
 	if (text === "") {

@@ -120,7 +120,10 @@ style」という 2 方式混在を解消）。
     dispatch に変え、`reconcileObjectContentSizes` を `forceRemeasure` 付きで再実行する。
     スロットからは要求できない唯一のパス。`CanvasThumbnail` は dispatch する reducer を
     持たないので、同じカウンタを `canvasToState` の memo キーとして使う。箱が 1 つも動かなければ
-    同じ state 参照が返るので、2 つのイベントが重なっても無駄はない。字面自体はオプトインで、
+    同じ state 参照が返るので、2 つのイベントが重なっても無駄はない。dispatch が届くのは state に
+    現れる箱だけなので、同じカウンタを `FontsLoadedNonceContext` として描画層へも配る。レンダー中に
+    計測するもの（レコードの帯・コネクターのラベル箱・テキストの当たり帯）はこれを購読しており、
+    値が動けば memo を貫いて再レンダーされ、計測がやり直される。字面自体はオプトインで、
     `CANVAS_FONT_FAMILIES` が挙げるものを使うにはホストが `@jiscribe/canvas/fonts.css` を
     import する。
 - **標準テーマ**: `darkCanvasTheme`（既定。その値はトークンのフォールバックを兼ねる）と

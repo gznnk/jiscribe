@@ -15,6 +15,7 @@ import type { FillStyleState } from "../../../states/objects/base/FillStyleState
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
+import { useFontsLoadedNonceContext } from "../FontsLoadedNonceContext";
 import { useObjectTextRegionRegistry } from "../registry/ObjectTextRegionRegistryContext";
 import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
@@ -198,6 +199,11 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			isEditing = false,
 			editingSlotId,
 		} = props;
+
+		// Subscribed to, never read: `draw` and SlotOverlay measure text while they
+		// render, and a context change is what gets past this component's memo when
+		// a face lands after the first paint.
+		useFontsLoadedNonceContext();
 
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 		// The features.text gate matches the one used by the text-edit gesture and

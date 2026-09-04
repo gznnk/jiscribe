@@ -6,6 +6,7 @@ import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { CanvasRegistries } from "./registries";
 import { CanvasRegistriesContext } from "./registries/CanvasRegistriesContext";
+import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
@@ -15,21 +16,24 @@ type CanvasProvidersProps = {
 	locale: string;
 	messages: CanvasMessages;
 	registries: CanvasRegistries;
+	/** The counter from `useFontsLoadedNonce`, handed to the render-time measurement sites. */
+	fontsLoadedNonce: number;
 	viewportElementRef: RefObject<HTMLDivElement | null>;
 	children: ReactNode;
 };
 
 /**
  * Aggregates the context providers a live `<Canvas>` needs (theme, locale,
- * messages, the registry bundle, its three rendering registries, and the
- * viewport element ref) into one node, so Canvas.tsx renders its tree without
- * the deep provider nesting.
+ * messages, the registry bundle, its three rendering registries, the
+ * fonts-loaded counter, and the viewport element ref) into one node, so
+ * Canvas.tsx renders its tree without the deep provider nesting.
  */
 export function CanvasProviders({
 	theme,
 	locale,
 	messages,
 	registries,
+	fontsLoadedNonce,
 	viewportElementRef,
 	children,
 }: CanvasProvidersProps) {
@@ -48,9 +52,11 @@ export function CanvasProviders({
 							objectGeometryKey={registries.objectGeometryKey}
 							objectSvgDefs={registries.objectSvgDefs}
 						>
-							<CanvasViewportElementRefContext value={viewportElementRef}>
-								{children}
-							</CanvasViewportElementRefContext>
+							<FontsLoadedNonceContext value={fontsLoadedNonce}>
+								<CanvasViewportElementRefContext value={viewportElementRef}>
+									{children}
+								</CanvasViewportElementRefContext>
+							</FontsLoadedNonceContext>
 						</RenderingRegistriesProvider>
 					</CanvasRegistriesContext>
 				</CanvasMessagesContext>

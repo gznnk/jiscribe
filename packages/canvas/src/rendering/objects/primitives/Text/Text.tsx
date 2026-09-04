@@ -10,6 +10,7 @@ import type { TextState } from "../../../../states/objects/primitives/text/TextS
 import { readRichTextSlot } from "../../../../states/objects/types/TextSlots";
 import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
+import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { useObjectTextStyleDefaultsRegistry } from "../../registry/ObjectTextStyleDefaultsRegistryContext";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
@@ -38,6 +39,10 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 		[textStyleDefaults, type, bodySlot],
 	);
 
+	// An invalidation signal, not an argument: the bands were measured against
+	// whatever face was loaded at the time, so a later arrival has to re-run this
+	// even though nothing the callback reads has changed.
+	const fontsLoadedNonce = useFontsLoadedNonceContext();
 	const hitRects = useMemo(
 		() =>
 			calcTextLineHitRects(
@@ -49,7 +54,8 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 				// the drawn lines rather than the authored ones.
 				textLayout === "block" ? width - TEXT_BOX_PADDING_X * 2 : undefined,
 			),
-		[body, style, width, height, textLayout],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[body, style, width, height, textLayout, fontsLoadedNonce],
 	);
 
 	return (

@@ -6,6 +6,7 @@ import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import type { CanvasPlugin } from "../plugin/CanvasPlugin";
 import { CanvasView } from "../rendering/CanvasView";
+import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
@@ -64,7 +65,8 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	// is a memo key rather than an effect: a web font landing after the first paint
 	// re-maps the doc against the face it is actually drawn in. It is an
 	// invalidation signal, not an argument, which is why the dependency is one the
-	// callback does not read.
+	// callback does not read. A re-map that moves no box returns the same state,
+	// so the render-time measurements get the counter as a context as well.
 	const fontsLoadedNonce = useFontsLoadedNonce();
 
 	const { objects, rootIds, background } = useMemo(
@@ -113,16 +115,18 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				objectGeometryKey={registries.objectGeometryKey}
 				objectSvgDefs={registries.objectSvgDefs}
 			>
-				<div style={themeCssVars}>
-					<CanvasView
-						objects={objects}
-						rootIds={rootIds}
-						viewport={viewport}
-						svgRef={svgRef}
-						background={background}
-						surfaceColor={theme.tokens.canvasBg}
-					/>
-				</div>
+				<FontsLoadedNonceContext value={fontsLoadedNonce}>
+					<div style={themeCssVars}>
+						<CanvasView
+							objects={objects}
+							rootIds={rootIds}
+							viewport={viewport}
+							svgRef={svgRef}
+							background={background}
+							surfaceColor={theme.tokens.canvasBg}
+						/>
+					</div>
+				</FontsLoadedNonceContext>
 			</RenderingRegistriesProvider>
 		</CanvasThemeContext>
 	);

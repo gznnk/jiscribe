@@ -126,7 +126,11 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     `forceRemeasure` flag — the one pass the slots cannot ask for.
     `CanvasThumbnail` has no reducer to dispatch through, so it takes the same counter as a memo key
     on `canvasToState` instead. A pass that moves no box returns the same state reference, so the
-    two events overlapping costs nothing. The faces themselves are opt-in: a host imports
+    two events overlapping costs nothing. A dispatch only reaches boxes that live in the state, so
+    the same counter is handed to the render layer as `FontsLoadedNonceContext` as well. The sites
+    that measure while they render (a record's bands, a connector's label box, a text object's hit
+    bands) subscribe to it, and a change pierces their memo so the measurement re-runs. The faces
+    themselves are opt-in: a host imports
     `@jiscribe/canvas/fonts.css` to get the ones `CANVAS_FONT_FAMILIES` names.
 - **Standard themes**: `darkCanvasTheme` (the default; its values double as the token fallbacks) and
   `lightCanvasTheme` are exported from the package (`theme/themePresets.ts`).

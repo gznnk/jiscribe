@@ -361,7 +361,9 @@ const CanvasComponent = ({
 	// before then was measured against a fallback face. Nothing in the doc moves
 	// when the real one arrives, which is why this needs a signal of its own; a
 	// pass that moves no box returns the same state, so the nonce firing more
-	// than once costs nothing.
+	// than once costs nothing. The same counter also goes down the tree as a
+	// context, for the measurements that happen while rendering and so change no
+	// state at all (FontsLoadedNonceContext).
 	const fontsLoadedNonce = useFontsLoadedNonce();
 	useEffect(() => {
 		if (fontsLoadedNonce > 0) {
@@ -615,6 +617,7 @@ const CanvasComponent = ({
 			locale={locale}
 			messages={mergedMessages}
 			registries={registries}
+			fontsLoadedNonce={fontsLoadedNonce}
 			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot
