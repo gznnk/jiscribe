@@ -105,7 +105,12 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
  * checkExternalChange).
  */
 export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<JiscribeImageDocument> {
-	constructor(private readonly context: vscode.ExtensionContext) {}
+	constructor(private readonly context: vscode.ExtensionContext) {
+		// The provider lives for the whole session, and changeEmitter holds the
+		// undo/redo closures of every edit (each capturing a full source string),
+		// so tie its release to the extension instead of leaving it unowned.
+		context.subscriptions.push(this.changeEmitter);
+	}
 
 	// dirty / undo / redo notification channel. Firing this event tells VSCode
 	// the document was edited; VSCode manages the undo/redo stack and calls the
