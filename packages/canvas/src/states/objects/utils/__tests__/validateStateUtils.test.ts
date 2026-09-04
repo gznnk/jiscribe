@@ -1,3 +1,9 @@
+import { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc";
+import { FILL_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
+import { RADIUS_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
+import { STROKE_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import { TEXT_INLINE_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/RichText";
+import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -12,6 +18,7 @@ import {
 	isValidStrokeStyleState,
 	isValidTextStyleState,
 	isValidTransformState,
+	type StateRecord,
 } from "../validateStateUtils";
 
 describe("validateStateUtils", () => {
@@ -114,18 +121,14 @@ describe("validateStateUtils", () => {
 				),
 			).toBe(true);
 		});
-		it("fontSize >= 1 is true, < 1 is false (schema minimum: 1)", () => {
+		// The bound is inclusive at 1; what it refuses is asserted for every inline
+		// field at once in "fields driven by the style tables".
+		it("fontSize is true from 1 up (schema minimum: 1)", () => {
 			expect(isValidTextStyleState(withSlot({ fontSize: 1 }), "body")).toBe(
 				true,
 			);
 			expect(isValidTextStyleState(withSlot({ fontSize: 12 }), "body")).toBe(
 				true,
-			);
-			expect(isValidTextStyleState(withSlot({ fontSize: 0 }), "body")).toBe(
-				false,
-			);
-			expect(isValidTextStyleState(withSlot({ fontSize: -3 }), "body")).toBe(
-				false,
 			);
 		});
 		it("valid fontStyle / textDecoration is true", () => {
@@ -138,34 +141,6 @@ describe("validateStateUtils", () => {
 					"body",
 				),
 			).toBe(true);
-		});
-		it("injection in fontStyle / textDecoration is false", () => {
-			expect(
-				isValidTextStyleState(
-					withSlot({ fontStyle: "italic } html {" }),
-					"body",
-				),
-			).toBe(false);
-			expect(
-				isValidTextStyleState(
-					withSlot({ textDecoration: "underline } html {" }),
-					"body",
-				),
-			).toBe(false);
-		});
-		it("injection in fontFamily / fontWeight is false", () => {
-			expect(
-				isValidTextStyleState(
-					withSlot({ fontFamily: "Arial; } body {" }),
-					"body",
-				),
-			).toBe(false);
-			expect(
-				isValidTextStyleState(
-					withSlot({ fontWeight: "bold } html {" }),
-					"body",
-				),
-			).toBe(false);
 		});
 		it("checks the styling of every run, which is inlined into the same CSS", () => {
 			expect(
@@ -319,6 +294,115 @@ describe("validateStateUtils", () => {
 		});
 		it("no points is false", () => {
 			expect(isValidPolyState({}, 2)).toBe(false);
+		});
+	});
+
+	// Each table is keyed by `Record<keyof <the group's type>, …>`, the very type
+	// the doc-side table is keyed by, so a group that gains a field the table
+	// misses fails to compile on both sides. These are the runtime witnesses that
+	// every key is actually reached, and that "absent" and "there but undefined"
+	// read alike here as they do on the doc side.
+	describe("fields driven by the style tables", () => {
+		const fieldTables: [
+			string,
+			(o: StateRecord) => boolean,
+			readonly string[],
+		][] = [
+			["stroke", isValidStrokeStyleState, STROKE_STYLE_KEYS],
+			["fill", isValidFillStyleState, FILL_STYLE_KEYS],
+			["radius", isValidRadiusStyleState, RADIUS_STYLE_KEYS],
+			["arrow", isValidArrowFields, ARROW_STYLE_KEYS],
+		];
+
+		it.each(fieldTables)(
+			"the %s table checks every key",
+			(_group, isValid, keys) => {
+				// null is admissible under none of the field validators, and none of them
+				// reaches `CSS` with it (isCssSafeValue rejects a non-string first).
+				for (const key of keys) {
+					expect(isValid({ [key]: null })).toBe(false);
+				}
+			},
+		);
+
+		it.each(fieldTables)(
+			"the %s table reads an explicitly undefined field as unspecified",
+			(_group, isValid, keys) => {
+				expect(
+					isValid(Object.fromEntries(keys.map((key) => [key, undefined]))),
+				).toBe(true);
+			},
+		);
+
+		// The text tables are reached through a slot rather than a flat record, so
+		// they need witnesses of their own. A `null` would not serve: `isTextSlot`
+		// refuses it for every one of these fields before the table is consulted.
+		// These values pass their declared type and must still be refused, which is
+		// exactly what the table adds — the fontSize bound and CSS safety. One per
+		// inline field, keyed by the field union, so a field the group gains has to
+		// be given a value here too.
+		const beyondDeclaredType: Record<
+			(typeof TEXT_INLINE_STYLE_KEYS)[number],
+			unknown
+		> = {
+			fontColor: "red; } body {",
+			fontSize: 0,
+			fontFamily: "Arial; } body {",
+			fontWeight: "bold; } body {",
+			fontStyle: "italic } html {",
+			textDecoration: "underline } html {",
+		};
+
+		const slotOf = (style: Record<string, unknown>) => ({
+			text: { body: { text: "hi", ...style } },
+		});
+		const runOf = (style: Record<string, unknown>) => ({
+			text: { body: { text: [{ text: "hi", ...style }] } },
+		});
+
+		it.each(TEXT_INLINE_STYLE_KEYS)(
+			"refuses a slot whose %s meets its declared type but not the table",
+			(key) => {
+				expect(
+					isValidTextStyleState(
+						slotOf({ [key]: beyondDeclaredType[key] }),
+						"body",
+					),
+				).toBe(false);
+			},
+		);
+
+		it.each(TEXT_INLINE_STYLE_KEYS)(
+			"refuses a run whose %s meets its declared type but not the table",
+			(key) => {
+				expect(
+					isValidTextStyleState(
+						runOf({ [key]: beyondDeclaredType[key] }),
+						"body",
+					),
+				).toBe(false);
+			},
+		);
+
+		// The two alignment fields the slot table carries beyond the inline half get
+		// no such case: `isTextSlot` checks them with the very guards the table does,
+		// so no value tells the two apart. Their coverage is the type's, not a test's.
+		it.each(TEXT_SLOT_STYLE_KEYS)(
+			"reads a slot's %s as unspecified when it is there but undefined",
+			(key) => {
+				expect(
+					isValidTextStyleState(slotOf({ [key]: undefined }), "body"),
+				).toBe(true);
+			},
+		);
+
+		it("accepts a slot whose alignment is valid, which only the table reaches here", () => {
+			expect(
+				isValidTextStyleState(
+					slotOf({ textAlign: "center", verticalAlign: "middle" }),
+					"body",
+				),
+			).toBe(true);
 		});
 	});
 

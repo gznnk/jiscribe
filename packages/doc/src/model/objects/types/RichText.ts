@@ -3,6 +3,14 @@ import { isNumber, isObject, isString } from "@jiscribe/basic-validators";
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /**
+ * Smallest admissible `fontSize` — the `minimum` the JSON schema states for it.
+ * Read by both boundaries that check the field: the doc validator
+ * (validateDocUtils) and the paste guard (validateStateUtils), a connector's
+ * label included.
+ */
+export const FONT_SIZE_MIN = 1;
+
+/**
  * The typography that may differ *inside* one body of text. Alignment is
  * deliberately absent: it places the whole block, so it stays on the slot
  * (TextSlot), and only what a run of characters can carry on its own lives here.

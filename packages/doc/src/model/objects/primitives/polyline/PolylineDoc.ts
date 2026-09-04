@@ -19,6 +19,13 @@ export type PolylineDoc = CreateObjectType<
 >;
 
 /**
+ * Fewest points a polyline may hold: two, the ends of a single segment. Both
+ * boundaries read the count from here — the doc validator and the paste-side
+ * state validator — so a poly type declares it once beside its features.
+ */
+export const POLYLINE_MIN_POINTS = 2;
+
+/**
  * Creation defaults of a polyline, sitting where every other type's do
  * (`RECT_DOC_DEFAULTS` and friends) and reached through the type's
  * `defaults` (builtinObjectDocDefinitions) rather than living as private

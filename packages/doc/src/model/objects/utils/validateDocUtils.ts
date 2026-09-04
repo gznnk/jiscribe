@@ -6,12 +6,20 @@ import {
 } from "@jiscribe/basic-validators";
 
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
-import { ARROW_STYLE_KEYS } from "../base/ArrowStyleDoc";
+import type { ArrowStyleDoc } from "../base/ArrowStyleDoc";
+import type { FillStyleDoc } from "../base/FillStyleDoc";
+import type { RadiusStyleDoc } from "../base/RadiusStyleDoc";
+import { CORNER_RADIUS_MIN } from "../base/RadiusStyleDoc";
+import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
+import { STROKE_WIDTH_MIN } from "../base/StrokeStyleDoc";
 import { isArrowType } from "../types/ArrowType";
 import { isEdgeAnchorSide } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
+import type { InlineTextStyle } from "../types/RichText";
+import { FONT_SIZE_MIN } from "../types/RichText";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { isTextAlign } from "../types/TextAlign";
+import type { TextSlotStyle } from "../types/TextSlot";
 import { isTextVerticalBasis } from "../types/TextVerticalBasis";
 import { isVerticalAlign } from "../types/VerticalAlign";
 
@@ -275,28 +283,178 @@ export function validateTransformFields(
 	return errors;
 }
 
+/**
+ * How one field's value is checked at the doc boundary: the diagnostics the
+ * value written at `path` yields, empty when it is admissible.
+ */
+export type DocFieldValidator = (
+	value: unknown,
+	path: string,
+) => SemanticDiagnostic[];
+
+/**
+ * Validator for a value used as a color. Only CSS-injection safety is asked
+ * here: whether the string names a color at all needs the browser's parser,
+ * which this layer cannot reach, and is asked at the paste boundary instead
+ * (`isValidColorValue`).
+ */
+export const colorValidator: DocFieldValidator = (value, path) =>
+	isCssSafeValue(value)
+		? []
+		: [{ path, message: "must be a safe CSS color value", beyondSchema: true }];
+
+/**
+ * Builds a validator for a string inlined into a CSS declaration.
+ *
+ * @param cssProperty - The property the value lands in ("font-family"), which the diagnostic quotes
+ * @returns A validator rejecting anything that could break out of that declaration
+ */
+export const cssValueValidator =
+	(cssProperty: string): DocFieldValidator =>
+	(value, path) =>
+		isCssSafeValue(value)
+			? []
+			: [
+					{
+						path,
+						message: `must be a safe CSS ${cssProperty} value`,
+						beyondSchema: true,
+					},
+				];
+
+/**
+ * Builds a validator for a numeric field.
+ *
+ * @param min - Lower bound, inclusive — the schema's `minimum` for the field; omitted leaves the number unbounded
+ * @returns A validator rejecting non-numbers ("must be a number") and values below the bound ("must be >= min")
+ */
+export const numberValidator =
+	(min?: number): DocFieldValidator =>
+	(value, path) => {
+		if (!isNumber(value)) {
+			return [{ path, message: "must be a number" }];
+		}
+		if (min !== undefined && value < min) {
+			return [{ path, message: `must be >= ${min}` }];
+		}
+		return [];
+	};
+
+/**
+ * Builds a validator for a numeric field bounded at both ends.
+ *
+ * @param min - Smallest admissible value, inclusive
+ * @param max - Largest admissible value, inclusive
+ * @returns A validator whose single diagnostic names both ends, a non-number failing it like an out-of-range one
+ */
+export const numberRangeValidator =
+	(min: number, max: number): DocFieldValidator =>
+	(value, path) =>
+		isNumber(value) && value >= min && value <= max
+			? []
+			: [{ path, message: `must be a number between ${min} and ${max}` }];
+
+/**
+ * Validator for a field written as plain text.
+ *
+ * @param value - The value written for the field
+ * @param path - Diagnostic path of the field
+ * @returns One diagnostic for anything but a string
+ */
+export const stringValidator: DocFieldValidator = (value, path) =>
+	isString(value) ? [] : [{ path, message: "must be a string" }];
+
+/**
+ * Builds a validator for a field limited to a known set of values.
+ *
+ * @param isValid - The set's own type guard (`isStrokeDashType`, ...)
+ * @param message - Diagnostic text, which spells the admissible values out
+ * @returns A validator yielding that one diagnostic when the guard rejects
+ */
+export const enumValidator =
+	(isValid: (value: unknown) => boolean, message: string): DocFieldValidator =>
+	(value, path) =>
+		isValid(value) ? [] : [{ path, message }];
+
+/**
+ * Validates the fields of one group, each against the validator the group's
+ * table gives it. The state layer keys a table of its own by the same type, so a
+ * field a group gains has to be given a validator on both sides or fails to
+ * compile on both (validateStateUtils).
+ *
+ * @param o - The object carrying the group's fields; keys outside the table are ignored
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @param validators - The group's table, whose key order the diagnostics follow
+ * @returns One diagnostic per malformed field; a field that is absent or `undefined` is unspecified and yields none
+ */
+export const validateFields = (
+	o: Record<string, unknown>,
+	path: string,
+	validators: Readonly<Record<string, DocFieldValidator>>,
+): SemanticDiagnostic[] =>
+	Object.entries(validators).flatMap(([key, validate]) =>
+		o[key] === undefined ? [] : validate(o[key], `${path}.${key}`),
+	);
+
+/** The stroke group's fields, in the order of `STROKE_STYLE_KEYS`. */
+const strokeStyleValidators = {
+	stroke: colorValidator,
+	strokeWidth: numberValidator(STROKE_WIDTH_MIN),
+	strokeDashType: enumValidator(
+		isStrokeDashType,
+		"must be one of: solid, dashed, dotted",
+	),
+} as const satisfies Record<keyof StrokeStyleDoc, DocFieldValidator>;
+
+/** The fill group's fields, in the order of `FILL_STYLE_KEYS`. */
+const fillStyleValidators = {
+	fill: colorValidator,
+} as const satisfies Record<keyof FillStyleDoc, DocFieldValidator>;
+
+/** The corner-radius group's fields, in the order of `RADIUS_STYLE_KEYS`. */
+const radiusStyleValidators = {
+	rx: numberValidator(CORNER_RADIUS_MIN),
+} as const satisfies Record<keyof RadiusStyleDoc, DocFieldValidator>;
+
+/** The arrowhead group's fields, in the order of `ARROW_STYLE_KEYS`. */
+const arrowStyleValidators = {
+	startArrow: enumValidator(isArrowType, "must be a valid ArrowType"),
+	endArrow: enumValidator(isArrowType, "must be a valid ArrowType"),
+} as const satisfies Record<keyof ArrowStyleDoc, DocFieldValidator>;
+
+/**
+ * The inline typography, in the order of `TEXT_INLINE_STYLE_KEYS`. Applied to a
+ * slot and to every run of its text alike, a run being inlined into the same CSS.
+ */
+const inlineTextStyleValidators = {
+	fontColor: colorValidator,
+	fontSize: numberValidator(FONT_SIZE_MIN),
+	fontFamily: cssValueValidator("font-family"),
+	fontWeight: cssValueValidator("font-weight"),
+	fontStyle: cssValueValidator("font-style"),
+	textDecoration: cssValueValidator("text-decoration"),
+} as const satisfies Record<keyof InlineTextStyle, DocFieldValidator>;
+
+/**
+ * A slot's whole styling: the alignment that places the block (and so has no
+ * per-run counterpart) before the inline half, so the iteration order matches
+ * `TEXT_SLOT_STYLE_KEYS` and, with it, the order the diagnostics come out in.
+ */
+const textSlotStyleValidators = {
+	textAlign: enumValidator(isTextAlign, "must be one of: left, center, right"),
+	verticalAlign: enumValidator(
+		isVerticalAlign,
+		"must be one of: top, middle, bottom",
+	),
+	...inlineTextStyleValidators,
+} as const satisfies Record<keyof TextSlotStyle, DocFieldValidator>;
+
 /** Validate optional stroke style fields: `stroke` (safe CSS color), `strokeWidth` (≥ 0), `strokeDashType`. */
 export function validateStrokeStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	const errors: SemanticDiagnostic[] = [];
-	if ("stroke" in o && !isCssSafeValue(o.stroke)) {
-		errors.push({
-			path: `${path}.stroke`,
-			message: "must be a safe CSS color value",
-			beyondSchema: true,
-		});
-	}
-	// strokeWidth has minimum: 0 in the schema
-	errors.push(...validateOptionalNumber(o, path, "strokeWidth", 0));
-	if ("strokeDashType" in o && !isStrokeDashType(o.strokeDashType)) {
-		errors.push({
-			path: `${path}.strokeDashType`,
-			message: "must be one of: solid, dashed, dotted",
-		});
-	}
-	return errors;
+	return validateFields(o, path, strokeStyleValidators);
 }
 
 /** Validate the optional `fill` field as a safe CSS color value. */
@@ -304,15 +462,7 @@ export function validateFillStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	const errors: SemanticDiagnostic[] = [];
-	if ("fill" in o && !isCssSafeValue(o.fill)) {
-		errors.push({
-			path: `${path}.fill`,
-			message: "must be a safe CSS color value",
-			beyondSchema: true,
-		});
-	}
-	return errors;
+	return validateFields(o, path, fillStyleValidators);
 }
 
 /**
@@ -330,21 +480,7 @@ export function validateTextSlotStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	const errors: SemanticDiagnostic[] = [];
-	if ("textAlign" in o && !isTextAlign(o.textAlign)) {
-		errors.push({
-			path: `${path}.textAlign`,
-			message: "must be one of: left, center, right",
-		});
-	}
-	if ("verticalAlign" in o && !isVerticalAlign(o.verticalAlign)) {
-		errors.push({
-			path: `${path}.verticalAlign`,
-			message: "must be one of: top, middle, bottom",
-		});
-	}
-	errors.push(...validateInlineTextStyleFields(o, path));
-	return errors;
+	return validateFields(o, path, textSlotStyleValidators);
 }
 
 /**
@@ -360,45 +496,7 @@ export function validateInlineTextStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	const errors: SemanticDiagnostic[] = [];
-	if ("fontColor" in o && !isCssSafeValue(o.fontColor)) {
-		errors.push({
-			path: `${path}.fontColor`,
-			message: "must be a safe CSS color value",
-			beyondSchema: true,
-		});
-	}
-	// fontSize has minimum: 1 in the schema
-	errors.push(...validateOptionalNumber(o, path, "fontSize", 1));
-	if ("fontFamily" in o && !isCssSafeValue(o.fontFamily)) {
-		errors.push({
-			path: `${path}.fontFamily`,
-			message: "must be a safe CSS font-family value",
-			beyondSchema: true,
-		});
-	}
-	if ("fontWeight" in o && !isCssSafeValue(o.fontWeight)) {
-		errors.push({
-			path: `${path}.fontWeight`,
-			message: "must be a safe CSS font-weight value",
-			beyondSchema: true,
-		});
-	}
-	if ("fontStyle" in o && !isCssSafeValue(o.fontStyle)) {
-		errors.push({
-			path: `${path}.fontStyle`,
-			message: "must be a safe CSS font-style value",
-			beyondSchema: true,
-		});
-	}
-	if ("textDecoration" in o && !isCssSafeValue(o.textDecoration)) {
-		errors.push({
-			path: `${path}.textDecoration`,
-			message: "must be a safe CSS text-decoration value",
-			beyondSchema: true,
-		});
-	}
-	return errors;
+	return validateFields(o, path, inlineTextStyleValidators);
 }
 
 /**
@@ -474,22 +572,13 @@ export function validateRadiusStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	// The corner radius rx has minimum: 0 in the schema
-	return validateOptionalNumber(o, path, "rx", 0);
+	return validateFields(o, path, radiusStyleValidators);
 }
 
-/**
- * Validate the optional arrowhead fields as valid ArrowType values. The fields are taken
- * from ARROW_STYLE_KEYS, so a field added to the group is checked without editing this.
- */
+/** Validate the optional arrowhead fields as valid ArrowType values. */
 export function validateArrowFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	return ARROW_STYLE_KEYS.filter((key) => key in o && !isArrowType(o[key])).map(
-		(key) => ({
-			path: `${path}.${key}`,
-			message: "must be a valid ArrowType",
-		}),
-	);
+	return validateFields(o, path, arrowStyleValidators);
 }

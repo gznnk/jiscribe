@@ -4,33 +4,64 @@ import {
 	isObject,
 	isString,
 } from "@jiscribe/basic-validators";
+import { STROKE_WIDTH_MIN } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { isConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
+import { FONT_SIZE_MIN } from "@jiscribe/doc/model/objects/types/RichText";
 import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 
 import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRegistry";
 import { createPolyStateValidator } from "../utils/createPolyStateValidator";
 import {
 	hasOwnedEndpoint,
+	hasValidFields,
 	isValidColorValue,
 	isValidEndpointRefState,
+	numberRangeValidator,
+	numberValidator,
+	type StateFieldValidator,
 	type StateRecord,
 } from "../utils/validateStateUtils";
+
+/**
+ * The label's optional fields, keyed by the very type the Doc-side table is
+ * (validateConnectorDoc), so a field the label gains has to be given a check on
+ * both sides or fails to compile on both. `text` is left out: it is required,
+ * which a table checking only the fields that are there cannot say.
+ *
+ * Colors are the one place this is tighter than the Doc side rather than equal:
+ * `isValidColorValue` also asks whether the value is a color, which the Doc side
+ * cannot (it runs in Node too). Tighter is safe here — it can only refuse a
+ * paste, never produce a doc that fails.
+ */
+const connectorLabelValidators = {
+	// position is a 0..1 fraction along the line (schema range).
+	position: numberRangeValidator(0, 1),
+	offset: isNumber,
+	fontColor: isValidColorValue,
+	fontFamily: isCssSafeValue,
+	fontSize: numberValidator(FONT_SIZE_MIN),
+	fontWeight: isCssSafeValue,
+	fill: isValidColorValue,
+	stroke: isValidColorValue,
+	strokeWidth: numberValidator(STROKE_WIDTH_MIN),
+	strokeDashType: isStrokeDashType,
+} as const satisfies Record<
+	keyof Omit<ConnectorLabel, "text">,
+	StateFieldValidator
+>;
 
 /**
  * Validates the structure of `label` (a nested annotation). Omitting it is
  * allowed and treated as no label. `text` is a required string; position and
  * style fields are type-checked only when present.
  *
- * The constraints are those of the Doc-side `validateConnectorLabelFields` or tighter:
- * this is the clipboard boundary, so anything it accepts must also survive re-parse. A
- * looser check here (plain `isString` on colors, unbounded `position`) would let a
- * pasted label carry `stroke: "red;}…"` (CSS injection) or `position: 5` through
- * `commit`, producing a `.jis.json` that fails the Doc validator on the next open.
- *
- * Colors are the one place this is tighter rather than equal: `isValidColorValue` also
- * asks whether the value is a color, which the Doc side cannot (it runs in Node too).
- * Tighter is safe here — it can only refuse a paste, never produce a doc that fails.
+ * Every field is held as strictly as the Doc side holds it, or more: this is the
+ * clipboard boundary, so anything it accepts must also survive re-parse. A looser check
+ * (plain `isString` on colors, unbounded `position`) would let a pasted label carry
+ * `stroke: "red;}…"` (CSS injection) or `position: 5` through `commit`, producing a
+ * `.jis.json` that fails the Doc validator on the next open.
  */
 export const isValidConnectorLabelState = (label: unknown): boolean => {
 	if (label === undefined) {
@@ -40,26 +71,7 @@ export const isValidConnectorLabelState = (label: unknown): boolean => {
 		return false;
 	}
 	const l = label as StateRecord;
-	return (
-		isString(l.text) &&
-		// position is a 0..1 fraction along the line (schema range).
-		(l.position === undefined ||
-			(isNumber(l.position) && l.position >= 0 && l.position <= 1)) &&
-		(l.offset === undefined || isNumber(l.offset)) &&
-		// Colors must be colors; the other style strings only have to be
-		// CSS-injection-safe (see isValidColorValue).
-		(l.fontColor === undefined || isValidColorValue(l.fontColor)) &&
-		(l.fontFamily === undefined || isCssSafeValue(l.fontFamily)) &&
-		// fontSize has minimum: 1 in the schema.
-		(l.fontSize === undefined || (isNumber(l.fontSize) && l.fontSize >= 1)) &&
-		(l.fontWeight === undefined || isCssSafeValue(l.fontWeight)) &&
-		(l.fill === undefined || isValidColorValue(l.fill)) &&
-		(l.stroke === undefined || isValidColorValue(l.stroke)) &&
-		// strokeWidth has minimum: 0 in the schema.
-		(l.strokeWidth === undefined ||
-			(isNumber(l.strokeWidth) && l.strokeWidth >= 0)) &&
-		(l.strokeDashType === undefined || isStrokeDashType(l.strokeDashType))
-	);
+	return isString(l.text) && hasValidFields(l, connectorLabelValidators);
 };
 
 /**

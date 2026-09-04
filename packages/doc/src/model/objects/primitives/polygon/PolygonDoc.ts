@@ -19,6 +19,14 @@ export type PolygonDoc = CreateObjectType<
 >;
 
 /**
+ * Fewest points a polygon may hold. A closed shape needs three: two would enclose
+ * nothing but a degenerate line segment. Both boundaries read the count from here
+ * — the doc validator and the paste-side state validator — so a poly type declares
+ * it once beside its features (the schema's `minItems: 3` says the same).
+ */
+export const POLYGON_MIN_POINTS = 3;
+
+/**
  * Creation defaults of a polygon, sitting where every other type's do
  * (`RECT_DOC_DEFAULTS` and friends) and reached through the type's
  * `defaults` (builtinObjectDocDefinitions) rather than living as private
