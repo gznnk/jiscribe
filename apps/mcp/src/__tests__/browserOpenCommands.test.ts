@@ -7,6 +7,15 @@ import {
 
 const URL = "http://localhost:5190";
 
+/** The switches headless mode puts before the URL (see browserOpenCommands) */
+const HEADLESS_ARGS = [
+	"--headless=new",
+	"--disable-gpu",
+	"--disable-background-timer-throttling",
+	"--disable-renderer-backgrounding",
+	"--disable-backgrounding-occluded-windows",
+];
+
 describe("calcBrowserOpenCommands", () => {
 	it("returns only the default browser's candidates in tab mode", () => {
 		expect(calcBrowserOpenCommands(URL, "win32", "tab")).toEqual([
@@ -51,6 +60,51 @@ describe("calcBrowserOpenCommands", () => {
 			"chrome",
 			`--app=${URL}`,
 		]);
+	});
+
+	it("names the Chromium binary itself in headless mode, on every platform", () => {
+		// Anything that hands the URL to the registered browser through a shell
+		// helper loses the process, and with it the chance to ask for headless
+		expect(calcBrowserOpenCommands(URL, "linux", "headless")[0]).toEqual([
+			"google-chrome",
+			...HEADLESS_ARGS,
+			URL,
+		]);
+		expect(calcBrowserOpenCommands(URL, "win32", "headless")[0]).toEqual([
+			"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+			...HEADLESS_ARGS,
+			URL,
+		]);
+		expect(calcBrowserOpenCommands(URL, "darwin", "headless")[0]).toEqual([
+			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+			...HEADLESS_ARGS,
+			URL,
+		]);
+	});
+
+	it("keeps the Windows-side .exe paths in linux's headless mode, for WSL", () => {
+		const commands = calcBrowserOpenCommands(URL, "linux", "headless");
+		expect(commands.some(([command]) => command.endsWith("chrome.exe"))).toBe(
+			true,
+		);
+	});
+
+	it("never falls back to a tab in headless mode", () => {
+		// The default browser has no headless mode, so a fallback would put a
+		// window on the user's screen behind their back
+		const tabLaunchers = new Set(["cmd", "open", "xdg-open", "wslview"]);
+		for (const platform of ["linux", "win32", "darwin"] as const) {
+			const commands = calcBrowserOpenCommands(URL, platform, "headless");
+			expect(commands.some(([command]) => tabLaunchers.has(command))).toBe(
+				false,
+			);
+		}
+	});
+
+	it("tries only the named executable in headless mode", () => {
+		expect(
+			calcBrowserOpenCommands(URL, "linux", "headless", "/opt/chrome"),
+		).toEqual([["/opt/chrome", ...HEADLESS_ARGS, URL]]);
 	});
 
 	it("passes everything after --args through open -na in darwin's app mode", () => {

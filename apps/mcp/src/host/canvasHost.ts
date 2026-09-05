@@ -10,7 +10,13 @@
 //
 // Only the queries the file has no answer for (capture, camera, selection,
 // measurement) are put to the viewer under a requestId (runHandleOp).
+//
+// The window is either one a person looks at or a headless one the AI looks
+// through (openHeadlessViewer). Both are viewers as far as everything here is
+// concerned; where they differ is that a headless one has nobody to close it, so
+// closing goes through the closeViewer frame rather than the browser's window.
 
+import type { ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { unwatchFile, watchFile } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -23,8 +29,10 @@ import { WebSocketServer, type WebSocket } from "ws";
 import { CanvasHostError } from "./canvasHostError";
 import { createViewerHttpServer } from "./httpServer";
 import { openBrowser } from "./openBrowser";
+import type { BrowserOpenOptions } from "./openBrowser";
 import { resolveViewerAssets } from "./viewerAssets";
 import {
+	HEADLESS_VIEWER_QUERY,
 	isCanvasHostClientMessage,
 	type CanvasHostServerMessage,
 } from "../shared/canvasHostProtocol";
@@ -64,6 +72,13 @@ const VIEWER_CLOSE_TIMEOUT_MS = 5_000;
 const IDLE_SHUTDOWN_DELAY_MS = 5_000;
 
 /**
+ * How long to wait for a headless window to connect back after it was spawned. A
+ * Chromium starting cold has to come up before its page can reach the WebSocket,
+ * so this is generous; nothing waits this long unless the browser never arrives
+ */
+const HEADLESS_CONNECT_TIMEOUT_MS = 20_000;
+
+/**
  * The answer to a handleOpRequest. canvas-agent's AiCanvasOpResult with the
  * requestId dropped
  */
@@ -74,6 +89,22 @@ export type HandleOpOutcome = {
 	/** The PNG (base64), present only for capture_canvas */
 	imagePngBase64?: string;
 };
+
+/** The result of openHeadlessViewer */
+export type HeadlessViewerOutcome =
+	| {
+			ok: true;
+			/**
+			 * false when a viewer was already connected and was used as it is (a
+			 * window a person opened counts)
+			 */
+			didOpenWindow: boolean;
+	  }
+	| {
+			ok: false;
+			/** Why there is no eye: no Chromium to run, or none that connected */
+			reason: string;
+	  };
 
 /** The result of closeViewers. A window that could not be closed keeps running */
 export type ViewerCloseOutcome = {
@@ -119,6 +150,43 @@ export type CanvasHost = {
 	 */
 	closeViewers: () => Promise<ViewerCloseOutcome>;
 	/**
+	 * Whether a window a person can see is connected. A headless one does not
+	 * count: it holds the host open without putting anything on screen
+	 */
+	hasVisibleViewer: () => boolean;
+	/**
+	 * Opens a window for a person to look at. Nothing is opened when
+	 * `JISCRIBE_MCP_NO_OPEN` says not to, and nothing waits for it to connect.
+	 * `shouldOpenBrowser: false` does not hold it back: that one is about what
+	 * starting the host does, not about what may be opened afterwards
+	 */
+	openVisibleViewer: () => void;
+	/**
+	 * Opens one window-less browser for the AI to look through, and waits until its
+	 * page has connected. With a viewer already connected, nothing is opened and
+	 * that one is used.
+	 *
+	 * @returns Whether there is now an eye on the canvas. A failure carries the
+	 *   reason rather than leaving the caller to find out by the next screen
+	 *   operation timing out
+	 */
+	openHeadlessViewer: () => Promise<HeadlessViewerOutcome>;
+	/**
+	 * Waits for a viewer to be connected.
+	 *
+	 * @param timeoutMs How long to wait (milliseconds). It returns straight away
+	 *   when one is connected already
+	 * @returns Whether a viewer is connected. false on running out of time, and on
+	 *   the host being closed while waiting
+	 */
+	waitForViewer: (timeoutMs: number) => Promise<boolean>;
+	/**
+	 * Whether a headless window is connected right now. What it tells the caller is
+	 * that a window nobody can see is holding the host, so "close it by hand" is
+	 * not advice that can be followed
+	 */
+	hasHeadlessViewer: () => boolean;
+	/**
 	 * Tears down the watch, the WebSocket and the HTTP server. Calling it twice is
 	 * harmless
 	 */
@@ -131,7 +199,8 @@ export type CanvasHostOptions = {
 	/** The port tried first (default 5190). While it is taken, steps one port up */
 	port?: number;
 	/**
-	 * With false, only the URL is returned and no browser is opened. When omitted,
+	 * With false, starting the host opens no browser and only the URL is returned;
+	 * openVisibleViewer can still put a window up later. When omitted,
 	 * nothing is opened if the environment variable `JISCRIBE_MCP_NO_OPEN` holds
 	 * anything (an escape hatch for running the MCP where there is no browser; the
 	 * value does not matter, so "1" and "true" both work). How it is opened is
@@ -143,7 +212,11 @@ export type CanvasHostOptions = {
 	 * within the grace period. The host does not tear itself down, so the caller
 	 * must close it and drop the reference. It is not called until at least one
 	 * viewer has connected (so that nothing is torn down while a browser is still
-	 * starting up, or when the setting is not to open one at all)
+	 * starting up, or when the setting is not to open one at all).
+	 *
+	 * It says the windows are gone, not that a person closed them: a headless
+	 * window holds the connection just as a visible one does, so as long as one is
+	 * open this is not reached
 	 */
 	onViewersGone?: () => void;
 	/**
@@ -153,6 +226,17 @@ export type CanvasHostOptions = {
 	 * not to wait (tests)
 	 */
 	idleShutdownDelayMs?: number;
+	/**
+	 * How long openHeadlessViewer waits for the window it spawned to connect
+	 * (milliseconds, default 20000). Shortening it only makes sense where no
+	 * browser is going to arrive at all (tests)
+	 */
+	headlessConnectTimeoutMs?: number;
+	/**
+	 * What launches the browser. It is only ever passed by tests, which have no
+	 * browser to launch and want the URL the window would have been given
+	 */
+	launchBrowser?: (url: string, browserOptions: BrowserOpenOptions) => void;
 };
 
 const isAddressInUseError = (error: unknown): boolean =>
@@ -273,6 +357,64 @@ export async function startCanvasHost(
 	let hasEverConnected = false;
 	let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
+	/**
+	 * The headless browser this host spawned, while it is still ours to kill. It is
+	 * a last resort only: the way a window is actually closed is the closeViewer
+	 * frame (see close)
+	 */
+	let headlessBrowserProcess: ChildProcess | null = null;
+
+	/**
+	 * The sockets belonging to a headless window. A window a person can see is the
+	 * one that has to be there before open_canvas can say the canvas is on screen,
+	 * so the two are told apart by the query the page carries (see the viewer's App)
+	 */
+	const headlessSockets = new WeakSet<WebSocket>();
+
+	/** Callers of waitForViewer, each settling its own wait */
+	const viewerWaiters = new Set<(isConnected: boolean) => void>();
+
+	const settleViewerWaiters = (isConnected: boolean): void => {
+		for (const settle of [...viewerWaiters]) {
+			settle(isConnected);
+		}
+	};
+
+	const countOpenSockets = (): number =>
+		[...sockets].filter((socket) => socket.readyState === socket.OPEN).length;
+
+	const hasVisibleViewer = (): boolean =>
+		[...sockets].some(
+			(socket) =>
+				socket.readyState === socket.OPEN && !headlessSockets.has(socket),
+		);
+
+	const hasHeadlessViewer = (): boolean =>
+		[...sockets].some(
+			(socket) =>
+				socket.readyState === socket.OPEN && headlessSockets.has(socket),
+		);
+
+	const waitForViewer = async (timeoutMs: number): Promise<boolean> => {
+		if (countOpenSockets() > 0) {
+			return true;
+		}
+		if (isClosed) {
+			return false;
+		}
+		return await new Promise<boolean>((resolve) => {
+			const settle = (isConnected: boolean): void => {
+				clearTimeout(timer);
+				viewerWaiters.delete(settle);
+				resolve(isConnected);
+			};
+			const timer = setTimeout(() => {
+				settle(false);
+			}, timeoutMs);
+			viewerWaiters.add(settle);
+		});
+	};
+
 	const cancelIdleShutdown = (): void => {
 		if (idleTimer !== null) {
 			clearTimeout(idleTimer);
@@ -381,10 +523,14 @@ export async function startCanvasHost(
 		});
 	};
 
-	webSocketServer.on("connection", (socket) => {
+	webSocketServer.on("connection", (socket, request) => {
 		sockets.add(socket);
+		if ((request.url ?? "").includes(HEADLESS_VIEWER_QUERY)) {
+			headlessSockets.add(socket);
+		}
 		hasEverConnected = true;
 		cancelIdleShutdown();
+		settleViewerWaiters(true);
 		socket.on("message", (data) => {
 			let frame: unknown;
 			try {
@@ -442,12 +588,60 @@ export async function startCanvasHost(
 		}
 	});
 
-	const shouldOpenBrowser =
-		options.shouldOpenBrowser ??
+	const launchBrowser = options.launchBrowser ?? openBrowser;
+
+	// The escape hatch for a machine with no browser. It is read on every open
+	// rather than once at startup, so it holds wherever the call comes from
+	const isBrowserOpeningAllowed = (): boolean =>
 		(process.env.JISCRIBE_MCP_NO_OPEN ?? "") === "";
-	if (shouldOpenBrowser) {
-		openBrowser(url);
+
+	const openVisibleViewer = (): void => {
+		if (!isBrowserOpeningAllowed()) {
+			return;
+		}
+		launchBrowser(url, {});
+	};
+
+	// shouldOpenBrowser is about this moment alone: a host started for a headless
+	// window puts nothing up now, and still opens one later if asked
+	if (options.shouldOpenBrowser ?? isBrowserOpeningAllowed()) {
+		launchBrowser(url, {});
 	}
+
+	/**
+	 * Asks the given windows to close and waits for them to go.
+	 *
+	 * @param targets Open sockets, one per window asked
+	 */
+	const closeSockets = async (
+		targets: readonly WebSocket[],
+	): Promise<ViewerCloseOutcome> => {
+		if (targets.length === 0) {
+			return { closedCount: 0, remainingCount: 0 };
+		}
+		const frame = JSON.stringify({
+			type: "closeViewer",
+		} satisfies CanvasHostServerMessage);
+		for (const socket of targets) {
+			socket.send(frame);
+		}
+		await waitForSocketsToClose(targets, VIEWER_CLOSE_TIMEOUT_MS);
+		// A window going away takes its connection with it, so what is left is a
+		// window that refused to close
+		const remainingCount = targets.filter(
+			(candidate) => candidate.readyState === candidate.OPEN,
+		).length;
+		return {
+			closedCount: targets.length - remainingCount,
+			remainingCount,
+		};
+	};
+
+	const openSockets = (): WebSocket[] =>
+		[...sockets].filter((candidate) => candidate.readyState === candidate.OPEN);
+
+	const closeViewers = (): Promise<ViewerCloseOutcome> =>
+		closeSockets(openSockets());
 
 	return {
 		url,
@@ -493,28 +687,50 @@ export async function startCanvasHost(
 				}
 			});
 		},
-		closeViewers: async () => {
-			const targets = [...sockets].filter(
-				(candidate) => candidate.readyState === candidate.OPEN,
+		closeViewers,
+		waitForViewer,
+		hasVisibleViewer,
+		openVisibleViewer,
+		hasHeadlessViewer,
+		openHeadlessViewer: async () => {
+			if (isClosed) {
+				return { ok: false, reason: "the canvas host is already shut down" };
+			}
+			if (countOpenSockets() > 0) {
+				return { ok: true, didOpenWindow: false };
+			}
+			// Held on an object because the callback that fills it in runs while the
+			// wait below is in flight
+			const launchOutcome: { failure: string | null } = { failure: null };
+			launchBrowser(`${url}?${HEADLESS_VIEWER_QUERY}`, {
+				mode: "headless",
+				onSpawn: (child) => {
+					headlessBrowserProcess = child;
+				},
+				onFailure: (reason) => {
+					launchOutcome.failure = reason;
+					// Nothing is coming, so the wait below is not left to run its
+					// full course. Only the headless open ever waits, so this cannot
+					// cut short a wait someone else started
+					settleViewerWaiters(false);
+				},
+			});
+			// Having no candidate at all is known before any of them is spawned, so
+			// there is nothing to wait for
+			if (launchOutcome.failure !== null) {
+				return { ok: false, reason: launchOutcome.failure };
+			}
+			const isConnected = await waitForViewer(
+				options.headlessConnectTimeoutMs ?? HEADLESS_CONNECT_TIMEOUT_MS,
 			);
-			if (targets.length === 0) {
-				return { closedCount: 0, remainingCount: 0 };
+			if (isConnected) {
+				return { ok: true, didOpenWindow: true };
 			}
-			const frame = JSON.stringify({
-				type: "closeViewer",
-			} satisfies CanvasHostServerMessage);
-			for (const socket of targets) {
-				socket.send(frame);
-			}
-			await waitForSocketsToClose(targets, VIEWER_CLOSE_TIMEOUT_MS);
-			// A window going away takes its connection with it, so what is left is a
-			// window that refused to close
-			const remainingCount = targets.filter(
-				(candidate) => candidate.readyState === candidate.OPEN,
-			).length;
 			return {
-				closedCount: targets.length - remainingCount,
-				remainingCount,
+				ok: false,
+				reason:
+					launchOutcome.failure ??
+					"a headless browser was started but its page never connected back",
 			};
 		},
 		openFile: async (relPath) => {
@@ -530,7 +746,27 @@ export async function startCanvasHost(
 			if (isClosed) {
 				return;
 			}
+			// Marked closed before anything is awaited, so a second call on the way
+			// in leaves at the guard above
 			isClosed = true;
+			settleViewerWaiters(false);
+			// A headless window has nobody to close it, and cutting the socket first
+			// would only leave it reconnecting. The closeViewer frame is the way that
+			// works everywhere, so it goes before the teardown. Only the headless
+			// windows are asked: a window a person is looking at is left to reconnect
+			// to whatever host comes next, which is what a workspace switch relies on
+			if (headlessBrowserProcess !== null) {
+				const browserProcess = headlessBrowserProcess;
+				headlessBrowserProcess = null;
+				await closeSockets(
+					openSockets().filter((socket) => headlessSockets.has(socket)),
+				);
+				// Killing the child reaches the browser only when it is a local one.
+				// A Windows-side .exe spawned from WSL is reached through an interop
+				// proxy, and the kill takes the proxy while the browser lives on, so
+				// this is the lucky case rather than the plan
+				browserProcess.kill();
+			}
 			cancelIdleShutdown();
 			stopWatching();
 			for (const requestId of [...pendingHandleOps.keys()]) {

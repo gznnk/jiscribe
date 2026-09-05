@@ -12,6 +12,14 @@
 
 import type { AiHandleOp } from "@jiscribe/ai-tools";
 
+/**
+ * The query naming a viewer that nobody can see (the AI's eye). The host puts it
+ * on the page URL it opens and the page puts it back on the WebSocket URL, so
+ * both the page and the socket can be told apart from a window a person is
+ * looking at. Written without the leading "?" so it reads as a search parameter
+ */
+export const HEADLESS_VIEWER_QUERY = "headless=1";
+
 /** Server to viewer */
 export type CanvasHostServerMessage =
 	// Arrives right after connecting, and whenever the file to open changes

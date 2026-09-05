@@ -6,8 +6,12 @@ export type BrowserOpenCommand = readonly [string, ...string[]];
  * - `app`: through a Chromium-family `--app=`, in a window with no tabs and no
  *   address bar
  * - `tab`: in a tab of the default browser
+ * - `headless`: a Chromium with no window at all, for the AI to look through. The
+ *   executable is named directly, because a shell helper that hands the URL to
+ *   whatever browser is registered loses the process along with the chance to
+ *   ask for headless
  */
-export type BrowserOpenMode = "app" | "tab";
+export type BrowserOpenMode = "app" | "tab" | "headless";
 
 /**
  * Windows-side Chromium reachable from WSL. Chrome first, then Edge, which is
@@ -18,6 +22,17 @@ const WINDOWS_CHROMIUM_PATHS = [
 	"/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe",
 	"/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
 	"/mnt/c/Program Files/Microsoft/Edge/Application/msedge.exe",
+] as const;
+
+/**
+ * The same installations seen from Windows itself. Only headless uses them: the
+ * other modes go through `start`, which finds the browser under App Paths
+ */
+const WINDOWS_NATIVE_CHROMIUM_PATHS = [
+	"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+	"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+	"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+	"C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
 ] as const;
 
 /** Chromium executable names tried on Linux (WSL included) */
@@ -31,6 +46,29 @@ const LINUX_CHROMIUM_COMMANDS = [
 
 /** macOS's `open -na <app>`. What follows --args reaches the browser itself */
 const MACOS_CHROMIUM_APPS = ["Google Chrome", "Microsoft Edge"] as const;
+
+/**
+ * The binaries inside those same bundles. Only headless uses them, since `open`
+ * returns as soon as it has handed the launch over
+ */
+const MACOS_CHROMIUM_BINARIES = [
+	"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+	"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+] as const;
+
+/**
+ * The arguments that put Chromium in a window-less mode that keeps drawing. The
+ * three throttling switches matter because the page is the AI's eye: a renderer
+ * treated as hidden stops servicing requestAnimationFrame, and a capture would
+ * then wait on a frame that never comes
+ */
+const HEADLESS_CHROMIUM_ARGS = [
+	"--headless=new",
+	"--disable-gpu",
+	"--disable-background-timer-throttling",
+	"--disable-renderer-backgrounding",
+	"--disable-backgrounding-occluded-windows",
+] as const;
 
 /**
  * The candidate commands for opening a URL in a tab of the default browser, in the
@@ -108,6 +146,47 @@ const calcAppOpenCommands = (
 };
 
 /**
+ * The candidate commands for opening a window-less Chromium, in the order they are
+ * tried. Every candidate is an executable named by path or by a name on PATH, so
+ * the spawned process is the browser itself and stays the one this process holds.
+ *
+ * @param url The URL to open. It goes in as the command's last argument
+ * @param platform The value of `process.platform`. Anything but win32 / darwin is
+ *   treated as Linux
+ * @param browserCommand The executable to name. When omitted, the known Chromiums
+ *   are tried in order
+ * @returns The commands in the order they are tried, or empty when the platform
+ *   has no known Chromium installation to name. Nothing here checks that a
+ *   candidate exists, so a non-empty list can still fail its way to the end
+ */
+const calcHeadlessOpenCommands = (
+	url: string,
+	platform: NodeJS.Platform,
+	browserCommand: string | undefined,
+): readonly BrowserOpenCommand[] => {
+	const toCommand = (executable: string): BrowserOpenCommand => [
+		executable,
+		...HEADLESS_CHROMIUM_ARGS,
+		url,
+	];
+	if (browserCommand !== undefined) {
+		return [toCommand(browserCommand)];
+	}
+	if (platform === "win32") {
+		return WINDOWS_NATIVE_CHROMIUM_PATHS.map(toCommand);
+	}
+	if (platform === "darwin") {
+		return MACOS_CHROMIUM_BINARIES.map(toCommand);
+	}
+	// As in app mode, the Windows-side .exe paths are there for WSL and merely fail
+	// with ENOENT on plain Linux
+	return [
+		...LINUX_CHROMIUM_COMMANDS.map(toCommand),
+		...WINDOWS_CHROMIUM_PATHS.map(toCommand),
+	];
+};
+
+/**
  * The candidate commands for opening a URL, in the order they are tried.
  * They are meant to be spawned from the head down, dropping to the next on failure
  * (no such executable, or an abnormal exit).
@@ -116,10 +195,14 @@ const calcAppOpenCommands = (
  * @param platform The value of `process.platform`. Anything but win32 / darwin is
  *   treated as Linux
  * @param mode With `app`, a window with no frame is preferred and, once those run
- *   out, it drops to a tab. `tab` is the default browser only
- * @param browserCommand The executable to name in app mode. When omitted, the known
- *   Chromiums are looked for
- * @returns Never empty. The tail always holds the candidates that open a tab
+ *   out, it drops to a tab. `tab` is the default browser only. `headless` names a
+ *   Chromium and never drops to a tab, since the default browser has no such mode
+ * @param browserCommand The executable to name in app and headless mode. When
+ *   omitted, the known Chromiums are looked for
+ * @returns The commands in the order they are tried. In app and tab mode the tail
+ *   always holds the candidates that open a tab, so something is always there to
+ *   try; headless has no such tail and can come back empty, and even a non-empty
+ *   list is only the installations the platform is known to have
  */
 export const calcBrowserOpenCommands = (
 	url: string,
@@ -127,6 +210,9 @@ export const calcBrowserOpenCommands = (
 	mode: BrowserOpenMode,
 	browserCommand?: string,
 ): readonly BrowserOpenCommand[] => {
+	if (mode === "headless") {
+		return calcHeadlessOpenCommands(url, platform, browserCommand);
+	}
 	const tabCommands = calcTabOpenCommands(url, platform);
 	if (mode === "tab") {
 		return tabCommands;

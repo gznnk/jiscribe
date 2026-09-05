@@ -45,7 +45,8 @@ import { createPathLock, type PathLock } from "./pathLock";
  * 1. The ones this server has of its own (written out directly below)
  *    - `open_canvas`: starts a viewer locally and opens it in a browser. From
  *      then on the same file is where the AI rewriting it and a person correcting
- *      it on screen work together
+ *      it on screen work together. With `headless` it opens a window-less browser
+ *      instead, so the AI gets its eye without anything appearing on screen
  *    - `close_canvas`: closes that window and folds the server up too. A person
  *      closing the window ends up in the same place (the host is folded up once
  *      the last window is gone)
@@ -116,15 +117,40 @@ export function createJiscribeMcpServer(): McpServer {
 	// up and the port given back
 	let host: CanvasHost | null = null;
 
+	// The client going away has to take the host with it. The HTTP server keeps the
+	// event loop from ever emptying, so a headless window left connected would hold
+	// the whole process open after the last client has gone
+	server.server.onclose = () => {
+		void (async () => {
+			const started = host;
+			if (started === null) {
+				return;
+			}
+			host = null;
+			// Ask the windows to close before the connections are cut. A headless one
+			// has no person to close it, and a window told nothing would only spend
+			// its time looking for a host to reconnect to
+			await started.closeViewers();
+			await started.close();
+		})();
+	};
+
 	/**
 	 * Start the host, arranging for it to be folded up once every window is closed.
 	 *
 	 * @param workspaceRoot The base directory of the file API (absolute path)
+	 * @param shouldOpenBrowser false when the caller opens a headless window
+	 *   itself. undefined leaves it to `JISCRIBE_MCP_NO_OPEN`, which is how a plain
+	 *   open has always decided
 	 * @returns The started host. It has nothing to show yet, so call openFile next
 	 */
-	const startHost = async (workspaceRoot: string): Promise<CanvasHost> => {
+	const startHost = async (
+		workspaceRoot: string,
+		shouldOpenBrowser: boolean | undefined,
+	): Promise<CanvasHost> => {
 		const started: CanvasHost = await startCanvasHost({
 			workspaceRoot,
+			...(shouldOpenBrowser === undefined ? {} : { shouldOpenBrowser }),
 			onViewersGone: () => {
 				void (async () => {
 					// If another host has already taken over, this one is done with and
@@ -167,9 +193,19 @@ export function createJiscribeMcpServer(): McpServer {
 				"Calling it again switches the viewer to another file. Naming a file outside the directory currently being served restarts the server on that file's directory, and the open viewer reconnects on its own.",
 				"Returns the viewer URL, which is worth passing on to the user.",
 			].join(" "),
-			inputSchema: z.object({ path: pathArg }).strict(),
+			inputSchema: z
+				.object({
+					path: pathArg,
+					headless: z
+						.boolean()
+						.default(false)
+						.describe(
+							"Open a headless viewer instead: nothing appears on the user's screen, and the canvas exists only for the tools that need one on screen (capture, camera, selection, measurement). Use it to check your own work; leave it false when the user is meant to watch or edit the diagram. A viewer already open is used as it is, headless or not.",
+						),
+				})
+				.strict(),
 		},
-		async ({ path }) =>
+		async ({ path, headless }) =>
 			runTool(async () => {
 				if (!isAbsolute(path)) {
 					throw new CanvasFileError(
@@ -188,11 +224,30 @@ export function createJiscribeMcpServer(): McpServer {
 					await host.close();
 					host = null;
 				}
-				host ??= await startHost(workspaceRoot);
+				// The environment variable that says not to open a window means "do
+				// not put one up unasked", so an explicit headless request goes ahead
+				const isReusedHost = host !== null;
+				host ??= await startHost(workspaceRoot, headless ? false : undefined);
 				await host.openFile(basename(path));
 
 				const state = isCreated ? "created and opened" : "opened";
-				return `${state} ${basename(path)} — viewer: ${host.url}`;
+				if (!headless) {
+					// A host kept alive by a headless window has nothing on screen, so
+					// a plain open has to put a window up even though the host is
+					// already running. A host started just above opened its own
+					if (isReusedHost && !host.hasVisibleViewer()) {
+						host.openVisibleViewer();
+					}
+					return `${state} ${basename(path)} — viewer: ${host.url}`;
+				}
+				const outcome = await host.openHeadlessViewer();
+				if (!outcome.ok) {
+					return `error: ${state} ${basename(path)}, but no headless viewer could be opened, so the tools that need a canvas on screen have nothing to work with: ${outcome.reason}`;
+				}
+				const openedIn = outcome.didOpenWindow
+					? "a headless viewer (nothing is on the user's screen)"
+					: "the viewer window already open";
+				return `${state} ${basename(path)} in ${openedIn} — viewer: ${host.url}`;
 			}),
 	);
 
@@ -216,7 +271,10 @@ export function createJiscribeMcpServer(): McpServer {
 					// Stopping the server while a window remains leaves that window
 					// looking for somewhere to reconnect. It would join whichever host
 					// takes this port next, so it is not stopped
-					return `error: ${remainingCount} viewer window(s) refused to close, so the local server is left running; close the window(s) by hand`;
+					const advice = host.hasHeadlessViewer()
+						? "a headless viewer cannot be closed by hand, so the port is held until this MCP session ends, which folds the server and lets that window close itself"
+						: "close the window(s) by hand";
+					return `error: ${remainingCount} viewer window(s) refused to close, so the local server is left running; ${advice}`;
 				}
 				await host.close();
 				host = null;
