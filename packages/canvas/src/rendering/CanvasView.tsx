@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import type React from "react";
 
 import { ContentGroup, Svg } from "./CanvasViewStyled";
@@ -42,7 +42,12 @@ type CanvasViewProps = {
 	surfaceColor?: string;
 } & Pick<CanvasState, "objects" | "rootIds" | "viewport" | "background">;
 
-const CanvasViewComponent: React.FC<CanvasViewProps> = ({
+/**
+ * Not memoized on purpose: Canvas passes the overlay layers as `children`,
+ * new JSX every render, so a memo here could never bail out. The heavy part,
+ * ObjectsRenderer, keeps its own memo.
+ */
+export const CanvasView: React.FC<CanvasViewProps> = ({
 	objects,
 	rootIds,
 	viewport,
@@ -121,5 +126,3 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 		</Svg>
 	);
 };
-
-export const CanvasView = memo(CanvasViewComponent);
