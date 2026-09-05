@@ -125,7 +125,10 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     change in it into a `REMEASURE_TEXT` dispatch, which re-runs `reconcileObjectContentSizes` with
     its `forceRemeasure` flag — the one pass the slots cannot ask for. That covers the arrivals
     nobody waited for; the mounted document's own faces are covered by the preload gate below, which
-    dispatches its own re-measure as it settles.
+    dispatches its own re-measure as it settles. Neither hook is reached directly: `useDocFonts`
+    (`controllers/hooks/useDocFonts.ts`) is the entry point Canvas and CanvasThumbnail take, with
+    those two behind it — it folds them into one counter and one `onFacesChanged` callback and
+    reports whether the content is still held back.
     `CanvasThumbnail` has no reducer to dispatch through, so it takes both signals as a memo key on
     `canvasToState` instead. A pass that moves no box returns the same state reference, so the
     two events overlapping costs nothing. A dispatch only reaches boxes that live in the state, so

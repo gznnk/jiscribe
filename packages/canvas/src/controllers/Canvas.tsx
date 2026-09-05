@@ -32,11 +32,10 @@ import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
-import { useDocFontsPreload } from "./hooks/useDocFontsPreload";
+import { useDocFonts } from "./hooks/useDocFonts";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
 import { useExportDialog } from "./hooks/useExportDialog";
-import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -359,36 +358,16 @@ const CanvasComponent = ({
 		initialConfig?.scrollBounds,
 	);
 
-	// A face landing after the first paint invalidates every content-derived box
-	// mapped before it, and nothing in the doc moves to say so — hence a signal of
-	// its own. This one covers the later arrivals: a doc swapped in after mount,
-	// and the unicode-range fetches typing a JP character triggers. A pass that
-	// moves no box returns the same state, so it firing more than once costs
-	// nothing.
-	const fontsLoadedNonce = useFontsLoadedNonce();
-	useEffect(() => {
-		if (fontsLoadedNonce > 0) {
-			dispatch({ type: "REMEASURE_TEXT" });
-		}
-	}, [fontsLoadedNonce, dispatch]);
-
-	// The mounted document's own faces are covered before that, by fetching them
-	// while the scene is hidden (useDocFontsPreload). Its re-measure is dispatched
-	// from the callback that flips the flag, which puts it in the commit that
-	// reveals the content — so the first frame anyone sees is already measured
-	// against the faces it is drawn in.
-	const isFontsPreloadSettled = useDocFontsPreload(
-		() =>
+	// Boxes derived from their content are re-measured through the reducer, the
+	// one pass the slots cannot ask for; the counter covers the sites that measure
+	// while they render instead (see useDocFonts).
+	const { fontsNonce, isContentHidden } = useDocFonts({
+		collectRequests: () =>
 			collectDocFontRequests(state.objects, registries.objectTextStyleDefaults),
-		() => {
+		onFacesChanged: () => {
 			dispatch({ type: "REMEASURE_TEXT" });
 		},
-	);
-
-	// One counter for both signals, since neither says anything but "measure
-	// again". It goes down the tree as a context, for the measurements that happen
-	// while rendering and so change no state at all (FontsLoadedNonceContext).
-	const fontsNonce = fontsLoadedNonce + (isFontsPreloadSettled ? 1 : 0);
+	});
 
 	// Single toast slot shared by every error source (clipboard, export).
 	const { errorNotification, notifyError } = useErrorNotification();
@@ -636,7 +615,7 @@ const CanvasComponent = ({
 			locale={locale}
 			messages={mergedMessages}
 			registries={registries}
-			fontsLoadedNonce={fontsNonce}
+			fontsNonce={fontsNonce}
 			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot
@@ -671,7 +650,7 @@ const CanvasComponent = ({
 							rootIds={state.rootIds}
 							viewport={drawnViewport}
 							svgRef={svgRef}
-							isContentHidden={!isFontsPreloadSettled}
+							isContentHidden={isContentHidden}
 							textEditObjectId={state.textEditState?.objectId ?? null}
 							textEditSlotId={
 								state.textEditState?.kind === "shape"

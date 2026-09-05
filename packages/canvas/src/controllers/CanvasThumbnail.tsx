@@ -1,8 +1,7 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { memo, useMemo, useRef, useState } from "react";
 
-import { useDocFontsPreload } from "./hooks/useDocFontsPreload";
-import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
+import { useDocFonts } from "./hooks/useDocFonts";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
@@ -62,24 +61,16 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 		plugins ? createCanvasRegistries({ plugins }) : defaultCanvasRegistries,
 	);
 
-	// Content-derived boxes are measured against the fonts loaded at the time of
-	// mapping, and a thumbnail has no reducer to re-measure through — so both
-	// signals are a memo key rather than an effect: the faces of the mounted
-	// document arriving (useDocFontsPreload, which also holds the content back
-	// until then) and any later one landing (useFontsLoadedNonce) re-map the doc
-	// against the face it is actually drawn in. They are invalidation signals, not
-	// arguments, which is why the dependency is one the callback does not read. A
-	// re-map that moves no box returns the same state, so the render-time
-	// measurements get the counter as a context as well.
-	//
-	// The faces are collected off the mapped objects below: the collection runs in
-	// the preload's mount effect, by which point the first render has produced
-	// them.
-	const fontsLoadedNonce = useFontsLoadedNonce();
-	const isFontsPreloadSettled = useDocFontsPreload(() =>
-		collectDocFontRequests(objects, registries.objectTextStyleDefaults),
-	);
-	const fontsNonce = fontsLoadedNonce + (isFontsPreloadSettled ? 1 : 0);
+	// A thumbnail has no reducer to re-measure through, so the counter is a memo
+	// key on the mapping itself (see useDocFonts). It is an invalidation signal,
+	// not an argument, which is why the dependency is one the callback does not
+	// read — and why the faces can be collected off the objects mapped below: the
+	// collection runs in the preload's mount effect, by which point the first
+	// render has produced them.
+	const { fontsNonce, isContentHidden } = useDocFonts({
+		collectRequests: () =>
+			collectDocFontRequests(objects, registries.objectTextStyleDefaults),
+	});
 
 	const { objects, rootIds, background } = useMemo(
 		() =>
@@ -134,7 +125,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 							rootIds={rootIds}
 							viewport={viewport}
 							svgRef={svgRef}
-							isContentHidden={!isFontsPreloadSettled}
+							isContentHidden={isContentHidden}
 							background={background}
 							surfaceColor={theme.tokens.canvasBg}
 						/>

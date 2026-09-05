@@ -16,8 +16,8 @@ type CanvasProvidersProps = {
 	locale: string;
 	messages: CanvasMessages;
 	registries: CanvasRegistries;
-	/** The counter from `useFontsLoadedNonce`, handed to the render-time measurement sites. */
-	fontsLoadedNonce: number;
+	/** The counter from `useDocFonts`, handed to the render-time measurement sites. */
+	fontsNonce: number;
 	viewportElementRef: RefObject<HTMLDivElement | null>;
 	children: ReactNode;
 };
@@ -33,7 +33,7 @@ export function CanvasProviders({
 	locale,
 	messages,
 	registries,
-	fontsLoadedNonce,
+	fontsNonce,
 	viewportElementRef,
 	children,
 }: CanvasProvidersProps) {
@@ -52,7 +52,7 @@ export function CanvasProviders({
 							objectGeometryKey={registries.objectGeometryKey}
 							objectSvgDefs={registries.objectSvgDefs}
 						>
-							<FontsLoadedNonceContext value={fontsLoadedNonce}>
+							<FontsLoadedNonceContext value={fontsNonce}>
 								<CanvasViewportElementRefContext value={viewportElementRef}>
 									{children}
 								</CanvasViewportElementRefContext>

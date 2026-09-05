@@ -120,7 +120,10 @@ style」という 2 方式混在を解消）。
     dispatch に変え、`reconcileObjectContentSizes` を `forceRemeasure` 付きで再実行する。
     スロットからは要求できない唯一のパス。これが受け持つのは誰も待っていなかった到着で、マウント時の
     doc 自身の字面は後述の事前読み込みゲートが受け持ち、そちらは決着時に自前で再計測を dispatch
-    する。`CanvasThumbnail` は dispatch する reducer を
+    する。どちらのフックも直接は使わない。Canvas と CanvasThumbnail の入口は
+    `useDocFonts`（`controllers/hooks/useDocFonts.ts`）で、この 2 つはその後ろにいる —
+    2 つの信号を 1 つのカウンタと 1 つの `onFacesChanged` コールバックに畳み、内容をまだ
+    隠しているかどうかも返す。`CanvasThumbnail` は dispatch する reducer を
     持たないので、2 つの信号を `canvasToState` の memo キーとして使う。箱が 1 つも動かなければ
     同じ state 参照が返るので、2 つのイベントが重なっても無駄はない。dispatch が届くのは state に
     現れる箱だけなので、描画層へもカウンタを `FontsLoadedNonceContext` として配る。こちらは

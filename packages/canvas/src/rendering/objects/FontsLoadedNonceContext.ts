@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 
 /**
- * Rendering-layer context carrying the counter `useFontsLoadedNonce` produces:
+ * Rendering-layer context carrying the counter `useDocFonts` produces:
  * a value that changes whenever the faces the document can draw with do.
  *
  * Only its identity matters — nothing reads the number. A component that
@@ -19,8 +19,8 @@ export const FontsLoadedNonceContext = createContext<number>(0);
  * Subscribes to the surrounding `<Canvas>` / `<CanvasThumbnail>` fonts-loaded counter, so a
  * memoized component re-renders when a face arrives.
  *
- * Distinct from `useFontsLoadedNonce`, which is the `document.fonts` subscriber
- * `Canvas` mounts once and feeds into this context.
+ * Distinct from `useDocFonts`, which is the `document.fonts` side `Canvas`
+ * mounts once and feeds into this context.
  *
  * @returns The counter, to be used as a memo key or simply subscribed to; the value itself carries no meaning
  */
