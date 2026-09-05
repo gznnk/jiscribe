@@ -32,6 +32,7 @@ import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
+import { useDocFontsPreload } from "./hooks/useDocFontsPreload";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
 import { useExportDialog } from "./hooks/useExportDialog";
@@ -70,6 +71,7 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
+import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
@@ -357,19 +359,36 @@ const CanvasComponent = ({
 		initialConfig?.scrollBounds,
 	);
 
-	// Web fonts land after the first paint, so every content-derived box mapped
-	// before then was measured against a fallback face. Nothing in the doc moves
-	// when the real one arrives, which is why this needs a signal of its own; a
-	// pass that moves no box returns the same state, so the nonce firing more
-	// than once costs nothing. The same counter also goes down the tree as a
-	// context, for the measurements that happen while rendering and so change no
-	// state at all (FontsLoadedNonceContext).
+	// A face landing after the first paint invalidates every content-derived box
+	// mapped before it, and nothing in the doc moves to say so — hence a signal of
+	// its own. This one covers the later arrivals: a doc swapped in after mount,
+	// and the unicode-range fetches typing a JP character triggers. A pass that
+	// moves no box returns the same state, so it firing more than once costs
+	// nothing.
 	const fontsLoadedNonce = useFontsLoadedNonce();
 	useEffect(() => {
 		if (fontsLoadedNonce > 0) {
 			dispatch({ type: "REMEASURE_TEXT" });
 		}
 	}, [fontsLoadedNonce, dispatch]);
+
+	// The mounted document's own faces are covered before that, by fetching them
+	// while the scene is hidden (useDocFontsPreload). Its re-measure is dispatched
+	// from the callback that flips the flag, which puts it in the commit that
+	// reveals the content — so the first frame anyone sees is already measured
+	// against the faces it is drawn in.
+	const isFontsPreloadSettled = useDocFontsPreload(
+		() =>
+			collectDocFontRequests(state.objects, registries.objectTextStyleDefaults),
+		() => {
+			dispatch({ type: "REMEASURE_TEXT" });
+		},
+	);
+
+	// One counter for both signals, since neither says anything but "measure
+	// again". It goes down the tree as a context, for the measurements that happen
+	// while rendering and so change no state at all (FontsLoadedNonceContext).
+	const fontsNonce = fontsLoadedNonce + (isFontsPreloadSettled ? 1 : 0);
 
 	// Single toast slot shared by every error source (clipboard, export).
 	const { errorNotification, notifyError } = useErrorNotification();
@@ -617,7 +636,7 @@ const CanvasComponent = ({
 			locale={locale}
 			messages={mergedMessages}
 			registries={registries}
-			fontsLoadedNonce={fontsLoadedNonce}
+			fontsLoadedNonce={fontsNonce}
 			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot
@@ -652,6 +671,7 @@ const CanvasComponent = ({
 							rootIds={state.rootIds}
 							viewport={drawnViewport}
 							svgRef={svgRef}
+							isContentHidden={!isFontsPreloadSettled}
 							textEditObjectId={state.textEditState?.objectId ?? null}
 							textEditSlotId={
 								state.textEditState?.kind === "shape"

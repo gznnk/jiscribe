@@ -121,17 +121,38 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     Web fonts arrive after the first paint, so a box derived from its content is measured against
     the stack's generic keyword and drawn moments later in a face with other metrics.
     `useFontsLoadedNonce` watches `document.fonts` (`ready` for the first layout, `loadingdone` for
-    the later unicode-range fetches a JP character triggers) and returns a counter. Canvas turns it
-    into a `REMEASURE_TEXT` dispatch, which re-runs `reconcileObjectContentSizes` with its
-    `forceRemeasure` flag — the one pass the slots cannot ask for.
-    `CanvasThumbnail` has no reducer to dispatch through, so it takes the same counter as a memo key
-    on `canvasToState` instead. A pass that moves no box returns the same state reference, so the
+    the later unicode-range fetches a JP character triggers) and returns a counter. Canvas turns a
+    change in it into a `REMEASURE_TEXT` dispatch, which re-runs `reconcileObjectContentSizes` with
+    its `forceRemeasure` flag — the one pass the slots cannot ask for. That covers the arrivals
+    nobody waited for; the mounted document's own faces are covered by the preload gate below, which
+    dispatches its own re-measure as it settles.
+    `CanvasThumbnail` has no reducer to dispatch through, so it takes both signals as a memo key on
+    `canvasToState` instead. A pass that moves no box returns the same state reference, so the
     two events overlapping costs nothing. A dispatch only reaches boxes that live in the state, so
-    the same counter is handed to the render layer as `FontsLoadedNonceContext` as well. The sites
+    the render layer is handed a counter as `FontsLoadedNonceContext` as well — this one plus the
+    gate's settling, since neither says anything but "measure again". The sites
     that measure while they render (a record's bands, a connector's label box, a text object's hit
     bands) subscribe to it, and a change pierces their memo so the measurement re-runs. The faces
     themselves are opt-in: a host imports
     `@jiscribe/canvas/fonts.css` to get the ones `CANVAS_FONT_FAMILIES` names.
+  - **Why the content waits for its faces**: the nonce repairs the layout, but visibly — the first
+    frame is drawn against the fallback and snaps into place a moment later. So a canvas asks for
+    the faces its document draws in before it shows anything. `collectDocFontRequests` walks the
+    mounted state's text slots and connector labels — each slot resolved through the same type
+    defaults the drawing side resolves, each run that overrides a family, weight or style counted as
+    its own face — and yields one request per distinct face with the characters that face has to
+    draw. `useDocFontsPreload` hands each to `document.fonts.load`. The characters are the point:
+    with unicode-range subsets nothing is pending until text has been laid out, so `fonts.ready`
+    settles at once and says nothing, while naming the text is what makes the browser fetch exactly
+    the subsets the document needs. Until they arrive the scene is hidden — `visibility: hidden` on
+    the content group, so it is still laid out (a hidden group still has the browser fetching what
+    it draws) and the ground below it, background and grid, keeps showing. The gate opens on
+    whichever comes first: every request settled, or `FONT_PRELOAD_TIMEOUT_MS` (2 s), a blank canvas
+    past which is worse than the re-flow the nonce still repairs. Settling dispatches the
+    `REMEASURE_TEXT` and flips the flag in one callback, so the frame that reveals the content is
+    already measured against the faces it is drawn in. Only the document mounted with is covered: a
+    document swapped in later goes through the nonce path alone. A host that never imported
+    `fonts.css` loses nothing — with no face to fetch, the load resolves at once.
 - **Standard themes**: `darkCanvasTheme` (the default; its values double as the token fallbacks) and
   `lightCanvasTheme` are exported from the package (`theme/themePresets.ts`).
 - **VSCode mapping layer**: the VSCode host (not this package) maps `--vscode-*` onto the neutral

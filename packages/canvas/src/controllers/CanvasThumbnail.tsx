@@ -1,9 +1,11 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { memo, useMemo, useRef, useState } from "react";
 
+import { useDocFontsPreload } from "./hooks/useDocFontsPreload";
 import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
+import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import type { CanvasPlugin } from "../plugin/CanvasPlugin";
 import { CanvasView } from "../rendering/CanvasView";
 import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
@@ -61,13 +63,23 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	);
 
 	// Content-derived boxes are measured against the fonts loaded at the time of
-	// mapping, and a thumbnail has no reducer to re-measure through — so the nonce
-	// is a memo key rather than an effect: a web font landing after the first paint
-	// re-maps the doc against the face it is actually drawn in. It is an
-	// invalidation signal, not an argument, which is why the dependency is one the
-	// callback does not read. A re-map that moves no box returns the same state,
-	// so the render-time measurements get the counter as a context as well.
+	// mapping, and a thumbnail has no reducer to re-measure through — so both
+	// signals are a memo key rather than an effect: the faces of the mounted
+	// document arriving (useDocFontsPreload, which also holds the content back
+	// until then) and any later one landing (useFontsLoadedNonce) re-map the doc
+	// against the face it is actually drawn in. They are invalidation signals, not
+	// arguments, which is why the dependency is one the callback does not read. A
+	// re-map that moves no box returns the same state, so the render-time
+	// measurements get the counter as a context as well.
+	//
+	// The faces are collected off the mapped objects below: the collection runs in
+	// the preload's mount effect, by which point the first render has produced
+	// them.
 	const fontsLoadedNonce = useFontsLoadedNonce();
+	const isFontsPreloadSettled = useDocFontsPreload(() =>
+		collectDocFontRequests(objects, registries.objectTextStyleDefaults),
+	);
+	const fontsNonce = fontsLoadedNonce + (isFontsPreloadSettled ? 1 : 0);
 
 	const { objects, rootIds, background } = useMemo(
 		() =>
@@ -77,7 +89,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				registries.objectContentResizer,
 			),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[canvasDoc, registries, fontsLoadedNonce],
+		[canvasDoc, registries, fontsNonce],
 	);
 
 	const viewport = useMemo(
@@ -115,13 +127,14 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				objectGeometryKey={registries.objectGeometryKey}
 				objectSvgDefs={registries.objectSvgDefs}
 			>
-				<FontsLoadedNonceContext value={fontsLoadedNonce}>
+				<FontsLoadedNonceContext value={fontsNonce}>
 					<div style={themeCssVars}>
 						<CanvasView
 							objects={objects}
 							rootIds={rootIds}
 							viewport={viewport}
 							svgRef={svgRef}
+							isContentHidden={!isFontsPreloadSettled}
 							background={background}
 							surfaceColor={theme.tokens.canvasBg}
 						/>

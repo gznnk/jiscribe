@@ -16,6 +16,15 @@ type CanvasViewProps = {
 	textEditSlotId?: string | null;
 	isDrawMode?: boolean;
 	/**
+	 * Hides the drawn scene while leaving it laid out (default false). Set while
+	 * the document's faces are being fetched, so the first frame anyone sees is
+	 * measured against them rather than the fallback (see useDocFontsPreload);
+	 * the ground below it — the background and the grid — keeps showing. An image
+	 * export taken inside that window still draws the scene: the hiding is an
+	 * emotion class, which buildExportSvg strips from its clone.
+	 */
+	isContentHidden?: boolean;
+	/**
 	 * Viewport culling: IDs to render (see ObjectsRenderer). Omit to render the
 	 * full tree (export / thumbnail / any path that snapshots the DOM).
 	 */
@@ -42,6 +51,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	textEditObjectId,
 	textEditSlotId,
 	isDrawMode = false,
+	isContentHidden = false,
 	visibleObjectIds,
 	showGrid = false,
 	gridSize = 25,
@@ -94,7 +104,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 					height={height / zoom}
 				/>
 			)}
-			<ContentGroup isDrawMode={isDrawMode}>
+			<ContentGroup isDrawMode={isDrawMode} isContentHidden={isContentHidden}>
 				{/* Traverse rootIds (in z-order) and render objects and connectors interleaved */}
 				<ObjectsRenderer
 					objects={objects}

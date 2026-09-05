@@ -116,16 +116,37 @@ style」という 2 方式混在を解消）。
     決まらない。web フォントは初回描画の後に届くので、内容から導出する箱はスタックの総称
     キーワードで計測され、その直後に別のメトリクスの字面で描かれる。`useFontsLoadedNonce` が
     `document.fonts` を監視し（初回レイアウト分は `ready`、日本語入力が引き起こす後続の
-    unicode-range 取得は `loadingdone`）、カウンタを返す。Canvas はそれを `REMEASURE_TEXT` の
+    unicode-range 取得は `loadingdone`）、カウンタを返す。Canvas は値が動いたら `REMEASURE_TEXT` の
     dispatch に変え、`reconcileObjectContentSizes` を `forceRemeasure` 付きで再実行する。
-    スロットからは要求できない唯一のパス。`CanvasThumbnail` は dispatch する reducer を
-    持たないので、同じカウンタを `canvasToState` の memo キーとして使う。箱が 1 つも動かなければ
+    スロットからは要求できない唯一のパス。これが受け持つのは誰も待っていなかった到着で、マウント時の
+    doc 自身の字面は後述の事前読み込みゲートが受け持ち、そちらは決着時に自前で再計測を dispatch
+    する。`CanvasThumbnail` は dispatch する reducer を
+    持たないので、2 つの信号を `canvasToState` の memo キーとして使う。箱が 1 つも動かなければ
     同じ state 参照が返るので、2 つのイベントが重なっても無駄はない。dispatch が届くのは state に
-    現れる箱だけなので、同じカウンタを `FontsLoadedNonceContext` として描画層へも配る。レンダー中に
+    現れる箱だけなので、描画層へもカウンタを `FontsLoadedNonceContext` として配る。こちらは
+    このカウンタとゲートの決着を足したもので、どちらも「計測し直せ」以上のことを言わない。レンダー中に
     計測するもの（レコードの帯・コネクターのラベル箱・テキストの当たり帯）はこれを購読しており、
     値が動けば memo を貫いて再レンダーされ、計測がやり直される。字面自体はオプトインで、
     `CANVAS_FONT_FAMILIES` が挙げるものを使うにはホストが `@jiscribe/canvas/fonts.css` を
     import する。
+  - **内容を字面の到着まで見せない理由**: nonce はレイアウトを直すが、直る過程が見えてしまう —
+    最初のフレームはフォールバックで描かれ、少し後にガクッと収まる。そこで canvas は、何かを
+    見せる前に、その doc が描く字面を要求する。`collectDocFontRequests` がマウント時の state を
+    走査してテキストスロットとコネクターのラベルを集め（スロットは描画側と同じ型の既定値を通して
+    解決し、ファミリ・ウェイト・スタイルを上書きする run はそれ自体を 1 つの字面として数える）、
+    字面ごとに「その字面が描かねばならない文字」を添えた要求を 1 件ずつ返す。
+    `useDocFontsPreload` はそれを `document.fonts.load` へ渡す。文字を添えることこそが肝で、
+    unicode-range 分割ではテキストがレイアウトされるまで何も pending にならないため
+    `fonts.ready` は即座に解決して何も語らない。テキストを名指しして初めて、ブラウザは doc が
+    必要とするサブセットだけを取りに行く。到着までシーンは隠す — 内容のグループに
+    `visibility: hidden` を当てるので、レイアウトは残り（隠れたグループでもブラウザは描く分の
+    字面を取りに行く）、その下の地（背景とグリッド）は出たままになる。ゲートが開くのは、全要求の
+    決着か `FONT_PRELOAD_TIMEOUT_MS`（2 秒）の早い方。それを超えて真っ白なままの方が、nonce が
+    後から直す再レイアウトより悪い。決着時は同じコールバックの中で `REMEASURE_TEXT` を dispatch
+    してからフラグを立てるので、内容が現れるフレームは既に本来の字面で計測されている。対象は
+    マウント時の doc だけで、後から差し替えられた doc は nonce の経路だけを通る。
+    `fonts.css` を import していないホストが失うものは無い — 取りに行く字面が無いので、
+    load は即座に解決する。
 - **標準テーマ**: `darkCanvasTheme`（既定。その値はトークンのフォールバックを兼ねる）と
   `lightCanvasTheme` をパッケージから export する（`theme/themePresets.ts`）。
 - **VSCode マッピング層**: VSCode ホスト側（このパッケージではない）が、トークン値として

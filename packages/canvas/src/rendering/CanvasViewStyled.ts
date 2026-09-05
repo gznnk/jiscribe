@@ -22,6 +22,7 @@ export const Svg = styled.svg`
 
 type ContentGroupProps = {
 	isDrawMode: boolean;
+	isContentHidden: boolean;
 };
 
 /**
@@ -31,8 +32,13 @@ type ContentGroupProps = {
  * auto (theme-following) colors are resolved to role-specific theme tokens by
  * `resolveAutoColor` and applied via CSS, so there is no need here to pin `currentColor`
  * to the foreground (issue #38 / doc 08).
+ *
+ * `visibility` rather than `display` for the font gate: a hidden group is still
+ * laid out, which is what keeps the browser fetching the faces its text needs
+ * (and leaves the ground — the SVG's own background and the grid — painted).
  */
 export const ContentGroup = styled.g<ContentGroupProps>`
+	${({ isContentHidden }) => isContentHidden && `visibility: hidden;`}
 	${({ isDrawMode }) =>
 		isDrawMode &&
 		`
