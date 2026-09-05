@@ -3,7 +3,7 @@ import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
 /**
  * The `svgDefs` seam (ObjectSvgDefsRegistry): a registered type's shared SVG
  * resources reach the canvas-wide `<defs>`, and its instances resolve against
- * them. Sticky is the only shipped shape using it — the eight gradients its
+ * them. Sticky is the only shipped shape using it — the seven gradients its
  * shadow's soft edge is painted with. Guarded here rather than in a unit test
  * because a broken wiring (registry not provided, `<defs>` not rendered) still
  * leaves the sticky visible, just unshadowed, so the shape-level specs stay green.
@@ -21,14 +21,14 @@ test.describe("sticky svgDefs", () => {
 		// The contribution renders once per canvas, in the single <defs>.
 		await expect(
 			canvas.page.locator('defs > [id^="sticky-shadow-"]'),
-		).toHaveCount(8);
+		).toHaveCount(7);
 
 		// Every piece of the soft edge points at one of them, and nothing is filtered.
 		const fills = await canvas
 			.objectById(id)
 			.locator("rect[fill^='url(']")
 			.evaluateAll((rects) => rects.map((rect) => rect.getAttribute("fill")));
-		expect(fills).toHaveLength(8);
+		expect(fills).toHaveLength(7);
 		for (const fill of fills) {
 			await expect(
 				canvas.page.locator(`defs > ${(fill ?? "").slice(4, -1)}`),

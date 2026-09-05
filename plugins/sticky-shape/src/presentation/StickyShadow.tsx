@@ -19,10 +19,11 @@ type StickyShadowProps = {
 const paint = (id: string): string => `url(#${id})`;
 
 /**
- * The paper's drop shadow: a solid rectangle under the note plus the eight
- * pieces of its soft edge (see StickyShadowConstants for why it is drawn this
- * way rather than blurred). Inert to the pointer — the note itself is the
- * grab target, and the shadow reaches past it on every side.
+ * The paper's drop shadow: the solid strip below the note plus the seven
+ * pieces of its soft edge — everything but the top edge, which stays under the
+ * paper (see StickyShadowConstants for why it is drawn this way rather than
+ * blurred). Inert to the pointer — the note itself is the grab target, and the
+ * shadow reaches past it at the sides and the bottom.
  */
 const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 	width,
@@ -35,22 +36,19 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 	const bottom = height / 2 + STICKY_SHADOW_OFFSET_Y;
 	const spread = STICKY_SHADOW_SPREAD;
 
+	// The solid middle only shows below the paper, so only that strip is
+	// painted: what the paper covers would still cost its pixels (#133).
+	const paperBottom = height / 2;
+
 	return (
 		<g transform={transform} pointerEvents="none">
 			<rect
 				x={left}
-				y={top}
+				y={paperBottom}
 				width={width}
-				height={height}
+				height={bottom - paperBottom}
 				fill="#000"
 				fillOpacity={STICKY_SHADOW_OPACITY}
-			/>
-			<rect
-				x={left}
-				y={top - spread}
-				width={width}
-				height={spread}
-				fill={paint(STICKY_SHADOW_GRADIENT_IDS.top)}
 			/>
 			<rect
 				x={left}

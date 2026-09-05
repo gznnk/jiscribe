@@ -10,7 +10,6 @@ import {
  * from the edge that touches the shadow (solid) to the one facing away (clear).
  */
 const EDGE_VECTORS = {
-	top: { x1: 0, y1: 1, x2: 0, y2: 0 },
 	bottom: { x1: 0, y1: 0, x2: 0, y2: 1 },
 	left: { x1: 1, y1: 0, x2: 0, y2: 0 },
 	right: { x1: 0, y1: 0, x2: 1, y2: 0 },
@@ -37,7 +36,7 @@ const ShadowStops: React.FC = () => (
 
 /**
  * Shared SVG resources the sticky references (see `ObjectTypeDefinition.svgDefs`):
- * the eight gradients its shadow's soft edge is painted with. Default
+ * the seven gradients its shadow's soft edge is painted with. Default
  * gradientUnits (objectBoundingBox) maps the stops over each piece's own box, so
  * one set serves every sticky whatever its size.
  */

@@ -6,7 +6,7 @@
 // StickyMapper / validateStickyState. The headless part of schema/**
 // (DEFAULT_FONT_FAMILY) comes from `@jiscribe/canvas-sdk/doc`; the presentation / menu
 // parts (TextOverlay / calcTextRegion / createSvgTransform / the ObjectMenu UI kit) come
-// through `@jiscribe/canvas-sdk`. The gradient the note's shadow is painted with is
+// through `@jiscribe/canvas-sdk`. The gradients the note's shadow is painted with are
 // supplied to the canvas <defs> via `ObjectTypeDefinition.svgDefs`.
 // The headless parse entry point is ./doc (stickyDocPlugin).
 export * from "./schema/StickyDoc";
