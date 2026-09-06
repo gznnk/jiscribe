@@ -76,6 +76,11 @@ export {
 // a slot id as the rendering layer's does.
 export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
 
+// Where the text-style defaults of a type come from, for a headless consumer
+// that resolves a slot's styling itself: the registry the canvas fills is a
+// rendering-side thing, and this is the reading that fills it.
+export { extractTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";
+
 // Text measurement, which the wrapping and the box sizes both follow from. Headless
 // because it needs no DOM of its own: layoutVisualLines reproduces the display-side
 // CSS (pre-wrap + break-word) from character widths alone, and where those widths

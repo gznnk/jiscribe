@@ -145,6 +145,80 @@ describe("diagnoseDoc", () => {
 		});
 	});
 
+	describe("text styling a type declares", () => {
+		/**
+		 * A sticky holding six full-width characters, whose type declares
+		 * `fontSize: 14` (STICKY_DOC_DEFAULTS): they wrap to one line at 14 and to
+		 * two at the canvas-wide 16, which is more than the 40px box holds.
+		 */
+		const stickyDoc = (fontSize?: number): CanvasDoc => ({
+			version: 1,
+			root: [
+				{
+					id: "s1",
+					type: "sticky",
+					x: 0,
+					y: 0,
+					width: 100,
+					height: 40,
+					text: "あいうえおか",
+					...(fontSize === undefined ? undefined : { fontSize }),
+				} as never,
+			],
+		});
+
+		it("measures a body at the type's own size where the document sets none", () => {
+			expect(diagnoseDoc(stickyDoc())).toEqual([]);
+		});
+
+		it("measures a body at the size the document sets over its type's", () => {
+			const diagnostics = diagnoseDoc(stickyDoc(16));
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0].message).toMatch(
+				/text overflows sticky 100x40: 2 line\(s\) need 48px .*font 16px/,
+			);
+		});
+
+		/**
+		 * A note placed on its whole height, whose type declares
+		 * `verticalAlign: "top"` (NOTE_DOC_DEFAULTS): the block is 72px tall, so a
+		 * top-placed one reaches 8px past the region — past the tolerance — while a
+		 * centred one splits the same excess between the two edges and stays inside.
+		 */
+		const noteDoc = (verticalAlign?: string): CanvasDoc => ({
+			version: 1,
+			root: [
+				{
+					id: "n1",
+					type: "note",
+					x: 0,
+					y: 0,
+					width: 120,
+					height: 66,
+					text: "あいうえおかきくけこさしすせそ",
+					textVerticalBasis: "frame",
+					...(verticalAlign === undefined ? undefined : { verticalAlign }),
+				} as never,
+			],
+		});
+
+		it("places a body where its type declares where the document sets no verticalAlign", () => {
+			const overlap = diagnoseDoc(noteDoc()).filter(
+				(diagnostic) => diagnostic.severity === "warning",
+			);
+			expect(overlap).toHaveLength(1);
+			expect(overlap[0].message).toMatch(/reaches 8px past the region/);
+		});
+
+		it("places a body where the document says over where its type does", () => {
+			expect(
+				diagnoseDoc(noteDoc("middle")).every(
+					(diagnostic) => diagnostic.severity === "error",
+				),
+			).toBe(true);
+		});
+	});
+
 	it("warns rather than passes over a text-bearing type that declares no region", () => {
 		// Unreachable with the shipped set — every `text: "body"` type declares one
 		// — so the gap is staged here, which is what the warning is a guard against.

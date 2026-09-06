@@ -3,6 +3,7 @@ import type {
 	ObjectDoc,
 	ObjectDocDefinition,
 	RichText,
+	TextSlotStyle,
 } from "@jiscribe/doc";
 import {
 	isTextVerticalBasis,
@@ -11,8 +12,10 @@ import {
 } from "@jiscribe/doc";
 import type { TextMeasureFont, VisualLine } from "@jiscribe/doc/unstable";
 import {
+	BODY_TEXT_SLOT_ID,
 	calcAutoShapeHeight,
 	DEFAULT_FONT_FAMILY,
+	extractTextSlotStyleDefaults,
 	TEXT_LINE_HEIGHT,
 	TEXT_STYLE_FALLBACK,
 } from "@jiscribe/doc/unstable";
@@ -76,43 +79,61 @@ type TextBodyDoc = ObjectDoc & {
 };
 
 /**
+ * Text styling the type declares for its single body: its creation defaults,
+ * which are its draw-time defaults for a `"body"` type
+ * ({@link extractTextSlotStyleDefaults}). Undefined for a type that declares
+ * none.
+ */
+const resolveBodyStyleDefaults = (
+	definition: ObjectDocDefinition,
+): TextSlotStyle | undefined =>
+	extractTextSlotStyleDefaults(
+		definition.features,
+		definition.defaults,
+		definition.textSlotStyleDefaults,
+	)?.[BODY_TEXT_SLOT_ID];
+
+/**
  * The font the object's body is drawn with: what the document sets, over what
  * its type declares, over the canvas-wide last resort. The family has no
  * constant last resort (an unset one follows the host theme), so the built-in
- * default stands in — which is what an unthemed canvas draws.
+ * default stands in — which is what an unthemed canvas draws. A type's own
+ * family is deliberately not among its defaults (see
+ * {@link resolveBodyStyleDefaults}), so an unset family reaches that default
+ * whatever the type is.
+ *
+ * @param typeDefaults - The type's body defaults, as {@link resolveBodyStyleDefaults} reads them
  */
 const resolveBodyFont = (
 	object: TextBodyDoc,
-	definition: ObjectDocDefinition,
-): TextMeasureFont => {
-	const typeDefaults = definition.textSlotStyleDefaults?.body;
-	return {
-		fontSize:
-			object.fontSize ?? typeDefaults?.fontSize ?? TEXT_STYLE_FALLBACK.fontSize,
-		fontFamily:
-			object.fontFamily ?? typeDefaults?.fontFamily ?? DEFAULT_FONT_FAMILY,
-		fontWeight:
-			object.fontWeight ??
-			typeDefaults?.fontWeight ??
-			TEXT_STYLE_FALLBACK.fontWeight,
-		fontStyle:
-			object.fontStyle ??
-			typeDefaults?.fontStyle ??
-			TEXT_STYLE_FALLBACK.fontStyle,
-	};
-};
+	typeDefaults: TextSlotStyle | undefined,
+): TextMeasureFont => ({
+	fontSize:
+		object.fontSize ?? typeDefaults?.fontSize ?? TEXT_STYLE_FALLBACK.fontSize,
+	fontFamily: object.fontFamily ?? DEFAULT_FONT_FAMILY,
+	fontWeight:
+		object.fontWeight ??
+		typeDefaults?.fontWeight ??
+		TEXT_STYLE_FALLBACK.fontWeight,
+	fontStyle:
+		object.fontStyle ??
+		typeDefaults?.fontStyle ??
+		TEXT_STYLE_FALLBACK.fontStyle,
+});
 
 /**
  * Where in its box the object's body sits: what the document sets, over what its
  * type declares for its body slot, over the canvas-wide last resort — the same
  * three-step resolution the overlay makes (`resolveTextSlotStyle`).
+ *
+ * @param typeDefaults - The type's body defaults, as {@link resolveBodyStyleDefaults} reads them
  */
 const resolveBodyVerticalAlign = (
 	object: TextBodyDoc,
-	definition: ObjectDocDefinition,
+	typeDefaults: TextSlotStyle | undefined,
 ): string =>
 	object.verticalAlign ??
-	definition.textSlotStyleDefaults?.body?.verticalAlign ??
+	typeDefaults?.verticalAlign ??
 	TEXT_STYLE_FALLBACK.verticalAlign;
 
 const round = (value: number): number => Math.round(value * 10) / 10;
@@ -349,7 +370,8 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 			},
 		];
 	}
-	const font = resolveBodyFont(body, definition);
+	const typeDefaults = resolveBodyStyleDefaults(definition);
+	const font = resolveBodyFont(body, typeDefaults);
 	const drawnHeight = resolveDrawnHeight(
 		body,
 		definition,
@@ -393,7 +415,7 @@ const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 					resolution.declaredRegion,
 					font,
 					lines,
-					resolveBodyVerticalAlign(body, definition),
+					resolveBodyVerticalAlign(body, typeDefaults),
 				)
 			: []),
 		...diagnoseObjectTextLineStarts(object, text, box, font, lines),
