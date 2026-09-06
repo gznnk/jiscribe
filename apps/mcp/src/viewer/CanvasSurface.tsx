@@ -4,9 +4,13 @@ import type {
 	CanvasDoc,
 	CanvasHandle,
 	OpenReferencePayload,
+	StencilCategory,
 	ToolbarEntry,
 } from "@jiscribe/canvas";
-import { standardToolbarLayout } from "@jiscribe/standard-shapes";
+import {
+	standardStencilLibrarySections,
+	standardToolbarLayout,
+} from "@jiscribe/standard-shapes";
 import { useEffect, useRef } from "react";
 
 import { plugins } from "./canvasPlugins";
@@ -15,10 +19,13 @@ import { FileLabel } from "./FileLabel";
 // A module-scope constant, so that Canvas is not rebuilt on every re-render
 const initialConfig: CanvasConfig = { plugins };
 
-// The annotation / flowchart / container / general / icon categories and the
-// markdown preset are not in core's default layout (the plugins supply them). Use
-// the arrangement the shape set proposes
+// The bar pins the six presets the shape set proposes; the markdown preset and the
+// flowchart / uml / container / general / annotation / icon categories live in the
+// shape library sidebar instead. None of it is in core's default layout (the
+// plugins supply them), so both are passed
 const toolbarLayout: ToolbarEntry[] = standardToolbarLayout;
+const stencilLibrarySections: StencilCategory[] =
+	standardStencilLibrarySections;
 
 export type CanvasSurfaceProps = {
 	/** The doc to draw. Every replacement redraws it */
@@ -73,6 +80,7 @@ export function CanvasSurface({
 				onOpenReference={onOpenReference}
 				theme={lightCanvasTheme}
 				initialConfig={initialConfig}
+				stencilLibrary={{ sections: stencilLibrarySections }}
 				toolbar={{
 					layout: toolbarLayout,
 					leading: (

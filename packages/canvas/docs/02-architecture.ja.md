@@ -99,6 +99,8 @@ State を Props として受け取り SVG を描画するだけの純粋コン�
 
 各レジストリは形状タイプ（`"rect"`, `"ellipse"` など）をキーにするため、形状横断的な処理を `if (type === ...)` の分岐なしで型安全に書ける。
 
+`StencilRegistry` が答えるのは「どのプリセットが存在するか」だけで、並びはホストが宣言する。`toolbar.layout` がツールバーの並び（ピン留めプリセットとカテゴリフライアウト）を、`stencilLibrary.sections` が**図形ライブラリのサイドバー**のセクションを決める。サイドバーはツールバーの `…` トグルでビューポートの左に開くパネルで、登録済みの全ステンシルをセクション分け・検索付きで並べる。どちらも同じ `StencilCategory` を取り、`presetIds` をレジストリに解決して、解決できない id と空になったセクションを落とす。パネルの開閉と折りたたみ状態は reducer state（`stencilLibraryPanel` (`isOpen` / `collapsedSectionIds`)）で、ツールバーからは `toggleStencilLibrary` コマンド、パネル自身のセクションヘッダと閉じるボタンからは `StencilLibraryPanelHandler` が動かす。常設パネルなのでどちらも `resetUiState` の対象外で、doc を差し替えてもユーザーが開いたままにした姿を保つ。パネルは開いている間だけマウントされ、ビューポートから自分の幅ぶんの場所を取る（オーバーレイでもスライドでもない）。その場所を取るぶんビューポートの左端が動き、放っておくと絵が画面上を一緒に流れてしまうので、`useContainerResize` が移動量を `CONTAINER_RESIZE` の `leftEdgeShift` として渡し、reducer がそのときのズームで `minX` から差し引く。絵は画面に留まったままで、パネルは左の帯を覆ったり戻したりするだけになる。この補正はカメラそのものに乗るので、`onViewportChange`（および `ref.viewport`）が返すカメラはパネルを開いている間その補正を含む。そのカメラを保存したホストが、次回マウント時にパネルを閉じた状態で復元すると、絵はパネル幅 ÷ ズームぶん横にずれて見える。
+
 ### canvas 単位のレジストリ（`CanvasConfig`）
 
 これらのレジストリは**モジュールシングルトンではない**。各 `<Canvas>` インスタンスが自前の**バンドル**（`CanvasRegistries`＝各レジストリクラスのインスタンス一式）を持ち、`controllers/registries/createCanvasRegistries(config?)` が生成する。これにより、同一ページ上の2つの canvas を異なる object type / command セットで動かせる（プラグイン的拡張・機能制限）。`config` 未指定時は共有のフルデフォルト（`defaultCanvasRegistries`）を再利用する。

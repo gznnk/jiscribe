@@ -142,7 +142,8 @@ of them tolerates the others' imports.
   `node:child_process` and vite, none of which can be bundled into a page
 
 The API is `createCanvasPlaywrightConfig({ testDir, harnessCommand })` /
-`createPluginHarnessViteConfig()` / `mountPluginHarness({ plugins, toolbarLayout })`, plus
+`createPluginHarnessViteConfig()` /
+`mountPluginHarness({ plugins, toolbarLayout, stencilLibrarySections })`, plus
 `test` / `expect` / `CanvasDriver` / `selectors` on the spec side. canvas itself imports the
 kit relatively (`./e2e/testing-playwright-config`), never through the SDK: the
 `canvas → canvas-sdk → canvas` cycle is what this split removed. Standing up a suite for a

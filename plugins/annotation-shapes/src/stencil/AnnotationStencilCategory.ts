@@ -1,11 +1,12 @@
-import type { ToolbarEntry } from "@jiscribe/canvas";
+import type { StencilCategory } from "@jiscribe/canvas";
 
 import { CalloutIcon } from "./CalloutIcon";
 
 /**
- * Toolbar category entry for the annotation shapes. The annotation category is
+ * Stencil category for the annotation shapes. The annotation category is
  * not in the core default layout (plugin-supplied), so a host composes this into
- * its `toolbar.layout` where it wants the flyout to appear.
+ * its `stencilLibrary.sections` (a sidebar section) or, as a `{ kind: "category",
+ * category }` entry, into its `toolbar.layout` (a flyout).
  *
  * The two boxes that stand on their own — rather than marking a run of other
  * shapes — lead, because they are what a user wanting to "write something on the
@@ -15,8 +16,7 @@ import { CalloutIcon } from "./CalloutIcon";
  * most expressive to the plainest, since a user who has got past the boxes is
  * usually after the marker that can point somewhere.
  */
-export const annotationToolbarEntry: ToolbarEntry = {
-	kind: "category",
+export const annotationStencilCategory: StencilCategory = {
 	id: "annotation",
 	label: { en: "Annotation", ja: "注釈" },
 	icon: CalloutIcon,

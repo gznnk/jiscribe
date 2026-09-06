@@ -6,12 +6,10 @@ import {
 	StencilCategoryContainer,
 	StencilCategoryFlyout,
 } from "./StencilLibraryStyled";
+import { resolveStencilCategoryLabel } from "./utils/resolveStencilLabel";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import {
-	resolveLocalizedLabel,
-	type LocaleMessages,
-} from "../../../messages/resolveLocaleMessages";
+import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
 import type { StencilIconProps, Stencil } from "../../objects/Stencil";
 
@@ -47,9 +45,12 @@ const StencilCategoryMenuComponent: React.FC<StencilCategoryMenuProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
-	const label =
-		messages.stencilCategoryLabels[id] ??
-		resolveLocalizedLabel(categoryLabel, locale);
+	const label = resolveStencilCategoryLabel(
+		id,
+		categoryLabel,
+		messages,
+		locale,
+	);
 
 	return (
 		<StencilCategoryContainer>

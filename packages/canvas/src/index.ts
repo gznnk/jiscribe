@@ -60,17 +60,21 @@ export type {
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
 } from "./export";
-// StencilLibrary toolbar arrangement (pinned presets + category flyouts, issue #184).
+// StencilLibrary arrangement (pinned presets + category flyouts, issue #184).
 // The layout is the single source of order and category metadata: each entry names,
-// in display order, a pinned preset or a category flyout (label / icon / `presetIds`
-// carried inline). Pass a custom `toolbar.layout` to `<Canvas>`; built-in category
-// entries are exported for hosts composing layouts, and plugins export their own
-// (e.g. `containerToolbarEntry`).
+// in display order, a pinned preset or a category flyout. Pass a custom
+// `toolbar.layout` to `<Canvas>`. A `StencilCategory` is the same object whether
+// it becomes a flyout there or a section of the shape library sidebar
+// (`stencilLibrary.sections`); core exports `basicStencilCategory` and plugins
+// export their own (e.g. `containerStencilCategory`).
 export {
 	DEFAULT_TOOLBAR_LAYOUT,
-	basicToolbarEntry,
 	type ToolbarEntry,
 } from "./controllers/ui/menu/Toolbar";
+export {
+	basicStencilCategory,
+	type StencilCategory,
+} from "./controllers/ui/objects/StencilCategory";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export type {
 	CanvasMessages,

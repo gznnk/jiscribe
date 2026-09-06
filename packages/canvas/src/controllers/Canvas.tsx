@@ -13,6 +13,7 @@ import {
 import type { CanvasGestureHandling } from "./CanvasGestureHandling";
 import { CanvasProviders } from "./CanvasProviders";
 import {
+	CanvasBody,
 	CanvasRoot,
 	Container,
 	ScrollSyncedOverlay,
@@ -70,6 +71,7 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
+import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
 import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
@@ -80,9 +82,11 @@ import type {
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
+import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
+import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
@@ -207,10 +211,10 @@ type CanvasProps = {
 	// ── Toolbar (visibility & host UI slots) ──
 	/**
 	 * Host-provided toolbar customization: visibility (`show`), UI slots at the
-	 * edges (`leading` / `trailing`) and an override of the shape-tool arrangement
-	 * (`layout`). Grouped for cohesion; since the JSX slots already break
-	 * `<Canvas>`'s memo, a host rendering this inline can `useMemo` the object to
-	 * avoid extra re-renders.
+	 * edges (`leading` / `trailing`) and an override of the shape-tool
+	 * arrangement (`layout`). Grouped for cohesion; since the JSX slots already
+	 * break `<Canvas>`'s memo, a host rendering this inline can `useMemo` the
+	 * object to avoid extra re-renders.
 	 */
 	toolbar?: {
 		/**
@@ -239,6 +243,23 @@ type CanvasProps = {
 		 * flyout — anything a plugin supplies must be added here by the host.
 		 */
 		layout?: ToolbarEntry[];
+	};
+
+	// ── Shape library sidebar ──
+	/**
+	 * The shape library sidebar. Omit and neither the sidebar nor its toolbar
+	 * toggle is rendered. Grouped as an object like `toolbar` / `grid`;
+	 * `sections` is its only field for now.
+	 */
+	stencilLibrary?: {
+		/**
+		 * Sections in display order. Each section lists its presets by id; an id
+		 * naming no registered preset is skipped and a section left empty is
+		 * dropped. Two sections sharing an `id`, or one section naming the same
+		 * preset id twice, throws rather than rendering a section or an item that
+		 * cannot be told from its twin.
+		 */
+		sections: StencilCategory[];
 	};
 
 	// ── Focus behavior ──
@@ -318,6 +339,7 @@ const CanvasComponent = ({
 	onExportImage,
 	onOpenReference,
 	toolbar,
+	stencilLibrary,
 	autoFocus = true,
 	gestureHandling = "greedy",
 	initialConfig,
@@ -415,7 +437,7 @@ const CanvasComponent = ({
 	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
-	useContainerResize(canvasRef, dispatch);
+	useContainerResize(canvasRef, dispatch, state.stencilLibraryPanel.isOpen);
 
 	// The document's own framing intent, applied only where the host expressed
 	// none: `initialConfig.viewport` is a camera the host already decided on, and
@@ -609,6 +631,18 @@ const CanvasComponent = ({
 	const canZoomOut =
 		resolveCommandState(state, registries, "zoomOut")?.enabled ?? false;
 
+	// Sections whose ids resolve to registered presets. Resolved here (not in the
+	// panel) so an unmounted-but-declared library still decides whether the
+	// sidebar can open at all.
+	const librarySections = useMemo(
+		() =>
+			resolveStencilCategories(
+				stencilLibrary?.sections ?? [],
+				registries.stencil,
+			),
+		[stencilLibrary?.sections, registries],
+	);
+
 	return (
 		<CanvasProviders
 			theme={theme}
@@ -634,134 +668,147 @@ const CanvasComponent = ({
 						canZoomIn={canZoomIn}
 						canZoomOut={canZoomOut}
 						layout={toolbar?.layout}
+						hasLibrary={librarySections.length > 0}
+						isLibraryOpen={state.stencilLibraryPanel.isOpen}
 						leading={toolbar?.leading}
 						trailing={toolbar?.trailing}
 					/>
 				)}
-				<Viewport
-					data-id="canvas"
-					data-kind="canvas"
-					ref={canvasRef}
-					cursor={state.shapeDrawing ? "crosshair" : undefined}
-				>
-					<Container>
-						<CanvasView
-							objects={draftObjects}
-							rootIds={state.rootIds}
-							viewport={drawnViewport}
-							svgRef={svgRef}
-							isContentHidden={isContentHidden}
-							textEditObjectId={state.textEditState?.objectId ?? null}
-							textEditSlotId={
-								state.textEditState?.kind === "shape"
-									? state.textEditState.slotId
-									: null
+				<CanvasBody>
+					{state.stencilLibraryPanel.isOpen && librarySections.length > 0 && (
+						<StencilLibraryPanel
+							sections={librarySections}
+							collapsedSectionIds={
+								state.stencilLibraryPanel.collapsedSectionIds
 							}
-							isDrawMode={!!state.shapeDrawing}
-							visibleObjectIds={visibleObjectIds}
-							showGrid={grid?.show}
-							gridSize={grid?.size}
-							background={state.background}
-							surfaceColor={theme.tokens.canvasBg}
-						>
-							<PendingConnectorOverlay
-								pendingConnector={state.pendingConnector}
-								objects={state.objects}
-							/>
-							<SelectionOverlay
-								selectedIds={state.selectedIds}
-								objects={draftObjects}
-								multiSelectGroup={state.multiSelectGroup}
-								selectedTextSlot={selectedTextSlot}
-							/>
-							<ConnectorControlsLayer
-								selectedConnectorId={state.selectedConnectorId}
-								objects={state.objects}
-								zoom={state.viewport.zoom}
-								selectedVertex={state.selectedVertex}
-							/>
-							<TransformControlsLayer
-								selectedIds={state.selectedIds}
-								objects={state.objects}
-								multiSelectGroup={state.multiSelectGroup}
-								zoom={state.viewport.zoom}
-								isTextEditing={!!state.textEditState}
-								isTextSlotSelected={selectedTextSlot !== null}
-								activeDragKind={state.activeDragKind}
-							/>
-							<ConnectionAnchorsLayer
-								selectedIds={state.selectedIds}
-								objects={state.objects}
-								zoom={state.viewport.zoom}
-								pendingConnector={state.pendingConnector}
-								editingConnectorId={state.editingConnectorId}
-								editingEndpoint={state.editingEndpoint}
-								isTextEditing={!!state.textEditState}
-								activeDragKind={state.activeDragKind}
-							/>
-							<VertexControlsLayer
-								selectedIds={state.selectedIds}
-								objects={state.objects}
-								zoom={state.viewport.zoom}
-								selectedVertex={state.selectedVertex}
-							/>
-							<SelectionControlsLayer
-								selectedIds={state.selectedIds}
-								objects={state.objects}
-								zoom={state.viewport.zoom}
-								isTextEditing={!!state.textEditState}
-							/>
-							<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
-							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
-							<AreaSelectionRect areaSelection={state.areaSelection} />
-							<SnapGuides
-								snapFeedback={state.snapFeedback}
-								zoom={state.viewport.zoom}
-							/>
-							<AxisLockGuide
-								axisLockFeedback={state.axisLockFeedback}
-								viewport={state.viewport}
-							/>
-						</CanvasView>
-						{/* HTML that follows scroll and scales with zoom */}
-						<ZoomScaledOverlay
-							style={{
-								left: -minX * zoom,
-								top: -minY * zoom,
-								transform: `scale(${zoom})`,
-							}}
-						>
-							<TextEditorLayer
-								textEditState={state.textEditState}
-								objects={draftObjects}
-								onTextChange={handleTextEditChange}
-								onEscape={handleTextEditEscape}
-								onCaretMove={revealCaret}
-								onSelectionChange={handleTextEditSelectionChange}
-								onToggleFormat={handleTextEditToggleFormat}
-							/>
-						</ZoomScaledOverlay>
-						{/* HTML whose position follows zoom but whose size does not */}
-						<ScrollSyncedOverlay
-							style={{ left: -minX * zoom, top: -minY * zoom }}
-						>
-							<ObjectMenu
-								canvasState={menuCanvasState}
-								onPropertyUpdate={handleMenuPropertyUpdate}
-								onOpenReference={handleOpenReference}
-							/>
-						</ScrollSyncedOverlay>
-					</Container>
-					<ViewportOverlay>
-						<ErrorToast notification={errorNotification} />
-						<ContextMenu
-							position={state.contextMenuPosition}
-							canvasState={state}
-							callbacks={contextMenuCallbacks}
+							activePresetId={state.shapeDrawing?.preset.id ?? null}
 						/>
-					</ViewportOverlay>
-				</Viewport>
-				{/* Every modal is rendered here, as a sibling of the toolbar/viewport, so
+					)}
+					<Viewport
+						data-id="canvas"
+						data-kind="canvas"
+						ref={canvasRef}
+						cursor={state.shapeDrawing ? "crosshair" : undefined}
+					>
+						<Container>
+							<CanvasView
+								objects={draftObjects}
+								rootIds={state.rootIds}
+								viewport={drawnViewport}
+								svgRef={svgRef}
+								isContentHidden={isContentHidden}
+								textEditObjectId={state.textEditState?.objectId ?? null}
+								textEditSlotId={
+									state.textEditState?.kind === "shape"
+										? state.textEditState.slotId
+										: null
+								}
+								isDrawMode={!!state.shapeDrawing}
+								visibleObjectIds={visibleObjectIds}
+								showGrid={grid?.show}
+								gridSize={grid?.size}
+								background={state.background}
+								surfaceColor={theme.tokens.canvasBg}
+							>
+								<PendingConnectorOverlay
+									pendingConnector={state.pendingConnector}
+									objects={state.objects}
+								/>
+								<SelectionOverlay
+									selectedIds={state.selectedIds}
+									objects={draftObjects}
+									multiSelectGroup={state.multiSelectGroup}
+									selectedTextSlot={selectedTextSlot}
+								/>
+								<ConnectorControlsLayer
+									selectedConnectorId={state.selectedConnectorId}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									selectedVertex={state.selectedVertex}
+								/>
+								<TransformControlsLayer
+									selectedIds={state.selectedIds}
+									objects={state.objects}
+									multiSelectGroup={state.multiSelectGroup}
+									zoom={state.viewport.zoom}
+									isTextEditing={!!state.textEditState}
+									isTextSlotSelected={selectedTextSlot !== null}
+									activeDragKind={state.activeDragKind}
+								/>
+								<ConnectionAnchorsLayer
+									selectedIds={state.selectedIds}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									pendingConnector={state.pendingConnector}
+									editingConnectorId={state.editingConnectorId}
+									editingEndpoint={state.editingEndpoint}
+									isTextEditing={!!state.textEditState}
+									activeDragKind={state.activeDragKind}
+								/>
+								<VertexControlsLayer
+									selectedIds={state.selectedIds}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									selectedVertex={state.selectedVertex}
+								/>
+								<SelectionControlsLayer
+									selectedIds={state.selectedIds}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									isTextEditing={!!state.textEditState}
+								/>
+								<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
+								<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
+								<AreaSelectionRect areaSelection={state.areaSelection} />
+								<SnapGuides
+									snapFeedback={state.snapFeedback}
+									zoom={state.viewport.zoom}
+								/>
+								<AxisLockGuide
+									axisLockFeedback={state.axisLockFeedback}
+									viewport={state.viewport}
+								/>
+							</CanvasView>
+							{/* HTML that follows scroll and scales with zoom */}
+							<ZoomScaledOverlay
+								style={{
+									left: -minX * zoom,
+									top: -minY * zoom,
+									transform: `scale(${zoom})`,
+								}}
+							>
+								<TextEditorLayer
+									textEditState={state.textEditState}
+									objects={draftObjects}
+									onTextChange={handleTextEditChange}
+									onEscape={handleTextEditEscape}
+									onCaretMove={revealCaret}
+									onSelectionChange={handleTextEditSelectionChange}
+									onToggleFormat={handleTextEditToggleFormat}
+								/>
+							</ZoomScaledOverlay>
+							{/* HTML whose position follows zoom but whose size does not */}
+							<ScrollSyncedOverlay
+								style={{ left: -minX * zoom, top: -minY * zoom }}
+							>
+								<ObjectMenu
+									canvasState={menuCanvasState}
+									onPropertyUpdate={handleMenuPropertyUpdate}
+									onOpenReference={handleOpenReference}
+								/>
+							</ScrollSyncedOverlay>
+						</Container>
+						<ViewportOverlay>
+							<ErrorToast notification={errorNotification} />
+							<ContextMenu
+								position={state.contextMenuPosition}
+								canvasState={state}
+								callbacks={contextMenuCallbacks}
+							/>
+						</ViewportOverlay>
+					</Viewport>
+				</CanvasBody>
+				{/* Every modal is rendered here, as a sibling of the toolbar/body row, so
 				    its backdrop covers the whole canvas including the toolbar */}
 				{state.activeModal === "export" && (
 					<ExportDialog

@@ -4,7 +4,8 @@ import { theme } from "../../../../constants/theme";
 
 /**
  * Individual item button in the stencil library.
- * Placed inside the unified toolbar (Toolbar).
+ * Placed in the unified toolbar (pinned or in a category flyout) and in the
+ * shape library sidebar (StencilLibraryPanel).
  */
 export const StencilLibraryButton = styled.button<{ isActive?: boolean }>`
 	display: flex;
@@ -42,9 +43,10 @@ export const StencilCategoryContainer = styled.div`
 `;
 
 /**
- * Category button in the StencilLibrary. Unlike a stencil item it is a plain menu
- * toggle (opt out of the gesture system with `data-gesture="none"`), so its
- * cursor is a pointer and it shows a small caret to signal the flyout.
+ * Category button in the StencilLibrary. It is its own gesture target
+ * (`data-kind="menu" data-id="stencil-category"`, routed to
+ * StencilCategoryToggleHandler) rather than a stencil item, so its cursor is a
+ * pointer and it shows a small caret to signal the flyout.
  */
 export const StencilCategoryButton = styled.button<{ isOpen?: boolean }>`
 	display: flex;

@@ -10,6 +10,7 @@ import type {
 	CanvasDoc,
 	CanvasParser,
 	CanvasPlugin,
+	StencilCategory,
 	ToolbarEntry,
 } from "../../src";
 import { Canvas, darkCanvasTheme, extractCanvasSourceFromPng } from "../../src";
@@ -33,6 +34,13 @@ export type PluginHarnessParams = {
 	 * the `rect` preset in any layout passed here.
 	 */
 	toolbarLayout?: ToolbarEntry[];
+	/**
+	 * Sections of the shape library sidebar, mirroring how a host app declares one.
+	 * Omit and neither the sidebar nor the toolbar toggle that opens it is
+	 * rendered; pass sections whenever a spec drives the sidebar. Independent of
+	 * `toolbarLayout` — the same category can appear in both.
+	 */
+	stencilLibrarySections?: StencilCategory[];
 };
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
@@ -40,6 +48,7 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
 	toolbarLayout: ToolbarEntry[] | undefined;
+	stencilLibrarySections: StencilCategory[] | undefined;
 	parser: CanvasParser;
 };
 
@@ -49,7 +58,12 @@ type HarnessAppProps = {
  * Restoring a dropped jiscribe export PNG (with .jis.json in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
-function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
+function HarnessApp({
+	initialConfig,
+	toolbarLayout,
+	stencilLibrarySections,
+	parser,
+}: HarnessAppProps) {
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(emptyDoc);
 
 	// Hook for a spec to trigger external sync (a doc swap from the parent, SYNC_EXTERNAL).
@@ -108,6 +122,11 @@ function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
 				toolbar={toolbarLayout ? { layout: toolbarLayout } : undefined}
+				stencilLibrary={
+					stencilLibrarySections
+						? { sections: stencilLibrarySections }
+						: undefined
+				}
 			/>
 		</div>
 	);
@@ -118,7 +137,7 @@ function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
  * `index.html` provides. Call it once from the harness entry module; the layout
  * stylesheet comes with it.
  *
- * @param params - The plugin set and toolbar the page is built around. See {@link PluginHarnessParams}.
+ * @param params - The plugin set, toolbar and shape library the page is built around. See {@link PluginHarnessParams}.
  */
 export function mountPluginHarness(params: PluginHarnessParams): void {
 	const initialConfig: CanvasConfig = { plugins: params.plugins };
@@ -134,6 +153,7 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 			<HarnessApp
 				initialConfig={initialConfig}
 				toolbarLayout={params.toolbarLayout}
+				stencilLibrarySections={params.stencilLibrarySections}
 				parser={parser}
 			/>
 		</React.StrictMode>,

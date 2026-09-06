@@ -7,7 +7,8 @@ import { theme } from "../../../../constants/theme";
  * Places shape tools on the left and the zoom readout / help on the right.
  *
  * Laid out as the first child of CanvasRoot (a flex column), stacked above the
- * canvas area (occupying space rather than overlaying it).
+ * canvas area (occupying space rather than overlaying it). The bottom border is
+ * its only separation from what sits below.
  */
 export const ToolbarContainer = styled.div`
 	position: relative;
@@ -22,7 +23,6 @@ export const ToolbarContainer = styled.div`
 	gap: 4px;
 	background-color: ${theme.surface};
 	border-bottom: 1px solid ${theme.border};
-	box-shadow: ${theme.shadow};
 	pointer-events: auto;
 	user-select: none;
 `;
@@ -94,6 +94,37 @@ export const ToolbarIconButton = styled.button`
 	&:disabled:hover,
 	&:disabled:active {
 		background-color: transparent;
+	}
+
+	svg {
+		color: ${theme.iconForeground};
+	}
+`;
+
+/**
+ * Toolbar toggle button for a panel that stays open (the shape library sidebar).
+ *
+ * Sized like ToolbarIconButton, but takes the pressed look of a category button
+ * while its panel is open so the bar shows what is currently on screen.
+ */
+export const ToolbarToggleButton = styled.button<{ isOpen: boolean }>`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 1px solid ${(props) => (props.isOpen ? theme.accent : "transparent")};
+	border-radius: ${theme.radius};
+	background: ${(props) =>
+		props.isOpen ? theme.surfaceActive : "transparent"};
+	color: ${theme.iconForeground};
+	line-height: 1;
+	cursor: pointer;
+	transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+	&:hover {
+		background-color: ${theme.surfaceHover};
 	}
 
 	svg {

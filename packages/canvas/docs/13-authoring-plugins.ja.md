@@ -19,7 +19,7 @@ plugins/sticky-shape/
 │   ├── harness/          spec が叩くページ（このプラグインだけを載せる）
 │   └── specs/            Playwright の spec
 └── src/
-    ├── index.ts          公開 export（plugin・ツールバーエントリなどホストが要るもの）
+    ├── index.ts          公開 export（plugin・図形カテゴリなどホストが要るもの）
     ├── plugin.ts         CanvasPlugin の宣言
     ├── doc.ts            CanvasDocPlugin の宣言 — headless 入口
     ├── definition.ts     ObjectTypeDefinition（UI 半分）
@@ -215,13 +215,16 @@ export default createPluginHarnessViteConfig();
 import { mountPluginHarness } from "@jiscribe/canvas-sdk/testing/harness";
 import {
 	annotationPlugin,
-	annotationToolbarEntry,
+	annotationStencilCategory,
 } from "@jiscribe/plugin-annotation-shapes";
 
 // This package's shapes only, so a spec failing here is this package's own fault.
 mountPluginHarness({
 	plugins: [annotationPlugin],
-	toolbarLayout: [{ kind: "preset", presetId: "rect" }, annotationToolbarEntry],
+	toolbarLayout: [
+		{ kind: "preset", presetId: "rect" },
+		{ kind: "category", category: annotationStencilCategory },
+	],
 });
 ```
 
@@ -230,7 +233,7 @@ mountPluginHarness({
 - **プラグインは自分のパッケージ名で読む。**`../../src` ではない。外部の作者が通る経路が
   こちらであり、それに乗ることがパッケージの `exports` だけで足りていることの証明になる
 - **`toolbarLayout` は spec が描く分だけに絞る。**自分のピン留めプリセットかカテゴリ
-  エントリと、それに必ず `{ kind: "preset", presetId: "rect" }` を足す。後者は必須で、
+  （`{ kind: "category", category }` のエントリにする）と、それに必ず `{ kind: "preset", presetId: "rect" }` を足す。後者は必須で、
   `CanvasDriver.goto()` が "Rectangle" ツールボタンの出現を待ってからページを引き渡すため。
   プラグインのプリセットとカテゴリは canvas の既定 layout に含まれないので、layout を
   渡さなければ spec からそもそも触れない
@@ -284,11 +287,17 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 6. **全ホストを配線する**（後述）
 7. **検証する**（後述）
 
-ツールバーへの露出はパッケージングとは別の判断である。カテゴリフライアウトの
-エントリ（`containerToolbarEntry` / `annotationToolbarEntry`）はプラグインが所有し、
-ホストが `toolbar.layout` に合成する。プラグインのカテゴリは
-`DEFAULT_TOOLBAR_LAYOUT` に含まれないので、既定 layout をそのまま使うホストでは
-エントリを足すまでその図形は出てこない。
+ツールバーへの露出はパッケージングとは別の判断である。カテゴリ
+（`containerStencilCategory` / `annotationStencilCategory`。型は `StencilCategory`）は
+プラグインが所有し、ホストが合成する。宣言 1 つが 2 箇所に効く。
+`stencilLibrary.sections` へ入れれば図形ライブラリのサイドバーのセクションになり、
+`toolbar.layout` へ `{ kind: "category", category }` として入れればツールバーの
+カテゴリフライアウトになる（任意）。出荷図形
+セットは全プラグインのカテゴリを `standardStencilLibrarySections`
+（`packages/standard-shapes`）でサイドバーのセクションとして並べ、バーにはプリセット
+だけをピン留めしている。プラグインの
+カテゴリは `DEFAULT_TOOLBAR_LAYOUT` に含まれないので、既定 layout をそのまま使い
+library も宣言しないホストでは、カテゴリを足すまでその図形は出てこない。
 
 ## 配線チェックリスト
 
@@ -298,8 +307,8 @@ UI プラグイン（`somePlugin`）:
 
 - [ ] `apps/canvas-examples/src/examples/plugins.tsx`
 - [ ] `apps/vscode-extension/src/webview/canvasParser.ts`
-- [ ] `apps/vscode-extension/src/webview/index.tsx`（`toolbarLayout`）
-- [ ] `apps/canvas-examples/e2e/harness/main.tsx`（`plugins` と `toolbarLayout`）
+- [ ] `packages/standard-shapes/src/index.ts`（`standardPlugins` と `standardStencilLibrarySections`。VSCode 拡張・MCP ビューア・CLI preview はここから図形セットを受け取る）
+- [ ] `apps/canvas-examples/e2e/harness/main.tsx`（`plugins` と `stencilLibrarySections`）
 
 headless doc プラグイン（`someDocPlugin`）:
 

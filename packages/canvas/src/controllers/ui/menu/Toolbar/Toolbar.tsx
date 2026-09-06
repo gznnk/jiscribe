@@ -7,23 +7,25 @@ import {
 	ToolbarGroup,
 	ToolbarHostSlot,
 	ToolbarIconButton,
+	ToolbarToggleButton,
 	ZoomReadout,
 } from "./ToolbarStyled";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import { EllipsisIcon } from "../../icons/EllipsisIcon";
 import { HelpIcon } from "../../icons/HelpIcon";
 import type { Stencil } from "../../objects/Stencil";
 import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
+import {
+	resolveStencilCategory,
+	type ResolvedStencilCategory,
+} from "../StencilLibrary/utils/resolveStencilCategory";
 
 /** A layout entry with its presets looked up in the registry, ready to draw. */
 type ResolvedToolbarEntry =
 	| { kind: "preset"; preset: Stencil }
-	| {
-			kind: "category";
-			entry: Extract<ToolbarEntry, { kind: "category" }>;
-			presets: Stencil[];
-	  };
+	| ({ kind: "category" } & ResolvedStencilCategory);
 
 type ToolbarProps = {
 	/** ID of the stencil currently being drawn (for the tool's active state) */
@@ -38,6 +40,14 @@ type ToolbarProps = {
 	canZoomOut: boolean;
 	/** Top-level arrangement of the shape tools (pinned presets + category flyouts) */
 	layout?: ToolbarEntry[];
+	/**
+	 * Whether the host's `stencilLibrary.sections` resolved to at least one
+	 * section. The sidebar toggle is drawn only then; Canvas resolves the sections
+	 * and answers this, so the bar never looks them up itself.
+	 */
+	hasLibrary: boolean;
+	/** Whether the shape library sidebar is currently open (reducer state) */
+	isLibraryOpen: boolean;
 	/** Host UI at the left edge (see CanvasProps.toolbar.leading) */
 	leading?: React.ReactNode;
 	/** Host UI at the right edge (see CanvasProps.toolbar.trailing) */
@@ -46,12 +56,15 @@ type ToolbarProps = {
 
 /**
  * Unified toolbar centered at the top.
- * Combines the shape tools (StencilLibrary), zoom readout, and help (?) into a single bar.
+ * Combines the shape tools (StencilLibrary), the shape library toggle, the zoom
+ * readout and help (?) into a single bar.
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/-, the readout and help go through the command system (ToolbarHandler →
  *   handleCommand), the same path as the keyboard shortcuts and the context menu.
- *   The help modal itself is rendered by Canvas from reducer state.
+ *   So does the shape library toggle, which shows only when the host declared a
+ *   library with something in it. The help modal and the library panel
+ *   themselves are rendered by Canvas from reducer state.
  */
 const ToolbarComponent: React.FC<ToolbarProps> = ({
 	activePresetId,
@@ -60,6 +73,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	canZoomIn,
 	canZoomOut,
 	layout = DEFAULT_TOOLBAR_LAYOUT,
+	hasLibrary,
+	isLibraryOpen,
 	leading,
 	trailing,
 }) => {
@@ -79,10 +94,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					const preset = stencil.get(entry.presetId);
 					return preset ? [{ kind: "preset", preset }] : [];
 				}
-				const presets = entry.presetIds
-					.map((id) => stencil.get(id))
-					.filter((preset) => preset !== undefined);
-				return presets.length > 0 ? [{ kind: "category", entry, presets }] : [];
+				const resolved = resolveStencilCategory(entry.category, stencil);
+				return resolved ? [{ kind: "category", ...resolved }] : [];
 			}),
 		[layout, stencil],
 	);
@@ -116,15 +129,30 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						/>
 					) : (
 						<StencilCategoryMenu
-							key={`category:${resolved.entry.id}`}
-							id={resolved.entry.id}
-							label={resolved.entry.label}
-							icon={resolved.entry.icon}
+							key={`category:${resolved.category.id}`}
+							id={resolved.category.id}
+							label={resolved.category.label}
+							icon={resolved.category.icon}
 							presets={resolved.presets}
-							isOpen={openCategoryId === resolved.entry.id}
+							isOpen={openCategoryId === resolved.category.id}
 							activePresetId={activePresetId}
 						/>
 					),
+				)}
+				{hasLibrary && (
+					<>
+						<ToolbarDivider />
+						<ToolbarToggleButton
+							type="button"
+							aria-label={messages.toolbarStencilLibrary}
+							title={messages.toolbarStencilLibrary}
+							aria-expanded={isLibraryOpen}
+							data-part="command:toggleStencilLibrary"
+							isOpen={isLibraryOpen}
+						>
+							<EllipsisIcon />
+						</ToolbarToggleButton>
+					</>
 				)}
 			</ToolbarGroup>
 

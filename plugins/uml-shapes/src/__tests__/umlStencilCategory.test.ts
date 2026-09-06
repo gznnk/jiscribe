@@ -2,7 +2,7 @@ import { createCanvasRegistries } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
 import { umlPlugin } from "../plugin";
-import { umlToolbarEntry } from "../stencil/UmlToolbarEntry";
+import { umlStencilCategory } from "../stencil/UmlStencilCategory";
 
 /**
  * A presetId naming no registered preset is silently skipped at render time, so a
@@ -14,13 +14,11 @@ import { umlToolbarEntry } from "../stencil/UmlToolbarEntry";
  * missing from the flyout is reachable only by hand-writing JSON, and neither the
  * plugin nor the toolbar entry catches that alone.
  */
-const presetIds = (): readonly string[] =>
-	umlToolbarEntry.kind === "category" ? umlToolbarEntry.presetIds : [];
+const presetIds = (): readonly string[] => umlStencilCategory.presetIds;
 
-describe("umlToolbarEntry", () => {
+describe("umlStencilCategory", () => {
 	it("names only presets a canvas with this plugin applied registers", () => {
 		const { stencil } = createCanvasRegistries({ plugins: [umlPlugin] });
-		expect(umlToolbarEntry.kind).toBe("category");
 		const unresolved = presetIds().filter(
 			(presetId) => stencil.get(presetId) === undefined,
 		);

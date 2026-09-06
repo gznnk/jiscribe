@@ -20,7 +20,7 @@ plugins/sticky-shape/
 │   ├── harness/          the page the specs drive — this plugin alone
 │   └── specs/            the Playwright specs
 └── src/
-    ├── index.ts          public exports (plugin, toolbar entry, anything a host needs)
+    ├── index.ts          public exports (plugin, stencil category, anything a host needs)
     ├── plugin.ts         the CanvasPlugin declaration
     ├── doc.ts            the CanvasDocPlugin declaration — headless entry
     ├── definition.ts     the ObjectTypeDefinition (UI half)
@@ -217,13 +217,16 @@ export default createPluginHarnessViteConfig();
 import { mountPluginHarness } from "@jiscribe/canvas-sdk/testing/harness";
 import {
 	annotationPlugin,
-	annotationToolbarEntry,
+	annotationStencilCategory,
 } from "@jiscribe/plugin-annotation-shapes";
 
 // This package's shapes only, so a spec failing here is this package's own fault.
 mountPluginHarness({
 	plugins: [annotationPlugin],
-	toolbarLayout: [{ kind: "preset", presetId: "rect" }, annotationToolbarEntry],
+	toolbarLayout: [
+		{ kind: "preset", presetId: "rect" },
+		{ kind: "category", category: annotationStencilCategory },
+	],
 });
 ```
 
@@ -233,7 +236,7 @@ Two things that file has to get right:
   external author has, and taking it is what proves the package's `exports` suffice on their
   own.
 - **Keep `toolbarLayout` down to what the specs draw** — this plugin's pinned presets or its
-  category entry, plus `{ kind: "preset", presetId: "rect" }`, which is always required
+  category (as a `{ kind: "category", category }` entry), plus `{ kind: "preset", presetId: "rect" }`, which is always required
   because `CanvasDriver.goto()` waits for the "Rectangle" tool button before handing the page
   over. A plugin's presets and categories are absent from the canvas default layout, so
   without a layout the specs cannot reach them at all.
@@ -291,11 +294,16 @@ The playbook, from seven rounds of doing it.
 6. **Wire every host** (below).
 7. **Verify** (below).
 
-Toolbar placement is a separate decision from packaging: a category flyout entry
-(`containerToolbarEntry`, `annotationToolbarEntry`) is owned by the plugin and
-composed by the host into `toolbar.layout`. Plugin categories are not part of
-`DEFAULT_TOOLBAR_LAYOUT`, so a host that uses the default layout unchanged will not
-show the shape until it adds the entry.
+Toolbar placement is a separate decision from packaging: a category
+(`containerStencilCategory`, `annotationStencilCategory`), typed `StencilCategory`,
+is owned by the plugin and composed by the host. One declaration serves two
+places — `stencilLibrary.sections`, where it becomes a section of the shape
+library sidebar, and optionally `toolbar.layout`, where wrapped as
+`{ kind: "category", category }` it becomes a category flyout on the bar. The standard set files every plugin category as a sidebar
+section in `standardStencilLibrarySections` (`packages/standard-shapes`) and pins
+only presets on the bar. Plugin categories are not part of
+`DEFAULT_TOOLBAR_LAYOUT`, so a host that uses the default layout unchanged and
+declares no library will not show the shape until it adds the category.
 
 ## Wiring checklist
 
@@ -306,8 +314,8 @@ UI plugin (`somePlugin`):
 
 - [ ] `apps/canvas-examples/src/examples/plugins.tsx`
 - [ ] `apps/vscode-extension/src/webview/canvasParser.ts`
-- [ ] `apps/vscode-extension/src/webview/index.tsx` (`toolbarLayout`)
-- [ ] `apps/canvas-examples/e2e/harness/main.tsx` (`plugins` and `toolbarLayout`)
+- [ ] `packages/standard-shapes/src/index.ts` (`standardPlugins` and `standardStencilLibrarySections`; the VSCode extension, the MCP viewer and the CLI preview all take the set from there)
+- [ ] `apps/canvas-examples/e2e/harness/main.tsx` (`plugins` and `stencilLibrarySections`)
 
 Headless doc plugin (`someDocPlugin`):
 

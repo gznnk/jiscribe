@@ -7,9 +7,9 @@ import type { CanvasDriver } from "@jiscribe/canvas/testing";
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
  *   throws while the registries are built, leaving nothing rendered)
- * - the toolbar carrying every pinned preset and every category exactly once
- * - each category flyout opening onto its own plugin's presets, with no preset id
- *   showing up in two places
+ * - the toolbar carrying every pinned preset and the one category left on the bar
+ * - the shape library sidebar holding one section per plugin category, each onto
+ *   its own plugin's presets, with no preset id showing up in two sections
  * - shapes from every plugin coexisting in one document
  * - SVG ids staying unique across the canvas once `svgDefs` contributors and
  *   per-object defs are all in play
@@ -26,15 +26,22 @@ const PINNED_PRESET_IDS = [
 	"polygon",
 	"text",
 	"sticky",
-	"markdown",
 ];
 
 /**
- * Category flyouts of the harness toolbar, in layout order. `ownPresetId` is a
- * preset only that category's plugin registers, so finding it inside the flyout
- * proves the category resolved against the right plugin's stencils.
+ * The one category the harness leaves on the bar as a flyout. The others moved into
+ * the shape library sidebar, which is the arrangement the apps ship; this one stays
+ * so both surfaces are covered. `ownPresetId` is a preset only its plugin registers.
  */
-const CATEGORIES = [
+const FLYOUT_CATEGORY = { id: "icon", ownPresetId: "lucideIconUser" };
+
+/**
+ * Sections of the shape library sidebar, in declaration order. `ownPresetId` is a
+ * preset only that section holds, so finding it there proves the section resolved
+ * against the right plugin's stencils.
+ */
+const LIBRARY_SECTIONS = [
+	{ id: "basic", ownPresetId: "markdown" },
 	{ id: "flowchart", ownPresetId: "diamond" },
 	{ id: "uml", ownPresetId: "class" },
 	{ id: "container", ownPresetId: "frame" },
@@ -45,6 +52,9 @@ const CATEGORIES = [
 
 /** Every toolbar category button, pinned presets excluded. */
 const CATEGORY_TOGGLES = '[data-id="stencil-category"][data-part^="toggle:"]';
+
+/** Every sidebar section header, in display order. */
+const LIBRARY_SECTION_HEADERS = `[data-kind="menu"][data-id="stencil-library-panel"] [data-part^="section:"]`;
 
 /** Preset ids of the stencil buttons under `scopeSelector`, in DOM order. */
 async function readPresetIds(
@@ -65,11 +75,112 @@ function findDuplicates(values: string[]): string[] {
 	return [...new Set(values.filter((value, i) => values.indexOf(value) !== i))];
 }
 
+/** Collapses or expands one sidebar section, clicking only when it has to. */
+async function setSectionExpanded(
+	canvas: CanvasDriver,
+	sectionId: string,
+	isExpanded: boolean,
+): Promise<void> {
+	const header = canvas.page.locator(
+		selectors.stencilLibrarySection(sectionId),
+	);
+	const expected = String(isExpanded);
+	if ((await header.getAttribute("aria-expanded")) !== expected) {
+		await header.click();
+		await expect(header).toHaveAttribute("aria-expanded", expected);
+	}
+}
+
+/**
+ * Preset ids of one sidebar section, in DOM order. The sections share one list with
+ * no per-section element to scope to, so the one being read is left expanded and
+ * every other collapsed.
+ */
+async function readSectionPresetIds(
+	canvas: CanvasDriver,
+	sectionId: string,
+): Promise<string[]> {
+	for (const section of LIBRARY_SECTIONS) {
+		await setSectionExpanded(canvas, section.id, section.id === sectionId);
+	}
+	return readPresetIds(canvas, selectors.stencilLibraryPanel);
+}
+
+/** Runs an operation expected to add exactly one shape and returns its data-id. */
+async function captureCreated(
+	canvas: CanvasDriver,
+	presetId: string,
+	add: () => Promise<void>,
+): Promise<string> {
+	const before = await canvas.captureObjects();
+	const beforeIds = new Set(before.map((object) => object.id));
+
+	await add();
+
+	await expect
+		.poll(async () => (await canvas.captureObjects()).length, {
+			message: `${presetId} creates a new shape`,
+		})
+		.toBe(before.length + 1);
+
+	const created = (await canvas.captureObjects()).find(
+		(object) => !beforeIds.has(object.id),
+	);
+	if (!created?.id) {
+		throw new Error(
+			`cannot read the data-id of the shape created by ${presetId}`,
+		);
+	}
+	return created.id;
+}
+
+/**
+ * Picks a shape in the open sidebar and drags it out on the canvas, in the driver's
+ * content coordinates.
+ */
+async function drawFromLibrary(
+	canvas: CanvasDriver,
+	presetId: string,
+	from: { x: number; y: number },
+	to: { x: number; y: number },
+): Promise<string> {
+	return captureCreated(canvas, presetId, async () => {
+		await canvas.page.click(selectors.stencilLibraryPanelItem(presetId));
+		// A sidebar item has no armed cursor of its own, so the canvas's crosshair is
+		// the signal that drawing mode was entered.
+		await expect
+			.poll(() => canvas.isDrawingMode(), {
+				message: `clicking ${presetId} enters drawing mode`,
+			})
+			.toBe(true);
+
+		await canvas.drag(from, to);
+	});
+}
+
+/**
+ * Picks a click-placed shape (`supportsBounds: false`) in the open sidebar. It is
+ * placed at the center of the canvas by the click that picks it, so there is no
+ * crosshair to wait for and nothing to drag.
+ */
+async function placeFromLibrary(
+	canvas: CanvasDriver,
+	presetId: string,
+): Promise<string> {
+	return captureCreated(canvas, presetId, () =>
+		canvas.page.click(selectors.stencilLibraryPanelItem(presetId)),
+	);
+}
+
 /**
  * Draws one shape per plugin into the empty document, each in its own area of the
- * 1440x900 viewport so nothing overlaps (a container swallows what sits inside it,
- * and the ObjectMenu of a selected shape covers the area below it). Returns the
- * new shapes' data-ids in creation order.
+ * canvas so nothing overlaps (a container swallows what sits inside it, and the
+ * ObjectMenu of a selected shape covers the area below it). Returns the new shapes'
+ * data-ids in creation order.
+ *
+ * Every shape comes out of the shape library sidebar, which is where the harness
+ * (like the apps) files everything the plugins contribute. The sidebar is left
+ * closed again at the end, the way a user would leave it.
  *
  * The flowchart representative is multiDocument rather than a plain box because it
  * is the one shipped shape minting per-object SVG ids.
@@ -77,9 +188,11 @@ function findDuplicates(values: string[]): string[] {
 async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	const ids: string[] = [];
 
+	await canvas.openStencilLibrary();
+
 	ids.push(
-		await canvas.drawShapeFromFlyout(
-			"flowchart",
+		await drawFromLibrary(
+			canvas,
 			"multiDocument",
 			{ x: 120, y: 200 },
 			{ x: 260, y: 320 },
@@ -88,8 +201,8 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await canvas.drawShapeFromFlyout(
-			"uml",
+		await drawFromLibrary(
+			canvas,
 			"class",
 			{ x: 300, y: 200 },
 			{ x: 440, y: 320 },
@@ -98,8 +211,8 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await canvas.drawShapeFromFlyout(
-			"general",
+		await drawFromLibrary(
+			canvas,
 			"actor",
 			{ x: 500, y: 200 },
 			{ x: 600, y: 320 },
@@ -108,8 +221,8 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await canvas.drawShapeFromFlyout(
-			"annotation",
+		await drawFromLibrary(
+			canvas,
 			"callout",
 			{ x: 120, y: 400 },
 			{ x: 280, y: 520 },
@@ -118,8 +231,8 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await canvas.drawShapeFromFlyout(
-			"container",
+		await drawFromLibrary(
+			canvas,
 			"frame",
 			{ x: 900, y: 560 },
 			{ x: 1100, y: 700 },
@@ -128,20 +241,27 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	await canvas.deselect();
 
 	ids.push(
-		await canvas.drawShape("Markdown", { x: 320, y: 400 }, { x: 480, y: 520 }),
+		await drawFromLibrary(
+			canvas,
+			"markdown",
+			{ x: 320, y: 400 },
+			{ x: 480, y: 520 },
+		),
 	);
 	await canvas.deselect();
 
 	// Stickies are center-placed on click (no bounds drawing), which lands this one
 	// clear of everything above.
-	ids.push(await canvas.placeShape("Sticky"));
+	ids.push(await placeFromLibrary(canvas, "sticky"));
 	await canvas.deselect();
 
 	// The icon is center-placed too, so it lands under the sticky. Overlap is fine
 	// here: this suite asks whether every plugin's shape coexists in one document,
 	// and a covered element is still a rendered, visible one.
-	ids.push(await canvas.placeShapeFromFlyout("icon", "lucideIconUser"));
+	ids.push(await placeFromLibrary(canvas, "lucideIconUser"));
 	await canvas.deselect();
+
+	await canvas.closeStencilLibrary();
 
 	return ids;
 }
@@ -165,30 +285,45 @@ test.describe("plugin coexistence", () => {
 					(element.getAttribute("data-part") ?? "").slice("toggle:".length),
 				),
 			);
-		expect(categoryIds).toEqual(CATEGORIES.map((category) => category.id));
+		expect(categoryIds).toEqual([FLYOUT_CATEGORY.id]);
 	});
 
-	test("opens every category flyout onto its own plugin's presets", async ({
+	test("fills the shape library with every plugin's own presets", async ({
 		canvas,
 	}) => {
-		const allPresetIds = [...PINNED_PRESET_IDS];
+		await canvas.openStencilLibrary();
 
-		for (const category of CATEGORIES) {
-			await canvas.page.click(selectors.categoryButton(category.id));
-			const flyoutSelector = selectors.categoryFlyout(category.id);
-			await expect(canvas.page.locator(flyoutSelector)).toBeVisible();
+		const sectionIds = await canvas.page
+			.locator(LIBRARY_SECTION_HEADERS)
+			.evaluateAll((elements) =>
+				elements.map((element) =>
+					(element.getAttribute("data-part") ?? "").slice("section:".length),
+				),
+			);
+		expect(sectionIds).toEqual(LIBRARY_SECTIONS.map((section) => section.id));
 
-			const presetIds = await readPresetIds(canvas, flyoutSelector);
-			expect(presetIds).toContain(category.ownPresetId);
+		const allPresetIds: string[] = [];
+		for (const section of LIBRARY_SECTIONS) {
+			const presetIds = await readSectionPresetIds(canvas, section.id);
+			expect(presetIds).toContain(section.ownPresetId);
 			allPresetIds.push(...presetIds);
-
-			await canvas.page.keyboard.press("Escape");
-			await expect(canvas.page.locator(flyoutSelector)).toHaveCount(0);
 		}
 
-		// Every plugin owns a disjoint set of presets, so an id reachable from two
-		// places means two of them claimed the same one.
+		// Every plugin owns a disjoint set of presets, so an id filed under two
+		// sections means two of them claimed the same one.
 		expect(findDuplicates(allPresetIds)).toEqual([]);
+	});
+
+	test("opens the one category left on the toolbar", async ({ canvas }) => {
+		await canvas.page.click(selectors.categoryButton(FLYOUT_CATEGORY.id));
+		const flyoutSelector = selectors.categoryFlyout(FLYOUT_CATEGORY.id);
+		await expect(canvas.page.locator(flyoutSelector)).toBeVisible();
+
+		const presetIds = await readPresetIds(canvas, flyoutSelector);
+		expect(presetIds).toContain(FLYOUT_CATEGORY.ownPresetId);
+
+		await canvas.page.keyboard.press("Escape");
+		await expect(canvas.page.locator(flyoutSelector)).toHaveCount(0);
 	});
 
 	test("holds a shape from every plugin in one document", async ({

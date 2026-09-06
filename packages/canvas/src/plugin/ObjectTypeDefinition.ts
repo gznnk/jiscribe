@@ -159,7 +159,8 @@ export type ObjectTypeDefinition<
 	/**
 	 * Stencils this type contributes to the palette (multiple allowed per type).
 	 * Registration only makes them exist; where they show and in what order is
-	 * decided by `toolbar.layout` (a pinned entry, or a category entry's `presetIds`).
+	 * decided by `toolbar.layout` (a pinned entry, or a category's `presetIds`)
+	 * and `stencilLibrary.sections` (a sidebar section's `presetIds`).
 	 */
 	stencils?: Stencil[];
 

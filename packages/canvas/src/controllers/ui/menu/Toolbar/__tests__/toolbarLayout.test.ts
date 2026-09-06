@@ -2,19 +2,19 @@ import { describe, it, expect } from "vitest";
 
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
 import {
-	DEFAULT_TOOLBAR_LAYOUT,
-	basicToolbarEntry,
-	type ToolbarEntry,
-} from "../toolbarLayout";
+	basicStencilCategory,
+	type StencilCategory,
+} from "../../../objects/StencilCategory";
+import { DEFAULT_TOOLBAR_LAYOUT, type ToolbarEntry } from "../toolbarLayout";
 
 const ALL_ENTRIES: ToolbarEntry[] = [
 	...DEFAULT_TOOLBAR_LAYOUT,
-	basicToolbarEntry,
+	{ kind: "category", category: basicStencilCategory },
 ];
 
 const collectPresetIds = (entries: readonly ToolbarEntry[]): string[] =>
 	entries.flatMap((entry) =>
-		entry.kind === "preset" ? [entry.presetId] : entry.presetIds,
+		entry.kind === "preset" ? [entry.presetId] : entry.category.presetIds,
 	);
 
 describe("DEFAULT_TOOLBAR_LAYOUT", () => {
@@ -43,9 +43,9 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 	});
 
 	it("gives every category a unique id", () => {
-		const categoryIds = ALL_ENTRIES.filter(
-			(entry) => entry.kind === "category",
-		).map((entry) => entry.id);
+		const categoryIds = ALL_ENTRIES.flatMap((entry) =>
+			entry.kind === "category" ? [entry.category.id] : [],
+		);
 		expect(categoryIds).toHaveLength(new Set(categoryIds).size);
 	});
 
@@ -58,54 +58,31 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 
 	/**
 	 * Core owns nothing but the basic primitives, and every one is pinned, so no
-	 * flyout is left to open.
+	 * flyout is left to open (the basic category is for hosts that want one).
 	 */
 	it("opens no category flyout at all", () => {
 		expect(
 			DEFAULT_TOOLBAR_LAYOUT.filter((entry) => entry.kind === "category"),
 		).toEqual([]);
 	});
-
-	it("excludes the basic category, whose members are pinned instead", () => {
-		expect(DEFAULT_TOOLBAR_LAYOUT).not.toContain(basicToolbarEntry);
-	});
-
-	it("carries no plugin category, so a host must opt in explicitly", () => {
-		const categoryIds = DEFAULT_TOOLBAR_LAYOUT.filter(
-			(entry) => entry.kind === "category",
-		).map((entry) => entry.id);
-		expect(categoryIds).not.toContain("annotation");
-		expect(categoryIds).not.toContain("flowchart");
-		expect(categoryIds).not.toContain("container");
-		expect(categoryIds).not.toContain("general");
-	});
 });
 
-describe("toolbar category entries", () => {
-	it.each([["basic", basicToolbarEntry]] as [string, ToolbarEntry][])(
+describe("basicStencilCategory", () => {
+	it.each([["basic", basicStencilCategory]] as [string, StencilCategory][])(
 		"declares %s as a non-empty category",
-		(id, entry) => {
-			expect(entry.kind).toBe("category");
-			if (entry.kind !== "category") {
-				return;
-			}
-			expect(entry.id).toBe(id);
-			expect(entry.presetIds.length).toBeGreaterThan(0);
+		(id, category) => {
+			expect(category.id).toBe(id);
+			expect(category.presetIds.length).toBeGreaterThan(0);
 			// Icons are memo()-wrapped, so they are objects rather than functions.
-			expect(entry.icon).toBeTruthy();
+			expect(category.icon).toBeTruthy();
 		},
 	);
 
-	it("carries an English and Japanese label for every built-in category", () => {
-		for (const entry of [basicToolbarEntry]) {
-			if (entry.kind !== "category") {
-				continue;
-			}
-			expect(typeof entry.label).toBe("object");
-			expect(entry.label).toMatchObject({
-				en: expect.any(String),
-				ja: expect.any(String),
-			});
-		}
+	it("carries an English and Japanese label", () => {
+		expect(typeof basicStencilCategory.label).toBe("object");
+		expect(basicStencilCategory.label).toMatchObject({
+			en: expect.any(String),
+			ja: expect.any(String),
+		});
 	});
 });

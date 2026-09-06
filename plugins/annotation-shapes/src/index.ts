@@ -22,7 +22,7 @@
 // boxes that carry text inside a box, so they use no shared/ and are self-contained in
 // their own folders (a callout tail is {side, position}, a different model from the group
 // marker's direction / tipPosition).
-// The toolbar exposes all 5 shapes under one annotationToolbarEntry (a category).
+// The toolbar exposes all 5 shapes under one annotationStencilCategory.
 export * from "./schema/shared/GroupMarkerFields";
 export {
 	validateGroupMarkerDirection,
@@ -62,7 +62,7 @@ export { BracketIcon } from "./stencil/BracketIcon";
 export { BracketWithStemIcon } from "./stencil/BracketWithStemIcon";
 export { CalloutIcon } from "./stencil/CalloutIcon";
 export { NoteIcon } from "./stencil/NoteIcon";
-export { annotationToolbarEntry } from "./stencil/AnnotationToolbarEntry";
+export { annotationStencilCategory } from "./stencil/AnnotationStencilCategory";
 
 export {
 	braceDefinition,

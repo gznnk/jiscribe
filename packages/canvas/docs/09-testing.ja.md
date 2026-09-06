@@ -145,7 +145,8 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
   `node:child_process`・vite に手を伸ばしており、いずれもページにはバンドルできない
 
 API は `createCanvasPlaywrightConfig({ testDir, harnessCommand })` /
-`createPluginHarnessViteConfig()` / `mountPluginHarness({ plugins, toolbarLayout })` と、
+`createPluginHarnessViteConfig()` /
+`mountPluginHarness({ plugins, toolbarLayout, stencilLibrarySections })` と、
 spec 側の `test` / `expect` / `CanvasDriver` / `selectors`。canvas 自身はキットを相対 import で
 取る（`./e2e/testing-playwright-config`）。SDK 経由にはしない — `canvas → canvas-sdk → canvas`
 の循環こそ、この分離で解消したものだからである。プラグインのスイートを立ち上げる手順は

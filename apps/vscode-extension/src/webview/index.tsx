@@ -5,9 +5,13 @@ import {
 	type CanvasDoc,
 	type CanvasExportImagePayload,
 	type CanvasHandle,
+	type StencilCategory,
 	type ToolbarEntry,
 } from "@jiscribe/canvas";
-import { standardToolbarLayout } from "@jiscribe/standard-shapes";
+import {
+	standardStencilLibrarySections,
+	standardToolbarLayout,
+} from "@jiscribe/standard-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "@jiscribe/canvas/fonts.css";
@@ -30,10 +34,13 @@ import type {
 // (packages/canvas/docs/13-authoring-plugins.md).
 const initialConfig: CanvasConfig = { plugins };
 
-// The annotation / flowchart / container / general / icon categories and the markdown preset are
-// not part of core's default layout (they come from plugins), so the host inserts them —
-// here in the arrangement the shape set itself proposes.
+// The bar pins the six presets the shape set proposes; everything else it ships —
+// the markdown preset and the flowchart / uml / container / general / annotation /
+// icon categories — is reached through the shape library sidebar. Neither is part
+// of core's default layout (they come from plugins), so the host passes both.
 const toolbarLayout: ToolbarEntry[] = standardToolbarLayout;
+const stencilLibrarySections: StencilCategory[] =
+	standardStencilLibrarySections;
 
 /**
  * Type of the API available only in the VSCode Webview environment.
@@ -343,6 +350,7 @@ function App() {
 					syncNonce={docView.syncNonce}
 					initialConfig={mountConfig}
 					toolbar={{ layout: toolbarLayout }}
+					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}

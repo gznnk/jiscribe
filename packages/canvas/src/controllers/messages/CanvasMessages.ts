@@ -13,6 +13,12 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarZoomIn: "Zoom in",
 	toolbarShowShortcutHelp: "Show keyboard shortcuts",
 	toolbarShortcutHelp: "Keyboard shortcuts",
+	toolbarStencilLibrary: "All shapes",
+
+	stencilLibraryTitle: "Shape library",
+	stencilLibraryClose: "Close",
+	stencilLibrarySearchPlaceholder: "Search shapes",
+	stencilLibraryNoMatch: "No matching shapes",
 
 	exportDialogTitle: "Export Image",
 	exportDialogFormat: "Format",

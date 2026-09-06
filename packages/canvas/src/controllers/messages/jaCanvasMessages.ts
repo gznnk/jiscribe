@@ -7,6 +7,12 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomIn: "ズームイン",
 	toolbarShowShortcutHelp: "キーボードショートカットを表示",
 	toolbarShortcutHelp: "キーボードショートカット",
+	toolbarStencilLibrary: "すべての図形",
+
+	stencilLibraryTitle: "図形ライブラリ",
+	stencilLibraryClose: "閉じる",
+	stencilLibrarySearchPlaceholder: "図形を検索",
+	stencilLibraryNoMatch: "一致する図形はありません",
 
 	exportDialogTitle: "画像をエクスポート",
 	exportDialogFormat: "形式",

@@ -133,10 +133,20 @@ export const createCanvasReducer =
 			}
 
 			case "CONTAINER_RESIZE": {
+				// A left edge that moved would carry the drawing with it, since the
+				// screen position of a world point is measured from that edge. Undoing
+				// the move on minX in the same commit keeps the drawing pinned: the
+				// sidebar covers and uncovers the left strip rather than pushing it.
+				const { leftEdgeShift } = action;
+				const shouldCompensate =
+					leftEdgeShift !== undefined && leftEdgeShift !== 0;
 				return {
 					...state,
 					viewport: {
 						...state.viewport,
+						minX: shouldCompensate
+							? state.viewport.minX + leftEdgeShift / state.viewport.zoom
+							: state.viewport.minX,
 						width: action.dimensions.width,
 						height: action.dimensions.height,
 					},

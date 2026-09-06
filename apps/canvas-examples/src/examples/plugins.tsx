@@ -1,29 +1,34 @@
-import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@jiscribe/canvas";
-import { Canvas } from "@jiscribe/canvas";
+import type {
+	CanvasConfig,
+	CanvasDoc,
+	StencilCategory,
+	ToolbarEntry,
+} from "@jiscribe/canvas";
+import { basicStencilCategory, Canvas } from "@jiscribe/canvas";
 import { createCanvasParser } from "@jiscribe/doc";
 import {
 	annotationPlugin,
-	annotationToolbarEntry,
+	annotationStencilCategory,
 } from "@jiscribe/plugin-annotation-shapes";
 import {
 	containerPlugin,
-	containerToolbarEntry,
+	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
 import {
 	flowchartPlugin,
-	flowchartToolbarEntry,
+	flowchartStencilCategory,
 } from "@jiscribe/plugin-flowchart-shapes";
 import {
 	generalPlugin,
-	generalToolbarEntry,
+	generalStencilCategory,
 } from "@jiscribe/plugin-general-shapes";
 import {
 	lucideIconPlugin,
-	lucideIconToolbarEntry,
+	lucideIconStencilCategory,
 } from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
-import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
+import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 // One plugin ships one shape family, complete with its doc schema, its rendering and
 // editing behaviour, and its toolbar stencils. The shapes on this canvas come from:
@@ -56,22 +61,36 @@ const plugins = [
 const initialConfig: CanvasConfig = { plugins };
 const pluginParser = createCanvasParser({ plugins });
 
-// Core's default layout knows nothing of plugin shapes, so the host lays them out: the
-// categories come from the plugins (flowchartToolbarEntry and friends) and the sticky /
-// markdown presets are single-shape entries referenced by preset id.
+// Core's default layout knows nothing of plugin shapes, so the host arranges them, over
+// two surfaces: the bar pins the handful of presets a diagram is mostly built out of, and
+// the shape library sidebar (`stencilLibrary.sections`, behind the bar's "All shapes"
+// toggle) holds the whole set grouped into sections. Both are declared the same way — the
+// categories come from the plugins (flowchartStencilCategory and friends) and single shapes
+// are referenced by preset id.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "text" },
 	{ kind: "preset", presetId: "sticky" },
-	{ kind: "preset", presetId: "markdown" },
-	flowchartToolbarEntry,
-	umlToolbarEntry,
-	containerToolbarEntry,
-	generalToolbarEntry,
-	annotationToolbarEntry,
-	lucideIconToolbarEntry,
+	// One category left on the bar as a flyout: the same object also feeds the sidebar below.
+	{ kind: "category", category: lucideIconStencilCategory },
+];
+
+// The sidebar carries every shape on the canvas: core's primitives (with the two
+// single-shape plugin presets folded in beside them) and one section per plugin category.
+const stencilLibrarySections: StencilCategory[] = [
+	{
+		...basicStencilCategory,
+		presetIds: [...basicStencilCategory.presetIds, "sticky", "markdown"],
+	},
+	flowchartStencilCategory,
+	umlStencilCategory,
+	containerStencilCategory,
+	generalStencilCategory,
+	annotationStencilCategory,
+	lucideIconStencilCategory,
 ];
 
 const legendMarkdown = [
@@ -293,7 +312,7 @@ const pluginsDoc = buildPluginsDoc();
 /**
  * Assembling a canvas out of shape plugins: the eight shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
- * the toolbar to draw more of them.
+ * the shape library ("All shapes" on the toolbar) to draw more of them.
  */
 export function PluginsExample() {
 	return (
@@ -301,6 +320,7 @@ export function PluginsExample() {
 			doc={pluginsDoc}
 			initialConfig={initialConfig}
 			toolbar={{ layout: toolbarLayout }}
+			stencilLibrary={{ sections: stencilLibrarySections }}
 		/>
 	);
 }

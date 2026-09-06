@@ -1,19 +1,19 @@
-import type { ToolbarEntry } from "@jiscribe/canvas";
+import type { StencilCategory } from "@jiscribe/canvas";
 
 import { CloudIcon } from "./CloudIcon";
 
 /**
- * Toolbar category entry for the general shapes. Entries reference presets by
+ * Stencil category for the general shapes. Entries reference presets by
  * string id, so every id resolves against whatever a host has applied — here all
  * of them come from this package's own stencils. The general category is not in
- * the core default layout, so a host composes this into its `toolbar.layout`
- * where it wants the flyout to appear.
+ * the core default layout, so a host composes this into its
+ * `stencilLibrary.sections` (a sidebar section) or, as a `{ kind: "category",
+ * category }` entry, into its `toolbar.layout` (a flyout).
  *
  * The order groups the flyout the way the shapes are reached for: who and where
  * first, then what runs, then what moves between them, then what guards it.
  */
-export const generalToolbarEntry: ToolbarEntry = {
-	kind: "category",
+export const generalStencilCategory: StencilCategory = {
 	id: "general",
 	label: { en: "General", ja: "一般" },
 	icon: CloudIcon,

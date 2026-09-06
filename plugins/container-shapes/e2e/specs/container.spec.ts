@@ -12,13 +12,6 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 const CATEGORY = "container";
 
-/** The canvas computed cursor. crosshair means draw mode is on. */
-async function canvasCursor(canvas: CanvasDriver): Promise<string> {
-	return canvas.page
-		.locator('[data-kind="canvas"]')
-		.evaluate((el) => getComputedStyle(el).cursor);
-}
-
 /** Creates presetId from the container flyout by diagonal drag and returns the new object's {id, tag}. */
 async function createFromFlyout(
 	canvas: CanvasDriver,
@@ -34,10 +27,10 @@ async function createFromFlyout(
 	await expect(item).toBeVisible();
 	await item.click();
 	await expect
-		.poll(() => canvasCursor(canvas), {
+		.poll(() => canvas.isDrawingMode(), {
 			message: `clicking ${presetId} enters draw mode`,
 		})
-		.toBe("crosshair");
+		.toBe(true);
 
 	await canvas.drag(from, to);
 	await expect

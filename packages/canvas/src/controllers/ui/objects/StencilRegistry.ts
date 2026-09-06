@@ -1,7 +1,8 @@
 import type { Stencil } from "./Stencil";
 
 /**
- * Registry that manages the stencils shown in the StencilLibrary (toolbar).
+ * Registry that manages the stencils shown in the StencilLibrary (the toolbar and
+ * the shape library sidebar).
  * Registration happens via `applyObjectDefinition()` in `initializeObjectRegistry()`.
  *
  * It answers only "what exists"; display order (top level and within category

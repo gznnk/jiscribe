@@ -7,6 +7,9 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * (history navigation — see restoreHistorySnapshot — and external sync) or the
  * canvas is initialized. They are not part of CanvasDoc and carry no history.
  *
+ * The shape library sidebar (`stencilLibraryPanel`) is deliberately absent: the panel is
+ * persistent chrome that outlives the document shown next to it.
+ *
  * Kept as a `Pick` so the field list stays type-locked to CanvasControllerState:
  * renaming a field there fails to compile here.
  */

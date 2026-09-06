@@ -1,14 +1,14 @@
-import type { ToolbarEntry } from "@jiscribe/canvas";
+import type { StencilCategory } from "@jiscribe/canvas";
 
 import { RecordIcon } from "./RecordIcon";
 
 /**
- * Toolbar category entry for the UML shapes. The uml category is not in the core
+ * Stencil category for the UML shapes. The uml category is not in the core
  * default layout (plugin-supplied), so a host composes this into its
- * `toolbar.layout` where it wants the flyout to appear.
+ * `stencilLibrary.sections` (a sidebar section) or, as a `{ kind: "category",
+ * category }` entry, into its `toolbar.layout` (a flyout).
  */
-export const umlToolbarEntry: ToolbarEntry = {
-	kind: "category",
+export const umlStencilCategory: StencilCategory = {
 	id: "uml",
 	label: { en: "UML", ja: "UML" },
 	icon: RecordIcon,

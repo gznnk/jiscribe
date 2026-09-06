@@ -2,7 +2,7 @@ import { createCanvasRegistries } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
 import { generalPlugin } from "../plugin";
-import { generalToolbarEntry } from "../stencil/GeneralToolbarEntry";
+import { generalStencilCategory } from "../stencil/GeneralStencilCategory";
 
 /**
  * A presetId naming no registered preset is silently skipped at render time, so
@@ -12,16 +12,14 @@ import { generalToolbarEntry } from "../stencil/GeneralToolbarEntry";
  *
  * The other direction matters just as much: a shape registered in `objects` but
  * missing from the flyout is reachable only by hand-writing JSON. Neither the
- * plugin nor the toolbar entry can catch that alone, since a new shape that is
+ * plugin nor the category can catch that alone, since a new shape that is
  * simply forgotten in both stays consistent with itself.
  */
-const presetIds = (): readonly string[] =>
-	generalToolbarEntry.kind === "category" ? generalToolbarEntry.presetIds : [];
+const presetIds = (): readonly string[] => generalStencilCategory.presetIds;
 
-describe("generalToolbarEntry", () => {
+describe("generalStencilCategory", () => {
 	it("names only presets a canvas with this plugin applied registers", () => {
 		const { stencil } = createCanvasRegistries({ plugins: [generalPlugin] });
-		expect(generalToolbarEntry.kind).toBe("category");
 		const unresolved = presetIds().filter(
 			(presetId) => stencil.get(presetId) === undefined,
 		);

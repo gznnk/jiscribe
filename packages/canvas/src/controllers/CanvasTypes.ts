@@ -237,6 +237,17 @@ export type ScrollBoundsConfig = {
 	padding?: number;
 };
 
+/** State of the shape library sidebar; see CanvasControllerState.stencilLibraryPanel. */
+export type StencilLibraryPanelState = {
+	/** Whether the panel is open. Toggled by the toolbar `…` button and the panel's own close button. */
+	isOpen: boolean;
+	/**
+	 * Ids of the collapsed sections; every section not listed is expanded, so the
+	 * empty array is "all open". Survives closing and reopening the panel.
+	 */
+	collapsedSectionIds: string[];
+};
+
 /**
  * Canvas state extended with undo/redo history for the controller layer.
  *
@@ -401,6 +412,14 @@ export type CanvasControllerState = CanvasState & {
 	 * resetUiState, and by Escape — there is no central clear in handleGesture.
 	 */
 	stencilLibraryOpenCategory: string | null;
+
+	/**
+	 * The shape library sidebar (StencilLibraryPanel). Editor chrome rather than
+	 * part of the document: canvas presses, Escape, selection changes and a doc
+	 * swap (resetUiState / restoreHistorySnapshot) all leave it as it is. Written
+	 * only by the `toggleStencilLibrary` command and StencilLibraryPanelHandler.
+	 */
+	stencilLibraryPanel: StencilLibraryPanelState;
 
 	/**
 	 * Group state covering a multi-selection: while non-null every object in selectedIds is

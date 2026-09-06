@@ -2,6 +2,7 @@ import { ContextMenuHandler } from "./ContextMenuHandler";
 import { ObjectMenuHandler } from "./ObjectMenuHandler";
 import { StencilCategoryToggleHandler } from "./StencilCategoryToggleHandler";
 import { StencilLibraryItemHandler } from "./StencilLibraryItemHandler";
+import { StencilLibraryPanelHandler } from "./StencilLibraryPanelHandler";
 import { ToolbarHandler } from "./ToolbarHandler";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
@@ -16,6 +17,7 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  */
 export const MENU_HANDLERS: readonly GestureHandler[] = [
 	StencilLibraryItemHandler,
+	StencilLibraryPanelHandler,
 	StencilCategoryToggleHandler,
 	ToolbarHandler,
 	ContextMenuHandler,
@@ -25,9 +27,9 @@ export const MENU_HANDLERS: readonly GestureHandler[] = [
 /**
  * Main handler for all menu-level events.
  * Routes each event to the first sub-handler whose supports() accepts it. The
- * sub-handlers split on targetId (stencil-library / stencil-category / toolbar
- * / context-menu / object-menu) and are mutually exclusive, so the array order
- * never decides routing.
+ * sub-handlers split on targetId (stencil-library / stencil-library-panel /
+ * stencil-category / toolbar / context-menu / object-menu) and are mutually
+ * exclusive, so the array order never decides routing.
  */
 export const MenuEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {

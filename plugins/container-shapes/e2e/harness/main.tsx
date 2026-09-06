@@ -1,7 +1,7 @@
 import { mountPluginHarness } from "@jiscribe/canvas-sdk/testing/harness";
 import {
 	containerPlugin,
-	containerToolbarEntry,
+	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
 
 mountPluginHarness({
@@ -9,5 +9,8 @@ mountPluginHarness({
 	// The container specs reach every container stencil through the category flyout, so
 	// the layout only needs that entry. The rect preset is kept because
 	// CanvasDriver.goto() waits for the "Rectangle" tool button.
-	toolbarLayout: [{ kind: "preset", presetId: "rect" }, containerToolbarEntry],
+	toolbarLayout: [
+		{ kind: "preset", presetId: "rect" },
+		{ kind: "category", category: containerStencilCategory },
+	],
 });

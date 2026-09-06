@@ -5,6 +5,7 @@ import { MENU_HANDLERS } from "../../gestures/handlers/menu/MenuEventHandler";
 import { ObjectMenuHandler } from "../../gestures/handlers/menu/ObjectMenuHandler";
 import { StencilCategoryToggleHandler } from "../../gestures/handlers/menu/StencilCategoryToggleHandler";
 import { StencilLibraryItemHandler } from "../../gestures/handlers/menu/StencilLibraryItemHandler";
+import { StencilLibraryPanelHandler } from "../../gestures/handlers/menu/StencilLibraryPanelHandler";
 import { ToolbarHandler } from "../../gestures/handlers/menu/ToolbarHandler";
 import { ConnectorClickHandler } from "../../gestures/handlers/objects/ConnectorClickHandler";
 import { CONNECTOR_HANDLERS } from "../../gestures/handlers/objects/ConnectorEventHandler";
@@ -63,6 +64,11 @@ const TARGETS: Target[] = [
 		targetPart: "toggle:basic",
 	},
 	{ targetKind: "connector", targetId: "c", targetPart: "segment-move:1" },
+	{
+		targetKind: "menu",
+		targetId: "stencil-library-panel",
+		targetPart: "section:flowchart",
+	},
 ];
 
 const LABEL_BOX = TARGETS[9];
@@ -291,6 +297,9 @@ describe("menu sub-handler routing", () => {
 		expect(
 			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[11])),
 		).toBe(StencilCategoryToggleHandler);
+		expect(
+			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[13])),
+		).toBe(StencilLibraryPanelHandler);
 	});
 
 	it("leaves an unknown menu targetId to no sub-handler", () => {

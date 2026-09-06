@@ -47,12 +47,19 @@ const EMPTY_SPOT = { x: 70, y: 820 };
  */
 export class CanvasDriver {
 	/**
-	 * Screen origin (top-left) of the canvas area (the SVG).
+	 * Screen origin (top-left) of the canvas area (the SVG), as of the last measurement.
 	 *
 	 * Every test is written in content coordinates, which are screen coordinates minus this
-	 * origin. The toolbar occupies layout space above, so the canvas starts at screen
-	 * y = toolbar height. Pan and zoom only change the viewBox and never move the SVG element
-	 * itself, so this origin is measured once and stays valid.
+	 * origin. Chrome takes its layout space out of the canvas area — the toolbar above it,
+	 * the shape library sidebar beside it — so the origin moves whenever a piece of chrome
+	 * opens or closes. Pan and zoom never move it: they only change the viewBox.
+	 *
+	 * Every driver operation that converts content coordinates re-measures this first, so its
+	 * input lands where the caller meant even while the sidebar is open. toScreen() and
+	 * toContent() stay synchronous and answer from the last measurement — fresh as of the
+	 * driver call before them, so a spec that moves chrome by clicking the DOM itself and then
+	 * converts reads the old origin. Open and close the sidebar through openStencilLibrary()
+	 * and closeStencilLibrary(), which re-measure.
 	 *
 	 * Coordinates from boundingBox() are screen coordinates — pass them through toContent()
 	 * before handing them to the driver.
@@ -67,8 +74,16 @@ export class CanvasDriver {
 		await expect(
 			this.page.locator(selectors.toolButton("Rectangle")),
 		).toBeVisible();
-		// Measure the screen offset of the canvas area. As a flex child it has real size from
-		// mount, and its top-left sits one toolbar height down.
+		await this.measureOrigin();
+	}
+
+	/**
+	 * Re-read the screen offset of the canvas area. As a flex child it has real size from
+	 * mount, and its top-left sits one toolbar height down and one open sidebar to the right.
+	 * querySelector rather than a locator: the multi-canvas page mounts two of them, and the
+	 * first is the one the driver drives.
+	 */
+	private async measureOrigin() {
 		const origin = await this.page.evaluate(() => {
 			const el = document.querySelector('[data-kind="canvas"]');
 			const rect = el?.getBoundingClientRect();
@@ -79,8 +94,9 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Content coordinates to screen coordinates. Used by the driver's own input methods, and by
-	 * tests that send raw screen coordinates over CDP (multi-touch and the like).
+	 * Content coordinates to screen coordinates, against the origin as of the last driver
+	 * operation. Used by the driver's own input methods, which re-measure first, and by tests
+	 * that send raw screen coordinates over CDP (multi-touch and the like).
 	 */
 	toScreen(point: { x: number; y: number }): { x: number; y: number } {
 		return { x: point.x + this.originX, y: point.y + this.originY };
@@ -144,6 +160,7 @@ export class CanvasDriver {
 		to: { x: number; y: number },
 		steps = 8,
 	) {
+		await this.measureOrigin();
 		await this.dragScreen(this.toScreen(from), this.toScreen(to), steps);
 	}
 
@@ -159,6 +176,7 @@ export class CanvasDriver {
 			ctrl = false,
 		}: { deltaX?: number; deltaY?: number; ctrl?: boolean },
 	) {
+		await this.measureOrigin();
 		const screen = this.toScreen(point);
 		await this.page.mouse.move(screen.x, screen.y);
 		if (ctrl) {
@@ -192,6 +210,7 @@ export class CanvasDriver {
 			shift = false,
 		}: { steps?: number; ctrl?: boolean; shift?: boolean } = {},
 	) {
+		await this.measureOrigin();
 		const fromScreen = this.toScreen(from);
 		const toScreen = this.toScreen(to);
 		await this.page.mouse.move(fromScreen.x, fromScreen.y);
@@ -299,6 +318,7 @@ export class CanvasDriver {
 		steps: number,
 		{ fling = false }: { fling?: boolean },
 	) {
+		await this.measureOrigin();
 		const fromScreen = this.toScreen(from);
 		const toScreen = this.toScreen(to);
 		await this.page.mouse.move(fromScreen.x, fromScreen.y);
@@ -312,6 +332,7 @@ export class CanvasDriver {
 
 	/** Middle-click a content coordinate (#159); asserts nothing about the selection. */
 	async middleClickAt(point: { x: number; y: number }) {
+		await this.measureOrigin();
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y, { button: "middle" });
 	}
@@ -412,14 +433,10 @@ export class CanvasDriver {
 		// Unlike a tool button a flyout item has no armed cursor of its own, so the canvas's
 		// cursor: crosshair is the signal that drawing mode was entered.
 		await expect
-			.poll(
-				() =>
-					this.page
-						.locator('[data-kind="canvas"]')
-						.evaluate((el) => getComputedStyle(el).cursor),
-				{ message: `clicking ${presetId} enters drawing mode` },
-			)
-			.toBe("crosshair");
+			.poll(() => this.isDrawingMode(), {
+				message: `clicking ${presetId} enters drawing mode`,
+			})
+			.toBe(true);
 
 		await this.drag(from, to);
 
@@ -502,6 +519,43 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * Open the shape library sidebar from the toolbar toggle and wait for its panel. The
+	 * panel takes its width out of the canvas area, so the canvas origin is re-measured
+	 * before returning and content coordinates keep meaning the same place.
+	 */
+	async openStencilLibrary() {
+		await this.page.click(selectors.stencilLibraryToggle);
+		await expect(
+			this.page.locator(selectors.stencilLibraryPanel),
+		).toBeVisible();
+		await this.measureOrigin();
+	}
+
+	/**
+	 * Close the sidebar from its own close button, which unmounts it; the counterpart of
+	 * openStencilLibrary, re-measuring the origin the same way.
+	 */
+	async closeStencilLibrary() {
+		await this.page.click(selectors.stencilLibraryPanelClose);
+		await expect(this.page.locator(selectors.stencilLibraryPanel)).toHaveCount(
+			0,
+		);
+		await this.measureOrigin();
+	}
+
+	/**
+	 * Whether a shape is armed to be drawn, read off the canvas cursor (crosshair while armed,
+	 * grab otherwise). It is the canvas that is watched rather than the button that armed it,
+	 * because a stencil item can unmount on the pointerup that picks it.
+	 */
+	async isDrawingMode(): Promise<boolean> {
+		const cursor = await this.page
+			.locator('[data-kind="canvas"]')
+			.evaluate((el) => getComputedStyle(el).cursor);
+		return cursor === "crosshair";
+	}
+
+	/**
 	 * Wait until the gesture recognizer has consumed the pointer events a click just queued.
 	 *
 	 * GestureRecognizer batches pointer input into one requestAnimationFrame run, while
@@ -527,6 +581,7 @@ export class CanvasDriver {
 
 	/** Click a shape to select it and wait for its control handles. */
 	async selectAt(point: { x: number; y: number }) {
+		await this.measureOrigin();
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y);
 		await this.waitForGestureBatch();
@@ -538,6 +593,7 @@ export class CanvasDriver {
 	 * selectAt's assumption of a control handle does not hold, such as connectors.
 	 */
 	async clickAt(point: { x: number; y: number }) {
+		await this.measureOrigin();
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y);
 		await this.waitForGestureBatch();
@@ -548,6 +604,7 @@ export class CanvasDriver {
 	 * skips the coordinate conversion, so additive selection must go through this.
 	 */
 	async ctrlClickAt(point: { x: number; y: number }) {
+		await this.measureOrigin();
 		const screen = this.toScreen(point);
 		await this.page.keyboard.down("Control");
 		await this.page.mouse.click(screen.x, screen.y);
@@ -557,6 +614,7 @@ export class CanvasDriver {
 
 	/** Click empty space to deselect, committing any text edit in progress. */
 	async deselect() {
+		await this.measureOrigin();
 		const screen = this.toScreen(EMPTY_SPOT);
 		await this.page.mouse.click(screen.x, screen.y);
 		await expect(this.page.locator(selectors.control)).toHaveCount(0);
@@ -574,6 +632,7 @@ export class CanvasDriver {
 
 	/** Double-click to open the text editor and type; commit with commitText(). */
 	async typeTextAt(point: { x: number; y: number }, text: string) {
+		await this.measureOrigin();
 		const screen = this.toScreen(point);
 		await this.page.mouse.dblclick(screen.x, screen.y);
 		await this.waitForTextEditor();
@@ -592,6 +651,7 @@ export class CanvasDriver {
 
 	/** Commit a text edit by clicking outside; Escape cancels, so it is not used here. */
 	async commitText() {
+		await this.measureOrigin();
 		const screen = this.toScreen(EMPTY_SPOT);
 		await this.page.mouse.click(screen.x, screen.y);
 		await expect(this.page.locator(selectors.textEditor)).toHaveCount(0);
@@ -1000,6 +1060,7 @@ export class CanvasDriver {
 			throw new Error(`cannot read the position of anchor ${sourceAnchorId}`);
 		}
 		// box is screen coordinates and dropPoint is content coordinates; align on screen for dragScreen.
+		await this.measureOrigin();
 		await this.dragScreen(
 			{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
 			this.toScreen(dropPoint),
@@ -1025,6 +1086,7 @@ export class CanvasDriver {
 
 	/** Right-click a point to open the canvas's own context menu. */
 	async openContextMenu(point: { x: number; y: number }) {
+		await this.measureOrigin();
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y, { button: "right" });
 		await expect(
@@ -1083,6 +1145,7 @@ export class CanvasDriver {
 			throw new Error(`cannot read the position of transform handle ${handle}`);
 		}
 		// The handle box is screen coordinates and `to` is content coordinates; align on screen.
+		await this.measureOrigin();
 		const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 		const toScreen = this.toScreen(to);
 		if (!shift && !ctrl && !inspect) {

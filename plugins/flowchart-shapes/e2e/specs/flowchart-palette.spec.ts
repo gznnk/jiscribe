@@ -13,13 +13,6 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 
 const FLOWCHART = "flowchart";
 
-/** The canvas computed cursor. crosshair means draw mode is on. */
-async function canvasCursor(canvas: CanvasDriver): Promise<string> {
-	return canvas.page
-		.locator('[data-kind="canvas"]')
-		.evaluate((el) => getComputedStyle(el).cursor);
-}
-
 /** Creates one presetId from the flowchart flyout by diagonal drag and returns its SVG tag name. */
 async function createFromFlyout(
 	canvas: CanvasDriver,
@@ -35,10 +28,10 @@ async function createFromFlyout(
 	await expect(item).toBeVisible();
 	await item.click();
 	await expect
-		.poll(() => canvasCursor(canvas), {
+		.poll(() => canvas.isDrawingMode(), {
 			message: `clicking ${presetId} enters draw mode`,
 		})
-		.toBe("crosshair");
+		.toBe(true);
 
 	await canvas.drag(from, to);
 	await expect

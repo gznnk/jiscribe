@@ -25,7 +25,7 @@ export { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightCo
 export { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";
 
 export { ContainerStencils } from "./stencil/ContainerStencils";
-export { containerToolbarEntry } from "./stencil/ContainerToolbarEntry";
+export { containerStencilCategory } from "./stencil/ContainerStencilCategory";
 
 export { containerDefinition } from "./definition";
 export { containerDocDefinition, containerDocPlugin } from "./doc";

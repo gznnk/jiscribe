@@ -10,6 +10,7 @@ import { Canvas, darkCanvasTheme } from "@jiscribe/canvas";
 import type { CanvasConfig } from "@jiscribe/canvas";
 import {
 	standardPlugins,
+	standardStencilLibrarySections,
 	standardToolbarLayout,
 } from "@jiscribe/standard-shapes";
 import { createRoot } from "react-dom/client";
@@ -72,6 +73,7 @@ const mount = async (): Promise<void> => {
 			doc={payload.doc}
 			initialConfig={initialConfig}
 			toolbar={{ layout: standardToolbarLayout }}
+			stencilLibrary={{ sections: standardStencilLibrarySections }}
 		/>,
 	);
 };

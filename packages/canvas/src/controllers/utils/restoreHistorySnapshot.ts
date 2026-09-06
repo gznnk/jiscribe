@@ -24,7 +24,7 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  * What survives the swap is the point of sharing it: the objects come from the
  * snapshot, everything transient is dropped (resetUiState), and a short list of
  * fields is deliberately carried over — the view the user is looking at, what is
- * on the clipboard, an open modal. `commitVersion` is *not* bumped (restoring is
+ * on the clipboard, an open modal, the shape library sidebar. `commitVersion` is *not* bumped (restoring is
  * not a new edit) while `saveVersion` is (the file on disk no longer matches), a
  * pairing that is easy to get wrong in three places and impossible to get wrong
  * in one.
@@ -63,6 +63,9 @@ export const restoreHistorySnapshot = (
 		historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 		internalClipboard: state.internalClipboard,
 		activeModal: state.activeModal, // History navigation must not close an open modal
+		// The shape library sidebar is chrome, not part of the document being
+		// swapped: it stays open, and as collapsed, as the user left it.
+		stencilLibraryPanel: state.stencilLibraryPanel,
 		history,
 	};
 };

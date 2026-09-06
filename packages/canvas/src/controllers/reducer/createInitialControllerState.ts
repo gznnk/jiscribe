@@ -15,7 +15,8 @@ import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
  *
  * `initialCamera` seeds the viewport's pan/zoom at construction so the first
  * paint lands at the host's camera instead of the doc default (0,0). Width/height
- * stay at the mapper default and are corrected by the ResizeObserver.
+ * stay at the mapper default until useContainerResize measures the container in
+ * a layout effect, before the first paint.
  *
  * The seeded camera is left as given even when the wall limits scrolling: only a
  * view scroll of the user's own is limited, so wherever the host starts the view
@@ -53,6 +54,9 @@ export const createInitialControllerState = (
 			measuredView: undefined,
 		},
 		...resetUiState(),
+		// Outside resetUiState: the shape library sidebar is persistent, so a doc
+		// swap must not close it (see CanvasControllerState).
+		stencilLibraryPanel: { isOpen: false, collapsedSectionIds: [] },
 		activeModal: null,
 		commitVersion: 0,
 		saveVersion: 0,

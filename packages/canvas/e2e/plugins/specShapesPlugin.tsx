@@ -24,8 +24,8 @@ import type {
 	CreateObjectType,
 	ObjectFeatures,
 	ObjectTypeDefinition,
+	StencilCategory,
 	StencilIconProps,
-	ToolbarEntry,
 } from "../../src";
 import { BODY_TEXT_SLOT_ID } from "../../src";
 import type { FrameShapeProps, TextEditable } from "../../src/unstable";
@@ -304,7 +304,7 @@ const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
 
 /**
  * The test-only plugin the core e2e harness registers. Registration only makes
- * the stencils exist; `specShapesToolbarEntry` and pinned `pin` / `card` entries
+ * the stencils exist; `specShapesStencilCategory` and pinned `pin` / `card` entries
  * are what put them on the bar.
  */
 export const specShapesPlugin: CanvasPlugin = {
@@ -317,12 +317,11 @@ export const specShapesPlugin: CanvasPlugin = {
 };
 
 /**
- * Category entry holding the `tile` preset, so the flyout spec has a category to
- * open. Composed into the harness `toolbar.layout` the same way a host composes a
- * plugin's own entry.
+ * Category holding the `tile` preset, so the flyout spec has a category to
+ * open. Composed into the harness `toolbar.layout` and `stencilLibrarySections`
+ * the same way a host composes a plugin's own category.
  */
-export const specShapesToolbarEntry: ToolbarEntry = {
-	kind: "category",
+export const specShapesStencilCategory: StencilCategory = {
 	id: "spec",
 	label: "Spec",
 	icon: SpecShapeIcon,

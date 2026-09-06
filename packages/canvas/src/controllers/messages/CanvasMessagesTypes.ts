@@ -12,6 +12,18 @@ export type CanvasMessageStrings = {
 	toolbarShowShortcutHelp: string;
 	/** title (tooltip) of the help (?) button */
 	toolbarShortcutHelp: string;
+	/** title / aria-label of the toggle opening the shape library sidebar */
+	toolbarStencilLibrary: string;
+
+	// Shape library sidebar
+	/** Heading of the sidebar */
+	stencilLibraryTitle: string;
+	/** aria-label of the sidebar's close (×) button */
+	stencilLibraryClose: string;
+	/** placeholder of the sidebar's search box */
+	stencilLibrarySearchPlaceholder: string;
+	/** Shown in place of the sections when a search matches no stencil */
+	stencilLibraryNoMatch: string;
 
 	// Export dialog
 	exportDialogTitle: string;

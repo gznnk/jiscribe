@@ -27,6 +27,15 @@ export type GestureAction = {
 export type ContainerResizeAction = {
 	type: "CONTAINER_RESIZE";
 	dimensions: Dimensions;
+	/**
+	 * Screen pixels the container's left edge moved inside CanvasRoot since the
+	 * last measurement; positive means it moved right (the shape library sidebar
+	 * opening beside the viewport, say). The reducer divides it by the current
+	 * zoom and adds it to `minX`, so the drawing stays pinned to the screen
+	 * instead of being dragged along with the edge. Absent or 0 when the edge
+	 * held still, which is the case for every resize from the right.
+	 */
+	leftEdgeShift?: number;
 };
 
 /**
@@ -54,9 +63,8 @@ export type SetCameraAction = {
  * loaded — at mount, and again whenever another document is swapped in — and
  * only when the host passed no `initialConfig.viewport`.
  *
- * The size travels with the camera because the two must land in the same commit:
- * a fit is only correct against the viewport it was measured for, and the
- * ResizeObserver's own CONTAINER_RESIZE arrives after the first paint.
+ * The size travels with the camera because a fit is only correct against the
+ * size it was computed from, so the two have to land together.
  */
 export type SetViewportAction = {
 	type: "SET_VIEWPORT";

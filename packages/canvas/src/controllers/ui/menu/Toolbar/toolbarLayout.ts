@@ -1,8 +1,4 @@
-import type { ComponentType } from "react";
-
-import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
-import { RectIcon } from "../../objects/primitives/RectIcon";
-import type { StencilIconProps } from "../../objects/Stencil";
+import type { StencilCategory } from "../../objects/StencilCategory";
 
 /**
  * Describes the top-level arrangement of the StencilLibrary section of the toolbar.
@@ -14,40 +10,16 @@ import type { StencilIconProps } from "../../objects/Stencil";
  *
  * The bar is an ordered list of entries mixing two kinds:
  * - `preset`: a shape button pinned directly on the bar (the classic flat display).
- * - `category`: a category button that opens a flyout listing `presetIds` in order.
- *   Its `label` / `icon` are carried inline; `id` keys the flyout open/close state
- *   and resolves a host label override (`messages.stencilCategoryLabels[id]`).
+ * - `category`: a category button that opens a flyout listing the category's
+ *   `presetIds` in order (see {@link StencilCategory}). The same category object
+ *   can also be passed to `stencilLibrary.sections`.
  *
  * Hosts can override the whole list via the `toolbar.layout` Canvas prop; a
  * `presetId` naming no registered preset (e.g. a plugin not applied) is skipped.
  */
 export type ToolbarEntry =
 	| { kind: "preset"; presetId: string }
-	| {
-			kind: "category";
-			id: string;
-			/** A plain string (all locales) or a `LocaleMessages` dictionary. */
-			label: string | LocaleMessages<string>;
-			/** Icon shown on the category button. */
-			icon: ComponentType<StencilIconProps>;
-			presetIds: string[];
-	  };
-
-/**
- * The `basic` primitives as a category entry. Not in `DEFAULT_TOOLBAR_LAYOUT`
- * (its members are pinned directly there); exported for a host that prefers to
- * fold them into a flyout. The category icon reuses a representative shape icon
- * (a dedicated glyph set can replace these later without touching callers);
- * plugins export their own entries (e.g. `flowchartToolbarEntry`,
- * `containerToolbarEntry`, `generalToolbarEntry`).
- */
-export const basicToolbarEntry: ToolbarEntry = {
-	kind: "category",
-	id: "basic",
-	label: { en: "Basic", ja: "基本" },
-	icon: RectIcon,
-	presetIds: ["rect", "ellipse", "polyline", "polygon", "text"],
-};
+	| { kind: "category"; category: StencilCategory };
 
 /**
  * Default toolbar layout: every core preset pinned directly (the classic

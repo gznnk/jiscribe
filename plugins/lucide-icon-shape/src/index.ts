@@ -36,7 +36,7 @@ export { IconPickerMenu } from "./menu/IconPickerMenu";
 
 export { createLucideStencilIcon } from "./stencil/createLucideStencilIcon";
 export { ICON_STENCIL_IDS, IconStencils } from "./stencil/IconStencils";
-export { lucideIconToolbarEntry } from "./stencil/IconToolbarEntry";
+export { lucideIconStencilCategory } from "./stencil/IconStencilCategory";
 
 export { lucideIconDefinition } from "./definition";
 export { lucideIconDocDefinition, lucideIconDocPlugin } from "./doc";

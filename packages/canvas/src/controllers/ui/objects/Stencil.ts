@@ -10,7 +10,8 @@ export type StencilIconProps = {
 };
 
 /**
- * A single item in the stencil palette shown in the StencilLibrary (toolbar).
+ * A single item in the stencil palette (the toolbar's pinned tools and category
+ * flyouts, and the shape library sidebar).
  *
  * Presets are not 1:1 with object types (e.g. "rect" and "process" are both
  * variants of the rect type). Creation always goes through the objectType's

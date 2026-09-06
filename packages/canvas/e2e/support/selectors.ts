@@ -34,12 +34,23 @@ export type ColorSectionId =
 /** Shared by the unscoped and the section-scoped color input selectors below. */
 const CSS_COLOR_INPUT = 'input[placeholder="CSS color"]';
 
+/** Shared by the shape library sidebar selectors below, which all scope into it. */
+const STENCIL_LIBRARY_PANEL =
+	'[data-kind="menu"][data-id="stencil-library-panel"]';
+
+/**
+ * Shared by the toolbar-scoped selectors below. Scoping them matters because while
+ * the sidebar is open every preset it lists is a second button with the same title
+ * and data-part as the pinned one.
+ */
+const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
+
 export const selectors = {
-	/** Toolbar tool button. */
-	toolButton: (tool: ToolTitle) => `button[title="${tool}"]`,
+	/** Toolbar tool button, scoped to the bar so the sidebar's copy cannot match. */
+	toolButton: (tool: ToolTitle) => `${TOOLBAR} button[title="${tool}"]`,
 
 	/** The toolbar bar itself; the only element of the bar carrying data-kind / data-id. */
-	toolbar: '[data-kind="menu"][data-id="toolbar"]',
+	toolbar: TOOLBAR,
 
 	/**
 	 * Toolbar command button (zoom and so on). Written as a descendant selector
@@ -48,7 +59,7 @@ export const selectors = {
 	 * and keeps them apart from the `command:*` parts of the other menus.
 	 */
 	toolbarCommand: (commandId: string) =>
-		`[data-kind="menu"][data-id="toolbar"] [data-part="command:${commandId}"]`,
+		`${TOOLBAR} [data-part="command:${commandId}"]`,
 
 	/** StencilLibrary category button; the toggle that opens a flyout. */
 	categoryButton: (categoryId: string) =>
@@ -58,8 +69,46 @@ export const selectors = {
 	categoryFlyout: (categoryId: string) =>
 		`[data-category-flyout="${categoryId}"]`,
 
-	/** StencilLibrary shape item; pinned and in-flyout share this DOM contract. */
-	shapeItem: (presetId: string) => `[data-part="item:${presetId}"]`,
+	/**
+	 * StencilLibrary shape item; pinned and in-flyout share this DOM contract, and
+	 * both live inside the toolbar, which is what scopes the sidebar's copy out.
+	 */
+	shapeItem: (presetId: string) => `${TOOLBAR} [data-part="item:${presetId}"]`,
+
+	/**
+	 * Toolbar toggle that opens and closes the shape library sidebar. Present only
+	 * when the host declared `stencilLibrary.sections` with something in it, and
+	 * carrying the open state on aria-expanded. Written as a descendant selector for
+	 * the same reason as toolbarCommand.
+	 */
+	stencilLibraryToggle: `${TOOLBAR} [data-part="command:toggleStencilLibrary"]`,
+
+	/**
+	 * The shape library sidebar itself. Mounted only while open, so closed it is
+	 * absent from the DOM: assert `toHaveCount(0)` for closed rather than waiting
+	 * for it to become invisible.
+	 */
+	stencilLibraryPanel: STENCIL_LIBRARY_PANEL,
+
+	/** Close (x) button in the sidebar header. */
+	stencilLibraryPanelClose: `${STENCIL_LIBRARY_PANEL} [data-part="close"]`,
+
+	/**
+	 * Sidebar section header; the disclosure button carrying aria-expanded, whose
+	 * id is the category id the host declared.
+	 */
+	stencilLibrarySection: (sectionId: string) =>
+		`${STENCIL_LIBRARY_PANEL} [data-part="section:${sectionId}"]`,
+
+	/**
+	 * Shape item inside the sidebar. Same DOM contract as shapeItem, scoped to the
+	 * panel so it does not also match the pinned copy on the toolbar.
+	 */
+	stencilLibraryPanelItem: (presetId: string) =>
+		`${STENCIL_LIBRARY_PANEL} [data-part="item:${presetId}"]`,
+
+	/** Search box of the sidebar; filtering collapses the sections into one grid. */
+	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
 
 	/** Shape on the canvas (rect / ellipse / polyline and so on). */
 	object: "[data-kind=object]",
