@@ -119,6 +119,9 @@ importers:
       '@jiscribe/plugin-annotation-shapes':
         specifier: workspace:*
         version: link:../../plugins/annotation-shapes
+      '@jiscribe/plugin-aws-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/aws-shapes
       '@jiscribe/plugin-container-shapes':
         specifier: workspace:*
         version: link:../../plugins/container-shapes
@@ -593,6 +596,9 @@ importers:
       '@jiscribe/doc':
         specifier: workspace:*
         version: link:../doc
+      '@jiscribe/plugin-aws-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/aws-shapes
       '@jiscribe/plugin-lucide-icon-shape':
         specifier: workspace:*
         version: link:../../plugins/lucide-icon-shape
@@ -725,6 +731,9 @@ importers:
       '@jiscribe/plugin-annotation-shapes':
         specifier: workspace:*
         version: link:../../plugins/annotation-shapes
+      '@jiscribe/plugin-aws-shapes':
+        specifier: workspace:*
+        version: link:../../plugins/aws-shapes
       '@jiscribe/plugin-container-shapes':
         specifier: workspace:*
         version: link:../../plugins/container-shapes
@@ -768,6 +777,46 @@ importers:
       '@jiscribe/basic-validators':
         specifier: workspace:*
         version: link:../../packages/basic-validators
+      '@jiscribe/geometry':
+        specifier: workspace:*
+        version: link:../../packages/geometry
+    devDependencies:
+      '@emotion/react':
+        specifier: 'catalog:'
+        version: 11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@7.2.0)
+      '@emotion/styled':
+        specifier: 'catalog:'
+        version: 11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@7.2.0))(@types/react@19.2.18)(react@19.2.8)(supports-color@7.2.0)
+      '@jiscribe/canvas':
+        specifier: workspace:*
+        version: link:../../packages/canvas
+      '@jiscribe/canvas-sdk':
+        specifier: workspace:*
+        version: link:../../packages/canvas-sdk
+      '@jiscribe/doc':
+        specifier: workspace:*
+        version: link:../../packages/doc
+      '@playwright/test':
+        specifier: ^1.62.1
+        version: 1.62.1
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
+      react:
+        specifier: 'catalog:'
+        version: 19.2.8
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@22.20.1)(tsx@4.23.11)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1)(vite@7.3.6(@types/node@22.20.1)(tsx@4.23.11))
+
+  plugins/aws-shapes:
+    dependencies:
       '@jiscribe/geometry':
         specifier: workspace:*
         version: link:../../packages/geometry

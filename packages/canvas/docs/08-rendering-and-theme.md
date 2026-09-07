@@ -158,6 +158,12 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     `fonts.css` loses nothing — with no face to fetch, the load resolves at once.
 - **Standard themes**: `darkCanvasTheme` (the default; its values double as the token fallbacks) and
   `lightCanvasTheme` are exported from the package (`theme/themePresets.ts`).
+- **`colorScheme`**: the one theme field shapes read as a JS value. It names the ground the tokens
+  paint (`"light"` / `"dark"`) for artwork that ships a rendition per ground and cannot be recoloured
+  through tokens — the AWS icons pick their official Light or Dark drawing by it. It is required
+  rather than inferred from `canvasBg`, because a token may be a `var(...)` string the canvas cannot
+  read. A host that keeps its tokens fixed but follows the editor's ground (VSCode) therefore holds one
+  theme per scheme and swaps them.
 - **VSCode mapping layer**: the VSCode host (not this package) maps `--vscode-*` onto the neutral
   tokens by passing `var(--vscode-..., <dark fallback>)` strings as token values
   (`apps/vscode-extension/src/webview/vscodeCanvasTheme.ts`). That is the only remaining VSCode

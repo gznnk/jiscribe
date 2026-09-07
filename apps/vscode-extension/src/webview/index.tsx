@@ -24,7 +24,8 @@ import {
 	type DocViewState,
 	initialDocViewState,
 } from "./docViewState";
-import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
+import { useVscodeColorScheme } from "./useVscodeColorScheme";
+import { vscodeCanvasThemes } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
 	WebviewToExtensionMessage,
@@ -130,6 +131,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
  * failure.
  */
 function App() {
+	const colorScheme = useVscodeColorScheme();
 	const [docView, setDocView] = useState<DocViewState>(initialDocViewState);
 	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
 
@@ -355,7 +357,7 @@ function App() {
 					onCommit={handleCommit}
 					onUndo={handleUndo}
 					onRedo={handleRedo}
-					theme={vscodeCanvasTheme}
+					theme={vscodeCanvasThemes[colorScheme]}
 					ref={canvasRef}
 					onExportImage={handleExportImage}
 				/>

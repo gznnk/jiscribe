@@ -60,6 +60,7 @@ export const darkCanvasTheme: CanvasTheme = {
 		objectSurface: "#252526",
 	},
 	handleDimensions: HANDLE_DIMENSIONS,
+	colorScheme: "dark",
 };
 
 /** Standard light theme. */
@@ -93,4 +94,5 @@ export const lightCanvasTheme: CanvasTheme = {
 		objectSurface: "#f3f3f3",
 	},
 	handleDimensions: HANDLE_DIMENSIONS,
+	colorScheme: "light",
 };

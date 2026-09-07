@@ -113,5 +113,7 @@ The extension also opens `.jiscribe` and the legacy `.jis.json` / `.jiscribe.jso
 MIT © 2026 gznnk. The source lives at
 [github.com/gznnk/jiscribe](https://github.com/gznnk/jiscribe).
 
-This extension bundles third-party open-source software.
-See the bundled `THIRD-PARTY-NOTICES.txt` for their license texts.
+This extension bundles third-party open-source software and, for the AWS
+shapes, the AWS Architecture Icons, which are not open source and are
+redistributed unmodified under AWS's terms. See the bundled
+`THIRD-PARTY-NOTICES.txt` for the license texts and those terms.

@@ -110,6 +110,8 @@ titled one), with the pictogram left to mean "this is the web UI".
 | `record`           | Titled box + row compartments (UML class / ER entity)      | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text (keyed), Transform |
 | `umlPackage`       | Namespace, module, layer                                   | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
 | `umlComponent`     | Component, replaceable part                                | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
+| `awsIcon`          | AWS service / resource icon (a labelled, connectable node) | `x`, `y`, `width`, `height`                                     | Text, Transform (no Stroke)           |
+| `awsGroup`         | AWS boundary frame (VPC, subnet, region, account)          | `x`, `y`, `width`, `height`                                     | Stroke, Fill, Text, Transform         |
 | `polyline`         | Open line                                                  | `points`                                                        | Stroke                                |
 | `polygon`          | Closed shape from points                                   | `points`                                                        | Stroke, Fill                          |
 | `group`            | Container of child objects                                 | none                                                            | Transform                             |
@@ -403,6 +405,60 @@ Container ("frame") shape: a titled rectangle that marks off a region of the dia
 | `height`       | `number` | `160`    | Bounding-box height (px).                                                                      |
 | `headerFill`   | `string` | `"auto"` | Header band color, independent of `fill` (the body). `"auto"` follows the theme surface color. |
 | `headerHeight` | `number` | `28`     | Title band height in px, measured down from the top edge (min 1, capped at `height`).          |
+
+---
+
+### `awsIcon`
+
+One icon from the official AWS Architecture Icons set, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. `icon` names the picture, as a layer-prefixed kebab-case name — "service/aws-lambda" (an AWS service), "resource/amazon-ec2/instance" (a resource of a service), "general/user" (a generic figure). Common short names resolve too ("lambda", "s3", "ec2", "alb", "igw"), as does a name with the "amazon-"/"aws-" prefix or the layer prefix dropped where that is unambiguous; a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself, so keep it to the short service name ("Lambda", "S3"). There is no stroke or fill: AWS forbids recolouring its icons. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Put these inside an awsGroup frame to show which VPC or subnet they live in. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "aws-icon-1",
+	"type": "awsIcon",
+	"x": 200,
+	"y": 150,
+	"width": 64,
+	"height": 64,
+	"icon": "s3",
+	"text": "S3"
+}
+```
+
+| Field    | Type     | Default                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------- | -------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`      | `number` | `0`                    | X of the bounding box's top-left.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `y`      | `number` | `0`                    | Y of the bounding box's top-left.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `width`  | `number` | `64`                   | Bounding-box width (px).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `height` | `number` | `64`                   | Bounding-box height (px).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `icon`   | `string` | `"service/amazon-ec2"` | Which icon to draw, as a layer-prefixed kebab-case name from the official AWS Architecture Icons set: `service/aws-lambda` (an AWS service), `resource/amazon-ec2/instance` (a resource of a service), `general/user` (a generic figure), `group/region` (a boundary badge). Short names resolve too (`lambda`, `s3`, `ec2`, `alb`, `igw`), as does a name with the `amazon-` / `aws-` prefix or the layer prefix dropped where that is unambiguous; a name that resolves to nothing is rejected with the nearest candidates named. |
+
+---
+
+### `awsGroup`
+
+A boundary frame of an AWS architecture diagram: the VPC, subnet, availability zone or account that the icons inside belong to. `kind` picks which one, and the border colour, the line style and the corner badge all follow from it — one of: aws-cloud, aws-cloud-plain, region, availability-zone, vpc, public-subnet, private-subnet, security-group, auto-scaling-group, aws-account, corporate-data-center, server-contents, ec2-instance-contents, spot-fleet, iot-greengrass-deployment, iot-greengrass, elastic-beanstalk-container, step-functions-workflow, generic. `text` is the frame's title, drawn at the top left beside the badge, never in the body. Objects go inside it by geometry alone: give them coordinates within the box and place them after the frame in `root` so they paint on top. The body is click-through, so the icons lying over it stay selectable, and the frame does not carry its contents when it moves — wrap them in a `group` when they must move together. Nest them the way AWS does: aws-cloud > region > vpc > public-subnet / private-subnet. Setting `stroke` or `strokeDashType` overrides what the kind would have chosen. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "aws-group-1",
+	"type": "awsGroup",
+	"x": 80,
+	"y": 60,
+	"width": 400,
+	"height": 260,
+	"kind": "vpc",
+	"text": "VPC 10.0.0.0/16"
+}
+```
+
+| Field    | Type     | Default     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------- | -------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`      | `number` | `0`         | X of the bounding box's top-left.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `y`      | `number` | `0`         | Y of the bounding box's top-left.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `width`  | `number` | `320`       | Bounding-box width (px).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `height` | `number` | `200`       | Bounding-box height (px).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `kind`   | `string` | `"generic"` | Which boundary this is. The border color, the line style and the corner badge all follow from it. One of `aws-cloud`, `aws-cloud-plain`, `region`, `availability-zone`, `vpc`, `public-subnet`, `private-subnet`, `security-group`, `auto-scaling-group`, `aws-account`, `corporate-data-center`, `server-contents`, `ec2-instance-contents`, `spot-fleet`, `iot-greengrass-deployment`, `iot-greengrass`, `elastic-beanstalk-container`, `step-functions-workflow`, `generic`. Setting `stroke` or `strokeDashType` overrides what the kind would have chosen. |
 
 ---
 

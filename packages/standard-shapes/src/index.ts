@@ -1,4 +1,4 @@
-// The standard shape set as a host mounts it: the eight plugins a `<Canvas>` is
+// The standard shape set as a host mounts it: the nine plugins a `<Canvas>` is
 // configured with, plus the two declarations that make their stencils reachable —
 // the toolbar arrangement and the shape library sidebar. The headless half lives
 // behind ./doc and pulls in no react.
@@ -15,6 +15,11 @@ import {
 	annotationPlugin,
 	annotationStencilCategory,
 } from "@jiscribe/plugin-annotation-shapes";
+import {
+	awsGroupStencilCategory,
+	awsShapesPlugin,
+	awsStencilCategory,
+} from "@jiscribe/plugin-aws-shapes";
 import {
 	containerPlugin,
 	containerStencilCategory,
@@ -36,7 +41,7 @@ import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 /**
- * The eight plugins of the standard shape set, in the same order as
+ * The nine plugins of the standard shape set, in the same order as
  * `standardDocPlugins`. Pass to `CanvasConfig.plugins`; a shape whose plugin is
  * missing is simply not drawn, so this array and the one the parser is given
  * have to describe the same set.
@@ -50,12 +55,13 @@ export const standardPlugins: readonly CanvasPlugin[] = [
 	generalPlugin,
 	annotationPlugin,
 	lucideIconPlugin,
+	awsShapesPlugin,
 ];
 
 /**
  * The toolbar arrangement the standard set is drawn with: the six presets a
  * diagram is mostly built out of, pinned straight on the bar. Everything else the
- * set ships — the `markdown` preset and the six plugin categories — is reached
+ * set ships — the `markdown` preset and the eight plugin categories — is reached
  * through the shape library sidebar instead, so pass
  * `standardStencilLibrarySections` alongside this or those shapes become
  * undrawable by hand.
@@ -78,7 +84,8 @@ export const standardToolbarLayout: ToolbarEntry[] = [
 
 /**
  * The sections of the shape library sidebar for the standard set, in display
- * order: the primitives first, then one section per plugin category. Pass to
+ * order: the primitives first, then one section per plugin category (aws-shapes
+ * contributing two — its icons and the frames drawn around them). Pass to
  * `Canvas`'s `stencilLibrary.sections` beside {@link standardToolbarLayout} —
  * the bar pins only the six most-used presets, and this is where the rest of the
  * set lives.
@@ -100,4 +107,6 @@ export const standardStencilLibrarySections: StencilCategory[] = [
 	generalStencilCategory,
 	annotationStencilCategory,
 	lucideIconStencilCategory,
+	awsStencilCategory,
+	awsGroupStencilCategory,
 ];

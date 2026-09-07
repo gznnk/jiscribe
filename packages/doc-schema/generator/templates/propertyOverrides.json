@@ -1,7 +1,7 @@
 {
 	"brace": {
 		"direction": {
-			"description": "Which way the tip points, away from the shapes being grouped: the arms reach the opposite edge, where those shapes are. \"left\" is the typographic \"{\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions — use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
+			"description": "Which way the tip points, away from the shapes being grouped: the arms reach the opposite edge, where those shapes are. \"left\" is the typographic \"{\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions \u2014 use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
 			"type": "string",
 			"enum": ["left", "right", "up", "down"]
 		},
@@ -14,7 +14,7 @@
 	},
 	"bracketWithStem": {
 		"direction": {
-			"description": "Which way the stem points, away from the shapes being grouped: the feet reach the opposite edge, where those shapes are. \"left\" is the typographic \"[\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions — use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
+			"description": "Which way the stem points, away from the shapes being grouped: the feet reach the opposite edge, where those shapes are. \"left\" is the typographic \"[\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions \u2014 use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
 			"type": "string",
 			"enum": ["left", "right", "up", "down"]
 		},
@@ -27,7 +27,7 @@
 	},
 	"bracket": {
 		"direction": {
-			"description": "Which side the spine sits on, away from the shapes being grouped: the feet reach the opposite edge, where those shapes are. \"left\" is the typographic \"[\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions — use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
+			"description": "Which side the spine sits on, away from the shapes being grouped: the feet reach the opposite edge, where those shapes are. \"left\" is the typographic \"[\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions \u2014 use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
 			"type": "string",
 			"enum": ["left", "right", "up", "down"]
 		}
@@ -72,7 +72,7 @@
 			"enum": ["label", "block"]
 		},
 		"width": {
-			"description": "Box width in pixels, padding included, that the text wraps in. Required with `textLayout: \"block\"` and allowed only there — the label layout measures its own width, and a width on it is invalid. There is no `height` field in either layout: the height always follows from the text.",
+			"description": "Box width in pixels, padding included, that the text wraps in. Required with `textLayout: \"block\"` and allowed only there \u2014 the label layout measures its own width, and a width on it is invalid. There is no `height` field in either layout: the height always follows from the text.",
 			"type": "number",
 			"minimum": 0
 		},
@@ -94,9 +94,31 @@
 	},
 	"lucideIcon": {
 		"icon": {
-			"description": "Which icon to draw, as a kebab-case name from the bundled Lucide set (1767 icons). Any name in that set is accepted, not only the ones listed below. A superseded name (\"user-circle\") or another spelling (\"fileText\", \"file_text\") resolves to the current one, and a name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set (\"account_circle\", \"document-text\") — those resolve to nothing. Commonly wanted names — {{COMMON_ICON_GROUPS}}. Omitted = \"star\".",
+			"description": "Which icon to draw, as a kebab-case name from the bundled Lucide set (1767 icons). Any name in that set is accepted, not only the ones listed below. A superseded name (\"user-circle\") or another spelling (\"fileText\", \"file_text\") resolves to the current one, and a name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set (\"account_circle\", \"document-text\") \u2014 those resolve to nothing. Commonly wanted names \u2014 {{COMMON_ICON_GROUPS}}. Omitted = \"star\".",
 			"type": "string",
 			"default": "star"
+		}
+	},
+	"awsIcon": {
+		"icon": {
+			"description": "Which icon to draw, as a layer-prefixed kebab-case name from the official AWS Architecture Icons set: \"service/<service>\" for an AWS service (\"service/aws-lambda\"), \"resource/<service>/<resource>\" for a resource of one (\"resource/amazon-ec2/instance\"), \"general/<thing>\" for a generic figure (\"general/user\"), \"group/<boundary>\" for a boundary badge (\"group/region\"). The short names people say resolve too (\"lambda\", \"s3\", \"ec2\", \"alb\", \"igw\", \"nat\"), as does a name with the \"amazon-\" / \"aws-\" prefix or the layer prefix dropped wherever that is unambiguous (\"ec2/instance\", \"cloudfront\"). A name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set. Omitted = \"service/amazon-ec2\".",
+			"type": "string",
+			"default": "service/amazon-ec2",
+			"examples": [
+				"service/aws-lambda",
+				"service/amazon-simple-storage-service",
+				"resource/amazon-ec2/instance",
+				"resource/amazon-vpc/internet-gateway",
+				"general/user"
+			]
+		}
+	},
+	"awsGroup": {
+		"kind": {
+			"description": "Which boundary this frame is. The border color, the line style and the corner badge all follow from it, and nesting them the way AWS does (aws-cloud > region > vpc > public-subnet / private-subnet) is what makes the diagram read. Setting `stroke` or `strokeDashType` overrides what the kind would have chosen. Omitted = \"generic\", a frame tied to no AWS service.",
+			"type": "string",
+			"enum": "{{AWS_GROUP_KINDS}}",
+			"default": "generic"
 		}
 	}
 }

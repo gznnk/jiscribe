@@ -2,7 +2,7 @@ import { test, expect, selectors } from "@jiscribe/canvas/testing";
 import type { CanvasDriver } from "@jiscribe/canvas/testing";
 
 /**
- * All eight shipped plugins registered on one canvas. Each plugin's own e2e suite
+ * All nine shipped plugins registered on one canvas. Each plugin's own e2e suite
  * loads a harness holding that plugin alone, so nothing there can see what only
  * breaks when they share a canvas. That is all this suite owns:
  * - a canvas mounting at all with every plugin applied (a type claimed twice
@@ -36,6 +36,12 @@ const PINNED_PRESET_IDS = [
 const FLYOUT_CATEGORY = { id: "icon", ownPresetId: "lucideIconUser" };
 
 /**
+ * The awsIcon preset the aws section is found by and both AWS icons are placed from.
+ * Any one would do; S3 is picked because it is a shape every AWS diagram carries.
+ */
+const AWS_S3_PRESET_ID = "awsIconServiceAmazonSimpleStorageService";
+
+/**
  * Sections of the shape library sidebar, in declaration order. `ownPresetId` is a
  * preset only that section holds, so finding it there proves the section resolved
  * against the right plugin's stencils.
@@ -48,6 +54,8 @@ const LIBRARY_SECTIONS = [
 	{ id: "general", ownPresetId: "actor" },
 	{ id: "annotation", ownPresetId: "callout" },
 	{ id: "icon", ownPresetId: "lucideIconUser" },
+	{ id: "aws", ownPresetId: AWS_S3_PRESET_ID },
+	{ id: "aws-group", ownPresetId: "awsGroupVpc" },
 ];
 
 /** Every toolbar category button, pinned presets excluded. */
@@ -259,6 +267,24 @@ async function drawOneShapePerPlugin(canvas: CanvasDriver): Promise<string[]> {
 	// here: this suite asks whether every plugin's shape coexists in one document,
 	// and a covered element is still a rendered, visible one.
 	ids.push(await placeFromLibrary(canvas, "lucideIconUser"));
+	await canvas.deselect();
+
+	ids.push(
+		await drawFromLibrary(
+			canvas,
+			"awsGroupVpc",
+			{ x: 120, y: 560 },
+			{ x: 400, y: 700 },
+		),
+	);
+	await canvas.deselect();
+
+	// Two of the same AWS icon, both center-placed: the icon drawing rewrites the
+	// SVG ids it carries per object, so a second copy of one icon is what tells a
+	// working rewrite from one document-wide set of ids shared by every instance.
+	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
+	await canvas.deselect();
+	ids.push(await placeFromLibrary(canvas, AWS_S3_PRESET_ID));
 	await canvas.deselect();
 
 	await canvas.closeStencilLibrary();

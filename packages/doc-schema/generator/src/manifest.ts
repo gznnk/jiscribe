@@ -61,6 +61,10 @@ export const CANONICAL_TYPE_ORDER = [
 	// The rest of uml-shapes: notation shapes that are one box each, unlike record
 	"umlPackage",
 	"umlComponent",
+	// The two shapes of aws-shapes: one AWS Architecture Icon, and the boundary
+	// frame drawn around a group of them
+	"awsIcon",
+	"awsGroup",
 	"polyline",
 	"polygon",
 	"group",
@@ -128,6 +132,8 @@ export const DETAIL_SECTION_TYPES = [
 	"bracketWithStem",
 	"bracket",
 	"container",
+	"awsIcon",
+	"awsGroup",
 ] as const;
 
 /**

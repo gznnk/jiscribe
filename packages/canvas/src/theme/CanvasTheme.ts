@@ -107,8 +107,18 @@ export type CanvasHandleDimensions = {
 	connectionAnchorOffset: number;
 };
 
+/**
+ * Which ground the theme's colors are meant to sit on. Not derivable from the
+ * tokens (a host may map them to variables of its own), and not a CSS value
+ * either: it is read in JS by drawings that ship a light and a dark rendition
+ * of the same picture and have to choose between them.
+ */
+export type CanvasColorScheme = "light" | "dark";
+
 /** The full theme a host can inject via the Canvas `theme` prop. */
 export type CanvasTheme = {
 	tokens: CanvasThemeTokens;
 	handleDimensions: CanvasHandleDimensions;
+	/** Which of the two renditions a two-rendition drawing picks. */
+	colorScheme: CanvasColorScheme;
 };

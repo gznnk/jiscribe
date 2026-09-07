@@ -73,23 +73,23 @@ consumers that already name that path.
 
 ## What is in this repository
 
-| Package                      | What it is                                                                                |
-| ---------------------------- | ----------------------------------------------------------------------------------------- |
-| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                          |
-| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser and its editing ops        |
-| `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API             |
-| `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)              |
-| `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                             |
-| `@jiscribe/basic-validators` | Primitive runtime validators                                                              |
-| `@jiscribe/utility-types`    | Shared TypeScript utility types                                                           |
-| `@jiscribe/doc-schema`       | Generated JSON Schema and AI-facing reference for the shipped shape set                   |
-| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied          |
-| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)           |
-| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)         |
-| `plugins/*`                  | The shipped shape sets — flowchart, UML, container, general, annotation, sticky, markdown |
-| `apps/canvas-examples`       | Integration examples (one example = one file)                                             |
-| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                           |
-| `apps/vscode-extension`      | The Jiscribe VSCode extension                                                             |
+| Package                      | What it is                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `@jiscribe/canvas`           | The engine: rendering, gestures, commands, state                                                             |
+| `@jiscribe/doc`              | The headless document layer: the `CanvasDoc` model, its parser and its editing ops                           |
+| `@jiscribe/canvas-sdk`       | Shape-authoring kit for plugin authors, written against the canvas public API                                |
+| `@jiscribe/geometry`         | Geometry types and calculations (rects, ellipses, transforms, intersections)                                 |
+| `@jiscribe/markdown`         | Markdown rendering used by the markdown shape                                                                |
+| `@jiscribe/basic-validators` | Primitive runtime validators                                                                                 |
+| `@jiscribe/utility-types`    | Shared TypeScript utility types                                                                              |
+| `@jiscribe/doc-schema`       | Generated JSON Schema and AI-facing reference for the shipped shape set                                      |
+| `@jiscribe/ai-tools`         | The canvas tool set an AI can call — declared free of any transport, and applied                             |
+| `@jiscribe/standard-shapes`  | The shipped shape set, bundled once for every host (doc + presentation entries)                              |
+| `@jiscribe/doc-tools`        | Validate / measure / diagnose over the standard set (Node text measurer included)                            |
+| `plugins/*`                  | The shipped shape sets — flowchart, UML, container, general, annotation, sticky, markdown, Lucide icons, AWS |
+| `apps/canvas-examples`       | Integration examples (one example = one file)                                                                |
+| `apps/mcp`                   | MCP server: the tool set over stdio, with a local canvas viewer                                              |
+| `apps/vscode-extension`      | The Jiscribe VSCode extension                                                                                |
 
 The `plugins/` directory is deliberately treated as _external_: those packages
 may only use the public API of `@jiscribe/canvas` and `@jiscribe/canvas-sdk`,
@@ -130,6 +130,14 @@ everything else you need to get a change merged.
 
 Note that most in-code comments and some design documents are written in
 Japanese; English is fine for issues and pull requests.
+
+## Third-party assets
+
+The AWS shape set (`plugins/aws-shapes`) ships the drawings of the **AWS
+Architecture Icons**, © Amazon Web Services, Inc. or its affiliates. **The MIT
+license below does not cover them**: they are used under AWS's own terms,
+redistributed unmodified with attribution, and must not be modified. See
+[`plugins/aws-shapes/LICENSE-ICONS.md`](./plugins/aws-shapes/LICENSE-ICONS.md).
 
 ## License
 

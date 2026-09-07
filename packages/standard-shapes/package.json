@@ -2,7 +2,7 @@
 	"name": "@jiscribe/standard-shapes",
 	"version": "0.0.0",
 	"private": true,
-	"description": "The shipped shape set as one package: the eight standard shape plugins, bundled once for every host to register",
+	"description": "The shipped shape set as one package: the nine standard shape plugins, bundled once for every host to register",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {
@@ -18,6 +18,7 @@
 	},
 	"dependencies": {
 		"@jiscribe/plugin-annotation-shapes": "workspace:*",
+		"@jiscribe/plugin-aws-shapes": "workspace:*",
 		"@jiscribe/plugin-container-shapes": "workspace:*",
 		"@jiscribe/plugin-flowchart-shapes": "workspace:*",
 		"@jiscribe/plugin-general-shapes": "workspace:*",

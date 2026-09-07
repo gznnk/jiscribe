@@ -1,10 +1,11 @@
 THIRD-PARTY SOFTWARE NOTICES
 ============================
 
-The Jiscribe extension bundles the following third-party open-source
-packages — code compiled into the extension, the Lucide icon drawings
-generated into it, and the font files shipped alongside it. Their license
-texts are reproduced below.
+The Jiscribe extension bundles the following third-party software and
+assets — code compiled into the extension, the icon drawings generated into
+it, and the font files shipped alongside it. Their license texts are
+reproduced below. All of them are open source except the AWS Architecture
+Icons, whose section states the terms they are redistributed under.
 
 Package list:
   - @babel/runtime@7.29.7 (MIT)
@@ -26,6 +27,7 @@ Package list:
   - @fontsource/source-code-pro@5.3.0 (OFL-1.1)
   - @fontsource/source-sans-3@5.3.0 (OFL-1.1)
   - @fontsource/source-serif-4@5.3.0 (OFL-1.1)
+  - AWS Architecture Icons 2026-07-31 (AWS terms, not open source)
   - dompurify@3.4.13 ((MPL-2.0 OR Apache-2.0))
   - entities@8.0.0 (BSD-2-Clause)
   - hoist-non-react-statics@3.3.2 (BSD-3-Clause)
@@ -476,6 +478,42 @@ INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
 DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
+
+----------------------------------------------------------------------
+AWS Architecture Icons (release 2026-07-31) — AWS terms, not open source
+----------------------------------------------------------------------
+
+The drawings this package ships in
+`plugins/aws-shapes/src/schema/icon/iconData.generated.ts` are
+generated from the **AWS Architecture Icons** asset package (release
+2026-07-31).
+
+AWS Architecture Icons are © Amazon Web Services, Inc. or its affiliates, and
+are used under the AWS terms published at
+<https://aws.amazon.com/architecture/icons/>. **The MIT license this repository
+is under does not cover them.** They are redistributed here the way AWS Labs
+itself redistributes them (see `awslabs/aws-icons-for-plantuml`, whose icons are
+made available under CC-BY-ND 2.0): unmodified, with attribution.
+
+**The icons must not be modified.** Nothing in the pipeline that produced the
+data module changes what is drawn: no coordinate is rounded, no fill is
+substituted, and where AWS ships a light and a dark rendition of a drawing both
+are kept and the theme picks between them. Only the technical embedding is
+adjusted — `<title>` elements, `xmlns` attributes and clipPaths that clip the
+whole viewBox (no-ops) are dropped, the ids that survive are rewritten so that
+several icons can share one document, and attribute names carry React's
+spelling. `plugins/aws-shapes/scripts/generateIconData.mjs` is the whole of that
+pipeline.
+
+The `awsIcon` shape offers no stroke and no fill for the same reason: an icon
+cannot be recoloured from the editor.
+
+Where the assets came from:
+
+    https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip
+
+Amazon Web Services, AWS, and the service names this package carries as icon
+names are trademarks of Amazon.com, Inc. or its affiliates.
 
 ----------------------------------------------------------------------
 dompurify@3.4.13 — (MPL-2.0 OR Apache-2.0)

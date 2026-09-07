@@ -9,6 +9,7 @@ import {
 	TRANSFORM_STYLE_KEYS,
 	type ObjectDocDefinition,
 } from "@jiscribe/doc";
+import { AWS_GROUP_KINDS } from "@jiscribe/plugin-aws-shapes/doc";
 import { COMMON_ICON_GROUPS } from "@jiscribe/plugin-lucide-icon-shape/doc";
 
 import {
@@ -35,6 +36,17 @@ const DESCRIPTION_TOKENS: Readonly<Record<string, string>> = {
 	COMMON_ICON_GROUPS: COMMON_ICON_GROUPS.map(
 		(group) => `${group.label}: ${group.names.join(", ")}`,
 	).join("; "),
+	AWS_GROUP_KINDS: AWS_GROUP_KINDS.join(", "),
+};
+
+/**
+ * The same for a whole `enum`, which a template writes as the token string in
+ * place of the array. An unknown token throws rather than being left alone: a
+ * leftover `{{...}}` in a description is merely loud, but one in an `enum` is a
+ * schema that rejects every value.
+ */
+const ENUM_TOKENS: Readonly<Record<string, readonly string[]>> = {
+	AWS_GROUP_KINDS,
 };
 
 const expandDescriptionTokens = (node: JsonSchemaNode): JsonSchemaNode => {
@@ -51,6 +63,19 @@ const expandDescriptionTokens = (node: JsonSchemaNode): JsonSchemaNode => {
 	};
 };
 
+const expandEnumToken = (node: JsonSchemaNode): JsonSchemaNode => {
+	const values = node.enum;
+	if (typeof values !== "string") {
+		return node;
+	}
+	const token = /^\{\{(\w+)\}\}$/.exec(values)?.[1];
+	const expanded = token === undefined ? undefined : ENUM_TOKENS[token];
+	if (expanded === undefined) {
+		throw new Error(`No enum is declared for the token ${values}`);
+	}
+	return { ...node, enum: [...expanded] };
+};
+
 const propertyOverrides = Object.fromEntries(
 	Object.entries(
 		JSON.parse(
@@ -61,7 +86,7 @@ const propertyOverrides = Object.fromEntries(
 		Object.fromEntries(
 			Object.entries(properties).map(([name, node]) => [
 				name,
-				expandDescriptionTokens(node),
+				expandDescriptionTokens(expandEnumToken(node)),
 			]),
 		),
 	]),

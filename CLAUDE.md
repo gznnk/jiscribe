@@ -27,7 +27,7 @@ packages/
   ai-tools/          the canvas tool set an AI can call: the declaration, and the applying side under ./apply (node) and ./client (browser)
   standard-shapes/   the shipped shape set, bundled once for every host (doc + presentation entries)
   doc-tools/         validate / measure / diagnose over the standard set (Node text measurer included)
-plugins/             flowchart, uml, container, general, annotation, sticky, markdown, lucide-icon — each with its own e2e suite
+plugins/             flowchart, uml, container, general, annotation, sticky, markdown, lucide-icon, aws — each with its own e2e suite
 apps/
   canvas-examples/   integration examples (one example = one file) + the plugin-coexistence e2e suite
   vscode-extension/  the VSCode extension
@@ -35,10 +35,10 @@ apps/
   mcp/               the MCP server: the tool set over stdio, plus a local canvas viewer people can edit in
 ```
 
-Playwright e2e is spread over ten suites, one per package that owns shapes:
+Playwright e2e is spread over eleven suites, one per package that owns shapes:
 `packages/canvas/e2e/` (core, on a harness registering no shipped plugin),
 `plugins/<name>/e2e/` (that plugin alone), and `apps/canvas-examples/e2e/` (one spec:
-all eight plugins on a single canvas). Each has its own `playwright.config.ts` and runs
+all nine plugins on a single canvas). Each has its own `playwright.config.ts` and runs
 as `pnpm --filter <package> test:e2e`. They share canvas's kit, which plugins reach
 through `@jiscribe/canvas-sdk/testing/*` — see `packages/canvas/docs/09-testing.md`.
 
@@ -74,7 +74,7 @@ Then, by impact:
   `defaults`): run `pnpm generate:schema` and commit the regenerated
   `packages/doc-schema/assets/`, or CI's `check:schema` fails on the drift.
 - **Anything the VSCode extension ships** (a bundled dependency's version, a
-  font family, the Lucide icon set): run `pnpm build:vscode` and then
+  font family, the Lucide or AWS icon set): run `pnpm build:vscode` and then
   `pnpm generate:notices`, and commit the regenerated
   `apps/vscode-extension/THIRD-PARTY-NOTICES.txt`, or CI's `check:notices`
   fails on the drift. It reads the built bundle, so the build has to come

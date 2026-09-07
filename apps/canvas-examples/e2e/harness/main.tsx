@@ -5,6 +5,11 @@ import {
 	annotationStencilCategory,
 } from "@jiscribe/plugin-annotation-shapes";
 import {
+	awsGroupStencilCategory,
+	awsShapesPlugin,
+	awsStencilCategory,
+} from "@jiscribe/plugin-aws-shapes";
+import {
 	containerPlugin,
 	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
@@ -35,7 +40,7 @@ import "katex/dist/katex.min.css";
 // category left on it as a flyout so that mechanism stays covered, and the shape library
 // sidebar holding the whole set as sections. The shipped hosts leave no flyout on the bar
 // (standardToolbarLayout pins the six presets and nothing else). The markdown / sticky
-// presets and the six categories are all plugin-supplied and absent from core's default
+// presets and the eight categories are all plugin-supplied and absent from core's default
 // layout.
 mountPluginHarness({
 	plugins: [
@@ -47,6 +52,7 @@ mountPluginHarness({
 		generalPlugin,
 		annotationPlugin,
 		lucideIconPlugin,
+		awsShapesPlugin,
 	],
 	toolbarLayout: [
 		{ kind: "preset", presetId: "rect" },
@@ -68,5 +74,7 @@ mountPluginHarness({
 		generalStencilCategory,
 		annotationStencilCategory,
 		lucideIconStencilCategory,
+		awsStencilCategory,
+		awsGroupStencilCategory,
 	],
 });

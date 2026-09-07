@@ -1,4 +1,5 @@
 import { supportsAutoHeight, type ObjectDocDefinition } from "@jiscribe/doc";
+import { AWS_GROUP_KINDS } from "@jiscribe/plugin-aws-shapes/doc";
 
 import {
 	CANONICAL_TYPE_ORDER,
@@ -97,6 +98,26 @@ const REFERENCE_EXAMPLES: Readonly<Record<string, Record<string, unknown>>> = {
 		stroke: "auto",
 		strokeWidth: 2,
 	},
+	awsIcon: {
+		id: "aws-icon-1",
+		type: "awsIcon",
+		x: 200,
+		y: 150,
+		width: 64,
+		height: 64,
+		icon: "s3",
+		text: "S3",
+	},
+	awsGroup: {
+		id: "aws-group-1",
+		type: "awsGroup",
+		x: 80,
+		y: 60,
+		width: 400,
+		height: 260,
+		kind: "vpc",
+		text: "VPC 10.0.0.0/16",
+	},
 };
 
 /** JSON example for the grouped catalog section (one representative type). */
@@ -139,6 +160,12 @@ const EXTRA_FIELD_ROWS: Readonly<Record<string, string[]>> = {
 	container: [
 		'| `headerFill` | `string` | `"auto"` | Header band color, independent of `fill` (the body). `"auto"` follows the theme surface color. |',
 		"| `headerHeight` | `number` | `28` | Title band height in px, measured down from the top edge (min 1, capped at `height`). |",
+	],
+	awsIcon: [
+		'| `icon` | `string` | `"service/amazon-ec2"` | Which icon to draw, as a layer-prefixed kebab-case name from the official AWS Architecture Icons set: `service/aws-lambda` (an AWS service), `resource/amazon-ec2/instance` (a resource of a service), `general/user` (a generic figure), `group/region` (a boundary badge). Short names resolve too (`lambda`, `s3`, `ec2`, `alb`, `igw`), as does a name with the `amazon-` / `aws-` prefix or the layer prefix dropped where that is unambiguous; a name that resolves to nothing is rejected with the nearest candidates named. |',
+	],
+	awsGroup: [
+		`| \`kind\` | \`string\` | \`"generic"\` | Which boundary this is. The border color, the line style and the corner badge all follow from it. One of ${AWS_GROUP_KINDS.map((kind) => `\`${kind}\``).join(", ")}. Setting \`stroke\` or \`strokeDashType\` overrides what the kind would have chosen. |`,
 	],
 };
 

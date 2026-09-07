@@ -71,23 +71,23 @@ export function App() {
 
 ## リポジトリの構成
 
-| パッケージ                   | 内容                                                                                |
-| ---------------------------- | ----------------------------------------------------------------------------------- |
-| `@jiscribe/canvas`           | エンジン本体。描画、ジェスチャー、コマンド、状態                                    |
-| `@jiscribe/doc`              | ヘッドレスなドキュメント層。`CanvasDoc` モデルとそのパーサー・編集 ops              |
-| `@jiscribe/canvas-sdk`       | プラグイン作者向けの図形オーサリングキット。canvas の公開 API だけで書かれている    |
-| `@jiscribe/geometry`         | 幾何型と幾何計算（矩形、楕円、変換、交差判定）                                      |
-| `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                           |
-| `@jiscribe/basic-validators` | プリミティブの実行時バリデーター                                                    |
-| `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                  |
-| `@jiscribe/doc-schema`       | 標準図形セットの生成済み JSON Schema と AI 向けリファレンス                         |
-| `@jiscribe/ai-tools`         | AI が呼べるキャンバスツールの宣言（トランスポート非依存）                           |
-| `@jiscribe/standard-shapes`  | 出荷図形セットの正本（doc 面 / presentation 面の 2 エントリ）                       |
-| `@jiscribe/doc-tools`        | 標準セットに対する検証・計測・診断（Node 計測バックエンド込み）                     |
-| `plugins/*`                  | 標準の図形セット — flowchart、UML、container、general、annotation、sticky、markdown |
-| `apps/canvas-examples`       | 統合サンプル（1 サンプル = 1 ファイル）                                             |
-| `apps/mcp`                   | MCP サーバー。stdio でツールを配り、ローカルにキャンバスビューアを立てる            |
-| `apps/vscode-extension`      | Jiscribe の VSCode 拡張                                                             |
+| パッケージ                   | 内容                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `@jiscribe/canvas`           | エンジン本体。描画、ジェスチャー、コマンド、状態                                                          |
+| `@jiscribe/doc`              | ヘッドレスなドキュメント層。`CanvasDoc` モデルとそのパーサー・編集 ops                                    |
+| `@jiscribe/canvas-sdk`       | プラグイン作者向けの図形オーサリングキット。canvas の公開 API だけで書かれている                          |
+| `@jiscribe/geometry`         | 幾何型と幾何計算（矩形、楕円、変換、交差判定）                                                            |
+| `@jiscribe/markdown`         | Markdown 図形が使う Markdown レンダリング                                                                 |
+| `@jiscribe/basic-validators` | プリミティブの実行時バリデーター                                                                          |
+| `@jiscribe/utility-types`    | 共有の TypeScript ユーティリティ型                                                                        |
+| `@jiscribe/doc-schema`       | 標準図形セットの生成済み JSON Schema と AI 向けリファレンス                                               |
+| `@jiscribe/ai-tools`         | AI が呼べるキャンバスツールの宣言（トランスポート非依存）                                                 |
+| `@jiscribe/standard-shapes`  | 出荷図形セットの正本（doc 面 / presentation 面の 2 エントリ）                                             |
+| `@jiscribe/doc-tools`        | 標準セットに対する検証・計測・診断（Node 計測バックエンド込み）                                           |
+| `plugins/*`                  | 標準の図形セット — flowchart、UML、container、general、annotation、sticky、markdown、Lucide アイコン、AWS |
+| `apps/canvas-examples`       | 統合サンプル（1 サンプル = 1 ファイル）                                                                   |
+| `apps/mcp`                   | MCP サーバー。stdio でツールを配り、ローカルにキャンバスビューアを立てる                                  |
+| `apps/vscode-extension`      | Jiscribe の VSCode 拡張                                                                                   |
 
 `plugins/` ディレクトリは意図的に*外部*として扱っている。これらのパッケージは
 `@jiscribe/canvas` と `@jiscribe/canvas-sdk` の公開 API しか使えず、それは ESLint で
@@ -126,6 +126,14 @@ pnpm test:e2e          # Playwright の全スイート（コア・各プラグ�
 
 コード内コメントの多くと一部の設計ドキュメントは日本語で書かれているが、Issue と
 Pull Request は英語でも構わない。
+
+## 同梱している第三者の素材
+
+AWS 図形セット（`plugins/aws-shapes`）は **AWS Architecture Icons** の図を同梱して
+いる。これは Amazon Web Services, Inc. またはその関連会社の資産で、**下記の MIT
+ライセンスは及ばない**。AWS の利用条件に従い、無改変・帰属表示付きで再配布している
+ものなので、改変してはならない。詳細は
+[`plugins/aws-shapes/LICENSE-ICONS.md`](./plugins/aws-shapes/LICENSE-ICONS.md)。
 
 ## ライセンス
 

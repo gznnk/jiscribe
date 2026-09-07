@@ -84,6 +84,7 @@ export type {
 	CanvasTheme,
 	CanvasThemeTokens,
 	CanvasHandleDimensions,
+	CanvasColorScheme,
 } from "./theme/CanvasTheme";
 export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
 export type { Viewport } from "./rendering/Viewport";
