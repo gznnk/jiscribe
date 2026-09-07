@@ -1,6 +1,7 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
+import { INITIAL_VIEWPORT } from "../../../constants/viewport";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
 import { createInitialControllerState } from "../createInitialControllerState";
@@ -54,12 +55,13 @@ describe("createInitialControllerState", () => {
 		expect(a.history).not.toBe(b.history);
 	});
 
-	it("keeps the doc-derived default viewport when no initialCamera is given", () => {
+	it("starts at INITIAL_VIEWPORT when no initialCamera is given", () => {
 		const state = createInitialControllerState(docWithRect, registries);
 
-		// Mapper default: pan at origin, zoom 1 (width/height are placeholders the
-		// ResizeObserver corrects at runtime).
-		expect(state.viewport).toMatchObject({ minX: 0, minY: 0, zoom: 1 });
+		expect(state.viewport).toEqual(INITIAL_VIEWPORT);
+		// A copy, so freezing or replacing one canvas's viewport cannot reach the
+		// constant every other canvas starts from.
+		expect(state.viewport).not.toBe(INITIAL_VIEWPORT);
 	});
 
 	it("seeds the viewport camera from initialCamera without touching width/height", () => {
@@ -72,7 +74,7 @@ describe("createInitialControllerState", () => {
 
 		// Camera adopted so the first paint lands at the host's pan/zoom (no flash).
 		expect(state.viewport).toMatchObject({ minX: 10, minY: 20, zoom: 2 });
-		// Width/height stay the mapper default (host does not control pixel size).
+		// Width/height stay the placeholder (host does not control pixel size).
 		expect(state.viewport.width).toBe(base.viewport.width);
 		expect(state.viewport.height).toBe(base.viewport.height);
 	});

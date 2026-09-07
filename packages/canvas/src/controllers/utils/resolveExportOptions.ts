@@ -8,6 +8,7 @@ import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
 import { calcVisibleWorldRect } from "./calcVisibleWorldRect";
 import type { BuildExportSvgOptions, RasterizeSvgOptions } from "../../export";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { Viewport } from "../../rendering/Viewport";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
@@ -99,7 +100,7 @@ type ResolvedExportRegion = {
 
 /** Resolves a {@link CanvasExportRegion} against the state it is measured in. */
 const resolveExportRegion = (
-	state: Pick<CanvasState, "objects" | "viewport">,
+	state: Pick<CanvasState, "objects"> & { viewport: Viewport },
 	visualBounds: Pick<ObjectVisualBoundsRegistry, "get"> | null | undefined,
 	region: CanvasExportRegion,
 	margin: ResolvedViewPadding,
@@ -149,7 +150,9 @@ const resolveExportRegion = (
  * @param options - Region / margin / source embedding / background overrides
  */
 export const resolveExportOptions = (
-	state: Pick<CanvasState, "objects" | "rootIds" | "viewport" | "view">,
+	state: Pick<CanvasState, "objects" | "rootIds" | "view"> & {
+		viewport: Viewport;
+	},
 	objectMapper: ObjectMapperRegistry,
 	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
 	{

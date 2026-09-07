@@ -4,8 +4,8 @@ import {
 } from "@jiscribe/doc/model/objects/types/RichText";
 
 import type { CanvasAction } from "./CanvasActions";
-import { isSameCamera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
@@ -255,7 +255,6 @@ export const createCanvasReducer =
 				// Record the current present into past, then update present.
 				// Clear future (to prevent redoing to an old state after the external change).
 				// Since the objects are swapped out, clear all UI state as well (selection, in-progress operations, etc.).
-				// Only viewport is kept (to preserve the user's current view).
 				return {
 					...state,
 					objects: action.payload.objects,

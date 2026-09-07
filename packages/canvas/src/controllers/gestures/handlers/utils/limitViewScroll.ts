@@ -1,8 +1,8 @@
-import { isSameCamera } from "../../../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
 import { calcScrollBounds } from "../../../utils/calcScrollBounds";
 import { clampScrolledCamera } from "../../../utils/clampScrolledCamera";
+import { isSameCamera } from "../../../utils/isSameCamera";
 import { resolveScrollWallPadding } from "../../../utils/resolveScrollWallPadding";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 

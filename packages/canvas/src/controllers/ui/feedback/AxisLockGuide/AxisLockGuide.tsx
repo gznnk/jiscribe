@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
-import type { Viewport } from "../../../../states/canvas/Viewport";
+import type { Viewport } from "../../../../rendering/Viewport";
 import type { AxisLockFeedback } from "../../../CanvasTypes";
 
 type AxisLockGuideProps = {

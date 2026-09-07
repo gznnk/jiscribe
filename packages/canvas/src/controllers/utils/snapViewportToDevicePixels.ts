@@ -1,4 +1,4 @@
-import type { Viewport } from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
 
 /**
  * The camera moved onto the device pixel grid, for drawing only.

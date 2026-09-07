@@ -3,7 +3,7 @@ import { roundToDecimal } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { ZOOM } from "../../constants/zoom";
-import type { Viewport } from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
 
 type FitOptions = {
 	/** Viewport width in screen px. */

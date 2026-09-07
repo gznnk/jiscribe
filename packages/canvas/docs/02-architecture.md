@@ -22,7 +22,7 @@ packages/canvas/src/
 ├── png-source.ts           # re-export shim onto @jiscribe/doc/png-source
 ├── svg-source.ts           # re-export shim onto @jiscribe/doc/svg-source
 ├── states/                 # runtime state types (State model) + Mapper
-│   ├── canvas/             # CanvasState / CanvasMapper / Viewport
+│   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # base / primitives / connector / annotations (State + Mapper)
 │   └── registry/           # ObjectMapperRegistry / ObjectStateValidatorRegistry
 ├── controllers/            # state management + business logic
@@ -35,7 +35,7 @@ packages/canvas/src/
 │   ├── registries/         # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
 │   ├── ui/                 # UI control (transform controls, menus, icons) incl. StencilRegistry / ObjectMenuRegistry
 │   └── utils/
-├── rendering/              # pure rendering components (layers / objects / defs)
+├── rendering/              # pure rendering components (layers / objects / defs) + the Viewport type
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
 └── constants/              # theme.ts / zoom.ts, etc.

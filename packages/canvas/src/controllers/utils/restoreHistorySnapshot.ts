@@ -52,7 +52,7 @@ export const restoreHistorySnapshot = (
 	return {
 		...restoredState,
 		...resetUiState(),
-		viewport: state.viewport, // Preserve viewport
+		viewport: state.viewport,
 		// Only the host's half of the wall is carried over; the rest of the entry is
 		// the measurement cache, and limitViewScroll notices the swapped objects and
 		// `view` and re-measures on the next view scroll.

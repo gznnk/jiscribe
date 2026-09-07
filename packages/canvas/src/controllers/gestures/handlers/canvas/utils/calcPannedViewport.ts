@@ -1,7 +1,7 @@
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 
-import type { Viewport } from "../../../../../states/canvas/Viewport";
+import type { Viewport } from "../../../../../rendering/Viewport";
 
 /**
  * Viewport panned so the content follows the pointer (grab scroll / touch pan).

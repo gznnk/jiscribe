@@ -3,12 +3,14 @@ import type React from "react";
 
 import { ContentGroup, Svg } from "./CanvasViewStyled";
 import { CanvasDefs } from "./defs/CanvasDefs";
-import type { CanvasState } from "../states/canvas/CanvasState";
 import { deriveGridLineColor } from "./layers/background/deriveGridLineColor";
 import { Grid } from "./layers/background/Grid";
 import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
+import type { Viewport } from "./Viewport";
+import type { CanvasState } from "../states/canvas/CanvasState";
 
 type CanvasViewProps = {
+	viewport: Viewport;
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	children?: React.ReactNode;
 	textEditObjectId?: string | null;
@@ -40,7 +42,7 @@ type CanvasViewProps = {
 	 * (see the layout effect below).
 	 */
 	surfaceColor?: string;
-} & Pick<CanvasState, "objects" | "rootIds" | "viewport" | "background">;
+} & Pick<CanvasState, "objects" | "rootIds" | "background">;
 
 /**
  * Not memoized on purpose: Canvas passes the overlay layers as `children`,

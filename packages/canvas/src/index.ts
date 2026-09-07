@@ -86,8 +86,8 @@ export type {
 	CanvasHandleDimensions,
 } from "./theme/CanvasTheme";
 export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
-export type { Camera, Viewport } from "./states/canvas/Viewport";
-export type { ScrollBoundsConfig } from "./controllers/CanvasTypes";
+export type { Viewport } from "./rendering/Viewport";
+export type { Camera, ScrollBoundsConfig } from "./controllers/CanvasTypes";
 export type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 // A UI consumer reads `view` to decide whether to pass settings of its own
 // (`initialConfig.viewport` overrules `view.open`, `initialConfig.scrollBounds`

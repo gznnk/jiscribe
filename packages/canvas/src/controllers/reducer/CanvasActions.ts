@@ -1,9 +1,10 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { Dimensions } from "@jiscribe/geometry";
 
+import type { Viewport } from "../../rendering/Viewport";
 import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { Camera, Viewport } from "../../states/canvas/Viewport";
 import type { CanvasGestureHandling } from "../CanvasGestureHandling";
+import type { Camera } from "../CanvasTypes";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 import type { TextEditFormat } from "../utils/toggleTextEditFormat";

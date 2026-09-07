@@ -4,8 +4,8 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
-import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { Stencil } from "./ui/objects/Stencil";
 import type { ObjectState } from "../states/objects/base/ObjectState";
@@ -208,6 +208,12 @@ export type DragKind =
 	| "other";
 
 /**
+ * The host-controllable part of the viewport (pan + zoom). Width/height are
+ * excluded: they are container-measured, not host-set.
+ */
+export type Camera = Pick<Viewport, "minX" | "minY" | "zoom">;
+
+/**
  * How far the canvas may be scrolled, set once at mount through
  * `initialConfig.scrollBounds`.
  *
@@ -255,6 +261,12 @@ export type StencilLibraryPanelState = {
  * passed to the reducer/handler/command tree as an explicit `registries` argument (#165).
  */
 export type CanvasControllerState = CanvasState & {
+	/**
+	 * Where the canvas is looked at from: width/height as useContainerResize
+	 * measures the container, pan/zoom as the host and the view gestures move it.
+	 */
+	viewport: Viewport;
+
 	history: HistoryState;
 
 	selectedIds: string[];

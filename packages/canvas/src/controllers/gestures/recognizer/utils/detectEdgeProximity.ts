@@ -1,4 +1,4 @@
-import type { Viewport } from "../../../../states/canvas/Viewport";
+import type { Viewport } from "../../../../rendering/Viewport";
 import { AUTO_SCROLL_THRESHOLD } from "../GestureRecognizerConstants";
 
 /**

@@ -22,7 +22,7 @@ packages/canvas/src/
 ├── png-source.ts           # @jiscribe/doc/png-source への re-export shim
 ├── svg-source.ts           # @jiscribe/doc/svg-source への re-export shim
 ├── states/                 # ランタイム状態型（State モデル）+ Mapper
-│   ├── canvas/             # CanvasState / CanvasMapper / Viewport
+│   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # base / primitives / connector / annotations（State + Mapper）
 │   └── registry/           # ObjectMapperRegistry / ObjectStateValidatorRegistry
 ├── controllers/            # 状態管理 + ビジネスロジック
@@ -35,7 +35,7 @@ packages/canvas/src/
 │   ├── registries/         # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
 │   ├── ui/                 # 変形コントロール・メニュー・アイコンなど UI 制御（StencilRegistry / ObjectMenuRegistry を含む）
 │   └── utils/
-├── rendering/              # 純粋な描画コンポーネント（layers / objects / defs）
+├── rendering/              # 純粋な描画コンポーネント（layers / objects / defs）+ Viewport 型
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
 └── constants/              # theme.ts / zoom.ts など

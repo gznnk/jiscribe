@@ -1,8 +1,12 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 
+import { INITIAL_VIEWPORT } from "../../constants/viewport";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
-import type { Camera } from "../../states/canvas/Viewport";
-import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
+import type {
+	Camera,
+	CanvasControllerState,
+	ScrollBoundsConfig,
+} from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resetUiState } from "../utils/resetUiState";
 import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
@@ -13,10 +17,11 @@ import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
  * Both production (useCanvasReducer) and integration tests share this so the
  * default values of the initial state do not drift apart.
  *
- * `initialCamera` seeds the viewport's pan/zoom at construction so the first
- * paint lands at the host's camera instead of the doc default (0,0). Width/height
- * stay at the mapper default until useContainerResize measures the container in
- * a layout effect, before the first paint.
+ * The viewport starts at {@link INITIAL_VIEWPORT}; `initialCamera` seeds its
+ * pan/zoom at construction so the first paint lands at the host's camera
+ * instead of the origin. Width/height stay at the placeholder until
+ * useContainerResize measures the container in a layout effect, before the
+ * first paint.
  *
  * The seeded camera is left as given even when the wall limits scrolling: only a
  * view scroll of the user's own is limited, so wherever the host starts the view
@@ -35,9 +40,9 @@ export const createInitialControllerState = (
 	);
 	const viewport =
 		initialCamera === undefined
-			? baseState.viewport
+			? { ...INITIAL_VIEWPORT }
 			: {
-					...baseState.viewport,
+					...INITIAL_VIEWPORT,
 					minX: initialCamera.minX,
 					minY: initialCamera.minY,
 					zoom: initialCamera.zoom,

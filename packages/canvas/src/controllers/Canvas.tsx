@@ -21,6 +21,7 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
+import type { Camera } from "./CanvasTypes";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
@@ -71,23 +72,22 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
-import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
-import { collectDocFontRequests } from "./utils/collectDocFontRequests";
-import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
-import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
-import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
-import type { Camera } from "../states/canvas/Viewport";
 import type {
 	ObjectMenuPropertyUpdater,
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
+import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
+import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
+import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
 type CanvasProps = {

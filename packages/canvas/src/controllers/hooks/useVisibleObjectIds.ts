@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
-import type { Viewport } from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { calcVisibleObjectIds } from "../utils/calcVisibleObjectIds";
 import type { VisibilityBBoxCache } from "../utils/calcVisibleObjectIds";
