@@ -1,9 +1,8 @@
 import { memo, useRef } from "react";
 
 import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
-import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
-import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
@@ -18,6 +17,7 @@ import {
 	ObjectMenuButton,
 } from "../../ObjectMenuStyled";
 import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
 
 const SECTION_ID = "line-style";
 
@@ -39,11 +39,12 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const strokeWidth = getSelectedStrokeWidth(
-		canvasState,
+	const { strokeWidth, strokeDashType } = getSelectedShapeStyle(
+		getEffectiveSelectedIds(canvasState),
+		canvasState.objects,
 		objectShapeStyleDefaults,
+		"stroke",
 	);
-	const strokeDashType = getSelectedStrokeDashType(canvasState);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

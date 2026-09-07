@@ -8,6 +8,14 @@ import type { StrokeDashType } from "../model/objects/types/StrokeDashType";
 import { SHAPE_STYLE_FALLBACK } from "../model/objects/utils/shapeStyleFallback";
 
 /**
+ * One of the two groups a shape's style fields fall into, named by the
+ * ObjectFeatures flag that enables it: `"stroke"` covers StrokeStyleDoc (color,
+ * width, dash), `"fill"` covers FillStyleDoc. The unit a type declares support
+ * in, and the unit the style menus search the selection by.
+ */
+export type ShapeStyleGroup = "stroke" | "fill";
+
+/**
  * A type's stroke / fill defaults: whichever of the two style groups its
  * features enable, holding only the fields its creation defaults actually set.
  */

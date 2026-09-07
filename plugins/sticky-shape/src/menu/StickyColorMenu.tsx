@@ -1,18 +1,14 @@
-import type {
-	ObjectMenuItemProps,
-	ObjectShapeStyleDefaultsRegistry,
-} from "@jiscribe/canvas";
+import type { ObjectMenuItemProps } from "@jiscribe/canvas";
 import {
 	ColorPreviewIcon,
 	ObjectMenuButton,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
-	getFirstSelectedWithFeature,
+	getSelectedShapeStyle,
 	useCanvasMessages,
 	useObjectShapeStyleDefaultsRegistry,
 	useSubmenuPosition,
 } from "@jiscribe/canvas-sdk";
-import { SHAPE_STYLE_FALLBACK } from "@jiscribe/canvas-sdk/doc";
 import { memo, useRef } from "react";
 
 import { STICKY_PRESET_COLORS } from "./StickyColorConstants";
@@ -23,26 +19,6 @@ import {
 } from "./StickyColorMenuStyled";
 
 const SECTION_ID = "sticky-color";
-
-/**
- * The paper color the menu shows: the selected note's own, resolved through the
- * type's defaults (ObjectShapeStyleDefaultsRegistry) so a document that never
- * wrote `fill` still shows the yellow the note is drawn with.
- */
-const getSelectedFillColor = (
-	selectedIds: string[],
-	objects: ObjectMenuItemProps["objects"],
-	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
-): string => {
-	const selected = getFirstSelectedWithFeature(selectedIds, objects, "fill");
-	if (selected === undefined) {
-		return SHAPE_STYLE_FALLBACK.fill;
-	}
-	const ownFill = (selected as Record<string, unknown>).fill;
-	return shapeStyleDefaults.resolveShapeStyle(selected.type, {
-		fill: typeof ownFill === "string" ? ownFill : undefined,
-	}).fill;
-};
 
 /**
  * Paper-color menu (sticky only). Replaces the generic fill picker with the
@@ -60,11 +36,12 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
 	const shapeStyleDefaults = useObjectShapeStyleDefaultsRegistry();
-	const currentColor = getSelectedFillColor(
+	const currentColor = getSelectedShapeStyle(
 		selectedIds,
 		objects,
 		shapeStyleDefaults,
-	);
+		"fill",
+	).fill;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

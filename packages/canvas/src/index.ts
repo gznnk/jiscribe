@@ -210,6 +210,7 @@ export type {
 	ObjectShapeStyleDefaults,
 	ObjectShapeStyleDefaultsRegistry,
 	ResolvedShapeStyle,
+	ShapeStyleGroup,
 } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 export type {
 	ObjectTextEditOverflowResolver,

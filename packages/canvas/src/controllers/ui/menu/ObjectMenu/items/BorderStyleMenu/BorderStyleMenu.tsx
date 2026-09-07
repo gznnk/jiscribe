@@ -1,12 +1,10 @@
+import { isNumber } from "@jiscribe/basic-validators";
 import { memo, useRef } from "react";
 
 import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
-import { getSelectedCornerRadius } from "./utils/getSelectedCornerRadius";
-import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
-import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
@@ -22,6 +20,8 @@ import {
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
 import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import { getFirstSelectedPropValue } from "../../utils/getFirstSelectedPropValue";
+import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
 
 const SECTION_ID = "border-style";
 
@@ -33,6 +33,8 @@ const SLIDER_MAX_STROKE_WIDTH = 20;
 
 const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
+// An omitted rx draws square corners, the SVG attribute's own default.
+const DEFAULT_CORNER_RADIUS = 0;
 // Slider covers the common range; larger radii via the number input.
 const SLIDER_MAX_CORNER_RADIUS = 20;
 
@@ -56,12 +58,19 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const strokeWidth = getSelectedStrokeWidth(
-		canvasState,
+	const { strokeWidth, strokeDashType } = getSelectedShapeStyle(
+		canvasState.selectedIds,
+		canvasState.objects,
 		objectShapeStyleDefaults,
+		"stroke",
 	);
-	const strokeDashType = getSelectedStrokeDashType(canvasState);
-	const cornerRadius = getSelectedCornerRadius(canvasState);
+	const cornerRadius =
+		getFirstSelectedPropValue(
+			canvasState.selectedIds,
+			canvasState.objects,
+			"rx",
+			isNumber,
+		) ?? DEFAULT_CORNER_RADIUS;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

@@ -129,6 +129,7 @@ export { extractShapeStyleDefaults } from "./plugin/ObjectShapeStyleDefaultsRegi
 export type {
 	ObjectShapeStyleDefaults,
 	ResolvedShapeStyle,
+	ShapeStyleGroup,
 } from "./plugin/ObjectShapeStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidatorRegistry";

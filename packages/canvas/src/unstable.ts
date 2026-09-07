@@ -144,7 +144,9 @@ export { useSubmenuPosition } from "./controllers/ui/menu/ObjectMenu/hooks/useSu
 export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 
 export { getFirstSelectedWithProp } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithProp";
-export { getFirstSelectedWithFeature } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithFeature";
+export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithStyleGroup";
+export { getFirstSelectedPropValue } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedPropValue";
+export { getSelectedShapeStyle } from "./controllers/ui/menu/ObjectMenu/utils/getSelectedShapeStyle";
 
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
 export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";

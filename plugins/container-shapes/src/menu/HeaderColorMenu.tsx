@@ -1,10 +1,11 @@
+import { isString } from "@jiscribe/basic-validators";
 import type { ObjectMenuItemProps } from "@jiscribe/canvas";
 import {
 	ObjectMenuColorPickerGrid,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
 	ObjectMenuButton,
-	getFirstSelectedWithProp,
+	getFirstSelectedPropValue,
 	resolveAutoColor,
 	resolveLocaleMessages,
 	useCanvasLocale,
@@ -14,21 +15,21 @@ import { memo, useRef } from "react";
 
 import { HeaderColorPreviewIcon } from "./HeaderColorPreviewIcon";
 import { containerMessagesByLocale } from "../messages/containerMessages";
+import { CONTAINER_DOC_DEFAULTS } from "../schema/ContainerDoc";
 
 const SECTION_ID = "header-color";
 
 const getSelectedHeaderColor = (
 	selectedIds: string[],
 	objects: ObjectMenuItemProps["objects"],
-): string => {
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "headerFill");
-	const headerFill = (obj as Record<string, unknown>)?.headerFill;
-	return typeof headerFill === "string" ? headerFill : "transparent";
-};
+): string =>
+	getFirstSelectedPropValue(selectedIds, objects, "headerFill", isString) ??
+	CONTAINER_DOC_DEFAULTS.headerFill;
 
 /**
  * Header color menu (container only). Sets the `headerFill` property via a color
- * picker. Unset = the header shows a derived faint tint of the stroke.
+ * picker. Unset reads as the doc default (`"auto"`, the theme surface), which is
+ * what the header is drawn with (Container.tsx).
  *
  * `menuHeaderColor` is owned by this plugin: its dictionary is resolved from the
  * canvas locale (`useCanvasLocale` + `resolveLocaleMessages`), not from core.

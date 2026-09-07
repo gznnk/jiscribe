@@ -1,5 +1,3 @@
-import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
@@ -15,7 +13,7 @@ import {
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
 import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
-import { getFirstSelectedWithFeature } from "../../utils/getFirstSelectedWithFeature";
+import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
 
 const SECTION_ID = "stroke-color";
 
@@ -25,34 +23,8 @@ type StrokeColorMenuProps = {
 };
 
 /**
- * The stroke color the menu shows: the selected object's own, resolved through
- * its type's own defaults (ObjectShapeStyleDefaultsRegistry) so the swatch
- * matches the outline the shape draws. The object is found by its declared
- * stroke, so one whose document never wrote the field still shows its type's
- * answer.
- */
-const getSelectedStrokeColor = (
-	state: CanvasControllerState,
-	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
-): string => {
-	const selected = getFirstSelectedWithFeature(
-		state.selectedIds,
-		state.objects,
-		"stroke",
-	);
-	if (selected === undefined) {
-		return SHAPE_STYLE_FALLBACK.stroke;
-	}
-	const ownStroke = (selected as Record<string, unknown>).stroke;
-	return shapeStyleDefaults.resolveShapeStyle(selected.type, {
-		stroke: typeof ownStroke === "string" ? ownStroke : undefined,
-	}).stroke;
-};
-
-/**
  * Stroke color menu.
  * Changes the stroke property of the selected object via a color picker.
- * Unifies both the BorderColor and LineColor menus.
  */
 const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	canvasState,
@@ -62,10 +34,12 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const currentColor = getSelectedStrokeColor(
-		canvasState,
+	const currentColor = getSelectedShapeStyle(
+		canvasState.selectedIds,
+		canvasState.objects,
 		objectShapeStyleDefaults,
-	);
+		"stroke",
+	).stroke;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

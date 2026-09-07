@@ -52,7 +52,7 @@ export type ContainerDoc = CreateObjectType<
 >;
 
 /** Theme-derived doc defaults for a newly created container (tier 2: AUTO_COLOR / DEFAULT_FONT_FAMILY). */
-export const CONTAINER_DOC_DEFAULTS: Omit<ContainerDoc, "id"> = {
+export const CONTAINER_DOC_DEFAULTS = {
 	type: "container",
 	x: 0,
 	y: 0,
@@ -69,4 +69,4 @@ export const CONTAINER_DOC_DEFAULTS: Omit<ContainerDoc, "id"> = {
 	fontSize: 14,
 	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "bold",
-} as const as ContainerDoc;
+} as const satisfies Omit<ContainerDoc, "id" | typeof ContainerDocBrand>;

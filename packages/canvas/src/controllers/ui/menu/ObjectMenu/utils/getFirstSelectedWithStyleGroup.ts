@@ -1,3 +1,5 @@
+import type { ShapeStyleGroup } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
+
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 
@@ -13,25 +15,25 @@ import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
  *
  * @param selectedIds - The selection, in the order the first match is taken from
  * @param objects - Every object of the canvas, keyed by id; ids not in it are skipped
- * @param feature - Which style group must be enabled: `"stroke"` for stroke color / width / dash, `"fill"` for the face
+ * @param styleGroup - Which style group must be enabled: `"stroke"` for stroke color / width / dash, `"fill"` for the face
  * @returns The object, or undefined when nothing selected declares the group (a state carrying no `features` declares none)
  */
-export function getFirstSelectedWithFeature(
+export function getFirstSelectedWithStyleGroup(
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
-	feature: "stroke" | "fill",
+	styleGroup: ShapeStyleGroup,
 ): ObjectState | undefined {
 	for (const id of selectedIds) {
 		const selected = objects[id];
 		if (!selected) {
 			continue;
 		}
-		if (selected.features?.[feature]) {
+		if (selected.features?.[styleGroup]) {
 			return selected;
 		}
 		for (const descendantId of collectDescendantIds(id, objects)) {
 			const descendant = objects[descendantId];
-			if (descendant?.features?.[feature]) {
+			if (descendant?.features?.[styleGroup]) {
 				return descendant;
 			}
 		}

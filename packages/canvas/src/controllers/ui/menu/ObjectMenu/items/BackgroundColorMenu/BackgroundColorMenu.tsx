@@ -1,6 +1,4 @@
-﻿import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
-import { memo, useRef } from "react";
+﻿import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
@@ -15,37 +13,13 @@ import {
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
 import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
-import { getFirstSelectedWithFeature } from "../../utils/getFirstSelectedWithFeature";
+import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
 
 const SECTION_ID = "bg-color";
 
 type BackgroundColorMenuProps = {
 	canvasState: CanvasControllerState;
 	onPropertyUpdate: ObjectMenuPropertyUpdater;
-};
-
-/**
- * The fill the menu shows: the selected object's own, resolved through its
- * type's own defaults (ObjectShapeStyleDefaultsRegistry) so the swatch matches
- * the face the shape draws. The object is found by its declared fill, so one
- * whose document never wrote the field still shows its type's answer.
- */
-const getSelectedFillColor = (
-	state: CanvasControllerState,
-	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
-): string => {
-	const selected = getFirstSelectedWithFeature(
-		state.selectedIds,
-		state.objects,
-		"fill",
-	);
-	if (selected === undefined) {
-		return SHAPE_STYLE_FALLBACK.fill;
-	}
-	const ownFill = (selected as Record<string, unknown>).fill;
-	return shapeStyleDefaults.resolveShapeStyle(selected.type, {
-		fill: typeof ownFill === "string" ? ownFill : undefined,
-	}).fill;
 };
 
 /**
@@ -60,10 +34,12 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { objectShapeStyleDefaults } = useCanvasRegistries();
-	const currentColor = getSelectedFillColor(
-		canvasState,
+	const currentColor = getSelectedShapeStyle(
+		canvasState.selectedIds,
+		canvasState.objects,
 		objectShapeStyleDefaults,
-	);
+		"fill",
+	).fill;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
