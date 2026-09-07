@@ -400,6 +400,7 @@ export function App() {
 			<CanvasSurface
 				doc={doc}
 				relPath={openPath}
+				docLoadId={openPath ?? undefined}
 				isConnected={isConnected}
 				onCommit={handleCommit}
 				onOpenReference={handleOpenReference}

@@ -110,6 +110,23 @@ type CanvasProps = {
 	 */
 	syncNonce?: string;
 	/**
+	 * Token identifying the load `doc` belongs to. Any string the host likes — the
+	 * file path, or a counter bumped on every read — as long as two documents never
+	 * share one.
+	 *
+	 * Change it when another document goes onto a canvas that stays mounted
+	 * (opening a file, creating a new one, switching paths); the canvas then adopts
+	 * `doc` with the undo history dropped, so the first Ctrl+Z after the swap cannot
+	 * bring the previous document's contents back under the new one's name. Leave it
+	 * as it is for every change to the same document — an external rewrite of the
+	 * file, or the host re-sending a doc after its own undo/redo — since those stay
+	 * undoable.
+	 *
+	 * Omitting it entirely keeps the pre-existing behaviour: every incoming doc is an
+	 * external edit and the history is preserved.
+	 */
+	docLoadId?: string;
+	/**
 	 * Callback invoked when a committable action occurs (e.g., dragEnd, click).
 	 * Use this to persist or sync the canvas state to external storage.
 	 * The second argument is the saveNonce that should be echoed back via syncNonce.
@@ -327,6 +344,7 @@ type CanvasProps = {
 const CanvasComponent = ({
 	doc,
 	syncNonce,
+	docLoadId,
 	onCommit,
 	onSelectionChange,
 	onViewportChange,
@@ -423,6 +441,7 @@ const CanvasComponent = ({
 	useSyncExternalDoc({
 		canvasDoc: doc,
 		syncNonce,
+		docLoadId,
 		canvasState: state,
 		dispatch,
 		resetGestureState,

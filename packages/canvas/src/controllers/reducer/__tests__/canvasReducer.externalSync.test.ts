@@ -41,6 +41,22 @@ const syncExternal = (): CanvasAction => ({
 	),
 });
 
+// The document a host swaps in when a person opens another file: nothing of the
+// one on screen is left in it.
+const otherDoc: CanvasDoc = {
+	version: 1,
+	root: [rectDoc("rect-9", 200, 200)],
+} as unknown as CanvasDoc;
+
+const loadDocument = (doc: CanvasDoc): CanvasAction => ({
+	type: "LOAD_DOCUMENT",
+	payload: canvasToState(
+		doc,
+		registries.objectMapper,
+		registries.objectContentResizer,
+	),
+});
+
 const cxOf = (state: CanvasControllerState) =>
 	(state.objects["rect-1"] as unknown as { cx: number }).cx;
 
@@ -62,6 +78,36 @@ describe("canvasReducer (integration)", () => {
 			expect(after.selectedIds).toEqual([]);
 			expect(after.historyCoalesce.recorded).toBeNull();
 			expect(after.historyCoalesce.pending).toBeNull();
+		});
+	});
+
+	describe("LOAD_DOCUMENT", () => {
+		it("drops both history stacks, so no undo reaches the previous document", () => {
+			const state = canvasReducer(createState(), syncExternal());
+			expect(state.history.past).toHaveLength(1);
+
+			const after = canvasReducer(state, loadDocument(otherDoc));
+
+			expect(after.history.past).toEqual([]);
+			expect(after.history.future).toEqual([]);
+		});
+
+		it("makes the loaded document the present entry", () => {
+			const after = canvasReducer(createState(), loadDocument(otherDoc));
+
+			expect(Object.keys(after.objects)).toEqual(["rect-9"]);
+			expect(after.rootIds).toEqual(["rect-9"]);
+			expect(after.history.present.source?.rootIds).toEqual(["rect-9"]);
+		});
+
+		it("resets selection and coalescing state, keeping the viewport", () => {
+			const state = createState();
+			const after = canvasReducer(state, loadDocument(otherDoc));
+
+			expect(after.selectedIds).toEqual([]);
+			expect(after.historyCoalesce.recorded).toBeNull();
+			expect(after.historyCoalesce.pending).toBeNull();
+			expect(after.viewport).toBe(state.viewport);
 		});
 	});
 });

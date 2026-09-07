@@ -4,7 +4,8 @@ import {
 } from "@jiscribe/doc/model/objects/types/RichText";
 
 import type { CanvasAction } from "./CanvasActions";
-import type { CanvasControllerState } from "../CanvasTypes";
+import type { CanvasState } from "../../states/canvas/CanvasState";
+import type { CanvasControllerState, DocSnapshot } from "../CanvasTypes";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
 import { handleCommand } from "../commands/handlers/handleCommand";
@@ -252,26 +253,20 @@ export const createCanvasReducer =
 				// are recognized by the self-save nonce tracker and dropped before dispatch
 				// (see useSyncExternalDoc), so they never touch history or UI state.
 				//
-				// Record the current present into past, then update present.
-				// Clear future (to prevent redoing to an old state after the external change).
-				// Since the objects are swapped out, clear all UI state as well (selection, in-progress operations, etc.).
-				return {
-					...state,
-					objects: action.payload.objects,
-					rootIds: action.payload.rootIds,
-					background: action.payload.background,
-					view: action.payload.view,
-					...resetUiState(),
-					// An external change is a history boundary. Since past is pushed directly without going
-					// through recordHistoryIfNeeded, explicitly reset the coalesce state here (do not carry
-					// over the recorded value from a preceding nudge).
-					historyCoalesce: { recorded: null, pending: null },
-					history: {
-						past: [...state.history.past, state.history.present].slice(-50),
-						present: createDocSnapshotFromState(action.payload),
-						future: [],
-					},
-				};
+				// The same document edited elsewhere, so the entries recorded for it stay
+				// usable: the current present moves onto past and the edit becomes
+				// undoable like any local commit.
+				return adoptDocumentState(state, action.payload, [
+					...state.history.past,
+					state.history.present,
+				]);
+			}
+
+			case "LOAD_DOCUMENT": {
+				// Another document, so its predecessor's entries go with it: undoing into
+				// them would restore the old contents under the new document's name
+				// (see LoadDocumentAction).
+				return adoptDocumentState(state, action.payload, []);
 			}
 
 			case "UPDATE_TEXT_EDIT": {
@@ -394,6 +389,41 @@ export const createCanvasReducer =
 				return state;
 		}
 	};
+
+/**
+ * Installs a document handed in from outside over the current state, shared by
+ * the two actions that do so (SYNC_EXTERNAL / LOAD_DOCUMENT). Everything the doc
+ * carries is replaced wholesale and every transient field that pointed into the
+ * old objects is reset with them; the viewport alone survives, since it belongs
+ * to the person looking rather than to the document.
+ *
+ * @param past - The undo stack to keep, capped here at the newest 50 entries.
+ *   The one thing the two actions disagree on: an external edit to the same
+ *   document keeps the stack, another document drops it (pass `[]`)
+ */
+const adoptDocumentState = (
+	state: CanvasControllerState,
+	payload: CanvasState,
+	past: readonly DocSnapshot[],
+): CanvasControllerState => ({
+	...state,
+	objects: payload.objects,
+	rootIds: payload.rootIds,
+	background: payload.background,
+	view: payload.view,
+	...resetUiState(),
+	// Adopting a document is a history boundary. Since past is set directly without
+	// going through recordHistoryIfNeeded, explicitly reset the coalesce state here
+	// (do not carry over the recorded value from a preceding nudge).
+	historyCoalesce: { recorded: null, pending: null },
+	history: {
+		past: past.slice(-50),
+		present: createDocSnapshotFromState(payload),
+		// Cleared either way: a redo would reapply an edit that the incoming
+		// document knows nothing about.
+		future: [],
+	},
+});
 
 /** Prefix of the coalesce key for consecutive ObjectMenu property commits */
 const MENU_PROPERTY_COALESCE_PREFIX = "menu-property";

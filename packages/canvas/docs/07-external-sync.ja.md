@@ -24,6 +24,21 @@ State に変換して `SYNC_EXTERNAL` を dispatch する。
 `SYNC_EXTERNAL` を受けた reducer 側の扱い（履歴境界として past を直接積み、
 選択・進行中操作をリセットし viewport のみ維持）は [状態更新フロー](./06-state-update-flow.ja.md) を参照。
 
+## 別ドキュメントの読み込み：docLoadId / LOAD_DOCUMENT
+
+`SYNC_EXTERNAL` は past を積む＝履歴を残すので、**別のドキュメント**を同じ経路で
+入れると、直後の Ctrl+Z で前のドキュメントの内容が今の名前の下に戻ってしまう。
+ホストは `docLoadId` プロップで「今 `doc` に載っているのはどの読み込みか」を宣言する。
+値は任意の文字列（パスでも読み込みごとのカウンタでもよい）で、別のドキュメントを
+載せたときだけ変える。同一ドキュメントへの外部編集や、ホスト側 undo/redo による
+同じ doc の再送では変えない。
+
+`useSyncExternalDoc` は docLoadId の変化を最初に見る。変化していれば
+`LOAD_DOCUMENT` を dispatch し、reducer は past / future を捨てて取り込む。
+自分の保存の折り返し判定も内容一致による skip も通さない（内容が同一でも、
+ホストが読み込みだと言った以上は履歴を捨てなければならない）。
+プロップを渡さないホストの挙動は従来どおり（すべて `SYNC_EXTERNAL`）。
+
 外部から入る doc は信頼できないため、本来は parser の二段検証を境界で通す
 （[データモデルと永続化](./03-data-model-and-persistence.ja.md)、[設計思想](./01-design-philosophy.ja.md) 原則 4）。
 

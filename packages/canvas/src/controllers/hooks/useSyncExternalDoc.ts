@@ -14,6 +14,13 @@ export type UseSyncExternalDocParams = {
 	canvasDoc: CanvasDoc;
 	/** Nonce of the most recent sync message (used to detect fold-back saves) */
 	syncNonce: string | undefined;
+	/**
+	 * Host token identifying which load `canvasDoc` came from; a changed value
+	 * means another document was put on the canvas (see the `docLoadId` prop).
+	 * Undefined throughout means the host never opts in, leaving every incoming
+	 * doc an external edit to the same document.
+	 */
+	docLoadId: string | undefined;
 	/** Canvas's current state (used for content comparison) */
 	canvasState: CanvasControllerState;
 	/** Canvas reducer dispatch */
@@ -38,10 +45,15 @@ export type UseSyncExternalDocParams = {
  * The very first run right after mount is skipped because the reducer already
  * initialized from the same canvasDoc (dispatching SYNC_EXTERNAL would create a
  * redundant history entry).
+ *
+ * A changed `docLoadId` is a history boundary rather than an edit: it says the
+ * host put another document on a canvas that stays mounted, and the previous
+ * document's undo entries must not survive into it.
  */
 export const useSyncExternalDoc = ({
 	canvasDoc,
 	syncNonce,
+	docLoadId,
 	canvasState,
 	dispatch,
 	resetGestureState,
@@ -49,6 +61,9 @@ export const useSyncExternalDoc = ({
 	registries,
 }: UseSyncExternalDocParams): void => {
 	const hasMountedRef = useRef(false);
+	// Seeded with the value of the first render, so the doc the reducer already
+	// initialized from is never mistaken for a second load.
+	const lastDocLoadIdRef = useRef(docLoadId);
 	const { objectMapper, objectContentResizer } = registries;
 
 	// Always-fresh mirror of state so the sync effect below does not need to
@@ -61,6 +76,18 @@ export const useSyncExternalDoc = ({
 	useEffect(() => {
 		if (!hasMountedRef.current) {
 			hasMountedRef.current = true;
+			return;
+		}
+		// A load the host declared. Checked ahead of everything below because a
+		// declared load has to drop the history even when the fold-back or the
+		// content comparison would have called the doc unchanged.
+		if (lastDocLoadIdRef.current !== docLoadId) {
+			lastDocLoadIdRef.current = docLoadId;
+			resetGestureState();
+			dispatch({
+				type: "LOAD_DOCUMENT",
+				payload: canvasToState(canvasDoc, objectMapper, objectContentResizer),
+			});
 			return;
 		}
 		// Our own save echoed back: the canvas already holds the authoritative
@@ -94,6 +121,7 @@ export const useSyncExternalDoc = ({
 		});
 	}, [
 		canvasDoc,
+		docLoadId,
 		dispatch,
 		resetGestureState,
 		syncNonce,

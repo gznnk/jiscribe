@@ -32,6 +32,12 @@ export type CanvasSurfaceProps = {
 	doc: CanvasDoc;
 	/** Workspace-relative path of the open file, shown in the toolbar */
 	relPath: string | null;
+	/**
+	 * Identifies which file the doc was read from, so that opening another one
+	 * drops the previous file's undo history instead of leaving it reachable on the
+	 * new canvas. Undefined while no file is open
+	 */
+	docLoadId: string | undefined;
 	/** Whether the socket to the host is up (drawn beside the file name) */
 	isConnected: boolean;
 	/** Called when a person commits an edit. Not called mid-drag */
@@ -57,6 +63,7 @@ export type CanvasSurfaceProps = {
 export function CanvasSurface({
 	doc,
 	relPath,
+	docLoadId,
 	isConnected,
 	onCommit,
 	onOpenReference,
@@ -76,6 +83,7 @@ export function CanvasSurface({
 			<Canvas
 				ref={canvasRef}
 				doc={doc}
+				docLoadId={docLoadId}
 				onCommit={onCommit}
 				onOpenReference={onOpenReference}
 				theme={lightCanvasTheme}

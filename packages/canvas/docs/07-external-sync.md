@@ -26,6 +26,23 @@ For how the reducer handles `SYNC_EXTERNAL` (pushing `past` directly as a histor
 resetting selection and in-progress operations while preserving only the viewport),
 see [State Update Flow](./06-state-update-flow.md).
 
+## Loading Another Document: docLoadId / LOAD_DOCUMENT
+
+`SYNC_EXTERNAL` pushes onto `past` — it keeps the history — so putting **another
+document** through that same path leaves the next Ctrl+Z restoring the previous
+document's contents under the current document's name. The host declares which load
+the doc currently in `doc` came from through the `docLoadId` prop. The value is any
+string it likes (a path, or a counter bumped per load), changed only when another
+document is put on the canvas; it stays as it is for an external edit to the same
+document, and for the host re-sending the same doc after its own undo/redo.
+
+`useSyncExternalDoc` checks `docLoadId` first. When it has changed, `LOAD_DOCUMENT`
+is dispatched and the reducer adopts the doc with `past` and `future` dropped.
+Neither the self-save fold-back check nor the identical-content skip runs on that
+path: once the host has declared a load, the history has to go even if the contents
+read the same. A host that passes no prop keeps the previous behaviour (every doc is
+a `SYNC_EXTERNAL`).
+
 Because docs coming from external sources cannot be trusted, they should ideally pass through
 the parser's two-stage validation at the boundary
 (see [Data Model and Persistence](./03-data-model-and-persistence.md) and [Design Philosophy](./01-design-philosophy.md), Principle 4).

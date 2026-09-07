@@ -48,6 +48,19 @@ export type SyncExternalAction = {
 };
 
 /**
+ * Load document action - adopts another document (the host opened a file, created
+ * a new one, switched paths) into a canvas that stays mounted. Same replacement
+ * as SYNC_EXTERNAL, except that the undo history goes with the document it
+ * belonged to: keeping it would let one Ctrl+Z pull the previous document's
+ * contents back under the new one's name. Dispatched by useSyncExternalDoc when
+ * the host's `docLoadId` changes.
+ */
+export type LoadDocumentAction = {
+	type: "LOAD_DOCUMENT";
+	payload: CanvasState;
+};
+
+/**
  * Set camera action - moves the pan/zoom alone, keeping the measured
  * width/height. Dispatched by the imperative `ref.current.viewport.setViewport`
  * (useViewportHandle) so a host can move the view programmatically.
@@ -210,6 +223,7 @@ export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
+	| LoadDocumentAction
 	| SetCameraAction
 	| SetViewportAction
 	| SetSelectionAction

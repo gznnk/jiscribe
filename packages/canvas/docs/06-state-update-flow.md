@@ -19,6 +19,7 @@ This "assemble the entire transition in one place" policy follows principle 3 of
 | `PASTE`                              | Applying clipboard data                                 | `handlePaste`                                                                     |
 | `MENU_PROPERTY_UPDATE`               | ObjectMenu input (preview / commit)                     | `StylePropertyRegistry.apply` → [Style Property System](./10-style-properties.md) |
 | `SYNC_EXTERNAL`                      | Importing a doc from the external host                  | → [External Sync](./07-external-sync.md)                                          |
+| `LOAD_DOCUMENT`                      | Loading another document (an import that drops history) | → [External Sync](./07-external-sync.md)                                          |
 | `CONTAINER_RESIZE`                   | Updating viewport dimensions                            | (inline)                                                                          |
 | `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | Updates during text editing / commit or cancel          | `commitTextEditIfNeeded`                                                          |
 | `CLOSE_CONTEXT_MENU`                 | Simply closing the context menu                         | (inline)                                                                          |
@@ -66,5 +67,7 @@ viewport is preserved).
 Fold-backs of the canvas's own save are filtered out before reaching the reducer, so every
 `SYNC_EXTERNAL` seen here is a genuine external change. For how fold-backs are identified, see
 [External Sync / VSCode Integration](./07-external-sync.md).
-</content>
-</invoke>
+
+Loading **another document** (`LOAD_DOCUMENT`) is the same adoption, except that
+`past` is not pushed but dropped along with `future`: keeping the previous document's
+entries would let an undo restore its contents under the new document's name.

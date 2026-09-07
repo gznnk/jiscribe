@@ -17,6 +17,7 @@
 | `PASTE`                              | クリップボードデータの適用                                     | `handlePaste`                                                                             |
 | `MENU_PROPERTY_UPDATE`               | ObjectMenu の入力（プレビュー / コミット）                     | `StylePropertyRegistry.apply` → [スタイルプロパティシステム](./10-style-properties.ja.md) |
 | `SYNC_EXTERNAL`                      | 外部（ホスト）からの doc 取り込み                              | → [外部同期](./07-external-sync.ja.md)                                                    |
+| `LOAD_DOCUMENT`                      | 別ドキュメントの読み込み（履歴を捨てる取り込み）               | → [外部同期](./07-external-sync.ja.md)                                                    |
 | `CONTAINER_RESIZE`                   | ビューポート寸法の更新                                         | （インライン）                                                                            |
 | `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | テキスト編集中の更新 / 確定・キャンセル                        | `commitTextEditIfNeeded`                                                                  |
 | `CLOSE_CONTEXT_MENU`                 | コンテキストメニューを閉じるだけ                               | （インライン）                                                                            |
@@ -57,4 +58,7 @@
 あわせて選択・進行中の操作など UI state も明示的にリセットする（viewport のみ維持）。
 自分の保存の折り返し（fold-back）は reducer に届く前に除外されるため、ここに来る `SYNC_EXTERNAL` は
 常に本物の外部変更である。折り返しの識別方法は [外部同期・VSCode 連携](./07-external-sync.ja.md) を参照。
-</content>
+
+**別のドキュメント**の読み込み（`LOAD_DOCUMENT`）も同じ取り込みだが、`past` を積まずに
+`past` / `future` ごと捨てる。前のドキュメントのエントリを残すと、undo でその内容が
+新しいドキュメントの名前の下に戻るため。
