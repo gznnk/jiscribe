@@ -1,5 +1,6 @@
 import { isEnum, isNumber, isObject } from "@jiscribe/basic-validators";
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
@@ -102,9 +103,9 @@ export const CALLOUT_DOC_DEFAULTS: Omit<CalloutDoc, "id"> = {
 	y: 0,
 	width: 160,
 	height: 110,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "center",
 	verticalAlign: "middle",

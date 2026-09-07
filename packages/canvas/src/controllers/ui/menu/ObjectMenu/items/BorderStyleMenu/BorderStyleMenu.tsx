@@ -9,6 +9,7 @@ import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
 import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
@@ -54,7 +55,11 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const strokeWidth = getSelectedStrokeWidth(canvasState);
+	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const strokeWidth = getSelectedStrokeWidth(
+		canvasState,
+		objectShapeStyleDefaults,
+	);
 	const strokeDashType = getSelectedStrokeDashType(canvasState);
 	const cornerRadius = getSelectedCornerRadius(canvasState);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(

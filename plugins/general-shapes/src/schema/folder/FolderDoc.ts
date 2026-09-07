@@ -1,4 +1,5 @@
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
@@ -50,9 +51,9 @@ export const FOLDER_DOC_DEFAULTS: Omit<FolderDoc, "id"> = {
 	y: 0,
 	width: 130,
 	height: 100,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "center",
 	verticalAlign: "middle",

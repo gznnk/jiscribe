@@ -1,7 +1,6 @@
 import { ConnectorExtraStyleProperties } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { builtinObjectDocDefinitions } from "@jiscribe/doc/plugin/builtinObjectDocDefinitions";
-import { extractTextSlotStyleDefaults } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
@@ -405,14 +404,8 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
-	const slotStyleDefaults = extractTextSlotStyleDefaults(
-		definition.features,
-		definition.defaults,
-		definition.textSlotStyleDefaults,
-	);
-	if (slotStyleDefaults) {
-		registries.objectTextStyleDefaults.register(type, slotStyleDefaults);
-	}
+	registries.objectTextStyleDefaults.registerDefinition(type, definition);
+	registries.objectShapeStyleDefaults.registerDefinition(type, definition);
 	const supportsAutoHeight = supportsAutoHeightType(definition);
 	if (supportsAutoHeight) {
 		registries.objectAutoHeight.register(type);
@@ -441,7 +434,10 @@ export const applyObjectDefinition = (
 		// reaching for a registry the states layer cannot see. Only the body slot's
 		// are passed: a content-resized type sizes its box to one text. A type with
 		// no defaults to add is registered as it is, so nothing is wrapped for nothing.
-		const textStyleDefaults = slotStyleDefaults?.[BODY_TEXT_SLOT_ID];
+		const textStyleDefaults = registries.objectTextStyleDefaults.get(
+			type,
+			BODY_TEXT_SLOT_ID,
+		);
 		registries.objectContentResizer.register(
 			type,
 			textStyleDefaults === undefined
@@ -542,6 +538,7 @@ export const initializeObjectRegistry = (
 ): void => {
 	registries.objectMapper.clear();
 	registries.objectTextStyleDefaults.clear();
+	registries.objectShapeStyleDefaults.clear();
 	registries.objectContentResizer.clear();
 	registries.objectAutoHeight.clear();
 	registries.objectTextVerticalBasis.clear();

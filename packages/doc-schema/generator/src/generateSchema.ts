@@ -109,6 +109,16 @@ function formatDefaultValue(value: unknown): string {
 }
 
 /**
+ * The size `createObject` writes when the caller omits the field. Palette entries
+ * override it through `defaultOverrides`, so it is not the palette size.
+ *
+ * @param value - A size field of the type's creation defaults (width / height / rx / ry)
+ */
+function describeOmittedSize(value: unknown): string {
+	return `Size written when a creation omits it: ${formatDefaultValue(value)}`;
+}
+
+/**
  * Build the inline override node for a property whose default differs from the
  * shared style definition: clone the shared node, then swap the "Default: ..."
  * clause of the description and `default` for the type-specific value.
@@ -160,12 +170,12 @@ function buildRectGeometryProps(
 		x: { description: RECT_GEOMETRY_DESCRIPTIONS.x, type: "number" },
 		y: { description: RECT_GEOMETRY_DESCRIPTIONS.y, type: "number" },
 		width: {
-			description: `${RECT_GEOMETRY_DESCRIPTIONS.width} Default when created from the palette: ${formatDefaultValue(defaults.width)}`,
+			description: `${RECT_GEOMETRY_DESCRIPTIONS.width} ${describeOmittedSize(defaults.width)}`,
 			type: "number",
 			minimum: 0,
 		},
 		height: {
-			description: `${RECT_GEOMETRY_DESCRIPTIONS.height}${autoHeight ? ` ${AUTO_HEIGHT_NOTE}` : ""} Default when created from the palette: ${formatDefaultValue(defaults.height)}`,
+			description: `${RECT_GEOMETRY_DESCRIPTIONS.height}${autoHeight ? ` ${AUTO_HEIGHT_NOTE}` : ""} ${describeOmittedSize(defaults.height)}`,
 			type: "number",
 			minimum: 0,
 		},
@@ -180,12 +190,12 @@ function buildEllipseGeometryProps(
 		cx: { description: "Center X coordinate.", type: "number" },
 		cy: { description: "Center Y coordinate.", type: "number" },
 		rx: {
-			description: `Horizontal radius in pixels. Default when created from the palette: ${formatDefaultValue(defaults.rx)}`,
+			description: `Horizontal radius in pixels. ${describeOmittedSize(defaults.rx)}`,
 			type: "number",
 			minimum: 0,
 		},
 		ry: {
-			description: `Vertical radius in pixels. Default when created from the palette: ${formatDefaultValue(defaults.ry)}`,
+			description: `Vertical radius in pixels. ${describeOmittedSize(defaults.ry)}`,
 			type: "number",
 			minimum: 0,
 		},

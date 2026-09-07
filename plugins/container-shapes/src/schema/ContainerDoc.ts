@@ -1,4 +1,5 @@
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type {
 	CreateObjectType,
 	ExtraStylePropertyDescriptor,
@@ -57,10 +58,10 @@ export const CONTAINER_DOC_DEFAULTS: Omit<ContainerDoc, "id"> = {
 	y: 0,
 	width: 240,
 	height: 160,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	headerFill: AUTO_COLOR,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "left",
 	verticalAlign: "middle",

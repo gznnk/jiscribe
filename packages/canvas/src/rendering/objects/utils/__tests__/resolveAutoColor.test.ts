@@ -1,3 +1,4 @@
+import { DEFAULT_FILL } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
 import { describe, it, expect } from "vitest";
 
 import { theme } from "../../../../constants/theme";
@@ -23,18 +24,8 @@ describe("resolveAutoColor", () => {
 		expect(resolveAutoColor("transparent", "surface")).toBe("transparent");
 	});
 
-	it("returns the role default when unspecified (ink: objectInk / surface: transparent)", () => {
+	it("returns the role default when unspecified (ink: objectInk / surface: DEFAULT_FILL)", () => {
 		expect(resolveAutoColor(undefined, "ink")).toBe(theme.objectInk);
-		expect(resolveAutoColor(undefined, "surface")).toBe("transparent");
-	});
-
-	it("prefers the fallback over the role default when unspecified", () => {
-		expect(resolveAutoColor(undefined, "ink", "red")).toBe("red");
-	});
-
-	it('"auto" prefers the role token even when a fallback is given', () => {
-		expect(resolveAutoColor("auto", "surface", "red")).toBe(
-			theme.objectSurface,
-		);
+		expect(resolveAutoColor(undefined, "surface")).toBe(DEFAULT_FILL);
 	});
 });

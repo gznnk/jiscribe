@@ -203,6 +203,14 @@ export type {
 	ObjectTextSlotStyleDefaults,
 	ObjectTextStyleDefaultsRegistry,
 } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+// Per-type stroke / fill defaults: the registry a canvas resolves an unset
+// stroke, width, dash or fill through, reachable as
+// `CanvasRegistries["objectShapeStyleDefaults"]`.
+export type {
+	ObjectShapeStyleDefaults,
+	ObjectShapeStyleDefaultsRegistry,
+	ResolvedShapeStyle,
+} from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,

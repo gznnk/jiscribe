@@ -6,6 +6,7 @@ import {
 	createSvgTransform,
 	readRichTextSlot,
 	resolveAutoColor,
+	useObjectShapeStyleDefaultsRegistry,
 	useObjectTextStyleDefaultsRegistry,
 } from "@jiscribe/canvas-sdk";
 import type React from "react";
@@ -13,7 +14,6 @@ import { memo } from "react";
 
 import { StickyShadow } from "./StickyShadow";
 import { StickyBody } from "./StickyStyled";
-import { STICKY_DOC_DEFAULTS } from "../schema/StickyDoc";
 import type { StickyState } from "../state/StickyState";
 
 type StickyProps = StickyState & TextEditable;
@@ -55,11 +55,14 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		bodySlot,
 	);
 
-	// A document may leave `fill` out (parsing resolves nothing; only the editor's
-	// factory copies the defaults in), and the paper is yellow rather than the
-	// shared "transparent" that resolveAutoColor would otherwise fall back to —
-	// so the schema constant is the fallback, keeping one source for the default.
-	const fillColor = resolveAutoColor(fill, "surface", STICKY_DOC_DEFAULTS.fill);
+	// Hand-drawn shapes have to resolve the type's own stroke / fill defaults
+	// themselves as well, which is what makes a document that leaves `fill` out
+	// draw the paper yellow rather than the shared transparent.
+	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
+		type,
+		{ fill },
+	);
+	const fillColor = resolveAutoColor(shapeStyle.fill, "surface");
 
 	const left = -width / 2;
 	const right = width / 2;

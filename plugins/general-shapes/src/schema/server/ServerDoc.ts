@@ -2,6 +2,7 @@ import {
 	AUTO_COLOR,
 	BELOW_LABEL_STYLE_DEFAULTS,
 } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
@@ -41,9 +42,9 @@ export const SERVER_DOC_DEFAULTS: Omit<ServerDoc, "id"> = {
 	y: 0,
 	width: 90,
 	height: 110,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	...BELOW_LABEL_STYLE_DEFAULTS,
 } as const as ServerDoc;

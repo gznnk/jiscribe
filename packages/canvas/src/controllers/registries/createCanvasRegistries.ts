@@ -1,4 +1,5 @@
 import { createObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
+import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 
 import type { CanvasCapabilities, CanvasRegistries } from "./CanvasRegistries";
@@ -59,6 +60,7 @@ export const createCanvasRegistries = (
 		objectComponent: createObjectComponentRegistry(),
 		objectTextRegion: createObjectTextRegionRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
+		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),

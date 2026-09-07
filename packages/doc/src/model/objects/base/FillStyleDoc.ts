@@ -1,6 +1,14 @@
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /**
+ * Fill a shape is drawn with when `fill` is omitted and its type declares no
+ * default of its own — the default the JSON schema documents. Renderers resolve
+ * the absent field with this, so a document that leaves the fill out draws the
+ * same as one that writes "transparent".
+ */
+export const DEFAULT_FILL = "transparent";
+
+/**
  * Properties related to fill styling.
  */
 export type FillStyleDoc = {

@@ -1,8 +1,11 @@
-﻿import { memo, useRef } from "react";
+﻿import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
+import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -12,7 +15,7 @@ import {
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
 import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import { getFirstSelectedWithFeature } from "../../utils/getFirstSelectedWithFeature";
 
 const SECTION_ID = "bg-color";
 
@@ -21,14 +24,28 @@ type BackgroundColorMenuProps = {
 	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
-const getSelectedFillColor = (state: CanvasControllerState): string => {
-	const obj = getFirstSelectedWithProp(
+/**
+ * The fill the menu shows: the selected object's own, resolved through its
+ * type's own defaults (ObjectShapeStyleDefaultsRegistry) so the swatch matches
+ * the face the shape draws. The object is found by its declared fill, so one
+ * whose document never wrote the field still shows its type's answer.
+ */
+const getSelectedFillColor = (
+	state: CanvasControllerState,
+	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
+): string => {
+	const selected = getFirstSelectedWithFeature(
 		state.selectedIds,
 		state.objects,
 		"fill",
 	);
-	const fill = (obj as Record<string, unknown>)?.fill;
-	return typeof fill === "string" ? fill : "transparent";
+	if (selected === undefined) {
+		return SHAPE_STYLE_FALLBACK.fill;
+	}
+	const ownFill = (selected as Record<string, unknown>).fill;
+	return shapeStyleDefaults.resolveShapeStyle(selected.type, {
+		fill: typeof ownFill === "string" ? ownFill : undefined,
+	}).fill;
 };
 
 /**
@@ -42,7 +59,11 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const currentColor = getSelectedFillColor(canvasState);
+	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const currentColor = getSelectedFillColor(
+		canvasState,
+		objectShapeStyleDefaults,
+	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

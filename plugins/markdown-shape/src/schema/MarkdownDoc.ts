@@ -1,4 +1,5 @@
 import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
@@ -41,7 +42,7 @@ export const MARKDOWN_DOC_DEFAULTS: Omit<MarkdownDoc, "id"> = {
 	height: 200,
 	fill: AUTO_COLOR,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	rx: 0,
 	text: "",
 	textAlign: "left",

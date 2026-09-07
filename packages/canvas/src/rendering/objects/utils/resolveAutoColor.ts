@@ -1,3 +1,4 @@
+import { DEFAULT_FILL } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 
 import { theme } from "../../../constants/theme";
@@ -28,10 +29,15 @@ const ROLE_TOKEN: Record<AutoColorRole, string> = {
 	surface: theme.objectSurface,
 };
 
-/** Per-role fallback when the value is unspecified (undefined). */
+/**
+ * Per-role fallback when the value is unspecified (undefined). A shape's own
+ * stroke and fill are resolved against its type's defaults before they get here
+ * (ObjectShapeStyleDefaultsRegistry), so this catches the fields no type speaks
+ * for — a connector label's border, a run's font color.
+ */
 const ROLE_FALLBACK: Record<AutoColorRole, string> = {
 	ink: theme.objectInk,
-	surface: "transparent",
+	surface: DEFAULT_FILL,
 };
 
 /**
@@ -39,13 +45,14 @@ const ROLE_FALLBACK: Record<AutoColorRole, string> = {
  *
  * - `"auto"` → the role's theme token (ink: objectInk / surface: objectSurface)
  * - concrete color → passed through as-is
- * - unspecified → `fallback`, or the role default if none (ink: objectInk / surface: transparent)
+ * - unspecified → the role default (ink: objectInk / surface: DEFAULT_FILL)
+ *
+ * @param value - The color field as the state holds it; `"auto"` and undefined are the two it resolves
+ * @param role - Which theme token the value follows: `"ink"` for a stroke or font color, `"surface"` for a fill
+ * @returns A CSS color, possibly a `var(--jiscribe-*)` token — apply it through CSS, not an SVG presentation attribute
  */
 export const resolveAutoColor = (
 	value: string | undefined,
 	role: AutoColorRole,
-	fallback?: string,
 ): string =>
-	value === AUTO_COLOR
-		? ROLE_TOKEN[role]
-		: (value ?? fallback ?? ROLE_FALLBACK[role]);
+	value === AUTO_COLOR ? ROLE_TOKEN[role] : (value ?? ROLE_FALLBACK[role]);

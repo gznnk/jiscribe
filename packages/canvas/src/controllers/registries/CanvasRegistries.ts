@@ -1,5 +1,6 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
@@ -64,6 +65,12 @@ export type CanvasRegistries = {
 	 * type-agnostic default.
 	 */
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
+	/**
+	 * Per-type stroke / fill defaults, read by every side that draws or reports a
+	 * shape style so a field the author left unset resolves to what that type is
+	 * drawn with rather than a type-agnostic default.
+	 */
+	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;

@@ -176,8 +176,8 @@ describe("recordToState", () => {
 		).toEqual([]);
 	});
 
-	it("reads an omitted fill as the documented auto default", () => {
-		expect(recordToState(makeDoc()).fill).toBe("auto");
+	it("leaves an omitted fill omitted, the type's default being resolved per read", () => {
+		expect(recordToState(makeDoc()).fill).toBeUndefined();
 	});
 
 	it("keeps an explicit fill", () => {

@@ -1,6 +1,7 @@
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
 import { calcFullBoxTextRegion } from "./ObjectDocTextRegion";
 import {
+	CONNECTOR_DOC_DEFAULTS,
 	CONNECTOR_EXTRA_KEYS,
 	ConnectorFeatures,
 } from "../model/objects/connector/ConnectorDoc";
@@ -63,7 +64,10 @@ import { validateTextDoc } from "../model/objects/primitives/text/validateTextDo
  *
  * `description` / `summary` / `defaults` feed the generated JSON schema and AI docs
  * (`pnpm generate:schema`); types whose schema `$def` is a handwritten template
- * (group / connector / svg / polyline / polygon) carry only `summary`.
+ * (group / connector / svg / polyline / polygon) carry no `description`.
+ * `defaults` is declared past that whenever the type has creation defaults to
+ * state at all, the draw-time style registries reading the very same field
+ * (ObjectShapeStyleDefaultsRegistry); only group and svg leave it out.
  */
 export const builtinObjectDocDefinitions = {
 	rect: {
@@ -123,6 +127,7 @@ export const builtinObjectDocDefinitions = {
 		validateDoc: validateConnectorDoc,
 		extraKeys: CONNECTOR_EXTRA_KEYS,
 		summary: "edge / arrow between objects",
+		defaults: CONNECTOR_DOC_DEFAULTS,
 	},
 	svg: {
 		features: SvgFeatures,

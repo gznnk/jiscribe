@@ -1,9 +1,9 @@
-import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import type React from "react";
 import { memo } from "react";
 
 import { PolygonElement } from "./PolygonStyled";
 import type { PolygonState } from "../../../../states/objects/primitives/polygon/PolygonState";
+import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
@@ -11,23 +11,31 @@ type PolygonProps = PolygonState;
 
 const PolygonComponent: React.FC<PolygonProps> = ({
 	id,
+	type,
 	points,
 	fill,
 	stroke,
-	strokeWidth = DEFAULT_STROKE_WIDTH,
+	strokeWidth,
 	strokeDashType,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
+	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
+		type,
+		{ stroke, strokeWidth, strokeDashType, fill },
+	);
 
 	return (
 		<PolygonElement
 			data-kind="object"
 			data-id={id}
 			points={pointsAttr}
-			strokeColor={resolveAutoColor(stroke, "ink")}
-			fillColor={resolveAutoColor(fill, "surface")}
-			strokeWidth={strokeWidth}
-			strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
+			strokeColor={resolveAutoColor(shapeStyle.stroke, "ink")}
+			fillColor={resolveAutoColor(shapeStyle.fill, "surface")}
+			strokeWidth={shapeStyle.strokeWidth}
+			strokeDasharray={getStrokeDasharray(
+				shapeStyle.strokeDashType,
+				shapeStyle.strokeWidth,
+			)}
 		/>
 	);
 };

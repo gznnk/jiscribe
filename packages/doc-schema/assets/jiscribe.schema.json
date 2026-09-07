@@ -428,12 +428,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 100",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 100",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 100",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 100",
 					"type": "number",
 					"minimum": 0
 				},
@@ -526,12 +526,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Width in pixels. Default when created from the palette: 300",
+					"description": "Width in pixels. Size written when a creation omits it: 300",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Default when created from the palette: 200",
+					"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Size written when a creation omits it: 200",
 					"type": "number",
 					"minimum": 0
 				},
@@ -643,12 +643,12 @@
 					"type": "number"
 				},
 				"rx": {
-					"description": "Horizontal radius in pixels. Default when created from the palette: 50",
+					"description": "Horizontal radius in pixels. Size written when a creation omits it: 50",
 					"type": "number",
 					"minimum": 0
 				},
 				"ry": {
-					"description": "Vertical radius in pixels. Default when created from the palette: 50",
+					"description": "Vertical radius in pixels. Size written when a creation omits it: 50",
 					"type": "number",
 					"minimum": 0
 				},
@@ -987,12 +987,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 70",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 70",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 120",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1082,12 +1082,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 140",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 100",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 100",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1305,12 +1305,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 100",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 100",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 120",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1405,12 +1405,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 64",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 64",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 64",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 64",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1485,12 +1485,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 110",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 110",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1577,12 +1577,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 180",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 180",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 110",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 110",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1692,12 +1692,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 24",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1792,12 +1792,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 24",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1886,12 +1886,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 24",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2498,12 +2498,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 108",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 108",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2597,12 +2597,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 90",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 90",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2831,12 +2831,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 240",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 240",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2934,12 +2934,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 200",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 150",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2952,10 +2952,22 @@
 					"$ref": "#/$defs/TextStyle/properties/text"
 				},
 				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
+					"description": "Horizontal text alignment. Default: \"left\" (overrides the shared default \"center\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/TextAlign"
+						}
+					],
+					"default": "left"
 				},
 				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+					"description": "Vertical text alignment. Default: \"top\" (overrides the shared default \"middle\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/VerticalAlign"
+						}
+					],
+					"default": "top"
 				},
 				"fontColor": {
 					"description": "Font color as a CSS color string, or \"auto\" to follow the theme foreground. Sticky notes override the usual \"auto\" default with \"#000000\" (black), because a sticky is drawn on a light paper-colored background. Default: \"#000000\"",

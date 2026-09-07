@@ -1,4 +1,5 @@
 import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
@@ -57,6 +58,12 @@ export interface ICanvasRegistries {
 	 * actually drawn with.
 	 */
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
+	/**
+	 * Per-type stroke / fill defaults, needed by the pure tree wherever it reports
+	 * a shape style back: the style menus show the value the shape is drawn with,
+	 * so an object that sets nothing still shows its type's answer.
+	 */
+	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	stencil: StencilRegistry;

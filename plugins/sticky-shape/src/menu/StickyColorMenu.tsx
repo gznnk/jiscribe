@@ -1,13 +1,18 @@
-import type { ObjectMenuItemProps } from "@jiscribe/canvas";
+import type {
+	ObjectMenuItemProps,
+	ObjectShapeStyleDefaultsRegistry,
+} from "@jiscribe/canvas";
 import {
 	ColorPreviewIcon,
 	ObjectMenuButton,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
-	getFirstSelectedWithProp,
+	getFirstSelectedWithFeature,
 	useCanvasMessages,
+	useObjectShapeStyleDefaultsRegistry,
 	useSubmenuPosition,
 } from "@jiscribe/canvas-sdk";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/canvas-sdk/doc";
 import { memo, useRef } from "react";
 
 import { STICKY_PRESET_COLORS } from "./StickyColorConstants";
@@ -19,13 +24,24 @@ import {
 
 const SECTION_ID = "sticky-color";
 
+/**
+ * The paper color the menu shows: the selected note's own, resolved through the
+ * type's defaults (ObjectShapeStyleDefaultsRegistry) so a document that never
+ * wrote `fill` still shows the yellow the note is drawn with.
+ */
 const getSelectedFillColor = (
 	selectedIds: string[],
 	objects: ObjectMenuItemProps["objects"],
+	shapeStyleDefaults: ObjectShapeStyleDefaultsRegistry,
 ): string => {
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "fill");
-	const fill = (obj as Record<string, unknown>)?.fill;
-	return typeof fill === "string" ? fill : "transparent";
+	const selected = getFirstSelectedWithFeature(selectedIds, objects, "fill");
+	if (selected === undefined) {
+		return SHAPE_STYLE_FALLBACK.fill;
+	}
+	const ownFill = (selected as Record<string, unknown>).fill;
+	return shapeStyleDefaults.resolveShapeStyle(selected.type, {
+		fill: typeof ownFill === "string" ? ownFill : undefined,
+	}).fill;
 };
 
 /**
@@ -43,7 +59,12 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentColor = getSelectedFillColor(selectedIds, objects);
+	const shapeStyleDefaults = useObjectShapeStyleDefaultsRegistry();
+	const currentColor = getSelectedFillColor(
+		selectedIds,
+		objects,
+		shapeStyleDefaults,
+	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

@@ -1,4 +1,3 @@
-import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
 import { calcVectorAngleRad, type Point } from "@jiscribe/geometry";
@@ -9,6 +8,7 @@ import { ConnectorElement, ConnectorHitArea } from "./ConnectorStyled";
 import { dedupePoints } from "./utils/dedupePoints";
 import { toPointsAttr } from "./utils/toPointsAttr";
 import { Arrow, getArrowLineInset } from "../../arrows";
+import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { insetPolylineEnds } from "../../utils/insetPolylineEnds";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
@@ -28,15 +28,23 @@ type ConnectorProps = {
 const ConnectorComponent: React.FC<ConnectorProps> = ({
 	id,
 	points,
-	stroke = "auto",
-	strokeWidth = DEFAULT_STROKE_WIDTH,
+	stroke,
+	strokeWidth,
 	strokeDashType,
 	startArrow,
 	endArrow,
 	disablePointerEvents = false,
 }) => {
+	// The component draws that one type, so the type is named here rather than
+	// carried as a prop. It declares no creation defaults, which leaves every
+	// unset field on the shared last resort (SHAPE_STYLE_FALLBACK).
+	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
+		"connector",
+		{ stroke, strokeWidth, strokeDashType },
+	);
+	const resolvedStrokeWidth = shapeStyle.strokeWidth;
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
-	const strokeColor = resolveAutoColor(stroke, "ink");
+	const strokeColor = resolveAutoColor(shapeStyle.stroke, "ink");
 
 	// Polyline. Collapse redundant waypoints coinciding with endpoints before drawing.
 	const polyPoints = dedupePoints(points);
@@ -53,8 +61,8 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	// For hollow arrows, terminate the line at the arrow base so it does not pass through the hollow part.
 	const insetPoints = insetPolylineEnds(
 		polyPoints,
-		getArrowLineInset(startArrow) * strokeWidth,
-		getArrowLineInset(endArrow) * strokeWidth,
+		getArrowLineInset(startArrow) * resolvedStrokeWidth,
+		getArrowLineInset(endArrow) * resolvedStrokeWidth,
 	);
 	const linePointsAttr = toPointsAttr(insetPoints);
 
@@ -84,8 +92,11 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 			<ConnectorElement
 				points={linePointsAttr}
 				strokeColor={strokeColor}
-				strokeWidth={strokeWidth}
-				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
+				strokeWidth={resolvedStrokeWidth}
+				strokeDasharray={getStrokeDasharray(
+					shapeStyle.strokeDashType,
+					resolvedStrokeWidth,
+				)}
 			/>
 			{startArrow && startArrow !== "None" && (
 				<Arrow
@@ -94,7 +105,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					y={start.y}
 					color={strokeColor}
 					radians={startAngleRadians}
-					scale={strokeWidth}
+					scale={resolvedStrokeWidth}
 					dataKind="connector"
 					dataId={id}
 				/>
@@ -106,7 +117,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					y={end.y}
 					color={strokeColor}
 					radians={endAngleRadians}
-					scale={strokeWidth}
+					scale={resolvedStrokeWidth}
 					dataKind="connector"
 					dataId={id}
 				/>

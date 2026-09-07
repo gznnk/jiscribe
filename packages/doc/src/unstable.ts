@@ -58,6 +58,11 @@ export type {
 // or it measures at a size nothing is drawn at.
 export { TEXT_STYLE_FALLBACK } from "./text/style/textStyleFallback";
 
+// The stroke / fill counterpart: the last resort ObjectShapeStyleDefaultsRegistry
+// resolves to, for a host that shows a shape style with nothing selected to
+// resolve it from.
+export { SHAPE_STYLE_FALLBACK } from "./model/objects/utils/shapeStyleFallback";
+
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows
 // drift from the rendered line height.

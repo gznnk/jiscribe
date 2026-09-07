@@ -42,6 +42,12 @@ export { TextOverlay } from "./rendering/objects/base/TextOverlay/TextOverlay";
 // disagree wherever the type's defaults differ from TEXT_STYLE_FALLBACK.
 export { useObjectTextStyleDefaultsRegistry } from "./rendering/objects/registry/ObjectTextStyleDefaultsRegistryContext";
 
+// The stroke / fill counterpart, for the same kind of type: the per-canvas
+// registry of shape-style defaults, keyed by type. Resolve stroke, width, dash
+// and fill through it before drawing, or a document that omits one of them draws
+// differently from the same shape the editor's factory created.
+export { useObjectShapeStyleDefaultsRegistry } from "./rendering/objects/registry/ObjectShapeStyleDefaultsRegistryContext";
+
 // The active theme, for a component that has to read the host's handle
 // dimensions (zoom-adjusted geometry).
 export { useCanvasTheme } from "./theme/CanvasThemeContext";
@@ -138,6 +144,7 @@ export { useSubmenuPosition } from "./controllers/ui/menu/ObjectMenu/hooks/useSu
 export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 
 export { getFirstSelectedWithProp } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithProp";
+export { getFirstSelectedWithFeature } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithFeature";
 
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
 export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";

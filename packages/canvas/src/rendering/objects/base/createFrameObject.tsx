@@ -1,4 +1,3 @@
-import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import { joinRichTextLines } from "@jiscribe/doc/model/objects/types/RichText";
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
@@ -16,6 +15,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { useFontsLoadedNonceContext } from "../FontsLoadedNonceContext";
+import { useObjectShapeStyleDefaultsRegistry } from "../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { useObjectTextRegionRegistry } from "../registry/ObjectTextRegionRegistryContext";
 import { useObjectTextStyleDefaultsRegistry } from "../registry/ObjectTextStyleDefaultsRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
@@ -31,11 +31,11 @@ export type FrameShapeProps = {
 	"data-kind": "object";
 	"data-id": string;
 	transform: string;
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
+	/** Stroke color the shape draws with, `"auto"` already resolved to the theme ink. */
 	strokeColor: string;
-	/** Resolved fill color (auto is resolved to the theme surface). */
+	/** Fill color the shape draws with, `"auto"` already resolved to the theme surface. */
 	fillColor: string;
-	/** Resolved stroke width (an absent document value is resolved to DEFAULT_STROKE_WIDTH). */
+	/** Stroke width the shape draws with; an absent document value is resolved to the type's own default, else DEFAULT_STROKE_WIDTH. */
 	strokeWidth: number;
 	strokeDasharray?: string;
 };
@@ -107,6 +107,13 @@ export type FrameTextOverlayRenderer = (
  * text overlay, and memo; the only difference is the SVG shape drawn. So the common part is
  * consolidated here, and each shape only passes a `draw` function that returns its shape. `draw`
  * receives the state (width/height/rx, etc.) and the shared attributes `shape`.
+ *
+ * Stroke and fill are resolved in three steps, the same way text styling is: the
+ * object's own fields, then the type's own defaults
+ * (ObjectShapeStyleDefaultsRegistry), then the shared last resort
+ * (SHAPE_STYLE_FALLBACK). A document that omits `fill` on a type declaring
+ * `"auto"` therefore draws the theme surface, matching what the editor's factory
+ * would have written.
  *
  * Text follows `features.text`: a "body" type draws its single body slot, a
  * "slots" type draws one overlay per key of `state.text` (the authority on which
@@ -193,12 +200,17 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			rotation,
 			fill,
 			stroke,
-			strokeWidth = DEFAULT_STROKE_WIDTH,
+			strokeWidth,
 			strokeDashType,
 			text,
 			isEditing = false,
 			editingSlotId,
 		} = props;
+
+		const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
+			props.type,
+			{ stroke, strokeWidth, strokeDashType, fill },
+		);
 
 		// Subscribed to, never read: `draw` and SlotOverlay measure text while they
 		// render, and a context change is what gets past this component's memo when
@@ -215,10 +227,13 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			"data-kind": "object",
 			"data-id": id,
 			transform: transformAttr,
-			strokeColor: resolveAutoColor(stroke, "ink"),
-			fillColor: resolveAutoColor(fill, "surface"),
-			strokeWidth,
-			strokeDasharray: getStrokeDasharray(strokeDashType, strokeWidth),
+			strokeColor: resolveAutoColor(shapeStyle.stroke, "ink"),
+			fillColor: resolveAutoColor(shapeStyle.fill, "surface"),
+			strokeWidth: shapeStyle.strokeWidth,
+			strokeDasharray: getStrokeDasharray(
+				shapeStyle.strokeDashType,
+				shapeStyle.strokeWidth,
+			),
 		};
 
 		// Only the slot the editor is over must go blank; a caller that names no

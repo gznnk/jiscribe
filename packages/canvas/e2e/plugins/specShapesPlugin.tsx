@@ -1,7 +1,8 @@
 /**
  * Shapes that exist only so the core e2e specs have something to drive: a
  * drag-drawn `tile` listed in a category flyout, a click-placed `pin` pinned on
- * the bar, and a `card` that roots its render in a `<g>` and carries a text slot.
+ * the bar, a `card` that roots its render in a `<g>` and carries a text slot, and
+ * a `panel` that declares creation defaults of its own.
  * Core supplies none of those traits itself any more — every categorized shape
  * moved to a plugin, and sticky, the last click-placed and last `<g>`-rooted one,
  * to `@jiscribe/plugin-sticky-shape` — so the specs covering the StencilLibrary
@@ -132,6 +133,75 @@ const tileDefinition: ObjectTypeDefinition<TileDoc, TileState> = {
 	stencils: [
 		{ id: "tile", objectType: "tile", label: "Tile", icon: SpecShapeIcon },
 	],
+};
+
+/**
+ * The panel's box. Same shape as `drawSpecShapeBox`, but the fill goes through
+ * CSS: an `"auto"` fill resolves to a `var(--jiscribe-*)` token, which an SVG
+ * presentation attribute cannot read.
+ */
+const drawPanelBox = (
+	state: { width: number; height: number },
+	{ strokeColor, fillColor, ...shape }: FrameShapeProps,
+) => (
+	<rect
+		{...shape}
+		x={-state.width / 2}
+		y={-state.height / 2}
+		width={state.width}
+		height={state.height}
+		stroke={strokeColor}
+		style={{ fill: fillColor }}
+		pointerEvents="auto"
+	/>
+);
+
+const PanelFeatures = {
+	type: "panel",
+	geometry: "rect",
+	transform: true,
+	stroke: true,
+	fill: true,
+} as const satisfies ObjectFeatures;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const PanelDocBrand: unique symbol;
+type PanelDoc = CreateObjectType<typeof PanelFeatures, typeof PanelDocBrand>;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const PanelStateBrand: unique symbol;
+type PanelState = CreateObjectState<
+	typeof PanelFeatures,
+	typeof PanelStateBrand
+>;
+
+const PANEL_DOC_DEFAULTS: Omit<PanelDoc, "id"> = {
+	type: "panel",
+	x: 0,
+	y: 0,
+	width: 100,
+	height: 100,
+	fill: AUTO_COLOR,
+	stroke: AUTO_COLOR,
+	strokeWidth: 4,
+} as const as PanelDoc;
+
+/**
+ * The only spec shape declaring its creation defaults to the registries
+ * (`defaults`), and the only one whose fill is AUTO_COLOR rather than
+ * transparent: the type a document has to omit `fill` / `strokeWidth` on for the
+ * three-step resolution to be visible (default-fill.spec.ts). Off the toolbar and
+ * out of every category, so it exists only for documents to name.
+ */
+const panelDefinition: ObjectTypeDefinition<PanelDoc, PanelState> = {
+	features: PanelFeatures,
+	defaults: PANEL_DOC_DEFAULTS,
+	validateDoc: createFrameDocValidator(PanelFeatures),
+	factory: createFrameObjectFactory(PANEL_DOC_DEFAULTS),
+	mapper: createFrameMapper<PanelDoc, PanelState>(PanelFeatures),
+	stateValidator: createFrameStateValidator(PanelFeatures),
+	behavior: createFrameBehavior<PanelState>(),
+	component: createFrameObject<PanelState>(drawPanelBox),
 };
 
 const PinFeatures = {
@@ -313,6 +383,7 @@ export const specShapesPlugin: CanvasPlugin = {
 		tile: tileDefinition,
 		pin: pinDefinition,
 		card: cardDefinition,
+		panel: panelDefinition,
 	},
 };
 

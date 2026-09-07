@@ -2,6 +2,7 @@ import {
 	AUTO_COLOR,
 	BELOW_LABEL_STYLE_DEFAULTS,
 } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 import type {
@@ -51,7 +52,7 @@ export const BRACE_DOC_DEFAULTS: Omit<BraceDoc, "id"> = {
 	width: 24,
 	height: 160,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	direction: GROUP_MARKER_DIRECTION_DEFAULT,
 	tipPosition: GROUP_MARKER_TIP_POSITION_DEFAULT,
 	text: "",

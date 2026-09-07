@@ -1,4 +1,5 @@
 import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /**
@@ -40,9 +41,9 @@ export const HEXAGON_DOC_DEFAULTS: Omit<HexagonDoc, "id"> = {
 	y: 0,
 	width: 140,
 	height: 80,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "center",
 	verticalAlign: "middle",

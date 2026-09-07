@@ -1,3 +1,4 @@
+import { DEFAULT_STROKE_WIDTH } from "../../base/StrokeStyleDoc";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
@@ -39,5 +40,5 @@ export const POLYLINE_MIN_POINTS = 2;
 export const POLYLINE_DOC_DEFAULTS: Omit<PolylineDoc, "id" | "points"> = {
 	type: "polyline",
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 } as const as PolylineDoc;

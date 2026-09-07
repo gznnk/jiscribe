@@ -1,10 +1,12 @@
-import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_DOC_DEFAULTS,
+	ConnectorFeatures,
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { defaultRoutingForAnchors } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
 import {
 	isFreeEndpointRef,
 	isSameEndpoint,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
-import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { isTransformedFrame, type Point } from "@jiscribe/geometry";
 
 import type { AnchorSnapContext } from "./utils/calcNearestAnchor";
@@ -168,8 +170,10 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			},
 			// routing is omitted. When omitted, orthogonal (right-angle segments) is the default.
 			// Specify "straight" explicitly only when segments at any angle are wanted.
-			stroke: AUTO_COLOR,
-			strokeWidth: 2,
+			stroke: CONNECTOR_DOC_DEFAULTS.stroke,
+			strokeWidth: CONNECTOR_DOC_DEFAULTS.strokeWidth,
+			// The arrow head is this gesture's own choice, not a default of the type:
+			// a connector created through the doc-ops (ops/connectors) gets none.
 			endArrow: "ConcaveTriangle",
 		} as ConnectorState;
 

@@ -26,12 +26,12 @@
 				"type": "number"
 			},
 			"width": {
-				"description": "Width in pixels. Default when created from the palette: 300",
+				"description": "Width in pixels. Size written when a creation omits it: 300",
 				"type": "number",
 				"minimum": 0
 			},
 			"height": {
-				"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Default when created from the palette: 200",
+				"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Size written when a creation omits it: 200",
 				"type": "number",
 				"minimum": 0
 			},

@@ -1,15 +1,25 @@
 // @vitest-environment jsdom
 
+import { DEFAULT_FILL } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
+import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { theme } from "../../../../constants/theme";
+import type { FillStyleState } from "../../../../states/objects/base/FillStyleState";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { StrokeStyleState } from "../../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { FontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
+import { ObjectShapeStyleDefaultsRegistryContext } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { createFrameObject } from "../createFrameObject";
+import type { FrameShapeProps } from "../createFrameObject";
 import type * as TextOverlayModule from "../TextOverlay";
 
 /**
@@ -39,7 +49,11 @@ vi.mock("../TextOverlay", async (importOriginal) => {
 	};
 });
 
-type ProbeState = ObjectState & TransformedFrame & Partial<TextStyleState>;
+type ProbeState = ObjectState &
+	TransformedFrame &
+	StrokeStyleState &
+	FillStyleState &
+	Partial<TextStyleState>;
 
 const probeState: ProbeState = {
 	id: "frame-1",
@@ -55,11 +69,25 @@ const probeState: ProbeState = {
 	text: { [BODY_TEXT_SLOT_ID]: { text: "hello" } },
 };
 
-/** Mounts one frame shape and lets the test drive the nonce the tree is given. */
-const renderFrameShape = () => {
+/**
+ * Mounts one frame shape and lets the test drive the nonce the tree is given.
+ *
+ * `shapeStyleDefaults` stands in for the canvas's own registry, so a test can
+ * see what a type's declared defaults do to a state that omits the field; the
+ * empty default registry leaves every omission on the shared last resort.
+ */
+const renderFrameShape = (options?: {
+	state?: ProbeState;
+	shapeStyleDefaults?: ObjectShapeStyleDefaultsRegistry;
+}) => {
 	const drawCount = { value: 0 };
-	const FrameShape = createFrameObject<ProbeState>((state, shape) => {
+	const drawnShape: { value: FrameShapeProps | null } = { value: null };
+	const state = options?.state ?? probeState;
+	const shapeStyleDefaults =
+		options?.shapeStyleDefaults ?? createObjectShapeStyleDefaultsRegistry();
+	const FrameShape = createFrameObject<ProbeState>((drawState, shape) => {
 		drawCount.value += 1;
+		drawnShape.value = shape;
 		// Only the attributes a bare SVG element accepts: the real shapes hand the
 		// resolved colors to an emotion element, which is beside the point here.
 		return (
@@ -67,8 +95,8 @@ const renderFrameShape = () => {
 				data-kind={shape["data-kind"]}
 				data-id={shape["data-id"]}
 				transform={shape.transform}
-				width={state.width}
-				height={state.height}
+				width={drawState.width}
+				height={drawState.height}
 			/>
 		);
 	});
@@ -76,19 +104,31 @@ const renderFrameShape = () => {
 	const root = createRoot(container);
 	return {
 		drawCount,
+		drawnShape,
 		render: (nonce: number): void => {
 			act(() =>
 				root.render(
-					<FontsLoadedNonceContext value={nonce}>
-						<svg>
-							<FrameShape {...probeState} />
-						</svg>
-					</FontsLoadedNonceContext>,
+					<ObjectShapeStyleDefaultsRegistryContext value={shapeStyleDefaults}>
+						<FontsLoadedNonceContext value={nonce}>
+							<svg>
+								<FrameShape {...state} />
+							</svg>
+						</FontsLoadedNonceContext>
+					</ObjectShapeStyleDefaultsRegistryContext>,
 				),
 			);
 		},
 		unmount: () => act(() => root.unmount()),
 	};
+};
+
+/** A registry answering for the probe's own type and nothing else. */
+const registryFor = (
+	defaults: Parameters<ObjectShapeStyleDefaultsRegistry["register"]>[1],
+): ObjectShapeStyleDefaultsRegistry => {
+	const registry = createObjectShapeStyleDefaultsRegistry();
+	registry.register(probeState.type, defaults);
+	return registry;
 };
 
 describe("createFrameObject", () => {
@@ -116,6 +156,46 @@ describe("createFrameObject", () => {
 		shape.render(0);
 
 		expect(shape.drawCount.value).toBe(drawnBefore);
+		shape.unmount();
+	});
+
+	it("draws the type's own fill where the state omits one", () => {
+		const shape = renderFrameShape({
+			shapeStyleDefaults: registryFor({ fill: AUTO_COLOR }),
+		});
+		shape.render(0);
+
+		expect(shape.drawnShape.value?.fillColor).toBe(theme.objectSurface);
+		shape.unmount();
+	});
+
+	it("draws the type's own stroke width where the state omits one", () => {
+		const shape = renderFrameShape({
+			shapeStyleDefaults: registryFor({ strokeWidth: 4 }),
+		});
+		shape.render(0);
+
+		expect(shape.drawnShape.value?.strokeWidth).toBe(4);
+		shape.unmount();
+	});
+
+	it("falls to the shared last resort for a type declaring nothing", () => {
+		const shape = renderFrameShape();
+		shape.render(0);
+
+		expect(shape.drawnShape.value?.strokeWidth).toBe(DEFAULT_STROKE_WIDTH);
+		expect(shape.drawnShape.value?.fillColor).toBe(DEFAULT_FILL);
+		shape.unmount();
+	});
+
+	it("lets the state's own fill win over the type's", () => {
+		const shape = renderFrameShape({
+			state: { ...probeState, fill: "#ff0000" },
+			shapeStyleDefaults: registryFor({ fill: AUTO_COLOR }),
+		});
+		shape.render(0);
+
+		expect(shape.drawnShape.value?.fillColor).toBe("#ff0000");
 		shape.unmount();
 	});
 

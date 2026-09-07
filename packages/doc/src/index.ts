@@ -47,7 +47,10 @@ export type { CreateObjectType } from "./model/objects/types/CreateObjectType";
 // group cannot be left out. Consumers that enumerate style properties of their own —
 // the AI schema generator's property table is the one outside this package — build
 // their lists from these rather than spelling the names again.
-export { FILL_STYLE_KEYS } from "./model/objects/base/FillStyleDoc";
+export {
+	DEFAULT_FILL,
+	FILL_STYLE_KEYS,
+} from "./model/objects/base/FillStyleDoc";
 export {
 	DEFAULT_STROKE_WIDTH,
 	STROKE_STYLE_KEYS,
@@ -120,6 +123,13 @@ export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";
+// The stroke / fill defaults a type declares through its creation defaults, and
+// what one shape's style resolves to once type and last resort are folded in.
+export { extractShapeStyleDefaults } from "./plugin/ObjectShapeStyleDefaultsRegistry";
+export type {
+	ObjectShapeStyleDefaults,
+	ResolvedShapeStyle,
+} from "./plugin/ObjectShapeStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidatorRegistry";
 export type { SemanticDiagnostic } from "./model/types/SemanticDiagnostic";

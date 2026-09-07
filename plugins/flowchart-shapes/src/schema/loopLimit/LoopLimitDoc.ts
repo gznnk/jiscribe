@@ -1,4 +1,5 @@
 import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /** Length of the cut top corners as a fraction of the shorter side. */
@@ -36,9 +37,9 @@ export const LOOP_LIMIT_DOC_DEFAULTS: Omit<LoopLimitDoc, "id"> = {
 	y: 0,
 	width: 140,
 	height: 80,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "center",
 	verticalAlign: "middle",
