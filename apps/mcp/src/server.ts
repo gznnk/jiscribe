@@ -17,6 +17,7 @@ import type { Diagnostic } from "@jiscribe/doc-tools";
 import {
 	resolveContentBox,
 	diagnoseDoc,
+	hasOwnTextLayout,
 	measureWrappedText,
 	validateDoc,
 } from "@jiscribe/doc-tools";
@@ -325,7 +326,7 @@ export function createJiscribeMcpServer(): McpServer {
 						.string()
 						.default("rect")
 						.describe(
-							"Object type to measure against (rect, stadium, card, ...). A type that draws its label outside its outline is measured without a fit verdict, since its box does not constrain the text.",
+							"Object type to measure against (rect, stadium, card, ...). A type that draws its label outside its outline is measured without a fit verdict, since its box does not constrain the text. A type that lays its body out itself (markdown) is not measured at all.",
 						),
 					width: z.number().positive().describe("Shape width in px."),
 					height: z
@@ -628,7 +629,7 @@ function round(value: number): number {
  * given the height is not judged). The wording is kept in line with the CLI too
  * (engine/apps/cli/src/measureCommand.ts): a type that draws outside its box is
  * only measured and gets no fit verdict, and a type outside the shipped set comes
- * back as an error.
+ * back as an error, as does a type that lays its body out itself.
  */
 function measureTextInShape(params: {
 	text: string;
@@ -646,6 +647,14 @@ function measureTextInShape(params: {
 	});
 	if (resolution.kind === "unknown") {
 		return `error: unknown shape type "${shape}" (not in the standard set)`;
+	}
+
+	// Wrapping the string into plain lines describes nothing about a body its own
+	// type renders (markdown's headings, lists and fenced blocks each take a size
+	// of their own), so the call is refused rather than answered with a figure
+	// that is about something else.
+	if (hasOwnTextLayout(shape)) {
+		return `error: shape ${shape} lays its body out itself, so laying the text out as plain lines says nothing about how it is drawn; measure it on an open canvas with measure_rendered_text, which reads the rendered blocks`;
 	}
 
 	const font = {

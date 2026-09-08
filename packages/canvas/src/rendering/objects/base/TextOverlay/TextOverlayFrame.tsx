@@ -15,6 +15,15 @@ import { resolveAutoColor } from "../../utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../utils/verticalAlignToAlignItems";
 
 export type TextOverlayFrameProps = {
+	/**
+	 * Id of the object the text belongs to, written to `data-object-id` so
+	 * measurement can find this box in the live DOM (see measureTextSlot).
+	 * Omitted leaves the box unaddressable, which only costs a type that draws
+	 * its own body: those are measured off the DOM rather than simulated.
+	 */
+	objectId?: string;
+	/** Which slot is drawn, written to `data-slot` beside `objectId`; omitting either leaves the box unaddressable. */
+	slotId?: string;
 	/** Text region left edge in the shape's local coordinates (from calcTextRegion). */
 	x: number;
 	/** Text region top edge in the shape's local coordinates (from calcTextRegion). */
@@ -70,6 +79,8 @@ export type TextOverlayFrameProps = {
  * boundary is the caller (TextOverlay, or the type's own overlay renderer).
  */
 export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
+	objectId,
+	slotId,
 	x,
 	y,
 	width,
@@ -90,6 +101,14 @@ export const TextOverlayFrame: React.FC<TextOverlayFrameProps> = ({
 
 	return (
 		<ForeignObjectElement
+			// Neither data-kind nor data-id, though the shape element carries both:
+			// data-kind is the gesture recognizer's target vocabulary
+			// (getGestureTarget), which a box holding clickable content — a Markdown
+			// link — would start resolving to, and a second data-id per object makes
+			// every `[data-id="…"]` locator in the e2e suites ambiguous.
+			data-layer="text-overlay"
+			data-object-id={objectId}
+			data-slot={slotId}
 			// The region offset rides on the transform instead of x/y: Chromium
 			// rasterizes a foreignObject's HTML at its box position rounded to whole
 			// pixels, and rounding `y` on its own breaks the cancellation between the

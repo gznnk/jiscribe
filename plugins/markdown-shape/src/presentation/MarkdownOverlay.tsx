@@ -8,6 +8,8 @@ import { memo, useEffect, useMemo, useRef } from "react";
 import { MarkdownBody } from "./MarkdownStyled";
 
 const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
+	id,
+	slotId,
 	x,
 	y,
 	width,
@@ -54,6 +56,8 @@ const MarkdownOverlayComponent: React.FC<FrameTextOverlayProps> = ({
 
 	return (
 		<TextOverlayFrame
+			objectId={id}
+			slotId={slotId}
 			x={x}
 			y={y}
 			width={width}

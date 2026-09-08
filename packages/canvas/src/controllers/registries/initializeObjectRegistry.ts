@@ -414,6 +414,9 @@ export const applyObjectDefinition = (
 	if (hasInsetTextRegion) {
 		registries.objectTextVerticalBasis.register(type);
 	}
+	if (definition.textLayout === "own") {
+		registries.objectTextLayout.register(type);
+	}
 	// A type whose doc may leave `height` out gets the shared derivation, which is
 	// inert for every object of it that states one — the two are mutually
 	// exclusive anyway, a content-resized type storing no size at all
@@ -542,6 +545,7 @@ export const initializeObjectRegistry = (
 	registries.objectContentResizer.clear();
 	registries.objectAutoHeight.clear();
 	registries.objectTextVerticalBasis.clear();
+	registries.objectTextLayout.clear();
 	registries.objectComponent.clear();
 	registries.objectSvgDefs.clear();
 	registries.objectTextRegion.clear();

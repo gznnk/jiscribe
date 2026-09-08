@@ -20,7 +20,7 @@ import type { AnyObjectTypeDefinition } from "./ObjectTypeDefinition";
  *   `createFrameObjectDefinition` carries the doc's verdict across as
  *   `autoHeight: false`, and the built-ins spread their doc definition whole
  *
- * @param definition - The type's UI definition; only `features`, `textRegion` and `autoHeight` are read, so the answer is a fact about the type
+ * @param definition - The type's UI definition; only `features`, `textRegion`, `autoHeight` and `textLayout` are read, so the answer is a fact about the type
  * @returns True when the canvas may offer this type the switch
  */
 export const supportsAutoHeightType = (
@@ -30,4 +30,5 @@ export const supportsAutoHeightType = (
 		features: definition.features,
 		textRegion: definition.textRegion ?? calcFullBoxTextRegion,
 		autoHeight: definition.autoHeight,
+		textLayout: definition.textLayout,
 	});

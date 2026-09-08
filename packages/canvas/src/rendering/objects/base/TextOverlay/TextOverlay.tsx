@@ -19,6 +19,10 @@ export type TextEditable = {
 };
 
 type TextOverlayProps = {
+	/** Id of the object the slot belongs to; marks the drawn box for measurement (TextOverlayFrame). */
+	id: string;
+	/** Which slot is drawn; marks the box beside `id`. */
+	slotId: string;
 	// Position and size (relative to parent shape's center)
 	x: number;
 	y: number;
@@ -42,6 +46,8 @@ type TextOverlayProps = {
 };
 
 const TextOverlayComponent: React.FC<TextOverlayProps> = ({
+	id,
+	slotId,
 	x,
 	y,
 	width,
@@ -69,6 +75,8 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 
 	return (
 		<TextOverlayFrame
+			objectId={id}
+			slotId={slotId}
 			x={x}
 			y={y}
 			width={width}

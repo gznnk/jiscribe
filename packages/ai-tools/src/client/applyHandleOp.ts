@@ -56,14 +56,18 @@ const describeMissingRoom = ({
 		.filter((missing) => missing !== null)
 		.join(" and ");
 
-/** The size of the slot measured; the same numbers whether or not it fits */
+/**
+ * The size of the slot measured; the same numbers whether or not it fits. A
+ * body its own type lays out (a Markdown card) reports no line count, so the
+ * count is replaced with where the size came from instead
+ */
 const describeTextSlotSize = ({
 	lineCount,
 	textSize,
 	regionSize,
 	bounds,
 }: TextSlotMeasurement): string =>
-	`${lineCount} line(s) taking ${formatNumber(textSize.width)} x ${formatNumber(textSize.height)} px in a text region of ${formatNumber(regionSize.width)} x ${formatNumber(regionSize.height)} px, drawn at ${formatPoint(bounds)}`;
+	`${lineCount === null ? "measured from its rendered blocks rather than wrapped lines (a Markdown body has none)," : `${lineCount} line(s)`} taking ${formatNumber(textSize.width)} x ${formatNumber(textSize.height)} px in a text region of ${formatNumber(regionSize.width)} x ${formatNumber(regionSize.height)} px, drawn at ${formatPoint(bounds)}`;
 
 const describeTextSlot = (
 	id: string,
@@ -267,7 +271,7 @@ export const applyHandleOp = (
 				const slotNote = op.slot === undefined ? "" : ` slot "${op.slot}" of`;
 				return {
 					ok: false,
-					text: `nothing to measure at${slotNote} "${op.id}": either no object has that id, its type has no text region (connectors and poly shapes have none), or it holds no such text slot — describe_canvas lists the slots an object has`,
+					text: `nothing to measure at${slotNote} "${op.id}": either no object has that id, its type has no text region (connectors and poly shapes have none), or it holds no such text slot. A body its own type lays out (a Markdown card) is measured off the drawing, so it also goes unmeasured while its text is empty or open in the editor — describe_canvas lists the slots an object has`,
 				};
 			}
 			return { ok: true, text: describeTextSlot(op.id, measurement) };

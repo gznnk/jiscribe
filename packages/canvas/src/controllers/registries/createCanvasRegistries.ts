@@ -22,6 +22,7 @@ import { createObjectAutoHeightRegistry } from "../../states/registry/ObjectAuto
 import { createObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
+import { createObjectTextLayoutRegistry } from "../../states/registry/ObjectTextLayoutRegistry";
 import { createObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
@@ -57,6 +58,7 @@ export const createCanvasRegistries = (
 		objectContentResizer: createObjectContentResizerRegistry(),
 		objectAutoHeight: createObjectAutoHeightRegistry(),
 		objectTextVerticalBasis: createObjectTextVerticalBasisRegistry(),
+		objectTextLayout: createObjectTextLayoutRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		objectTextRegion: createObjectTextRegionRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),

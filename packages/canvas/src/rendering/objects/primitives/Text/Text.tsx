@@ -80,6 +80,8 @@ const TextComponent: React.FC<TextState & TextEditable> = ({
 			</TextHitGroup>
 			{bodySlot !== undefined && (
 				<TextOverlay
+					id={id}
+					slotId={BODY_TEXT_SLOT_ID}
 					x={-width / 2}
 					y={-height / 2}
 					width={width}

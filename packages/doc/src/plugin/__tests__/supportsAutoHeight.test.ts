@@ -68,6 +68,16 @@ describe("supportsAutoHeight", () => {
 		).toBe(false);
 	});
 
+	it("is false where the type lays its body out itself", () => {
+		expect(
+			supportsAutoHeight({
+				features: boxFeatures,
+				textRegion: calcFullBoxTextRegion,
+				textLayout: "own",
+			}),
+		).toBe(false);
+	});
+
 	it("names the built-ins that can be sized from their text", () => {
 		const sized = Object.entries(builtinObjectDocDefinitions)
 			.filter(([, definition]) => supportsAutoHeight(definition))

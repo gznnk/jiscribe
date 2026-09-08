@@ -219,6 +219,91 @@ describe("diagnoseDoc", () => {
 		});
 	});
 
+	describe("bodies laid out by their own type", () => {
+		/**
+		 * The source of the reproduction document's first markdown card, shortened:
+		 * as wrapped plain text it is far more than a 60px-tall box holds, while the
+		 * blocks it renders to — a heading, paragraphs, a fenced block whose
+		 * delimiter lines take no line at all — take a size of their own.
+		 */
+		const markdownSource = [
+			"### 1. 今 ─ 同じ問いに 3 つの答え",
+			"",
+			"**線幅**\u3000レンダラーの引数既定値で解決する。型の宣言は見ない",
+			"",
+			"```tsx",
+			"// createFrameObject.tsx:196",
+			"strokeWidth = DEFAULT_STROKE_WIDTH,",
+			"```",
+		].join("\n");
+
+		/** One card of the given type, sized far too small for its text as plain lines. */
+		const card = (id: string, type: string, text?: string): never =>
+			({
+				id,
+				type,
+				x: 0,
+				y: 0,
+				width: 320,
+				height: 60,
+				fontSize: 14,
+				...(text === undefined ? undefined : { text }),
+			}) as never;
+
+		it("reports the shrunken card as unchecked rather than as overflowing", () => {
+			const diagnostics = diagnoseDoc({
+				version: 1,
+				root: [card("markdown-1", "markdown", markdownSource)],
+			});
+			expect(diagnostics).toEqual([
+				{
+					severity: "warning",
+					message:
+						"markdown-1: body laid out by the type itself (markdown), so whether it fits is not checked here; measure it on a mounted canvas (CanvasHandle measure.textSlot, the measure_text tool), which reads the rendered blocks",
+				},
+			]);
+		});
+
+		it("reports the same text in a shape the shared layout draws as overflowing", () => {
+			// The guard on the test above: the box really is too small for the text as
+			// wrapped plain lines, so the silence there is the declaration's doing.
+			const diagnostics = diagnoseDoc({
+				version: 1,
+				root: [card("rect-1", "rect", markdownSource)],
+			});
+			expect(diagnostics[0]).toMatchObject({
+				severity: "error",
+				objectId: "rect-1",
+			});
+		});
+
+		it("names every such object in one warning, in document order", () => {
+			const diagnostics = diagnoseDoc({
+				version: 1,
+				root: [
+					card("markdown-1", "markdown", markdownSource),
+					card("markdown-2", "markdown", "# 見出しだけの短い本文"),
+				],
+			});
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0].message).toMatch(
+				/^markdown-1, markdown-2: body laid out by the type itself \(markdown\)/,
+			);
+		});
+
+		it("passes over a card holding no text", () => {
+			expect(
+				diagnoseDoc({
+					version: 1,
+					root: [
+						card("markdown-1", "markdown"),
+						card("markdown-2", "markdown", ""),
+					],
+				}),
+			).toEqual([]);
+		});
+	});
+
 	it("warns rather than passes over a text-bearing type that declares no region", () => {
 		// Unreachable with the shipped set — every `text: "body"` type declares one
 		// — so the gap is staged here, which is what the warning is a guard against.

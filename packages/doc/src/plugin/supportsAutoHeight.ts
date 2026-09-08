@@ -4,15 +4,15 @@ import type { ObjectDocDefinition } from "./ObjectDocDefinition";
 import { BODY_TEXT_SLOT_ID } from "../text/style/textSlotId";
 
 /**
- * What {@link supportsAutoHeight} reads off a type: the two declarations that
+ * What {@link supportsAutoHeight} reads off a type: the three declarations that
  * decide the answer, plus the features that say whether there is a height to
  * decide about. A whole `ObjectDocDefinition` is one; so is the `{ features,
- * textRegion, autoHeight }` a definition is being assembled from, which is how a
- * doc validator asks before its definition exists.
+ * textRegion, autoHeight, textLayout }` a definition is being assembled from,
+ * which is how a doc validator asks before its definition exists.
  */
 export type AutoHeightDeclaration = Pick<
 	ObjectDocDefinition,
-	"features" | "textRegion" | "autoHeight"
+	"features" | "textRegion" | "autoHeight" | "textLayout"
 >;
 
 /**
@@ -30,10 +30,12 @@ const AUTO_HEIGHT_PROBE_BOX: Dimensions = { width: 200, height: 100 };
  * True for a type that stores a `height` at all (`geometry: "rect"`), carries one
  * body of text, declares a text region its box actually holds
  * (`ObjectDocDefinition.textRegion` answering a rectangle rather than `null`),
- * and has not denied it (`ObjectDocDefinition.autoHeight: false`). A shape
- * drawing its label outside the outline, one dividing its box into bands, and one
- * storing no height have nothing to derive a height from, so their `height` stays
- * required.
+ * draws that body with the shared text layout (no
+ * `ObjectDocDefinition.textLayout: "own"`, whose rendered blocks the layout
+ * cannot size) and has not denied it (`ObjectDocDefinition.autoHeight: false`).
+ * A shape drawing its label outside the outline, one dividing its box into
+ * bands, and one storing no height have nothing to derive a height from, so
+ * their `height` stays required.
  *
  * @param definition - The type's declarations (see {@link AutoHeightDeclaration}); nothing outside them is read, so the answer is a fact about the type
  * @returns True when the document may omit `height` for this type
@@ -41,8 +43,8 @@ const AUTO_HEIGHT_PROBE_BOX: Dimensions = { width: 200, height: 100 };
 export const supportsAutoHeight = (
 	definition: AutoHeightDeclaration,
 ): boolean => {
-	const { features, textRegion, autoHeight } = definition;
-	if (autoHeight === false) {
+	const { features, textRegion, autoHeight, textLayout } = definition;
+	if (autoHeight === false || textLayout === "own") {
 		return false;
 	}
 	if (features.geometry !== "rect" || features.text !== "body") {

@@ -8,6 +8,7 @@ import { PageScrollApp } from "./PageScrollApp";
 import type {
 	CanvasConfig,
 	CanvasDoc,
+	CanvasHandle,
 	CanvasParser,
 	CanvasPlugin,
 	StencilCategory,
@@ -45,6 +46,17 @@ export type PluginHarnessParams = {
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
+/** What the harness page hangs on `window` for the specs to drive it through. */
+type HarnessWindow = {
+	/** Swaps the mounted document, the way a host pushes an external change in. */
+	__setHarnessDoc?: (docText: string) => void;
+	/**
+	 * The mounted canvas's imperative handle; null once that canvas unmounts, and
+	 * absent on the ?multi / ?pageScroll pages, which mount their own canvases.
+	 */
+	__canvasHandle?: CanvasHandle | null;
+};
+
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
 	toolbarLayout: ToolbarEntry[] | undefined;
@@ -69,11 +81,9 @@ function HarnessApp({
 	// Hook for a spec to trigger external sync (a doc swap from the parent, SYNC_EXTERNAL).
 	// scenario/external-sync-cancels-drag.spec depends on it.
 	useEffect(() => {
-		(
-			window as unknown as {
-				__setHarnessDoc?: (docText: string) => void;
-			}
-		).__setHarnessDoc = (docText: string) => {
+		(window as unknown as HarnessWindow).__setHarnessDoc = (
+			docText: string,
+		) => {
 			const result = parser.parse(docText);
 			if (result.kind !== "ok") {
 				throw new Error(`invalid harness doc: ${result.kind}`);
@@ -81,6 +91,12 @@ function HarnessApp({
 			setLoadedDoc(result.doc);
 		};
 	}, [parser]);
+
+	// The handle itself rather than a wrapper per method: a spec measuring or
+	// reading the view calls the same API a host app would.
+	const bindCanvasHandle = useCallback((handle: CanvasHandle | null) => {
+		(window as unknown as HarnessWindow).__canvasHandle = handle;
+	}, []);
 
 	const handleDrop = useCallback(
 		async (e: React.DragEvent) => {
@@ -118,6 +134,7 @@ function HarnessApp({
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
+				ref={bindCanvasHandle}
 				doc={loadedDoc}
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}

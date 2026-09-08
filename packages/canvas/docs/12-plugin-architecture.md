@@ -143,6 +143,13 @@ mid-gesture, which is when an external write would be destructive). Editing the
 document itself needs no canvas and belongs to `createDocOps` in the headless
 `@jiscribe/doc`.
 
+`measure` reads the committed state, with one exception: a type that draws its
+body with a renderer of its own (`textLayout: "own"`, the Markdown card) has no
+wrapped lines to simulate, so `measure.textSlot` reads its drawn box off the live
+SVG and reports no `lineCount`. It suspends viewport culling to do so, and
+answers null while that body is not drawn — before the view mounts, and while its
+text is empty or open in the editor.
+
 Lifting state into the host (controlled props) was considered and rejected:
 
 1. **It fights the performance model.** `CanvasState` updates every frame during a

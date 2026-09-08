@@ -329,6 +329,8 @@ const CardComponent: React.FC<CardState & TextEditable> = (props) => {
 				pointerEvents="auto"
 			/>
 			<TextOverlay
+				id={id}
+				slotId={BODY_TEXT_SLOT_ID}
 				x={textRegion.x}
 				y={textRegion.y}
 				width={textRegion.width}

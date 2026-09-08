@@ -28,6 +28,7 @@ import {
 	resolveConnectorLabel,
 } from "./connectorLabelFit";
 import type { Diagnostic } from "./Diagnostic";
+import { hasOwnTextLayout } from "./hasOwnTextLayout";
 import {
 	describeLineStartProhibitions,
 	findLineStartProhibitions,
@@ -346,10 +347,56 @@ const diagnoseObjectTextLineStarts = (
 	];
 };
 
+/**
+ * True for an object holding text whose type draws its body with a renderer of
+ * its own (`ObjectDocDefinition.textLayout: "own"`), which is every body this
+ * file's plain-text layout describes nothing about.
+ */
+const hasOwnLayoutBodyText = (object: ObjectDoc): boolean => {
+	if (!hasOwnTextLayout(object.type)) {
+		return false;
+	}
+	const text = (object as TextBodyDoc).text;
+	return text !== undefined && richTextToPlain(text) !== "";
+};
+
+/**
+ * The one finding about the bodies laid out by their own type, empty when the
+ * document holds none. One diagnostic naming them all rather than one each: the
+ * remark is about what this check cannot see, so repeating it per object would
+ * only crowd out the findings that are about the document.
+ *
+ * No `objectId`, several objects being named at once (see {@link Diagnostic}).
+ */
+const diagnoseOwnLayoutBodies = (
+	objects: readonly ObjectDoc[],
+): Diagnostic[] => {
+	const ownLayoutObjects = objects.filter(hasOwnLayoutBodyText);
+	if (ownLayoutObjects.length === 0) {
+		return [];
+	}
+	const ids = ownLayoutObjects.map((object) => object.id).join(", ");
+	const types = [
+		...new Set(ownLayoutObjects.map((object) => object.type)),
+	].join(", ");
+	return [
+		{
+			severity: "warning",
+			message: `${ids}: body laid out by the type itself (${types}), so whether it fits is not checked here; measure it on a mounted canvas (CanvasHandle measure.textSlot, the measure_text tool), which reads the rendered blocks`,
+		},
+	];
+};
+
 /** Every finding about one object's text, empty when it fits and breaks well. */
 const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	const definition = standardObjectDocDefinitions.get(object.type);
 	if (definition?.features.text !== "body") {
+		return [];
+	}
+	// Nothing below describes a body its own type draws: the lines it would be
+	// wrapped into are not the blocks that are rendered. `diagnoseDoc` names such
+	// objects once for the whole document instead.
+	if (hasOwnTextLayout(object.type)) {
 		return [];
 	}
 	const body = object as TextBodyDoc;
@@ -520,15 +567,25 @@ const diagnoseConnectorLabelLineStarts = (
  * nothing measures it, and that is a gap in the shape set rather than a fact
  * about the document.
  *
+ * A body its own type draws (`ObjectDocDefinition.textLayout: "own"`, the
+ * `markdown` card) is passed over whole — its rendered blocks each take a size
+ * the plain-text layout knows nothing of, so measuring it here would report an
+ * overflow that is not there. Such objects are named together in one
+ * document-wide warning, the canvas being the only thing that can measure them
+ * (`measure.textSlot`, which reads the rendered blocks).
+ *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
- * @returns One error per overflowing object, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, and per object of a text-bearing type that declares no region; empty when everything fits
+ * @returns One error per overflowing object, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, and per object of a text-bearing type that declares no region; last, where the document holds bodies their own type draws, a single warning naming all of them; empty when everything fits
  */
 export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	const objects = flattenObjects(doc.root);
 	const objectsById = indexObjectsById(objects);
-	return objects.flatMap((object) => [
-		...diagnoseObjectText(object),
-		...diagnoseConnectorLabel(object, objectsById),
-		...diagnoseConnectorLabelLineStarts(object),
-	]);
+	return [
+		...objects.flatMap((object) => [
+			...diagnoseObjectText(object),
+			...diagnoseConnectorLabel(object, objectsById),
+			...diagnoseConnectorLabelLineStarts(object),
+		]),
+		...diagnoseOwnLayoutBodies(objects),
+	];
 };

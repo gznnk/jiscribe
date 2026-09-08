@@ -54,11 +54,18 @@ type FrameObjectDocCommonParams = {
 	/**
 	 * Pass `false` for a shape whose box must not be sized from its text even
 	 * though its `textRegion` says it could — one whose height is settled by
-	 * something else (the children it frames), or whose body is not drawn by the
-	 * shared text layout (see `ObjectDocDefinition.autoHeight`). Omit it in every
-	 * other case and let the region decide.
+	 * something else, the children it frames (see `ObjectDocDefinition.autoHeight`).
+	 * Omit it in every other case and let the region decide.
 	 */
 	autoHeight?: false;
+
+	/**
+	 * Pass `"own"` for a shape that draws its body with a renderer of its own
+	 * rather than the shared plain-text layout, so nothing sizes or checks the body
+	 * as wrapped plain text (see `ObjectDocDefinition.textLayout`). Omit it for a
+	 * body the layout draws.
+	 */
+	textLayout?: "own";
 
 	/** AI-facing description of the shape (see `ObjectDocDefinition.description`). */
 	description?: string;
@@ -135,6 +142,7 @@ export const createFrameObjectDoc = ({
 	extraKeys,
 	textRegion,
 	autoHeight,
+	textLayout,
 	description,
 	summary,
 	outlineDescription,
@@ -147,11 +155,13 @@ export const createFrameObjectDoc = ({
 	validateDoc: createFrameDocValidator(features, validateExtra, {
 		textRegion,
 		autoHeight,
+		textLayout,
 	}),
 	extraKeys,
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
 	autoHeight,
+	textLayout,
 	description,
 	summary,
 	outlineDescription,

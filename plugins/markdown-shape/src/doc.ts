@@ -15,9 +15,9 @@ export const markdownDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	defaults: MARKDOWN_DOC_DEFAULTS,
 	textRegion: calcFullBoxTextRegion,
 	// The body is rendered Markdown, not the wrapped plain text the shared layout
-	// measures, so a height derived from that measurement is not the one it draws
-	// at — headings, lists and code blocks all take a size of their own.
-	autoHeight: false,
+	// measures — headings, lists and code blocks all take a size of their own —
+	// so neither a height nor a fit verdict can be derived from that layout.
+	textLayout: "own",
 	// The schema $def is a handwritten template (nearly every property description
 	// is Markdown-specific), so only summary is consumed — it fills the generated
 	// doc tables.

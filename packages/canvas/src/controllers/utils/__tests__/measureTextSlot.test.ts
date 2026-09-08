@@ -33,8 +33,10 @@ const textRect = (
 		...overrides,
 	}) as unknown as ObjectState;
 
+// No `<svg>`: every type here lays its body out as plain text, which is
+// simulated from the state and never reads the drawing.
 const measure = (object: ObjectState, slotId = "body") =>
-	measureTextSlot(object, slotId, registries);
+	measureTextSlot(object, slotId, registries, null);
 
 describe("measureTextSlot", () => {
 	it("reports one line for a short text that fits", () => {

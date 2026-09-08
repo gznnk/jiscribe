@@ -88,6 +88,8 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 				transform={transformAttr}
 			/>
 			<TextOverlay
+				id={id}
+				slotId={BODY_TEXT_SLOT_ID}
 				x={textRegion.x}
 				y={textRegion.y}
 				width={textRegion.width}

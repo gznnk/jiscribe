@@ -238,6 +238,46 @@ describe("measure", () => {
 		expect(stdout).toBe("");
 	});
 
+	it("refuses a type that lays its body out itself, and exits 1", () => {
+		const { code, stderr, stdout } = capture(() =>
+			runMeasureCommand([
+				"--width",
+				"320",
+				"--height",
+				"60",
+				"--font-size",
+				"14",
+				"--shape",
+				"markdown",
+				"### 見出し\n\n本文",
+			]),
+		);
+		expect(code).toBe(1);
+		expect(stderr).toBe(
+			"error: shape markdown lays its body out itself, so laying the text out as plain lines says nothing about how it is drawn; it can only be measured on a mounted canvas, which reads the rendered blocks\n",
+		);
+		expect(stdout).toBe("");
+	});
+
+	it("refuses it in --json too, there being no size to report", () => {
+		const { code, stdout } = capture(() =>
+			runMeasureCommand([
+				"--json",
+				"--width",
+				"320",
+				"--height",
+				"60",
+				"--font-size",
+				"14",
+				"--shape",
+				"markdown",
+				"### 見出し",
+			]),
+		);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+	});
+
 	it("names an unknown type before insisting on a height", () => {
 		const { code, stderr } = capture(() =>
 			runMeasureCommand([

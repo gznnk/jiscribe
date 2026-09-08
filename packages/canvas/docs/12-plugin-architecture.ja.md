@@ -135,6 +135,12 @@ await canvasRef.current?.export.toSvgString();
 込むと壊れる状態か）の 3 つ。doc 自体の編集に canvas は要らないので、そちらは
 headless な `@jiscribe/doc` の `createDocOps` の担当。
 
+`measure` が読むのは確定済みの state だが、1 つだけ例外がある。本文を自前の
+レンダラーで描く型（`textLayout: "own"`。Markdown カード）には折り返し行が無く
+シミュレートできないので、`measure.textSlot` は描かれた箱を実際の SVG から読み、
+`lineCount` は返さない。そのためにビューポートカリングを一時停止する。本文が
+描かれていない間（ビュー mount 前、本文が空、編集中）は null を返す。
+
 state をホストへ持ち上げる（controlled props 化）案は検討したうえで**採らない**。
 
 1. **性能モデルと衝突する。**`CanvasState` はドラッグ中に RAF バッチで毎フレーム

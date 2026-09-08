@@ -199,6 +199,50 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("set_text");
 	});
 
+	it("says a body its type lays out itself was measured from its rendered blocks", () => {
+		const result = applyHandleOp(
+			{ kind: "measureText", id: "card-1" },
+			createFakeHandleControl({
+				measureText: () => ({
+					slotId: "body",
+					bounds: { x: 0, y: 0, width: 880, height: 400 },
+					textSize: { width: 880, height: 300 },
+					regionSize: { width: 880, height: 400 },
+					lineCount: null,
+					isOverflowing: false,
+				}),
+			}),
+		);
+
+		expect(result.ok).toBe(true);
+		expect(result.text).toContain("rendered blocks");
+		expect(result.text).not.toContain("line(s)");
+		expect(result.text).toContain("880 x 300 px");
+		expect(result.text).toContain("880 x 400 px");
+		expect(result.text).toContain("it fits");
+	});
+
+	it("still says how much room a body measured from its blocks is short of", () => {
+		const result = applyHandleOp(
+			{ kind: "measureText", id: "card-1" },
+			createFakeHandleControl({
+				measureText: () => ({
+					slotId: "body",
+					bounds: { x: 0, y: 0, width: 880, height: 60 },
+					textSize: { width: 880, height: 300 },
+					regionSize: { width: 880, height: 60 },
+					lineCount: null,
+					isOverflowing: true,
+				}),
+			}),
+		);
+
+		expect(result.ok).toBe(true);
+		expect(result.text).toContain("rendered blocks");
+		expect(result.text).toContain("clipping");
+		expect(result.text).toContain("240 px of height");
+	});
+
 	it("fails listing every reason when there is no text to measure", () => {
 		const result = applyHandleOp(
 			{ kind: "measureText", id: "gone", slot: "title" },

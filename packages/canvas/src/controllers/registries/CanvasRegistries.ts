@@ -16,6 +16,7 @@ import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoH
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
+import type { ObjectTextLayoutRegistry } from "../../states/registry/ObjectTextLayoutRegistry";
 import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { Camera, ScrollBoundsConfig } from "../CanvasTypes";
 import type { CommandRegistry } from "../commands/CommandRegistry";
@@ -55,6 +56,11 @@ export type CanvasRegistries = {
 	 * the body of, so the canvas offers it only where it does something.
 	 */
 	objectTextVerticalBasis: ObjectTextVerticalBasisRegistry;
+	/**
+	 * Which types draw their body with a renderer of their own, so measurement
+	 * reads the drawn DOM for them rather than simulating the plain-text layout.
+	 */
+	objectTextLayout: ObjectTextLayoutRegistry;
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	/**

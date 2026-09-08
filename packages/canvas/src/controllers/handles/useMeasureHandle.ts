@@ -1,6 +1,6 @@
 import { convertBoundingBoxToRect } from "@jiscribe/geometry";
 import type { Point, Rect } from "@jiscribe/geometry";
-import { useMemo } from "react";
+import { type RefObject, useMemo } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
@@ -45,7 +45,10 @@ export type CanvasHitTestOptions = {
  *
  * Everything is measured from the committed state rather than from the DOM, so
  * an object the current view has scrolled past (and viewport culling has
- * dropped) measures the same as one on screen.
+ * dropped) measures the same as one on screen. The one exception is a body its
+ * type lays out itself (a Markdown card), which only the drawing knows the size
+ * of; `textSlot` suspends culling to read it, so an off-screen one still
+ * measures.
  */
 export type CanvasMeasureHandle = {
 	/**
@@ -64,11 +67,17 @@ export type CanvasMeasureHandle = {
 	 * text takes, and whether the shape is clipping it
 	 * (see {@link TextSlotMeasurement}).
 	 *
+	 * A type that lays its body out itself (a Markdown card) is measured off the
+	 * drawing rather than simulated, so it answers only while that body is on the
+	 * canvas: before the view mounts, and while the slot's text is open in the
+	 * editor or empty, there is nothing drawn to measure and the answer is null.
+	 *
 	 * @param id - The object holding the slot
 	 * @param slotId - Which slot; omitted measures the shape's first slot, the
 	 *   one editing opens by default. An unknown slot yields null
 	 * @returns The measurement, or null for a missing object, a shape with no
-	 *   text region (a connector, a poly shape), or an absent slot
+	 *   text region (a connector, a poly shape), an absent slot, or a
+	 *   self-laid-out body that is not drawn right now
 	 */
 	textSlot(id: string, slotId?: string): TextSlotMeasurement | null;
 	/**
@@ -113,10 +122,18 @@ export type CanvasMeasureHandle = {
  * @param registries - The canvas's registry bundle, supplying the per-type
  *   silhouettes, text regions and style defaults every measurement resolves
  *   through; a plugin type is measured like a built-in one because of it
+ * @param svgRef - Ref to the canvas's `<svg>`; only the text measurement reads
+ *   it, and only for a type that lays its body out itself. Null before the view
+ *   mounts, which is what makes those measurements answer null
+ * @param withCullingSuspended - Runs a read with viewport culling suspended, so
+ *   a body read off the DOM is there to read even for an object the current view
+ *   has scrolled past (see useViewportCulling)
  */
 export const useMeasureHandle = (
 	canvasState: CanvasControllerState,
 	registries: CanvasRegistries,
+	svgRef: RefObject<SVGSVGElement | null>,
+	withCullingSuspended: <T>(snapshot: () => T) => T,
 ): CanvasMeasureHandle => {
 	const canvasStateRef = useCanvasStateMirror(canvasState);
 
@@ -145,7 +162,13 @@ export const useMeasureHandle = (
 				if (resolvedSlotId === undefined) {
 					return null;
 				}
-				return measureTextSlot(object, resolvedSlotId, registries);
+				const measure = () =>
+					measureTextSlot(object, resolvedSlotId, registries, svgRef.current);
+				// Only the DOM-reading path pays for the re-render the suspension
+				// forces; the simulated one reads nothing but the state.
+				return registries.objectTextLayout.hasOwnLayout(object.type)
+					? withCullingSuspended(measure)
+					: measure();
 			},
 
 			connectorPath: (id) => {
@@ -177,6 +200,6 @@ export const useMeasureHandle = (
 				);
 			},
 		}),
-		[canvasStateRef, registries],
+		[canvasStateRef, registries, svgRef, withCullingSuspended],
 	);
 };

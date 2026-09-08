@@ -23,8 +23,10 @@ export type UseCanvasHandleParams = {
 	svgRef: RefObject<SVGSVGElement | null>;
 	/**
 	 * Runs a snapshot with viewport culling suspended (see useViewportCulling).
-	 * Only the export namespace needs it, and it is why the whole handle is built
-	 * after the culling hook rather than beside the other state-derived hooks.
+	 * Only the two namespaces that read the live DOM need it — export, and the
+	 * text measurement of a type that lays its body out itself — and it is why the
+	 * whole handle is built after the culling hook rather than beside the other
+	 * state-derived hooks.
 	 */
 	withCullingSuspended: <T>(snapshot: () => T) => T;
 };
@@ -65,7 +67,12 @@ export const useCanvasHandle = ({
 	// Read-only counterparts: what the canvas made of the document, and what the
 	// user is doing to it. Only the history handle writes, and only through the
 	// same commands the shortcuts use.
-	const measure = useMeasureHandle(canvasState, registries);
+	const measure = useMeasureHandle(
+		canvasState,
+		registries,
+		svgRef,
+		withCullingSuspended,
+	);
 	const history = useHistoryHandle(dispatch, canvasState, registries);
 	const interaction = useInteractionHandle(canvasState);
 

@@ -101,3 +101,9 @@ body running over the shape's decoration). Those latter two are warnings: the
 text stays readable, and the remark is what a careful author would make.
 Spacing, aspect ratio and the rest of the layout rules in a project's own design
 guide are matters of taste and belong in a rule file, not in the default check.
+
+A body its own type draws rather than the shared text layout
+(`ObjectDocDefinition.textLayout: "own"` — the `markdown` card, whose headings,
+lists and fenced blocks each take a size of their own) is not measured at all:
+`diagnoseDoc` names such objects together in one warning and leaves the fit to a
+mounted canvas, which measures the rendered blocks (`measure.textSlot`).

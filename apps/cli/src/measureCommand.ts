@@ -1,6 +1,10 @@
 import { parseArgs } from "node:util";
 
-import { measureWrappedText, resolveContentBox } from "@jiscribe/doc-tools";
+import {
+	hasOwnTextLayout,
+	measureWrappedText,
+	resolveContentBox,
+} from "@jiscribe/doc-tools";
 
 import { parseCommandArgs } from "./parseCommandArgs";
 
@@ -34,6 +38,16 @@ const outsideBoxMessage = (shape: string): string =>
 const unknownShapeMessage = (shape: string): string =>
 	`error: unknown shape type "${shape}" (not in the standard set)`;
 
+/**
+ * What a type whose body its own renderer draws is reported as. The first half
+ * is worded the same as the MCP `measure_text` tool's refusal; only the redirect
+ * differs, that server having a canvas of its own to send the caller to.
+ *
+ * @param shape - Object type name as the command line spelled it
+ */
+const ownTextLayoutMessage = (shape: string): string =>
+	`error: shape ${shape} lays its body out itself, so laying the text out as plain lines says nothing about how it is drawn; it can only be measured on a mounted canvas, which reads the rendered blocks`;
+
 const parsePositiveNumber = (raw: string, name: string): number | null => {
 	const value = Number(raw);
 	if (!Number.isFinite(value) || value <= 0) {
@@ -65,8 +79,12 @@ const fail = (message?: string): number => {
  * the text is measured as authored and reported with a note, and neither a
  * `content` line nor a verdict is printed.
  *
+ * A shape whose body its own type draws (`markdown`) is not measured at all: its
+ * rendered blocks each take a size this layout knows nothing of, so the command
+ * reports that and stops, the way it does for a type it does not ship.
+ *
  * @param argv - Arguments after the sub-command name: `--width` (required), `--font-size` (required), `--bold`, `--shape` (default `rect`), `--height` (required for any shape whose outline is built from both sides and holds its text), `--json`, and the text as the single positional
- * @returns The process exit code: 0 when the text fits and for a shape whose box does not constrain it, 1 when it does not fit and for a type outside the shipped set, 2 for a malformed command line
+ * @returns The process exit code: 0 when the text fits and for a shape whose box does not constrain it, 1 when it does not fit and for a type this command cannot answer for (outside the shipped set, or laying its body out itself), 2 for a malformed command line
  */
 export const runMeasureCommand = (argv: readonly string[]): number => {
 	const parsed = parseCommandArgs(USAGE, () =>
@@ -118,6 +136,13 @@ export const runMeasureCommand = (argv: readonly string[]): number => {
 	});
 	if (resolution.kind === "unknown") {
 		process.stderr.write(`${unknownShapeMessage(shape)}\n`);
+		return 1;
+	}
+	// Reported rather than measured, and on the same footing as an unknown type:
+	// there is no size this command could print about such a body, `--json`
+	// included.
+	if (hasOwnTextLayout(shape)) {
+		process.stderr.write(`${ownTextLayoutMessage(shape)}\n`);
 		return 1;
 	}
 

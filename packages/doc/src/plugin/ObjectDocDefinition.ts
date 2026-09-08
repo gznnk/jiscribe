@@ -61,21 +61,35 @@ export type ObjectDocDefinition = {
 
 	/**
 	 * Set to `false` by a type whose box must not be sized from the text laid out
-	 * in its region, even though {@link textRegion} says it could — the one
-	 * declaration {@link import("./supportsAutoHeight").supportsAutoHeight} cannot
-	 * derive from the region, since neither reason is visible in a rectangle:
-	 *
-	 * - the height is settled by something other than the text (`container` is as
-	 *   tall as the children it frames; its region is only the title band)
-	 * - the body is not drawn by the shared text layout, so measuring it as
-	 *   wrapped plain text gives a height the shape is not drawn at (`markdown`
-	 *   renders its source)
+	 * in its region, even though {@link textRegion} says it could — the height
+	 * being settled by something other than the text (`container` is as tall as
+	 * the children it frames; its region is only the title band), which
+	 * {@link import("./supportsAutoHeight").supportsAutoHeight} cannot see in a
+	 * rectangle. A body the shared text layout does not draw at all is declared
+	 * through {@link textLayout} instead, which denies this as one of its
+	 * consequences.
 	 *
 	 * There is no `true`: a type may only ever deny what its region implies, never
 	 * claim what it does not — leaving this out is the normal case and lets the
 	 * region decide.
 	 */
 	autoHeight?: false;
+
+	/**
+	 * Set to `"own"` by a type that draws its body with a renderer of its own
+	 * rather than the shared plain-text layout (`markdown` renders its source as
+	 * HTML blocks: headings, lists and code fences each take a size of their own).
+	 * Everything that lays the body out as wrapped plain text is wrong for such a
+	 * type, so the declaration turns it off at the source: the box cannot be sized
+	 * from the text ({@link import("./supportsAutoHeight").supportsAutoHeight}
+	 * answers false), a headless overflow check (`@jiscribe/doc-tools`) reports the
+	 * body as unchecked rather than measuring it, and the canvas measures it from
+	 * the rendering (`measure.textSlot`) rather than from the layout.
+	 *
+	 * There is no `"shared"`: leaving this out is the normal case, the body being
+	 * drawn by the layout the region was declared for.
+	 */
+	textLayout?: "own";
 
 	/**
 	 * AI-facing description of the shape (1–3 sentences, English): what it draws,

@@ -13,6 +13,8 @@ export type { ValidateDocResult } from "./validateDoc";
 export { measureWrappedText } from "./measureWrappedText";
 export type { TextMeasureFont, WrappedTextMetrics } from "./measureWrappedText";
 
+export { hasOwnTextLayout } from "./hasOwnTextLayout";
+
 export { resolveContentBox } from "./resolveContentBox";
 export type {
 	ContentBoxResolution,

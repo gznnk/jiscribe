@@ -82,6 +82,19 @@ describe("measure_text", () => {
 		expect(result.text).toContain("fits yes");
 	});
 
+	it("refuses a type that lays its body out itself rather than measuring it", async () => {
+		const result = await client.callTool("measure_text", {
+			text: "### 見出し\n\n```ts\nconst a = 1;\n```",
+			shape: "markdown",
+			width: 320,
+			height: 60,
+			fontSize: 14,
+		});
+		expect(result.text).toBe(
+			"error: shape markdown lays its body out itself, so laying the text out as plain lines says nothing about how it is drawn; measure it on an open canvas with measure_rendered_text, which reads the rendered blocks",
+		);
+	});
+
 	it("makes a type outside the standard shape set an error", async () => {
 		const result = await client.callTool("measure_text", {
 			text: "x",

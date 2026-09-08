@@ -57,6 +57,8 @@ type FrameRenderState = ObjectState &
  * their own body.
  */
 export type FrameTextOverlayProps = {
+	/** Id of the object the slot belongs to; pass it to `TextOverlayFrame` as `objectId` so the drawn box can be measured. */
+	id: string;
 	/** Which slot is being drawn: a key of `state.text`. Single-slot shapes ignore it. */
 	slotId: string;
 	/** Text region left edge in local coordinates (shape center as origin). */
@@ -166,6 +168,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		);
 
 		const overlayProps: FrameTextOverlayProps = {
+			id: state.id,
 			slotId,
 			x: textRegion.x,
 			y: textRegion.y,
