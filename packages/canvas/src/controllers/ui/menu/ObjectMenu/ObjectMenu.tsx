@@ -15,6 +15,7 @@ import { KeepAspectRatioMenu } from "./items/KeepAspectRatioMenu";
 import { LineColorMenu } from "./items/LineColorMenu";
 import { LineStyleMenu } from "./items/LineStyleMenu";
 import { OpenReferenceMenu } from "./items/OpenReferenceMenu";
+import { PropertyPanelMenu } from "./items/PropertyPanelMenu";
 import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import { TextFormatMenu } from "./items/TextFormatMenu";
@@ -306,6 +307,12 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				onPointerLeave={handlePointerLeave}
 			>
 				{sections}
+				{/* The way into the sidebar, after every per-type section. Not a
+				    section itself, so a custom menu cannot drop it and the "nothing
+				    to show" check above does not count it. */}
+				<ObjectMenuSectionRow>
+					<PropertyPanelMenu />
+				</ObjectMenuSectionRow>
 			</ObjectMenuContainer>
 		</ObjectMenuWrapper>
 	);

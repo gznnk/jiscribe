@@ -6,7 +6,8 @@ type EllipsisIconProps = {
 };
 
 /**
- * Horizontal ellipsis (…) icon, used for the toggle opening the shape library.
+ * Horizontal ellipsis (…) icon, used for the toggle opening the shape library
+ * and for the ObjectMenu's button opening the properties sidebar.
  *
  * The dots are filled circles rather than the usual hairline glyph: the button
  * sits next to stroke-width 2 stencil icons and a lighter mark reads as disabled

@@ -5,9 +5,10 @@ import type { ExecutableCommand } from "../CommandTypes";
  *
  * Deliberately carries no keyboard shortcut, like its counterpart
  * ToggleStencilLibraryCommand: the panel is reached from its toolbar toggle
- * (`data-part="command:togglePropertyPanel"`) and closed from there or from its
- * own close button. Categorized as a view command because it changes what the
- * chrome shows, not the document.
+ * (`data-part="command:togglePropertyPanel"`) or from the ellipsis at the end
+ * of the ObjectMenu, and closed from the toolbar or from its own close button.
+ * Categorized as a view command because it changes what the chrome shows, not
+ * the document.
  */
 export const TogglePropertyPanelCommand: ExecutableCommand = {
 	id: "togglePropertyPanel",
