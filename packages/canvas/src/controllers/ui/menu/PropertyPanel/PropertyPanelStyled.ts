@@ -30,14 +30,6 @@ export const PropertyPanelContainer = styled.aside`
 	background: ${theme.surface};
 	border-left: 1px solid ${theme.border};
 	user-select: none;
-
-	/* Buttons and inputs do not inherit the font by default (the UA gives them
-	   its own), which would set the controls in a different face from the labels
-	   beside them — and, for Japanese, in whatever the OS falls back to. */
-	& button,
-	& input {
-		font-family: inherit;
-	}
 `;
 
 /** Title row of the panel: the heading and the close button. */

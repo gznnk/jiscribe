@@ -56,6 +56,19 @@ export const CanvasRoot = styled.div<CanvasRootProps>`
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;
 
+	/* Form controls do not inherit the font by default (the UA gives them its
+	   own), which would set every text-bearing button and input in the canvas UI
+	   — the context menu's items, the zoom readout, the color picker's Auto and
+	   its text field, the sidebar's controls — in a different face from the
+	   labels beside them, and, for Japanese, in whatever the OS falls back to.
+	   Claimed once here so no panel has to remember it. */
+	& button,
+	& input,
+	& select,
+	& textarea {
+		font-family: inherit;
+	}
+
 	/* The per-element claim. Effective as-is for the HTML pieces (menus); for the
 	   SVG shape elements Chromium and WebKit ignore touch-action, so the working
 	   claim for those is the touchstart guard in useCooperativeTouchClaim. */
