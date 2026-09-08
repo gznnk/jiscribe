@@ -28,6 +28,7 @@ const makeState = (params: {
 	future: DocSnapshot[];
 	eventStartSnapshot?: unknown;
 	textEditState?: unknown;
+	selectedIds?: string[];
 }): CanvasControllerState =>
 	({
 		history: {
@@ -38,6 +39,9 @@ const makeState = (params: {
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		eventStartSnapshot: params.eventStartSnapshot ?? null,
 		textEditState: params.textEditState ?? null,
+		selectedIds: params.selectedIds ?? [],
+		selectedConnectorId: null,
+		multiSelectGroup: null,
 		internalClipboard: null,
 		commitVersion: 5,
 		saveVersion: 0,
@@ -64,14 +68,23 @@ describe("RedoCommand", () => {
 		expect(next.history.future).toEqual([]);
 	});
 
-	it("clears the selection, increments saveVersion, and leaves commitVersion unchanged", () => {
+	it("keeps the selection the restored entry still holds", () => {
+		const state = makeState({
+			past: [],
+			present: snapshotPrev,
+			future: [snapshotNext],
+			selectedIds: ["r1"],
+		});
+		expect(RedoCommand.execute(state, registries).selectedIds).toEqual(["r1"]);
+	});
+
+	it("increments saveVersion and leaves commitVersion unchanged", () => {
 		const state = makeState({
 			past: [],
 			present: snapshotPrev,
 			future: [snapshotNext],
 		});
 		const next = RedoCommand.execute(state, registries);
-		expect(next.selectedIds).toEqual([]);
 		expect(next.saveVersion).toBe(1);
 		expect(next.commitVersion).toBe(5);
 	});

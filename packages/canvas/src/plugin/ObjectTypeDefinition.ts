@@ -8,6 +8,7 @@ import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/contro
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
+import type { PropertyPanelSection } from "../controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
@@ -170,6 +171,16 @@ export type ObjectTypeDefinition<
 	 * (return null and the emptied section collapses).
 	 */
 	menu?: ObjectMenuSection[];
+
+	/**
+	 * Properties-sidebar sections for this type. Omitted = derived from features
+	 * (see createDefaultPropertyPanel); a declared array replaces it entirely;
+	 * `[]` means no sections. Static per type; a row of the type's own goes in as
+	 * a `custom` item (PropertyPanelCustomItem), and per-instance visibility
+	 * belongs to that component (returning null leaves the row out, though the
+	 * section's own header stays).
+	 */
+	propertyPanel?: PropertyPanelSection[];
 };
 
 /**

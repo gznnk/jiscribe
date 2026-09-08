@@ -4,11 +4,12 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * Transient UI/interaction fields of CanvasControllerState.
  *
  * These are cleared as a set whenever the underlying object set is swapped out
- * (history navigation — see restoreHistorySnapshot — and external sync) or the
- * canvas is initialized. They are not part of CanvasDoc and carry no history.
+ * (history navigation — see restoreHistorySnapshot, which then re-selects what
+ * the restored objects still hold — and external sync) or the canvas is
+ * initialized. They are not part of CanvasDoc and carry no history.
  *
- * The shape library sidebar (`stencilLibraryPanel`) is deliberately absent: the panel is
- * persistent chrome that outlives the document shown next to it.
+ * The two sidebars (`stencilLibraryPanel` / `propertyPanel`) are deliberately absent:
+ * they are persistent chrome that outlives the document shown between them.
  *
  * Kept as a `Pick` so the field list stays type-locked to CanvasControllerState:
  * renaming a field there fails to compile here.

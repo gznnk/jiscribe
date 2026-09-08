@@ -1,7 +1,15 @@
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { buildSelectedIdsWithDescendants } from "../../../../../utils/buildSelectedIdsWithDescendants";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import type { TransformAnchorType } from "../TransformAnchorType";
+
+/**
+ * What a resize has to say about itself before it starts: only the modifier that
+ * locks the aspect ratio for this one resize. Narrower than the whole event so a
+ * resize that comes from a typed size rather than a drag can state it too.
+ */
+type ResizeIntent = Pick<CanvasEvent, "mods">;
 
 /**
  * The two anchors that move only a vertical edge, so a drag on them leaves the
@@ -16,7 +24,7 @@ const WIDTH_ONLY_ANCHORS: ReadonlySet<TransformAnchorType> = new Set([
 /** Whether the selection resizes both axes together whatever anchor is dragged. */
 const keepsProportion = (
 	state: CanvasControllerState,
-	event: CanvasEvent,
+	event: ResizeIntent,
 ): boolean => {
 	if (event.mods.shift) {
 		return true;
@@ -66,14 +74,15 @@ const settleHeights = (
  * frame of the drag is rebuilt from that snapshot; without it the flag would come
  * straight back and the derivation would fight the drag frame by frame.
  *
- * @param state - The state the drag starts from, its `eventStartSnapshot` already built
+ * @param state - The state the resize starts from; its `eventStartSnapshot` names the ids when a
+ *   drag built one, and off a drag (a stated size) the descendants are collected here instead
  * @param event - The dragStart, read for the modifier that locks the ratio for this drag alone
  * @param anchorType - The handle being dragged; `"rotation"` changes no extent and is left alone
  * @returns `state` itself when nothing in the selection was following its text
  */
 export const dropAutoHeightOnResize = (
 	state: CanvasControllerState,
-	event: CanvasEvent,
+	event: ResizeIntent,
 	anchorType: TransformAnchorType,
 ): CanvasControllerState => {
 	if (
@@ -83,7 +92,8 @@ export const dropAutoHeightOnResize = (
 		return state;
 	}
 	const ids =
-		state.eventStartSnapshot?.selectedIdsWithDescendants ?? state.selectedIds;
+		state.eventStartSnapshot?.selectedIdsWithDescendants ??
+		buildSelectedIdsWithDescendants(state.selectedIds, state.objects);
 	const objects = settleHeights(state.objects, ids);
 	if (objects === state.objects) {
 		return state;

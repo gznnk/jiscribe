@@ -104,7 +104,7 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 解釈して `connector.label` へ書く（label 未設定時は no-op）。共有 UI
 （`ColorPickerGrid` / `MenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を再実装せずに
 再利用するための割り切り。専用アクションを増やす案は、この commit 機微を二重持ちすることになるため
-採らない。
+採らない。ただし枠そのものの数値（x / y / width / height / rotation）はスタイルレジストリの管轄外なので、兄弟アクション `TRANSFORM_PROPERTY_UPDATE` を通す。commit 機微は二重に持たず共有する。 doc 自身の設定（今のところ `background` だけ）も同じ理由で 3 つ目の `DOCUMENT_PROPERTY_UPDATE` を通す。対象が選択ではなく doc である点だけが違い、`null` はヘッドレスの `setBackground` と同じく「フィールドを消してテーマに従う」を意味する。
 
 ## parser の二段検証（境界での防御）
 

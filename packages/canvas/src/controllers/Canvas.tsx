@@ -77,6 +77,11 @@ import type {
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
+import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
+import type {
+	PropertyPanelDocumentUpdater,
+	PropertyPanelTransformUpdater,
+} from "./ui/menu/PropertyPanel/PropertyPanelTypes";
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
 import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
@@ -456,7 +461,13 @@ const CanvasComponent = ({
 	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
-	useContainerResize(canvasRef, dispatch, state.stencilLibraryPanel.isOpen);
+	// Both sidebars take their width out of the viewport, so either one opening or
+	// closing has to be re-measured before the next paint.
+	useContainerResize(
+		canvasRef,
+		dispatch,
+		`${state.stencilLibraryPanel.isOpen}:${state.propertyPanel.isOpen}`,
+	);
 
 	// The document's own framing intent, applied only where the host expressed
 	// none: `initialConfig.viewport` is a camera the host already decided on, and
@@ -501,6 +512,32 @@ const CanvasComponent = ({
 		(property, value, commit, coalesceHistory = false) => {
 			dispatch({
 				type: "MENU_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
+		},
+		[dispatch],
+	);
+
+	const handleTransformUpdate = useCallback<PropertyPanelTransformUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "TRANSFORM_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
+		},
+		[dispatch],
+	);
+
+	const handleDocumentUpdate = useCallback<PropertyPanelDocumentUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "DOCUMENT_PROPERTY_UPDATE",
 				property,
 				value,
 				commit,
@@ -689,6 +726,7 @@ const CanvasComponent = ({
 						layout={toolbar?.layout}
 						hasLibrary={librarySections.length > 0}
 						isLibraryOpen={state.stencilLibraryPanel.isOpen}
+						isPropertyPanelOpen={state.propertyPanel.isOpen}
 						leading={toolbar?.leading}
 						trailing={toolbar?.trailing}
 					/>
@@ -826,6 +864,14 @@ const CanvasComponent = ({
 							/>
 						</ViewportOverlay>
 					</Viewport>
+					{state.propertyPanel.isOpen && (
+						<PropertyPanel
+							canvasState={menuCanvasState}
+							onPropertyUpdate={handleMenuPropertyUpdate}
+							onTransformUpdate={handleTransformUpdate}
+							onDocumentUpdate={handleDocumentUpdate}
+						/>
+					)}
 				</CanvasBody>
 				{/* Every modal is rendered here, as a sibling of the toolbar/body row, so
 				    its backdrop covers the whole canvas including the toolbar */}

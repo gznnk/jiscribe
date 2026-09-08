@@ -4,6 +4,7 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
+import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
 import { filterTextSlotMenuSections } from "../utils/filterTextSlotMenuSections";
@@ -12,33 +13,22 @@ const itemKey = (item: ObjectMenuItem): string =>
 	item.type === "custom" ? item.id : item.type;
 
 /**
- * AND-merges the item lists of multiple object types.
- * Keeps only the items common to all types.
- * For borderStyle, radius is enabled only when every type has radius: true.
+ * Reconciles the per-type variants of one item that survived the AND-merge.
+ * Only borderStyle carries an option to reconcile: the corner radius is offered
+ * only when every type in the selection has one, since the property reaches the
+ * others as a field they do not draw.
  */
-const mergeItems = (arrays: ObjectMenuItem[][]): ObjectMenuItem[] => {
-	if (arrays.length === 1) {
-		return arrays[0];
+const mergeItemVariants = (items: ObjectMenuItem[]): ObjectMenuItem => {
+	const first = items[0];
+	if (first.type !== "borderStyle") {
+		return first;
 	}
-
-	return arrays[0]
-		.filter((item) => {
-			const key = itemKey(item);
-			return arrays
-				.slice(1)
-				.every((arr) => arr.some((s) => itemKey(s) === key));
-		})
-		.map((item) => {
-			if (item.type !== "borderStyle") {
-				return item;
-			}
-			// Show radius only when every type has it set to true
-			const allRadius = arrays.every((arr) => {
-				const found = arr.find((s) => s.type === "borderStyle");
-				return found?.type === "borderStyle" && found.radius === true;
-			});
-			return { type: "borderStyle" as const, radius: allRadius };
-		});
+	return {
+		type: "borderStyle",
+		radius: items.every(
+			(item) => item.type === "borderStyle" && item.radius === true,
+		),
+	};
 };
 
 /**
@@ -46,26 +36,8 @@ const mergeItems = (arrays: ObjectMenuItem[][]): ObjectMenuItem[] => {
  * Keeps only sections whose id is common to all types, and AND-merges the items
  * within each section as well.
  */
-const mergeSections = (arrays: ObjectMenuSection[][]): ObjectMenuSection[] => {
-	if (arrays.length === 0) {
-		return [];
-	}
-	if (arrays.length === 1) {
-		return arrays[0];
-	}
-
-	return arrays[0]
-		.filter((section) =>
-			arrays.slice(1).every((arr) => arr.some((s) => s.id === section.id)),
-		)
-		.map((section) => ({
-			id: section.id,
-			items: mergeItems(
-				arrays.map((arr) => arr.find((s) => s.id === section.id)?.items ?? []),
-			),
-		}))
-		.filter((section) => section.items.length > 0);
-};
+const mergeSections = (arrays: ObjectMenuSection[][]): ObjectMenuSection[] =>
+	mergeSectionsByKey(arrays, itemKey, mergeItemVariants);
 
 /**
  * Collects the menu sections of the current selection, before any slot narrowing.

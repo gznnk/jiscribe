@@ -38,6 +38,9 @@ const CSS_COLOR_INPUT = 'input[placeholder="CSS color"]';
 const STENCIL_LIBRARY_PANEL =
 	'[data-kind="menu"][data-id="stencil-library-panel"]';
 
+/** Shared by the properties sidebar selectors below, which all scope into it. */
+const PROPERTY_PANEL = '[data-kind="menu"][data-id="property-panel"]';
+
 /**
  * Shared by the toolbar-scoped selectors below. Scoping them matters because while
  * the sidebar is open every preset it lists is a second button with the same title
@@ -109,6 +112,80 @@ export const selectors = {
 
 	/** Search box of the sidebar; filtering collapses the sections into one grid. */
 	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
+
+	/**
+	 * Toolbar toggle that opens and closes the properties sidebar, carrying the
+	 * open state on aria-expanded. Scoped to the toolbar so it does not also match
+	 * the panel's own close button, which routes through the same command.
+	 */
+	propertyPanelToggle: `${TOOLBAR} [data-part="command:togglePropertyPanel"]`,
+
+	/**
+	 * The properties sidebar itself. Mounted only while open, so closed it is
+	 * absent from the DOM: assert `toHaveCount(0)` for closed rather than waiting
+	 * for it to become invisible.
+	 */
+	propertyPanel: PROPERTY_PANEL,
+
+	/** Close (x) button in the properties sidebar header. */
+	propertyPanelClose: `${PROPERTY_PANEL} [data-part="command:togglePropertyPanel"]`,
+
+	/**
+	 * Section header of the properties sidebar; the disclosure button carrying
+	 * aria-expanded. Scoped to the panel, since the ObjectMenu's own section
+	 * toggles share the `toggle:` grammar.
+	 */
+	propertyPanelSection: (sectionId: string) =>
+		`${PROPERTY_PANEL} [data-part="toggle:${sectionId}"]`,
+
+	/**
+	 * A property-writing control inside the sidebar (a swatch, a segment, a
+	 * checkbox). The controls declare themselves as object-menu targets, so this
+	 * differs from `objectMenuSet` only in being scoped to the panel.
+	 */
+	propertyPanelSet: (property: string, value: string) =>
+		`${PROPERTY_PANEL} [data-part="set:${property}:${value}"]`,
+
+	/** A command button inside the sidebar (the Arrange section's stacking-order buttons). */
+	propertyPanelCommand: (commandId: string) =>
+		`${PROPERTY_PANEL} [data-part="command:${commandId}"]`,
+
+	/**
+	 * A number field of the sidebar, found by its test-only hook: `x` / `y` /
+	 * `width` / `height` / `rotation` for the frame, and the style property's own
+	 * name for the rest (`strokeWidth`, `rx`, `fontSize`).
+	 */
+	propertyPanelField: (name: string) =>
+		`${PROPERTY_PANEL} [data-testid="property-field:${name}"]`,
+
+	/**
+	 * One of the two spin buttons beside a number field. Scoped through the
+	 * field's own root (`> ` against the input), so the pair of a Size row does
+	 * not also match its neighbour's buttons; the aria-label is the only thing
+	 * that tells up from down.
+	 */
+	propertyPanelFieldSpin: (name: string, direction: "Increase" | "Decrease") =>
+		`${PROPERTY_PANEL} div:has(> [data-testid="property-field:${name}"]) button[aria-label="${direction}"]`,
+
+	/**
+	 * Title row of the sidebar. Its first child rather than a data-part of its
+	 * own: it is the one place inside the panel a press reaches no control, which
+	 * is what a test of "pressing outside" needs.
+	 */
+	propertyPanelHeader: `${PROPERTY_PANEL} > div:nth-child(1)`,
+
+	/**
+	 * Scrolling body of the sidebar, the child that holds the sections. The
+	 * dropdown panels are portalled to the panel root beside it, so they never
+	 * scroll with the rows they cover.
+	 */
+	propertyPanelBody: `${PROPERTY_PANEL} > div:nth-child(2)`,
+
+	/**
+	 * The open panel of a sidebar dropdown field, portalled to the sidebar's root.
+	 * Present only while open, so assert `toHaveCount(0)` for closed.
+	 */
+	propertyPanelDropdown: `${PROPERTY_PANEL} [data-part="panel"]`,
 
 	/** Shape on the canvas (rect / ellipse / polyline and so on). */
 	object: "[data-kind=object]",

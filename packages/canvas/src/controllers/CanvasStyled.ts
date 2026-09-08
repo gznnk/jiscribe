@@ -13,8 +13,8 @@ type ViewportProps = {
 
 /**
  * Outermost container that takes up full available space and stacks the
- * toolbar above the body row (shape library sidebar + canvas viewport, see
- * CanvasBody) as a flex column.
+ * toolbar above the body row (shape library sidebar + canvas viewport +
+ * properties sidebar, see CanvasBody) as a flex column.
  *
  * The gesture recognizer's pointerHandlers / pointer capture are attached to this element.
  * By containing both the toolbar (data-kind="menu") and the canvas region,
@@ -82,9 +82,9 @@ export const CanvasRoot = styled.div<CanvasRootProps>`
 `;
 
 /**
- * Row below the toolbar, holding the shape library sidebar (when open) and the
- * viewport side by side. `min-height: 0` lets the sidebar's own list scroll
- * instead of stretching the row past the canvas.
+ * Row below the toolbar, holding the shape library sidebar, the viewport and the
+ * properties sidebar side by side (each sidebar only while open). `min-height: 0`
+ * lets a sidebar's own list scroll instead of stretching the row past the canvas.
  */
 export const CanvasBody = styled.div`
 	display: flex;
@@ -94,8 +94,8 @@ export const CanvasBody = styled.div`
 `;
 
 /**
- * Canvas drawing region, the flex child of CanvasBody that takes the width the
- * shape library sidebar leaves.
+ * Canvas drawing region, the middle flex child of CanvasBody that takes the width
+ * the two sidebars leave.
  *
  * Edge-scroll detection is based on this element's rectangle (measured via
  * useContainerResize) and the screen position of the contained SVG (getScreenCTM).
@@ -107,7 +107,7 @@ export const Viewport = styled.div<ViewportProps>`
 	flex: 1 1 auto;
 	min-height: 0;
 	/* Row flex child: without this the viewport refuses to shrink below its
-	   content and the sidebar pushes it off the right edge. */
+	   content and the sidebars push it off the right edge. */
 	min-width: 0;
 	overflow: hidden;
 	${(props) => props.cursor && `cursor: ${props.cursor};`}

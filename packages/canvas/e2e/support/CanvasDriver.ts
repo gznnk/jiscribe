@@ -544,6 +544,25 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * Open the properties sidebar from the toolbar toggle and wait for its panel. It takes
+	 * its width off the right of the canvas area, so the origin does not move; the wait is
+	 * what the caller needs.
+	 */
+	async openPropertyPanel() {
+		await this.page.click(selectors.propertyPanelToggle);
+		await expect(this.page.locator(selectors.propertyPanel)).toBeVisible();
+	}
+
+	/**
+	 * Close the properties sidebar from its own close button, which unmounts it; the
+	 * counterpart of openPropertyPanel.
+	 */
+	async closePropertyPanel() {
+		await this.page.click(selectors.propertyPanelClose);
+		await expect(this.page.locator(selectors.propertyPanel)).toHaveCount(0);
+	}
+
+	/**
 	 * Whether a shape is armed to be drawn, read off the canvas cursor (crosshair while armed,
 	 * grab otherwise). It is the canvas that is watched rather than the button that armed it,
 	 * because a stencil item can unmount on the pointerup that picks it.
@@ -1448,6 +1467,21 @@ export class CanvasDriver {
 	async visualPolylineFor(id: string) {
 		const points = await this.objectById(id).getAttribute("points");
 		return this.page.locator(`polyline[points="${points}"]:not([data-kind])`);
+	}
+
+	/**
+	 * The drawn color of the canvas surface, read from the main svg's computed
+	 * style. A document background paints as that svg's inline background-color,
+	 * so this is what a `background` write has to move; with none declared it
+	 * reads whatever the theme's `canvasBg` resolves to.
+	 *
+	 * @returns Browser-normalized `rgb(...)` or `rgba(...)`
+	 */
+	async canvasSurfaceColor(): Promise<string> {
+		return this.page
+			.locator('[data-kind="canvas"] svg')
+			.first()
+			.evaluate((el) => getComputedStyle(el).backgroundColor);
 	}
 
 	/** The canvas pan/zoom state, as the main svg's viewBox. */

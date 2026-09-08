@@ -125,12 +125,35 @@ test.describe("the box a body's vertical alignment is measured against", () => {
 		await expect(toggle).toHaveAttribute("title", "Align Text to Shape Area");
 		expect(await textBoxHeightOf(canvas, "oval")).toBe(OVAL_RY * 2);
 
-		// Undo rebuilds the canvas from the previous document, selection included,
-		// so the shape is picked up again to read the switch back off the menu.
+		// Undo keeps the selection, so the switch reads back straight off the menu.
 		await canvas.undo();
 		expect(await textBoxHeightOf(canvas, "oval")).toBeCloseTo(REGION_HEIGHT, 3);
-		await canvas.selectAt({ x: OVAL_CX, y: OVAL_CY });
 		await expect(toggle).toHaveAttribute("title", "Align Text to Full Height");
+	});
+
+	test("is stated outright from the sidebar's two segments", async ({
+		canvas,
+	}) => {
+		await loadDoc(canvas);
+		await canvas.openPropertyPanel();
+		await canvas.selectAt({ x: OVAL_CX, y: OVAL_CY });
+
+		const region = canvas.page.locator(
+			selectors.propertyPanelSet("textVerticalBasis", "region"),
+		);
+		const frame = canvas.page.locator(
+			selectors.propertyPanelSet("textVerticalBasis", "frame"),
+		);
+		await expect(region).toHaveAttribute("aria-pressed", "true");
+		await expect(frame).toHaveAttribute("aria-pressed", "false");
+
+		await frame.click();
+		await expect(frame).toHaveAttribute("aria-pressed", "true");
+		expect(await textBoxHeightOf(canvas, "oval")).toBe(OVAL_RY * 2);
+
+		await region.click();
+		await expect(region).toHaveAttribute("aria-pressed", "true");
+		expect(await textBoxHeightOf(canvas, "oval")).toBeCloseTo(REGION_HEIGHT, 3);
 	});
 
 	test("is not offered on a shape whose region is its whole box already", async ({

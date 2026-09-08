@@ -26,6 +26,7 @@ import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransf
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import type { PropertyPanelRegistry } from "../ui/menu/PropertyPanel/PropertyPanelRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
@@ -83,6 +84,7 @@ export type CanvasRegistries = {
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
+	propertyPanel: PropertyPanelRegistry;
 	stencil: StencilRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	styleProperty: StylePropertyRegistry;

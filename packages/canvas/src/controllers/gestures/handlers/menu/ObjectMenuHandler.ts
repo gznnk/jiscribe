@@ -7,7 +7,9 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * GestureHandler that processes ObjectMenu item interactions.
- * Handles events with targetKind "menu" and targetId "object-menu".
+ * Handles events with targetKind "menu" and targetId "object-menu" — which the
+ * controls of the properties sidebar declare as well (see PropertyPanelHandler),
+ * so a property write from either surface lands here.
  *
  * Property updates from the ObjectMenu take two paths:
  * (1) This handler: via the gesture system (set: / slider:). Most property changes go through here.

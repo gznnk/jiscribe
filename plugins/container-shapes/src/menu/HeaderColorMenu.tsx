@@ -1,11 +1,9 @@
-import { isString } from "@jiscribe/basic-validators";
 import type { ObjectMenuItemProps } from "@jiscribe/canvas";
 import {
 	ObjectMenuColorPickerGrid,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
 	ObjectMenuButton,
-	getFirstSelectedPropValue,
 	resolveAutoColor,
 	resolveLocaleMessages,
 	useCanvasLocale,
@@ -15,16 +13,9 @@ import { memo, useRef } from "react";
 
 import { HeaderColorPreviewIcon } from "./HeaderColorPreviewIcon";
 import { containerMessagesByLocale } from "../messages/containerMessages";
-import { CONTAINER_DOC_DEFAULTS } from "../schema/ContainerDoc";
+import { getSelectedHeaderFill } from "../state/getSelectedHeaderFill";
 
 const SECTION_ID = "header-color";
-
-const getSelectedHeaderColor = (
-	selectedIds: string[],
-	objects: ObjectMenuItemProps["objects"],
-): string =>
-	getFirstSelectedPropValue(selectedIds, objects, "headerFill", isString) ??
-	CONTAINER_DOC_DEFAULTS.headerFill;
 
 /**
  * Header color menu (container only). Sets the `headerFill` property via a color
@@ -44,7 +35,7 @@ const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentColor = getSelectedHeaderColor(selectedIds, objects);
+	const currentColor = getSelectedHeaderFill(selectedIds, objects);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

@@ -88,18 +88,20 @@ State を Props として受け取り SVG を描画するだけの純粋コン�
 
 **トップレベルの `src/registry/` ディレクトリも `ObjectRegistry` クラスも存在しない**。形状ごとの機能は、**それぞれが属するレイヤーに共配置された**複数の小さなレジストリで解決される。
 
-| レジストリクラス                                                                 | 場所                                   | 解決する対象                                                      |
-| -------------------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------- |
-| `ObjectFactoryRegistry` / `ObjectDocValidatorRegistry`                           | `@jiscribe/doc` の `plugin/`           | 型別 ObjectFactory（Doc / bounds 生成）、Doc バリデータ           |
-| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                          | `states/registry/`                     | Doc ↔ State Mapper（+ features）・State バリデータ                |
-| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                              | `controllers/gestures/registry/`       | ジェスチャーハンドラ・`moveByDelta` / `transformByGroup`          |
-| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry` | `rendering/objects/registry/`          | 描画コンポーネント・編集テキスト領域・ヒットテスト / スナップ輪郭 |
-| `StencilRegistry` / `ObjectMenuRegistry` / `SelectionControlRegistry`            | `controllers/ui/...`（各ドメイン配下） | StencilLibrary プリセット・型別 ObjectMenu・型別 SelectionControl |
-| `CommandRegistry`                                                                | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）         |
+| レジストリクラス                                                                                | 場所                                   | 解決する対象                                                                                            |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `ObjectFactoryRegistry` / `ObjectDocValidatorRegistry`                                          | `@jiscribe/doc` の `plugin/`           | 型別 ObjectFactory（Doc / bounds 生成）、Doc バリデータ                                                 |
+| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                                         | `states/registry/`                     | Doc ↔ State Mapper（+ features）・State バリデータ                                                      |
+| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                                             | `controllers/gestures/registry/`       | ジェスチャーハンドラ・`moveByDelta` / `transformByGroup`                                                |
+| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry`                | `rendering/objects/registry/`          | 描画コンポーネント・編集テキスト領域・ヒットテスト / スナップ輪郭                                       |
+| `StencilRegistry` / `ObjectMenuRegistry` / `PropertyPanelRegistry` / `SelectionControlRegistry` | `controllers/ui/...`（各ドメイン配下） | StencilLibrary プリセット・型別 ObjectMenu・型別プロパティサイドバーのセクション・型別 SelectionControl |
+| `CommandRegistry`                                                                               | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）                                               |
 
 各レジストリは形状タイプ（`"rect"`, `"ellipse"` など）をキーにするため、形状横断的な処理を `if (type === ...)` の分岐なしで型安全に書ける。
 
 `StencilRegistry` が答えるのは「どのプリセットが存在するか」だけで、並びはホストが宣言する。`toolbar.layout` がツールバーの並び（ピン留めプリセットとカテゴリフライアウト）を、`stencilLibrary.sections` が**図形ライブラリのサイドバー**のセクションを決める。サイドバーはツールバーの `…` トグルでビューポートの左に開くパネルで、登録済みの全ステンシルをセクション分け・検索付きで並べる。どちらも同じ `StencilCategory` を取り、`presetIds` をレジストリに解決して、解決できない id と空になったセクションを落とす。パネルの開閉と折りたたみ状態は reducer state（`stencilLibraryPanel` (`isOpen` / `collapsedSectionIds`)）で、ツールバーからは `toggleStencilLibrary` コマンド、パネル自身のセクションヘッダと閉じるボタンからは `StencilLibraryPanelHandler` が動かす。常設パネルなのでどちらも `resetUiState` の対象外で、doc を差し替えてもユーザーが開いたままにした姿を保つ。パネルは開いている間だけマウントされ、ビューポートから自分の幅ぶんの場所を取る（オーバーレイでもスライドでもない）。その場所を取るぶんビューポートの左端が動き、放っておくと絵が画面上を一緒に流れてしまうので、`useContainerResize` が移動量を `CONTAINER_RESIZE` の `leftEdgeShift` として渡し、reducer がそのときのズームで `minX` から差し引く。絵は画面に留まったままで、パネルは左の帯を覆ったり戻したりするだけになる。この補正はカメラそのものに乗るので、`onViewportChange`（および `ref.viewport`）が返すカメラはパネルを開いている間その補正を含む。そのカメラを保存したホストが、次回マウント時にパネルを閉じた状態で復元すると、絵はパネル幅 ÷ ズームぶん横にずれて見える。
+
+**プロパティサイドバー**は、これと同じ仕組みを反対側の端に置いたもの。ホストが宣言するものは無く、ツールバーのあるキャンバスには必ずトグルが付き、パネルは閉じた状態から始まる。開閉とセクションの折りたたみ状態は reducer state（`propertyPanel` (`isOpen` / `collapsedSectionIds`)）で、ツールバーのトグルからもパネル自身の閉じるボタンからも `togglePropertyPanel` コマンドが動かす（後者は `PropertyPanelHandler` 経由）。図形ライブラリと同じく `resetUiState` の対象外で、開いている間だけマウントされ、ビューポートから自分の幅ぶんの場所を取る。開いている間はフローティングの ObjectMenu を描かない。サイドバーが ObjectMenu の内容を全て持つので、出しても重複するうえ選択のそばの絵を隠すだけになる（ObjectMenu のジェスチャハンドラは残る。サイドバーの部品がそこを通って書くため）。ただし右端にあるためビューポートの動く端は**右**だけで、補正すべきものが無い。`useContainerResize` は `leftEdgeShift` を 0 のまま新しいサイズだけを渡し、カメラには触らない。それでも描画前の再計測は要るので、フックの `layoutKey` は両パネルの開閉フラグをまとめて持つ。中身が型ごとに決まるのは ObjectMenu と同じで、`PropertyPanelRegistry` が型別のセクションを持ち（`propertyPanel` の宣言か、`createDefaultPropertyPanel` による `features` からの導出）、選択に出るのは選択中の全型が共通して持つものだけになる（`useMenuSections` と共有の `mergeSectionsByKey`。行単位まで突き合わせる）。何も選択していない間は、型別のセクションの代わりに文書自身の設定（`background`）を編集する「キャンバス」セクションを出し、その書き込みは `DOCUMENT_PROPERTY_UPDATE` で reducer に届く。型に属さないセクションが 1 つある。「重ね順」は重なり順のコマンドをテキストボタンで並べたもので、`isArrangeableSelection`（ObjectMenu の重なり順フライアウトを出す判定と同じ）が真のとき型別セクションの後ろにパネル自身が足す。コネクターやプラグインの型も宣言なしでこれを得る。
 
 ### canvas 単位のレジストリ（`CanvasConfig`）
 

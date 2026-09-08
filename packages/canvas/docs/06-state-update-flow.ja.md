@@ -16,6 +16,8 @@
 | `COMMAND`                            | ショートカット/メニュー/ツールバーのコマンド（undo/redo 含む） | `handleCommand` → [コマンドシステム](./05-command-system.ja.md)                           |
 | `PASTE`                              | クリップボードデータの適用                                     | `handlePaste`                                                                             |
 | `MENU_PROPERTY_UPDATE`               | ObjectMenu の入力（プレビュー / コミット）                     | `StylePropertyRegistry.apply` → [スタイルプロパティシステム](./10-style-properties.ja.md) |
+| `TRANSFORM_PROPERTY_UPDATE`          | プロパティサイドバーの入力（プレビュー / コミット）            | `handleTransformPropertyUpdate` → 変形ドラッグと同じリサイズ / 回転ユーティリティ         |
+| `DOCUMENT_PROPERTY_UPDATE`           | プロパティサイドバーのキャンバス節（プレビュー / コミット）    | （インライン）`state.background` を書く。`null` で消してテーマに従う                      |
 | `SYNC_EXTERNAL`                      | 外部（ホスト）からの doc 取り込み                              | → [外部同期](./07-external-sync.ja.md)                                                    |
 | `LOAD_DOCUMENT`                      | 別ドキュメントの読み込み（履歴を捨てる取り込み）               | → [外部同期](./07-external-sync.ja.md)                                                    |
 | `CONTAINER_RESIZE`                   | ビューポート寸法の更新                                         | （インライン）                                                                            |
@@ -37,6 +39,8 @@
   doc 変化のないドラッグで幽霊 undo エントリが生まれるのを防ぐ。
 - `MENU_PROPERTY_UPDATE` は `commit: false`（プレビュー）なら履歴を記録せず、
   `commit: true`（blur / Enter）でのみ `commitVersion` を進める。
+  `TRANSFORM_PROPERTY_UPDATE` と `DOCUMENT_PROPERTY_UPDATE` も同じコミット末尾
+  （`commitPropertyUpdate`）を通るので挙動は同じ。
 
 履歴は `state.history`（`past` / `present` / `future`）。`past` は直近 50 件に丸める。
 

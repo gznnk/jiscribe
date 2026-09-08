@@ -1,9 +1,9 @@
 import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { isSelectionTextVerticalBasisFrame } from "../../../../../commands/shape/ToggleTextVerticalBasisCommand";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
+import { isSelectionTextVerticalBasisFrame } from "../../../../../utils/textVerticalBasisSelection";
 import { TextVerticalBasisIcon } from "../../../../icons/TextVerticalBasisIcon";
 import {
 	ObjectMenuButton,

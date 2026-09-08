@@ -21,19 +21,33 @@ type ObjectMenuColorPickerGridProps = {
 	currentColor: string;
 	/** Property name (e.g. "fill", "stroke") */
 	property: string;
+	/**
+	 * Whether a swatch and the Auto button write through `onPropertyUpdate`
+	 * (committing at once) instead of through the `set:` gesture. Set by a picker
+	 * whose target is not the selection — the canvas background — since the
+	 * gesture route ends in the style registry, which only ever writes to
+	 * selected objects. Defaults to false, the floating menu's own route.
+	 */
+	writesThroughCallback?: boolean;
 	onPropertyUpdate: ObjectMenuPropertyUpdater;
 };
 
 /**
  * Color picker grid.
  * Displays preset color swatches (4×7 grid) and a CSS color text input.
- * Each swatch has data-kind="menu" and updates the property through the gesture system.
+ * Each swatch has data-kind="menu" and updates the property through the gesture system,
+ * unless `writesThroughCallback` opts the picker out of gestures entirely.
  * The text input previews in real time on onChange (commit: false), and
  * commits on onBlur / Enter (commit: true).
  */
 const ObjectMenuColorPickerGridComponent: React.FC<
 	ObjectMenuColorPickerGridProps
-> = ({ currentColor, property, onPropertyUpdate }) => {
+> = ({
+	currentColor,
+	property,
+	writesThroughCallback = false,
+	onPropertyUpdate,
+}) => {
 	const messages = useCanvasMessages();
 	const [inputValue, setInputValue] = useState(currentColor);
 	const [isValid, setIsValid] = useState(true);
@@ -88,6 +102,23 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 		[commit],
 	);
 
+	// The two routes a swatch (and the Auto button) can take. The gesture one
+	// keeps the `set:` grammar the floating menu is read by; the callback one
+	// opts out of gestures so no handler applies the write to the selection as
+	// well, and still carries data-part, which is what names the swatch.
+	const buildPickProps = (value: string) =>
+		writesThroughCallback
+			? {
+					"data-gesture": "none",
+					"data-part": `set:${property}:${value}`,
+					onClick: () => onPropertyUpdate(property, value, true),
+				}
+			: {
+					"data-kind": "menu",
+					"data-id": "object-menu",
+					"data-part": `set:${property}:${value}`,
+				};
+
 	return (
 		<ColorPickerContainer>
 			<ColorGrid>
@@ -96,9 +127,7 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 						key={preset.value}
 						swatchColor={preset.value}
 						selected={preset.value.toLowerCase() === currentColor.toLowerCase()}
-						data-kind="menu"
-						data-id="object-menu"
-						data-part={`set:${property}:${preset.value}`}
+						{...buildPickProps(preset.value)}
 						title={messages.colorNames[preset.name] ?? preset.name}
 					/>
 				))}
@@ -107,9 +136,7 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 				<AutoButton
 					type="button"
 					selected={isAutoColor(currentColor)}
-					data-kind="menu"
-					data-id="object-menu"
-					data-part={`set:${property}:${AUTO_COLOR}`}
+					{...buildPickProps(AUTO_COLOR)}
 					title={messages.colorPickerAutoTitle}
 				>
 					{messages.colorPickerAuto}

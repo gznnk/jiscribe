@@ -137,7 +137,7 @@ function HarnessApp({
  * `index.html` provides. Call it once from the harness entry module; the layout
  * stylesheet comes with it.
  *
- * @param params - The plugin set, toolbar and shape library the page is built around. See {@link PluginHarnessParams}.
+ * @param params - The plugin set, toolbar and sidebars the page is built around. See {@link PluginHarnessParams}.
  */
 export function mountPluginHarness(params: PluginHarnessParams): void {
 	const initialConfig: CanvasConfig = { plugins: params.plugins };

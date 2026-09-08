@@ -1,5 +1,7 @@
+import { createMultiSelectGroup } from "./createMultiSelectGroup";
 import { resetUiState } from "./resetUiState";
 import { resolveDocSnapshot } from "./resolveDocSnapshot";
+import { resolveRequestedSelection } from "./resolveRequestedSelection";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
@@ -24,7 +26,12 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  * What survives the swap is the point of sharing it: the objects come from the
  * snapshot, everything transient is dropped (resetUiState), and a short list of
  * fields is deliberately carried over — the view the user is looking at, what is
- * on the clipboard, an open modal, the shape library sidebar. `commitVersion` is *not* bumped (restoring is
+ * on the clipboard, an open modal, the two sidebars, and the selection as far as
+ * the restored objects still hold it. The selection is not part of any entry:
+ * the ids selected before the swap are simply re-selected if they exist after
+ * it, so undoing a property change leaves the shape selected for the next try,
+ * while undoing a creation (or redoing a deletion) loses the shape and its
+ * selection with it. `commitVersion` is *not* bumped (restoring is
  * not a new edit) while `saveVersion` is (the file on disk no longer matches), a
  * pairing that is easy to get wrong in three places and impossible to get wrong
  * in one.
@@ -48,10 +55,25 @@ export const restoreHistorySnapshot = (
 		mapper,
 		registries.objectContentResizer,
 	);
+	const { selectedIds, selectedConnectorId } = resolveRequestedSelection(
+		[
+			...state.selectedIds,
+			...(state.selectedConnectorId ? [state.selectedConnectorId] : []),
+		],
+		restoredState.objects,
+	);
 
 	return {
 		...restoredState,
 		...resetUiState(),
+		selectedIds,
+		selectedConnectorId,
+		// Rebuilt rather than carried: the objects it wraps may have moved or gone.
+		multiSelectGroup: createMultiSelectGroup(
+			selectedIds,
+			restoredState.objects,
+			state.multiSelectGroup,
+		),
 		viewport: state.viewport,
 		// Only the host's half of the wall is carried over; the rest of the entry is
 		// the measurement cache, and limitViewScroll notices the swapped objects and
@@ -63,9 +85,10 @@ export const restoreHistorySnapshot = (
 		historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 		internalClipboard: state.internalClipboard,
 		activeModal: state.activeModal, // History navigation must not close an open modal
-		// The shape library sidebar is chrome, not part of the document being
-		// swapped: it stays open, and as collapsed, as the user left it.
+		// The two sidebars are chrome, not part of the document being swapped: they
+		// stay open, and as collapsed, as the user left them.
 		stencilLibraryPanel: state.stencilLibraryPanel,
+		propertyPanel: state.propertyPanel,
 		history,
 	};
 };

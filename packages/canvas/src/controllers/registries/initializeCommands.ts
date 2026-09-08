@@ -32,6 +32,7 @@ import { ToggleTextVerticalBasisCommand } from "../commands/shape/ToggleTextVert
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ShortcutHelpCommand } from "../commands/view/ShortcutHelpCommand";
+import { TogglePropertyPanelCommand } from "../commands/view/TogglePropertyPanelCommand";
 import { ToggleStencilLibraryCommand } from "../commands/view/ToggleStencilLibraryCommand";
 import { ZoomInCommand } from "../commands/view/ZoomInCommand";
 import { ZoomOutCommand } from "../commands/view/ZoomOutCommand";
@@ -89,6 +90,7 @@ export const ALL_COMMANDS: Command[] = [
 	ZoomToSelectionCommand,
 	ShortcutHelpCommand,
 	ToggleStencilLibraryCommand,
+	TogglePropertyPanelCommand,
 	// Export command (opens the dialog; the export itself runs via callback)
 	ExportCommand,
 ];

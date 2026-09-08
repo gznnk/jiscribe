@@ -10,6 +10,7 @@ import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFea
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createObjectTextVerticalBasisRegistry } from "../../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
@@ -33,7 +34,10 @@ const ExtraShapeExtraStyleProperties = {
 
 // Production-shaped registry: system handlers + the extras under test.
 const styleRegistry = createStylePropertyRegistry();
-initializeStyleProperties(styleRegistry);
+initializeStyleProperties(
+	styleRegistry,
+	createObjectTextVerticalBasisRegistry(),
+);
 styleRegistry.registerExtras(EXTRA_SHAPE_TYPE, ExtraShapeExtraStyleProperties);
 styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 

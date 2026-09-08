@@ -130,7 +130,7 @@ describe("canvasReducer (integration)", () => {
 			expect(reverted.saveVersion).toBe(state.saveVersion + 1);
 		});
 
-		it("keeps the viewport and an open modal, and drops the selection", () => {
+		it("keeps the viewport, an open modal, and a selection the target still holds", () => {
 			const state = createState({
 				selectedIds: ["rect-1"],
 				activeModal: "export",
@@ -140,7 +140,7 @@ describe("canvasReducer (integration)", () => {
 
 			expect(reverted.viewport).toEqual(state.viewport);
 			expect(reverted.activeModal).toBe("export");
-			expect(reverted.selectedIds).toEqual([]);
+			expect(reverted.selectedIds).toEqual(["rect-1"]);
 		});
 	});
 });

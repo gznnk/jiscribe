@@ -103,6 +103,8 @@ import {
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import type { ObjectMenuSection } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
+import type { PropertyPanelSection } from "../ui/menu/PropertyPanel/PropertyPanelTypes";
+import { createDefaultPropertyPanel } from "../ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
@@ -182,6 +184,13 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				...createDefaultMenu(builtinObjectDocDefinitions.text.features),
 				{ id: "text-layout", items: [{ type: "textLayout" }] },
 			],
+			// Same in the sidebar, where the switch is a row of the text section
+			// rather than a section of its own: the merge that keeps only what
+			// every selected type offers works row by row there, so a plain box in
+			// the selection drops the switch without taking the font controls with it.
+			propertyPanel: appendTextLayoutRow(
+				createDefaultPropertyPanel(builtinObjectDocDefinitions.text.features),
+			),
 			stencils: TextStencils,
 		}),
 
@@ -389,9 +398,78 @@ const insertTextVerticalBasisMenuSection = (
 };
 
 /**
+ * The switch between a height the document states and one that follows the text,
+ * as a row of the properties sidebar's layout section, inserted for every type
+ * that may take it (`supportsAutoHeightType`).
+ *
+ * A row rather than a section of its own, unlike the ObjectMenu's: the sidebar's
+ * merge drops individual rows a selected type lacks, so the switch can sit beside
+ * the aspect-ratio lock it belongs with without endangering it.
+ */
+const insertAutoHeightPropertyPanelRow = (
+	sections: readonly PropertyPanelSection[],
+): PropertyPanelSection[] => {
+	const layoutIndex = sections.findIndex((section) => section.id === "layout");
+	if (layoutIndex === -1) {
+		return [
+			...sections,
+			{ id: "layout", label: "Layout", items: [{ type: "autoHeight" }] },
+		];
+	}
+	return sections.map((section, index) =>
+		index === layoutIndex
+			? { ...section, items: [...section.items, { type: "autoHeight" }] }
+			: section,
+	);
+};
+
+/**
+ * The sidebar sections with the vertical-basis switch as the last row of the
+ * text section, for the types the switch moves the text of
+ * (`hasInsetTextRegionType`). It governs what the vertical alignment in that
+ * section is measured against, so it follows it; a type with no text section
+ * gets one holding the switch alone. A row rather than a section for the same
+ * reason auto-height is (see {@link insertAutoHeightPropertyPanelRow}).
+ */
+const insertTextVerticalBasisPropertyPanelRow = (
+	sections: readonly PropertyPanelSection[],
+): PropertyPanelSection[] => {
+	const textIndex = sections.findIndex((section) => section.id === "text");
+	if (textIndex === -1) {
+		return [
+			...sections,
+			{ id: "text", label: "Text", items: [{ type: "textVerticalBasis" }] },
+		];
+	}
+	return sections.map((section, index) =>
+		index === textIndex
+			? {
+					...section,
+					items: [...section.items, { type: "textVerticalBasis" }],
+				}
+			: section,
+	);
+};
+
+/**
+ * The sidebar sections with the text-layout switch as the last row of the text
+ * section. A declaration rather than a const: the type definitions below are
+ * built at module load, before a const initializer would have run.
+ */
+function appendTextLayoutRow(
+	sections: readonly PropertyPanelSection[],
+): PropertyPanelSection[] {
+	return sections.map((section) =>
+		section.id === "text"
+			? { ...section, items: [...section.items, { type: "textLayout" }] }
+			: section,
+	);
+}
+
+/**
  * Registers a single object type described by `definition` across all registries
  * in the given bundle (mapper, component, text region, behavior, state validator,
- * menu), and optionally its factory / stencils.
+ * menu, property panel), and optionally its factory / stencils.
  */
 export const applyObjectDefinition = (
 	registries: CanvasRegistries,
@@ -502,6 +580,17 @@ export const applyObjectDefinition = (
 			? insertTextVerticalBasisMenuSection(sizedMenu)
 			: sizedMenu,
 	);
+	const declaredPropertyPanel =
+		definition.propertyPanel ?? createDefaultPropertyPanel(definition.features);
+	const sizedPropertyPanel = supportsAutoHeight
+		? insertAutoHeightPropertyPanelRow(declaredPropertyPanel)
+		: declaredPropertyPanel;
+	registries.propertyPanel.register(
+		type,
+		hasInsetTextRegion
+			? insertTextVerticalBasisPropertyPanelRow(sizedPropertyPanel)
+			: sizedPropertyPanel,
+	);
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}
@@ -555,6 +644,7 @@ export const initializeObjectRegistry = (
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();
+	registries.propertyPanel.clear();
 	registries.selectionControl.clear();
 	registries.objectFactory.clear();
 	registries.stencil.clear();

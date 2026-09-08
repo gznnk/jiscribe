@@ -28,7 +28,7 @@ import type {
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { createCowObjects } from "../../../../utils/cowObjects";
-import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import { updateGroupBoundsForSelection } from "../../../../utils/updateGroupBoundsForSelection";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { isSnapSuppressed } from "../../utils/snap/isSnapSuppressed";
@@ -394,15 +394,10 @@ export class TransformControlHandler extends ControlStrategy {
 	): CanvasControllerState {
 		// Apply the drag-time state update to compute the final state.
 		// handleDrag never mutates its argument, so the state can be passed as is.
-		let nextState = this.handleDrag(state, event, anchorType, registries);
+		const draggedState = this.handleDrag(state, event, anchorType, registries);
 
 		// On dragEnd, update the bounds of the selected objects and their parent groups
-		for (const selectedId of nextState.selectedIds) {
-			const obj = nextState.objects[selectedId];
-			if (obj && (obj.type === "group" || obj.parentId)) {
-				nextState = updateGroupBoundsFromRoot(nextState, selectedId);
-			}
-		}
+		const nextState = updateGroupBoundsForSelection(draggedState);
 
 		return {
 			...nextState,

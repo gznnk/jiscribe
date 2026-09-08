@@ -59,9 +59,10 @@ export const createInitialControllerState = (
 			measuredView: undefined,
 		},
 		...resetUiState(),
-		// Outside resetUiState: the shape library sidebar is persistent, so a doc
-		// swap must not close it (see CanvasControllerState).
+		// Outside resetUiState: the two sidebars are persistent, so a doc swap must
+		// not close them (see CanvasControllerState).
 		stencilLibraryPanel: { isOpen: false, collapsedSectionIds: [] },
+		propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		activeModal: null,
 		commitVersion: 0,
 		saveVersion: 0,

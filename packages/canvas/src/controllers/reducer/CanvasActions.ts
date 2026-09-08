@@ -182,6 +182,74 @@ export type MenuPropertyUpdateAction = {
 };
 
 /**
+ * The five numbers a properties sidebar states about the selection's frame: its
+ * top-left corner in world coordinates, its size, and its rotation.
+ */
+export type TransformProperty = "x" | "y" | "width" | "height" | "rotation";
+
+/**
+ * Transform property update action - states one number of the selection's frame
+ * outright, where the transform handles would have dragged it there.
+ *
+ * The sibling of {@link MenuPropertyUpdateAction} for the geometry the style
+ * registry does not own: the frame it edits is the selected object's, or the
+ * multiSelectGroup's for a multi-selection, and the result matches the
+ * corresponding drag (groups scale their children, connectors follow, a height
+ * stated by hand stops following the text).
+ */
+export type TransformPropertyUpdateAction = {
+	type: "TRANSFORM_PROPERTY_UPDATE";
+	property: TransformProperty;
+	/** World units; `rotation` in degrees. Non-finite, and a non-positive size, leave the state alone. */
+	value: number;
+	/**
+	 * true: recorded in history (blur/Enter) — also when the frame already holds
+	 * the value, since the preview that preceded the commit is what put it there;
+	 * false: preview only
+	 */
+	commit: boolean;
+	/**
+	 * true: merge this commit with the preceding one for the same property and
+	 * selection into a single undo entry (spinner key repeat). Ignored when
+	 * `commit` is false. Omitted means every commit is its own entry.
+	 */
+	coalesceHistory?: boolean;
+};
+
+/**
+ * The document's own settings the properties sidebar states, as opposed to the
+ * selection's. Only the surface color so far; the Canvas section grows here.
+ */
+export type DocumentProperty = "background";
+
+/**
+ * Document property update action - states a setting of the document itself,
+ * which is what the properties sidebar offers while nothing is selected.
+ *
+ * The third property route beside {@link MenuPropertyUpdateAction} and
+ * {@link TransformPropertyUpdateAction}, and the only one whose target is not a
+ * selection: it mirrors the headless `setBackground` op, down to `null` meaning
+ * "drop the field and follow the host theme again" rather than "paint it white".
+ */
+export type DocumentPropertyUpdateAction = {
+	type: "DOCUMENT_PROPERTY_UPDATE";
+	property: DocumentProperty;
+	/** A literal CSS color, or null to clear the setting so the theme decides again. */
+	value: string | null;
+	/**
+	 * true: recorded in history (a swatch, blur/Enter) — also when the color is
+	 * already set, since a preview may have put it there; false: preview only
+	 */
+	commit: boolean;
+	/**
+	 * true: merge this commit with the preceding one for the same property into a
+	 * single undo entry. Ignored when `commit` is false. Omitted means every commit
+	 * is its own entry.
+	 */
+	coalesceHistory?: boolean;
+};
+
+/**
  * Paste action - applies clipboard data to canvas state
  */
 export type PasteAction = {
@@ -234,6 +302,8 @@ export type CanvasAction =
 	| ToggleTextFormatAction
 	| EndTextEditAction
 	| MenuPropertyUpdateAction
+	| TransformPropertyUpdateAction
+	| DocumentPropertyUpdateAction
 	| PasteAction
 	| RemeasureTextAction
 	| CloseContextMenuAction

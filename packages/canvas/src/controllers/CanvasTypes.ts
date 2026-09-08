@@ -254,6 +254,17 @@ export type StencilLibraryPanelState = {
 	collapsedSectionIds: string[];
 };
 
+/** State of the properties sidebar; see CanvasControllerState.propertyPanel. */
+export type PropertyPanelState = {
+	/** Whether the panel is open. Toggled by the toolbar button and the panel's own close button. */
+	isOpen: boolean;
+	/**
+	 * Ids of the collapsed sections; every section not listed is expanded, so the
+	 * empty array is "all open". Survives closing and reopening the panel.
+	 */
+	collapsedSectionIds: string[];
+};
+
 /**
  * Canvas state extended with undo/redo history for the controller layer.
  *
@@ -432,6 +443,14 @@ export type CanvasControllerState = CanvasState & {
 	 * only by the `toggleStencilLibrary` command and StencilLibraryPanelHandler.
 	 */
 	stencilLibraryPanel: StencilLibraryPanelState;
+
+	/**
+	 * The properties sidebar (PropertyPanel), on the opposite edge from the shape
+	 * library. Editor chrome on the same terms: canvas presses, Escape, selection
+	 * changes and a doc swap (resetUiState / restoreHistorySnapshot) all leave it
+	 * as it is. Written only by the `togglePropertyPanel` command.
+	 */
+	propertyPanel: PropertyPanelState;
 
 	/**
 	 * Group state covering a multi-selection: while non-null every object in selectedIds is

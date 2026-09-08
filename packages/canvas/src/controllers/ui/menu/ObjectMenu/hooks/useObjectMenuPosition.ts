@@ -65,6 +65,7 @@ export function useObjectMenuPosition(
 		inertialScrolling,
 		objectMenuOpenId,
 		textEditState,
+		propertyPanel,
 	} = state;
 
 	// The menu sits below the selection's drawn extent, so a shape whose label
@@ -126,6 +127,12 @@ export function useObjectMenuPosition(
 		if (areaSelection !== null) {
 			return false;
 		}
+		// The properties sidebar states everything the menu does, so while it is
+		// open the menu would only duplicate it and cover the drawing beside the
+		// selection.
+		if (propertyPanel.isOpen) {
+			return false;
+		}
 		return true;
 	}, [
 		selectedIds,
@@ -134,6 +141,7 @@ export function useObjectMenuPosition(
 		isViewUnsettled,
 		areaSelection,
 		textEditState,
+		propertyPanel.isOpen,
 	]);
 
 	useLayoutEffect(() => {

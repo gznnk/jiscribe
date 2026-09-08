@@ -29,6 +29,7 @@ plugins/sticky-shape/
     ├── presentation/     the React component and its <defs>
     ├── stencil/          palette icon and stencil entries
     ├── menu/             custom ObjectMenu items, if any
+    ├── propertyPanel/    custom properties-sidebar rows, if any
     └── __tests__/        the parse-check suite
 ```
 
@@ -262,7 +263,8 @@ harness alone with `dev:harness` to look at it by eye. `vitest.config.ts` includ
 - A plugin's `src/schema/` and `src/doc.ts` are headless. They may use
   `@jiscribe/doc` and `@jiscribe/canvas-sdk/doc` only — not the UI entries,
   not `react` / `react-dom` / `@emotion/*`, and not the package's own
-  `presentation/`, `state/`, `stencil/`, `controls/` or `menu/` directories.
+  `presentation/`, `state/`, `stencil/`, `controls/`, `menu/` or
+  `propertyPanel/` directories.
 - **Import through package roots.** `@jiscribe/geometry`, never
   `@jiscribe/geometry/src/...`.
 - `packages/canvas-sdk` lives under the same rules as a plugin: it sees only the

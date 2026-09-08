@@ -180,6 +180,15 @@ export type {
 	OpenReferenceHandler,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 export type {
+	PropertyPanelSection,
+	PropertyPanelItem,
+	PropertyPanelBuiltinItem,
+	PropertyPanelBuiltinItemKey,
+	PropertyPanelCustomItem,
+	PropertyPanelItemProps,
+	PropertyPanelTransformUpdater,
+} from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
+export type {
 	SelectionControlContext,
 	SelectionControlDefinition,
 	SelectionControlEvent,

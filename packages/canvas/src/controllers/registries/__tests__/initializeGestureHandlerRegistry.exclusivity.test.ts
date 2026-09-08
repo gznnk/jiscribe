@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { ContextMenuHandler } from "../../gestures/handlers/menu/ContextMenuHandler";
 import { MENU_HANDLERS } from "../../gestures/handlers/menu/MenuEventHandler";
 import { ObjectMenuHandler } from "../../gestures/handlers/menu/ObjectMenuHandler";
+import { PropertyPanelHandler } from "../../gestures/handlers/menu/PropertyPanelHandler";
 import { StencilCategoryToggleHandler } from "../../gestures/handlers/menu/StencilCategoryToggleHandler";
 import { StencilLibraryItemHandler } from "../../gestures/handlers/menu/StencilLibraryItemHandler";
 import { StencilLibraryPanelHandler } from "../../gestures/handlers/menu/StencilLibraryPanelHandler";
@@ -68,6 +69,11 @@ const TARGETS: Target[] = [
 		targetKind: "menu",
 		targetId: "stencil-library-panel",
 		targetPart: "section:flowchart",
+	},
+	{
+		targetKind: "menu",
+		targetId: "property-panel",
+		targetPart: "command:togglePropertyPanel",
 	},
 ];
 
@@ -300,6 +306,9 @@ describe("menu sub-handler routing", () => {
 		expect(
 			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[13])),
 		).toBe(StencilLibraryPanelHandler);
+		expect(
+			routedHandler(MENU_HANDLERS, makeEvent("click", 0, TARGETS[14])),
+		).toBe(PropertyPanelHandler);
 	});
 
 	it("leaves an unknown menu targetId to no sub-handler", () => {

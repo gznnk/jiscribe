@@ -518,9 +518,10 @@ export default tseslint.config(
 								"**/stencil/**",
 								"**/controls/**",
 								"**/menu/**",
+								"**/propertyPanel/**",
 							],
 							message:
-								"The headless (doc) layer cannot depend on the presentation / state / stencil / controls / menu layers.",
+								"The headless (doc) layer cannot depend on the presentation / state / stencil / controls / menu / propertyPanel layers.",
 						},
 						docCuratedEntriesOnly,
 					],

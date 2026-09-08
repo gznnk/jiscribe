@@ -31,6 +31,7 @@ import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTrans
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import { createPropertyPanelRegistry } from "../ui/menu/PropertyPanel/PropertyPanelRegistry";
 import { createStencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
@@ -74,13 +75,17 @@ export const createCanvasRegistries = (
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),
+		propertyPanel: createPropertyPanelRegistry(),
 		stencil: createStencilRegistry(),
 		objectFactory: createObjectFactoryRegistry(),
 		styleProperty: createStylePropertyRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);
-	initializeStyleProperties(registries.styleProperty);
+	initializeStyleProperties(
+		registries.styleProperty,
+		registries.objectTextVerticalBasis,
+	);
 
 	// Tracks which object types are already claimed and by whom, so a plugin
 	// colliding with a built-in or an earlier plugin throws instead of

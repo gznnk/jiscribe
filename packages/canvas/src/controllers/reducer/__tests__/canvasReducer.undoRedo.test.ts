@@ -90,6 +90,39 @@ describe("canvasReducer (integration)", () => {
 			expect(cxOf(state)).toBe(5); // restored at the pre-delete position
 		});
 
+		it("undo keeps the selection when the restored entry still holds it", () => {
+			let state = createState();
+			state = runCommands(state, "move-right", "undo");
+			expect(cxOf(state)).toBe(5);
+			// The shape is selected again, so the next try needs no re-selection
+			expect(state.selectedIds).toEqual(["rect-1"]);
+		});
+
+		it("rebuilds the multi-select group for a surviving multi-selection", () => {
+			let state = createTestState(twoRectsDoc, {
+				selectedIds: ["rect-1", "rect-2"],
+			});
+			state = runCommands(state, "move-right", "undo");
+			expect(state.selectedIds).toEqual(["rect-1", "rect-2"]);
+			expect(state.multiSelectGroup).not.toBeNull();
+		});
+
+		it("drops a selection the restored entry no longer holds", () => {
+			let state = createState();
+			// Deleting clears the selection, so the undo has nothing to carry back
+			state = runCommands(state, "delete", "undo");
+			expect(state.objects["rect-1"]).toBeDefined();
+			expect(state.selectedIds).toEqual([]);
+
+			// Selected again, then the deletion is redone: the shape is gone, and the
+			// selection with it
+			state = { ...state, selectedIds: ["rect-1"] };
+			state = runCommands(state, "redo");
+			expect(state.objects["rect-1"]).toBeUndefined();
+			expect(state.selectedIds).toEqual([]);
+			expect(state.multiSelectGroup).toBeNull();
+		});
+
 		it("coalesced nudge → undo → redo restores the entire coalesced result", () => {
 			let state = createState();
 			state = runCommands(state, "move-right", "move-right", "move-right");
@@ -109,8 +142,6 @@ describe("canvasReducer (integration)", () => {
 			state = runCommands(state, "undo");
 			expect(state.history.future).toHaveLength(1);
 
-			// undo clears the selection, so re-select rect-1 before the new operation
-			state = { ...state, selectedIds: ["rect-1"] };
 			// Discard the branch restored by undo and fork history with a new operation
 			state = runCommands(state, "delete");
 			expect(state.history.future).toHaveLength(0);

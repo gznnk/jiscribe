@@ -8,6 +8,10 @@ import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { CanvasControllerState, DocSnapshot } from "../CanvasTypes";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
+import {
+	canApplyTransformProperty,
+	handleTransformPropertyUpdate,
+} from "./handlers/handleTransformPropertyUpdate";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
@@ -224,28 +228,101 @@ export const createCanvasReducer =
 						registries.objectContentResizer,
 					);
 				}
-				// This case decides the commit itself (action.commit above), so the
-				// unconditional reconcile applies — no commitVersion gate to re-check.
-				const committedResult = {
-					...updatedWithVertexCleared,
-					commitVersion: state.commitVersion + 1,
-					historyCoalesce: action.coalesceHistory
-						? {
-								...updatedWithVertexCleared.historyCoalesce,
-								pending: buildMenuPropertyCoalesceKey(state, action.property),
-							}
-						: updatedWithVertexCleared.historyCoalesce,
-				};
-				const resizedResult = reconcileObjectContentSizes(
-					committedResult,
+				return commitPropertyUpdate(
+					updatedWithVertexCleared,
 					state,
-					registries.objectContentResizer,
-				);
-				const reconciledResult = reconcileConnectorVertices(
-					resizedResult,
+					action.coalesceHistory
+						? buildPropertyCoalesceKey(
+								state,
+								MENU_PROPERTY_COALESCE_PREFIX,
+								action.property,
+							)
+						: null,
 					registries,
 				);
-				return recordHistoryIfNeeded(reconciledResult, state);
+			}
+
+			case "TRANSFORM_PROPERTY_UPDATE": {
+				// The sibling route to MENU_PROPERTY_UPDATE for the geometry the style
+				// registry does not own; dispatched from the properties sidebar's
+				// number inputs, which fire no gesture (see TransformPropertyUpdateAction).
+				const updated = handleTransformPropertyUpdate(
+					state,
+					action.property,
+					action.value,
+					registries,
+				);
+				// Nothing moved. For a preview that is the end of it; for a commit it is
+				// the normal case, since the field previews while typing and the frame
+				// holds the value by the time Enter commits it — the commit is what
+				// records that preview. Only a value nothing could take stays a no-op.
+				if (
+					updated === state &&
+					(!action.commit ||
+						!canApplyTransformProperty(state, action.property, action.value))
+				) {
+					return state;
+				}
+				// Same one-shot flattening and vertex clearing as the menu route: this
+				// path bypasses handleGesture, which is what normally does both (#213).
+				const updatedWithVertexCleared = {
+					...updated,
+					objects: materializeObjects(updated.objects),
+					selectedVertex: null,
+				};
+				if (!action.commit) {
+					return reconcileObjectContentSizes(
+						updatedWithVertexCleared,
+						state,
+						registries.objectContentResizer,
+					);
+				}
+				return commitPropertyUpdate(
+					updatedWithVertexCleared,
+					state,
+					action.coalesceHistory
+						? buildPropertyCoalesceKey(
+								state,
+								TRANSFORM_PROPERTY_COALESCE_PREFIX,
+								action.property,
+							)
+						: null,
+					registries,
+				);
+			}
+
+			case "DOCUMENT_PROPERTY_UPDATE": {
+				// The third property route: what the sidebar states about the document
+				// itself rather than about a selection. No object is touched, so the
+				// COW flattening and vertex clearing the other two routes do would
+				// have nothing to act on here.
+				//
+				// `background` is the only DocumentProperty so far, so the value goes
+				// straight to it; null drops the field, which is what puts the surface
+				// back under the host theme (the headless setBackground op's rule).
+				const background = action.value ?? undefined;
+				// A commit of the color already set is recorded, not skipped: the
+				// picker's text input previews while typing, so the color is already
+				// in place when Enter commits it (the same rule as the transform route).
+				if (state.background === background && !action.commit) {
+					return state;
+				}
+				const updated = { ...state, background };
+				if (!action.commit) {
+					return updated;
+				}
+				return commitPropertyUpdate(
+					updated,
+					state,
+					action.coalesceHistory
+						? buildPropertyCoalesceKey(
+								state,
+								DOCUMENT_PROPERTY_COALESCE_PREFIX,
+								action.property,
+							)
+						: null,
+					registries,
+				);
 			}
 
 			case "SYNC_EXTERNAL": {
@@ -428,20 +505,63 @@ const adoptDocumentState = (
 /** Prefix of the coalesce key for consecutive ObjectMenu property commits */
 const MENU_PROPERTY_COALESCE_PREFIX = "menu-property";
 
+/** Prefix of the coalesce key for consecutive properties-sidebar transform commits */
+const TRANSFORM_PROPERTY_COALESCE_PREFIX = "transform-property";
+
+/** Prefix of the coalesce key for consecutive properties-sidebar document commits */
+const DOCUMENT_PROPERTY_COALESCE_PREFIX = "document-property";
+
 /**
- * Builds the coalesce key for an ObjectMenu property commit. The target identity is
- * part of the key, so a changed selection (or a different property) automatically
- * becomes a separate undo entry.
+ * Builds the coalesce key for a property commit. The target identity is part of the
+ * key, so a changed selection (or a different property) automatically becomes a
+ * separate undo entry; the prefix keeps the two routes apart, since the same name
+ * can mean a different edit on each.
  */
-const buildMenuPropertyCoalesceKey = (
+const buildPropertyCoalesceKey = (
 	state: CanvasControllerState,
+	prefix: string,
 	property: string,
 ): string => {
 	const target =
 		state.selectedIds.length > 0
 			? state.selectedIds.join(",")
 			: (state.selectedConnectorId ?? "");
-	return `${MENU_PROPERTY_COALESCE_PREFIX}:${property}:${target}`;
+	return `${prefix}:${property}:${target}`;
+};
+
+/**
+ * Commits a property update that has already been applied: raises commitVersion,
+ * arms the coalesce key, re-measures and re-routes, and records the entry.
+ *
+ * Shared by the three property routes (menu / transform / document), which differ
+ * only in what they apply. The reconciles run unconditionally because the caller
+ * has already decided this is a commit — there is no commitVersion gate left to
+ * re-check.
+ */
+const commitPropertyUpdate = (
+	updatedState: CanvasControllerState,
+	previousState: CanvasControllerState,
+	coalesceKey: string | null,
+	registries: CanvasRegistries,
+): CanvasControllerState => {
+	const committedResult = {
+		...updatedState,
+		commitVersion: previousState.commitVersion + 1,
+		historyCoalesce:
+			coalesceKey === null
+				? updatedState.historyCoalesce
+				: { ...updatedState.historyCoalesce, pending: coalesceKey },
+	};
+	const resizedResult = reconcileObjectContentSizes(
+		committedResult,
+		previousState,
+		registries.objectContentResizer,
+	);
+	const reconciledResult = reconcileConnectorVertices(
+		resizedResult,
+		registries,
+	);
+	return recordHistoryIfNeeded(reconciledResult, previousState);
 };
 
 /**

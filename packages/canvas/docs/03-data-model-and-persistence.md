@@ -89,7 +89,7 @@ as connector-specific style properties (`ConnectorExtraStyleProperties`), and th
 interprets the dots as a nested merge into `connector.label` (a no-op while the label is unset). This is
 a pragmatic compromise to reuse the shared UI (`ColorPickerGrid` / `MenuSlider`) and the `commit`
 subtleties (live preview + a single history entry) without reimplementing them. Adding a dedicated
-action is rejected because it would duplicate these commit subtleties.
+action is rejected because it would duplicate these commit subtleties. The frame's own numbers (x / y / width / height / rotation) do take a sibling action, `TRANSFORM_PROPERTY_UPDATE`, since the style registry owns no geometry — it shares that commit tail rather than a second copy of it. The document's own settings (so far just `background`) take a third, `DOCUMENT_PROPERTY_UPDATE`, for the same reason with the target one level up: no selection is involved at all, and `null` clears the field the way the headless `setBackground` op does.
 
 ## The Parser's Two-Stage Validation (Defense at the Boundary)
 

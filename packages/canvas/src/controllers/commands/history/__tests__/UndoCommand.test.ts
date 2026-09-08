@@ -28,6 +28,7 @@ const makeState = (params: {
 	future: DocSnapshot[];
 	eventStartSnapshot?: unknown;
 	textEditState?: unknown;
+	selectedIds?: string[];
 }): CanvasControllerState =>
 	({
 		history: {
@@ -38,6 +39,9 @@ const makeState = (params: {
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		eventStartSnapshot: params.eventStartSnapshot ?? null,
 		textEditState: params.textEditState ?? null,
+		selectedIds: params.selectedIds ?? [],
+		selectedConnectorId: null,
+		multiSelectGroup: null,
 		internalClipboard: null,
 		commitVersion: 5,
 		saveVersion: 0,
@@ -64,14 +68,24 @@ describe("UndoCommand", () => {
 		expect(next.history.future).toEqual([snapshotCurrent]);
 	});
 
-	it("clears the selection, increments saveVersion, and leaves commitVersion unchanged", () => {
+	it("keeps the selection the restored entry still holds, and drops the rest", () => {
+		const state = makeState({
+			past: [snapshotPrev],
+			present: snapshotCurrent,
+			future: [],
+			selectedIds: ["r1", "r2"],
+		});
+		// r2 does not exist in docPrev, so only r1 stays selected
+		expect(UndoCommand.execute(state, registries).selectedIds).toEqual(["r1"]);
+	});
+
+	it("increments saveVersion and leaves commitVersion unchanged", () => {
 		const state = makeState({
 			past: [snapshotPrev],
 			present: snapshotCurrent,
 			future: [],
 		});
 		const next = UndoCommand.execute(state, registries);
-		expect(next.selectedIds).toEqual([]);
 		expect(next.saveVersion).toBe(1);
 		// restoring history is not a commit, so commitVersion is not changed
 		expect(next.commitVersion).toBe(5);

@@ -32,7 +32,7 @@ export type CanvasPlugin = {
 `objects` は `ObjectType` をキーに取り、値がその型に必要なものを全部持つ。
 `mapper` / `stateValidator` / `component` / `behavior` と、任意の calculator
 （`outline` / `textRegion` / `geometryKey` / `visualBounds` / `anchorRegion` /
-`extraConnectPoints`）、加えて `stencils` / `menu` / `svgDefs` /
+`extraConnectPoints`）、加えて `stencils` / `menu` / `propertyPanel` / `svgDefs` /
 `selectionControls` / `transformHandles` / `extraStyleProperties`。エンジン側に
 型による分岐は無く、すべて `ObjectType` キーのレジストリで解決されるため、
 実行時にプラグイン型と組み込み型は区別できない。
@@ -185,6 +185,35 @@ CodeMirror の `EditorView`）。
 配列の宣言は全置換、`[]` はメニュー無し。導出規則は `createDefaultMenu` と
 その unit テストが正である。
 
+**`propertyPanel`。**プロパティサイドバーのセクションで、意味は `menu` と同じ
+3 通り。省略は `features` からの既定導出、配列の宣言は全置換、`[]` は
+セクション無し。導出規則は `createDefaultPropertyPanel` とその unit テストが
+正である。宣言は組み込みの行種を並べ、どれも当てはまらないところに型自身の行を
+足す形になる。
+
+**`propertyPanel` のカスタム行。**プラグインが自分で描く行は組み込みの行に混ぜる
+`{ type: "custom"; id; component }` で、ObjectMenu のカスタム項目と同じ形である。
+コンポーネントが受け取るのは `PropertyPanelItemProps` だけ — `objects` /
+`selectedIds` / `selectedConnectorId` / `multiSelectGroup` に、スタイルを書く
+`onPropertyUpdate` とフレームの 5 つの数値を書く `onTransformUpdate` である。
+組み込みの行が読むコントローラ state は渡らない。使ってよいのは
+`@jiscribe/canvas/unstable`（したがって `@jiscribe/canvas-sdk`）が公開する
+プロパティサイドバーの UI キットで、全行が共有するラベル列の `PropertyRow` と、
+その隣に置くコントロール（`PropertyNumberField` / `PropertyColorField` /
+`PropertyDropdownField` / `PropertySegmentedControl`）、それに単体で 1 行になる
+`PropertyCheckbox`（セクションの左端から、ボックスと右側のラベル）である。
+書く前に知っておく規約は 2 つ:
+
+- 複数型のマージが行を突き合わせる鍵は `id` である。同じ行を出す型どうしは同じ
+  綴りにすること。綴りが違う型が混ざった選択ではその行は落ちる（片方しか持たない
+  組み込みの行種が落ちるのと同じ）
+- テキストスロット選択中はカスタム行が落ちる。プラグインの行には「スロット対応で
+  ある」と申告する手段が無いためで、ObjectMenu がカスタム項目に課すのと同じ規則
+
+実例は `plugins/container-shapes` である。`header-fill` 行が
+`PropertyColorField` から `onPropertyUpdate` 経由で `headerFill` を書き、Fill
+セクションの本体色の下に並ぶ。文言はプラグイン自身の辞書から取る。
+
 **i18n。**プラグインは自分の辞書を持ち、`useCanvasLocale` /
 `resolveLocaleMessages` で解決する。core の文言キーにプラグインの語彙は足さない。
 
@@ -197,15 +226,17 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 
 無いものを前提に設計しないよう、限界を明示しておく。
 
-| 領域                       | 現状                                                                                                                                        |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 組み込み UI                | Toolbar / ObjectMenu / ContextMenu は無条件にマウントされ、隠す・差し替える手段が無い                                                       |
-| UI スロット                | `toolbar.leading` / `toolbar.trailing` の 2 つだけ。プロパティパネルやオーバーレイ層のスロットは無い                                        |
-| 細粒度のプロパティ書き戻し | ハンドルに `updateProperties` が無い。`doc` prop の差し替えは外部変更扱いで選択状態がリセットされ履歴境界も切られるため、編集経路に使えない |
-| インタラクションの調整     | スナップ閾値などが定数でハードコードされている。エッジスクロールとパン/ズームも外部から無効化できない                                       |
-| コマンド                   | `config.commands` で組み込みを減らせるが、プラグインからの追加もショートカット再割当もできない                                              |
-| ObjectMenu の項目種        | 組み込みの項目種は switch 固定で、データ駆動なのは `custom` コンポーネント項目だけ                                                          |
+| 領域                         | 現状                                                                                                                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 組み込み UI                  | Toolbar / ObjectMenu / ContextMenu は無条件にマウントされ、隠す・差し替える手段が無い                                                                                                                     |
+| UI スロット                  | `toolbar.leading` / `toolbar.trailing` の 2 つだけ。オーバーレイ層のスロットは無い。プロパティサイドバーは、型が宣言したセクションの 1 行としてしかコンポーネントを受け取らない（パネル単位では渡せない） |
+| 細粒度のプロパティ書き戻し   | ハンドルに `updateProperties` が無い。`doc` prop の差し替えは外部変更扱いで選択状態がリセットされ履歴境界も切られるため、編集経路に使えない                                                               |
+| インタラクションの調整       | スナップ閾値などが定数でハードコードされている。エッジスクロールとパン/ズームも外部から無効化できない                                                                                                     |
+| コマンド                     | `config.commands` で組み込みを減らせるが、プラグインからの追加もショートカット再割当もできない                                                                                                            |
+| ObjectMenu の項目種          | 組み込みの項目種は switch 固定で、データ駆動なのは `custom` コンポーネント項目だけ                                                                                                                        |
+| プロパティサイドバーの項目種 | 組み込みの項目種は固定の引き当てで、データ駆動なのは `custom` コンポーネント行だけ。その行は「スロット対応」と申告できない                                                                                |
 
 一方で**できること**: 独自の doc スキーマ・検証・描画・ステンシル・メニュー・
-スタイルプロパティ・輪郭/スナップ挙動・型固有の選択コントロール・共有 SVG defs・
+プロパティサイドバーのセクション・スタイルプロパティ・輪郭/スナップ挙動・
+型固有の選択コントロール・共有 SVG defs・
 自前の i18n を持つ図形型を、外部パッケージから追加できる。

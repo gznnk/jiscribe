@@ -7,6 +7,7 @@ import { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHei
 import { containerDocDefinition } from "./doc";
 import { HeaderColorMenu } from "./menu/HeaderColorMenu";
 import { Container } from "./presentation/Container";
+import { HeaderColorProperty } from "./propertyPanel/HeaderColorProperty";
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import { ContainerExtraStyleProperties } from "./schema/ContainerDoc";
 import { calcContainerTextRegion } from "./schema/textRegions";
@@ -22,6 +23,11 @@ import { ContainerStencils } from "./stencil/ContainerStencils";
  * The `header-color` custom menu item (HeaderColorMenu) is the last piece that
  * was missing (ObjectMenu UI kit, published via `@jiscribe/canvas-sdk`);
  * it is now restored below.
+ *
+ * `propertyPanel` states the same sections `createDefaultPropertyPanel` derives
+ * from `ContainerFeatures`, with the `header-fill` custom row added to the fill
+ * section; the auto-height and vertical-basis switches are still inserted at
+ * registration, declared or not (applyObjectDefinition).
  */
 export const containerDefinition: ObjectTypeDefinition<
 	ContainerDoc,
@@ -44,6 +50,47 @@ export const containerDefinition: ObjectTypeDefinition<
 	],
 	extraStyleProperties: ContainerExtraStyleProperties,
 	stencils: ContainerStencils,
+	propertyPanel: [
+		{
+			id: "layout",
+			label: "Layout",
+			items: [
+				{ type: "position" },
+				{ type: "size" },
+				{ type: "rotation" },
+				{ type: "lockAspectRatio" },
+			],
+		},
+		{
+			id: "fill",
+			label: "Fill",
+			items: [
+				{ type: "fill" },
+				{ type: "custom", id: "header-fill", component: HeaderColorProperty },
+			],
+		},
+		{
+			id: "stroke",
+			label: "Border",
+			items: [
+				{ type: "strokeColor" },
+				{ type: "strokeWidth" },
+				{ type: "strokeDashType" },
+			],
+		},
+		{
+			id: "text",
+			label: "Text",
+			items: [
+				{ type: "fontFamily" },
+				{ type: "fontSize" },
+				{ type: "fontColor" },
+				{ type: "textFormat" },
+				{ type: "textAlign" },
+				{ type: "verticalAlign" },
+			],
+		},
+	],
 	menu: [
 		{
 			id: "style",

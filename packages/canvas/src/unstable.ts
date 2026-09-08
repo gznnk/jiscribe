@@ -148,6 +148,40 @@ export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/ObjectMenu
 export { getFirstSelectedPropValue } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedPropValue";
 export { getSelectedShapeStyle } from "./controllers/ui/menu/ObjectMenu/utils/getSelectedShapeStyle";
 
+// ---------------------------------------------------------------------------
+// Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)
+// ---------------------------------------------------------------------------
+// A type declares its sidebar sections in `propertyPanel`, and a row it draws
+// itself is a `{ type: "custom"; id; component }` item among the built-in ones.
+// The component is handed PropertyPanelItemProps and nothing else: the selection
+// and the objects it names, plus `onPropertyUpdate` for a style property and
+// `onTransformUpdate` for one of the frame's five numbers. Build the row out of
+// the widgets below so it lines up with the built-in ones — PropertyRow supplies
+// the label column every row shares, except PropertyCheckbox, which is a row of
+// its own from the section's left edge. The widgets that write do it either through
+// the callback (PropertyColorField) or through the same `data-part` grammar the
+// ObjectMenu uses (PropertySegmentedControl / PropertyCheckbox); writing
+// `data-part` by hand is discouraged for the same reason as there.
+// Custom rows are dropped while a text slot is selected, since a plugin row has
+// no way to say it is slot-aware.
+
+export type {
+	PropertyPanelSection,
+	PropertyPanelItem,
+	PropertyPanelCustomItem,
+	PropertyPanelItemProps,
+	PropertyPanelTransformUpdater,
+} from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
+
+export { PropertyRow } from "./controllers/ui/menu/PropertyPanel/common/PropertyRow";
+export { PropertyNumberField } from "./controllers/ui/menu/PropertyPanel/common/PropertyNumberField";
+export type { PropertyNumberUpdater } from "./controllers/ui/menu/PropertyPanel/common/PropertyNumberField";
+export { PropertyColorField } from "./controllers/ui/menu/PropertyPanel/common/PropertyColorField";
+export { PropertyDropdownField } from "./controllers/ui/menu/PropertyPanel/common/PropertyDropdownField";
+export { PropertySegmentedControl } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
+export type { PropertySegmentedOption } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
+export { PropertyCheckbox } from "./controllers/ui/menu/PropertyPanel/common/PropertyCheckbox";
+
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
 export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";
 export {

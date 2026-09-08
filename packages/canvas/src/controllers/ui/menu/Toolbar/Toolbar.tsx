@@ -14,6 +14,7 @@ import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { EllipsisIcon } from "../../icons/EllipsisIcon";
 import { HelpIcon } from "../../icons/HelpIcon";
+import { PropertyPanelIcon } from "../../icons/PropertyPanelIcon";
 import type { Stencil } from "../../objects/Stencil";
 import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
@@ -48,6 +49,8 @@ type ToolbarProps = {
 	hasLibrary: boolean;
 	/** Whether the shape library sidebar is currently open (reducer state) */
 	isLibraryOpen: boolean;
+	/** Whether the properties sidebar is currently open (reducer state) */
+	isPropertyPanelOpen: boolean;
 	/** Host UI at the left edge (see CanvasProps.toolbar.leading) */
 	leading?: React.ReactNode;
 	/** Host UI at the right edge (see CanvasProps.toolbar.trailing) */
@@ -57,14 +60,15 @@ type ToolbarProps = {
 /**
  * Unified toolbar centered at the top.
  * Combines the shape tools (StencilLibrary), the shape library toggle, the zoom
- * readout and help (?) into a single bar.
+ * readout, help (?) and the properties sidebar toggle into a single bar.
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/-, the readout and help go through the command system (ToolbarHandler →
  *   handleCommand), the same path as the keyboard shortcuts and the context menu.
- *   So does the shape library toggle, which shows only when the host declared a
- *   library with something in it. The help modal and the library panel
- *   themselves are rendered by Canvas from reducer state.
+ *   So do the two sidebar toggles: the shape library one shows only when the host
+ *   declared a library with something in it, the properties one only when the host
+ *   opted into that panel. The help modal and the panels themselves are rendered
+ *   by Canvas from reducer state.
  */
 const ToolbarComponent: React.FC<ToolbarProps> = ({
 	activePresetId,
@@ -75,6 +79,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	layout = DEFAULT_TOOLBAR_LAYOUT,
 	hasLibrary,
 	isLibraryOpen,
+	isPropertyPanelOpen,
 	leading,
 	trailing,
 }) => {
@@ -156,7 +161,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 				)}
 			</ToolbarGroup>
 
-			{/* Right: zoom readout and help */}
+			{/* Right: zoom readout, help and the properties sidebar toggle */}
 			<ToolbarGroup>
 				{/* Zoom actions go through the command system (ToolbarHandler → handleCommand),
 					    the same path as keyboard shortcuts and the context menu. */}
@@ -198,6 +203,16 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 				>
 					<HelpIcon />
 				</ToolbarIconButton>
+				<ToolbarToggleButton
+					type="button"
+					aria-label={messages.toolbarPropertyPanel}
+					title={messages.toolbarPropertyPanel}
+					aria-expanded={isPropertyPanelOpen}
+					data-part="command:togglePropertyPanel"
+					isOpen={isPropertyPanelOpen}
+				>
+					<PropertyPanelIcon />
+				</ToolbarToggleButton>
 				{trailing != null && (
 					<>
 						<ToolbarDivider />

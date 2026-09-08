@@ -28,6 +28,7 @@ plugins/sticky-shape/
     ├── presentation/     React コンポーネントと <defs>
     ├── stencil/          パレットのアイコンとステンシル定義
     ├── menu/             独自の ObjectMenu 項目（あれば）
+    ├── propertyPanel/    独自のプロパティサイドバー行（あれば）
     └── __tests__/        parse-check スイート
 ```
 
@@ -259,7 +260,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 - プラグインの `src/schema/` と `src/doc.ts` は headless。使えるのは
   `@jiscribe/doc` と `@jiscribe/canvas-sdk/doc` だけで、UI 入口・
   `react` / `react-dom` / `@emotion/*`・自パッケージの `presentation/`・
-  `state/`・`stencil/`・`controls/`・`menu/` へは到達できない
+  `state/`・`stencil/`・`controls/`・`menu/`・`propertyPanel/` へは到達できない
 - **import はパッケージルート経由。**`@jiscribe/geometry` であって
   `@jiscribe/geometry/src/...` ではない
 - `packages/canvas-sdk` もプラグインと同じ規則の下にある（canvas の公開入口だけを見る）

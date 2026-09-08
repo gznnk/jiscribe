@@ -32,7 +32,8 @@ A host wires it in through `initialConfig`:
 `objects` is keyed by `ObjectType`, and the value carries everything the engine
 needs for that type: `mapper`, `stateValidator`, `component`, `behavior` and the
 optional calculators (`outline`, `textRegion`, `geometryKey`, `visualBounds`,
-`anchorRegion`, `extraConnectPoints`), plus `stencils`, `menu`, `svgDefs`,
+`anchorRegion`, `extraConnectPoints`), plus `stencils`, `menu`, `propertyPanel`,
+`svgDefs`,
 `selectionControls`, `transformHandles` and `extraStyleProperties`. Nothing in the
 engine branches on the type — everything is resolved through an `ObjectType`-keyed
 registry, so a plugin type is indistinguishable from a built-in one at runtime.
@@ -198,6 +199,39 @@ shape's intent. `mapTextDocToState` drops such keys, so they never reach state.
 `features`; a declared array replaces it entirely; `[]` means no menu. The
 derivation rules are defined by `createDefaultMenu` and its unit tests.
 
+**`propertyPanel`.** The properties sidebar's sections, with the same three
+meanings: omitted derives them from `features`; a declared array replaces them
+entirely; `[]` means no sections. The derivation rules are defined by
+`createDefaultPropertyPanel` and its unit tests. A declaration composes the
+built-in row kinds and, where none of them fits, rows of the type's own.
+
+**`propertyPanel` custom rows.** A row a plugin draws itself is
+`{ type: "custom"; id; component }` among the built-in ones, the same shape the
+ObjectMenu's custom item has. What the component receives is
+`PropertyPanelItemProps` and nothing else: `objects`, `selectedIds`,
+`selectedConnectorId`, `multiSelectGroup`, plus `onPropertyUpdate` for a style
+property and `onTransformUpdate` for one of the frame's five numbers — never the
+controller state the built-in rows read. What it may import is the properties
+sidebar UI kit published through `@jiscribe/canvas/unstable` (and so through
+`@jiscribe/canvas-sdk`): `PropertyRow` for the label column every row shares,
+`PropertyNumberField` / `PropertyColorField` / `PropertyDropdownField` /
+`PropertySegmentedControl` for the control beside it, and `PropertyCheckbox`,
+which is a row of its own (the box with its label to the right, from the
+section's left edge). Two rules to know before writing one:
+
+- The `id` is what the multi-type merge matches the row by, so two types offering
+  the same row must spell it the same way; a selection mixing types that spell it
+  differently drops it, exactly as a built-in kind only one of them offers is
+  dropped.
+- Custom rows are dropped while a text slot is selected, since a plugin row has
+  no way to say it is slot-aware — the same rule the ObjectMenu applies to its
+  custom items.
+
+`plugins/container-shapes` is the worked example: its `header-fill` row states
+`headerFill` through `onPropertyUpdate` from a `PropertyColorField`, sitting under
+the body color in the Fill section, and takes its wording from the plugin's own
+dictionary.
+
 **i18n.** A plugin owns its dictionary and resolves it through `useCanvasLocale` /
 `resolveLocaleMessages`. Plugin vocabulary is never added to the core message keys.
 
@@ -211,16 +245,18 @@ internal adapter.
 
 Honest limits, so you do not design against something that is not there.
 
-| Area                             | Current state                                                                                                                                                                        |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Built-in UI                      | Toolbar / ObjectMenu / ContextMenu mount unconditionally; there is no way to hide or replace them                                                                                    |
-| UI slots                         | Only `toolbar.leading` / `toolbar.trailing`. No slot for a property panel or an overlay layer                                                                                        |
-| Fine-grained property write-back | The handle has no `updateProperties`. Replacing the `doc` prop is treated as an external change: it resets the selection and cuts the history boundary, so it is not an editing path |
-| Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                     |
-| Commands                         | `config.commands` can narrow the built-in set, but a plugin cannot contribute a command or rebind a shortcut                                                                         |
-| ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                 |
+| Area                             | Current state                                                                                                                                                                             |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Built-in UI                      | Toolbar / ObjectMenu / ContextMenu mount unconditionally; there is no way to hide or replace them                                                                                         |
+| UI slots                         | Only `toolbar.leading` / `toolbar.trailing`. No slot for an overlay layer; the properties sidebar takes a component only as a row of a section a type declares, not as a panel of its own |
+| Fine-grained property write-back | The handle has no `updateProperties`. Replacing the `doc` prop is treated as an external change: it resets the selection and cuts the history boundary, so it is not an editing path      |
+| Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                          |
+| Commands                         | `config.commands` can narrow the built-in set, but a plugin cannot contribute a command or rebind a shortcut                                                                              |
+| ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                      |
+| Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one cannot say it is text-slot-aware                                                             |
 
 What _is_ fully available: adding shape types with their own doc schema, validation,
-rendering, stencils, menus, style properties, outline/snap behaviour, type-specific
+rendering, stencils, menus, properties-sidebar sections, style properties,
+outline/snap behaviour, type-specific
 selection controls, shared SVG defs, and their own i18n — all from an external
 package.
