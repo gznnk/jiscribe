@@ -3,7 +3,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * Guards the ObjectMenu switch between the two boxes a body's vertical alignment
+ * Guards the sidebar switch between the two boxes a body's vertical alignment
  * is measured against: the region the type's own outline leaves clear, and the
  * shape's whole height (`textVerticalBasis`). The ellipse is the built-in that
  * insets its region — its text is laid out in the inscribed rectangle — so it is
@@ -102,33 +102,37 @@ async function textBoxHeightOf(
 	}, id);
 }
 
-/** The vertical-basis switch, found by the command it fires. */
-const basisSwitch = (canvas: CanvasDriver) =>
-	canvas.page.locator(selectors.objectMenuCommand("toggleTextVerticalBasis"));
+/** The two segments of the sidebar's vertical-basis switch. */
+const regionSegment = (canvas: CanvasDriver) =>
+	canvas.page.locator(
+		selectors.propertyPanelSet("textVerticalBasis", "region"),
+	);
+const frameSegment = (canvas: CanvasDriver) =>
+	canvas.page.locator(selectors.propertyPanelSet("textVerticalBasis", "frame"));
 
 test.describe("the box a body's vertical alignment is measured against", () => {
-	test("switches to the whole height from the object menu and back with undo", async ({
+	test("switches to the whole height and back with undo", async ({
 		canvas,
 	}) => {
 		await loadDoc(canvas);
+		await canvas.openPropertyPanel();
 		await canvas.selectAt({ x: OVAL_CX, y: OVAL_CY });
 
 		expect(await textBoxHeightOf(canvas, "oval")).toBeCloseTo(REGION_HEIGHT, 3);
-
-		const toggle = basisSwitch(canvas);
-		await expect(toggle).toBeVisible();
-		await expect(toggle).toHaveAttribute("title", "Align Text to Full Height");
+		const region = regionSegment(canvas);
+		const frame = frameSegment(canvas);
+		await expect(region).toHaveAttribute("aria-pressed", "true");
 
 		// Switched over, the text is placed against the ellipse's whole height
 		// rather than the rectangle inscribed in it.
-		await toggle.click();
-		await expect(toggle).toHaveAttribute("title", "Align Text to Shape Area");
+		await frame.click();
+		await expect(frame).toHaveAttribute("aria-pressed", "true");
 		expect(await textBoxHeightOf(canvas, "oval")).toBe(OVAL_RY * 2);
 
-		// Undo keeps the selection, so the switch reads back straight off the menu.
+		// Undo keeps the selection, so the switch reads back straight off the sidebar.
 		await canvas.undo();
 		expect(await textBoxHeightOf(canvas, "oval")).toBeCloseTo(REGION_HEIGHT, 3);
-		await expect(toggle).toHaveAttribute("title", "Align Text to Full Height");
+		await expect(region).toHaveAttribute("aria-pressed", "true");
 	});
 
 	test("is stated outright from the sidebar's two segments", async ({
@@ -138,12 +142,8 @@ test.describe("the box a body's vertical alignment is measured against", () => {
 		await canvas.openPropertyPanel();
 		await canvas.selectAt({ x: OVAL_CX, y: OVAL_CY });
 
-		const region = canvas.page.locator(
-			selectors.propertyPanelSet("textVerticalBasis", "region"),
-		);
-		const frame = canvas.page.locator(
-			selectors.propertyPanelSet("textVerticalBasis", "frame"),
-		);
+		const region = regionSegment(canvas);
+		const frame = frameSegment(canvas);
 		await expect(region).toHaveAttribute("aria-pressed", "true");
 		await expect(frame).toHaveAttribute("aria-pressed", "false");
 
@@ -160,12 +160,16 @@ test.describe("the box a body's vertical alignment is measured against", () => {
 		canvas,
 	}) => {
 		await loadDoc(canvas);
+		await canvas.openPropertyPanel();
 		await canvas.selectAt({
 			x: RECT_X + RECT_WIDTH / 2,
 			y: RECT_Y + RECT_HEIGHT / 2,
 		});
 
-		await expect(canvas.page.locator(selectors.objectMenu)).toBeVisible();
-		await expect(basisSwitch(canvas)).toHaveCount(0);
+		await expect(
+			canvas.page.locator(selectors.propertyPanelSection("text")),
+		).toBeVisible();
+		await expect(regionSegment(canvas)).toHaveCount(0);
+		await expect(frameSegment(canvas)).toHaveCount(0);
 	});
 });

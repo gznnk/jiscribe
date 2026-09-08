@@ -4,7 +4,7 @@ import { selectors } from "../../support/selectors";
 
 /**
  * Guards the editor half of a height that follows the text: a document leaving
- * `height` out is drawn at the height its text needs, the ObjectMenu switch turns
+ * `height` out is drawn at the height its text needs, the sidebar switch turns
  * that off and on, and a resize handle that can move the bottom edge settles the
  * height while the side handles leave it to the text.
  *
@@ -91,9 +91,9 @@ const boxHeightFor = (lineCount: number): number =>
 	TEXT_BOX_PADDING_Y +
 	COMFORT_PADDING;
 
-/** The auto-height switch, found by the label it carries in each of its two states. */
+/** The auto-height switch of the sidebar, which carries its state on aria-checked. */
 const autoHeightSwitch = (canvas: CanvasDriver) =>
-	canvas.page.locator(selectors.objectMenuCommand("toggleAutoHeight"));
+	canvas.page.locator(selectors.propertyPanelCommand("toggleAutoHeight"));
 
 test.describe("a height that follows the text", () => {
 	test("draws a shape stating no height at the height its text needs", async ({
@@ -152,24 +152,22 @@ test.describe("a height that follows the text", () => {
 		expect(settled.height).toBe(dragged.height);
 	});
 
-	test("switches the height off and on from the object menu", async ({
+	test("switches the height off and on from the sidebar", async ({
 		canvas,
 	}) => {
 		await loadDoc(canvas);
+		await canvas.openPropertyPanel();
 		await selectShape(canvas);
 		const auto = await boxOf(canvas);
 
 		const toggle = autoHeightSwitch(canvas);
 		await expect(toggle).toBeVisible();
-		await expect(toggle).toHaveAttribute(
-			"title",
-			"Stop Fitting Height to Text",
-		);
+		await expect(toggle).toHaveAttribute("aria-checked", "true");
 
 		// Switched off, the shape keeps the height it was drawn at and no longer
 		// follows the text when the width changes.
 		await toggle.click();
-		await expect(toggle).toHaveAttribute("title", "Fit Height to Text");
+		await expect(toggle).toHaveAttribute("aria-checked", "false");
 		expect((await boxOf(canvas)).height).toBe(auto.height);
 		await canvas.dragTransformHandle(
 			"rightCenter",
@@ -182,10 +180,7 @@ test.describe("a height that follows the text", () => {
 
 		// Switched back on, the box shrinks to what the text now needs at that width.
 		await toggle.click();
-		await expect(toggle).toHaveAttribute(
-			"title",
-			"Stop Fitting Height to Text",
-		);
+		await expect(toggle).toHaveAttribute("aria-checked", "true");
 		expect((await boxOf(canvas)).height).toBeLessThan(fixed.height);
 	});
 });

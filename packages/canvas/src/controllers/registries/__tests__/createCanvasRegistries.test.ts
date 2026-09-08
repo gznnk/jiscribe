@@ -180,20 +180,20 @@ describe("createCanvasRegistries", () => {
 					id: "text",
 					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 				},
-				// The box holds its text and nothing denies it, so the type may leave
-				// `height` out and gets the switch (supportsAutoHeightType), placed
-				// before the aspect lock so the two sizing toggles read as one run.
-				{ id: "auto-height", items: [{ type: "autoHeight" }] },
 				{ id: "transform", items: [{ type: "aspectRatio" }] },
 			]);
-			// The whole box is the region, so both vertical bases name it and the
-			// basis switch is left out (hasInsetTextRegionType).
+			// The box holds its text and nothing denies it, so the type may leave
+			// `height` out and gets the switch (supportsAutoHeightType) — in the
+			// sidebar, which is the only place it is offered.
 			expect(
-				sections.some((section) => section.id === "text-vertical-basis"),
-			).toBe(false);
+				registries.propertyPanel
+					.getSections("boxy")
+					.find((section) => section.id === "layout")
+					?.items.some((item) => item.type === "autoHeight"),
+			).toBe(true);
 		});
 
-		it("adds the vertical-basis switch after the text section for a type that insets its region", () => {
+		it("keeps the sidebar's vertical-basis switch out of the menu of a type that insets its region", () => {
 			const plugin: CanvasPlugin = {
 				id: "capped-plugin",
 				objects: {
@@ -233,15 +233,13 @@ describe("createCanvasRegistries", () => {
 				registries.objectMenu
 					.getSections("capped")
 					.map((section) => section.id),
-			).toEqual([
-				"style",
-				"text",
-				// The basis switch governs what the vertical alignment above it is
-				// measured against, so it follows the text run rather than the sizing one.
-				"text-vertical-basis",
-				"auto-height",
-				"transform",
-			]);
+			).toEqual(["style", "text", "transform"]);
+			expect(
+				registries.propertyPanel
+					.getSections("capped")
+					.find((section) => section.id === "text")
+					?.items.at(-1),
+			).toEqual({ type: "textVerticalBasis" });
 		});
 
 		it("throws when a definition declares stencils but no factory", () => {

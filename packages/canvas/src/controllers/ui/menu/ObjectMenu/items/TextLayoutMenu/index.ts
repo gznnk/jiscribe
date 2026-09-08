@@ -1,1 +1,0 @@
-export { TextLayoutMenu } from "./TextLayoutMenu";

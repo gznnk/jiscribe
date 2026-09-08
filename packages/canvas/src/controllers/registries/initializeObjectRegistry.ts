@@ -101,7 +101,6 @@ import {
 	LabelFontSizeMenu,
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
-import type { ObjectMenuSection } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
 import type { PropertyPanelSection } from "../ui/menu/PropertyPanel/PropertyPanelTypes";
 import { createDefaultPropertyPanel } from "../ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
@@ -177,17 +176,11 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				state.textLayout === "block"
 					? TEXT_BLOCK_TRANSFORM_HANDLES
 					: TEXT_LABEL_TRANSFORM_HANDLES,
-			// The layout switch is the one section text adds to what its features
-			// imply; every other type either declares its whole menu or takes the
-			// derived one as it is.
-			menu: [
-				...createDefaultMenu(builtinObjectDocDefinitions.text.features),
-				{ id: "text-layout", items: [{ type: "textLayout" }] },
-			],
-			// Same in the sidebar, where the switch is a row of the text section
-			// rather than a section of its own: the merge that keeps only what
-			// every selected type offers works row by row there, so a plain box in
-			// the selection drops the switch without taking the font controls with it.
+			// The layout switch is the one row text adds to what its features
+			// imply, and it lives in the sidebar alone: the merge that keeps only
+			// what every selected type offers works row by row there, so a plain
+			// box in the selection drops the switch without taking the font
+			// controls with it.
 			propertyPanel: appendTextLayoutRow(
 				createDefaultPropertyPanel(builtinObjectDocDefinitions.text.features),
 			),
@@ -317,85 +310,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<SvgState>(),
 		}),
 	};
-
-/**
- * The switch between a height the document states and one that follows the text,
- * inserted into the menu of every type that may take it (`supportsAutoHeightType`,
- * placement in {@link insertAutoHeightMenuSection}).
- * One shared section value, so the merge that keeps only the sections every
- * selected type registers matches it across a multi-type selection.
- */
-const AUTO_HEIGHT_MENU_SECTION: ObjectMenuSection = {
-	id: "auto-height",
-	items: [{ type: "autoHeight" }],
-};
-
-/**
- * The menu with the auto-height switch put right before the transform section:
- * the switch and the aspect-ratio lock both govern how the shape resizes, so
- * they read as one sizing run with the more-used switch first. A menu with no
- * transform section takes it at the end. It stays a section of its own rather
- * than an item inside "transform" — the multi-type merge drops a section any
- * selected type lacks, and folding the switch in would take the aspect lock
- * down with it whenever a type that cannot take auto height is in the selection.
- */
-const insertAutoHeightMenuSection = (
-	menu: readonly ObjectMenuSection[],
-): ObjectMenuSection[] => {
-	const transformIndex = menu.findIndex(
-		(section) => section.id === "transform",
-	);
-	if (transformIndex === -1) {
-		return [...menu, AUTO_HEIGHT_MENU_SECTION];
-	}
-	return [
-		...menu.slice(0, transformIndex),
-		AUTO_HEIGHT_MENU_SECTION,
-		...menu.slice(transformIndex),
-	];
-};
-
-/**
- * The switch between placing a body in the region the type's outline leaves
- * clear and placing it on the whole height, inserted into the menu of every type
- * the switch actually moves the text of (`hasInsetTextRegionType`, placement in
- * {@link insertTextVerticalBasisMenuSection}).
- * One shared section value, so the merge that keeps only the sections every
- * selected type registers matches it across a multi-type selection.
- */
-const TEXT_VERTICAL_BASIS_MENU_SECTION: ObjectMenuSection = {
-	id: "text-vertical-basis",
-	items: [{ type: "textVerticalBasis" }],
-};
-
-/**
- * The menu with the vertical-basis switch put right after the text section: it
- * governs what the vertical alignment there is measured against, so the two
- * belong to one run. A menu with no text section falls back to the place the
- * sizing run starts — before the auto-height switch, itself sitting before the
- * transform section — and takes the end when there is none. It stays a section
- * of its own for the same reason auto-height does: the multi-type merge drops a
- * section any selected type lacks, and folding the switch into "text" would take
- * the font and alignment controls down with it whenever a plain box is in the
- * selection.
- */
-const insertTextVerticalBasisMenuSection = (
-	menu: readonly ObjectMenuSection[],
-): ObjectMenuSection[] => {
-	const textIndex = menu.findIndex((section) => section.id === "text");
-	const insertAt =
-		textIndex === -1
-			? menu.findIndex((section) => section.id === AUTO_HEIGHT_MENU_SECTION.id)
-			: textIndex + 1;
-	if (insertAt === -1) {
-		return [...menu, TEXT_VERTICAL_BASIS_MENU_SECTION];
-	}
-	return [
-		...menu.slice(0, insertAt),
-		TEXT_VERTICAL_BASIS_MENU_SECTION,
-		...menu.slice(insertAt),
-	];
-};
 
 /**
  * The switch between a height the document states and one that follows the text,
@@ -562,24 +476,14 @@ export const applyObjectDefinition = (
 	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
-	const declaredMenu =
-		definition.menu ?? createDefaultMenu(definition.features);
-	// Both switches are inserted rather than declared per type: each belongs to
-	// every type whose declarations imply it, and a type declaring its own menu
-	// would otherwise have to remember them. A multi-type selection keeps only the
-	// sections every selected type registers, so the section itself is the gate
-	// that hides a switch beside a shape that cannot take it (useMenuSections).
-	// Auto-height goes in first, so the basis switch can place itself against the
-	// sizing run when the type has no text section to follow.
-	const sizedMenu = supportsAutoHeight
-		? insertAutoHeightMenuSection(declaredMenu)
-		: declaredMenu;
 	registries.objectMenu.register(
 		type,
-		hasInsetTextRegion
-			? insertTextVerticalBasisMenuSection(sizedMenu)
-			: sizedMenu,
+		definition.menu ?? createDefaultMenu(definition.features),
 	);
+	// The auto-height and vertical-basis switches are offered in the sidebar
+	// alone, and inserted rather than declared per type: each belongs to every
+	// type whose declarations imply it, and a type declaring its own sections
+	// would otherwise have to remember them.
 	const declaredPropertyPanel =
 		definition.propertyPanel ?? createDefaultPropertyPanel(definition.features);
 	const sizedPropertyPanel = supportsAutoHeight

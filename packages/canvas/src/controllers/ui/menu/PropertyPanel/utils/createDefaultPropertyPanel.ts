@@ -13,8 +13,7 @@ import type {
  * The two switches the features cannot answer for are not here: auto height is
  * offered per type by `supportsAutoHeightType` and inserted at registration
  * (applyObjectDefinition), and the text-layout switch belongs to the `text` type
- * alone, which declares it. Both mirror how the ObjectMenu gates the same
- * controls.
+ * alone, which declares it. Neither has a counterpart in the ObjectMenu.
  *
  * @param features - The type's declaration; `transform`, `geometry`, `fill`, `stroke`, `radius`, `arrow` and `text` are read
  * @returns The sections in display order, each labelled with the English wording its message key carries
