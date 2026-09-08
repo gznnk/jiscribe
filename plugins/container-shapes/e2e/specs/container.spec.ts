@@ -6,7 +6,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
  * - frame / boundary / zone can be created from the container flyout and render as a composite <g>
  * - the body passes clicks through, so only the header band selects it (pass-through)
  * - the boundary preset gets a dashed border
- * - the plugin's own properties-sidebar row states the header color
+ * - the plugin's own properties-sidebar rows state the header color and the header height
  *
  * Moving children together is the existing group's job, so it is not checked here.
  */
@@ -228,6 +228,39 @@ test.describe("container palette / behavior", () => {
 
 		await canvas.undo();
 		await expect.poll(rectFills).not.toContain(blue);
+	});
+
+	test("states the header height from the sidebar's own row and undoes it", async ({
+		canvas,
+	}) => {
+		const frame = await createFromFlyout(
+			canvas,
+			"frame",
+			{ x: 300, y: 220 },
+			{ x: 560, y: 420 },
+		);
+		// The header band is the second rect the container draws (the body comes
+		// first); its height is the number the row states.
+		const headerHeight = () =>
+			canvas.page.evaluate((id) => {
+				const rect = document.querySelectorAll(`[data-id="${id}"] rect`)[1];
+				return rect ? Number(rect.getAttribute("height")) : null;
+			}, frame.id);
+		const before = await headerHeight();
+
+		// The plugin's `header-height` row: a custom item of the Layout section,
+		// written as the headerHeight extra style property.
+		await canvas.openPropertyPanel();
+		const field = canvas.page.locator(
+			selectors.propertyPanelField("headerHeight"),
+		);
+		await expect(field).toHaveValue(String(before));
+		await field.fill("48");
+		await field.press("Enter");
+		await expect.poll(headerHeight).toBe(48);
+
+		await canvas.undo();
+		await expect.poll(headerHeight).toBe(before);
 	});
 
 	test("changes the header color independently (headerFill)", async ({

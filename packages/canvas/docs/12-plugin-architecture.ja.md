@@ -212,7 +212,9 @@ CodeMirror の `EditorView`）。
 
 実例は `plugins/container-shapes` である。`header-fill` 行が
 `PropertyColorField` から `onPropertyUpdate` 経由で `headerFill` を書き、Fill
-セクションの本体色の下に並ぶ。文言はプラグイン自身の辞書から取る。
+セクションの本体色の下に並ぶ。`header-height` 行は `PropertyNumberField` から
+extra スタイルプロパティ `headerHeight` を書き、Layout セクションのサイズの下に
+並ぶ。文言はどちらもプラグイン自身の辞書から取る。
 
 **i18n。**プラグインは自分の辞書を持ち、`useCanvasLocale` /
 `resolveLocaleMessages` で解決する。core の文言キーにプラグインの語彙は足さない。

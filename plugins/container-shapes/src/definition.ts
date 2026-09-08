@@ -8,6 +8,7 @@ import { containerDocDefinition } from "./doc";
 import { HeaderColorMenu } from "./menu/HeaderColorMenu";
 import { Container } from "./presentation/Container";
 import { HeaderColorProperty } from "./propertyPanel/HeaderColorProperty";
+import { HeaderHeightProperty } from "./propertyPanel/HeaderHeightProperty";
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import { ContainerExtraStyleProperties } from "./schema/ContainerDoc";
 import { calcContainerTextRegion } from "./schema/textRegions";
@@ -25,8 +26,8 @@ import { ContainerStencils } from "./stencil/ContainerStencils";
  * it is now restored below.
  *
  * `propertyPanel` states the same sections `createDefaultPropertyPanel` derives
- * from `ContainerFeatures`, with the `header-fill` custom row added to the fill
- * section; the auto-height and vertical-basis switches are still inserted at
+ * from `ContainerFeatures`, with the `header-height` custom row added to the
+ * layout section and the `header-fill` one to the fill section; the auto-height and vertical-basis switches are still inserted at
  * registration, declared or not (applyObjectDefinition).
  */
 export const containerDefinition: ObjectTypeDefinition<
@@ -57,6 +58,11 @@ export const containerDefinition: ObjectTypeDefinition<
 			items: [
 				{ type: "position" },
 				{ type: "size" },
+				{
+					type: "custom",
+					id: "header-height",
+					component: HeaderHeightProperty,
+				},
 				{ type: "rotation" },
 				{ type: "lockAspectRatio" },
 			],

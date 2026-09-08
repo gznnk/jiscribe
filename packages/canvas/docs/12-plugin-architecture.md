@@ -229,8 +229,9 @@ section's left edge). Two rules to know before writing one:
 
 `plugins/container-shapes` is the worked example: its `header-fill` row states
 `headerFill` through `onPropertyUpdate` from a `PropertyColorField`, sitting under
-the body color in the Fill section, and takes its wording from the plugin's own
-dictionary.
+the body color in the Fill section, and its `header-height` row states the
+`headerHeight` extra style property from a `PropertyNumberField` under the size in
+the Layout section; both take their wording from the plugin's own dictionary.
 
 **i18n.** A plugin owns its dictionary and resolves it through `useCanvasLocale` /
 `resolveLocaleMessages`. Plugin vocabulary is never added to the core message keys.

@@ -15,14 +15,15 @@ type PropertyRowProps = {
 /**
  * One row of a property section: a fixed-width label and the control that states
  * the value. The label column is kept even when there is no label, so every
- * control in the panel starts on the same line.
+ * control in the panel starts on the same line. The label doubles as its own
+ * tooltip, so wording the column ellipsises is still readable on hover.
  */
 const PropertyRowComponent: React.FC<PropertyRowProps> = ({
 	label,
 	children,
 }) => (
 	<PropertyPanelRowContainer>
-		<PropertyPanelRowLabel>{label}</PropertyPanelRowLabel>
+		<PropertyPanelRowLabel title={label}>{label}</PropertyPanelRowLabel>
 		<PropertyPanelRowControl>{children}</PropertyPanelRowControl>
 	</PropertyPanelRowContainer>
 );

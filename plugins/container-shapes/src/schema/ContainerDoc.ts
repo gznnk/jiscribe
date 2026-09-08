@@ -35,6 +35,7 @@ export const ContainerFeatures = {
 /** Container-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyRegistry). */
 export const ContainerExtraStyleProperties = {
 	headerFill: { valueType: "string" },
+	headerHeight: { valueType: "number" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
