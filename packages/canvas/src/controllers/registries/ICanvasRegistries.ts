@@ -100,7 +100,7 @@ export interface ICanvasRegistries {
 	};
 	/**
 	 * Styleable-property update dispatch, used by the object-menu gesture handler
-	 * and the reducer's MENU_PROPERTY_UPDATE. Inline shape for the same acyclicity
+	 * and the reducer's STYLE_PROPERTY_UPDATE. Inline shape for the same acyclicity
 	 * reason as `command` (the concrete class is `StylePropertyRegistry`).
 	 */
 	styleProperty: {

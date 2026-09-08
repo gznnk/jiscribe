@@ -13,7 +13,7 @@ import type { AutoColorRole } from "../../../../../rendering/objects/utils/resol
 import { resolveAutoColor } from "../../../../../rendering/objects/utils/resolveAutoColor";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { ObjectMenuColorPickerGrid } from "../../ObjectMenu/common/ObjectMenuColorPickerGrid";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
 
 type PropertyColorFieldProps = {
 	/** The color the selection is drawn with, already resolved through its type's defaults. */
@@ -36,7 +36,7 @@ type PropertyColorFieldProps = {
 	writesThroughCallback?: boolean;
 	/** title / aria-label of the trigger. */
 	title: string;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 /**

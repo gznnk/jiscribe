@@ -52,11 +52,11 @@ describe("canvasReducer (integration)", () => {
 			expect(after.history.past).toHaveLength(1);
 		});
 
-		it("MENU_PROPERTY_UPDATE records with commit:true and does not record with commit:false (preview)", () => {
+		it("STYLE_PROPERTY_UPDATE records with commit:true and does not record with commit:false (preview)", () => {
 			const state = createState();
 
 			const preview = canvasReducer(state, {
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property: "fill",
 				value: "#ff0000",
 				commit: false,
@@ -64,7 +64,7 @@ describe("canvasReducer (integration)", () => {
 			expect(preview.history.past).toHaveLength(0);
 
 			const committed = canvasReducer(state, {
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property: "fill",
 				value: "#ff0000",
 				commit: true,
@@ -137,11 +137,11 @@ describe("canvasReducer (integration)", () => {
 			expect(state.textEditState).toBeNull();
 		});
 
-		it("MENU_PROPERTY_UPDATE records only once even when preview → commit follow in sequence", () => {
+		it("STYLE_PROPERTY_UPDATE records only once even when preview → commit follow in sequence", () => {
 			let state = createState();
 			// Preview (commit:false) does not record
 			state = canvasReducer(state, {
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property: "fill",
 				value: "#ff0000",
 				commit: false,
@@ -150,7 +150,7 @@ describe("canvasReducer (integration)", () => {
 
 			// Only on commit (commit:true) is one entry pushed (the preview is not double-counted)
 			state = canvasReducer(state, {
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property: "fill",
 				value: "#ff0000",
 				commit: true,
@@ -161,14 +161,14 @@ describe("canvasReducer (integration)", () => {
 
 	// The coalesce window is 1000ms of wall-clock time, so back-to-back dispatches
 	// in a test naturally fall inside it.
-	describe("MENU_PROPERTY_UPDATE history coalescing", () => {
+	describe("STYLE_PROPERTY_UPDATE history coalescing", () => {
 		const commitStrokeWidth = (
 			state: CanvasControllerState,
 			value: string,
 			coalesceHistory: boolean,
 		): CanvasControllerState =>
 			canvasReducer(state, {
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property: "strokeWidth",
 				value,
 				commit: true,

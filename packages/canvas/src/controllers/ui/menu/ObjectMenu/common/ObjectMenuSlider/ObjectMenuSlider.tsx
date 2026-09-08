@@ -8,7 +8,7 @@ import {
 	ObjectMenuSliderLabel,
 	ObjectMenuSliderNumberInput,
 } from "./ObjectMenuSliderStyled";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuSliderProps = {
 	value: number;
@@ -27,7 +27,7 @@ type ObjectMenuSliderProps = {
 	step?: number;
 	label?: string;
 	property: string;
-	onPropertyUpdate?: ObjectMenuPropertyUpdater;
+	onPropertyUpdate?: StylePropertyUpdater;
 };
 
 const clamp = (value: number, lower: number, upper: number): number =>

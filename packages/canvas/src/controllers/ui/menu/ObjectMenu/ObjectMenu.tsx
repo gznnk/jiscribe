@@ -27,7 +27,7 @@ import {
 } from "./ObjectMenuStyled";
 import type {
 	ObjectMenuItem,
-	ObjectMenuPropertyUpdater,
+	StylePropertyUpdater,
 	ObjectMenuSection,
 	OpenReferenceHandler,
 } from "./ObjectMenuTypes";
@@ -38,14 +38,14 @@ import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot"
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 	onOpenReference?: OpenReferenceHandler;
 };
 
 const renderItem = (
 	item: ObjectMenuItem,
 	canvasState: CanvasControllerState,
-	onPropertyUpdate: ObjectMenuPropertyUpdater,
+	onPropertyUpdate: StylePropertyUpdater,
 	onOpenReference: OpenReferenceHandler | undefined,
 ): React.ReactNode => {
 	switch (item.type) {

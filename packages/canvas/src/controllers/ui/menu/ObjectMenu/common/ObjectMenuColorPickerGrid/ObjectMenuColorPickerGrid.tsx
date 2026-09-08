@@ -14,7 +14,7 @@ import {
 } from "./ObjectMenuColorPickerGridStyled";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuColorPickerGridProps = {
 	/** Currently selected color */
@@ -29,7 +29,7 @@ type ObjectMenuColorPickerGridProps = {
 	 * selected objects. Defaults to false, the floating menu's own route.
 	 */
 	writesThroughCallback?: boolean;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 /**

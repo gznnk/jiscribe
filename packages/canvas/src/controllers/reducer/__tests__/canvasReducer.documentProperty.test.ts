@@ -96,7 +96,7 @@ describe("canvasReducer / DOCUMENT_PROPERTY_UPDATE", () => {
 		let state = canvasReducer(
 			createTestState(twoRectsDoc, { selectedIds: ["rect-1"] }),
 			{
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property: "background",
 				value: "#102030",
 				commit: true,

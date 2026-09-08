@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
 import type { PropertyPanelTransformUpdater } from "../PropertyPanelTypes";
 
 /**
@@ -11,6 +11,6 @@ import type { PropertyPanelTransformUpdater } from "../PropertyPanelTypes";
  */
 export type BuiltinItemProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 	onTransformUpdate: PropertyPanelTransformUpdater;
 };

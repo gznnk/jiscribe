@@ -5,7 +5,7 @@ import type {
 	DocumentProperty,
 	TransformProperty,
 } from "../../../reducer/CanvasActions";
-import type { ObjectMenuPropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
 
 /**
  * The controls the properties sidebar knows how to draw. Each names one row (or
@@ -90,7 +90,7 @@ export type PropertyPanelSection = {
 
 /**
  * States one number of the selection's transform frame, dispatching
- * TRANSFORM_PROPERTY_UPDATE. The sibling of {@link ObjectMenuPropertyUpdater}
+ * TRANSFORM_PROPERTY_UPDATE. The sibling of {@link StylePropertyUpdater}
  * for the geometry the style-property registry does not own.
  *
  * @param property - Which of the frame's five numbers is being stated
@@ -144,6 +144,6 @@ export type PropertyPanelItemProps = {
 	selectedConnectorId: string | null;
 	/** The frame a multi-selection is transformed through; null while one object or nothing is selected. */
 	multiSelectGroup: GroupState | null;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 	onTransformUpdate: PropertyPanelTransformUpdater;
 };

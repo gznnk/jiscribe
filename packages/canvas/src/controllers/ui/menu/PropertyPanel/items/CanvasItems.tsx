@@ -5,7 +5,7 @@ import {
 import { memo, useCallback } from "react";
 
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenu/ObjectMenuTypes";
 import { PropertyColorField } from "../common/PropertyColorField";
 import { PropertyRow } from "../common/PropertyRow";
 import type { PropertyPanelDocumentUpdater } from "../PropertyPanelTypes";
@@ -30,7 +30,7 @@ const BackgroundItemComponent: React.FC<BackgroundItemProps> = ({
 
 	// The picker speaks the style-property shape, so the sentinel it writes for
 	// Auto is translated here into the null the document route takes.
-	const handleColorUpdate = useCallback<ObjectMenuPropertyUpdater>(
+	const handleColorUpdate = useCallback<StylePropertyUpdater>(
 		(_property, value, commit, coalesceHistory) => {
 			onDocumentUpdate(
 				"background",

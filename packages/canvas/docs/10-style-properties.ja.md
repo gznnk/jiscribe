@@ -2,7 +2,7 @@
 
 # スタイルプロパティシステム
 
-ObjectMenu から発行されるスタイルプロパティ更新（fill / stroke / fontSize /
+ObjectMenu とプロパティサイドバーから発行されるスタイルプロパティ更新（fill / stroke / fontSize /
 headerFill / `label.*` …）を解決・適用する機構。#187 で従来の中央 `switch`
 （`handlePropertyUpdate`）を per-canvas の宣言に置き換えた。新しいプロパティは
 dispatch 関数の編集ではなく**宣言の登録**で追加する。
@@ -10,18 +10,18 @@ dispatch 関数の編集ではなく**宣言の登録**で追加する。
 ## フロー: 2 経路が 1 つのレジストリに収束する
 
 ```
-ObjectMenu 項目 / スライダー ── gesture (set:/slider:) ─→ ObjectMenuHandler ┐
-ObjectMenu 数値入力          ── MENU_PROPERTY_UPDATE ──→ canvasReducer      ┼─→ registries.styleProperty.apply(state, property, value)
-                                                                            ┘        │
-                                                               StylePropertyRegistry │
-                                                      handlers.get(property) ?? extraFallback
-                                                                                     │
-                                                            handler.apply(...) ⇒ 新しい state
+ObjectMenu 項目 / スライダー、サイドバーのスウォッチ ── gesture (set:/slider:) ─→ ObjectMenuHandler     ┐
+ObjectMenu 数値入力、サイドバーのコールバック         ── STYLE_PROPERTY_UPDATE ──→ canvasReducer      ┼─→ registries.styleProperty.apply(state, property, value)
+                                                                                         ┘        │
+                                                                            StylePropertyRegistry │
+                                                                   handlers.get(property) ?? extraFallback
+                                                                                                  │
+                                                                         handler.apply(...) ⇒ 新しい state
 ```
 
 スライダーは両方にまたがる。ポインタ操作（ドラッグとトラッククリック）は
 gesture 経路を通り、キーボード操作（矢印キー等）は gesture が発生しないため
-`MENU_PROPERTY_UPDATE` を通る。
+`STYLE_PROPERTY_UPDATE` を通る。
 
 どちらの経路も UI から来たプロパティ名と生の文字列値を
 `StylePropertyRegistry.apply` に渡すだけで、プロパティ固有のこと —
@@ -110,7 +110,7 @@ number のパース失敗はそのオブジェクトをスキップする。
 スライダードラッグは pointermove フレームごとに `apply` を呼ぶため、選択ループは
 #213 の `createCowObjects` ビューを使う（O(全オブジェクト) のスプレッドでなく
 O(変更分)）。materialize は標準の分担どおり: gesture 経路は `handleGesture` の
-イベント終端 choke point で、`handleGesture` を通らない `MENU_PROPERTY_UPDATE`
+イベント終端 choke point で、`handleGesture` を通らない `STYLE_PROPERTY_UPDATE`
 経路は `apply` 直後に flatten する（`MoveCommands` と同じ one-shot パターン）。
 
 ## プロパティの追加方法

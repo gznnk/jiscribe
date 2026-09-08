@@ -13,14 +13,14 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
 
 const SECTION_ID = "line-color";
 
 type LineColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 /**

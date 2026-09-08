@@ -460,7 +460,7 @@ export const runTextEditFuzzSession = (
 				selection: { start: op.start, end: op.end },
 			});
 			dispatch({
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property: op.property,
 				value: op.value,
 				commit: op.commit,

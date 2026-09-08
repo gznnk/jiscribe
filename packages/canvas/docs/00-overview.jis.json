@@ -2251,7 +2251,7 @@
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"text": "StylePropertyRegistry：メニューの set:/slider: と MENU_PROPERTY_UPDATE が同一経路で収束し、プロパティ→ハンドラを解決",
+			"text": "StylePropertyRegistry：メニューの set:/slider: と STYLE_PROPERTY_UPDATE が同一経路で収束し、プロパティ→ハンドラを解決",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",

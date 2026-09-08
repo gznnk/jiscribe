@@ -73,7 +73,7 @@ import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import type {
-	ObjectMenuPropertyUpdater,
+	StylePropertyUpdater,
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
@@ -508,10 +508,10 @@ const CanvasComponent = ({
 	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
-	const handleMenuPropertyUpdate = useCallback<ObjectMenuPropertyUpdater>(
+	const handleStylePropertyUpdate = useCallback<StylePropertyUpdater>(
 		(property, value, commit, coalesceHistory = false) => {
 			dispatch({
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property,
 				value,
 				commit,
@@ -850,7 +850,7 @@ const CanvasComponent = ({
 							>
 								<ObjectMenu
 									canvasState={menuCanvasState}
-									onPropertyUpdate={handleMenuPropertyUpdate}
+									onPropertyUpdate={handleStylePropertyUpdate}
 									onOpenReference={handleOpenReference}
 								/>
 							</ScrollSyncedOverlay>
@@ -867,7 +867,7 @@ const CanvasComponent = ({
 					{state.propertyPanel.isOpen && (
 						<PropertyPanel
 							canvasState={menuCanvasState}
-							onPropertyUpdate={handleMenuPropertyUpdate}
+							onPropertyUpdate={handleStylePropertyUpdate}
 							onTransformUpdate={handleTransformUpdate}
 							onDocumentUpdate={handleDocumentUpdate}
 						/>

@@ -12,7 +12,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "font-color";
@@ -20,7 +20,7 @@ const DEFAULT_FONT_COLOR = "#333333";
 
 type FontColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 /**

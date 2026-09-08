@@ -18,7 +18,8 @@ export type BuiltinItemKey =
 	| "openReference";
 
 /**
- * Applies a style property change from an ObjectMenu item to the current selection.
+ * Applies a style property change to the current selection, from an ObjectMenu
+ * item or a properties-sidebar row (both surfaces are handed the same callback).
  *
  * @param property - Style property key resolved by the style-property registry (e.g. `strokeWidth`)
  * @param value - New value as a string; the property's own parser converts it
@@ -29,7 +30,7 @@ export type BuiltinItemKey =
  *   on a slider) becomes a single undo entry. Defaults to false, i.e. every commit
  *   gets its own entry
  */
-export type ObjectMenuPropertyUpdater = (
+export type StylePropertyUpdater = (
 	property: string,
 	value: string,
 	commit: boolean,
@@ -65,7 +66,7 @@ export type ObjectMenuItemProps = {
 	selectedConnectorId: string | null;
 	/** ID of the currently open menu section (`toggle:{sectionId}`). */
 	openSectionId: string | null;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 export type BuiltinItem =

@@ -165,10 +165,13 @@ export type EndTextEditAction = {
 };
 
 /**
- * Menu property update action - handles real-time preview and commit from ObjectMenu inputs
+ * Style property update action - a style property written through
+ * StylePropertyRegistry with live preview and commit, from the inputs that fire
+ * no gesture: the ObjectMenu's number input and keyboard-driven slider, and the
+ * properties sidebar's callback-writing controls.
  */
-export type MenuPropertyUpdateAction = {
-	type: "MENU_PROPERTY_UPDATE";
+export type StylePropertyUpdateAction = {
+	type: "STYLE_PROPERTY_UPDATE";
 	property: string;
 	value: string;
 	/** true: recorded in history (blur/Enter), false: preview only */
@@ -191,7 +194,7 @@ export type TransformProperty = "x" | "y" | "width" | "height" | "rotation";
  * Transform property update action - states one number of the selection's frame
  * outright, where the transform handles would have dragged it there.
  *
- * The sibling of {@link MenuPropertyUpdateAction} for the geometry the style
+ * The sibling of {@link StylePropertyUpdateAction} for the geometry the style
  * registry does not own: the frame it edits is the selected object's, or the
  * multiSelectGroup's for a multi-selection, and the result matches the
  * corresponding drag (groups scale their children, connectors follow, a height
@@ -226,7 +229,7 @@ export type DocumentProperty = "background";
  * Document property update action - states a setting of the document itself,
  * which is what the properties sidebar offers while nothing is selected.
  *
- * The third property route beside {@link MenuPropertyUpdateAction} and
+ * The third property route beside {@link StylePropertyUpdateAction} and
  * {@link TransformPropertyUpdateAction}, and the only one whose target is not a
  * selection: it mirrors the headless `setBackground` op, down to `null` meaning
  * "drop the field and follow the host theme again" rather than "paint it white".
@@ -301,7 +304,7 @@ export type CanvasAction =
 	| UpdateTextEditSelectionAction
 	| ToggleTextFormatAction
 	| EndTextEditAction
-	| MenuPropertyUpdateAction
+	| StylePropertyUpdateAction
 	| TransformPropertyUpdateAction
 	| DocumentPropertyUpdateAction
 	| PasteAction

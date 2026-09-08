@@ -54,13 +54,13 @@ import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
-import type { ObjectMenuPropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
 
 type PropertyPanelProps = {
 	/** The state the rows read: the draft-grafted objects, so a keystroke mid-edit shows here too. */
 	canvasState: CanvasControllerState;
 	/** Applies a style change; the same callback the ObjectMenu's own inputs are given. */
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 	/** States one number of the selection's transform frame. */
 	onTransformUpdate: PropertyPanelTransformUpdater;
 	/** States one of the document's own settings, for the Canvas section. */

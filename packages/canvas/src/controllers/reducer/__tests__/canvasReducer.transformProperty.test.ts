@@ -366,7 +366,7 @@ describe("canvasReducer / TRANSFORM_PROPERTY_UPDATE", () => {
 			expect(state.history.past).toHaveLength(1);
 
 			state = canvasReducer(state, {
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
 				property: "width",
 				value: "60",
 				commit: true,

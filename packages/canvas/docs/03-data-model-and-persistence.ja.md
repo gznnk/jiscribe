@@ -96,7 +96,7 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
   コネクター＝注記（`label`）で **意味が違う**ため、ある種の非対称は概念上どうしても残る。
 
 **スタイリング UI のネスト対応（ドット記法）**: スタイリングのプロパティ更新配管
-（メニュー項目 → `MENU_PROPERTY_UPDATE` / `object-menu:set:` → `StylePropertyRegistry.apply`）は
+（メニュー項目 → `STYLE_PROPERTY_UPDATE` / `object-menu:set:` → `StylePropertyRegistry.apply`）は
 フラットなプロパティ名を運ぶ。ラベルの背景・枠線（`label.fill` / `label.stroke` /
 `label.strokeWidth`）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
 2 経路とも収束点は `StylePropertyRegistry.apply` の 1 か所。`label.*` は connector 固有の宣言

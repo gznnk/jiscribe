@@ -12,19 +12,19 @@ This "assemble the entire transition in one place" policy follows principle 3 of
 
 `CanvasAction` (`controllers/reducer/CanvasActions.ts`) is the following union.
 
-| Action                               | Role                                                    | Delegates to                                                                                 |
-| ------------------------------------ | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `GESTURE`                            | Gestures originating from pointer/wheel input           | `handleGesture` → [Gesture System](./04-gesture-system.md)                                   |
-| `COMMAND`                            | Commands from shortcuts/menus/toolbar (incl. undo/redo) | `handleCommand` → [Command System](./05-command-system.md)                                   |
-| `PASTE`                              | Applying clipboard data                                 | `handlePaste`                                                                                |
-| `MENU_PROPERTY_UPDATE`               | ObjectMenu input (preview / commit)                     | `StylePropertyRegistry.apply` → [Style Property System](./10-style-properties.md)            |
-| `TRANSFORM_PROPERTY_UPDATE`          | Properties sidebar input (preview / commit)             | `handleTransformPropertyUpdate` → the same resize / rotate utilities the transform drag uses |
-| `DOCUMENT_PROPERTY_UPDATE`           | Properties sidebar Canvas section (preview / commit)    | (inline) — writes `state.background`; `null` clears it and the host theme decides again      |
-| `SYNC_EXTERNAL`                      | Importing a doc from the external host                  | → [External Sync](./07-external-sync.md)                                                     |
-| `LOAD_DOCUMENT`                      | Loading another document (an import that drops history) | → [External Sync](./07-external-sync.md)                                                     |
-| `CONTAINER_RESIZE`                   | Updating viewport dimensions                            | (inline)                                                                                     |
-| `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | Updates during text editing / commit or cancel          | `commitTextEditIfNeeded`                                                                     |
-| `CLOSE_CONTEXT_MENU`                 | Simply closing the context menu                         | (inline)                                                                                     |
+| Action                               | Role                                                                  | Delegates to                                                                                 |
+| ------------------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `GESTURE`                            | Gestures originating from pointer/wheel input                         | `handleGesture` → [Gesture System](./04-gesture-system.md)                                   |
+| `COMMAND`                            | Commands from shortcuts/menus/toolbar (incl. undo/redo)               | `handleCommand` → [Command System](./05-command-system.md)                                   |
+| `PASTE`                              | Applying clipboard data                                               | `handlePaste`                                                                                |
+| `STYLE_PROPERTY_UPDATE`              | Style input of the ObjectMenu / properties sidebar (preview / commit) | `StylePropertyRegistry.apply` → [Style Property System](./10-style-properties.md)            |
+| `TRANSFORM_PROPERTY_UPDATE`          | Properties sidebar input (preview / commit)                           | `handleTransformPropertyUpdate` → the same resize / rotate utilities the transform drag uses |
+| `DOCUMENT_PROPERTY_UPDATE`           | Properties sidebar Canvas section (preview / commit)                  | (inline) — writes `state.background`; `null` clears it and the host theme decides again      |
+| `SYNC_EXTERNAL`                      | Importing a doc from the external host                                | → [External Sync](./07-external-sync.md)                                                     |
+| `LOAD_DOCUMENT`                      | Loading another document (an import that drops history)               | → [External Sync](./07-external-sync.md)                                                     |
+| `CONTAINER_RESIZE`                   | Updating viewport dimensions                                          | (inline)                                                                                     |
+| `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | Updates during text editing / commit or cancel                        | `commitTextEditIfNeeded`                                                                     |
+| `CLOSE_CONTEXT_MENU`                 | Simply closing the context menu                                       | (inline)                                                                                     |
 
 Each handler (`handleGesture` / `handleCommand` / `handlePaste`, …) is implemented as a
 **pure function of the form `(state) => state`** with no side effects.
@@ -41,7 +41,7 @@ previous state** (advancing `saveVersion` at the same time).
 - For gestures, `handleGesture` advances `commitVersion` only when the doc actually
   changed on `dragEnd`. This prevents ghost undo entries from being created by drags that
   produce no doc change, such as "drawing was abandoned below the minimum size."
-- `MENU_PROPERTY_UPDATE` does not record history when `commit: false` (preview); it only
+- `STYLE_PROPERTY_UPDATE` does not record history when `commit: false` (preview); it only
   advances `commitVersion` when `commit: true` (blur / Enter). `TRANSFORM_PROPERTY_UPDATE`
   and `DOCUMENT_PROPERTY_UPDATE` go through the same commit tail (`commitPropertyUpdate`),
   so they behave identically.

@@ -3,7 +3,8 @@
 # Style Property System
 
 The mechanism that resolves and applies styleable property updates (fill, stroke,
-fontSize, headerFill, `label.*`, …) issued from the ObjectMenu. Introduced by #187 to
+fontSize, headerFill, `label.*`, …) issued from the ObjectMenu and the properties
+sidebar. Introduced by #187 to
 replace the former central `switch` (`handlePropertyUpdate`) with per-canvas
 declarations: a new property is added by **registering a declaration**, not by editing
 a dispatch function.
@@ -11,18 +12,18 @@ a dispatch function.
 ## Flow: two entry routes converge on one registry
 
 ```
-ObjectMenu item / slider   ── gesture (set:/slider:) ─→ ObjectMenuHandler ┐
-ObjectMenu number input    ── MENU_PROPERTY_UPDATE ──→ canvasReducer      ┼─→ registries.styleProperty.apply(state, property, value)
-                                                                          ┘        │
-                                                             StylePropertyRegistry │
-                                                    handlers.get(property) ?? extraFallback
-                                                                                   │
-                                                          handler.apply(...) ⇒ new state
+ObjectMenu item / slider, sidebar swatch ── gesture (set:/slider:) ─→ ObjectMenuHandler   ┐
+ObjectMenu number input, sidebar callback ── STYLE_PROPERTY_UPDATE ──→ canvasReducer      ┼─→ registries.styleProperty.apply(state, property, value)
+                                                                                          ┘        │
+                                                                             StylePropertyRegistry │
+                                                                    handlers.get(property) ?? extraFallback
+                                                                                                   │
+                                                                          handler.apply(...) ⇒ new state
 ```
 
 The slider straddles both: pointer interaction (drag and track click) rides the
 gesture route, while keyboard interaction (arrow keys and the like) produces no
-gesture and so goes through `MENU_PROPERTY_UPDATE`.
+gesture and so goes through `STYLE_PROPERTY_UPDATE`.
 
 Both routes hand the property name and the raw string value from the UI to
 `StylePropertyRegistry.apply`; everything property-specific — support gating, value
@@ -112,7 +113,7 @@ and applied per object; a failed number parse skips that object.
 Slider drags call `apply` once per pointermove frame, so the selection loop uses the
 #213 `createCowObjects` view (O(changed) instead of an O(all objects) map spread).
 Materialization follows the standard split: the gesture route is flattened at
-`handleGesture`'s end-of-event choke point; the `MENU_PROPERTY_UPDATE` route, which
+`handleGesture`'s end-of-event choke point; the `STYLE_PROPERTY_UPDATE` route, which
 bypasses `handleGesture`, materializes right after `apply` (one-shot pattern, same
 as `MoveCommands`).
 

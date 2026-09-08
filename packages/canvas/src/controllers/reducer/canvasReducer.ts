@@ -201,11 +201,14 @@ export const createCanvasReducer =
 				};
 			}
 
-			case "MENU_PROPERTY_UPDATE": {
-				// Property updates from the ObjectMenu take two paths.
-				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React onChange
-				//     events (number-input, and a slider driven from the keyboard, which fires no gesture).
-				// (2) ObjectMenuHandler: via the gesture system (set: / slider:). That path does not go through here.
+			case "STYLE_PROPERTY_UPDATE": {
+				// Style property updates take two paths.
+				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React
+				//     onChange events — the ObjectMenu's number input and keyboard-driven slider, and
+				//     the properties sidebar's callback-writing controls — none of which fires a gesture.
+				// (2) ObjectMenuHandler: via the gesture system (set: / slider:), from the ObjectMenu's
+				//     buttons and the sidebar controls that declare themselves as object-menu targets.
+				//     That path does not go through here.
 				const updated = registries.styleProperty.apply(
 					state,
 					action.property,
@@ -234,7 +237,7 @@ export const createCanvasReducer =
 					action.coalesceHistory
 						? buildPropertyCoalesceKey(
 								state,
-								MENU_PROPERTY_COALESCE_PREFIX,
+								STYLE_PROPERTY_COALESCE_PREFIX,
 								action.property,
 							)
 						: null,
@@ -243,7 +246,7 @@ export const createCanvasReducer =
 			}
 
 			case "TRANSFORM_PROPERTY_UPDATE": {
-				// The sibling route to MENU_PROPERTY_UPDATE for the geometry the style
+				// The sibling route to STYLE_PROPERTY_UPDATE for the geometry the style
 				// registry does not own; dispatched from the properties sidebar's
 				// number inputs, which fire no gesture (see TransformPropertyUpdateAction).
 				const updated = handleTransformPropertyUpdate(
@@ -502,8 +505,8 @@ const adoptDocumentState = (
 	},
 });
 
-/** Prefix of the coalesce key for consecutive ObjectMenu property commits */
-const MENU_PROPERTY_COALESCE_PREFIX = "menu-property";
+/** Prefix of the coalesce key for consecutive style-property commits (ObjectMenu or sidebar) */
+const STYLE_PROPERTY_COALESCE_PREFIX = "style-property";
 
 /** Prefix of the coalesce key for consecutive properties-sidebar transform commits */
 const TRANSFORM_PROPERTY_COALESCE_PREFIX = "transform-property";

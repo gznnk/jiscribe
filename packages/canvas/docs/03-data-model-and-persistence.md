@@ -81,7 +81,7 @@ Guidance for when this asymmetry bothers you:
 - **Perfect symmetry is inherently unattainable.** Even if everything were nested, the key names would still **differ in meaning** — shape = body (`text`), connector = annotation (`label`) — so some asymmetry conceptually remains no matter what.
 
 **Nesting support in the styling UI (dot notation)**: The styling property-update plumbing
-(menu item → `MENU_PROPERTY_UPDATE` / `object-menu:set:` → `StylePropertyRegistry.apply`) carries
+(menu item → `STYLE_PROPERTY_UPDATE` / `object-menu:set:` → `StylePropertyRegistry.apply`) carries
 flat property names. Because the label's background and border (`label.fill` / `label.stroke` /
 `label.strokeWidth`) are nested, they **ride on this plumbing as-is using dot-notation property names**.
 Both routes converge at the single point `StylePropertyRegistry.apply`; the `label.*` names are declared
