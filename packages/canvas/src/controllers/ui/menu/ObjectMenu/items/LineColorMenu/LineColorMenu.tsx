@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
@@ -52,7 +53,7 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLineColor}
 			>
 				<ColorPreviewIcon

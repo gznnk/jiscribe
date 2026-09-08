@@ -1,3 +1,4 @@
+import { parseMenuPart } from "./utils/menuParts";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type {
 	CanvasEvent,
@@ -24,7 +25,8 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  *   dragStart cover the native value changes made before the drag slop is crossed)
  * - dragEnd: commit the slider's final value + record history
  *
- * targetPart formats (absent = the menu chrome itself, e.g. bar / panel background):
+ * targetPart formats (absent = the menu chrome itself, e.g. bar / panel background;
+ * built and parsed by utils/menuParts.ts):
  * - `toggle:{sectionId}` → toggle a section open/closed
  * - `set:{property}:{value}` → update a property of the selected object
  * - `command:{commandId}` → execute a command
@@ -47,16 +49,17 @@ export const ObjectMenuHandler: GestureHandler = {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
+		const part = parseMenuPart(event.targetPart);
+
 		// Slider interaction: pressed / dragStart / drag / dragEnd / click
-		if (event.targetPart?.startsWith("slider:")) {
+		if (part?.kind === "slider") {
 			// Do nothing if there is no input value
 			if (event.inputValue === undefined) {
 				console.warn("[ObjectMenuHandler] No input value found");
 				return state;
 			}
 
-			// Strip the "slider:" prefix from targetPart to get the property name
-			const property = event.targetPart.slice("slider:".length);
+			const { property } = part;
 			if (!property) {
 				console.warn("[ObjectMenuHandler] No property found in targetPart");
 				return state;
@@ -117,11 +120,9 @@ export const ObjectMenuHandler: GestureHandler = {
 			(event.type === "click" || event.type === "doubleClick") &&
 			event.targetPart
 		) {
-			const actionId = event.targetPart;
-
 			// toggle button: toggle a section open/closed
-			if (actionId.startsWith("toggle:")) {
-				const sectionId = actionId.slice("toggle:".length);
+			if (part?.kind === "toggle") {
+				const sectionId = part.id;
 				return {
 					...state,
 					objectMenuOpenId:
@@ -130,30 +131,23 @@ export const ObjectMenuHandler: GestureHandler = {
 			}
 
 			// Property update: set:{property}:{value}
-			if (actionId.startsWith("set:")) {
-				const rest = actionId.slice("set:".length);
-				const colonIndex = rest.indexOf(":");
-				if (colonIndex !== -1) {
-					const property = rest.slice(0, colonIndex);
-					const value = rest.slice(colonIndex + 1);
-					const newState = registries.styleProperty.apply(
-						state,
-						property,
-						value,
-					);
-					// History recording is delegated to handleGesture, so only update commitVersion
-					return {
-						...newState,
-						selectedVertex: null,
-						commitVersion: state.commitVersion + 1,
-					};
-				}
+			if (part?.kind === "set") {
+				const newState = registries.styleProperty.apply(
+					state,
+					part.property,
+					part.value,
+				);
+				// History recording is delegated to handleGesture, so only update commitVersion
+				return {
+					...newState,
+					selectedVertex: null,
+					commitVersion: state.commitVersion + 1,
+				};
 			}
 
 			// Command button: command:{commandId}
-			if (actionId.startsWith("command:")) {
-				const commandId = actionId.slice("command:".length);
-				return handleCommand(state, commandId, registries);
+			if (part?.kind === "command") {
+				return handleCommand(state, part.commandId, registries);
 			}
 		}
 

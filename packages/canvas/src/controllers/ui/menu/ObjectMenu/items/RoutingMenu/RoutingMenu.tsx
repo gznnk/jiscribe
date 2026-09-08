@@ -4,6 +4,10 @@ import { memo, useRef } from "react";
 import { RoutingMenuRow } from "./RoutingMenuStyled";
 import { getSelectedRouting } from "./utils/getSelectedRouting";
 import { isSelectedConnectorSelfLoop } from "./utils/isSelectedConnectorSelfLoop";
+import {
+	commandPart,
+	togglePart,
+} from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";
@@ -93,7 +97,7 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuConnectorRouting}
 			>
 				<CurrentIcon title={messages.menuConnectorRouting} />
@@ -111,7 +115,7 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 								isActive={routing === currentRouting}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part={`command:${commandId}`}
+								data-part={commandPart(commandId)}
 								title={messages[messageKey]}
 							>
 								<Icon title={messages[messageKey]} />

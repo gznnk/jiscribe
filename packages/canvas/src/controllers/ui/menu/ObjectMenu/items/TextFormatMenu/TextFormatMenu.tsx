@@ -2,6 +2,10 @@ import { memo, useRef } from "react";
 
 import { TextFormatMenuContent } from "./TextFormatMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import {
+	setPart,
+	togglePart,
+} from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
@@ -64,34 +68,34 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		{
 			id: "bold",
 			isActive: isBold,
-			part: `set:fontWeight:${isBold ? "normal" : "bold"}`,
+			part: setPart("fontWeight", isBold ? "normal" : "bold"),
 			label: messages.menuBold,
 			icon: <BoldIcon title={messages.menuBold} />,
 		},
 		{
 			id: "italic",
 			isActive: isItalic,
-			part: `set:fontStyle:${isItalic ? "normal" : "italic"}`,
+			part: setPart("fontStyle", isItalic ? "normal" : "italic"),
 			label: messages.menuItalic,
 			icon: <ItalicIcon title={messages.menuItalic} />,
 		},
 		{
 			id: "underline",
 			isActive: isUnderline,
-			part: `set:textDecoration:${toggleTextDecorationToken(
-				slot?.textDecoration,
-				"underline",
-			)}`,
+			part: setPart(
+				"textDecoration",
+				toggleTextDecorationToken(slot?.textDecoration, "underline"),
+			),
 			label: messages.menuUnderline,
 			icon: <UnderlineIcon title={messages.menuUnderline} />,
 		},
 		{
 			id: "strikethrough",
 			isActive: isStrikethrough,
-			part: `set:textDecoration:${toggleTextDecorationToken(
-				slot?.textDecoration,
-				"line-through",
-			)}`,
+			part: setPart(
+				"textDecoration",
+				toggleTextDecorationToken(slot?.textDecoration, "line-through"),
+			),
 			label: messages.menuStrikethrough,
 			icon: <StrikethroughIcon title={messages.menuStrikethrough} />,
 		},
@@ -123,7 +127,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuTextFormat}
 			>
 				<BoldIcon title={messages.menuTextFormat} />

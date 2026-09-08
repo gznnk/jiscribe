@@ -1,6 +1,10 @@
 import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
+import {
+	setPart,
+	togglePart,
+} from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
@@ -60,7 +64,7 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLabelBorderStyle}
 			>
 				<DashedCircleIcon title={messages.menuLabelBorderStyle} />
@@ -77,7 +81,7 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 								isActive={!strokeDashType || strokeDashType === "solid"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:label.strokeDashType:solid"
+								data-part={setPart("label.strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
 								<SolidLineIcon title={messages.menuSolidLine} />
@@ -86,7 +90,7 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 								isActive={strokeDashType === "dashed"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:label.strokeDashType:dashed"
+								data-part={setPart("label.strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
 								<DashedLineIcon title={messages.menuDashedLine} />
@@ -95,7 +99,7 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 								isActive={strokeDashType === "dotted"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:label.strokeDashType:dotted"
+								data-part={setPart("label.strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>
 								<DottedLineIcon title={messages.menuDottedLine} />

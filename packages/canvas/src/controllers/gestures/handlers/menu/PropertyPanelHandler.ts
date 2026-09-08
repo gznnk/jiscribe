@@ -1,3 +1,4 @@
+import { parseMenuPart } from "./utils/menuParts";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type {
 	CanvasEvent,
@@ -9,7 +10,7 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * GestureHandler for the properties sidebar's own chrome.
  * Handles events with targetKind "menu" and targetId "property-panel".
  *
- * targetPart format:
+ * targetPart format (built and parsed by utils/menuParts.ts):
  * - `command:{commandId}` → execute the command (the close button is
  *   `command:togglePropertyPanel`, the same route as the toolbar's toggle).
  * - `toggle:{sectionId}` → collapse that section, or expand it when already
@@ -24,9 +25,6 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * category flyout, and leaves the selection alone. The panel is persistent
  * chrome, so a press on it never closes the panel.
  */
-const COMMAND_PREFIX = "command:";
-const TOGGLE_PREFIX = "toggle:";
-
 export const PropertyPanelHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
 		return (
@@ -48,17 +46,17 @@ export const PropertyPanelHandler: GestureHandler = {
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		if (!isActivation || event.targetPart === undefined) {
+		const part = parseMenuPart(event.targetPart);
+		if (!isActivation || part === null) {
 			return nextState;
 		}
 
-		if (event.targetPart.startsWith(COMMAND_PREFIX)) {
-			const commandId = event.targetPart.slice(COMMAND_PREFIX.length);
-			return handleCommand(nextState, commandId, registries);
+		if (part.kind === "command") {
+			return handleCommand(nextState, part.commandId, registries);
 		}
 
-		if (event.targetPart.startsWith(TOGGLE_PREFIX)) {
-			const sectionId = event.targetPart.slice(TOGGLE_PREFIX.length);
+		if (part.kind === "toggle") {
+			const sectionId = part.id;
 			const collapsedIds = nextState.propertyPanel.collapsedSectionIds;
 			return {
 				...nextState,

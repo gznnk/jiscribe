@@ -2,6 +2,7 @@
 
 import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
@@ -55,7 +56,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuFontSize}
 			>
 				<FontSizeIcon />

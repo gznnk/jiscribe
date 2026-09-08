@@ -8,6 +8,8 @@ import {
 	useCanvasMessages,
 	useObjectShapeStyleDefaultsRegistry,
 	useSubmenuPosition,
+	setPart,
+	togglePart,
 } from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
@@ -53,7 +55,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>
 				<ColorPreviewIcon
@@ -78,7 +80,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 									}
 									data-kind="menu"
 									data-id="object-menu"
-									data-part={`set:fill:${preset.value}`}
+									data-part={setPart("fill", preset.value)}
 									title={messages.colorNames[preset.name] ?? preset.name}
 								/>
 							))}

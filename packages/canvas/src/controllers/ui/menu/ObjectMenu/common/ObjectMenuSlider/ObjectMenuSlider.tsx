@@ -8,6 +8,7 @@ import {
 	ObjectMenuSliderLabel,
 	ObjectMenuSliderNumberInput,
 } from "./ObjectMenuSliderStyled";
+import { sliderPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuSliderProps = {
@@ -196,7 +197,7 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 				onPointerUp={handleSliderPointerUp}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`slider:${property}`}
+				data-part={sliderPart(property)}
 				data-gesture="native-pointer"
 			/>
 		</ObjectMenuSliderWrapper>

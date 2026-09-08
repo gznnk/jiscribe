@@ -2,6 +2,7 @@ import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../rendering/objects/connector/ConnectorLabel";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -53,7 +54,7 @@ const LabelFontFamilyMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLabelFontFamily}
 			>
 				<FontFamilyIcon title={messages.menuLabelFontFamily} />

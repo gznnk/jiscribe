@@ -8,6 +8,7 @@ import {
 	resolveLocaleMessages,
 	useCanvasLocale,
 	useSubmenuPosition,
+	togglePart,
 } from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
@@ -47,7 +48,7 @@ const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuHeaderColor}
 			>
 				<HeaderColorPreviewIcon

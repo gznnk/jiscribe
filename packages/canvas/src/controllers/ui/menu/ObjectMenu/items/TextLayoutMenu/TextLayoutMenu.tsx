@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { isSelectionTextBlock } from "../../../../../commands/shape/ToggleTextLayoutCommand";
+import { commandPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { TextWrapIcon } from "../../../../icons/TextWrapIcon";
 import {
@@ -41,7 +42,7 @@ const TextLayoutMenuComponent: React.FC<TextLayoutMenuProps> = ({
 				isActive={isBlock}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part="command:toggleTextLayout"
+				data-part={commandPart("toggleTextLayout")}
 				title={title}
 			>
 				<TextWrapIcon title={title} />

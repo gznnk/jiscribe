@@ -13,6 +13,7 @@ import {
 	formatShortcut,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
+import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCommandState } from "../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
@@ -102,7 +103,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 						: {
 								"data-kind": "menu",
 								"data-id": "context-menu",
-								"data-part": `command:${command.id}`,
+								"data-part": commandPart(command.id),
 							};
 
 				return (

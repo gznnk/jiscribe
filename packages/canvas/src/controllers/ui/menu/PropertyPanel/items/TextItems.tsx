@@ -6,6 +6,10 @@ import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
 import { isSelectionTextBlock } from "../../../../commands/shape/ToggleTextLayoutCommand";
+import {
+	commandPart,
+	setPart,
+} from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
@@ -205,34 +209,34 @@ const TextFormatItemComponent: React.FC<BuiltinItemProps> = ({
 				options={[
 					{
 						id: "bold",
-						part: `set:fontWeight:${isBold ? "normal" : "bold"}`,
+						part: setPart("fontWeight", isBold ? "normal" : "bold"),
 						title: messages.menuBold,
 						content: <BoldIcon title={messages.menuBold} />,
 						isActive: isBold,
 					},
 					{
 						id: "italic",
-						part: `set:fontStyle:${isItalic ? "normal" : "italic"}`,
+						part: setPart("fontStyle", isItalic ? "normal" : "italic"),
 						title: messages.menuItalic,
 						content: <ItalicIcon title={messages.menuItalic} />,
 						isActive: isItalic,
 					},
 					{
 						id: "underline",
-						part: `set:textDecoration:${toggleTextDecorationToken(
-							textDecoration,
-							"underline",
-						)}`,
+						part: setPart(
+							"textDecoration",
+							toggleTextDecorationToken(textDecoration, "underline"),
+						),
 						title: messages.menuUnderline,
 						content: <UnderlineIcon title={messages.menuUnderline} />,
 						isActive: isUnderline,
 					},
 					{
 						id: "strikethrough",
-						part: `set:textDecoration:${toggleTextDecorationToken(
-							textDecoration,
-							"line-through",
-						)}`,
+						part: setPart(
+							"textDecoration",
+							toggleTextDecorationToken(textDecoration, "line-through"),
+						),
 						title: messages.menuStrikethrough,
 						content: <StrikethroughIcon title={messages.menuStrikethrough} />,
 						isActive: isStrikethrough,
@@ -264,21 +268,21 @@ const TextAlignItemComponent: React.FC<BuiltinItemProps> = ({
 				options={[
 					{
 						id: "left",
-						part: "set:textAlign:left",
+						part: setPart("textAlign", "left"),
 						title: messages.menuAlignLeft,
 						content: <AlignLeftIcon />,
 						isActive: textAlign === "left",
 					},
 					{
 						id: "center",
-						part: "set:textAlign:center",
+						part: setPart("textAlign", "center"),
 						title: messages.menuAlignCenter,
 						content: <AlignCenterIcon />,
 						isActive: textAlign === "center",
 					},
 					{
 						id: "right",
-						part: "set:textAlign:right",
+						part: setPart("textAlign", "right"),
 						title: messages.menuAlignRight,
 						content: <AlignRightIcon />,
 						isActive: textAlign === "right",
@@ -311,21 +315,21 @@ const VerticalAlignItemComponent: React.FC<BuiltinItemProps> = ({
 				options={[
 					{
 						id: "top",
-						part: "set:verticalAlign:top",
+						part: setPart("verticalAlign", "top"),
 						title: messages.menuAlignTop,
 						content: <AlignTopIcon />,
 						isActive: verticalAlign === "top",
 					},
 					{
 						id: "middle",
-						part: "set:verticalAlign:middle",
+						part: setPart("verticalAlign", "middle"),
 						title: messages.menuAlignMiddle,
 						content: <AlignMiddleIcon />,
 						isActive: verticalAlign === "middle",
 					},
 					{
 						id: "bottom",
-						part: "set:verticalAlign:bottom",
+						part: setPart("verticalAlign", "bottom"),
 						title: messages.menuAlignBottom,
 						content: <AlignBottomIcon />,
 						isActive: verticalAlign === "bottom",
@@ -352,7 +356,7 @@ const TextLayoutItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyCheckbox
 			isOn={isBlock}
-			part="command:toggleTextLayout"
+			part={commandPart("toggleTextLayout")}
 			label={messages.menuWrapTextInWidth}
 			title={
 				isBlock ? messages.menuFitWidthToText : messages.menuWrapTextInWidth
@@ -388,14 +392,14 @@ const TextVerticalBasisItemComponent: React.FC<BuiltinItemProps> = ({
 				options={[
 					{
 						id: "region",
-						part: "set:textVerticalBasis:region",
+						part: setPart("textVerticalBasis", "region"),
 						title: messages.menuTextBasisRegion,
 						content: messages.propertyPanelTextBasisRegion,
 						isActive: basis === "region",
 					},
 					{
 						id: "frame",
-						part: "set:textVerticalBasis:frame",
+						part: setPart("textVerticalBasis", "frame"),
 						title: messages.menuTextBasisFrame,
 						content: messages.propertyPanelTextBasisFrame,
 						isActive: basis === "frame",

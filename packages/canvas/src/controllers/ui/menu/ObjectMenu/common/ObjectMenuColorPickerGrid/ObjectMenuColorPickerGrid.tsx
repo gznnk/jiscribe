@@ -12,6 +12,7 @@ import {
 	ColorSwatch,
 	ColorTextInput,
 } from "./ObjectMenuColorPickerGridStyled";
+import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
@@ -110,13 +111,13 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 		writesThroughCallback
 			? {
 					"data-gesture": "none",
-					"data-part": `set:${property}:${value}`,
+					"data-part": setPart(property, value),
 					onClick: () => onPropertyUpdate(property, value, true),
 				}
 			: {
 					"data-kind": "menu",
 					"data-id": "object-menu",
-					"data-part": `set:${property}:${value}`,
+					"data-part": setPart(property, value),
 				};
 
 	return (

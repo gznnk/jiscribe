@@ -152,6 +152,10 @@ Rules:
   command channel.
 - `data-kind` is present only on elements that have a gesture handler. "Interactive but not a gesture
   target" is expressed with `data-gesture="none"`, not with a handler-less kind.
+- The `menu` kind's part grammar (`command:` / `toggle:` / `set:` / `slider:`) has one home,
+  `gestures/handlers/menu/utils/menuParts.ts`: writers build the strings with `commandPart` / `togglePart` /
+  `setPart` / `sliderPart` (also exported through `@jiscribe/canvas/unstable` for plugins) and the menu
+  handlers take them apart with `parseMenuPart`, so no prefix is spelled twice.
 
 Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
 With a committed label, only a double click on the label box (not the bare line) starts label editing,

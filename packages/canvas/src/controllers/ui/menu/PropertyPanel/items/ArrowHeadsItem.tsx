@@ -3,6 +3,7 @@ import type { ArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
+import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
 import { ArrowHeadIconPreview } from "../../ObjectMenu/items/ArrowHeadMenu/ArrowHeadIconPreview";
@@ -53,7 +54,7 @@ const ArrowEndRow: React.FC<{
 							isActive={!isMixed && current === type}
 							data-kind="menu"
 							data-id="object-menu"
-							data-part={`set:${property}:${type}`}
+							data-part={setPart(property, type)}
 							title={messages.arrowTypeNames[type] ?? type}
 						>
 							<ArrowHeadIconPreview arrowType={type} direction={direction} />

@@ -2,6 +2,7 @@
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
@@ -51,7 +52,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>
 				<ColorPreviewIcon

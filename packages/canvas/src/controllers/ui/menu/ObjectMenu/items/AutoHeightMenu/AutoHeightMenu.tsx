@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { isSelectionAutoHeight } from "../../../../../commands/shape/ToggleAutoHeightCommand";
+import { commandPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { AutoHeightIcon } from "../../../../icons/AutoHeightIcon";
@@ -43,7 +44,7 @@ const AutoHeightMenuComponent: React.FC<AutoHeightMenuProps> = ({
 				isActive={isAuto}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part="command:toggleAutoHeight"
+				data-part={commandPart("toggleAutoHeight")}
 				title={title}
 			>
 				<AutoHeightIcon title={title} />

@@ -2,6 +2,7 @@ import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
@@ -51,7 +52,7 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuStrokeColor}
 			>
 				<BorderColorIcon

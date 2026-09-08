@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
+import { commandPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCommandState } from "../../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
@@ -45,7 +46,7 @@ const StackOrderItemComponent: React.FC<
 						title={label}
 						data-kind="menu"
 						data-id="object-menu"
-						data-part={`command:${commandId}`}
+						data-part={commandPart(commandId)}
 					>
 						{label}
 					</PropertyCommandButton>

@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { commandPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { isSelectionTextVerticalBasisFrame } from "../../../../../utils/textVerticalBasisSelection";
@@ -49,7 +50,7 @@ const TextVerticalBasisMenuComponent: React.FC<TextVerticalBasisMenuProps> = ({
 				isActive={isFrame}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part="command:toggleTextVerticalBasis"
+				data-part={commandPart("toggleTextVerticalBasis")}
 				title={title}
 			>
 				<TextVerticalBasisIcon title={title} />

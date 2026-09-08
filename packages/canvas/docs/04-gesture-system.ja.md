@@ -147,6 +147,10 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
   part はコマンド伝達チャネルではない
 - `data-kind` はジェスチャーハンドラを持つ要素にだけ付ける。「インタラクティブだが
   ジェスチャー対象外」はハンドラ無しの kind ではなく `data-gesture="none"` で表現する
+- `menu` kind の part 文法（`command:` / `toggle:` / `set:` / `slider:`）の正本は
+  `gestures/handlers/menu/utils/menuParts.ts` の 1 箇所。書く側は `commandPart` / `togglePart` /
+  `setPart` / `sliderPart`（プラグイン向けに `@jiscribe/canvas/unstable` からも公開）で文字列を
+  組み、menu 系ハンドラは `parseMenuPart` で分解する。接頭辞をどこにも二度書かない
 
 例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-part="label"`。
 ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。

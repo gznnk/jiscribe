@@ -182,6 +182,16 @@ export { PropertySegmentedControl } from "./controllers/ui/menu/PropertyPanel/co
 export type { PropertySegmentedOption } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
 export { PropertyCheckbox } from "./controllers/ui/menu/PropertyPanel/common/PropertyCheckbox";
 
+// The `data-part` grammar the menu targets are read by (command: / toggle: /
+// set: / slider:). Build the strings with these rather than spelling the
+// prefixes, so a plugin's buttons and the core's are read by the same rule.
+export {
+	commandPart,
+	setPart,
+	sliderPart,
+	togglePart,
+} from "./controllers/gestures/handlers/menu/utils/menuParts";
+
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
 export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";
 export {

@@ -2,6 +2,7 @@ import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeSty
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
+import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { getEffectiveSelectedIds } from "../../../../utils/getEffectiveSelectedIds";
@@ -150,21 +151,21 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 				options={[
 					{
 						id: "solid",
-						part: "set:strokeDashType:solid",
+						part: setPart("strokeDashType", "solid"),
 						title: messages.menuSolidLine,
 						content: <SolidLineIcon title={messages.menuSolidLine} />,
 						isActive: dashType === "solid",
 					},
 					{
 						id: "dashed",
-						part: "set:strokeDashType:dashed",
+						part: setPart("strokeDashType", "dashed"),
 						title: messages.menuDashedLine,
 						content: <DashedLineIcon title={messages.menuDashedLine} />,
 						isActive: dashType === "dashed",
 					},
 					{
 						id: "dotted",
-						part: "set:strokeDashType:dotted",
+						part: setPart("strokeDashType", "dotted"),
 						title: messages.menuDottedLine,
 						content: <DottedLineIcon title={messages.menuDottedLine} />,
 						isActive: dashType === "dotted",

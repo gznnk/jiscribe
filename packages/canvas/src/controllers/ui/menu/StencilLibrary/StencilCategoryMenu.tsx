@@ -7,6 +7,7 @@ import {
 	StencilCategoryFlyout,
 } from "./StencilLibraryStyled";
 import { resolveStencilCategoryLabel } from "./utils/resolveStencilLabel";
+import { togglePart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
@@ -58,7 +59,7 @@ const StencilCategoryMenuComponent: React.FC<StencilCategoryMenuProps> = ({
 				type="button"
 				data-kind="menu"
 				data-id="stencil-category"
-				data-part={`toggle:${id}`}
+				data-part={togglePart(id)}
 				aria-haspopup="true"
 				aria-expanded={isOpen}
 				title={label}

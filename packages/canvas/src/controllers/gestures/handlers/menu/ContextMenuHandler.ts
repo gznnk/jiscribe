@@ -1,3 +1,4 @@
+import { parseMenuPart } from "./utils/menuParts";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type {
 	CanvasEvent,
@@ -22,11 +23,10 @@ export const ContextMenuHandler: GestureHandler = {
 	},
 
 	handle(state, event, registries) {
-		if (event.type === "click" && event.targetPart?.startsWith("command:")) {
-			const commandId = event.targetPart.slice("command:".length);
-
+		const part = parseMenuPart(event.targetPart);
+		if (event.type === "click" && part?.kind === "command") {
 			// Execute the COMMAND action
-			const nextState = handleCommand(state, commandId, registries);
+			const nextState = handleCommand(state, part.commandId, registries);
 
 			// Close the context menu
 			return {

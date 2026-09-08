@@ -6,6 +6,8 @@ import {
 	resolveLocaleMessages,
 	useCanvasLocale,
 	useSubmenuPosition,
+	setPart,
+	togglePart,
 } from "@jiscribe/canvas-sdk";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 
@@ -129,7 +131,7 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuIcon}
 			>
 				<IconGlyph name={currentIcon} size={18} />
@@ -166,7 +168,7 @@ const IconPickerMenuComponent: React.FC<ObjectMenuItemProps> = ({
 									selected={name === currentIcon}
 									data-kind="menu"
 									data-id="object-menu"
-									data-part={`set:icon:${name}`}
+									data-part={setPart("icon", name)}
 									title={name}
 								>
 									<IconGlyph name={name} size={18} />

@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
@@ -50,7 +51,7 @@ const LabelBorderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLabelBorderColor}
 			>
 				<BorderColorIcon

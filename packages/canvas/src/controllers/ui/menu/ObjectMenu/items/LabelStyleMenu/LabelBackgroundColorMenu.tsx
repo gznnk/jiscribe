@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveLabelFill } from "../../../../../../rendering/objects/connector/ConnectorLabel";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
@@ -50,7 +51,7 @@ const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLabelBackgroundColor}
 			>
 				<ColorPreviewIcon

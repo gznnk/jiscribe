@@ -49,6 +49,10 @@ import type {
 import { isCanvasSectionShown } from "./utils/isCanvasSectionShown";
 import { resolvePropertyPanelSectionLabel } from "./utils/resolvePropertyPanelSectionLabel";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import {
+	commandPart,
+	togglePart,
+} from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
@@ -138,7 +142,7 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
 		<PropertyPanelSectionHeader
 			type="button"
 			aria-expanded={isExpanded}
-			data-part={`toggle:${sectionId}`}
+			data-part={togglePart(sectionId)}
 		>
 			<PropertyPanelSectionChevron isExpanded={isExpanded}>
 				<ChevronRightIcon width={CHEVRON_SIZE} height={CHEVRON_SIZE} />
@@ -197,7 +201,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 					type="button"
 					aria-label={messages.propertyPanelClose}
 					title={messages.propertyPanelClose}
-					data-part="command:togglePropertyPanel"
+					data-part={commandPart("togglePropertyPanel")}
 				>
 					<CloseIcon width={CLOSE_ICON_SIZE} height={CLOSE_ICON_SIZE} />
 				</PropertyPanelCloseButton>

@@ -10,6 +10,7 @@ import {
 	ToolbarToggleButton,
 	ZoomReadout,
 } from "./ToolbarStyled";
+import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { EllipsisIcon } from "../../icons/EllipsisIcon";
@@ -152,7 +153,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 							aria-label={messages.toolbarStencilLibrary}
 							title={messages.toolbarStencilLibrary}
 							aria-expanded={isLibraryOpen}
-							data-part="command:toggleStencilLibrary"
+							data-part={commandPart("toggleStencilLibrary")}
 							isOpen={isLibraryOpen}
 						>
 							<EllipsisIcon />
@@ -170,7 +171,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					aria-label={messages.toolbarZoomOut}
 					title={messages.toolbarZoomOut}
 					disabled={!canZoomOut}
-					data-part="command:zoomOut"
+					data-part={commandPart("zoomOut")}
 				>
 					−
 				</ToolbarIconButton>
@@ -178,7 +179,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					type="button"
 					aria-label={messages.toolbarResetZoom}
 					title={messages.toolbarResetZoom}
-					data-part="command:resetZoom"
+					data-part={commandPart("resetZoom")}
 				>
 					{Math.round(zoom * 100)}%
 				</ZoomReadout>
@@ -187,7 +188,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					aria-label={messages.toolbarZoomIn}
 					title={messages.toolbarZoomIn}
 					disabled={!canZoomIn}
-					data-part="command:zoomIn"
+					data-part={commandPart("zoomIn")}
 				>
 					+
 				</ToolbarIconButton>
@@ -199,7 +200,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					aria-label={messages.toolbarShowShortcutHelp}
 					title={messages.toolbarShortcutHelp}
 					data-testid="shortcut-help:open"
-					data-part="command:shortcutHelp"
+					data-part={commandPart("shortcutHelp")}
 				>
 					<HelpIcon />
 				</ToolbarIconButton>
@@ -208,7 +209,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					aria-label={messages.toolbarPropertyPanel}
 					title={messages.toolbarPropertyPanel}
 					aria-expanded={isPropertyPanelOpen}
-					data-part="command:togglePropertyPanel"
+					data-part={commandPart("togglePropertyPanel")}
 					isOpen={isPropertyPanelOpen}
 				>
 					<PropertyPanelIcon />

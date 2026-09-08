@@ -1,3 +1,4 @@
+import { parseMenuPart } from "./utils/menuParts";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -22,8 +23,6 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * press on its padding lands here and is deliberately inert (without it the
  * press would resolve to the toolbar background and close the flyout).
  */
-const TOGGLE_PREFIX = "toggle:";
-
 export const StencilCategoryToggleHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
 		return (
@@ -42,8 +41,9 @@ export const StencilCategoryToggleHandler: GestureHandler = {
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		if (isActivation && event.targetPart?.startsWith(TOGGLE_PREFIX)) {
-			const categoryId = event.targetPart.slice(TOGGLE_PREFIX.length);
+		const part = parseMenuPart(event.targetPart);
+		if (isActivation && part?.kind === "toggle") {
+			const categoryId = part.id;
 			return {
 				...nextState,
 				stencilLibraryOpenCategory:

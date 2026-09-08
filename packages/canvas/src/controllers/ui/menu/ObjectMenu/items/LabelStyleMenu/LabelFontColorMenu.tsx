@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
@@ -49,7 +50,7 @@ const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLabelFontColor}
 			>
 				<FontColorIcon underlineColor={resolveAutoColor(fontColor, "ink")} />
