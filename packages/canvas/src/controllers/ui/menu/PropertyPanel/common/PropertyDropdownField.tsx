@@ -73,11 +73,16 @@ const PropertyDropdownFieldComponent: React.FC<PropertyDropdownFieldProps> = ({
 		}
 		const hostRect = overlayHost.getBoundingClientRect();
 		const triggerRect = trigger.getBoundingClientRect();
+		// The rects are screen px, the `top` written below is the sidebar's own px:
+		// the two differ by whatever scale a host has transformed the canvas with,
+		// which the sidebar's on-screen height over its layout height gives back.
+		const scale = hostRect.height / overlayHost.offsetHeight || 1;
 		const panelHeight = panel.offsetHeight;
-		const topUnderTrigger = triggerRect.bottom - hostRect.top + PANEL_GAP;
-		const topAboveTrigger =
-			triggerRect.top - hostRect.top - PANEL_GAP - panelHeight;
-		const topAtHostBottom = hostRect.height - panelHeight - PANEL_GAP;
+		const triggerTop = (triggerRect.top - hostRect.top) / scale;
+		const triggerBottom = (triggerRect.bottom - hostRect.top) / scale;
+		const topUnderTrigger = triggerBottom + PANEL_GAP;
+		const topAboveTrigger = triggerTop - PANEL_GAP - panelHeight;
+		const topAtHostBottom = overlayHost.offsetHeight - panelHeight - PANEL_GAP;
 		if (topUnderTrigger <= topAtHostBottom) {
 			setPanelTop(topUnderTrigger);
 		} else if (topAboveTrigger >= 0) {
