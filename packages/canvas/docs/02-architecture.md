@@ -39,7 +39,7 @@ packages/canvas/src/
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
 ├── theme/                  # CanvasTheme / presets / CSS vars + the `theme` token object styles read
-└── constants/              # zoom.ts / viewport.ts, etc.
+└── constants/              # zoom.ts / groupDimensions.ts, etc.
 ```
 
 The Doc model is **not** in this package. It lives in `@jiscribe/doc`

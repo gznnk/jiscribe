@@ -1,10 +1,12 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
-import { INITIAL_VIEWPORT } from "../../../constants/viewport";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
-import { createInitialControllerState } from "../createInitialControllerState";
+import {
+	createInitialControllerState,
+	INITIAL_VIEWPORT,
+} from "../createInitialControllerState";
 
 const registries = createTestRegistries();
 

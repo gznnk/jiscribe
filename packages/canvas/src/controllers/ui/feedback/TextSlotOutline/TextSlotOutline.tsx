@@ -1,12 +1,12 @@
 import { isTransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { SELECTION_OUTLINE_WIDTH } from "../../../../constants/selectionOutline";
 import { useObjectTextRegionRegistry } from "../../../../rendering/objects/registry/ObjectTextRegionRegistryContext";
 import { calcTextRegion } from "../../../../rendering/objects/utils/calcTextRegion";
 import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { theme } from "../../../../theme/themeTokens";
+import { SELECTION_OUTLINE_WIDTH } from "../selectionOutline";
 
 type TextSlotOutlineProps = {
 	object: ObjectState;

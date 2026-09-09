@@ -1,12 +1,12 @@
 import type { Point } from "@jiscribe/geometry";
 
+import { DEFAULT_CONNECTOR_MARGIN } from "./routingConstants";
 import { simplifyPath } from "./simplifyPath";
 import { stubPoint } from "./stub";
 import type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,
 } from "./types";
-import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRouting";
 
 /** Tolerance for perimeter-parameter comparisons (px). Used for corner/endpoint overlap detection. */
 const EPS = 1e-6;

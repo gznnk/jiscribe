@@ -1,7 +1,6 @@
 import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type { Point } from "@jiscribe/geometry";
 
-import { ORIGIN_SNAP_PX } from "../../../../../constants/axisLock";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,
@@ -11,6 +10,7 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { ORIGIN_SNAP_PX } from "../../utils/axisLock";
 import {
 	buildSnapFeedback,
 	findSnap,

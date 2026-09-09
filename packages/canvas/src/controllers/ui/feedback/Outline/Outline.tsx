@@ -1,12 +1,12 @@
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
+import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
+import { theme } from "../../../../theme/themeTokens";
 import {
 	SELECTION_OUTLINE_DASH_PATTERN,
 	SELECTION_OUTLINE_WIDTH,
-} from "../../../../constants/selectionOutline";
-import { createSvgTransform } from "../../../../rendering/objects/utils/createSvgTransform";
-import { theme } from "../../../../theme/themeTokens";
+} from "../selectionOutline";
 
 type OutlineProps = {
 	frame: TransformedFrame;

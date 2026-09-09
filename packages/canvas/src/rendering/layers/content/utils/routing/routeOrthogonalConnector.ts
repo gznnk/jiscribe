@@ -8,13 +8,13 @@ import {
 	compareRouteChoices,
 	type RouteChoice,
 } from "./routeCost";
+import { DEFAULT_CONNECTOR_MARGIN } from "./routingConstants";
 import { simplifyPath } from "./simplifyPath";
 import { clampStubMargin, stubPoint } from "./stub";
 import type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,
 } from "./types";
-import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRouting";
 
 /**
  * Generates an orthogonal route connecting two endpoints using only horizontal/vertical segments.

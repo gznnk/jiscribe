@@ -39,7 +39,7 @@ packages/canvas/src/
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
 ├── theme/                  # CanvasTheme・プリセット・CSS 変数 + スタイルが読む `theme` トークン
-└── constants/              # zoom.ts / viewport.ts など
+└── constants/              # zoom.ts / groupDimensions.ts など
 ```
 
 Doc モデルはこのパッケージには**無い**。canvas が依存する `@jiscribe/doc`
