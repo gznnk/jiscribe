@@ -17,10 +17,10 @@ import {
 	createMultiSelectResizeBoundsCache,
 } from "./utils/multiSelectResizeBoundsCache";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
-import { MIN_GROUP_DIMENSION } from "../../../../../constants/groupDimensions";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { MIN_GROUP_DIMENSION } from "../../../../../states/utils/groupDimensions";
 import { transformChildren } from "../../../../behaviors/primitives/GroupController";
 import type {
 	CanvasControllerState,

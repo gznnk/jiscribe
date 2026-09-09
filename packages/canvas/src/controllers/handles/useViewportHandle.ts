@@ -8,7 +8,6 @@ import {
 import { type Dispatch, type RefObject, useMemo } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
-import { ZOOM } from "../../constants/zoom";
 import type { Viewport } from "../../rendering/Viewport";
 import type { Camera, CanvasControllerState } from "../CanvasTypes";
 import { getSvgPoint } from "../gestures/recognizer/utils/getSvgPoint";
@@ -19,6 +18,7 @@ import { calcSelectionFitViewport } from "../utils/calcSelectionFitViewport";
 import { calcViewportForBounds } from "../utils/calcViewportForBounds";
 import { calcVisibleWorldRect } from "../utils/calcVisibleWorldRect";
 import { getClientPoint } from "../utils/getClientPoint";
+import { ZOOM } from "../utils/zoom";
 
 /** Per-call options shared by the fit methods of {@link CanvasViewportHandle} */
 export type CanvasFitOptions = {

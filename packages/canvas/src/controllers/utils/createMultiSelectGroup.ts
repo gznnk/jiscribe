@@ -2,10 +2,14 @@ import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcUnionBoundingBox } from "./buildObjectBBoxes";
 import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
-import { MIN_GROUP_DIMENSION } from "../../constants/groupDimensions";
-import { MULTI_SELECT_GROUP } from "../../constants/multiSelectGroup";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
+import { MIN_GROUP_DIMENSION } from "../../states/utils/groupDimensions";
+
+export const MULTI_SELECT_GROUP = {
+	/** Fixed ID for the temporary multi-select group object */
+	ID: "@@multi-select-group@@",
+} as const;
 
 /**
  * Build a transient multi-select group state that wraps the current selection.

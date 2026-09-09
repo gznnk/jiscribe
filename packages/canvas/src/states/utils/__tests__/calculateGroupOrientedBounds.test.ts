@@ -1,12 +1,12 @@
 import type { Transform } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { MIN_GROUP_DIMENSION } from "../../../constants/groupDimensions";
 import type { ObjectState } from "../../objects/base/ObjectState";
 import {
 	calculateGroupOrientedBounds,
 	calculateOrientedBoundsFromChildIds,
 } from "../calculateGroupOrientedBounds";
+import { MIN_GROUP_DIMENSION } from "../groupDimensions";
 
 /**
  * Helpers that build objects with only the minimal fields needed for testing.

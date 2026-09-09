@@ -5,7 +5,6 @@ import { convertRectToBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { ZOOM } from "../../../constants/zoom";
 import type { ObjectVisualBoundsRegistry } from "../../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
@@ -18,6 +17,7 @@ import {
 	resolveExportOptions,
 } from "../resolveExportOptions";
 import { resolveScrollWallPadding } from "../resolveScrollWallPadding";
+import { ZOOM } from "../zoom";
 
 /**
  * The one rectangle `view.padding` is supposed to mean, checked across the three

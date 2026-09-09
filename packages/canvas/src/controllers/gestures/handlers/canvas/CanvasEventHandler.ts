@@ -4,10 +4,10 @@ import { roundToDecimal } from "@jiscribe/geometry";
 
 import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
-import { ZOOM } from "../../../../constants/zoom";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
+import { ZOOM } from "../../../utils/zoom";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import {

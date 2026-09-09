@@ -20,7 +20,7 @@ import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
 import { limitViewScroll } from "./utils/limitViewScroll";
 import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
-import { ZOOM } from "../../../constants/zoom";
+import { ZOOM } from "../../utils/zoom";
 
 /**
  * Event types that should trigger saving the current state as eventStartSnapshot.

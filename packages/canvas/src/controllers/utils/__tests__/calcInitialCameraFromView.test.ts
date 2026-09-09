@@ -1,8 +1,8 @@
 import type { BoundingBox } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import { ZOOM } from "../../../constants/zoom";
 import { calcInitialCameraFromView } from "../calcInitialCameraFromView";
+import { ZOOM } from "../zoom";
 
 const limits = { min: ZOOM.MIN, max: ZOOM.MAX };
 

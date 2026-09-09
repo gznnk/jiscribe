@@ -38,8 +38,7 @@ packages/canvas/src/
 ├── rendering/              # 純粋な描画コンポーネント（layers / objects / defs）+ Viewport 型
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
-├── theme/                  # CanvasTheme・プリセット・CSS 変数 + スタイルが読む `theme` トークン
-└── constants/              # zoom.ts / groupDimensions.ts など
+└── theme/                  # CanvasTheme・プリセット・CSS 変数 + スタイルが読む `theme` トークン
 ```
 
 Doc モデルはこのパッケージには**無い**。canvas が依存する `@jiscribe/doc`

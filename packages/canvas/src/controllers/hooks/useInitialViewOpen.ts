@@ -6,12 +6,12 @@ import {
 import type { Dimensions } from "@jiscribe/geometry";
 import { type Dispatch, type RefObject, useLayoutEffect, useRef } from "react";
 
-import { ZOOM } from "../../constants/zoom";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { calcContentBounds } from "../utils/calcContentBounds";
 import { calcInitialCameraFromView } from "../utils/calcInitialCameraFromView";
+import { ZOOM } from "../utils/zoom";
 
 type InitialViewOpenOptions = {
 	/**

@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../constants/connectorHitArea";
+import { CONNECTOR_HIT_STROKE_WIDTH } from "./connectorHitArea";
 
 /**
  * The whole-path band. It takes clicks (select, and double click to edit the label) but no drag —

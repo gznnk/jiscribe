@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { ZOOM } from "../../../../constants/zoom";
 import type { Viewport } from "../../../../rendering/Viewport";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { ZOOM } from "../../../utils/zoom";
 import { ZoomInCommand } from "../ZoomInCommand";
 
 const registries = createTestRegistries();

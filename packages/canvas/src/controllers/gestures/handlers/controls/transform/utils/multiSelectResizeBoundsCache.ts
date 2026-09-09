@@ -5,11 +5,11 @@ import {
 	isTransformedFrame,
 } from "@jiscribe/geometry";
 
-import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { isConnectorState } from "../../../../../../states/objects/connector/ConnectorState";
 import { isGroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import { MIN_GROUP_DIMENSION } from "../../../../../../states/utils/groupDimensions";
 import type { MultiSelectResizeBoundsCache } from "../../../../../CanvasTypes";
 import { classifyChildRelativeRotation } from "../../../../../utils/classifyChildRelativeRotation";
 import { collectObjectPoints } from "../../../../../utils/collectObjectPoints";

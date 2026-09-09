@@ -6,7 +6,7 @@ import {
 } from "@jiscribe/geometry";
 import type { Point, Transform, TransformedFrame } from "@jiscribe/geometry";
 
-import { MIN_GROUP_DIMENSION } from "../../constants/groupDimensions";
+import { MIN_GROUP_DIMENSION } from "./groupDimensions";
 import type { ObjectState } from "../objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
 

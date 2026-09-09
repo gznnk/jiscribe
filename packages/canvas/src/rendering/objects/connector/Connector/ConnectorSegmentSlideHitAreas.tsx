@@ -1,7 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../constants/connectorHitArea";
+import { CONNECTOR_HIT_STROKE_WIDTH } from "./connectorHitArea";
 
 // Bands of two perpendicular segments overlap where they meet, so a segment shorter than the band
 // width sits entirely inside its neighbours' overlap and cannot be aimed at — a drag there lands on
