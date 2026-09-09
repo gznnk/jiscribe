@@ -33,15 +33,24 @@ file and mirrors it into the viewer. When a person moves or retypes something in
 the viewer, it is written back, so the next read shows what they changed. No
 canvas state is kept in the tools themselves.
 
-Three families of tools, 68 in all:
+Three families of tools, 69 in all:
 
-- Six of its own: `open_canvas` / `close_canvas` / `diagnose_canvas` /
-  `measure_text` / `add_rect` / `add_ellipse`. `open_canvas` takes `headless`,
-  which gives the AI a canvas to look at without putting a window on screen
+- Seven of its own: `read_drawing_guide` / `open_canvas` / `close_canvas` /
+  `diagnose_canvas` / `measure_text` / `add_rect` / `add_ellipse`.
+  `open_canvas` takes `headless`, which gives the AI a canvas to look at without
+  putting a window on screen
 - 46 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
   align, group, style, read, undo — each given a `path` so it names a file
 - 16 more from the same declarations that only a mounted canvas can answer —
   capture, camera, selection, measurement — run over the viewer's WebSocket
+
+The handshake carries `instructions` describing this server alone: that files are
+addressed by absolute path, which tools need a viewer, where validation starts.
+The canvas itself — what it can hold, what each shape is for, how to draw well,
+and how the JSON is laid out — is not in there. It is prose too large to sit in
+the context all session, so `read_drawing_guide` fetches it on demand:
+`"drawing"` before starting a diagram, `"json-format"` when a `.jis.json` file is
+to be edited directly rather than through these tools.
 
 ## The viewer
 
@@ -83,9 +92,9 @@ node apps/mcp/dist/index.mjs       # stdio; register this path with your client
 
 Run pnpm from the repository root, never with the working directory inside
 `engine/`. The build output stands alone — `dist/index.mjs` (the server),
-`dist/client/` (the viewer), and `dist/node_modules/` (the JSON schema and the
-fonts the text measurement needs at runtime) — which is what gets published, so
-a checkout is not needed to run it.
+`dist/client/` (the viewer), and `dist/node_modules/` (the JSON schema, the two
+guides `read_drawing_guide` returns, and the fonts the text measurement needs at
+runtime) — which is what gets published, so a checkout is not needed to run it.
 
 To work on the viewer alone, `pnpm --filter jiscribe-mcp dev:viewer` serves it
 from vite on 5196 and proxies to the host on 5190.

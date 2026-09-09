@@ -32,7 +32,8 @@ describe("createJiscribeMcpServer", () => {
 		// ai-tools ones move as that side grows or shrinks, so the two tests below
 		// only look at their count and at duplicates
 		const names = await client.listToolNames();
-		expect(names.slice(0, 6)).toEqual([
+		expect(names.slice(0, 7)).toEqual([
+			"read_drawing_guide",
 			"open_canvas",
 			"close_canvas",
 			"diagnose_canvas",

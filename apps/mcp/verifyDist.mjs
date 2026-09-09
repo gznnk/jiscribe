@@ -16,6 +16,11 @@ const REQUIRED_FILES = [
 	"index.mjs",
 	"client/index.html",
 	"node_modules/@jiscribe/doc-schema/assets/jiscribe.schema.json",
+	// The two guides read_drawing_guide hands back. Nothing else reads them, so
+	// leaving them out ships a server whose only advice on how to draw is the
+	// tool list
+	"node_modules/@jiscribe/doc-schema/assets/canvas-prompt.md",
+	"node_modules/@jiscribe/doc-schema/assets/authoring-json.md",
 ];
 
 const problems = [];

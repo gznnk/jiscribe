@@ -4,8 +4,8 @@
 //   1. vite が出したビューアの JS と CSS を index.html の中へ畳む（単一 HTML 化）。
 //      フォントだけは畳まない（全部で 50MB あり、しかも unicode-range 分割なので
 //      ブラウザは実際に描く範囲しか取りに来ない）。
-//   2. doc-tools が実行時に読むもの（JSON スキーマと計測用フォント）を
-//      dist/node_modules へ写し、写し漏れが無いか検証する。
+//   2. 実行時に node の解決規則で読むもの（JSON スキーマ・ガイド 2 枚・計測用
+//      フォント）を dist/node_modules へ写し、写し漏れが無いか検証する。
 //   3. esbuild で src/index.ts を単一ファイル dist/index.mjs にバンドルする（Node・ESM）。
 //   4. できた成果物に tools/list を投げ、ツール定義の分量を報告する。
 //
@@ -85,6 +85,9 @@ const inlineViewerHtml = async () => {
 //
 // フォントを置かずに済ませることはできない。doc-tools は見つからない families を
 // 「文字数からの推定」へ黙って落とすので、日本語の計測だけが静かにずれる。
+//
+// read_drawing_guide が返すガイド 2 枚（canvas-prompt.md / authoring-json.md）も
+// 同じ doc-schema から同じ流儀で読むので、ここで一緒に写す。
 
 const require = createRequire(import.meta.url);
 const stagedModulesDir = join(__dirname, "dist", "node_modules");
@@ -175,7 +178,17 @@ const stageFontPackage = async (packageName) => {
 	return woffCount;
 };
 
-/** 検証が読む JSON スキーマを写す（exports 経由で解決されるので package.json ごと） */
+/**
+ * doc-schema の assets のうち実行時に読むものを写す（exports 経由で解決されるので
+ * package.json ごと）。検証が読む JSON スキーマと、read_drawing_guide が返す
+ * ガイド 2 枚。
+ */
+const DOC_SCHEMA_ASSETS = [
+	"jiscribe.schema.json",
+	"canvas-prompt.md",
+	"authoring-json.md",
+];
+
 const stageDocSchema = async () => {
 	// package.json 自身は exports に無いので、公開されている ./schema から辿る
 	const sourceDir = dirname(
@@ -184,10 +197,12 @@ const stageDocSchema = async () => {
 	const targetDir = join(stagedModulesDir, "@jiscribe", "doc-schema");
 	await mkdir(join(targetDir, "assets"), { recursive: true });
 	await cp(join(sourceDir, "package.json"), join(targetDir, "package.json"));
-	await cp(
-		join(sourceDir, "assets", "jiscribe.schema.json"),
-		join(targetDir, "assets", "jiscribe.schema.json"),
-	);
+	for (const fileName of DOC_SCHEMA_ASSETS) {
+		await cp(
+			join(sourceDir, "assets", fileName),
+			join(targetDir, "assets", fileName),
+		);
+	}
 };
 
 /**
@@ -210,12 +225,22 @@ const verifyStagedRuntimeDependencies = async () => {
 		const manifest = JSON.parse(
 			await readFile(join(schemaDir, "package.json"), "utf8"),
 		);
-		if (manifest.exports?.["./schema"] === undefined) {
-			problems.push("doc-schema: package.json does not export ./schema");
+		for (const subpath of ["./schema", "./canvas-prompt", "./authoring-json"]) {
+			if (manifest.exports?.[subpath] === undefined) {
+				problems.push(`doc-schema: package.json does not export ${subpath}`);
+			}
 		}
 		JSON.parse(
 			await readFile(join(schemaDir, "assets", "jiscribe.schema.json"), "utf8"),
 		);
+		// ガイドは中身を検査できないので、空でないことだけ見る。欠けたまま出荷すると
+		// read_drawing_guide が error を返すだけの道具になる
+		for (const fileName of ["canvas-prompt.md", "authoring-json.md"]) {
+			const guide = await readFile(join(schemaDir, "assets", fileName), "utf8");
+			if (guide.trim() === "") {
+				problems.push(`doc-schema: ${fileName} is empty`);
+			}
+		}
 	} catch (error) {
 		problems.push(`doc-schema: ${String(error)}`);
 	}

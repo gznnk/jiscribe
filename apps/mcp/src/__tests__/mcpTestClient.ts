@@ -60,6 +60,11 @@ export type McpTestClient = {
 	 * @param name - The tool name. Throws if it is not registered
 	 */
 	getToolInputProperties: (name: string) => Promise<Record<string, unknown>>;
+	/**
+	 * Returns the `instructions` the server sent at handshake time, or undefined
+	 * when it sent none.
+	 */
+	getInstructions: () => string | undefined;
 	close: () => Promise<void>;
 };
 
@@ -111,6 +116,7 @@ export async function connectMcpTestClient(): Promise<McpTestClient> {
 		getToolInputSchema: async (name) => (await findTool(name)).inputSchema,
 		getToolInputProperties: async (name) =>
 			(await findTool(name)).inputSchema.properties ?? {},
+		getInstructions: () => client.getInstructions(),
 		close: async () => {
 			await client.close();
 			await server.close();

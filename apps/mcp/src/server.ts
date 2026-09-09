@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { basename, dirname, isAbsolute, resolve } from "node:path";
 
 import {
@@ -43,6 +45,9 @@ import { createPathLock, type PathLock } from "./pathLock";
  * The tools it exposes come in three groups.
  *
  * 1. The ones this server has of its own (written out directly below)
+ *    - `read_drawing_guide`: hands back one of the two guides `@jiscribe/doc-schema`
+ *      generates. The tool declarations say what each tool does but not what the
+ *      canvas is or how to draw well, and `instructions` is too small to hold it
  *    - `open_canvas`: starts a viewer locally and opens it in a browser. From
  *      then on the same file is where the AI rewriting it and a person correcting
  *      it on screen work together. With `headless` it opens a window-less browser
@@ -100,6 +105,38 @@ const pathArg = z
 	.string()
 	.describe("Absolute path to the target .jis.json file.");
 
+const require = createRequire(import.meta.url);
+
+/**
+ * The module specifier each `read_drawing_guide` value reads. Resolved at run
+ * time through node rather than bundled in, the same way doc-tools reads the JSON
+ * schema: `@jiscribe/doc-schema` stays the single source, and `build.mjs` stages
+ * these beside `dist/index.mjs` so a checkout is not needed.
+ */
+const DRAWING_GUIDE_SPECIFIERS = {
+	drawing: "@jiscribe/doc-schema/canvas-prompt",
+	"json-format": "@jiscribe/doc-schema/authoring-json",
+} as const;
+
+/** The guides `read_drawing_guide` can be asked for; its enum names these keys. */
+type DrawingGuide = keyof typeof DRAWING_GUIDE_SPECIFIERS;
+
+/**
+ * What the server tells a client about itself at handshake time. It stays in the
+ * model's context for the whole session, so it holds only what is true of this
+ * server as an MCP server — how the tools are addressed and what has to happen
+ * before which. The canvas itself, the shapes and the file format are what
+ * `read_drawing_guide` fetches on demand.
+ */
+const SERVER_INSTRUCTIONS = [
+	"Jiscribe draws diagrams as .jis.json files. The file on disk is the single source of truth: no canvas state is kept in the tools, so anything not written to a file does not exist.",
+	"Every document tool takes an absolute `path` naming the file it acts on. There is no concept of a currently open document, and a tool that only reads does not write the file back.",
+	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The 16 tools for capture, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
+	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports schema, parser and text-overflow problems; run it before telling the user a diagram is finished.",
+	"`undo` steps back through edits you made and keeps its history per file, so it cannot take back what a person changed in the viewer.",
+	"Call `read_drawing_guide` before you start drawing: `drawing` is what the canvas can hold and how to draw on it well, and `json-format` is for when you have decided to edit a .jis.json file directly instead of through these tools.",
+].join("\n\n");
+
 /**
  * Build an MCP server with the tools registered.
  *
@@ -107,10 +144,13 @@ const pathArg = z
  * different connection needs a different instance.
  */
 export function createJiscribeMcpServer(): McpServer {
-	const server = new McpServer({
-		name: "jiscribe",
-		version: "0.9.0",
-	});
+	const server = new McpServer(
+		{
+			name: "jiscribe",
+			version: "0.9.0",
+		},
+		{ instructions: SERVER_INSTRUCTIONS },
+	);
 
 	// The viewer is started only when open_canvas is first called, and reused after
 	// that. Its lifetime follows the windows: once the last one closes it is folded
@@ -182,6 +222,29 @@ export function createJiscribeMcpServer(): McpServer {
 		registeredNames.add(name);
 		return name;
 	};
+
+	server.registerTool(
+		registerName("read_drawing_guide"),
+		{
+			description: [
+				"Read one of the two Jiscribe guides: the background the tool list cannot carry.",
+				'"drawing" is what a canvas can hold, what each shape type is for, and how to draw well with it. Read it once before you start drawing, whichever tools you then use.',
+				'"json-format" is the structure of a .jis.json file. Read it only once you have decided to read or write such a file directly with your own file tools instead of the tools here.',
+				"Neither changes while this session runs, so read one once and work from what you read rather than calling again.",
+				"Both open with a `<!-- jiscribe guide ... -->` stamp naming the generation they came from. A workspace may also hold a .jiscribe/ai-guide.md placed there by the Jiscribe editor extension, stamped the same way; when the two stamps differ that copy is from another release, and this one is the generation these tools belong to.",
+			].join(" "),
+			inputSchema: z
+				.object({
+					guide: z
+						.enum(["drawing", "json-format"])
+						.describe(
+							'Which guide to read: "drawing" for the canvas, its shapes and how to draw on it; "json-format" for the .jis.json file format.',
+						),
+				})
+				.strict(),
+		},
+		async ({ guide }) => runTool(async () => readDrawingGuide(guide)),
+	);
 
 	server.registerTool(
 		registerName("open_canvas"),
@@ -619,6 +682,36 @@ function registerHandleTools(
  */
 function round(value: number): number {
 	return Math.round(value * 10) / 10;
+}
+
+/**
+ * Read one guide off disk, resolved through `@jiscribe/doc-schema`'s exports.
+ *
+ * A missing or empty file is thrown rather than answered with nothing: it means
+ * the build failed to stage the guide, and an empty answer would let a
+ * distribution ship without any of this and never say so.
+ *
+ * @param guide Which of the two guides to read; the tool's enum names the same
+ *   keys, so an unknown one cannot reach here
+ * @throws CanvasFileError when the guide cannot be resolved, read, or is empty
+ */
+function readDrawingGuide(guide: DrawingGuide): string {
+	const specifier = DRAWING_GUIDE_SPECIFIERS[guide];
+	let markdown: string;
+	try {
+		markdown = readFileSync(require.resolve(specifier), "utf8");
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		throw new CanvasFileError(
+			`the "${guide}" guide could not be read from ${specifier}, so this installation is incomplete: ${reason}`,
+		);
+	}
+	if (markdown.trim() === "") {
+		throw new CanvasFileError(
+			`the "${guide}" guide at ${specifier} is empty, so this installation is incomplete`,
+		);
+	}
+	return markdown;
 }
 
 /**
