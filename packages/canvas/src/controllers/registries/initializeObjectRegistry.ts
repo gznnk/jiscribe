@@ -113,17 +113,15 @@ import {
 	ConnectorLabelStyleItem,
 } from "../ui/menu/PropertyPanel/items/ConnectorLabelItems";
 import { ConnectorRoutingItem } from "../ui/menu/PropertyPanel/items/ConnectorRoutingItem";
-import type {
-	PropertyPanelSection,
-	PropertyPanelSelection,
-} from "../ui/menu/PropertyPanel/PropertyPanelTypes";
+import { appendPropertyPanelItem } from "../ui/menu/PropertyPanel/utils/appendPropertyPanelItem";
 import { createDefaultPropertyPanel } from "../ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
+import { derivePropertyPanel } from "../ui/menu/PropertyPanel/utils/derivePropertyPanel";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
 import { RectStencils } from "../ui/objects/primitives/RectStencils";
 import { TextStencils } from "../ui/objects/primitives/TextStencils";
-import { getSelectedConnectorLabel } from "../utils/getSelectedConnectorLabel";
+import { hasSelectedConnectorLabelText } from "../utils/hasSelectedConnectorLabelText";
 
 /**
  * The handles a label text puts on its transform frame: none that resize it. Its
@@ -196,8 +194,10 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			// what every selected type offers works row by row there, so a plain
 			// box in the selection drops the switch without taking the font
 			// controls with it.
-			propertyPanel: appendTextLayoutRow(
+			propertyPanel: appendPropertyPanelItem(
 				createDefaultPropertyPanel(builtinObjectDocDefinitions.text.features),
+				{ id: "text", label: "Text" },
+				{ type: "textLayout" },
 			),
 			stencils: TextStencils,
 		}),
@@ -321,10 +321,16 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			// Text and Border are apart: under one heading "Width" and "Color"
 			// would not say which of the two they state.
 			propertyPanel: [
-				...appendConnectorRoutingRow(
+				...appendPropertyPanelItem(
 					createDefaultPropertyPanel(
 						builtinObjectDocDefinitions.connector.features,
 					),
+					{ id: "line", label: "Line" },
+					{
+						type: "custom",
+						id: "connector-routing",
+						component: ConnectorRoutingItem,
+					},
 				),
 				{
 					id: "label",
@@ -395,114 +401,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 	};
 
 /**
- * The switch between a height the document states and one that follows the text,
- * as a row of the properties sidebar's layout section, inserted for every type
- * that may take it (`supportsAutoHeightType`).
- *
- * A row rather than a section of its own, unlike the ObjectMenu's: the sidebar's
- * merge drops individual rows a selected type lacks, so the switch can sit beside
- * the aspect-ratio lock it belongs with without endangering it.
- */
-const insertAutoHeightPropertyPanelRow = (
-	sections: readonly PropertyPanelSection[],
-): PropertyPanelSection[] => {
-	const layoutIndex = sections.findIndex((section) => section.id === "layout");
-	if (layoutIndex === -1) {
-		return [
-			...sections,
-			{ id: "layout", label: "Layout", items: [{ type: "autoHeight" }] },
-		];
-	}
-	return sections.map((section, index) =>
-		index === layoutIndex
-			? { ...section, items: [...section.items, { type: "autoHeight" }] }
-			: section,
-	);
-};
-
-/**
- * The sidebar sections with the vertical-basis switch as the last row of the
- * text section, for the types the switch moves the text of
- * (`hasInsetTextRegionType`). It governs what the vertical alignment in that
- * section is measured against, so it follows it; a type with no text section
- * gets one holding the switch alone. A row rather than a section for the same
- * reason auto-height is (see {@link insertAutoHeightPropertyPanelRow}).
- */
-const insertTextVerticalBasisPropertyPanelRow = (
-	sections: readonly PropertyPanelSection[],
-): PropertyPanelSection[] => {
-	const textIndex = sections.findIndex((section) => section.id === "text");
-	if (textIndex === -1) {
-		return [
-			...sections,
-			{ id: "text", label: "Text", items: [{ type: "textVerticalBasis" }] },
-		];
-	}
-	return sections.map((section, index) =>
-		index === textIndex
-			? {
-					...section,
-					items: [...section.items, { type: "textVerticalBasis" }],
-				}
-			: section,
-	);
-};
-
-/**
- * Whether the selected connector carries label text, which is what every row of
- * the two label sections needs: without it they all draw nothing, and the
- * headings go with them rather than standing over an empty body.
- */
-function hasSelectedConnectorLabelText(
-	selection: PropertyPanelSelection,
-): boolean {
-	return Boolean(
-		getSelectedConnectorLabel(selection.selectedConnectorId, selection.objects)
-			?.text,
-	);
-}
-
-/**
- * The sidebar sections with the routing row as the last row of the line section,
- * for the connector alone. A declaration rather than a const, for the same
- * reason {@link appendTextLayoutRow} is one.
- */
-function appendConnectorRoutingRow(
-	sections: readonly PropertyPanelSection[],
-): PropertyPanelSection[] {
-	return sections.map((section) =>
-		section.id === "line"
-			? {
-					...section,
-					items: [
-						...section.items,
-						{
-							type: "custom",
-							id: "connector-routing",
-							component: ConnectorRoutingItem,
-						},
-					],
-				}
-			: section,
-	);
-}
-
-/**
- * The sidebar sections with the text-layout switch as the last row of the text
- * section. A declaration rather than a const: the type definitions below are
- * built at module load, before a const initializer would have run.
- */
-function appendTextLayoutRow(
-	sections: readonly PropertyPanelSection[],
-): PropertyPanelSection[] {
-	return sections.map((section) =>
-		section.id === "text"
-			? { ...section, items: [...section.items, { type: "textLayout" }] }
-			: section,
-	);
-}
-
-/**
  * Registers a single object type described by `definition` across all registries
  * in the given bundle (mapper, component, text region, behavior, state validator,
  * menu, property panel), and optionally its factory / stencils.
@@ -524,8 +422,7 @@ export const applyObjectDefinition = (
 	if (supportsAutoHeight) {
 		registries.objectAutoHeight.register(type);
 	}
-	const hasInsetTextRegion = hasInsetTextRegionType(definition);
-	if (hasInsetTextRegion) {
+	if (hasInsetTextRegionType(definition)) {
 		registries.objectTextVerticalBasis.register(type);
 	}
 	// A type whose doc may leave `height` out gets the shared derivation, which is
@@ -602,21 +499,7 @@ export const applyObjectDefinition = (
 		type,
 		definition.menu ?? createDefaultMenu(definition.features),
 	);
-	// The auto-height and vertical-basis switches are offered in the sidebar
-	// alone, and inserted rather than declared per type: each belongs to every
-	// type whose declarations imply it, and a type declaring its own sections
-	// would otherwise have to remember them.
-	const declaredPropertyPanel =
-		definition.propertyPanel ?? createDefaultPropertyPanel(definition.features);
-	const sizedPropertyPanel = supportsAutoHeight
-		? insertAutoHeightPropertyPanelRow(declaredPropertyPanel)
-		: declaredPropertyPanel;
-	registries.propertyPanel.register(
-		type,
-		hasInsetTextRegion
-			? insertTextVerticalBasisPropertyPanelRow(sizedPropertyPanel)
-			: sizedPropertyPanel,
-	);
+	registries.propertyPanel.register(type, derivePropertyPanel(definition));
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}

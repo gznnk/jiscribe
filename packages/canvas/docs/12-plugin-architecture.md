@@ -202,7 +202,10 @@ derivation rules are defined by `createDefaultMenu` and its unit tests.
 **`propertyPanel`.** The properties sidebar's sections, with the same three
 meanings: omitted derives them from `features`; a declared array replaces them
 entirely; `[]` means no sections. The derivation rules are defined by
-`createDefaultPropertyPanel` and its unit tests. A declaration composes the
+`createDefaultPropertyPanel` and its unit tests. Derived or declared,
+`derivePropertyPanel` then appends the auto-height row to the layout section and
+the vertical-basis row to the text section for every type whose definition
+implies them, so a declaration need not list either. A declaration composes the
 built-in row kinds and, where none of them fits, rows of the type's own.
 
 **`propertyPanel` custom rows.** A row a plugin draws itself is

@@ -14,6 +14,7 @@ import type {
 	PropertyPanelSection,
 	PropertyPanelSelection,
 } from "../../ui/menu/PropertyPanel/PropertyPanelTypes";
+import { derivePropertyPanel } from "../../ui/menu/PropertyPanel/utils/derivePropertyPanel";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 import { applyObjectDefinition } from "../initializeObjectRegistry";
 
@@ -94,56 +95,29 @@ describe("propertyPanel registration", () => {
 		expect(registries.propertyPanel.getSections("unknown")).toEqual([]);
 	});
 
-	it("adds the auto-height switch to the layout section of a type that may take it", () => {
-		const registries = createCanvasRegistries();
+	it("registers what derivePropertyPanel derives for the definition", () => {
+		const definition = rectLikeDefinition({
+			features: {
+				type: "rect",
+				geometry: "rect",
+				transform: true,
+				stroke: true,
+				fill: true,
+				text: "body",
+			},
+			// Inset from the top and bottom edge, so both appended switches apply.
+			textRegion: (state) => ({
+				x: -state.width / 2,
+				y: -state.height / 4,
+				width: state.width,
+				height: state.height / 2,
+			}),
+		});
+		const registries = createCanvasRegistries({ objectTypes: [] });
+		applyObjectDefinition(registries, "inset", definition);
 
-		const layout = registries.propertyPanel
-			.getSections("rect")
-			.find((section) => section.id === "layout");
-
-		expect(layout?.items.map((item) => item.type)).toEqual([
-			"position",
-			"size",
-			"rotation",
-			"lockAspectRatio",
-			"autoHeight",
-		]);
-	});
-
-	it("leaves the switch off a type whose height never follows its text", () => {
-		const registries = createCanvasRegistries();
-
-		const layout = registries.propertyPanel
-			.getSections("svg")
-			.find((section) => section.id === "layout");
-
-		expect(layout?.items.map((item) => item.type)).toEqual([
-			"position",
-			"size",
-			"rotation",
-			"lockAspectRatio",
-		]);
-	});
-
-	it("adds the vertical-basis switch to the text section of a type whose outline insets its text", () => {
-		const registries = createCanvasRegistries();
-
-		const text = registries.propertyPanel
-			.getSections("ellipse")
-			.find((section) => section.id === "text");
-
-		expect(text?.items.at(-1)).toEqual({ type: "textVerticalBasis" });
-	});
-
-	it("leaves the vertical-basis switch off a type drawn with its whole box", () => {
-		const registries = createCanvasRegistries();
-
-		const text = registries.propertyPanel
-			.getSections("rect")
-			.find((section) => section.id === "text");
-
-		expect(text?.items.some((item) => item.type === "textVerticalBasis")).toBe(
-			false,
+		expect(registries.propertyPanel.getSections("inset")).toEqual(
+			derivePropertyPanel(definition),
 		);
 	});
 
