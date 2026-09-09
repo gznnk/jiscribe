@@ -285,6 +285,27 @@ export const PropertyCommandGrid = styled.div`
 	width: 100%;
 `;
 
+/** A command stated by an icon alone, kept square at the height every control is drawn at. */
+export const PropertyIconButton = styled.button`
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: ${CONTROL_HEIGHT};
+	height: ${CONTROL_HEIGHT};
+	padding: 0;
+	box-sizing: border-box;
+	border: 1px solid ${theme.inputBorder};
+	border-radius: ${theme.radius};
+	background: ${theme.inputBg};
+	color: ${theme.foreground};
+	cursor: pointer;
+
+	&:hover {
+		background: ${theme.surfaceHover};
+	}
+`;
+
 /** A command stated by its name; disabled while the command cannot run on the selection. */
 export const PropertyCommandButton = styled.button`
 	min-width: 0;

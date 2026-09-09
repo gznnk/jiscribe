@@ -33,6 +33,11 @@ type PropertyDropdownFieldProps = {
 	 * of them; the panel opens and writes to the whole selection unchanged.
 	 */
 	isMixed?: boolean;
+	/**
+	 * What the trigger draws while `isMixed`, in place of the word for it; for a
+	 * trigger too narrow for the word. Omitted draws the word.
+	 */
+	mixedPreview?: React.ReactNode;
 	/** title / aria-label of the trigger. */
 	title: string;
 	/** The panel's content. Mounted only while open, so its own effects do not run closed. */
@@ -55,6 +60,7 @@ type PropertyDropdownFieldProps = {
 const PropertyDropdownFieldComponent: React.FC<PropertyDropdownFieldProps> = ({
 	preview,
 	isMixed = false,
+	mixedPreview,
 	title,
 	children,
 }) => {
@@ -153,11 +159,13 @@ const PropertyDropdownFieldComponent: React.FC<PropertyDropdownFieldProps> = ({
 				data-gesture="none"
 				onClick={() => setIsOpen((open) => !open)}
 			>
-				{isMixed ? (
-					<PropertyMixedLabel>{messages.propertyPanelMixed}</PropertyMixedLabel>
-				) : (
-					preview
-				)}
+				{isMixed
+					? (mixedPreview ?? (
+							<PropertyMixedLabel>
+								{messages.propertyPanelMixed}
+							</PropertyMixedLabel>
+						))
+					: preview}
 				<PropertyDropdownChevron>
 					<ChevronDownIcon width={CHEVRON_SIZE} height={CHEVRON_SIZE} />
 				</PropertyDropdownChevron>

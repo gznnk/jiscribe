@@ -135,6 +135,51 @@ async function setupLabelledConnector(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
+/**
+ * The mark drawn at each end of the connector, fingerprinted by the `points` of
+ * the arrow polygon that end carries; null for an end carrying none. Each
+ * polygon is assigned to whichever endpoint it sits nearer to, so a connector
+ * marked on one end alone leaves the other end null.
+ */
+async function arrowMarksByEnd(
+	canvas: CanvasDriver,
+	connectorId: string,
+): Promise<{ start: string | null; end: string | null }> {
+	const points = await readPoints(canvas, connectorId);
+	return canvas.page.evaluate(
+		({ cid, start, end }) => {
+			const marks = [
+				...document.querySelectorAll(
+					`polygon[data-kind="connector"][data-id="${cid}"]`,
+				),
+			].map((polygon) => {
+				const matched = (polygon.getAttribute("transform") ?? "").match(
+					/matrix\(([^)]+)\)/,
+				);
+				const numbers = matched ? matched[1].split(",").map(Number) : [];
+				return {
+					points: polygon.getAttribute("points"),
+					x: numbers[4],
+					y: numbers[5],
+				};
+			});
+			const distanceTo = (
+				mark: { x: number; y: number },
+				point: { x: number; y: number },
+			) => Math.hypot(mark.x - point.x, mark.y - point.y);
+			const markAt = (
+				point: { x: number; y: number },
+				otherEnd: { x: number; y: number },
+			) =>
+				marks.find(
+					(mark) => distanceTo(mark, point) <= distanceTo(mark, otherEnd),
+				)?.points ?? null;
+			return { start: markAt(start, end), end: markAt(end, start) };
+		},
+		{ cid: connectorId, start: points[0], end: points[points.length - 1] },
+	);
+}
+
 test.describe("Properties sidebar: connector", () => {
 	test("switches the routing from the Line section's segments, and undo puts it back", async ({
 		canvas,
@@ -292,5 +337,50 @@ test.describe("Properties sidebar: connector", () => {
 		await fontSize.press("Enter");
 
 		await expect(labelBox).toHaveCSS("font-size", "28px");
+	});
+
+	test("swaps the two ends from the Arrow row, and undo puts them back", async ({
+		canvas,
+	}) => {
+		const connectorId = await buildDiagonalConnector(canvas);
+		await canvas.openPropertyPanel();
+		await selectConnectorAt(
+			canvas,
+			await pointOnLongestSegment(canvas, connectorId),
+		);
+
+		// A new connector is marked on its end alone, so the start is given a mark
+		// of its own: two ends that can be told apart once swapped.
+		const startArrow = canvas.page.locator(
+			`${selectors.propertyPanel} [aria-label="Start Arrow"]`,
+		);
+		await startArrow.click();
+		await canvas.page.click(
+			selectors.propertyPanelSet("startArrow", "FilledTriangle"),
+		);
+		await expect
+			.poll(async () => (await arrowMarksByEnd(canvas, connectorId)).start)
+			.toBeTruthy();
+		// The grid stays up on a pick, and it is the swap button's own row it opens
+		// under; a second press on the trigger takes it away.
+		await startArrow.click();
+
+		const before = await arrowMarksByEnd(canvas, connectorId);
+		expect(before.start).not.toBe(before.end);
+
+		await canvas.page.click(selectors.propertyPanelCommand("swapArrows"));
+
+		await expect
+			.poll(async () => (await arrowMarksByEnd(canvas, connectorId)).start)
+			.toBe(before.end);
+		expect((await arrowMarksByEnd(canvas, connectorId)).end).toBe(before.start);
+
+		await canvas.undo();
+		await expect
+			.poll(async () => (await arrowMarksByEnd(canvas, connectorId)).start, {
+				message: "undo takes the marks back to the ends they were swapped from",
+			})
+			.toBe(before.start);
+		expect((await arrowMarksByEnd(canvas, connectorId)).end).toBe(before.end);
 	});
 });
