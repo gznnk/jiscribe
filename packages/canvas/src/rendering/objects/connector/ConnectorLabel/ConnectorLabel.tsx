@@ -1,12 +1,10 @@
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { Point } from "@jiscribe/geometry";
 import type React from "react";
 import { memo, useMemo } from "react";
 
 import { LabelBox } from "./ConnectorLabelStyled";
-import {
-	resolveConnectorLabelBox,
-	CONNECTOR_LABEL_DEFAULTS,
-} from "./utils/connectorLabelLayout";
+import { resolveConnectorLabelBox } from "./utils/connectorLabelLayout";
 import { resolveLabelFill } from "./utils/resolveLabelFill";
 import { useFontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";

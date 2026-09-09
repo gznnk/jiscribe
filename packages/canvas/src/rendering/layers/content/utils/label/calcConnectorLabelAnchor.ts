@@ -1,22 +1,24 @@
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { calcEuclideanDistance, type Point } from "@jiscribe/geometry";
 
 /**
  * Computes the label anchor coordinates along a polyline (resolved connector
  * path).
  *
- * `position` is a ratio over the path length (0 = source end, 1 = target end,
- * default 0.5 = midpoint). `offset` is a signed perpendicular distance (world
- * units, default 0) that is positive toward the left of the path's direction
- * of travel ((-dy, dx)). Storing it as a ratio keeps the label attached to the
- * line even when the path changes on an orthogonal-routing recomputation.
+ * `position` is a ratio over the path length (0 = source end, 1 = target end).
+ * `offset` is a signed perpendicular distance (world units) that is positive
+ * toward the left of the path's direction of travel ((-dy, dx)). Both fall back
+ * to {@link CONNECTOR_LABEL_DEFAULTS} when omitted. Storing the position as a
+ * ratio keeps the label attached to the line even when the path changes on an
+ * orthogonal-routing recomputation.
  *
  * @param points Resolved coordinate list in source → ...waypoints → target
  *   order (at least 2 points)
  */
 export const calcConnectorLabelAnchor = (
 	points: readonly Point[],
-	position = 0.5,
-	offset = 0,
+	position = CONNECTOR_LABEL_DEFAULTS.position,
+	offset = CONNECTOR_LABEL_DEFAULTS.offset,
 ): Point | null => {
 	if (points.length < 2) {
 		return points.length === 1 ? { ...points[0] } : null;

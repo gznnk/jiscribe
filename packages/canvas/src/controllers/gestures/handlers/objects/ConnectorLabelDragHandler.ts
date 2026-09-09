@@ -1,4 +1,7 @@
-import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_LABEL_DEFAULTS,
+	type ConnectorLabel,
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 
 import { calcConnectorLabelAnchor } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelAnchor";
 import { calcConnectorLabelPlacement } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
@@ -9,11 +12,7 @@ import {
 } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import {
-	applyLabelPlacement,
-	DEFAULT_LABEL_OFFSET,
-	DEFAULT_LABEL_POSITION,
-} from "../../../utils/applyLabelPlacement";
+import { applyLabelPlacement } from "../../../utils/applyLabelPlacement";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createCowObjects } from "../../../utils/cowObjects";
@@ -33,10 +32,10 @@ const isSamePlacement = (
 	label: ConnectorLabel,
 	otherLabel: ConnectorLabel,
 ): boolean =>
-	(label.position ?? DEFAULT_LABEL_POSITION) ===
-		(otherLabel.position ?? DEFAULT_LABEL_POSITION) &&
-	(label.offset ?? DEFAULT_LABEL_OFFSET) ===
-		(otherLabel.offset ?? DEFAULT_LABEL_OFFSET);
+	(label.position ?? CONNECTOR_LABEL_DEFAULTS.position) ===
+		(otherLabel.position ?? CONNECTOR_LABEL_DEFAULTS.position) &&
+	(label.offset ?? CONNECTOR_LABEL_DEFAULTS.offset) ===
+		(otherLabel.offset ?? CONNECTOR_LABEL_DEFAULTS.offset);
 
 /** Narrows an object to a connector that actually has a label box to grab. */
 const getLabeledConnector = (

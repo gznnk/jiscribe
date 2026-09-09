@@ -1,4 +1,7 @@
-import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_LABEL_DEFAULTS,
+	type ConnectorLabel,
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 
@@ -7,12 +10,6 @@ import type { ConnectorLabelPlacement } from "../../rendering/layers/content/uti
 /** Decimal places for label.position (a 0..1 ratio; 4 ≒ sub-pixel on paths up to ~10k px). */
 const LABEL_POSITION_PRECISION = 4;
 
-/** Position an absent `label.position` means, mirroring calcConnectorLabelAnchor. */
-export const DEFAULT_LABEL_POSITION = 0.5;
-
-/** Offset an absent `label.offset` means, mirroring calcConnectorLabelAnchor. */
-export const DEFAULT_LABEL_OFFSET = 0;
-
 /**
  * Placement of a label nobody aimed: the path midpoint, on the line. Passing it
  * to {@link applyLabelPlacement} strips `position` / `offset` (both equal their
@@ -20,8 +17,8 @@ export const DEFAULT_LABEL_OFFSET = 0;
  * shortcut — discards what a deleted label left on the connector.
  */
 export const DEFAULT_LABEL_PLACEMENT: ConnectorLabelPlacement = {
-	position: DEFAULT_LABEL_POSITION,
-	offset: DEFAULT_LABEL_OFFSET,
+	position: CONNECTOR_LABEL_DEFAULTS.position,
+	offset: CONNECTOR_LABEL_DEFAULTS.offset,
 };
 
 /**
@@ -51,7 +48,7 @@ export const applyLabelPlacement = (
 	const { position: _prevPosition, offset: _prevOffset, ...rest } = label;
 	return {
 		...rest,
-		...(position === DEFAULT_LABEL_POSITION ? {} : { position }),
-		...(offset === DEFAULT_LABEL_OFFSET ? {} : { offset }),
+		...(position === CONNECTOR_LABEL_DEFAULTS.position ? {} : { position }),
+		...(offset === CONNECTOR_LABEL_DEFAULTS.offset ? {} : { offset }),
 	};
 };

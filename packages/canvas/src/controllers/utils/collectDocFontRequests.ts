@@ -1,4 +1,5 @@
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
@@ -7,7 +8,6 @@ import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/Objec
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 
-import { CONNECTOR_LABEL_DEFAULTS } from "../../rendering/objects/connector/ConnectorLabel/utils/connectorLabelLayout";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import { isConnectorState } from "../../states/objects/connector/ConnectorState";

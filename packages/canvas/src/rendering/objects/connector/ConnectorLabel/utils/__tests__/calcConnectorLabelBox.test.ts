@@ -1,10 +1,10 @@
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { TEXT_BLOCK_MIN_WIDTH } from "@jiscribe/doc/text/block/calcTextBlockSize";
 import { describe, expect, it } from "vitest";
 
 import {
 	calcConnectorLabelBox,
 	resolveConnectorLabelBox,
-	CONNECTOR_LABEL_DEFAULTS,
 	type ConnectorLabelFont,
 } from "../connectorLabelLayout";
 

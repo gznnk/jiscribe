@@ -1,15 +1,9 @@
-import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_LABEL_DEFAULTS,
+	type ConnectorLabel,
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { calcTextBlockSize } from "@jiscribe/doc/text/block/calcTextBlockSize";
 import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
-import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
-
-/** Default label style (fallback when the ConnectorLabel has no value). */
-export const CONNECTOR_LABEL_DEFAULTS = {
-	fontColor: "auto",
-	fontSize: 16,
-	fontFamily: DEFAULT_FONT_FAMILY,
-	fontWeight: "normal",
-} as const;
 
 /** The label's font, in the shape the shared measurement takes it (see TextMeasureFont). */
 export type ConnectorLabelFont = TextMeasureFont;

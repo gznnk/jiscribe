@@ -9,10 +9,10 @@
  * which splits the same properties across two sections of icons.
  */
 
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo } from "react";
 
-import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../rendering/objects/connector/ConnectorLabel";
 import { setPart } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { getSelectedConnectorLabel } from "../../../../utils/getSelectedConnectorLabel";

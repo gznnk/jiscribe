@@ -1,6 +1,6 @@
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { memo, useRef } from "react";
 
-import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../rendering/objects/connector/ConnectorLabel";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
