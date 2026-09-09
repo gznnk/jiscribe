@@ -6,7 +6,10 @@
 
 `parts/` は読者ではなく知識の種類で切ってある。01〜03（キャンバスの模型・図形カタログ・
 作図の作法）は誰が読んでも同じで、04（JSON を手で書く）だけが読者ごとに分かれる。h1 は
-持たず `##` から始まり、導入文は `generator/templates/` の 3 枚が持つ。
+持たず `##` から始まり、導入文は `generator/templates/` の 4 枚（`aiGuideIntro.md` /
+`canvasPromptIntro.md` / `authoringJsonIntro.md` / `skillIntro.md`）が持つ。SKILL.md の
+YAML frontmatter だけは本文と別の 1 枚（`skillFrontmatter.md`）にある。frontmatter は
+ファイル先頭に無いと frontmatter にならず、刻印のコメントより前に置く必要があるため。
 
 **ツールの使い方はここに書かない。**キャンバス操作ツールで描く読者に向けた「どの道具を
 いつ使うか」は `@jiscribe/ai-tools` の各 descriptor の文言が正本で、zod の引数スキーマと
@@ -14,18 +17,24 @@
 写しになる。単一の descriptor に収まらないツール横断の作法が要るようになったら、置き場は
 やはり ai-tools 側（該当する descriptor か、宣言の隣）で、`parts/` には戻さない。
 
-| 生成物                                            | 生成範囲                                                                                               |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `assets/jiscribe.schema.json`                     | 全体を再構成。図形 `$def` と union・OwnerRef の connectable 列挙は生成、特殊型・共有スタイルはテンプレ |
-| `assets/ai-guide.md`                              | 導入 + parts 01・02・03・04 の合成                                                                     |
-| `assets/canvas-prompt.md`                         | 導入 + parts 01・02・03 の合成                                                                         |
-| `assets/authoring-json.md`                        | 導入 + parts 04 の合成（形式仕様を単体で配る。jiscribe-mcp の `read_drawing_guide` が返す）            |
-| `../ai-tools/src/prompt/generatedCanvasPrompt.ts` | `canvas-prompt.md` の本文を文字列で export（`@jiscribe/ai-tools/prompt` が包む）                       |
+| 生成物                                                                  | 生成範囲                                                                                               |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `assets/jiscribe.schema.json`                                           | 全体を再構成。図形 `$def` と union・OwnerRef の connectable 列挙は生成、特殊型・共有スタイルはテンプレ |
+| `assets/ai-guide.md`                                                    | 導入 + parts 01・02・03・04 の合成                                                                     |
+| `assets/canvas-prompt.md`                                               | 導入 + parts 01・02・03 の合成                                                                         |
+| `assets/authoring-json.md`                                              | 導入 + parts 04 の合成（形式仕様を単体で配る。jiscribe-mcp の `read_drawing_guide` が返す）            |
+| `../ai-tools/src/prompt/generatedCanvasPrompt.ts`                       | `canvas-prompt.md` の本文を文字列で export（`@jiscribe/ai-tools/prompt` が包む）                       |
+| `../../apps/claude-plugin/skills/jiscribe/SKILL.md`                     | frontmatter + 導入 + parts 01・02・03 の合成（Claude Code プラグインのスキル）                         |
+| `../../apps/claude-plugin/skills/jiscribe/references/authoring-json.md` | `assets/authoring-json.md` と同一内容（合成し直さず、同じ本文を 2 つ目のパスへ書く）                   |
 
-3 枚のガイドは `<!-- jiscribe guide <8 桁> -->` の刻印で始まる。値は 3 枚の本文から
-決まる 1 つのダイジェストで、3 枚とも同じものが入る。同じガイドが版のピンの違う経路
-（VSCode 拡張が置く `.jiscribe/ai-guide.md` と、jiscribe-mcp が返すもの）で読み手に届く
-ため、写しがどの生成から来たかを言えるようにしてある。**版番号でもコミットでもなく内容
+4 枚のガイド（SKILL.md は frontmatter の直後）は `<!-- jiscribe guide <8 桁> -->` の
+刻印で始まる。値は 4 枚の本文から決まる 1 つのダイジェストで、どれにも同じものが入る
+（references の写しは authoring-json.md と同一なので刻印もそのまま乗る）。**SKILL.md の
+frontmatter は含めない** — トリガー文言を直しただけで全部の刻印が動くと、本文が同じ写しが
+別の世代から来たように見えるため。乖離の検出は `--check` の役目で、刻印の役目ではない。同じガイドが
+版のピンの違う経路（VSCode 拡張が置く `.jiscribe/ai-guide.md`、jiscribe-mcp が返すもの、
+Claude Code プラグインが配るスキル）で読み手に届くため、写しがどの生成から来たかを
+言えるようにしてある。**版番号でもコミットでもなく内容
 から導く**のは、変わっていない木を再生成しても同じ値が出て `check:schema` がドリフト検査
 のままでいられるようにするため。
 

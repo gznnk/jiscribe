@@ -7,7 +7,12 @@ import { generateCanvasPromptModule } from "./generateCanvasPromptModule";
 import { loadGuideParts } from "./generateParts";
 import { generateSchema } from "./generateSchema";
 import { loadManifest } from "./manifest";
-import { aiToolsSrcPath, assetsPath, templatePath } from "./paths";
+import {
+	aiToolsSrcPath,
+	assetsPath,
+	claudePluginPath,
+	templatePath,
+} from "./paths";
 
 /** Run prettier over generated content, with the config that path resolves to. */
 async function formatFor(filePath: string, content: string): Promise<string> {
@@ -21,17 +26,19 @@ function composeDocument(parts: readonly string[]): string {
 }
 
 /**
- * Short digest naming one generation of the guides, stamped into all three so a
- * copy can be told apart from another copy.
+ * Short digest naming one generation of the guides, stamped into every one of
+ * them so a copy can be told apart from another copy.
  *
  * The same guides reach a reader through channels that pin their versions
  * independently — the VSCode extension writes .jiscribe/ai-guide.md at its own
- * release, jiscribe-mcp serves them at the npm package's — and nothing else
- * would say which generation a copy came from. Derived from the content rather
- * than from a version or a commit, so regenerating an unchanged tree keeps the
- * same stamp and `--check` stays a drift test.
+ * release, jiscribe-mcp serves them at the npm package's, the Claude Code plugin
+ * ships its skill at the marketplace's — and nothing else would say which
+ * generation a copy came from. Derived from the content rather than from a
+ * version or a commit, so regenerating an unchanged tree keeps the same stamp
+ * and `--check` stays a drift test.
  *
- * @param documents every composed guide, unstamped, in a fixed order
+ * @param documents every composed guide, unstamped and front matter included, in
+ *   a fixed order
  * @returns the first 8 hex characters of the SHA-256 over them
  */
 function guideStamp(documents: readonly string[]): string {
@@ -46,14 +53,41 @@ function stampGuide(stamp: string, document: string): string {
 	return `<!-- jiscribe guide ${stamp} -->\n\n${document}`;
 }
 
+/** One composed guide, before the stamp is known. */
+interface Guide {
+	/** Where the stamped file is written. */
+	path: string;
+	/**
+	 * YAML front matter, for the guides that are read as something other than
+	 * plain markdown. Kept out of the body because front matter only counts as
+	 * front matter at the very start of the file, ahead of the stamp comment —
+	 * and out of the stamp, which names a generation of the guide prose: a
+	 * changed skill trigger would otherwise move the stamp in every document and
+	 * make copies whose prose is identical look like they came from different
+	 * releases. Drift is `--check`'s job, not the stamp's.
+	 */
+	frontMatter?: string;
+	/** The composed body, h1 downwards. */
+	body: string;
+}
+
+/** Lay a guide out as it is written: front matter, then the stamp, then the body. */
+function composeGuideFile(stamp: string, guide: Guide): string {
+	const stamped = stampGuide(stamp, guide.body);
+	return guide.frontMatter
+		? `${guide.frontMatter.trim()}\n\n${stamped}`
+		: stamped;
+}
+
 /**
  * Generate everything derived from the shape manifest and the guide parts: the
- * JSON schema, the three composed guides (ai-guide.md for a reader writing JSON
+ * JSON schema, the four composed guides (ai-guide.md for a reader writing JSON
  * by hand, canvas-prompt.md for one holding the canvas tools, authoring-json.md
- * for the file format alone) and the TypeScript module @jiscribe/ai-tools ships
- * the canvas prompt as. With `--check` nothing is
- * written; the output is compared against the committed content instead (drift
- * detection, run by CI).
+ * for the file format alone, SKILL.md for the Claude Code plugin), the
+ * TypeScript module @jiscribe/ai-tools ships the canvas prompt as, and the copy
+ * of authoring-json.md the skill keeps beside itself as a reference. With
+ * `--check` nothing is written; the output is compared against the committed
+ * content instead (drift detection, run by CI).
  */
 async function main(): Promise<void> {
 	const checkOnly = process.argv.includes("--check");
@@ -61,12 +95,13 @@ async function main(): Promise<void> {
 	const parts = loadGuideParts(manifest);
 
 	const canvasPromptPath = assetsPath("canvas-prompt.md");
+	const authoringJsonPath = assetsPath("authoring-json.md");
 
 	// Every guide, composed but not yet stamped. The stamp is taken over all of
 	// them at once, so listing a guide here is what puts it into the stamp — one
 	// appended straight to `outputs` instead would leave the stamp unmoved when
 	// its text changes, and a copy of it could then never be told apart.
-	const guides = [
+	const guides: Guide[] = [
 		{
 			path: assetsPath("ai-guide.md"),
 			body: composeDocument([
@@ -87,10 +122,20 @@ async function main(): Promise<void> {
 			]),
 		},
 		{
-			path: assetsPath("authoring-json.md"),
+			path: authoringJsonPath,
 			body: composeDocument([
 				readFileSync(templatePath("authoringJsonIntro.md"), "utf8"),
 				parts.authoringJson,
+			]),
+		},
+		{
+			path: claudePluginPath("skills/jiscribe/SKILL.md"),
+			frontMatter: readFileSync(templatePath("skillFrontmatter.md"), "utf8"),
+			body: composeDocument([
+				readFileSync(templatePath("skillIntro.md"), "utf8"),
+				parts.canvasModel,
+				parts.shapeCatalog,
+				parts.drawingPractice,
 			]),
 		},
 	];
@@ -102,12 +147,12 @@ async function main(): Promise<void> {
 	const guideOutputs = await Promise.all(
 		guides.map(async (guide) => ({
 			path: guide.path,
-			content: await formatFor(guide.path, stampGuide(stamp, guide.body)),
+			content: await formatFor(guide.path, composeGuideFile(stamp, guide)),
 		})),
 	);
-	const canvasPrompt = guideOutputs.find(
-		(output) => output.path === canvasPromptPath,
-	)!.content;
+	const findGuide = (path: string): string =>
+		guideOutputs.find((output) => output.path === path)!.content;
+	const canvasPrompt = findGuide(canvasPromptPath);
 
 	const outputs: Array<{ path: string; content: string }> = [
 		{
@@ -118,6 +163,12 @@ async function main(): Promise<void> {
 		{
 			path: aiToolsSrcPath("prompt/generatedCanvasPrompt.ts"),
 			content: generateCanvasPromptModule(canvasPrompt),
+		},
+		// The same text as assets/authoring-json.md, reused rather than composed a
+		// second time: two builds of one document could disagree.
+		{
+			path: claudePluginPath("skills/jiscribe/references/authoring-json.md"),
+			content: findGuide(authoringJsonPath),
 		},
 	];
 

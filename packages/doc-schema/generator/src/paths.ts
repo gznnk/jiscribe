@@ -25,3 +25,14 @@ export function aiToolsSrcPath(fileName: string): string {
 		new URL(`../../../ai-tools/src/${fileName}`, import.meta.url),
 	);
 }
+
+/**
+ * Absolute path under apps/claude-plugin/, the Claude Code plugin. Its skill is
+ * generated here, so that what Claude Code reads cannot drift from the shape
+ * manifest; everything else in that directory is hand-written.
+ */
+export function claudePluginPath(fileName: string): string {
+	return fileURLToPath(
+		new URL(`../../../../apps/claude-plugin/${fileName}`, import.meta.url),
+	);
+}

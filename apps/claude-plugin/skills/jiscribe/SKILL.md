@@ -1,9 +1,15 @@
+---
+name: jiscribe
+description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
+---
+
 <!-- jiscribe guide e47ea624 -->
 
 # Drawing on a Jiscribe canvas
 
-You draw on a Jiscribe canvas by calling the tools you have been given — every shape, connector, style and view change is one call, and nothing you place is final.
-What follows is what the canvas can hold, and how to draw on it well.
+The jiscribe MCP server gives you the tools, and its own instructions say how they are addressed. What follows is what the canvas can hold and how to draw on it well.
+
+To read or write a `.jis` file directly with your own file tools instead of those tools, read `references/authoring-json.md` beside this skill first — it holds the file format.
 
 ## The canvas
 

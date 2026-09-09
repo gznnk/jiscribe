@@ -1,4 +1,4 @@
-<!-- jiscribe guide f4a1f6c5 -->
+<!-- jiscribe guide e47ea624 -->
 
 # Jiscribe AI Authoring Guide
 
