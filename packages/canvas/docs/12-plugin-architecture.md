@@ -58,8 +58,7 @@ export type CanvasDocPlugin = {
 ```
 
 `ObjectDocDefinition` is the headless half of a type: `features`, `validateDoc`,
-`factory`, plus the AI-facing `description` / `summary` / `outlineDescription` /
-`defaults`. `ObjectTypeDefinition` extends it, which is why a full `CanvasPlugin` is
+`factory`, plus the AI-facing `description` / `summary` / `defaults`. `ObjectTypeDefinition` extends it, which is why a full `CanvasPlugin` is
 **structurally assignable** to `CanvasDocPlugin` — one `plugins` array feeds both
 `<Canvas>` and the parser.
 

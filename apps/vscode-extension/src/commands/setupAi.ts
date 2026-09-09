@@ -7,10 +7,10 @@ import * as vscode from "vscode";
  * instructions) so a workspace's AI agents can generate and edit `.jis.json`
  * correctly. See docs/03_ai-integration/setup_ai_design.md.
  *
- * - The canonical copy lives once in `.jiscribe/` (ai-guide.md + reference.md +
+ * - The canonical copy lives once in `.jiscribe/` (ai-guide.md +
  *   jiscribe.schema.json).
  * - Each agent's own-file adapter is a thin pointer to `.jiscribe/ai-guide.md`,
- *   which is the single entry point to the full reference and schema.
+ *   which is the single entry point to the schema beside it.
  * - Only files we generate are overwritten; user-managed files (CLAUDE.md,
  *   .gitignore, etc.) are never touched.
  *
@@ -22,9 +22,11 @@ import * as vscode from "vscode";
 const GENERATED_NOTICE =
 	"<!-- Generated and managed by the Jiscribe extension's “Set up AI” command. Manual edits are overwritten on re-run. -->";
 
-// Shared adapter body (excluding frontmatter). `.jiscribe/ai-guide.md` is the
-// single entry point, so we don't duplicate references here.
-const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis\` / \`.jiscribe\` / \`.jis.json\` / \`.jiscribe.json\`), read \`.jiscribe/ai-guide.md\` at the workspace root and follow it. It links to the full reference and schema.
+// Shared adapter body (excluding frontmatter). It names where to go and nothing
+// else: an adapter that also summarised what the guide holds would be a copy that
+// goes stale the next time the guide changes, and each of these files is written
+// once into a workspace we never see again.
+const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis\` / \`.jiscribe\` / \`.jis.json\` / \`.jiscribe.json\`), read \`.jiscribe/ai-guide.md\` at the workspace root and follow it.
 `;
 
 /** Claude Code Skill: .claude/skills/jiscribe/SKILL.md */
@@ -177,9 +179,8 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 	}
 
 	try {
-		const [guide, reference, schema] = await Promise.all([
+		const [guide, schema] = await Promise.all([
 			readDistAsset(context, "ai-guide.md"),
-			readDistAsset(context, "reference.md"),
 			readDistAsset(context, "jiscribe.schema.json"),
 		]);
 
@@ -187,7 +188,6 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		const jiscribeDir = vscode.Uri.joinPath(root, ".jiscribe");
 		await vscode.workspace.fs.createDirectory(jiscribeDir);
 		const guideUri = vscode.Uri.joinPath(jiscribeDir, "ai-guide.md");
-		const referenceUri = vscode.Uri.joinPath(jiscribeDir, "reference.md");
 		const schemaUri = vscode.Uri.joinPath(jiscribeDir, "jiscribe.schema.json");
 		// Prepend the generated header to Markdown (not the JSON schema).
 		const withNotice = (asset: Uint8Array): Uint8Array =>
@@ -195,8 +195,18 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 				`${GENERATED_NOTICE}\n\n${new TextDecoder().decode(asset)}`,
 			);
 		await writeFile(guideUri, withNotice(guide));
-		await writeFile(referenceUri, withNotice(reference));
 		await writeFile(schemaUri, schema);
+		// reference.md was ours until the guide absorbed it. A copy left from an
+		// earlier run is never refreshed again, so drop it rather than let an AI
+		// find a stale spec beside the current one. Absent is the normal case.
+		try {
+			await vscode.workspace.fs.delete(
+				vscode.Uri.joinPath(jiscribeDir, "reference.md"),
+				{ useTrash: false },
+			);
+		} catch {
+			// Nothing to remove.
+		}
 
 		// Place the adapter for each selected agent.
 		for (const target of targets) {

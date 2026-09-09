@@ -31,5 +31,5 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 
 Materials intended for AI, such as the format specification and authoring procedures, are located under `packages/doc-schema/assets/` (a separate track from this design documentation).
 
-- [Canvas Doc Reference](../../doc-schema/assets/reference.md)
 - [AI Authoring Guide](../../doc-schema/assets/ai-guide.md)
+- [Canvas Doc JSON Schema](../../doc-schema/assets/jiscribe.schema.json) — the field-level reference

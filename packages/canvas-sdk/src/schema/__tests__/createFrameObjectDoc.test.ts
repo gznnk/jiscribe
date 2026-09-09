@@ -42,14 +42,12 @@ describe("createFrameObjectDoc", () => {
 			defaults: DEMO_DOC_DEFAULTS,
 			description: "Demo shape.",
 			summary: "demo",
-			outlineDescription: "Rectangle",
 		});
 
 		expect(definition.features).toBe(DemoFeatures);
 		expect(definition.defaults).toBe(DEMO_DOC_DEFAULTS);
 		expect(definition.description).toBe("Demo shape.");
 		expect(definition.summary).toBe("demo");
-		expect(definition.outlineDescription).toBe("Rectangle");
 	});
 
 	it("derives a doc validator from features", () => {

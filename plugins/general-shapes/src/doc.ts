@@ -64,9 +64,8 @@ export const actorDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: ActorFeatures,
 	textRegion: calcOutsideBoxTextRegion,
 	defaults: ACTOR_DOC_DEFAULTS,
-	description: `Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. ${RECT_GEOMETRY_NOTE} The stick figure fills the whole box. ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best.`,
+	description: `Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. ${RECT_GEOMETRY_NOTE} The stick figure fills the whole box. "fill" paints the head circle only — the limbs are strokes and take no fill. ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best.`,
 	summary: "user, role, stakeholder",
-	outlineDescription: "Stick figure",
 });
 
 export const cloudDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -76,8 +75,6 @@ export const cloudDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Cloud shape, typically used for external systems/networks in architecture diagrams or fuzzy concepts in brainstorming. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cloud. Text is laid out in a reduced central region inside the bumps, so give it generous width/height for longer text.",
 	summary: "external system, fuzzy concept",
-	outlineDescription:
-		"Cloud of rounded bumps (inner text area is small — size generously)",
 });
 
 export const serverDocDefinition: ObjectDocDefinition = createFrameObjectDoc({

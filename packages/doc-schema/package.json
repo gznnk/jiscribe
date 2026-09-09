@@ -7,7 +7,8 @@
 	"exports": {
 		"./schema": "./assets/jiscribe.schema.json",
 		"./guide": "./assets/ai-guide.md",
-		"./reference": "./assets/reference.md"
+		"./canvas-prompt": "./assets/canvas-prompt.md",
+		"./authoring-json": "./assets/authoring-json.md"
 	},
 	"scripts": {
 		"generate": "tsx generator/src/main.ts",

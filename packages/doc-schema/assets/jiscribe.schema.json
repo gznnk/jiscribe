@@ -813,7 +813,7 @@
 			}
 		},
 		"DiamondDoc": {
-			"description": "Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond. Text is laid out within the full bounding box (not clipped to the diamond interior).",
+			"description": "Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond, with its four vertices at the midpoints of the box's edges — so a connector on topCenter / rightCenter / bottomCenter / leftCenter lands exactly on a point. Text is laid out within the full bounding box (not clipped to the diamond interior).",
 			"type": "object",
 			"allOf": [
 				{
@@ -925,7 +925,7 @@
 			}
 		},
 		"ActorDoc": {
-			"description": "Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The stick figure fills the whole box. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best.",
+			"description": "Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The stick figure fills the whole box. \"fill\" paints the head circle only — the limbs are strokes and take no fill. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best.",
 			"type": "object",
 			"allOf": [
 				{
@@ -2179,12 +2179,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels.",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 180",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). A written \"stereotype\" adds a band of its own above the title, 28 more at the default fontSize. Either header band grows with its content — a larger fontSize, a newline, or text too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 95 (a title band over three attribute rows). Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). A written \"stereotype\" adds a band of its own above the title, 28 more at the default fontSize. Either header band grows with its content — a larger fontSize, a newline, or text too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2990,7 +2990,7 @@
 			}
 		},
 		"GroupDoc": {
-			"description": "A group containing child objects.",
+			"description": "A group containing child objects. It has no position or size of its own: both follow from the children, so there are no x/y/width/height fields to write here.",
 			"type": "object",
 			"required": ["id", "type", "children"],
 			"additionalProperties": false,
@@ -3281,7 +3281,7 @@
 					"minimum": 0
 				},
 				"svgText": {
-					"description": "Inline SVG markup, starting with a <svg ...> root element. Include a viewBox so the content scales to fit the box (if absent, the markup's width/height, or 100x100, is used). Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered.",
+					"description": "Inline SVG markup, starting with a <svg ...> root element. Include a viewBox so the content scales to fit the box (if absent, the markup's width/height, or 100x100, is used). Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered. Markup that does not parse as SVG is replaced by a placeholder error icon rather than drawing nothing.",
 					"type": "string"
 				},
 				"rotation": {
@@ -3317,7 +3317,7 @@
 					"$ref": "#/$defs/MetaDoc"
 				},
 				"points": {
-					"description": "Ordered list of the route's vertices from source to target, in world coordinates - the corners the line bends at. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Empty (the normal case) lets the engine route the whole path. Non-empty, these points ARE the path: under the default \"orthogonal\" shape consecutive points must share x or y, and the first/last must share the axis its endpoint is left on, because nothing straightens or re-routes them. Use vertices only when a specific route matters.",
+					"description": "Ordered list of the route's vertices from source to target, in world coordinates - the corners the line bends at. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Empty (the normal case) lets the engine route the whole path. Non-empty, these points ARE the path: under the default \"orthogonal\" shape consecutive points must share x or y, and the first/last must share the axis its endpoint is left on, because nothing straightens or re-routes them. When a connected shape moves, only the vertex next to each endpoint slides along, so the segment touching that endpoint stays axis-aligned; an editor operation writes that slid position back into this list when it commits, so a stored list read back always matches what is drawn. Nothing else re-routes, so a route pinned by vertices survives a big layout change as a detour. Use vertices only when a specific route matters.",
 					"type": "array",
 					"items": {
 						"$ref": "#/$defs/Point"
@@ -3355,7 +3355,7 @@
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
 				"label": {
-					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontFamily, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign or verticalAlign — do not add those keys here.",
+					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontFamily, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign or verticalAlign — do not add those keys here. It is always drawn horizontally, centered on its anchor point on the path: a rotated or diagonal connector does not tilt it.",
 					"type": "object",
 					"required": ["text"],
 					"additionalProperties": false,
@@ -3565,7 +3565,7 @@
 			}
 		},
 		"MetaDoc": {
-			"description": "Optional metadata attached to any object.",
+			"description": "Optional metadata attached to any object. Beyond the keys listed here it accepts any custom key, which jiscribe carries through untouched.",
 			"type": "object",
 			"properties": {
 				"name": {

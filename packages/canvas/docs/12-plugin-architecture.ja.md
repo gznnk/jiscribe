@@ -57,8 +57,7 @@ export type CanvasDocPlugin = {
 ```
 
 `ObjectDocDefinition` は型の headless 半分である。`features` / `validateDoc` /
-`factory` と、AI 向けの `description` / `summary` / `outlineDescription` /
-`defaults` を持つ。`ObjectTypeDefinition` はこれを継承しており、だから
+`factory` と、AI 向けの `description` / `summary` / `defaults` を持つ。`ObjectTypeDefinition` はこれを継承しており、だから
 `CanvasPlugin` は `CanvasDocPlugin` に**構造的に代入できる** — 同じ `plugins`
 配列が `<Canvas>` にもパーサーにも渡せる。
 

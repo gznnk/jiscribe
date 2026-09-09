@@ -58,7 +58,7 @@ The saved format is `CanvasDoc` (`@jiscribe/doc`, `model/canvas/CanvasDoc.ts`).
 - Connector (`type: "connector"`) … Each endpoint references its target shape via `source` / `target` using an `owner{type,id}` plus an `anchor`. Connectors are placed only directly under `root` and are never children of a group. At least one endpoint must be owned (a connector with both ends free is invalid).
 - Color fields (`stroke` / `fontColor` / `fill`) … In addition to a concrete CSS color, they may take the sentinel value `"auto"` (follow the theme). `"auto"` is resolved to the theme's foreground color at render time (see [Rendering and Theme](./08-rendering-and-theme.md)). The default `stroke` / `fontColor` for a new shape is `"auto"`.
 - Numeric fields (coordinates / sizes / rotation) … Rounded to `PRECISION` **where the State turns into a Doc**, not where a gesture or command computes them. The Doc's geometry is derived from the State's (`x = cx - width / 2`), so rounding upstream does not survive the derivation; fixing the precision at the one boundary also covers the paths that round nothing of their own (group transforms, plugin controls, `createDocOps`). See `roundDocNumbers` in `@jiscribe/doc`.
-- For the full format specification, see `../../doc-schema/assets/reference.md` and `../../doc-schema/assets/jiscribe.schema.json`.
+- For the full format specification, see `../../doc-schema/assets/jiscribe.schema.json`; `../../doc-schema/assets/ai-guide.md` is the prose introduction to it.
 
 ### Text Model Asymmetry (a shape's `text` vs. a connector's `label`)
 
