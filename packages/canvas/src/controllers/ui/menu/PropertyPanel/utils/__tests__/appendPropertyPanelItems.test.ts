@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
-import { appendPropertyPanelItem } from "../appendPropertyPanelItem";
+import { appendPropertyPanelItems } from "../appendPropertyPanelItems";
 
 /** Two sections, so a test can tell the one appended to from the one left alone. */
 const sectionsOfLayoutAndText = (): PropertyPanelSection[] => [
@@ -9,9 +9,9 @@ const sectionsOfLayoutAndText = (): PropertyPanelSection[] => [
 	{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
 ];
 
-describe("appendPropertyPanelItem", () => {
+describe("appendPropertyPanelItems", () => {
 	it("puts the row last in the section carrying the id", () => {
-		const sections = appendPropertyPanelItem(
+		const sections = appendPropertyPanelItems(
 			sectionsOfLayoutAndText(),
 			{ id: "layout", label: "Layout" },
 			{ type: "autoHeight" },
@@ -27,7 +27,7 @@ describe("appendPropertyPanelItem", () => {
 	it("leaves the other sections as they are", () => {
 		const input = sectionsOfLayoutAndText();
 
-		const sections = appendPropertyPanelItem(
+		const sections = appendPropertyPanelItems(
 			input,
 			{ id: "layout", label: "Layout" },
 			{ type: "autoHeight" },
@@ -39,7 +39,7 @@ describe("appendPropertyPanelItem", () => {
 	it("does not touch the sections it is given", () => {
 		const input = sectionsOfLayoutAndText();
 
-		appendPropertyPanelItem(
+		appendPropertyPanelItems(
 			input,
 			{ id: "layout", label: "Layout" },
 			{ type: "autoHeight" },
@@ -48,8 +48,23 @@ describe("appendPropertyPanelItem", () => {
 		expect(input).toEqual(sectionsOfLayoutAndText());
 	});
 
+	it("puts several rows last in the order they are given", () => {
+		const sections = appendPropertyPanelItems(
+			sectionsOfLayoutAndText(),
+			{ id: "layout", label: "Layout" },
+			{ type: "size" },
+			{ type: "autoHeight" },
+		);
+
+		expect(sections[0].items).toEqual([
+			{ type: "position" },
+			{ type: "size" },
+			{ type: "autoHeight" },
+		]);
+	});
+
 	it("creates the section at the end when none carries the id", () => {
-		const sections = appendPropertyPanelItem(
+		const sections = appendPropertyPanelItems(
 			sectionsOfLayoutAndText(),
 			{ id: "fill", label: "Fill" },
 			{ type: "fill" },
@@ -67,8 +82,25 @@ describe("appendPropertyPanelItem", () => {
 		});
 	});
 
+	it("creates the section holding every row it was given", () => {
+		const sections = appendPropertyPanelItems(
+			[],
+			{ id: "line", label: "Line" },
+			{ type: "strokeColor" },
+			{ type: "strokeWidth" },
+		);
+
+		expect(sections).toEqual([
+			{
+				id: "line",
+				label: "Line",
+				items: [{ type: "strokeColor" }, { type: "strokeWidth" }],
+			},
+		]);
+	});
+
 	it("creates the section with the given label when it has to build one", () => {
-		const sections = appendPropertyPanelItem(
+		const sections = appendPropertyPanelItems(
 			[],
 			{ id: "text", label: "Text" },
 			{ type: "textVerticalBasis" },

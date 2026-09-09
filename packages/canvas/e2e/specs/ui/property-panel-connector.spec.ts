@@ -4,9 +4,9 @@ import { selectors } from "../../support/selectors";
 
 /**
  * What the properties sidebar offers for a selected connector beyond the line
- * and arrow rows its features imply: the routing row at the end of the Line
- * section, and the Label and Label border sections, which appear only once the
- * connector carries label text.
+ * and arrow rows its features imply: the routing row and the reset-route button
+ * its Line section ends with, and the Label and Label border sections, which
+ * appear only once the connector carries label text.
  *
  * The routing assertions read the rendered route the way
  * `specs/shapes/connector-routing-switch.spec.ts` does — straight is a single
@@ -243,6 +243,43 @@ test.describe("Properties sidebar: connector", () => {
 					"undo takes the route back to the straight it was switched from",
 			})
 			.toBe(2);
+	});
+
+	test("hands a hand-shaped route back to the engine from the Line section's reset button", async ({
+		canvas,
+	}) => {
+		const connectorId = await buildDiagonalConnector(canvas);
+		await canvas.openPropertyPanel();
+		await selectConnectorAt(
+			canvas,
+			await pointOnLongestSegment(canvas, connectorId),
+		);
+
+		const resetRoute = canvas.page.locator(
+			selectors.propertyPanelCommand("resetConnectorRoute"),
+		);
+		await expect(
+			resetRoute,
+			"a route the engine decides has no vertices to discard",
+		).toBeDisabled();
+
+		// Pull the vertical run sideways: the vertices the drag leaves behind are
+		// what makes the route the author's rather than the engine's.
+		const automatic = await readPoints(canvas, connectorId);
+		const onRun = {
+			x: (automatic[1].x + automatic[2].x) / 2,
+			y: (automatic[1].y + automatic[2].y) / 2,
+		};
+		await canvas.drag(onRun, { x: onRun.x + 100, y: onRun.y });
+		await expect(resetRoute).toBeEnabled();
+
+		await resetRoute.click();
+		await expect
+			.poll(async () => readPoints(canvas, connectorId), {
+				message: "the route goes back to the one the engine draws",
+			})
+			.toEqual(automatic);
+		await expect(resetRoute).toBeDisabled();
 	});
 
 	test("offers the Label and Label border sections only once the connector carries label text", async ({

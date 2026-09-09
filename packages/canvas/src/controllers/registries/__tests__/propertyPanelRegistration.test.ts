@@ -139,7 +139,7 @@ describe("propertyPanel registration", () => {
 		).toEqual(["line", "arrow", "label", "label-border"]);
 	});
 
-	it("puts the routing row at the end of the connector's line section", () => {
+	it("ends the connector's line section with the routing row and the reset button", () => {
 		const registries = createCanvasRegistries();
 
 		const line = registries.propertyPanel
@@ -151,6 +151,7 @@ describe("propertyPanel registration", () => {
 			"strokeWidth",
 			"strokeDashType",
 			"connector-routing",
+			"connector-reset-route",
 		]);
 	});
 

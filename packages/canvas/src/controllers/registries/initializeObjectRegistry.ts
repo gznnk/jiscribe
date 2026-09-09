@@ -112,8 +112,9 @@ import {
 	ConnectorLabelFontSizeItem,
 	ConnectorLabelStyleItem,
 } from "../ui/menu/PropertyPanel/items/ConnectorLabelItems";
+import { ConnectorResetRouteItem } from "../ui/menu/PropertyPanel/items/ConnectorResetRouteItem";
 import { ConnectorRoutingItem } from "../ui/menu/PropertyPanel/items/ConnectorRoutingItem";
-import { appendPropertyPanelItem } from "../ui/menu/PropertyPanel/utils/appendPropertyPanelItem";
+import { appendPropertyPanelItems } from "../ui/menu/PropertyPanel/utils/appendPropertyPanelItems";
 import { createDefaultPropertyPanel } from "../ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
 import { derivePropertyPanel } from "../ui/menu/PropertyPanel/utils/derivePropertyPanel";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
@@ -194,7 +195,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			// what every selected type offers works row by row there, so a plain
 			// box in the selection drops the switch without taking the font
 			// controls with it.
-			propertyPanel: appendPropertyPanelItem(
+			propertyPanel: appendPropertyPanelItems(
 				createDefaultPropertyPanel(builtinObjectDocDefinitions.text.features),
 				{ id: "text", label: "Text" },
 				{ type: "textLayout" },
@@ -321,7 +322,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			// Text and Border are apart: under one heading "Width" and "Color"
 			// would not say which of the two they state.
 			propertyPanel: [
-				...appendPropertyPanelItem(
+				...appendPropertyPanelItems(
 					createDefaultPropertyPanel(
 						builtinObjectDocDefinitions.connector.features,
 					),
@@ -330,6 +331,11 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 						type: "custom",
 						id: "connector-routing",
 						component: ConnectorRoutingItem,
+					},
+					{
+						type: "custom",
+						id: "connector-reset-route",
+						component: ConnectorResetRouteItem,
 					},
 				),
 				{

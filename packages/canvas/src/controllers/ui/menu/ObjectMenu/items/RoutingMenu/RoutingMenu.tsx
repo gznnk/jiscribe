@@ -61,8 +61,8 @@ const ROUTING_OPTIONS: RoutingOption[] = [
  * horizontal row. Each option fires `command:setRouting*`, delegating to SetConnectorRoutingCommand.
  *
  * Only the shape lives here. Dropping the vertices a segment drag left behind is an action rather
- * than a mode, so it sits in the context menu (ResetConnectorRouteCommand) instead of alongside two
- * buttons that show which shape is active.
+ * than a mode, so it sits in the context menu and the properties sidebar
+ * (ResetConnectorRouteCommand) instead of alongside two buttons that show which shape is active.
  *
  * Self-loops are fixed to orthogonal, so this returns null. An emptied section is
  * collapsed along with its divider via ObjectMenuSection's `:empty`.

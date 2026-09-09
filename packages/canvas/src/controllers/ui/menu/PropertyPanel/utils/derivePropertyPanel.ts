@@ -1,4 +1,4 @@
-import { appendPropertyPanelItem } from "./appendPropertyPanelItem";
+import { appendPropertyPanelItems } from "./appendPropertyPanelItems";
 import { createDefaultPropertyPanel } from "./createDefaultPropertyPanel";
 import { hasInsetTextRegionType } from "../../../../../plugin/hasInsetTextRegionType";
 import type { AnyObjectTypeDefinition } from "../../../../../plugin/ObjectTypeDefinition";
@@ -30,7 +30,7 @@ export const derivePropertyPanel = (
 	let sections =
 		definition.propertyPanel ?? createDefaultPropertyPanel(definition.features);
 	if (supportsAutoHeightType(definition)) {
-		sections = appendPropertyPanelItem(
+		sections = appendPropertyPanelItems(
 			sections,
 			{ id: "layout", label: "Layout" },
 			{ type: "autoHeight" },
@@ -39,7 +39,7 @@ export const derivePropertyPanel = (
 	// The basis governs what the vertical alignment in the text section is
 	// measured against, so it follows it.
 	if (hasInsetTextRegionType(definition)) {
-		sections = appendPropertyPanelItem(
+		sections = appendPropertyPanelItems(
 			sections,
 			{ id: "text", label: "Text" },
 			{ type: "textVerticalBasis" },
