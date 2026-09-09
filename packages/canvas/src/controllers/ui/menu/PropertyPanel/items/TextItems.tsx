@@ -1,7 +1,4 @@
-import {
-	CANVAS_FONT_FAMILIES,
-	DEFAULT_FONT_FAMILY,
-} from "@jiscribe/doc/text/style/fontFamilies";
+import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { memo } from "react";
 
 import type { BuiltinItemProps } from "./BuiltinItemProps";
@@ -11,7 +8,6 @@ import {
 	setPart,
 } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
-import type { CanvasMessages } from "../../../../messages/CanvasMessagesTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { isBoldFontWeight } from "../../../../utils/isBoldFontWeight";
 import {
@@ -41,6 +37,7 @@ import { PropertyRow } from "../common/PropertyRow";
 import { PropertySegmentedControl } from "../common/PropertySegmentedControl";
 import { readSelectionTextStyle } from "../utils/readSelectionTextStyle";
 import { readSelectionTextVerticalBasis } from "../utils/readSelectionTextVerticalBasis";
+import { resolveFontFamilyLabel } from "../utils/resolveFontFamilyLabel";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
@@ -51,33 +48,6 @@ const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
 
 const DEFAULT_FONT_COLOR = "#333333";
-
-/** Readers rather than key names: not every CanvasMessages entry is a string. */
-const FONT_FAMILY_LABEL_READERS: Record<
-	string,
-	(messages: CanvasMessages) => string
-> = {
-	sans: (messages) => messages.fontFamilySans,
-	serif: (messages) => messages.fontFamilySerif,
-	mono: (messages) => messages.fontFamilyMono,
-	hand: (messages) => messages.fontFamilyHand,
-};
-
-/**
- * The name of the shipped family a stack belongs to. A doc naming something else
- * keeps its own string, which is what the shape is drawn with.
- */
-const resolveFontFamilyLabel = (
-	fontFamily: string,
-	messages: CanvasMessages,
-): string => {
-	const shipped = CANVAS_FONT_FAMILIES.find(
-		(font) => font.stack === fontFamily,
-	);
-	return shipped === undefined
-		? fontFamily
-		: FONT_FAMILY_LABEL_READERS[shipped.id](messages);
-};
 
 /** The face the selected text is drawn in, picked from the shipped set. */
 const FontFamilyItemComponent: React.FC<BuiltinItemProps> = ({

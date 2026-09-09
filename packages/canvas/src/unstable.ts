@@ -164,12 +164,16 @@ export { getSelectedShapeStyle } from "./controllers/ui/menu/ObjectMenu/utils/ge
 // `data-part` by hand is discouraged for the same reason as there.
 // Custom rows are dropped while a text slot is selected, since a plugin row has
 // no way to say it is slot-aware.
+// A section may also carry `isShown`, asked about the selection
+// (PropertyPanelSelection) before the section is drawn: a section whose every row
+// would return null uses it to take its heading away with them.
 
 export type {
 	PropertyPanelSection,
 	PropertyPanelItem,
 	PropertyPanelCustomItem,
 	PropertyPanelItemProps,
+	PropertyPanelSelection,
 	PropertyPanelTransformUpdater,
 } from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 

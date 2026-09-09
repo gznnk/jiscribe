@@ -210,6 +210,13 @@ CodeMirror の `EditorView`）。
 - テキストスロット選択中はカスタム行が落ちる。プラグインの行には「スロット対応で
   ある」と申告する手段が無いためで、ObjectMenu がカスタム項目に課すのと同じ規則
 
+**`propertyPanel` のセクション表示。**セクションは `isShown(selection)` を持てる。
+描く前に、行が読むのと同じ選択の切片（`PropertyPanelSelection` — `objects` /
+`selectedIds` / `selectedConnectorId`）を渡して尋ねられる。全ての行が null を返す
+セクションにはこれが要る。行は自分で消えるが、アコーディオンの見出しだけが空の中身の
+上に残るためである。コア自身の用例はコネクターの「ラベル」「ラベルの枠線」セクションで、ラベルに
+文字があるときだけ出る。省略は常に出す。
+
 実例は `plugins/container-shapes` である。`header-fill` 行が
 `PropertyColorField` から `onPropertyUpdate` 経由で `headerFill` を書き、Fill
 セクションの本体色の下に並ぶ。`header-height` 行は `PropertyNumberField` から

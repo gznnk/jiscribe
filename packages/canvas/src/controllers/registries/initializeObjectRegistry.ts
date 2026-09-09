@@ -102,13 +102,28 @@ import {
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
-import type { PropertyPanelSection } from "../ui/menu/PropertyPanel/PropertyPanelTypes";
+import {
+	ConnectorLabelBackgroundItem,
+	ConnectorLabelBorderColorItem,
+	ConnectorLabelBorderTypeItem,
+	ConnectorLabelBorderWidthItem,
+	ConnectorLabelFontColorItem,
+	ConnectorLabelFontFamilyItem,
+	ConnectorLabelFontSizeItem,
+	ConnectorLabelStyleItem,
+} from "../ui/menu/PropertyPanel/items/ConnectorLabelItems";
+import { ConnectorRoutingItem } from "../ui/menu/PropertyPanel/items/ConnectorRoutingItem";
+import type {
+	PropertyPanelSection,
+	PropertyPanelSelection,
+} from "../ui/menu/PropertyPanel/PropertyPanelTypes";
 import { createDefaultPropertyPanel } from "../ui/menu/PropertyPanel/utils/createDefaultPropertyPanel";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
 import { RectStencils } from "../ui/objects/primitives/RectStencils";
 import { TextStencils } from "../ui/objects/primitives/TextStencils";
+import { getSelectedConnectorLabel } from "../utils/getSelectedConnectorLabel";
 
 /**
  * The handles a label text puts on its transform frame: none that resize it. Its
@@ -298,6 +313,74 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					],
 				},
 			],
+			// The connector states its own sidebar because neither half follows
+			// from its features: the routing row is a shape of the line rather
+			// than a style of it, and the label is a text box the type carries
+			// under `label` that no feature speaks for. The label takes two
+			// sections, its text and face apart from its border, the way a shape's
+			// Text and Border are apart: under one heading "Width" and "Color"
+			// would not say which of the two they state.
+			propertyPanel: [
+				...appendConnectorRoutingRow(
+					createDefaultPropertyPanel(
+						builtinObjectDocDefinitions.connector.features,
+					),
+				),
+				{
+					id: "label",
+					label: "Label",
+					isShown: hasSelectedConnectorLabelText,
+					items: [
+						{
+							type: "custom",
+							id: "label-font-family",
+							component: ConnectorLabelFontFamilyItem,
+						},
+						{
+							type: "custom",
+							id: "label-font-size",
+							component: ConnectorLabelFontSizeItem,
+						},
+						{
+							type: "custom",
+							id: "label-font-color",
+							component: ConnectorLabelFontColorItem,
+						},
+						{
+							type: "custom",
+							id: "label-style",
+							component: ConnectorLabelStyleItem,
+						},
+						{
+							type: "custom",
+							id: "label-background",
+							component: ConnectorLabelBackgroundItem,
+						},
+					],
+				},
+				{
+					id: "label-border",
+					label: "Label border",
+					isShown: hasSelectedConnectorLabelText,
+					items: [
+						{
+							type: "custom",
+							id: "label-border-color",
+							component: ConnectorLabelBorderColorItem,
+						},
+						{
+							type: "custom",
+							id: "label-border-width",
+							component: ConnectorLabelBorderWidthItem,
+						},
+						{
+							type: "custom",
+							id: "label-border-type",
+							component: ConnectorLabelBorderTypeItem,
+						},
+					],
+				},
+			],
 		}),
 
 		// SVG is not created from the StencilLibrary (only added via AI / direct .jis.json authoring).
@@ -364,6 +447,45 @@ const insertTextVerticalBasisPropertyPanelRow = (
 			: section,
 	);
 };
+
+/**
+ * Whether the selected connector carries label text, which is what every row of
+ * the two label sections needs: without it they all draw nothing, and the
+ * headings go with them rather than standing over an empty body.
+ */
+function hasSelectedConnectorLabelText(
+	selection: PropertyPanelSelection,
+): boolean {
+	return Boolean(
+		getSelectedConnectorLabel(selection.selectedConnectorId, selection.objects)
+			?.text,
+	);
+}
+
+/**
+ * The sidebar sections with the routing row as the last row of the line section,
+ * for the connector alone. A declaration rather than a const, for the same
+ * reason {@link appendTextLayoutRow} is one.
+ */
+function appendConnectorRoutingRow(
+	sections: readonly PropertyPanelSection[],
+): PropertyPanelSection[] {
+	return sections.map((section) =>
+		section.id === "line"
+			? {
+					...section,
+					items: [
+						...section.items,
+						{
+							type: "custom",
+							id: "connector-routing",
+							component: ConnectorRoutingItem,
+						},
+					],
+				}
+			: section,
+	);
+}
 
 /**
  * The sidebar sections with the text-layout switch as the last row of the text

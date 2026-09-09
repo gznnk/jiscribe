@@ -227,6 +227,14 @@ section's left edge). Two rules to know before writing one:
   no way to say it is slot-aware — the same rule the ObjectMenu applies to its
   custom items.
 
+**`propertyPanel` section visibility.** A section may carry
+`isShown(selection)`, asked before it is drawn with the slice of the selection
+its rows read (`PropertyPanelSelection`: `objects`, `selectedIds`,
+`selectedConnectorId`). A section every row of which would return null needs it:
+the rows leave on their own, but the accordion heading would stay behind over an
+empty body. Core's own use is the connector's Label and Label border sections, offered
+only once the label has text. Omitted means always offered.
+
 `plugins/container-shapes` is the worked example: its `header-fill` row states
 `headerFill` through `onPropertyUpdate` from a `PropertyColorField`, sitting under
 the body color in the Fill section, and its `header-height` row states the

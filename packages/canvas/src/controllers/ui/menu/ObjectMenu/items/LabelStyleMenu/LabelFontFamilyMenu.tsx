@@ -1,9 +1,9 @@
 import { memo, useRef } from "react";
 
-import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../rendering/objects/connector/ConnectorLabel";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { FontFamilyIcon } from "../../../../icons/FontFamilyIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import {

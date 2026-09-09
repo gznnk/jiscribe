@@ -186,6 +186,7 @@ export type {
 	PropertyPanelBuiltinItemKey,
 	PropertyPanelCustomItem,
 	PropertyPanelItemProps,
+	PropertyPanelSelection,
 	PropertyPanelTransformUpdater,
 } from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 export type {

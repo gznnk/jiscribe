@@ -1,10 +1,11 @@
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 
-import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
  * Returns the label of the selected connector (selectedConnectorId).
- * A shared helper for label-related menu items (LabelStyleMenu) to read the current value.
+ * A shared helper for the label rows of both surfaces (the ObjectMenu's LabelStyleMenu
+ * and the properties sidebar's Label section) to read the current value.
  * Equivalent to getFirstSelectedWithProp for shapes, but a connector is accessed via
  * selectedConnectorId and its style is nested under label, so it is retrieved via a
  * separate path.

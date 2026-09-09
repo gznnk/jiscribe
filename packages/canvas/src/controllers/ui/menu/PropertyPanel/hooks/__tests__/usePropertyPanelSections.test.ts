@@ -59,6 +59,20 @@ const CONTAINER_SECTIONS: PropertyPanelSection[] = [
 	},
 ];
 
+/**
+ * A plugin type whose second section is offered only for a selection of one, so
+ * the `isShown` predicate has something to turn on.
+ */
+const GAUGE_SECTIONS: PropertyPanelSection[] = [
+	{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
+	{
+		id: "gauge",
+		label: "Gauge",
+		isShown: (selection) => selection.selectedIds.length === 1,
+		items: [{ type: "custom", id: "gauge-range", component: BadgeRow }],
+	},
+];
+
 /** Another plugin type, offering the fill row under its own id. */
 const BADGE_SECTIONS: PropertyPanelSection[] = [
 	{
@@ -77,6 +91,7 @@ registry.register("ellipse", ELLIPSE_SECTIONS);
 registry.register("connector", LINE_SECTIONS);
 registry.register("container", CONTAINER_SECTIONS);
 registry.register("badge", BADGE_SECTIONS);
+registry.register("gauge", GAUGE_SECTIONS);
 
 /** A shape holding one named text slot, so a slot selection can resolve against it. */
 const shape = (id: string, type: string): ObjectState =>
@@ -236,6 +251,31 @@ describe("getPropertyPanelSections", () => {
 		expect(getPropertyPanelSections(state, registry)).toEqual([
 			{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
 		]);
+	});
+
+	it("keeps a section whose isShown accepts the selection", () => {
+		const state = stateOf({
+			objects: { "g-1": shape("g-1", "gauge") },
+			selectedIds: ["g-1"],
+		});
+
+		expect(
+			getPropertyPanelSections(state, registry).map((section) => section.id),
+		).toEqual(["fill", "gauge"]);
+	});
+
+	it("drops a section whose isShown turns the selection down, heading and all", () => {
+		const state = stateOf({
+			objects: {
+				"g-1": shape("g-1", "gauge"),
+				"g-2": shape("g-2", "gauge"),
+			},
+			selectedIds: ["g-1", "g-2"],
+		});
+
+		expect(
+			getPropertyPanelSections(state, registry).map((section) => section.id),
+		).toEqual(["fill"]);
 	});
 
 	it("keeps only the text section while a shape's text is being edited", () => {

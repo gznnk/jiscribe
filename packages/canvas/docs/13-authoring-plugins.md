@@ -133,6 +133,8 @@ not the SVG `fill` attribute** — `"auto"` resolves to a `var(--jiscribe-*)` to
 that presentation attributes do not evaluate, so an attribute leaves the shape
 painted black (#38 / #206).
 
+A type's properties-sidebar sections are declared as `propertyPanel`, and a row of its own is a `{ type: "custom"; id; component }` item built from the sidebar widgets the kit re-exports (`PropertyRow` and friends). A section that has nothing to say for a given selection carries `isShown`, which takes its heading away with its rows — see doc 12 for both.
+
 `./testing` is a separate entry so vitest never reaches a runtime bundle.
 
 ## Giving the package an e2e suite

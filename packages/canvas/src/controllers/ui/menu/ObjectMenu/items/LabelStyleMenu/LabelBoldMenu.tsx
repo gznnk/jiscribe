@@ -1,8 +1,8 @@
 import { memo } from "react";
 
-import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import {

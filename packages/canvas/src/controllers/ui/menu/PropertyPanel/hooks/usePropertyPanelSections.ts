@@ -9,6 +9,7 @@ import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
 import type {
 	PropertyPanelItem,
 	PropertyPanelSection,
+	PropertyPanelSelection,
 } from "../PropertyPanelTypes";
 
 /** The one section whose rows a selected text slot can receive. */
@@ -96,6 +97,24 @@ const collectSelectionSections = (
 };
 
 /**
+ * Drops the sections whose `isShown` turns them down for this selection, after
+ * the merge and the slot narrowing: a section every row of which would draw
+ * nothing (the connector's label sections while the label has no text) would
+ * otherwise leave its heading standing over an empty body.
+ */
+const filterShownSections = (
+	sections: PropertyPanelSection[],
+	state: CanvasControllerState,
+): PropertyPanelSection[] => {
+	const selection: PropertyPanelSelection = {
+		objects: state.objects,
+		selectedIds: state.selectedIds,
+		selectedConnectorId: state.selectedConnectorId,
+	};
+	return sections.filter((section) => section.isShown?.(selection) ?? true);
+};
+
+/**
  * Computes the sidebar sections to display from the current selection.
  *
  * While a text slot is selected the sections are narrowed to the text one and
@@ -107,7 +126,7 @@ const collectSelectionSections = (
  *
  * @param state - The current canvas controller state; the selection, the objects it names and the text focus are read
  * @param propertyPanelRegistry - Per-canvas PropertyPanelRegistry, asked once per concrete type in the selection
- * @returns The sections in display order; empty when nothing is selected or the selected types share nothing
+ * @returns The sections in display order; empty when nothing is selected, the selected types share nothing, or every section turned the selection down
  */
 export const getPropertyPanelSections = (
 	state: CanvasControllerState,
@@ -118,9 +137,9 @@ export const getPropertyPanelSections = (
 		resolveSelectedTextSlot(state) === null &&
 		state.textEditState?.kind !== "shape"
 	) {
-		return sections;
+		return filterShownSections(sections, state);
 	}
-	return filterTextSlotSections(sections);
+	return filterShownSections(filterTextSlotSections(sections), state);
 };
 
 /**

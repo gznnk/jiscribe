@@ -54,6 +54,10 @@ export type CanvasMessageStrings = {
 	propertyPanelSectionArrow: string;
 	/** Heading of the section stating the text style of the selected slot */
 	propertyPanelSectionText: string;
+	/** Heading of the section stating a connector label's text and face, shown only once the label has text */
+	propertyPanelSectionLabel: string;
+	/** Heading of the section stating a connector label's border, shown only once the label has text */
+	propertyPanelSectionLabelBorder: string;
 	/** Heading of the section holding the stacking-order commands, shown for any selection they apply to */
 	propertyPanelSectionArrange: string;
 	/** Label of the row stating the canvas surface color, and the aria-label of its field */
@@ -80,6 +84,8 @@ export type CanvasMessageStrings = {
 	propertyPanelRowVertical: string;
 	/** Label of the row choosing which box a body's vertical alignment is measured against */
 	propertyPanelRowTextBasis: string;
+	/** Label of the row choosing a connector's line shape (orthogonal / straight) */
+	propertyPanelRowRouting: string;
 	/** The segment placing the text in the region the shape's own outline leaves clear (the default) */
 	propertyPanelTextBasisRegion: string;
 	/** The segment placing the text on the shape's whole height */

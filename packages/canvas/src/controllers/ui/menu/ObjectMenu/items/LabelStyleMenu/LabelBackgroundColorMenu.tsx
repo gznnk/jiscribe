@@ -1,10 +1,10 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useRef } from "react";
 
-import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveLabelFill } from "../../../../../../rendering/objects/connector/ConnectorLabel";
 import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";

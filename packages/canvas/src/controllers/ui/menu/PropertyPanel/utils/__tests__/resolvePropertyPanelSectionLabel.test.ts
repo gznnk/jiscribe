@@ -25,6 +25,44 @@ describe("resolvePropertyPanelSectionLabel", () => {
 		).toBe(defaultCanvasMessages.propertyPanelSectionArrange);
 	});
 
+	it("resolves the connector's label section, which core declares by hand", () => {
+		expect(
+			resolvePropertyPanelSectionLabel(
+				"label",
+				"Label",
+				defaultCanvasMessages,
+				"en",
+			),
+		).toBe(defaultCanvasMessages.propertyPanelSectionLabel);
+		expect(
+			resolvePropertyPanelSectionLabel(
+				"label",
+				"Label",
+				jaCanvasMessages,
+				"ja",
+			),
+		).toBe(jaCanvasMessages.propertyPanelSectionLabel);
+	});
+
+	it("resolves the connector's label-border section the same way", () => {
+		expect(
+			resolvePropertyPanelSectionLabel(
+				"label-border",
+				"Label border",
+				defaultCanvasMessages,
+				"en",
+			),
+		).toBe(defaultCanvasMessages.propertyPanelSectionLabelBorder);
+		expect(
+			resolvePropertyPanelSectionLabel(
+				"label-border",
+				"Label border",
+				jaCanvasMessages,
+				"ja",
+			),
+		).toBe(jaCanvasMessages.propertyPanelSectionLabelBorder);
+	});
+
 	it("a Japanese message set changes a core id's heading", () => {
 		expect(
 			resolvePropertyPanelSectionLabel(

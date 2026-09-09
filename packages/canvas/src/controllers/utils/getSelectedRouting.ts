@@ -1,7 +1,7 @@
 import { isOrthogonalRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
 import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
 
-import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
  * Returns the current routing of the selected connector.

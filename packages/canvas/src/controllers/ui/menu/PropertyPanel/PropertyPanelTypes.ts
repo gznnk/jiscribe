@@ -86,7 +86,19 @@ export type PropertyPanelSection = {
 	 */
 	label: string | LocaleMessages<string>;
 	items: PropertyPanelItem[];
+	/** Whether the section is offered for the selection at all; a section every row of which would return null hides its heading with it. Omitted = always offered. */
+	isShown?: (selection: PropertyPanelSelection) => boolean;
 };
+
+/**
+ * What {@link PropertyPanelSection.isShown} is asked about: the slices of the
+ * selection a section's visibility can turn on, which are the ones its rows read
+ * to decide the same thing for themselves.
+ */
+export type PropertyPanelSelection = Pick<
+	PropertyPanelItemProps,
+	"objects" | "selectedIds" | "selectedConnectorId"
+>;
 
 /**
  * States one number of the selection's transform frame, dispatching

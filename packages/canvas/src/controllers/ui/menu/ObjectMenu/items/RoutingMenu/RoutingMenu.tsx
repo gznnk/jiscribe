@@ -2,14 +2,14 @@ import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/Connect
 import { memo, useRef } from "react";
 
 import { RoutingMenuRow } from "./RoutingMenuStyled";
-import { getSelectedRouting } from "./utils/getSelectedRouting";
-import { isSelectedConnectorSelfLoop } from "./utils/isSelectedConnectorSelfLoop";
 import {
 	commandPart,
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
+import { getSelectedRouting } from "../../../../../utils/getSelectedRouting";
+import { isSelectedConnectorSelfLoop } from "../../../../../utils/isSelectedConnectorSelfLoop";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";
 import { StraightConnectorIcon } from "../../../../icons/StraightConnectorIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";

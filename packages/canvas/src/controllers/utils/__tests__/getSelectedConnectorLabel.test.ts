@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ObjectState } from "../../../../../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { getSelectedConnectorLabel } from "../getSelectedConnectorLabel";
 
 describe("getSelectedConnectorLabel", () => {

@@ -1,11 +1,11 @@
 import { memo, useRef } from "react";
 
-import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import {
 	setPart,
 	togglePart,
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
