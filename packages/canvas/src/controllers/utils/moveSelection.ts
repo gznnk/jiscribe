@@ -1,9 +1,9 @@
 import type { Point } from "@jiscribe/geometry";
 
 import { createCowObjects } from "./cowObjects";
+import { moveObjectTree } from "./moveObjectTree";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
-import { moveObjectTree } from "../behaviors/primitives/GroupController";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 
 export type MoveSelectionParams = {

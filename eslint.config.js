@@ -31,6 +31,58 @@ const docCuratedEntriesOnly = {
 		"@jiscribe/doc has no deep import surface. Take it from @jiscribe/doc, ./unstable, ./png-source or ./svg-source.",
 };
 
+/**
+ * The stack inside packages/canvas/src/controllers, low to high. A layer may not
+ * import a *value* from a layer above it; types are allowed. That is the invariant
+ * the code already holds — every backward edge in the folder graph is a type
+ * contract (ObjectBehaviorTypes, SelectionControlRegistry, CanvasActions …), which
+ * is what keeps the folder-level two-way pairs from being concrete import cycles,
+ * the same trick applyObjectDefinition plays for plugin <-> registries.
+ *
+ * Left out on purpose:
+ * - registries/ is the wiring layer; reaching into every layer is its job.
+ * - the files directly under controllers/ are shared vocabulary (CanvasTypes) and
+ *   the composition root (Canvas.tsx), not a layer.
+ *
+ * madge (pnpm dep:check) only reports cycles, so nothing else catches a value edge
+ * that runs the wrong way.
+ */
+const CONTROLLER_LAYERS = [
+	"messages",
+	"utils",
+	"behaviors",
+	"commands",
+	"styleProperties",
+	"gestures",
+	"reducer",
+	"hooks",
+	"handles",
+	"ui",
+];
+
+// The patterns match the import specifier, which is relative here, so they are
+// written as "**/<layer>/**" rather than by full path.
+const controllerLayerFences = CONTROLLER_LAYERS.slice(0, -1).map(
+	(layer, i) => ({
+		files: [`packages/canvas/src/controllers/${layer}/**`],
+		ignores: ["**/__tests__/**", "**/__benchmarks__/**"],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: CONTROLLER_LAYERS.slice(i + 1).map((up) => `**/${up}/**`),
+							allowTypeImports: true,
+							message: `controllers/${layer} is below these layers and cannot import a value from them (types are allowed). Move the value down, or take it as a type.`,
+						},
+					],
+				},
+			],
+		},
+	}),
+);
+
 export default tseslint.config(
 	{
 		ignores: [
@@ -214,6 +266,7 @@ export default tseslint.config(
 			],
 		},
 	},
+	...controllerLayerFences,
 	{
 		// The headless (doc) entry points that are not the doc package itself: the canvas
 		// re-export shims onto @jiscribe/doc, and the shipped set's headless half, whose

@@ -3,16 +3,16 @@ import { ConnectPointIds } from "@jiscribe/doc/model/objects/types/EndpointRef";
 /**
  * Selectable anchor position on a shape as a single token — the geometric
  * center plus the four edge midpoints. This is the "handle" space used by the
- * connection controls: the highlight dots this UI renders and the DOM anchor
- * ids the gesture handler reads back, where "center" must be an offerable
- * choice.
+ * connection controls: the highlight dots the UI renders and the DOM anchor
+ * ids this handler reads back, where "center" must be an offerable choice.
  *
  * It is intentionally distinct from the persisted {@link ConnectPointId} (edge
  * midpoints only): the center is stored as a `CenterAnchorSpec`
  * (`kind: "center"`), never as `{ kind: "connectPoint", id: "center" }`.
  * Callers translate the "center" handle to a CenterAnchorSpec and the rest to
  * a ConnectPointAnchorSpec. Because it never reaches the document, it lives in
- * the controllers layer rather than in `@jiscribe/doc`.
+ * the controllers layer rather than in `@jiscribe/doc`, and next to the handler
+ * that reads the ids back off the DOM.
  */
 export const AnchorHandleIds = ["center", ...ConnectPointIds] as const;
 

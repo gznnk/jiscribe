@@ -9,6 +9,7 @@ import {
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { isTransformedFrame, type Point } from "@jiscribe/geometry";
 
+import { isAnchorHandleId } from "./ConnectionAnchorTypes";
 import type { AnchorSnapContext } from "./utils/calcNearestAnchor";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
 import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
@@ -21,7 +22,6 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
-import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { isConnectableObject } from "../../../../utils/isConnectableObject";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
