@@ -1,6 +1,6 @@
 import { css } from "@emotion/react";
 
-import { theme } from "./theme";
+import { theme } from "./themeTokens";
 
 /**
  * Width (and height) of the custom webkit scrollbar in px. Consumers that
@@ -18,7 +18,7 @@ export const SCROLLBAR_WIDTH = 8;
  * same scrollbar.
  *
  * Usage:
- *   import { scrollbarStyles } from "../../constants/scrollbarStyles";
+ *   import { scrollbarStyles } from "../../theme/themeScrollbarStyles";
  *
  *   const MyStyledDiv = styled.div`
  *     overflow-y: auto;

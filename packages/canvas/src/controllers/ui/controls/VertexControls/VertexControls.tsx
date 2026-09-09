@@ -1,8 +1,8 @@
 import type { Point } from "@jiscribe/geometry";
 import { Fragment, memo } from "react";
 
-import { theme } from "../../../../constants/theme";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { theme } from "../../../../theme/themeTokens";
 
 const VERTEX_RING_RADIUS = 7;
 const VERTEX_RING_STROKE_WIDTH = 1.5;

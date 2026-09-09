@@ -45,7 +45,7 @@
 |            | UI クローム                                  | 図形データ                                     |
 | ---------- | -------------------------------------------- | ---------------------------------------------- |
 | 例         | メニュー・ツールバー・選択枠・スナップガイド | 図形の `fill` / `stroke` / `fontColor`         |
-| 出所       | `constants/theme.ts` のテーマトークン        | ドキュメント（`.jis.json`）に保存される値      |
+| 出所       | `theme/themeTokens.ts` のテーマトークン      | ドキュメント（`.jis.json`）に保存される値      |
 | テーマ追従 | する（ホストが注入したテーマに従う）         | しない（ユーザーが指定したデータ）※auto を除く |
 
 ### `"auto"`（テーマ追従色）— 図形データの例外（issue #38）
@@ -96,7 +96,7 @@ style」という 2 方式混在を解消）。
 
 テーマはホストが注入する中立な仕組みで、canvas 自体は VSCode を知らない。
 
-- **中立トークン**: `theme`（`constants/theme.ts`）は中立な `--jiscribe-*` CSS カスタムプロパティを
+- **中立トークン**: `theme`（`theme/themeTokens.ts`）は中立な `--jiscribe-*` CSS カスタムプロパティを
   参照し、フォールバックにはダークプリセット値を持つ（`var(--jiscribe-foreground, #cccccc)`）。
   テーマは CSS 解決時に決まるため、emotion スタイルは静的なモジュール定数のままでよい。
 - **注入**: ホストは Canvas / CanvasThumbnail の `theme` prop に `CanvasTheme`

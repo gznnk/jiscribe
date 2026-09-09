@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../../../constants/theme";
+import { theme } from "../../../../../../theme/themeTokens";
 
 /**
  * Styled root of the dropdown panel. Rendered centered below or above the button.

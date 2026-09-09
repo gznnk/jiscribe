@@ -1,6 +1,6 @@
-import type { CanvasThemeTokens } from "../theme/CanvasTheme";
-import { THEME_TOKEN_CSS_VARS } from "../theme/themeCssVars";
-import { darkCanvasTheme } from "../theme/themePresets";
+import type { CanvasThemeTokens } from "./CanvasTheme";
+import { THEME_TOKEN_CSS_VARS } from "./themeCssVars";
+import { darkCanvasTheme } from "./themePresets";
 
 /**
  * Static style tokens referencing the neutral `--jiscribe-*` CSS custom

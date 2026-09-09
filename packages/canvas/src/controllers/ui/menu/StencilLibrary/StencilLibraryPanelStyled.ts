@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 
-import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
-import { theme } from "../../../../constants/theme";
+import { scrollbarStyles } from "../../../../theme/themeScrollbarStyles";
+import { theme } from "../../../../theme/themeTokens";
 
 /**
  * Width of the sidebar. Sized for six 34px stencil buttons per row with 2px gaps

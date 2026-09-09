@@ -1,7 +1,7 @@
 import { DEFAULT_FILL } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
 import { describe, it, expect } from "vitest";
 
-import { theme } from "../../../../constants/theme";
+import { theme } from "../../../../theme/themeTokens";
 import { resolveAutoColor } from "../resolveAutoColor";
 
 describe("resolveAutoColor", () => {

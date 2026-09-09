@@ -45,7 +45,7 @@ There are two kinds of color with different natures, and their origins must alwa
 |               | UI chrome                                      | Shape data                                   |
 | ------------- | ---------------------------------------------- | -------------------------------------------- |
 | Examples      | menus, toolbars, selection frames, snap guides | a shape's `fill` / `stroke` / `fontColor`    |
-| Origin        | theme tokens in `constants/theme.ts`           | values saved in the document (`.jis.json`)   |
+| Origin        | theme tokens in `theme/themeTokens.ts`         | values saved in the document (`.jis.json`)   |
 | Follows theme | yes (follows the host-injected theme)          | no (data specified by the user) ※except auto |
 
 ### `"auto"` (theme-following color) — an exception in shape data (issue #38)
@@ -101,7 +101,7 @@ and "attribute vs. style").
 
 Theming is host-injectable and neutral — the canvas knows nothing about VSCode.
 
-- **Neutral tokens**: `theme` (`constants/theme.ts`) references neutral `--jiscribe-*` CSS custom
+- **Neutral tokens**: `theme` (`theme/themeTokens.ts`) references neutral `--jiscribe-*` CSS custom
   properties, each with the dark preset value as its fallback (`var(--jiscribe-foreground, #cccccc)`).
   emotion styles can stay static module-level constants because the theme resolves at CSS time.
 - **Injection**: the host passes a `CanvasTheme` (`theme/CanvasTheme.ts`) via the Canvas / CanvasThumbnail

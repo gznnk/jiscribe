@@ -5,7 +5,7 @@
  *
  * - {@link CanvasThemeTokens} are CSS values. The Canvas root injects them as
  *   `--jiscribe-*` CSS custom properties, and styles reference them via the
- *   static token object in `constants/theme.ts`. Values may themselves be
+ *   static token object in `theme/themeTokens.ts`. Values may themselves be
  *   `var(...)` expressions — that is how a host maps its own variables onto
  *   the neutral tokens (e.g. VSCode maps `--vscode-editor-background` to
  *   `canvasBg`).

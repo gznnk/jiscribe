@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../../constants/theme";
+import { theme } from "../../../../../theme/themeTokens";
 
 /** Height every control in the panel is drawn at, so rows line up. */
 const CONTROL_HEIGHT = "28px";

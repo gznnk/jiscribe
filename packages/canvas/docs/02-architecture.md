@@ -38,7 +38,8 @@ packages/canvas/src/
 ├── rendering/              # pure rendering components (layers / objects / defs) + the Viewport type
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
-└── constants/              # theme.ts / zoom.ts, etc.
+├── theme/                  # CanvasTheme / presets / CSS vars + the `theme` token object styles read
+└── constants/              # zoom.ts / viewport.ts, etc.
 ```
 
 The Doc model is **not** in this package. It lives in `@jiscribe/doc`
@@ -180,7 +181,7 @@ graph TD
     Plugin --> DocPackage
 ```
 
-Direct references to `@jiscribe/doc` types/constants (`EndpointRef`, `AUTO_COLOR`, …) and to `constants/` (theme, etc.) exist from nearly everywhere, so they are omitted from the graph.
+Direct references to `@jiscribe/doc` types/constants (`EndpointRef`, `AUTO_COLOR`, …) and to `theme/` (the `theme` token object) exist from nearly everywhere, so they are omitted from the graph.
 
 **On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `@jiscribe/doc`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, component/textRegion/outline contracts from `rendering`), so `plugin` depends on all three layers of this package plus the doc package. Conversely `controllers/registries` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries). At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
 

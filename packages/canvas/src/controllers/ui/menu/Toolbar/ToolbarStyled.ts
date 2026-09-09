@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../constants/theme";
+import { theme } from "../../../../theme/themeTokens";
 
 /**
  * Container for the full-width integrated toolbar pinned to the top.

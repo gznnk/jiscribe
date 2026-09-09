@@ -6,8 +6,8 @@ import {
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { theme } from "../../../../constants/theme";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { theme } from "../../../../theme/themeTokens";
 import { RotateRight } from "../../icons/RotateRight";
 import { getResizeCursorForRotation } from "../../utils/getResizeCursorForRotation";
 import type { ObjectTransformHandles } from "../ObjectTransformHandlesRegistry";

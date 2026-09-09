@@ -11,11 +11,11 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { theme } from "../../../../constants/theme";
 import type { FillStyleState } from "../../../../states/objects/base/FillStyleState";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
+import { theme } from "../../../../theme/themeTokens";
 import { FontsLoadedNonceContext } from "../../FontsLoadedNonceContext";
 import { ObjectShapeStyleDefaultsRegistryContext } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { createFrameObject } from "../createFrameObject";

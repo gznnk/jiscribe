@@ -1,7 +1,7 @@
 import { memo } from "react";
 
-import { theme } from "../../../../constants/theme";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { theme } from "../../../../theme/themeTokens";
 
 /** Pill dimensions in screen pixels — distinct from the circular resize anchors. */
 const PILL_WIDTH = 18;

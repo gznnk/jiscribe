@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { theme } from "../../../../constants/theme";
+import { theme } from "../../../../theme/themeTokens";
 import type { SnapFeedback } from "../../../CanvasTypes";
 
 type SnapGuidesProps = {

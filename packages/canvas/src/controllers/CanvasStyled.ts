@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 
 import type { CanvasGestureHandling } from "./CanvasGestureHandling";
-import { theme } from "../constants/theme";
+import { theme } from "../theme/themeTokens";
 
 type CanvasRootProps = {
 	gestureHandling: CanvasGestureHandling;

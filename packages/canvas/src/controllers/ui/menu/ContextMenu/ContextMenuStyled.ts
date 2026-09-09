@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../constants/theme";
+import { theme } from "../../../../theme/themeTokens";
 
 export const Menu = styled.div<{ left: number; top: number }>`
 	position: fixed;

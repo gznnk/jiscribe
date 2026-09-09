@@ -38,7 +38,8 @@ packages/canvas/src/
 ├── rendering/              # 純粋な描画コンポーネント（layers / objects / defs）+ Viewport 型
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 ├── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
-└── constants/              # theme.ts / zoom.ts など
+├── theme/                  # CanvasTheme・プリセット・CSS 変数 + スタイルが読む `theme` トークン
+└── constants/              # zoom.ts / viewport.ts など
 ```
 
 Doc モデルはこのパッケージには**無い**。canvas が依存する `@jiscribe/doc`
@@ -180,7 +181,7 @@ graph TD
     Plugin --> DocPackage
 ```
 
-`@jiscribe/doc` の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `constants/`（theme など）への直接参照はほぼ全域から存在するため、図では省略している。
+`@jiscribe/doc` の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `theme/`（`theme` トークン）への直接参照はほぼ全域から存在するため、図では省略している。
 
 **`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、`@jiscribe/doc` の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、rendering の component/textRegion/outline 契約）ため、`plugin` はこのパッケージの3レイヤーと doc パッケージのすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
 
