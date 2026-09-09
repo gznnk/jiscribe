@@ -60,6 +60,8 @@ export type CanvasMessageStrings = {
 	propertyPanelSectionLabelBorder: string;
 	/** Heading of the section holding the stacking-order commands, shown for any selection they apply to */
 	propertyPanelSectionArrange: string;
+	/** Heading of the section stating the note a single selected object carries in the document */
+	propertyPanelSectionMeta: string;
 	/** Label of the row stating the canvas surface color, and the aria-label of its field */
 	propertyPanelRowBackground: string;
 	/** Label of the color row (fill, stroke, font color) */
@@ -86,6 +88,10 @@ export type CanvasMessageStrings = {
 	propertyPanelRowTextBasis: string;
 	/** Label of the row choosing a connector's line shape (orthogonal / straight) */
 	propertyPanelRowRouting: string;
+	/** Label of the row stating the selected object's name in the document */
+	propertyPanelRowName: string;
+	/** Label of the row stating what the selected object is for, over several lines */
+	propertyPanelRowDescription: string;
 	/** The segment placing the text in the region the shape's own outline leaves clear (the default) */
 	propertyPanelTextBasisRegion: string;
 	/** The segment placing the text on the shape's whole height */

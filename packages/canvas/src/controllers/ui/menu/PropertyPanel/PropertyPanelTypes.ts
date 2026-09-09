@@ -3,6 +3,7 @@ import type { GroupState } from "../../../../states/objects/primitives/group/Gro
 import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import type {
 	DocumentProperty,
+	MetaProperty,
 	TransformProperty,
 } from "../../../reducer/CanvasActions";
 import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
@@ -139,6 +140,29 @@ export type PropertyPanelTransformUpdater = (
  */
 export type PropertyPanelDocumentUpdater = (
 	property: DocumentProperty,
+	value: string | null,
+	commit: boolean,
+	coalesceHistory?: boolean,
+) => void;
+
+/**
+ * States one field of the selected object's `meta`, dispatching
+ * META_PROPERTY_UPDATE. The route the Meta section writes through, and the only
+ * property updater whose target is the object itself rather than how it is drawn.
+ *
+ * Panel-internal on purpose, as {@link PropertyPanelDocumentUpdater} is: the
+ * section is the panel's own, drawn for whatever single object is selected, so
+ * no plugin row is ever handed it.
+ *
+ * @param property - Which of the two meta fields is being stated
+ * @param value - The text to state, or null to drop the field; an empty string drops it too, so an emptied field leaves no empty note in the document
+ * @param commit - true records the change in history (blur / Enter), false only previews it live
+ * @param coalesceHistory - true merges this commit into the immediately preceding
+ *   commit for the same field and selection, so a burst becomes a single undo entry.
+ *   Defaults to false, i.e. every commit gets its own entry
+ */
+export type PropertyPanelMetaUpdater = (
+	property: MetaProperty,
 	value: string | null,
 	commit: boolean,
 	coalesceHistory?: boolean,

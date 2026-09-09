@@ -42,10 +42,25 @@ const FILL_TRIGGER = `${selectors.propertyPanel} [aria-label="Background Color"]
 
 /**
  * The last dropdown of a polyline's panel. A line's rows are what leaves a
- * dropdown with no room under it: below this one sit only the Arrange buttons,
- * fewer pixels than the panel it opens.
+ * dropdown with no room under it: below this one sit only the two sections the
+ * panel adds for the selection itself, collapsed to their headings by
+ * {@link collapseSelectionSections} so they come to fewer pixels than the panel
+ * this trigger opens.
  */
 const END_ARROW_TRIGGER = `${selectors.propertyPanel} [aria-label="End Arrow"]`;
+
+/**
+ * Collapses the Arrange and Meta sections, the two the panel adds after the
+ * per-type ones. Their rows are what a low dropdown would otherwise have room to
+ * open into, so a test resting on the flip collapses them first.
+ */
+async function collapseSelectionSections(canvas: CanvasDriver) {
+	for (const sectionId of ["arrange", "meta"]) {
+		await canvas.page
+			.locator(selectors.propertyPanelSection(sectionId))
+			.click();
+	}
+}
 
 /** Scrolls the sidebar's rows to their end, so the last of them sit at the bottom edge. */
 async function scrollPanelToBottom(canvas: CanvasDriver) {
@@ -161,6 +176,7 @@ test.describe("Properties sidebar dropdowns", () => {
 		await canvas.page.setViewportSize(SHORT_VIEWPORT);
 		await canvas.drawShape("Polyline", SHAPE_FROM, SHAPE_TO);
 		await canvas.openPropertyPanel();
+		await collapseSelectionSections(canvas);
 		await scrollPanelToBottom(canvas);
 
 		const triggerBox = await boxOf(canvas, END_ARROW_TRIGGER);

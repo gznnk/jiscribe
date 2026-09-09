@@ -11,6 +11,7 @@ import {
 	RotationItem,
 	SizeItem,
 } from "./items/LayoutItems";
+import { MetaDescriptionItem, MetaNameItem } from "./items/MetaItems";
 import {
 	FillItem,
 	RadiusItem,
@@ -44,9 +45,11 @@ import {
 import type {
 	PropertyPanelBuiltinItemKey,
 	PropertyPanelDocumentUpdater,
+	PropertyPanelMetaUpdater,
 	PropertyPanelTransformUpdater,
 } from "./PropertyPanelTypes";
 import { isCanvasSectionShown } from "./utils/isCanvasSectionShown";
+import { isMetaSectionShown } from "./utils/isMetaSectionShown";
 import { resolvePropertyPanelSectionLabel } from "./utils/resolvePropertyPanelSectionLabel";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import {
@@ -69,6 +72,8 @@ type PropertyPanelProps = {
 	onTransformUpdate: PropertyPanelTransformUpdater;
 	/** States one of the document's own settings, for the Canvas section. */
 	onDocumentUpdate: PropertyPanelDocumentUpdater;
+	/** States one field of the selected object's note, for the Meta section. */
+	onMetaUpdate: PropertyPanelMetaUpdater;
 };
 
 const CLOSE_ICON_SIZE = 14;
@@ -91,6 +96,14 @@ const CANVAS_SECTION_LABEL = "Canvas";
  */
 const ARRANGE_SECTION_ID = "arrange";
 const ARRANGE_SECTION_LABEL = "Arrange";
+
+/**
+ * Identity and English wording of the Meta section: the note the selected object
+ * carries in the document, which belongs to the object rather than to its type,
+ * so the panel adds it itself after the per-type sections and the Arrange one.
+ */
+const META_SECTION_ID = "meta";
+const META_SECTION_LABEL = "Meta";
 
 /**
  * The component each built-in item kind draws itself with. Exhaustive over
@@ -160,7 +173,8 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * edge from the shape library. With nothing selected it holds the Canvas section
  * instead — the document's own settings, which is the panel's empty state. The
  * per-type sections are followed by the Arrange section whenever the selection
- * can be reordered, whatever its types.
+ * can be reordered, and by the Meta section whenever it names a single object —
+ * both of which belong to the selection rather than to any of its types.
  *
  * The panel is one gesture target (`data-kind="menu" data-id="property-panel"`)
  * handled by PropertyPanelHandler: its chrome carries only a data-part, and the
@@ -177,6 +191,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 	onPropertyUpdate,
 	onTransformUpdate,
 	onDocumentUpdate,
+	onMetaUpdate,
 }) => {
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
@@ -185,6 +200,8 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 	const showsCanvasSection = isCanvasSectionShown(canvasState);
 	const showsArrangeSection =
 		!showsCanvasSection && isArrangeableSelection(canvasState);
+	const showsMetaSection =
+		!showsCanvasSection && isMetaSectionShown(canvasState);
 	// State rather than a ref, so the fields re-render once the host element exists.
 	const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);
 
@@ -282,6 +299,27 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 							isExpanded={!collapsedSectionIds.includes(ARRANGE_SECTION_ID)}
 						>
 							<StackOrderItem canvasState={canvasState} />
+						</PropertyPanelAccordion>
+					)}
+					{showsMetaSection && (
+						<PropertyPanelAccordion
+							sectionId={META_SECTION_ID}
+							label={resolvePropertyPanelSectionLabel(
+								META_SECTION_ID,
+								META_SECTION_LABEL,
+								messages,
+								locale,
+							)}
+							isExpanded={!collapsedSectionIds.includes(META_SECTION_ID)}
+						>
+							<MetaNameItem
+								canvasState={canvasState}
+								onMetaUpdate={onMetaUpdate}
+							/>
+							<MetaDescriptionItem
+								canvasState={canvasState}
+								onMetaUpdate={onMetaUpdate}
+							/>
 						</PropertyPanelAccordion>
 					)}
 				</PropertyPanelOverlayHostContext.Provider>

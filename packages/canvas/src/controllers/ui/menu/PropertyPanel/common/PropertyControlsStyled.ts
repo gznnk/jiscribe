@@ -331,3 +331,66 @@ export const PropertyCommandButton = styled.button`
 		cursor: default;
 	}
 `;
+
+/** Wrapper of a text field, drawn as a number field's box without the spinner column. */
+export const PropertyTextFieldRoot = styled.div`
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	border: 1px solid ${theme.inputBorder};
+	border-radius: ${theme.radius};
+	background: ${theme.inputBg};
+
+	&:hover {
+		border-color: ${theme.foregroundMuted};
+	}
+
+	&:focus-within {
+		border-color: ${theme.accent};
+		box-shadow: 0 0 0 1px ${theme.accent};
+	}
+`;
+
+/** The single-line input of a text field; the typography of a number field's own. */
+export const PropertyTextFieldInput = styled.input`
+	flex: 1;
+	min-width: 0;
+	height: ${CONTROL_HEIGHT};
+	padding: 0 6px;
+	box-sizing: border-box;
+	border: none;
+	background: transparent;
+	color: ${theme.inputFg};
+	font-size: 12px;
+	outline: none;
+
+	&::placeholder {
+		color: ${theme.inputPlaceholder};
+	}
+`;
+
+/**
+ * The multi-line input of a text field. Tall enough for a few lines and resizable
+ * downwards only, so dragging it cannot widen the sidebar it sits in.
+ */
+export const PropertyTextFieldTextarea = styled.textarea`
+	flex: 1;
+	min-width: 0;
+	min-height: 64px;
+	padding: 5px 6px;
+	box-sizing: border-box;
+	border: none;
+	background: transparent;
+	color: ${theme.inputFg};
+	font-family: inherit;
+	font-size: 12px;
+	line-height: 1.4;
+	resize: vertical;
+	outline: none;
+
+	&::placeholder {
+		color: ${theme.inputPlaceholder};
+	}
+`;

@@ -4,15 +4,19 @@ import {
 } from "@jiscribe/doc/model/objects/types/RichText";
 
 import type { CanvasAction } from "./CanvasActions";
+import {
+	canApplyMetaProperty,
+	handleMetaPropertyUpdate,
+} from "./handlers/handleMetaPropertyUpdate";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { CanvasControllerState, DocSnapshot } from "../CanvasTypes";
+import { handleCommand } from "../commands/handlers/handleCommand";
 import { isSameCamera } from "../utils/isSameCamera";
 import { handlePaste } from "./handlers/handlePaste";
 import {
 	canApplyTransformProperty,
 	handleTransformPropertyUpdate,
 } from "./handlers/handleTransformPropertyUpdate";
-import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
@@ -328,6 +332,43 @@ export const createCanvasReducer =
 				);
 			}
 
+			case "META_PROPERTY_UPDATE": {
+				// The fourth property route: the note the selected object carries in
+				// the document. Nothing is drawn from it, so the re-measure the style
+				// route needs and the vertex clearing the geometry ones do both have
+				// nothing to act on — the object's shape is the one it already had.
+				const updated = handleMetaPropertyUpdate(
+					state,
+					action.property,
+					action.value,
+				);
+				// Nothing changed. For a preview that is the end of it; for a commit it
+				// is the normal case, since the field previews while typing and the
+				// object holds the text by the time the blur commits it — the commit is
+				// what records that preview. Only an edit with no target stays a no-op.
+				if (
+					updated === state &&
+					(!action.commit || !canApplyMetaProperty(state))
+				) {
+					return state;
+				}
+				if (!action.commit) {
+					return updated;
+				}
+				return commitPropertyUpdate(
+					updated,
+					state,
+					action.coalesceHistory
+						? buildPropertyCoalesceKey(
+								state,
+								META_PROPERTY_COALESCE_PREFIX,
+								action.property,
+							)
+						: null,
+					registries,
+				);
+			}
+
 			case "SYNC_EXTERNAL": {
 				// Only genuine external changes reach here: fold-backs of our own saves
 				// are recognized by the self-save nonce tracker and dropped before dispatch
@@ -513,6 +554,9 @@ const TRANSFORM_PROPERTY_COALESCE_PREFIX = "transform-property";
 
 /** Prefix of the coalesce key for consecutive properties-sidebar document commits */
 const DOCUMENT_PROPERTY_COALESCE_PREFIX = "document-property";
+
+/** Prefix of the coalesce key for consecutive properties-sidebar meta commits */
+const META_PROPERTY_COALESCE_PREFIX = "meta-property";
 
 /**
  * Builds the coalesce key for a property commit. The target identity is part of the

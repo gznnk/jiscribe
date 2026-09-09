@@ -4,8 +4,8 @@ import { resolveLocalizedLabel } from "../../../../messages/resolveLocaleMessage
 
 /**
  * Readers rather than key names: not every CanvasMessages entry is a string.
- * Keyed by the section ids `createDefaultPropertyPanel` produces, the two the
- * panel adds itself (canvas / arrange) and the two core declares by hand (the
+ * Keyed by the section ids `createDefaultPropertyPanel` produces, the three the
+ * panel adds itself (canvas / arrange / meta) and the two core declares by hand (the
  * connector's label and its border), which is what makes the core headings translatable and
  * host-overridable while a plugin section's own label is left alone.
  */
@@ -23,6 +23,7 @@ const CORE_SECTION_LABEL_READERS: Record<
 	label: (messages) => messages.propertyPanelSectionLabel,
 	"label-border": (messages) => messages.propertyPanelSectionLabelBorder,
 	arrange: (messages) => messages.propertyPanelSectionArrange,
+	meta: (messages) => messages.propertyPanelSectionMeta,
 };
 
 /**
@@ -30,7 +31,7 @@ const CORE_SECTION_LABEL_READERS: Record<
  * names one, then the label the section declaration carries, resolved for
  * `locale`.
  *
- * @param sectionId - The section's id; the ten core ids resolve through CanvasMessages, anything else falls through to `label`
+ * @param sectionId - The section's id; the eleven core ids resolve through CanvasMessages, anything else falls through to `label`
  * @param label - The label the declaration carries: a plain string is locale-agnostic, a dictionary is resolved for `locale`
  * @param messages - The active message set, host overrides already applied
  * @param locale - BCP 47 tag the dictionary form is resolved against (exact tag, then language subtag, then `en`)

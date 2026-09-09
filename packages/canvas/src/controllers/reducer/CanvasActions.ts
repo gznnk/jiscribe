@@ -253,6 +253,43 @@ export type DocumentPropertyUpdateAction = {
 };
 
 /**
+ * The fields of an object's `meta` the properties sidebar states: the note that
+ * travels with the object in the document, which nothing is drawn from.
+ */
+export type MetaProperty = "name" | "description";
+
+/**
+ * Meta property update action - states one of the selected object's meta fields.
+ *
+ * The fourth property route beside {@link StylePropertyUpdateAction},
+ * {@link TransformPropertyUpdateAction} and {@link DocumentPropertyUpdateAction}.
+ * Its target is the one object the sidebar names — a single selected object, or
+ * the selected connector — and never a selected group's descendants: a group
+ * carries a note of its own.
+ */
+export type MetaPropertyUpdateAction = {
+	type: "META_PROPERTY_UPDATE";
+	property: MetaProperty;
+	/**
+	 * The text to state, or null to drop the field. An empty string drops it too,
+	 * so an emptied field leaves no `meta: { name: "" }` behind in the document.
+	 */
+	value: string | null;
+	/**
+	 * true: recorded in history (blur / Enter) — also when the field already holds
+	 * the value, since the preview that preceded the commit is what put it there;
+	 * false: preview only
+	 */
+	commit: boolean;
+	/**
+	 * true: merge this commit with the preceding one for the same property and
+	 * selection into a single undo entry. Ignored when `commit` is false. Omitted
+	 * means every commit is its own entry.
+	 */
+	coalesceHistory?: boolean;
+};
+
+/**
  * Paste action - applies clipboard data to canvas state
  */
 export type PasteAction = {
@@ -307,6 +344,7 @@ export type CanvasAction =
 	| StylePropertyUpdateAction
 	| TransformPropertyUpdateAction
 	| DocumentPropertyUpdateAction
+	| MetaPropertyUpdateAction
 	| PasteAction
 	| RemeasureTextAction
 	| CloseContextMenuAction

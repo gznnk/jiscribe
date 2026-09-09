@@ -80,6 +80,7 @@ import type {
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
 import type {
 	PropertyPanelDocumentUpdater,
+	PropertyPanelMetaUpdater,
 	PropertyPanelTransformUpdater,
 } from "./ui/menu/PropertyPanel/PropertyPanelTypes";
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
@@ -547,6 +548,19 @@ const CanvasComponent = ({
 		[dispatch],
 	);
 
+	const handleMetaUpdate = useCallback<PropertyPanelMetaUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "META_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
+		},
+		[dispatch],
+	);
+
 	// The host callback is read through a ref, so passing a new function each
 	// render does not defeat ObjectMenu's memo. Only adding or removing the prop
 	// changes the identity, which is also what decides whether the item shows.
@@ -870,6 +884,7 @@ const CanvasComponent = ({
 							onPropertyUpdate={handleStylePropertyUpdate}
 							onTransformUpdate={handleTransformUpdate}
 							onDocumentUpdate={handleDocumentUpdate}
+							onMetaUpdate={handleMetaUpdate}
 						/>
 					)}
 				</CanvasBody>
