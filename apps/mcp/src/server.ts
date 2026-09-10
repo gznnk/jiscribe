@@ -231,7 +231,7 @@ export function createJiscribeMcpServer(): McpServer {
 				'"drawing" is what a canvas can hold, what each shape type is for, and how to draw well with it. Read it once before you start drawing, whichever tools you then use.',
 				'"json-format" is the structure of a .jis.json file. Read it only once you have decided to read or write such a file directly with your own file tools instead of the tools here.',
 				"Neither changes while this session runs, so read one once and work from what you read rather than calling again.",
-				"Both open with a `<!-- jiscribe guide ... -->` stamp naming the generation they came from. A workspace may also hold a .jiscribe/ai-guide.md placed there by the Jiscribe editor extension, stamped the same way; when the two stamps differ that copy is from another release, and this one is the generation these tools belong to.",
+				"Both open with a `<!-- jiscribe guide <version>+<digest> -->` stamp naming the generation they came from. A workspace may also hold a .jiscribe/ai-guide.md placed there by the Jiscribe editor extension, stamped the same way; when the two stamps differ, the higher version is the newer text, and the one you read here is the generation these tools belong to.",
 			].join(" "),
 			inputSchema: z
 				.object({

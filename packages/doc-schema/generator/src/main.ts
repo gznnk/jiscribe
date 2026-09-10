@@ -11,6 +11,7 @@ import {
 	aiToolsSrcPath,
 	assetsPath,
 	claudePluginPath,
+	packageRootPath,
 	templatePath,
 } from "./paths";
 
@@ -33,19 +34,30 @@ function composeDocument(parts: readonly string[]): string {
  * independently — the VSCode extension writes .jiscribe/ai-guide.md at its own
  * release, jiscribe-mcp serves them at the npm package's, the Claude Code plugin
  * ships its skill at the marketplace's — and nothing else would say which
- * generation a copy came from. Derived from the content rather than from a
- * version or a commit, so regenerating an unchanged tree keeps the same stamp
- * and `--check` stays a drift test.
+ * generation a copy came from.
  *
- * @param documents every composed guide, unstamped and front matter included, in
- *   a fixed order
- * @returns the first 8 hex characters of the SHA-256 over them
+ * Two halves, because neither alone does the job. The version orders them — a
+ * reader holding two copies has to know which one to trust, and a digest only
+ * says they differ. The digest keeps the version honest — a release that edits
+ * the guides and forgets to bump would otherwise have two different texts
+ * claiming the same version, which is the one answer that must never be wrong.
+ * Forgetting the bump then costs the ordering, not the truth.
+ *
+ * Neither half is derived from the commit, so regenerating an unchanged tree
+ * keeps the same stamp and `--check` stays a drift test.
+ *
+ * @param documents every composed guide body, unstamped, in a fixed order
+ * @returns `<version>+<8 hex characters of the SHA-256 over the bodies>`
  */
 function guideStamp(documents: readonly string[]): string {
-	return createHash("sha256")
+	const { version } = JSON.parse(
+		readFileSync(packageRootPath("package.json"), "utf8"),
+	) as { version: string };
+	const digest = createHash("sha256")
 		.update(documents.join("\u0000"))
 		.digest("hex")
 		.slice(0, 8);
+	return `${version}+${digest}`;
 }
 
 /** Prefix a guide with the generation stamp, as a comment markdown does not render. */

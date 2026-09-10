@@ -36,3 +36,8 @@ export function claudePluginPath(fileName: string): string {
 		new URL(`../../../../apps/claude-plugin/${fileName}`, import.meta.url),
 	);
 }
+
+/** Absolute path under this package's own root, for reading its package.json. */
+export function packageRootPath(fileName: string): string {
+	return fileURLToPath(new URL(`../../${fileName}`, import.meta.url));
+}

@@ -27,16 +27,20 @@ YAML frontmatter だけは本文と別の 1 枚（`skillFrontmatter.md`）にあ
 | `../../apps/claude-plugin/skills/jiscribe/SKILL.md`                     | frontmatter + 導入 + parts 01・02・03 の合成（Claude Code プラグインのスキル）                         |
 | `../../apps/claude-plugin/skills/jiscribe/references/authoring-json.md` | `assets/authoring-json.md` と同一内容（合成し直さず、同じ本文を 2 つ目のパスへ書く）                   |
 
-4 枚のガイド（SKILL.md は frontmatter の直後）は `<!-- jiscribe guide <8 桁> -->` の
-刻印で始まる。値は 4 枚の本文から決まる 1 つのダイジェストで、どれにも同じものが入る
+4 枚のガイド（SKILL.md は frontmatter の直後）は
+`<!-- jiscribe guide <version>+<8 桁> -->` の刻印で始まる。version はこのパッケージの
+`package.json` のもの、8 桁は 4 枚の本文から決まるダイジェストで、どれにも同じものが入る
 （references の写しは authoring-json.md と同一なので刻印もそのまま乗る）。**SKILL.md の
 frontmatter は含めない** — トリガー文言を直しただけで全部の刻印が動くと、本文が同じ写しが
 別の世代から来たように見えるため。乖離の検出は `--check` の役目で、刻印の役目ではない。同じガイドが
 版のピンの違う経路（VSCode 拡張が置く `.jiscribe/ai-guide.md`、jiscribe-mcp が返すもの、
 Claude Code プラグインが配るスキル）で読み手に届くため、写しがどの生成から来たかを
-言えるようにしてある。**版番号でもコミットでもなく内容
-から導く**のは、変わっていない木を再生成しても同じ値が出て `check:schema` がドリフト検査
-のままでいられるようにするため。
+言えるようにしてある。**両方入れるのは、片方では足りないから。**version は順序を与える — 2 つの写しを
+持つ読み手は、どちらを信じるかを知る必要があり、ダイジェストは「違う」としか言わない。
+ダイジェストは version を正直に保つ — ガイドを直して bump を忘れたリリースは、中身の
+違う 2 つが同じ version を名乗ることになり、それだけは間違ってはいけない答えだから。
+bump を忘れても失うのは順序であって真偽ではない。どちらもコミットからは導かないので、
+変わっていない木を再生成すれば同じ値が出て `check:schema` はドリフト検査のままでいられる。
 
 parts のうち 02 の `object-quick-reference` 区間（`type` と用途）と 04 の
 `object-geometry` 区間（`type` と必須ジオメトリ）だけがマニフェストから生成され、

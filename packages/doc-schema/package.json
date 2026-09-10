@@ -1,6 +1,6 @@
 {
 	"name": "@jiscribe/doc-schema",
-	"version": "1.0.0",
+	"version": "0.10.0",
 	"private": true,
 	"description": "Generated JSON schema and AI authoring docs for the shipped jiscribe shape set",
 	"type": "module",
