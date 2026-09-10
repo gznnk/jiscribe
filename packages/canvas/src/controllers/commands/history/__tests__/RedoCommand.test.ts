@@ -26,7 +26,7 @@ const makeState = (params: {
 	past: DocSnapshot[];
 	present: DocSnapshot;
 	future: DocSnapshot[];
-	eventStartSnapshot?: unknown;
+	activeDrag?: unknown;
 	textEditState?: unknown;
 	selectedIds?: string[];
 }): CanvasControllerState =>
@@ -37,14 +37,14 @@ const makeState = (params: {
 			future: params.future,
 		},
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: params.eventStartSnapshot ?? null,
+		activeDrag: params.activeDrag ?? null,
 		textEditState: params.textEditState ?? null,
 		selectedIds: params.selectedIds ?? [],
 		selectedConnectorId: null,
 		multiSelectGroup: null,
 		internalClipboard: null,
 		commitVersion: 5,
-		saveVersion: 0,
+		saveRequest: { version: 0, nonce: "" },
 		registries,
 	}) as unknown as CanvasControllerState;
 
@@ -78,14 +78,14 @@ describe("RedoCommand", () => {
 		expect(RedoCommand.execute(state, registries).selectedIds).toEqual(["r1"]);
 	});
 
-	it("increments saveVersion and leaves commitVersion unchanged", () => {
+	it("raises a save request and leaves commitVersion unchanged", () => {
 		const state = makeState({
 			past: [],
 			present: snapshotPrev,
 			future: [snapshotNext],
 		});
 		const next = RedoCommand.execute(state, registries);
-		expect(next.saveVersion).toBe(1);
+		expect(next.saveRequest.version).toBe(1);
 		expect(next.commitVersion).toBe(5);
 	});
 
@@ -124,7 +124,7 @@ describe("RedoCommand", () => {
 						past: [],
 						present: snapshotPrev,
 						future: [snapshotNext],
-						eventStartSnapshot: { foo: 1 },
+						activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
 					}),
 					registries,
 				),

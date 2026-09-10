@@ -76,7 +76,7 @@ export class VertexInsertHandler extends ControlStrategy {
 
 	/**
 	 * Handles drag start on the vertex-insert control.
-	 * Adds a new vertex and updates eventStartSnapshot so the next drag event can reference it.
+	 * Adds a new vertex and updates the drag's start snapshot so the next drag event can reference it.
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
@@ -118,11 +118,14 @@ export class VertexInsertHandler extends ControlStrategy {
 			edgeScrollEnabled: true,
 		};
 
-		// Update eventStartSnapshot so the drag event can reference the state including the new vertex
-		if (state.eventStartSnapshot) {
-			nextState.eventStartSnapshot = {
-				...state.eventStartSnapshot,
-				objects: updatedObjects,
+		// Update the drag's start snapshot so the drag event can reference the state including the new vertex
+		if (state.activeDrag) {
+			nextState.activeDrag = {
+				...state.activeDrag,
+				startSnapshot: {
+					...state.activeDrag.startSnapshot,
+					objects: updatedObjects,
+				},
 			};
 		}
 
@@ -139,14 +142,14 @@ export class VertexInsertHandler extends ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const eventStartSnapshot = state.eventStartSnapshot;
-		if (!eventStartSnapshot) {
+		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		if (!dragStartSnapshot) {
 			return state;
 		}
 
-		// Get the start object from the eventStartSnapshot updated on dragStart
+		// Get the start object from the start snapshot updated on dragStart
 		// (the state including the newly added vertex)
-		const startObject = eventStartSnapshot.objects[objectId];
+		const startObject = dragStartSnapshot.objects[objectId];
 		if (!isPoly(startObject)) {
 			return state;
 		}
@@ -163,7 +166,7 @@ export class VertexInsertHandler extends ControlStrategy {
 		// Snap correction
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
-		const snapCandidates = eventStartSnapshot.snapCandidates;
+		const snapCandidates = dragStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 		if (snapCandidates && !isSnapSuppressed(event)) {

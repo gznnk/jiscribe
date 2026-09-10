@@ -85,7 +85,7 @@ describe("handleGesture - a touch canvas drag pans instead of area-selecting", (
 			registries,
 		);
 
-		expect(state3.eventStartSnapshot).toBeNull();
+		expect(state3.activeDrag).toBeNull();
 		expect(state3.commitVersion).toBe(state0.commitVersion);
 		expect(state3.objects).toEqual(state0.objects);
 	});

@@ -81,7 +81,7 @@ const handleDragStart = (
 /**
  * Rewrites the connector's label placement from the cursor position.
  *
- * The path is always resolved from eventStartSnapshot, so every frame is
+ * The path is always resolved from the drag's start snapshot, so every frame is
  * measured against the same polyline and the ratio cannot drift as the label
  * moves. The pointer is corrected by the grab offset (the gap between where the
  * label was grabbed and its anchor), so grabbing a corner of the box does not
@@ -100,7 +100,7 @@ const handleDrag = (
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const snapshot = state.eventStartSnapshot;
+	const snapshot = state.activeDrag?.startSnapshot;
 	if (!connectorId || !snapshot) {
 		return state;
 	}
@@ -171,7 +171,7 @@ const handleDragEnd = (
 	const connectorId = event.targetId;
 	const dragResult = handleDrag(state, event, registries);
 	const started = connectorId
-		? getLabeledConnector(state.eventStartSnapshot?.objects[connectorId])
+		? getLabeledConnector(state.activeDrag?.startSnapshot.objects[connectorId])
 		: null;
 	const finished = connectorId
 		? getLabeledConnector(dragResult.objects[connectorId])

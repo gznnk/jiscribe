@@ -20,14 +20,17 @@ const makeState = (
 ): CanvasControllerState =>
 	({
 		objects: { "obj-1": object },
-		eventStartSnapshot: { objects: { "obj-1": snapshotObject } },
+		activeDrag: {
+			startSnapshot: { objects: { "obj-1": snapshotObject } },
+			kind: "other",
+		},
 	}) as unknown as CanvasControllerState;
 
 /** State with the current frame but no gesture-start snapshot. */
 const makeStateWithoutSnapshot = (object: ObjectState): CanvasControllerState =>
 	({
 		objects: { "obj-1": object },
-		eventStartSnapshot: undefined,
+		activeDrag: undefined,
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
@@ -169,7 +172,10 @@ describe("SelectionControlStrategy (via createRegisteredSelectionControl)", () =
 		});
 		const state = {
 			objects: {},
-			eventStartSnapshot: { objects: { "obj-1": makeObject() } },
+			activeDrag: {
+				startSnapshot: { objects: { "obj-1": makeObject() } },
+				kind: "other",
+			},
 		} as unknown as CanvasControllerState;
 		const next = strategy.handle(state, makeEvent("drag"), undefined as never);
 		expect(handle).not.toHaveBeenCalled();

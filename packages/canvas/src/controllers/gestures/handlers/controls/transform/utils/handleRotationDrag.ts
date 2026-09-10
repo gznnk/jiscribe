@@ -23,8 +23,8 @@ export function handleRotationDrag(
 	event: CanvasEvent,
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
-	const eventStartSnapshot = state.eventStartSnapshot;
-	if (!eventStartSnapshot) {
+	const dragStartSnapshot = state.activeDrag?.startSnapshot;
+	if (!dragStartSnapshot) {
 		return state;
 	}
 
@@ -35,14 +35,14 @@ export function handleRotationDrag(
 
 	if (isMultiSelect) {
 		// For multi-selection, use multiSelectGroup
-		const multiSelectGroup = eventStartSnapshot.multiSelectGroup;
+		const multiSelectGroup = dragStartSnapshot.multiSelectGroup;
 		if (multiSelectGroup && isTransformedFrame(multiSelectGroup)) {
 			startFrame = multiSelectGroup;
 		}
 	} else if (state.selectedIds.length === 1) {
 		// For single selection
 		selectedId = state.selectedIds[0];
-		const startObject = eventStartSnapshot.objects[selectedId];
+		const startObject = dragStartSnapshot.objects[selectedId];
 		if (startObject && isTransformedFrame(startObject)) {
 			startFrame = startObject;
 		}
@@ -77,8 +77,8 @@ export function handleRotationDrag(
 		roundToDecimal(radiansToDegrees(radian - rotatePointRadian), 0),
 	);
 
-	// Build the updated object map from eventStartSnapshot (COW view, #213)
-	const updatedObjects = createCowObjects(eventStartSnapshot.objects);
+	// Build the updated object map from dragStartSnapshot (COW view, #213)
+	const updatedObjects = createCowObjects(dragStartSnapshot.objects);
 
 	let nextState: CanvasControllerState;
 
@@ -113,7 +113,7 @@ export function handleRotationDrag(
 			return state;
 		}
 
-		const startObject = eventStartSnapshot.objects[selectedId];
+		const startObject = dragStartSnapshot.objects[selectedId];
 		if (!startObject) {
 			return state;
 		}
@@ -130,7 +130,7 @@ export function handleRotationDrag(
 				startObject as GroupState,
 				newRotation,
 				updatedObject as GroupState,
-				eventStartSnapshot.objects,
+				dragStartSnapshot.objects,
 				registries.objectBehavior,
 			);
 			Object.assign(updatedObjects, rotatedChildren);

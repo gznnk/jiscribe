@@ -26,7 +26,7 @@ const makeState = (params: {
 	past: DocSnapshot[];
 	present: DocSnapshot;
 	future: DocSnapshot[];
-	eventStartSnapshot?: unknown;
+	activeDrag?: unknown;
 	textEditState?: unknown;
 	selectedIds?: string[];
 }): CanvasControllerState =>
@@ -37,14 +37,14 @@ const makeState = (params: {
 			future: params.future,
 		},
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: params.eventStartSnapshot ?? null,
+		activeDrag: params.activeDrag ?? null,
 		textEditState: params.textEditState ?? null,
 		selectedIds: params.selectedIds ?? [],
 		selectedConnectorId: null,
 		multiSelectGroup: null,
 		internalClipboard: null,
 		commitVersion: 5,
-		saveVersion: 0,
+		saveRequest: { version: 0, nonce: "" },
 		registries,
 	}) as unknown as CanvasControllerState;
 
@@ -79,14 +79,14 @@ describe("UndoCommand", () => {
 		expect(UndoCommand.execute(state, registries).selectedIds).toEqual(["r1"]);
 	});
 
-	it("increments saveVersion and leaves commitVersion unchanged", () => {
+	it("raises a save request and leaves commitVersion unchanged", () => {
 		const state = makeState({
 			past: [snapshotPrev],
 			present: snapshotCurrent,
 			future: [],
 		});
 		const next = UndoCommand.execute(state, registries);
-		expect(next.saveVersion).toBe(1);
+		expect(next.saveRequest.version).toBe(1);
 		// restoring history is not a commit, so commitVersion is not changed
 		expect(next.commitVersion).toBe(5);
 	});
@@ -137,7 +137,7 @@ describe("UndoCommand", () => {
 						past: [snapshotPrev],
 						present: snapshotCurrent,
 						future: [],
-						eventStartSnapshot: { foo: 1 },
+						activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
 					}),
 					registries,
 				),

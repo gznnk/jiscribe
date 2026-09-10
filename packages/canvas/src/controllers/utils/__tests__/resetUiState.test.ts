@@ -7,11 +7,9 @@ describe("resetUiState", () => {
 	it("clears every transient field to its empty value", () => {
 		expect(resetUiState()).toEqual({
 			selectedIds: [],
-			eventStartSnapshot: null,
-			activeDragKind: null,
+			activeDrag: null,
 			inertialScrolling: false,
-			keyPointsCache: {},
-			snapCandidatesCache: null,
+			dragStartCaches: { keyPoints: {}, snapCandidates: null },
 			edgeScrollEnabled: false,
 			contextMenuPosition: null,
 			stencilLibraryDrag: null,
@@ -20,12 +18,10 @@ describe("resetUiState", () => {
 			stencilLibraryOpenCategory: null,
 			multiSelectGroup: null,
 			textEditState: null,
-			pendingConnector: null,
+			connectorDraft: null,
 			selectedConnectorId: null,
 			selectedVertex: null,
 			selectedTextSlot: null,
-			editingConnectorId: null,
-			editingEndpoint: null,
 			snapFeedback: null,
 			axisLockFeedback: null,
 			shapeDrawing: null,
@@ -38,17 +34,17 @@ describe("resetUiState", () => {
 		const second = resetUiState();
 		expect(first).not.toBe(second);
 		expect(first.selectedIds).not.toBe(second.selectedIds);
-		expect(first.keyPointsCache).not.toBe(second.keyPointsCache);
+		expect(first.dragStartCaches).not.toBe(second.dragStartCaches);
 	});
 
 	it("hands out containers a later write cannot leak into the next reset", () => {
 		const first = resetUiState();
 		first.selectedIds.push("a");
-		first.keyPointsCache["a"] = {
+		first.dragStartCaches.keyPoints["a"] = {
 			stateRef: { id: "a" } as unknown as KeyPointsCacheEntry["stateRef"],
 			keyPoints: {} as KeyPointsCacheEntry["keyPoints"],
 		};
 		expect(resetUiState().selectedIds).toEqual([]);
-		expect(resetUiState().keyPointsCache).toEqual({});
+		expect(resetUiState().dragStartCaches.keyPoints).toEqual({});
 	});
 });

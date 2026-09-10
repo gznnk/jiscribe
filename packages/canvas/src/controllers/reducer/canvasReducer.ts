@@ -619,7 +619,7 @@ const commitPropertyUpdate = (
 const HISTORY_COALESCE_WINDOW_MS = 1000;
 
 /**
- * Records history if commitVersion has changed, and also increments saveVersion.
+ * Records history if commitVersion has changed, and also raises a save request.
  * Only canvasReducer may call this.
  *
  * On commit, if an event handler has set a coalesce key in state.historyCoalesce.pending, then as
@@ -655,8 +655,10 @@ const recordHistoryIfNeeded = (
 
 	return {
 		...state,
-		saveVersion: state.saveVersion + 1,
-		saveNonce: crypto.randomUUID(),
+		saveRequest: {
+			version: state.saveRequest.version + 1,
+			nonce: crypto.randomUUID(),
+		},
 		// Consume pending and update recorded (a non-coalescing commit becomes null = coalesce boundary). pending is always reset to null.
 		historyCoalesce: {
 			recorded: pending === null ? null : { key: pending, time: now },

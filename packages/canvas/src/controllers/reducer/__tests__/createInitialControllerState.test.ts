@@ -30,11 +30,11 @@ describe("createInitialControllerState", () => {
 
 		expect(state.objects["rect-1"]).toMatchObject({ cx: 5, cy: 5 });
 		expect(state.selectedIds).toEqual([]);
-		expect(state.eventStartSnapshot).toBeNull();
+		expect(state.activeDrag).toBeNull();
 		expect(state.multiSelectGroup).toBeNull();
 		expect(state.textEditState).toBeNull();
 		expect(state.commitVersion).toBe(0);
-		expect(state.saveVersion).toBe(0);
+		expect(state.saveRequest.version).toBe(0);
 	});
 
 	it("history has empty past/future and the initial Doc as present", () => {
@@ -53,7 +53,7 @@ describe("createInitialControllerState", () => {
 		const b = createInitialControllerState(docWithRect, registries);
 
 		expect(a).not.toBe(b);
-		expect(a.keyPointsCache).not.toBe(b.keyPointsCache);
+		expect(a.dragStartCaches).not.toBe(b.dragStartCaches);
 		expect(a.history).not.toBe(b.history);
 	});
 

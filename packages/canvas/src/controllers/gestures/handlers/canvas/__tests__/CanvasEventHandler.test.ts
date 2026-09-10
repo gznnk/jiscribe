@@ -230,7 +230,7 @@ describe("CanvasEventHandler", () => {
 				rootIds: ["a", "b"],
 				selectedIds: [],
 				textEditState: null,
-				eventStartSnapshot: { bboxes },
+				activeDrag: { startSnapshot: { bboxes }, kind: "other" },
 				...overrides,
 			} as Partial<CanvasControllerState>);
 

@@ -87,8 +87,7 @@ describe("handleGesture - inertialScroll moves the view like a wheel scroll", ()
 		const state = baseState();
 		const next = handleGesture(state, inertialScroll(-40, 0), registries);
 
-		expect(next.eventStartSnapshot).toBeNull();
-		expect(next.activeDragKind).toBeNull();
+		expect(next.activeDrag).toBeNull();
 		expect(next.areaSelection).toBeNull();
 		expect(next.commitVersion).toBe(state.commitVersion);
 	});

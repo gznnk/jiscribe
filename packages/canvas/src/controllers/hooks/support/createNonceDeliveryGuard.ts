@@ -1,5 +1,5 @@
 /**
- * Guards that each save request (saveNonce) is delivered to the host at most
+ * Guards that each save request (its nonce) is delivered to the host at most
  * once.
  *
  * A boundary flush (keyup / blur / unmount) can run before the schedule effect

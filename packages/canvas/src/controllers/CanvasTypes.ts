@@ -13,6 +13,25 @@ import type { ConnectorState } from "../states/objects/connector/ConnectorState"
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
 
 // ---------------------------------------------------------------------------
+// Save request types (stored in CanvasControllerState)
+// ---------------------------------------------------------------------------
+
+/**
+ * A standing request for the host to save, as a version counter paired with the
+ * nonce identifying that particular request.
+ */
+export type SaveRequest = {
+	/** Incremented when a file save is required; watched by the single useEffect in Canvas.tsx */
+	version: number;
+	/**
+	 * Regenerated on every `version` increment. Passed to onCommit and echoed back by the
+	 * host, so the nonce tracker can identify fold-back saves (see useSyncExternalDoc).
+	 * Empty string before the first save request.
+	 */
+	nonce: string;
+};
+
+// ---------------------------------------------------------------------------
 // History coalescing types (stored in CanvasControllerState)
 // ---------------------------------------------------------------------------
 
@@ -45,6 +64,35 @@ export type KeyPointsCacheEntry = {
 
 /** Object ID → keyPoints. Held in CanvasControllerState and updated in handleGesture. */
 export type KeyPointsCache = Record<string, KeyPointsCacheEntry>;
+
+// ---------------------------------------------------------------------------
+// Connector draft types (stored in CanvasControllerState)
+// ---------------------------------------------------------------------------
+
+/**
+ * The connector a drag from a connection anchor is working on. The two modes are
+ * exclusive and differ in where the connector lives: creation holds it here until
+ * dragEnd commits it into `objects`, while a re-anchor rewrites the existing entity
+ * in `objects` on every frame (like vertex editing) and only names it here.
+ *
+ * Creation always drags the target end, so only `"edit"` carries the side.
+ */
+export type ConnectorDraft =
+	| {
+			kind: "create";
+			/** The connector being drawn; absent from `objects` and `rootIds` until dragEnd */
+			connector: ConnectorState;
+	  }
+	| {
+			kind: "edit";
+			/** ID of the connector in `objects` whose endpoint the drag rewrites */
+			connectorId: string;
+			/**
+			 * The end the drag moves; the other keeps its start-time anchor. Lets the UI
+			 * show receiving anchors only on the fixed side.
+			 */
+			endpoint: "source" | "target";
+	  };
 
 // ---------------------------------------------------------------------------
 // Snap types (controller-layer only)
@@ -167,9 +215,29 @@ export type MultiSelectResizeBoundsCache = {
 };
 
 /**
+ * What a dragStart carries over from the last one rather than recomputing.
+ *
+ * Pure speed-up, kept outside the snapshot because it outlives any single drag:
+ * dropping either half costs the next dragStart a recomputation, never
+ * correctness, which is why resetUiState may clear them wholesale.
+ */
+export type DragStartCaches = {
+	/**
+	 * Persistent across gestures; each dragStart recomputes only the objects that
+	 * changed, found by reference comparison against `stateRef`.
+	 */
+	keyPoints: KeyPointsCache;
+	/**
+	 * Recomputed only on a dragStart where `keyPoints` changed. null means not yet
+	 * computed, so the next dragStart always computes it.
+	 */
+	snapCandidates: SnapCandidates | null;
+};
+
+/**
  * Data pre-computed for the duration of a drag. Created on dragStart and cleared on dragEnd.
  */
-export type EventStartSnapshot = {
+export type DragStartSnapshot = {
 	objects: Record<string, ObjectState>;
 	/** Slice of object ID → FrameKeyPoints; also includes multiSelectGroup.id */
 	keyPoints: Record<string, FrameKeyPoints>;
@@ -206,6 +274,21 @@ export type DragKind =
 	| "transform"
 	/** Everything else: connectors, vertices, connection anchors, marquee, pan, menus */
 	| "other";
+
+/**
+ * The drag in progress. handleGesture owns the lifecycle — one is opened on every
+ * dragStart and dropped on every dragEnd — so a non-null `activeDrag` is exactly
+ * "a drag is under way" no matter which handler runs.
+ */
+export type ActiveDrag = {
+	/** Data frozen at dragStart, and the reference the whole drag is measured from */
+	startSnapshot: DragStartSnapshot;
+	/**
+	 * What the drag is doing. Opened as "other"; a handler that wants its drag
+	 * distinguished overwrites the kind in its own dragStart.
+	 */
+	kind: DragKind;
+};
 
 /**
  * The host-controllable part of the viewport (pan + zoom). Width/height are
@@ -283,36 +366,22 @@ export type CanvasControllerState = CanvasState & {
 	selectedIds: string[];
 
 	/** null when no gesture is in progress */
-	eventStartSnapshot: EventStartSnapshot | null;
-
-	/**
-	 * Kind of the drag in progress; null when none is. handleGesture owns the lifecycle —
-	 * "other" on every dragStart, null on every dragEnd — so `!== null` is exactly "a drag
-	 * is under way" no matter which handler runs. Handlers own the meaning: one that wants
-	 * its drag distinguished overwrites the kind in its own dragStart.
-	 */
-	activeDragKind: DragKind | null;
+	activeDrag: ActiveDrag | null;
 
 	/**
 	 * Whether the view is still coasting from a released pan (inertial scrolling).
-	 * Deliberately not folded into activeDragKind: no pointer is down and no
-	 * eventStartSnapshot is open, so the two would stop being set as a pair.
-	 * handleGesture owns the lifecycle — up on every fling frame, down on the
-	 * recognizer's inertialScrollEnd.
+	 * Deliberately not folded into activeDrag: no pointer is down and no drag is
+	 * open, so the two would stop being set as a pair. handleGesture owns the
+	 * lifecycle — up on every fling frame, down on the recognizer's
+	 * inertialScrollEnd.
 	 */
 	inertialScrolling: boolean;
 
 	/**
-	 * Persistent across gestures; each dragStart recomputes only the diff by reference
-	 * comparison. Not part of CanvasDoc and not subject to history management.
+	 * What the next dragStart reuses instead of recomputing. Not part of CanvasDoc
+	 * and not subject to history management.
 	 */
-	keyPointsCache: KeyPointsCache;
-
-	/**
-	 * Recomputed only on a dragStart where keyPointsCache changed.
-	 * null means not yet computed, so the next dragStart always computes it.
-	 */
-	snapCandidatesCache: SnapCandidates | null;
+	dragStartCaches: DragStartCaches;
 
 	/** Whether dragging near a canvas edge scrolls the viewport */
 	edgeScrollEnabled: boolean;
@@ -359,16 +428,10 @@ export type CanvasControllerState = CanvasState & {
 	commitVersion: number;
 
 	/**
-	 * Incremented when a file save is required. Set by recordHistoryIfNeeded on normal commits
-	 * and by Undo/Redo; watched by the single useEffect in Canvas.tsx.
+	 * Standing request for the host to save. Both halves are written as a pair, by
+	 * recordHistoryIfNeeded on normal commits and by Undo/Redo.
 	 */
-	saveVersion: number;
-
-	/**
-	 * Regenerated on every saveVersion increment. Passed to onCommit and echoed back by the
-	 * host, so the nonce tracker can identify fold-back saves (see useSyncExternalDoc).
-	 */
-	saveNonce: string;
+	saveRequest: SaveRequest;
 
 	/** Transient signal for merging consecutive nudges into one undo; not part of CanvasDoc */
 	historyCoalesce: HistoryCoalesce;
@@ -499,7 +562,7 @@ export type CanvasControllerState = CanvasState & {
 		| null;
 
 	/** Set while dragging from a connection anchor; committed or discarded on dragEnd */
-	pendingConnector: ConnectorState | null;
+	connectorDraft: ConnectorDraft | null;
 
 	/** Managed independently from selectedIds (shapes only), guaranteeing mutual exclusion */
 	selectedConnectorId: string | null;
@@ -519,19 +582,6 @@ export type CanvasControllerState = CanvasState & {
 		objectId: string;
 		slotId: string;
 	} | null;
-
-	/**
-	 * Connector being edited, used together with pendingConnector: null on new creation, the
-	 * original connector ID on edit. Cleared on dragEnd.
-	 */
-	editingConnectorId: string | null;
-
-	/**
-	 * Which end of pendingConnector is being dragged — always "target" on new creation, the
-	 * dragged handle's side on edit. Lets the UI show an anchor only on the fixed side.
-	 * Cleared on dragEnd.
-	 */
-	editingEndpoint: "source" | "target" | null;
 
 	/** Non-null only while snapping; cleared on dragEnd */
 	snapFeedback: SnapFeedback | null;

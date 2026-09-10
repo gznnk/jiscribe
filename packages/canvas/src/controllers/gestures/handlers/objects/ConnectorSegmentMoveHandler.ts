@@ -37,7 +37,7 @@ const handleDrag = (
 	connectorId: string,
 	segmentIndex: number,
 ): CanvasControllerState => {
-	const snapshot = state.eventStartSnapshot;
+	const snapshot = state.activeDrag?.startSnapshot;
 	const connector = snapshot?.objects[connectorId];
 	if (!snapshot || !isConnectorState(connector)) {
 		return state;

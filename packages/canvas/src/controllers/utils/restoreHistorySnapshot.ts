@@ -16,7 +16,7 @@ import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
  *   is an entry to move to, which each caller checks for its own direction
  */
 export const canNavigateHistory = (state: CanvasControllerState): boolean =>
-	state.eventStartSnapshot === null && state.textEditState === null;
+	state.activeDrag === null && state.textEditState === null;
 
 /**
  * Moves the canvas onto another history entry — the one state transition undo,
@@ -32,7 +32,8 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  * it, so undoing a property change leaves the shape selected for the next try,
  * while undoing a creation (or redoing a deletion) loses the shape and its
  * selection with it. `commitVersion` is *not* bumped (restoring is
- * not a new edit) while `saveVersion` is (the file on disk no longer matches), a
+ * not a new edit) while `saveRequest` is raised (the file on disk no longer
+ * matches), a
  * pairing that is easy to get wrong in three places and impossible to get wrong
  * in one.
  *
@@ -80,8 +81,10 @@ export const restoreHistorySnapshot = (
 		// `view` and re-measures on the next view scroll.
 		scrollLimit: state.scrollLimit,
 		commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
-		saveVersion: state.saveVersion + 1,
-		saveNonce: crypto.randomUUID(),
+		saveRequest: {
+			version: state.saveRequest.version + 1,
+			nonce: crypto.randomUUID(),
+		},
 		historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 		internalClipboard: state.internalClipboard,
 		activeModal: state.activeModal, // History navigation must not close an open modal

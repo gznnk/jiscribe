@@ -46,7 +46,7 @@ const resolveSegment = (
 	connectorId: string,
 	segmentIndex: number,
 ): DraggedSegment | null => {
-	const snapshot = state.eventStartSnapshot;
+	const snapshot = state.activeDrag?.startSnapshot;
 	if (!snapshot) {
 		return null;
 	}
@@ -92,7 +92,7 @@ const handleDrag = (
 	connectorId: string,
 	segmentIndex: number,
 ): CanvasControllerState => {
-	const snapshot = state.eventStartSnapshot;
+	const snapshot = state.activeDrag?.startSnapshot;
 	const segment = resolveSegment(state, registries, connectorId, segmentIndex);
 	if (!snapshot || !segment) {
 		return state;

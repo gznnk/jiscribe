@@ -96,7 +96,7 @@ class SelectionControlStrategy extends ControlStrategy {
 		if (!objectId) {
 			return state;
 		}
-		const snapshot = state.eventStartSnapshot;
+		const snapshot = state.activeDrag?.startSnapshot;
 		if (!snapshot) {
 			return state;
 		}

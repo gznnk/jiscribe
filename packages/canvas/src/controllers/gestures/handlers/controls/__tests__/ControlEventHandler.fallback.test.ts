@@ -17,7 +17,10 @@ const makeContainer = (): ObjectState =>
 const makeState = (): CanvasControllerState =>
 	({
 		objects: { "container-1": makeContainer() },
-		eventStartSnapshot: { objects: { "container-1": makeContainer() } },
+		activeDrag: {
+			startSnapshot: { objects: { "container-1": makeContainer() } },
+			kind: "other",
+		},
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (targetPart: string): CanvasEvent =>

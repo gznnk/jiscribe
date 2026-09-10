@@ -26,9 +26,12 @@ const dragStartState = (
 		objects: { [object.id]: object },
 		selectedIds: [object.id],
 		multiSelectGroup: null,
-		eventStartSnapshot: {
-			objects: { [object.id]: object },
-			selectedIdsWithDescendants: new Set([object.id]),
+		activeDrag: {
+			startSnapshot: {
+				objects: { [object.id]: object },
+				selectedIdsWithDescendants: new Set([object.id]),
+			},
+			kind: "other",
 		},
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -43,7 +46,9 @@ describe("dropAutoHeightOnResize", () => {
 		const dropped = dropAutoHeightOnResize(state, dragStart(), "bottomRight");
 
 		expect(dropped.objects.auto.autoHeight).toBeUndefined();
-		expect(dropped.eventStartSnapshot?.objects.auto.autoHeight).toBeUndefined();
+		expect(
+			dropped.activeDrag?.startSnapshot.objects.auto.autoHeight,
+		).toBeUndefined();
 	});
 
 	it("settles it on a top or bottom handle", () => {

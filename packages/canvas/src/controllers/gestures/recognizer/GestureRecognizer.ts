@@ -488,7 +488,7 @@ export class GestureRecognizer {
 					!this.pressed.isNativePointerTarget &&
 					canConvertDrag
 				) {
-					// Close the pan drag first so the eventStartSnapshot lifecycle
+					// Close the pan drag first so the activeDrag lifecycle
 					// completes (dragStart saved it; only dragEnd clears it). A pan
 					// changes no doc, so this dragEnd commits nothing.
 					if (this.pressed.dragging) {

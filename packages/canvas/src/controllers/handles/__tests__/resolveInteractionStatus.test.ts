@@ -11,7 +11,7 @@ import { resolveInteractionStatus } from "../useInteractionHandle";
 type StatusInput = Parameters<typeof resolveInteractionStatus>[0];
 
 const idleState: StatusInput = {
-	activeDragKind: null,
+	activeDrag: null,
 	inertialScrolling: false,
 	textEditState: null,
 	shapeDrawing: null,
@@ -20,6 +20,10 @@ const idleState: StatusInput = {
 
 const resolve = (overrides: Partial<StatusInput> = {}) =>
 	resolveInteractionStatus({ ...idleState, ...overrides } as StatusInput);
+
+/** A drag of the given kind; its start snapshot is never read by the status. */
+const dragOf = (kind: string): StatusInput["activeDrag"] =>
+	({ kind }) as unknown as StatusInput["activeDrag"];
 
 const textEdit = {
 	kind: "shape",
@@ -46,9 +50,9 @@ describe("resolveInteractionStatus", () => {
 	});
 
 	it("is busy for a drag of any kind", () => {
-		expect(resolve({ activeDragKind: "other" }).isBusy).toBe(true);
-		expect(resolve({ activeDragKind: "move" }).isBusy).toBe(true);
-		expect(resolve({ activeDragKind: "transform" }).isBusy).toBe(true);
+		expect(resolve({ activeDrag: dragOf("other") }).isBusy).toBe(true);
+		expect(resolve({ activeDrag: dragOf("move") }).isBusy).toBe(true);
+		expect(resolve({ activeDrag: dragOf("transform") }).isBusy).toBe(true);
 	});
 
 	it("is busy while the view coasts from a released pan", () => {
@@ -73,7 +77,10 @@ describe("resolveInteractionStatus", () => {
 			preset: { id: "process", objectType: "rect" },
 			preview: { startX: 0, startY: 0, endX: 10, endY: 10 },
 		} as unknown as StatusInput["shapeDrawing"];
-		const status = resolve({ shapeDrawing: drawing, activeDragKind: "other" });
+		const status = resolve({
+			shapeDrawing: drawing,
+			activeDrag: dragOf("other"),
+		});
 		expect(status.drawingShapeType).toBe("rect");
 		expect(status.isBusy).toBe(true);
 	});
@@ -87,7 +94,7 @@ describe("resolveInteractionStatus", () => {
 	it("derives isBusy from the fields it reports, so a true is always explainable", () => {
 		for (const overrides of [
 			{},
-			{ activeDragKind: "move" as const },
+			{ activeDrag: dragOf("move") },
 			{ inertialScrolling: true },
 			{ textEditState: textEdit },
 			{ shapeDrawing: armedTool },

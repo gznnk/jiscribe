@@ -17,7 +17,7 @@ import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot"
 export const getTextSlotCycleTarget = (
 	state: CanvasControllerState,
 ): (ObjectState & TextStyleState) | null => {
-	if (state.eventStartSnapshot !== null) {
+	if (state.activeDrag !== null) {
 		return null;
 	}
 	if (state.selectedIds.length !== 1) {

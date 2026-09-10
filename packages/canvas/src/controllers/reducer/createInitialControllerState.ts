@@ -82,8 +82,7 @@ export const createInitialControllerState = (
 		propertyPanel: { isOpen: false, collapsedSectionIds: [] },
 		activeModal: null,
 		commitVersion: 0,
-		saveVersion: 0,
-		saveNonce: "",
+		saveRequest: { version: 0, nonce: "" },
 		historyCoalesce: { recorded: null, pending: null },
 		internalClipboard: null,
 		history: {
