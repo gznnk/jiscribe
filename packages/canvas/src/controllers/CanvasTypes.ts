@@ -215,6 +215,26 @@ export type MultiSelectResizeBoundsCache = {
 };
 
 /**
+ * What a dragStart carries over from the last one rather than recomputing.
+ *
+ * Pure speed-up, kept outside the snapshot because it outlives any single drag:
+ * dropping either half costs the next dragStart a recomputation, never
+ * correctness, which is why resetUiState may clear them wholesale.
+ */
+export type DragStartCaches = {
+	/**
+	 * Persistent across gestures; each dragStart recomputes only the objects that
+	 * changed, found by reference comparison against `stateRef`.
+	 */
+	keyPoints: KeyPointsCache;
+	/**
+	 * Recomputed only on a dragStart where `keyPoints` changed. null means not yet
+	 * computed, so the next dragStart always computes it.
+	 */
+	snapCandidates: SnapCandidates | null;
+};
+
+/**
  * Data pre-computed for the duration of a drag. Created on dragStart and cleared on dragEnd.
  */
 export type DragStartSnapshot = {
@@ -358,16 +378,10 @@ export type CanvasControllerState = CanvasState & {
 	inertialScrolling: boolean;
 
 	/**
-	 * Persistent across gestures; each dragStart recomputes only the diff by reference
-	 * comparison. Not part of CanvasDoc and not subject to history management.
+	 * What the next dragStart reuses instead of recomputing. Not part of CanvasDoc
+	 * and not subject to history management.
 	 */
-	keyPointsCache: KeyPointsCache;
-
-	/**
-	 * Recomputed only on a dragStart where keyPointsCache changed.
-	 * null means not yet computed, so the next dragStart always computes it.
-	 */
-	snapCandidatesCache: SnapCandidates | null;
+	dragStartCaches: DragStartCaches;
 
 	/** Whether dragging near a canvas edge scrolls the viewport */
 	edgeScrollEnabled: boolean;

@@ -97,8 +97,8 @@ export const handleGesture = (
 
 	// Open the drag on event start
 	if (EVENT_START_TYPES.includes(canvasEvent.type)) {
-		// Read state.keyPointsCache and recompute only the objects that changed by reference comparison
-		const oldCache = state.keyPointsCache;
+		// Read the carried-over keyPoints and recompute only the objects that changed by reference comparison
+		const oldCache = state.dragStartCaches.keyPoints;
 		const newCache: KeyPointsCache = {};
 		let cacheChanged = false;
 		const keyPoints: Record<string, FrameKeyPoints> = {};
@@ -141,11 +141,11 @@ export const handleGesture = (
 			);
 		}
 
-		// Recompute snapCandidates only when keyPointsCache changed
-		const snapCandidatesCache =
-			cacheChanged || !state.snapCandidatesCache
+		// Recompute snapCandidates only when the keyPoints cache changed
+		const snapCandidates =
+			cacheChanged || !state.dragStartCaches.snapCandidates
 				? calcSnapCandidates(state.objects, keyPoints)
-				: state.snapCandidatesCache;
+				: state.dragStartCaches.snapCandidates;
 
 		// Precompute the ID set of selected objects plus all descendants (to avoid recomputing on every drag event)
 		// If a handler changes selectedIds after dragStart, ObjectEventHandler overwrites it
@@ -162,7 +162,7 @@ export const handleGesture = (
 			objects: state.objects,
 			keyPoints,
 			bboxes,
-			snapCandidates: snapCandidatesCache,
+			snapCandidates,
 			selectedIds: state.selectedIds,
 			selectedIdsWithDescendants,
 			multiSelectGroup: state.multiSelectGroup,
@@ -171,8 +171,7 @@ export const handleGesture = (
 
 		nextState = {
 			...state,
-			keyPointsCache: newCache,
-			snapCandidatesCache,
+			dragStartCaches: { keyPoints: newCache, snapCandidates },
 			activeDrag: {
 				startSnapshot,
 				// The default every drag starts from. A handler that gives its drag a

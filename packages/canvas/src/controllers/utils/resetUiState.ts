@@ -19,8 +19,7 @@ export type UiStateReset = Pick<
 	| "selectedIds"
 	| "activeDrag"
 	| "inertialScrolling"
-	| "keyPointsCache"
-	| "snapCandidatesCache"
+	| "dragStartCaches"
 	| "edgeScrollEnabled"
 	| "contextMenuPosition"
 	| "stencilLibraryDrag"
@@ -46,7 +45,7 @@ export type UiStateReset = Pick<
  * across history navigation, external sync, and initialization. Spread over a
  * state to clear them all at once: `{ ...state, ...resetUiState() }`.
  *
- * Returns a fresh object (with fresh `selectedIds` / `keyPointsCache`) on every
+ * Returns a fresh object (with fresh `selectedIds` / `dragStartCaches`) on every
  * call so no mutable reference is shared between states.
  */
 export const resetUiState = (): UiStateReset => ({
@@ -57,8 +56,7 @@ export const resetUiState = (): UiStateReset => ({
 	// Same reason as activeDrag: cancelPendingGesture() may kill a fling during
 	// the swap, and the flag must not outlive it.
 	inertialScrolling: false,
-	keyPointsCache: {},
-	snapCandidatesCache: null,
+	dragStartCaches: { keyPoints: {}, snapCandidates: null },
 	edgeScrollEnabled: false,
 	contextMenuPosition: null,
 	stencilLibraryDrag: null,

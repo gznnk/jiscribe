@@ -53,7 +53,7 @@ describe("createInitialControllerState", () => {
 		const b = createInitialControllerState(docWithRect, registries);
 
 		expect(a).not.toBe(b);
-		expect(a.keyPointsCache).not.toBe(b.keyPointsCache);
+		expect(a.dragStartCaches).not.toBe(b.dragStartCaches);
 		expect(a.history).not.toBe(b.history);
 	});
 
