@@ -44,7 +44,7 @@ const makeState = (params: {
 		multiSelectGroup: null,
 		internalClipboard: null,
 		commitVersion: 5,
-		saveVersion: 0,
+		saveRequest: { version: 0, nonce: "" },
 		registries,
 	}) as unknown as CanvasControllerState;
 
@@ -78,14 +78,14 @@ describe("RedoCommand", () => {
 		expect(RedoCommand.execute(state, registries).selectedIds).toEqual(["r1"]);
 	});
 
-	it("increments saveVersion and leaves commitVersion unchanged", () => {
+	it("raises a save request and leaves commitVersion unchanged", () => {
 		const state = makeState({
 			past: [],
 			present: snapshotPrev,
 			future: [snapshotNext],
 		});
 		const next = RedoCommand.execute(state, registries);
-		expect(next.saveVersion).toBe(1);
+		expect(next.saveRequest.version).toBe(1);
 		expect(next.commitVersion).toBe(5);
 	});
 

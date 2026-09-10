@@ -136,6 +136,14 @@ const dragEvent = (
 		button: 0,
 	}) as unknown as CanvasEvent;
 
+/** The connector held by a creation draft; null while re-anchoring or idle. */
+const draftedConnectorOf = (
+	state: CanvasControllerState,
+): ConnectorState | null =>
+	state.connectorDraft?.kind === "create"
+		? state.connectorDraft.connector
+		: null;
+
 describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)", () => {
 	const handler = new ConnectionAnchorEventHandler();
 
@@ -166,7 +174,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		expect(afterEnd.rootIds).toEqual(["c1", "c2", "c3"]);
 	});
 
-	it("updates the entity directly during editing without using an overlay (pendingConnector)", () => {
+	it("updates the entity directly during editing without an overlay copy", () => {
 		const state = stateWithConnectors([
 			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
@@ -179,9 +187,12 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			}),
 			registries,
 		);
-		// On dragStart, no pendingConnector is created; only the edit target is recorded
-		expect(afterStart.pendingConnector).toBeNull();
-		expect(afterStart.editingConnectorId).toBe("c1");
+		// On dragStart, no connector is drafted; only the edit target is recorded
+		expect(afterStart.connectorDraft).toEqual({
+			kind: "edit",
+			connectorId: "c1",
+			endpoint: "target",
+		});
 
 		// On dragEnd, the entity's (objects["c1"]) target moves directly
 		const afterEnd = handler.handle(
@@ -197,8 +208,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			kind: "free",
 			point: { x: 80, y: 80 },
 		});
-		expect(afterEnd.pendingConnector).toBeNull();
-		expect(afterEnd.editingConnectorId).toBeNull();
+		expect(afterEnd.connectorDraft).toBeNull();
 	});
 
 	it("keeps the objects reference for a no-op edit that returns the endpoint to its original position (no commit)", () => {
@@ -226,7 +236,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		// The objects reference is unchanged = handleGesture's auto-commit check does not fire
 		expect(afterEnd.objects).toBe(state.objects);
-		expect(afterEnd.editingConnectorId).toBeNull();
+		expect(afterEnd.connectorDraft).toBeNull();
 	});
 
 	it("changes the objects reference for an edit that moves the endpoint (subject to commit)", () => {
@@ -399,10 +409,9 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		);
 
 		// No explicit field (omitted); the default interpretation makes it orthogonal.
-		expect(afterStart.pendingConnector?.routing).toBeUndefined();
-		expect(isOrthogonalRouting(afterStart.pendingConnector?.routing)).toBe(
-			true,
-		);
+		const draftedConnector = draftedConnectorOf(afterStart);
+		expect(draftedConnector?.routing).toBeUndefined();
+		expect(isOrthogonalRouting(draftedConnector?.routing)).toBe(true);
 	});
 
 	it("keeps orthogonal (routing omitted) when a new connector drops onto empty space (edge → free)", () => {

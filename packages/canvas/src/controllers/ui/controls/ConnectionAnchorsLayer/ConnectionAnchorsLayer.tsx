@@ -14,7 +14,7 @@ import { useObjectOutlineRegistry } from "../../../../rendering/objects/registry
 import { calcEdgeAnchorPoint } from "../../../../rendering/objects/utils/calcConnectPoint";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
-import type { DragKind } from "../../../CanvasTypes";
+import type { ConnectorDraft, DragKind } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { isConnectableObject } from "../../../utils/isConnectableObject";
 import { ConnectionAnchors } from "../ConnectionAnchors";
@@ -25,21 +25,10 @@ type ConnectionAnchorsLayerProps = {
 	objects: Record<string, ObjectState>;
 	zoom?: number;
 	/**
-	 * Temporary connector during a connection drag (new creation).
-	 * When present, the target-side receiving anchors are shown.
+	 * The connector a connection drag is working on; null when none is under way.
+	 * Its dragged end decides which object the receiving anchors are shown on.
 	 */
-	pendingConnector?: ConnectorState | null;
-	/**
-	 * ID of the connector whose endpoint is being edited.
-	 * Editing mutates the entity directly, so the receiving anchors are derived
-	 * from the entity in `objects`.
-	 */
-	editingConnectorId?: string | null;
-	/**
-	 * The endpoint currently being edited (dragged).
-	 * This lets anchors be shown only on the fixed-side (not-being-edited) object.
-	 */
-	editingEndpoint?: "source" | "target" | null;
+	connectorDraft?: ConnectorDraft | null;
 	isTextEditing: boolean;
 	/** Kind of the drag in progress; null when none is */
 	activeDragKind: DragKind | null;
@@ -92,9 +81,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	selectedIds,
 	objects,
 	zoom = 1,
-	pendingConnector,
-	editingConnectorId,
-	editingEndpoint,
+	connectorDraft,
 	isTextEditing,
 	activeDragKind,
 }) => {
@@ -108,24 +95,22 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	const selectedObject = selectedId ? objects[selectedId] : null;
 
 	// --- Target anchors (shown during a connection drag on the hovered object) ---
-	// Show anchors on the endpoint being edited (hover target).
-	// - If editingEndpoint is "target", show anchors on target object (hover candidate)
-	// - If editingEndpoint is "source", show anchors on source object (hover candidate)
-	// - Default to "target" for backward compatibility (new creation mode)
-	const activeEditingEndpoint = editingEndpoint ?? "target";
+	// The anchors go on the object the dragged end may land on, so a re-anchor of
+	// the source shows them there instead of on the target.
+	const draggedEndpoint =
+		connectorDraft?.kind === "edit" ? connectorDraft.endpoint : "target";
 
-	// Source connector for deriving the receiving anchors:
-	// - during new creation, pendingConnector
-	// - during endpoint editing of an existing connector, the entity (editingConnectorId in objects)
+	// Where the connector being dragged lives: creation holds it in the draft,
+	// while a re-anchor rewrites the entity in `objects` on every frame.
 	const editingConnector =
-		pendingConnector ??
-		(editingConnectorId
-			? (objects[editingConnectorId] as ConnectorState | undefined)
-			: null);
+		connectorDraft?.kind === "create"
+			? connectorDraft.connector
+			: connectorDraft
+				? (objects[connectorDraft.connectorId] as ConnectorState | undefined)
+				: null;
 
-	// Determine which endpoint is being edited (hover target)
 	const editingEndpointRef =
-		activeEditingEndpoint === "source"
+		draggedEndpoint === "source"
 			? editingConnector?.source
 			: editingConnector?.target;
 

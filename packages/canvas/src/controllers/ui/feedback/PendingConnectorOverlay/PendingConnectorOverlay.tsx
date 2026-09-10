@@ -6,21 +6,27 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type PendingConnectorOverlayProps = Pick<
 	CanvasControllerState,
-	"pendingConnector" | "objects"
+	"connectorDraft" | "objects"
 >;
 
+/**
+ * Draws the connector being created, which lives only in the draft until dragEnd
+ * commits it. A re-anchor draft renders nothing here: it edits the entity in
+ * `objects`, which the content layer already draws.
+ */
 const PendingConnectorOverlayComponent: React.FC<
 	PendingConnectorOverlayProps
-> = ({ pendingConnector, objects }) => {
-	if (!pendingConnector) {
+> = ({ connectorDraft, objects }) => {
+	if (connectorDraft?.kind !== "create") {
 		return null;
 	}
 
+	const { connector } = connectorDraft;
 	return (
 		<ConnectorRenderer
-			connectorState={pendingConnector}
-			sourceObj={resolveEndpointOwner(objects, pendingConnector.source)}
-			targetObj={resolveEndpointOwner(objects, pendingConnector.target)}
+			connectorState={connector}
+			sourceObj={resolveEndpointOwner(objects, connector.source)}
+			targetObj={resolveEndpointOwner(objects, connector.target)}
 			disablePointerEvents={true}
 		/>
 	);

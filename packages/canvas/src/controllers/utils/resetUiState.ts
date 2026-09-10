@@ -30,12 +30,10 @@ export type UiStateReset = Pick<
 	| "stencilLibraryOpenCategory"
 	| "multiSelectGroup"
 	| "textEditState"
-	| "pendingConnector"
+	| "connectorDraft"
 	| "selectedConnectorId"
 	| "selectedVertex"
 	| "selectedTextSlot"
-	| "editingConnectorId"
-	| "editingEndpoint"
 	| "snapFeedback"
 	| "axisLockFeedback"
 	| "shapeDrawing"
@@ -71,12 +69,10 @@ export const resetUiState = (): UiStateReset => ({
 	stencilLibraryOpenCategory: null,
 	multiSelectGroup: null,
 	textEditState: null,
-	pendingConnector: null,
+	connectorDraft: null,
 	selectedConnectorId: null,
 	selectedVertex: null,
 	selectedTextSlot: null,
-	editingConnectorId: null,
-	editingEndpoint: null,
 	snapFeedback: null,
 	axisLockFeedback: null,
 	shapeDrawing: null,

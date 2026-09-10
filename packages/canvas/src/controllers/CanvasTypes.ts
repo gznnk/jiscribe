@@ -13,6 +13,25 @@ import type { ConnectorState } from "../states/objects/connector/ConnectorState"
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
 
 // ---------------------------------------------------------------------------
+// Save request types (stored in CanvasControllerState)
+// ---------------------------------------------------------------------------
+
+/**
+ * A standing request for the host to save, as a version counter paired with the
+ * nonce identifying that particular request.
+ */
+export type SaveRequest = {
+	/** Incremented when a file save is required; watched by the single useEffect in Canvas.tsx */
+	version: number;
+	/**
+	 * Regenerated on every `version` increment. Passed to onCommit and echoed back by the
+	 * host, so the nonce tracker can identify fold-back saves (see useSyncExternalDoc).
+	 * Empty string before the first save request.
+	 */
+	nonce: string;
+};
+
+// ---------------------------------------------------------------------------
 // History coalescing types (stored in CanvasControllerState)
 // ---------------------------------------------------------------------------
 
@@ -45,6 +64,35 @@ export type KeyPointsCacheEntry = {
 
 /** Object ID → keyPoints. Held in CanvasControllerState and updated in handleGesture. */
 export type KeyPointsCache = Record<string, KeyPointsCacheEntry>;
+
+// ---------------------------------------------------------------------------
+// Connector draft types (stored in CanvasControllerState)
+// ---------------------------------------------------------------------------
+
+/**
+ * The connector a drag from a connection anchor is working on. The two modes are
+ * exclusive and differ in where the connector lives: creation holds it here until
+ * dragEnd commits it into `objects`, while a re-anchor rewrites the existing entity
+ * in `objects` on every frame (like vertex editing) and only names it here.
+ *
+ * Creation always drags the target end, so only `"edit"` carries the side.
+ */
+export type ConnectorDraft =
+	| {
+			kind: "create";
+			/** The connector being drawn; absent from `objects` and `rootIds` until dragEnd */
+			connector: ConnectorState;
+	  }
+	| {
+			kind: "edit";
+			/** ID of the connector in `objects` whose endpoint the drag rewrites */
+			connectorId: string;
+			/**
+			 * The end the drag moves; the other keeps its start-time anchor. Lets the UI
+			 * show receiving anchors only on the fixed side.
+			 */
+			endpoint: "source" | "target";
+	  };
 
 // ---------------------------------------------------------------------------
 // Snap types (controller-layer only)
@@ -359,16 +407,10 @@ export type CanvasControllerState = CanvasState & {
 	commitVersion: number;
 
 	/**
-	 * Incremented when a file save is required. Set by recordHistoryIfNeeded on normal commits
-	 * and by Undo/Redo; watched by the single useEffect in Canvas.tsx.
+	 * Standing request for the host to save. Both halves are written as a pair, by
+	 * recordHistoryIfNeeded on normal commits and by Undo/Redo.
 	 */
-	saveVersion: number;
-
-	/**
-	 * Regenerated on every saveVersion increment. Passed to onCommit and echoed back by the
-	 * host, so the nonce tracker can identify fold-back saves (see useSyncExternalDoc).
-	 */
-	saveNonce: string;
+	saveRequest: SaveRequest;
 
 	/** Transient signal for merging consecutive nudges into one undo; not part of CanvasDoc */
 	historyCoalesce: HistoryCoalesce;
@@ -499,7 +541,7 @@ export type CanvasControllerState = CanvasState & {
 		| null;
 
 	/** Set while dragging from a connection anchor; committed or discarded on dragEnd */
-	pendingConnector: ConnectorState | null;
+	connectorDraft: ConnectorDraft | null;
 
 	/** Managed independently from selectedIds (shapes only), guaranteeing mutual exclusion */
 	selectedConnectorId: string | null;
@@ -519,19 +561,6 @@ export type CanvasControllerState = CanvasState & {
 		objectId: string;
 		slotId: string;
 	} | null;
-
-	/**
-	 * Connector being edited, used together with pendingConnector: null on new creation, the
-	 * original connector ID on edit. Cleared on dragEnd.
-	 */
-	editingConnectorId: string | null;
-
-	/**
-	 * Which end of pendingConnector is being dragged — always "target" on new creation, the
-	 * dragged handle's side on edit. Lets the UI show an anchor only on the fixed side.
-	 * Cleared on dragEnd.
-	 */
-	editingEndpoint: "source" | "target" | null;
 
 	/** Non-null only while snapping; cleared on dragEnd */
 	snapFeedback: SnapFeedback | null;

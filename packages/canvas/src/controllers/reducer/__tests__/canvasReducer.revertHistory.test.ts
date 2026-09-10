@@ -127,7 +127,7 @@ describe("canvasReducer (integration)", () => {
 			// Restoring is not a new edit, but the file no longer matches what is on
 			// screen — the same pairing undo makes.
 			expect(reverted.commitVersion).toBe(state.commitVersion);
-			expect(reverted.saveVersion).toBe(state.saveVersion + 1);
+			expect(reverted.saveRequest.version).toBe(state.saveRequest.version + 1);
 		});
 
 		it("keeps the viewport, an open modal, and a selection the target still holds", () => {

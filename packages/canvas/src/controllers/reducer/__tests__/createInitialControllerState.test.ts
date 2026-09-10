@@ -34,7 +34,7 @@ describe("createInitialControllerState", () => {
 		expect(state.multiSelectGroup).toBeNull();
 		expect(state.textEditState).toBeNull();
 		expect(state.commitVersion).toBe(0);
-		expect(state.saveVersion).toBe(0);
+		expect(state.saveRequest.version).toBe(0);
 	});
 
 	it("history has empty past/future and the initial Doc as present", () => {

@@ -782,7 +782,7 @@ const CanvasComponent = ({
 								surfaceColor={theme.tokens.canvasBg}
 							>
 								<PendingConnectorOverlay
-									pendingConnector={state.pendingConnector}
+									connectorDraft={state.connectorDraft}
 									objects={state.objects}
 								/>
 								<SelectionOverlay
@@ -810,9 +810,7 @@ const CanvasComponent = ({
 									selectedIds={state.selectedIds}
 									objects={state.objects}
 									zoom={state.viewport.zoom}
-									pendingConnector={state.pendingConnector}
-									editingConnectorId={state.editingConnectorId}
-									editingEndpoint={state.editingEndpoint}
+									connectorDraft={state.connectorDraft}
 									isTextEditing={!!state.textEditState}
 									activeDragKind={state.activeDragKind}
 								/>

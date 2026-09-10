@@ -60,35 +60,35 @@ export const useNotifySaveRequest = (
 	const deliveryGuard = useConstant(createNonceDeliveryGuard);
 	const scheduler = useConstant(createSaveRequestScheduler);
 
-	// Depends only on saveVersion: every bump is one save request. Whether the
+	// Depends only on saveRequest.version: every bump is one save request. Whether the
 	// commit is part of a coalesce chain is read from historyCoalesce.recorded,
 	// which recordHistoryIfNeeded sets exactly for coalescing commits.
 	useEffect(() => {
-		if (state.saveVersion === 0) {
+		if (state.saveRequest.version === 0) {
 			return;
 		}
 		scheduler.schedule(state.historyCoalesce.recorded !== null, () => {
 			const latestState = stateRef.current;
-			if (!deliveryGuard.shouldDeliver(latestState.saveNonce)) {
+			if (!deliveryGuard.shouldDeliver(latestState.saveRequest.nonce)) {
 				return;
 			}
 			// Record the delivered nonce so its fold-back is recognized as a
 			// self-save even if a later save's fold-back returns first (issue #29).
-			selfSaveNonceTracker.register(latestState.saveNonce);
+			selfSaveNonceTracker.register(latestState.saveRequest.nonce);
 			onCommitRef.current?.(
 				resolveDocSnapshot(latestState.history.present, objectMapper),
-				latestState.saveNonce,
+				latestState.saveRequest.nonce,
 			);
 		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [state.saveVersion]);
+	}, [state.saveRequest.version]);
 
 	// Mount-only effect: deferred saves are flushed by boundary events, not by
 	// time — keyup ends a key-repeat chain (the only coalescing source today)
 	// and window blur means no further keyup will arrive. flush is a no-op
 	// without a pending save, so listening to every key is safe. Unmount also
 	// flushes so the last chain is not lost. This must NOT live in the effect
-	// above — its cleanup runs on every saveVersion change, which would flush
+	// above — its cleanup runs on every save request, which would flush
 	// per repeat and defeat the deferral.
 	useEffect(() => {
 		const flushPendingSave = () => {

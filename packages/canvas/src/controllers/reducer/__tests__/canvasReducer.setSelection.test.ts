@@ -76,7 +76,7 @@ describe("canvasReducer / SET_SELECTION", () => {
 		const next = canvasReducer(state, setSelection(["rect-1"]));
 
 		expect(next.history).toBe(state.history);
-		expect(next.saveVersion).toBe(state.saveVersion);
+		expect(next.saveRequest.version).toBe(state.saveRequest.version);
 		expect(next.commitVersion).toBe(state.commitVersion);
 	});
 });

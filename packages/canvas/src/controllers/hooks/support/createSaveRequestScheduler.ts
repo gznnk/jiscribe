@@ -10,7 +10,7 @@ const SAVE_BACKSTOP_MS = 2000;
 
 export type SaveRequestScheduler = {
 	/**
-	 * Called on every save request (saveVersion bump).
+	 * Called on every save request (a saveRequest.version bump).
 	 * A non-coalescing request cancels any pending timer and notifies
 	 * immediately (the latest state includes everything a pending save would
 	 * have covered). A coalescing request defers notification until flush() —
