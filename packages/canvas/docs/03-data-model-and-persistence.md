@@ -133,8 +133,6 @@ It is aimed at consumers who "just want to parse text into a `CanvasDoc`" or bui
 import { createCanvasParser } from "@jiscribe/doc";
 ```
 
-`@jiscribe/canvas/doc` keeps working as a re-export shim onto it, so a consumer can migrate on its own schedule.
-
 Assuming that any Doc that has passed this boundary is valid, internal functions omit defensive checks
 (principle 4 of the [Design Philosophy](./01-design-philosophy.md)). For validation at the entry point of external sync, see
 [External Sync / VSCode Integration](./07-external-sync.md).

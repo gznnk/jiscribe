@@ -106,10 +106,10 @@ with no config gives the default configuration: every built-in type and nothing 
 @jiscribe/canvas-sdk/doc      headless counterpart
 ```
 
-The two headless entries are a package of their own. `@jiscribe/canvas` keeps
-`./doc` and `./unstable-doc` as re-export shims onto them, so the plugins and Node
-tools that name the canvas paths — which is what ESLint still points them at — go on
-working unchanged.
+The two headless entries are a package of their own. `@jiscribe/canvas` has no
+headless subpath of its own: a plugin or Node tool that wants the document layer
+names `@jiscribe/doc` (or `@jiscribe/canvas-sdk/doc`), which is where ESLint points
+it.
 
 The `unstable` subpaths carry the frame-family base implementations and the
 presentation parts that shapes are built from. They are outside the semver

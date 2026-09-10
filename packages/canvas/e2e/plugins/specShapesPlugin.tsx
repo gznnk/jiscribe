@@ -17,6 +17,12 @@
  */
 
 // Relative, never through @jiscribe/canvas-sdk: canvas may not depend on the kit it ships.
+import {
+	AUTO_COLOR,
+	DEFAULT_FONT_FAMILY,
+	createFrameDocValidator,
+	createFrameObjectFactory,
+} from "@jiscribe/doc/unstable";
 import { memo } from "react";
 
 import type {
@@ -41,12 +47,6 @@ import {
 	readTextSlot,
 	resolveAutoColor,
 } from "../../src/unstable";
-import {
-	AUTO_COLOR,
-	DEFAULT_FONT_FAMILY,
-	createFrameDocValidator,
-	createFrameObjectFactory,
-} from "../../src/unstable-doc";
 
 /** Stencil icon edge length in px, the size StencilLibraryItem asks for. */
 const ICON_SIZE = 24;

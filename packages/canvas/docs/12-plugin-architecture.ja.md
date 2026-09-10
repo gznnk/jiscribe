@@ -102,9 +102,9 @@ const result = parser.parse(text);
 @jiscribe/canvas-sdk/doc      その headless 版
 ```
 
-headless な 2 つのエントリは独立したパッケージである。`@jiscribe/canvas` は
-`./doc` と `./unstable-doc` をそれらへの re-export shim として残しているので、canvas
-側のパスを名指しするプラグインや Node ツール（ESLint が今も指している先）はそのまま動く。
+headless な 2 つのエントリは独立したパッケージである。`@jiscribe/canvas` 側に
+headless なサブパスは無い。ドキュメント層が要るプラグインや Node ツールは
+`@jiscribe/doc`（または `@jiscribe/canvas-sdk/doc`）を名指しする。ESLint もそこを指す。
 
 `unstable` サブパスには frame 系のベース実装と、図形を組み立てる presentation
 部材が入っている。semver の保証外であり、そのことが import 文そのものに出る。

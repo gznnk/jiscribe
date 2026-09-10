@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 
+import { createCanvasParser } from "@jiscribe/doc";
 import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
@@ -14,7 +15,6 @@ import type {
 	ToolbarEntry,
 } from "../../src";
 import { Canvas, darkCanvasTheme, extractCanvasSourceFromPng } from "../../src";
-import { createCanvasParser } from "../../src/doc";
 import "./harness.css";
 
 /** What a harness page has to say about itself; everything else is fixed by the kit. */

@@ -1,6 +1,7 @@
+import { createCanvasParser } from "@jiscribe/doc";
+
 import type { CanvasDoc } from "../../src";
 import { Canvas } from "../../src";
-import { createCanvasParser } from "../../src/doc";
 
 // Page for verifying gestureHandling="cooperative": a canvas embedded in a
 // document that scrolls, the way a landing page or an article figure embeds one.

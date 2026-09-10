@@ -1,6 +1,7 @@
+import { createCanvasParser } from "@jiscribe/doc";
+
 import type { CanvasDoc } from "../../src";
 import { Canvas } from "../../src";
-import { createCanvasParser } from "../../src/doc";
 
 // Two-canvas setup for verifying keyboard scoping, where only the focused Canvas handles
 // shortcuts. Shape IDs are unique across the page so selectors cannot collide, and the doc goes

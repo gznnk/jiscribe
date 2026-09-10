@@ -145,8 +145,6 @@ type CanvasParseResult =
 import { createCanvasParser } from "@jiscribe/doc";
 ```
 
-`@jiscribe/canvas/doc` はそこへの re-export shim として動き続けるので、利用側は自分のタイミングで移行できる。
-
 この境界を通った Doc は正当であることを前提に、内部関数は防御的チェックを省く
 （[設計思想](./01-design-philosophy.ja.md) の原則 4）。外部同期の入口での検証は
 [外部同期・VSCode 連携](./07-external-sync.ja.md) を参照。

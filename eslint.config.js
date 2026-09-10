@@ -268,18 +268,36 @@ export default tseslint.config(
 	},
 	...controllerLayerFences,
 	{
-		// The headless (doc) entry points that are not the doc package itself: the canvas
-		// re-export shims onto @jiscribe/doc, and the shipped set's headless half, whose
-		// whole point is that a Node host can take the eight plugins without a rendering
-		// layer coming with them. Each may name @jiscribe/doc, and nothing else that
-		// drags the UI in.
-		files: [
-			"packages/canvas/src/doc.ts",
-			"packages/canvas/src/unstable-doc.ts",
-			"packages/canvas/src/png-source.ts",
-			"packages/canvas/src/svg-source.ts",
-			"packages/standard-shapes/src/doc.ts",
-		],
+		// rendering/ is the pure drawing layer: components that hold no state and reach
+		// no controller, so a shape can be drawn by the export path and by isolated
+		// tests with nothing wired up. What separates it from controllers/ui is purity,
+		// not the kind of component — the menus, modals, icons and editors live under
+		// controllers/ui precisely because they are not pure. Types are allowed: a
+		// drawing component takes controller-owned types as Props.
+		files: ["packages/canvas/src/rendering/**"],
+		ignores: ["**/__tests__/**", "**/__benchmarks__/**"],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["**/controllers/**"],
+							allowTypeImports: true,
+							message:
+								"rendering is the pure drawing layer and cannot take a value from controllers. A component that needs state or a command belongs under controllers/ui.",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		// The headless (doc) entry point that is not the doc package itself: the shipped
+		// set's headless half, whose whole point is that a Node host can take the eight
+		// plugins without a rendering layer coming with them. It may name @jiscribe/doc,
+		// and nothing else that drags the UI in.
+		files: ["packages/standard-shapes/src/doc.ts"],
 		rules: {
 			"no-restricted-imports": [
 				"error",
@@ -494,10 +512,6 @@ export default tseslint.config(
 								"Use @jiscribe/canvas-sdk instead (@jiscribe/canvas-sdk/doc for headless).",
 						},
 						{
-							name: "@jiscribe/canvas/unstable-doc",
-							message: "Use @jiscribe/canvas-sdk/doc instead.",
-						},
-						{
 							name: "@jiscribe/doc/unstable",
 							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
@@ -533,10 +547,6 @@ export default tseslint.config(
 							name: "@jiscribe/canvas/unstable",
 							message:
 								"This would break the headless (doc) layer. Use @jiscribe/canvas-sdk/doc.",
-						},
-						{
-							name: "@jiscribe/canvas/unstable-doc",
-							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
 						{
 							name: "@jiscribe/doc/unstable",

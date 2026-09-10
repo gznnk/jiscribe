@@ -17,10 +17,6 @@
 ```
 packages/canvas/src/
 ├── index.ts                # パッケージエントリ（Canvas / CanvasDoc / パース結果型を re-export）
-├── doc.ts                  # @jiscribe/doc への re-export shim（利用側が呼び続けるヘッドレスエントリ）
-├── unstable-doc.ts         # @jiscribe/doc/unstable への re-export shim
-├── png-source.ts           # @jiscribe/doc/png-source への re-export shim
-├── svg-source.ts           # @jiscribe/doc/svg-source への re-export shim
 ├── states/                 # ランタイム状態型（State モデル）+ Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # base / primitives / connector / annotations（State + Mapper）
@@ -47,8 +43,7 @@ Doc モデルはこのパッケージには**無い**。canvas が依存する `
 `ObjectDocValidatorRegistry` / `ObjectFactoryRegistry`）・`parse/`
 （`createCanvasParser` / `validateStructure` / `validateSemantics`）・`ops/`
 （`createDocOps`）・`text/`（テキスト計測）・`file/`（`.jis.png` / `.jis.svg` への
-ソース埋め込み）で構成される。上記の 4 つの shim が、利用側が使ってきた
-`@jiscribe/canvas/*` のパスでそれらを re-export している →
+ソース埋め込み）で構成される。いずれも `@jiscribe/doc` から取る →
 [`packages/doc/README.md`](../../doc/README.md)。
 
 形状ごと（rect / ellipse / diamond / group / polygon / polyline / connector / sticky / svg）に、

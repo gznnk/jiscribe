@@ -68,8 +68,7 @@ export function App() {
 The **document layer is a package of its own**, `@jiscribe/doc`. It parses,
 validates and transforms `.jis.json` without pulling in React or any DOM
 dependency — that is what the VSCode extension's diagnostics and the AI tooling
-are built on. `@jiscribe/canvas` re-exports it as `@jiscribe/canvas/doc` for
-consumers that already name that path.
+are built on.
 
 ## What is in this repository
 

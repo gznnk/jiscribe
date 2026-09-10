@@ -17,10 +17,6 @@ The internal structure and layer separation of `canvas`. For the rationale behin
 ```
 packages/canvas/src/
 ├── index.ts                # package entry (re-exports Canvas / CanvasDoc / the parse result types)
-├── doc.ts                  # re-export shim onto @jiscribe/doc (the headless entry consumers still name)
-├── unstable-doc.ts         # re-export shim onto @jiscribe/doc/unstable
-├── png-source.ts           # re-export shim onto @jiscribe/doc/png-source
-├── svg-source.ts           # re-export shim onto @jiscribe/doc/svg-source
 ├── states/                 # runtime state types (State model) + Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # base / primitives / connector / annotations (State + Mapper)
@@ -47,8 +43,7 @@ validation), `plugin/` (`ObjectDocDefinition` / `CanvasDocPlugin` /
 `resolveDocDefinitions` / `ObjectDocValidatorRegistry` / `ObjectFactoryRegistry`),
 `parse/` (`createCanvasParser` / `validateStructure` / `validateSemantics`), `ops/`
 (`createDocOps`), `text/` (text measurement) and `file/` (`.jis.png` / `.jis.svg`
-source embedding). The four shim files above re-export it under the
-`@jiscribe/canvas/*` paths consumers already use — see
+source embedding). Take all of it from `@jiscribe/doc` — see
 [`packages/doc/README.md`](../../doc/README.md).
 
 For each shape (rect / ellipse / diamond / group / polygon / polyline / connector / sticky / svg), there is a corresponding
