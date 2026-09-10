@@ -3,13 +3,13 @@ import { selectors } from "../../support/selectors";
 
 /**
  * The selection controls are hidden for the duration of a drag, driven by the
- * `activeDragKind` the gesture router resolves once per dragStart:
+ * `activeDrag.kind` the gesture router resolves once per dragStart:
  *
  * - "move" hides both the transform frame and the connection anchors
  * - "transform" hides the anchors only — the handle being dragged has to stay
  *
  * The ObjectMenu was already hidden for every drag; it is asserted here because
- * its gate moved from `eventStartSnapshot` onto the same field.
+ * its gate moved from the drag's start snapshot onto the same field.
  */
 test.describe("selection controls hidden while dragging", () => {
 	test("hides the transform frame, anchors and ObjectMenu while a shape is moved", async ({

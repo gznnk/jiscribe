@@ -10,8 +10,8 @@ import { test, expect } from "../../fixtures";
  * server, so this spec detects that regression together with its environment.
  *
  * Pan (middle-button drag) is what makes the difference observable: the pan drag
- * handler falls back to the current viewport even when eventStartSnapshot is
- * gone (CanvasEventHandler), so a reset that does not take effect shows up as
+ * handler falls back to the current viewport even when the drag is gone
+ * (CanvasEventHandler), so a reset that does not take effect shows up as
  * "panning continues after the sync". A shape drag returns early on the missing
  * snapshot and looks identical either way, so it cannot tell the two apart.
  */
