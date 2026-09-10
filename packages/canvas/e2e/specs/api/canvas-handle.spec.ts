@@ -42,7 +42,6 @@ const readCanvasHandle = (
 /** Two rectangles side by side joined by a connector, the setup a connector needs. */
 const drawConnectedPair = async (
 	canvas: CanvasDriver,
-	handle: JSHandle<CanvasModule.CanvasHandle>,
 ): Promise<{ source: string; target: string; connector: string }> => {
 	const target = await canvas.drawShape(
 		"Rectangle",
@@ -62,21 +61,6 @@ const drawConnectedPair = async (
 		x: 710,
 		y: 250,
 	});
-	// The driver takes the new id off the DOM, where the connector is already
-	// drawn as a draft while the pointer is down, so it can hand one back before
-	// the release commits it into the document. Everything below names the
-	// connector by id, and an id the document does not hold yet is simply
-	// ignored, so wait for the commit rather than race it.
-	await expect
-		.poll(
-			() =>
-				handle.evaluate(
-					(h, id) => h.measure.connectorPath(id) !== null,
-					connector,
-				),
-			{ message: "the connector is committed into the document" },
-		)
-		.toBe(true);
 	return { source, target, connector };
 };
 
@@ -301,7 +285,7 @@ test.describe("canvas handle / viewport", () => {
 		canvas,
 	}) => {
 		const handle = await readCanvasHandle(canvas.page);
-		const { connector } = await drawConnectedPair(canvas, handle);
+		const { connector } = await drawConnectedPair(canvas);
 
 		await handle.evaluate((h, id) => h.selection.select([id]), connector);
 		await expect
@@ -420,7 +404,7 @@ test.describe("canvas handle / measure", () => {
 		canvas,
 	}) => {
 		const handle = await readCanvasHandle(canvas.page);
-		const { connector } = await drawConnectedPair(canvas, handle);
+		const { connector } = await drawConnectedPair(canvas);
 
 		const probe = await handle.evaluate((h, id) => {
 			const path = h.measure.connectorPath(id);
@@ -613,7 +597,7 @@ test.describe("canvas handle / selection", () => {
 
 	test("drops the ids it cannot select and names them", async ({ canvas }) => {
 		const handle = await readCanvasHandle(canvas.page);
-		const { source, connector } = await drawConnectedPair(canvas, handle);
+		const { source, connector } = await drawConnectedPair(canvas);
 
 		expect(
 			await handle.evaluate(

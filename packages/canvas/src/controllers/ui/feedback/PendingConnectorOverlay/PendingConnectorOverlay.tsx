@@ -22,13 +22,19 @@ const PendingConnectorOverlayComponent: React.FC<
 	}
 
 	const { connector } = connectorDraft;
+	// data-testid: the draft reuses the connector's own renderer, so it carries
+	// data-kind=connector and the id the commit will use, from the first drag
+	// frame on. e2e excludes this subtree so the draft is not mistaken for the
+	// committed connector (the same reason DrawingPreviewOverlay carries one).
 	return (
-		<ConnectorRenderer
-			connectorState={connector}
-			sourceObj={resolveEndpointOwner(objects, connector.source)}
-			targetObj={resolveEndpointOwner(objects, connector.target)}
-			disablePointerEvents={true}
-		/>
+		<g data-testid="pending-connector">
+			<ConnectorRenderer
+				connectorState={connector}
+				sourceObj={resolveEndpointOwner(objects, connector.source)}
+				targetObj={resolveEndpointOwner(objects, connector.target)}
+				disablePointerEvents={true}
+			/>
+		</g>
 	);
 };
 

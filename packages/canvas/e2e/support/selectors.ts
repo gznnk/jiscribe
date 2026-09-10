@@ -197,6 +197,14 @@ export const selectors = {
 	 */
 	drawingPreview: '[data-testid="drawing-preview"]',
 
+	/**
+	 * Draft connector drawn while one is being pulled from an anchor. It reuses the
+	 * connector renderer and already carries the id the commit will use, so exclude
+	 * its subtree when enumerating objects or a connector is seen before dragEnd
+	 * puts it in the document.
+	 */
+	pendingConnector: '[data-testid="pending-connector"]',
+
 	/** Connector body polyline; the arrowhead polygon carries the same data-kind. */
 	connectorPolyline: "polyline[data-kind=connector]",
 

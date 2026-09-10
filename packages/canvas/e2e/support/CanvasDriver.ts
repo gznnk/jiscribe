@@ -119,17 +119,30 @@ export class CanvasDriver {
 		await this.page.mouse.up();
 	}
 
-	/** Snapshot every shape and connector. */
+	/** Snapshot every shape and connector, the uncommitted drafts left out. */
 	async captureObjects(): Promise<ObjectSnapshot[]> {
 		return this.page.evaluate(
-			({ objectSelector, connectorSelector, previewSelector }) =>
+			({
+				objectSelector,
+				connectorSelector,
+				previewSelector,
+				pendingConnectorSelector,
+			}) =>
 				[
 					...document.querySelectorAll(
 						`${objectSelector}, ${connectorSelector}`,
 					),
 				]
-					// The drag-drawing ghost carries data-kind=object but is uncommitted, so drop it.
-					.filter((el) => !el.closest(previewSelector))
+					// Both drafts reuse the real component and so carry the same data-kind
+					// while the document holds nothing yet: the drag-drawing ghost, and the
+					// connector being pulled from an anchor, which already carries the id
+					// the commit will use. Counting either hands back an id the document
+					// does not hold, and every later call naming it is silently ignored.
+					.filter(
+						(el) =>
+							!el.closest(previewSelector) &&
+							!el.closest(pendingConnectorSelector),
+					)
 					.map((el) => {
 						// Colors come from emotion CSS rather than SVG attributes, so they
 						// must be read from computed style (#38 / theme following). Values
@@ -147,6 +160,7 @@ export class CanvasDriver {
 				objectSelector: selectors.object,
 				connectorSelector: selectors.connectorPolyline,
 				previewSelector: selectors.drawingPreview,
+				pendingConnectorSelector: selectors.pendingConnector,
 			},
 		);
 	}
