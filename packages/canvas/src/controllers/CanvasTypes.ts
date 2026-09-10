@@ -217,7 +217,7 @@ export type MultiSelectResizeBoundsCache = {
 /**
  * Data pre-computed for the duration of a drag. Created on dragStart and cleared on dragEnd.
  */
-export type EventStartSnapshot = {
+export type DragStartSnapshot = {
 	objects: Record<string, ObjectState>;
 	/** Slice of object ID → FrameKeyPoints; also includes multiSelectGroup.id */
 	keyPoints: Record<string, FrameKeyPoints>;
@@ -254,6 +254,21 @@ export type DragKind =
 	| "transform"
 	/** Everything else: connectors, vertices, connection anchors, marquee, pan, menus */
 	| "other";
+
+/**
+ * The drag in progress. handleGesture owns the lifecycle — one is opened on every
+ * dragStart and dropped on every dragEnd — so a non-null `activeDrag` is exactly
+ * "a drag is under way" no matter which handler runs.
+ */
+export type ActiveDrag = {
+	/** Data frozen at dragStart, and the reference the whole drag is measured from */
+	startSnapshot: DragStartSnapshot;
+	/**
+	 * What the drag is doing. Opened as "other"; a handler that wants its drag
+	 * distinguished overwrites the kind in its own dragStart.
+	 */
+	kind: DragKind;
+};
 
 /**
  * The host-controllable part of the viewport (pan + zoom). Width/height are
@@ -331,22 +346,14 @@ export type CanvasControllerState = CanvasState & {
 	selectedIds: string[];
 
 	/** null when no gesture is in progress */
-	eventStartSnapshot: EventStartSnapshot | null;
-
-	/**
-	 * Kind of the drag in progress; null when none is. handleGesture owns the lifecycle —
-	 * "other" on every dragStart, null on every dragEnd — so `!== null` is exactly "a drag
-	 * is under way" no matter which handler runs. Handlers own the meaning: one that wants
-	 * its drag distinguished overwrites the kind in its own dragStart.
-	 */
-	activeDragKind: DragKind | null;
+	activeDrag: ActiveDrag | null;
 
 	/**
 	 * Whether the view is still coasting from a released pan (inertial scrolling).
-	 * Deliberately not folded into activeDragKind: no pointer is down and no
-	 * eventStartSnapshot is open, so the two would stop being set as a pair.
-	 * handleGesture owns the lifecycle — up on every fling frame, down on the
-	 * recognizer's inertialScrollEnd.
+	 * Deliberately not folded into activeDrag: no pointer is down and no drag is
+	 * open, so the two would stop being set as a pair. handleGesture owns the
+	 * lifecycle — up on every fling frame, down on the recognizer's
+	 * inertialScrollEnd.
 	 */
 	inertialScrolling: boolean;
 

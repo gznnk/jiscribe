@@ -804,7 +804,7 @@ const CanvasComponent = ({
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
 									isTextSlotSelected={selectedTextSlot !== null}
-									activeDragKind={state.activeDragKind}
+									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer
 									selectedIds={state.selectedIds}
@@ -812,7 +812,7 @@ const CanvasComponent = ({
 									zoom={state.viewport.zoom}
 									connectorDraft={state.connectorDraft}
 									isTextEditing={!!state.textEditState}
-									activeDragKind={state.activeDragKind}
+									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<VertexControlsLayer
 									selectedIds={state.selectedIds}

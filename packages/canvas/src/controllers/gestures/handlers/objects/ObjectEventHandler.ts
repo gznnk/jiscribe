@@ -146,12 +146,12 @@ function handleObjectDrag(
 	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	const { delta, mods } = event;
-	const eventStartSnapshot = canvasState.eventStartSnapshot;
-	if (!eventStartSnapshot) {
+	const dragStartSnapshot = canvasState.activeDrag?.startSnapshot;
+	if (!dragStartSnapshot) {
 		return canvasState;
 	}
 
-	const eventStartObjects = eventStartSnapshot.objects;
+	const eventStartObjects = dragStartSnapshot.objects;
 	const selectedIds = canvasState.selectedIds;
 
 	// --- Axis lock via Shift ---
@@ -186,14 +186,14 @@ function handleObjectDrag(
 
 	// Snap candidates use the cached set of all objects from dragStart by reference only.
 	// Exclusions (selection + all descendants) are not filtered out of the array; a Set is passed to findSnap and filtered internally.
-	const snapCandidates = eventStartSnapshot.snapCandidates;
-	const excludeIds = eventStartSnapshot.selectedIdsWithDescendants;
+	const snapCandidates = dragStartSnapshot.snapCandidates;
+	const excludeIds = dragStartSnapshot.selectedIdsWithDescendants;
 	const snapSourceId =
 		selectedIds.length > 1
-			? eventStartSnapshot.multiSelectGroup?.id
+			? dragStartSnapshot.multiSelectGroup?.id
 			: selectedIds[0];
 	const snapSourceKeyPoints: FrameKeyPoints | undefined = snapSourceId
-		? eventStartSnapshot.keyPoints[snapSourceId]
+		? dragStartSnapshot.keyPoints[snapSourceId]
 		: undefined;
 
 	if (snapSourceKeyPoints && !isSnapSuppressed(event) && !snapToOrigin) {
@@ -263,7 +263,7 @@ function handleObjectDrag(
 	// --- Move all selected objects by adjustedDelta (shared with nudge move) ---
 	// Dragging moves by the cumulative delta from the drag-start snapshot as the source.
 	// Parent group bounds updates are done together on dragEnd, not here.
-	const eventStartMultiSelectGroup = eventStartSnapshot.multiSelectGroup;
+	const eventStartMultiSelectGroup = dragStartSnapshot.multiSelectGroup;
 	const { objects: updatedObjects, multiSelectGroup: movedMultiSelectGroup } =
 		moveSelection({
 			selectedIds,
@@ -309,10 +309,10 @@ function handleObjectDragStart(
 
 	let selectedIds: string[];
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
-	// The multiSelectGroup and keyPoints updates to set on eventStartSnapshot
+	// The multiSelectGroup and keyPoints updates to set on the drag's start snapshot
 	let eventStartMultiSelectGroup =
-		canvasState.eventStartSnapshot?.multiSelectGroup ?? null;
-	let keyPoints = canvasState.eventStartSnapshot?.keyPoints ?? {};
+		canvasState.activeDrag?.startSnapshot.multiSelectGroup ?? null;
+	let keyPoints = canvasState.activeDrag?.startSnapshot.keyPoints ?? {};
 
 	if (isCurrentlySelected || isAncestorSelected) {
 		// Already selected: keep the current selection
@@ -324,7 +324,7 @@ function handleObjectDragStart(
 
 		// Create/update multiSelectGroup as the number of selected shapes increases
 		const eventStartObjects =
-			canvasState.eventStartSnapshot?.objects ?? canvasState.objects;
+			canvasState.activeDrag?.startSnapshot.objects ?? canvasState.objects;
 		newMultiSelectGroup =
 			selectedIds.length > 1
 				? createMultiSelectGroup(
@@ -348,10 +348,10 @@ function handleObjectDragStart(
 
 	// Re-cache the exclusion set with the selectedIds finalized after dragStart
 	// (refresh the snapshot if the selection changed from what it was when handleGesture was built)
-	const selectedIdsWithDescendants = canvasState.eventStartSnapshot
+	const selectedIdsWithDescendants = canvasState.activeDrag
 		? buildSelectedIdsWithDescendants(
 				selectedIds,
-				canvasState.eventStartSnapshot.objects,
+				canvasState.activeDrag.startSnapshot.objects,
 			)
 		: null;
 
@@ -360,7 +360,6 @@ function handleObjectDragStart(
 		...canvasState,
 		selectedIds,
 		multiSelectGroup: newMultiSelectGroup,
-		activeDragKind: "move" as const,
 		edgeScrollEnabled: true,
 		// Clear the connector selection to guarantee mutual exclusion
 		selectedConnectorId: null,
@@ -371,12 +370,15 @@ function handleObjectDragStart(
 		// Close the object menu dropdown at drag start
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
-		eventStartSnapshot: canvasState.eventStartSnapshot
+		activeDrag: canvasState.activeDrag
 			? {
-					...canvasState.eventStartSnapshot,
-					multiSelectGroup: eventStartMultiSelectGroup,
-					keyPoints,
-					...(selectedIdsWithDescendants && { selectedIdsWithDescendants }),
+					startSnapshot: {
+						...canvasState.activeDrag.startSnapshot,
+						multiSelectGroup: eventStartMultiSelectGroup,
+						keyPoints,
+						...(selectedIdsWithDescendants && { selectedIdsWithDescendants }),
+					},
+					kind: "move" as const,
 				}
 			: null,
 	};
@@ -412,7 +414,7 @@ function handleObjectDragEnd(
  *
  * Shape-agnostic, since each shape's handling is resolved dynamically via the registry.
  *
- * Note: eventStartSnapshot is managed by handleGesture(), not here.
+ * Note: the drag's start snapshot is managed by handleGesture(), not here.
  */
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
@@ -499,7 +501,7 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the drag events
 		const objectStartState =
-			nextState.eventStartSnapshot?.objects[targetObjectId];
+			nextState.activeDrag?.startSnapshot.objects[targetObjectId];
 		if (!objectStartState) {
 			return nextState;
 		}

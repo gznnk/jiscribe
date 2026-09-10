@@ -182,7 +182,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 			}
 
 			case "drag": {
-				const snapCandidates = state.eventStartSnapshot?.snapCandidates;
+				const snapCandidates = state.activeDrag?.startSnapshot.snapCandidates;
 				const drag = state.stencilLibraryDrag;
 
 				if (!snapCandidates || !drag || isSnapSuppressed(event)) {

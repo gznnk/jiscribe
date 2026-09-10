@@ -26,14 +26,17 @@ const makeState = (points: Point[]): CanvasControllerState => {
 		selectedIds: [],
 		selectedVertex: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: {
-			objects: { "poly-1": poly },
-			keyPoints: {},
-			snapCandidates: null,
-			selectedIds: [],
-			selectedIdsWithDescendants: new Set(),
-			multiSelectGroup: null,
-			viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+		activeDrag: {
+			startSnapshot: {
+				objects: { "poly-1": poly },
+				keyPoints: {},
+				snapCandidates: null,
+				selectedIds: [],
+				selectedIdsWithDescendants: new Set(),
+				multiSelectGroup: null,
+				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+			},
+			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };

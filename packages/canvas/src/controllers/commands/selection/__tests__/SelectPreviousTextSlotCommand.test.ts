@@ -20,7 +20,7 @@ const baseState = (
 		},
 		selectedIds: ["rec-1"],
 		selectedTextSlot: null,
-		eventStartSnapshot: null,
+		activeDrag: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 

@@ -87,24 +87,24 @@ export type CanvasInteractionHandle = {
 export const resolveInteractionStatus = (
 	state: Pick<
 		CanvasControllerState,
-		| "activeDragKind"
+		| "activeDrag"
 		| "inertialScrolling"
 		| "textEditState"
 		| "shapeDrawing"
 		| "activeModal"
 	>,
 ): CanvasInteractionStatus => ({
-	drag: state.activeDragKind,
+	drag: state.activeDrag?.kind ?? null,
 	isInertialScrolling: state.inertialScrolling,
 	editingTextId: state.textEditState?.objectId ?? null,
 	drawingShapeType: state.shapeDrawing?.preset.objectType ?? null,
 	modal: state.activeModal,
 	// The transient states of the individual drags (a pending connector, a
 	// marquee, a stencil dragged off the palette) are not read here:
-	// handleGesture raises activeDragKind on every dragStart and clears it on
+	// handleGesture opens activeDrag on every dragStart and drops it on
 	// every dragEnd, so a drag of any kind is already this.
 	isBusy:
-		state.activeDragKind !== null ||
+		state.activeDrag !== null ||
 		state.inertialScrolling ||
 		state.textEditState !== null,
 });

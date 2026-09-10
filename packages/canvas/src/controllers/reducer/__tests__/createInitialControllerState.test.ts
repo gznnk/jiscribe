@@ -30,7 +30,7 @@ describe("createInitialControllerState", () => {
 
 		expect(state.objects["rect-1"]).toMatchObject({ cx: 5, cy: 5 });
 		expect(state.selectedIds).toEqual([]);
-		expect(state.eventStartSnapshot).toBeNull();
+		expect(state.activeDrag).toBeNull();
 		expect(state.multiSelectGroup).toBeNull();
 		expect(state.textEditState).toBeNull();
 		expect(state.commitVersion).toBe(0);

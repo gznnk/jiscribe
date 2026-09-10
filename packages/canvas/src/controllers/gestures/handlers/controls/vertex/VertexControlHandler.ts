@@ -118,12 +118,12 @@ export class VertexControlHandler extends ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
-		const eventStartSnapshot = state.eventStartSnapshot;
-		if (!eventStartSnapshot) {
+		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		if (!dragStartSnapshot) {
 			return state;
 		}
 
-		const startObject = eventStartSnapshot.objects[objectId];
+		const startObject = dragStartSnapshot.objects[objectId];
 		if (!isPoly(startObject)) {
 			return state;
 		}
@@ -163,7 +163,7 @@ export class VertexControlHandler extends ControlStrategy {
 		}
 
 		// --- Snap correction between objects (skipped while axis-locked / origin-snapping) ---
-		const snapCandidates = eventStartSnapshot.snapCandidates;
+		const snapCandidates = dragStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 		if (snapCandidates && !isSnapSuppressed(event) && !snapToOrigin) {

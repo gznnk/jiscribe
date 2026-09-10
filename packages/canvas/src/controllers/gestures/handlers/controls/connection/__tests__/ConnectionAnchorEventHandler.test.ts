@@ -82,7 +82,7 @@ const withBlob = (state: CanvasControllerState): CanvasControllerState => ({
 
 /**
  * Build a state that injects connectors into objects / rootIds and also prepares the
- * eventStartSnapshot that serves as the editing baseline (in the real app, handleGesture creates it on dragStart).
+ * start snapshot that serves as the editing baseline (in the real app, handleGesture creates it on dragStart).
  * Connectors are managed intermixed in rootIds, so push them onto rootIds.
  */
 const stateWithConnectors = (
@@ -97,15 +97,18 @@ const stateWithConnectors = (
 		...base,
 		objects,
 		rootIds: [...base.rootIds, ...connectors.map((c) => c.id)],
-		eventStartSnapshot: {
-			objects,
-			keyPoints: {},
-			bboxes: {},
-			snapCandidates: { x: [], y: [] },
-			selectedIds: [],
-			selectedIdsWithDescendants: new Set(),
-			multiSelectGroup: null,
-			viewport: base.viewport,
+		activeDrag: {
+			startSnapshot: {
+				objects,
+				keyPoints: {},
+				bboxes: {},
+				snapCandidates: { x: [], y: [] },
+				selectedIds: [],
+				selectedIdsWithDescendants: new Set(),
+				multiSelectGroup: null,
+				viewport: base.viewport,
+			},
+			kind: "other",
 		},
 	});
 };

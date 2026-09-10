@@ -61,7 +61,7 @@ export function useObjectMenuPosition(
 		viewport,
 		contextMenuPosition,
 		areaSelection,
-		activeDragKind,
+		activeDrag,
 		inertialScrolling,
 		objectMenuOpenId,
 		textEditState,
@@ -96,7 +96,7 @@ export function useObjectMenuPosition(
 	// fling a released pan leaves behind. The linger is what keeps the handover
 	// between the two from flashing the menu (see REAPPEAR_DELAY_MS).
 	const isViewMoving =
-		(activeDragKind !== null && objectMenuOpenId === null) || inertialScrolling;
+		(activeDrag !== null && objectMenuOpenId === null) || inertialScrolling;
 	const isViewUnsettled = useLingeringFlag(isViewMoving, REAPPEAR_DELAY_MS);
 
 	const shouldRender = useMemo(() => {

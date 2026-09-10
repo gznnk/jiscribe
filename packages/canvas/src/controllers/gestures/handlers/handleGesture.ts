@@ -9,7 +9,7 @@ import type { FrameKeyPoints, TransformedFrame } from "@jiscribe/geometry";
 import type { CanvasGestureHandling } from "../../CanvasGestureHandling";
 import type {
 	CanvasControllerState,
-	EventStartSnapshot,
+	DragStartSnapshot,
 	KeyPointsCache,
 } from "../../CanvasTypes";
 import type { CanvasRegistries } from "../../registries/CanvasRegistries";
@@ -23,13 +23,13 @@ import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
 import { ZOOM } from "../../utils/zoom";
 
 /**
- * Event types that should trigger saving the current state as eventStartSnapshot.
+ * Event types that should open a drag and freeze its start snapshot.
  * Add new event start types here as needed.
  */
 const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
 
 /**
- * Event types that should trigger clearing the eventStartSnapshot.
+ * Event types that should close the drag in progress.
  * Add new event end types here as needed.
  */
 const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
@@ -37,8 +37,7 @@ const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
 /**
  * Main gesture router.
  * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
- * Also manages the eventStartSnapshot and activeDragKind lifecycle (set on dragStart,
- * cleared on dragEnd).
+ * Also manages the activeDrag lifecycle (opened on dragStart, dropped on dragEnd).
  * Automatically records history when commitVersion changes.
  *
  * Routing uses the canvas's own gesture handler registry, passed in via
@@ -96,7 +95,7 @@ export const handleGesture = (
 	}
 	canvasEvent = { ...canvasEvent, gestureHandling };
 
-	// Save eventStartSnapshot on event start
+	// Open the drag on event start
 	if (EVENT_START_TYPES.includes(canvasEvent.type)) {
 		// Read state.keyPointsCache and recompute only the objects that changed by reference comparison
 		const oldCache = state.keyPointsCache;
@@ -159,7 +158,7 @@ export const handleGesture = (
 		// so the marquee drag hot path never recomputes bboxes per frame (issue #124).
 		const bboxes = buildObjectBBoxes(state.objects, keyPoints);
 
-		const eventStartSnapshot: EventStartSnapshot = {
+		const startSnapshot: DragStartSnapshot = {
 			objects: state.objects,
 			keyPoints,
 			bboxes,
@@ -174,11 +173,13 @@ export const handleGesture = (
 			...state,
 			keyPointsCache: newCache,
 			snapCandidatesCache,
-			eventStartSnapshot,
-			// The default every drag starts from. A handler that gives its drag a
-			// meaning refines it in its own dragStart; anything else stays "other",
-			// which is what keeps "a drag is under way" true for all of them.
-			activeDragKind: "other",
+			activeDrag: {
+				startSnapshot,
+				// The default every drag starts from. A handler that gives its drag a
+				// meaning refines it in its own dragStart; anything else stays "other",
+				// which is what keeps "a drag is under way" true for all of them.
+				kind: "other",
+			},
 		};
 	}
 
@@ -215,7 +216,7 @@ export const handleGesture = (
 		nextState = registries.gestureHandler.handle(nextState, event, registries);
 	}
 
-	// Clear eventStartSnapshot / activeDragKind on event end
+	// Drop the drag on event end
 	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
 		// Only commit if objects/rootIds actually changed.
 		// (connectors are also part of rootIds, so comparing rootIds detects them)
@@ -230,8 +231,7 @@ export const handleGesture = (
 			// Flatten the per-frame COW view so history / persistence / the next
 			// gesture's snapshot only ever hold plain records (#213). No-op when plain.
 			objects: materializeObjects(nextState.objects),
-			eventStartSnapshot: null,
-			activeDragKind: null,
+			activeDrag: null,
 			snapFeedback: null,
 			axisLockFeedback: null,
 			...(hasDocChanges ? { commitVersion: state.commitVersion + 1 } : {}),

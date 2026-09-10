@@ -100,26 +100,25 @@ export class TransformControlHandler extends ControlStrategy {
 
 		// For a multi-select resize, cache what the per-frame bounds derivation
 		// needs so it never re-collects every leaf vertex (#215)
-		let eventStartSnapshot = state.eventStartSnapshot;
+		let startSnapshot = state.activeDrag?.startSnapshot;
 		if (
 			anchorType !== "rotation" &&
-			eventStartSnapshot?.multiSelectGroup &&
+			startSnapshot?.multiSelectGroup &&
 			state.selectedIds.length > 1
 		) {
-			eventStartSnapshot = {
-				...eventStartSnapshot,
+			startSnapshot = {
+				...startSnapshot,
 				multiSelectResizeBoundsCache: createMultiSelectResizeBoundsCache(
 					state.selectedIds,
-					eventStartSnapshot.objects,
-					eventStartSnapshot.multiSelectGroup,
+					startSnapshot.objects,
+					startSnapshot.multiSelectGroup,
 				),
 			};
 		}
 
 		return {
 			...state,
-			eventStartSnapshot,
-			activeDragKind: "transform",
+			activeDrag: startSnapshot ? { startSnapshot, kind: "transform" } : null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
@@ -141,8 +140,8 @@ export class TransformControlHandler extends ControlStrategy {
 		}
 
 		// Common preprocessing for resize handling
-		const eventStartSnapshot = state.eventStartSnapshot;
-		if (!eventStartSnapshot) {
+		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		if (!dragStartSnapshot) {
 			return state;
 		}
 
@@ -154,7 +153,7 @@ export class TransformControlHandler extends ControlStrategy {
 
 		if (isMultiSelect) {
 			// For multi-selection, use multiSelectGroup
-			const multiSelectGroup = eventStartSnapshot.multiSelectGroup;
+			const multiSelectGroup = dragStartSnapshot.multiSelectGroup;
 			if (
 				multiSelectGroup &&
 				isTransformedFrame(multiSelectGroup) &&
@@ -166,7 +165,7 @@ export class TransformControlHandler extends ControlStrategy {
 		} else if (state.selectedIds.length === 1) {
 			// For single selection
 			selectedId = state.selectedIds[0];
-			const startObject = eventStartSnapshot.objects[selectedId];
+			const startObject = dragStartSnapshot.objects[selectedId];
 			if (
 				startObject &&
 				isTransformedFrame(startObject) &&
@@ -197,11 +196,11 @@ export class TransformControlHandler extends ControlStrategy {
 
 		// Get from keyPoints, or compute if absent
 		const startFrameKeyPointsId = isMultiSelect
-			? eventStartSnapshot.multiSelectGroup?.id
+			? dragStartSnapshot.multiSelectGroup?.id
 			: selectedId;
 		const startFrameKeyPoints: FrameKeyPoints =
 			(startFrameKeyPointsId &&
-				eventStartSnapshot.keyPoints[startFrameKeyPointsId]) ||
+				dragStartSnapshot.keyPoints[startFrameKeyPointsId]) ||
 			calcFrameKeyPoints(startFrame);
 
 		const aspectRatio =
@@ -231,7 +230,7 @@ export class TransformControlHandler extends ControlStrategy {
 		// Snap correction
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-		if (eventStartSnapshot.snapCandidates && !isSnapSuppressed(event)) {
+		if (dragStartSnapshot.snapCandidates && !isSnapSuppressed(event)) {
 			// Snap candidates use the cached set of all objects from dragStart by reference only;
 			// exclusions (selection + all descendants) are passed to findSnap as a Set and filtered internally.
 			const snapped = applyResizeSnap({
@@ -244,8 +243,8 @@ export class TransformControlHandler extends ControlStrategy {
 				aspectRatio,
 				doKeepProportion,
 				resizeResult,
-				snapCandidates: eventStartSnapshot.snapCandidates,
-				excludeIds: eventStartSnapshot.selectedIdsWithDescendants,
+				snapCandidates: dragStartSnapshot.snapCandidates,
+				excludeIds: dragStartSnapshot.selectedIdsWithDescendants,
 				zoom: state.viewport.zoom,
 			});
 			resizeResult = snapped.resizeResult;
@@ -283,8 +282,8 @@ export class TransformControlHandler extends ControlStrategy {
 			scaleY: newScaleY,
 		};
 
-		// Build the updated object map from eventStartSnapshot (COW view, #213)
-		const updatedObjects = createCowObjects(eventStartSnapshot.objects);
+		// Build the updated object map from dragStartSnapshot (COW view, #213)
+		const updatedObjects = createCowObjects(dragStartSnapshot.objects);
 
 		let nextState: CanvasControllerState;
 
@@ -300,7 +299,7 @@ export class TransformControlHandler extends ControlStrategy {
 				startGroup,
 				updatedGroup,
 				startGroup,
-				eventStartSnapshot.objects,
+				dragStartSnapshot.objects,
 				registries.objectBehavior,
 			);
 			Object.assign(updatedObjects, groupChildrenUpdates);
@@ -316,7 +315,7 @@ export class TransformControlHandler extends ControlStrategy {
 			// Recompute the bounding box of multiSelectGroup (only this is updated during drag).
 			// The dragStart cache derives it without re-collecting every leaf vertex (#215);
 			// fall back to the full point collection when the cache is absent.
-			const boundsCache = eventStartSnapshot.multiSelectResizeBoundsCache;
+			const boundsCache = dragStartSnapshot.multiSelectResizeBoundsCache;
 			const recalculatedBounds = boundsCache
 				? calcMultiSelectGroupBoundsFromCache(
 						boundsCache,
@@ -344,7 +343,7 @@ export class TransformControlHandler extends ControlStrategy {
 				return state;
 			}
 
-			const startObject = eventStartSnapshot.objects[selectedId];
+			const startObject = dragStartSnapshot.objects[selectedId];
 			if (!startObject) {
 				return state;
 			}
@@ -361,7 +360,7 @@ export class TransformControlHandler extends ControlStrategy {
 					startObject as GroupState,
 					updatedObject as GroupState,
 					updatedObject as GroupState,
-					eventStartSnapshot.objects,
+					dragStartSnapshot.objects,
 					registries.objectBehavior,
 				);
 				Object.assign(updatedObjects, groupChildrenUpdates);

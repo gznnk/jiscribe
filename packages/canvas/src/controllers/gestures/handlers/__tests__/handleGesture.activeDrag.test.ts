@@ -54,9 +54,9 @@ const dragGesture = (
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as Gesture;
 
-describe("handleGesture - activeDragKind", () => {
+describe("handleGesture - activeDrag", () => {
 	it("is null while no drag is in progress", () => {
-		expect(stateWithSelectedRect().activeDragKind).toBeNull();
+		expect(stateWithSelectedRect().activeDrag).toBeNull();
 	});
 
 	it("is 'move' for the length of an object drag", () => {
@@ -66,14 +66,14 @@ describe("handleGesture - activeDragKind", () => {
 			dragGesture("dragStart", { targetKind: "object", targetId: "r1" }),
 			registries,
 		);
-		expect(state.activeDragKind).toBe("move");
+		expect(state.activeDrag?.kind).toBe("move");
 
 		state = handleGesture(
 			state,
 			dragGesture("dragEnd", { targetKind: "object", targetId: "r1" }),
 			registries,
 		);
-		expect(state.activeDragKind).toBeNull();
+		expect(state.activeDrag).toBeNull();
 	});
 
 	it("is 'transform' for a resize handle drag", () => {
@@ -87,7 +87,7 @@ describe("handleGesture - activeDragKind", () => {
 			}),
 			registries,
 		);
-		expect(state.activeDragKind).toBe("transform");
+		expect(state.activeDrag?.kind).toBe("transform");
 	});
 
 	it("is 'other' for a marquee on the canvas", () => {
@@ -97,6 +97,6 @@ describe("handleGesture - activeDragKind", () => {
 			dragGesture("dragStart", { targetKind: "canvas", targetId: "canvas" }),
 			registries,
 		);
-		expect(state.activeDragKind).toBe("other");
+		expect(state.activeDrag?.kind).toBe("other");
 	});
 });

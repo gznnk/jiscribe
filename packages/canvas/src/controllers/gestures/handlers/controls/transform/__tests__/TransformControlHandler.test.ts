@@ -72,15 +72,18 @@ const makeGroupResizeState = (): CanvasControllerState => {
 		viewport,
 		multiSelectGroup: null,
 		snapFeedback: { x: [], y: [] },
-		eventStartSnapshot: {
-			objects,
-			keyPoints: {},
-			bboxes: {},
-			snapCandidates: { x: [], y: [] },
-			selectedIds: ["g"],
-			selectedIdsWithDescendants: new Set(["g", "a"]),
-			multiSelectGroup: null,
-			viewport,
+		activeDrag: {
+			startSnapshot: {
+				objects,
+				keyPoints: {},
+				bboxes: {},
+				snapCandidates: { x: [], y: [] },
+				selectedIds: ["g"],
+				selectedIdsWithDescendants: new Set(["g", "a"]),
+				multiSelectGroup: null,
+				viewport,
+			},
+			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -97,14 +100,17 @@ const makeDragState = (): CanvasControllerState => {
 		rootIds: ["rect-1"],
 		selectedIds: ["rect-1"],
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: {
-			objects: { "rect-1": rect },
-			keyPoints: {},
-			snapCandidates: null,
-			selectedIds: ["rect-1"],
-			selectedIdsWithDescendants: new Set(["rect-1"]),
-			multiSelectGroup: null,
-			viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+		activeDrag: {
+			startSnapshot: {
+				objects: { "rect-1": rect },
+				keyPoints: {},
+				snapCandidates: null,
+				selectedIds: ["rect-1"],
+				selectedIdsWithDescendants: new Set(["rect-1"]),
+				multiSelectGroup: null,
+				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+			},
+			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };

@@ -10,7 +10,7 @@ import type { SnapCandidate, SnapCandidates } from "../../../../CanvasTypes";
  * Exclusions (selected / descendants) must be applied by the caller as filteredCandidates.
  *
  * @param objects - Object map
- * @param keyPointsCache - Precomputed keyPoints cache (passed from EventStartSnapshot)
+ * @param keyPointsCache - Precomputed keyPoints cache (passed from DragStartSnapshot)
  */
 export const calcSnapCandidates = (
 	objects: Record<string, ObjectState>,

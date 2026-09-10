@@ -26,7 +26,7 @@ const makeState = (params: {
 	past: DocSnapshot[];
 	present: DocSnapshot;
 	future: DocSnapshot[];
-	eventStartSnapshot?: unknown;
+	activeDrag?: unknown;
 	textEditState?: unknown;
 	selectedIds?: string[];
 }): CanvasControllerState =>
@@ -37,7 +37,7 @@ const makeState = (params: {
 			future: params.future,
 		},
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: params.eventStartSnapshot ?? null,
+		activeDrag: params.activeDrag ?? null,
 		textEditState: params.textEditState ?? null,
 		selectedIds: params.selectedIds ?? [],
 		selectedConnectorId: null,
@@ -124,7 +124,7 @@ describe("RedoCommand", () => {
 						past: [],
 						present: snapshotPrev,
 						future: [snapshotNext],
-						eventStartSnapshot: { foo: 1 },
+						activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
 					}),
 					registries,
 				),

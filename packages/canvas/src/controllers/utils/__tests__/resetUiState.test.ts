@@ -7,8 +7,7 @@ describe("resetUiState", () => {
 	it("clears every transient field to its empty value", () => {
 		expect(resetUiState()).toEqual({
 			selectedIds: [],
-			eventStartSnapshot: null,
-			activeDragKind: null,
+			activeDrag: null,
 			inertialScrolling: false,
 			keyPointsCache: {},
 			snapCandidatesCache: null,

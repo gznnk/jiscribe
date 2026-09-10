@@ -75,21 +75,21 @@ describe("handleGesture - area selection (marquee)", () => {
 	it("builds bboxes at dragStart and selects only fully-contained objects", () => {
 		let state = stateWithRects();
 
-		// dragStart: eventStartSnapshot (and its bboxes) is created here.
+		// dragStart: the drag's start snapshot (and its bboxes) is created here.
 		state = handleGesture(
 			state,
 			dragGesture("dragStart", 0, 0, 0, 0),
 			registries,
 		);
-		expect(state.eventStartSnapshot).not.toBeNull();
-		expect(state.eventStartSnapshot?.bboxes.r1).toEqual({
+		expect(state.activeDrag).not.toBeNull();
+		expect(state.activeDrag?.startSnapshot.bboxes.r1).toEqual({
 			left: 30,
 			top: 30,
 			right: 70,
 			bottom: 70,
 		});
 		// Connectors / the far rect aside, the map covers the on-canvas shapes.
-		expect(state.eventStartSnapshot?.bboxes.far).toBeDefined();
+		expect(state.activeDrag?.startSnapshot.bboxes.far).toBeDefined();
 
 		// drag a rectangle that fully contains r1 + r2 but not `far`.
 		state = handleGesture(
@@ -122,7 +122,7 @@ describe("handleGesture - area selection (marquee)", () => {
 		expect(state.multiSelectGroup).toBeNull();
 	});
 
-	it("clears eventStartSnapshot on dragEnd", () => {
+	it("drops the drag on dragEnd", () => {
 		let state = stateWithRects();
 		state = handleGesture(
 			state,
@@ -139,6 +139,6 @@ describe("handleGesture - area selection (marquee)", () => {
 			dragGesture("dragEnd", 0, 0, 200, 200),
 			registries,
 		);
-		expect(state.eventStartSnapshot).toBeNull();
+		expect(state.activeDrag).toBeNull();
 	});
 });

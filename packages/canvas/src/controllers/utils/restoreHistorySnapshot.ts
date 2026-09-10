@@ -16,7 +16,7 @@ import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
  *   is an entry to move to, which each caller checks for its own direction
  */
 export const canNavigateHistory = (state: CanvasControllerState): boolean =>
-	state.eventStartSnapshot === null && state.textEditState === null;
+	state.activeDrag === null && state.textEditState === null;
 
 /**
  * Moves the canvas onto another history entry — the one state transition undo,

@@ -17,8 +17,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
 export type UiStateReset = Pick<
 	CanvasControllerState,
 	| "selectedIds"
-	| "eventStartSnapshot"
-	| "activeDragKind"
+	| "activeDrag"
 	| "inertialScrolling"
 	| "keyPointsCache"
 	| "snapCandidatesCache"
@@ -52,11 +51,10 @@ export type UiStateReset = Pick<
  */
 export const resetUiState = (): UiStateReset => ({
 	selectedIds: [],
-	eventStartSnapshot: null,
 	// cancelPendingGesture() drops an in-flight drag without firing dragEnd, so this
-	// reset is what keeps the kind from outliving the gesture on an external swap.
-	activeDragKind: null,
-	// Same reason as activeDragKind: cancelPendingGesture() may kill a fling during
+	// reset is what keeps the drag from outliving the gesture on an external swap.
+	activeDrag: null,
+	// Same reason as activeDrag: cancelPendingGesture() may kill a fling during
 	// the swap, and the flag must not outlive it.
 	inertialScrolling: false,
 	keyPointsCache: {},

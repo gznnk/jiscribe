@@ -114,7 +114,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("is a no-op while a drag is in progress, like undo itself", () => {
 			const state = createState({
-				eventStartSnapshot: {},
+				activeDrag: { startSnapshot: {}, kind: "other" },
 			} as Partial<CanvasControllerState>);
 
 			expect(applyActions(state, [revertTo(entries.oldest)])).toBe(state);

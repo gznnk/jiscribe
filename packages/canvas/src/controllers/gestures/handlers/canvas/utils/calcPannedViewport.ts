@@ -6,7 +6,7 @@ import type { Viewport } from "../../../../../rendering/Viewport";
 /**
  * Viewport panned so the content follows the pointer (grab scroll / touch pan).
  *
- * @param initialViewport - The viewport at dragStart (eventStartSnapshot), not the
+ * @param initialViewport - The viewport at dragStart (the drag's start snapshot), not the
  *   current one: the pan is recomputed from the drag origin every frame, so
  *   incremental drift cannot accumulate.
  * @param clientDelta - Movement since dragStart in screen pixels. Screen-based on

@@ -59,14 +59,17 @@ const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 		multiSelectGroup: null,
 		textEditState: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: {
-			objects: { "rect-1": rect },
-			keyPoints: { "rect-1": makeKeyPoints(cx, cy) },
-			snapCandidates: { x: [], y: [] },
-			selectedIds: ["rect-1"],
-			selectedIdsWithDescendants: new Set(["rect-1"]),
-			multiSelectGroup: null,
-			viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+		activeDrag: {
+			startSnapshot: {
+				objects: { "rect-1": rect },
+				keyPoints: { "rect-1": makeKeyPoints(cx, cy) },
+				snapCandidates: { x: [], y: [] },
+				selectedIds: ["rect-1"],
+				selectedIdsWithDescendants: new Set(["rect-1"]),
+				multiSelectGroup: null,
+				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+			},
+			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -452,7 +455,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		expect(movedRect(afterX)).toMatchObject({ cx: 20, cy: 0 });
 
 		// Second: still the same drag, now switches to vertical dominant -> X locked, Y moves
-		// drag uses the accumulated delta from eventStartSnapshot, so it is re-evaluated from the start state
+		// drag uses the accumulated delta from the drag's start snapshot, so it is re-evaluated from the start state
 		const afterY = ObjectEventHandler.handle(
 			afterX,
 			makeDragEvent({ x: 6, y: 40 }, true),
@@ -545,20 +548,23 @@ const makeSnapDragState = (coordinate: number): CanvasControllerState => {
 	const state = makeDragState();
 	return {
 		...state,
-		eventStartSnapshot: {
-			...state.eventStartSnapshot,
-			snapCandidates: {
-				x: [
-					{
-						objectId: "rect-2",
-						coordinate,
-						edge: "hCenter",
-						perpendicularMin: -100,
-						perpendicularMax: 100,
-					},
-				],
-				y: [],
+		activeDrag: {
+			startSnapshot: {
+				...state.activeDrag?.startSnapshot,
+				snapCandidates: {
+					x: [
+						{
+							objectId: "rect-2",
+							coordinate,
+							edge: "hCenter",
+							perpendicularMin: -100,
+							perpendicularMax: 100,
+						},
+					],
+					y: [],
+				},
 			},
+			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };

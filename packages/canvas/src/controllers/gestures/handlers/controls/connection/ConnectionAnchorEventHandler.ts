@@ -194,7 +194,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 	 * Like polyline vertex editing, edits the entity directly without an overlay copy.
 	 * Therefore objects / rootIds are left unchanged (preserving z-order), and the selection is kept
 	 * so that ConnectorControls' endpoint handles follow the entity.
-	 * The actual endpoint update is performed by handleDrag based on eventStartSnapshot.
+	 * The actual endpoint update is performed by handleDrag based on the drag's start snapshot.
 	 */
 	private handleEditDragStart(
 		state: CanvasControllerState,
@@ -293,10 +293,11 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		const { connectorDraft } = state;
 
 		// Edit mode: rewrite the entity directly, like polyline vertex editing (no overlay).
-		// The base is the original connector from eventStartSnapshot, so the fixed side and intermediate points always keep their start-time values.
+		// The base is the original connector from the drag's start snapshot, so the fixed side and intermediate points always keep their start-time values.
 		if (connectorDraft?.kind === "edit") {
 			const { connectorId } = connectorDraft;
-			const baseConnector = state.eventStartSnapshot?.objects[connectorId];
+			const baseConnector =
+				state.activeDrag?.startSnapshot.objects[connectorId];
 			if (!baseConnector || baseConnector.type !== "connector") {
 				return state;
 			}
@@ -393,7 +394,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		// Edit mode: the entity has been edited directly. Apply the final state and decide whether to commit.
 		if (connectorDraft?.kind === "edit") {
 			const { connectorId } = connectorDraft;
-			const original = state.eventStartSnapshot?.objects[connectorId];
+			const original = state.activeDrag?.startSnapshot.objects[connectorId];
 
 			// If the endpoint has not effectively changed since the start, it is a no-op.
 			// Leaving objects as-is (during handleDrag the entity ends at final position = start position)
