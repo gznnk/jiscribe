@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 import { createCanvasParser } from "@jiscribe/doc";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
@@ -9,6 +9,7 @@ import { PageScrollApp } from "./PageScrollApp";
 import type {
 	CanvasConfig,
 	CanvasDoc,
+	CanvasHandle,
 	CanvasParser,
 	CanvasPlugin,
 	StencilCategory,
@@ -65,6 +66,7 @@ function HarnessApp({
 	parser,
 }: HarnessAppProps) {
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(emptyDoc);
+	const canvasHandleRef = useRef<CanvasHandle>(null);
 
 	// Hook for a spec to trigger external sync (a doc swap from the parent, SYNC_EXTERNAL).
 	// scenario/external-sync-cancels-drag.spec depends on it.
@@ -81,6 +83,15 @@ function HarnessApp({
 			setLoadedDoc(result.doc);
 		};
 	}, [parser]);
+
+	// The imperative handle reaches a host through the ref prop and nowhere else:
+	// none of what it answers is readable off the DOM. api/canvas-handle.spec
+	// drives it through this. Only the default page has one canvas to publish.
+	useEffect(() => {
+		(
+			window as unknown as { __canvasHandle?: CanvasHandle | null }
+		).__canvasHandle = canvasHandleRef.current;
+	}, []);
 
 	const handleDrop = useCallback(
 		async (e: React.DragEvent) => {
@@ -118,6 +129,7 @@ function HarnessApp({
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
+				ref={canvasHandleRef}
 				doc={loadedDoc}
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}

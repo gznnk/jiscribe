@@ -18,7 +18,7 @@ packages/canvas/
 │   ├── kit/               # the shared implementation behind the testing entries
 │   │   ├── createCanvasPlaywrightConfig.ts  # ephemeral-port webServer, viewport, headed ergonomics
 │   │   ├── createPluginHarnessViteConfig.ts # dev-server-only vite config
-│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi and ?pageScroll switch pages
+│   │   ├── mountPluginHarness.tsx  # a single Canvas with an empty document (dark theme fixed). ?multi and ?pageScroll switch pages. The default page publishes its CanvasHandle as window.__canvasHandle
 │   │   ├── MultiCanvasApp.tsx      # a 2-canvas page for verifying keyboard scope
 │   │   ├── PageScrollApp.tsx       # a canvas embedded in a scrolling document, for verifying gestureHandling="cooperative"
 │   │   └── harness.css
