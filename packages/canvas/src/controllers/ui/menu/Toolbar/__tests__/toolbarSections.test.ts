@@ -63,7 +63,7 @@ describe("DEFAULT_TOOLBAR_SECTIONS", () => {
 		const commandIds = allItems(ALL_SECTIONS).flatMap((item) =>
 			item.type === "command" ? [item.commandId] : [],
 		);
-		expect(commandIds).toEqual(["undo", "redo", "shortcutHelp"]);
+		expect(commandIds).toEqual(["undo", "redo", "zoomToFit", "shortcutHelp"]);
 		expect(
 			commandIds.filter(
 				(commandId) => registries.command.get(commandId) === undefined,
@@ -171,6 +171,7 @@ describe("the sections of the default bar", () => {
 		expect(DEFAULT_TOOLBAR_VIEW_SECTION.align).toBe("end");
 		expect(itemNames(DEFAULT_TOOLBAR_VIEW_SECTION)).toEqual([
 			"zoom",
+			"zoomToFit",
 			"divider",
 			"shortcutHelp",
 		]);

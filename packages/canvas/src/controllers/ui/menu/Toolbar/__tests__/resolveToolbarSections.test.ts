@@ -53,7 +53,7 @@ describe("resolveToolbarSections", () => {
 				"stencilPreset",
 			],
 			["divider", "command", "command"],
-			["zoom", "divider", "command"],
+			["zoom", "command", "divider", "command"],
 			["divider", "propertyPanelToggle"],
 		]);
 	});
@@ -81,7 +81,13 @@ describe("resolveToolbarSections", () => {
 		const resolved = resolveToolbarSections(
 			DEFAULT_TOOLBAR_SECTIONS,
 			// `commands` restricts the registry, which is how a host switches one off.
-			createContext(true, ["shortcutHelp", "zoomIn", "zoomOut", "resetZoom"]),
+			createContext(true, [
+				"shortcutHelp",
+				"zoomToFit",
+				"zoomIn",
+				"zoomOut",
+				"resetZoom",
+			]),
 		);
 		expect(resolved.map((section) => section.id)).toEqual([
 			"tools",

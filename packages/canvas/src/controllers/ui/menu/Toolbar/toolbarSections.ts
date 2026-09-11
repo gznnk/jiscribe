@@ -4,6 +4,7 @@ import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { RedoIcon } from "../../icons/RedoIcon";
 import { UndoIcon } from "../../icons/UndoIcon";
+import { ZoomToFitIcon } from "../../icons/ZoomToFitIcon";
 import type { StencilIconProps } from "../../objects/Stencil";
 import type { StencilCategory } from "../../objects/StencilCategory";
 
@@ -124,8 +125,11 @@ export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
 };
 
 /**
- * Zoom and shortcut help, packed against the right edge: the controls that leave
- * the document alone. A host adding its own view-side UI (a settings menu, say)
+ * Zoom, zoom to fit and shortcut help, packed against the right edge: the
+ * controls that leave the document alone. Zoom to fit rides beside the zoom
+ * group as the one view command the bar shows; zoom to selection stays a
+ * shortcut, since a button that needs a selection would sit disabled most of the
+ * time. A host adding its own view-side UI (a settings menu, say)
  * belongs after this section and before the properties toggle, so the toggle
  * keeps the far edge.
  */
@@ -134,6 +138,7 @@ export const DEFAULT_TOOLBAR_VIEW_SECTION: ToolbarSection = {
 	align: "end",
 	items: [
 		{ type: "zoom" },
+		{ type: "command", commandId: "zoomToFit", icon: ZoomToFitIcon },
 		{ type: "divider" },
 		{ type: "command", commandId: "shortcutHelp", icon: HelpIcon },
 	],

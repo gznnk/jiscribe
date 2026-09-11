@@ -14,6 +14,7 @@ import { selectors } from "../../support/selectors";
 const zoomInButton = selectors.toolbarCommand("zoomIn");
 const zoomOutButton = selectors.toolbarCommand("zoomOut");
 const readout = selectors.toolbarCommand("resetZoom");
+const zoomToFitButton = selectors.toolbarCommand("zoomToFit");
 
 test.describe("toolbar zoom buttons", () => {
 	test("zooms one step per click and returns to 100% on reset", async ({
@@ -51,5 +52,19 @@ test.describe("toolbar zoom buttons", () => {
 
 		// Two steps 1 -> 1.25 -> 1.5 (if the second press is dropped it stays at 125%).
 		await expect(canvas.page.locator(readout)).toHaveText("150%");
+	});
+
+	test("zoom to fit is disabled on an empty canvas and frames the drawing once there is one", async ({
+		canvas,
+	}) => {
+		const button = canvas.page.locator(zoomToFitButton);
+		await expect(button).toBeDisabled();
+
+		await canvas.drawShape("Rectangle", { x: 200, y: 200 }, { x: 300, y: 280 });
+		await expect(button).toBeEnabled();
+
+		// A single small shape fits at a zoom other than 100%, so the readout moves.
+		await button.click();
+		await expect(canvas.page.locator(readout)).not.toHaveText("100%");
 	});
 });
