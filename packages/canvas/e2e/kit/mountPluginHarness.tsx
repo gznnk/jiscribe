@@ -1,7 +1,13 @@
 /// <reference types="vite/client" />
 
 import { createCanvasParser } from "@jiscribe/doc";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import ReactDOM from "react-dom/client";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
