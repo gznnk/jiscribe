@@ -4,8 +4,9 @@ import { sampleEllipseArc } from "@jiscribe/geometry";
 import type { Dimensions } from "@jiscribe/geometry";
 
 /**
- * Delay outline (centered): rectangle with a right-side semicircular bulge
- * (radius = height/2). Renderer draws the equivalent arc (buildDelayPath).
+ * Delay outline (centered): rectangle whose right edge bulges out over the full
+ * height, so the bulge is half the height deep vertically and no deeper than the
+ * width horizontally. Renderer draws the equivalent arc (buildDelayPath).
  */
 export const delayOutline: ObjectOutlineCalculator<Dimensions> = ({
 	width,
@@ -13,16 +14,17 @@ export const delayOutline: ObjectOutlineCalculator<Dimensions> = ({
 }) => {
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
-	const r = halfHeight;
+	const ry = halfHeight;
+	const rx = Math.min(width, ry);
 	return [
 		{ x: -halfWidth, y: -halfHeight },
-		{ x: halfWidth - r, y: -halfHeight },
-		// right semicircle (top to bottom, bulging right)
+		{ x: halfWidth - rx, y: -halfHeight },
+		// right bulge (top to bottom, bulging right)
 		...sampleEllipseArc(
-			halfWidth - r,
+			halfWidth - rx,
 			0,
-			r,
-			r,
+			rx,
+			ry,
 			-90,
 			90,
 			OUTLINE_CURVE_SEGMENTS,

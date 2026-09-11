@@ -55,7 +55,7 @@ export const calcDbTextRegion = createInsetTextRegion({
  * ends where the straight top/bottom edges meet the semicircular cap. A
  * constant ratio overflows the right corners once height exceeds 0.4 * width.
  *
- * @param doc - The delay's untransformed box; the cap radius is half the height, so the inset ratio depends on the width too
+ * @param doc - The delay's untransformed box; the bulge is half the height deep, so the inset ratio depends on the width too, and runs the region to nothing once it takes the whole width
  * @returns The region in local coordinates (shape center as origin)
  */
 export const calcDelayTextRegion = ({ width, height }: Dimensions): Rect =>

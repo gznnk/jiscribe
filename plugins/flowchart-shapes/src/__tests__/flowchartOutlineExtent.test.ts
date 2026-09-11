@@ -41,23 +41,6 @@ const SIZES: ReadonlyArray<Dimensions> = [
 ];
 
 /**
- * Shapes left out of the overflow rule because they break it today. This is not
- * an exemption like a gap one — nothing here is a silhouette the rule was never
- * meant to bind, only a defect the rule would otherwise have to record as
- * correct. Removing an entry is the point; adding one needs the same reason.
- */
-const OVERFLOW_DEFECTS: Record<string, string> = {
-	// buildDelayPath promises "the cap radius is half the height, so the bulge
-	// stays inside the bounding box". The cap is centered at halfWidth - height/2
-	// though, so a box taller than it is wide puts that center left of the box and
-	// the arc leaves through the *left* edge: 100% of the width out at 100x400.
-	// delayOutline derives the same center, so the drawing and the connectors
-	// agree on being outside. Sizing the radius from the shorter side, the way
-	// card / loopLimit / multiDocument size theirs, is what the comment describes.
-	delay: "cap radius follows the height alone (buildDelayPath)",
-};
-
-/**
  * Every outline in this package reads nothing but width/height; the definition
  * types it against the shape's whole State, so the cast is what lets a bare box
  * stand in for one.
@@ -121,9 +104,6 @@ describe("flowchart shapes fill their box", () => {
 	it("stays inside the bounding box, at every aspect ratio", () => {
 		const spilling: string[] = [];
 		for (const [type, calcOutline] of outlinesOf()) {
-			if (type in OVERFLOW_DEFECTS) {
-				continue;
-			}
 			for (const size of SIZES) {
 				const overflow = maxOverflowPercent(calcOutline(size), size);
 				if (overflow > MAX_OVERFLOW_PERCENT) {
@@ -134,11 +114,5 @@ describe("flowchart shapes fill their box", () => {
 			}
 		}
 		expect(spilling).toEqual([]);
-	});
-
-	it("keeps the defect list from outliving its shapes", () => {
-		for (const type of Object.keys(OVERFLOW_DEFECTS)) {
-			expect(flowchartPlugin.objects?.[type]).toBeDefined();
-		}
 	});
 });
