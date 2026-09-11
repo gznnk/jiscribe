@@ -2,6 +2,8 @@ import { useToolbarCommandState } from "./ToolbarCommandStateContext";
 import { ToolbarIconButton, ZoomReadout } from "./ToolbarStyled";
 import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { ZoomInIcon } from "../../icons/ZoomInIcon";
+import { ZoomOutIcon } from "../../icons/ZoomOutIcon";
 
 type ToolbarZoomGroupProps = {
 	/** Current zoom factor (1 = 100%), shown as a percentage on the readout. */
@@ -36,7 +38,7 @@ export const ToolbarZoomGroup: React.FC<ToolbarZoomGroupProps> = ({ zoom }) => {
 				disabled={resolveCommand("zoomOut")?.enabled !== true}
 				data-part={commandPart("zoomOut")}
 			>
-				−
+				<ZoomOutIcon />
 			</ToolbarIconButton>
 			<ZoomReadout
 				type="button"
@@ -53,7 +55,7 @@ export const ToolbarZoomGroup: React.FC<ToolbarZoomGroupProps> = ({ zoom }) => {
 				disabled={resolveCommand("zoomIn")?.enabled !== true}
 				data-part={commandPart("zoomIn")}
 			>
-				+
+				<ZoomInIcon />
 			</ToolbarIconButton>
 		</>
 	);

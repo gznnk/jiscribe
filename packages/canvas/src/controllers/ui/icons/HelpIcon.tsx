@@ -10,10 +10,13 @@ type HelpIconProps = {
 /**
  * Help (question mark) icon.
  * Used for buttons such as opening the keyboard shortcut list.
+ *
+ * Drawn at 24px with whole-number coordinates so the stroke-width 2 ring covers
+ * whole pixels at its extremes, like every other icon on the bar.
  */
 const HelpIconComponent: React.FC<HelpIconProps> = ({
-	width = 20,
-	height = 20,
+	width = 24,
+	height = 24,
 	fill = "currentColor",
 	title = "Help",
 }) => {

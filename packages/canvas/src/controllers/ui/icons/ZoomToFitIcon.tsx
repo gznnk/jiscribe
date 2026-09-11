@@ -11,10 +11,10 @@ type ZoomToFitIconProps = {
  * box between the arms without its hole shrinking to a dot, and a filled one
  * read as an unrelated mark rather than the drawing.
  *
- * Drawn at 24px like the sidebar icons rather than the 20px of undo / redo /
- * help: at 24px every coordinate is a whole number and the stroke-width 2 lines
- * (butt caps, mitre joins) cover whole pixels, where the 20px scale lands every
- * edge on a fraction and the straight arms blur.
+ * Drawn at 24px like every other icon on the bar: every coordinate is a whole
+ * number, so the stroke-width 2 lines (butt caps, mitre joins) cover whole
+ * pixels, where a scaled-down size lands every edge on a fraction and the
+ * straight arms blur.
  */
 const ZoomToFitIconComponent: React.FC<ZoomToFitIconProps> = ({
 	width = 24,

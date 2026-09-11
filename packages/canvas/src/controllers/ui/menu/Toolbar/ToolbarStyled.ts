@@ -84,7 +84,6 @@ export const ToolbarIconButton = styled.button`
 	border-radius: ${theme.radius};
 	background: transparent;
 	color: ${theme.iconForeground};
-	font-size: 18px;
 	line-height: 1;
 	cursor: pointer;
 	transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
@@ -112,8 +111,7 @@ export const ToolbarIconButton = styled.button`
 	}
 
 	/* Restates the disabled color for the icon: the rule above pins the svg's
-	   color, so the one on :disabled never reaches it by inheritance. Only the
-	   zoom buttons draw their glyph as text and grey out without this. */
+	   color, so the one on :disabled never reaches it by inheritance. */
 	&:disabled svg,
 	&:disabled:hover svg {
 		color: ${theme.disabledForeground};
