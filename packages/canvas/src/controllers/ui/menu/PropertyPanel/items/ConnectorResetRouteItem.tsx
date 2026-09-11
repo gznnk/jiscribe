@@ -11,8 +11,8 @@ import type { PropertyPanelItemProps } from "../PropertyPanelTypes";
 
 /**
  * Hands the selected connector's route back to the engine, discarding the
- * vertices a segment drag left in it. The sidebar twin of the context menu's
- * entry, writing through the same command (ResetConnectorRouteCommand).
+ * vertices a segment drag left in it. The only place the reset is offered from;
+ * it writes through ResetConnectorRouteCommand.
  *
  * A connector the engine already routes leaves the button disabled rather than
  * gone, so the row keeps its place at the end of the Line section. A custom row

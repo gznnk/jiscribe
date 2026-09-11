@@ -1,5 +1,6 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { selectors } from "../../support/selectors";
 
 /**
  * Spec guarding *sequences* of segment-drag operations at the UI level.
@@ -126,13 +127,11 @@ test.describe("sequences of segment-drag operations", () => {
 			.toEqual(afterEnd);
 
 		// 4. Reset back to the automatic route
-		const onLine = await readPoints(canvas, connectorId);
 		await selectConnector(canvas, connectorId);
-		await canvas.openContextMenu({
-			x: (onLine[2].x + onLine[3].x) / 2,
-			y: (onLine[2].y + onLine[3].y) / 2,
-		});
-		await canvas.clickContextMenuCommand("resetConnectorRoute");
+		await canvas.openPropertyPanel();
+		await canvas.page
+			.locator(selectors.propertyPanelCommand("resetConnectorRoute"))
+			.click();
 		await expect
 			.poll(async () => readPoints(canvas, connectorId))
 			.toEqual(initial);

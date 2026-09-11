@@ -69,8 +69,6 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{ type: "command", commandId: "group" },
 		{ type: "command", commandId: "ungroup" },
 		{ type: "separator" },
-		{ type: "command", commandId: "resetConnectorRoute" },
-		{ type: "separator" },
 		{ type: "command", commandId: "export" },
 	];
 
