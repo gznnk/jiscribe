@@ -162,7 +162,7 @@ export const ZoomReadout = styled.button`
 	border: 1px solid transparent;
 	border-radius: ${theme.radius};
 	background: transparent;
-	font-size: 11px;
+	font-size: 12px;
 	font-weight: 500;
 	line-height: 1;
 	text-align: center;
