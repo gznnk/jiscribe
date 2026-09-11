@@ -551,8 +551,11 @@ export async function startCanvasHost(
 				});
 				return;
 			}
-			// Record a person's save as the latest text we know of, stopping the watch
-			// from echoing it back to us
+			// Record a person's save as the latest text we know of. The viewer writes
+			// the file before sending this, so the watch can still read that write
+			// first and broadcast it; what rejects the echo either way is the viewer's
+			// own record, taken before the write (see the viewer's saveDoc). Winning
+			// the race here only spares the round trip.
 			if (frame.relPath === openPath) {
 				lastKnownText = frame.docText;
 			}
