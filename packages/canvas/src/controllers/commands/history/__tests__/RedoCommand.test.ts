@@ -94,6 +94,16 @@ describe("RedoCommand", () => {
 		expect(RedoCommand.execute(state, registries)).toBe(state);
 	});
 
+	it("returns the state unchanged during a drag", () => {
+		const state = makeState({
+			past: [],
+			present: snapshotPrev,
+			future: [snapshotNext],
+			activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+		});
+		expect(RedoCommand.execute(state, registries)).toBe(state);
+	});
+
 	describe("canExecute", () => {
 		it("is executable when there is a future", () => {
 			expect(
@@ -117,7 +127,7 @@ describe("RedoCommand", () => {
 			).toBe(false);
 		});
 
-		it("is not executable during a drag", () => {
+		it("stays offered during a drag; the drag is guarded on execution", () => {
 			expect(
 				RedoCommand.canExecute(
 					makeState({
@@ -128,7 +138,7 @@ describe("RedoCommand", () => {
 					}),
 					registries,
 				),
-			).toBe(false);
+			).toBe(true);
 		});
 
 		it("is not executable while editing text", () => {

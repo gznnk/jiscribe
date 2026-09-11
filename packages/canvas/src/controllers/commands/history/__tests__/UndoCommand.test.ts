@@ -107,6 +107,16 @@ describe("UndoCommand", () => {
 		expect(UndoCommand.execute(state, registries)).toBe(state);
 	});
 
+	it("returns the state unchanged during a drag", () => {
+		const state = makeState({
+			past: [snapshotPrev],
+			present: snapshotCurrent,
+			future: [],
+			activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+		});
+		expect(UndoCommand.execute(state, registries)).toBe(state);
+	});
+
 	describe("canExecute", () => {
 		it("is executable when there is a past", () => {
 			expect(
@@ -130,7 +140,7 @@ describe("UndoCommand", () => {
 			).toBe(false);
 		});
 
-		it("is not executable during a drag", () => {
+		it("stays offered during a drag; the drag is guarded on execution", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({
@@ -141,7 +151,7 @@ describe("UndoCommand", () => {
 					}),
 					registries,
 				),
-			).toBe(false);
+			).toBe(true);
 		});
 
 		it("is not executable while editing text", () => {

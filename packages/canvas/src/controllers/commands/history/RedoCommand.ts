@@ -1,5 +1,6 @@
 import {
 	canNavigateHistory,
+	canOfferHistoryNavigation,
 	restoreHistorySnapshot,
 } from "../../utils/restoreHistorySnapshot";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -30,11 +31,12 @@ export const RedoCommand: ExecutableCommand = {
 	},
 
 	canExecute: (state) =>
-		canNavigateHistory(state) && state.history.future.length > 0,
+		canOfferHistoryNavigation(state) && state.history.future.length > 0,
 
 	execute: (state, registries) => {
 		const { past, present, future } = state.history;
-		if (future.length === 0) {
+		// The drag guard lives here rather than in canExecute (see canNavigateHistory).
+		if (future.length === 0 || !canNavigateHistory(state)) {
 			return state;
 		}
 
