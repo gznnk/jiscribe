@@ -12,22 +12,31 @@ is regenerated from scratch and nothing you changed is lost, because what you
 draw is a **plain object** in your code and **plain JSON** (`.jis`) on
 disk — the canvas is one way to edit it, and an agent's tools are another.
 
-Everything you need to draw is in the box. The core carries eight primitive
-types (`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` /
+Most of what you need to draw is already in the box. The core carries eight
+primitive types (`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` /
 `connector` / `svg`), and the richer shape sets — flowchart, UML, sticky,
 markdown, container, annotation, general pictograms, Lucide icons, AWS
-architecture — ship as plugins. The public API those plugins are built on is
-exactly the one you would use for your own.
+architecture — ship as plugins. More sets are on the way.
 
-- **[Jiscribe Web](https://app.jiscribe.dev/)** — the editor, in your browser
-- **[Jiscribe for VSCode](https://marketplace.visualstudio.com/items?itemName=gznnk.jiscribe)**
-  — opens and edits `.jis` inside VSCode
-- **[Jiscribe for Claude Code](./apps/claude-plugin)** — the plugin, and the
-  [`jiscribe-mcp`](https://www.npmjs.com/package/jiscribe-mcp) server behind it
+## What you can make
+
+|                                                                                                                                                                                               |                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ![A UML class diagram of an order domain](./docs/images/gallery-uml-class-diagram.jis.png)<br>**UML and class diagrams** — packages, interfaces, composition, multiplicities, notes           | ![A three-tier AWS architecture](./docs/images/gallery-aws-architecture.jis.png)<br>**Architecture diagrams** — AWS icons and boundary groups, from region down to subnet                                 |
+| ![Regional cloud topology on an isometric lattice](./docs/images/gallery-isometric-topology.jis.png)<br>**Infrastructure, drawn to scale** — every solid is a native polygon on a 30° lattice | ![A trading terminal mock](./docs/images/gallery-trading-terminal.jis.png)<br>**UI mockups** — a trading terminal: candles, order book, tape, at the fidelity a spec needs                                |
+| ![A Swiss-style conference poster](./docs/images/gallery-conference-poster.jis.png)<br>**Posters and print** — a typographic grid is just shapes and text                                     | ![A refund request flow across four swimlanes](./docs/images/gallery-refund-swimlane.jis.png)<br>**Flows and swimlanes** — handoffs, decisions, exceptions, and the icon that says what each step touches |
+
+![An incident postmortem on one page](./docs/images/gallery-postmortem.jis.png)
+
+**Whole documents on one canvas** — a postmortem: numbers, timeline, cause, action items
+
+Every image in this gallery is a `.jis.png`: the exported picture carries the
+document that drew it, so it is an image wherever an image is needed and still
+a document when you open it in Jiscribe. None of it is a special mode. Each one
+is an ordinary document of shapes, text and connectors — the kind an agent can
+write and a person can move by hand.
 
 ## Built for agents, not bolted onto them
-
-![The agent edits through tools, the file is the source of truth, the viewer follows it and writes your changes back, and the agent looks before it says it is done](./docs/images/agent-and-you.jis.png)
 
 - **It edits one move at a time; it does not regenerate.** 69 tools over
   stdio, the same moves you make in the editor: add and connect, align and
@@ -54,37 +63,11 @@ exactly the one you would use for your own.
   generated from the same manifest — so the shape set an agent is told about
   is the shape set that exists.
 
-## What you can make
-
-|                                                                                                                                                                                               |                                                                                                                                                                                                           |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![A UML class diagram of an order domain](./docs/images/gallery-uml-class-diagram.jis.png)<br>**UML and class diagrams** — packages, interfaces, composition, multiplicities, notes           | ![A three-tier AWS architecture](./docs/images/gallery-aws-architecture.jis.png)<br>**Architecture diagrams** — AWS icons and boundary groups, from region down to subnet                                 |
-| ![Regional cloud topology on an isometric lattice](./docs/images/gallery-isometric-topology.jis.png)<br>**Infrastructure, drawn to scale** — every solid is a native polygon on a 30° lattice | ![A trading terminal mock](./docs/images/gallery-trading-terminal.jis.png)<br>**UI mockups** — a trading terminal: candles, order book, tape, at the fidelity a spec needs                                |
-| ![A Swiss-style conference poster](./docs/images/gallery-conference-poster.jis.png)<br>**Posters and print** — a typographic grid is just shapes and text                                     | ![A refund request flow across four swimlanes](./docs/images/gallery-refund-swimlane.jis.png)<br>**Flows and swimlanes** — handoffs, decisions, exceptions, and the icon that says what each step touches |
-
-![An incident postmortem on one page](./docs/images/gallery-postmortem.jis.png)
-
-**Whole documents on one canvas** — a postmortem: numbers, timeline, cause, action items
-
-Every image in this gallery is a `.jis.png`: the exported picture carries the document
-that drew it, so it is an image wherever an image is needed and still a
-document when you open it in the VSCode extension. Download one and keep
-editing it. `pnpm dev:examples` runs the gallery in
-`apps/canvas-examples`, where each example is a single self-contained file you
-can copy into your own app.
-
 ## Getting started
 
 ### With an agent
 
-In Claude Code:
-
-```
-/plugin marketplace add gznnk/jiscribe
-/plugin install jiscribe
-```
-
-In any MCP client that speaks stdio:
+Register the MCP server in any client that speaks stdio:
 
 ```jsonc
 {
@@ -94,37 +77,35 @@ In any MCP client that speaks stdio:
 }
 ```
 
-Node 22 or newer is required; nothing else is. The published package carries the
-server, the viewer and the fonts its text measurement needs. See
+Node 22 or newer is required; nothing else is. The
+[`jiscribe-mcp`](https://www.npmjs.com/package/jiscribe-mcp) package carries
+the server, the viewer and the fonts its text measurement needs. See
 [`apps/mcp`](./apps/mcp) for the tool list and the viewer's behaviour.
+
+In Claude Code, the plugin does that for you and adds a drawing skill generated
+from the shape set:
+
+```text
+/plugin marketplace add gznnk/jiscribe
+/plugin install jiscribe
+```
 
 ### In an editor
 
-[Jiscribe Web](https://app.jiscribe.dev/) opens a canvas in the browser with no
-account and no upload — files stay on your machine.
 [Jiscribe for VSCode](https://marketplace.visualstudio.com/items?itemName=gznnk.jiscribe)
 opens `.jis`, `.jis.png` and `.jis.svg` as editable canvases next to your
-code, with diagnostics in the Problems panel.
+code, with diagnostics in the Problems panel. Pair it with the MCP server and
+the agent draws with its own checks — diagnose, measure, capture — while you
+watch the file take shape in VSCode.
 
-### From a shell
+If you just want to draw something by hand without installing anything,
+[Jiscribe Web](https://app.jiscribe.dev/) opens a canvas in the browser — no
+account, no upload, files stay on your machine.
 
-```bash
-jiscribe validate <files...>   schema + parser; exit 1 on any error
-jiscribe diagnose <files...>   validate, then report text overflowing its shape
-jiscribe measure  <text>       how a string lays out in a given box
-jiscribe render   <file>       draw the document to a .png or .svg
-jiscribe preview  <file>       write the document into one HTML file that draws it
-```
+## Embedding the engine (not on npm yet)
 
-The CLI is the same document layer with a shell around it, so a person, a CI job
-and an agent are told the same things about a file. See [`apps/cli`](./apps/cli).
-
-## Embedding the engine
-
-**Ready now:** `jiscribe-mcp` on npm, the VSCode extension, and Jiscribe Web.
-
-**Coming:** the packages themselves. `@jiscribe/canvas` and the rest are not on
-npm yet and the public API may still move as the embedding surface is settled.
+The packages themselves are not on npm yet. `@jiscribe/canvas` and the rest
+are still being settled as an embedding surface, so the public API may move.
 The first release will go out as a GitHub Release — watch this repository under
 Custom → Releases to hear about it. What the API looks like today:
 
@@ -161,8 +142,6 @@ tooling are all built on. If your product needs the document but not the canvas,
 that is the package to take.
 
 ## How it fits together
-
-![Every host stands on the same plain object](./docs/images/how-it-fits.jis.png)
 
 | Package                      | What it is                                                                                                |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
