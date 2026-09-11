@@ -4,11 +4,17 @@ import { theme } from "../../../../theme/themeTokens";
 
 /**
  * Container for the full-width integrated toolbar pinned to the top.
- * Places shape tools on the left and the zoom readout / help on the right.
+ * Holds the sections in order, the `align: "start"` ones packed left and the
+ * `align: "end"` ones right.
  *
  * Laid out as the first child of CanvasRoot (a flex column), stacked above the
  * canvas area (occupying space rather than overlaying it). The bottom border is
  * its only separation from what sits below.
+ *
+ * Overflow stays `visible`, so a bar too wide for the canvas runs off its edge.
+ * Scrolling it is not an option while the category flyout hangs below the bar:
+ * a non-visible overflow on either axis makes the other one `auto` as well, and
+ * the flyout would be clipped away. Narrow layouts wait for the overflow menu.
  */
 export const ToolbarContainer = styled.div`
 	position: relative;
@@ -18,7 +24,6 @@ export const ToolbarContainer = styled.div`
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	justify-content: space-between;
 	padding: 0 8px;
 	gap: 4px;
 	background-color: ${theme.surface};
@@ -28,17 +33,23 @@ export const ToolbarContainer = styled.div`
 `;
 
 /**
- * Button group within the toolbar (left-aligned / right-aligned).
+ * One section of the toolbar (see ToolbarSection).
+ *
+ * Right alignment is an auto left margin on the first `align: "end"` section
+ * rather than `justify-content` on the container, which only knows two groups
+ * and breaks as soon as a third section appears.
  */
-export const ToolbarGroup = styled.div`
+export const ToolbarGroup = styled.div<{ startsEndGroup?: boolean }>`
 	display: flex;
+	flex: 0 0 auto;
 	flex-direction: row;
 	align-items: center;
 	gap: 4px;
+	${(props) => (props.startsEndGroup ? "margin-left: auto;" : "")}
 `;
 
 /**
- * Container for host-provided toolbar UI (CanvasProps.toolbar.leading / trailing).
+ * Container for host-provided toolbar UI (a `slot` item's node).
  * Opts the slot out of the gesture system so plain onClick works.
  */
 export const ToolbarHostSlot = styled.div`
@@ -60,7 +71,7 @@ export const ToolbarDivider = styled.div`
 `;
 
 /**
- * Toolbar icon button (for zoom / help).
+ * Toolbar icon button (zoom, help and every `command` item).
  */
 export const ToolbarIconButton = styled.button`
 	display: flex;
@@ -98,6 +109,14 @@ export const ToolbarIconButton = styled.button`
 
 	svg {
 		color: ${theme.iconForeground};
+	}
+
+	/* Restates the disabled color for the icon: the rule above pins the svg's
+	   color, so the one on :disabled never reaches it by inheritance. Only the
+	   zoom buttons draw their glyph as text and grey out without this. */
+	&:disabled svg,
+	&:disabled:hover svg {
+		color: ${theme.disabledForeground};
 	}
 `;
 

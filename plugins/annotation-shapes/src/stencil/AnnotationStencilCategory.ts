@@ -4,9 +4,9 @@ import { CalloutIcon } from "./CalloutIcon";
 
 /**
  * Stencil category for the annotation shapes. The annotation category is
- * not in the core default layout (plugin-supplied), so a host composes this into
- * its `stencilLibrary.sections` (a sidebar section) or, as a `{ kind: "category",
- * category }` entry, into its `toolbar.layout` (a flyout).
+ * not in core's default bar (plugin-supplied), so a host composes this into
+ * its `stencilLibrary.sections` (a sidebar section) or, as a `{ type: "stencilCategory",
+ * category }` item, into its `toolbar.sections` (a flyout).
  *
  * The two boxes that stand on their own — rather than marking a run of other
  * shapes — lead, because they are what a user wanting to "write something on the

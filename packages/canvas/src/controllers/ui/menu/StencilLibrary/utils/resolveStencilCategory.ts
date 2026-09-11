@@ -48,7 +48,7 @@ export const resolveStencilCategory = (
  * Resolves every category in display order, dropping the ones left empty.
  *
  * @param categories Groups in display order (the sidebar's sections, or the
- * category entries of a toolbar layout).
+ * `stencilCategory` items of a toolbar section).
  * @param stencil Registry answering "what presets exist" for this canvas.
  * @returns The resolvable groups in the given order; empty when none resolves.
  * @throws When two groups share an `id`, or one of them repeats a preset id

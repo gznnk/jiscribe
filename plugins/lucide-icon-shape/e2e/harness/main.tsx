@@ -11,8 +11,8 @@ mountPluginHarness({
 	// "Rectangle" tool. The icons come from this package's own stencils, as the category
 	// every spec opens: the shape is only useful once an icon is picked, so the plugin
 	// contributes a flyout to pick from rather than a single pinned preset.
-	toolbarLayout: [
-		{ kind: "preset", presetId: "rect" },
-		{ kind: "category", category: lucideIconStencilCategory },
+	toolbarItems: [
+		{ type: "stencilPreset", presetId: "rect" },
+		{ type: "stencilCategory", category: lucideIconStencilCategory },
 	],
 });

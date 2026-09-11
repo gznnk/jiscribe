@@ -389,7 +389,7 @@ export const specShapesPlugin: CanvasPlugin = {
 
 /**
  * Category holding the `tile` preset, so the flyout spec has a category to
- * open. Composed into the harness `toolbar.layout` and `stencilLibrarySections`
+ * open. Composed into the harness `toolbarItems` and `stencilLibrarySections`
  * the same way a host composes a plugin's own category.
  */
 export const specShapesStencilCategory: StencilCategory = {

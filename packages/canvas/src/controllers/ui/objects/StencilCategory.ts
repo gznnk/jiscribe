@@ -6,7 +6,7 @@ import type { LocaleMessages } from "../../messages/resolveLocaleMessages";
 
 /**
  * A named, ordered group of stencils. Where it shows is the host's call: a
- * category flyout on the toolbar (`toolbar.layout`), a section of the shape
+ * category flyout on the toolbar (`toolbar.sections`), a section of the shape
  * library sidebar (`stencilLibrary.sections`), or both from one declaration.
  *
  * `presetIds` is the group's order; the preset registry only answers "what
@@ -23,8 +23,8 @@ export type StencilCategory = {
 };
 
 /**
- * The `basic` primitives as a category. Not in `DEFAULT_TOOLBAR_LAYOUT` (its
- * members are pinned directly there); exported for a host that folds them into
+ * The `basic` primitives as a category. Not in `DEFAULT_TOOLBAR_TOOLS_SECTION`
+ * (its members are pinned directly there); exported for a host that folds them into
  * a flyout, or into the shape library sidebar. The icon reuses a representative
  * shape icon (a dedicated glyph set can replace these later without touching
  * callers); plugins export their own categories (e.g. `flowchartStencilCategory`,

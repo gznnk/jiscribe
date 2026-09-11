@@ -19,7 +19,7 @@ export type StencilIconProps = {
  */
 export type Stencil = {
 	/**
-	 * Stable identifier; the lookup key for label overrides and toolbar layout. Shared by
+	 * Stable identifier; the lookup key for label overrides and toolbar sections. Shared by
 	 * every plugin a host applies, so a plugin offering several presets of one type
 	 * prefixes them (`lucideIconFileText`). No colon: it separates the id from the `item`
 	 * token in the DOM (`data-part="item:{id}"`), and StencilRegistry refuses one that has it.

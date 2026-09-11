@@ -224,9 +224,9 @@ import {
 // This package's shapes only, so a spec failing here is this package's own fault.
 mountPluginHarness({
 	plugins: [annotationPlugin],
-	toolbarLayout: [
-		{ kind: "preset", presetId: "rect" },
-		{ kind: "category", category: annotationStencilCategory },
+	toolbarItems: [
+		{ type: "stencilPreset", presetId: "rect" },
+		{ type: "stencilCategory", category: annotationStencilCategory },
 	],
 });
 ```
@@ -235,11 +235,13 @@ mountPluginHarness({
 
 - **プラグインは自分のパッケージ名で読む。**`../../src` ではない。外部の作者が通る経路が
   こちらであり、それに乗ることがパッケージの `exports` だけで足りていることの証明になる
-- **`toolbarLayout` は spec が描く分だけに絞る。**自分のピン留めプリセットかカテゴリ
-  （`{ kind: "category", category }` のエントリにする）と、それに必ず `{ kind: "preset", presetId: "rect" }` を足す。後者は必須で、
+- **`toolbarItems` は spec が描く分だけに絞る。**自分のピン留めプリセットかカテゴリ
+  （`{ type: "stencilCategory", category }` の項目にする）と、それに必ず `{ type: "stencilPreset", presetId: "rect" }` を足す。後者は必須で、
   `CanvasDriver.goto()` が "Rectangle" ツールボタンの出現を待ってからページを引き渡すため。
-  プラグインのプリセットとカテゴリは canvas の既定 layout に含まれないので、layout を
-  渡さなければ spec からそもそも触れない
+  渡すのはバーの図形ツールだけで、ツールセクションの末尾の図形ライブラリトグルとコアの
+  view セクションはキットが足す。トグル・undo / redo・ズーム・プロパティトグルは名指し
+  しなくても残る。プラグインのプリセットとカテゴリは canvas の既定バーに含まれないので、
+  項目を渡さなければ spec からそもそも触れない
 
 spec 側は spec 用エントリからすべて取る。
 
@@ -279,7 +281,7 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 2. **中身を書き換える前にファイルを移す。**git が rename として追えるようにするため。
    移送先は 1 図形 1 フォルダ（`schema/<id>/`・`state/<id>/`・`presentation/<Pascal>/`）
 3. **エンジンから除去する。**`ObjectTypes` union・`builtinObjectDocDefinitions`・
-   `initializeObjectRegistry`・`DEFAULT_TOOLBAR_LAYOUT` の 4 箇所
+   `initializeObjectRegistry`・`DEFAULT_TOOLBAR_TOOLS_SECTION` の 4 箇所
 4. **エンジン側テストの副作用を処理する。**「輪郭を持つ図形」「クリック配置の図形」の
    代表としてその図形を使っていたテストが主語を失う。別の組み込みに乗り換えるのではなく、
    テスト側に最小の型を宣言する。前例は
@@ -294,12 +296,12 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 （`containerStencilCategory` / `annotationStencilCategory`。型は `StencilCategory`）は
 プラグインが所有し、ホストが合成する。宣言 1 つが 2 箇所に効く。
 `stencilLibrary.sections` へ入れれば図形ライブラリのサイドバーのセクションになり、
-`toolbar.layout` へ `{ kind: "category", category }` として入れればツールバーの
+`toolbar.sections` へ `{ type: "stencilCategory", category }` として入れればツールバーの
 カテゴリフライアウトになる（任意）。出荷図形
 セットは全プラグインのカテゴリを `standardStencilLibrarySections`
 （`packages/standard-shapes`）でサイドバーのセクションとして並べ、バーにはプリセット
 だけをピン留めしている。プラグインの
-カテゴリは `DEFAULT_TOOLBAR_LAYOUT` に含まれないので、既定 layout をそのまま使い
+カテゴリは `DEFAULT_TOOLBAR_SECTIONS` に含まれないので、既定のバーをそのまま使い
 library も宣言しないホストでは、カテゴリを足すまでその図形は出てこない。
 
 ## 配線チェックリスト

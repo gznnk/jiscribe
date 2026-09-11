@@ -6,11 +6,11 @@ import {
 	type CanvasExportImagePayload,
 	type CanvasHandle,
 	type StencilCategory,
-	type ToolbarEntry,
+	type ToolbarSection,
 } from "@jiscribe/canvas";
 import {
 	standardStencilLibrarySections,
-	standardToolbarLayout,
+	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -35,11 +35,9 @@ import type {
 // (packages/canvas/docs/13-authoring-plugins.md).
 const initialConfig: CanvasConfig = { plugins };
 
-// The bar pins the six presets the shape set proposes; everything else it ships —
-// the markdown preset and the flowchart / uml / container / general / annotation /
-// icon categories — is reached through the shape library sidebar. Neither is part
-// of core's default layout (they come from plugins), so the host passes both.
-const toolbarLayout: ToolbarEntry[] = standardToolbarLayout;
+// The shape set owns how its stencils are arranged, over the bar and the sidebar
+// both; core's default bar knows none of them, so the host passes both halves.
+const toolbarSections: ToolbarSection[] = standardToolbarSections;
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
 
@@ -351,7 +349,7 @@ function App() {
 					doc={docView.doc}
 					syncNonce={docView.syncNonce}
 					initialConfig={mountConfig}
-					toolbar={{ layout: toolbarLayout }}
+					toolbar={{ sections: toolbarSections }}
 					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}

@@ -1,2 +1,9 @@
 export { Toolbar } from "./Toolbar";
-export { DEFAULT_TOOLBAR_LAYOUT, type ToolbarEntry } from "./toolbarLayout";
+export {
+	DEFAULT_TOOLBAR_SECTIONS,
+	DEFAULT_TOOLBAR_TOOLS_SECTION,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
+	type ToolbarItem,
+	type ToolbarSection,
+} from "./toolbarSections";
+export { collectToolbarCommandIds } from "./utils/resolveToolbarSections";

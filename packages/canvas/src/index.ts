@@ -60,16 +60,21 @@ export type {
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
 } from "./export";
-// StencilLibrary arrangement (pinned presets + category flyouts, issue #184).
-// The layout is the single source of order and category metadata: each entry names,
-// in display order, a pinned preset or a category flyout. Pass a custom
-// `toolbar.layout` to `<Canvas>`. A `StencilCategory` is the same object whether
-// it becomes a flyout there or a section of the shape library sidebar
-// (`stencilLibrary.sections`); core exports `basicStencilCategory` and plugins
-// export their own (e.g. `containerStencilCategory`).
+// Toolbar composition (issue #184). The sections are the single source of order
+// and category metadata: each item names, in display order, a pinned preset, a
+// category flyout, a command button, the zoom group, a sidebar toggle, a divider
+// or a host UI slot. Pass a custom `toolbar.sections` to `<Canvas>`; the default
+// bar is itself such an array, and its two halves are exported separately so a
+// host replacing only the tools can reuse the other. A `StencilCategory` is the
+// same object whether it becomes a flyout there or a section of the shape library
+// sidebar (`stencilLibrary.sections`); core exports `basicStencilCategory` and
+// plugins export their own (e.g. `containerStencilCategory`).
 export {
-	DEFAULT_TOOLBAR_LAYOUT,
-	type ToolbarEntry,
+	DEFAULT_TOOLBAR_SECTIONS,
+	DEFAULT_TOOLBAR_TOOLS_SECTION,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
+	type ToolbarItem,
+	type ToolbarSection,
 } from "./controllers/ui/menu/Toolbar";
 export {
 	basicStencilCategory,

@@ -226,9 +226,9 @@ import {
 // This package's shapes only, so a spec failing here is this package's own fault.
 mountPluginHarness({
 	plugins: [annotationPlugin],
-	toolbarLayout: [
-		{ kind: "preset", presetId: "rect" },
-		{ kind: "category", category: annotationStencilCategory },
+	toolbarItems: [
+		{ type: "stencilPreset", presetId: "rect" },
+		{ type: "stencilCategory", category: annotationStencilCategory },
 	],
 });
 ```
@@ -238,11 +238,14 @@ Two things that file has to get right:
 - **Load the plugin by its own package name**, not through `../../src`. That is the route an
   external author has, and taking it is what proves the package's `exports` suffice on their
   own.
-- **Keep `toolbarLayout` down to what the specs draw** — this plugin's pinned presets or its
-  category (as a `{ kind: "category", category }` entry), plus `{ kind: "preset", presetId: "rect" }`, which is always required
+- **Keep `toolbarItems` down to what the specs draw** — this plugin's pinned presets or its
+  category (as a `{ type: "stencilCategory", category }` item), plus `{ type: "stencilPreset", presetId: "rect" }`, which is always required
   because `CanvasDriver.goto()` waits for the "Rectangle" tool button before handing the page
-  over. A plugin's presets and categories are absent from the canvas default layout, so
-  without a layout the specs cannot reach them at all.
+  over. The items are the bar's shape tools only: the kit closes the tool section with the
+  shape library toggle and appends core's view section, so the page keeps that toggle, undo
+  / redo, zoom and the properties toggle without naming them. A plugin's presets and
+  categories are absent from the canvas default bar, so without items the specs cannot reach
+  them at all.
 
 Specs take everything from the spec entry:
 
@@ -287,7 +290,7 @@ The playbook, from seven rounds of doing it.
    layout is one folder per shape: `schema/<id>/`, `state/<id>/`,
    `presentation/<Pascal>/`.
 3. **Remove it from the engine**: the `ObjectTypes` union, `builtinObjectDocDefinitions`,
-   `initializeObjectRegistry`, and `DEFAULT_TOOLBAR_LAYOUT`.
+   `initializeObjectRegistry`, and `DEFAULT_TOOLBAR_TOOLS_SECTION`.
 4. **Handle the fallout in the engine's own tests.** Engine tests that used the shape
    as a representative — "a shape with an outline", "a click-placed shape" — lose
    their subject. Declare a minimal type in the test instead of reaching for another
@@ -302,11 +305,11 @@ Toolbar placement is a separate decision from packaging: a category
 (`containerStencilCategory`, `annotationStencilCategory`), typed `StencilCategory`,
 is owned by the plugin and composed by the host. One declaration serves two
 places — `stencilLibrary.sections`, where it becomes a section of the shape
-library sidebar, and optionally `toolbar.layout`, where wrapped as
-`{ kind: "category", category }` it becomes a category flyout on the bar. The standard set files every plugin category as a sidebar
+library sidebar, and optionally `toolbar.sections`, where wrapped as
+`{ type: "stencilCategory", category }` it becomes a category flyout on the bar. The standard set files every plugin category as a sidebar
 section in `standardStencilLibrarySections` (`packages/standard-shapes`) and pins
 only presets on the bar. Plugin categories are not part of
-`DEFAULT_TOOLBAR_LAYOUT`, so a host that uses the default layout unchanged and
+`DEFAULT_TOOLBAR_SECTIONS`, so a host that uses the default bar unchanged and
 declares no library will not show the shape until it adds the category.
 
 ## Wiring checklist

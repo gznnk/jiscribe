@@ -85,7 +85,12 @@ import type {
 } from "./ui/menu/PropertyPanel/PropertyPanelTypes";
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
 import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
-import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
+import {
+	collectToolbarCommandIds,
+	DEFAULT_TOOLBAR_SECTIONS,
+	Toolbar,
+	type ToolbarSection,
+} from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
 import type { StencilCategory } from "./ui/objects/StencilCategory";
@@ -231,41 +236,33 @@ type CanvasProps = {
 	 */
 	onOpenReference?: (payload: OpenReferencePayload) => void;
 
-	// ── Toolbar (visibility & host UI slots) ──
+	// ── Toolbar (visibility & composition) ──
 	/**
-	 * Host-provided toolbar customization: visibility (`show`), UI slots at the
-	 * edges (`leading` / `trailing`) and an override of the shape-tool
-	 * arrangement (`layout`). Grouped for cohesion; since the JSX slots already
-	 * break `<Canvas>`'s memo, a host rendering this inline can `useMemo` the
-	 * object to avoid extra re-renders.
+	 * Host-provided toolbar customization: visibility (`show`) and the whole
+	 * composition of the bar (`sections`). Grouped for cohesion; since a
+	 * `sections` array built inline breaks `<Canvas>`'s memo, a host rendering
+	 * this inline can `useMemo` the object to avoid extra re-renders.
 	 */
 	toolbar?: {
 		/**
 		 * Whether to render the toolbar (default `true`). `false` removes the whole
-		 * bar — shape tools, zoom controls, the help button and the `leading` /
-		 * `trailing` slots — and the canvas area takes the full height. Keyboard
-		 * shortcuts still work (`?` opens the shortcut help, rendered outside the
-		 * bar), but the default UI is left with no entry point for drawing new
-		 * shapes, so this suits read-mostly hosts (previews, embedded viewers).
+		 * bar — shape tools, zoom controls, the help button and any host `slot`
+		 * items — and the canvas area takes the full height. Keyboard shortcuts
+		 * still work (`?` opens the shortcut help, rendered outside the bar), but
+		 * the default UI is left with no entry point for drawing new shapes, so
+		 * this suits read-mostly hosts (previews, embedded viewers).
 		 */
 		show?: boolean;
 		/**
-		 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
-		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+		 * Replaces the whole bar: sections of pinned presets, category flyouts,
+		 * command buttons, the zoom group, the two sidebar toggles, dividers and
+		 * host UI slots (see {@link ToolbarSection}). Omit for
+		 * {@link DEFAULT_TOOLBAR_SECTIONS}, which pins every core preset directly
+		 * and opens no flyout — anything a plugin supplies must be named here by
+		 * the host, which can reuse `DEFAULT_TOOLBAR_VIEW_SECTION` for the right
+		 * half rather than restating it.
 		 */
-		leading?: React.ReactNode;
-		/**
-		 * Host UI inserted at the right edge of the toolbar (e.g. a settings button).
-		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
-		 */
-		trailing?: React.ReactNode;
-		/**
-		 * Overrides the top-level arrangement of the shape tools: an ordered mix of
-		 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
-		 * for the default layout, which pins every core preset directly and opens no
-		 * flyout — anything a plugin supplies must be added here by the host.
-		 */
-		layout?: ToolbarEntry[];
+		sections?: ToolbarSection[];
 	};
 
 	// ── Shape library sidebar ──
@@ -694,12 +691,23 @@ const CanvasComponent = ({
 
 	const selectedTextSlot = resolveSelectedTextSlot(state);
 
-	// Delegated to the command's canExecute as the single source of truth. Canvas provides
-	// the registries context, so it resolves against its directly-held bundle, not a hook.
-	const canZoomIn =
-		resolveCommandState(state, registries, "zoomIn")?.enabled ?? false;
-	const canZoomOut =
-		resolveCommandState(state, registries, "zoomOut")?.enabled ?? false;
+	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
+
+	// Which commands the bar can disable is a property of its composition alone,
+	// so only the collection is memoized; the states themselves change with
+	// nearly every dispatch and are evaluated per render. Delegated to each
+	// command's canExecute as the single source of truth. Canvas provides the
+	// registries context, so it resolves against its directly-held bundle, not a hook.
+	const toolbarCommandIds = useMemo(
+		() => collectToolbarCommandIds(toolbarSections),
+		[toolbarSections],
+	);
+	const disabledCommandIds = toolbarCommandIds
+		.filter(
+			(commandId) =>
+				resolveCommandState(state, registries, commandId)?.enabled !== true,
+		)
+		.join(",");
 
 	// Sections whose ids resolve to registered presets. Resolved here (not in the
 	// panel) so an unmounted-but-declared library still decides whether the
@@ -735,14 +743,11 @@ const CanvasComponent = ({
 						activePresetId={state.shapeDrawing?.preset.id ?? null}
 						openCategoryId={state.stencilLibraryOpenCategory}
 						zoom={state.viewport.zoom}
-						canZoomIn={canZoomIn}
-						canZoomOut={canZoomOut}
-						layout={toolbar?.layout}
+						disabledCommandIds={disabledCommandIds}
+						sections={toolbarSections}
 						hasLibrary={librarySections.length > 0}
 						isLibraryOpen={state.stencilLibraryPanel.isOpen}
 						isPropertyPanelOpen={state.propertyPanel.isOpen}
-						leading={toolbar?.leading}
-						trailing={toolbar?.trailing}
 					/>
 				)}
 				<CanvasBody>

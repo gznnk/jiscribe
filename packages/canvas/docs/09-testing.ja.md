@@ -146,7 +146,7 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 API は `createCanvasPlaywrightConfig({ testDir, harnessCommand })` /
 `createPluginHarnessViteConfig()` /
-`mountPluginHarness({ plugins, toolbarLayout, stencilLibrarySections })` と、
+`mountPluginHarness({ plugins, toolbarItems, stencilLibrarySections })` と、
 spec 側の `test` / `expect` / `CanvasDriver` / `selectors`。canvas 自身はキットを相対 import で
 取る（`./e2e/testing-playwright-config`）。SDK 経由にはしない — `canvas → canvas-sdk → canvas`
 の循環こそ、この分離で解消したものだからである。プラグインのスイートを立ち上げる手順は

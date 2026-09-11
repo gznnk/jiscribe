@@ -5,13 +5,13 @@ import type {
 	CanvasHandle,
 	OpenReferencePayload,
 	StencilCategory,
-	ToolbarEntry,
+	ToolbarSection,
 } from "@jiscribe/canvas";
 import {
 	standardStencilLibrarySections,
-	standardToolbarLayout,
+	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { plugins } from "./canvasPlugins";
 import { FileLabel } from "./FileLabel";
@@ -19,11 +19,8 @@ import { FileLabel } from "./FileLabel";
 // A module-scope constant, so that Canvas is not rebuilt on every re-render
 const initialConfig: CanvasConfig = { plugins };
 
-// The bar pins the six presets the shape set proposes; the markdown preset and the
-// flowchart / uml / container / general / annotation / icon categories live in the
-// shape library sidebar instead. None of it is in core's default layout (the
-// plugins supply them), so both are passed
-const toolbarLayout: ToolbarEntry[] = standardToolbarLayout;
+// The shape set owns how its stencils are arranged, over the bar and the sidebar
+// both; core's default bar knows none of them, so the host passes both halves.
 const stencilLibrarySections: StencilCategory[] =
 	standardStencilLibrarySections;
 
@@ -78,6 +75,33 @@ export function CanvasSurface({
 		};
 	}, [onRegisterCanvas]);
 
+	// The file name rides in a section of its own, ahead of the shape set's bar; the
+	// divider closing it separates the name from the tools. Memoized so the toolbar keeps
+	// its memo: `node` is a fresh element on every render.
+	const toolbarSections = useMemo<ToolbarSection[]>(
+		() => [
+			{
+				id: "file",
+				items: [
+					{
+						type: "slot",
+						id: "file-label",
+						node: (
+							<FileLabel
+								relPath={relPath}
+								isConnected={isConnected}
+								tokens={lightCanvasTheme.tokens}
+							/>
+						),
+					},
+					{ type: "divider" },
+				],
+			},
+			...standardToolbarSections,
+		],
+		[relPath, isConnected],
+	);
+
 	return (
 		<div className="viewer-canvas-host">
 			<Canvas
@@ -89,16 +113,7 @@ export function CanvasSurface({
 				theme={lightCanvasTheme}
 				initialConfig={initialConfig}
 				stencilLibrary={{ sections: stencilLibrarySections }}
-				toolbar={{
-					layout: toolbarLayout,
-					leading: (
-						<FileLabel
-							relPath={relPath}
-							isConnected={isConnected}
-							tokens={lightCanvasTheme.tokens}
-						/>
-					),
-				}}
+				toolbar={{ sections: toolbarSections }}
 			/>
 		</div>
 	);

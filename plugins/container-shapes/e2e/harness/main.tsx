@@ -7,10 +7,10 @@ import {
 mountPluginHarness({
 	plugins: [containerPlugin],
 	// The container specs reach every container stencil through the category flyout, so
-	// the layout only needs that entry. The rect preset is kept because
+	// the tool section only needs that item. The rect preset is kept because
 	// CanvasDriver.goto() waits for the "Rectangle" tool button.
-	toolbarLayout: [
-		{ kind: "preset", presetId: "rect" },
-		{ kind: "category", category: containerStencilCategory },
+	toolbarItems: [
+		{ type: "stencilPreset", presetId: "rect" },
+		{ type: "stencilCategory", category: containerStencilCategory },
 	],
 });

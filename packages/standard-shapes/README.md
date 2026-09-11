@@ -10,20 +10,20 @@ plugin imports. This is that list, once.
 import {
 	standardPlugins,
 	standardStencilLibrarySections,
-	standardToolbarLayout,
+	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
 
 // A parser, doc-ops or generator: no react, so it runs in Node
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 ```
 
-| Export                           | Entry  | What it is                                                         |
-| -------------------------------- | ------ | ------------------------------------------------------------------ |
-| `standardPlugins`                | `.`    | The nine plugins for `CanvasConfig.plugins`                        |
-| `standardToolbarLayout`          | `.`    | The six presets pinned on the bar, for `toolbar.layout`            |
-| `standardStencilLibrarySections` | `.`    | The whole set as sidebar sections, for `stencilLibrary.sections`   |
-| `standardDocPlugins`             | `/doc` | The same nine, headless, for `createCanvasParser` / `createDocOps` |
-| `standardObjectDocDefinitions`   | `/doc` | Every type of the set by name, canvas built-ins included           |
+| Export                           | Entry  | What it is                                                                          |
+| -------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `standardPlugins`                | `.`    | The nine plugins for `CanvasConfig.plugins`                                         |
+| `standardToolbarSections`        | `.`    | The whole bar — six pinned presets, then the view controls — for `toolbar.sections` |
+| `standardStencilLibrarySections` | `.`    | The whole set as sidebar sections, for `stencilLibrary.sections`                    |
+| `standardDocPlugins`             | `/doc` | The same nine, headless, for `createCanvasParser` / `createDocOps`                  |
+| `standardObjectDocDefinitions`   | `/doc` | Every type of the set by name, canvas built-ins included                            |
 
 ## The two entries
 
@@ -45,15 +45,16 @@ which is what makes the pair safe to use without checking.
 
 ## The bar and the library are one pair
 
-`standardToolbarLayout` pins six presets and nothing else; every other shape of
+`standardToolbarSections` pins six presets and nothing else; every other shape of
 the set — the `markdown` preset and the eight plugin categories — is reachable
 only through `standardStencilLibrarySections`, the sidebar the toolbar's "All
-shapes" toggle opens. A host passing the layout without the library ships a
-canvas whose plugin shapes cannot be drawn by hand, so pass both:
+shapes" toggle opens. A host passing the bar without the library ships a canvas
+whose plugin shapes cannot be drawn by hand — and the toggle itself is dropped,
+since it would open an empty sidebar. Pass both:
 
 ```tsx
 <Canvas
-	toolbar={{ layout: standardToolbarLayout }}
+	toolbar={{ sections: standardToolbarSections }}
 	stencilLibrary={{ sections: standardStencilLibrarySections }}
 />
 ```

@@ -6,7 +6,7 @@ import type { Stencil } from "./Stencil";
  * Registration happens via `applyObjectDefinition()` in `initializeObjectRegistry()`.
  *
  * It answers only "what exists"; display order (top level and within category
- * flyouts) is owned by the toolbar layout, which resolves presets by id via `get`.
+ * flyouts) is owned by the toolbar sections, which resolve presets by id via `get`.
  * Presets have a 1:N relationship with object types (e.g. rect has "rect" and "process").
  */
 export class StencilRegistry {

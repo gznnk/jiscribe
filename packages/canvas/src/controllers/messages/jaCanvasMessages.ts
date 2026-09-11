@@ -5,8 +5,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomOut: "ズームアウト",
 	toolbarResetZoom: "ズームを100%に戻す",
 	toolbarZoomIn: "ズームイン",
-	toolbarShowShortcutHelp: "キーボードショートカットを表示",
-	toolbarShortcutHelp: "キーボードショートカット",
 	toolbarStencilLibrary: "すべての図形",
 	toolbarPropertyPanel: "プロパティ",
 
@@ -183,7 +181,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	// プリセットの ja ラベルは各プリセット定義側にある。record はホスト上書き用に残す
 	stencilLabels: {},
 
-	// カテゴリの ja ラベルは toolbar.layout のカテゴリエントリ側にある。record はホスト上書き用に残す
+	// カテゴリの ja ラベルは toolbar.sections のカテゴリ項目側にある。record はホスト上書き用に残す
 	stencilCategoryLabels: {},
 
 	// PRESET_COLORS の英語名を網羅する。プラグインが独自パレットを持つ場合も

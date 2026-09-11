@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 import { createCanvasParser } from "@jiscribe/doc";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
@@ -13,9 +13,15 @@ import type {
 	CanvasParser,
 	CanvasPlugin,
 	StencilCategory,
-	ToolbarEntry,
+	ToolbarItem,
+	ToolbarSection,
 } from "../../src";
-import { Canvas, darkCanvasTheme, extractCanvasSourceFromPng } from "../../src";
+import {
+	Canvas,
+	darkCanvasTheme,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
+	extractCanvasSourceFromPng,
+} from "../../src";
 import "./harness.css";
 
 /** What a harness page has to say about itself; everything else is fixed by the kit. */
@@ -28,18 +34,22 @@ export type PluginHarnessParams = {
 	 */
 	plugins: readonly CanvasPlugin[];
 	/**
-	 * Toolbar arrangement, mirroring how a host app composes one. Omit to take the
-	 * canvas default layout, which pins the core presets only and shows nothing a
-	 * plugin contributes; pass a layout whenever a spec drives a plugin's preset or
-	 * category flyout. `CanvasDriver.goto()` waits for the "Rectangle" tool, so keep
-	 * the `rect` preset in any layout passed here.
+	 * The shape tools of the bar only — not the whole bar. The kit closes the tool
+	 * section with the shape library toggle and appends
+	 * `DEFAULT_TOOLBAR_VIEW_SECTION`, so a page declaring its plugin's presets
+	 * keeps the sidebar toggle, undo / redo, zoom, help and the properties toggle
+	 * without naming them. Omit to take the canvas default bar, whose tools pin the
+	 * core presets only and show nothing a plugin contributes; pass items whenever
+	 * a spec drives a plugin's preset or category flyout. `CanvasDriver.goto()`
+	 * waits for the "Rectangle" tool, so keep the `rect` preset in any items passed
+	 * here.
 	 */
-	toolbarLayout?: ToolbarEntry[];
+	toolbarItems?: ToolbarItem[];
 	/**
 	 * Sections of the shape library sidebar, mirroring how a host app declares one.
 	 * Omit and neither the sidebar nor the toolbar toggle that opens it is
 	 * rendered; pass sections whenever a spec drives the sidebar. Independent of
-	 * `toolbarLayout` — the same category can appear in both.
+	 * `toolbarItems` — the same category can appear in both.
 	 */
 	stencilLibrarySections?: StencilCategory[];
 };
@@ -48,7 +58,7 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
-	toolbarLayout: ToolbarEntry[] | undefined;
+	toolbarItems: ToolbarItem[] | undefined;
 	stencilLibrarySections: StencilCategory[] | undefined;
 	parser: CanvasParser;
 };
@@ -61,7 +71,7 @@ type HarnessAppProps = {
  */
 function HarnessApp({
 	initialConfig,
-	toolbarLayout,
+	toolbarItems,
 	stencilLibrarySections,
 	parser,
 }: HarnessAppProps) {
@@ -119,6 +129,28 @@ function HarnessApp({
 		e.preventDefault();
 	}, []);
 
+	// The tool section is the page's items plus the two the core default ends with, so a
+	// page that declares only its plugin's presets still gets the "All shapes" toggle when
+	// it declared a library. Without a library both are dropped by resolution — the toggle
+	// as unusable, the divider as stranded — leaving the bar as the page declared it.
+	const toolbarSections = useMemo<ToolbarSection[] | undefined>(
+		() =>
+			toolbarItems
+				? [
+						{
+							id: "tools",
+							items: [
+								...toolbarItems,
+								{ type: "divider" },
+								{ type: "stencilLibraryToggle" },
+							],
+						},
+						DEFAULT_TOOLBAR_VIEW_SECTION,
+					]
+				: undefined,
+		[toolbarItems],
+	);
+
 	const query = new URLSearchParams(window.location.search);
 	if (query.has("multi")) {
 		return <MultiCanvasApp />;
@@ -133,7 +165,7 @@ function HarnessApp({
 				doc={loadedDoc}
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
-				toolbar={toolbarLayout ? { layout: toolbarLayout } : undefined}
+				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
 				stencilLibrary={
 					stencilLibrarySections
 						? { sections: stencilLibrarySections }
@@ -164,7 +196,7 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 		<React.StrictMode>
 			<HarnessApp
 				initialConfig={initialConfig}
-				toolbarLayout={params.toolbarLayout}
+				toolbarItems={params.toolbarItems}
 				stencilLibrarySections={params.stencilLibrarySections}
 				parser={parser}
 			/>

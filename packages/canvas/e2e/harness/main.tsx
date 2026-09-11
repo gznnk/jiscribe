@@ -14,9 +14,9 @@ import { mountPluginHarness } from "../testing-harness";
 // mounted together are covered by apps/canvas-examples.
 
 // The shape library sidebar needs host-declared `stencilLibrarySections` to exist at all,
-// and the toolbar toggle that opens it shows only once a section resolves. Core's
-// primitives and the same test-only category are enough, so the specs have both a section
-// of shapes and a category living on the bar and in the sidebar at once.
+// and the toolbar toggle the kit puts at the end of the tools shows only once a section
+// resolves. Core's primitives and the same test-only category are enough, so the specs have
+// both a section of shapes and a category living on the bar and in the sidebar at once.
 const librarySections: StencilCategory[] = [
 	basicStencilCategory,
 	specShapesStencilCategory,
@@ -24,15 +24,15 @@ const librarySections: StencilCategory[] = [
 
 mountPluginHarness({
 	plugins: [specShapesPlugin],
-	toolbarLayout: [
-		{ kind: "preset", presetId: "rect" },
-		{ kind: "preset", presetId: "ellipse" },
-		{ kind: "preset", presetId: "polyline" },
-		{ kind: "preset", presetId: "polygon" },
-		{ kind: "preset", presetId: "text" },
-		{ kind: "preset", presetId: "pin" },
-		{ kind: "preset", presetId: "card" },
-		{ kind: "category", category: specShapesStencilCategory },
+	toolbarItems: [
+		{ type: "stencilPreset", presetId: "rect" },
+		{ type: "stencilPreset", presetId: "ellipse" },
+		{ type: "stencilPreset", presetId: "polyline" },
+		{ type: "stencilPreset", presetId: "polygon" },
+		{ type: "stencilPreset", presetId: "text" },
+		{ type: "stencilPreset", presetId: "pin" },
+		{ type: "stencilPreset", presetId: "card" },
+		{ type: "stencilCategory", category: specShapesStencilCategory },
 	],
 	stencilLibrarySections: librarySections,
 });

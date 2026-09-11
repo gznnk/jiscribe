@@ -11,7 +11,7 @@ import type { CanvasConfig } from "@jiscribe/canvas";
 import {
 	standardPlugins,
 	standardStencilLibrarySections,
-	standardToolbarLayout,
+	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
 import { createRoot } from "react-dom/client";
 
@@ -72,7 +72,7 @@ const mount = async (): Promise<void> => {
 		<Canvas
 			doc={payload.doc}
 			initialConfig={initialConfig}
-			toolbar={{ layout: standardToolbarLayout }}
+			toolbar={{ sections: standardToolbarSections }}
 			stencilLibrary={{ sections: standardStencilLibrarySections }}
 		/>,
 	);

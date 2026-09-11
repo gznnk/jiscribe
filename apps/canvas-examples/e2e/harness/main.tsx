@@ -39,9 +39,9 @@ import "katex/dist/katex.min.css";
 // The arrangement mirrors examples/plugins.tsx — six presets pinned on the bar, one
 // category left on it as a flyout so that mechanism stays covered, and the shape library
 // sidebar holding the whole set as sections. The shipped hosts leave no flyout on the bar
-// (standardToolbarLayout pins the six presets and nothing else). The markdown / sticky
+// (standardToolbarSections pins the six presets and nothing else). The markdown / sticky
 // presets and the eight categories are all plugin-supplied and absent from core's default
-// layout.
+// bar.
 mountPluginHarness({
 	plugins: [
 		flowchartPlugin,
@@ -54,14 +54,14 @@ mountPluginHarness({
 		lucideIconPlugin,
 		awsShapesPlugin,
 	],
-	toolbarLayout: [
-		{ kind: "preset", presetId: "rect" },
-		{ kind: "preset", presetId: "ellipse" },
-		{ kind: "preset", presetId: "polyline" },
-		{ kind: "preset", presetId: "polygon" },
-		{ kind: "preset", presetId: "text" },
-		{ kind: "preset", presetId: "sticky" },
-		{ kind: "category", category: lucideIconStencilCategory },
+	toolbarItems: [
+		{ type: "stencilPreset", presetId: "rect" },
+		{ type: "stencilPreset", presetId: "ellipse" },
+		{ type: "stencilPreset", presetId: "polyline" },
+		{ type: "stencilPreset", presetId: "polygon" },
+		{ type: "stencilPreset", presetId: "text" },
+		{ type: "stencilPreset", presetId: "sticky" },
+		{ type: "stencilCategory", category: lucideIconStencilCategory },
 	],
 	stencilLibrarySections: [
 		{

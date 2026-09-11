@@ -8,10 +8,6 @@ export type CanvasMessageStrings = {
 	toolbarZoomOut: string;
 	toolbarResetZoom: string;
 	toolbarZoomIn: string;
-	/** aria-label of the help (?) button */
-	toolbarShowShortcutHelp: string;
-	/** title (tooltip) of the help (?) button */
-	toolbarShortcutHelp: string;
 	/** title / aria-label of the toggle opening the shape library sidebar */
 	toolbarStencilLibrary: string;
 	/** title / aria-label of the toggle opening the properties sidebar */

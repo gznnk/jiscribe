@@ -12,9 +12,9 @@ mountPluginHarness({
 	// rect is a core preset and is needed because CanvasDriver.goto() waits for
 	// the "Rectangle" tool to appear. Both AWS categories go up: the icons and
 	// the frames are separate sections, and the specs open either flyout.
-	toolbarLayout: [
-		{ kind: "preset", presetId: "rect" },
-		{ kind: "category", category: awsStencilCategory },
-		{ kind: "category", category: awsGroupStencilCategory },
+	toolbarItems: [
+		{ type: "stencilPreset", presetId: "rect" },
+		{ type: "stencilCategory", category: awsStencilCategory },
+		{ type: "stencilCategory", category: awsGroupStencilCategory },
 	],
 });
