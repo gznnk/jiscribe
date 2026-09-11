@@ -12,8 +12,10 @@ type SidebarIconProps = {
  * standing for the panel taking that strip off the canvas. The same drawing
  * serves both sidebars, so the two toggles on the bar are exact mirror images.
  *
- * Every coordinate is a whole number, so a stroke-width 2 line covers whole
- * pixels at 24px, matching the other toolbar icons.
+ * The frame spans 18 × 16, the width of the rect stencil beside it and the
+ * height of the other 24px command icons, so the two toggles do not read a size
+ * smaller than the rest of the bar. Every coordinate is a whole number, so a
+ * stroke-width 2 line covers whole pixels at 24px.
  */
 const SidebarIconComponent: React.FC<SidebarIconProps> = ({
 	edge,
@@ -30,15 +32,15 @@ const SidebarIconComponent: React.FC<SidebarIconProps> = ({
 			fill="none"
 		>
 			<rect
-				x="4"
-				y="5"
-				width="16"
-				height="14"
+				x="3"
+				y="4"
+				width="18"
+				height="16"
 				rx="2"
 				stroke="currentColor"
 				strokeWidth="2"
 			/>
-			<path d={`M${dividerX} 5V19`} stroke="currentColor" strokeWidth="2" />
+			<path d={`M${dividerX} 4V20`} stroke="currentColor" strokeWidth="2" />
 		</svg>
 	);
 };
