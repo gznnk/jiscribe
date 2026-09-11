@@ -5,7 +5,7 @@
 An SVG canvas that people and AI agents draw on together. Diagrams, mockups,
 posters, whole documents.
 
-![A three-tier AWS architecture drawn in Jiscribe](./docs/images/hero-aws-architecture.jis.png)
+![An AI agent drawing on the canvas in real time](https://beta.jiscribe.dev/images/vscode/ai-workflow.gif)
 
 An agent draws, you fix it by hand, and the agent picks up from there. Nothing
 is regenerated from scratch and nothing you changed is lost, because what you
@@ -58,11 +58,15 @@ exactly the one you would use for your own.
 
 |                                                                                                                                                                                               |                                                                                                                                                                                                           |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![Regional cloud topology on an isometric lattice](./docs/images/gallery-isometric-topology.jis.png)<br>**Infrastructure, drawn to scale** — every solid is a native polygon on a 30° lattice | ![An invoices console mock](./docs/images/gallery-billing-console.jis.png)<br>**UI mockups** — tables, toolbars, state, at the fidelity a spec needs                                                      |
-| ![A UML class diagram of an order domain](./docs/images/gallery-uml-class-diagram.jis.png)<br>**UML and class diagrams** — packages, interfaces, composition, multiplicities, notes           | ![An incident postmortem on one page](./docs/images/gallery-postmortem.jis.png)<br>**Whole documents on one canvas** — a postmortem: numbers, timeline, cause, action items                               |
+| ![A UML class diagram of an order domain](./docs/images/gallery-uml-class-diagram.jis.png)<br>**UML and class diagrams** — packages, interfaces, composition, multiplicities, notes           | ![A three-tier AWS architecture](./docs/images/gallery-aws-architecture.jis.png)<br>**Architecture diagrams** — AWS icons and boundary groups, from region down to subnet                                 |
+| ![Regional cloud topology on an isometric lattice](./docs/images/gallery-isometric-topology.jis.png)<br>**Infrastructure, drawn to scale** — every solid is a native polygon on a 30° lattice | ![A trading terminal mock](./docs/images/gallery-trading-terminal.jis.png)<br>**UI mockups** — a trading terminal: candles, order book, tape, at the fidelity a spec needs                                |
 | ![A Swiss-style conference poster](./docs/images/gallery-conference-poster.jis.png)<br>**Posters and print** — a typographic grid is just shapes and text                                     | ![A refund request flow across four swimlanes](./docs/images/gallery-refund-swimlane.jis.png)<br>**Flows and swimlanes** — handoffs, decisions, exceptions, and the icon that says what each step touches |
 
-Every image above is a `.jis.png`: the exported picture carries the document
+![An incident postmortem on one page](./docs/images/gallery-postmortem.jis.png)
+
+**Whole documents on one canvas** — a postmortem: numbers, timeline, cause, action items
+
+Every image in this gallery is a `.jis.png`: the exported picture carries the document
 that drew it, so it is an image wherever an image is needed and still a
 document when you open it in the VSCode extension. Download one and keep
 editing it. `pnpm dev:examples` runs the gallery in
