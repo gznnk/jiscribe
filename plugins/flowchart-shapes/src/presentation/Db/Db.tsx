@@ -1,31 +1,7 @@
 import { ShapeBodyPath, createFrameObject } from "@jiscribe/canvas-sdk";
 
-import { DB_CAP_RATIO } from "../../schema/db/DbDoc";
+import { buildDbPaths } from "./buildDbPaths";
 import type { DbState } from "../../state/db/DbState";
-
-/**
- * Builds the cylinder paths centered at the origin.
- * - body: the full silhouette (top bulge, straight sides, bottom bulge), closed for fill
- * - capEdge: the front (lower) half of the top cap ellipse, stroked only
- */
-const buildDbPaths = (
-	width: number,
-	height: number,
-): { bodyPath: string; capEdgePath: string } => {
-	const halfWidth = width / 2;
-	const halfHeight = height / 2;
-	const capRy = height * DB_CAP_RATIO;
-	const topY = -halfHeight + capRy;
-	const bottomY = halfHeight - capRy;
-	const arc = `${halfWidth} ${capRy} 0 0`;
-
-	return {
-		bodyPath:
-			`M ${-halfWidth} ${topY} A ${arc} 1 ${halfWidth} ${topY} ` +
-			`L ${halfWidth} ${bottomY} A ${arc} 1 ${-halfWidth} ${bottomY} Z`,
-		capEdgePath: `M ${-halfWidth} ${topY} A ${arc} 0 ${halfWidth} ${topY}`,
-	};
-};
 
 /** Renders a database cylinder (Frame-family shared logic lives in createFrameObject; only the shape is swapped in). */
 export const Db = createFrameObject<DbState>((state, shape) => {
