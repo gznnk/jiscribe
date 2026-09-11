@@ -83,11 +83,45 @@ test.describe("text editing", () => {
 			);
 		}, "first\n\nlast");
 
-		expect(await canvas.textEditorText()).toBe("first\n\nlast");
+		await expect.poll(() => canvas.textEditorText()).toBe("first\n\nlast");
 		await canvas.commitText();
 
 		await canvas.typeTextAt({ x: 530, y: 290 }, "");
 		expect(await canvas.textEditorText()).toBe("first\n\nlast");
+	});
+
+	// VS Code's webview hands a paste to the page as document.execCommand("paste"),
+	// so the paste event fires from inside that call, and Chrome refuses any
+	// execCommand nested in a running one. That is emulated by dispatching the
+	// paste from the input event of an execCommand of the test's own, the one
+	// place a page script can stand inside a running execCommand.
+	test("inserts a paste dispatched from inside execCommand", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 180 }, { x: 660, y: 400 });
+		await canvas.deselect();
+		await canvas.typeTextAt({ x: 530, y: 290 }, "");
+
+		await canvas.textEditorSurface().evaluate((surface, pasted) => {
+			surface.addEventListener(
+				"input",
+				() => {
+					const clipboardData = new DataTransfer();
+					clipboardData.setData("text/plain", pasted);
+					surface.dispatchEvent(
+						new ClipboardEvent("paste", {
+							clipboardData,
+							bubbles: true,
+							cancelable: true,
+						}),
+					);
+				},
+				{ once: true },
+			);
+			surface.ownerDocument.execCommand("insertText", false, "typed ");
+		}, "pasted");
+
+		await expect.poll(() => canvas.textEditorText()).toBe("typed pasted");
 	});
 
 	// A line box is fontSize × 1.5 tall, so an odd size makes the drawn box end on
