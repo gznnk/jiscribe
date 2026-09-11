@@ -17,8 +17,9 @@ export interface CanvasWebviewOptions {
 	/** The Webview initialized and wants the document's current contents. */
 	onReady: () => void;
 	/**
-	 * A canvas edit arrived. `saveNonce` identifies the write so the Webview can
-	 * recognize its own save echoing back.
+	 * A canvas edit arrived. `saveNonce` identifies the write in the Webview
+	 * protocol; no editor consumes it (the text editor recognizes its own writes
+	 * by their content instead, see selfWriteTracker).
 	 */
 	onUpdate: (data: string, saveNonce: string) => void;
 	/**
