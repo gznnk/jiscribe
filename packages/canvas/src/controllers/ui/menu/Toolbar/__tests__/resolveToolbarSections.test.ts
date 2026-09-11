@@ -8,7 +8,6 @@ import {
 	type ToolbarSection,
 } from "../toolbarSections";
 import {
-	collectToolbarCommandIds,
 	resolveToolbarSections,
 	type ToolbarResolutionContext,
 } from "../utils/resolveToolbarSections";
@@ -220,49 +219,5 @@ describe("resolveToolbarSections", () => {
 		expect(() => resolveToolbarSections(sections, createContext(true))).toThrow(
 			/"tools"/,
 		);
-	});
-});
-
-describe("collectToolbarCommandIds", () => {
-	it("reads the zoom group as its two commands and sorts the result", () => {
-		expect(collectToolbarCommandIds(DEFAULT_TOOLBAR_SECTIONS)).toEqual([
-			"redo",
-			"shortcutHelp",
-			"undo",
-			"zoomIn",
-			"zoomOut",
-		]);
-	});
-
-	it("names a command only once however often it appears", () => {
-		const sections: ToolbarSection[] = [
-			{
-				id: "a",
-				items: [
-					{ type: "command", commandId: "undo", icon: RectIcon },
-					{ type: "zoom" },
-				],
-			},
-			{
-				id: "b",
-				items: [
-					{ type: "command", commandId: "undo", icon: RectIcon },
-					{ type: "zoom" },
-				],
-			},
-		];
-		expect(collectToolbarCommandIds(sections)).toEqual([
-			"undo",
-			"zoomIn",
-			"zoomOut",
-		]);
-	});
-
-	it("returns nothing for a bar with no command on it", () => {
-		expect(
-			collectToolbarCommandIds([
-				{ id: "tools", items: [{ type: "stencilPreset", presetId: "rect" }] },
-			]),
-		).toEqual([]);
 	});
 });

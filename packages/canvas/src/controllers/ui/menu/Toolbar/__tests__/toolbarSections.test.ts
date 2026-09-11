@@ -67,6 +67,21 @@ describe("DEFAULT_TOOLBAR_SECTIONS", () => {
 		).toEqual([]);
 	});
 
+	/**
+	 * The zoom item names no command in the declaration — ToolbarZoomGroup draws
+	 * the three buttons and looks these ids up itself — so nothing else would
+	 * catch a rename of one of them.
+	 */
+	it("has the commands its zoom group drives registered", () => {
+		const registries = createCanvasRegistries();
+		expect(allItems(ALL_SECTIONS).some((item) => item.type === "zoom")).toBe(
+			true,
+		);
+		for (const commandId of ["zoomOut", "resetZoom", "zoomIn"]) {
+			expect(registries.command.get(commandId)).toBeDefined();
+		}
+	});
+
 	it("lists no preset twice within a single item", () => {
 		for (const item of allItems(ALL_SECTIONS)) {
 			const presetIds = collectPresetIds([item]);

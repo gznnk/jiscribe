@@ -1,5 +1,6 @@
 import { Fragment, memo, useMemo } from "react";
 
+import { ToolbarCommandButton } from "./ToolbarCommandButton";
 import {
 	DEFAULT_TOOLBAR_SECTIONS,
 	type ToolbarSection,
@@ -9,20 +10,15 @@ import {
 	ToolbarDivider,
 	ToolbarGroup,
 	ToolbarHostSlot,
-	ToolbarIconButton,
 	ToolbarToggleButton,
-	ZoomReadout,
 } from "./ToolbarStyled";
+import { ToolbarZoomGroup } from "./ToolbarZoomGroup";
 import {
 	resolveToolbarSections,
 	type ResolvedToolbarItem,
 } from "./utils/resolveToolbarSections";
 import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
-import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
-import { getCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import type { CanvasMessages } from "../../../messages/CanvasMessagesTypes";
-import { resolveLocalizedLabel } from "../../../messages/resolveLocaleMessages";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { EllipsisIcon } from "../../icons/EllipsisIcon";
 import { PropertyPanelIcon } from "../../icons/PropertyPanelIcon";
@@ -36,12 +32,6 @@ type ToolbarProps = {
 	openCategoryId: string | null;
 	/** Current zoom factor (1 = 100%) */
 	zoom: number;
-	/**
-	 * The commands on the bar whose `canExecute` is currently false, sorted and
-	 * joined with commas. A primitive on purpose: the bar re-renders on every
-	 * zoom step, and a fresh array or Set each render would defeat its memo.
-	 */
-	disabledCommandIds: string;
 	/** The whole bar in display order (see CanvasProps.toolbar.sections) */
 	sections?: ToolbarSection[];
 	/**
@@ -55,16 +45,6 @@ type ToolbarProps = {
 	/** Whether the properties sidebar is currently open (reducer state) */
 	isPropertyPanelOpen: boolean;
 };
-
-/** A command button's tooltip / aria-label: the item's override, else the command's. */
-const resolveCommandItemLabel = (
-	item: Extract<ResolvedToolbarItem, { type: "command" }>,
-	messages: CanvasMessages,
-	locale: string,
-): string =>
-	item.label === undefined
-		? getCommandLabel(messages, item.command)
-		: resolveLocalizedLabel(item.label, locale);
 
 /** Stable within a resolved bar; the index only serves the anonymous items. */
 const toolbarItemKey = (item: ResolvedToolbarItem, index: number): string => {
@@ -95,19 +75,24 @@ const toolbarItemKey = (item: ResolvedToolbarItem, index: number): string => {
  *   library one shows only when the host declared a library with something in
  *   it, the properties one only when the host asked for that item. The help
  *   modal and the panels themselves are rendered by Canvas from reducer state.
+ *
+ * Everything the bar draws from arrives as a prop except whether each command
+ * can currently run, which comes through ToolbarCommandStateContext: the props
+ * change rarely, while command availability changes on nearly every dispatch.
+ * Reading that context here would re-render the whole bar each time, so only
+ * the two leaves that show it subscribe (ToolbarCommandButton,
+ * ToolbarZoomGroup) and the bar itself stays memoized.
  */
 const ToolbarComponent: React.FC<ToolbarProps> = ({
 	activePresetId,
 	openCategoryId,
 	zoom,
-	disabledCommandIds,
 	sections = DEFAULT_TOOLBAR_SECTIONS,
 	hasLibrary,
 	isLibraryOpen,
 	isPropertyPanelOpen,
 }) => {
 	const messages = useCanvasMessages();
-	const locale = useCanvasLocale();
 	const { stencil, command } = useCanvasRegistries();
 
 	// Resolved once per (sections, registries, hasLibrary) tuple, not inline in
@@ -116,11 +101,6 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	const resolvedSections = useMemo(
 		() => resolveToolbarSections(sections, { stencil, command, hasLibrary }),
 		[sections, stencil, command, hasLibrary],
-	);
-
-	const disabledCommands = useMemo(
-		() => new Set(disabledCommandIds.split(",")),
-		[disabledCommandIds],
 	);
 
 	// The first end-aligned section carries the auto margin that pushes it and
@@ -149,53 +129,16 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						activePresetId={activePresetId}
 					/>
 				);
-			case "command": {
-				const label = resolveCommandItemLabel(item, messages, locale);
-				const Icon = item.icon;
+			case "command":
 				return (
-					<ToolbarIconButton
-						type="button"
-						aria-label={label}
-						title={label}
-						disabled={disabledCommands.has(item.commandId)}
-						data-testid={`toolbar-command:${item.commandId}`}
-						data-part={commandPart(item.commandId)}
-					>
-						<Icon />
-					</ToolbarIconButton>
+					<ToolbarCommandButton
+						commandId={item.commandId}
+						icon={item.icon}
+						label={item.label}
+					/>
 				);
-			}
 			case "zoom":
-				return (
-					<>
-						<ToolbarIconButton
-							type="button"
-							aria-label={messages.toolbarZoomOut}
-							title={messages.toolbarZoomOut}
-							disabled={disabledCommands.has("zoomOut")}
-							data-part={commandPart("zoomOut")}
-						>
-							−
-						</ToolbarIconButton>
-						<ZoomReadout
-							type="button"
-							aria-label={messages.toolbarResetZoom}
-							title={messages.toolbarResetZoom}
-							data-part={commandPart("resetZoom")}
-						>
-							{Math.round(zoom * 100)}%
-						</ZoomReadout>
-						<ToolbarIconButton
-							type="button"
-							aria-label={messages.toolbarZoomIn}
-							title={messages.toolbarZoomIn}
-							disabled={disabledCommands.has("zoomIn")}
-							data-part={commandPart("zoomIn")}
-						>
-							+
-						</ToolbarIconButton>
-					</>
-				);
+				return <ToolbarZoomGroup zoom={zoom} />;
 			case "stencilLibraryToggle":
 				return (
 					<ToolbarToggleButton

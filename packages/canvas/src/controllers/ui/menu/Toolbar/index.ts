@@ -1,4 +1,5 @@
 export { Toolbar } from "./Toolbar";
+export { ToolbarCommandStateContext } from "./ToolbarCommandStateContext";
 export {
 	DEFAULT_TOOLBAR_SECTIONS,
 	DEFAULT_TOOLBAR_TOOLS_SECTION,
@@ -6,4 +7,3 @@ export {
 	type ToolbarItem,
 	type ToolbarSection,
 } from "./toolbarSections";
-export { collectToolbarCommandIds } from "./utils/resolveToolbarSections";

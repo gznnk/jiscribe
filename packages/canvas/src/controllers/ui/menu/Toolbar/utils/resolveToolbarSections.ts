@@ -1,5 +1,4 @@
 import type { CommandRegistry } from "../../../../commands/CommandRegistry";
-import type { Command } from "../../../../commands/CommandTypes";
 import type { Stencil } from "../../../objects/Stencil";
 import type { StencilRegistry } from "../../../objects/StencilRegistry";
 import {
@@ -12,7 +11,7 @@ import type { ToolbarItem, ToolbarSection } from "../toolbarSections";
 export type ResolvedToolbarItem =
 	| { type: "stencilPreset"; preset: Stencil }
 	| ({ type: "stencilCategory" } & ResolvedStencilCategory)
-	| ({ type: "command"; command: Command } & Pick<
+	| ({ type: "command" } & Pick<
 			Extract<ToolbarItem, { type: "command" }>,
 			"commandId" | "icon" | "label"
 	  >)
@@ -33,7 +32,11 @@ export type ResolvedToolbarSection = {
 export type ToolbarResolutionContext = {
 	/** Registry answering "what presets exist" for this canvas. */
 	stencil: StencilRegistry;
-	/** Registry the `command` items are looked up in; an unknown id is dropped. */
+	/**
+	 * Registry the `command` items are looked up in; an unknown id is dropped.
+	 * Only the existence of the command is read here — the button resolves the
+	 * command itself, so the two never disagree.
+	 */
 	command: CommandRegistry;
 	/**
 	 * Whether the host's `stencilLibrary.sections` resolved to at least one
@@ -95,20 +98,17 @@ const resolveToolbarItem = (
 			const resolved = resolveStencilCategory(item.category, context.stencil);
 			return resolved ? [{ type: "stencilCategory", ...resolved }] : [];
 		}
-		case "command": {
-			const command = context.command.get(item.commandId);
-			return command
+		case "command":
+			return context.command.get(item.commandId)
 				? [
 						{
 							type: "command",
-							command,
 							commandId: item.commandId,
 							icon: item.icon,
 							label: item.label,
 						},
 					]
 				: [];
-		}
 		case "stencilLibraryToggle":
 			return context.hasLibrary ? [item] : [];
 		default:
@@ -162,35 +162,4 @@ export const resolveToolbarSections = (
 			? [{ id: section.id, align: section.align ?? "start", items }]
 			: [];
 	});
-};
-
-/**
- * Collects the commands whose enabled state the bar needs, so the caller can
- * evaluate `canExecute` for exactly those.
- *
- * Reads the declaration rather than the resolved bar: the answer must not
- * change with the registries, since it feeds a `useMemo` keyed on `sections`
- * alone.
- *
- * @param sections Declared bar; a `zoom` item counts as naming `zoomIn` and
- * `zoomOut`, which it draws as buttons of its own.
- * @returns The ids, deduplicated and sorted ascending so a caller joining them
- * into a string gets a stable order.
- */
-export const collectToolbarCommandIds = (
-	sections: readonly ToolbarSection[],
-): string[] => {
-	const commandIds = new Set<string>();
-	for (const section of sections) {
-		for (const item of section.items) {
-			if (item.type === "command") {
-				commandIds.add(item.commandId);
-			}
-			if (item.type === "zoom") {
-				commandIds.add("zoomIn");
-				commandIds.add("zoomOut");
-			}
-		}
-	}
-	return Array.from(commandIds).sort();
 };

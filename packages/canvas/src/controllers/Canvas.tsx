@@ -86,9 +86,9 @@ import type {
 import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
 import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
 import {
-	collectToolbarCommandIds,
 	DEFAULT_TOOLBAR_SECTIONS,
 	Toolbar,
+	ToolbarCommandStateContext,
 	type ToolbarSection,
 } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
@@ -693,21 +693,13 @@ const CanvasComponent = ({
 
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
-	// Which commands the bar can disable is a property of its composition alone,
-	// so only the collection is memoized; the states themselves change with
-	// nearly every dispatch and are evaluated per render. Delegated to each
-	// command's canExecute as the single source of truth. Canvas provides the
-	// registries context, so it resolves against its directly-held bundle, not a hook.
-	const toolbarCommandIds = useMemo(
-		() => collectToolbarCommandIds(toolbarSections),
-		[toolbarSections],
-	);
-	const disabledCommandIds = toolbarCommandIds
-		.filter(
-			(commandId) =>
-				resolveCommandState(state, registries, commandId)?.enabled !== true,
-		)
-		.join(",");
+	// What the bar's command buttons read to draw themselves disabled, delegated
+	// to each command's canExecute as the single source of truth. Canvas provides
+	// the registries context, so it resolves against its directly-held bundle
+	// rather than the hook. A plain closure, not useCallback-memoized, for the
+	// same reason as in useCommandState: `state` changes on nearly every dispatch.
+	const resolveToolbarCommandState = (commandId: string) =>
+		resolveCommandState(state, registries, commandId);
 
 	// Sections whose ids resolve to registered presets. Resolved here (not in the
 	// panel) so an unmounted-but-declared library still decides whether the
@@ -739,16 +731,17 @@ const CanvasComponent = ({
 				{...pointerHandlers}
 			>
 				{toolbar?.show !== false && (
-					<Toolbar
-						activePresetId={state.shapeDrawing?.preset.id ?? null}
-						openCategoryId={state.stencilLibraryOpenCategory}
-						zoom={state.viewport.zoom}
-						disabledCommandIds={disabledCommandIds}
-						sections={toolbarSections}
-						hasLibrary={librarySections.length > 0}
-						isLibraryOpen={state.stencilLibraryPanel.isOpen}
-						isPropertyPanelOpen={state.propertyPanel.isOpen}
-					/>
+					<ToolbarCommandStateContext value={resolveToolbarCommandState}>
+						<Toolbar
+							activePresetId={state.shapeDrawing?.preset.id ?? null}
+							openCategoryId={state.stencilLibraryOpenCategory}
+							zoom={state.viewport.zoom}
+							sections={toolbarSections}
+							hasLibrary={librarySections.length > 0}
+							isLibraryOpen={state.stencilLibraryPanel.isOpen}
+							isPropertyPanelOpen={state.propertyPanel.isOpen}
+						/>
+					</ToolbarCommandStateContext>
 				)}
 				<CanvasBody>
 					{state.stencilLibraryPanel.isOpen && librarySections.length > 0 && (
