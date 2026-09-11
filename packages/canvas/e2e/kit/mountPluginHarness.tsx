@@ -25,6 +25,8 @@ import type {
 import {
 	Canvas,
 	darkCanvasTheme,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 	extractCanvasSourceFromPng,
 } from "../../src";
@@ -40,11 +42,11 @@ export type PluginHarnessParams = {
 	 */
 	plugins: readonly CanvasPlugin[];
 	/**
-	 * The shape tools of the bar only — not the whole bar. The kit closes the tool
-	 * section with the shape library toggle and appends
-	 * `DEFAULT_TOOLBAR_VIEW_SECTION`, so a page declaring its plugin's presets
-	 * keeps the sidebar toggle, undo / redo, zoom, help and the properties toggle
-	 * without naming them. Omit to take the canvas default bar, whose tools pin the
+	 * The shape tools of the bar only — not the whole bar. The kit opens the tool
+	 * section with the shape library toggle and appends core's history, view and
+	 * properties sections, so a page declaring its plugin's presets keeps the
+	 * sidebar toggle, undo / redo, zoom, help and the properties toggle without
+	 * naming them. Omit to take the canvas default bar, whose tools pin the
 	 * core presets only and show nothing a plugin contributes; pass items whenever
 	 * a spec drives a plugin's preset or category flyout. `CanvasDriver.goto()`
 	 * waits for the "Rectangle" tool, so keep the `rect` preset in any items passed
@@ -135,8 +137,8 @@ function HarnessApp({
 		e.preventDefault();
 	}, []);
 
-	// The tool section is the page's items plus the two the core default ends with, so a
-	// page that declares only its plugin's presets still gets the "All shapes" toggle when
+	// The tool section is the two the core default opens with plus the page's items, so a
+	// page that declares only its plugin's presets still gets the shape library toggle when
 	// it declared a library. Without a library both are dropped by resolution — the toggle
 	// as unusable, the divider as stranded — leaving the bar as the page declared it.
 	const toolbarSections = useMemo<ToolbarSection[] | undefined>(
@@ -146,12 +148,14 @@ function HarnessApp({
 						{
 							id: "tools",
 							items: [
-								...toolbarItems,
-								{ type: "divider" },
 								{ type: "stencilLibraryToggle" },
+								{ type: "divider" },
+								...toolbarItems,
 							],
 						},
+						DEFAULT_TOOLBAR_HISTORY_SECTION,
 						DEFAULT_TOOLBAR_VIEW_SECTION,
+						DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 					]
 				: undefined,
 		[toolbarItems],

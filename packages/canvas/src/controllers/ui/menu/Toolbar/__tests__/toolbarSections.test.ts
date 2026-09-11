@@ -6,6 +6,8 @@ import {
 	type StencilCategory,
 } from "../../../objects/StencilCategory";
 import {
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_SECTIONS,
 	DEFAULT_TOOLBAR_TOOLS_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
@@ -34,10 +36,12 @@ const collectPresetIds = (items: readonly ToolbarItem[]): string[] =>
 	});
 
 describe("DEFAULT_TOOLBAR_SECTIONS", () => {
-	it("is the two exported halves, tools first", () => {
+	it("is the four exported sections, in display order", () => {
 		expect(DEFAULT_TOOLBAR_SECTIONS).toEqual([
 			DEFAULT_TOOLBAR_TOOLS_SECTION,
+			DEFAULT_TOOLBAR_HISTORY_SECTION,
 			DEFAULT_TOOLBAR_VIEW_SECTION,
+			DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 		]);
 	});
 
@@ -120,7 +124,7 @@ describe("DEFAULT_TOOLBAR_SECTIONS", () => {
 		const pinned = allItems(DEFAULT_TOOLBAR_SECTIONS).flatMap((item) =>
 			item.type === "stencilPreset" ? [item.presetId] : [],
 		);
-		expect(pinned).toEqual(["rect", "ellipse", "polyline", "polygon", "text"]);
+		expect(pinned).toEqual(["rect", "ellipse", "polygon", "polyline", "text"]);
 	});
 
 	/**
@@ -136,29 +140,44 @@ describe("DEFAULT_TOOLBAR_SECTIONS", () => {
 	});
 });
 
-describe("DEFAULT_TOOLBAR_VIEW_SECTION", () => {
-	it("packs against the right edge", () => {
-		expect(DEFAULT_TOOLBAR_VIEW_SECTION.align).toBe("end");
-	});
+const itemNames = (section: ToolbarSection): string[] =>
+	section.items.map((item) =>
+		item.type === "command" ? item.commandId : item.type,
+	);
 
-	it("leads with history, then zoom, then help and the properties toggle", () => {
-		expect(
-			DEFAULT_TOOLBAR_VIEW_SECTION.items.map((item) =>
-				item.type === "command" ? item.commandId : item.type,
-			),
-		).toEqual([
-			"undo",
-			"redo",
+describe("the sections of the default bar", () => {
+	/** Rule 1: each sidebar toggle sits at the edge its panel opens on. */
+	it("opens the tools with the library toggle and ends the bar with the properties one", () => {
+		expect(itemNames(DEFAULT_TOOLBAR_TOOLS_SECTION)[0]).toBe(
+			"stencilLibraryToggle",
+		);
+		expect(DEFAULT_TOOLBAR_SECTIONS[DEFAULT_TOOLBAR_SECTIONS.length - 1]).toBe(
+			DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+		);
+		expect(itemNames(DEFAULT_TOOLBAR_PROPERTIES_SECTION)).toEqual([
 			"divider",
-			"zoom",
-			"divider",
-			"shortcutHelp",
 			"propertyPanelToggle",
 		]);
 	});
 
+	/** Rule 2: the document-changing half stays on the start side. */
+	it("packs history against the start edge and view against the end", () => {
+		expect(DEFAULT_TOOLBAR_HISTORY_SECTION.align).toBeUndefined();
+		expect(itemNames(DEFAULT_TOOLBAR_HISTORY_SECTION)).toEqual([
+			"divider",
+			"undo",
+			"redo",
+		]);
+		expect(DEFAULT_TOOLBAR_VIEW_SECTION.align).toBe("end");
+		expect(itemNames(DEFAULT_TOOLBAR_VIEW_SECTION)).toEqual([
+			"zoom",
+			"divider",
+			"shortcutHelp",
+		]);
+	});
+
 	it("gives every command button an icon", () => {
-		for (const item of DEFAULT_TOOLBAR_VIEW_SECTION.items) {
+		for (const item of allItems(DEFAULT_TOOLBAR_SECTIONS)) {
 			if (item.type === "command") {
 				// Icons are memo()-wrapped, so they are objects rather than functions.
 				expect(item.icon).toBeTruthy();

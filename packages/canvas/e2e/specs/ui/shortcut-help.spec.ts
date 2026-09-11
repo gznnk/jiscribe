@@ -23,7 +23,7 @@ const MODAL = '[data-testid="shortcut-help"]';
 const MODAL_CLOSE = '[data-testid="shortcut-help:close"]';
 
 /** The toolbar's help button, the entrance that is not a keystroke. */
-const TOOLBAR_OPEN = '[data-testid="shortcut-help:open"]';
+const TOOLBAR_OPEN = selectors.toolbarCommand("shortcutHelp");
 
 /** The box the Escape tests select, clear of the centred panel. */
 const SHAPE_FROM = { x: 120, y: 150 };

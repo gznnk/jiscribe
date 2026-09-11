@@ -38,31 +38,27 @@ describe("resolveToolbarSections", () => {
 		);
 		expect(resolved.map((section) => [section.id, section.align])).toEqual([
 			["tools", "start"],
+			["history", "start"],
 			["view", "end"],
+			["properties", "end"],
 		]);
 		expect(itemTypes(resolved)).toEqual([
 			[
-				"stencilPreset",
-				"stencilPreset",
-				"stencilPreset",
-				"stencilPreset",
-				"stencilPreset",
-				"divider",
 				"stencilLibraryToggle",
-			],
-			[
-				"command",
-				"command",
 				"divider",
-				"zoom",
-				"divider",
-				"command",
-				"propertyPanelToggle",
+				"stencilPreset",
+				"stencilPreset",
+				"stencilPreset",
+				"stencilPreset",
+				"stencilPreset",
 			],
+			["divider", "command", "command"],
+			["zoom", "divider", "command"],
+			["divider", "propertyPanelToggle"],
 		]);
 	});
 
-	it("drops the library toggle and its now-trailing divider without a library", () => {
+	it("drops the library toggle and its now-leading divider without a library", () => {
 		const resolved = resolveToolbarSections(
 			DEFAULT_TOOLBAR_SECTIONS,
 			createContext(false),
@@ -73,6 +69,24 @@ describe("resolveToolbarSections", () => {
 			"stencilPreset",
 			"stencilPreset",
 			"stencilPreset",
+		]);
+	});
+
+	/**
+	 * The section is nothing but the two commands and the divider that joins them
+	 * to the tools, so switching both off has to take the divider with them rather
+	 * than leave a hairline floating between the tools and the free space.
+	 */
+	it("drops the whole history section when undo and redo are switched off", () => {
+		const resolved = resolveToolbarSections(
+			DEFAULT_TOOLBAR_SECTIONS,
+			// `commands` restricts the registry, which is how a host switches one off.
+			createContext(true, ["shortcutHelp", "zoomIn", "zoomOut", "resetZoom"]),
+		);
+		expect(resolved.map((section) => section.id)).toEqual([
+			"tools",
+			"view",
+			"properties",
 		]);
 	});
 

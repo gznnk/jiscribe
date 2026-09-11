@@ -39,7 +39,7 @@ import "katex/dist/katex.min.css";
 // The arrangement mirrors examples/plugins.tsx — six presets pinned on the bar, one
 // category left on it as a flyout so that mechanism stays covered, and the shape library
 // sidebar holding the whole set as sections. The shipped hosts leave no flyout on the bar
-// (standardToolbarSections pins the six presets and nothing else). The markdown / sticky
+// (standardToolbarToolsSection pins the six presets and nothing else). The markdown / sticky
 // presets and the eight categories are all plugin-supplied and absent from core's default
 // bar.
 mountPluginHarness({

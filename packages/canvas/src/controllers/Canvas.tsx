@@ -259,8 +259,11 @@ type CanvasProps = {
 		 * host UI slots (see {@link ToolbarSection}). Omit for
 		 * {@link DEFAULT_TOOLBAR_SECTIONS}, which pins every core preset directly
 		 * and opens no flyout — anything a plugin supplies must be named here by
-		 * the host, which can reuse `DEFAULT_TOOLBAR_VIEW_SECTION` for the right
-		 * half rather than restating it.
+		 * the host, which can reuse the default's other three sections
+		 * (`DEFAULT_TOOLBAR_HISTORY_SECTION` / `DEFAULT_TOOLBAR_VIEW_SECTION` /
+		 * `DEFAULT_TOOLBAR_PROPERTIES_SECTION`) rather than restating them. Host UI
+		 * packed against the end belongs before the properties section, which is
+		 * meant to keep the far right.
 		 */
 		sections?: ToolbarSection[];
 	};

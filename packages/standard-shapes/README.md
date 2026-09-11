@@ -17,13 +17,14 @@ import {
 import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 ```
 
-| Export                           | Entry  | What it is                                                                          |
-| -------------------------------- | ------ | ----------------------------------------------------------------------------------- |
-| `standardPlugins`                | `.`    | The nine plugins for `CanvasConfig.plugins`                                         |
-| `standardToolbarSections`        | `.`    | The whole bar — six pinned presets, then the view controls — for `toolbar.sections` |
-| `standardStencilLibrarySections` | `.`    | The whole set as sidebar sections, for `stencilLibrary.sections`                    |
-| `standardDocPlugins`             | `/doc` | The same nine, headless, for `createCanvasParser` / `createDocOps`                  |
-| `standardObjectDocDefinitions`   | `/doc` | Every type of the set by name, canvas built-ins included                            |
+| Export                           | Entry  | What it is                                                                                                        |
+| -------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------- |
+| `standardPlugins`                | `.`    | The nine plugins for `CanvasConfig.plugins`                                                                       |
+| `standardToolbarSections`        | `.`    | The whole bar — the shape tools below, then core's history, view and properties sections — for `toolbar.sections` |
+| `standardToolbarToolsSection`    | `.`    | Just the shape tools of that bar: the library toggle, then six pinned presets                                     |
+| `standardStencilLibrarySections` | `.`    | The whole set as sidebar sections, for `stencilLibrary.sections`                                                  |
+| `standardDocPlugins`             | `/doc` | The same nine, headless, for `createCanvasParser` / `createDocOps`                                                |
+| `standardObjectDocDefinitions`   | `/doc` | Every type of the set by name, canvas built-ins included                                                          |
 
 ## The two entries
 
@@ -47,8 +48,8 @@ which is what makes the pair safe to use without checking.
 
 `standardToolbarSections` pins six presets and nothing else; every other shape of
 the set — the `markdown` preset and the eight plugin categories — is reachable
-only through `standardStencilLibrarySections`, the sidebar the toolbar's "All
-shapes" toggle opens. A host passing the bar without the library ships a canvas
+only through `standardStencilLibrarySections`, the sidebar the toolbar's shape
+library toggle opens at its far left. A host passing the bar without the library ships a canvas
 whose plugin shapes cannot be drawn by hand — and the toggle itself is dropped,
 since it would open an empty sidebar. Pass both:
 
@@ -61,8 +62,13 @@ since it would open an empty sidebar. Pass both:
 
 ## Not the toolbar for everyone
 
-Both arrays are the arrangement the editors settled on, not a rule. A host
-wanting a different one copies them and rebuilds from the plugins' own
+Both arrays are the arrangement the editors settled on, not a rule. A host that
+only wants its own UI on the bar takes `standardToolbarToolsSection` and orders
+the sections itself — core's `DEFAULT_TOOLBAR_HISTORY_SECTION`,
+`DEFAULT_TOOLBAR_VIEW_SECTION` and `DEFAULT_TOOLBAR_PROPERTIES_SECTION` are
+exported one by one for exactly that, and the properties toggle is meant to stay
+at the far right. A host wanting a different set of shapes copies them and
+rebuilds from the plugins' own
 `*StencilCategory` exports, which serve as a bar flyout and a sidebar section
 alike — `apps/canvas-examples`'s plugins example does exactly that, on purpose,
 to show what composing them by hand looks like.

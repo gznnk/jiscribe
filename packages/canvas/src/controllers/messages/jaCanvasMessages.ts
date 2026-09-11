@@ -5,7 +5,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomOut: "ズームアウト",
 	toolbarResetZoom: "ズームを100%に戻す",
 	toolbarZoomIn: "ズームイン",
-	toolbarStencilLibrary: "すべての図形",
+	toolbarStencilLibrary: "図形ライブラリ",
 	toolbarPropertyPanel: "プロパティ",
 
 	stencilLibraryTitle: "図形ライブラリ",

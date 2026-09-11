@@ -12,6 +12,8 @@ import type {
 } from "@jiscribe/canvas";
 import {
 	basicStencilCategory,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 } from "@jiscribe/canvas";
 import {
@@ -62,39 +64,53 @@ export const standardPlugins: readonly CanvasPlugin[] = [
 ];
 
 /**
- * The whole toolbar the standard set is drawn with: the six presets a diagram is
- * mostly built out of pinned straight on the bar, the shape library toggle, and
- * core's view controls ({@link DEFAULT_TOOLBAR_VIEW_SECTION}) at the far end.
- * Everything else the set ships — the `markdown` preset and the eight plugin
- * categories — is reached through the shape library sidebar instead, so pass
- * `standardStencilLibrarySections` alongside this or those shapes become
- * undrawable by hand.
+ * The shape tools of the standard set: the shape library toggle at the far left,
+ * then the six presets a diagram is mostly built out of, pinned straight on the
+ * bar and ordered area → line → text. Everything else the set ships — the
+ * `markdown` preset and the eight plugin categories — is reached through the
+ * shape library sidebar instead, so pass `standardStencilLibrarySections`
+ * alongside this or those shapes become undrawable by hand.
  *
  * The toggle is declared here because a section says exactly what is on the bar:
  * it is no longer added on the host's behalf just because a library exists.
  *
- * Core's default bar knows nothing of `sticky` either, so a host that passes no
- * sections gets a canvas short of even the pinned set.
+ * Exported apart from {@link standardToolbarSections} for a host that keeps these
+ * tools but rearranges the rest of the bar — slipping its own end-aligned UI in
+ * front of {@link DEFAULT_TOOLBAR_PROPERTIES_SECTION}, say.
  *
  * Typed mutable because that is what `Canvas`'s `toolbar.sections` takes; it is
  * one shared array, so a host wanting a different order copies it rather than
  * splicing this one.
  */
+export const standardToolbarToolsSection: ToolbarSection = {
+	id: "tools",
+	items: [
+		{ type: "stencilLibraryToggle" },
+		{ type: "divider" },
+		{ type: "stencilPreset", presetId: "rect" },
+		{ type: "stencilPreset", presetId: "ellipse" },
+		{ type: "stencilPreset", presetId: "polygon" },
+		{ type: "stencilPreset", presetId: "polyline" },
+		{ type: "stencilPreset", presetId: "text" },
+		{ type: "stencilPreset", presetId: "sticky" },
+	],
+};
+
+/**
+ * The whole toolbar the standard set is drawn with: its shape tools
+ * ({@link standardToolbarToolsSection}), then core's history, view and
+ * properties sections unchanged.
+ *
+ * Core's default bar knows nothing of `sticky`, so a host that passes no sections
+ * gets a canvas short of even the pinned set.
+ *
+ * Typed mutable for the same reason as {@link standardToolbarToolsSection}.
+ */
 export const standardToolbarSections: ToolbarSection[] = [
-	{
-		id: "tools",
-		items: [
-			{ type: "stencilPreset", presetId: "rect" },
-			{ type: "stencilPreset", presetId: "ellipse" },
-			{ type: "stencilPreset", presetId: "polyline" },
-			{ type: "stencilPreset", presetId: "polygon" },
-			{ type: "stencilPreset", presetId: "text" },
-			{ type: "stencilPreset", presetId: "sticky" },
-			{ type: "divider" },
-			{ type: "stencilLibraryToggle" },
-		],
-	},
+	standardToolbarToolsSection,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 ];
 
 /**
@@ -109,7 +125,7 @@ export const standardToolbarSections: ToolbarSection[] = [
  * primitives on the bar and the `sticky` / `markdown` presets belong with them
  * rather than in a category of their own.
  *
- * Typed mutable for the same reason as {@link standardToolbarSections}.
+ * Typed mutable for the same reason as {@link standardToolbarToolsSection}.
  */
 export const standardStencilLibrarySections: StencilCategory[] = [
 	{

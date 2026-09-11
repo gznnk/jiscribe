@@ -20,8 +20,7 @@ import {
 import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
-import { EllipsisIcon } from "../../icons/EllipsisIcon";
-import { PropertyPanelIcon } from "../../icons/PropertyPanelIcon";
+import { SidebarIcon } from "../../icons/SidebarIcon";
 import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
 
@@ -149,7 +148,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						data-part={commandPart("toggleStencilLibrary")}
 						isOpen={isLibraryOpen}
 					>
-						<EllipsisIcon />
+						<SidebarIcon edge="left" />
 					</ToolbarToggleButton>
 				);
 			case "propertyPanelToggle":
@@ -162,7 +161,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						data-part={commandPart("togglePropertyPanel")}
 						isOpen={isPropertyPanelOpen}
 					>
-						<PropertyPanelIcon />
+						<SidebarIcon edge="right" />
 					</ToolbarToggleButton>
 				);
 			case "divider":

@@ -7,6 +7,8 @@ import type {
 import {
 	basicStencilCategory,
 	Canvas,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
 } from "@jiscribe/canvas";
 import { createCanvasParser } from "@jiscribe/doc";
@@ -74,30 +76,33 @@ const pluginParser = createCanvasParser({ plugins });
 
 // Core's default bar knows nothing of plugin shapes, so the host arranges them, over
 // two surfaces: the bar pins the handful of presets a diagram is mostly built out of, and
-// the shape library sidebar (`stencilLibrary.sections`, behind the bar's "All shapes"
-// toggle) holds the whole set grouped into sections. Both are declared the same way — the
+// the shape library sidebar (`stencilLibrary.sections`, behind the toggle at the bar's far
+// left) holds the whole set grouped into sections. Both are declared the same way — the
 // categories come from the plugins (flowchartStencilCategory and friends) and single shapes
 // are referenced by preset id.
 //
-// `toolbar.sections` is the whole bar, so the host names the "All shapes" toggle itself and
-// reuses core's view controls rather than restating undo / redo / zoom / help / properties.
+// `toolbar.sections` is the whole bar, so the host names the library toggle itself and
+// reuses core's remaining three sections rather than restating undo / redo / zoom / help /
+// properties.
 const toolbarSections: ToolbarSection[] = [
 	{
 		id: "tools",
 		items: [
+			{ type: "stencilLibraryToggle" },
+			{ type: "divider" },
 			{ type: "stencilPreset", presetId: "rect" },
 			{ type: "stencilPreset", presetId: "ellipse" },
-			{ type: "stencilPreset", presetId: "polyline" },
 			{ type: "stencilPreset", presetId: "polygon" },
+			{ type: "stencilPreset", presetId: "polyline" },
 			{ type: "stencilPreset", presetId: "text" },
 			{ type: "stencilPreset", presetId: "sticky" },
 			// One category left on the bar as a flyout: the same object also feeds the sidebar below.
 			{ type: "stencilCategory", category: lucideIconStencilCategory },
-			{ type: "divider" },
-			{ type: "stencilLibraryToggle" },
 		],
 	},
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 ];
 
 // The sidebar carries every shape on the canvas: core's primitives (with the two
@@ -336,7 +341,7 @@ const pluginsDoc = buildPluginsDoc();
 /**
  * Assembling a canvas out of shape plugins: the nine shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
- * the shape library ("All shapes" on the toolbar) to draw more of them.
+ * the shape library (the toggle at the toolbar's far left) to draw more of them.
  */
 export function PluginsExample() {
 	return (

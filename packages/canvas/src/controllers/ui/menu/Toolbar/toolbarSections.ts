@@ -76,9 +76,19 @@ export type ToolbarSection = {
 	items: ToolbarItem[];
 };
 
+// The bar is laid out by three rules, which the sections below follow and a host
+// replacing them is meant to keep:
+//   1. A sidebar toggle sits at the edge its panel opens on — the shape library
+//      at the far left, the properties panel at the far right.
+//   2. The start side holds what changes the document (placing shapes, undo /
+//      redo); the end side what does not (zoom, help, and whatever view-side UI
+//      the host adds for itself).
+//   3. Only the basic presets are pinned on the bar, as shortcuts; the shape
+//      library sidebar is the full catalogue. They run area → line → text.
+
 /**
- * The shape tools: every core preset pinned directly (the classic
- * direct-placement UX), then the shape library toggle. Core owns the basic
+ * The shape tools: the shape library toggle at the far left, then core's
+ * presets pinned directly (the classic direct-placement UX). Core owns the basic
  * primitives and nothing else, so those are the whole section; anything a plugin
  * supplies (the annotation / flowchart / container / general categories, the
  * `markdown` / `sticky` presets) is shown only when the host names it in its own
@@ -87,37 +97,63 @@ export type ToolbarSection = {
 export const DEFAULT_TOOLBAR_TOOLS_SECTION: ToolbarSection = {
 	id: "tools",
 	items: [
+		{ type: "stencilLibraryToggle" },
+		{ type: "divider" },
 		{ type: "stencilPreset", presetId: "rect" },
 		{ type: "stencilPreset", presetId: "ellipse" },
-		{ type: "stencilPreset", presetId: "polyline" },
 		{ type: "stencilPreset", presetId: "polygon" },
+		{ type: "stencilPreset", presetId: "polyline" },
 		{ type: "stencilPreset", presetId: "text" },
-		{ type: "divider" },
-		{ type: "stencilLibraryToggle" },
 	],
 };
 
 /**
- * History, zoom, shortcut help and the properties toggle, packed against the
- * right edge. Exported on its own so a host replacing only the tools (as
- * `@jiscribe/standard-shapes` does) can reuse this half instead of copying it.
+ * Undo / redo, kept on the start side as document-changing operations but in a
+ * section of their own so a host replacing the shape tools does not have to
+ * restate them. The leading divider marks the boundary with whatever tools
+ * precede it; the whole section disappears when the host switched both commands
+ * off.
+ */
+export const DEFAULT_TOOLBAR_HISTORY_SECTION: ToolbarSection = {
+	id: "history",
+	items: [
+		{ type: "divider" },
+		{ type: "command", commandId: "undo", icon: UndoIcon },
+		{ type: "command", commandId: "redo", icon: RedoIcon },
+	],
+};
+
+/**
+ * Zoom and shortcut help, packed against the right edge: the controls that leave
+ * the document alone. A host adding its own view-side UI (a settings menu, say)
+ * belongs after this section and before the properties toggle, so the toggle
+ * keeps the far edge.
  */
 export const DEFAULT_TOOLBAR_VIEW_SECTION: ToolbarSection = {
 	id: "view",
 	align: "end",
 	items: [
-		{ type: "command", commandId: "undo", icon: UndoIcon },
-		{ type: "command", commandId: "redo", icon: RedoIcon },
-		{ type: "divider" },
 		{ type: "zoom" },
 		{ type: "divider" },
 		{ type: "command", commandId: "shortcutHelp", icon: HelpIcon },
-		{ type: "propertyPanelToggle" },
 	],
 };
 
-/** The default bar: core's shape tools on the left, the view controls right. */
+/**
+ * The properties toggle alone at the far right, mirroring the shape library
+ * toggle at the far left. Its leading divider separates it from whatever the
+ * host packed against the end before it.
+ */
+export const DEFAULT_TOOLBAR_PROPERTIES_SECTION: ToolbarSection = {
+	id: "properties",
+	align: "end",
+	items: [{ type: "divider" }, { type: "propertyPanelToggle" }],
+};
+
+/** The default bar: shape tools and history on the left, view and properties right. */
 export const DEFAULT_TOOLBAR_SECTIONS: ToolbarSection[] = [
 	DEFAULT_TOOLBAR_TOOLS_SECTION,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
 	DEFAULT_TOOLBAR_VIEW_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
 ];

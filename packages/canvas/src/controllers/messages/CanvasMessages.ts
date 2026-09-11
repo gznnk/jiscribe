@@ -11,7 +11,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarZoomOut: "Zoom out",
 	toolbarResetZoom: "Reset zoom to 100%",
 	toolbarZoomIn: "Zoom in",
-	toolbarStencilLibrary: "All shapes",
+	toolbarStencilLibrary: "Shape library",
 	toolbarPropertyPanel: "Properties",
 
 	stencilLibraryTitle: "Shape library",
