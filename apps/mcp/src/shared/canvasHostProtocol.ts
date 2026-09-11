@@ -3,7 +3,7 @@
 //
 // There are two kinds of thing to carry.
 //
-// 1. File synchronisation. The source of truth is the .jis.json in the workspace;
+// 1. File synchronisation. The source of truth is the .jis in the workspace;
 //    the AI rewrites it through the MCP tools, and a person fixes it in the viewer
 //    and saves. A one-way notification is enough here.
 // 2. Operations that need a mounted canvas (capture, camera, selection,

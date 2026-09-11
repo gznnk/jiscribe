@@ -95,7 +95,7 @@ export const createCanvasHandleControl = (
 	hitTest: (target, tolerance) =>
 		getCanvas()?.measure.hitTest(target, { tolerance }) ?? [],
 
-	// What the AI reads is how it is drawn, so the .jis.json for re-editing is not
+	// What the AI reads is how it is drawn, so the .jis for re-editing is not
 	// embedded (it would make most of the characters a copy of the document, and
 	// the budget would run out first)
 	toSvgString: () =>

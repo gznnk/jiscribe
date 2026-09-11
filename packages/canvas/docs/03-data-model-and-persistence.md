@@ -38,7 +38,7 @@ invokes it polymorphically, it is the one point that consults a registry to conv
 conversion between tree and flat (expanding and reconstructing parent-child relationships)
 is concentrated at this single point and never leaks into the individual Mappers.
 
-## Persistence Format (`.jis.json` / `CanvasDoc`)
+## Persistence Format (`.jis` / `CanvasDoc`)
 
 The saved format is `CanvasDoc` (`@jiscribe/doc`, `model/canvas/CanvasDoc.ts`).
 

@@ -75,7 +75,7 @@ export type RasterizedPng = {
  * `<text>`, so no foreignObject-induced canvas taint occurs. Its faces are
  * embedded into this copy alone (see {@link embedLoadedFontFaces}) — the file
  * the SVG export writes stays free of them. When `options.source` is given, the
- * `.jis.json` is embedded as an `iTXt` chunk so the PNG can be reopened for
+ * `.jis` is embedded as an `iTXt` chunk so the PNG can be reopened for
  * editing (draw.io-style round-trip).
  *
  * @param svg - The live canvas `<svg>` to snapshot

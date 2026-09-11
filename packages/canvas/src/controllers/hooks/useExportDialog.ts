@@ -31,12 +31,12 @@ export type CanvasExportImagePayload = {
 	format: ExportImageFormat;
 	/** Encoded image bytes (PNG, or serialized SVG text) */
 	data: Blob;
-	/** Whether the `.jis.json` source is embedded (re-editable image) */
+	/** Whether the `.jis` source is embedded (re-editable image) */
 	includesSource: boolean;
 };
 
 /**
- * Runs the chosen export (with source: SVG embeds the .jis.json in
+ * Runs the chosen export (with source: SVG embeds the .jis in
  * <metadata>, PNG in an iTXt chunk; without: a plain image). The result is
  * handed to the host via deliverToHost when set, downloaded otherwise.
  * Failures surface through notifyError (error toast).

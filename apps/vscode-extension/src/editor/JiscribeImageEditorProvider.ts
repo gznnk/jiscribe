@@ -44,7 +44,7 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	 * @param savedBytes - image bytes last written to (or read from) the file;
 	 *   the base for the save fallback that re-embeds the latest source when the
 	 *   Webview can't respond
-	 * @param sourceText - current `.jis.json` source; null means no embedded
+	 * @param sourceText - current `.jis` source; null means no embedded
 	 *   source (shown as an uneditable error)
 	 */
 	constructor(

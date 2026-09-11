@@ -22,7 +22,7 @@ export type HarnessRenderRequest = {
 	scale: number;
 	/** Whether to leave the background unpainted, producing an alpha-transparent image. */
 	transparentBackground: boolean;
-	/** Whether to embed the `.jis.json` in the image, keeping it re-editable. */
+	/** Whether to embed the `.jis` in the image, keeping it re-editable. */
 	includeSource: boolean;
 };
 

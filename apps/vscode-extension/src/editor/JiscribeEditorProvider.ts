@@ -5,7 +5,7 @@ import { toWebviewDocSource } from "../canvasDocSource";
 import type { ExtensionToWebviewMessage } from "../types/messages";
 
 /**
- * Custom editor provider that shows the Canvas UI when a .jis.json file opens.
+ * Custom editor provider that shows the Canvas UI when a .jis file opens.
  *
  * Data flow:
  *   file change → Extension → Webview (postMessage)
@@ -19,7 +19,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
 	/**
-	 * Called by VSCode each time a .jis.json file opens. Initializes the Webview
+	 * Called by VSCode each time a .jis file opens. Initializes the Webview
 	 * and registers its event listeners.
 	 *
 	 * @param document  the opened file

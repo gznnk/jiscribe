@@ -15,7 +15,7 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 | --- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | 1   | [Design Philosophy](./01-design-philosophy.md)                   | The four decision criteria: performance first, pure functions, handler responsibilities, and defense at the boundaries |
 | 2   | [Architecture](./02-architecture.md)                             | Layer separation (`@jiscribe/doc` + states → rendering → controllers, plus registries) and unidirectional dependencies |
-| 3   | [Data Model and Persistence](./03-data-model-and-persistence.md) | Doc ↔ State conversion via the Mapper, the `.jis.json` specification, and the parser's two-stage validation            |
+| 3   | [Data Model and Persistence](./03-data-model-and-persistence.md) | Doc ↔ State conversion via the Mapper, the `.jis` specification, and the parser's two-stage validation                 |
 | 4   | [Gesture System](./04-gesture-system.md)                         | GestureRecognizer, handler composition, and the `data-gesture` linking attribute                                       |
 | 5   | [Command System](./05-command-system.md)                         | CommandRegistry, unification of shortcuts/menus/toolbar, and Undo/Redo                                                 |
 | 6   | [State Update Flow (Reducer)](./06-state-update-flow.md)         | The `canvasReducer` actions and the mechanism for recording and aggregating history                                    |

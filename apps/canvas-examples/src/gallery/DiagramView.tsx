@@ -14,7 +14,7 @@ const plugins = [flowchartPlugin, generalPlugin];
 const canvasParser = createCanvasParser({ plugins });
 
 /**
- * Renders one gallery diagram at the framing its entry declares. The `.jis.json` is
+ * Renders one gallery diagram at the framing its entry declares. The `.jis` is
  * external input, so it goes through the parser's two-stage validation before reaching
  * Canvas.
  */

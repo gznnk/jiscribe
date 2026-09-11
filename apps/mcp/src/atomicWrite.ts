@@ -17,7 +17,7 @@ import { basename, dirname, join } from "node:path";
  *
  * The temporary file is given a name starting with a dot, and is removed when the
  * write fails. It is left behind only when the process is killed, and that
- * leftover cannot be mistaken for the real thing (it does not end in `.jis.json`,
+ * leftover cannot be mistaken for the real thing (it does not end in `.jis`,
  * so it is not picked up as a canvas).
  *
  * When the destination already exists, its permissions are carried over. Without
@@ -26,7 +26,7 @@ import { basename, dirname, join } from "node:path";
  *
  * When the destination is a symbolic link, the link itself is replaced by an
  * ordinary file (overwriting directly would rewrite what the link points at).
- * Using a link for a `.jis.json` is not an intended use, so resolving it is not
+ * Using a link for a `.jis` is not an intended use, so resolving it is not
  * taken on.
  *
  * @param filePath The destination to replace. Its parent directory must exist

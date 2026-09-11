@@ -36,7 +36,7 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
 [アーキテクチャ](./02-architecture.ja.md) を参照）。ツリー ↔ フラットの
 構造変換（親子関係の展開・再構築）はこの一点に集約し、個々の Mapper には漏らさない。
 
-## 永続化フォーマット（`.jis.json` / `CanvasDoc`）
+## 永続化フォーマット（`.jis` / `CanvasDoc`）
 
 保存形式は `CanvasDoc`（`@jiscribe/doc` の `model/canvas/CanvasDoc.ts`）。
 

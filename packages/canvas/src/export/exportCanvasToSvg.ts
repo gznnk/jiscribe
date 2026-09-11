@@ -15,7 +15,7 @@ export type ExportCanvasToSvgOptions = BuildExportSvgOptions & {
 
 /**
  * Converts the Canvas `<svg>` to a self-contained SVG string displayable in
- * any environment. When `source` is given, the `.jis.json` is embedded in
+ * any environment. When `source` is given, the `.jis` is embedded in
  * `<metadata>` so the file remains re-editable.
  */
 export const canvasToSvgString = (

@@ -3,7 +3,7 @@
 # @jiscribe/basic-validators
 
 Runtime type guards shared across jiscribe. Dependency-free predicates that narrow
-`unknown` at trust boundaries — parsed `.jis.json` documents, clipboard payloads, plugin
+`unknown` at trust boundaries — parsed `.jis` documents, clipboard payloads, plugin
 input — before the value reaches typed code. Nothing here touches a browser global, so
 every guard behaves the same in Node and the browser.
 

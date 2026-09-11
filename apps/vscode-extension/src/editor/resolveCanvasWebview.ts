@@ -37,7 +37,7 @@ export interface CanvasWebviewOptions {
 
 /**
  * Boot the Canvas Webview in a panel and wire its message channel, shared by the
- * `.jis.json` and `.jis.png` / `.jis.svg` editors.
+ * `.jis` and `.jis.png` / `.jis.svg` editors.
  *
  * Undo / redo / image export behave the same in both editors, so they are
  * handled here; only the messages that touch the document model are delegated to

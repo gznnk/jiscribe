@@ -36,7 +36,7 @@ const EXAMPLE_ENTRIES: ReadonlyArray<ShellEntry> = [
 		id: "file-io",
 		title: "File I/O",
 		description:
-			"Loading and saving .jis.json, and restoring an exported PNG by dropping it",
+			"Loading and saving .jis, and restoring an exported PNG by dropping it",
 		source: "src/examples/file-io.tsx",
 		Component: FileIoExample,
 	},

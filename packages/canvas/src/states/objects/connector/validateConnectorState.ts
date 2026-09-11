@@ -61,7 +61,7 @@ const connectorLabelValidators = {
  * clipboard boundary, so anything it accepts must also survive re-parse. A looser check
  * (plain `isString` on colors, unbounded `position`) would let a pasted label carry
  * `stroke: "red;}…"` (CSS injection) or `position: 5` through `commit`, producing a
- * `.jis.json` that fails the Doc validator on the next open.
+ * `.jis` that fails the Doc validator on the next open.
  */
 export const isValidConnectorLabelState = (label: unknown): boolean => {
 	if (label === undefined) {

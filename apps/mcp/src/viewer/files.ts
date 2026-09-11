@@ -6,7 +6,7 @@
  *
  * @param relPath Path relative to the workspace root. A path leading outside is
  *   rejected by the server
- * @param text The text to write (the whole `.jis.json`)
+ * @param text The text to write (the whole `.jis`)
  * @throws An Error carrying the error message the server returned
  */
 export async function saveFile(relPath: string, text: string): Promise<void> {

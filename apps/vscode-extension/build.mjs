@@ -153,7 +153,7 @@ function assertNoRedundantFontFormats() {
 // ── Copying the AI assets ────────────────────────────────────────────────
 // Place the doc-schema package's distributable assets (assets/) into dist/.
 // - jiscribe.schema.json: referenced by VSCode's jsonValidation to provide
-//   completion and validation for .jis.json.
+//   completion and validation for .jis.
 // - ai-guide.md: the AI authoring guide (entry point) that "Set up AI" writes
 //   into the workspace. Its field-level detail is the schema's, so the two land
 //   in the same .jiscribe/ directory and the guide's link to it resolves.

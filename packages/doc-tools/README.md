@@ -1,6 +1,6 @@
 # @jiscribe/doc-tools
 
-Checking, measuring and diagnosing `.jis.json` documents from Node. React- and
+Checking, measuring and diagnosing `.jis` documents from Node. React- and
 DOM-free: the document layer is reached through `@jiscribe/doc` and
 `@jiscribe/doc/unstable` alone, so this runs in a CI job, an MCP server or a CLI without a
 browser anywhere.

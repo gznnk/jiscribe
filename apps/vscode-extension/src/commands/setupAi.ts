@@ -4,7 +4,7 @@ import * as vscode from "vscode";
  * "Set up AI" command.
  *
  * Places the guide/schema plus per-agent adapters (Skill / rules /
- * instructions) so a workspace's AI agents can generate and edit `.jis.json`
+ * instructions) so a workspace's AI agents can generate and edit `.jis`
  * correctly. See docs/03_ai-integration/setup_ai_design.md.
  *
  * - The canonical copy lives once in `.jiscribe/` (ai-guide.md +

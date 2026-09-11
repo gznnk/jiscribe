@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 /**
  * Build the HTML shown in the Canvas editor's Webview, shared by both the
- * `.jis.json` (text) and `.jis.png` (binary) custom editors.
+ * `.jis` (text) and `.jis.png` (binary) custom editors.
  *
  * Sets a Content-Security-Policy that blocks all but the allowed script,
  * identified by a single-use random nonce.

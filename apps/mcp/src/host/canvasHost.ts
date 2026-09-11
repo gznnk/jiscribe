@@ -2,7 +2,7 @@
 // fix it there. It brings up HTTP + WebSocket inside the MCP process and opens the
 // viewer in a browser.
 //
-// The single source of truth is one .jis.json file in the workspace. The AI
+// The single source of truth is one .jis file in the workspace. The AI
 // rewrites it through the path-based tools (add_rect and the rest), and the host
 // watches the file and mirrors it into the viewer. A fix a person makes in the
 // viewer is saved back, so the next time the AI reads the file it gets the shape

@@ -395,7 +395,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			],
 		}),
 
-		// SVG is not created from the StencilLibrary (only added via AI / direct .jis.json authoring).
+		// SVG is not created from the StencilLibrary (only added via AI / direct .jis authoring).
 		// Therefore factory / stencils are not registered.
 		svg: defineObject({
 			...builtinObjectDocDefinitions.svg,

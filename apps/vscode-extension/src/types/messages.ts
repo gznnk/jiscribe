@@ -10,7 +10,7 @@
 /**
  * Kind of the edited document; decides how an update message's `data` is read.
  *
- * - "json": `.jis.json`. `data` is the JSON text itself.
+ * - "json": `.jis`. `data` is the JSON text itself.
  * - "svg" / "png": `.jis.svg` / `.jis.png`. The Extension has already extracted
  *   the embedded source, so `data` is JSON text in both directions (empty
  *   string when there is no embedded source). The image itself (full SVG / PNG

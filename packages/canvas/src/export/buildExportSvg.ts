@@ -11,7 +11,7 @@ import {
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 export type BuildExportSvgOptions = {
-	/** Editing source (`.jis.json`) to embed. Omit to skip the metadata. */
+	/** Editing source (`.jis`) to embed. Omit to skip the metadata. */
 	source?: CanvasDoc;
 	/**
 	 * Background color. When omitted, the live SVG's computed
@@ -121,7 +121,7 @@ export const getSvgSize = (
  *   their box as a `<rect>` (avoids canvas taint and works on GitHub, which
  *   sanitizes foreignObject away)
  * - Lays a solid background `<rect>`
- * - When `source` is given, embeds the `.jis.json` in `<metadata>`
+ * - When `source` is given, embeds the `.jis` in `<metadata>`
  */
 export const buildExportSvg = (
 	svg: SVGSVGElement,

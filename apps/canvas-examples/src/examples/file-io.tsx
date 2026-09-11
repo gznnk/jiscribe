@@ -18,7 +18,7 @@ const canvasParser = createCanvasParser();
 
 const initialDoc: CanvasDoc = { version: 1, root: [] };
 
-const DEFAULT_FILE_NAME = "untitled.jis.json";
+const DEFAULT_FILE_NAME = "untitled.jis";
 
 /** Turn a parse failure result into a string suitable for an alert */
 const formatParseError = (
@@ -94,11 +94,11 @@ function FileToolbarButtons({
 
 /**
  * File I/O example:
- * - Loading a .jis.json (the Open button in the toolbar's host slot, then two-stage
+ * - Loading a .jis (the Open button in the toolbar's host slot, then two-stage
  *   validation through the parser)
  * - Saving the document being edited (onCommit copies the latest doc into a ref, and Save
  *   downloads it)
- * - Restoring a PNG exported by jiscribe (its iTXt carries the .jis.json) by dropping it,
+ * - Restoring a PNG exported by jiscribe (its iTXt carries the .jis) by dropping it,
  *   which doubles as a round-trip check
  */
 export function FileIoExample() {

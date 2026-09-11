@@ -8,7 +8,7 @@ import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
  *
  * Note: GroupDoc carries no frame (cx/cy/width/height) — the frame is derived
  * from the children on load (CanvasMapper → calculateGroupOrientedBounds),
- * where it is clamped to MIN_GROUP_DIMENSION. A `.jis.json` file therefore
+ * where it is clamped to MIN_GROUP_DIMENSION. A `.jis` file therefore
  * cannot inject a zero-size group frame, so there is nothing to validate here.
  */
 export const validateGroupDoc: ObjectDocValidateFn =

@@ -18,7 +18,7 @@ const MAX_CAPTURE_PIXEL_SIZE = 1400;
 
 /**
  * The capture options. Size is held down by drawing at 1:1 with a cap on the
- * longest edge, and the .jis.json embedded for re-editing is left out (the AI
+ * longest edge, and the .jis embedded for re-editing is left out (the AI
  * can read the document with describe_canvas, so carrying it twice buys
  * nothing)
  */

@@ -36,7 +36,7 @@ export type ExportSubmitValues = {
 	format: ExportImageFormat;
 	/** Margin (world px) kept around the content */
 	margin: number;
-	/** Whether to embed the `.jis.json` source (re-editable file) */
+	/** Whether to embed the `.jis` source (re-editable file) */
 	includeSource: boolean;
 	/** Whether to skip the background fill (alpha-transparent image) */
 	transparentBackground: boolean;

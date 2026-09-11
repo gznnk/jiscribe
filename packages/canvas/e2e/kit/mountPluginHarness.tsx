@@ -72,7 +72,7 @@ type HarnessAppProps = {
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
  * two-canvas setup and ?pageScroll to the canvas embedded in a scrolling document.
- * Restoring a dropped jiscribe export PNG (with .jis.json in its iTXt) is a
+ * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
 function HarnessApp({

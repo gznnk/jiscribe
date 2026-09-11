@@ -27,7 +27,7 @@ server, the viewer, and the files the text measurement needs at runtime.
 
 ## What it is
 
-The workspace `.jis.json` file is the single source of truth. The AI edits it
+The workspace `.jis` file is the single source of truth. The AI edits it
 through path-based tools (`add_rect`, `align_objects`, …); the host watches the
 file and mirrors it into the viewer. When a person moves or retypes something in
 the viewer, it is written back, so the next read shows what they changed. No
@@ -49,7 +49,7 @@ addressed by absolute path, which tools need a viewer, where validation starts.
 The canvas itself — what it can hold, what each shape is for, how to draw well,
 and how the JSON is laid out — is not in there. It is prose too large to sit in
 the context all session, so `read_drawing_guide` fetches it on demand:
-`"drawing"` before starting a diagram, `"json-format"` when a `.jis.json` file is
+`"drawing"` before starting a diagram, `"json-format"` when a `.jis` file is
 to be edited directly rather than through these tools.
 
 ## The viewer

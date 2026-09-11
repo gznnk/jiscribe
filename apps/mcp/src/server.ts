@@ -101,9 +101,7 @@ const DEFAULT_ELLIPSE_RY = 50;
  */
 const DEFAULT_FONT_FAMILY = '"Source Sans 3", "Noto Sans JP", sans-serif';
 
-const pathArg = z
-	.string()
-	.describe("Absolute path to the target .jis.json file.");
+const pathArg = z.string().describe("Absolute path to the target .jis file.");
 
 const require = createRequire(import.meta.url);
 
@@ -129,12 +127,12 @@ type DrawingGuide = keyof typeof DRAWING_GUIDE_SPECIFIERS;
  * `read_drawing_guide` fetches on demand.
  */
 const SERVER_INSTRUCTIONS = [
-	"Jiscribe draws diagrams as .jis.json files. The file on disk is the single source of truth: no canvas state is kept in the tools, so anything not written to a file does not exist.",
+	"Jiscribe draws diagrams as .jis files. The file on disk is the single source of truth: no canvas state is kept in the tools, so anything not written to a file does not exist.",
 	"Every document tool takes an absolute `path` naming the file it acts on. There is no concept of a currently open document, and a tool that only reads does not write the file back.",
 	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The 16 tools for capture, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
 	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports schema, parser and text-overflow problems; run it before telling the user a diagram is finished.",
 	"`undo` steps back through edits you made and keeps its history per file, so it cannot take back what a person changed in the viewer.",
-	"Call `read_drawing_guide` before you start drawing: `drawing` is what the canvas can hold and how to draw on it well, and `json-format` is for when you have decided to edit a .jis.json file directly instead of through these tools.",
+	"Call `read_drawing_guide` before you start drawing: `drawing` is what the canvas can hold and how to draw on it well, and `json-format` is for when you have decided to edit a .jis file directly instead of through these tools.",
 ].join("\n\n");
 
 /**
@@ -229,7 +227,7 @@ export function createJiscribeMcpServer(): McpServer {
 			description: [
 				"Read one of the two Jiscribe guides: the background the tool list cannot carry.",
 				'"drawing" is what a canvas can hold, what each shape type is for, and how to draw well with it. Read it once before you start drawing, whichever tools you then use.',
-				'"json-format" is the structure of a .jis.json file. Read it only once you have decided to read or write such a file directly with your own file tools instead of the tools here.',
+				'"json-format" is the structure of a .jis file. Read it only once you have decided to read or write such a file directly with your own file tools instead of the tools here.',
 				"Neither changes while this session runs, so read one once and work from what you read rather than calling again.",
 				"Both open with a `<!-- jiscribe guide <version>+<digest> -->` stamp naming the generation they came from. A workspace may also hold a .jiscribe/ai-guide.md placed there by the Jiscribe editor extension, stamped the same way; when the two stamps differ, the higher version is the newer text, and the one you read here is the generation these tools belong to.",
 			].join(" "),
@@ -238,7 +236,7 @@ export function createJiscribeMcpServer(): McpServer {
 					guide: z
 						.enum(["drawing", "json-format"])
 						.describe(
-							'Which guide to read: "drawing" for the canvas, its shapes and how to draw on it; "json-format" for the .jis.json file format.',
+							'Which guide to read: "drawing" for the canvas, its shapes and how to draw on it; "json-format" for the .jis file format.',
 						),
 				})
 				.strict(),
@@ -250,7 +248,7 @@ export function createJiscribeMcpServer(): McpServer {
 		registerName("open_canvas"),
 		{
 			description: [
-				"Open a .jis.json file in a canvas viewer: starts a local web server inside this MCP process and opens the file in a browser window.",
+				"Open a .jis file in a canvas viewer: starts a local web server inside this MCP process and opens the file in a browser window.",
 				"The file stays the single source of truth. The editing tools below write to it and the viewer follows within a moment; when a person moves or retypes shapes in the viewer, it writes the file back, so reading the file again shows what they changed.",
 				"A file that does not exist yet is created as an empty canvas, which is how a new diagram is started.",
 				"Calling it again switches the viewer to another file. Naming a file outside the directory currently being served restarts the server on that file's directory, and the open viewer reconnects on its own.",
@@ -319,7 +317,7 @@ export function createJiscribeMcpServer(): McpServer {
 		{
 			description: [
 				"Close the canvas viewer window and stop the local web server that open_canvas started.",
-				"Use it when the diagram is finished and the window is in the way; the .jis.json file is untouched and open_canvas brings it back.",
+				"Use it when the diagram is finished and the window is in the way; the .jis file is untouched and open_canvas brings it back.",
 				"A window the browser refuses to close is reported as still open, and the server is left running for it.",
 			].join(" "),
 			inputSchema: z.object({}).strict(),
@@ -351,7 +349,7 @@ export function createJiscribeMcpServer(): McpServer {
 		registerName("diagnose_canvas"),
 		{
 			description: [
-				"Check an existing .jis.json file: validation (schema + parser) plus a diagnosis of whether each shape's text actually fits inside it.",
+				"Check an existing .jis file: validation (schema + parser) plus a diagnosis of whether each shape's text actually fits inside it.",
 				"Names the file by path, so a large diagram never has to be sent through the conversation; this is the only validation entry point, and it reports JSON syntax errors too.",
 				"Overflow is only diagnosed when the file itself validates, since a shape with an invalid size has no meaningful content box.",
 				"Returns one line per finding, or valid: true when there is nothing to report.",
@@ -410,7 +408,7 @@ export function createJiscribeMcpServer(): McpServer {
 		registerName("add_rect"),
 		{
 			description:
-				"Add a rectangle to a .jis.json file (read → modify → validate → write). Returns the new object id.",
+				"Add a rectangle to a .jis file (read → modify → validate → write). Returns the new object id.",
 			inputSchema: z
 				.object({
 					path: pathArg,
@@ -452,7 +450,7 @@ export function createJiscribeMcpServer(): McpServer {
 		registerName("add_ellipse"),
 		{
 			description:
-				"Add an ellipse to a .jis.json file (read → modify → validate → write). Returns the new object id.",
+				"Add an ellipse to a .jis file (read → modify → validate → write). Returns the new object id.",
 			inputSchema: z
 				.object({
 					path: pathArg,

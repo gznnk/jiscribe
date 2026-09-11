@@ -28,7 +28,7 @@ export type CanvasExportHandle = {
 	 */
 	toSvgString(options?: CanvasExportOptions): string | null;
 	/**
-	 * Rasterizes the canvas to a PNG with the `.jis.json` source embedded as an
+	 * Rasterizes the canvas to a PNG with the `.jis` source embedded as an
 	 * iTXt chunk, and with the image's own frame of reference attached
 	 * (see {@link CanvasPngCapture}).
 	 *
@@ -52,7 +52,7 @@ export type CanvasExportHandle = {
 
 /** An exported PNG together with the part of the world it shows. */
 export type CanvasPngCapture = {
-	/** The encoded PNG (with the `.jis.json` source embedded unless turned off). */
+	/** The encoded PNG (with the `.jis` source embedded unless turned off). */
 	blob: Blob;
 	/**
 	 * The world rect the image covers, margin included. It is mapped onto the

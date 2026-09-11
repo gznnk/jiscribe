@@ -45,7 +45,7 @@ There are two kinds of color with different natures, and their origins must alwa
 |               | UI chrome                                      | Shape data                                   |
 | ------------- | ---------------------------------------------- | -------------------------------------------- |
 | Examples      | menus, toolbars, selection frames, snap guides | a shape's `fill` / `stroke` / `fontColor`    |
-| Origin        | theme tokens in `theme/themeTokens.ts`         | values saved in the document (`.jis.json`)   |
+| Origin        | theme tokens in `theme/themeTokens.ts`         | values saved in the document (`.jis`)        |
 | Follows theme | yes (follows the host-injected theme)          | no (data specified by the user) ※except auto |
 
 ### `"auto"` (theme-following color) — an exception in shape data (issue #38)
@@ -55,7 +55,7 @@ unambiguous **data-level meaning** of "no concrete color specified = follow the 
 the saved value does not become theme-dependent, it does not break portability. The default `stroke` /
 `fontColor` for new shapes is this `"auto"`.
 
-- **Storage**: `.jis.json` and State retain `"auto"` as-is. The Mapper does not convert it.
+- **Storage**: `.jis` and State retain `"auto"` as-is. The Mapper does not convert it.
 - **Resolution**: at render time, `rendering/objects/utils/resolveAutoColor.ts` resolves it to a
   theme color **per role** (described below).
 - **Explicit color**: once the user picks a concrete color in the color picker, it is saved as a concrete
