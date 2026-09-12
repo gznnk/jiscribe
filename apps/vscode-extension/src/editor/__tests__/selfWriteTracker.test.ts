@@ -32,8 +32,7 @@ describe("selfWriteTracker", () => {
 	it("drops an older write with no echo when the newer one matches", () => {
 		const tracker = createSelfWriteTracker();
 
-		// A changed nothing (a no-op replace fires no change event), so only B's
-		// echo arrives.
+		// A's echo never arrived, so B's is the first event the tracker sees.
 		tracker.track(docA, "\n");
 		tracker.track(docB, "\n");
 

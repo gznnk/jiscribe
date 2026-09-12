@@ -50,6 +50,14 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 					return;
 				}
 
+				// Metadata-only event (no ranges): VSCode raises one when a clean
+				// document turns dirty, right after the content event of the same
+				// edit. The text did not move, so there is nothing to forward, and
+				// letting it reach the tracker would clear the queue on every commit.
+				if (e.contentChanges.length === 0) {
+					return;
+				}
+
 				// Our own write echoing back. The Canvas already holds this state, and
 				// an echo forwarded after a newer commit would be applied as an external
 				// change and revert the canvas to the older document.

@@ -51,9 +51,9 @@ export interface SelfWriteTracker {
 	/**
 	 * Classify a change event by the document's text, consuming the queue.
 	 *
-	 * A match drops that entry and every older one (an older write whose echo can
-	 * no longer arrive, e.g. a replace that changed nothing fires no event); no
-	 * match empties the queue (see the module comment).
+	 * A match drops that entry and every older one, so an older write whose echo
+	 * never arrived cannot linger and swallow a later external change of the same
+	 * text; no match empties the queue (see the module comment).
 	 *
 	 * @param documentText - the document's full text after the change event
 	 * @returns true when the text is one this extension wrote, false for an
