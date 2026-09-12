@@ -464,8 +464,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -562,10 +568,16 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface. Default: \"auto\" (unlike other shapes, which default to transparent)",
 					"type": "string",
 					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"description": "Markdown source to render. Default: \"\"",
@@ -673,8 +685,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1017,8 +1035,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1112,8 +1136,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1335,8 +1365,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1435,6 +1471,9 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
 				},
@@ -1515,8 +1554,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1607,8 +1652,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1722,6 +1773,9 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
 				},
@@ -1822,6 +1876,9 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
 				},
@@ -1915,6 +1972,9 @@
 				},
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -2197,10 +2257,16 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface. Default: \"auto\" (unlike most shapes, which default to transparent)",
 					"type": "string",
 					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"description": "The text slots. Not a string: a record keeps its title and its compartments apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Which slots you write is what gives the box its compartments — write \"attributes\" alone for a two-compartment box (an ER entity, a DTO), add \"operations\" for a UML class, omit both for a plain titled box; \"stereotype\" is a band rather than a compartment and is what marks an interface, an abstract class, or an enum. Default: { \"name\": { \"text\": \"\" }, \"attributes\": { \"text\": [] } }",
@@ -2528,10 +2594,16 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"auto\" (overrides the shared default \"transparent\").",
 					"type": "string",
 					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -2627,10 +2699,16 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"auto\" (overrides the shared default \"transparent\").",
 					"type": "string",
 					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -2846,8 +2924,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -2946,6 +3030,9 @@
 				},
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 				}
 			}
 		},
@@ -2984,8 +3071,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				}
 			}
 		},
@@ -3084,8 +3177,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -3182,6 +3281,9 @@
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"#fef9c3\" (overrides the shared default \"transparent\").",
 					"type": "string",
 					"default": "#fef9c3"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -3353,6 +3455,9 @@
 				},
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 				},
 				"label": {
 					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontFamily, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign or verticalAlign — do not add those keys here. It is always drawn horizontally, centered on its anchor point on the path: a rotated or diagonal connector does not tilt it.",
@@ -3606,6 +3711,13 @@
 						}
 					],
 					"default": "solid"
+				},
+				"strokeOpacity": {
+					"description": "Stroke opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the stroke color already carries, so rgba() / #RRGGBBAA still work and combine with it. Default: 1",
+					"type": "number",
+					"minimum": 0,
+					"maximum": 1,
+					"default": 1
 				}
 			}
 		},
@@ -3617,6 +3729,13 @@
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"transparent\"",
 					"type": "string",
 					"default": "transparent"
+				},
+				"fillOpacity": {
+					"description": "Fill opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the fill color already carries, so rgba() / #RRGGBBAA still work and combine with it. Default: 1",
+					"type": "number",
+					"minimum": 0,
+					"maximum": 1,
+					"default": 1
 				}
 			}
 		},
@@ -3799,8 +3918,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -3889,8 +4014,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"

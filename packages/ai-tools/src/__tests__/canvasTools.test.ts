@@ -327,6 +327,22 @@ describe("CanvasToolDescriptor.toOp", () => {
 		).toEqual({ kind: "setStyle", ids: ["rect-1"], style: { fill: "#000" } });
 	});
 
+	it("carries the paint opacities into the style of set_style", () => {
+		const descriptors = createCanvasToolDescriptors(capabilities);
+
+		expect(
+			findDescriptor(descriptors, "set_style").toOp({
+				ids: ["rect-1"],
+				fillOpacity: 0.5,
+				strokeOpacity: 0.25,
+			}),
+		).toEqual({
+			kind: "setStyle",
+			ids: ["rect-1"],
+			style: { fillOpacity: 0.5, strokeOpacity: 0.25 },
+		});
+	});
+
 	it("builds the argument-less operations from their kind alone", () => {
 		const descriptors = createCanvasToolDescriptors(capabilities);
 
@@ -529,6 +545,22 @@ describe("CanvasToolDescriptor.inputSchema", () => {
 				match: "hi",
 				fontWeight: "bolder",
 			}).success,
+		).toBe(false);
+	});
+
+	it("takes a paint opacity anywhere in 0..1 and refuses one outside it", () => {
+		for (const fillOpacity of [0, 0.5, 1]) {
+			expect(
+				parseArgs("add_object", { type: "rect", x: 0, y: 0, fillOpacity })
+					.success,
+				`add_object should take fillOpacity ${fillOpacity}`,
+			).toBe(true);
+		}
+		expect(
+			parseArgs("set_style", { ids: ["rect-1"], fillOpacity: 1.5 }).success,
+		).toBe(false);
+		expect(
+			parseArgs("set_style", { ids: ["rect-1"], strokeOpacity: -0.5 }).success,
 		).toBe(false);
 	});
 

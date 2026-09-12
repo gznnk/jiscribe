@@ -1,27 +1,49 @@
 import styled from "@emotion/styled";
 
 /**
- * Color properties for arrow shapes.
+ * Paint properties for arrow shapes.
  * Filled arrows pass `fillColor`, hollow arrows pass `strokeColor` (the unset
  * side becomes `none`). Values are already resolved (auto is resolved to the
  * theme foreground). CSS safety is guaranteed at the external-input boundary.
+ * The alpha is the line's own `strokeOpacity` and is applied to the element
+ * rather than to either paint, so the one rule covers both builds of head. Named
+ * apart from the CSS property it feeds (see shapePaint).
  */
-type ArrowColorProps = {
+type ArrowPaintProps = {
 	fillColor?: string;
 	strokeColor?: string;
+	alpha?: number;
 };
 
-const arrowColor = ({ fillColor, strokeColor }: ArrowColorProps): string => `
+/** The element's `opacity`; omitted draws fully opaque (the CSS initial value). */
+const alphaRule = (alpha: number | undefined): string =>
+	alpha === undefined ? "" : `opacity: ${alpha};`;
+
+const arrowPaint = ({
+	fillColor,
+	strokeColor,
+	alpha,
+}: ArrowPaintProps): string => `
 	fill: ${fillColor ? fillColor : "none"};
 	stroke: ${strokeColor ? strokeColor : "none"};
+	${alphaRule(alpha)}
+`;
+
+/**
+ * The group a head built from more than one element draws into. It carries the
+ * whole mark's alpha, so a translucent line does not darken where two of its
+ * pieces meet; the pieces inside then take none of their own.
+ */
+export const ArrowGroup = styled.g<{ alpha?: number }>`
+	${({ alpha }) => alphaRule(alpha)}
 `;
 
 /**
  * Styled polygon element for arrow shapes.
  * Enables pointer events for click detection.
  */
-export const ArrowPolygon = styled.polygon<ArrowColorProps>`
-	${arrowColor}
+export const ArrowPolygon = styled.polygon<ArrowPaintProps>`
+	${arrowPaint}
 	pointer-events: auto;
 	cursor: grab;
 `;
@@ -30,8 +52,8 @@ export const ArrowPolygon = styled.polygon<ArrowColorProps>`
  * Styled polyline element for arrow shapes.
  * Enables pointer events for click detection.
  */
-export const ArrowPolyline = styled.polyline<ArrowColorProps>`
-	${arrowColor}
+export const ArrowPolyline = styled.polyline<ArrowPaintProps>`
+	${arrowPaint}
 	pointer-events: auto;
 	cursor: grab;
 `;
@@ -42,8 +64,8 @@ export const ArrowPolyline = styled.polyline<ArrowColorProps>`
  * and its cardinality bars), which a single polyline cannot express.
  * Enables pointer events for click detection.
  */
-export const ArrowPath = styled.path<ArrowColorProps>`
-	${arrowColor}
+export const ArrowPath = styled.path<ArrowPaintProps>`
+	${arrowPaint}
 	pointer-events: auto;
 	cursor: grab;
 `;
@@ -52,8 +74,8 @@ export const ArrowPath = styled.path<ArrowColorProps>`
  * Styled circle element for arrow shapes.
  * Enables pointer events for click detection.
  */
-export const ArrowCircle = styled.circle<ArrowColorProps>`
-	${arrowColor}
+export const ArrowCircle = styled.circle<ArrowPaintProps>`
+	${arrowPaint}
 	pointer-events: auto;
 	cursor: grab;
 `;

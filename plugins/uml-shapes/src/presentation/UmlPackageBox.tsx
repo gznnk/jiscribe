@@ -34,7 +34,9 @@ export const UmlPackageBox = createFrameObject<UmlPackageState>(
 			"data-id": dataId,
 			transform,
 			strokeColor,
+			strokeAlpha,
 			fillColor,
+			fillAlpha,
 			strokeWidth,
 			strokeDasharray,
 		} = shape;
@@ -50,7 +52,9 @@ export const UmlPackageBox = createFrameObject<UmlPackageState>(
 						calcUmlPackagePoints(left, -height / 2, width, height),
 					)}
 					strokeColor={strokeColor}
+					strokeAlpha={strokeAlpha}
 					fillColor={fillColor}
+					fillAlpha={fillAlpha}
 					strokeWidth={strokeWidth}
 					strokeDasharray={strokeDasharray}
 				/>
@@ -60,6 +64,7 @@ export const UmlPackageBox = createFrameObject<UmlPackageState>(
 					x2={left + width * UML_PACKAGE_TAB_WIDTH_RATIO}
 					y2={dividerY}
 					strokeColor={strokeColor}
+					strokeAlpha={strokeAlpha}
 					strokeWidth={strokeWidth}
 					strokeDasharray={strokeDasharray}
 				/>

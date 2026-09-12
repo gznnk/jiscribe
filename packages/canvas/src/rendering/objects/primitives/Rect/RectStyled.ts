@@ -1,15 +1,11 @@
 import styled from "@emotion/styled";
 
-type RectElementProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-	/** Resolved fill color (auto is resolved to the theme surface). */
-	fillColor: string;
-};
+import type { FillPaintProps, StrokePaintProps } from "../../utils/shapePaint";
+import { fillPaint, strokePaint } from "../../utils/shapePaint";
 
-export const RectElement = styled.rect<RectElementProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+export const RectElement = styled.rect<StrokePaintProps & FillPaintProps>`
+	${strokePaint}
+	${fillPaint}
 	pointer-events: auto;
 	cursor: grab;
 

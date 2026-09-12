@@ -4,8 +4,8 @@ import { STROKE_STYLE_KEYS } from "../model/objects/base/StrokeStyleDoc";
 import type { StrokeStyleDoc } from "../model/objects/base/StrokeStyleDoc";
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
 import type { ObjectType } from "../model/objects/types/ObjectType";
-import type { StrokeDashType } from "../model/objects/types/StrokeDashType";
 import { SHAPE_STYLE_FALLBACK } from "../model/objects/utils/shapeStyleFallback";
+import type { ShapeStyleFallback } from "../model/objects/utils/shapeStyleFallback";
 
 /**
  * One of the two groups a shape's style fields fall into, named by the
@@ -27,18 +27,11 @@ export type ObjectShapeStyleDefaults = Readonly<
  * One shape's stroke and fill with every step of the resolution already taken,
  * as {@link ObjectShapeStyleDefaultsRegistry.resolveShapeStyle} returns it. The
  * colors may still be `"auto"`, which is the drawing side's to resolve against
- * the theme (resolveAutoColor).
+ * the theme (resolveAutoColor). The dash alone stays optional: nobody declares a
+ * solid one, so there is nothing to resolve an absent dash to.
  */
-export type ResolvedShapeStyle = {
-	/** Stroke color, or `"auto"` to follow the theme ink. */
-	stroke: string;
-	/** Stroke width in pixels. */
-	strokeWidth: number;
-	/** Dash pattern; absent means a solid line, nobody having declared one. */
-	strokeDashType?: StrokeDashType;
-	/** Fill color, or `"auto"` to follow the theme surface. */
-	fill: string;
-};
+export type ResolvedShapeStyle = ShapeStyleFallback &
+	Pick<StrokeStyleDoc, "strokeDashType">;
 
 /**
  * The draw-time stroke / fill defaults of one type, read out of the creation
@@ -139,7 +132,7 @@ export class ObjectShapeStyleDefaultsRegistry {
 	 *
 	 * @param type - The object's type; one with nothing registered contributes no defaults
 	 * @param own - The object's own style fields; a field carrying undefined does not shadow the type's default
-	 * @returns Stroke color, width and fill always answered; the dash only where one side sets it
+	 * @returns Stroke color, width, fill and the two opacities always answered; the dash only where one side sets it
 	 */
 	resolveShapeStyle(
 		type: ObjectType,
@@ -153,7 +146,15 @@ export class ObjectShapeStyleDefaultsRegistry {
 				typeDefaults?.strokeWidth ??
 				SHAPE_STYLE_FALLBACK.strokeWidth,
 			strokeDashType: own.strokeDashType ?? typeDefaults?.strokeDashType,
+			strokeOpacity:
+				own.strokeOpacity ??
+				typeDefaults?.strokeOpacity ??
+				SHAPE_STYLE_FALLBACK.strokeOpacity,
 			fill: own.fill ?? typeDefaults?.fill ?? SHAPE_STYLE_FALLBACK.fill,
+			fillOpacity:
+				own.fillOpacity ??
+				typeDefaults?.fillOpacity ??
+				SHAPE_STYLE_FALLBACK.fillOpacity,
 		};
 	}
 

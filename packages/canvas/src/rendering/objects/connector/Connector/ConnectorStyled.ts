@@ -1,6 +1,8 @@
 import styled from "@emotion/styled";
 
 import { CONNECTOR_HIT_STROKE_WIDTH } from "./connectorHitArea";
+import type { StrokePaintProps } from "../../utils/shapePaint";
+import { strokePaint } from "../../utils/shapePaint";
 
 /**
  * The whole-path band. It takes clicks (select, and double click to edit the label) but no drag —
@@ -21,13 +23,8 @@ export const ConnectorHitArea = styled.polyline<{
 	stroke-linejoin: round;
 `;
 
-type ConnectorElementProps = {
-	/** Resolved stroke color (auto is already resolved to the theme foreground). */
-	strokeColor: string;
-};
-
-export const ConnectorElement = styled.polyline<ConnectorElementProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const ConnectorElement = styled.polyline<StrokePaintProps>`
+	${strokePaint}
 	pointer-events: none;
 	fill: none;
 

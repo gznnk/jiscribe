@@ -297,6 +297,39 @@ describe("validateStateUtils", () => {
 		});
 	});
 
+	// The paste boundary holds the two opacities to the same range the doc side
+	// does; colors cannot be exercised here (isCssColor needs a browser), so these
+	// stand for the fill group's runtime coverage.
+	describe("paint opacity", () => {
+		const opacityFields: [string, (o: StateRecord) => boolean][] = [
+			["fillOpacity", isValidFillStyleState],
+			["strokeOpacity", isValidStrokeStyleState],
+		];
+
+		it.each(opacityFields)(
+			"%s accepts 0, 1 and a value between",
+			(key, isValid) => {
+				for (const value of [0, 1, 0.5]) {
+					expect(isValid({ [key]: value })).toBe(true);
+				}
+			},
+		);
+
+		it.each(opacityFields)(
+			"%s refuses anything outside the range or not a number",
+			(key, isValid) => {
+				for (const value of [-0.1, 1.5, "0.5", null, Number.NaN]) {
+					expect(isValid({ [key]: value })).toBe(false);
+				}
+			},
+		);
+
+		it.each(opacityFields)("%s unspecified is allowed", (key, isValid) => {
+			expect(isValid({})).toBe(true);
+			expect(isValid({ [key]: undefined })).toBe(true);
+		});
+	});
+
 	// Each table is keyed by `Record<keyof <the group's type>, …>`, the very type
 	// the doc-side table is keyed by, so a group that gains a field the table
 	// misses fails to compile on both sides. These are the runtime witnesses that

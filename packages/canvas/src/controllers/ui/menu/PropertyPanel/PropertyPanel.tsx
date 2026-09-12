@@ -14,9 +14,11 @@ import {
 import { MetaDescriptionItem, MetaNameItem } from "./items/MetaItems";
 import {
 	FillItem,
+	FillOpacityItem,
 	RadiusItem,
 	StrokeColorItem,
 	StrokeDashTypeItem,
+	StrokeOpacityItem,
 	StrokeWidthItem,
 } from "./items/ShapeStyleItems";
 import { StackOrderItem } from "./items/StackOrderItem";
@@ -120,9 +122,11 @@ const ITEM_COMPONENTS: Record<
 	lockAspectRatio: LockAspectRatioItem,
 	autoHeight: AutoHeightItem,
 	fill: FillItem,
+	fillOpacity: FillOpacityItem,
 	strokeColor: StrokeColorItem,
 	strokeWidth: StrokeWidthItem,
 	strokeDashType: StrokeDashTypeItem,
+	strokeOpacity: StrokeOpacityItem,
 	radius: RadiusItem,
 	arrowHeads: ArrowHeadsItem,
 	fontFamily: FontFamilyItem,

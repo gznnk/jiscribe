@@ -24,7 +24,7 @@ const NOTHING_SELECTED: ResolvedShapeStyle = { ...SHAPE_STYLE_FALLBACK };
  * @param selectedIds - The selection, in the order the first match is taken from; a selected group is searched down into its descendants
  * @param objects - Every object of the canvas, keyed by id; ids not in it are skipped
  * @param shapeStyleDefaults - Per-canvas ObjectShapeStyleDefaultsRegistry, keyed by the type of whichever object was found
- * @param styleGroup - Which style group the object is searched by: `"stroke"` for the outline menus, `"fill"` for the face ones. All four fields are answered either way, but only the ones of the group searched by are the ones the found object was chosen for
+ * @param styleGroup - Which style group the object is searched by: `"stroke"` for the outline menus, `"fill"` for the face ones. Every field is answered either way, but only the ones of the group searched by are the ones the found object was chosen for
  * @returns The resolved style; SHAPE_STYLE_FALLBACK (whose `strokeDashType` is undefined) when nothing selected declares the group
  */
 export const getSelectedShapeStyle = (
@@ -48,6 +48,8 @@ export const getSelectedShapeStyle = (
 		strokeDashType: isStrokeDashType(own.strokeDashType)
 			? own.strokeDashType
 			: undefined,
+		strokeOpacity: isNumber(own.strokeOpacity) ? own.strokeOpacity : undefined,
 		fill: isString(own.fill) ? own.fill : undefined,
+		fillOpacity: isNumber(own.fillOpacity) ? own.fillOpacity : undefined,
 	});
 };

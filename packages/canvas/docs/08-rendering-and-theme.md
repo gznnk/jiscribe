@@ -92,6 +92,16 @@ including stroke / fill / arrow color.
   interpolates strings into the template, but the CSS safety (injection defense) of the interpolated color
   and font values is already guaranteed at the **external-input boundary** (the parser's two-stage
   validation / clipboard state validation), so no sanitization is performed at the sink (Principle 4).
+- `fillOpacity` / `strokeOpacity` follow the same route: they reach the same styled element as
+  `fillColor` / `strokeColor` — as the props `fillAlpha` / `strokeAlpha`, named apart from the CSS
+  properties because emotion also writes any prop that is a valid SVG attribute onto the element —
+  and are interpolated as CSS `fill-opacity` / `stroke-opacity`.
+  One element's paint is therefore never split between CSS and attributes. Both halves are written in
+  one place (`rendering/objects/utils/shapePaint.ts`, re-exported to plugins through `unstable`).
+- An arrowhead is not a `<marker>` but an element of its own, and takes the line's `strokeOpacity` as
+  its element `opacity` (the styled prop is `alpha`, for the same reason) — one rule covering the
+  filled heads (which paint the line color into `fill`) and the hollow ones (which paint it into
+  `stroke`) alike.
 - For plain SVG elements without styled (render previews' `<rect>`, icons, etc.), apply it via inline `style`.
 
 This makes both the kind of resolved value and the method of applying it consistent across all fields.

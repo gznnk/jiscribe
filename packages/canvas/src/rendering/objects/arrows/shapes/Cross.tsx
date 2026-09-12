@@ -25,6 +25,7 @@ const CrossArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -40,6 +41,7 @@ const CrossArrowComponent: React.FC<ArrowShapeProps> = ({
 		<ArrowPath
 			d={d}
 			strokeColor={color}
+			alpha={opacity}
 			strokeWidth={1}
 			transform={transform}
 			data-kind={dataKind}

@@ -29,7 +29,9 @@ describe("getSelectedShapeStyle", () => {
 			{
 				stroke: SHAPE_STYLE_FALLBACK.stroke,
 				strokeWidth: SHAPE_STYLE_FALLBACK.strokeWidth,
+				strokeOpacity: SHAPE_STYLE_FALLBACK.strokeOpacity,
 				fill: SHAPE_STYLE_FALLBACK.fill,
+				fillOpacity: SHAPE_STYLE_FALLBACK.fillOpacity,
 				strokeDashType: undefined,
 			},
 		);
@@ -50,7 +52,9 @@ describe("getSelectedShapeStyle", () => {
 			stroke: "#f00",
 			strokeWidth: 8,
 			strokeDashType: "dotted",
+			strokeOpacity: SHAPE_STYLE_FALLBACK.strokeOpacity,
 			fill: "#0f0",
+			fillOpacity: SHAPE_STYLE_FALLBACK.fillOpacity,
 		});
 	});
 
@@ -71,7 +75,9 @@ describe("getSelectedShapeStyle", () => {
 		).toEqual({
 			stroke: SHAPE_STYLE_FALLBACK.stroke,
 			strokeWidth: SHAPE_STYLE_FALLBACK.strokeWidth,
+			strokeOpacity: SHAPE_STYLE_FALLBACK.strokeOpacity,
 			fill: SHAPE_STYLE_FALLBACK.fill,
+			fillOpacity: SHAPE_STYLE_FALLBACK.fillOpacity,
 			strokeDashType: undefined,
 		});
 	});

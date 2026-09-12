@@ -16,8 +16,8 @@ import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
  *   around, stated as numbers
  * - `lockAspectRatio` / `autoHeight` — the two switches that govern how the
  *   shape resizes
- * - `fill` / `strokeColor` / `strokeWidth` / `strokeDashType` / `radius` — the
- *   shape style
+ * - `fill` / `fillOpacity` / `strokeColor` / `strokeWidth` / `strokeDashType` /
+ *   `strokeOpacity` / `radius` — the shape style
  * - `arrowHeads` — the two ends of an arrow
  * - `fontFamily` / `fontSize` / `fontColor` / `textFormat` / `textAlign` /
  *   `verticalAlign` / `textLayout` — the text style of the selected slot
@@ -29,9 +29,11 @@ export type PropertyPanelBuiltinItemKey =
 	| "lockAspectRatio"
 	| "autoHeight"
 	| "fill"
+	| "fillOpacity"
 	| "strokeColor"
 	| "strokeWidth"
 	| "strokeDashType"
+	| "strokeOpacity"
 	| "radius"
 	| "arrowHeads"
 	| "fontFamily"

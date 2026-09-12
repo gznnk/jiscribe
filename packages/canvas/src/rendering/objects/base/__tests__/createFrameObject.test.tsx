@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
-import { DEFAULT_FILL } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
-import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import {
+	DEFAULT_FILL,
+	DEFAULT_FILL_OPACITY,
+} from "@jiscribe/doc/model/objects/base/FillStyleDoc";
+import {
+	DEFAULT_STROKE_OPACITY,
+	DEFAULT_STROKE_WIDTH,
+} from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
@@ -185,6 +191,40 @@ describe("createFrameObject", () => {
 
 		expect(shape.drawnShape.value?.strokeWidth).toBe(DEFAULT_STROKE_WIDTH);
 		expect(shape.drawnShape.value?.fillColor).toBe(DEFAULT_FILL);
+		shape.unmount();
+	});
+
+	it("draws fully opaque where neither the state nor the type states an opacity", () => {
+		const shape = renderFrameShape();
+		shape.render(0);
+
+		expect(shape.drawnShape.value?.fillAlpha).toBe(DEFAULT_FILL_OPACITY);
+		expect(shape.drawnShape.value?.strokeAlpha).toBe(DEFAULT_STROKE_OPACITY);
+		shape.unmount();
+	});
+
+	it("draws the opacities the state states", () => {
+		const shape = renderFrameShape({
+			state: { ...probeState, fillOpacity: 0.4, strokeOpacity: 0.7 },
+		});
+		shape.render(0);
+
+		expect(shape.drawnShape.value?.fillAlpha).toBe(0.4);
+		expect(shape.drawnShape.value?.strokeAlpha).toBe(0.7);
+		shape.unmount();
+	});
+
+	it("draws the type's own opacities where the state omits them", () => {
+		const shape = renderFrameShape({
+			shapeStyleDefaults: registryFor({
+				fillOpacity: 0.5,
+				strokeOpacity: 0.25,
+			}),
+		});
+		shape.render(0);
+
+		expect(shape.drawnShape.value?.fillAlpha).toBe(0.5);
+		expect(shape.drawnShape.value?.strokeAlpha).toBe(0.25);
 		shape.unmount();
 	});
 

@@ -5,6 +5,7 @@ import {
 	isString,
 } from "@jiscribe/basic-validators";
 
+import { OPACITY_MAX, OPACITY_MIN } from "./opacity";
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import type { ArrowStyleDoc } from "../base/ArrowStyleDoc";
 import type { FillStyleDoc } from "../base/FillStyleDoc";
@@ -404,11 +405,13 @@ const strokeStyleValidators = {
 		isStrokeDashType,
 		"must be one of: solid, dashed, dotted",
 	),
+	strokeOpacity: numberRangeValidator(OPACITY_MIN, OPACITY_MAX),
 } as const satisfies Record<keyof StrokeStyleDoc, DocFieldValidator>;
 
 /** The fill group's fields, in the order of `FILL_STYLE_KEYS`. */
 const fillStyleValidators = {
 	fill: colorValidator,
+	fillOpacity: numberRangeValidator(OPACITY_MIN, OPACITY_MAX),
 } as const satisfies Record<keyof FillStyleDoc, DocFieldValidator>;
 
 /** The corner-radius group's fields, in the order of `RADIUS_STYLE_KEYS`. */

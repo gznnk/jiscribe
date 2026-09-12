@@ -84,6 +84,15 @@ export { createSvgTransform } from "./rendering/objects/utils/createSvgTransform
 export { resolveAutoColor } from "./rendering/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./rendering/objects/utils/resolveAutoColor";
 
+// The paint declarations of a styled shape element, for a type defining its own
+// styled parts instead of reusing the sdk's ShapeBody*: interpolating these is
+// what puts the color and the opacity beside it on one CSS route (doc 08).
+export { fillPaint, strokePaint } from "./rendering/objects/utils/shapePaint";
+export type {
+	FillPaintProps,
+	StrokePaintProps,
+} from "./rendering/objects/utils/shapePaint";
+
 // The box a text of its own takes — the `text` object's frame, and every label a
 // shape sizes from its content rather than from its box. Laid out as authored, so
 // the box grows sideways with the longest line and breaks only where the author

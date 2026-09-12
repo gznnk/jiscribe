@@ -20,6 +20,7 @@ type ConnectorProps = {
 	stroke?: string;
 	strokeWidth?: number;
 	strokeDashType?: StrokeDashType;
+	strokeOpacity?: number;
 	startArrow?: ArrowType;
 	endArrow?: ArrowType;
 	disablePointerEvents?: boolean;
@@ -31,6 +32,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	stroke,
 	strokeWidth,
 	strokeDashType,
+	strokeOpacity,
 	startArrow,
 	endArrow,
 	disablePointerEvents = false,
@@ -40,7 +42,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	// unset field on the shared last resort (SHAPE_STYLE_FALLBACK).
 	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 		"connector",
-		{ stroke, strokeWidth, strokeDashType },
+		{ stroke, strokeWidth, strokeDashType, strokeOpacity },
 	);
 	const resolvedStrokeWidth = shapeStyle.strokeWidth;
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
@@ -92,6 +94,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 			<ConnectorElement
 				points={linePointsAttr}
 				strokeColor={strokeColor}
+				strokeAlpha={shapeStyle.strokeOpacity}
 				strokeWidth={resolvedStrokeWidth}
 				strokeDasharray={getStrokeDasharray(
 					shapeStyle.strokeDashType,
@@ -104,6 +107,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					x={start.x}
 					y={start.y}
 					color={strokeColor}
+					opacity={shapeStyle.strokeOpacity}
 					radians={startAngleRadians}
 					scale={resolvedStrokeWidth}
 					dataKind="connector"
@@ -116,6 +120,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					x={end.x}
 					y={end.y}
 					color={strokeColor}
+					opacity={shapeStyle.strokeOpacity}
 					radians={endAngleRadians}
 					scale={resolvedStrokeWidth}
 					dataKind="connector"

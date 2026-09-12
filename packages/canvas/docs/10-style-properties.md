@@ -2,8 +2,8 @@
 
 # Style Property System
 
-The mechanism that resolves and applies styleable property updates (fill, stroke,
-fontSize, headerFill, `label.*`, …) issued from the ObjectMenu and the properties
+The mechanism that resolves and applies styleable property updates (fill, fillOpacity,
+stroke, strokeOpacity, fontSize, headerFill, `label.*`, …) issued from the ObjectMenu and the properties
 sidebar. Introduced by #187 to
 replace the former central `switch` (`handlePropertyUpdate`) with per-canvas
 declarations: a new property is added by **registering a declaration**, not by editing
@@ -82,6 +82,12 @@ declares applies to nothing (fail-closed). Because registration flows through
 (see [Plugin Architecture](./12-plugin-architecture.md)) get the same capability. The
 extras are registered per canvas bundle from each type's definition, while system handlers
 sit on every canvas regardless of type, like gesture handlers and commands.
+
+The two opacities (`fillOpacity`, `strokeOpacity`) are gated by the same `fill` and
+`stroke` flags their colors are. The document states them as 0..1; the properties
+sidebar states the same value in percent and converts on both sides
+(`PropertyPanel/utils/opacityPercent.ts`), so what reaches the handler is the 0..1
+value either way.
 
 ## Dot notation = generic nested writes
 

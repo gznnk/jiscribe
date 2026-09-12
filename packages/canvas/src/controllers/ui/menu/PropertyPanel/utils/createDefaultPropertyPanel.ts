@@ -39,13 +39,18 @@ export const createDefaultPropertyPanel = (
 		sections.push({ id: "layout", label: "Layout", items });
 	}
 	if (features.fill) {
-		sections.push({ id: "fill", label: "Fill", items: [{ type: "fill" }] });
+		sections.push({
+			id: "fill",
+			label: "Fill",
+			items: [{ type: "fill" }, { type: "fillOpacity" }],
+		});
 	}
 	if (features.stroke) {
 		const items: PropertyPanelItem[] = [
 			{ type: "strokeColor" },
 			{ type: "strokeWidth" },
 			{ type: "strokeDashType" },
+			{ type: "strokeOpacity" },
 		];
 		if (features.fill) {
 			if (features.radius) {

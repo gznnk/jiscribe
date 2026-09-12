@@ -1,7 +1,10 @@
 import styled from "@emotion/styled";
 
-export const PolylineElement = styled.polyline<{ strokeColor: string }>`
-	stroke: ${({ strokeColor }) => strokeColor};
+import type { StrokePaintProps } from "../../utils/shapePaint";
+import { strokePaint } from "../../utils/shapePaint";
+
+export const PolylineElement = styled.polyline<StrokePaintProps>`
+	${strokePaint}
 	pointer-events: none;
 	cursor: grab;
 	fill: none;

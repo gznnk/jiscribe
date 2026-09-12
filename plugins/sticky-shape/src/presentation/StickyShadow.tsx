@@ -14,6 +14,13 @@ type StickyShadowProps = {
 	height: number;
 	/** The sticky's SVG transform matrix, so the shadow follows the note. */
 	transform: string;
+	/**
+	 * The paper's own fill opacity from 0 to 1, which every piece of the shadow is
+	 * multiplied by. Applied per piece rather than to the group, because a group
+	 * opacity below 1 puts the whole shadow on its own compositing surface — the
+	 * cost this shadow is built out of gradients to avoid (#133).
+	 */
+	fillOpacity: number;
 };
 
 const paint = (id: string): string => `url(#${id})`;
@@ -29,6 +36,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 	width,
 	height,
 	transform,
+	fillOpacity,
 }) => {
 	const left = -width / 2;
 	const right = width / 2;
@@ -48,7 +56,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 				width={width}
 				height={bottom - paperBottom}
 				fill="#000"
-				fillOpacity={STICKY_SHADOW_OPACITY}
+				fillOpacity={STICKY_SHADOW_OPACITY * fillOpacity}
 			/>
 			<rect
 				x={left}
@@ -56,6 +64,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 				width={width}
 				height={spread}
 				fill={paint(STICKY_SHADOW_GRADIENT_IDS.bottom)}
+				fillOpacity={fillOpacity}
 			/>
 			<rect
 				x={left - spread}
@@ -63,6 +72,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 				width={spread}
 				height={height}
 				fill={paint(STICKY_SHADOW_GRADIENT_IDS.left)}
+				fillOpacity={fillOpacity}
 			/>
 			<rect
 				x={right}
@@ -70,6 +80,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 				width={spread}
 				height={height}
 				fill={paint(STICKY_SHADOW_GRADIENT_IDS.right)}
+				fillOpacity={fillOpacity}
 			/>
 			<rect
 				x={left - spread}
@@ -77,6 +88,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 				width={spread}
 				height={spread}
 				fill={paint(STICKY_SHADOW_GRADIENT_IDS.topLeft)}
+				fillOpacity={fillOpacity}
 			/>
 			<rect
 				x={right}
@@ -84,6 +96,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 				width={spread}
 				height={spread}
 				fill={paint(STICKY_SHADOW_GRADIENT_IDS.topRight)}
+				fillOpacity={fillOpacity}
 			/>
 			<rect
 				x={left - spread}
@@ -91,6 +104,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 				width={spread}
 				height={spread}
 				fill={paint(STICKY_SHADOW_GRADIENT_IDS.bottomLeft)}
+				fillOpacity={fillOpacity}
 			/>
 			<rect
 				x={right}
@@ -98,6 +112,7 @@ const StickyShadowComponent: React.FC<StickyShadowProps> = ({
 				width={spread}
 				height={spread}
 				fill={paint(STICKY_SHADOW_GRADIENT_IDS.bottomRight)}
+				fillOpacity={fillOpacity}
 			/>
 		</g>
 	);

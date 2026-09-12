@@ -1,16 +1,11 @@
 import styled from "@emotion/styled";
-
-type MarkdownCardProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-	/** Resolved fill color (auto is resolved to the theme surface). */
-	fillColor: string;
-};
+import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
 /** The card the rendered Markdown sits on. Same interaction affordances as a Rect. */
-export const MarkdownCard = styled.rect<MarkdownCardProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+export const MarkdownCard = styled.rect<StrokePaintProps & FillPaintProps>`
+	${strokePaint}
+	${fillPaint}
 	pointer-events: auto;
 	cursor: grab;
 

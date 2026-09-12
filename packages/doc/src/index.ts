@@ -49,12 +49,17 @@ export type { CreateObjectType } from "./model/objects/types/CreateObjectType";
 // their lists from these rather than spelling the names again.
 export {
 	DEFAULT_FILL,
+	DEFAULT_FILL_OPACITY,
 	FILL_STYLE_KEYS,
 } from "./model/objects/base/FillStyleDoc";
 export {
+	DEFAULT_STROKE_OPACITY,
 	DEFAULT_STROKE_WIDTH,
 	STROKE_STYLE_KEYS,
 } from "./model/objects/base/StrokeStyleDoc";
+// The range both paint opacities are held to, for a schema stated outside this package
+// (the AI tool declarations) to read rather than restate.
+export { OPACITY_MAX, OPACITY_MIN } from "./model/objects/utils/opacity";
 export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
 export { TRANSFORM_STYLE_KEYS } from "./model/objects/base/TransformDoc";

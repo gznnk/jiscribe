@@ -75,6 +75,7 @@ export const containerDefinition: ObjectTypeDefinition<
 			items: [
 				{ type: "fill" },
 				{ type: "custom", id: "header-fill", component: HeaderColorProperty },
+				{ type: "fillOpacity" },
 			],
 		},
 		{
@@ -84,6 +85,7 @@ export const containerDefinition: ObjectTypeDefinition<
 				{ type: "strokeColor" },
 				{ type: "strokeWidth" },
 				{ type: "strokeDashType" },
+				{ type: "strokeOpacity" },
 			],
 		},
 		{

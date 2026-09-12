@@ -67,6 +67,7 @@ export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 				width={width}
 				height={height}
 				fillColor={shape.fillColor}
+				fillAlpha={shape.fillAlpha}
 			/>
 			{/* The badge's row is grabbable out to the right edge (container's header
 			    band does the same). A label taller than the row raises it. */}
@@ -90,6 +91,7 @@ export const AwsGroup = createFrameObject<AwsGroupState>((state, shape) => {
 				width={width}
 				height={height}
 				strokeColor={strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={strokeDasharray}
 			/>

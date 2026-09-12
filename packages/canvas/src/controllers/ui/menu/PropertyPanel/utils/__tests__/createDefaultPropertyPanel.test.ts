@@ -39,11 +39,12 @@ describe("createDefaultPropertyPanel", () => {
 			"rotation",
 			"lockAspectRatio",
 		]);
-		expect(itemsOf(sections, "fill")).toEqual(["fill"]);
+		expect(itemsOf(sections, "fill")).toEqual(["fill", "fillOpacity"]);
 		expect(itemsOf(sections, "stroke")).toEqual([
 			"strokeColor",
 			"strokeWidth",
 			"strokeDashType",
+			"strokeOpacity",
 			"radius",
 		]);
 		expect(itemsOf(sections, "text")).toEqual([
@@ -70,6 +71,7 @@ describe("createDefaultPropertyPanel", () => {
 			"strokeColor",
 			"strokeWidth",
 			"strokeDashType",
+			"strokeOpacity",
 		]);
 	});
 
@@ -83,6 +85,7 @@ describe("createDefaultPropertyPanel", () => {
 			"strokeColor",
 			"strokeWidth",
 			"strokeDashType",
+			"strokeOpacity",
 		]);
 		expect(itemsOf(sections, "arrow")).toEqual(["arrowHeads"]);
 	});

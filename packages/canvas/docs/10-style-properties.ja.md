@@ -2,8 +2,8 @@
 
 # スタイルプロパティシステム
 
-ObjectMenu とプロパティサイドバーから発行されるスタイルプロパティ更新（fill / stroke / fontSize /
-headerFill / `label.*` …）を解決・適用する機構。#187 で従来の中央 `switch`
+ObjectMenu とプロパティサイドバーから発行されるスタイルプロパティ更新（fill / fillOpacity / stroke / strokeOpacity /
+fontSize / headerFill / `label.*` …）を解決・適用する機構。#187 で従来の中央 `switch`
 （`handlePropertyUpdate`）を per-canvas の宣言に置き換えた。新しいプロパティは
 dispatch 関数の編集ではなく**宣言の登録**で追加する。
 
@@ -76,6 +76,11 @@ connector の宣言は `@jiscribe/doc` の `model/objects/connector/ConnectorDoc
 （[プラグインアーキテクチャ](./12-plugin-architecture.ja.md) 参照）で足した
 プラグイン/カスタム図形も同じ能力を持つ。extras はキャンバスのバンドルごとに型の定義から
 登録され、システムハンドラは gesture handler や command と同じく型に依らず全キャンバスに載る。
+
+2 つの不透明度（`fillOpacity` / `strokeOpacity`）の gate は、対応する色と同じ `fill` /
+`stroke` フラグ。ドキュメントが持つ値は 0..1 で、プロパティサイドバーは同じ値を
+パーセントで表示し、読み書きの両方向で変換する（`PropertyPanel/utils/opacityPercent.ts`）。
+ハンドラに届くのはどちらの経路でも 0..1 の値になる。
 
 ## ドット記法 = 汎用ネスト書き込み
 

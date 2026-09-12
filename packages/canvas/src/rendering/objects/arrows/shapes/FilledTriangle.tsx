@@ -20,6 +20,7 @@ const FilledTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -34,6 +35,7 @@ const FilledTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 		<ArrowPolygon
 			points={points}
 			fillColor={color}
+			alpha={opacity}
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}

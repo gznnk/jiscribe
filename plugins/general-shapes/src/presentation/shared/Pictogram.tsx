@@ -43,7 +43,9 @@ export const Pictogram: React.FC<PictogramProps> = ({
 				d={d}
 				fillRule={figure.fillRule}
 				strokeColor={shape.strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				fillColor={shape.fillColor}
+				fillAlpha={shape.fillAlpha}
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>
@@ -53,6 +55,7 @@ export const Pictogram: React.FC<PictogramProps> = ({
 				key={index}
 				d={d}
 				strokeColor={shape.strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>

@@ -37,6 +37,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		scaleY,
 		rotation,
 		fill,
+		fillOpacity,
 		text,
 		isEditing = false,
 	} = props;
@@ -60,7 +61,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 	// draw the paper yellow rather than the shared transparent.
 	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 		type,
-		{ fill },
+		{ fill, fillOpacity },
 	);
 	const fillColor = resolveAutoColor(shapeStyle.fill, "surface");
 
@@ -80,11 +81,19 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 
 	return (
 		<g data-kind="object" data-id={id} style={{ cursor: "grab" }}>
-			<StickyShadow width={width} height={height} transform={transformAttr} />
+			<StickyShadow
+				width={width}
+				height={height}
+				transform={transformAttr}
+				// A translucent note lying on an opaque shadow would read as a hole
+				// rather than as a sheet, so the shadow fades with the paper.
+				fillOpacity={shapeStyle.fillOpacity}
+			/>
 			{/* Main sticky note */}
 			<StickyBody
 				points={points}
 				fillColor={fillColor}
+				fillAlpha={shapeStyle.fillOpacity}
 				transform={transformAttr}
 			/>
 			<TextOverlay

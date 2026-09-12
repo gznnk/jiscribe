@@ -37,6 +37,10 @@ export type FrameShapeProps = {
 	fillColor: string;
 	/** Stroke width the shape draws with; an absent document value is resolved to the type's own default, else DEFAULT_STROKE_WIDTH. */
 	strokeWidth: number;
+	/** Stroke opacity from 0 to 1, multiplying the alpha `strokeColor` already carries; an absent document value is resolved to the type's own default, else DEFAULT_STROKE_OPACITY. Named apart from the CSS property it feeds (see shapePaint). */
+	strokeAlpha: number;
+	/** Fill opacity from 0 to 1, multiplying the alpha `fillColor` already carries; an absent document value is resolved to the type's own default, else DEFAULT_FILL_OPACITY. Named apart from the CSS property it feeds (see shapePaint). */
+	fillAlpha: number;
 	strokeDasharray?: string;
 };
 
@@ -199,9 +203,11 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			scaleY,
 			rotation,
 			fill,
+			fillOpacity,
 			stroke,
 			strokeWidth,
 			strokeDashType,
+			strokeOpacity,
 			text,
 			isEditing = false,
 			editingSlotId,
@@ -209,7 +215,14 @@ export const createFrameObject = <TState extends FrameRenderState>(
 
 		const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 			props.type,
-			{ stroke, strokeWidth, strokeDashType, fill },
+			{
+				stroke,
+				strokeWidth,
+				strokeDashType,
+				strokeOpacity,
+				fill,
+				fillOpacity,
+			},
 		);
 
 		// Subscribed to, never read: `draw` and SlotOverlay measure text while they
@@ -230,6 +243,8 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeColor: resolveAutoColor(shapeStyle.stroke, "ink"),
 			fillColor: resolveAutoColor(shapeStyle.fill, "surface"),
 			strokeWidth: shapeStyle.strokeWidth,
+			strokeAlpha: shapeStyle.strokeOpacity,
+			fillAlpha: shapeStyle.fillOpacity,
 			strokeDasharray: getStrokeDasharray(
 				shapeStyle.strokeDashType,
 				shapeStyle.strokeWidth,

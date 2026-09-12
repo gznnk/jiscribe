@@ -8,6 +8,7 @@
 // of truth: `z.toJSONSchema(z.object(inputSchema))` derives the JSON Schema, and
 // there is no way back.
 
+import { OPACITY_MAX, OPACITY_MIN } from "@jiscribe/doc";
 import { z } from "zod";
 
 import type { CanvasApiRef } from "./canvasApiRef";
@@ -161,21 +162,37 @@ const styleSchema = {
 		.describe(
 			[
 				'Background color, any CSS color ("#e3f2fd", "transparent").',
-				"There is no opacity property: write the alpha into the color itself, rgba(37, 99, 235, 0.15) or #2563EB26, so what sits behind still shows through.",
+				"For semi-transparency either write the alpha into the color, rgba(37, 99, 235, 0.15) or #2563EB26, or keep the color opaque and fade it with fillOpacity.",
 				"On a connector this colors its label instead.",
 			].join(" "),
+		),
+	fillOpacity: z
+		.number()
+		.min(OPACITY_MIN)
+		.max(OPACITY_MAX)
+		.optional()
+		.describe(
+			"Opacity of the background, 0 (invisible) to 1 (opaque, the default); it multiplies the alpha the fill color already carries. A connector has no place for it — its label takes no opacity.",
 		),
 	stroke: z
 		.string()
 		.optional()
 		.describe(
-			"Outline color, any CSS color; rgba() and #RRGGBBAA make it semi-transparent. On a connector this is the color of the line itself.",
+			"Outline color, any CSS color; rgba() and #RRGGBBAA make it semi-transparent, and so does strokeOpacity. On a connector this is the color of the line itself.",
 		),
 	strokeWidth: z.number().min(0).optional().describe("Outline width in px."),
 	strokeDashType: z
 		.enum(["solid", "dashed", "dotted"])
 		.optional()
 		.describe("Outline dash pattern."),
+	strokeOpacity: z
+		.number()
+		.min(OPACITY_MIN)
+		.max(OPACITY_MAX)
+		.optional()
+		.describe(
+			"Opacity of the outline, 0 (invisible) to 1 (opaque, the default); it multiplies the alpha the stroke color already carries. On a connector this fades the line itself.",
+		),
 	startArrow: z
 		.enum(ARROW_TYPES)
 		.optional()

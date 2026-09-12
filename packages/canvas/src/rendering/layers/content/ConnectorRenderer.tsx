@@ -71,6 +71,7 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 				stroke={connectorState.stroke}
 				strokeWidth={connectorState.strokeWidth}
 				strokeDashType={connectorState.strokeDashType}
+				strokeOpacity={connectorState.strokeOpacity}
 				startArrow={connectorState.startArrow}
 				endArrow={connectorState.endArrow}
 				disablePointerEvents={disablePointerEvents}

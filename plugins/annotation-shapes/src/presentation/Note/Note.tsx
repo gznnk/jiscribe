@@ -27,13 +27,16 @@ export const Note = createFrameObject<NoteState>((state, shape) => {
 			<NoteBodyPath
 				d={figure.body}
 				strokeColor={shape.strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				fillColor={shape.fillColor}
+				fillAlpha={shape.fillAlpha}
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>
 			<NoteFoldPath
 				d={figure.fold}
 				strokeColor={shape.strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>

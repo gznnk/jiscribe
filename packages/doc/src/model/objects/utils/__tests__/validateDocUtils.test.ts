@@ -657,6 +657,45 @@ describe("lower bounds for numeric style fields", () => {
 	});
 });
 
+// ─── Paint opacity, bounded at both ends ─────────────────────────
+
+describe("paint opacity", () => {
+	// The two are one range held by one validator, so they are exercised as a pair.
+	const opacityFields: [string, GroupValidator][] = [
+		["fillOpacity", validateFillStyleFields],
+		["strokeOpacity", validateStrokeStyleFields],
+	];
+
+	it.each(opacityFields)(
+		"%s accepts 0, 1 and a value between",
+		(key, validate) => {
+			for (const value of [0, 1, 0.5]) {
+				expect(validate({ [key]: value }, "root")).toEqual([]);
+			}
+		},
+	);
+
+	it.each(opacityFields)("%s names both ends when refused", (key, validate) => {
+		expect(validate({ [key]: 1.5 }, "root")[0].message).toBe(
+			"must be a number between 0 and 1",
+		);
+	});
+
+	it.each(opacityFields)(
+		"%s refuses anything outside the range or not a number",
+		(key, validate) => {
+			for (const value of [-0.1, 1.5, "0.5", null, Number.NaN]) {
+				expect(validate({ [key]: value }, "root")).toHaveLength(1);
+			}
+		},
+	);
+
+	it.each(opacityFields)("%s unspecified is allowed", (key, validate) => {
+		expect(validate({}, "root")).toEqual([]);
+		expect(validate({ [key]: undefined }, "root")).toEqual([]);
+	});
+});
+
 // ─── Validation driven by the field tables ───────────────────────
 
 /** One style group's doc-side entry point, which is how its table is reached. */

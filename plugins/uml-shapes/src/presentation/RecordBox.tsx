@@ -28,7 +28,9 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 		"data-id": dataId,
 		transform,
 		strokeColor,
+		strokeAlpha,
 		fillColor,
+		fillAlpha,
 		strokeWidth,
 		strokeDasharray,
 	} = shape;
@@ -61,6 +63,7 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 					width={region.width}
 					height={region.height}
 					fillColor={fillColor}
+					fillAlpha={fillAlpha}
 				/>
 			))}
 			{dividedCompartments.map(({ slotId, region }) => (
@@ -71,6 +74,7 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 					x2={region.x + region.width}
 					y2={region.y}
 					strokeColor={strokeColor}
+					strokeAlpha={strokeAlpha}
 					strokeWidth={strokeWidth}
 					strokeDasharray={strokeDasharray}
 				/>
@@ -81,6 +85,7 @@ export const RecordBox = createFrameObject<RecordState>((state, shape) => {
 				width={width}
 				height={height}
 				strokeColor={strokeColor}
+				strokeAlpha={strokeAlpha}
 				strokeWidth={strokeWidth}
 				strokeDasharray={strokeDasharray}
 			/>

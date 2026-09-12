@@ -3,7 +3,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * The Text and Border rows of the properties sidebar (TextItems /
+ * The Text, Border and Opacity rows of the properties sidebar (TextItems /
  * ShapeStyleItems), checked by what the canvas ends up drawing.
  *
  * The sidebar is its own component with its own parts, so a write from here
@@ -12,6 +12,11 @@ import { selectors } from "../../support/selectors";
  * readSelectionShapeStyle, and the press travels control -> gesture -> property
  * update -> re-render. Only the real DOM runs that end to end, so each test
  * states a value and then reads the drawn result out of computed style.
+ *
+ * The opacity rows are the exception: they are read back through the row itself,
+ * having been dropped and taken up again by a re-selection. The row states the
+ * percent of what readSelectionShapeStyle finds on the object, so the number
+ * coming back is the 0..1 value the object now carries.
  */
 
 /** The rectangle the tests draw, kept clear of the sidebar's own width. */
@@ -208,5 +213,68 @@ test.describe("Properties sidebar Border rows", () => {
 		await expect
 			.poll(() => computedShapeStyle(canvas, id, "stroke-dasharray"))
 			.toBe("none");
+	});
+});
+
+test.describe("Properties sidebar Opacity rows", () => {
+	test("keeps the percent typed into the Fill opacity, the shape carrying it as 0..1", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
+		await canvas.openPropertyPanel();
+		const fillOpacity = canvas.page.locator(
+			selectors.propertyPanelField("fillOpacity"),
+		);
+		await expect(
+			fillOpacity,
+			"an opacity nobody declared is drawn fully opaque",
+		).toHaveValue("100");
+
+		await fillOpacity.fill("40");
+		await fillOpacity.press("Enter");
+
+		// Dropped and taken up again, so the number is read off the object rather
+		// than left over from what was typed.
+		await canvas.deselect();
+		await canvas.selectAt(RECT_CENTER);
+		await expect(fillOpacity).toHaveValue("40");
+	});
+
+	test("offers a faceless shape its stroke opacity alone", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Polyline", { x: 150, y: 400 }, { x: 380, y: 400 });
+		await canvas.openPropertyPanel();
+
+		await expect(
+			canvas.page.locator(selectors.propertyPanelField("strokeOpacity")),
+		).toHaveValue("100");
+		await expect(
+			canvas.page.locator(selectors.propertyPanelField("fillOpacity")),
+			"a shape with no face has no fill section to state an opacity under",
+		).toHaveCount(0);
+	});
+
+	test("says the opacity is mixed for a selection whose shapes disagree", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
+		await canvas.drawShape("Rectangle", { x: 380, y: 150 }, { x: 500, y: 280 });
+		await canvas.openPropertyPanel();
+		const fillOpacity = canvas.page.locator(
+			selectors.propertyPanelField("fillOpacity"),
+		);
+
+		// Only the first is faded, so the two disagree about their face
+		await canvas.selectAt(RECT_CENTER);
+		await fillOpacity.fill("40");
+		await fillOpacity.press("Enter");
+
+		await canvas.selectAll();
+		await expect(
+			fillOpacity,
+			"no one shape's opacity is shown as the selection's",
+		).toHaveValue("");
+		await expect(fillOpacity).toHaveAttribute("placeholder", "—");
 	});
 });

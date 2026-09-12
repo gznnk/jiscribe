@@ -86,6 +86,15 @@ SVG presentation 属性では解決されないため、stroke / fill / arrow �
   props で渡し、styled 定義側で CSS として補間**する。emotion はテンプレートに文字列補間するが、
   補間する色・フォント値の CSS 安全性（インジェクション防御）は**外部入力の境界**（parser
   の二段検証 / クリップボードの state 検証）で担保済みのため、sink 側での無害化は行わない（原則 4）。
+- `fillOpacity` / `strokeOpacity` も同じ経路を通る。`fillColor` / `strokeColor` と同じ styled 要素へ
+  `fillAlpha` / `strokeAlpha` という prop 名で渡し、CSS の `fill-opacity` / `stroke-opacity` として
+  補間する（CSS プロパティと別名なのは、SVG 属性として妥当な prop を emotion が要素へも書き出す
+  ため）。これで 1 要素の塗りが CSS と属性に割れることはない。塗りの両半分は 1 箇所
+  （`rendering/objects/utils/shapePaint.ts`。`unstable` 経由でプラグインへも再エクスポート）に書く。
+- 矢尻は `<marker>` ではなく独立した要素で、線の `strokeOpacity` を要素の `opacity` として受け取る
+  （styled 側の prop 名は同じ理由で `alpha`）。
+  塗りつぶしの矢尻（線色を `fill` に塗る）も中抜きの矢尻（`stroke` に塗る）も、この 1 つのルールで
+  まかなえる。
 - styled を持たない素の SVG 要素（描画プレビュー等の `<rect>` / アイコン）では inline `style` で当てる。
 
 これにより解決値の種類も適用方法も全フィールドで一貫する。`currentColor` や `ContentGroup` への

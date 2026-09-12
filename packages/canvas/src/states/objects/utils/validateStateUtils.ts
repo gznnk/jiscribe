@@ -31,6 +31,10 @@ import type {
 import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { isVerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
 import { isAutoColor } from "@jiscribe/doc/model/objects/utils/autoColor";
+import {
+	OPACITY_MAX,
+	OPACITY_MIN,
+} from "@jiscribe/doc/model/objects/utils/opacity";
 import { validateEndpointRef } from "@jiscribe/doc/model/objects/utils/validateDocUtils";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
@@ -188,11 +192,13 @@ const strokeStyleValidators = {
 	stroke: isValidColorValue,
 	strokeWidth: numberValidator(STROKE_WIDTH_MIN),
 	strokeDashType: isStrokeDashType,
+	strokeOpacity: numberRangeValidator(OPACITY_MIN, OPACITY_MAX),
 } as const satisfies Record<keyof StrokeStyleDoc, StateFieldValidator>;
 
 /** The fill group's fields. */
 const fillStyleValidators = {
 	fill: isValidColorValue,
+	fillOpacity: numberRangeValidator(OPACITY_MIN, OPACITY_MAX),
 } as const satisfies Record<keyof FillStyleDoc, StateFieldValidator>;
 
 /** The corner-radius group's fields. */

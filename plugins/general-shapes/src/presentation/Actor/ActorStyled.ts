@@ -1,23 +1,15 @@
 import styled from "@emotion/styled";
+import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
-type ActorStrokeProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-};
-
-type ActorHeadProps = ActorStrokeProps & {
-	/** Resolved fill color (auto is resolved to the theme surface). */
-	fillColor: string;
-};
-
-export const ActorHead = styled.circle<ActorHeadProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+export const ActorHead = styled.circle<StrokePaintProps & FillPaintProps>`
+	${strokePaint}
+	${fillPaint}
 	pointer-events: none;
 `;
 
-export const ActorLimbs = styled.path<ActorStrokeProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const ActorLimbs = styled.path<StrokePaintProps>`
+	${strokePaint}
 	fill: none;
 	stroke-linecap: round;
 	pointer-events: none;

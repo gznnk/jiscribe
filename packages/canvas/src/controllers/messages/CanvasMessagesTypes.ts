@@ -66,6 +66,8 @@ export type CanvasMessageStrings = {
 	propertyPanelRowWidth: string;
 	/** Label of the dash-pattern row */
 	propertyPanelRowType: string;
+	/** Label of the row stating how opaque the fill or the stroke is drawn, in percent */
+	propertyPanelRowOpacity: string;
 	/** Label of the corner-radius row */
 	propertyPanelRowRadius: string;
 	/** Label of the font-size row */
@@ -164,6 +166,8 @@ export type CanvasMessageStrings = {
 	menuLineWidth: string;
 	menuBorderStyle: string;
 	menuBorderWidth: string;
+	menuFillOpacity: string;
+	menuBorderOpacity: string;
 	menuCornerRadius: string;
 	menuSolidLine: string;
 	menuDashedLine: string;

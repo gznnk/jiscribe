@@ -150,6 +150,7 @@ describe("propertyPanel registration", () => {
 			"strokeColor",
 			"strokeWidth",
 			"strokeDashType",
+			"strokeOpacity",
 			"connector-routing",
 			"connector-reset-route",
 		]);

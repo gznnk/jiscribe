@@ -45,7 +45,7 @@ type PropertyNumberFieldProps = {
 	isMixed?: boolean;
 	/** Letter drawn inside the left edge, naming what the field states (X / Y / W / H). */
 	prefix?: string;
-	/** Unit drawn inside the right edge (°). */
+	/** Unit drawn inside the right edge (° for an angle, % for an opacity). */
 	unit?: string;
 	/** Lower bound the typed value is clamped to. Omitted leaves it unbounded. */
 	min?: number;

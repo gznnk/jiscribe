@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_FILL } from "../../model/objects/base/FillStyleDoc";
-import { DEFAULT_STROKE_WIDTH } from "../../model/objects/base/StrokeStyleDoc";
+import {
+	DEFAULT_FILL,
+	DEFAULT_FILL_OPACITY,
+} from "../../model/objects/base/FillStyleDoc";
+import {
+	DEFAULT_STROKE_OPACITY,
+	DEFAULT_STROKE_WIDTH,
+} from "../../model/objects/base/StrokeStyleDoc";
 import {
 	PolylineFeatures,
 	POLYLINE_DOC_DEFAULTS,
@@ -68,7 +74,9 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 			stroke: SHAPE_STYLE_FALLBACK.stroke,
 			strokeWidth: DEFAULT_STROKE_WIDTH,
 			strokeDashType: undefined,
+			strokeOpacity: DEFAULT_STROKE_OPACITY,
 			fill: DEFAULT_FILL,
+			fillOpacity: DEFAULT_FILL_OPACITY,
 		});
 	});
 
@@ -89,7 +97,9 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 			stroke: AUTO_COLOR,
 			strokeWidth: 1,
 			strokeDashType: undefined,
+			strokeOpacity: DEFAULT_STROKE_OPACITY,
 			fill: "#ff0000",
+			fillOpacity: DEFAULT_FILL_OPACITY,
 		});
 	});
 
@@ -111,6 +121,23 @@ describe("ObjectShapeStyleDefaultsRegistry.resolveShapeStyle", () => {
 			registry.resolveShapeStyle("rect", { strokeDashType: "dashed" })
 				.strokeDashType,
 		).toBe("dashed");
+	});
+
+	// Unlike the dash, an omitted opacity resolves to a number: the drawing side
+	// has to emit one either way.
+	it("answers a full opacity while nobody declares one", () => {
+		const style = registry.resolveShapeStyle("rect", {});
+		expect(style.fillOpacity).toBe(DEFAULT_FILL_OPACITY);
+		expect(style.strokeOpacity).toBe(DEFAULT_STROKE_OPACITY);
+	});
+
+	it("answers the object's own opacities, a fully transparent one included", () => {
+		const style = registry.resolveShapeStyle("rect", {
+			fillOpacity: 0,
+			strokeOpacity: 0.25,
+		});
+		expect(style.fillOpacity).toBe(0);
+		expect(style.strokeOpacity).toBe(0.25);
 	});
 });
 

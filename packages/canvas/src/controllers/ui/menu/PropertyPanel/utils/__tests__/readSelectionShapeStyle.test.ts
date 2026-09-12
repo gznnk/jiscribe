@@ -1,4 +1,5 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
+import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
@@ -46,6 +47,8 @@ describe("readSelectionShapeStyle", () => {
 		expect(style.stroke).toEqual({ kind: "none" });
 		expect(style.strokeWidth).toEqual({ kind: "none" });
 		expect(style.strokeDashType).toEqual({ kind: "none" });
+		expect(style.fillOpacity).toEqual({ kind: "none" });
+		expect(style.strokeOpacity).toEqual({ kind: "none" });
 	});
 
 	it("nothing selected declares the group → none, even for a shape that is there", () => {
@@ -148,6 +151,53 @@ describe("readSelectionShapeStyle", () => {
 			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "stroke")
 				.strokeDashType,
 		).toEqual({ kind: "mixed" });
+	});
+
+	it("an opacity nobody declared reads as the fallback, not as no value", () => {
+		const objects = { a: rect("a") };
+		const style = readSelectionShapeStyle(
+			["a"],
+			objects,
+			shapeStyleDefaults,
+			"fill",
+		);
+		expect(style.fillOpacity).toEqual({
+			kind: "single",
+			value: SHAPE_STYLE_FALLBACK.fillOpacity,
+		});
+	});
+
+	it("an opacity stated on one of the two → mixed", () => {
+		const objects = {
+			a: rect("a", { fillOpacity: 0.4 }),
+			b: rect("b", { fillOpacity: 1 }),
+		};
+		const style = readSelectionShapeStyle(
+			["a", "b"],
+			objects,
+			shapeStyleDefaults,
+			"fill",
+		);
+		expect(style.fillOpacity).toEqual({ kind: "mixed" });
+		expect(style.fill).toEqual({
+			kind: "single",
+			value: SHAPE_STYLE_FALLBACK.fill,
+		});
+	});
+
+	it("the two opacities are told apart", () => {
+		const objects = { a: rect("a", { strokeOpacity: 0.25 }) };
+		const style = readSelectionShapeStyle(
+			["a"],
+			objects,
+			shapeStyleDefaults,
+			"stroke",
+		);
+		expect(style.strokeOpacity).toEqual({ kind: "single", value: 0.25 });
+		expect(style.fillOpacity).toEqual({
+			kind: "single",
+			value: SHAPE_STYLE_FALLBACK.fillOpacity,
+		});
 	});
 
 	it("descendants of a selected group have their say", () => {

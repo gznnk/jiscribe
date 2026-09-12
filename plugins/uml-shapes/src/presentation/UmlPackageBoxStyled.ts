@@ -1,4 +1,6 @@
 import styled from "@emotion/styled";
+import type { StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * The line closing the body's top edge under the tab. The silhouette already
@@ -10,7 +12,7 @@ import styled from "@emotion/styled";
  * `pointer-events: none` keeps it from stealing the hit from the silhouette
  * beneath it, which is the shape's single grab area.
  */
-export const UmlPackageTabDivider = styled.line<{ strokeColor: string }>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const UmlPackageTabDivider = styled.line<StrokePaintProps>`
+	${strokePaint}
 	pointer-events: none;
 `;

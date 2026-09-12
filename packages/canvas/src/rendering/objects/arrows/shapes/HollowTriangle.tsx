@@ -20,6 +20,7 @@ const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -34,6 +35,7 @@ const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 		<ArrowPolygon
 			points={points}
 			strokeColor={color}
+			alpha={opacity}
 			strokeWidth={1}
 			strokeLinejoin="miter"
 			transform={transform}

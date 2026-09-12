@@ -14,6 +14,12 @@ import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
 import { PropertySegmentedControl } from "../common/PropertySegmentedControl";
 import {
+	MAX_OPACITY_PERCENT,
+	MIN_OPACITY_PERCENT,
+	toOpacityPercent,
+	toOpacityValue,
+} from "../utils/opacityPercent";
+import {
 	DEFAULT_CORNER_RADIUS,
 	readSelectionCornerRadius,
 } from "../utils/readSelectionCornerRadius";
@@ -61,6 +67,47 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 };
 
 export const FillItem = memo(FillItemComponent);
+
+/** How opaque the face is drawn, stated in percent over the document's 0..1. */
+const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
+	canvasState,
+	onPropertyUpdate,
+}) => {
+	const messages = useCanvasMessages();
+	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const { fillOpacity } = readSelectionShapeStyle(
+		canvasState.selectedIds,
+		canvasState.objects,
+		objectShapeStyleDefaults,
+		"fill",
+	);
+
+	return (
+		<PropertyRow label={messages.propertyPanelRowOpacity}>
+			<PropertyNumberField
+				value={toOpacityPercent(
+					selectionValueOr(fillOpacity, SHAPE_STYLE_FALLBACK.fillOpacity),
+				)}
+				isMixed={isMixedSelectionValue(fillOpacity)}
+				min={MIN_OPACITY_PERCENT}
+				max={MAX_OPACITY_PERCENT}
+				unit="%"
+				ariaLabel={messages.menuFillOpacity}
+				testId="property-field:fillOpacity"
+				onUpdate={(percent, commit, coalesceHistory) =>
+					onPropertyUpdate(
+						"fillOpacity",
+						String(toOpacityValue(percent)),
+						commit,
+						coalesceHistory,
+					)
+				}
+			/>
+		</PropertyRow>
+	);
+};
+
+export const FillOpacityItem = memo(FillOpacityItemComponent);
 
 /** The stroke of the selected shape, or of the selected connector. */
 const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
@@ -177,6 +224,47 @@ const StrokeDashTypeItemComponent: React.FC<BuiltinItemProps> = ({
 };
 
 export const StrokeDashTypeItem = memo(StrokeDashTypeItemComponent);
+
+/** How opaque the stroke is drawn, stated in percent over the document's 0..1. */
+const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
+	canvasState,
+	onPropertyUpdate,
+}) => {
+	const messages = useCanvasMessages();
+	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const { strokeOpacity } = readSelectionShapeStyle(
+		getEffectiveSelectedIds(canvasState),
+		canvasState.objects,
+		objectShapeStyleDefaults,
+		"stroke",
+	);
+
+	return (
+		<PropertyRow label={messages.propertyPanelRowOpacity}>
+			<PropertyNumberField
+				value={toOpacityPercent(
+					selectionValueOr(strokeOpacity, SHAPE_STYLE_FALLBACK.strokeOpacity),
+				)}
+				isMixed={isMixedSelectionValue(strokeOpacity)}
+				min={MIN_OPACITY_PERCENT}
+				max={MAX_OPACITY_PERCENT}
+				unit="%"
+				ariaLabel={messages.menuBorderOpacity}
+				testId="property-field:strokeOpacity"
+				onUpdate={(percent, commit, coalesceHistory) =>
+					onPropertyUpdate(
+						"strokeOpacity",
+						String(toOpacityValue(percent)),
+						commit,
+						coalesceHistory,
+					)
+				}
+			/>
+		</PropertyRow>
+	);
+};
+
+export const StrokeOpacityItem = memo(StrokeOpacityItemComponent);
 
 /** How far the corners are rounded. */
 const RadiusItemComponent: React.FC<BuiltinItemProps> = ({

@@ -26,8 +26,12 @@ export type SelectionShapeStyle = {
 	strokeWidth: SelectionValue<number>;
 	/** Dash pattern, with an undeclared one read as `"solid"`. */
 	strokeDashType: SelectionValue<StrokeDashType>;
+	/** How opaque the stroke is drawn, 0..1 as the document states it. */
+	strokeOpacity: SelectionValue<number>;
 	/** Fill color, `"auto"` and `"transparent"` included. */
 	fill: SelectionValue<string>;
+	/** How opaque the fill is drawn, 0..1 as the document states it. */
+	fillOpacity: SelectionValue<number>;
 };
 
 /**
@@ -41,8 +45,8 @@ export type SelectionShapeStyle = {
  * @param selectedIds - The selection; a selected group contributes its descendants too. Pass the effective ids (getEffectiveSelectedIds) for the rows a connector also answers
  * @param objects - Every object of the canvas, keyed by id
  * @param shapeStyleDefaults - Per-canvas ObjectShapeStyleDefaultsRegistry, consulted per object by its own type
- * @param styleGroup - Which group decides who has a say: `"stroke"` for the outline rows, `"fill"` for the face one. All four fields are answered either way, but only the group's own fields were narrowed to the objects that declare them
- * @returns All four fields; each is `none` when no object of the selection declares `styleGroup`
+ * @param styleGroup - Which group decides who has a say: `"stroke"` for the outline rows, `"fill"` for the face ones. Every field is answered either way, but only the group's own fields were narrowed to the objects that declare them
+ * @returns Every field; each is `none` when no object of the selection declares `styleGroup`
  */
 export const readSelectionShapeStyle = (
 	selectedIds: string[],
@@ -53,7 +57,9 @@ export const readSelectionShapeStyle = (
 	const strokes: string[] = [];
 	const strokeWidths: number[] = [];
 	const strokeDashTypes: StrokeDashType[] = [];
+	const strokeOpacities: number[] = [];
 	const fills: string[] = [];
+	const fillOpacities: number[] = [];
 
 	for (const object of collectSelectionObjects(selectedIds, objects)) {
 		if (!object.features?.[styleGroup]) {
@@ -68,13 +74,17 @@ export const readSelectionShapeStyle = (
 		strokes.push(style.stroke);
 		strokeWidths.push(style.strokeWidth);
 		strokeDashTypes.push(style.strokeDashType ?? UNDECLARED_STROKE_DASH);
+		strokeOpacities.push(style.strokeOpacity);
 		fills.push(style.fill);
+		fillOpacities.push(style.fillOpacity);
 	}
 
 	return {
 		stroke: combineSelectionValues(strokes),
 		strokeWidth: combineSelectionValues(strokeWidths),
 		strokeDashType: combineSelectionValues(strokeDashTypes),
+		strokeOpacity: combineSelectionValues(strokeOpacities),
 		fill: combineSelectionValues(fills),
+		fillOpacity: combineSelectionValues(fillOpacities),
 	};
 };

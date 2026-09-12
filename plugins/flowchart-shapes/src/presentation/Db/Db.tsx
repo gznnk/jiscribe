@@ -12,7 +12,9 @@ export const Db = createFrameObject<DbState>((state, shape) => {
 				d={bodyPath}
 				transform={shape.transform}
 				strokeColor={shape.strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				fillColor={shape.fillColor}
+				fillAlpha={shape.fillAlpha}
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>
@@ -21,6 +23,7 @@ export const Db = createFrameObject<DbState>((state, shape) => {
 				d={capEdgePath}
 				transform={shape.transform}
 				strokeColor={shape.strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				fillColor="none"
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}

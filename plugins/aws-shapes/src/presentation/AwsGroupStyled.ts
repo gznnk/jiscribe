@@ -1,12 +1,14 @@
 import styled from "@emotion/styled";
+import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * The frame's body. `pointer-events: none`, so it never takes a click meant for
  * a shape lying over it: the frame is grabbed by its border and its top-left
  * header band alone.
  */
-export const AwsGroupBody = styled.rect<{ fillColor: string }>`
-	fill: ${({ fillColor }) => fillColor};
+export const AwsGroupBody = styled.rect<FillPaintProps>`
+	${fillPaint}
 	stroke: none;
 	pointer-events: none;
 `;
@@ -30,9 +32,9 @@ export const AwsGroupHeaderHitArea = styled.rect`
  * The border. `fill: none`, so the inside takes nothing. The line itself is too
  * thin to aim at, so AwsGroupOutlineHitArea takes the hits and this only draws.
  */
-export const AwsGroupOutline = styled.rect<{ strokeColor: string }>`
+export const AwsGroupOutline = styled.rect<StrokePaintProps>`
 	fill: none;
-	stroke: ${({ strokeColor }) => strokeColor};
+	${strokePaint}
 	pointer-events: none;
 	cursor: grab;
 

@@ -19,13 +19,14 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	stroke,
 	strokeWidth,
 	strokeDashType,
+	strokeOpacity,
 	startArrow,
 	endArrow,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
 	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 		type,
-		{ stroke, strokeWidth, strokeDashType },
+		{ stroke, strokeWidth, strokeDashType, strokeOpacity },
 	);
 	const resolvedStrokeWidth = shapeStyle.strokeWidth;
 	// Resolve auto (theme-following) — and an unspecified stroke, like every
@@ -71,6 +72,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 			<PolylineElement
 				points={linePointsAttr}
 				strokeColor={strokeColor}
+				strokeAlpha={shapeStyle.strokeOpacity}
 				strokeWidth={resolvedStrokeWidth}
 				strokeDasharray={getStrokeDasharray(
 					shapeStyle.strokeDashType,
@@ -83,6 +85,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					x={points[0].x}
 					y={points[0].y}
 					color={strokeColor}
+					opacity={shapeStyle.strokeOpacity}
 					radians={startAngleRadians}
 					scale={resolvedStrokeWidth}
 					dataKind="object"
@@ -95,6 +98,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					x={points[points.length - 1].x}
 					y={points[points.length - 1].y}
 					color={strokeColor}
+					opacity={shapeStyle.strokeOpacity}
 					radians={endAngleRadians}
 					scale={resolvedStrokeWidth}
 					dataKind="object"

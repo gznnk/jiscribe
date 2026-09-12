@@ -14,14 +14,16 @@ const PolygonComponent: React.FC<PolygonProps> = ({
 	type,
 	points,
 	fill,
+	fillOpacity,
 	stroke,
 	strokeWidth,
 	strokeDashType,
+	strokeOpacity,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
 	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
 		type,
-		{ stroke, strokeWidth, strokeDashType, fill },
+		{ stroke, strokeWidth, strokeDashType, strokeOpacity, fill, fillOpacity },
 	);
 
 	return (
@@ -31,6 +33,8 @@ const PolygonComponent: React.FC<PolygonProps> = ({
 			points={pointsAttr}
 			strokeColor={resolveAutoColor(shapeStyle.stroke, "ink")}
 			fillColor={resolveAutoColor(shapeStyle.fill, "surface")}
+			strokeAlpha={shapeStyle.strokeOpacity}
+			fillAlpha={shapeStyle.fillOpacity}
 			strokeWidth={shapeStyle.strokeWidth}
 			strokeDasharray={getStrokeDasharray(
 				shapeStyle.strokeDashType,

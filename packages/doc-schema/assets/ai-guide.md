@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.10.0+e47ea624 -->
+<!-- jiscribe guide 0.10.0+775aeeec -->
 
 # Jiscribe AI Authoring Guide
 
@@ -15,8 +15,8 @@ It focuses on the essentials. The field-level specification lives in the JSON Sc
 ## Colors, lines, fill and text
 
 - Colors (`stroke` / `fontColor` / `fill`): a CSS color string, or `"auto"` to follow the editor theme. `"auto"` is the default for `stroke` / `fontColor` (resolved to the theme foreground) and adapts to light/dark; `fill` defaults to `"transparent"`. Prefer `"auto"` (or omit the field) unless a specific color is needed.
-- Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
-- Fill: `fill` (default `"transparent"`)
+- Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`, `strokeOpacity` (0–1, default 1)
+- Fill: `fill` (default `"transparent"`), `fillOpacity` (0–1, default 1)
 - Text (every box shape, and `text`): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). Where inside a shape the text lands differs by type — see "Where text is drawn".
 
 ## Arrows and relationship notation
@@ -141,9 +141,14 @@ many shapes:
 - **No shadows**: separate a card from its background with a border or a fill, not a fake blurred layer.
 - **No arcs**: an ellipse is always a whole ellipse, so show a ratio as a bar or a number rather than a ring.
 
-Semi-transparency is not missing, but it is a **color**, not a property:
-`rgba(37, 99, 235, 0.15)` or `#2563EB26`. When a fill hides a gridline or a shape
-behind it, restyle the fill instead of removing what it covers.
+Semi-transparency is not among them, and it is a **property** as well as a
+color: `fillOpacity` / `strokeOpacity`, 0 (invisible) to 1 (opaque, the default),
+each multiplying the alpha its own color already carries. Use the property when
+the color is a shared token that should stay opaque and reusable, and write the
+alpha into the color (`rgba(37, 99, 235, 0.15)`, `#2563EB26`) when the
+transparency belongs to that color itself. A connector's `label` takes neither
+opacity field. When a fill hides a gridline or a shape behind it, restyle the
+fill instead of removing what it covers.
 
 ## Object quick reference
 
@@ -451,8 +456,10 @@ shipped stacks; default sans), `fontSize` (default 16), `fontWeight`, plus
 background/border — `fill` (default canvas background = masks the line;
 `"transparent"` to show the line), `stroke` (border color), `strokeWidth` (border
 width, default 0 = no border), `strokeDashType` (border line style:
-`"solid"`/`"dashed"`/`"dotted"`). Plain text only; the label is drawn
-horizontally at the midpoint by default. Omit `label` for no label.
+`"solid"`/`"dashed"`/`"dotted"`). It takes **no** `fillOpacity` /
+`strokeOpacity` — write the alpha into the label's own color. Plain text only;
+the label is drawn horizontally at the midpoint by default. Omit `label` for no
+label.
 
 ## Writing runs, records and raw SVG
 
@@ -598,6 +605,7 @@ escape hatch for complex visuals".
 			"height": 80,
 			"rx": 8,
 			"fill": "#F3E5F5",
+			"fillOpacity": 0.6,
 			"stroke": "#6A1B9A",
 			"strokeWidth": 2,
 			"text": "Process",

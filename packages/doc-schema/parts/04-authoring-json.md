@@ -96,8 +96,10 @@ shipped stacks; default sans), `fontSize` (default 16), `fontWeight`, plus
 background/border — `fill` (default canvas background = masks the line;
 `"transparent"` to show the line), `stroke` (border color), `strokeWidth` (border
 width, default 0 = no border), `strokeDashType` (border line style:
-`"solid"`/`"dashed"`/`"dotted"`). Plain text only; the label is drawn
-horizontally at the midpoint by default. Omit `label` for no label.
+`"solid"`/`"dashed"`/`"dotted"`). It takes **no** `fillOpacity` /
+`strokeOpacity` — write the alpha into the label's own color. Plain text only;
+the label is drawn horizontally at the midpoint by default. Omit `label` for no
+label.
 
 ## Writing runs, records and raw SVG
 
@@ -243,6 +245,7 @@ escape hatch for complex visuals".
 			"height": 80,
 			"rx": 8,
 			"fill": "#F3E5F5",
+			"fillOpacity": 0.6,
 			"stroke": "#6A1B9A",
 			"strokeWidth": 2,
 			"text": "Process",

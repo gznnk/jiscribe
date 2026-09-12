@@ -21,6 +21,7 @@ const CircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -38,6 +39,7 @@ const CircleArrowComponent: React.FC<ArrowShapeProps> = ({
 			cy={0}
 			r={radius}
 			fillColor={color}
+			alpha={opacity}
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}

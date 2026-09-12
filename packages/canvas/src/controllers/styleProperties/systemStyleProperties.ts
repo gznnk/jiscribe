@@ -48,9 +48,11 @@ export const SYSTEM_STYLE_PROPERTIES: Record<
 	StylePropertyHandler
 > = {
 	fill: new FeatureGatedStyleProperty("fill", "string"),
+	fillOpacity: new FeatureGatedStyleProperty("fill", "number"),
 	stroke: new FeatureGatedStyleProperty("stroke", "string"),
 	strokeWidth: new FeatureGatedStyleProperty("stroke", "number"),
 	strokeDashType: new FeatureGatedStyleProperty("stroke", "string"),
+	strokeOpacity: new FeatureGatedStyleProperty("stroke", "number"),
 	rx: new FeatureGatedStyleProperty("radius", "number"),
 	text: new TextContentProperty(),
 	textAlign: new TextSlotStyleProperty("string"),

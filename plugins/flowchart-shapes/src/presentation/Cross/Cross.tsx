@@ -23,7 +23,9 @@ export const Cross = createFrameObject<CrossState>((state, shape) => (
 		<BelowLabelHitArea state={state} />
 		<ShapeBodyPolygon
 			strokeColor={shape.strokeColor}
+			strokeAlpha={shape.strokeAlpha}
 			fillColor={shape.fillColor}
+			fillAlpha={shape.fillAlpha}
 			strokeWidth={shape.strokeWidth}
 			strokeDasharray={shape.strokeDasharray}
 			points={buildCrossPoints(

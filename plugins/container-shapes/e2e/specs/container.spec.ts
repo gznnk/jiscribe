@@ -228,6 +228,15 @@ test.describe("container palette / behavior", () => {
 
 		await canvas.undo();
 		await expect.poll(rectFills).not.toContain(blue);
+
+		// The plugin lists its sidebar by hand, so the two opacity rows are checked
+		// here rather than trusted to the default panel.
+		await expect(
+			canvas.page.locator(selectors.propertyPanelField("fillOpacity")),
+		).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.propertyPanelField("strokeOpacity")),
+		).toBeVisible();
 	});
 
 	test("states the header height from the sidebar's own row and undoes it", async ({

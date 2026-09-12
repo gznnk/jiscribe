@@ -24,7 +24,9 @@ const Sheet: React.FC<{ d: string; shape: FrameShapeProps }> = ({
 	<ShapeBodyPath
 		d={d}
 		strokeColor={shape.strokeColor}
+		strokeAlpha={shape.strokeAlpha}
 		fillColor={shape.fillColor}
+		fillAlpha={shape.fillAlpha}
 		strokeWidth={shape.strokeWidth}
 		strokeDasharray={shape.strokeDasharray}
 	/>

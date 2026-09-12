@@ -10,4 +10,6 @@ export type StrokeStyleState = {
 	strokeWidth?: number;
 	/** Stroke dash type (e.g. 'solid', 'dashed', 'dotted'). */
 	strokeDashType?: StrokeDashType;
+	/** Stroke opacity from 0 (invisible) to 1 (opaque), multiplying the color's own alpha. */
+	strokeOpacity?: number;
 };

@@ -22,7 +22,9 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 		"data-id": dataId,
 		transform,
 		strokeColor,
+		strokeAlpha,
 		fillColor,
+		fillAlpha,
 		strokeWidth,
 		strokeDasharray,
 	} = shape;
@@ -45,6 +47,7 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 				width={width}
 				height={height}
 				fillColor={fillColor}
+				fillAlpha={fillAlpha}
 			/>
 			<ContainerHeader
 				x={x}
@@ -52,6 +55,7 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 				width={width}
 				height={headerHeight}
 				fillColor={headerColor}
+				fillAlpha={fillAlpha}
 			/>
 			<ContainerDivider
 				x1={x}
@@ -59,6 +63,7 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 				x2={x + width}
 				y2={y + headerHeight}
 				strokeColor={strokeColor}
+				strokeAlpha={strokeAlpha}
 				strokeWidth={strokeWidth}
 				strokeDasharray={strokeDasharray}
 			/>
@@ -68,6 +73,7 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 				width={width}
 				height={height}
 				strokeColor={strokeColor}
+				strokeAlpha={strokeAlpha}
 				strokeWidth={strokeWidth}
 				strokeDasharray={strokeDasharray}
 			/>
