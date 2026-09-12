@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.10.0+775aeeec -->
+<!-- jiscribe guide 0.10.0+9f6750a7 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -146,9 +146,11 @@ color: `fillOpacity` / `strokeOpacity`, 0 (invisible) to 1 (opaque, the default)
 each multiplying the alpha its own color already carries. Use the property when
 the color is a shared token that should stay opaque and reusable, and write the
 alpha into the color (`rgba(37, 99, 235, 0.15)`, `#2563EB26`) when the
-transparency belongs to that color itself. A connector's `label` takes neither
-opacity field. When a fill hides a gridline or a shape behind it, restyle the
-fill instead of removing what it covers.
+transparency belongs to that color itself. The stroke is centered on the
+outline and painted over the fill, so with both translucent the inner half of
+the stroke reads darker; for an evenly faded shape, fade only one of the two. A
+connector's `label` takes neither opacity field. When a fill hides a gridline or
+a shape behind it, restyle the fill instead of removing what it covers.
 
 ## Object quick reference
 

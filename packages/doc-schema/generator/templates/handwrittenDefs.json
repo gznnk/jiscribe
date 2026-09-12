@@ -940,15 +940,12 @@
 		"type": "object",
 		"properties": {
 			"stroke": {
-				"description": "Stroke color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time). Default: \"auto\"",
-				"type": "string",
-				"default": "auto"
+				"description": "Stroke color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time).",
+				"type": "string"
 			},
 			"strokeWidth": {
-				"description": "Stroke width in pixels. Default: 2",
-				"type": "number",
-				"minimum": 0,
-				"default": 2
+				"description": "Stroke width in pixels.",
+				"type": "number"
 			},
 			"strokeDashType": {
 				"description": "Dash pattern. Default: \"solid\"",
@@ -960,11 +957,8 @@
 				"default": "solid"
 			},
 			"strokeOpacity": {
-				"description": "Stroke opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the stroke color already carries, so rgba() / #RRGGBBAA still work and combine with it. Default: 1",
-				"type": "number",
-				"minimum": 0,
-				"maximum": 1,
-				"default": 1
+				"description": "Stroke opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the stroke color already carries, so rgba() / #RRGGBBAA still work and combine with it.",
+				"type": "number"
 			}
 		}
 	},
@@ -973,16 +967,12 @@
 		"type": "object",
 		"properties": {
 			"fill": {
-				"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"transparent\"",
-				"type": "string",
-				"default": "transparent"
+				"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time).",
+				"type": "string"
 			},
 			"fillOpacity": {
-				"description": "Fill opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the fill color already carries, so rgba() / #RRGGBBAA still work and combine with it. Default: 1",
-				"type": "number",
-				"minimum": 0,
-				"maximum": 1,
-				"default": 1
+				"description": "Fill opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the fill color already carries, so rgba() / #RRGGBBAA still work and combine with it.",
+				"type": "number"
 			}
 		}
 	},

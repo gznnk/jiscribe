@@ -56,10 +56,13 @@ export {
 	DEFAULT_STROKE_OPACITY,
 	DEFAULT_STROKE_WIDTH,
 	STROKE_STYLE_KEYS,
+	STROKE_WIDTH_MIN,
 } from "./model/objects/base/StrokeStyleDoc";
-// The range both paint opacities are held to, for a schema stated outside this package
-// (the AI tool declarations) to read rather than restate.
+// The bounds the paint fields are held to and the color that follows the theme, for
+// schemas stated outside this package (the JSON schema generator, the AI tool
+// declarations) to read rather than restate.
 export { OPACITY_MAX, OPACITY_MIN } from "./model/objects/utils/opacity";
+export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
 export { TRANSFORM_STYLE_KEYS } from "./model/objects/base/TransformDoc";

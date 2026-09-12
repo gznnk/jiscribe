@@ -1,8 +1,16 @@
 import { readFileSync } from "node:fs";
 
 import {
+	AUTO_COLOR,
+	DEFAULT_FILL,
+	DEFAULT_FILL_OPACITY,
+	DEFAULT_STROKE_OPACITY,
+	DEFAULT_STROKE_WIDTH,
 	FILL_STYLE_KEYS,
+	OPACITY_MAX,
+	OPACITY_MIN,
 	STROKE_STYLE_KEYS,
+	STROKE_WIDTH_MIN,
 	supportsAutoHeight,
 	TEXT_BODY_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
@@ -25,6 +33,79 @@ type JsonSchemaNode = Record<string, unknown>;
 const handwrittenDefs = JSON.parse(
 	readFileSync(templatePath("handwrittenDefs.json"), "utf8"),
 ) as Record<string, JsonSchemaNode>;
+
+/** The bound and default facts of one shared style property, read off `@jiscribe/doc`. */
+type SharedStyleFacts = {
+	minimum?: number;
+	maximum?: number;
+	default: unknown;
+};
+
+/**
+ * Bounds and defaults of the shared style defs, keyed by def and property. The
+ * template carries only the prose for these: the numbers and the default colors
+ * are the doc package's constants, so the schema cannot drift from what the
+ * validators and renderers hold.
+ */
+const SHARED_STYLE_FACTS: Record<
+	"StrokeStyle" | "FillStyle",
+	Record<string, SharedStyleFacts>
+> = {
+	StrokeStyle: {
+		stroke: { default: AUTO_COLOR },
+		strokeWidth: { minimum: STROKE_WIDTH_MIN, default: DEFAULT_STROKE_WIDTH },
+		strokeOpacity: {
+			minimum: OPACITY_MIN,
+			maximum: OPACITY_MAX,
+			default: DEFAULT_STROKE_OPACITY,
+		},
+	},
+	FillStyle: {
+		fill: { default: DEFAULT_FILL },
+		fillOpacity: {
+			minimum: OPACITY_MIN,
+			maximum: OPACITY_MAX,
+			default: DEFAULT_FILL_OPACITY,
+		},
+	},
+};
+
+/**
+ * Writes {@link SHARED_STYLE_FACTS} into the parsed template, in place, before
+ * anything reads it: the per-type defaults comparison (isBoxShapeCompatible) and
+ * the override nodes both read the shared defaults off `handwrittenDefs`.
+ *
+ * @param defs - The parsed template; a property the facts name must exist there with its prose and carry none of the facts itself
+ */
+function applySharedStyleFacts(defs: Record<string, JsonSchemaNode>): void {
+	for (const [defName, facts] of Object.entries(SHARED_STYLE_FACTS)) {
+		const props = defs[defName].properties as Record<string, JsonSchemaNode>;
+		for (const [prop, { minimum, maximum, default: value }] of Object.entries(
+			facts,
+		)) {
+			const node = props[prop];
+			if (node === undefined) {
+				throw new Error(`${defName}.${prop} is missing from handwrittenDefs`);
+			}
+			for (const key of ["minimum", "maximum", "default"]) {
+				if (key in node) {
+					throw new Error(
+						`${defName}.${prop}.${key} is stated in handwrittenDefs; it comes from @jiscribe/doc`,
+					);
+				}
+			}
+			props[prop] = {
+				...node,
+				description: `${String(node.description)} Default: ${formatDefaultValue(value)}`,
+				...(minimum === undefined ? {} : { minimum }),
+				...(maximum === undefined ? {} : { maximum }),
+				default: value,
+			};
+		}
+	}
+}
+
+applySharedStyleFacts(handwrittenDefs);
 
 /**
  * Names a template description can ask for rather than spell out, so a list that also
