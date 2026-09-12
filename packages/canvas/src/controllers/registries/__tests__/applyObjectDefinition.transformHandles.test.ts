@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
+import { applyObjectDefinition } from "../applyObjectDefinition";
 import { createTestRegistries } from "../createCanvasRegistries";
-import { applyObjectDefinition } from "../initializeObjectRegistry";
 
 // Minimal stand-in for an object type, mirroring buildFakeDefinition in
 // createCanvasRegistries.test.ts.

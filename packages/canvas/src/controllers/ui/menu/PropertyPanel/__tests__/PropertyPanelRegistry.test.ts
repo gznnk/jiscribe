@@ -8,8 +8,8 @@ import {
 import type { RectState } from "../../../../../states/objects/primitives/rect/RectState";
 import { isValidRectState } from "../../../../../states/objects/primitives/rect/validateRectState";
 import { createFrameBehavior } from "../../../../behaviors/base/FrameController";
+import { applyObjectDefinition } from "../../../../registries/applyObjectDefinition";
 import { createCanvasRegistries } from "../../../../registries/createCanvasRegistries";
-import { applyObjectDefinition } from "../../../../registries/initializeObjectRegistry";
 import { createPropertyPanelRegistry } from "../PropertyPanelRegistry";
 import type { PropertyPanelSection } from "../PropertyPanelTypes";
 

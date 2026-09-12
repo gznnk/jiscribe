@@ -3,7 +3,7 @@ import type { Stencil } from "./Stencil";
 /**
  * Registry that manages the stencils shown in the StencilLibrary (the toolbar and
  * the shape library sidebar).
- * Registration happens via `applyObjectDefinition()` in `initializeObjectRegistry()`.
+ * Registration happens via `applyObjectDefinition()` when `createCanvasRegistries()` builds a bundle.
  *
  * It answers only "what exists"; display order (top level and within category
  * flyouts) is owned by the toolbar sections, which resolve presets by id via `get`.

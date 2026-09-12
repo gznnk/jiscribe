@@ -17,7 +17,7 @@ import { ContainerStencils } from "./stencil/ContainerStencils";
 
 /**
  * `containerDefinition` has zero intentional omissions relative to the core
- * container entry (`initializeObjectRegistry.ts`) — same section structure,
+ * container entry (`applyObjectDefinition.ts`) — same section structure,
  * same items, same `selectionControls`
  * (packages/canvas/docs/13-authoring-plugins.md).
  *
@@ -27,8 +27,10 @@ import { ContainerStencils } from "./stencil/ContainerStencils";
  *
  * `propertyPanel` states the same sections `createDefaultPropertyPanel` derives
  * from `ContainerFeatures`, with the `header-height` custom row added to the
- * layout section and the `header-fill` one to the fill section; the auto-height and vertical-basis switches are still inserted at
- * registration, declared or not (applyObjectDefinition).
+ * layout section and the `header-fill` one to the fill section. Declaring it does not
+ * drop the auto-height and vertical-basis switches: registration appends each where its
+ * predicate admits the type (derivePropertyPanel), and container opts out of auto-height
+ * in its doc definition.
  */
 export const containerDefinition: ObjectTypeDefinition<
 	ContainerDoc,

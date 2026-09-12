@@ -37,18 +37,29 @@ State に変換して `SYNC_EXTERNAL` を dispatch する。
 `LOAD_DOCUMENT` を dispatch し、reducer は past / future を捨てて取り込む。
 自分の保存の折り返し判定も内容一致による skip も通さない（内容が同一でも、
 ホストが読み込みだと言った以上は履歴を捨てなければならない）。
-プロップを渡さないホストの挙動は従来どおり（すべて `SYNC_EXTERNAL`）。
+プロップを渡さないホストでは、届く doc はすべて `SYNC_EXTERNAL` になる。
 
-外部から入る doc は信頼できないため、本来は parser の二段検証を境界で通す
-（[データモデルと永続化](./03-data-model-and-persistence.ja.md)、[設計思想](./01-design-philosophy.ja.md) 原則 4）。
+canvas は `doc` プロップを検証し直さない。外部から入る doc は信頼できないため、ホストが
+`createCanvasParser` の検証を通した doc を渡す（`Canvas` の `doc` プロップの契約。
+[データモデルと永続化](./03-data-model-and-persistence.ja.md)、[設計思想](./01-design-philosophy.ja.md) 原則 4）。
 
 ## 保存通知：useNotifySaveRequest
 
-コミット（commit / undo / redo）で `saveVersion` が進むと、`useNotifySaveRequest`
-（`controllers/hooks/useNotifySaveRequest.ts`）が親へ `onCommit(doc, saveNonce)` を通知する。
-この effect は `saveVersion` のみに依存するので、`saveVersion` が増えた**まさにその render の
-state**（= 永続化すべき state）をクロージャで捕える。`onCommit` は ref 経由で呼び、
-親が毎 render 新しい関数を渡しても再発火しないようにしている。
+コミットで履歴を記録するとき（`recordHistoryIfNeeded`）と、undo / redo などで履歴を復元するとき
+（`controllers/utils/restoreHistorySnapshot.ts`）に、state の `saveRequest` が進む（`version` を 1 つ上げ、
+新しい `nonce` を振る）。`useNotifySaveRequest`（`controllers/hooks/useNotifySaveRequest.ts`）はこれを受けて
+親へ `onCommit(doc, saveNonce)` を通知する。
+
+- **effect は `saveRequest.version` に依存する**。1 回の増加が 1 件の保存要求になる。
+- **送る内容は、送る時点の最新の state から読む**。layout effect で更新する `stateRef` から読み、
+  要求を出した render のクロージャの state は使わない。送信を遅らせても最後のコミットを送るため。
+- **送る doc は `history.present` から作る**。state をもう一度変換しない。
+- **送るタイミングは `createSaveRequestScheduler`（`controllers/hooks/support/`）が決める**。通常のコミットは
+  すぐ送る。集約チェーン中のコミット（キーリピートのナッジなど）は保留し、keyup・ウィンドウの blur・
+  アンマウントのどれかで送る（そうしたイベントが来ない経路のために、時間による保険もある）。
+- **各 nonce は最大 1 回だけ送る**（`createNonceDeliveryGuard`）。境界イベントでの送信が、そのコミット自身の
+  予約より先に走ることがあるため。
+- `onCommit` は ref 経由で呼び、親が毎 render 新しい関数を渡しても再発火しないようにしている。
 
 ## saveNonce による折り返しの識別（#29）
 
@@ -58,7 +69,7 @@ state**（= 永続化すべき state）をクロージャで捕える。`onCommi
 
 対策: 保存時に `saveNonce` を発行して `onCommit` で渡し、ホストはそれをそのまま
 `syncNonce` として返す。突き合わせは `useSelfSaveNonceTracker` が保持する
-**未消化 nonce のセット**で行う（`controllers/utils/createSelfSaveNonceTracker.ts`）。
+**未消化 nonce のセット**で行う（`controllers/hooks/support/createSelfSaveNonceTracker.ts`）。
 
 - `useNotifySaveRequest` が配信した nonce を `register` する。
 - `useSyncExternalDoc` は折り返しの `syncNonce` を `consumeIfSelfSave` で照合し、

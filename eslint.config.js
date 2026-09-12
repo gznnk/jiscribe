@@ -273,9 +273,9 @@ export default tseslint.config(
 	},
 	...controllerLayerFences,
 	{
-		// rendering/ is the pure drawing layer: components that hold no state and reach
-		// no controller, so a shape can be drawn by the export path and by isolated
-		// tests with nothing wired up. What separates it from controllers/ui is purity,
+		// rendering/ is the pure drawing layer: components that draw what their Props hand
+		// them and reach no controller, so a shape can be drawn by the export path and by
+		// isolated tests with nothing wired up. What separates it from controllers/ui is purity,
 		// not the kind of component — the menus, modals, icons and editors live under
 		// controllers/ui precisely because they are not pure. Types are allowed: a
 		// drawing component takes controller-owned types as Props.

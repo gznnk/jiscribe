@@ -8,7 +8,7 @@ import {
 import type { RectState } from "../../../../../../states/objects/primitives/rect/RectState";
 import { isValidRectState } from "../../../../../../states/objects/primitives/rect/validateRectState";
 import { createFrameBehavior } from "../../../../../behaviors/base/FrameController";
-import { ALL_OBJECT_DEFINITIONS } from "../../../../../registries/initializeObjectRegistry";
+import { BUILTIN_OBJECT_DEFINITIONS } from "../../../../../registries/applyObjectDefinition";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
 import { derivePropertyPanel } from "../derivePropertyPanel";
 
@@ -100,7 +100,7 @@ describe("derivePropertyPanel", () => {
 
 	it("adds the auto-height switch to the layout section of a type that may take it", () => {
 		expect(
-			itemsOf(derivePropertyPanel(ALL_OBJECT_DEFINITIONS.rect), "layout"),
+			itemsOf(derivePropertyPanel(BUILTIN_OBJECT_DEFINITIONS.rect), "layout"),
 		).toEqual([
 			"position",
 			"size",
@@ -112,12 +112,12 @@ describe("derivePropertyPanel", () => {
 
 	it("leaves the switch off a type whose height never follows its text", () => {
 		expect(
-			itemsOf(derivePropertyPanel(ALL_OBJECT_DEFINITIONS.svg), "layout"),
+			itemsOf(derivePropertyPanel(BUILTIN_OBJECT_DEFINITIONS.svg), "layout"),
 		).toEqual(["position", "size", "rotation", "lockAspectRatio"]);
 	});
 
 	it("adds the vertical-basis switch to the text section of a type whose outline insets its text", () => {
-		const text = derivePropertyPanel(ALL_OBJECT_DEFINITIONS.ellipse).find(
+		const text = derivePropertyPanel(BUILTIN_OBJECT_DEFINITIONS.ellipse).find(
 			(section) => section.id === "text",
 		);
 
@@ -125,7 +125,7 @@ describe("derivePropertyPanel", () => {
 	});
 
 	it("leaves the vertical-basis switch off a type drawn with its whole box", () => {
-		const text = derivePropertyPanel(ALL_OBJECT_DEFINITIONS.rect).find(
+		const text = derivePropertyPanel(BUILTIN_OBJECT_DEFINITIONS.rect).find(
 			(section) => section.id === "text",
 		);
 

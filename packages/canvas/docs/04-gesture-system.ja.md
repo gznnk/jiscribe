@@ -7,15 +7,12 @@
 
 ## GestureRecognizer：pointer から gesture を認識
 
-生の pointer / wheel イベントはキャンバスのルート（`Viewport`）に集約され、
+生の pointer イベントはキャンバスのルート要素（`CanvasRoot`）で、wheel イベントはその配下の
+ビューポート要素（`Viewport`）で受け取り（`controllers/Canvas.tsx`）、
 `GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
 
-`GestureType` は次の 11 種:
-
-```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
-inertialScroll | inertialScrollEnd
-```
+ジェスチャーの種類の正本は `GestureType`（`controllers/gestures/recognizer/GestureRecognizerTypes.ts`）。
+押下・ドラッグの開始／途中／終了・click / doubleClick のほか、wheel・pinch・longPress・慣性スクロールなどがある。
 
 `Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
 （`mods`）、ホバー要素（`getHovered()`：遅延評価＋メモ化のヒットテスト）、`targetId` / `targetKind`、
@@ -23,9 +20,13 @@ inertialScroll | inertialScrollEnd
 
 ポイント:
 
-- **click / doubleClick は排他**: 同一ターゲット（`(targetId, targetPart)` の組）を
-  `DOUBLE_CLICK_THRESHOLD`（300ms）以内に連打すると、2 回目以降は `click` ではなく `doubleClick` になる。
-  同一ターゲット内の別 part（同じメニューの別ボタン、コネクターの線とラベルボックス）は別のクリック対象。「シングル＝選択 /
+- **click / doubleClick は排他**: pointerup ごとに `click` か `doubleClick` のどちらか一方だけが出る。
+  前回の click から `DOUBLE_CLICK_THRESHOLD`（300ms）以内かつ画面上の距離しきい値以内で、両方が主ボタンなら
+  2 回目は `doubleClick` になる（`controllers/gestures/recognizer/utils/isDoubleClick.ts`）。
+  **ターゲットは比較しない**（OS／ブラウザの慣行どおり時間と位置だけで判定する）。1 回目のクリックで現れた
+  コントロールを 2 回目で押しても組になり、`doubleClick` の対象は 2 回目のクリックの要素で、組の意味は
+  それを受けたハンドラが決める。`doubleClick` を出すと前回の記録を捨てるので、3 回目は再び `click` になる
+  （連打すると `click` と `doubleClick` が交互に出る）。「シングル＝選択 /
   ダブル＝テキスト編集」のように**意味を変えたい**ケースのための意図的な設計で、
   オブジェクト／テキスト系ハンドラはこれに依存している（DOM 標準の加算式に変えると回帰リスクが大きい）。
 - **RAF バッチ**: 高頻度な pointermove は `requestAnimationFrame` でまとめて 1 つの `drag` に集約し、
@@ -67,30 +68,34 @@ inertialScroll | inertialScrollEnd
 `inertialScrollEnd` は状態遷移として消費しどこにも渡さない）、
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
 自分が処理すべきイベントかを判定する。registry には `targetKind` ごとに 1 ハンドラだけを
-登録する。さらに細かい分岐（`targetId` / `data-part` / イベント種）が要る kind では、
+登録する（`controllers/registries/initializeGestureHandlerRegistry.ts`）。さらに細かい分岐（`targetId` / `data-part` / イベント種）が要る kind では、
 そのハンドラがルーターになり、同じフォルダ内のサブハンドラへ委譲する。
 
-| ハンドラ群  | 対象                                                                       | 主なファイル                                                                                                                                                                                                |
-| ----------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                     | `CanvasEventHandler.ts`                                                                                                                                                                                     |
-| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                             | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                                                                                                            |
-| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ     | `MenuEventHandler.ts`（ルーター）, `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`, `StencilCategoryToggleHandler.ts`, `StencilLibraryPanelHandler.ts` |
-| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動・ラベル移動・線分移動） | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`（ルーター）, `ConnectorClickHandler.ts`, `ConnectorLabelDragHandler.ts`, `ConnectorSegmentSlideHandler.ts`, `ConnectorSegmentMoveHandler.ts`            |
+| ハンドラ群  | 対象                                                                                                | 主なファイル                                                                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                                              | `CanvasEventHandler.ts`                                                                                                                                          |
+| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                                                      | `ControlEventHandler.ts`（ルーター。ストラテジの並びは `initializeGestureHandlerRegistry.ts`）, `transform/`, `vertex/`, `connection/`                           |
+| `menu/`     | メニュー系 UI（ツールバー・コンテキストメニュー・ObjectMenu・プロパティパネル・図形ライブラリなど） | `MenuEventHandler.ts`（ルーター。サブハンドラの正本は同ファイルの `MENU_HANDLERS`）, `ToolbarHandler.ts`, `ObjectMenuHandler.ts`, `PropertyPanelHandler.ts` ほか |
+| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動・ラベル移動・線分移動）                          | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`（ルーター。サブハンドラの正本は同ファイルの `CONNECTOR_HANDLERS`）, `ConnectorClickHandler.ts` ほか          |
 
-`handleGesture` は `dragStart` で `eventStartSnapshot`（操作開始時の objects / keyPoints /
-snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば
+`handleGesture` は `dragStart` で state の `activeDrag`（型は `controllers/CanvasTypes.ts` の `ActiveDrag`）を開き、
+`dragEnd` で `null` に戻す。`activeDrag.startSnapshot` は操作開始時の objects / keyPoints /
+snapCandidates 等で、ドラッグ中の計算はこれを基準にする。`dragEnd` 時に doc が実際に変化していれば
 `commitVersion` を進め、履歴記録のトリガにする（詳細は [状態更新フロー](./06-state-update-flow.ja.md)）。
 
-`activeDragKind`（`"move"` / `"transform"` / `"other"`）も同じ `dragStart` / `dragEnd` の境界に従う。
-`handleGesture` が全ドラッグを `"other"` で始めて `dragEnd` でクリアするので、`!== null` は常に
-「ドラッグ中」を意味する。区別が必要なハンドラは自分の `dragStart` で上書きする
-（`ObjectEventHandler` が `"move"`、`TransformControlHandler` が `"transform"`）。UI はこれを見て、
-移動中は変形フレームと接続アンカーを、変形中は接続アンカーを隠し、ObjectMenu はドラッグ中すべてで隠す。
+`activeDrag.kind`（`DragKind`）はそのドラッグが何をしているかを表す。`handleGesture` が全ドラッグを
+`"other"` で開くので、`activeDrag !== null` は常に「ドラッグ中」を意味する。区別が必要なハンドラは
+自分の `dragStart` で kind を上書きする（例: `ObjectEventHandler` が `"move"`、`TransformControlHandler` が
+`"transform"`）。UI はこれを見て、移動中は変形フレームと接続アンカーを、変形中は接続アンカーを隠す。
+ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のドロップダウンが開いている間
+（`objectMenuOpenId !== null`）はスライダーを使えるようにドラッグ中でも隠さない
+（`controllers/ui/menu/ObjectMenu/hooks/useObjectMenuPosition.ts`）。
 
 滑走側の対になるのが `inertialScrolling` で、あえて別フィールドにしている。滑走中はポインタが下りて
-おらず `eventStartSnapshot` も開いていないため、`activeDragKind` に混ぜるとこの2つが対で設定・解除
-されるという性質が崩れる。読んでいるのは ObjectMenu だけで、直前のパンと同じように滑走中も隠す。
-別々の状態である以上、パン→滑走・滑走→次のパンの受け渡しにはどちらも false になる隙間が1フレーム
+おらずドラッグも開いていないため、`activeDrag` に混ぜると `dragStart` / `dragEnd` で対になって開閉する
+という性質が崩れる。読む側の例: ObjectMenu は直前のパンと同じように滑走中も隠れ、
+`resolveInteractionStatus`（`controllers/handles/useInteractionHandle.ts`）は `isInertialScrolling` と
+`isBusy` に反映する。別々の状態である以上、パン→滑走・滑走→次のパンの受け渡しにはどちらも false になる隙間が1フレーム
 以上できる。そこでメニューの条件は `useLingeringFlag` を通し、隠すのは即時、戻すのはビューが
 `REAPPEAR_DELAY_MS` 静止してからにしている。これが受け渡しでのちらつきを防いでいる。
 
@@ -132,11 +137,11 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 3 属性はそれぞれ 1 軸を担い、`kind`（粗）→ `part` 接頭辞（細）の 2 段ルーティングツリーを成す（issue #81）:
 
-| 属性        | 意味                                    | 文法                                                                  |
-| ----------- | --------------------------------------- | --------------------------------------------------------------------- |
-| `data-kind` | **ドメイン** — ハンドラ群と 1:1         | `object` / `connector` / `canvas` / `control` / `menu` のいずれか     |
-| `data-id`   | **識別子** — どのターゲットか           | 実体の UUID、またはシングルトン部品名。**パースしない（コロン禁止）** |
-| `data-part` | **サブ要素** — ターゲット内のどの部品か | `<subtype>[:<args...>]`。無印 = ターゲット本体そのもの                |
+| 属性        | 意味                                     | 文法                                                                       |
+| ----------- | ---------------------------------------- | -------------------------------------------------------------------------- |
+| `data-kind` | **ドメイン** — registry のハンドラと 1:1 | ハンドラが `supports()` で名指す固定名（例: `object` / `canvas` / `menu`） |
+| `data-id`   | **識別子** — どのターゲットか            | 実体の UUID、またはシングルトン部品名。**パースしない（コロン禁止）**      |
+| `data-part` | **サブ要素** — ターゲット内のどの部品か  | `<subtype>[:<args...>]`。無印 = ターゲット本体そのもの                     |
 
 原則:
 
@@ -147,9 +152,9 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
   part はコマンド伝達チャネルではない
 - `data-kind` はジェスチャーハンドラを持つ要素にだけ付ける。「インタラクティブだが
   ジェスチャー対象外」はハンドラ無しの kind ではなく `data-gesture="none"` で表現する
-- `menu` kind の part 文法（`command:` / `toggle:` / `set:` / `slider:`）の正本は
-  `gestures/handlers/menu/utils/menuParts.ts` の 1 箇所。書く側は `commandPart` / `togglePart` /
-  `setPart` / `sliderPart`（プラグイン向けに `@jiscribe/canvas/unstable` からも公開）で文字列を
+- `menu` kind の part 文法（`command:` などの接頭辞とその意味）の正本は
+  `controllers/gestures/handlers/menu/utils/menuParts.ts` の 1 箇所。書く側は同ファイルの組み立て関数
+  （`commandPart` など。プラグイン向けに `@jiscribe/canvas/unstable` からも公開）で文字列を
   組み、menu 系ハンドラは `parseMenuPart` で分解する。接頭辞をどこにも二度書かない
 
 例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-part="label"`。
@@ -158,9 +163,11 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 線から `SNAP_THRESHOLD_PX` 以内に落とすと `offset` は 0 に吸着する（Ctrl 押下で解除）。
 ラベルが無いときは線のダブルクリックがクリック点（経路へ射影し同じ吸着をかけた位置）に
 ラベルを作る。確定するまでは `textEditState` が保持し、コネクターには書き込まない。
-複数スロットを持つ図形は入れ子の形を使う: `record` の `<g data-kind="object">` は
-`data-part="name"` / `data-part="rows"` を持つ 2 つの区画矩形を包み、ダブルクリックした区画から
-編集スロットを解決する（`resolveTextSlotId` が値を `state.text` のキーと照合する）。
+複数スロットを持つ図形は入れ子の形を使う: 例えば UML の `record`
+（`plugins/uml-shapes/src/presentation/RecordBox.tsx`）の `<g data-kind="object">` は、その箱が持つ
+区画ごとの矩形を包み、各区画にスロット id をそのまま `data-part` として付ける（`data-part="name"` /
+`data-part="attributes"` など）。ダブルクリックした区画から編集スロットを解決する
+（`resolveTextSlotId` が値を `state.text` のキーと照合し、該当しなければ先頭のスロットに落とす）。
 
 #### 移行（issue #81）— 完了
 
@@ -211,16 +218,14 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 ```ts
 const isActivation = event.type === "click" || event.type === "doubleClick";
-if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
-	return handleCommand(state, commandId);
-}
 ```
 
 理由は前述の排他仕様。反復コマンドボタンには「ダブルクリック固有の意味」が無いため、
 `click` だけを拾うと連打時に 1 回おきにスキップする（2 回目が `doubleClick` として捨てられる）。
+ターゲットを比較しないので、押すたびに `data-part` が変わるトグル（`set:fontWeight:bold` →
+`set:fontWeight:normal`）の 2 回目も `doubleClick` で届く。
 認識器の排他仕様はオブジェクト／テキスト系が依存しているので変えず、**消費側ハンドラで両者を
 等価に扱う**ことで「N 連打＝N 実行」を局所的・低リスクに実現する。
 
-- 該当: `controllers/gestures/handlers/menu/ToolbarHandler.ts`
-- 関連定数: `DOUBLE_CLICK_THRESHOLD`（`recognizer/GestureRecognizerConstants.ts`）
-  </content>
+- 例: `controllers/gestures/handlers/menu/ToolbarHandler.ts`（menu 系の他のサブハンドラにも同じ形がある）
+- 関連定数: `DOUBLE_CLICK_THRESHOLD`（`controllers/gestures/recognizer/GestureRecognizerConstants.ts`）

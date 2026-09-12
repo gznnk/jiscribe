@@ -6,7 +6,7 @@
 // createFrameBehavior / createFrameMapper / createFrameStateValidator /
 // formatPolygonPoints / centeredPolygonOutline / OUTLINE_CURVE_SEGMENTS) come through
 // `@jiscribe/canvas-sdk`. The headless parse entry point is ./doc (flowchartDocPlugin).
-// Every definition matches its counterpart in core (initializeObjectRegistry.ts) exactly
+// Every definition matches its counterpart in core (applyObjectDefinition.ts) exactly
 // (nothing is left out on purpose). The process / onPageConnector presets stay owned by
 // core (flowchartStencilCategory references them by presetId).
 // (See packages/canvas/docs/13-authoring-plugins.md.)

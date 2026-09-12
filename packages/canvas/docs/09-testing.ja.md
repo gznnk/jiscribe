@@ -31,16 +31,18 @@ solitary も sociable も**同じユニット層**であり、フォルダでは
 および sociable な振る舞いテストを、対象ファイルのすぐ隣に配置する
 （[アーキテクチャ](./02-architecture.ja.md) の共配置方針）。
 
-- 対象は `states` / `controllers` / `rendering` 各層
+- 主な対象は `states` / `controllers` / `rendering` 各層
   （Mapper の往復変換、Command の `execute`、変形ロジック、`canvasReducer` 経由の振る舞いなど）。
+  `src/` の外にあるビルド時ヘルパー（`build/`）も同じく `__tests__/` に持つ。
+  拾うファイルは `vitest.config.ts` の `include` が正本。
   Doc モデル自体のテスト（`validateXxxDoc`・パーサー・doc ops）は `@jiscribe/doc` にあり、`pnpm --filter @jiscribe/doc test` で走る
-- `vitest.config.ts` は `environment: "node"`。DOM を介さず入力 state → 出力 state を直接検証する
+- 既定の環境は `environment: "node"` で、DOM を介さず入力 state → 出力 state を直接検証する。
+  DOM API が要るテスト（React の hook・コンポーネントを描いて確かめるものなど）だけは、
+  ファイル先頭の `// @vitest-environment jsdom` で jsdom に切り替える
+  （例: `controllers/hooks/__tests__/useSyncExternalDoc.test.tsx`・`controllers/__tests__/CanvasThumbnail.test.tsx`）。
+  jsdom はインプロセスの模擬 DOM なので、これもユニット層に入る
 - 実行: `pnpm --filter @jiscribe/canvas test`（`vitest run`）。
-  `test:coverage` / `test:ui` も用意（カバレッジは `index.ts` と `vitest.config.ts` を除外）
-
-```
-src/**/__tests__/**/*.{test,spec}.{ts,tsx}
-```
+  `test:coverage` / `test:ui` も用意（カバレッジの除外対象は `vitest.config.ts` の `coverage.exclude` 参照）
 
 ### ファイル命名規則
 
@@ -58,8 +60,9 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
   — 落ちたとき開くべきは入口ではなく不変条件を実装する側であり、入口が複数のこともある
   （例: `copyPasteDuplicateOrder` は `handleCommand` と `handlePaste` の両方を叩く）。
   入口はフォルダ位置（下表）とテスト先頭の doc コメントで示す
-- `handleCommand` 自体の契約（Registry 解決・`canExecute` ゲートなど）をテストする場合は、
-  scenario 命名にせず通常どおり `handlers/__tests__/handleCommand.test.ts` の SUT 命名に乗せる
+- 入口そのものの契約（`handleCommand` なら Registry 解決・`canExecute` ゲートなど）をテストする場合は、
+  scenario 命名にせず、通常どおり入口を SUT とする命名に乗せる
+  （例: `canvasReducer` の契約は `canvasReducer.<facet>.test.ts`）
 - sociable テストは state 組み立て・dispatch・fixtures を担う `support/` を `__tests__/support/` に置く。
   `support/` の共通化は将来課題で、当面は **フォルダごとに重複を許容**する
   （`controllers/reducer/__tests__/support/` と `controllers/commands/__tests__/support/` は別物）
@@ -74,19 +77,19 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 ## E2E（Playwright）
 
 実ブラウザ・実 UI 操作での非回帰テスト。図形を持つパッケージがその spec を持つため、
-**10 個のスイート**に分散している。
+スイートは**パッケージごと**に分かれている（canvas・`plugins/*` の各プラグイン・canvas-examples）。
 
 | スイート         | 置き場所                    | 守備範囲                                                                                         |
 | ---------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
 | canvas           | `packages/canvas/e2e/`      | コアの振る舞い（ジェスチャー・選択・変形・テキスト編集・コネクター・整列・ツールバーとメニュー） |
 | 各図形プラグイン | `plugins/<name>/e2e/`       | そのパッケージの図形だけ                                                                         |
-| プラグイン同居   | `apps/canvas-examples/e2e/` | spec 1 本。出荷 8 プラグインを 1 つのキャンバスに同居させる                                      |
+| プラグイン同居   | `apps/canvas-examples/e2e/` | 出荷プラグインを全部 1 つのキャンバスに同居させたときだけ起きること、と出荷フォントが要る検証    |
 
 どのスイートも構成は同じで、後述の共有キットに乗っている。
 
 ```
 <package>/
-├── playwright.config.ts     # createCanvasPlaywrightConfig({ testDir, harnessCommand }) の呼び出し
+├── playwright.config.ts     # createCanvasPlaywrightConfig の呼び出し
 └── e2e/
     ├── harness/             # index.html + main.tsx（mountPluginHarness）+ vite.config.ts
     └── specs/
@@ -98,32 +101,38 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
   CommonJS へトランスパイルするため。ESM の config ではキットの名前付き export を受け取れない
 - **canvas のハーネスは出荷プラグインを 1 つも登録しない。**載せるのは
   `e2e/plugins/specShapesPlugin.tsx` だけで、これはコアが自前では持たなくなった性質を
-  供給するテスト専用の代役である（`tile` = カテゴリフライアウトに出るドラッグ描画型、
-  `pin` = クリック配置型、`card` = `<g>` ルートでテキストスロットを持つ型）。
+  供給するテスト専用の代役である。型ごとに性質を受け持つ（例: `tile` = カテゴリフライアウトに
+  出るドラッグ描画型、`pin` = クリック配置型、`card` = `<g>` ルートでテキストスロットを持つ型、
+  `panel` = 作成時の既定値を自前で宣言する型。一覧は同ファイルの `specShapesPlugin`）。
   出荷図形を題材にしていたコアの spec はこちらを叩く
 - **プラグインのハーネスはそのプラグインだけを載せる。**単独ロードで通ること自体が、
   他プラグインへの暗黙依存が無いことの検証になる
-- **canvas-examples のハーネスは 8 つ全部を載せる。**spec は「全部載せたときに初めて
-  壊れるもの」（ObjectType の登録衝突・ツールバーの重複・`<defs>` の id 衝突）だけを見る。
-  ここに置いて循環が生まれないのは、canvas と 8 プラグインすべてに依存していて、かつ
+- **canvas-examples のハーネスは出荷プラグインを全部載せる**（`e2e/harness/main.tsx` の `plugins`）。
+  見るのは「全部載せたときに初めて壊れるもの」（例: ObjectType の登録衝突・ツールバーの重複・
+  `<defs>` の id 衝突。`specs/plugin-coexistence.spec.ts`）と、出荷フォントを読み込むのが
+  このハーネスだけであるために、ここでしか確かめられない PNG 書き出しのフォント埋め込み
+  （`specs/png-font-embedding.spec.ts`）。個々の図形の描画・編集は各プラグインのスイートの持ち分。
+  ここに置いて循環が生まれないのは、canvas と出荷プラグインすべてに依存していて、かつ
   どこからも依存されていない（依存グラフの頂点）から
 - `support/CanvasDriver.ts` … 描画・選択・テキスト・色・コネクター操作の API。
   `support/selectors.ts` … `data-kind` / `data-id` セレクタ定数。`fixtures.ts` が CanvasDriver を注入。
   3 つとも canvas にあり、他スイートへはキット経由で届く
-- canvas の `specs/` のカテゴリ: `arrange` / `driver` / `editing` / `keyboard` /
-  `scenario` / `shapes` / `ui`（+ `smoke.spec.ts`）
+- canvas の `specs/` はフォルダで機能領域を分けている。分け方と新しい spec の置き場所は
+  [`e2e/specs/README.md`](../e2e/specs/README.md) にある
 - 実行: `pnpm --filter @jiscribe/canvas test:e2e`（`:headed` / `:ui` あり）/
   `pnpm --filter @jiscribe/plugin-sticky-shape test:e2e` / `pnpm --filter canvas-examples test:e2e`
 
-設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
-（`expect.poll` 等）で安定させ、本当の不具合を隠さない。
+設計方針: **CanvasDriver に失敗を隠すリトライは入れない**。時間待ちではなく状態待ち
+（`expect.poll` 等）で安定させ、操作が効かなければそのままテストを落として本当の不具合を隠さない。
+Playwright のテスト単位のリトライは、共有キットの `createCanvasPlaywrightConfig` が CI でだけ
+有効にしている（ローカル実行ではリトライしない）。
 
 ジェスチャー仕様の非回帰は [ジェスチャシステム](./04-gesture-system.ja.md) と対応する
 （`specs/shapes/basic-gestures.spec.ts` / `specs/editing/text-edit-gestures.spec.ts` 等）。
 
 ### 共有キット
 
-実装は canvas の `e2e/kit/` にあり、**スイートの 1 ファイルにつき 1 エントリ**の計 4 つで
+実装は canvas の `e2e/kit/` にあり、**スイートの 1 ファイルにつき 1 エントリ**で
 公開している。プラグインは同じキットを `@jiscribe/canvas-sdk` 経由で取る。
 
 | スイート内のファイル         | canvas のエントリ                            | プラグインのエントリ                             |
@@ -141,24 +150,27 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 - vite 設定用エントリを Playwright 設定用エントリから分けてあるのは、Playwright が
   CommonJS へトランスパイルする config の読み込みが、ESM のみで配布される vite を
   `require()` せずに済むようにするため
-- ハーネス用エントリはブラウザコードである。残る 3 つは `@playwright/test`・
+- ハーネス用エントリはブラウザコードである。残りは `@playwright/test`・
   `node:child_process`・vite に手を伸ばしており、いずれもページにはバンドルできない
 
-API は `createCanvasPlaywrightConfig({ testDir, harnessCommand })` /
-`createPluginHarnessViteConfig()` /
-`mountPluginHarness({ plugins, toolbarItems, stencilLibrarySections })` と、
-spec 側の `test` / `expect` / `CanvasDriver` / `selectors`。canvas 自身はキットを相対 import で
+API は `createCanvasPlaywrightConfig` / `createPluginHarnessViteConfig` /
+`mountPluginHarness` と、spec 側の `test` / `expect` / `CanvasDriver` / `selectors` など
+（引数は `e2e/kit/` の各ファイル参照）。canvas 自身はキットを相対 import で
 取る（`./e2e/testing-playwright-config`）。SDK 経由にはしない — `canvas → canvas-sdk → canvas`
 の循環こそ、この分離で解消したものだからである。プラグインのスイートを立ち上げる手順は
 [プラグインの作り方](./13-authoring-plugins.ja.md) にある。
 
 ## 循環依存チェック（madge）
 
-レイヤーの一方向依存（[アーキテクチャ](./02-architecture.ja.md)）を機械的に担保するため、
-madge で循環依存を検出する。
+madge（`dep:check` = `madge --circular`）でモジュールグラフの循環を検出する。
+見るのは循環だけで、レイヤーの一方向依存（[アーキテクチャ](./02-architecture.ja.md)）に
+逆らう import は、循環を作らない限り捕まえない。そちらはリポジトリルートの
+`eslint.config.js` が `no-restricted-imports` で禁じている（`controllers/` 内の下の層から
+上の層への値の import と、`rendering/` から `controllers/` への値の import。型の import は許す）。
 
-- 実行: `pnpm dep:check`（ワークスペース全体）/ `pnpm --filter @jiscribe/canvas dep:check`（canvas のみ）
-- CI の checks ジョブでも `pnpm dep:check` が走る
+- 実行: `pnpm dep:check`（ワークスペース全体）/ `pnpm --filter @jiscribe/canvas dep:check`（canvas のみ）。
+  レイヤーの逆依存は `pnpm lint` で落ちる
+- CI の checks ジョブでも `pnpm dep:check` と `pnpm lint` が走る
 
 ## 一括実行（タスク完了時のチェック）
 
@@ -173,5 +185,3 @@ pnpm dep:check
 pnpm lint
 pnpm --filter @jiscribe/canvas test
 ```
-
-</content>

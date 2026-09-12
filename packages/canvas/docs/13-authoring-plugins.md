@@ -6,7 +6,7 @@ The practical side of [Plugin Architecture](./12-plugin-architecture.md): how a
 shape package is laid out, what the authoring kit gives you, where a piece of code
 belongs, and the wiring you must not forget.
 
-The eight packages under `plugins/` are the worked examples. `sticky-shape` is the
+Every package under `plugins/` is a worked example. `sticky-shape` is the
 smallest complete one; `container-shapes` shows a type-specific selection control;
 `uml-shapes` shows multiple text slots.
 
@@ -55,9 +55,16 @@ The headless half is written first, because the UI half takes it as input:
 
 ```ts
 // src/doc.ts
+import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
+import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { calcFullBoxTextRegion } from "@jiscribe/doc";
+
+import { STICKY_DOC_DEFAULTS, StickyFeatures } from "./schema/StickyDoc";
+
 export const stickyDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: StickyFeatures,
 	defaults: STICKY_DOC_DEFAULTS,
+	textRegion: calcFullBoxTextRegion,
 	description: "Sticky note annotation.",
 	summary: "sticky note (no stroke or `rx`)",
 	supportsBounds: false, // click-placed only, no bounds drawing
@@ -71,6 +78,10 @@ export const stickyDocPlugin: CanvasDocPlugin = {
 
 ```ts
 // src/definition.ts
+import type { ObjectTypeDefinition } from "@jiscribe/canvas";
+import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
+// plus this package's own parts from ./doc, ./presentation, ./stencil …
+
 export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 	createFrameObjectDefinition<StickyDoc, StickyState>({
 		doc: stickyDocDefinition,
@@ -83,6 +94,10 @@ export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 
 ```ts
 // src/plugin.ts
+import type { CanvasPlugin } from "@jiscribe/canvas";
+
+import { stickyDefinition } from "./definition";
+
 export const stickyPlugin: CanvasPlugin = {
 	id: "sticky-shape",
 	objects: { sticky: stickyDefinition },
@@ -93,11 +108,11 @@ export const stickyPlugin: CanvasPlugin = {
 
 Three layers, with a test for each.
 
-| Layer                 | Holds                                                                                       | The test                                                                                                             |
-| --------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `packages/canvas`     | `createFrame*` family, the `ObjectTypeDefinition` contract, registries                      | **Touches engine internals** — the state model, registries, theme, internal validator vocabulary. Add conservatively |
-| `packages/canvas-sdk` | Authoring helpers, plugin-only parts, re-exports of canvas `unstable`                       | **Writable with the canvas public API alone.** Promote once the same shape appears in two plugins                    |
-| a plugin's `shared/`  | Family-specific bases (pictogram in `general-shapes`, group markers in `annotation-shapes`) | **Vocabulary of that shape family only.** Move to the SDK once another family starts using it                        |
+| Layer                        | Holds                                                                                       | The test                                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `packages/canvas`            | `createFrame*` family, the `ObjectTypeDefinition` contract, registries                      | **Touches engine internals** — the state model, registries, theme, internal validator vocabulary. Add conservatively |
+| `packages/canvas-sdk`        | Authoring helpers, plugin-only parts, re-exports of canvas `unstable`                       | **Writable with the canvas public API alone.** Promote once the same shape appears in two plugins                    |
+| a plugin's `<layer>/shared/` | Family-specific bases (pictogram in `general-shapes`, group markers in `annotation-shapes`) | **Vocabulary of that shape family only.** Move to the SDK once another family starts using it                        |
 
 Two things pull a helper back into `packages/canvas` even when it looks like SDK
 material: dependence on a non-public context (the theme context) or on internal
@@ -108,7 +123,9 @@ physically moving them would widen the canvas public surface instead of narrowin
 
 `@jiscribe/canvas-sdk` re-exports the whole of `@jiscribe/canvas/unstable`
 (and `/doc` re-exports `@jiscribe/doc/unstable`), so it is a superset — you never
-need to reach past it. On top of that:
+need to reach past it. On top of that it adds, among others, the following (the
+exports of `index.ts` / `doc.ts` / `testing.ts` under `packages/canvas-sdk/src/` are
+the full list):
 
 | Export                                                                                                                  | Replaces                                                                   |
 | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -141,8 +158,8 @@ A type's properties-sidebar sections are declared as `propertyPanel`, and a row 
 
 Every plugin owns a Playwright suite driving **a harness that holds that plugin alone**.
 Passing under a solo load is the evidence that the package leans on no other plugin. How
-the shipped set behaves together is not this suite's business — `apps/canvas-examples/e2e/`
-owns that one spec. The machinery is canvas's e2e kit ([Testing](./09-testing.md)), reached
+the shipped set behaves together is not this suite's business — the suite in
+`apps/canvas-examples/e2e/` owns that. The machinery is canvas's e2e kit ([Testing](./09-testing.md)), reached
 through `@jiscribe/canvas-sdk/testing/*`; `plugins/annotation-shapes/` is the worked example
 for everything below.
 
@@ -155,11 +172,14 @@ Two scripts and two dependencies in `package.json`:
 		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.60.0",
+		"@playwright/test": "<same version as packages/canvas>",
 		"vite": "catalog:"
 	}
 }
 ```
+
+`@playwright/test` is not in the catalog, so match the version the existing plugins and
+`packages/canvas` declare in their `package.json`.
 
 `--configLoader runner` is not optional. Under vite's default `bundle` loader the bare
 specifier in the harness config is left external, so node loads
@@ -241,11 +261,14 @@ Two things that file has to get right:
 - **Keep `toolbarItems` down to what the specs draw** — this plugin's pinned presets or its
   category (as a `{ type: "stencilCategory", category }` item), plus `{ type: "stencilPreset", presetId: "rect" }`, which is always required
   because `CanvasDriver.goto()` waits for the "Rectangle" tool button before handing the page
-  over. The items are the bar's shape tools only: the kit closes the tool section with the
-  shape library toggle and appends core's view section, so the page keeps that toggle, undo
-  / redo, zoom and the properties toggle without naming them. A plugin's presets and
-  categories are absent from the canvas default bar, so without items the specs cannot reach
-  them at all.
+  over. The items are the bar's shape tools only: the kit
+  (`packages/canvas/e2e/kit/mountPluginHarness.tsx`) puts the shape library toggle and a
+  divider before them and appends the rest of core's default bar after them (undo / redo,
+  zoom, the properties toggle and so on), so the page keeps those without naming them. The
+  toggle and its divider survive only when `stencilLibrarySections` is passed; without it
+  they are dropped at resolution, so the example above shows no toggle. A plugin's presets
+  and categories are absent from the canvas default bar, so without items the specs cannot
+  reach them at all.
 
 Specs take everything from the spec entry:
 
@@ -265,15 +288,17 @@ harness alone with `dev:harness` to look at it by eye. `vitest.config.ts` includ
 - Nothing under a plugin's `src/` may import `@jiscribe/canvas/unstable` or
   `@jiscribe/doc/unstable`. Use `@jiscribe/canvas-sdk`, or
   `@jiscribe/canvas-sdk/doc` for the headless side.
-- A plugin's `src/schema/` and `src/doc.ts` are headless. They may use
-  `@jiscribe/doc` and `@jiscribe/canvas-sdk/doc` only — not the UI entries,
-  not `react` / `react-dom` / `@emotion/*`, and not the package's own
-  `presentation/`, `state/`, `stencil/`, `controls/`, `menu/` or
-  `propertyPanel/` directories.
+- A plugin's `src/schema/` and `src/doc.ts` are headless. Of the canvas and doc
+  entries they may use `@jiscribe/doc` and `@jiscribe/canvas-sdk/doc` only — not
+  the UI entries, not `react` / `react-dom` / `@emotion/*`, and not the package's
+  own UI-side layers (`presentation/`, `state/`, `menu/` and the rest;
+  `eslint.config.js` has the list).
 - **Import through package roots.** `@jiscribe/geometry`, never
   `@jiscribe/geometry/src/...`.
-- `packages/canvas-sdk` lives under the same rules as a plugin: it sees only the
-  canvas public entries.
+- `packages/canvas-sdk`, like a plugin, sees only the canvas public entries — never
+  canvas's `src/`. It is allowed more of them than a plugin, though:
+  `@jiscribe/canvas/unstable`, `@jiscribe/canvas/testing*` and
+  `@jiscribe/doc/unstable` are open to it, since re-exporting them is the SDK's job.
 
 Reuse `@jiscribe/geometry` before writing geometry of your own — it already has the
 types, distance and rotation helpers, affine transforms, intersection tests, shape
@@ -281,7 +306,7 @@ conversions and their validators.
 
 ## Moving a shape out of the engine
 
-The playbook, from seven rounds of doing it.
+The playbook for moving a built-in shape into a plugin.
 
 1. **Audit what the shape uses from the engine.** If everything is already exported,
    no API change is needed. If not, add the missing pieces to canvas's `unstable` /
@@ -289,8 +314,13 @@ The playbook, from seven rounds of doing it.
 2. **Move the files before editing them**, so git records renames. The target
    layout is one folder per shape: `schema/<id>/`, `state/<id>/`,
    `presentation/<Pascal>/`.
-3. **Remove it from the engine**: the `ObjectTypes` union, `builtinObjectDocDefinitions`,
-   `initializeObjectRegistry`, and `DEFAULT_TOOLBAR_TOOLS_SECTION`.
+3. **Remove it from the engine**: take out every place that names the type. The main
+   ones are below; grep `packages/doc/src` and `packages/canvas/src` for the type name
+   to catch the rest.
+   - the `ObjectTypes` union (`packages/doc/src/model/objects/types/ObjectType.ts`)
+   - the headless `builtinObjectDocDefinitions` (`packages/doc/src/plugin/builtinObjectDocDefinitions.ts`)
+   - the UI `BUILTIN_OBJECT_DEFINITIONS` (`packages/canvas/src/controllers/registries/applyObjectDefinition.ts`)
+   - the places naming its preset: `DEFAULT_TOOLBAR_TOOLS_SECTION` (`packages/canvas/src/controllers/ui/menu/Toolbar/toolbarSections.ts`) and `basicStencilCategory`'s `presetIds` (`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`)
 4. **Handle the fallout in the engine's own tests.** Engine tests that used the shape
    as a representative — "a shape with an outline", "a click-placed shape" — lose
    their subject. Declare a minimal type in the test instead of reaching for another
@@ -314,30 +344,37 @@ declares no library will not show the shape until it adds the category.
 
 ## Wiring checklist
 
-**The headless `./doc` side is the one that gets forgotten.** Work through both
-lists mechanically.
+**The headless `./doc` side is the one that gets forgotten.** Work through every
+list mechanically.
+
+For every type you add:
+
+- [ ] `packages/doc-schema/generator/src/manifest.ts` (add the type name to `CANONICAL_TYPE_ORDER`, the order of the schema and AI docs; generation fails on a missing or a leftover entry)
+
+When a new plugin package joins the shipped set, wire both halves as well.
 
 UI plugin (`somePlugin`):
 
-- [ ] `apps/canvas-examples/src/examples/plugins.tsx`
-- [ ] `apps/vscode-extension/src/webview/canvasParser.ts`
-- [ ] `packages/standard-shapes/src/index.ts` (`standardPlugins` and `standardStencilLibrarySections`; the VSCode extension, the MCP viewer and the CLI preview all take the set from there)
+- [ ] `packages/standard-shapes/src/index.ts` (`standardPlugins`, and `standardStencilLibrarySections`, which puts the shapes in the sidebar; the VSCode extension, the MCP viewer and the CLI preview all take the set from there)
+- [ ] `apps/canvas-examples/src/examples/plugins.tsx` (`plugins` and `stencilLibrarySections`)
 - [ ] `apps/canvas-examples/e2e/harness/main.tsx` (`plugins` and `stencilLibrarySections`)
 
 Headless doc plugin (`someDocPlugin`):
 
-- [ ] `apps/vscode-extension/src/diagnostics/DiagnosticProvider.ts`
-- [ ] `packages/doc-schema/generator/src/manifest.ts` (`definitionSources`)
+- [ ] `packages/standard-shapes/src/doc.ts` (`standardDocPlugins`; the VSCode extension's diagnostics, schema generation, the MCP server and `doc-tools` all take the set from there)
 
-Add the dependency to each of those packages' `package.json` too. `packages/canvas` is
-deliberately not on the list: it depends on no shipped plugin, and adding one would bring
-back the `canvas → plugins → canvas-sdk → canvas` cycle.
+Only `packages/standard-shapes` and `apps/canvas-examples` take the plugin as a
+`package.json` dependency; the other hosts (the VSCode extension, MCP, the CLI) depend
+on `@jiscribe/standard-shapes` alone and stay untouched. `packages/canvas` is
+deliberately not on the list: it depends on no shipped plugin, and adding one would
+bring back the `canvas → plugins → canvas-sdk → canvas` cycle.
 
 > **What an unwired host does:** parsing does not fail. The result is still
 > `kind: "ok"` and the objects of that type are **silently dropped** from `root`
 > (with a warning). It is easy to miss in testing, which is why the list above is
 > worked through mechanically rather than by inspection. The behaviour is pinned by
-> `plugins/sticky-shape/src/__tests__/stickyParseCheck.test.ts`.
+> every plugin's parse-check suite (`createParseCheckSuite`; e.g.
+> `plugins/sticky-shape/src/__tests__/stickyParseCheck.test.ts`).
 
 Downstream products that embed the canvas have their own wiring; adding a shape to
 the shipped set means updating them as well.

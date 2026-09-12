@@ -144,9 +144,8 @@ const TEXT_BLOCK_TRANSFORM_HANDLES: ObjectTransformHandles = {
 };
 
 /**
- * Data-only description of every object type. `createCanvasRegistries` applies a
- * chosen subset of these to a fresh bundle; `initializeObjectRegistry` applies
- * all of them to its target bundle.
+ * Data-only description of every built-in object type. `createCanvasRegistries`
+ * applies a chosen subset of these to a fresh bundle, ahead of the plugins'.
  *
  * Each entry spreads its headless definition, so a built-in's `textRegion` comes
  * from `builtinObjectDocDefinitions` — the ellipse's inscribed rect, the box
@@ -154,257 +153,259 @@ const TEXT_BLOCK_TRANSFORM_HANDLES: ObjectTransformHandles = {
  * instead, their doc-side declaration being allowed to say "not in the box at
  * all", which a renderer cannot use (see createFrameObjectDefinition).
  */
-export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
-	{
-		rect: defineObject({
-			...builtinObjectDocDefinitions.rect,
-			mapper: { toDoc: rectToDoc, toState: rectToState },
-			stateValidator: isValidRectState,
-			component: Rect,
-			behavior: createFrameBehavior<RectState>(),
-			stencils: RectStencils,
-		}),
+export const BUILTIN_OBJECT_DEFINITIONS: Record<
+	ObjectType,
+	ObjectTypeDefinition
+> = {
+	rect: defineObject({
+		...builtinObjectDocDefinitions.rect,
+		mapper: { toDoc: rectToDoc, toState: rectToState },
+		stateValidator: isValidRectState,
+		component: Rect,
+		behavior: createFrameBehavior<RectState>(),
+		stencils: RectStencils,
+	}),
 
-		ellipse: defineObject({
-			...builtinObjectDocDefinitions.ellipse,
-			mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
-			stateValidator: isValidEllipseState,
-			component: Ellipse,
-			behavior: createFrameBehavior<EllipseState>(),
-			stencils: EllipseStencils,
-		}),
+	ellipse: defineObject({
+		...builtinObjectDocDefinitions.ellipse,
+		mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
+		stateValidator: isValidEllipseState,
+		component: Ellipse,
+		behavior: createFrameBehavior<EllipseState>(),
+		stencils: EllipseStencils,
+	}),
 
-		text: defineObject({
-			...builtinObjectDocDefinitions.text,
-			mapper: { toDoc: textToDoc, toState: textToState },
-			stateValidator: isValidTextState,
-			contentResizer: (state, context) =>
-				resizeTextStateToContent(state, context.textStyleDefaults),
-			component: Text,
-			behavior: {
-				moveByDelta: textMoveByDelta,
-				transformByGroup: textTransformByGroup,
-				rotateByGroup: textRotateByGroup,
+	text: defineObject({
+		...builtinObjectDocDefinitions.text,
+		mapper: { toDoc: textToDoc, toState: textToState },
+		stateValidator: isValidTextState,
+		contentResizer: (state, context) =>
+			resizeTextStateToContent(state, context.textStyleDefaults),
+		component: Text,
+		behavior: {
+			moveByDelta: textMoveByDelta,
+			transformByGroup: textTransformByGroup,
+			rotateByGroup: textRotateByGroup,
+		},
+		transformHandles: (state: TextState) =>
+			state.textLayout === "block"
+				? TEXT_BLOCK_TRANSFORM_HANDLES
+				: TEXT_LABEL_TRANSFORM_HANDLES,
+		// The layout switch is the one row text adds to what its features
+		// imply, and it lives in the sidebar alone: the merge that keeps only
+		// what every selected type offers works row by row there, so a plain
+		// box in the selection drops the switch without taking the font
+		// controls with it.
+		propertyPanel: appendPropertyPanelItems(
+			createDefaultPropertyPanel(builtinObjectDocDefinitions.text.features),
+			{ id: "text", label: "Text" },
+			{ type: "textLayout" },
+		),
+		stencils: TextStencils,
+	}),
+
+	group: defineObject({
+		...builtinObjectDocDefinitions.group,
+		mapper: { toDoc: groupToDoc, toState: groupToState },
+		stateValidator: isValidGroupState,
+		component: () => null,
+		behavior: {
+			moveByDelta: groupMoveByDelta,
+			transformByGroup: groupTransformByGroup,
+			rotateByGroup: groupRotateByGroup,
+		},
+	}),
+
+	polygon: defineObject({
+		...builtinObjectDocDefinitions.polygon,
+		mapper: { toDoc: polygonToDoc, toState: polygonToState },
+		stateValidator: isValidPolygonState,
+		component: Polygon,
+		behavior: {
+			moveByDelta: polygonMoveByDelta,
+			transformByGroup: polygonTransformByGroup,
+			rotateByGroup: polygonRotateByGroup,
+		},
+		stencils: PolygonStencils,
+	}),
+
+	polyline: defineObject({
+		...builtinObjectDocDefinitions.polyline,
+		mapper: { toDoc: polylineToDoc, toState: polylineToState },
+		stateValidator: isValidPolylineState,
+		component: Polyline,
+		behavior: {
+			moveByDelta: polylineMoveByDelta,
+			transformByGroup: polylineTransformByGroup,
+			rotateByGroup: polylineRotateByGroup,
+		},
+		stencils: PolylineStencils,
+	}),
+
+	connector: defineObject({
+		...builtinObjectDocDefinitions.connector,
+		mapper: { toDoc: connectorToDoc, toState: connectorToState },
+		stateValidator: isValidConnectorState,
+		component: Connector,
+		behavior: {
+			moveByDelta: connectorMoveByDelta,
+			transformByGroup: connectorTransformByGroup,
+			rotateByGroup: connectorRotateByGroup,
+		},
+		extraStyleProperties: ConnectorExtraStyleProperties,
+		menu: [
+			{
+				id: "arrowHead",
+				items: [{ type: "arrowHead" }],
 			},
-			transformHandles: (state: TextState) =>
-				state.textLayout === "block"
-					? TEXT_BLOCK_TRANSFORM_HANDLES
-					: TEXT_LABEL_TRANSFORM_HANDLES,
-			// The layout switch is the one row text adds to what its features
-			// imply, and it lives in the sidebar alone: the merge that keeps only
-			// what every selected type offers works row by row there, so a plain
-			// box in the selection drops the switch without taking the font
-			// controls with it.
-			propertyPanel: appendPropertyPanelItems(
-				createDefaultPropertyPanel(builtinObjectDocDefinitions.text.features),
-				{ id: "text", label: "Text" },
-				{ type: "textLayout" },
-			),
-			stencils: TextStencils,
-		}),
-
-		group: defineObject({
-			...builtinObjectDocDefinitions.group,
-			mapper: { toDoc: groupToDoc, toState: groupToState },
-			stateValidator: isValidGroupState,
-			component: () => null,
-			behavior: {
-				moveByDelta: groupMoveByDelta,
-				transformByGroup: groupTransformByGroup,
-				rotateByGroup: groupRotateByGroup,
+			// Self-loops are orthogonal-only, so RoutingMenu renders null.
+			// The resulting empty section is collapsed via ObjectMenuSection's `:empty`.
+			{
+				id: "routing",
+				items: [
+					{ type: "custom", id: "connector-routing", component: RoutingMenu },
+				],
 			},
-		}),
-
-		polygon: defineObject({
-			...builtinObjectDocDefinitions.polygon,
-			mapper: { toDoc: polygonToDoc, toState: polygonToState },
-			stateValidator: isValidPolygonState,
-			component: Polygon,
-			behavior: {
-				moveByDelta: polygonMoveByDelta,
-				transformByGroup: polygonTransformByGroup,
-				rotateByGroup: polygonRotateByGroup,
+			{
+				id: "line",
+				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
-			stencils: PolygonStencils,
-		}),
-
-		polyline: defineObject({
-			...builtinObjectDocDefinitions.polyline,
-			mapper: { toDoc: polylineToDoc, toState: polylineToState },
-			stateValidator: isValidPolylineState,
-			component: Polyline,
-			behavior: {
-				moveByDelta: polylineMoveByDelta,
-				transformByGroup: polylineTransformByGroup,
-				rotateByGroup: polylineRotateByGroup,
-			},
-			stencils: PolylineStencils,
-		}),
-
-		connector: defineObject({
-			...builtinObjectDocDefinitions.connector,
-			mapper: { toDoc: connectorToDoc, toState: connectorToState },
-			stateValidator: isValidConnectorState,
-			component: Connector,
-			behavior: {
-				moveByDelta: connectorMoveByDelta,
-				transformByGroup: connectorTransformByGroup,
-				rotateByGroup: connectorRotateByGroup,
-			},
-			extraStyleProperties: ConnectorExtraStyleProperties,
-			menu: [
-				{
-					id: "arrowHead",
-					items: [{ type: "arrowHead" }],
-				},
-				// Self-loops are orthogonal-only, so RoutingMenu renders null.
-				// The resulting empty section is collapsed via ObjectMenuSection's `:empty`.
-				{
-					id: "routing",
-					items: [
-						{ type: "custom", id: "connector-routing", component: RoutingMenu },
-					],
-				},
-				{
-					id: "line",
-					items: [{ type: "lineColor" }, { type: "lineStyle" }],
-				},
-				// Label styles. Each item renders null while the connector has no label text,
-				// so both sections collapse via ObjectMenuSection's `:empty`.
-				// Following the shapes, split into background/border (style) and text (text) sections.
-				{
-					id: "label-style",
-					items: [
-						{
-							type: "custom",
-							id: "label-bg-color",
-							component: LabelBackgroundColorMenu,
-						},
-						{
-							type: "custom",
-							id: "label-border-color",
-							component: LabelBorderColorMenu,
-						},
-						{
-							type: "custom",
-							id: "label-border-style",
-							component: LabelBorderStyleMenu,
-						},
-					],
-				},
-				{
-					id: "label-text",
-					items: [
-						{
-							type: "custom",
-							id: "label-font-family",
-							component: LabelFontFamilyMenu,
-						},
-						{
-							type: "custom",
-							id: "label-font-size",
-							component: LabelFontSizeMenu,
-						},
-						{
-							type: "custom",
-							id: "label-font-color",
-							component: LabelFontColorMenu,
-						},
-						{ type: "custom", id: "label-bold", component: LabelBoldMenu },
-					],
-				},
-			],
-			// The connector states its own sidebar because neither half follows
-			// from its features: the routing row is a shape of the line rather
-			// than a style of it, and the label is a text box the type carries
-			// under `label` that no feature speaks for. The label takes two
-			// sections, its text and face apart from its border, the way a shape's
-			// Text and Border are apart: under one heading "Width" and "Color"
-			// would not say which of the two they state.
-			propertyPanel: [
-				...appendPropertyPanelItems(
-					createDefaultPropertyPanel(
-						builtinObjectDocDefinitions.connector.features,
-					),
-					{ id: "line", label: "Line" },
+			// Label styles. Each item renders null while the connector has no label text,
+			// so both sections collapse via ObjectMenuSection's `:empty`.
+			// Following the shapes, split into background/border (style) and text (text) sections.
+			{
+				id: "label-style",
+				items: [
 					{
 						type: "custom",
-						id: "connector-routing",
-						component: ConnectorRoutingItem,
+						id: "label-bg-color",
+						component: LabelBackgroundColorMenu,
 					},
 					{
 						type: "custom",
-						id: "connector-reset-route",
-						component: ConnectorResetRouteItem,
+						id: "label-border-color",
+						component: LabelBorderColorMenu,
 					},
+					{
+						type: "custom",
+						id: "label-border-style",
+						component: LabelBorderStyleMenu,
+					},
+				],
+			},
+			{
+				id: "label-text",
+				items: [
+					{
+						type: "custom",
+						id: "label-font-family",
+						component: LabelFontFamilyMenu,
+					},
+					{
+						type: "custom",
+						id: "label-font-size",
+						component: LabelFontSizeMenu,
+					},
+					{
+						type: "custom",
+						id: "label-font-color",
+						component: LabelFontColorMenu,
+					},
+					{ type: "custom", id: "label-bold", component: LabelBoldMenu },
+				],
+			},
+		],
+		// The connector states its own sidebar because neither half follows
+		// from its features: the routing row is a shape of the line rather
+		// than a style of it, and the label is a text box the type carries
+		// under `label` that no feature speaks for. The label takes two
+		// sections, its text and face apart from its border, the way a shape's
+		// Text and Border are apart: under one heading "Width" and "Color"
+		// would not say which of the two they state.
+		propertyPanel: [
+			...appendPropertyPanelItems(
+				createDefaultPropertyPanel(
+					builtinObjectDocDefinitions.connector.features,
 				),
+				{ id: "line", label: "Line" },
 				{
-					id: "label",
-					label: "Label",
-					isShown: hasSelectedConnectorLabelText,
-					items: [
-						{
-							type: "custom",
-							id: "label-font-family",
-							component: ConnectorLabelFontFamilyItem,
-						},
-						{
-							type: "custom",
-							id: "label-font-size",
-							component: ConnectorLabelFontSizeItem,
-						},
-						{
-							type: "custom",
-							id: "label-font-color",
-							component: ConnectorLabelFontColorItem,
-						},
-						{
-							type: "custom",
-							id: "label-style",
-							component: ConnectorLabelStyleItem,
-						},
-						{
-							type: "custom",
-							id: "label-background",
-							component: ConnectorLabelBackgroundItem,
-						},
-					],
+					type: "custom",
+					id: "connector-routing",
+					component: ConnectorRoutingItem,
 				},
 				{
-					id: "label-border",
-					label: "Label border",
-					isShown: hasSelectedConnectorLabelText,
-					items: [
-						{
-							type: "custom",
-							id: "label-border-color",
-							component: ConnectorLabelBorderColorItem,
-						},
-						{
-							type: "custom",
-							id: "label-border-width",
-							component: ConnectorLabelBorderWidthItem,
-						},
-						{
-							type: "custom",
-							id: "label-border-type",
-							component: ConnectorLabelBorderTypeItem,
-						},
-					],
+					type: "custom",
+					id: "connector-reset-route",
+					component: ConnectorResetRouteItem,
 				},
-			],
-		}),
+			),
+			{
+				id: "label",
+				label: "Label",
+				isShown: hasSelectedConnectorLabelText,
+				items: [
+					{
+						type: "custom",
+						id: "label-font-family",
+						component: ConnectorLabelFontFamilyItem,
+					},
+					{
+						type: "custom",
+						id: "label-font-size",
+						component: ConnectorLabelFontSizeItem,
+					},
+					{
+						type: "custom",
+						id: "label-font-color",
+						component: ConnectorLabelFontColorItem,
+					},
+					{
+						type: "custom",
+						id: "label-style",
+						component: ConnectorLabelStyleItem,
+					},
+					{
+						type: "custom",
+						id: "label-background",
+						component: ConnectorLabelBackgroundItem,
+					},
+				],
+			},
+			{
+				id: "label-border",
+				label: "Label border",
+				isShown: hasSelectedConnectorLabelText,
+				items: [
+					{
+						type: "custom",
+						id: "label-border-color",
+						component: ConnectorLabelBorderColorItem,
+					},
+					{
+						type: "custom",
+						id: "label-border-width",
+						component: ConnectorLabelBorderWidthItem,
+					},
+					{
+						type: "custom",
+						id: "label-border-type",
+						component: ConnectorLabelBorderTypeItem,
+					},
+				],
+			},
+		],
+	}),
 
-		// SVG is not created from the StencilLibrary (only added via AI / direct .jis authoring).
-		// Therefore factory / stencils are not registered.
-		svg: defineObject({
-			...builtinObjectDocDefinitions.svg,
-			mapper: { toDoc: svgToDoc, toState: svgToState },
-			stateValidator: isValidSvgState,
-			component: Svg,
-			behavior: createFrameBehavior<SvgState>(),
-		}),
-	};
+	// SVG is not created from the StencilLibrary (only added via AI / direct .jis authoring).
+	// Therefore factory / stencils are not registered.
+	svg: defineObject({
+		...builtinObjectDocDefinitions.svg,
+		mapper: { toDoc: svgToDoc, toState: svgToState },
+		stateValidator: isValidSvgState,
+		component: Svg,
+		behavior: createFrameBehavior<SvgState>(),
+	}),
+};
 
 /**
  * Registers a single object type described by `definition` across all registries
@@ -526,46 +527,4 @@ export const applyObjectDefinition = (
 	definition.stencils?.forEach((preset) => {
 		registries.stencil.register(preset);
 	});
-};
-
-/**
- * Clears every object registry in the bundle and re-registers all object types.
- *
- * The doc validators are not initialized here. They are used only during parse-time
- * validation, where `createCanvasParser` builds its own registry from the definition
- * set it is given (parser/createCanvasParser).
- *
- * @param registries Target bundle to populate.
- */
-export const initializeObjectRegistry = (
-	registries: CanvasRegistries,
-): void => {
-	registries.objectMapper.clear();
-	registries.objectTextStyleDefaults.clear();
-	registries.objectShapeStyleDefaults.clear();
-	registries.objectContentResizer.clear();
-	registries.objectAutoHeight.clear();
-	registries.objectTextVerticalBasis.clear();
-	registries.objectComponent.clear();
-	registries.objectSvgDefs.clear();
-	registries.objectTextRegion.clear();
-	registries.objectTextEditOverflow.clear();
-	registries.objectOutline.clear();
-	registries.objectAnchorRegion.clear();
-	registries.objectExtraConnectPoints.clear();
-	registries.objectGeometryKey.clear();
-	registries.objectVisualBounds.clear();
-	registries.objectTransformHandles.clear();
-	registries.objectBehavior.clear();
-	registries.objectStateValidator.clear();
-	registries.objectMenu.clear();
-	registries.propertyPanel.clear();
-	registries.selectionControl.clear();
-	registries.objectFactory.clear();
-	registries.stencil.clear();
-	registries.styleProperty.clearExtras();
-
-	for (const [type, definition] of Object.entries(ALL_OBJECT_DEFINITIONS)) {
-		applyObjectDefinition(registries, type, definition);
-	}
 };

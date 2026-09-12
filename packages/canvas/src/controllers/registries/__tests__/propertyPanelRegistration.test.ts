@@ -15,8 +15,8 @@ import type {
 	PropertyPanelSelection,
 } from "../../ui/menu/PropertyPanel/PropertyPanelTypes";
 import { derivePropertyPanel } from "../../ui/menu/PropertyPanel/utils/derivePropertyPanel";
+import { applyObjectDefinition } from "../applyObjectDefinition";
 import { createCanvasRegistries } from "../createCanvasRegistries";
-import { applyObjectDefinition } from "../initializeObjectRegistry";
 
 /** A rect-shaped definition, so only what each test varies is under test. */
 const rectLikeDefinition = (

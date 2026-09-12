@@ -5,7 +5,7 @@
 [プラグインアーキテクチャ](./12-plugin-architecture.ja.md) の実務側。図形パッケージの
 構成、量産キットが何をくれるか、どのコードをどこに置くか、そして忘れてはいけない配線。
 
-`plugins/` 配下の 8 パッケージが実例である。完成形として最小なのが `sticky-shape`、
+`plugins/` 配下のパッケージがそれぞれ実例である。完成形として最小なのが `sticky-shape`、
 型固有の選択コントロールを持つのが `container-shapes`、複数テキストスロットを
 持つのが `uml-shapes`。
 
@@ -55,9 +55,16 @@ headless 半分から先に書く。UI 半分がそれを入力に取るから�
 
 ```ts
 // src/doc.ts
+import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
+import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
+import { calcFullBoxTextRegion } from "@jiscribe/doc";
+
+import { STICKY_DOC_DEFAULTS, StickyFeatures } from "./schema/StickyDoc";
+
 export const stickyDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: StickyFeatures,
 	defaults: STICKY_DOC_DEFAULTS,
+	textRegion: calcFullBoxTextRegion,
 	description: "Sticky note annotation.",
 	summary: "sticky note (no stroke or `rx`)",
 	supportsBounds: false, // クリック配置のみ（ドラッグでのサイズ指定は無い）
@@ -71,6 +78,10 @@ export const stickyDocPlugin: CanvasDocPlugin = {
 
 ```ts
 // src/definition.ts
+import type { ObjectTypeDefinition } from "@jiscribe/canvas";
+import { createFrameObjectDefinition } from "@jiscribe/canvas-sdk";
+// 以下、./doc・./presentation・./stencil などから自パッケージの部品を import する
+
 export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 	createFrameObjectDefinition<StickyDoc, StickyState>({
 		doc: stickyDocDefinition,
@@ -83,6 +94,10 @@ export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 
 ```ts
 // src/plugin.ts
+import type { CanvasPlugin } from "@jiscribe/canvas";
+
+import { stickyDefinition } from "./definition";
+
 export const stickyPlugin: CanvasPlugin = {
 	id: "sticky-shape",
 	objects: { sticky: stickyDefinition },
@@ -93,11 +108,11 @@ export const stickyPlugin: CanvasPlugin = {
 
 3 層あり、それぞれに判定基準がある。
 
-| 層                     | 置くもの                                                                             | 基準                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `packages/canvas`      | `createFrame*` ファミリー・`ObjectTypeDefinition` 契約・レジストリ                   | **エンジン内部に触るもの**（State モデル・レジストリ・テーマ・内部バリデータ語彙）。追加は保守的に |
-| `packages/canvas-sdk`  | 量産ヘルパー・プラグイン専用部材・canvas `unstable` 面の再エクスポート               | **canvas の公開 API だけで書けるもの。**2 プラグイン以上で同型が出たら昇格する                     |
-| プラグインの `shared/` | 族固有の基盤（`general-shapes` のピクトグラム、`annotation-shapes` の group marker） | **その図形族だけの語彙。**他の族が使い始めたら SDK へ移す                                          |
+| 層                          | 置くもの                                                                             | 基準                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `packages/canvas`           | `createFrame*` ファミリー・`ObjectTypeDefinition` 契約・レジストリ                   | **エンジン内部に触るもの**（State モデル・レジストリ・テーマ・内部バリデータ語彙）。追加は保守的に |
+| `packages/canvas-sdk`       | 量産ヘルパー・プラグイン専用部材・canvas `unstable` 面の再エクスポート               | **canvas の公開 API だけで書けるもの。**2 プラグイン以上で同型が出たら昇格する                     |
+| プラグインの `<層>/shared/` | 族固有の基盤（`general-shapes` のピクトグラム、`annotation-shapes` の group marker） | **その図形族だけの語彙。**他の族が使い始めたら SDK へ移す                                          |
 
 SDK 向きに見えても `packages/canvas` に残るものが 2 種類ある。非公開のコンテキスト
 （テーマ context）に依存するものと、内部バリデータ語彙に依存するもの。これらは
@@ -108,7 +123,8 @@ canvas に残して SDK が再エクスポートする。物理的に移すと c
 
 `@jiscribe/canvas-sdk` は `@jiscribe/canvas/unstable` の全面を再エクスポートする
 （`/doc` は `@jiscribe/doc/unstable` の全面）。つまり上位集合なので、その先へ手を伸ばす必要は無い。
-そのうえで次を足している。
+そのうえで足している主なものが次である（全体は `packages/canvas-sdk/src/` の
+`index.ts` / `doc.ts` / `testing.ts` の export が正本）。
 
 | export                                                                                                                   | 置き換わるもの                                                  |
 | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
@@ -139,8 +155,8 @@ SVG の `fill` 属性ではなく CSS で当てる**。`"auto"` の解決先は 
 
 どのプラグインも、**自分だけを載せたハーネス**を叩く Playwright スイートを持つ。単独
 ロードで通ること自体が、他プラグインに寄りかかっていないことの証拠になる。出荷図形を
-まとめたときの挙動はこのスイートの仕事ではない — spec 1 本を
-`apps/canvas-examples/e2e/` が持っている。仕掛けは canvas の e2e キット
+まとめたときの挙動はこのスイートの仕事ではない — それは
+`apps/canvas-examples/e2e/` のスイートが持っている。仕掛けは canvas の e2e キット
 （[テスト](./09-testing.ja.md)）で、`@jiscribe/canvas-sdk/testing/*` 経由で取る。以下の
 実例は `plugins/annotation-shapes/`。
 
@@ -153,11 +169,14 @@ SVG の `fill` 属性ではなく CSS で当てる**。`"auto"` の解決先は 
 		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.60.0",
+		"@playwright/test": "<packages/canvas と同じ版>",
 		"vite": "catalog:"
 	}
 }
 ```
+
+`@playwright/test` は catalog に入っていないので、版は既存のプラグインや
+`packages/canvas` の `package.json` に揃える。
 
 `--configLoader runner` は省略できない。vite 既定の `bundle` ローダーではハーネス設定の
 bare specifier が external のまま残るため、`@jiscribe/canvas-sdk/testing/vite-config` を
@@ -238,10 +257,14 @@ mountPluginHarness({
 - **`toolbarItems` は spec が描く分だけに絞る。**自分のピン留めプリセットかカテゴリ
   （`{ type: "stencilCategory", category }` の項目にする）と、それに必ず `{ type: "stencilPreset", presetId: "rect" }` を足す。後者は必須で、
   `CanvasDriver.goto()` が "Rectangle" ツールボタンの出現を待ってからページを引き渡すため。
-  渡すのはバーの図形ツールだけで、ツールセクションの末尾の図形ライブラリトグルとコアの
-  view セクションはキットが足す。トグル・undo / redo・ズーム・プロパティトグルは名指し
-  しなくても残る。プラグインのプリセットとカテゴリは canvas の既定バーに含まれないので、
-  項目を渡さなければ spec からそもそも触れない
+  渡すのはバーの図形ツールだけである。キット
+  （`packages/canvas/e2e/kit/mountPluginHarness.tsx`）はその前に図形ライブラリの
+  トグルと区切りを置き、後ろに core の既定バーの残りのセクション（undo / redo・
+  ズーム・プロパティのトグルなど）を足すので、それらは名指ししなくても残る。ただし
+  トグルと区切りが残るのは `stencilLibrarySections` を渡したときだけで、渡さなければ
+  解決時に落ちる（上の例は渡していないので、トグルは出ない）。プラグインのプリセットと
+  カテゴリは canvas の既定バーに含まれないので、項目を渡さなければ spec からそもそも
+  触れない
 
 spec 側は spec 用エントリからすべて取る。
 
@@ -261,27 +284,35 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 - プラグインの `src/` 配下からは `@jiscribe/canvas/unstable`・
   `@jiscribe/doc/unstable` を import できない。`@jiscribe/canvas-sdk`
   （headless は `@jiscribe/canvas-sdk/doc`）を使う
-- プラグインの `src/schema/` と `src/doc.ts` は headless。使えるのは
-  `@jiscribe/doc` と `@jiscribe/canvas-sdk/doc` だけで、UI 入口・
-  `react` / `react-dom` / `@emotion/*`・自パッケージの `presentation/`・
-  `state/`・`stencil/`・`controls/`・`menu/`・`propertyPanel/` へは到達できない
+- プラグインの `src/schema/` と `src/doc.ts` は headless。canvas / doc 系の入口で
+  使えるのは `@jiscribe/doc` と `@jiscribe/canvas-sdk/doc` だけで、UI 入口・
+  `react` / `react-dom` / `@emotion/*`・自パッケージの UI 側の層（`presentation/`・
+  `state/`・`menu/` など。一覧は `eslint.config.js` が正本）へは到達できない
 - **import はパッケージルート経由。**`@jiscribe/geometry` であって
   `@jiscribe/geometry/src/...` ではない
-- `packages/canvas-sdk` もプラグインと同じ規則の下にある（canvas の公開入口だけを見る）
+- `packages/canvas-sdk` もプラグインと同じく canvas の公開入口だけを見る（内部の
+  `src/` へは届かない）。ただしプラグインより許される入口が広い。
+  `@jiscribe/canvas/unstable`・`@jiscribe/canvas/testing*`・`@jiscribe/doc/unstable`
+  を import でき、それらを再エクスポートするのが SDK の役目である
 
 幾何計算を自分で書く前に `@jiscribe/geometry` を見ること。型・距離と回転の
 ヘルパー・アフィン変換・交差判定・図形間変換とそのバリデータが既にある。
 
 ## 図形をエンジンから出す
 
-7 回やった結果の手順。
+組み込みの図形をプラグインへ移すときの手順。
 
 1. **その図形がエンジンから何を使っているか洗う。**すべて公開済みなら API 変更は
    不要。足りなければ先に canvas の `unstable` / doc の `unstable` へ足し、別コミットにする
 2. **中身を書き換える前にファイルを移す。**git が rename として追えるようにするため。
    移送先は 1 図形 1 フォルダ（`schema/<id>/`・`state/<id>/`・`presentation/<Pascal>/`）
-3. **エンジンから除去する。**`ObjectTypes` union・`builtinObjectDocDefinitions`・
-   `initializeObjectRegistry`・`DEFAULT_TOOLBAR_TOOLS_SECTION` の 4 箇所
+3. **エンジンから除去する。**その型を名指ししている箇所をすべて外す。主なものは
+   次のとおりで、取りこぼしは型名で `packages/doc/src` と `packages/canvas/src` を
+   grep して拾う
+   - 型の union `ObjectTypes`（`packages/doc/src/model/objects/types/ObjectType.ts`）
+   - headless 定義の `builtinObjectDocDefinitions`（`packages/doc/src/plugin/builtinObjectDocDefinitions.ts`）
+   - UI 定義の `BUILTIN_OBJECT_DEFINITIONS`（`packages/canvas/src/controllers/registries/applyObjectDefinition.ts`）
+   - プリセットを名指ししている `DEFAULT_TOOLBAR_TOOLS_SECTION`（`packages/canvas/src/controllers/ui/menu/Toolbar/toolbarSections.ts`）と `basicStencilCategory` の `presetIds`（`packages/canvas/src/controllers/ui/objects/StencilCategory.ts`）
 4. **エンジン側テストの副作用を処理する。**「輪郭を持つ図形」「クリック配置の図形」の
    代表としてその図形を使っていたテストが主語を失う。別の組み込みに乗り換えるのではなく、
    テスト側に最小の型を宣言する。前例は
@@ -306,28 +337,36 @@ library も宣言しないホストでは、カテゴリを足すまでその図
 
 ## 配線チェックリスト
 
-**忘れられるのは headless の `./doc` 側である。**両方を機械的に潰すこと。
+**忘れられるのは headless の `./doc` 側である。**どのリストも機械的に潰すこと。
+
+型を 1 つ足すたびに:
+
+- [ ] `packages/doc-schema/generator/src/manifest.ts`（`CANONICAL_TYPE_ORDER` に型名を足す。スキーマと AI ドキュメントの並び順で、漏れも余りも生成が落ちる）
+
+プラグインのパッケージを出荷図形セットに新しく加えるときは、さらに UI と headless の
+両方を配線する。
 
 UI プラグイン（`somePlugin`）:
 
-- [ ] `apps/canvas-examples/src/examples/plugins.tsx`
-- [ ] `apps/vscode-extension/src/webview/canvasParser.ts`
-- [ ] `packages/standard-shapes/src/index.ts`（`standardPlugins` と `standardStencilLibrarySections`。VSCode 拡張・MCP ビューア・CLI preview はここから図形セットを受け取る）
+- [ ] `packages/standard-shapes/src/index.ts`（`standardPlugins` と、図形をサイドバーに出す `standardStencilLibrarySections`。VSCode 拡張・MCP ビューア・CLI preview はここから図形セットを受け取る）
+- [ ] `apps/canvas-examples/src/examples/plugins.tsx`（`plugins` と `stencilLibrarySections`）
 - [ ] `apps/canvas-examples/e2e/harness/main.tsx`（`plugins` と `stencilLibrarySections`）
 
 headless doc プラグイン（`someDocPlugin`）:
 
-- [ ] `apps/vscode-extension/src/diagnostics/DiagnosticProvider.ts`
-- [ ] `packages/doc-schema/generator/src/manifest.ts`（`definitionSources`）
+- [ ] `packages/standard-shapes/src/doc.ts`（`standardDocPlugins`。VSCode 拡張の診断・スキーマ生成・MCP サーバー・`doc-tools` はここから図形セットを受け取る）
 
-上記各パッケージの `package.json` にも依存を足すこと。`packages/canvas` が意図的に
-入っていないのは、出荷プラグインに一切依存しないためである。足すと
+`package.json` にプラグインへの依存を足すのは `packages/standard-shapes` と
+`apps/canvas-examples` だけである。ほかのホスト（VSCode 拡張・MCP・CLI）は
+`@jiscribe/standard-shapes` にだけ依存しているので触らない。`packages/canvas` が
+意図的に入っていないのは、出荷プラグインに一切依存しないためである。足すと
 `canvas → plugins → canvas-sdk → canvas` の循環が戻ってくる。
 
 > **配線し忘れると何が起きるか**: パースはエラーにならない。結果は `kind: "ok"` の
 > ままで、その型のオブジェクトが `root` から**黙って落ちる**（警告は出る）。
 > テストで気付きにくいので、上のリストは目視ではなく機械的に潰す。この挙動は
-> `plugins/sticky-shape/src/__tests__/stickyParseCheck.test.ts` で固定してある。
+> 各プラグインの parse-check スイート（`createParseCheckSuite`。例:
+> `plugins/sticky-shape/src/__tests__/stickyParseCheck.test.ts`）が固定している。
 
 キャンバスを組み込んでいる下流の製品にも独自の配線がある。出荷図形セットに図形を
 足すということは、そちらの更新も含む。

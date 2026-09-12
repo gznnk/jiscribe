@@ -9,7 +9,7 @@ export type ObjectStateValidator = (value: unknown) => boolean;
 /**
  * Registry for per-type `ObjectState` validators.
  * This is the state-side counterpart of the schema-side `ObjectDocValidatorRegistry`;
- * registration happens via `applyObjectDefinition()` inside `initializeObjectRegistry()`.
+ * registration happens via `applyObjectDefinition()` when `createCanvasRegistries()` builds a bundle.
  *
  * Its main use is strict clipboard-data validation in `isClipboardData`.
  */

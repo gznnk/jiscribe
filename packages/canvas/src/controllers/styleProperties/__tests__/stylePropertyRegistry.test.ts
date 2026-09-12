@@ -4,8 +4,8 @@ import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { BUILTIN_OBJECT_DEFINITIONS } from "../../registries/applyObjectDefinition";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { ALL_OBJECT_DEFINITIONS } from "../../registries/initializeObjectRegistry";
 import { FeatureGatedStyleProperty } from "../FeatureGatedStyleProperty";
 import { SYSTEM_STYLE_PROPERTIES } from "../systemStyleProperties";
 
@@ -26,8 +26,8 @@ const EXPECTED_OUTPUT: Record<StyleValueType, string | number | boolean> = {
 // every ObjectTypeDefinition.extraStyleProperties declaration.
 const { styleProperty: registry } = createTestRegistries();
 
-/** Every shape-declared extra property wired via ALL_OBJECT_DEFINITIONS. */
-const EXTRA_DECLARATIONS = Object.entries(ALL_OBJECT_DEFINITIONS).flatMap(
+/** Every shape-declared extra property wired via BUILTIN_OBJECT_DEFINITIONS. */
+const EXTRA_DECLARATIONS = Object.entries(BUILTIN_OBJECT_DEFINITIONS).flatMap(
 	([type, definition]) =>
 		Object.entries(definition.extraStyleProperties ?? {}).map(
 			([property, descriptor]) => ({ type, property, descriptor }),

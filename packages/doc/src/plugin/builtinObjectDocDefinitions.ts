@@ -49,7 +49,7 @@ import { validateTextDoc } from "../model/objects/primitives/text/validateTextDo
 /**
  * One {@link ObjectDocDefinition} per built-in object type — the single source of
  * truth for the headless (doc) layer of the built-ins. The UI table
- * (`ALL_OBJECT_DEFINITIONS`) spreads each entry and adds its render/interaction
+ * (`BUILTIN_OBJECT_DEFINITIONS`) spreads each entry and adds its render/interaction
  * fields, and `resolveDocDefinitions` uses them verbatim as the default preset
  * that `createCanvasParser` / `createDocOps` fall back to.
  *

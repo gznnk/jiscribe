@@ -18,9 +18,9 @@ Concrete examples:
 - State is normalized into a flat shape (an ID-keyed `Record`) to speed up lookups
   and updates during editing operations
   → [Data Model and Persistence](./03-data-model-and-persistence.md)
-- keyPoints / snapCandidates are cached on a reference-comparison basis, and only
-  the objects that changed are recomputed
-  (the cache update on `dragStart` in `handleGesture`)
+- keyPoints are cached on a reference-comparison basis so only the objects that
+  changed are recomputed, and snapCandidates are rebuilt only when the keyPoints changed
+  (the cache update at drag start in `handleGesture`)
 - Validity checks are not duplicated throughout the internals; they are concentrated
   at the input boundary (Principle 4)
 
@@ -28,10 +28,17 @@ Concrete examples:
 
 State-update logic (each EventHandler / Controller / Command) is implemented as a
 **pure function that takes an input state and returns a new state**.
+The registries arrive as an argument — a dependency, not state.
 
 ```ts
-execute: (state: CanvasState) => CanvasState; // no side effects
+// A Command, for example (the source of truth is the Command type in controllers/commands/CommandTypes.ts)
+execute: (state: CanvasControllerState, registries: ICanvasRegistries) =>
+	CanvasControllerState; // no side effects
 ```
+
+An operation that cannot be a pure transition (paste, which reads the clipboard
+asynchronously) has no `execute`: only the command's definition is registered, and its
+execution is wired through a callback.
 
 ### Why
 

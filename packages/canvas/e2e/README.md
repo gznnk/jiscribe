@@ -14,7 +14,7 @@ packages/canvas/
 │   │   ├── main.tsx       # loads specShapesPlugin into mountPluginHarness (no shipped plugin)
 │   │   └── vite.config.ts # createPluginHarnessViteConfig call
 │   ├── plugins/           # test-only plugins this package registers in its own harness
-│   │   └── specShapesPlugin.tsx  # tile (drag-drawn) / pin (click-placed) / card (<g>-rooted, text, connectable)
+│   │   └── specShapesPlugin.tsx  # e.g. tile (drag-drawn) / pin (click-placed) / card (<g>-rooted, text, connectable) / panel (declares its creation defaults)
 │   ├── kit/               # the shared implementation behind the testing entries
 │   │   ├── createCanvasPlaywrightConfig.ts  # ephemeral-port webServer, viewport, headed ergonomics
 │   │   ├── createPluginHarnessViteConfig.ts # dev-server-only vite config
@@ -44,7 +44,7 @@ Running:
 
 ```bash
 pnpm --filter @jiscribe/canvas test:e2e         # from the root, pnpm test:e2e:canvas
-                                                # (pnpm test:e2e runs all nine suites)
+                                                # (pnpm test:e2e runs every package's suite)
 pnpm --filter @jiscribe/canvas test:e2e:headed  # with the browser shown
 pnpm --filter @jiscribe/canvas test:e2e:ui      # Playwright UI mode
 pnpm --filter @jiscribe/canvas dev:harness      # start the harness manually (for visual debugging)

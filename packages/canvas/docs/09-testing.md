@@ -29,16 +29,18 @@ Each layer keeps a `__tests__/` directory **co-located** with it. State + Mapper
 and sociable behavior tests are placed right next to the files they target
 (the co-location policy from [Architecture](./02-architecture.md)).
 
-- Targets are the `states` / `controllers` / `rendering` layers
+- The main targets are the `states` / `controllers` / `rendering` layers
   (Mapper round-trip conversions, a Command's `execute`, transformation logic, behavior via `canvasReducer`, etc.).
+  The build-time helpers outside `src/` (`build/`) keep their tests in `__tests__/` the same way.
+  Which files are picked up is decided by the `include` in `vitest.config.ts`.
   The Doc model's own tests (`validateXxxDoc`, the parser, the doc ops) live in `@jiscribe/doc` and run with `pnpm --filter @jiscribe/doc test`
-- `vitest.config.ts` uses `environment: "node"`. Without going through the DOM, it verifies input state → output state directly
+- The default environment is `environment: "node"`: without going through the DOM, a test verifies input state → output state directly.
+  Only tests that need DOM APIs (rendering a React hook or component to check it, and the like)
+  switch to jsdom with `// @vitest-environment jsdom` at the top of the file
+  (e.g. `controllers/hooks/__tests__/useSyncExternalDoc.test.tsx`, `controllers/__tests__/CanvasThumbnail.test.tsx`).
+  jsdom is an in-process simulated DOM, so these stay in the unit layer
 - Run: `pnpm --filter @jiscribe/canvas test` (`vitest run`).
-  `test:coverage` / `test:ui` are also provided (coverage excludes `index.ts` and `vitest.config.ts`)
-
-```
-src/**/__tests__/**/*.{test,spec}.{ts,tsx}
-```
+  `test:coverage` / `test:ui` are also provided (for what coverage excludes, see `coverage.exclude` in `vitest.config.ts`)
 
 ### File naming conventions
 
@@ -56,8 +58,8 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
   — when the test fails, the place to open is the code implementing the invariant, not the entry point, and there may be more than one entry point
   (e.g. `copyPasteDuplicateOrder` drives both `handleCommand` and `handlePaste`).
   The entry point is conveyed by the folder location (table below) and the doc comment at the top of the test
-- Tests of `handleCommand`'s own contract (Registry resolution, the `canExecute` gate, etc.) use normal SUT naming
-  as `handlers/__tests__/handleCommand.test.ts`, not scenario naming
+- Tests of an entry point's own contract (for `handleCommand`: Registry resolution, the `canExecute` gate, etc.) use normal SUT naming
+  with the entry point as the SUT, not scenario naming (e.g. `canvasReducer`'s contract lives in `canvasReducer.<facet>.test.ts`)
 - Sociable tests place their `support/` — responsible for state assembly, dispatch, and fixtures — under `__tests__/support/`.
   Sharing `support/` is a future task; for now we **tolerate duplication per folder**
   (`controllers/reducer/__tests__/support/` and `controllers/commands/__tests__/support/` are separate)
@@ -71,20 +73,21 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 ## E2E (Playwright)
 
-Non-regression tests using a real browser and real UI operations. They are spread over
-**ten suites**, because the package that owns a shape owns the specs for it.
+Non-regression tests using a real browser and real UI operations. The package that owns a
+shape owns the specs for it, so there is **one suite per package** (canvas, each plugin under
+`plugins/*`, and canvas-examples).
 
 | Suite              | Location                    | Scope                                                                                                   |
 | ------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------- |
 | canvas             | `packages/canvas/e2e/`      | Core behavior: gestures, selection, transform, text editing, connectors, arrangement, toolbar and menus |
 | each shape plugin  | `plugins/<name>/e2e/`       | That package's shapes only                                                                              |
-| plugin coexistence | `apps/canvas-examples/e2e/` | One spec: all eight shipped plugins on a single canvas                                                  |
+| plugin coexistence | `apps/canvas-examples/e2e/` | What only happens with every shipped plugin on a single canvas, and checks that need the shipped fonts  |
 
 Every suite is laid out the same way and runs on the shared kit described below.
 
 ```
 <package>/
-├── playwright.config.ts     # createCanvasPlaywrightConfig({ testDir, harnessCommand })
+├── playwright.config.ts     # a createCanvasPlaywrightConfig call
 └── e2e/
     ├── harness/             # index.html + main.tsx (mountPluginHarness) + vite.config.ts
     └── specs/
@@ -95,33 +98,39 @@ Every suite is laid out the same way and runs on the shared kit described below.
   side by side. The extension is not `.mts`: Playwright transpiles a config to CommonJS, and
   an ESM config cannot then take the kit's named exports
 - **canvas's harness registers no shipped plugin.** It mounts `e2e/plugins/specShapesPlugin.tsx`,
-  a test-only stand-in supplying the traits core no longer owns itself: `tile` (drag-drawn,
-  in a category flyout), `pin` (click-placed) and `card` (`<g>`-rooted, with a text slot).
-  Core specs that used a shipped shape as their subject drive these instead
+  a test-only stand-in supplying the traits core no longer owns itself, one type per trait
+  (e.g. `tile`: drag-drawn, in a category flyout; `pin`: click-placed; `card`: `<g>`-rooted,
+  with a text slot; `panel`: declares its own creation defaults. The full set is
+  `specShapesPlugin` in that file). Core specs that used a shipped shape as their subject
+  drive these instead
 - **A plugin's harness mounts that plugin alone.** Passing under a solo load is itself the
   evidence that the package carries no implicit dependency on another plugin
-- **canvas-examples' harness mounts all eight**, and its one spec looks only at what breaks
-  when they share a canvas: ObjectType registration collisions, duplicated toolbar entries,
-  `<defs>` id collisions. It can hold that without a dependency cycle because it sits at the
-  top of the dependency graph — it depends on canvas and all eight plugins, and nothing
-  depends on it
+- **canvas-examples' harness mounts every shipped plugin** (`plugins` in `e2e/harness/main.tsx`).
+  It looks at what only breaks when they share a canvas (e.g. ObjectType registration
+  collisions, duplicated toolbar entries, `<defs>` id collisions: `specs/plugin-coexistence.spec.ts`),
+  and at the PNG export's font embedding, which can be checked only here because this is the
+  one harness that loads the shipped fonts (`specs/png-font-embedding.spec.ts`). How a single
+  shape draws or edits is the owning plugin's suite's business. It can hold that without a
+  dependency cycle because it sits at the top of the dependency graph — it depends on canvas
+  and every shipped plugin, and nothing depends on it
 - `support/CanvasDriver.ts` … the API for drawing, selection, text, color, and connector operations.
   `support/selectors.ts` … `data-kind` / `data-id` selector constants. `fixtures.ts` injects the CanvasDriver.
   All three live in canvas and reach the other suites through the kit
-- canvas's `specs/` categories: `arrange` / `driver` / `editing` / `keyboard` /
-  `scenario` / `shapes` / `ui` (+ `smoke.spec.ts`)
+- canvas's `specs/` is split into folders by feature area. How it is split, and where a new
+  spec goes, is in [`e2e/specs/README.md`](../e2e/specs/README.md)
 - Run: `pnpm --filter @jiscribe/canvas test:e2e` (`:headed` / `:ui` available) /
   `pnpm --filter @jiscribe/plugin-sticky-shape test:e2e` / `pnpm --filter canvas-examples test:e2e`
 
-Design policy: **do not add retries that hide failures**. The CanvasDriver stabilizes by waiting on state (`expect.poll`, etc.) rather than on time, so it does not mask genuine defects.
+Design policy: **the CanvasDriver has no retries that hide failures**. It stabilizes by waiting on state (`expect.poll`, etc.) rather than on time, and when an operation does not take effect it lets the test fail, so it does not mask genuine defects.
+Playwright's per-test retries are turned on only in CI, by the shared kit's `createCanvasPlaywrightConfig` (a local run never retries).
 
 Non-regression for the gesture spec corresponds to the [Gesture System](./04-gesture-system.md)
 (`specs/shapes/basic-gestures.spec.ts` / `specs/editing/text-edit-gestures.spec.ts`, etc.).
 
 ### The shared kit
 
-The implementation lives in canvas under `e2e/kit/` and is exported as **four entries, one
-per file of a suite**. Plugins take the same kit through `@jiscribe/canvas-sdk`.
+The implementation lives in canvas under `e2e/kit/` and is exported as **one entry per file
+of a suite**. Plugins take the same kit through `@jiscribe/canvas-sdk`.
 
 | File in a suite              | canvas entry                                 | Plugin entry                                     |
 | ---------------------------- | -------------------------------------------- | ------------------------------------------------ |
@@ -138,24 +147,28 @@ of them tolerates the others' imports.
 - The vite config entry is kept apart from the Playwright config entry so that loading a
   config, which Playwright transpiles to CommonJS, never has to `require()` vite, which
   ships ESM only
-- The harness entry is browser code, while the other three reach for `@playwright/test`,
+- The harness entry is browser code, while the others reach for `@playwright/test`,
   `node:child_process` and vite, none of which can be bundled into a page
 
-The API is `createCanvasPlaywrightConfig({ testDir, harnessCommand })` /
-`createPluginHarnessViteConfig()` /
-`mountPluginHarness({ plugins, toolbarItems, stencilLibrarySections })`, plus
-`test` / `expect` / `CanvasDriver` / `selectors` on the spec side. canvas itself imports the
+The API is `createCanvasPlaywrightConfig` / `createPluginHarnessViteConfig` /
+`mountPluginHarness`, plus `test` / `expect` / `CanvasDriver` / `selectors` and the like on
+the spec side (see each file under `e2e/kit/` for the parameters). canvas itself imports the
 kit relatively (`./e2e/testing-playwright-config`), never through the SDK: the
 `canvas → canvas-sdk → canvas` cycle is what this split removed. Standing up a suite for a
 plugin is walked through in [Authoring Plugins](./13-authoring-plugins.md).
 
 ## Circular dependency check (madge)
 
-To mechanically guarantee the one-way dependency between layers ([Architecture](./02-architecture.md)),
-madge is used to detect circular dependencies.
+madge (`dep:check` = `madge --circular`) detects cycles in the module graph. It reports
+cycles only, so an import that runs against the one-way dependency between layers
+([Architecture](./02-architecture.md)) goes unnoticed unless it closes a cycle. That is
+caught by `no-restricted-imports` in the repository root's `eslint.config.js`: a value
+imported from a higher layer into a lower one inside `controllers/`, and a value imported
+from `controllers/` into `rendering/` (type imports are allowed).
 
-- Run: `pnpm dep:check` (whole workspace) / `pnpm --filter @jiscribe/canvas dep:check` (canvas only)
-- The CI `checks` job runs `pnpm dep:check` as well
+- Run: `pnpm dep:check` (whole workspace) / `pnpm --filter @jiscribe/canvas dep:check` (canvas only).
+  A backward layer import fails `pnpm lint`
+- The CI `checks` job runs `pnpm dep:check` and `pnpm lint` as well
 
 ## Running everything at once (checks on task completion)
 

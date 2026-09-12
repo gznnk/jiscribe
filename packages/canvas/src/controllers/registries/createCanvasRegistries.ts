@@ -2,13 +2,13 @@ import { createObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryR
 import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 
+import {
+	BUILTIN_OBJECT_DEFINITIONS,
+	applyObjectDefinition,
+} from "./applyObjectDefinition";
 import type { CanvasCapabilities, CanvasRegistries } from "./CanvasRegistries";
 import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
-import {
-	ALL_OBJECT_DEFINITIONS,
-	applyObjectDefinition,
-} from "./initializeObjectRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { createObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
@@ -93,9 +93,9 @@ export const createCanvasRegistries = (
 	const typeOrigins = new Map<string, string>();
 
 	const objectTypes =
-		config?.objectTypes ?? Object.keys(ALL_OBJECT_DEFINITIONS);
+		config?.objectTypes ?? Object.keys(BUILTIN_OBJECT_DEFINITIONS);
 	for (const type of objectTypes) {
-		const definition = ALL_OBJECT_DEFINITIONS[type];
+		const definition = BUILTIN_OBJECT_DEFINITIONS[type];
 		if (definition) {
 			applyObjectDefinition(registries, type, definition);
 			typeOrigins.set(type, "a built-in object type");

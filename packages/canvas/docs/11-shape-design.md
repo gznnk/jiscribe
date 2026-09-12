@@ -15,10 +15,16 @@ whether to expose it as a doc field or derive it in the engine based on the
 
 - **The outer bounds (bbox) belong to the user.** Content that does not fit never
   resizes the bounds; overflow and clipping are accepted (inconsistencies are
-  surfaced as diagnostics for the AI / user to fix — the engine does not auto-correct)
+  surfaced as diagnostics for the AI / user to fix — the engine does not auto-correct).
+  By default the doc states a fixed `height`; the one exception is auto-height, which
+  the user picks per shape. With `height` left out of the doc, the engine sets the
+  height to what the wrapped text needs — again because the user decided to hand the
+  height to the engine. Only types whose box holds one body of text offer it
+  (`supportsAutoHeight` in `@jiscribe/doc`), and some, such as container, opt out in
+  their declaration
 - **Internal compartments that exist only to hold text** (e.g., the record's name
   band) are **derived**. What the user wants is not "a specific height" but
-  "a readable title," and deriving from the font size and line count satisfies that
+  "a readable title," and deriving from the font size and the like satisfies that
 - **Regions that double as interaction surfaces or visual design elements**
   (e.g., the container's header: the grab handle standing in for the pass-through
   body, and a visual accent with its own color) are **manually adjustable via a

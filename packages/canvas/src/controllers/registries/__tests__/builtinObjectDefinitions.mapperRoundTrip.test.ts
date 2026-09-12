@@ -1,7 +1,7 @@
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import { describe, expect, it } from "vitest";
 
-import { ALL_OBJECT_DEFINITIONS } from "../initializeObjectRegistry";
+import { BUILTIN_OBJECT_DEFINITIONS } from "../applyObjectDefinition";
 
 /**
  * Doc→State→Doc round trip for every registered object type.
@@ -16,7 +16,7 @@ import { ALL_OBJECT_DEFINITIONS } from "../initializeObjectRegistry";
  * DOC_DEFAULTS — every field the type declares by default. A field dropped from
  * an allow-list, or one whose two directions disagree, fails here.
  */
-const definitions = Object.entries(ALL_OBJECT_DEFINITIONS);
+const definitions = Object.entries(BUILTIN_OBJECT_DEFINITIONS);
 
 /** Types created only programmatically, so there is no factory to build a starting Doc from. */
 const TYPES_WITHOUT_FACTORY = ["group", "connector", "svg"];
@@ -36,7 +36,7 @@ const normalizeEmptyText = (doc: ObjectDoc): object => {
 	return text === "" ? withoutText : doc;
 };
 
-describe("registered object types: Doc→State→Doc round trip", () => {
+describe("BUILTIN_OBJECT_DEFINITIONS: Doc→State→Doc round trip", () => {
 	it("covers every type that has a factory, and nothing else is silently skipped", () => {
 		const skipped = definitions
 			.filter(([, definition]) => !definition.factory)

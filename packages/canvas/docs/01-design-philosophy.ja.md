@@ -15,18 +15,24 @@ canvas のコードを読む・書くうえでの判断基準。実装の細部�
 
 - State はフラット（ID キーの `Record`）に正規化し、編集操作での探索・更新を速くする
   → [データモデルと永続化](./03-data-model-and-persistence.ja.md)
-- keyPoints / snapCandidates は参照比較ベースでキャッシュし、変化したオブジェクトだけ再計算する
-  （`handleGesture` の `dragStart` 時のキャッシュ更新）
+- keyPoints は参照比較ベースでキャッシュして変化したオブジェクトだけ再計算し、snapCandidates は
+  keyPoints が変わったときだけ作り直す（`handleGesture` のドラッグ開始時のキャッシュ更新）
 - 正当性チェックは内部の各所で重複させず、入力の境界に寄せる（原則 4）
 
 ## 2. ロジックは可能な限り純粋関数で書く
 
 状態更新ロジック（各 EventHandler / Controller / Command）は、
 **入力 state を受け取って新しい state を返す純粋関数**として実装する。
+レジストリ群は state ではなく依存として引数で受け取る。
 
 ```ts
-execute: (state: CanvasState) => CanvasState; // 副作用なし
+// Command の例（正本は controllers/commands/CommandTypes.ts の Command 型）
+execute: (state: CanvasControllerState, registries: ICanvasRegistries) =>
+	CanvasControllerState; // 副作用なし
 ```
+
+純粋な遷移にならない操作（非同期にクリップボードを読む貼り付けなど）は `execute` を
+持たず、コマンドの定義だけを登録して実行はコールバックで配線する。
 
 ### なぜ
 

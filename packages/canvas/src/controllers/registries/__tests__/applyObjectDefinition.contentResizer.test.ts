@@ -7,8 +7,8 @@ import type {
 	ObjectContentResizeContext,
 	ObjectContentResizer,
 } from "../../../states/registry/ObjectContentResizerRegistry";
+import { applyObjectDefinition } from "../applyObjectDefinition";
 import { createTestRegistries } from "../createCanvasRegistries";
-import { applyObjectDefinition } from "../initializeObjectRegistry";
 
 // Minimal stand-in for an object type, mirroring buildFakeDefinition in
 // createCanvasRegistries.test.ts.

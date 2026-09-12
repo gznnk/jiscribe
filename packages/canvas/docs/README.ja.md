@@ -2,12 +2,12 @@
 
 # canvas 設計ドキュメント
 
-`@jiscribe/canvas` の設計を 13 本の柱で整理したドキュメント群です。
+`@jiscribe/canvas` の設計を柱ごとに整理したドキュメント群です。
 全体像を俯瞰したい場合は、まず [設計思想](./01-design-philosophy.ja.md) と
 [アーキテクチャ](./02-architecture.ja.md) を読むことをおすすめします。
 
 設計ドキュメント全体の見取り図（マインドマップ）は [00-overview.jis.json](./00-overview.jis.json) を参照。
-jiscribe 形式なので、VSCode 拡張または demo アプリで開くと図として閲覧できます。
+jiscribe 形式なので、VSCode 拡張か、canvas-examples（`apps/canvas-examples`）の「File I/O」作例で開くと図として閲覧できます。
 
 ## 目次
 

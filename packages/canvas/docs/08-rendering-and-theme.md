@@ -6,16 +6,21 @@ The role of the rendering layer (`rendering/`) and the conventions for handling 
 
 ## The rendering layer is pure rendering
 
-Components under `rendering/` **only receive State via Props and render SVG**;
-they hold no state and contain no logic. Event handlers are received through Props.
-Their only dependency is `rendering → states` (type references); they do not depend
-on `controllers` (a prohibition from [Architecture](./02-architecture.md)).
+Components under `rendering/` **receive State via Props and render SVG**. They neither hold nor
+change the document or canvas state, and they take no event handlers either: what can be interacted
+with is declared through the `data-kind` / `data-id` / `data-part` attributes, and the gesture system
+at the root receives it and dispatches it to handlers ([Gesture System](./04-gesture-system.md)).
+Local state confined to drawing is allowed (e.g. `CanvasView.tsx` keeps `useState` / `useLayoutEffect`
+to derive the grid-line color from the background as painted).
+The dependency contract is that they do not depend on `controllers` (a prohibition from
+[Architecture](./02-architecture.md)); they may reference `states` (types and pure functions) and
+`theme` (the theme tokens).
 
-Structure:
+Main structure:
 
-- `layers/` … render stacking order (`background` / `content`)
-- `objects/` … per-shape components (`primitives/` / `connector/` / `annotations/`, `base/TextOverlay`, `arrows/`)
-- `defs/` … SVG `defs` (filters, etc.)
+- `layers/` … the layers, one per render stacking level
+- `objects/` … per-shape components and the parts they build on (e.g. `primitives/`, `connector/`, `base/TextOverlay`)
+- `defs/` … the canvas-wide SVG `<defs>`; the canvas holds nothing of its own there and lists the `svgDefs` registered object types ship (filters, gradients, etc.)
 
 By committing to pure rendering, the presentation is determined purely as a function of state, making it easy to test and reuse.
 
@@ -57,22 +62,26 @@ the saved value does not become theme-dependent, it does not break portability. 
 
 - **Storage**: `.jis` and State retain `"auto"` as-is. The Mapper does not convert it.
 - **Resolution**: at render time, `rendering/objects/utils/resolveAutoColor.ts` resolves it to a
-  theme color **per role** (described below).
+  theme color **per role** (described below, along with the exception).
 - **Explicit color**: once the user picks a concrete color in the color picker, it is saved as a concrete
   value at that point and thereafter displayed theme-independently as before (backward compatible).
 
 #### auto resolves to a theme token per role
 
-The color that `"auto"` "should follow" is determined by the field's role. Resolution is **consolidated
-into a single function**, `resolveAutoColor(value, role)` (`rendering/objects/utils/resolveAutoColor.ts`).
+The color that `"auto"` "should follow" is determined by the field's role. Shape-data auto is resolved
+by `resolveAutoColor(value, role)` (`rendering/objects/utils/resolveAutoColor.ts`). The roles and what
+each resolves to are defined there (`AutoColorRole` and its token table); for example:
 
-| Role    | Target fields          | Resolves to (theme token)                                |
-| ------- | ---------------------- | -------------------------------------------------------- |
-| Ink     | `stroke` / `fontColor` | `theme.objectInk` (`var(--jiscribe-object-ink)`)         |
-| Surface | `fill`                 | `theme.objectSurface` (`var(--jiscribe-object-surface)`) |
+- Ink (`ink`) … `stroke` / `fontColor` → `theme.objectInk` (`var(--jiscribe-object-ink)`)
+- Surface (`surface`) … `fill` → `theme.objectSurface` (`var(--jiscribe-object-surface)`)
 
-These two are shape-only tokens, separate from the UI chrome's `foreground` / `surface`, so a host can
-set the shape ink (e.g. pure black on a light theme) without changing its menu text color.
+`objectInk` / `objectSurface` are shape-only tokens, separate from the UI chrome's `foreground` / `surface`,
+so a host can set the shape ink (e.g. pure black on a light theme) without changing its menu text color.
+
+A connector label's background (`fill`) is the exception: it bypasses `resolveAutoColor`, and
+`resolveLabelFill` (`rendering/objects/connector/ConnectorLabel/utils/resolveLabelFill.ts`) resolves auto
+and an unspecified value to the canvas surface color, `theme.canvasBg` (so the label knocks out the line
+behind it).
 
 **Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because
 `var(--jiscribe-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,
@@ -94,8 +103,10 @@ and "attribute vs. style").
   surface↔foreground pair. The default for `fill` remains `"transparent"` (no fill), and `"auto"` is a
   separate option.
 - Since Sticky has a fixed colored background, its `fontColor` is not set to `"auto"` and stays at `#000000`.
-- The color preview icon in the UI chrome is at a different layer from shape-data resolution
-  (`resolveAutoColor`); following chrome convention, it indicates auto with `currentColor` (the chrome foreground).
+- The color previews in the UI chrome (the swatches in the ObjectMenu and the properties panel) resolve
+  auto through the same functions rendering does (`resolveAutoColor`, and `resolveLabelFill` for the
+  label background) and are handed the token color. The resolved value can be a `var(--jiscribe-*)`, so
+  `ColorPreviewIcon` applies its fill via inline `style`.
 
 ## Host theme injection (issue #150)
 
@@ -108,7 +119,7 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
   `theme` prop. The Canvas root injects `theme.tokens` as `--jiscribe-*` custom properties
   (`theme/themeCssVars.ts`); custom properties inherit, so every descendant style resolves them.
 - **Two delivery paths**: CSS-consumed tokens flow through the custom properties; JS-consumed values
-  (handle dimensions, for zoom-adjusted geometry) flow through `CanvasThemeContext`
+  (e.g. handle dimensions, for zoom-adjusted geometry, and `colorScheme` below) flow through `CanvasThemeContext`
   (`useCanvasTheme()`) and must be concrete values, never `var(...)` strings.
   - **Why fonts are not on the theme**: a box derived from its content is measured in JS against the
     family the doc names (`@jiscribe/doc`'s `text/layout`), so a family the canvas does not ship is one it cannot
@@ -158,9 +169,10 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
     `fonts.css` loses nothing — with no face to fetch, the load resolves at once.
 - **Standard themes**: `darkCanvasTheme` (the default; its values double as the token fallbacks) and
   `lightCanvasTheme` are exported from the package (`theme/themePresets.ts`).
-- **`colorScheme`**: the one theme field shapes read as a JS value. It names the ground the tokens
-  paint (`"light"` / `"dark"`) for artwork that ships a rendition per ground and cannot be recoloured
-  through tokens — the AWS icons pick their official Light or Dark drawing by it. It is required
+- **`colorScheme`**: a theme field shapes read as a JS value (`CanvasColorScheme`). It names the ground
+  the tokens paint (`"light"` / `"dark"`) for artwork that ships a rendition per ground and cannot be
+  recoloured through tokens — the AWS icons pick their official Light or Dark drawing by it
+  (`plugins/aws-shapes/src/presentation/AwsIconArt.tsx`, read through `useCanvasTheme()`). It is required
   rather than inferred from `canvasBg`, because a token may be a `var(...)` string the canvas cannot
   read. A host that keeps its tokens fixed but follows the editor's ground (VSCode) therefore holds one
   theme per scheme and swaps them.
@@ -172,12 +184,15 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
 ### Details
 
 - Render-only "generic" shapes (arrows, GroupIcon, etc.) do not import `theme` directly. Auto resolution
-  of shape-data colors is delegated to the rendering layer's `resolveAutoColor` (the single point of theme
-  coupling), and shapes merely receive the resolved color via props/`style`. On the other hand,
+  of shape-data colors is delegated to the rendering layer's resolvers (`resolveAutoColor` and the like),
+  and shapes merely receive the resolved color via props/`style`. Within the rendering layer, `theme` is
+  referenced directly only where the theme itself is the subject, such as auto resolution and the canvas's
+  own styles (`CanvasViewStyled.ts`). On the other hand,
   ObjectMenu-specific color icons (ColorPreviewIcon / BorderColorIcon, etc.) are UI chrome, so referencing
   `theme` tokens is permitted.
 - The checkerboard of the transparent (none) indicator is expressed with `theme.transparentChecker`
   (the foreground color lightly overlaid), so its shading automatically inverts between light and dark.
   Do not use a fixed gray.
-- Short-lived accent overlays (snap guides, etc.) work in both themes even with a vivid fixed color, so do
-  not force them into the theme. Consider tokenizing only when a color conflict arises.
+- Short-lived accent overlays (snap guides, etc.) are UI chrome too and are painted with theme tokens
+  (`controllers/ui/feedback/SnapGuides/SnapGuides.tsx` uses `theme.handleAccent`). A token can be a
+  `var(--jiscribe-*)`, so apply it via inline `style`, not a presentation attribute.

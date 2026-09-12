@@ -116,7 +116,7 @@ export type { CanvasParseResult, CanvasParser } from "@jiscribe/doc/parse";
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
 // Pass a `CanvasConfig` (capability set + view setup) to `<Canvas initialConfig={...}>`;
 // its capability subset `CanvasCapabilities` is what the lower-level factory consumes.
-// The factory and the full object-type descriptor table are exported for advanced/custom
+// The factory and the built-in object-type descriptor table are exported for advanced/custom
 // setups. Plugin declarations (packages/canvas/docs/12-plugin-architecture.md)
 // go through `CanvasConfig.plugins`; there is no raw-registry escape hatch.
 export type {
@@ -126,7 +126,7 @@ export type {
 } from "./controllers/registries";
 export {
 	createCanvasRegistries,
-	ALL_OBJECT_DEFINITIONS,
+	BUILTIN_OBJECT_DEFINITIONS,
 } from "./controllers/registries";
 
 // Shape-definition vocabulary for plugin authors (#144 Stage 1, src/plugin).

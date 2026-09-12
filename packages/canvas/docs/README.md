@@ -2,12 +2,12 @@
 
 # canvas Design Documentation
 
-A set of documents that organize the design of `@jiscribe/canvas` into 13 pillars.
+A set of documents that organize the design of `@jiscribe/canvas` pillar by pillar.
 For a high-level overview, we recommend reading [Design Philosophy](./01-design-philosophy.md) and
 [Architecture](./02-architecture.md) first.
 
 For a map of the entire design documentation set (a mind map), see [00-overview.jis.json](./00-overview.jis.json).
-It is in jiscribe format, so you can view it as a diagram by opening it in the VSCode extension or the demo app.
+It is in jiscribe format, so you can view it as a diagram by opening it in the VSCode extension or in the "File I/O" example of canvas-examples (`apps/canvas-examples`).
 
 ## Table of Contents
 

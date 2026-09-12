@@ -4,7 +4,7 @@
  *
  * Every row returns null while the selected connector carries no label text —
  * there is nothing to style until a label exists — and the sections' own
- * `isShown` takes their headings away with them (see initializeObjectRegistry).
+ * `isShown` takes their headings away with them (see applyObjectDefinition).
  * The two sections are the sidebar twin of the ObjectMenu's LabelStyleMenu,
  * which splits the same properties across two sections of icons.
  */

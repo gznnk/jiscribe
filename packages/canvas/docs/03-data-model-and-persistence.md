@@ -25,16 +25,19 @@ Each Mapper converts **only its own properties** and does not recurse into child
 
 ```
 states/objects/primitives/rect/
-├── RectState.ts      # State type
-├── RectMapper.ts     # Doc ↔ State
+├── RectState.ts         # State type
+├── RectMapper.ts        # Doc ↔ State
+├── validateRectState.ts # State validator
 └── __tests__/
 ```
 
 The overall conversion is managed centrally by `states/canvas/CanvasMapper.ts` (`canvasToState` / `canvasToDoc`).
-Because CanvasMapper looks up each shape type's Mapper from `objectMapperRegistry` (`states/registry/ObjectMapperRegistry`) and
-invokes it polymorphically, it is the one point that consults a registry to convert the whole document — but that registry lives
-**within the `states/` layer itself** (colocated with the mappers it serves), so this is not a cross-layer dependency (see
-[Architecture](./02-architecture.md) for the reasoning). The structural
+CanvasMapper looks up each shape type's Mapper from the `ObjectMapperRegistry` it receives as an argument
+(`states/registry/`; in practice the per-canvas registry bundle's `registries.objectMapper`) and invokes it
+polymorphically. `canvasToState` also receives an `ObjectContentResizerRegistry`, for the types whose box is
+re-derived from their content. The registries are passed one by one rather than as the bundle because both are
+**`states/`-layer registries** (colocated with the mappers they serve), so the conversion does not depend on the
+controller-layer bundle (see [Architecture](./02-architecture.md) for the reasoning). The structural
 conversion between tree and flat (expanding and reconstructing parent-child relationships)
 is concentrated at this single point and never leaks into the individual Mappers.
 
@@ -44,7 +47,6 @@ The saved format is `CanvasDoc` (`@jiscribe/doc`, `model/canvas/CanvasDoc.ts`).
 
 ```jsonc
 {
-	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
 	"root": [
 		/* An array mixing ObjectDocs and connectors in z-order (back to front).
@@ -54,10 +56,12 @@ The saved format is `CanvasDoc` (`@jiscribe/doc`, `model/canvas/CanvasDoc.ts`).
 }
 ```
 
-- `root` … A single array mixing shapes (rect / ellipse / diamond / polyline / polygon / group / sticky / svg) and connectors. **The array order is itself the stacking order (z-order).**
+- `root` … A single array mixing shapes and connectors. A shape may be of any registered type (the built-in types are in `@jiscribe/doc`'s `plugin/builtinObjectDocDefinitions.ts`; plugins add the rest). **The array order is itself the stacking order (z-order).**
+- Besides `version` and `root`, the top level has optional fields (such as the canvas surface color `background`); `CanvasDoc.ts` is the source of truth.
+- `$schema` … Never produced. An existing `.jis` carrying one still parses, but `canvasToDoc` drops it on save (so the line disappearing when you edit such a file is intended).
 - Connector (`type: "connector"`) … Each endpoint references its target shape via `source` / `target` using an `owner{type,id}` plus an `anchor`. Connectors are placed only directly under `root` and are never children of a group. At least one endpoint must be owned (a connector with both ends free is invalid).
 - Color fields (`stroke` / `fontColor` / `fill`) … In addition to a concrete CSS color, they may take the sentinel value `"auto"` (follow the theme). `"auto"` is resolved to the theme's foreground color at render time (see [Rendering and Theme](./08-rendering-and-theme.md)). The default `stroke` / `fontColor` for a new shape is `"auto"`.
-- Numeric fields (coordinates / sizes / rotation) … Rounded to `PRECISION` **where the State turns into a Doc**, not where a gesture or command computes them. The Doc's geometry is derived from the State's (`x = cx - width / 2`), so rounding upstream does not survive the derivation; fixing the precision at the one boundary also covers the paths that round nothing of their own (group transforms, plugin controls, `createDocOps`). See `roundDocNumbers` in `@jiscribe/doc`.
+- Numeric fields (coordinates / sizes / rotation) … Rounded to `PRECISION` **where the State turns into a Doc**, not where a gesture or command computes them. The Doc's geometry is derived from the State's (`x = cx - width / 2`), so rounding upstream does not survive the derivation; fixing the precision at the one boundary also covers the paths that round nothing of their own (group transforms, plugin controls, `createDocOps`). The rounding functions live in `@jiscribe/doc`'s `model/objects/utils/roundDocNumbers.ts`.
 - For the full format specification, see `../../doc-schema/assets/jiscribe.schema.json`; `../../doc-schema/assets/ai-guide.md` is the prose introduction to it.
 
 ### Text Model Asymmetry (a shape's `text` vs. a connector's `label`)
@@ -66,13 +70,13 @@ The storage shape of the text-bearing fields is **intentionally asymmetric** bet
 
 - **Single-body shapes (rect / ellipse / diamond / sticky, …)** … hold `text` / `textAlign` / `fontColor` … **flat at the top level** (`features.text: "body"` composes `TextStyleDoc`).
 - **Multi-slot shapes (e.g. the uml-shapes record)** … declare `features.text: "slots"` and hold `text` as an **object keyed by slot id** (`text: { name: {…}, rows: {…} }`; each slot is a `TextSlot` = content plus typography, and the slot set is closed per type).
-- **Connectors** … hold their annotation as a **single nested object**
-  `label: { text, position, offset, fontColor, fontFamily, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
-  (no `features.text`). The background `fill` and border `stroke` / `strokeWidth` / `strokeDashType` borrow the same vocabulary as shapes, but differ in that they are nested inside `label`.
+- **Connectors** … hold their annotation as a **single nested object** `label` (no `features.text`).
+  It carries the body `text`, its placement along the route (`position` / `offset`), text styling, and a background and border;
+  the type's source of truth is `ConnectorLabel` in `@jiscribe/doc`'s `ConnectorDoc.ts`. The background `fill` and border `stroke` etc. borrow the same vocabulary as shapes, but differ in that they are nested inside `label`.
 
 On the State side both shape forms normalize to the **one keyed-slot form** (a `"body"` type's mapper expands it into the single `body` slot and folds it back on save; see `TextSlotsMapper`). The rendering / editing / styling consumers read only this normal form and never branch on the doc's shape.
 
-This difference does not reflect layer convenience but a **difference in role**. A shape's `text` is "the _body_ of that shape" (central, essentially the main actor, with in-box alignment). A connector's text is "an _annotation_ attached to an edge (edge label)" (optional, secondary, with no notion of alignment), and it additionally has **connector-specific placement axes**: `position` (a ratio along the route) and `offset` (perpendicular distance). Reusing a flat form would introduce distortions: (1) these connector-specific fields would mix in with the other keys and their ownership would become unreadable; (2) a short tag on a line would carry irrelevant `textAlign` / `verticalAlign`. The judgment is that **different things may take different shapes** (forcing them to match would be "false consistency"). Even from the perspective of the AI that generates the JSON, this is consistent with the premise that each type has different capabilities (the capability table in `../../doc-schema/assets/ai-guide.md`), so the cost of confusion is low.
+This difference does not reflect layer convenience but a **difference in role**. A shape's `text` is "the _body_ of that shape" (central, essentially the main actor, with in-box alignment). A connector's text is "an _annotation_ attached to an edge (edge label)" (optional, secondary, with no notion of alignment), and it additionally has **connector-specific placement axes**: `position` (a ratio along the route) and `offset` (perpendicular distance). Reusing a flat form would introduce distortions: (1) these connector-specific fields would mix in with the other keys and their ownership would become unreadable; (2) a short tag on a line would carry irrelevant `textAlign` / `verticalAlign`. The judgment is that **different things may take different shapes** (forcing them to match would be "false consistency"). Even from the perspective of the AI that generates the JSON, this is consistent with the premise that each type carries different things (`../../doc-schema/assets/ai-guide.md` describes them type by type in "Object quick reference" and "Geometry by type"), so the cost of confusion is low.
 
 Guidance for when this asymmetry bothers you:
 
@@ -81,44 +85,47 @@ Guidance for when this asymmetry bothers you:
 - **Perfect symmetry is inherently unattainable.** Even if everything were nested, the key names would still **differ in meaning** — shape = body (`text`), connector = annotation (`label`) — so some asymmetry conceptually remains no matter what.
 
 **Nesting support in the styling UI (dot notation)**: The styling property-update plumbing
-(menu item → `STYLE_PROPERTY_UPDATE` / `object-menu:set:` → `StylePropertyRegistry.apply`) carries
-flat property names. Because the label's background and border (`label.fill` / `label.stroke` /
-`label.strokeWidth`) are nested, they **ride on this plumbing as-is using dot-notation property names**.
+(menu item → `STYLE_PROPERTY_UPDATE` or the ObjectMenu gesture `set:{property}:{value}` → `StylePropertyRegistry.apply`) carries
+flat property names. Because the label's styling (`label.fill` / `label.stroke` / `label.fontColor`, …) is nested,
+it **rides on this plumbing as-is using dot-notation property names**.
 Both routes converge at the single point `StylePropertyRegistry.apply`; the `label.*` names are declared
 as connector-specific style properties (`ConnectorExtraStyleProperties`), and the shared write path
 interprets the dots as a nested merge into `connector.label` (a no-op while the label is unset). This is
-a pragmatic compromise to reuse the shared UI (`ColorPickerGrid` / `MenuSlider`) and the `commit`
+a pragmatic compromise to reuse the shared UI (`ObjectMenuColorPickerGrid` / `ObjectMenuSlider`) and the `commit`
 subtleties (live preview + a single history entry) without reimplementing them. Adding a dedicated
-action is rejected because it would duplicate these commit subtleties. The frame's own numbers (x / y / width / height / rotation) do take a sibling action, `TRANSFORM_PROPERTY_UPDATE`, since the style registry owns no geometry — it shares that commit tail rather than a second copy of it. The document's own settings (so far just `background`) take a third, `DOCUMENT_PROPERTY_UPDATE`, for the same reason with the target one level up: no selection is involved at all, and `null` clears the field the way the headless `setBackground` op does.
+action is rejected because it would duplicate these commit subtleties. What the style registry does not own takes a
+sibling action instead: the frame's own numbers (position / size / rotation) take `TRANSFORM_PROPERTY_UPDATE`, the
+document's own settings (such as the canvas surface `background`) take `DOCUMENT_PROPERTY_UPDATE`, and an object's
+`meta` takes `META_PROPERTY_UPDATE`. None of them keeps a second copy of the commit subtleties; they share the commit tail
+(`commitPropertyUpdate` in `controllers/reducer/canvasReducer.ts`). `DOCUMENT_PROPERTY_UPDATE` differs in that its target
+is the doc rather than a selection, and `null` clears the field the way the headless `setBackground` op does, handing the surface back to the theme.
 
 ## The Parser's Two-Stage Validation (Defense at the Boundary)
 
 For JSON strings coming from outside, a parser from `createCanvasParser` (`@jiscribe/doc`, `parse/`)
-returns its result as a **discriminated union without throwing exceptions**. This lets the
-extension side and the Webview side share the same logic and prevents errors from slipping through.
+returns its result as a **discriminated union without throwing exceptions** (`CanvasParseResult`, defined in
+`parse/parseWithRegistry.ts`). This lets the extension side and the Webview side share the same logic and
+prevents errors from slipping through.
 
-```ts
-type CanvasParseResult =
-	| { kind: "ok"; doc: CanvasDoc }
-	| { kind: "syntax-error"; message: string } // JSON.parse failed
-	| { kind: "structure-error"; diagnostics: SemanticDiagnostic[] } // validateStructure failed
-	| { kind: "semantic-error"; diagnostics: SemanticDiagnostic[] } // validateSemantics failed
-	| { kind: "internal-error"; message: string }; // unexpected exception during validation
-```
+Each failure surfaces as its own `kind` (a JSON syntax error, a structure error, a semantic error, or an unexpected
+exception during validation). Success (`ok`) carries, besides the doc, `warnings` reporting what was removed.
 
-`structure-error` and `semantic-error` correspond to the two validation stages below, so
-each stage's failure surfaces as a distinct variant.
+Validation happens in two stages, preceded by a step that removes unknown content. If the structure does not hold,
+semantic validation is not reached.
 
-Validation happens in two stages. If the structure does not hold, semantic validation is not reached.
-
-1. **Structural validation `validateStructure`** — Validates each node's type and required fields.
+1. **Removing unknown content `stripUnknownContent`** — Removes objects of unregistered types (cascading to groups
+   left empty and connectors pointing at removed shapes) and unknown values of enum fields. These are not errors:
+   they are reported as the `ok` result's `warnings` and the rest of the document still loads. `ok.doc` is the
+   stripped doc, so saving it is what makes the removal stick.
+2. **Structural validation `validateStructure`** — Validates each node's type and required fields.
    Type-specific validation is delegated to the doc-validator registry the parser built, and only the recursion into a
    `group`'s `children` is handled here as a structural rule.
-2. **Semantic validation `validateSemantics`** — Validates consistency that can only be judged by
+3. **Semantic validation `validateSemantics`** — Validates consistency that can only be judged by
    traversing the entire document.
    - **Uniqueness of IDs**: IDs must not be duplicated across the root tree (including connectors).
      Because `CanvasDoc` is a nested tree, a "parent-child cycle" cannot occur structurally; any case that looks like a cycle is effectively "different objects sharing the same ID" — that is, nothing more than an ID duplication.
-   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (group / polyline / polygon / connector are not allowed). A self-loop where source and target point to the same object is permitted and, while its `points` are empty, is drawn as a rectangular loop via a dedicated orthogonal route (see `resolveConnectorPoints` / `routeSelfLoop`); vertices replace that fixed ring with the authored path.
+   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (decided by the type's `features.connectable`; e.g. group and connector are not).
+   - **Self-loop ends**: a self-loop, where source and target point to the same object, is permitted, but a `center` anchor on either end is a semantic error (both ends must be pinned to a connectPoint). While its `points` are empty, a self-loop is drawn as a rectangular loop via a dedicated orthogonal route; vertices replace that fixed ring with the authored path (see `resolveConnectorPoints` / `routeSelfLoop`).
 
 The doc-validator registry used for validation is needed only at parse time, so each parser builds its
 own from the definition set it is given. Nothing global is mutated, so two parsers with different plugin

@@ -2,10 +2,10 @@
 
 # Plugin Architecture
 
-How a shape lives outside the engine. Every shape beyond the eight primitives
-(`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` / `connector` /
-`svg`) ships as a plugin under `plugins/`, written against the same public API a
-third party would use. If the shipped shapes can be written that way, so can yours.
+How a shape lives outside the engine. Every shape beyond the engine's built-in
+primitives (the `ObjectTypes` list in
+`packages/doc/src/model/objects/types/ObjectType.ts`) ships as a plugin under
+`plugins/`, written against the same public API a third party would use. If the shipped shapes can be written that way, so can yours.
 
 This document covers the contract. For the practical steps — package layout, the
 authoring kit, the wiring checklist — see
@@ -16,12 +16,9 @@ authoring kit, the wiring checklist — see
 There is no plugin runtime. A plugin is a declaration of what to register, and the
 engine's registries are the same ones the built-in types go through.
 
-```ts
-export type CanvasPlugin = {
-	id: string;
-	objects?: Readonly<Partial<Record<ObjectType, AnyObjectTypeDefinition>>>;
-};
-```
+The type is `CanvasPlugin` (`packages/canvas/src/plugin/CanvasPlugin.ts`), and its
+substance is `objects`: keyed by `ObjectType`, with the type's definition as the
+value.
 
 A host wires it in through `initialConfig`:
 
@@ -29,17 +26,19 @@ A host wires it in through `initialConfig`:
 <Canvas doc={doc} initialConfig={{ plugins: [stickyPlugin, umlPlugin] }} />
 ```
 
-`objects` is keyed by `ObjectType`, and the value carries everything the engine
-needs for that type: `mapper`, `stateValidator`, `component`, `behavior` and the
-optional calculators (`outline`, `textRegion`, `geometryKey`, `visualBounds`,
-`anchorRegion`, `extraConnectPoints`), plus `stencils`, `menu`, `propertyPanel`,
-`svgDefs`,
-`selectionControls`, `transformHandles` and `extraStyleProperties`. Nothing in the
-engine branches on the type — everything is resolved through an `ObjectType`-keyed
-registry, so a plugin type is indistinguishable from a built-in one at runtime.
+Each value of `objects` is an `ObjectTypeDefinition`
+(`packages/canvas/src/plugin/ObjectTypeDefinition.ts`) carrying everything the engine
+needs for that type. The doc ↔ state conversion, state validation, the rendering
+component and the move / rotate behaviour are required; geometry calculators such as
+the outline and the text region, and UI contributions such as stencils, menus,
+properties-sidebar sections, SVG defs and selection controls, are optional. The type
+definition is the authority on which fields exist. Nothing in the engine branches on
+the type — everything is resolved through an `ObjectType`-keyed registry, so a plugin
+type is indistinguishable from a built-in one at runtime.
 
-`Partial<Record<...>>` rather than a plain `Record` matters: `ObjectType` is an open
-union, and a plugin that contributes one shape must be able to omit the rest.
+`objects` being typed `Partial<Record<...>>` rather than a plain `Record` matters:
+`ObjectType` is an open union, and a plugin that contributes one shape must be able
+to omit the rest.
 
 ## The two halves: UI and headless
 
@@ -50,15 +49,17 @@ A plugin exports its contributions twice, through two entry points.
 | `.`     | `CanvasPlugin` (UI definitions) | `<Canvas>` hosts                                     |
 | `./doc` | `CanvasDocPlugin`               | `createCanvasParser`, Node tools, VSCode diagnostics |
 
-```ts
-export type CanvasDocPlugin = {
-	id: string;
-	objects?: Readonly<Partial<Record<ObjectType, ObjectDocDefinition>>>;
-};
-```
+`CanvasDocPlugin` (`packages/doc/src/plugin/CanvasDocPlugin.ts`) has the same shape
+as `CanvasPlugin`, with `ObjectDocDefinition` as the value of `objects`.
 
-`ObjectDocDefinition` is the headless half of a type: `features`, `validateDoc`,
-`factory`, plus the AI-facing `description` / `summary` / `defaults`. `ObjectTypeDefinition` extends it, which is why a full `CanvasPlugin` is
+`ObjectDocDefinition` (`packages/doc/src/plugin/ObjectDocDefinition.ts`) is the
+headless half of a type: what the parse layer needs to know the type exists, validate
+its doc and create it from a doc (`features`, `validateDoc` and so on), plus the
+metadata the schema and AI-docs generator reads. That type is the authority on which
+fields exist. `ObjectTypeDefinition` adds the UI-layer contracts to it and takes over
+exactly one field, `textRegion`, with the renderer's calculator type — a doc
+declaration may answer "the box does not hold the text" with `null`, which a renderer
+has no use for. Everything else carries over, which is why a full `CanvasPlugin` is
 **structurally assignable** to `CanvasDocPlugin` — one `plugins` array feeds both
 `<Canvas>` and the parser.
 
@@ -96,6 +97,9 @@ with no config gives the default configuration: every built-in type and nothing 
   ([Design Philosophy](./01-design-philosophy.md)).
 
 ## The public surface and its tiers
+
+The main entries, by tier. The full set, `./testing*` and the like included, is each
+package's `package.json` `exports`.
 
 ```
 @jiscribe/canvas              stable: type vocabulary, registration, Canvas props
@@ -139,7 +143,8 @@ The handle also reads back what the canvas made of the document — the part no
 a shape draws outside its box, the route a connector took, which shapes overlap,
 what is drawn at a point), `history` (the undo stack, with `mark` / `revertTo` to
 roll a whole batch of edits back), and `interaction` (whether the user is
-mid-gesture, which is when an external write would be destructive). Editing the
+mid-gesture, which is when an external write would be destructive); see
+`packages/canvas/src/controllers/handles/CanvasHandle.ts`. Editing the
 document itself needs no canvas and belongs to `createDocOps` in the headless
 `@jiscribe/doc`.
 
@@ -184,8 +189,9 @@ vocabulary — a duplicate id against a built-in or another plugin throws.
 declared on the definition and rendered into the canvas-wide `<defs>` **once per
 type**, even when zero objects of that type exist, so the reference target never
 disappears. SVG ids are document-global and the registry cannot scope them, so
-**prefix the id with the type name** (`sticky-shadow`). Hosts that narrow
-`objectTypes` drop the corresponding `svgDefs` too. Export clones the live SVG, so
+**prefix the id with the type name** (`sticky-shadow`). A host's `objectTypes`
+narrows the built-in types only: a plugin's types, and their `svgDefs` with them, are
+always registered once the plugin is in `plugins`. Export clones the live SVG, so
 plugin-provided defs are included automatically.
 
 **Text slots** (`features.text: "slots"`). Do not use integer-like slot ids
@@ -208,18 +214,19 @@ implies them, so a declaration need not list either. A declaration composes the
 built-in row kinds and, where none of them fits, rows of the type's own.
 
 **`propertyPanel` custom rows.** A row a plugin draws itself is
-`{ type: "custom"; id; component }` among the built-in ones, the same shape the
-ObjectMenu's custom item has. What the component receives is
-`PropertyPanelItemProps` and nothing else: `objects`, `selectedIds`,
-`selectedConnectorId`, `multiSelectGroup`, plus `onPropertyUpdate` for a style
-property and `onTransformUpdate` for one of the frame's five numbers — never the
-controller state the built-in rows read. What it may import is the properties
-sidebar UI kit published through `@jiscribe/canvas/unstable` (and so through
-`@jiscribe/canvas-sdk`): `PropertyRow` for the label column every row shares,
-`PropertyNumberField` / `PropertyColorField` / `PropertyDropdownField` /
-`PropertySegmentedControl` for the control beside it, and `PropertyCheckbox`,
-which is a row of its own (the box with its label to the right, from the
-section's left edge). Two rules to know before writing one:
+`{ type: "custom"; id; component }` (`PropertyPanelCustomItem`) among the built-in
+ones, the same shape the ObjectMenu's custom item has. What the component receives
+is `PropertyPanelItemProps` and nothing else: the slice of the selection, plus
+`onPropertyUpdate` for a style property and `onTransformUpdate` for a number of the
+frame (both types live in
+`packages/canvas/src/controllers/ui/menu/PropertyPanel/PropertyPanelTypes.ts`) —
+never the controller state the built-in rows read. What it may import is the
+properties sidebar UI kit published through `@jiscribe/canvas/unstable` (and so
+through `@jiscribe/canvas-sdk`): `PropertyRow` for the label column every row
+shares, input controls such as `PropertyNumberField` / `PropertyColorField` for the
+control beside it, and `PropertyCheckbox`, which is a row of its own (the box with
+its label to the right, from the section's left edge). The exports of
+`packages/canvas/src/unstable.ts` are the authority on what the kit holds. Two rules to know before writing one:
 
 - The `id` is what the multi-type merge matches the row by, so two types offering
   the same row must spell it the same way; a selection mixing types that spell it
@@ -231,8 +238,7 @@ section's left edge). Two rules to know before writing one:
 
 **`propertyPanel` section visibility.** A section may carry
 `isShown(selection)`, asked before it is drawn with the slice of the selection
-its rows read (`PropertyPanelSelection`: `objects`, `selectedIds`,
-`selectedConnectorId`). A section every row of which would return null needs it:
+its rows read (`PropertyPanelSelection`). A section every row of which would return null needs it:
 the rows leave on their own, but the accordion heading would stay behind over an
 empty body. Core's own use is the connector's Label and Label border sections, offered
 only once the label has text. Omitted means always offered.
@@ -246,8 +252,9 @@ the Layout section; both take their wording from the plugin's own dictionary.
 **i18n.** A plugin owns its dictionary and resolves it through `useCanvasLocale` /
 `resolveLocaleMessages`. Plugin vocabulary is never added to the core message keys.
 
-**`selectionControls`.** A plain declaration, `{ name, Component, handle }` — no base
-class. `handle` receives the object's own information (current frame plus the
+**`selectionControls`.** A plain declaration (`SelectionControlDefinition`: a
+`Component` that draws the handles, paired with a `handle` that interprets the
+gesture) — no base class. `handle` receives the object's own information (current frame plus the
 gesture-start snapshot) and the cursor, and nothing else; part derivation, snapshot
 guarding, copy-on-write write-back and edge-scroll release are handled by an
 internal adapter.
@@ -258,7 +265,7 @@ Honest limits, so you do not design against something that is not there.
 
 | Area                             | Current state                                                                                                                                                                             |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Built-in UI                      | Toolbar / ObjectMenu / ContextMenu mount unconditionally; there is no way to hide or replace them                                                                                         |
+| Built-in UI                      | ObjectMenu / ContextMenu mount unconditionally; a host has no way to hide or replace them (the Toolbar can be hidden with `toolbar.show: false` and recomposed with `toolbar.sections`)   |
 | UI slots                         | Only the toolbar's `{ type: "slot" }` items. No slot for an overlay layer; the properties sidebar takes a component only as a row of a section a type declares, not as a panel of its own |
 | Fine-grained property write-back | The handle has no `updateProperties`. Replacing the `doc` prop is treated as an external change: it resets the selection and cuts the history boundary, so it is not an editing path      |
 | Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                          |

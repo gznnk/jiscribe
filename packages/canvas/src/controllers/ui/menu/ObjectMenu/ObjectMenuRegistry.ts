@@ -5,7 +5,7 @@ import type { ObjectMenuSection } from "./ObjectMenuTypes";
 /**
  * Registry that manages menu section definitions per object type.
  *
- * Registration goes through applyObjectDefinition() in initializeObjectRegistry.ts:
+ * Registration goes through `applyObjectDefinition` (controllers/registries):
  * a definition's `menu`, or the features-derived default (createDefaultMenu) when
  * omitted.
  */
@@ -25,7 +25,7 @@ export class ObjectMenuRegistry {
 		return this.sectionsByType.get(type) ?? [];
 	}
 
-	/** Removes all registrations. Call before re-running initializeObjectRegistry. */
+	/** Removes all registrations. */
 	clear(): void {
 		this.sectionsByType.clear();
 	}

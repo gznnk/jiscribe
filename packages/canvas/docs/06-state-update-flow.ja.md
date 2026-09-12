@@ -8,38 +8,42 @@
 
 ## アクション一覧
 
-`CanvasAction`（`controllers/reducer/CanvasActions.ts`）は次のユニオン。
+`CanvasAction`（`controllers/reducer/CanvasActions.ts`）は reducer が受け取るすべてのアクションのユニオンで、
+各アクションの意味は同ファイルの型定義に書いてある。主なアクションと委譲先:
 
-| アクション                           | 役割                                                                     | 委譲先                                                                                    |
-| ------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| `GESTURE`                            | ポインタ/ホイール由来のジェスチャー                                      | `handleGesture` → [ジェスチャシステム](./04-gesture-system.ja.md)                         |
-| `COMMAND`                            | ショートカット/メニュー/ツールバーのコマンド（undo/redo 含む）           | `handleCommand` → [コマンドシステム](./05-command-system.ja.md)                           |
-| `PASTE`                              | クリップボードデータの適用                                               | `handlePaste`                                                                             |
-| `STYLE_PROPERTY_UPDATE`              | ObjectMenu / プロパティサイドバーのスタイル入力（プレビュー / コミット） | `StylePropertyRegistry.apply` → [スタイルプロパティシステム](./10-style-properties.ja.md) |
-| `TRANSFORM_PROPERTY_UPDATE`          | プロパティサイドバーの入力（プレビュー / コミット）                      | `handleTransformPropertyUpdate` → 変形ドラッグと同じリサイズ / 回転ユーティリティ         |
-| `DOCUMENT_PROPERTY_UPDATE`           | プロパティサイドバーのキャンバス節（プレビュー / コミット）              | （インライン）`state.background` を書く。`null` で消してテーマに従う                      |
-| `SYNC_EXTERNAL`                      | 外部（ホスト）からの doc 取り込み                                        | → [外部同期](./07-external-sync.ja.md)                                                    |
-| `LOAD_DOCUMENT`                      | 別ドキュメントの読み込み（履歴を捨てる取り込み）                         | → [外部同期](./07-external-sync.ja.md)                                                    |
-| `CONTAINER_RESIZE`                   | ビューポート寸法の更新                                                   | （インライン）                                                                            |
-| `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | テキスト編集中の更新 / 確定・キャンセル                                  | `commitTextEditIfNeeded`                                                                  |
-| `CLOSE_CONTEXT_MENU`                 | コンテキストメニューを閉じるだけ                                         | （インライン）                                                                            |
+| アクション                  | 役割                                                                      | 委譲先                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `GESTURE`                   | ポインタ/ホイール由来のジェスチャー                                       | `handleGesture` → [ジェスチャシステム](./04-gesture-system.ja.md)                         |
+| `COMMAND`                   | ショートカット/メニュー/ツールバーのコマンド（undo/redo 含む）            | `handleCommand` → [コマンドシステム](./05-command-system.ja.md)                           |
+| `PASTE`                     | クリップボードデータの適用                                                | `handlePaste`                                                                             |
+| `STYLE_PROPERTY_UPDATE`     | ObjectMenu / プロパティサイドバーのスタイル入力（プレビュー / コミット）  | `StylePropertyRegistry.apply` → [スタイルプロパティシステム](./10-style-properties.ja.md) |
+| `TRANSFORM_PROPERTY_UPDATE` | プロパティサイドバーの枠の数値入力（プレビュー / コミット）               | `handleTransformPropertyUpdate` → 変形ドラッグと同じリサイズ / 回転ユーティリティ         |
+| `DOCUMENT_PROPERTY_UPDATE`  | プロパティサイドバーのキャンバス節（プレビュー / コミット）               | （インライン）`state.background` を書く。`null` で消してテーマに従う                      |
+| `META_PROPERTY_UPDATE`      | プロパティサイドバーのオブジェクトの `meta` 入力（プレビュー / コミット） | `handleMetaPropertyUpdate`                                                                |
+| `SYNC_EXTERNAL`             | 外部（ホスト）からの doc 取り込み                                         | → [外部同期](./07-external-sync.ja.md)                                                    |
+| `LOAD_DOCUMENT`             | 別ドキュメントの読み込み（履歴を捨てる取り込み）                          | → [外部同期](./07-external-sync.ja.md)                                                    |
+| `END_TEXT_EDIT`             | テキスト編集の確定 / キャンセル                                           | 確定は `commitTextEditIfNeeded`。キャンセルは編集状態を捨てるだけ                         |
 
-各ハンドラ（`handleGesture` / `handleCommand` / `handlePaste` …）は
-**`(state) => state` の純粋関数**として実装され、副作用を持たない。
+このほか、カメラや選択の設定・テキスト編集中の下書きの更新のように、reducer の中で state を差し替えるだけの
+アクションもある。たとえば `UPDATE_TEXT_EDIT` は下書きを差し替えるだけで、doc へのコミットは `END_TEXT_EDIT` の確定で起きる。
+
+各ハンドラ（`handleGesture` / `handleCommand` / `handlePaste` …）は、state と入力（とキャンバスのレジストリ束）から
+新しい state を返す**純粋関数**として実装され、副作用を持たない。
 これがユニット／結合テストを node 環境で完結させる土台になる（[テスト](./09-testing.ja.md)）。
 
 ## 履歴記録（commitVersion）
 
 「永続化・undo の対象になる変更」が起きたハンドラは、結果 state の `commitVersion` を
 インクリメントする。`canvasReducer` は対象アクションの後に `recordHistoryIfNeeded` を呼び、
-**`commitVersion` が前の state から変化していれば** 履歴を記録する（同時に `saveVersion` も進める）。
+**`commitVersion` が前の state から変化していれば** 履歴を記録する（同時に `saveRequest` の `version` を進め、
+新しい `nonce` を振って保存要求を出す。[外部同期・VSCode 連携](./07-external-sync.ja.md) 参照）。
 
 - ジェスチャーの場合、`handleGesture` が `dragEnd` 時に doc が実際に変化したときだけ
   `commitVersion` を進める。これにより「最小サイズ未満で描画をやめた」ような
   doc 変化のないドラッグで幽霊 undo エントリが生まれるのを防ぐ。
 - `STYLE_PROPERTY_UPDATE` は `commit: false`（プレビュー）なら履歴を記録せず、
   `commit: true`（blur / Enter）でのみ `commitVersion` を進める。
-  `TRANSFORM_PROPERTY_UPDATE` と `DOCUMENT_PROPERTY_UPDATE` も同じコミット末尾
+  他のプロパティ系アクション（`TRANSFORM_PROPERTY_UPDATE` など）も同じコミット末尾
   （`commitPropertyUpdate`）を通るので挙動は同じ。
 
 履歴は `state.history`（`past` / `present` / `future`）。`past` は直近 50 件に丸める。

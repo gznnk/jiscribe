@@ -24,15 +24,18 @@ canvas はデータを 2 つの形で持つ。**Doc**（保存用・ツリー）
 
 ```
 states/objects/primitives/rect/
-├── RectState.ts      # State 型
-├── RectMapper.ts     # Doc ↔ State
+├── RectState.ts         # State 型
+├── RectMapper.ts        # Doc ↔ State
+├── validateRectState.ts # State のバリデータ
 └── __tests__/
 ```
 
 全体変換は `states/canvas/CanvasMapper.ts` が一元管理する（`canvasToState` / `canvasToDoc`）。
-CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`states/registry/ObjectMapperRegistry`）から
-引いて多態的に呼び出す。全体変換のためにレジストリを参照する唯一の箇所だが、そのレジストリは
-**`states/` 層内**（対象の Mapper 群と共配置）に閉じているのでレイヤーをまたぐ依存ではない（理由は
+CanvasMapper は形状タイプごとの Mapper を、引数で受け取る `ObjectMapperRegistry`
+（`states/registry/`。実体はキャンバスごとのレジストリ束の `registries.objectMapper`）から引いて
+多態的に呼び出す。`canvasToState` は、内容から枠を導き直す型のために `ObjectContentResizerRegistry`
+も受け取る。束ごとではなくレジストリを個別に受け取るのは、どちらも **`states/` 層のレジストリ**
+（対象の Mapper 群と共配置）で、controllers 層のレジストリ束に依存しないためである（理由は
 [アーキテクチャ](./02-architecture.ja.md) を参照）。ツリー ↔ フラットの
 構造変換（親子関係の展開・再構築）はこの一点に集約し、個々の Mapper には漏らさない。
 
@@ -42,7 +45,6 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
 
 ```jsonc
 {
-	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
 	"root": [
 		/* ObjectDoc とコネクターを z-order 順（背面→前面）で混在させた配列。
@@ -51,10 +53,12 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
 }
 ```
 
-- `root` … 図形（rect / ellipse / diamond / polyline / polygon / group / sticky / svg）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
+- `root` … 図形とコネクターを混在させた単一配列。図形には登録済みの型なら何でも置ける（組み込みの型は `@jiscribe/doc` の `plugin/builtinObjectDocDefinitions.ts`、それ以外はプラグインが足す）。**配列順がそのまま重なり順（z-order）**になる
+- トップ階層には `version` と `root` のほか、省略可能なフィールド（キャンバス面の色 `background` など）がある。正本は `CanvasDoc.ts`
+- `$schema` … 生成しない。既存の `.jis` が持っていても parse は受け付けるが、保存時に `canvasToDoc` が落とす（`$schema` 行のあるファイルを編集すると保存でその行が消えるのは意図どおり）
 - コネクター（`type: "connector"`）… 端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する。`root` 直下にのみ置かれ、group の子にはならない。少なくとも一方の端点が owned であること（両端 free は不正）
 - 色フィールド（`stroke` / `fontColor` / `fill`）… 具体的な CSS 色のほか、sentinel 値 `"auto"`（テーマ追従）を取りうる。`"auto"` は描画時にテーマ前景色へ解決される（[描画・テーマ](./08-rendering-and-theme.ja.md) 参照）。新規図形の `stroke` / `fontColor` の既定値は `"auto"`
-- 数値フィールド（座標・サイズ・回転）… 丸めは **State → Doc へ変換する地点**で `PRECISION` に揃える。ジェスチャーやコマンドの計算地点では丸めない。Doc の幾何は State から導出されるため（`x = cx - width / 2`）、手前で丸めても導出でずれる。境界 1 か所で決めることで、自前では丸めない経路（グループ変換・プラグインの制御点・`createDocOps`）も同じ精度に乗る。`@jiscribe/doc` の `roundDocNumbers` 参照
+- 数値フィールド（座標・サイズ・回転）… 丸めは **State → Doc へ変換する地点**で `PRECISION` に揃える。ジェスチャーやコマンドの計算地点では丸めない。Doc の幾何は State から導出されるため（`x = cx - width / 2`）、手前で丸めても導出でずれる。境界 1 か所で決めることで、自前では丸めない経路（グループ変換・プラグインの制御点・`createDocOps`）も同じ精度に乗る。丸め関数は `@jiscribe/doc` の `model/objects/utils/roundDocNumbers.ts` にまとまっている
 - 形式仕様の全文は `../../doc-schema/assets/jiscribe.schema.json` を参照（散文の導入は `../../doc-schema/assets/ai-guide.md`）
 
 ### テキストモデルの非対称（図形の `text` とコネクターの `label`）
@@ -66,10 +70,10 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
 - **複数スロットの図形（uml-shapes の record など）** … `features.text: "slots"` を宣言し、`text` を
   **スロット ID キーのオブジェクト**で持つ（`text: { name: {…}, rows: {…} }`。各スロットは
   `TextSlot` = 内容＋タイポグラフィで、スロット集合は型ごとにクローズド）。
-- **コネクター** … 注記を
-  `label: { text, position, offset, fontColor, fontFamily, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
-  の **ネストした 1 オブジェクト**で持つ（`features.text` は立てない）。背景 `fill`・枠線
-  `stroke`/`strokeWidth`/`strokeDashType` は図形と同じ語彙を借りるが、`label` の中にネストする点が異なる。
+- **コネクター** … 注記を `label` の **ネストした 1 オブジェクト**で持つ（`features.text` は立てない）。
+  中身は本文 `text`、経路上の配置（`position` / `offset`）、文字スタイル、背景と枠線で、型の正本は
+  `@jiscribe/doc` の `ConnectorDoc.ts` の `ConnectorLabel`。背景 `fill`・枠線 `stroke` などは図形と
+  同じ語彙を借りるが、`label` の中にネストする点が異なる。
 
 State 側は図形のどちらの形も **keyed スロット一形**に正規化される（`"body"` 型は mapper が単一
 `body` スロットへ展開し、保存時に畳み戻す。`TextSlotsMapper` 参照）。描画・編集・スタイリングの
@@ -81,7 +85,8 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 **コネクター固有の配置軸**を持つ。フラットに流用すると (1) これら固有フィールドが他キーと混ざって
 帰属が読めない (2) 線の短いタグに無関係な `textAlign` / `verticalAlign` が付く、という
 歪みが出る。**違うものは違う形でよい**（無理に揃えるのは「偽の一貫性」）という判断。これは JSON を
-生成する AI から見ても、型ごとに能力が違う前提（`../../doc-schema/assets/ai-guide.md` の能力表）と整合し、混乱コストは低い。
+生成する AI から見ても、型ごとに持つものが違う前提（`../../doc-schema/assets/ai-guide.md` は
+"Object quick reference" や "Geometry by type" で型ごとに分けて説明している）と整合し、混乱コストは低い。
 
 この非対称が気になった場合の指針:
 
@@ -96,43 +101,44 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
   コネクター＝注記（`label`）で **意味が違う**ため、ある種の非対称は概念上どうしても残る。
 
 **スタイリング UI のネスト対応（ドット記法）**: スタイリングのプロパティ更新配管
-（メニュー項目 → `STYLE_PROPERTY_UPDATE` / `object-menu:set:` → `StylePropertyRegistry.apply`）は
-フラットなプロパティ名を運ぶ。ラベルの背景・枠線（`label.fill` / `label.stroke` /
-`label.strokeWidth`）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
+（メニュー項目 → `STYLE_PROPERTY_UPDATE` または ObjectMenu のジェスチャー `set:{property}:{value}` →
+`StylePropertyRegistry.apply`）はフラットなプロパティ名を運ぶ。ラベルのスタイル（`label.fill` /
+`label.stroke` / `label.fontColor` など）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
 2 経路とも収束点は `StylePropertyRegistry.apply` の 1 か所。`label.*` は connector 固有の宣言
 （`ConnectorExtraStyleProperties`）として登録され、共有の書き込みパスがドットをネスト merge と
 解釈して `connector.label` へ書く（label 未設定時は no-op）。共有 UI
-（`ColorPickerGrid` / `MenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を再実装せずに
-再利用するための割り切り。専用アクションを増やす案は、この commit 機微を二重持ちすることになるため
-採らない。ただし枠そのものの数値（x / y / width / height / rotation）はスタイルレジストリの管轄外なので、兄弟アクション `TRANSFORM_PROPERTY_UPDATE` を通す。commit 機微は二重に持たず共有する。 doc 自身の設定（今のところ `background` だけ）も同じ理由で 3 つ目の `DOCUMENT_PROPERTY_UPDATE` を通す。対象が選択ではなく doc である点だけが違い、`null` はヘッドレスの `setBackground` と同じく「フィールドを消してテーマに従う」を意味する。
+（`ObjectMenuColorPickerGrid` / `ObjectMenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を
+再実装せずに再利用するための割り切り。専用アクションを増やす案は、この commit 機微を二重持ちすることになるため
+採らない。ただしスタイルレジストリの管轄外のものは兄弟アクションを通る。枠そのものの数値（位置・サイズ・回転）は
+`TRANSFORM_PROPERTY_UPDATE`、doc 自身の設定（キャンバス面の `background` など）は `DOCUMENT_PROPERTY_UPDATE`、
+オブジェクトの `meta` は `META_PROPERTY_UPDATE`。どれも commit 機微は二重に持たず、コミット末尾
+（`controllers/reducer/canvasReducer.ts` の `commitPropertyUpdate`）を共有する。`DOCUMENT_PROPERTY_UPDATE` は
+対象が選択ではなく doc である点が違い、`null` はヘッドレスの `setBackground` と同じく「フィールドを消してテーマに従う」を意味する。
 
 ## parser の二段検証（境界での防御）
 
 外部から渡る JSON 文字列は、`createCanvasParser` が返すパーサー（`@jiscribe/doc` の `parse/`）が
-**例外を投げずに判別可能なユニオン**で結果を返す。これにより拡張側・Webview 側が
-同一ロジックを共有し、エラーの取りこぼしを防ぐ。
+**例外を投げずに判別可能なユニオン**（`CanvasParseResult`。定義は `parse/parseWithRegistry.ts`）で
+結果を返す。これにより拡張側・Webview 側が同一ロジックを共有し、エラーの取りこぼしを防ぐ。
 
-```ts
-type CanvasParseResult =
-	| { kind: "ok"; doc: CanvasDoc }
-	| { kind: "syntax-error"; message: string } // JSON.parse 失敗
-	| { kind: "structure-error"; diagnostics: SemanticDiagnostic[] } // validateStructure 失敗
-	| { kind: "semantic-error"; diagnostics: SemanticDiagnostic[] } // validateSemantics 失敗
-	| { kind: "internal-error"; message: string }; // 検証中の予期しない例外
-```
+失敗は段ごとに別の `kind` で返る（JSON の構文エラー・構造エラー・意味エラー・検証中の予期しない例外）。
+成功（`ok`）は doc に加えて、取り除いた内容を報告する `warnings` を持つ。
 
-`structure-error` と `semantic-error` は下記の 2 つの検証ステージに対応し、各ステージの失敗が別々のバリアントとして表れる。
+検証は 2 段階で、その手前に未知の内容を取り除く段がある。構造が成立していなければ意味検証へ進まない。
 
-検証は 2 段階。構造が成立していなければ意味検証へ進まない。
-
-1. **構造検証 `validateStructure`** — 各ノードの型・必須フィールドを検証。型別の検証は
+1. **未知の内容の除去 `stripUnknownContent`** — 未登録の型のオブジェクト（それで空になった group や、
+   消えた図形を指すコネクターも連鎖して）と、列挙型フィールドの未知の値を取り除く。これはエラーにせず
+   `ok` の `warnings` として報告し、文書の残りは読み込む。`ok.doc` は除去後の doc なので、それを保存すると
+   除去が確定する。
+2. **構造検証 `validateStructure`** — 各ノードの型・必須フィールドを検証。型別の検証は
    パーサーが構築した doc バリデータのレジストリに委譲し、`group` の `children` 再帰だけは構造ルールとしてここで処理する。
-2. **意味検証 `validateSemantics`** — 文書全体を横断しないと判断できない整合性を検証。
+3. **意味検証 `validateSemantics`** — 文書全体を横断しないと判断できない整合性を検証。
    - **ID の一意性**: root ツリー（コネクター含む）を通じて ID が重複しないこと。
      `CanvasDoc` はネストしたツリーなので「親子の循環」は構造的に起こり得ず、循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。
-   - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（group / polyline / polygon / connector は不可）。source と target が同一オブジェクトを指す自己ループは許可され、専用の直交ルートで矩形ループとして描画される（`resolveConnectorPoints` / `routeSelfLoop` を参照）。
+   - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（型の `features.connectable` が決める。例: group や connector は不可）。
+   - **自己ループの端**: source と target が同一オブジェクトを指す自己ループは許可されるが、どちらかの端が `center` アンカーだと意味エラーになる（両端を connectPoint に固定する）。自己ループは `points` が空の間は専用の直交ルートで矩形ループとして描画され、頂点を置けばその経路に置き換わる（`resolveConnectorPoints` / `routeSelfLoop` を参照）。
 
-検証に使う doc バリデータのレジストリは parse 時にだけ必要なため、パーサーが自前で構築する。
+検証に使う doc バリデータのレジストリは parse 時にだけ必要なため、パーサーが渡された定義集合から自前で構築する。
 グローバルを書き換えないので、プラグイン構成の異なるパーサーが同一プロセスに同居できる。
 
 ### headless なパッケージ
@@ -148,4 +154,3 @@ import { createCanvasParser } from "@jiscribe/doc";
 この境界を通った Doc は正当であることを前提に、内部関数は防御的チェックを省く
 （[設計思想](./01-design-philosophy.ja.md) の原則 4）。外部同期の入口での検証は
 [外部同期・VSCode 連携](./07-external-sync.ja.md) を参照。
-</content>

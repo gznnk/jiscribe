@@ -6,16 +6,19 @@
 
 ## 描画層は純粋描画
 
-`rendering/` のコンポーネントは **State を Props で受け取り SVG を描画するだけ**で、
-状態を持たずロジックも持たない。イベントハンドラは Props 経由で受け取る。
-依存は `rendering → states`（型参照）のみで、`controllers` には依存しない
-（[アーキテクチャ](./02-architecture.ja.md) の禁止事項）。
+`rendering/` のコンポーネントは **State を Props で受け取り SVG を描画する**。ドキュメントやキャンバスの
+状態は持たず、書き換えもしない。イベントハンドラも受け取らない — 操作の対象は `data-kind` / `data-id` /
+`data-part` 属性で宣言し、それを受けてハンドラへ振り分けるのはルートの
+[ジェスチャシステム](./04-gesture-system.ja.md)。描画に閉じた局所状態は持ってよい（例: `CanvasView.tsx` は
+描かれた背景色からグリッド線の色を導くために `useState` / `useLayoutEffect` を持つ）。
+依存の契約は `controllers` に依存しないこと（[アーキテクチャ](./02-architecture.ja.md) の禁止事項）。
+`states`（型と純粋関数）と `theme`（テーマトークン）は参照してよい。
 
-構成:
+主な構成:
 
-- `layers/` … 描画の重なり順（`background` / `content`）
-- `objects/` … 形状別コンポーネント（`primitives/` / `connector/` / `annotations/`、`base/TextOverlay`、`arrows/`）
-- `defs/` … SVG `defs`（フィルター等）
+- `layers/` … 描画の重なり順ごとの層
+- `objects/` … 形状別コンポーネントと、それを支える部品（例: `primitives/`、`connector/`、`base/TextOverlay`）
+- `defs/` … キャンバス全体の SVG `<defs>`。canvas 自身は何も持たず、図形型が登録する `svgDefs`（フィルター・グラデーション等）を並べる
 
 「純粋描画に徹する」ことで、表示は state の関数として決まり、テストや再利用がしやすくなる。
 
@@ -56,22 +59,25 @@
 
 - **保存**: `.jis`・State には `"auto"` のまま保持する。Mapper では変換しない。
 - **解決**: 描画時に `rendering/objects/utils/resolveAutoColor.ts` が**ロール（役割）ごと**に
-  テーマ色へ解決する（後述）。
+  テーマ色へ解決する（例外も含めて後述）。
 - **明示色**: ユーザーがカラーピッカーで具体色を選ぶと、その時点で具体値として保存され、以後は
   従来どおりテーマ非依存で表示される（後方互換）。
 
 #### auto はロール（役割）ごとのテーマトークンへ解決する
 
-`"auto"` が「従うべき色」はフィールドの役割で決まる。解決は `resolveAutoColor(value, role)`
-（`rendering/objects/utils/resolveAutoColor.ts`）の **1 関数に集約**する。
+`"auto"` が「従うべき色」はフィールドの役割（ロール）で決まる。図形データの auto は
+`resolveAutoColor(value, role)`（`rendering/objects/utils/resolveAutoColor.ts`）で解決する。ロールと
+解決先の正本は同ファイルの `AutoColorRole` と対応表で、例えば次のように解決する。
 
-| ロール           | 対象フィールド         | 解決先（テーマトークン）                                  |
-| ---------------- | ---------------------- | --------------------------------------------------------- |
-| 墨（ink）        | `stroke` / `fontColor` | `theme.objectInk`（`var(--jiscribe-object-ink)`）         |
-| サーフェス（面） | `fill`                 | `theme.objectSurface`（`var(--jiscribe-object-surface)`） |
+- 墨（`ink`）… `stroke` / `fontColor` → `theme.objectInk`（`var(--jiscribe-object-ink)`）
+- サーフェス（`surface`）… `fill` → `theme.objectSurface`（`var(--jiscribe-object-surface)`）
 
-この 2 つは図形専用トークンで、UI クロームの `foreground` / `surface` とは別枠。ホストはメニュー文字色を
-変えずに図形の墨だけを設定できる（ライトテーマで純黒にする等）。
+`objectInk` / `objectSurface` は図形専用トークンで、UI クロームの `foreground` / `surface` とは別枠。
+ホストはメニュー文字色を変えずに図形の墨だけを設定できる（ライトテーマで純黒にする等）。
+
+コネクターラベルの背景（`fill`）は例外で、`resolveAutoColor` を通さず
+`resolveLabelFill`（`rendering/objects/connector/ConnectorLabel/utils/resolveLabelFill.ts`）が auto と
+未指定をキャンバス面の色 `theme.canvasBg` へ解決する（背後の線を抜くため）。
 
 **単一ルール**: 「auto はロールのテーマトークンへ解決し、色は CSS で当てる」。`var(--jiscribe-*)` は
 SVG presentation 属性では解決されないため、stroke / fill / arrow の color も含め**色は属性では当てない**。
@@ -89,8 +95,9 @@ style」という 2 方式混在を解消）。
 - 「面＋前景」の組（fill:auto + fontColor:auto）は VSCode の surface↔foreground ペアと同じく
   可読性が保たれる。`fill` の既定は `"transparent"`（塗りなし）のままで、`"auto"` は別オプション。
 - Sticky の `fontColor` は固定の色付き背景を持つため `"auto"` にせず `#000000` を据え置く。
-- UI クロームのカラープレビューアイコンは、図形データの解決（`resolveAutoColor`）とは層が異なり、
-  chrome の慣用どおり `currentColor`（chrome 前景）で auto を示す。
+- UI クロームのカラープレビュー（ObjectMenu やプロパティパネルの色見本）も、描画と同じ解決関数
+  （`resolveAutoColor`、ラベル背景は `resolveLabelFill`）で auto をトークン色に解決して渡す。解決値は
+  `var(--jiscribe-*)` になりうるので、`ColorPreviewIcon` は fill を inline `style` で当てる。
 
 ## ホストによるテーマ注入（issue #150）
 
@@ -104,7 +111,7 @@ style」という 2 方式混在を解消）。
   カスタムプロパティとして注入する（`theme/themeCssVars.ts`）。カスタムプロパティは継承されるため、
   配下のすべてのスタイルが解決できる。
 - **2 つの伝搬経路**: CSS で消費するトークンはカスタムプロパティ経由。JS で消費する値
-  （ズーム補正計算に使うハンドル寸法）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、
+  （例: ズーム補正計算に使うハンドル寸法、後述の `colorScheme`）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、
   `var(...)` 文字列ではなく具体値でなければならない。
   - **フォントをテーマに載せない理由**: 内容から導出する箱は doc が名指すファミリで JS 計測する
     （`@jiscribe/doc` の `text/layout`）ので、canvas が同梱していないファミリは正しく計測できない — テキストが実際に
@@ -152,6 +159,12 @@ style」という 2 方式混在を解消）。
     load は即座に解決する。
 - **標準テーマ**: `darkCanvasTheme`（既定。その値はトークンのフォールバックを兼ねる）と
   `lightCanvasTheme` をパッケージから export する（`theme/themePresets.ts`）。
+- **`colorScheme`**: 図形が JS の値として読むテーマ項目（`CanvasColorScheme`）。トークンが塗る地の明暗
+  （`"light"` / `"dark"`）を名指し、地ごとに図版を出荷していてトークンでは塗り替えられない絵が使う —
+  AWS アイコンはこれで公式の Light / Dark の図版を選ぶ（`plugins/aws-shapes/src/presentation/AwsIconArt.tsx`。
+  `useCanvasTheme()` から読む）。`canvasBg` から推定せず必須項目にしているのは、トークンが canvas には
+  読めない `var(...)` 文字列でありうるため。そのため、トークンは固定のままエディタの地に追従するホスト
+  （VSCode）は配色ごとにテーマを持って差し替える。
 - **VSCode マッピング層**: VSCode ホスト側（このパッケージではない）が、トークン値として
   `var(--vscode-..., <ダークフォールバック>)` 文字列を渡すことで `--vscode-*` を中立トークンへ
   マップする（`apps/vscode-extension/src/webview/vscodeCanvasTheme.ts`）。VSCode 結合はこの 1 枚
@@ -160,10 +173,12 @@ style」という 2 方式混在を解消）。
 ### 細則
 
 - 描画専用の「汎用」シェイプ（矢印・GroupIcon 等）は `theme` を直接 import しない。
-  図形データ色の auto 解決は描画層の `resolveAutoColor`（唯一の theme 結合点）に委ね、シェイプは
-  解決済みの色を props/`style` で受け取るだけにする。一方 ObjectMenu 専用のカラー系アイコン
+  図形データ色の auto 解決は描画層の解決関数（`resolveAutoColor` など）に委ね、シェイプは
+  解決済みの色を props/`style` で受け取るだけにする。描画層で `theme` を直接参照するのは、auto の解決や
+  キャンバス自体のスタイル（`CanvasViewStyled.ts`）のように、テーマそのものを扱う箇所に留める。一方 ObjectMenu 専用のカラー系アイコン
   （ColorPreviewIcon / BorderColorIcon 等）は UI クロームなので `theme` トークンの参照を許容する。
 - 透明（none）インジケータの市松は `theme.transparentChecker`（前景色を薄く重ねる）で表現し、
   ライト / ダークで濃淡が自動反転するようにする。固定グレーは使わない。
-- 短命なアクセントオーバーレイ（スナップガイド等）は鮮やかな固定色でも両テーマで成立するため、
-  無理にテーマ化しない。色が衝突したときだけトークン化を検討する。
+- 短命なアクセントオーバーレイ（スナップガイド等）も UI クロームとしてテーマトークンで塗る
+  （`controllers/ui/feedback/SnapGuides/SnapGuides.tsx` は `theme.handleAccent`）。トークンは
+  `var(--jiscribe-*)` になりうるので、presentation 属性ではなく inline `style` で当てる。

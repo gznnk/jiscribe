@@ -7,15 +7,13 @@ For how the state changes triggered by gestures are reflected, see [State Update
 
 ## GestureRecognizer: Recognizing gestures from pointers
 
-Raw pointer/wheel events are aggregated at the canvas root (`Viewport`), and
+Raw pointer events are received on the canvas root element (`CanvasRoot`) and wheel events on the
+viewport element beneath it (`Viewport`) (`controllers/Canvas.tsx`), and
 the `GestureRecognizer` (`controllers/gestures/recognizer/`) converts them into a `Gesture`.
 
-There are eleven `GestureType`s:
-
-```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
-inertialScroll | inertialScrollEnd
-```
+The kinds of gesture are defined by `GestureType` (`controllers/gestures/recognizer/GestureRecognizerTypes.ts`).
+Besides press, drag start / move / end and click / doubleClick, there are wheel, pinch, longPress,
+inertial scrolling, and more.
 
 A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
 (`mods`), the hovered elements (`getHovered()`, a lazy + memoized hit test), `targetId` / `targetKind`,
@@ -23,10 +21,14 @@ A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`)
 
 Key points:
 
-- **click and doubleClick are mutually exclusive**: If the same target — the `(targetId, targetPart)` pair —
-  is tapped repeatedly within `DOUBLE_CLICK_THRESHOLD` (300ms), the second and subsequent events become
-  `doubleClick` instead of `click`. Different parts of one target (two buttons of the same menu, a
-  connector's line vs its label box) are separate click targets.
+- **click and doubleClick are mutually exclusive**: each pointerup emits exactly one of `click` /
+  `doubleClick`. A click that follows the previous one within `DOUBLE_CLICK_THRESHOLD` (300ms) and within
+  a screen-distance threshold, both with the primary button, becomes `doubleClick`
+  (`controllers/gestures/recognizer/utils/isDoubleClick.ts`). **The target is not compared** — time and
+  position only, as the OS / browser convention does: pressing a control the first click made appear
+  still pairs, the `doubleClick` targets the second click's element, and what the pair means is up to
+  the handler that receives it. Emitting a `doubleClick` drops the recorded click, so a third click is a
+  `click` again (rapid tapping alternates `click` and `doubleClick`).
   This is a deliberate design for cases where you want to **change the meaning** of the interaction, such as
   "single = select / double = text editing", and object- and text-related handlers depend on it (switching to
   the DOM-standard cumulative counting model would carry a large regression risk).
@@ -70,32 +72,36 @@ It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `sc
 `inertialScrollEnd` is consumed there as a state transition and routed nowhere)
 and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
 determine whether it should process the event. The registry holds exactly one handler per
-`targetKind`; where a kind needs finer splitting (by `targetId`, `data-part`, or event type), that
+`targetKind` (`controllers/registries/initializeGestureHandlerRegistry.ts`); where a kind needs finer splitting (by `targetId`, `data-part`, or event type), that
 handler is a router delegating to sub-handlers inside its own folder.
 
-| Handler group | Target                                                                                                              | Main files                                                                                                                                                                                               |
-| ------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)                                                   | `CanvasEventHandler.ts`                                                                                                                                                                                  |
-| `controls/`   | Transform controls (resize, rotate, vertex, connection)                                                             | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                                                                                                         |
-| `menu/`       | Context menu, object menu, toolbar, stencil library                                                                 | `MenuEventHandler.ts` (router), `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`, `StencilCategoryToggleHandler.ts`, `StencilLibraryPanelHandler.ts` |
-| `objects/`    | Shapes and connectors themselves (move, select, launch text editing, drag a connector label or one of its segments) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts` (router), `ConnectorClickHandler.ts`, `ConnectorLabelDragHandler.ts`, `ConnectorSegmentSlideHandler.ts`, `ConnectorSegmentMoveHandler.ts`            |
+| Handler group | Target                                                                                                              | Main files                                                                                                                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)                                                   | `CanvasEventHandler.ts`                                                                                                                                                                          |
+| `controls/`   | Transform controls (resize, rotate, vertex, connection)                                                             | `ControlEventHandler.ts` (router; the strategy order is in `initializeGestureHandlerRegistry.ts`), `transform/`, `vertex/`, `connection/`                                                        |
+| `menu/`       | Menu UI (toolbar, context menu, ObjectMenu, properties panel, stencil library, and so on)                           | `MenuEventHandler.ts` (router; `MENU_HANDLERS` in the same file is the source of truth for its sub-handlers), `ToolbarHandler.ts`, `ObjectMenuHandler.ts`, `PropertyPanelHandler.ts`, and others |
+| `objects/`    | Shapes and connectors themselves (move, select, launch text editing, drag a connector label or one of its segments) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts` (router; `CONNECTOR_HANDLERS` in the same file is the source of truth for its sub-handlers), `ConnectorClickHandler.ts`, and others          |
 
-On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoints /
-snapCandidates, etc. at the start of the operation), and clears it on `dragEnd`. If the doc has actually changed
+On `dragStart`, `handleGesture` opens the state's `activeDrag` (typed `ActiveDrag` in
+`controllers/CanvasTypes.ts`) and sets it back to `null` on `dragEnd`. `activeDrag.startSnapshot` holds the
+objects / keyPoints / snapCandidates, etc. at the start of the operation, and the drag's calculations are
+measured from it. If the doc has actually changed
 on `dragEnd`, it advances `commitVersion`, triggering history recording (see [State Update Flow](./06-state-update-flow.md) for details).
 
-`activeDragKind` (`"move"` / `"transform"` / `"other"`) follows that same
-`dragStart` / `dragEnd` boundary: `handleGesture` starts every drag at `"other"` and clears it
-on `dragEnd`, so `!== null` always means "a drag is under way". A handler whose drag needs to be
-told apart overwrites the kind in its own `dragStart` — `ObjectEventHandler` sets `"move"` and
+`activeDrag.kind` (`DragKind`) says what the drag is doing. `handleGesture` opens every drag as
+`"other"`, so `activeDrag !== null` always means "a drag is under way". A handler whose drag needs to be
+told apart overwrites the kind in its own `dragStart` — e.g. `ObjectEventHandler` sets `"move"` and
 `TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame and the
-connection anchors while a selection is moved, the anchors while it is transformed, and the
-ObjectMenu for every kind of drag.
+connection anchors while a selection is moved, and the anchors while it is transformed. The ObjectMenu
+hides for any kind of drag, except while one of its dropdowns is open (`objectMenuOpenId !== null`), so
+its sliders stay usable mid-drag (`controllers/ui/menu/ObjectMenu/hooks/useObjectMenuPosition.ts`).
 
 `inertialScrolling` is the fling's counterpart and deliberately a separate field: no pointer is down
-and no `eventStartSnapshot` is open during a fling, so folding it into `activeDragKind` would break
-the pair those two form. Only the ObjectMenu reads it, hiding for the fling the way it hides for the
-pan that preceded it. Being two states, they hand over with a gap of a frame or more where neither is
+and no drag is open during a fling, so folding it into `activeDrag` would break its opening and
+closing as a pair on `dragStart` / `dragEnd`. Readers include the ObjectMenu, which hides for the fling
+the way it hides for the pan that preceded it, and `resolveInteractionStatus`
+(`controllers/handles/useInteractionHandle.ts`), which reports it as `isInertialScrolling` and `isBusy`.
+Being two states, they hand over with a gap of a frame or more where neither is
 set — as do a fling and the pan that interrupts it — so the menu's own condition is run through
 `useLingeringFlag`: it hides at once and only comes back once the view has been still for
 `REAPPEAR_DELAY_MS`, which is what keeps those handovers from flashing it.
@@ -137,11 +143,11 @@ exposing a single `[data-kind]` element (one object = one `data-kind="object"` e
 
 Each attribute carries exactly one axis, forming the two-level routing tree `kind` (coarse) → `part` prefix (fine) (issue #81):
 
-| Attribute   | Meaning                                     | Grammar                                                                 |
-| ----------- | ------------------------------------------- | ----------------------------------------------------------------------- |
-| `data-kind` | **Domain** — 1:1 with a handler group       | one of `object` / `connector` / `canvas` / `control` / `menu`           |
-| `data-id`   | **Identity** — which target                 | an entity UUID or a singleton widget name. **Never parsed — no colons** |
-| `data-part` | **Sub-element** — which piece of the target | `<subtype>[:<args...>]`; absent = the target's body itself              |
+| Attribute   | Meaning                                     | Grammar                                                                           |
+| ----------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
+| `data-kind` | **Domain** — 1:1 with a registered handler  | a fixed name a handler claims in `supports()` (e.g. `object` / `canvas` / `menu`) |
+| `data-id`   | **Identity** — which target                 | an entity UUID or a singleton widget name. **Never parsed — no colons**           |
+| `data-part` | **Sub-element** — which piece of the target | `<subtype>[:<args...>]`; absent = the target's body itself                        |
 
 Rules:
 
@@ -152,10 +158,10 @@ Rules:
   command channel.
 - `data-kind` is present only on elements that have a gesture handler. "Interactive but not a gesture
   target" is expressed with `data-gesture="none"`, not with a handler-less kind.
-- The `menu` kind's part grammar (`command:` / `toggle:` / `set:` / `slider:`) has one home,
-  `gestures/handlers/menu/utils/menuParts.ts`: writers build the strings with `commandPart` / `togglePart` /
-  `setPart` / `sliderPart` (also exported through `@jiscribe/canvas/unstable` for plugins) and the menu
-  handlers take them apart with `parseMenuPart`, so no prefix is spelled twice.
+- The `menu` kind's part grammar (the prefixes such as `command:` and what each means) has one home,
+  `controllers/gestures/handlers/menu/utils/menuParts.ts`: writers build the strings with its builder
+  functions (`commandPart` and the like, also exported through `@jiscribe/canvas/unstable` for plugins)
+  and the menu handlers take them apart with `parseMenuPart`, so no prefix is spelled twice.
 
 Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
 With a committed label, only a double click on the label box (not the bare line) starts label editing,
@@ -163,9 +169,11 @@ and dragging the box moves the label along the path (`label.position` / `label.o
 with `offset` snapping to 0 within `SNAP_THRESHOLD_PX` of the line (bypassed by holding Ctrl).
 With no label yet, a double click on the bare line creates one at the clicked point (projected onto
 the path and snapped the same way), carried in `textEditState` until the edit is committed.
-A multi-slot shape uses the nested form instead: the `record` shape's `<g data-kind="object">` wraps two
-compartment rects carrying `data-part="name"` / `data-part="rows"`, which is how a double click resolves
-the text slot it landed in (`resolveTextSlotId` checks the value against the keys of `state.text`).
+A multi-slot shape uses the nested form instead: for example, the `<g data-kind="object">` of the UML
+`record` shape (`plugins/uml-shapes/src/presentation/RecordBox.tsx`) wraps one rect per compartment the box
+has, each carrying its slot id as its `data-part` (`data-part="name"`, `data-part="attributes"`, and so
+on), which is how a double click resolves the text slot it landed in (`resolveTextSlotId` checks the value
+against the keys of `state.text` and falls back to the first slot otherwise).
 
 #### Migration (issue #81) — completed
 
@@ -217,15 +225,14 @@ zoom ± buttons, the handler uses **both** `click` and `doubleClick` as executio
 
 ```ts
 const isActivation = event.type === "click" || event.type === "doubleClick";
-if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
-	return handleCommand(state, commandId);
-}
 ```
 
 The reason is the exclusivity spec described above. Since a repeat command button has no "doubleClick-specific meaning,"
 picking up only `click` would skip every other tap during rapid tapping (the second event is discarded as a `doubleClick`).
+Because targets are not compared, the second press of a toggle whose `data-part` changes with its value
+(`set:fontWeight:bold` → `set:fontWeight:normal`) arrives as a `doubleClick` too.
 Because the object- and text-related handlers depend on the recognizer's exclusivity spec, we leave it unchanged and instead
 **treat both events equivalently in the consuming handler**, achieving "N taps = N executions" locally and with low risk.
 
-- Applies to: `controllers/gestures/handlers/menu/ToolbarHandler.ts`
-- Related constant: `DOUBLE_CLICK_THRESHOLD` (`recognizer/GestureRecognizerConstants.ts`)
+- Example: `controllers/gestures/handlers/menu/ToolbarHandler.ts` (other menu sub-handlers take the same form)
+- Related constant: `DOUBLE_CLICK_THRESHOLD` (`controllers/gestures/recognizer/GestureRecognizerConstants.ts`)

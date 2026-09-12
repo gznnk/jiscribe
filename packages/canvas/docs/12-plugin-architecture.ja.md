@@ -2,10 +2,10 @@
 
 # プラグインアーキテクチャ
 
-図形をエンジンの外に置くための契約。8 つの基本型（`rect` / `ellipse` / `text` /
-`polyline` / `polygon` / `group` / `connector` / `svg`）以外の図形はすべて
-`plugins/` 配下のプラグインとして出荷しており、第三者が使うのと同じ公開 API だけで
-書いてある。
+図形をエンジンの外に置くための契約。エンジンが組み込みで持つ基本型（正本は
+`packages/doc/src/model/objects/types/ObjectType.ts` の `ObjectTypes`）以外の図形は
+すべて `plugins/` 配下のプラグインとして出荷しており、第三者が使うのと同じ公開 API
+だけで書いてある。
 出荷図形がそれで書けるなら、あなたの図形も書ける。
 
 ここでは契約を扱う。実際の手順（パッケージ構成・量産キット・配線チェックリスト）は
@@ -16,12 +16,8 @@
 プラグイン専用のランタイムは無い。プラグインは「何を登録するか」の宣言であり、
 通るレジストリは組み込み型と同じものである。
 
-```ts
-export type CanvasPlugin = {
-	id: string;
-	objects?: Readonly<Partial<Record<ObjectType, AnyObjectTypeDefinition>>>;
-};
-```
+プラグインの型は `CanvasPlugin`（`packages/canvas/src/plugin/CanvasPlugin.ts`）で、
+中身の本体は `objects` である。`ObjectType` をキーに、その型の定義を値に取る。
 
 ホストは `initialConfig` から配線する。
 
@@ -29,16 +25,18 @@ export type CanvasPlugin = {
 <Canvas doc={doc} initialConfig={{ plugins: [stickyPlugin, umlPlugin] }} />
 ```
 
-`objects` は `ObjectType` をキーに取り、値がその型に必要なものを全部持つ。
-`mapper` / `stateValidator` / `component` / `behavior` と、任意の calculator
-（`outline` / `textRegion` / `geometryKey` / `visualBounds` / `anchorRegion` /
-`extraConnectPoints`）、加えて `stencils` / `menu` / `propertyPanel` / `svgDefs` /
-`selectionControls` / `transformHandles` / `extraStyleProperties`。エンジン側に
+`objects` の値は `ObjectTypeDefinition`
+（`packages/canvas/src/plugin/ObjectTypeDefinition.ts`）で、その型についてエンジンが
+要るものを全部持つ。doc ↔ state の変換・state の検証・描画コンポーネント・
+移動や回転の振る舞いが必須で、輪郭やテキスト領域のような幾何の calculator と、
+ステンシル・メニュー・プロパティサイドバー・SVG defs・選択コントロールのような
+UI への寄与は任意である。どのフィールドがあるかはこの型定義が正本。エンジン側に
 型による分岐は無く、すべて `ObjectType` キーのレジストリで解決されるため、
 実行時にプラグイン型と組み込み型は区別できない。
 
-素の `Record` ではなく `Partial<Record<...>>` なのは意図的である。`ObjectType` は
-開いた union なので、1 図形だけ供給するプラグインが残りを省略できる必要がある。
+`objects` の型が素の `Record` ではなく `Partial<Record<...>>` なのは意図的である。
+`ObjectType` は開いた union なので、1 図形だけ供給するプラグインが残りを省略できる
+必要がある。
 
 ## UI と headless の 2 面
 
@@ -49,17 +47,18 @@ export type CanvasPlugin = {
 | `.`     | `CanvasPlugin`（UI 定義） | `<Canvas>` を使うホスト                        |
 | `./doc` | `CanvasDocPlugin`         | `createCanvasParser`・Node ツール・VSCode 診断 |
 
-```ts
-export type CanvasDocPlugin = {
-	id: string;
-	objects?: Readonly<Partial<Record<ObjectType, ObjectDocDefinition>>>;
-};
-```
+`CanvasDocPlugin`（`packages/doc/src/plugin/CanvasDocPlugin.ts`）は `CanvasPlugin`
+と同じ形で、`objects` の値が `ObjectDocDefinition` になっている。
 
-`ObjectDocDefinition` は型の headless 半分である。`features` / `validateDoc` /
-`factory` と、AI 向けの `description` / `summary` / `defaults` を持つ。`ObjectTypeDefinition` はこれを継承しており、だから
-`CanvasPlugin` は `CanvasDocPlugin` に**構造的に代入できる** — 同じ `plugins`
-配列が `<Canvas>` にもパーサーにも渡せる。
+`ObjectDocDefinition`（`packages/doc/src/plugin/ObjectDocDefinition.ts`）は型の
+headless 半分である。パース層がその型を知り、doc を検証し、doc から生成するのに
+要るもの（`features` / `validateDoc` など）と、スキーマ・AI ドキュメントの生成器が
+読むメタデータを持つ。どのフィールドがあるかはこの型定義が正本。
+`ObjectTypeDefinition` はこれに UI 層の契約を足したもので、`textRegion` だけは
+描画側の計算関数の型に差し替えている（doc 側の宣言は「箱が文字を持たない」を
+`null` で答えられるが、描画側にはその答えの使い道が無い）。それ以外はそのまま
+引き継いでおり、だから `CanvasPlugin` は `CanvasDocPlugin` に**構造的に代入できる**
+— 同じ `plugins` 配列が `<Canvas>` にもパーサーにも渡せる。
 
 分けてある理由は、ドキュメントを検証するだけの消費者に React を読ませないため。
 VSCode 拡張の診断も MCP サーバーも Node プロセスで `.jis` をパースする。
@@ -92,6 +91,9 @@ const result = parser.parse(text);
   場所であり、その先は正当性を前提にする（[設計思想](./01-design-philosophy.ja.md)）
 
 ## 公開面とその階層
+
+主な入口を並べる。テスト用の `./testing*` などを含む全体は、各パッケージの
+`package.json` の `exports` が正本。
 
 ```
 @jiscribe/canvas              安定: 型の語彙・登録口・Canvas の props
@@ -131,7 +133,8 @@ await canvasRef.current?.export.toSvgString();
 枠の外へ何を描いているか、コネクターがどう通ったか、どの図形が重なっているか、
 ある点に何が描かれているか）、`history`（undo スタック。`mark` / `revertTo` で
 一連の編集をまとめて巻き戻せる）、`interaction`（ユーザーが操作中か＝外から書き
-込むと壊れる状態か）の 3 つ。doc 自体の編集に canvas は要らないので、そちらは
+込むと壊れる状態か）がそれにあたる（正本は
+`packages/canvas/src/controllers/handles/CanvasHandle.ts`）。doc 自体の編集に canvas は要らないので、そちらは
 headless な `@jiscribe/doc` の `createDocOps` の担当。
 
 state をホストへ持ち上げる（controlled props 化）案は検討したうえで**採らない**。
@@ -171,8 +174,8 @@ CodeMirror の `EditorView`）。
 キャンバス全体の `<defs>` に**型ごと 1 回**描画される。その型のオブジェクトが 0 個
 でも描画されるので、参照先が消えることはない。SVG の id は document グローバルで
 レジストリ側でスコープを付けられないため、**id は型名を接頭辞にする**
-（`sticky-shadow`）。ホストが `objectTypes` で型を絞れば、その `svgDefs` も登録され
-ない。エクスポートは live SVG の `cloneNode` なので、プラグイン提供分も自動で入る。
+（`sticky-shadow`）。ホストの `objectTypes` が絞るのは組み込み型だけで、`plugins` に
+入れたプラグインの型とその `svgDefs` は常に登録される。エクスポートは live SVG の `cloneNode` なので、プラグイン提供分も自動で入る。
 
 **テキストスロット**（`features.text: "slots"`）。整数風のスロット ID（`"0"` /
 `"1"`）を使わない。JS は整数風の自前キーを挿入順より前に数値昇順で列挙するため、
@@ -193,16 +196,18 @@ CodeMirror の `EditorView`）。
 当てはまらないところに型自身の行を足す形になる。
 
 **`propertyPanel` のカスタム行。**プラグインが自分で描く行は組み込みの行に混ぜる
-`{ type: "custom"; id; component }` で、ObjectMenu のカスタム項目と同じ形である。
-コンポーネントが受け取るのは `PropertyPanelItemProps` だけ — `objects` /
-`selectedIds` / `selectedConnectorId` / `multiSelectGroup` に、スタイルを書く
-`onPropertyUpdate` とフレームの 5 つの数値を書く `onTransformUpdate` である。
+`{ type: "custom"; id; component }`（`PropertyPanelCustomItem`）で、ObjectMenu の
+カスタム項目と同じ形である。コンポーネントが受け取るのは `PropertyPanelItemProps`
+だけで、選択の切片と、スタイルを書く `onPropertyUpdate`・フレームの数値を書く
+`onTransformUpdate` が入っている（どちらの型も
+`packages/canvas/src/controllers/ui/menu/PropertyPanel/PropertyPanelTypes.ts` が正本）。
 組み込みの行が読むコントローラ state は渡らない。使ってよいのは
 `@jiscribe/canvas/unstable`（したがって `@jiscribe/canvas-sdk`）が公開する
-プロパティサイドバーの UI キットで、全行が共有するラベル列の `PropertyRow` と、
-その隣に置くコントロール（`PropertyNumberField` / `PropertyColorField` /
-`PropertyDropdownField` / `PropertySegmentedControl`）、それに単体で 1 行になる
-`PropertyCheckbox`（セクションの左端から、ボックスと右側のラベル）である。
+プロパティサイドバーの UI キットで、全行が共有するラベル列の `PropertyRow`、
+その隣に置く入力部品（`PropertyNumberField` / `PropertyColorField` など）、
+単体で 1 行になる `PropertyCheckbox`（セクションの左端から、ボックスと右側の
+ラベル）がある。キットに何があるかは `packages/canvas/src/unstable.ts` の export
+が正本。
 書く前に知っておく規約は 2 つ:
 
 - 複数型のマージが行を突き合わせる鍵は `id` である。同じ行を出す型どうしは同じ
@@ -212,8 +217,8 @@ CodeMirror の `EditorView`）。
   ある」と申告する手段が無いためで、ObjectMenu がカスタム項目に課すのと同じ規則
 
 **`propertyPanel` のセクション表示。**セクションは `isShown(selection)` を持てる。
-描く前に、行が読むのと同じ選択の切片（`PropertyPanelSelection` — `objects` /
-`selectedIds` / `selectedConnectorId`）を渡して尋ねられる。全ての行が null を返す
+描く前に、行が読むのと同じ選択の切片（`PropertyPanelSelection`）を渡して
+尋ねられる。全ての行が null を返す
 セクションにはこれが要る。行は自分で消えるが、アコーディオンの見出しだけが空の中身の
 上に残るためである。コア自身の用例はコネクターの「ラベル」「ラベルの枠線」セクションで、ラベルに
 文字があるときだけ出る。省略は常に出す。
@@ -227,8 +232,8 @@ extra スタイルプロパティ `headerHeight` を書き、Layout セクショ
 **i18n。**プラグインは自分の辞書を持ち、`useCanvasLocale` /
 `resolveLocaleMessages` で解決する。core の文言キーにプラグインの語彙は足さない。
 
-**`selectionControls`。**プレーン宣言 `{ name, Component, handle }` で、基底クラス
-継承は無い。`handle` に渡すのは自オブジェクトの情報（現フレーム + ジェスチャー開始
+**`selectionControls`。**プレーンな宣言（`SelectionControlDefinition`。ハンドルを
+描く `Component` と、ジェスチャーを解釈する `handle` の組）で、基底クラス継承は無い。`handle` に渡すのは自オブジェクトの情報（現フレーム + ジェスチャー開始
 スナップショット）とカーソルだけである。part の導出・スナップショットのガード・
 COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わりする。
 
@@ -238,7 +243,7 @@ COW 書き戻し・エッジスクロール解除は内部 adapter が肩代わ�
 
 | 領域                         | 現状                                                                                                                                                                                            |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 組み込み UI                  | Toolbar / ObjectMenu / ContextMenu は無条件にマウントされ、隠す・差し替える手段が無い                                                                                                           |
+| 組み込み UI                  | ObjectMenu / ContextMenu は無条件にマウントされ、ホストから隠す・差し替える手段が無い（Toolbar は `toolbar.show: false` で隠せ、`toolbar.sections` で中身を差し替えられる）                     |
 | UI スロット                  | ツールバーの `{ type: "slot" }` 項目だけ。オーバーレイ層のスロットは無い。プロパティサイドバーは、型が宣言したセクションの 1 行としてしかコンポーネントを受け取らない（パネル単位では渡せない） |
 | 細粒度のプロパティ書き戻し   | ハンドルに `updateProperties` が無い。`doc` prop の差し替えは外部変更扱いで選択状態がリセットされ履歴境界も切られるため、編集経路に使えない                                                     |
 | インタラクションの調整       | スナップ閾値などが定数でハードコードされている。エッジスクロールとパン/ズームも外部から無効化できない                                                                                           |

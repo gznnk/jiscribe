@@ -5,7 +5,7 @@ import type { PropertyPanelSection } from "./PropertyPanelTypes";
 /**
  * Registry that manages properties-sidebar section definitions per object type.
  *
- * Registration goes through applyObjectDefinition() in initializeObjectRegistry.ts:
+ * Registration goes through `applyObjectDefinition` (controllers/registries):
  * a definition's `propertyPanel`, or the features-derived default
  * (createDefaultPropertyPanel) when omitted.
  */
@@ -28,7 +28,7 @@ export class PropertyPanelRegistry {
 		return this.sectionsByType.get(type) ?? [];
 	}
 
-	/** Removes all registrations. Call before re-running initializeObjectRegistry. */
+	/** Removes all registrations. */
 	clear(): void {
 		this.sectionsByType.clear();
 	}

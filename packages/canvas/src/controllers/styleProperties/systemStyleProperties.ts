@@ -31,8 +31,9 @@ type SystemStyleName =
 	| "lockAspectRatio";
 
 /**
- * System style properties: the closed set tied 1:1 to ObjectFeatures flags,
- * registered into every canvas's StylePropertyRegistry at bundle creation.
+ * System style properties: one handler per SystemStyleName, registered into every
+ * canvas's StylePropertyRegistry at bundle creation. Several names may share one
+ * ObjectFeatures flag as their gate (strokeWidth and strokeDashType ride on "stroke").
  * Shape-specific properties are NOT added here — declare them in the shape's
  * ExtraStyleProperties (see ObjectTypeDefinition.extraStyleProperties) instead.
  * Handlers are stateless, so the instances are shared across bundles.
