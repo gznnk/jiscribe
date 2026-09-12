@@ -21,11 +21,30 @@ const TINY_PNG_BASE64 =
 	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 /**
+ * 2x1 opaque PNG (real encoder output), the carrier a test answers a save-time
+ * render request with. Its bytes differ from {@link TINY_PNG_BASE64} outside the
+ * embedded source, which is what lets a test tell a live render from the save
+ * fallback — the fallback re-embeds into the image the file already holds.
+ */
+const RENDERED_PNG_BASE64 =
+	"iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAADklEQVR42mP4z8AAQv8BD/kD/Zh51wAAAAAASUVORK5CYII=";
+
+/**
  * Minimal SVG carrying the empty `jiscribe:source` element that
  * `replaceCanvasSourceInSvgText` rewrites; it only ever replaces, never inserts.
  */
 const CANVAS_SVG_TEMPLATE =
 	`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1">` +
+	`<metadata><jiscribe:source xmlns:jiscribe="https://jiscribe.dev/ns/canvas" ` +
+	`data-jiscribe-version="1"></jiscribe:source></metadata></svg>`;
+
+/**
+ * The same SVG at a different size, the `.jis.svg` counterpart of
+ * {@link RENDERED_PNG_BASE64}: a test answers a render request with this one, so
+ * the text on disk says whether the save rendered or fell back.
+ */
+const RENDERED_SVG_TEMPLATE =
+	`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 1">` +
 	`<metadata><jiscribe:source xmlns:jiscribe="https://jiscribe.dev/ns/canvas" ` +
 	`data-jiscribe-version="1"></jiscribe:source></metadata></svg>`;
 
@@ -99,9 +118,47 @@ export function jisPngBytes(sourceJson: string): Uint8Array {
 	return insertPngTextChunk(plainPngBytes(), PNG_SOURCE_KEYWORD, sourceJson);
 }
 
+/**
+ * The bytes a test answers a `.jis.png` save-time render request with: a
+ * different carrier image than {@link jisPngBytes}, carrying the same kind of
+ * embedded source. Answering with these makes "the save rendered" and "the save
+ * re-embedded into the old image" two different byte strings on disk.
+ *
+ * @param sourceJson - the document text to embed, as in {@link jisPngBytes}
+ */
+export function renderedJisPngBytes(sourceJson: string): Uint8Array {
+	return insertPngTextChunk(
+		new Uint8Array(Buffer.from(RENDERED_PNG_BASE64, "base64")),
+		PNG_SOURCE_KEYWORD,
+		sourceJson,
+	);
+}
+
 /** An SVG with no embedded canvas source, as any ordinary image would be. */
 export function plainSvgText(): string {
 	return PLAIN_SVG_TEXT;
+}
+
+/**
+ * Embed a source into one of the SVG templates here.
+ *
+ * @param svgTemplate - a template carrying the empty `jiscribe:source` element
+ * @param svgTemplateName - the template constant's name, quoted in the error
+ *   raised when that element is no longer there to replace
+ * @param sourceJson - the document text to embed; XML-escaped on the way in
+ */
+function svgTextWithCanvasSource(
+	svgTemplate: string,
+	svgTemplateName: string,
+	sourceJson: string,
+): string {
+	const svgText = replaceCanvasSourceInSvgText(svgTemplate, sourceJson);
+	if (svgText === null) {
+		throw new Error(
+			`${svgTemplateName} no longer carries a jiscribe:source element to replace`,
+		);
+	}
+	return svgText;
 }
 
 /**
@@ -111,11 +168,23 @@ export function plainSvgText(): string {
  *   it is stored as written and comes back unchanged
  */
 export function jisSvgText(sourceJson: string): string {
-	const svgText = replaceCanvasSourceInSvgText(CANVAS_SVG_TEMPLATE, sourceJson);
-	if (svgText === null) {
-		throw new Error(
-			"CANVAS_SVG_TEMPLATE no longer carries a jiscribe:source element to replace",
-		);
-	}
-	return svgText;
+	return svgTextWithCanvasSource(
+		CANVAS_SVG_TEMPLATE,
+		"CANVAS_SVG_TEMPLATE",
+		sourceJson,
+	);
+}
+
+/**
+ * The text a test answers a `.jis.svg` save-time render request with; the SVG
+ * counterpart of {@link renderedJisPngBytes}.
+ *
+ * @param sourceJson - the document text to embed, as in {@link jisSvgText}
+ */
+export function renderedJisSvgText(sourceJson: string): string {
+	return svgTextWithCanvasSource(
+		RENDERED_SVG_TEMPLATE,
+		"RENDERED_SVG_TEMPLATE",
+		sourceJson,
+	);
 }

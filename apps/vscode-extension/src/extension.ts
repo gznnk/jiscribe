@@ -4,18 +4,30 @@ import { registerSetupAiCommand } from "./commands/setupAi";
 import { DiagnosticProvider } from "./diagnostics/DiagnosticProvider";
 import { JiscribeEditorProvider } from "./editor/JiscribeEditorProvider";
 import { JiscribeImageEditorProvider } from "./editor/JiscribeImageEditorProvider";
+import { createWebviewBridgeRegistry } from "./editor/webviewBridgeRegistry";
+import type { JiscribeTestApi } from "./types/testApi";
 
 /**
  * Extension entry point, called by VSCode on activation. Per package.json's
  * activationEvents (currently []), this fires when the first canvas file opens.
  * Disposables pushed to context.subscriptions are released on deactivation.
+ *
+ * @param context - the activation context; its extensionMode decides whether the
+ *   Test API is returned
+ * @returns the Test API in ExtensionMode.Test, undefined in every other mode
  */
-export function activate(context: vscode.ExtensionContext) {
+export function activate(
+	context: vscode.ExtensionContext,
+): JiscribeTestApi | undefined {
 	// Surface canvas file validation errors in the Problems panel.
 	new DiagnosticProvider(context);
 
+	// Both custom editors announce their panels here, so the e2e suite can act as
+	// a Webview (see editor/webviewBridgeRegistry).
+	const bridgeRegistry = createWebviewBridgeRegistry();
+
 	// Custom editor that shows the Canvas UI (Webview) for canvas files.
-	const provider = new JiscribeEditorProvider(context);
+	const provider = new JiscribeEditorProvider(context, bridgeRegistry);
 	const registration = vscode.window.registerCustomEditorProvider(
 		"jiscribe.editor", // must match contributes.customEditors[].viewType
 		provider,
@@ -36,7 +48,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Custom editor that opens source-embedded images (.jis.png / .jis.svg,
 	// analogous to draw.io's .drawio.png / .drawio.svg) in the Canvas UI.
-	const imageProvider = new JiscribeImageEditorProvider(context);
+	const imageProvider = new JiscribeImageEditorProvider(
+		context,
+		bridgeRegistry,
+	);
 	const imageRegistration = vscode.window.registerCustomEditorProvider(
 		"jiscribe.imageEditor", // must match contributes.customEditors[].viewType
 		imageProvider,
@@ -51,6 +66,14 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(imageRegistration);
 
 	registerSetupAiCommand(context);
+
+	// extensionMode is Test only for a host VSCode launched with
+	// --extensionTestsPath, which is how the e2e suite runs; a normal session (or
+	// a Development one) exports nothing, so this is not an environment sniff.
+	if (context.extensionMode === vscode.ExtensionMode.Test) {
+		return { webviewBridge: bridgeRegistry };
+	}
+	return undefined;
 }
 
 /**

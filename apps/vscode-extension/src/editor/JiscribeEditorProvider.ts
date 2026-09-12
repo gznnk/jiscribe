@@ -1,10 +1,16 @@
 import * as vscode from "vscode";
 
-import { resolveCanvasWebview } from "./resolveCanvasWebview";
+import { createLatestWriteSerializer } from "./latestWriteSerializer";
+import {
+	resolveCanvasWebview,
+	type CanvasWebviewChannel,
+} from "./resolveCanvasWebview";
 import {
 	createSelfWriteTracker,
 	type DocumentEndOfLine,
+	type SelfWriteTracker,
 } from "./selfWriteTracker";
+import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
 import { toWebviewDocSource } from "../canvasDocSource";
 import type { ExtensionToWebviewMessage } from "../types/messages";
 
@@ -18,14 +24,23 @@ function documentEndOfLine(document: vscode.TextDocument): DocumentEndOfLine {
  *
  * Data flow:
  *   file change → Extension → Webview (postMessage)
- *   canvas edit → Webview → Extension (postMessage) → write back via WorkspaceEdit
+ *   canvas edit → Webview → Extension (postMessage) → write back via WorkspaceEdit,
+ *     one at a time (latestWriteSerializer)
  *
  * Image documents (.jis.svg / .jis.png) can't be handled by full-text
  * replacement, so JiscribeImageEditorProvider (re-render the image at save time)
  * covers them.
  */
 export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
-	constructor(private readonly context: vscode.ExtensionContext) {}
+	/**
+	 * @param context - the extension context, for the Webview bundle's root URI
+	 * @param bridgeRegistry - registry every resolved panel is announced to, so
+	 *   the e2e suite can act as the Webview (see webviewBridgeRegistry)
+	 */
+	constructor(
+		private readonly context: vscode.ExtensionContext,
+		private readonly bridgeRegistry: WebviewBridgeRegistry,
+	) {}
 
 	/**
 	 * Called by VSCode each time a .jis file opens. Initializes the Webview
@@ -44,6 +59,32 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		// external change by content (see selfWriteTracker).
 		const selfWriteTracker = createSelfWriteTracker();
 
+		// One write at a time, so a commit is never built against a document version
+		// VSCode has already moved past (see latestWriteSerializer).
+		const writeSerializer = createLatestWriteSerializer((text) =>
+			this.writeCommit(document, selfWriteTracker, text),
+		);
+
+		const channel = resolveCanvasWebview(webviewPanel, {
+			extensionUri: this.context.extensionUri,
+			documentUri: document.uri,
+			bridgeRegistry: this.bridgeRegistry,
+
+			// Webview is initialized; send the initial file contents.
+			onReady: () => this.updateWebview(channel, document),
+
+			// Write the canvas edit back to the file, behind whatever write is still
+			// in flight. A commit that arrives while an older one waits supersedes
+			// it, so the file ends at the canvas' latest state either way.
+			onUpdate: (data) => writeSerializer.enqueue(data),
+
+			// The Webview's own listener is disposed by resolveCanvasWebview; this
+			// one is ours and leaks without it.
+			onDispose: () => changeDocumentSubscription.dispose(),
+		});
+
+		// Registered after the panel is resolved, so the channel the handler posts
+		// through exists by the time any event can arrive.
 		const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
 			(e) => {
 				if (e.document.uri.toString() !== document.uri.toString()) {
@@ -65,51 +106,51 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 					return;
 				}
 
-				this.updateWebview(webviewPanel, document);
+				this.updateWebview(channel, document);
 			},
 		);
+	}
 
-		resolveCanvasWebview(webviewPanel, {
-			extensionUri: this.context.extensionUri,
-			documentUri: document.uri,
-
-			// Webview is initialized; send the initial file contents.
-			onReady: () => this.updateWebview(webviewPanel, document),
-
-			onUpdate: (data) => {
-				// Write the canvas edit back to the file. Track the text before the
-				// write, because applyEdit() is async and onDidChangeTextDocument may
-				// fire before it resolves. The two-arg .then(onFulfilled, onRejected)
-				// is used so an exception thrown inside onFulfilled does not reach
-				// onRejected.
-				const trackedText = selfWriteTracker.track(
-					data,
-					documentEndOfLine(document),
-				);
-				this.updateTextDocument(document, data).then(
-					(applied) => {
-						// applyEdit() can resolve false instead of rejecting (e.g. the
-						// document is already closed); either way, notify the user it
-						// wasn't saved.
-						if (!applied) {
-							selfWriteTracker.untrack(trackedText);
-							this.notifySaveFailure(document, undefined);
-						}
-					},
-					(err: unknown) => {
-						// Nothing reached the document, so drop the tracked text;
-						// otherwise it would swallow a later external change that happens
-						// to match it.
-						selfWriteTracker.untrack(trackedText);
-						this.notifySaveFailure(document, err);
-					},
-				);
+	/**
+	 * Write one canvas commit back to the file and report it if it did not land.
+	 *
+	 * @param document - the edited document; its line ending decides the text the
+	 *   echo is recognized by
+	 * @param selfWriteTracker - this editor's tracker, told about the text right
+	 *   before it is written (applyEdit is async and onDidChangeTextDocument can
+	 *   fire before it resolves)
+	 * @param text - the whole document as the Webview committed it, with "\n"
+	 *   separators
+	 * @returns a promise that resolves once the outcome has been handled, whatever
+	 *   that outcome was, so the serializer can start the next write
+	 */
+	private writeCommit(
+		document: vscode.TextDocument,
+		selfWriteTracker: SelfWriteTracker,
+		text: string,
+	): Promise<void> {
+		const trackedText = selfWriteTracker.track(
+			text,
+			documentEndOfLine(document),
+		);
+		// The two-arg .then(onFulfilled, onRejected) is used so an exception thrown
+		// inside onFulfilled does not reach onRejected.
+		return this.updateTextDocument(document, text).then(
+			(applied) => {
+				// applyEdit() can resolve false instead of rejecting (e.g. the document
+				// is already closed); either way, notify the user it wasn't saved.
+				if (!applied) {
+					selfWriteTracker.untrack(trackedText);
+					this.notifySaveFailure(document, undefined);
+				}
 			},
-
-			// The Webview's own listener is disposed by resolveCanvasWebview; this
-			// one is ours and leaks without it.
-			onDispose: () => changeDocumentSubscription.dispose(),
-		});
+			(err: unknown) => {
+				// Nothing reached the document, so drop the tracked text; otherwise it
+				// would swallow a later external change that happens to match it.
+				selfWriteTracker.untrack(trackedText);
+				this.notifySaveFailure(document, err);
+			},
+		);
 	}
 
 	/**
@@ -129,19 +170,22 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	/**
 	 * Send the file's current contents to the Webview. Called when the file
 	 * changes externally or when the Webview signals it's ready.
+	 *
+	 * @param channel - the resolved panel's channel; posting through the panel
+	 *   directly would hide the message from the bridge registry
+	 * @param document - the edited document, re-indented on the way out
+	 *   (toWebviewDocSource)
 	 */
 	private updateWebview(
-		panel: vscode.WebviewPanel,
+		channel: CanvasWebviewChannel,
 		document: vscode.TextDocument,
-		saveNonce?: string,
 	) {
 		const message: ExtensionToWebviewMessage = {
 			type: "update",
 			data: toWebviewDocSource(document.getText()),
-			saveNonce,
 			docType: "json",
 		};
-		panel.webview.postMessage(message);
+		channel.post(message);
 	}
 
 	/**

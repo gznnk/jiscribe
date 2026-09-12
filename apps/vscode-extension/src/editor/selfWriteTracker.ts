@@ -7,15 +7,10 @@
  * as an `onDidChangeTextDocument` event. Forwarded to the webview, such an event
  * is applied as an external change, and one that lands after a newer commit
  * reverts the canvas to the older document, so the provider has to recognize
- * its own writes. It used to do that by counting in-flight writes and
- * carrying a single save nonce, which left two gaps (issue #29): a genuine
- * external change landing while a write was in flight was dropped as an echo,
- * and two overlapping commits shifted the nonces by one, so the canvas reloaded
- * its own save as an external change.
- *
- * Both gaps close by classifying on content instead: a change event whose text
- * is one the extension wrote is an echo, anything else is external. Self echoes
- * are never forwarded — the canvas already holds that state.
+ * its own writes. It classifies on content: a change event whose text is one
+ * the extension wrote is an echo, anything else is external (issue #29 is why
+ * neither an in-flight counter nor a nonce is enough). Self echoes are never
+ * forwarded — the canvas already holds that state.
  *
  * A non-matching event empties the queue, which is the non-obvious part. That
  * event is an external change and will be forwarded, so the canvas is about to

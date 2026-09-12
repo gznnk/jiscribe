@@ -160,11 +160,10 @@ function App() {
 	// The written-back payload is always the doc's JSON text regardless of
 	// docType; image docs (.jis.svg / .jis.png) render at save time via
 	// requestImageExport (keeping the commit path off DOM rendering).
-	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
+	const handleCommit = useCallback((doc: CanvasDoc) => {
 		const message: WebviewToExtensionMessage = {
 			type: "update",
 			data: JSON.stringify(doc, null, 2),
-			saveNonce,
 		};
 		vscode.postMessage(message);
 	}, []);
@@ -230,9 +229,7 @@ function App() {
 					// records the error, so mid-edit text (which is broken most of the
 					// time) neither rebuilds the canvas nor drops the viewport (#136).
 					const result = canvasParser.parse(jsonText);
-					setDocView((prev) =>
-						applyParseResult(prev, result, message.saveNonce),
-					);
+					setDocView((prev) => applyParseResult(prev, result));
 					break;
 				}
 
@@ -347,7 +344,6 @@ function App() {
 			<div style={{ width: "100%", height: "100vh", position: "relative" }}>
 				<Canvas
 					doc={docView.doc}
-					syncNonce={docView.syncNonce}
 					initialConfig={mountConfig}
 					toolbar={{ sections: toolbarSections }}
 					stencilLibrary={{ sections: stencilLibrarySections }}

@@ -65,7 +65,14 @@ Then, depending on what you touched:
   real VSCode (both `1.85.0`, the `engines.vscode` minimum, and `stable`) through the
   suites in `apps/vscode-extension/e2e/`, which cover what only the live
   API can show: activation, which editor a canvas file lands in, diagnostics, and the
-  document behaviour the self-write echo detection relies on. The VSCode builds are
+  document behaviour the self-write echo detection relies on. Through the
+  Test-mode bridge the extension exposes (`activate` returns it only in
+  `vscode.ExtensionMode.Test`), the suites also drive what the Webview would —
+  posting a canvas commit and watching what the extension writes and sends back,
+  and answering the render request a `.jis.png` / `.jis.svg` save waits for, which
+  is what puts the image editor under test: its save, the fallback a save from a
+  hidden tab takes, the repair of the image that leaves behind, and revert.
+  The VSCode builds are
   downloaded into `apps/vscode-extension/.vscode-test/` on the first run, and a
   display is required — WSLg provides one, and a headless machine needs
   `xvfb-run -a` in front of the command. When `$XDG_RUNTIME_DIR` names a

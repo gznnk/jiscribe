@@ -29,10 +29,10 @@ import {
  * to reach the "no editable source" display instead, which from here is visible
  * only as the open succeeding.
  *
- * What the webview then shows is out of reach: a test cannot post messages as
- * the webview, so nothing past the open is asserted. Saving is out of reach for
- * the same reason — every save asks the webview to render the image, and the
- * bytes that land on disk depend on whether it answers.
+ * What the webview then shows is out of reach — only its own rendering could tell
+ * a canvas apart from an error notice — so nothing past the open is asserted
+ * here. What the extension does past it is in imageEditorSave.test.ts, which
+ * drives the webview's side of the save through the Test-mode bridge.
  */
 
 describe("image editor open paths", () => {

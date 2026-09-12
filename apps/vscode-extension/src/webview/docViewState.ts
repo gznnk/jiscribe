@@ -26,15 +26,12 @@ export type DocViewError =
 export type DocViewState = {
 	/** Last document that parsed clean, or null before the first one arrives. */
 	doc: CanvasDoc | null;
-	/** saveNonce that delivered `doc`, echoed to the canvas as `syncNonce`. */
-	syncNonce: string | undefined;
 	/** Error of the latest text, or null when it parsed clean. */
 	error: DocViewError | null;
 };
 
 export const initialDocViewState: DocViewState = {
 	doc: null,
-	syncNonce: undefined,
 	error: null,
 };
 
@@ -62,18 +59,14 @@ const withError = (prev: DocViewState, error: DocViewError): DocViewState =>
  * @param prev State before this update; its `doc` is carried over unchanged for
  *   every failing result, which is what keeps the canvas mounted.
  * @param result Outcome of `canvasParser.parse` for the text just received.
- * @param saveNonce Nonce the Extension attached to the update, adopted only when
- *   the result is `ok` (it identifies the text now on screen). Undefined for an
- *   external change that is not a fold-back of our own save.
  */
 export const applyParseResult = (
 	prev: DocViewState,
 	result: CanvasParseResult,
-	saveNonce: string | undefined,
 ): DocViewState => {
 	switch (result.kind) {
 		case "ok":
-			return { doc: result.doc, syncNonce: saveNonce, error: null };
+			return { doc: result.doc, error: null };
 
 		case "structure-error":
 		case "semantic-error":

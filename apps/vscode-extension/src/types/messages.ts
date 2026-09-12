@@ -27,7 +27,7 @@ export type WebviewToExtensionMessage =
 	 * Requests writing canvas edits back. `data` is always the doc's JSON text
 	 * (for image docs the Extension tracks dirty state and renders at save time).
 	 */
-	| { type: "update"; data: string; saveNonce: string }
+	| { type: "update"; data: string }
 	/** Undo requested on the canvas (delegated to the host editor's undo command). */
 	| { type: "undo" }
 	/** Redo requested on the canvas (delegated to the host editor's redo command). */
@@ -61,13 +61,13 @@ export type WebviewToExtensionMessage =
 /** Messages sent Extension → Webview via webviewPanel.webview.postMessage(). */
 export type ExtensionToWebviewMessage =
 	/**
-	 * Sends the latest file contents to the Webview. The meaning of `data`
-	 * depends on `docType` (see JiscribeDocType); omitted docType means "json".
+	 * The file's current contents, sent on ready and on a change the Extension
+	 * did not make itself. The meaning of `data` depends on `docType` (see
+	 * JiscribeDocType); omitted docType means "json".
 	 */
 	| {
 			type: "update";
 			data: string;
-			saveNonce?: string;
 			docType?: JiscribeDocType;
 	  }
 	/**

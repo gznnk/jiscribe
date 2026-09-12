@@ -22,6 +22,34 @@ export function activeCustomEditorTabInput():
 }
 
 /**
+ * The tab of a file opened in a custom editor, wherever it sits.
+ *
+ * The tab is where a custom editor's state is readable at all: the provider only
+ * fires edit events and VSCode owns the dirty flag, so `tab.isDirty` is what a
+ * test asserts a commit and a save against. `tab.isActive` is also how a test
+ * reads whether the editor's Webview panel is on screen — which decides whether a
+ * save can render — and stands in for it only while every tab is in one editor
+ * group, as it is in these suites.
+ *
+ * @param uri - the opened file; a tab in any group matches, and undefined means
+ *   the file is not open in a custom editor (closed, or open as text)
+ */
+export function customEditorTabFor(uri: vscode.Uri): vscode.Tab | undefined {
+	const documentKey = uri.toString();
+	for (const tabGroup of vscode.window.tabGroups.all) {
+		for (const tab of tabGroup.tabs) {
+			if (
+				tab.input instanceof vscode.TabInputCustom &&
+				tab.input.uri.toString() === documentKey
+			) {
+				return tab;
+			}
+		}
+	}
+	return undefined;
+}
+
+/**
  * Open a file in one of the extension's custom editors and wait for its tab.
  *
  * `vscode.openWith` resolves once the editor is created, which is before the tab

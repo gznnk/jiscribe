@@ -9,8 +9,9 @@ export default defineConfig({
 		// e2e/, which runs the same extension inside a real VSCode (pnpm test:e2e)
 		// and sits outside src/ for that reason. What is left is the logic extracted
 		// away from both — the orchestration in imageDocumentOps, the self-write echo
-		// classification in selfWriteTracker, and the webview's view-state folding in
-		// docViewState.
+		// classification in selfWriteTracker, the write ordering in
+		// latestWriteSerializer, the panel bookkeeping in webviewBridgeRegistry, and
+		// the webview's view-state folding in docViewState.
 		include: ["src/**/__tests__/**/*.{test,spec}.{ts,tsx}"],
 	},
 });
