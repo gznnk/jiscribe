@@ -128,7 +128,8 @@
 		"publish-ext": "vsce publish --no-dependencies",
 		"lint": "eslint .",
 		"typecheck": "tsc --noEmit",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:e2e": "node build.mjs && node build-e2e.mjs && vscode-test"
 	},
 	"license": "MIT",
 	"devDependencies": {
@@ -139,7 +140,10 @@
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"@types/mocha": "^10.0.10",
 		"@types/vscode": "^1.85.0",
+		"@vscode/test-cli": "^0.0.15",
+		"@vscode/test-electron": "^3.1.0",
 		"@vscode/vsce": "^3.9.2",
 		"esbuild": "catalog:",
 		"katex": "catalog:",

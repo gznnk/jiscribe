@@ -49,9 +49,10 @@ Then, depending on what you touched:
 
 - **Any package** — run its unit tests: `pnpm --filter @jiscribe/canvas test`
 - **Behaviour or rendering** — run e2e from the suite that owns what you touched.
-  Playwright is spread over ten suites: `packages/canvas/e2e/` (core),
-  `plugins/<name>/e2e/` (that plugin alone) and `apps/canvas-examples/e2e/`
-  (all eight plugins on one canvas).
+  Ten of the eleven real-runtime suites are Playwright: `packages/canvas/e2e/`
+  (core), `plugins/<name>/e2e/` (that plugin alone) and
+  `apps/canvas-examples/e2e/` (all eight plugins on one canvas). The eleventh is
+  the VSCode extension's, below, which drives a real VSCode instead of a browser.
   - `packages/canvas/src/{gestures,controllers,rendering,states}` — select the
     related specs by keyword rather than running the suite in full:
     `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
@@ -59,11 +60,36 @@ Then, depending on what you touched:
     `pnpm --filter @jiscribe/plugin-uml-shapes test:e2e`
   - plugin registration, toolbar composition or `svgDefs` —
     `pnpm --filter canvas-examples test:e2e`
+- **The VSCode extension** — run its e2e suite as well:
+  `pnpm --filter jiscribe test:e2e`. It builds the extension, then drives a
+  real VSCode (both `1.85.0`, the `engines.vscode` minimum, and `stable`) through the
+  suites in `apps/vscode-extension/e2e/`, which cover what only the live
+  API can show: activation, which editor a canvas file lands in, diagnostics, and the
+  document behaviour the self-write echo detection relies on. The VSCode builds are
+  downloaded into `apps/vscode-extension/.vscode-test/` on the first run, and a
+  display is required — WSLg provides one, and a headless machine needs
+  `xvfb-run -a` in front of the command. When `$XDG_RUNTIME_DIR` names a
+  directory that does not exist, the run fails before launch and says so:
+  `1.85.0` can only put its IPC socket there and dies with `EACCES` otherwise,
+  where newer VSCode falls back to the temp directory. Prefix the command with
+  `XDG_RUNTIME_DIR=$(mktemp -d)`
 - **Shapes or AI-facing metadata** (a new shape, `ObjectFeatures`, `description`,
   `defaults`) — regenerate the AI assets with `pnpm generate:schema` and commit the
   result, or CI's `check:schema` will fail on the drift
 - **Anything consumed by an app** — build it: `pnpm build:examples` or
   `pnpm build:vscode`
+
+Tests come in two layers, and where a new one goes follows from which layer it
+belongs to. Unit tests are vitest, co-located under `src/**/__tests__/`, run by
+the package's `test` script, and part of the repository-wide `pnpm test`.
+Anything that needs a real runtime — a browser, a VSCode — goes in an `e2e/`
+directory at the package root, outside `src/` so the package's vitest never sees
+it, behind a `test:e2e` script that picks whatever runner that runtime calls for;
+list `e2e` in the package's `tsconfig.json` `include` so it is typechecked, and
+leave it out of `pnpm test`. These two are a package's only test entry points
+(variants such as `test:watch` or `test:e2e:ui` are fine, a third layer is not),
+which is what lets `pnpm test` and `pnpm test:e2e` each mean one thing at the
+repository root.
 
 The full e2e suite is heavy; CI runs it on pull requests targeting `main`.
 

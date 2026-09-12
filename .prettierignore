@@ -35,6 +35,10 @@ pnpm-lock.yaml
 test-results/
 playwright-report/
 
+# VSCode 拡張の e2e テスト: バンドル済みのテストと、ダウンロードした VSCode 本体
+apps/vscode-extension/out/
+apps/vscode-extension/.vscode-test/
+
 # Claude Code local settings
 .claude/settings.local.json
 

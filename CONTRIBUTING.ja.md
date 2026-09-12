@@ -46,9 +46,11 @@ pnpm lint
 
 - **どのパッケージでも** — そのパッケージのユニットテストを流す:
   `pnpm --filter @jiscribe/canvas test`
-- **挙動または描画** — 触った対象を所有するスイートの e2e を流す。Playwright は
-  10 スイートに分かれている: `packages/canvas/e2e/`（コア）、`plugins/<name>/e2e/`
-  （そのプラグイン単体）、`apps/canvas-examples/e2e/`（8 プラグイン同居）。
+- **挙動または描画** — 触った対象を所有するスイートの e2e を流す。実ランタイムの
+  スイート 11 本のうち 10 本が Playwright で、`packages/canvas/e2e/`（コア）、
+  `plugins/<name>/e2e/`（そのプラグイン単体）、`apps/canvas-examples/e2e/`
+  （8 プラグイン同居）に分かれている。11 本目は下の VSCode 拡張のもので、
+  ブラウザではなく本物の VSCode を動かす。
   - `packages/canvas/src/{gestures,controllers,rendering,states}` — スイート全体
     ではなくキーワードで関連スペックだけを絞る:
     `pnpm --filter @jiscribe/canvas test:e2e specs/shapes/connector`
@@ -56,11 +58,34 @@ pnpm lint
     `pnpm --filter @jiscribe/plugin-uml-shapes test:e2e`
   - プラグインの登録・ツールバーの合成・`svgDefs` —
     `pnpm --filter canvas-examples test:e2e`
+- **VSCode 拡張** — その e2e スイートも流す: `pnpm --filter jiscribe test:e2e`。
+  拡張をビルドしたうえで本物の VSCode（`engines.vscode` の下限 `1.85.0` と
+  `stable` の両方）を起動し、`apps/vscode-extension/e2e/` のスイートを
+  実行する。生きた API でしか確かめられないもの——拡張の起動、キャンバスファイルが
+  どのエディタで開くか、診断、そして自分の書き込みのエコー判定が前提にしている
+  ドキュメントの挙動——を対象にしている。VSCode 本体は初回に
+  `apps/vscode-extension/.vscode-test/` へダウンロードされる。画面が必要で、WSLg
+  があればそのまま動く。ヘッドレスな環境ではコマンドの前に `xvfb-run -a` を付ける。
+  `$XDG_RUNTIME_DIR` が実在しないディレクトリを指していると、起動前に理由付きで
+  失敗する。`1.85.0` は IPC のソケットをそこにしか作れず、無ければ `EACCES` で
+  起動できないため（新しい VSCode は tmpdir へ逃げる）。`XDG_RUNTIME_DIR=$(mktemp -d)`
+  を前置すればよい
 - **図形または AI 向けメタデータ**（新しい図形、`ObjectFeatures`、`description`、
   `defaults`） — `pnpm generate:schema` で AI 向けアセットを再生成してコミットする。
   さもないと差分によって CI の `check:schema` が落ちる
 - **アプリが利用するもの** — ビルドする: `pnpm build:examples` または
   `pnpm build:vscode`
+
+テストは 2 層ある。新しいテストをどこへ置くかは、どちらの層かで決まる。ユニット
+テストは vitest で、`src/**/__tests__/` に併置し、パッケージの `test` スクリプトで
+走り、リポジトリ全体の `pnpm test` に乗る。本物のランタイム（ブラウザ、VSCode）を
+要するものはパッケージ直下の `e2e/` に置く。`src/` の外に出すのはパッケージの
+vitest に拾わせないためで、`test:e2e` スクリプトから、そのランタイムに合う runner で
+起動する。型チェックはパッケージの `tsconfig.json` の `include` に `e2e` を並べて
+効かせ、`pnpm test` には乗せない。パッケージのテストの入口はこの 2 つだけ
+（`test:watch` や `test:e2e:ui` のような派生はよいが、第 3 の層は作らない）。
+それによってリポジトリルートの `pnpm test` と `pnpm test:e2e` がそれぞれ 1 つの
+ことを意味する。
 
 e2e スイート全体は重い。`main` を対象とした Pull Request では CI が実行する。
 

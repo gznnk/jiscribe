@@ -93,6 +93,10 @@ export default tseslint.config(
 			// playwright-report/, and test-results/ carries traces — both generated.
 			"**/playwright-report",
 			"**/test-results",
+			// VSCode extension e2e tests: the bundled test files, and the VSCode
+			// builds @vscode/test-electron downloads next to them.
+			"apps/vscode-extension/out",
+			"apps/vscode-extension/.vscode-test",
 		],
 	},
 	{
@@ -202,7 +206,8 @@ export default tseslint.config(
 		},
 	},
 	{
-		// Playwright e2e: excluded because a fixture's use() is mistaken for a React Hook
+		// e2e suites: a Playwright fixture's use() is mistaken for a React Hook. The
+		// glob also covers the VSCode extension's e2e/, where the rule has nothing to match.
 		files: ["**/e2e/**", "**/playwright*.config.ts"],
 		rules: {
 			"react-hooks/rules-of-hooks": "off",

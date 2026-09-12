@@ -44,11 +44,31 @@ jobs:
       - name: Install Playwright (chromium)
         run: pnpm --filter @jiscribe/canvas exec playwright install --with-deps chromium
 
-      # Every suite: canvas (core), each plugin's own, and canvas-examples' coexistence
-      # spec. Sequential on purpose — each starts its own harness dev server, and the
-      # timing-sensitive specs (inertial pan) go flaky when suites compete for CPU.
+      # Keeps the VSCode downloads (over 100MB per version) across runs. The key is
+      # deliberately identical to ci.yml's vscode-e2e job, so the two share one cache.
+      - name: Cache VSCode downloads
+        uses: actions/cache@v5
+        with:
+          path: apps/vscode-extension/.vscode-test
+          key: vscode-test-${{ runner.os }}-${{ hashFiles('apps/vscode-extension/.vscode-test.mjs') }}
+          restore-keys: |
+            vscode-test-${{ runner.os }}-
+
+      # Every suite: canvas (core), each plugin's own, canvas-examples' coexistence
+      # spec, and the VSCode extension's, which drives a real VSCode instead of a
+      # browser. Sequential on purpose — each starts its own harness dev server, and
+      # the timing-sensitive specs (inertial pan) go flaky when suites compete for CPU.
+      #
+      # xvfb is there because VSCode demands a display; Playwright runs fine under it.
+      # XDG_RUNTIME_DIR is there for VSCode 1.85.0, which can only put its IPC socket
+      # in $XDG_RUNTIME_DIR (/run/user/<uid> when unset) and hangs on EACCES when that
+      # directory is missing.
       - name: Run full e2e
-        run: pnpm test:e2e
+        run: |
+          export XDG_RUNTIME_DIR="$RUNNER_TEMP/xdg-runtime"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          xvfb-run -a pnpm test:e2e
 
       # test-results/ is what carries the traces and screenshots of the failures; the
       # report alone only names them. Without it a failure that does not reproduce

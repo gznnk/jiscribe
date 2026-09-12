@@ -1,7 +1,11 @@
 .vscode/**
 .vscode-test/**
+.vscode-test.mjs
 src/**
+e2e/**
+out/**
 build.mjs
+build-e2e.mjs
 scripts/**
 vitest.config.ts
 **/node_modules/**
