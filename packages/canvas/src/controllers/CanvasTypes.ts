@@ -3,7 +3,7 @@ import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
-import type { ConnectorLabelPlacement } from "../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorLabelPlacement";
 import type { Viewport } from "../rendering/Viewport";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ClipboardData } from "./commands/selection/ClipboardData";

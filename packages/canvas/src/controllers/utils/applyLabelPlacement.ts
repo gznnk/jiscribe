@@ -5,7 +5,7 @@ import {
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 
-import type { ConnectorLabelPlacement } from "../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../connectors/label/calcConnectorLabelPlacement";
 
 /** Decimal places for label.position (a 0..1 ratio; 4 ≒ sub-pixel on paths up to ~10k px). */
 const LABEL_POSITION_PRECISION = 4;

@@ -3,8 +3,8 @@ import {
 	type ConnectorLabel,
 } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 
-import { calcConnectorLabelAnchor } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelAnchor";
-import { calcConnectorLabelPlacement } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+import { calcConnectorLabelAnchor } from "../../../../connectors/label/calcConnectorLabelAnchor";
+import { calcConnectorLabelPlacement } from "../../../../connectors/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isConnectorState,

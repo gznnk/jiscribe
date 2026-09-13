@@ -3,7 +3,7 @@ import { snapLabelOffsetToLine } from "./snapLabelOffsetToLine";
 import {
 	calcConnectorLabelPlacement,
 	type ConnectorLabelPlacement,
-} from "../../../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+} from "../../../../connectors/label/calcConnectorLabelPlacement";
 import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../rendering/objects/connector/Connector/connectorHitArea";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";

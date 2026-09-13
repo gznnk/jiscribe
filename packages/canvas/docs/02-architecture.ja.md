@@ -23,6 +23,7 @@ packages/canvas/src/
 │   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # 図形ごとの State + Mapper
 │   └── registry/           # states 層のレジストリ（ObjectMapperRegistry など）
+├── connectors/             # コネクタの幾何（端点解決・直交ルーティング・ラベル配置）。描画も状態更新もせず、rendering / controllers から値を取らない
 ├── controllers/            # 状態管理 + ビジネスロジック
 │   ├── Canvas.tsx
 │   ├── gestures/           # ジェスチャー認識 + ハンドラ + そのレジストリ（GestureHandlerRegistry / ObjectBehaviorRegistry）
@@ -35,6 +36,8 @@ packages/canvas/src/
 │   └── utils/
 ├── rendering/              # 純粋な描画コンポーネント + Viewport 型
 │   └── objects/registry/   # 描画層のレジストリ（ObjectComponentRegistry など）
+├── text/                   # レンダラのテキスト計測（ブラウザが測り、@jiscribe/doc の計測スロットへ差し出す）
+├── export/                 # PNG / SVG 出力（フォント埋め込みと、`.jis.png` / `.jis.svg` へのソース埋め込み）
 ├── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
 └── theme/                  # CanvasTheme・プリセット・CSS 変数 + スタイルが読む `theme` トークン
 ```
@@ -82,7 +85,7 @@ State を Props として受け取り SVG を描画するコンポーネント�
 
 依存: `controllers → rendering → states / @jiscribe/doc`。制御層は描画層の**上**に乗るので、UI コントローラが描画層のコンポーネント（例: `PendingConnectorOverlay` → `ConnectorRenderer`、`ArrowHeadIconPreview` → `Arrow`）や registry Context（`RenderingRegistriesProvider` など）を import するのは、上位が下位の部品を組み立てる通常の合成であって例外ではない。
 
-構造上の課題として残るのは、描画と無関係な純幾何ロジックが描画層に置かれていること。コネクタ端点解決・直交ルーティング（`rendering/layers/content/utils/endpoints` / `routing`）は `ui` だけでなく `gestures`（Free 端点のスナップ・再アンカー）と `utils`（削除時の端点 Free 化・バウンディングボックス・可視判定）からも参照される。削除時に永続化される Free 端点座標もこの解決を通す（削除時点の見た目の位置を捕捉する意図）。依存の向きは保たれているが、本来は controllers / rendering の下に置きたい層。
+描画と無関係な純幾何は描画層の外、`connectors/` にある。コネクタ端点解決・直交ルーティング・ラベル配置（`connectors/endpoints` / `routing` / `label`）は `rendering` だけでなく `ui`・`gestures`（Free 端点のスナップ・再アンカー）・`utils`（削除時の端点 Free 化・バウンディングボックス・可視判定）からも参照される。削除時に永続化される Free 端点座標もこの解決を通す（削除時点の見た目の位置を捕捉する意図）。`connectors` が canvas 内で値として取るのは自分自身だけで、`states/` の State 型と `rendering/objects/registry/` のレジストリ型は型としてだけ参照する。レジストリ型への参照はレイヤー順では逆向きだが、逆向きの辺は型だけという既存の不変条件どおりで、循環にはならない。
 
 ### レジストリ群（分散型 — 単一の「registry 層」は存在しない）
 

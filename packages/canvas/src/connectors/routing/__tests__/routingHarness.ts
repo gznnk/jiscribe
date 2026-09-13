@@ -11,7 +11,7 @@ import { routeOrthogonalConnector } from "..";
 import {
 	calcConnectPoint,
 	calcConnectPointDirection,
-} from "../../../../../objects/utils/calcConnectPoint";
+} from "../../calcConnectPoint";
 import { countReversals } from "../routeCost";
 import type { OrthogonalConnectorEndpoint } from "../types";
 

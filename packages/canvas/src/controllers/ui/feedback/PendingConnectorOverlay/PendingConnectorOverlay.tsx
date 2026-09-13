@@ -1,7 +1,7 @@
 import { memo } from "react";
 
+import { resolveEndpointOwner } from "../../../../connectors/endpoints";
 import { ConnectorRenderer } from "../../../../rendering/layers/content/ConnectorRenderer";
-import { resolveEndpointOwner } from "../../../../rendering/layers/content/utils/endpoints";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type PendingConnectorOverlayProps = Pick<

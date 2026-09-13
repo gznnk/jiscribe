@@ -2,8 +2,8 @@ import { isConnectorDrawnOrthogonal } from "@jiscribe/doc/model/objects/connecto
 import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import { memo } from "react";
 
+import { resolveEndpointOwner } from "../../../../connectors/endpoints";
 import { useResolvedConnectorPoints } from "../../../../rendering/layers/content/hooks/useResolvedConnectorPoints";
-import { resolveEndpointOwner } from "../../../../rendering/layers/content/utils/endpoints";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";

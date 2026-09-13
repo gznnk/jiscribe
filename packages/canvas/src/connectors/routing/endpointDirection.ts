@@ -7,13 +7,13 @@ import {
 	type Point,
 } from "@jiscribe/geometry";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ExtraConnectPoint } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	calcConnectPointDirection,
 	calcEdgeAnchorDirection,
 	calcExtraConnectPointDirection,
-} from "../../../../objects/utils/calcConnectPoint";
+} from "../calcConnectPoint";
 
 /**
  * Determines an endpoint's outward direction — the direction the line has to leave it in.

@@ -5,12 +5,12 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import { alignVertexPath } from "../../../../../rendering/layers/content/utils/routing";
-import type { OrthogonalConnectorEndpoint } from "../../../../../rendering/layers/content/utils/routing";
 import {
 	calcConnectPoint,
 	calcConnectPointDirection,
-} from "../../../../../rendering/objects/utils/calcConnectPoint";
+} from "../../../../../connectors/calcConnectPoint";
+import { alignVertexPath } from "../../../../../connectors/routing";
+import type { OrthogonalConnectorEndpoint } from "../../../../../connectors/routing";
 
 /**
  * Shared harness for the slideConnectorSegment property tests: the .invariants sweep over the
