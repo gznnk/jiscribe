@@ -7,6 +7,7 @@ import { selectors } from "../../support/selectors";
  * - The spin buttons and the arrow keys step by 1, and by 10 with Shift. Each
  *   step commits, but consecutive steps of the same field merge into one history
  *   entry, so a burst of them comes back in a single undo.
+ * - A spin button held down keeps stepping at a fixed interval until released.
  * - Typing previews live and records only on Enter or blur, so Escape has both a
  *   value to put back and nothing to take out of the history.
  * - A selection whose objects disagree about a style leaves the field empty
@@ -22,6 +23,15 @@ const RECT_FROM = { x: 120, y: 150 };
 const RECT_TO = { x: 320, y: 280 };
 const RECT_WIDTH = "200";
 const RECT_HEIGHT = "130";
+
+/**
+ * How long a spin button is held down, and the fewest steps that must land in
+ * that time. The hold is long enough for several repeats past the initial
+ * delay, and the floor sits well under that count to leave room for timers the
+ * browser is late to run.
+ */
+const HOLD_DURATION_MS = 900;
+const MIN_HELD_STEPS = 3;
 
 /**
  * Rotation the render matrix carries, in degrees 0-360. From createSvgTransform
@@ -68,6 +78,46 @@ test.describe("Properties sidebar number fields", () => {
 		await expect
 			.poll(() => rect.getAttribute("width"), {
 				message: "one undo takes the whole run of steps back",
+			})
+			.toBe(RECT_WIDTH);
+		await expect(width).toHaveValue(RECT_WIDTH);
+	});
+
+	test("holds a spin button down to keep stepping, and one undo takes the run back", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
+		await canvas.openPropertyPanel();
+		const rect = canvas.objectById(id);
+		const width = canvas.page.locator(selectors.propertyPanelField("width"));
+		await expect(width).toHaveValue(RECT_WIDTH);
+
+		const increase = canvas.page.locator(
+			selectors.propertyPanelFieldSpin("width", "Increase"),
+		);
+		const box = await increase.boundingBox();
+		if (box === null) {
+			throw new Error("the spin button is not laid out");
+		}
+		await canvas.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+		await canvas.page.mouse.down();
+		// The press steps once and the hold repeats: long enough for several more,
+		// though how many land is up to the timers.
+		await canvas.page.waitForTimeout(HOLD_DURATION_MS);
+		await canvas.page.mouse.up();
+
+		const held = Number(await width.inputValue());
+		expect(
+			held,
+			"the hold kept stepping after the press",
+		).toBeGreaterThanOrEqual(Number(RECT_WIDTH) + MIN_HELD_STEPS);
+		await expect.poll(() => rect.getAttribute("width")).toBe(String(held));
+
+		// The whole run coalesces, so it comes back the way a burst of clicks does.
+		await canvas.undo();
+		await expect
+			.poll(() => rect.getAttribute("width"), {
+				message: "one undo takes the whole hold back",
 			})
 			.toBe(RECT_WIDTH);
 		await expect(width).toHaveValue(RECT_WIDTH);

@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import {
 	PropertyNumberFieldInput,
@@ -17,6 +17,10 @@ const DISPLAY_DECIMALS = 1;
 /** What one arrow-key press or spin-button click moves the value by, and what Shift multiplies it to. */
 const ARROW_STEP = 1;
 const SHIFT_ARROW_STEP = 10;
+
+/** How long a spin button is held before it repeats, and the interval it then steps at. */
+const SPIN_REPEAT_DELAY_MS = 350;
+const SPIN_REPEAT_INTERVAL_MS = 70;
 
 const SPIN_ICON_SIZE = 10;
 
@@ -74,7 +78,8 @@ const formatValue = (value: number): string =>
  * do; Escape puts the value the field was given back and gives up the focus.
  * The arrow keys and the up/down buttons at the right edge step by 1 (10 with
  * Shift) and commit each step as part of the same undo entry, so holding a key
- * down or clicking a button repeatedly is undone in a single press.
+ * down or clicking a button repeatedly is undone in a single press. A button
+ * held down keeps stepping at a fixed interval, the way a held arrow key does.
  *
  * A selection carrying several values (`isMixed`) leaves the field empty behind
  * its placeholder, and the arrow keys then step from `value` — one object's
@@ -111,6 +116,14 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 	// the selection disagrees.
 	const revertValue = useRef(value);
 	const revertText = useRef(agreedText);
+	// Timers of the spin button being held: the wait before the run starts, then
+	// the run itself.
+	const spinRepeatDelayTimer = useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	);
+	const spinRepeatIntervalTimer = useRef<ReturnType<typeof setInterval> | null>(
+		null,
+	);
 
 	// Reset only when the agreed text differs from what is typed, treating that
 	// as an external change (a handle drag, an undo). A commit:false preview also
@@ -152,9 +165,8 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 		}
 	};
 
-	const step = (delta: number): void => {
-		const parsed = Number.parseFloat(inputValue);
-		const base = Number.isFinite(parsed) ? parsed : revertValue.current;
+	/** Steps from a base already chosen, and states where it landed. */
+	const stepFrom = (base: number, delta: number): number => {
 		const stepped = clamp(base + delta, min, max);
 		setInputValue(formatValue(stepped));
 		pendingCommit.current = false;
@@ -165,6 +177,13 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 		if (stepped !== base) {
 			onUpdate(stepped, true, true);
 		}
+		return stepped;
+	};
+
+	/** Steps from what is typed, falling back to the value last agreed on. */
+	const step = (delta: number): void => {
+		const parsed = Number.parseFloat(inputValue);
+		stepFrom(Number.isFinite(parsed) ? parsed : revertValue.current, delta);
 	};
 
 	const handleKeyDown = (
@@ -194,17 +213,52 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 		}
 	};
 
-	const handleSpinClick = (
-		event: React.MouseEvent<HTMLButtonElement>,
-		direction: 1 | -1,
-	): void => {
-		step(direction * (event.shiftKey ? SHIFT_ARROW_STEP : ARROW_STEP));
-	};
-
 	// The focus stays where it is (on the input, if there): moving it to the
-	// button would blur the input and reformat what is being typed.
+	// button would blur the input and reformat what is being typed. Both events
+	// are prevented, since a prevented pointerdown suppresses the mousedown
+	// itself in some browsers and only its focus default in others.
 	const keepFocus = (event: React.MouseEvent<HTMLButtonElement>): void => {
 		event.preventDefault();
+	};
+
+	const stopSpinRepeat = useCallback((): void => {
+		if (spinRepeatDelayTimer.current !== null) {
+			clearTimeout(spinRepeatDelayTimer.current);
+			spinRepeatDelayTimer.current = null;
+		}
+		if (spinRepeatIntervalTimer.current !== null) {
+			clearInterval(spinRepeatIntervalTimer.current);
+			spinRepeatIntervalTimer.current = null;
+		}
+	}, []);
+
+	// A button held while the field goes away (the selection changes, an undo)
+	// never sees its release.
+	useEffect(() => stopSpinRepeat, [stopSpinRepeat]);
+
+	const handleSpinPointerDown = (
+		event: React.PointerEvent<HTMLButtonElement>,
+		direction: 1 | -1,
+	): void => {
+		keepFocus(event);
+		if (event.button !== 0) {
+			return;
+		}
+		// Read once: releasing Shift during the hold does not change the run's stride.
+		const delta = direction * (event.shiftKey ? SHIFT_ARROW_STEP : ARROW_STEP);
+		step(delta);
+		stopSpinRepeat();
+		spinRepeatDelayTimer.current = setTimeout(() => {
+			spinRepeatDelayTimer.current = null;
+			spinRepeatIntervalTimer.current = setInterval(() => {
+				// The ref carries the run forward; the inputValue this handler closed
+				// over stays at the value the field held when the button went down.
+				const base = revertValue.current;
+				if (stepFrom(base, delta) === base) {
+					stopSpinRepeat();
+				}
+			}, SPIN_REPEAT_INTERVAL_MS);
+		}, SPIN_REPEAT_DELAY_MS);
 	};
 
 	return (
@@ -236,7 +290,10 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 					aria-label={messages.propertyPanelStepUp}
 					title={messages.propertyPanelStepUp}
 					onMouseDown={keepFocus}
-					onClick={(event) => handleSpinClick(event, 1)}
+					onPointerDown={(event) => handleSpinPointerDown(event, 1)}
+					onPointerUp={stopSpinRepeat}
+					onPointerLeave={stopSpinRepeat}
+					onPointerCancel={stopSpinRepeat}
 				>
 					<ChevronDownIcon width={SPIN_ICON_SIZE} height={SPIN_ICON_SIZE} />
 				</PropertyNumberFieldSpinButton>
@@ -247,7 +304,10 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 					aria-label={messages.propertyPanelStepDown}
 					title={messages.propertyPanelStepDown}
 					onMouseDown={keepFocus}
-					onClick={(event) => handleSpinClick(event, -1)}
+					onPointerDown={(event) => handleSpinPointerDown(event, -1)}
+					onPointerUp={stopSpinRepeat}
+					onPointerLeave={stopSpinRepeat}
+					onPointerCancel={stopSpinRepeat}
 				>
 					<ChevronDownIcon width={SPIN_ICON_SIZE} height={SPIN_ICON_SIZE} />
 				</PropertyNumberFieldSpinButton>
