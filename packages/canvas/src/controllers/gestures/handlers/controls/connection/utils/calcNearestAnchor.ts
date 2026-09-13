@@ -16,13 +16,13 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcEdgeAnchorFromPoint,
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
-} from "../../../../../../rendering/objects/utils/calcConnectPoint";
+} from "../../../../../../connectors/calcConnectPoint";
+import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 
 /**
  * How near the cursor has to be to a named anchor — the center, an edge midpoint

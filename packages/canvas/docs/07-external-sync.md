@@ -58,7 +58,7 @@ the parent via `onCommit(doc, saveNonce)`.
   current, not from the state captured in the closure of the render that raised the request. This is what keeps a
   deferred send delivering the last commit.
 - **The doc sent is built from `history.present`**, without converting the state a second time.
-- **When to send is decided by `createSaveRequestScheduler` (`controllers/hooks/support/`).** An ordinary commit is sent
+- **When to send is decided by `createSaveRequestScheduler` (`controllers/hooks/utils/`).** An ordinary commit is sent
   immediately. A commit inside a coalesce chain (such as key-repeat nudges) is held back and sent on keyup, window blur,
   or unmount (with a time-based backstop for paths that never get such an event).
 - **Each nonce is sent at most once** (`createNonceDeliveryGuard`), because a send on a boundary event can run ahead of
@@ -73,7 +73,7 @@ the canvas just performed would be re-pushed as a history boundary, and the UI s
 
 The solution: on save, issue a `saveNonce` and pass it via `onCommit`; the host returns it unchanged
 as `syncNonce`. Matching is done against a **set of delivered nonces whose fold-back has not been consumed yet**,
-held by `useSelfSaveNonceTracker` (`controllers/hooks/support/createSelfSaveNonceTracker.ts`):
+held by `useSelfSaveNonceTracker` (`controllers/hooks/utils/createSelfSaveNonceTracker.ts`):
 
 - `useNotifySaveRequest` `register`s each nonce it delivers.
 - `useSyncExternalDoc` checks a fold-back's `syncNonce` with `consumeIfSelfSave`; on a match

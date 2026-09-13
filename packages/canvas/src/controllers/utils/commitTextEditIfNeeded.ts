@@ -3,7 +3,7 @@ import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { isSameRichText } from "@jiscribe/doc/model/objects/types/RichText";
 
 import { applyLabelPlacement } from "./applyLabelPlacement";
-import type { ConnectorLabelPlacement } from "../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../connectors/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,

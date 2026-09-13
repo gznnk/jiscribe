@@ -3,7 +3,7 @@ import { isFreeEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef
 import { memo, useMemo } from "react";
 
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
-import { calcConnectorLabelAnchor } from "./utils/label/calcConnectorLabelAnchor";
+import { calcConnectorLabelAnchor } from "../../../connectors/label/calcConnectorLabelAnchor";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import {

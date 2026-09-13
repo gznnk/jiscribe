@@ -7,13 +7,13 @@ import {
 	type Rect,
 } from "@jiscribe/geometry";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ExtraConnectPoint } from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ExtraConnectPoint } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	calcConnectPoint,
 	calcEdgeAnchorPoint,
 	calcExtraConnectPoint,
-} from "../../../../objects/utils/calcConnectPoint";
+} from "../calcConnectPoint";
 
 /**
  * Resolves an EndpointRef to a Point coordinate. It takes a single target

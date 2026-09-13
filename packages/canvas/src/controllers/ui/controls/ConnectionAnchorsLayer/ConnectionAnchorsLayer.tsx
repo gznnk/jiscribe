@@ -2,6 +2,7 @@ import { isTransformedFrame } from "@jiscribe/geometry";
 import type { Point, Rect } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
 
+import { calcEdgeAnchorPoint } from "../../../../connectors/calcConnectPoint";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { useObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistryContext";
 import type {
@@ -11,7 +12,6 @@ import type {
 import { useObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistryContext";
 import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";
 import { useObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistryContext";
-import { calcEdgeAnchorPoint } from "../../../../rendering/objects/utils/calcConnectPoint";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connector/ConnectorState";
 import type { ConnectorDraft, DragKind } from "../../../CanvasTypes";

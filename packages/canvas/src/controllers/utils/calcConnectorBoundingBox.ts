@@ -5,8 +5,8 @@ import type { BoundingBox, Point } from "@jiscribe/geometry";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../rendering/layers/content/utils/endpoints";
-import { calcConnectorLabelAnchor } from "../../rendering/layers/content/utils/label/calcConnectorLabelAnchor";
+} from "../../connectors/endpoints";
+import { calcConnectorLabelAnchor } from "../../connectors/label/calcConnectorLabelAnchor";
 import { resolveConnectorLabelBox } from "../../rendering/objects/connector/ConnectorLabel/utils/connectorLabelLayout";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";

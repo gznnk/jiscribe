@@ -6,9 +6,9 @@ import { memo } from "react";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
-} from "../../../../rendering/layers/content/utils/endpoints";
-import { calcConnectorLabelAnchor } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelAnchor";
-import type { ConnectorLabelPlacement } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+} from "../../../../connectors/endpoints";
+import { calcConnectorLabelAnchor } from "../../../../connectors/label/calcConnectorLabelAnchor";
+import type { ConnectorLabelPlacement } from "../../../../connectors/label/calcConnectorLabelPlacement";
 import type { ObjectAnchorRegionRegistry } from "../../../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsRegistry } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectOutlineRegistry } from "../../../../rendering/objects/registry/ObjectOutlineRegistry";

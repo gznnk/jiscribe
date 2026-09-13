@@ -23,6 +23,7 @@ packages/canvas/src/
 │   ├── canvas/             # CanvasState / CanvasMapper
 │   ├── objects/            # per-shape State + Mapper
 │   └── registry/           # the states layer's registries (ObjectMapperRegistry, …)
+├── connectors/             # connector geometry (endpoint resolution, orthogonal routing, label placement); renders nothing, changes nothing, takes no value from rendering / controllers
 ├── controllers/            # state management + business logic
 │   ├── Canvas.tsx
 │   ├── gestures/           # gesture recognition + handlers + their registries (GestureHandlerRegistry / ObjectBehaviorRegistry)
@@ -35,6 +36,8 @@ packages/canvas/src/
 │   └── utils/
 ├── rendering/              # pure rendering components + the Viewport type
 │   └── objects/registry/   # the rendering layer's registries (ObjectComponentRegistry, …)
+├── text/                   # the renderer's text measurement (the browser measures; offered into @jiscribe/doc's measurement slot)
+├── export/                 # PNG / SVG output (font embedding, and embedding the source into `.jis.png` / `.jis.svg`)
 ├── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
 └── theme/                  # CanvasTheme / presets / CSS vars + the `theme` token object styles read
 ```
@@ -82,7 +85,7 @@ Dependency: `rendering → states / @jiscribe/doc / theme` (types and pure funct
 
 Dependencies: `controllers → rendering → states / @jiscribe/doc`. Sitting **above** the rendering layer is why a UI controller importing a rendering **component** (e.g. `PendingConnectorOverlay` → `ConnectorRenderer`, `ArrowHeadIconPreview` → `Arrow`) or a rendering-layer registry context (`RenderingRegistriesProvider`, etc.) is ordinary composition — an upper layer assembling the parts below it — not an exception.
 
-What does remain a structural issue is the pure geometry that lives in the rendering layer. Connector endpoint resolution and orthogonal routing (`rendering/layers/content/utils/endpoints` / `routing`) are consumed not only by `ui` but also by `gestures` (free-endpoint snapping / re-anchoring) and `utils` (freeing endpoints on delete, bounding boxes, visibility); the free-endpoint coordinates persisted on delete go through the same resolution (deliberately, to capture the on-screen position at deletion time). The dependency direction holds, but none of it renders anything — it belongs in a layer below both controllers and rendering.
+The pure geometry that renders nothing sits outside the rendering layer, in `connectors/`. Connector endpoint resolution, orthogonal routing and label placement (`connectors/endpoints` / `routing` / `label`) are consumed by `rendering` and equally by `ui`, `gestures` (free-endpoint snapping / re-anchoring) and `utils` (freeing endpoints on delete, bounding boxes, visibility); the free-endpoint coordinates persisted on delete go through the same resolution (deliberately, to capture the on-screen position at deletion time). Within canvas, the only values `connectors` imports are its own: the State types in `states/` and the registry types in `rendering/objects/registry/` are taken as types only. That reference to the registry types runs backwards against the layer order, but it follows the same invariant the rest of the codebase holds — every backward edge is a type contract — so it is not a cycle.
 
 ### Registries (distributed — there is no single "registry" layer)
 

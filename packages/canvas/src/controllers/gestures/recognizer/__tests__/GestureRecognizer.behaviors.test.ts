@@ -6,6 +6,7 @@ import type {
 	Gesture,
 	GestureRecognizerConfig,
 } from "../GestureRecognizerTypes";
+import type * as RecognizerTargeting from "../targeting";
 import type * as RecognizerUtils from "../utils";
 
 /**
@@ -29,7 +30,7 @@ const mockUtil = vi.hoisted(() => ({
 	gestureTarget: {
 		id: "obj-1",
 		kind: "rect",
-	} as RecognizerUtils.GestureTarget | null,
+	} as RecognizerTargeting.GestureTarget | null,
 	optedOut: false,
 	inputValue: undefined as string | undefined,
 	nativePointer: false,
@@ -40,6 +41,19 @@ const mockUtil = vi.hoisted(() => ({
 // Replace only the DOM/layout-dependent utilities with deterministic stubs; use the real
 // pure logic (isDoubleClick, etc.). We want to verify doubleClick's distance/time decisions
 // at the wiring level, so do not mock that implementation here.
+vi.mock("../targeting", async (importActual) => {
+	const actual = await importActual<typeof RecognizerTargeting>();
+	return {
+		...actual,
+		getGestureTarget: () => mockUtil.gestureTarget,
+		createGetHovered: () => () => [],
+		getInputValue: () => mockUtil.inputValue,
+		readInputValue: () => mockUtil.inputValue,
+		isGestureOptedOut: () => mockUtil.optedOut,
+		isNativePointerTarget: () => mockUtil.nativePointer,
+	};
+});
+
 vi.mock("../utils", async (importActual) => {
 	const actual = await importActual<typeof RecognizerUtils>();
 	return {
@@ -53,12 +67,6 @@ vi.mock("../utils", async (importActual) => {
 			x: clientX / mockUtil.zoom,
 			y: clientY / mockUtil.zoom,
 		}),
-		getGestureTarget: () => mockUtil.gestureTarget,
-		createGetHovered: () => () => [],
-		getInputValue: () => mockUtil.inputValue,
-		readInputValue: () => mockUtil.inputValue,
-		isGestureOptedOut: () => mockUtil.optedOut,
-		isNativePointerTarget: () => mockUtil.nativePointer,
 		detectEdgeProximity: () => ({ isNearEdge: false }),
 		calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
 	};

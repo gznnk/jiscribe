@@ -1,7 +1,7 @@
 import { type RefObject, useEffect } from "react";
 
 import type { CanvasGestureHandling } from "../CanvasGestureHandling";
-import { shouldUseNativeWheel } from "../gestures/recognizer/utils/shouldUseNativeWheel";
+import { shouldUseNativeWheel } from "../gestures/recognizer/targeting/shouldUseNativeWheel";
 
 /**
  * Hook that listens for wheel events on the canvas container element and runs a callback.

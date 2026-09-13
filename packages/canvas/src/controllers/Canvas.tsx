@@ -22,7 +22,7 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import type { Camera } from "./CanvasTypes";
-import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
+import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";

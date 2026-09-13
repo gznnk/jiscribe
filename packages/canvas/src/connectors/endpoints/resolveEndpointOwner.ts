@@ -1,6 +1,6 @@
 import type { EndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
  * Resolves a connector endpoint's owner shape from the objects map.

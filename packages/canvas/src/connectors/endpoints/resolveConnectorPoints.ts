@@ -3,14 +3,14 @@ import { isTransformedFrame, type Point, type Rect } from "@jiscribe/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
-import type { ObjectAnchorRegionRegistry } from "../../../../objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type {
 	ExtraConnectPoint,
 	ObjectExtraConnectPointsRegistry,
-} from "../../../../objects/registry/ObjectExtraConnectPointsRegistry";
-import type { ObjectOutlineRegistry } from "../../../../objects/registry/ObjectOutlineRegistry";
+} from "../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
+import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/ObjectOutlineRegistry";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import {
 	alignVertexPath,
 	calcEndpointDirection,

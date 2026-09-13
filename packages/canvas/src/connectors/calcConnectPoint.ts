@@ -20,7 +20,7 @@ import {
 	type TransformedFrame,
 } from "@jiscribe/geometry";
 
-import type { ExtraConnectPoint } from "../registry/ObjectExtraConnectPointsRegistry";
+import type { ExtraConnectPoint } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 
 /** Outward direction of each local bounding-box edge in the shape's local space. */
 const EDGE_LOCAL_DIRECTIONS: Record<EdgeAnchorSide, Point> = {

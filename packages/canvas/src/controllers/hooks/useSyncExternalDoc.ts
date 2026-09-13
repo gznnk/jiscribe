@@ -5,7 +5,7 @@ import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
-import type { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";
+import type { createSelfSaveNonceTracker } from "./utils/createSelfSaveNonceTracker";
 import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
 import { resolveDocSnapshot } from "../utils/resolveDocSnapshot";
 

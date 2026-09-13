@@ -2,7 +2,7 @@ import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcConnectorBoundingBox } from "./calcConnectorBoundingBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
-import { resolveEndpointOwner } from "../../rendering/layers/content/utils/endpoints";
+import { resolveEndpointOwner } from "../../connectors/endpoints";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
