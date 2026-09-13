@@ -298,6 +298,31 @@ export default tseslint.config(
 		},
 	},
 	{
+		// connectors/ is the connector geometry — endpoint resolution, orthogonal routing
+		// and label placement — pulled out of the drawing layer because none of it draws.
+		// It is read by rendering and, just as much, by ui / gestures / controllers-utils,
+		// so it has to sit under all of them. Types are allowed: the resolvers take
+		// ObjectState and the per-shape registries as parameters, which is the same
+		// "every backward edge is a type contract" invariant the controller layers hold.
+		files: ["packages/canvas/src/connectors/**"],
+		ignores: ["**/__tests__/**"],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["**/controllers/**", "**/rendering/**"],
+							allowTypeImports: true,
+							message:
+								"connectors computes geometry and cannot take a value from rendering or controllers. Take what you need as a parameter (the registries already arrive that way).",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
 		// The headless (doc) entry point that is not the doc package itself: the shipped
 		// set's headless half, whose whole point is that a Node host can take the eight
 		// plugins without a rendering layer coming with them. It may name @jiscribe/doc,
