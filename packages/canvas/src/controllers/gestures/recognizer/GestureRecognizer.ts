@@ -24,20 +24,22 @@ import type {
 	ScrollDelta,
 } from "./GestureRecognizerTypes";
 import {
+	createGetHovered,
+	getGestureTarget,
+	getInputValue,
+	isGestureOptedOut,
+	isNativePointerTarget,
+	readInputValue,
+} from "./targeting";
+import {
 	calcFlingVelocity,
 	calcPinchDist,
 	calcPinchMid,
 	calculateScrollDelta,
-	createGetHovered,
 	detectEdgeProximity,
 	type FlingSample,
-	getGestureTarget,
-	getInputValue,
 	getWorldPoint,
 	isDoubleClick,
-	isGestureOptedOut,
-	isNativePointerTarget,
-	readInputValue,
 } from "./utils";
 
 /** Fields every queued event carries, whatever produced it (DOM event, wheel conversion, long-press timer). */

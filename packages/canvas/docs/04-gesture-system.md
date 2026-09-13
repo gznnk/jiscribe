@@ -132,7 +132,7 @@ Where they are read:
 - `native-wheel` → `shouldUseNativeWheel` (`useCanvasWheel`)
 
 All of these decision utilities are built on `findGestureElement(target, token)` and
-are located in `controllers/gestures/recognizer/utils/`.
+are located in `controllers/gestures/recognizer/targeting/`.
 
 ### `data-kind` / `data-id` / `data-part`
 

@@ -125,7 +125,7 @@ ObjectMenu はドラッグの種類を問わず隠れるが、ObjectMenu のド�
 - `native-wheel` → `shouldUseNativeWheel`（`useCanvasWheel`）
 
 判定ユーティリティはいずれも `findGestureElement(target, token)` を土台にし、
-`controllers/gestures/recognizer/utils/` に配置している。
+`controllers/gestures/recognizer/targeting/` に配置している。
 
 ### `data-kind` / `data-id` / `data-part`
 
