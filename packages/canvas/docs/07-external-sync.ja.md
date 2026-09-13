@@ -54,7 +54,7 @@ canvas は `doc` プロップを検証し直さない。外部から入る doc �
 - **送る内容は、送る時点の最新の state から読む**。layout effect で更新する `stateRef` から読み、
   要求を出した render のクロージャの state は使わない。送信を遅らせても最後のコミットを送るため。
 - **送る doc は `history.present` から作る**。state をもう一度変換しない。
-- **送るタイミングは `createSaveRequestScheduler`（`controllers/hooks/support/`）が決める**。通常のコミットは
+- **送るタイミングは `createSaveRequestScheduler`（`controllers/hooks/utils/`）が決める**。通常のコミットは
   すぐ送る。集約チェーン中のコミット（キーリピートのナッジなど）は保留し、keyup・ウィンドウの blur・
   アンマウントのどれかで送る（そうしたイベントが来ない経路のために、時間による保険もある）。
 - **各 nonce は最大 1 回だけ送る**（`createNonceDeliveryGuard`）。境界イベントでの送信が、そのコミット自身の
@@ -69,7 +69,7 @@ canvas は `doc` プロップを検証し直さない。外部から入る doc �
 
 対策: 保存時に `saveNonce` を発行して `onCommit` で渡し、ホストはそれをそのまま
 `syncNonce` として返す。突き合わせは `useSelfSaveNonceTracker` が保持する
-**未消化 nonce のセット**で行う（`controllers/hooks/support/createSelfSaveNonceTracker.ts`）。
+**未消化 nonce のセット**で行う（`controllers/hooks/utils/createSelfSaveNonceTracker.ts`）。
 
 - `useNotifySaveRequest` が配信した nonce を `register` する。
 - `useSyncExternalDoc` は折り返しの `syncNonce` を `consumeIfSelfSave` で照合し、

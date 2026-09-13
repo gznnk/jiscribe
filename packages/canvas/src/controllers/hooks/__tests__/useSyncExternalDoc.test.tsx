@@ -8,8 +8,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CanvasAction } from "../../reducer/CanvasActions";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { createSelfSaveNonceTracker } from "../support/createSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "../useSyncExternalDoc";
+import { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
 
 /**
  * What the hook decides is *which* action an incoming doc becomes — an edit to

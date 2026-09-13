@@ -5,9 +5,9 @@ import { useConstant } from "./useConstant";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resolveDocSnapshot } from "../utils/resolveDocSnapshot";
-import { createNonceDeliveryGuard } from "./support/createNonceDeliveryGuard";
-import { createSaveRequestScheduler } from "./support/createSaveRequestScheduler";
-import type { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";
+import { createNonceDeliveryGuard } from "./utils/createNonceDeliveryGuard";
+import { createSaveRequestScheduler } from "./utils/createSaveRequestScheduler";
+import type { createSelfSaveNonceTracker } from "./utils/createSelfSaveNonceTracker";
 
 /**
  * Custom hook that notifies the parent component when a save is required
