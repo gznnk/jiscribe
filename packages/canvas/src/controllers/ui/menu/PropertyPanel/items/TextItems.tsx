@@ -41,6 +41,7 @@ import { resolveFontFamilyLabel } from "../utils/resolveFontFamilyLabel";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
+	selectionValueOrFirst,
 } from "../utils/SelectionValue";
 
 const DEFAULT_FONT_SIZE = 14;
@@ -101,7 +102,7 @@ const FontSizeItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyPanelRowSize}>
 			<PropertyNumberField
-				value={selectionValueOr(fontSize, undefined) ?? DEFAULT_FONT_SIZE}
+				value={selectionValueOrFirst(fontSize, undefined) ?? DEFAULT_FONT_SIZE}
 				isMixed={isMixedSelectionValue(fontSize)}
 				min={MIN_FONT_SIZE}
 				max={MAX_FONT_SIZE}

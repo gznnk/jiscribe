@@ -5,6 +5,7 @@ import {
 	PropertyTextFieldRoot,
 	PropertyTextFieldTextarea,
 } from "./PropertyControlsStyled";
+import { useCommitOnOutsidePointerDown } from "./useCommitOnOutsidePointerDown";
 
 /**
  * Applies one edit of a text field.
@@ -31,10 +32,11 @@ type PropertyTextFieldProps = {
 /**
  * Text stated by hand: the selection's own value, editable in place.
  *
- * Typing previews live and commits on blur or Enter, the way the number fields
- * beside it do; Escape puts the text the field was given back and gives up the
- * focus. A multiline field keeps Enter for the newline, so Ctrl/Cmd+Enter is
- * what commits it there.
+ * Typing previews live and commits on blur, on Enter, or on the next press
+ * outside the field (a press on the canvas moves no focus, so no blur follows
+ * it), the way the number fields beside it do; Escape puts the text the field
+ * was given back and gives up the focus. A multiline field keeps Enter for the
+ * newline, so Ctrl/Cmd+Enter is what commits it there.
  *
  * Opted out of the gesture system (`data-gesture="none"`), so a press lands in
  * the field rather than on the canvas; the keystrokes reach it because the
@@ -48,6 +50,8 @@ const PropertyTextFieldComponent: React.FC<PropertyTextFieldProps> = ({
 	testId,
 	onUpdate,
 }) => {
+	// Tells the field's own presses apart from the ones that end the edit.
+	const rootRef = useRef<HTMLDivElement>(null);
 	const [inputValue, setInputValue] = useState(value);
 	// Read after render by the effect below, which must compare against what the
 	// user has typed rather than what the last render closed over.
@@ -89,6 +93,11 @@ const PropertyTextFieldComponent: React.FC<PropertyTextFieldProps> = ({
 		revertText.current = inputValue;
 	};
 
+	// A press outside the field ends the edit the way a blur would, but ahead of
+	// the canvas acting on it: the gesture layer keeps the focus here, so a
+	// deselect drops the row without the blur that would have committed.
+	useCommitOnOutsidePointerDown(rootRef, commit);
+
 	const handleKeyDown = (
 		event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
 	): void => {
@@ -116,7 +125,7 @@ const PropertyTextFieldComponent: React.FC<PropertyTextFieldProps> = ({
 	};
 
 	return (
-		<PropertyTextFieldRoot data-gesture="none">
+		<PropertyTextFieldRoot ref={rootRef} data-gesture="none">
 			{multiline ? (
 				<PropertyTextFieldTextarea
 					value={inputValue}

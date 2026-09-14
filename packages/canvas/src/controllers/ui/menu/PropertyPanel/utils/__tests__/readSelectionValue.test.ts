@@ -39,6 +39,7 @@ describe("readSelectionValue", () => {
 		const objects = { a: shape("a", "x"), b: shape("b", "y") };
 		expect(readSelectionValue(["a", "b"], objects, readValue)).toEqual({
 			kind: "mixed",
+			first: "x",
 		});
 	});
 
@@ -65,6 +66,7 @@ describe("readSelectionValue", () => {
 		};
 		expect(readSelectionValue(["g"], objects, readValue)).toEqual({
 			kind: "mixed",
+			first: "x",
 		});
 	});
 });

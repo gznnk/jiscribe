@@ -33,7 +33,8 @@ export const readSelectionTextVerticalBasis = (
 				"region",
 		),
 	);
+	const [first] = [...bases];
 	return bases.size === 1
-		? { kind: "single", value: [...bases][0] }
-		: { kind: "mixed" };
+		? { kind: "single", value: first }
+		: { kind: "mixed", first };
 };

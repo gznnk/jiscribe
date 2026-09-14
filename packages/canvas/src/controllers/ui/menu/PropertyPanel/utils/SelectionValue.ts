@@ -12,7 +12,14 @@
  *   "carried but unset" is a value of its own (a slot's `fontWeight`, say)
  */
 export type SelectionValue<Value> =
-	{ kind: "single"; value: Value } | { kind: "mixed" } | { kind: "none" };
+	| { kind: "single"; value: Value }
+	/**
+	 * `first` is the value of the first object that carries the property — one
+	 * the selection really holds, which is what a row that steps rather than
+	 * states (a number field's arrows) has to move from.
+	 */
+	| { kind: "mixed"; first: Value }
+	| { kind: "none" };
 
 /**
  * Folds the values the selection's objects carry into what the selection says.
@@ -31,7 +38,7 @@ export const combineSelectionValues = <Value>(
 	const first = values[0];
 	return values.every((value) => Object.is(value, first))
 		? { kind: "single", value: first }
-		: { kind: "mixed" };
+		: { kind: "mixed", first };
 };
 
 /**
@@ -48,6 +55,30 @@ export const selectionValueOr = <Value>(
 	fallback: Value,
 ): Value =>
 	selectionValue.kind === "single" ? selectionValue.value : fallback;
+
+/**
+ * A value the selection really carries: the one it agrees on, or the first of
+ * the several it does not. What a row hands a control that steps from the value
+ * it is given — a mixed row's arrows land on `value ± 1`, so the row's own
+ * constant there would step from a number nothing in the selection is near.
+ *
+ * @param selectionValue - What the selection says about the property
+ * @param fallback - Shown for `none` alone; usually the row's own default
+ * @returns The agreed value, the first of the differing ones, or `fallback`
+ */
+export const selectionValueOrFirst = <Value>(
+	selectionValue: SelectionValue<Value>,
+	fallback: Value,
+): Value => {
+	switch (selectionValue.kind) {
+		case "single":
+			return selectionValue.value;
+		case "mixed":
+			return selectionValue.first;
+		case "none":
+			return fallback;
+	}
+};
 
 /**
  * Whether a row should draw itself as stating no single value.

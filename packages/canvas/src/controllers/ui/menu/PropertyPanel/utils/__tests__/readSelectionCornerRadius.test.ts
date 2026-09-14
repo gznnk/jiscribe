@@ -51,6 +51,7 @@ describe("readSelectionCornerRadius", () => {
 		const objects = { a: rect("a", { rx: 8 }), b: rect("b") };
 		expect(readSelectionCornerRadius(["a", "b"], objects)).toEqual({
 			kind: "mixed",
+			first: 8,
 		});
 	});
 
@@ -70,6 +71,7 @@ describe("readSelectionCornerRadius", () => {
 		};
 		expect(readSelectionCornerRadius(["g"], objects)).toEqual({
 			kind: "mixed",
+			first: 8,
 		});
 	});
 });

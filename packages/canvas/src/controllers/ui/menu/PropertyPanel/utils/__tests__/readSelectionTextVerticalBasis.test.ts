@@ -55,7 +55,7 @@ describe("readSelectionTextVerticalBasis", () => {
 			shapeOf("e1", "ellipse", "frame"),
 			shapeOf("e2", "ellipse"),
 		);
-		expect(readBasis(selection)).toEqual({ kind: "mixed" });
+		expect(readBasis(selection)).toEqual({ kind: "mixed", first: "frame" });
 	});
 
 	it("a rect mixed into the selection has no say", () => {

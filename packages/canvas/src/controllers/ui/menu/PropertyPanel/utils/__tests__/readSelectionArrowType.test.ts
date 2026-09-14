@@ -78,7 +78,7 @@ describe("readSelectionArrowType", () => {
 		};
 		expect(
 			readSelectionArrowType(makeState(["a", "b"], objects), "endArrow"),
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "Arrow" });
 	});
 
 	it("a line that wrote no end reads as bare, so it disagrees with a marked one", () => {
@@ -88,7 +88,7 @@ describe("readSelectionArrowType", () => {
 		};
 		expect(
 			readSelectionArrowType(makeState(["a", "b"], objects), "endArrow"),
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "Arrow" });
 	});
 
 	it("lines that all wrote no end agree on being bare", () => {
@@ -108,7 +108,7 @@ describe("readSelectionArrowType", () => {
 		).toEqual({ kind: "single", value: "None" });
 		expect(
 			readSelectionArrowType(makeState(["a", "b"], objects), "endArrow"),
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "Arrow" });
 	});
 
 	it("descendants of a selected group have their say", () => {
@@ -119,6 +119,6 @@ describe("readSelectionArrowType", () => {
 		};
 		expect(
 			readSelectionArrowType(makeState(["g"], objects), "endArrow"),
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "Arrow" });
 	});
 });

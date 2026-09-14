@@ -49,6 +49,16 @@ const type = (input: HTMLInputElement, text: string): void => {
 	});
 };
 
+/**
+ * A press landing somewhere else on the page. jsdom has no PointerEvent, and the
+ * listener reads nothing off the event but its target.
+ */
+const pressOn = (target: EventTarget): void => {
+	act(() => {
+		target.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+	});
+};
+
 afterEach(() => {
 	act(() => {
 		root?.unmount();
@@ -91,6 +101,28 @@ describe("PropertyTextField", () => {
 		blur(input);
 
 		expect(onUpdate).not.toHaveBeenCalled();
+	});
+
+	it("commits the preview on a press outside, which is all a deselect leaves it", () => {
+		const onUpdate = vi.fn();
+		const input = render(
+			<PropertyTextField
+				value=""
+				ariaLabel="Name"
+				testId="property-field:metaName"
+				onUpdate={onUpdate}
+			/>,
+		);
+
+		type(input, "Server");
+		// The canvas keeps the focus where it is, so the row can go away without
+		// ever seeing a blur: the press itself is the last chance to record it.
+		pressOn(document.body);
+		blur(input);
+
+		expect(onUpdate.mock.calls.filter(([, commit]) => commit === true)).toEqual(
+			[["Server", true]],
+		);
 	});
 
 	it("puts the given text back on Escape, previewing it rather than recording it", () => {

@@ -27,6 +27,7 @@ import { readSelectionShapeStyle } from "../utils/readSelectionShapeStyle";
 import {
 	isMixedSelectionValue,
 	selectionValueOr,
+	selectionValueOrFirst,
 } from "../utils/SelectionValue";
 
 const MIN_STROKE_WIDTH = 0;
@@ -86,7 +87,7 @@ const FillOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
 			<PropertyNumberField
 				value={toOpacityPercent(
-					selectionValueOr(fillOpacity, SHAPE_STYLE_FALLBACK.fillOpacity),
+					selectionValueOrFirst(fillOpacity, SHAPE_STYLE_FALLBACK.fillOpacity),
 				)}
 				isMixed={isMixedSelectionValue(fillOpacity)}
 				min={MIN_OPACITY_PERCENT}
@@ -156,7 +157,10 @@ const StrokeWidthItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyPanelRowWidth}>
 			<PropertyNumberField
-				value={selectionValueOr(strokeWidth, SHAPE_STYLE_FALLBACK.strokeWidth)}
+				value={selectionValueOrFirst(
+					strokeWidth,
+					SHAPE_STYLE_FALLBACK.strokeWidth,
+				)}
 				isMixed={isMixedSelectionValue(strokeWidth)}
 				min={MIN_STROKE_WIDTH}
 				max={MAX_STROKE_WIDTH}
@@ -243,7 +247,10 @@ const StrokeOpacityItemComponent: React.FC<BuiltinItemProps> = ({
 		<PropertyRow label={messages.propertyPanelRowOpacity}>
 			<PropertyNumberField
 				value={toOpacityPercent(
-					selectionValueOr(strokeOpacity, SHAPE_STYLE_FALLBACK.strokeOpacity),
+					selectionValueOrFirst(
+						strokeOpacity,
+						SHAPE_STYLE_FALLBACK.strokeOpacity,
+					),
 				)}
 				isMixed={isMixedSelectionValue(strokeOpacity)}
 				min={MIN_OPACITY_PERCENT}
@@ -280,7 +287,7 @@ const RadiusItemComponent: React.FC<BuiltinItemProps> = ({
 	return (
 		<PropertyRow label={messages.propertyPanelRowRadius}>
 			<PropertyNumberField
-				value={selectionValueOr(cornerRadius, DEFAULT_CORNER_RADIUS)}
+				value={selectionValueOrFirst(cornerRadius, DEFAULT_CORNER_RADIUS)}
 				isMixed={isMixedSelectionValue(cornerRadius)}
 				min={MIN_CORNER_RADIUS}
 				max={MAX_CORNER_RADIUS}

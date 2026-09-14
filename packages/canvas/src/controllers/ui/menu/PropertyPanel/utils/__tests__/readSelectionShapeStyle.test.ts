@@ -84,7 +84,7 @@ describe("readSelectionShapeStyle", () => {
 		expect(
 			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "fill")
 				.fill,
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "#f00" });
 	});
 
 	it("mixing one field leaves the others alone", () => {
@@ -98,7 +98,7 @@ describe("readSelectionShapeStyle", () => {
 			shapeStyleDefaults,
 			"fill",
 		);
-		expect(style.fill).toEqual({ kind: "mixed" });
+		expect(style.fill).toEqual({ kind: "mixed", first: "#f00" });
 		expect(style.strokeWidth).toEqual({ kind: "single", value: 2 });
 	});
 
@@ -128,7 +128,7 @@ describe("readSelectionShapeStyle", () => {
 		expect(
 			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "fill")
 				.fill,
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: AUTO_COLOR });
 	});
 
 	it("a dash nobody declared reads as solid, not as a value of its own", () => {
@@ -150,7 +150,7 @@ describe("readSelectionShapeStyle", () => {
 		expect(
 			readSelectionShapeStyle(["a", "b"], objects, shapeStyleDefaults, "stroke")
 				.strokeDashType,
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "dashed" });
 	});
 
 	it("an opacity nobody declared reads as the fallback, not as no value", () => {
@@ -178,7 +178,9 @@ describe("readSelectionShapeStyle", () => {
 			shapeStyleDefaults,
 			"fill",
 		);
-		expect(style.fillOpacity).toEqual({ kind: "mixed" });
+		// The first shape's own opacity, not the fallback: the row's arrows step
+		// from it (PropertyNumberField).
+		expect(style.fillOpacity).toEqual({ kind: "mixed", first: 0.4 });
 		expect(style.fill).toEqual({
 			kind: "single",
 			value: SHAPE_STYLE_FALLBACK.fill,
@@ -208,7 +210,7 @@ describe("readSelectionShapeStyle", () => {
 		};
 		expect(
 			readSelectionShapeStyle(["g"], objects, shapeStyleDefaults, "fill").fill,
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "#f00" });
 	});
 
 	it("a connector in the selection is one voice among the strokes", () => {
@@ -222,7 +224,7 @@ describe("readSelectionShapeStyle", () => {
 		expect(
 			readSelectionShapeStyle(["a", "c"], objects, shapeStyleDefaults, "stroke")
 				.stroke,
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "#f00" });
 		expect(
 			readSelectionShapeStyle(["c"], objects, shapeStyleDefaults, "stroke")
 				.stroke,

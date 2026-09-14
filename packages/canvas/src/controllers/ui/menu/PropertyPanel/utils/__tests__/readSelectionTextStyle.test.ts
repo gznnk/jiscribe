@@ -75,7 +75,7 @@ describe("readSelectionTextStyle", () => {
 			makeState(["a", "b"], objects),
 			textStyleDefaults,
 		);
-		expect(style.fontSize).toEqual({ kind: "mixed" });
+		expect(style.fontSize).toEqual({ kind: "mixed", first: 20 });
 		expect(style.textAlign).toEqual({ kind: "single", value: "center" });
 	});
 
@@ -98,7 +98,7 @@ describe("readSelectionTextStyle", () => {
 		expect(
 			readSelectionTextStyle(makeState(["a", "b"], objects), textStyleDefaults)
 				.fontWeight,
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: "bold" });
 	});
 
 	it("a size stated outright and the same size coming from the type's defaults → one value", () => {
@@ -126,7 +126,7 @@ describe("readSelectionTextStyle", () => {
 		expect(
 			readSelectionTextStyle(makeState(["g"], objects), textStyleDefaults)
 				.fontSize,
-		).toEqual({ kind: "mixed" });
+		).toEqual({ kind: "mixed", first: 20 });
 	});
 
 	it("a slot picked below the object narrows the whole thing to that slot", () => {

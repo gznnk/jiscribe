@@ -8,6 +8,7 @@ import {
 	PropertyNumberFieldSpinner,
 	PropertyNumberFieldUnit,
 } from "./PropertyControlsStyled";
+import { useCommitOnOutsidePointerDown } from "./useCommitOnOutsidePointerDown";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { ChevronDownIcon } from "../../../icons/ChevronDownIcon";
 
@@ -74,8 +75,10 @@ const formatValue = (value: number): string =>
 /**
  * A number stated by hand: the selection's own value, editable in place.
  *
- * Typing previews live and commits on blur or Enter, the way the menu's sliders
- * do; Escape puts the value the field was given back and gives up the focus.
+ * Typing previews live and commits on blur, on Enter, or on the next press
+ * outside the field (a press on the canvas moves no focus, so no blur follows
+ * it), the way the menu's sliders do; Escape puts the value the field was given
+ * back and gives up the focus.
  * The arrow keys and the up/down buttons at the right edge step by 1 (10 with
  * Shift) and commit each step as part of the same undo entry, so holding a key
  * down or clicking a button repeatedly is undone in a single press. A button
@@ -100,6 +103,8 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 	onUpdate,
 }) => {
 	const messages = useCanvasMessages();
+	// Tells the field's own presses apart from the ones that end the edit.
+	const rootRef = useRef<HTMLDivElement>(null);
 	// What the field agrees with the selection on: empty while the selection
 	// disagrees, so no one object's number is shown as the selection's.
 	const agreedText = isMixed ? "" : formatValue(value);
@@ -164,6 +169,15 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 			revertText.current = formatValue(committed);
 		}
 	};
+
+	// A press outside the field ends the edit the way a blur would, but ahead of
+	// the canvas acting on it: the gesture layer keeps the focus here, so a
+	// deselect drops the row without the blur that would have committed.
+	useCommitOnOutsidePointerDown(rootRef, () => {
+		if (pendingCommit.current) {
+			commit();
+		}
+	});
 
 	/** Steps from a base already chosen, and states where it landed. */
 	const stepFrom = (base: number, delta: number): number => {
@@ -262,7 +276,7 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 	};
 
 	return (
-		<PropertyNumberFieldRoot data-gesture="none">
+		<PropertyNumberFieldRoot ref={rootRef} data-gesture="none">
 			{prefix !== undefined && (
 				<PropertyNumberFieldPrefix>{prefix}</PropertyNumberFieldPrefix>
 			)}
