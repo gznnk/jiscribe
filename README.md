@@ -2,15 +2,17 @@
 
 # Jiscribe
 
-An SVG canvas that people and AI agents draw on together. Diagrams, mockups,
-posters, whole documents.
+Let an agent draw, fix what bothers you by hand, and hand the rest back to
+the agent.
+An SVG engine that people and AI agents draw on together. Architecture
+diagrams, flowcharts, UI mockups, even posters and whole documents.
 
 ![An AI agent drawing on the canvas in real time](https://beta.jiscribe.dev/images/vscode/ai-workflow.gif)
 
-An agent draws, you fix it by hand, and the agent picks up from there. Nothing
-is regenerated from scratch and nothing you changed is lost, because what you
-draw is a **plain object** in your code and **plain JSON** (`.jis`) on
-disk — the canvas is one way to edit it, and an agent's tools are another.
+When the agent picks up again, nothing is regenerated from scratch and nothing
+you changed is lost, because what you draw is a **plain object** in your code
+and **plain JSON** (`.jis`) on disk — the canvas is one way to edit it, and an
+agent's tools are another.
 
 Most of what you need to draw is already in the box. The core carries eight
 primitive types (`rect` / `ellipse` / `text` / `polyline` / `polygon` / `group` /
