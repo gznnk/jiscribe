@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 
+import { GENERATED_NOTICE } from "./generatedFileNotice";
+import { removeGeneratedReference } from "./staleReferenceRemoval";
+
 /**
  * "Set up AI" command.
  *
@@ -17,10 +20,6 @@ import * as vscode from "vscode";
  * NOTE: auto-generating MCP server config is deferred
  * (docs/03_ai-integration/mcp_design.md).
  */
-
-// Header marking a generated file (discourages manual edits).
-const GENERATED_NOTICE =
-	"<!-- Generated and managed by the Jiscribe extension's “Set up AI” command. Manual edits are overwritten on re-run. -->";
 
 // Shared adapter body (excluding frontmatter). It names where to go and nothing
 // else: an adapter that also summarised what the guide holds would be a copy that
@@ -196,17 +195,14 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 			);
 		await writeFile(guideUri, withNotice(guide));
 		await writeFile(schemaUri, schema);
-		// reference.md was ours until the guide absorbed it. A copy left from an
-		// earlier run is never refreshed again, so drop it rather than let an AI
-		// find a stale spec beside the current one. Absent is the normal case.
-		try {
-			await vscode.workspace.fs.delete(
-				vscode.Uri.joinPath(jiscribeDir, "reference.md"),
-				{ useTrash: false },
-			);
-		} catch {
-			// Nothing to remove.
-		}
+		// A reference.md left by an earlier version goes, but only the copy we
+		// wrote (see removeGeneratedReference). Absent is the normal case.
+		const referenceUri = vscode.Uri.joinPath(jiscribeDir, "reference.md");
+		const referenceOutcome = await removeGeneratedReference({
+			read: async () => vscode.workspace.fs.readFile(referenceUri),
+			delete: async (useTrash) =>
+				vscode.workspace.fs.delete(referenceUri, { useTrash }),
+		});
 
 		// Place the adapter for each selected agent.
 		for (const target of targets) {
@@ -217,8 +213,14 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		}
 
 		const names = targets.map((t) => t.label).join(", ");
+		// A reference.md we did not write is the one thing the command leaves as it
+		// found it, so say so rather than let it look like a file we forgot.
+		const keptNote =
+			referenceOutcome === "kept"
+				? " Left .jiscribe/reference.md as it is: it is not a generated file, and the setup no longer uses it."
+				: "";
 		const action = await vscode.window.showInformationMessage(
-			`Set up AI: Created .jiscribe/ and config for ${names}. Ask your AI assistant to draw a Jiscribe diagram.`,
+			`Set up AI: Created .jiscribe/ and config for ${names}.${keptNote} Ask your AI assistant to draw a Jiscribe diagram.`,
 			"Open Guide",
 		);
 		if (action === "Open Guide") {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
 	buildImageResolvedMessage,
+	MAX_ENCODABLE_IMAGE_BYTES,
 	resolveDocImageContent,
 	type DocImageReader,
 } from "../docImageResolution";
@@ -94,6 +95,45 @@ describe("resolveDocImageContent", () => {
 			ok: false,
 			error: 'Could not read image "images/logo.png": EntryNotFound',
 		});
+	});
+
+	it("refuses a file whose base64 cannot fit in a string, without encoding it", async () => {
+		// Only the length is read before the refusal, so the test states one instead
+		// of allocating the 384 MB it would take to reach the limit for real.
+		const oversized = { length: MAX_ENCODABLE_IMAGE_BYTES + 1 } as Uint8Array;
+
+		const content = await resolveDocImageContent(
+			"images/huge.png",
+			async () => oversized,
+		);
+
+		expect(content.ok).toBe(false);
+		expect(content.ok ? "" : content.error).toContain(
+			'Image "images/huge.png" is too large to display',
+		);
+	});
+
+	it("answers rather than throwing when the encoding itself fails", async () => {
+		// What the size check cannot foresee: an allocation that fails on the way to
+		// the string. The caller voids this Promise, so a throw would leave the
+		// Webview waiting for an imageResolved that never comes.
+		const encode = vi.spyOn(Buffer, "from").mockImplementation(() => {
+			throw new RangeError("Array buffer allocation failed");
+		});
+
+		try {
+			const content = await resolveDocImageContent(
+				"a.png",
+				async () => PNG_BYTES,
+			);
+
+			expect(content).toEqual({
+				ok: false,
+				error: 'Could not encode image "a.png": Array buffer allocation failed',
+			});
+		} finally {
+			encode.mockRestore();
+		}
 	});
 
 	it("reports a failed read that threw a non-Error", async () => {

@@ -1,3 +1,5 @@
+import { constants as bufferConstants } from "node:buffer";
+
 import { resolveDocImageMimeType, splitDocRelativePath } from "@jiscribe/doc";
 
 import type { ImageRequestId, ImageResolvedMessage } from "../types/messages";
@@ -15,6 +17,14 @@ export type DocImageReader = (
 	segments: readonly string[],
 ) => Promise<Uint8Array>;
 
+/**
+ * The most bytes whose base64 still fits in a JS string: the encoding grows 3
+ * bytes into 4 characters, and a longer result makes toString("base64") throw
+ * RangeError instead of returning anything.
+ */
+export const MAX_ENCODABLE_IMAGE_BYTES =
+	Math.floor(bufferConstants.MAX_STRING_LENGTH / 4) * 3;
+
 /** What resolveDocImageContent produced, ready to be put into an imageResolved message. */
 export type DocImageContent =
 	{ ok: true; base64: string; mimeType: string } | { ok: false; error: string };
@@ -23,9 +33,11 @@ export type DocImageContent =
  * Read the image an `image` shape names and encode it for the Webview.
  *
  * Refuses a `src` that breaks the doc-relative rule (see splitDocRelativePath)
- * or names an extension the canvas cannot draw, and reports a failed read, all
- * as `{ ok: false }` — the Webview turns each into a rejected resolveImage so
- * the canvas shows the shape as unresolved rather than blank.
+ * or names an extension the canvas cannot draw, and reports a failed read or a
+ * file too big to encode ({@link MAX_ENCODABLE_IMAGE_BYTES}), all as
+ * `{ ok: false }` — the Webview turns each into a rejected resolveImage so the
+ * canvas shows the shape as unresolved rather than blank. Never rejects: the
+ * answer is the only thing that settles the Webview's pending request.
  *
  * @param src - the raw `src` string from the doc, relative to the document's folder and staying inside it
  * @param readImageFile - reads the named file's bytes; rejecting counts as "cannot be read" and its message is passed on
@@ -56,11 +68,23 @@ export async function resolveDocImageContent(
 		const detail = err instanceof Error ? `: ${err.message}` : "";
 		return { ok: false, error: `Could not read image "${src}"${detail}` };
 	}
-	return {
-		ok: true,
-		base64: Buffer.from(bytes).toString("base64"),
-		mimeType,
-	};
+	if (bytes.length > MAX_ENCODABLE_IMAGE_BYTES) {
+		return {
+			ok: false,
+			error: `Image "${src}" is too large to display: ${bytes.length} bytes, over the ${MAX_ENCODABLE_IMAGE_BYTES} that can be encoded`,
+		};
+	}
+	let base64: string;
+	try {
+		base64 = Buffer.from(bytes).toString("base64");
+	} catch (err) {
+		// The size check above covers the length the encoder refuses; this catches
+		// what is left (an allocation that fails on the way there), because the
+		// caller voids this Promise and the Webview waits for the answer forever
+		const detail = err instanceof Error ? `: ${err.message}` : "";
+		return { ok: false, error: `Could not encode image "${src}"${detail}` };
+	}
+	return { ok: true, base64, mimeType };
 }
 
 /**
