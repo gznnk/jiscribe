@@ -26,7 +26,8 @@
 	},
 	"files": [
 		"dist",
-		"!dist/**/*.map"
+		"!dist/**/*.map",
+		"CHANGELOG.md"
 	],
 	"bin": {
 		"jiscribe-mcp": "dist/index.mjs"

@@ -57,12 +57,27 @@ if (bundle !== "" && !bundle.includes(`version:"${version}"`)) {
 	);
 }
 
+// The third place the version is written. npm renders the top entry as this
+// release's notes, and a bump that never reached the CHANGELOG ships a package
+// whose newest entry describes the version before it
+const changelog = await readFile(
+	join(packageDir, "CHANGELOG.md"),
+	"utf8",
+).catch(() => "");
+const topEntryVersion = changelog.match(/^## \[([^\]]+)\]/m)?.[1];
+if (topEntryVersion !== version) {
+	problems.push(
+		`CHANGELOG.md's top entry is ${topEntryVersion ?? "absent"}, not ${version} — write this release's entry before publishing`,
+	);
+}
+
 if (problems.length > 0) {
 	console.error(
 		[
-			"dist/ is not publishable. Run `pnpm --filter jiscribe-mcp build` from the",
-			"repository root (never with the working directory inside engine/).",
+			"jiscribe-mcp is not publishable:",
 			...problems.map((problem) => `  - ${problem}`),
+			"Anything wrong with dist/ is fixed by `pnpm --filter jiscribe-mcp build`",
+			"from the repository root (never with the working directory inside engine/).",
 		].join("\n"),
 	);
 	process.exit(1);
