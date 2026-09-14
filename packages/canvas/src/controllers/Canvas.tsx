@@ -105,158 +105,124 @@ import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
 type CanvasProps = {
-	// ── Model & persistence (the core contract) ──
+	// ── Document ──
 	/**
-	 * The CanvasDoc to display.
-	 *
-	 * **Caller responsibility**: always pass a valid doc that has gone through
-	 * `createCanvasParser` (two-stage validation). Canvas does not re-validate
-	 * internally and assumes unique IDs, referential integrity, and acyclicity.
-	 * Passing an unvalidated doc (with broken references or cycles) can hang
-	 * internal traversals. Validation is done at the external-input boundary (host)
-	 * → see packages/canvas/docs/01-design-philosophy.md principle 4.
+	 * The document to display. Must already have passed `createCanvasParser`:
+	 * the canvas does not re-validate and assumes unique ids, referential
+	 * integrity and acyclicity, so a broken doc can hang its traversals
+	 * (docs/01-design-philosophy.md, principle 4).
 	 */
 	doc: CanvasDoc;
 	/**
-	 * Nonce from the most recent incoming sync message. Matched against the
-	 * delivered save nonces so a fold-back of our own save is recognized and
-	 * dropped instead of being treated as an external change (see useSyncExternalDoc).
-	 */
-	syncNonce?: string;
-	/**
-	 * Token identifying the load `doc` belongs to. Any string the host likes — the
-	 * file path, or a counter bumped on every read — as long as two documents never
-	 * share one.
-	 *
-	 * Change it when another document goes onto a canvas that stays mounted
-	 * (opening a file, creating a new one, switching paths); the canvas then adopts
-	 * `doc` with the undo history dropped, so the first Ctrl+Z after the swap cannot
-	 * bring the previous document's contents back under the new one's name. Leave it
-	 * as it is for every change to the same document — an external rewrite of the
-	 * file, or the host re-sending a doc after its own undo/redo — since those stay
-	 * undoable.
-	 *
-	 * Omitting it entirely keeps the pre-existing behaviour: every incoming doc is an
-	 * external edit and the history is preserved.
+	 * Identifies the load `doc` came from — a file path, a counter bumped on every
+	 * read — as long as two documents never share one. Change it when a different
+	 * document goes onto a mounted canvas: the undo history is dropped, so Ctrl+Z
+	 * cannot bring the previous document back under the new name. Keep it for
+	 * changes to the same document (an external rewrite, the host re-sending after
+	 * its own undo/redo), which stay undoable. Omitted, every incoming doc is an
+	 * external edit and the history is kept.
 	 */
 	docLoadId?: string;
 	/**
-	 * Callback invoked when a committable action occurs (e.g., dragEnd, click).
-	 * Use this to persist or sync the canvas state to external storage.
-	 * The second argument is the saveNonce that should be echoed back via syncNonce.
+	 * Nonce of the most recent incoming sync message. When it matches a nonce
+	 * handed out by `onCommit`, the doc is our own save folding back and is
+	 * dropped instead of applied as an external change (see useSyncExternalDoc).
+	 */
+	syncNonce?: string;
+	/**
+	 * Called on every committable action (drag end, click, …) with the doc to
+	 * persist and a save nonce the host echoes back through `syncNonce`.
 	 */
 	onCommit?: (doc: CanvasDoc, saveNonce: string) => void;
 
-	// ── Host notifications (read-out only) ──
+	// ── Read-outs ──
 	/**
-	 * Callback invoked when the selection changes, receiving the new set of
-	 * selected IDs (empty when nothing is selected). Shapes and the connector
-	 * are mutually exclusive and reported together as one ordered list. Use this
-	 * to drive host UI outside the canvas (e.g. an external property panel).
+	 * Called when the selection changes with the selected ids in order (empty
+	 * when nothing is selected). Shapes and the connector are mutually exclusive
+	 * and reported through the same list.
 	 */
 	onSelectionChange?: (selectedIds: string[]) => void;
 	/**
-	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
-	 * `ref.current.viewport.setViewport` (not on container resize). Read-only: use
-	 * it to persist or mirror the view. Do **not** feed it back into
-	 * `initialConfig.viewport` (mount-only) or drive the view from it — the canvas
-	 * owns the live camera; a mirror-back would fight continuous gestures. Push
-	 * programmatic changes via `ref.current.viewport` instead.
+	 * Called when the camera changes — on gestures and on
+	 * `ref.current.viewport.setViewport`, not on container resize. Read-only:
+	 * persist or mirror it, but do not feed it back into `initialConfig.viewport`
+	 * or drive the view from it; the canvas owns the live camera and programmatic
+	 * moves go through `ref.current.viewport`.
 	 */
 	onViewportChange?: (viewport: Camera) => void;
 
-	// ── Appearance & localization (live) ──
+	// ── Delegated to the host ──
 	/**
-	 * Theme injected by the host (default: `darkCanvasTheme`). Appearance tokens
-	 * are exposed to styles as `--jiscribe-*` CSS custom properties on the
-	 * Canvas root; handle dimensions and the default font are distributed via
-	 * context. A VSCode host passes tokens holding `var(--vscode-...)` values
-	 * to follow the editor theme; other hosts can pass `lightCanvasTheme` or
-	 * their own `CanvasTheme`.
-	 */
-	theme?: CanvasTheme;
-	/**
-	 * Background grid settings. The grid is hidden by default — omit this prop
-	 * for no grid, pass `{ show: true }` to display it (25 world units unless
-	 * `size` says otherwise). Live: can be changed at runtime. Since an object
-	 * literal breaks `<Canvas>`'s memo, a host rendering this inline can
-	 * `useMemo` it to avoid extra re-renders.
-	 *
-	 * The grid line color is not a setting here — it is derived from the effective
-	 * canvas surface (theme background, or the doc's `background`) so it stays
-	 * readable on any color.
-	 */
-	grid?: {
-		/**
-		 * Whether to render the grid (default `false`). The grid is a viewing aid
-		 * only — it is already excluded from image export — so this toggles the
-		 * on-screen display without changing exported images.
-		 */
-		show?: boolean;
-		/**
-		 * Base grid spacing in world units (default `25`). Sets the medium grid
-		 * interval; bold lines fall every 4× this value and the multi-level grid
-		 * adapts to zoom (see the canvas's grid layer). Ignored while the grid
-		 * is hidden.
-		 */
-		size?: number;
-	};
-	/**
-	 * Active locale (default `"en"`). Selects the canvas's built-in dictionary
-	 * (en / ja) and is exposed to plugins via `useCanvasLocale`. Resolution is
-	 * exact → language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
-	 */
-	locale?: string;
-	/**
-	 * Partial overrides applied on top of the locale-resolved dictionary
-	 * (tooltips, menus, toasts). Use this to tweak individual strings; use
-	 * `locale` to pick the language.
-	 */
-	messages?: Partial<CanvasMessages>;
-
-	// ── Host-integration escape hatches ──
-	/**
-	 * When provided, Ctrl+Z is delegated to this callback instead of Canvas's
-	 * internal undo stack. Use this in VSCode to forward undo to the host editor.
+	 * When provided, Ctrl+Z goes here instead of the internal undo stack (a
+	 * VSCode host forwards it to the editor).
 	 */
 	onUndo?: () => void;
-	/**
-	 * When provided, Ctrl+Shift+Z / Ctrl+Y is delegated to this callback instead
-	 * of Canvas's internal redo stack.
-	 */
+	/** When provided, Ctrl+Shift+Z / Ctrl+Y goes here instead of the internal redo stack. */
 	onRedo?: () => void;
 	/**
-	 * When provided, the export dialog delivers the exported image here instead
-	 * of triggering a browser download. Use this when the host owns file saving
-	 * (e.g. the VSCode extension writing into the workspace).
+	 * When provided, the export dialog delivers the image here instead of
+	 * triggering a browser download (a host that owns file saving, such as the
+	 * VSCode extension writing into the workspace).
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
 	/**
 	 * Called when "open reference" is pressed for an object carrying
-	 * `meta.reference`. Omit it and the menu item is never offered — opening a
-	 * file is the host's business. The canvas passes the reference through
-	 * untouched: it neither resolves nor validates the path.
+	 * `meta.reference`. Omit it and the menu item is never offered. The reference
+	 * is passed through untouched: the canvas neither resolves nor validates it.
 	 */
 	onOpenReference?: (payload: OpenReferencePayload) => void;
 	/**
 	 * Reads the bytes of the file an `image` object names, its `src` passed
-	 * through untouched — the canvas neither resolves nor validates the path, the
-	 * way it does not for `meta.reference` either. Omit it and every image in the
-	 * document draws as a placeholder; a rejected promise draws the same
-	 * placeholder for that one file.
-	 *
-	 * Resolutions are kept per `src` and read through a ref, so passing a new
-	 * function each render costs nothing and discards nothing: a host that needs a
-	 * `src` fetched again has to change the `src`.
+	 * through untouched. Omit it and every image draws as a placeholder; a
+	 * rejected promise draws the placeholder for that one file. Resolutions are
+	 * kept per `src` and the function is read through a ref, so a new function
+	 * each render costs nothing and discards nothing: to fetch a `src` again,
+	 * change the `src`.
 	 */
 	resolveImage?: ResolveImage;
 
-	// ── Toolbar (visibility & composition) ──
+	// ── Appearance & localization (live) ──
 	/**
-	 * Host-provided toolbar customization: visibility (`show`) and the whole
-	 * composition of the bar (`sections`). Grouped for cohesion; since a
-	 * `sections` array built inline breaks `<Canvas>`'s memo, a host rendering
-	 * this inline can `useMemo` the object to avoid extra re-renders.
+	 * Theme (default `darkCanvasTheme`). Appearance tokens reach styles as
+	 * `--jiscribe-*` CSS custom properties on the canvas root; handle dimensions
+	 * and the default font are distributed via context. A VSCode host passes
+	 * tokens holding `var(--vscode-...)` values to follow the editor theme.
+	 */
+	theme?: CanvasTheme;
+	/**
+	 * Background grid. Omit for no grid, `{ show: true }` to display it. Its line
+	 * color is not a setting: it is derived from the effective surface (theme
+	 * background, or the doc's `background`) so it stays readable on any color.
+	 * An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
+	 */
+	grid?: {
+		/**
+		 * Whether to render the grid (default `false`). A viewing aid only: it is
+		 * never part of an exported image.
+		 */
+		show?: boolean;
+		/**
+		 * Base spacing in world units (default `25`). Bold lines fall every 4× this
+		 * value and the multi-level grid adapts to zoom. Ignored while hidden.
+		 */
+		size?: number;
+	};
+	/**
+	 * Active locale (default `"en"`). Selects the built-in dictionary (en / ja)
+	 * and is exposed to plugins via `useCanvasLocale`. Resolution is exact →
+	 * language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
+	 */
+	locale?: string;
+	/**
+	 * Partial overrides on top of the locale-resolved dictionary (tooltips,
+	 * menus, toasts). Tweaks individual strings; `locale` picks the language.
+	 */
+	messages?: Partial<CanvasMessages>;
+
+	// ── Chrome ──
+	/**
+	 * Toolbar visibility and composition. An inline object literal defeats
+	 * `<Canvas>`'s memo; `useMemo` it.
 	 */
 	toolbar?: {
 		/**
@@ -264,8 +230,8 @@ type CanvasProps = {
 		 * bar — shape tools, zoom controls, the help button and any host `slot`
 		 * items — and the canvas area takes the full height. Keyboard shortcuts
 		 * still work (`?` opens the shortcut help, rendered outside the bar), but
-		 * the default UI is left with no entry point for drawing new shapes, so
-		 * this suits read-mostly hosts (previews, embedded viewers).
+		 * nothing is left to start drawing a new shape from, so this suits
+		 * read-mostly hosts (previews, embedded viewers).
 		 */
 		show?: boolean;
 		/**
@@ -282,12 +248,9 @@ type CanvasProps = {
 		 */
 		sections?: ToolbarSection[];
 	};
-
-	// ── Shape library sidebar ──
 	/**
 	 * The shape library sidebar. Omit and neither the sidebar nor its toolbar
-	 * toggle is rendered. Grouped as an object like `toolbar` / `grid`;
-	 * `sections` is its only field for now.
+	 * toggle is rendered.
 	 */
 	stencilLibrary?: {
 		/**
@@ -300,84 +263,67 @@ type CanvasProps = {
 		sections: StencilCategory[];
 	};
 
-	// ── Focus behavior ──
+	// ── Interaction with the host page ──
 	/**
 	 * Focus the canvas on mount so keyboard shortcuts work immediately (default
-	 * true). Shortcuts are scoped to the focused canvas; set false when embedding
-	 * multiple canvases (or when the host manages focus) so mounting does not
-	 * steal focus. Top-level (not in `initialConfig`) to match the React-idiomatic
-	 * `autoFocus` spelling.
+	 * `true`). Shortcuts are scoped to the focused canvas; set `false` when
+	 * embedding several canvases, or when the host manages focus, so mounting
+	 * does not steal it.
 	 */
 	autoFocus?: boolean;
-
-	// ── Host page coexistence ──
 	/**
 	 * How the canvas shares gestures with the page embedding it
-	 * ({@link CanvasGestureHandling}), default `"greedy"`. Set `"cooperative"` when
-	 * embedding the canvas in a document that scrolls: the wheel and a one-finger
-	 * background drag move the page past it, a one-finger drag on a shape still
-	 * drags the shape, and the view itself pans with two fingers. Zooming is
-	 * untouched: Ctrl+wheel, pinch and the toolbar's zoom controls keep working
-	 * under either value. Reactive, so a host can hand the canvas the gestures on
-	 * an explicit opt-in (a click, an "interact" button).
+	 * ({@link CanvasGestureHandling}), default `"greedy"`. `"cooperative"` is for a
+	 * canvas inside a scrolling document: the wheel and a one-finger background
+	 * drag move the page past it, a one-finger drag on a shape still drags the
+	 * shape, and the view pans with two fingers. Zooming (Ctrl+wheel, pinch, the
+	 * toolbar) works under either value. Live, so a host can hand the canvas the
+	 * gestures on an explicit opt-in (a click, an "interact" button).
 	 */
 	gestureHandling?: CanvasGestureHandling;
 
-	// ── Mount-time setup (read once; remount with a new key to change) ──
+	// ── Mount-time setup ──
 	/**
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
-	 * capability set (available object types, commands, plugins) plus the view
-	 * setup — the initial camera (`viewport`) and how far it may be scrolled
-	 * (`scrollBounds`, left to the document unless set). Restricts what this canvas can
-	 * create/handle (plugin-style extensibility and feature-gating), independently
-	 * of any other `<Canvas>` on the page. Omit for the full default set.
+	 * capability set (object types, commands, plugins) plus the initial camera
+	 * (`viewport`) and how far it may be scrolled (`scrollBounds`). Omit for the
+	 * full default set. Later changes are ignored; to reconfigure, remount with a
+	 * new React `key`.
 	 *
-	 * **`viewport` and `scrollBounds` outrank the document.** A doc that declares
-	 * `view.open` / `view.scroll` frames and walls itself; passing a camera or a
-	 * scroll limit here overrules it. So pass one only when the host genuinely
-	 * knows better — a restored session, a deep link, a surface that is not a
-	 * document viewer — and leave it out otherwise, where the document's own
-	 * intent is the better answer.
+	 * `viewport` and `scrollBounds` outrank the document's own `view.open` /
+	 * `view.scroll`, so pass them only when the host genuinely knows better (a
+	 * restored session, a deep link) and leave them out otherwise.
 	 *
-	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
-	 * whose object types remain enabled — otherwise state construction throws
-	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
-	 *
-	 * Later changes are ignored (the configuration is part of a canvas's identity).
-	 * To reconfigure, remount with a new React `key`
-	 * (`<Canvas key={configId} initialConfig={...} />`).
+	 * When `objectTypes` is restricted, only pass docs whose object types remain
+	 * enabled — otherwise state construction throws "Mapper not found"
+	 * (docs/01-design-philosophy.md, principle 4).
 	 */
 	initialConfig?: CanvasConfig;
-
-	// ── Imperative handle ──
 	/**
-	 * Receives the imperative Canvas handle ({@link CanvasHandle}), grouping every
-	 * imperative API by subsystem: `ref.current.viewport` to move pan/zoom
-	 * (fit-to-content, jump-to-node, a scripted intro), `ref.current.selection` to
-	 * select objects programmatically, `ref.current.export` to get the exported
-	 * image, and `ref.current.measure` / `history` / `interaction` to read back how
-	 * the canvas drew what it was given. Imperative by design so the view cannot
-	 * feed back into a render loop the way a controlled value prop would.
+	 * Receives the imperative handle ({@link CanvasHandle}), grouped by
+	 * subsystem: `viewport` to move pan/zoom, `selection` to select objects,
+	 * `export` to get the exported image, and `measure` / `history` /
+	 * `interaction` to read back how the canvas drew what it was given.
 	 */
 	ref?: React.Ref<CanvasHandle>;
 };
 
 const CanvasComponent = ({
 	doc,
-	syncNonce,
 	docLoadId,
+	syncNonce,
 	onCommit,
 	onSelectionChange,
 	onViewportChange,
-	theme = darkCanvasTheme,
-	grid,
-	locale = "en",
-	messages,
 	onUndo,
 	onRedo,
 	onExportImage,
 	onOpenReference,
 	resolveImage,
+	theme = darkCanvasTheme,
+	grid,
+	locale = "en",
+	messages,
 	toolbar,
 	stencilLibrary,
 	autoFocus = true,
@@ -401,10 +347,8 @@ const CanvasComponent = ({
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	// The stable instance is both closed over by the reducer and provided via context, so
-	// the two can never desync. Canvas is the provider, so its own hooks must take
-	// `registries` as an explicit argument — reading context here yields the default,
-	// missing any plugin types.
+	// Canvas is the registries provider, so its own hooks take `registries` as an
+	// argument: reading the context here yields the default, missing plugin types.
 	const [registries] = useState(() =>
 		initialConfig
 			? createCanvasRegistries(initialConfig)
@@ -451,7 +395,6 @@ const CanvasComponent = ({
 
 	useClipboardWrite(state.internalClipboard, notifyError);
 
-	// Declared before useSyncExternalDoc so resetGestureState is available to it.
 	const { pointerHandlers, wheelHandler, resetGestureState } =
 		useGestureRecognizer({
 			dispatch,
@@ -519,8 +462,7 @@ const CanvasComponent = ({
 		registries,
 	);
 
-	// Held stable so the wrapper object does not defeat ContextMenu's memo;
-	// an inline literal would fail its shallow compare on every render.
+	// Stable so ContextMenu's memo holds.
 	const contextMenuCallbacks = useMemo(
 		() => ({ paste: handlePaste }),
 		[handlePaste],
@@ -690,8 +632,6 @@ const CanvasComponent = ({
 		registries.objectVisualBounds,
 	);
 
-	// Built here rather than beside the other state-derived hooks because the
-	// export namespace needs the culling suspension declared just above.
 	const canvasHandle = useCanvasHandle({
 		dispatch,
 		canvasState: state,
@@ -713,11 +653,10 @@ const CanvasComponent = ({
 
 	useImperativeHandle(ref, () => canvasHandle, [canvasHandle]);
 
-	// The camera the scene is drawn with. It is the committed one moved onto the
-	// device pixel grid, so text stops creeping inside its shape as the viewport
-	// pans (see snapViewportToDevicePixels). Every layer that positions itself
-	// from the camera has to take this one, or the SVG and the HTML overlays
-	// above it would sit a fraction of a pixel apart.
+	// The committed camera moved onto the device pixel grid (see
+	// snapViewportToDevicePixels). Every layer that positions itself from the
+	// camera must take this one, or the SVG and the HTML overlays above it would
+	// sit a fraction of a pixel apart.
 	const devicePixelRatio = useDevicePixelRatio();
 	const drawnViewport = useMemo(
 		() => snapViewportToDevicePixels(state.viewport, devicePixelRatio),
@@ -729,11 +668,9 @@ const CanvasComponent = ({
 
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
-	// What the bar's command buttons read to draw themselves disabled, delegated
-	// to each command's canExecute as the single source of truth. Canvas provides
-	// the registries context, so it resolves against its directly-held bundle
-	// rather than the hook. A plain closure, not useCallback-memoized, for the
-	// same reason as in useCommandState: `state` changes on nearly every dispatch.
+	// What the bar's command buttons read to draw themselves disabled. A plain
+	// closure, not memoized: `state` changes on nearly every dispatch (see
+	// useCommandState).
 	const resolveToolbarCommandState = (commandId: string) =>
 		resolveCommandState(state, registries, commandId);
 
