@@ -5,7 +5,11 @@ import { createJiscribeMcpServer } from "./server";
 /**
  * How long the shutdown is given before the process is ended regardless. The timer
  * is unref'd, so it never keeps a process alive that would otherwise be done; it
- * only catches a teardown that hangs (a browser that will not let go of the port)
+ * only catches a teardown that hangs (a browser that will not let go of the port).
+ *
+ * Anything that has to happen for certain therefore has to happen before the
+ * teardown's own waits, not after them: the host kills the headless browser it
+ * spawned on that footing (see canvasHost's close)
  */
 const FORCED_EXIT_DELAY_MS = 10_000;
 

@@ -708,6 +708,13 @@ export async function startCanvasHost(
 			launchBrowser(`${url}?${HEADLESS_VIEWER_QUERY}`, {
 				mode: "headless",
 				onSpawn: (child) => {
+					// The host can be folded up while the browser is still coming up.
+					// Holding on to a process the closed host will never kill would
+					// leave a window-less Chromium behind for good
+					if (isClosed) {
+						child.kill();
+						return;
+					}
 					headlessBrowserProcess = child;
 				},
 				onFailure: (reason) => {
@@ -761,14 +768,17 @@ export async function startCanvasHost(
 			if (headlessBrowserProcess !== null) {
 				const browserProcess = headlessBrowserProcess;
 				headlessBrowserProcess = null;
+				// The kill goes first because it is the one step with a deadline over
+				// it: the caller ends the process outright shortly after the waits
+				// here are due (FORCED_EXIT_DELAY_MS in index.ts), and a kill left
+				// behind them is never reached. Killing the child reaches the browser
+				// only when it is a local one. A Windows-side .exe spawned from WSL is
+				// reached through an interop proxy, and the kill takes the proxy while
+				// the browser lives on, which is why the frame below still goes out
+				browserProcess.kill();
 				await closeSockets(
 					openSockets().filter((socket) => headlessSockets.has(socket)),
 				);
-				// Killing the child reaches the browser only when it is a local one.
-				// A Windows-side .exe spawned from WSL is reached through an interop
-				// proxy, and the kill takes the proxy while the browser lives on, so
-				// this is the lucky case rather than the plan
-				browserProcess.kill();
 			}
 			cancelIdleShutdown();
 			stopWatching();

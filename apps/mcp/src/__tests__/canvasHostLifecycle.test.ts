@@ -407,4 +407,64 @@ describe("close", () => {
 		expect(didAskHeadless).toBe(true);
 		expect(didAskVisible).toBe(false);
 	});
+
+	it("kills the headless browser before anything it has to wait for", async () => {
+		// The caller ends the process outright ten seconds into the shutdown, which
+		// is exactly what the two waits before this used to add up to: the kill was
+		// only ever reached when it was not needed
+		let killCount = 0;
+		const host = await startTestHost({
+			launchBrowser: (_url, browserOptions) => {
+				browserOptions.onSpawn?.({
+					kill: () => {
+						killCount += 1;
+						return true;
+					},
+				} as never);
+			},
+		});
+		const opening = host.openHeadlessViewer();
+		await connectFakeViewer(
+			host,
+			(socket) => {
+				socket.close();
+			},
+			"headless",
+		);
+		await opening;
+
+		const closing = host.close();
+
+		// Read before the close is awaited: the kill has to be done with by then
+		expect(killCount).toBe(1);
+		await closing;
+	});
+
+	it("kills a browser handed over after the host was already folded up", async () => {
+		// A launch still coming up when the host closes has nobody left to close it
+		let killCount = 0;
+		// Held on an object because the launch fills it in from its own callback
+		const launch: { handOverBrowser: (() => void) | null } = {
+			handOverBrowser: null,
+		};
+		const host = await startTestHost({
+			launchBrowser: (_url, browserOptions) => {
+				launch.handOverBrowser = () => {
+					browserOptions.onSpawn?.({
+						kill: () => {
+							killCount += 1;
+							return true;
+						},
+					} as never);
+				};
+			},
+			headlessConnectTimeoutMs: 50,
+		});
+		await host.openHeadlessViewer();
+		await host.close();
+
+		launch.handOverBrowser?.();
+
+		expect(killCount).toBe(1);
+	});
 });

@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 
 import {
 	calcBrowserOpenCommands,
@@ -8,6 +8,8 @@ import type {
 	BrowserOpenCommand,
 	BrowserOpenMode,
 } from "./browserOpenCommands";
+import { createHeadlessProfile, type HeadlessProfile } from "./headlessProfile";
+import { spawnFirstAvailable } from "./spawnFirstAvailable";
 
 /** How to open, and the callbacks reporting how the launch went */
 export type BrowserOpenOptions = {
@@ -35,83 +37,62 @@ export type BrowserOpenOptions = {
 };
 
 /**
- * Tries the candidates in order. A missing executable (ENOENT) or an abnormal exit
- * drops to the next, and once they run out it warns and gives up.
+ * Says that the browsers on the Windows side were left out, and why. A launch
+ * that went ahead without them is not the launch the caller asked for, so the
+ * reason travels with every failure rather than being left in the log.
  *
- * The exit code is looked at as well because an app-mode candidate can fail in the
- * shape of "it launches, but there is nothing to launch" (macOS's `open -na`,
- * Windows's `start`). A browser that did open either does not exit until the window
- * is closed, or hands over to an existing process and leaves with 0.
+ * @param profile The profile the launch was given, or null outside headless mode
+ * @returns The sentence to append, or "" when nothing was left out
  */
-const spawnFirstAvailable = (
-	commands: readonly BrowserOpenCommand[],
-	index: number,
-	options: {
-		onAdvance: (nextIndex: number) => void;
-		onSpawn: (child: ChildProcess) => void;
-		onExhausted: (reason: string) => void;
-		/**
-		 * Whether to let the child outlive this process. A headless browser has no
-		 * one to close it, so it is kept attached
-		 */
-		shouldUnref: boolean;
-	},
-): void => {
-	const [command, ...args] = commands[index];
-	let isSettled = false;
-	const fallBack = (reason: string): void => {
-		if (isSettled) {
-			return;
-		}
-		isSettled = true;
-		if (index + 1 < commands.length) {
-			options.onAdvance(index + 1);
-			spawnFirstAvailable(commands, index + 1, options);
-			return;
-		}
-		options.onExhausted(reason);
-	};
-	try {
-		const child = spawn(command, args, { stdio: "ignore" });
-		options.onSpawn(child);
-		child.on("error", (error) => {
-			fallBack(String(error));
-		});
-		child.on("exit", (code) => {
-			// code is null when it died on a signal, and when it never launched at
-			// all. The latter arrives separately as error, so nothing is decided here
-			if (code === 0) {
-				isSettled = true;
-				return;
-			}
-			if (code !== null) {
-				fallBack(`${command} exited with ${code}`);
-			}
-		});
-		if (options.shouldUnref) {
-			child.unref();
-		}
-	} catch (error) {
-		fallBack(String(error));
+const describeWindowsExclusion = (profile: HeadlessProfile | null): string => {
+	if (profile === null || profile.paths.windows.ok) {
+		return "";
 	}
+	return `; the Windows-side browsers were left out of the attempt, because ${profile.paths.windows.reason}`;
 };
 
 /**
  * Words the failure of every headless candidate so it reads as "no Chromium",
  * not as the last path tried being the one that is missing.
  *
- * @param commands The candidates that were tried, in order
+ * @param commands The candidates that were tried, in order. Never empty
  * @param lastReason The failure of the last of them, as spawn reported it
+ * @param profile The profile the launch was given, so that candidates left out for
+ *   want of one are accounted for too
  */
 const describeHeadlessExhaustion = (
 	commands: readonly BrowserOpenCommand[],
 	lastReason: string,
+	profile: HeadlessProfile | null,
 ): string => {
 	const hint = "name an executable with JISCRIBE_MCP_BROWSER";
+	const exclusion = describeWindowsExclusion(profile);
 	if (commands.length === 1) {
-		return `the Chromium named for headless mode, ${commands[0][0]}, could not be started (${lastReason}); ${hint}`;
+		return `the Chromium named for headless mode, ${commands[0][0]}, could not be started (${lastReason}); ${hint}${exclusion}`;
 	}
-	return `none of the ${commands.length} Chromium candidates for headless mode could be started, so none seems to be installed (the last one tried failed with: ${lastReason}); ${hint}`;
+	return `none of the ${commands.length} Chromium candidates for headless mode could be started, so none seems to be installed (the last one tried failed with: ${lastReason}); ${hint}${exclusion}`;
+};
+
+/**
+ * Ties the throwaway profile's lifetime to the browser using it. Every candidate
+ * of one launch is named the same directory, so it is taken away only once the
+ * last one to be tried is gone; a candidate that dropped out has handed it on.
+ *
+ * @param profile The profile named on the command line of every candidate
+ * @returns What to call with each process spawned, in the order they are tried
+ */
+const createProfileKeeper = (
+	profile: HeadlessProfile,
+): ((child: ChildProcess) => void) => {
+	let latestChild: ChildProcess | null = null;
+	return (child) => {
+		latestChild = child;
+		child.once("close", () => {
+			if (child === latestChild) {
+				profile.remove();
+			}
+		});
+	};
 };
 
 /**
@@ -133,19 +114,27 @@ export function openBrowser(
 		process.env.JISCRIBE_MCP_BROWSER,
 	);
 	const mode = options.mode ?? preference.mode;
+	// A headless launch gets a profile of its own. Left on the user's, it contends
+	// with the browser they already have open (see headlessProfile)
+	const profile =
+		mode === "headless" ? createHeadlessProfile(process.platform) : null;
+	const keepProfileWith =
+		profile === null ? null : createProfileKeeper(profile);
 	const commands = calcBrowserOpenCommands(
 		url,
 		process.platform,
 		mode,
 		options.browserCommand ?? preference.browserCommand,
+		profile?.paths,
 	);
 	const reportFailure = (reason: string): void => {
+		profile?.remove();
 		console.error(`Failed to open browser: ${reason}`);
 		options.onFailure?.(reason);
 	};
 	if (commands.length === 0) {
 		reportFailure(
-			"no Chromium executable was found to run headless (name one with JISCRIBE_MCP_BROWSER)",
+			`no Chromium executable was left to run headless (name one with JISCRIBE_MCP_BROWSER)${describeWindowsExclusion(profile)}`,
 		);
 		return;
 	}
@@ -166,14 +155,15 @@ export function openBrowser(
 		},
 		onSpawn: (child) => {
 			options.onSpawn?.(child);
+			keepProfileWith?.(child);
 		},
 		onExhausted: (lastReason) => {
 			reportFailure(
 				mode === "headless"
-					? describeHeadlessExhaustion(commands, lastReason)
+					? describeHeadlessExhaustion(commands, lastReason, profile)
 					: lastReason,
 			);
 		},
-		shouldUnref: mode !== "headless",
+		isChildTheBrowser: mode === "headless",
 	});
 }

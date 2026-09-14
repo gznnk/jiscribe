@@ -91,7 +91,13 @@ when no Chromium is found.
 16 screen-side tools have something to work with while the user's screen stays
 as it was. It names a Chromium executable directly and never falls back to a
 tab, since no default browser has a headless mode; with none installed the tool
-says so rather than leaving the AI blind. A viewer that is already connected,
+says so rather than leaving the AI blind. It runs on a throwaway profile in a
+temporary directory, removed when the window goes, so it never contends with the
+browser the user already has open — and carries none of their extensions,
+sessions or history. Under WSL, where the browser is a Windows-side one, that
+directory is this user's Windows `TEMP`, which Windows itself is asked for; if it
+cannot be had, those browsers are left out of the attempt and the tool says why,
+rather than falling back to a profile someone else on the machine can reach. A viewer that is already connected,
 visible or not, is used as it is and nothing new is opened. A plain
 `open_canvas` after that puts a window on screen, so a host held open by a
 headless window can still be looked at.

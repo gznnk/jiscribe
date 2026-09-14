@@ -1,3 +1,5 @@
+import type { HeadlessProfilePaths } from "./headlessProfile";
+
 /** One command to hand to spawn. The head is the executable, the rest its arguments */
 export type BrowserOpenCommand = readonly [string, ...string[]];
 
@@ -146,6 +148,34 @@ const calcAppOpenCommands = (
 };
 
 /**
+ * The switch putting one candidate on a profile of its own.
+ *
+ * @param executable The candidate's executable, as it is spawned
+ * @param platform The value of `process.platform`
+ * @param profilePaths Where the profile goes, in both of the forms it can need
+ * @returns The one argument, or null when this candidate has no profile to run
+ *   on and has to be left out of the launch. A Windows-side browser reached from
+ *   WSL is the only case that needs the Windows form of the path — it is
+ *   recognised by being a .exe named on a platform that is not Windows — and the
+ *   only one that can come back without a path to use
+ */
+const calcHeadlessProfileArg = (
+	executable: string,
+	platform: NodeJS.Platform,
+	profilePaths: HeadlessProfilePaths,
+): string | null => {
+	const isWindowsSideExecutable =
+		platform !== "win32" && executable.toLowerCase().endsWith(".exe");
+	if (!isWindowsSideExecutable) {
+		return `--user-data-dir=${profilePaths.nativePath}`;
+	}
+	if (!profilePaths.windows.ok) {
+		return null;
+	}
+	return `--user-data-dir=${profilePaths.windows.path}`;
+};
+
+/**
  * The candidate commands for opening a window-less Chromium, in the order they are
  * tried. Every candidate is an executable named by path or by a name on PATH, so
  * the spawned process is the browser itself and stays the one this process holds.
@@ -155,34 +185,46 @@ const calcAppOpenCommands = (
  *   treated as Linux
  * @param browserCommand The executable to name. When omitted, the known Chromiums
  *   are tried in order
+ * @param profilePaths Where the launched browser keeps its profile, which is never
+ *   the user's own: the browser they have open holds a lock over that one
  * @returns The commands in the order they are tried, or empty when the platform
- *   has no known Chromium installation to name. Nothing here checks that a
+ *   has no known Chromium installation to name and when the only ones it has need
+ *   a profile path that could not be worked out. Nothing here checks that a
  *   candidate exists, so a non-empty list can still fail its way to the end
  */
 const calcHeadlessOpenCommands = (
 	url: string,
 	platform: NodeJS.Platform,
 	browserCommand: string | undefined,
+	profilePaths: HeadlessProfilePaths,
 ): readonly BrowserOpenCommand[] => {
-	const toCommand = (executable: string): BrowserOpenCommand => [
-		executable,
-		...HEADLESS_CHROMIUM_ARGS,
-		url,
-	];
+	// A candidate with nowhere to keep a profile is left out rather than run on the
+	// user's own, so the list can come back shorter than the installations tried
+	const toCommands = (executable: string): readonly BrowserOpenCommand[] => {
+		const profileArg = calcHeadlessProfileArg(
+			executable,
+			platform,
+			profilePaths,
+		);
+		if (profileArg === null) {
+			return [];
+		}
+		return [[executable, ...HEADLESS_CHROMIUM_ARGS, profileArg, url]];
+	};
 	if (browserCommand !== undefined) {
-		return [toCommand(browserCommand)];
+		return toCommands(browserCommand);
 	}
 	if (platform === "win32") {
-		return WINDOWS_NATIVE_CHROMIUM_PATHS.map(toCommand);
+		return WINDOWS_NATIVE_CHROMIUM_PATHS.flatMap(toCommands);
 	}
 	if (platform === "darwin") {
-		return MACOS_CHROMIUM_BINARIES.map(toCommand);
+		return MACOS_CHROMIUM_BINARIES.flatMap(toCommands);
 	}
 	// As in app mode, the Windows-side .exe paths are there for WSL and merely fail
 	// with ENOENT on plain Linux
 	return [
-		...LINUX_CHROMIUM_COMMANDS.map(toCommand),
-		...WINDOWS_CHROMIUM_PATHS.map(toCommand),
+		...LINUX_CHROMIUM_COMMANDS.flatMap(toCommands),
+		...WINDOWS_CHROMIUM_PATHS.flatMap(toCommands),
 	];
 };
 
@@ -199,6 +241,10 @@ const calcHeadlessOpenCommands = (
  *   Chromium and never drops to a tab, since the default browser has no such mode
  * @param browserCommand The executable to name in app and headless mode. When
  *   omitted, the known Chromiums are looked for
+ * @param headlessProfilePaths Where a headless browser keeps its profile. Only
+ *   headless mode takes one, and it is required there: leaving a headless launch on
+ *   the user's own profile is what this is here to prevent, so its absence throws
+ *   rather than quietly going back to that
  * @returns The commands in the order they are tried. In app and tab mode the tail
  *   always holds the candidates that open a tab, so something is always there to
  *   try; headless has no such tail and can come back empty, and even a non-empty
@@ -209,9 +255,20 @@ export const calcBrowserOpenCommands = (
 	platform: NodeJS.Platform,
 	mode: BrowserOpenMode,
 	browserCommand?: string,
+	headlessProfilePaths?: HeadlessProfilePaths,
 ): readonly BrowserOpenCommand[] => {
 	if (mode === "headless") {
-		return calcHeadlessOpenCommands(url, platform, browserCommand);
+		if (headlessProfilePaths === undefined) {
+			throw new Error(
+				"a headless launch has to be given a profile directory of its own (see headlessProfile)",
+			);
+		}
+		return calcHeadlessOpenCommands(
+			url,
+			platform,
+			browserCommand,
+			headlessProfilePaths,
+		);
 	}
 	const tabCommands = calcTabOpenCommands(url, platform);
 	if (mode === "tab") {
