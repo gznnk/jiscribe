@@ -15,7 +15,7 @@ alongside.
 ## What is inside
 
 - **The `jiscribe` MCP server** (`.mcp.json`), run from npm as
-  `npx -y jiscribe-mcp@0.9`. It carries the canvas tools and the viewer.
+  `npx -y jiscribe-mcp@0.10`. It carries the canvas tools and the viewer.
 - **The `jiscribe` skill** (`skills/jiscribe/`): what a Jiscribe canvas can hold
   and how to draw on it well, with the file format in
   `references/authoring-json.md` for reading or writing a `.jis` file directly.

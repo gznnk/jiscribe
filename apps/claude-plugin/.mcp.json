@@ -1,5 +1,5 @@
 {
 	"mcpServers": {
-		"jiscribe": { "command": "npx", "args": ["-y", "jiscribe-mcp@0.9"] }
+		"jiscribe": { "command": "npx", "args": ["-y", "jiscribe-mcp@0.10"] }
 	}
 }
