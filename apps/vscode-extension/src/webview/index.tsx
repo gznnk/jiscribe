@@ -19,7 +19,7 @@ import "@jiscribe/canvas/fonts.css";
 import "katex/dist/katex.min.css";
 
 import { canvasParser, plugins } from "./canvasParser";
-import { DocErrorBanner, DocErrorNotice } from "./DocErrorNotice";
+import { DocEditingPausedOverlay, DocErrorNotice } from "./DocErrorNotice";
 import {
 	applyParseResult,
 	type DocViewState,
@@ -191,18 +191,47 @@ function App() {
 		persistSidebars(next);
 	}, []);
 
+	// While the editor's text does not parse, the canvas is showing an older
+	// document than the file holds, and a commit replaces the file's whole range
+	// with it. Editing is therefore paused: the overlay takes the pointer events
+	// and the keystrokes are swallowed below, so the user's edit is refused
+	// visibly rather than made and then dropped.
+	const isEditingPaused = docView.error !== null;
+	// Read by handlers that must keep one identity for the canvas's memo, which
+	// would otherwise re-render it on every broken keystroke.
+	const isEditingPausedRef = useRef(isEditingPaused);
+	isEditingPausedRef.current = isEditingPaused;
+
 	// The Canvas save scheduler throttles high-frequency commits (key repeat,
 	// etc.) (#125), so send straight to the Extension without debouncing here.
 	// The written-back payload is always the doc's JSON text regardless of
 	// docType; image docs (.jis.svg / .jis.png) render at save time via
 	// requestImageExport (keeping the commit path off DOM rendering).
 	const handleCommit = useCallback((doc: CanvasDoc) => {
+		// Backstop for anything that reaches the canvas past the pause (a commit
+		// already scheduled when the text broke).
+		if (isEditingPausedRef.current) {
+			return;
+		}
 		const message: WebviewToExtensionMessage = {
 			type: "update",
 			data: JSON.stringify(doc, null, 2),
 		};
 		vscode.postMessage(message);
 	}, []);
+
+	// The canvas listens for shortcuts on its own container, so the overlay above
+	// it stops the pointer but not the keyboard. Stopping the event here, in the
+	// capture phase, keeps Delete or a paste from changing a canvas whose changes
+	// cannot be written back.
+	const handleKeyDownCapture = useCallback(
+		(event: React.KeyboardEvent<HTMLDivElement>) => {
+			if (isEditingPausedRef.current) {
+				event.stopPropagation();
+			}
+		},
+		[],
+	);
 
 	// Delegate the export dialog's result to the workspace save. Choosing the
 	// destination (save dialog) and deriving the file name are the Extension's job.
@@ -374,7 +403,10 @@ function App() {
 
 	if (docView.doc) {
 		return (
-			<div style={{ width: "100%", height: "100vh", position: "relative" }}>
+			<div
+				style={{ width: "100%", height: "100vh", position: "relative" }}
+				onKeyDownCapture={handleKeyDownCapture}
+			>
 				<Canvas
 					doc={docView.doc}
 					initialConfig={mountConfig}
@@ -390,7 +422,7 @@ function App() {
 					onExportImage={handleExportImage}
 					resolveImage={imageResolver.resolveImage}
 				/>
-				{docView.error && <DocErrorBanner error={docView.error} />}
+				{docView.error && <DocEditingPausedOverlay error={docView.error} />}
 			</div>
 		);
 	}
