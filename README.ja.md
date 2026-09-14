@@ -63,7 +63,16 @@ Lucide アイコン・AWS アーキテクチャといった図形セットはプ
 
 ### AI から使う
 
-stdio 対応の MCP クライアントに、次の設定でサーバーを登録する:
+使っているエージェントにサーバーを登録する:
+
+```bash
+claude mcp add jiscribe -- npx -y jiscribe-mcp   # Claude Code
+codex mcp add jiscribe -- npx -y jiscribe-mcp    # Codex
+copilot mcp add jiscribe -- npx -y jiscribe-mcp  # GitHub Copilot CLI
+```
+
+stdio 対応のその他のクライアントには手で書く。多くは `mcpServers` だが、VSCode
+だけは同じものを `servers` と呼ぶ:
 
 ```jsonc
 {
