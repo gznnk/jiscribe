@@ -39,6 +39,12 @@ type ObjectMenuColorPickerGridProps = {
 	 * Defaults to false, where every pick writes: a picker showing the first of
 	 * several objects' color cannot tell, and dropping the pick there would take
 	 * away how a selection whose shapes disagree is brought onto one color.
+	 *
+	 * Counting targets is what settles this for a shape's own color, so it does
+	 * not settle it for text: a text style write lands on the slots, or on the
+	 * run being edited, not on the object. A single selected object is therefore
+	 * no proof, and the font color pickers pass nothing here on purpose — see
+	 * gznnk/jiscribe-private#288.
 	 */
 	currentColorIsShared?: boolean;
 	onPropertyUpdate: StylePropertyUpdater;

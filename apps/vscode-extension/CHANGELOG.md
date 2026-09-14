@@ -199,13 +199,12 @@ you were looking.
   artwork rather than characters, and the readout is 12 px.
 - **Undo and redo stay enabled while you drag.** They greyed out for the length
   of the gesture and came back when it ended.
-- **Picking the colour a shape already has no longer throws redo away.** The
-  swatch wrote regardless, and a write is a commit whether or not it changes
-  anything: the document was marked dirty and everything you had undone became
-  unreachable. It now writes only where it would change something — picking the
-  shown colour for several shapes at once still unifies them, since that is a
-  real change to all but one of them. The font colour pickers still write every
-  time, because a colour that matches the slot is a real edit to a run inside it.
+- **Picking the fill, border or background colour a shape already has no longer
+  throws redo away.** The swatch wrote regardless, and a write is a commit
+  whether or not it changes anything: the document was marked dirty and
+  everything you had undone became unreachable. It now writes only where it
+  would change something — picking the shown colour for several shapes at once
+  still unifies them, since that is a real change to all but one of them.
 - The image editor's change emitter is disposed with the extension, instead of
   holding every closed `.jis.png` / `.jis.svg` document's edit history for the
   rest of the session.
