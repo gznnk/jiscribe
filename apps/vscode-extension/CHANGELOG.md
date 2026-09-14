@@ -80,9 +80,11 @@ you were looking.
   and the supported formats are PNG, JPEG, GIF, WebP, AVIF, BMP and SVG. **The
   bytes are not embedded**, so a document is no longer self-contained: the
   picture has to travel beside it. A `src` that cannot be read draws a
-  placeholder rather than failing the document. There is no toolbar or library
-  entry for it — an `image` is placed by an AI or by writing the JSON, the same
-  way an `svg` is. Exports resolve the bytes and inline them, so a PNG or SVG
+  placeholder rather than failing the document. Each picture is read once per
+  view rather than watched, so replacing the file on disk shows through the next
+  time the view is built — switching to another tab and back is enough. There is
+  no toolbar or library entry for it — an `image` is placed by an AI or by
+  writing the JSON, the same way an `svg` is. Exports resolve the bytes and inline them, so a PNG or SVG
   you export stands alone; a picture that never resolved is left out of the
   export rather than written as a dead reference.
 - The shape set is now **54 drawable types**.
