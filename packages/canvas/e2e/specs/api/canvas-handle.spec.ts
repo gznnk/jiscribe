@@ -495,8 +495,8 @@ test.describe("canvas handle / export", () => {
 		const handle = await readCanvasHandle(canvas.page);
 		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 460, y: 300 });
 
-		const exported = await handle.evaluate((h) => {
-			const text = h.export.toSvgString();
+		const exported = await handle.evaluate(async (h) => {
+			const text = await h.export.toSvgString();
 			if (text === null) {
 				return null;
 			}

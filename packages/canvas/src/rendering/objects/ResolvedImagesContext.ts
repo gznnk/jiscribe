@@ -15,8 +15,8 @@ export type ResolvedImage =
 			status: "ready";
 			/** Blob URL the live `<image>` draws from; revoked once the document stops naming the src. */
 			objectUrl: string;
-			/** The same bytes as a `data:` URI, for the export to inline (it serializes synchronously, so this cannot be made then). */
-			dataUri: string;
+			/** The bytes themselves, which the export inlines — a blob URL names nothing outside this tab. */
+			blob: Blob;
 	  }
 	| { status: "error" };
 

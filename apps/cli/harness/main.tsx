@@ -123,7 +123,7 @@ const render = async (
 	};
 
 	if (request.format === "svg") {
-		const svg = handle.export.toSvgString(exportOptions);
+		const svg = await handle.export.toSvgString(exportOptions);
 		if (svg === null) {
 			throw new Error("canvas produced no SVG");
 		}

@@ -13,7 +13,7 @@ import {
 	exportCanvasToSvg,
 	rasterizeSvgToPng,
 } from "../../export";
-import type { BuildExportSvgOptions, ResolveImageHref } from "../../export";
+import type { BuildExportSvgOptions, ResolveImageBlob } from "../../export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";
@@ -61,8 +61,13 @@ export const runExportSubmit = (
 					includesSource: values.includeSource,
 				});
 			if (values.format === "svg") {
-				const svgText = canvasToSvgString(svg, exportOptions);
-				deliver(new Blob([svgText], { type: "image/svg+xml;charset=utf-8" }));
+				canvasToSvgString(svg, exportOptions).then(
+					(svgText) =>
+						deliver(
+							new Blob([svgText], { type: "image/svg+xml;charset=utf-8" }),
+						),
+					reportExportError,
+				);
 			} else {
 				rasterizeSvgToPng(svg, exportOptions).then(
 					({ blob }) => deliver(blob),
@@ -72,7 +77,7 @@ export const runExportSubmit = (
 			return;
 		}
 		if (values.format === "svg") {
-			exportCanvasToSvg(svg, exportOptions);
+			exportCanvasToSvg(svg, exportOptions).catch(reportExportError);
 		} else {
 			exportCanvasToPng(svg, exportOptions).catch(reportExportError);
 		}
@@ -92,13 +97,13 @@ type UseExportDialogParams = {
 	/**
 	 * Runs the snapshot with viewport culling suspended (full object tree in
 	 * the DOM), since every export path clones the live SVG. The synchronous
-	 * part of the snapshot must complete the clone — for the PNG path this
-	 * holds because rasterizeSvgToPng builds the export SVG (clone, style
-	 * baking, text conversion) before its first await.
+	 * part of the snapshot must complete the clone — both paths hold because
+	 * they build the export SVG (clone, style baking, text conversion) before
+	 * their first await, which is the one reading the image bytes.
 	 */
 	withCullingSuspended: <T>(snapshot: () => T) => T;
 	/** Reads the bytes an exported `<image>` carries (see buildExportSvg) */
-	resolveImageHref: ResolveImageHref;
+	resolveImageBlob: ResolveImageBlob;
 };
 
 /**
@@ -122,7 +127,7 @@ export const useExportDialog = ({
 	dispatch,
 	notifyError,
 	withCullingSuspended,
-	resolveImageHref,
+	resolveImageBlob,
 }: UseExportDialogParams): ((values: ExportSubmitValues) => void) => {
 	// Always-fresh mirror of the state, read at export time rather than at render
 	// time, so the callback below never has to be rebuilt.
@@ -140,9 +145,9 @@ export const useExportDialog = ({
 
 	// Mirrored like the state: it changes identity as files arrive, and the submit
 	// handler is meant to survive that.
-	const resolveImageHrefRef = useRef(resolveImageHref);
+	const resolveImageBlobRef = useRef(resolveImageBlob);
 	useEffect(() => {
-		resolveImageHrefRef.current = resolveImageHref;
+		resolveImageBlobRef.current = resolveImageBlob;
 	});
 
 	// Export dialog (opened by ExportCommand): pick format + margin, OK
@@ -164,7 +169,7 @@ export const useExportDialog = ({
 							registries.objectVisualBounds,
 							values,
 						),
-						resolveImageHref: (src: string) => resolveImageHrefRef.current(src),
+						resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),
 					},
 					onExportImageRef.current,
 					notifyError,

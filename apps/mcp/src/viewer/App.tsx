@@ -163,15 +163,15 @@ export function App() {
 	);
 
 	/**
-	 * Answers the queries about the drawn result. Capture alone is asynchronous and
-	 * carries an image, so its path is separate on the canvas-agent side as well
+	 * Answers the queries about the drawn result. Capture alone carries an image
+	 * rather than text, so its path is separate on the canvas-agent side as well
 	 */
 	const runHandleOp = useCallback(
 		async (op: AiHandleOp) => {
 			try {
 				return op.kind === "captureCanvas"
 					? await captureCanvasImage(capturePng)
-					: applyHandleOp(op, handleControl);
+					: await applyHandleOp(op, handleControl);
 			} catch (error) {
 				// Throwing without answering would leave the host with nothing to do but
 				// wait 15 seconds and time out, and the AI with no reason at all

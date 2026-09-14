@@ -28,7 +28,7 @@ const createFakeHandleControl = (
 	measureConnectorPath: () => null,
 	measureVisualBounds: () => null,
 	hitTest: () => [],
-	toSvgString: () => "<svg></svg>",
+	toSvgString: async () => "<svg></svg>",
 	getInteractionStatus: () => ({
 		drag: null,
 		isInertialScrolling: false,
@@ -43,8 +43,8 @@ const createFakeHandleControl = (
 });
 
 describe("applyHandleOp", () => {
-	it("fails when no canvas is on screen", () => {
-		const result = applyHandleOp(
+	it("fails when no canvas is on screen", async () => {
+		const result = await applyHandleOp(
 			{ kind: "fitView", target: "all" },
 			createFakeHandleControl({ isAvailable: () => false }),
 		);
@@ -53,8 +53,8 @@ describe("applyHandleOp", () => {
 		expect(result.text).toContain("no canvas");
 	});
 
-	it("lists the ids it selected in the result", () => {
-		const result = applyHandleOp(
+	it("lists the ids it selected in the result", async () => {
+		const result = await applyHandleOp(
 			{ kind: "selectObjects", ids: ["rect-1", "rect-2"] },
 			createFakeHandleControl(),
 		);
@@ -63,8 +63,8 @@ describe("applyHandleOp", () => {
 		expect(result.text).toBe('selected "rect-1", "rect-2"');
 	});
 
-	it("adds the ids it could not select, with the reason", () => {
-		const result = applyHandleOp(
+	it("adds the ids it could not select, with the reason", async () => {
+		const result = await applyHandleOp(
 			{ kind: "selectObjects", ids: ["rect-1", "gone"] },
 			createFakeHandleControl({
 				selectObjects: () => ({
@@ -78,8 +78,8 @@ describe("applyHandleOp", () => {
 		expect(result.text).toContain('"gone"');
 	});
 
-	it("fails when it could select nothing at all", () => {
-		const result = applyHandleOp(
+	it("fails when it could select nothing at all", async () => {
+		const result = await applyHandleOp(
 			{ kind: "selectObjects", ids: ["gone"] },
 			createFakeHandleControl({
 				selectObjects: () => ({ selectedIds: [], ignoredIds: ["gone"] }),
@@ -90,8 +90,8 @@ describe("applyHandleOp", () => {
 		expect(result.text).toContain('"gone"');
 	});
 
-	it("takes an empty array as clearing the selection, and succeeds", () => {
-		const result = applyHandleOp(
+	it("takes an empty array as clearing the selection, and succeeds", async () => {
+		const result = await applyHandleOp(
 			{ kind: "selectObjects", ids: [] },
 			createFakeHandleControl(),
 		);
@@ -99,8 +99,8 @@ describe("applyHandleOp", () => {
 		expect(result).toEqual({ ok: true, text: "cleared the selection" });
 	});
 
-	it("reports the camera left by centerView as numbers", () => {
-		const result = applyHandleOp(
+	it("reports the camera left by centerView as numbers", async () => {
+		const result = await applyHandleOp(
 			{ kind: "centerView", x: 100, y: 200, zoom: 2 },
 			createFakeHandleControl({
 				centerView: () => ({ minX: 50, minY: 100, zoom: 2 }),
@@ -113,14 +113,14 @@ describe("applyHandleOp", () => {
 		expect(result.text).toContain("200% zoom");
 	});
 
-	it("fails naming which target it was asked for when there is nothing to fit to", () => {
+	it("fails naming which target it was asked for when there is nothing to fit to", async () => {
 		const handleControl = createFakeHandleControl({ fitView: () => null });
 
-		const all = applyHandleOp(
+		const all = await applyHandleOp(
 			{ kind: "fitView", target: "all" },
 			handleControl,
 		);
-		const selection = applyHandleOp(
+		const selection = await applyHandleOp(
 			{ kind: "fitView", target: "selection" },
 			handleControl,
 		);
@@ -131,7 +131,7 @@ describe("applyHandleOp", () => {
 		expect(selection.text).toContain("nothing is selected");
 	});
 
-	it("passes the target straight on to fitView", () => {
+	it("passes the target straight on to fitView", async () => {
 		const receivedTargets: string[] = [];
 		const handleControl = createFakeHandleControl({
 			fitView: (target) => {
@@ -140,7 +140,7 @@ describe("applyHandleOp", () => {
 			},
 		});
 
-		const result = applyHandleOp(
+		const result = await applyHandleOp(
 			{ kind: "fitView", target: "selection" },
 			handleControl,
 		);
@@ -152,8 +152,8 @@ describe("applyHandleOp", () => {
 });
 
 describe("applyHandleOp (measuring)", () => {
-	it("reports the size and the line count of text that fits", () => {
-		const result = applyHandleOp(
+	it("reports the size and the line count of text that fits", async () => {
+		const result = await applyHandleOp(
 			{ kind: "measureText", id: "rect-1" },
 			createFakeHandleControl({
 				measureText: () => ({
@@ -176,8 +176,8 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("it fits");
 	});
 
-	it("reports how much room overflowing text is short of, and how to fix it", () => {
-		const result = applyHandleOp(
+	it("reports how much room overflowing text is short of, and how to fix it", async () => {
+		const result = await applyHandleOp(
 			{ kind: "measureText", id: "rect-1" },
 			createFakeHandleControl({
 				measureText: () => ({
@@ -199,8 +199,8 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("set_text");
 	});
 
-	it("fails listing every reason when there is no text to measure", () => {
-		const result = applyHandleOp(
+	it("fails listing every reason when there is no text to measure", async () => {
+		const result = await applyHandleOp(
 			{ kind: "measureText", id: "gone", slot: "title" },
 			createFakeHandleControl(),
 		);
@@ -211,8 +211,8 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("describe_canvas");
 	});
 
-	it("reports overlaps with the pair, the rect, and whether one contains the other", () => {
-		const result = applyHandleOp(
+	it("reports overlaps with the pair, the rect, and whether one contains the other", async () => {
+		const result = await applyHandleOp(
 			{ kind: "findOverlaps" },
 			createFakeHandleControl({
 				findOverlaps: () => [
@@ -240,12 +240,12 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("translate_objects");
 	});
 
-	it("succeeds on no overlaps at all, and names what it never compared", () => {
-		const all = applyHandleOp(
+	it("succeeds on no overlaps at all, and names what it never compared", async () => {
+		const all = await applyHandleOp(
 			{ kind: "findOverlaps" },
 			createFakeHandleControl(),
 		);
-		const named = applyHandleOp(
+		const named = await applyHandleOp(
 			{ kind: "findOverlaps", ids: ["box-a", "box-b"] },
 			createFakeHandleControl(),
 		);
@@ -260,8 +260,8 @@ describe("applyHandleOp (measuring)", () => {
 		expect(named.text).toContain("check the ids");
 	});
 
-	it("returns a connector route as its vertices in order", () => {
-		const result = applyHandleOp(
+	it("returns a connector route as its vertices in order", async () => {
+		const result = await applyHandleOp(
 			{ kind: "measureConnectorPath", id: "c-1" },
 			createFakeHandleControl({
 				measureConnectorPath: () => [
@@ -277,8 +277,8 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("(10, 20) -> (60, 20) -> (60, 90)");
 	});
 
-	it("fails listing every reason on a connector it cannot trace", () => {
-		const result = applyHandleOp(
+	it("fails listing every reason on a connector it cannot trace", async () => {
+		const result = await applyHandleOp(
 			{ kind: "measureConnectorPath", id: "rect-1" },
 			createFakeHandleControl(),
 		);
@@ -288,8 +288,8 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("not a connector");
 	});
 
-	it("reports what is drawn down to its right and bottom edges", () => {
-		const result = applyHandleOp(
+	it("reports what is drawn down to its right and bottom edges", async () => {
+		const result = await applyHandleOp(
 			{ kind: "measureVisualBounds", ids: ["box-a", "box-b"] },
 			createFakeHandleControl({
 				measureVisualBounds: () => ({ x: 10, y: 20, width: 300, height: 140 }),
@@ -304,8 +304,8 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("bottom edge y 160");
 	});
 
-	it("fails when nothing drawn can be measured", () => {
-		const result = applyHandleOp(
+	it("fails when nothing drawn can be measured", async () => {
+		const result = await applyHandleOp(
 			{ kind: "measureVisualBounds", ids: ["gone"] },
 			createFakeHandleControl(),
 		);
@@ -315,8 +315,8 @@ describe("applyHandleOp (measuring)", () => {
 		expect(result.text).toContain("none of those ids is on the canvas");
 	});
 
-	it("fails on a measurement too when no canvas is on screen", () => {
-		const result = applyHandleOp(
+	it("fails on a measurement too when no canvas is on screen", async () => {
+		const result = await applyHandleOp(
 			{ kind: "findOverlaps" },
 			createFakeHandleControl({ isAvailable: () => false }),
 		);
@@ -327,8 +327,8 @@ describe("applyHandleOp (measuring)", () => {
 });
 
 describe("applyHandleOp (reading and writing the view)", () => {
-	it("reports the camera, the size of the screen and the visible region on getView", () => {
-		const result = applyHandleOp(
+	it("reports the camera, the size of the screen and the visible region on getView", async () => {
+		const result = await applyHandleOp(
 			{ kind: "getView" },
 			createFakeHandleControl({
 				getView: () => ({
@@ -347,9 +347,9 @@ describe("applyHandleOp (reading and writing the view)", () => {
 		expect(result.text).toContain("set_view");
 	});
 
-	it("applies the camera given to setView as it is", () => {
+	it("applies the camera given to setView as it is", async () => {
 		const receivedCameras: unknown[] = [];
-		const result = applyHandleOp(
+		const result = await applyHandleOp(
 			{ kind: "setView", minX: 100, minY: 200, zoom: 0.5 },
 			createFakeHandleControl({
 				setView: (camera) => {
@@ -365,9 +365,9 @@ describe("applyHandleOp (reading and writing the view)", () => {
 		expect(result.text).toContain("50% zoom");
 	});
 
-	it("takes a rect on fitView too, and says the rect fitted and what actually shows are different", () => {
+	it("takes a rect on fitView too, and says the rect fitted and what actually shows are different", async () => {
 		const receivedRects: unknown[] = [];
-		const result = applyHandleOp(
+		const result = await applyHandleOp(
 			{ kind: "fitView", rect: { x: 0, y: 0, width: 400, height: 300 } },
 			createFakeHandleControl({
 				fitViewToRect: (rect) => {
@@ -383,8 +383,8 @@ describe("applyHandleOp (reading and writing the view)", () => {
 		expect(result.text).toContain("get_view");
 	});
 
-	it("fails on a rect with no extent", () => {
-		const result = applyHandleOp(
+	it("fails on a rect with no extent", async () => {
+		const result = await applyHandleOp(
 			{ kind: "fitView", rect: { x: 10, y: 10, width: 0, height: 0 } },
 			createFakeHandleControl({ fitViewToRect: () => null }),
 		);
@@ -393,10 +393,10 @@ describe("applyHandleOp (reading and writing the view)", () => {
 		expect(result.text).toContain("no extent");
 	});
 
-	it("refuses fitView given both a target and a rect, and given neither", () => {
+	it("refuses fitView given both a target and a rect, and given neither", async () => {
 		const handleControl = createFakeHandleControl();
 
-		const both = applyHandleOp(
+		const both = await applyHandleOp(
 			{
 				kind: "fitView",
 				target: "all",
@@ -404,7 +404,7 @@ describe("applyHandleOp (reading and writing the view)", () => {
 			},
 			handleControl,
 		);
-		const neither = applyHandleOp({ kind: "fitView" }, handleControl);
+		const neither = await applyHandleOp({ kind: "fitView" }, handleControl);
 
 		expect(both.ok).toBe(false);
 		expect(both.text).toContain("not both");
@@ -414,9 +414,9 @@ describe("applyHandleOp (reading and writing the view)", () => {
 });
 
 describe("applyHandleOp (hit testing, selection, status)", () => {
-	it("lists the ids hit from the front back", () => {
+	it("lists the ids hit from the front back", async () => {
 		const receivedTargets: unknown[] = [];
-		const result = applyHandleOp(
+		const result = await applyHandleOp(
 			{ kind: "hitTest", point: { x: 120, y: 80 }, tolerance: 8 },
 			createFakeHandleControl({
 				hitTest: (target, tolerance) => {
@@ -436,8 +436,8 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 		);
 	});
 
-	it("writes a rect target in the rect form", () => {
-		const result = applyHandleOp(
+	it("writes a rect target in the rect form", async () => {
+		const result = await applyHandleOp(
 			{ kind: "hitTest", rect: { x: 0, y: 0, width: 200, height: 100 } },
 			createFakeHandleControl({ hitTest: () => ["rect-1"] }),
 		);
@@ -445,8 +445,8 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 		expect(result.text).toContain("(0, 0) 200 x 100 px");
 	});
 
-	it("succeeds at a coordinate with nothing there (no results is not a failure)", () => {
-		const result = applyHandleOp(
+	it("succeeds at a coordinate with nothing there (no results is not a failure)", async () => {
+		const result = await applyHandleOp(
 			{ kind: "hitTest", point: { x: 900, y: 900 } },
 			createFakeHandleControl(),
 		);
@@ -456,8 +456,8 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 		expect(result.text).toContain("free");
 	});
 
-	it("fails on a hit test given neither a point nor a rect", () => {
-		const result = applyHandleOp(
+	it("fails on a hit test given neither a point nor a rect", async () => {
+		const result = await applyHandleOp(
 			{ kind: "hitTest" },
 			createFakeHandleControl(),
 		);
@@ -466,8 +466,8 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 		expect(result.text).toContain("nothing was given to test");
 	});
 
-	it("reports the selected ids together with how many there are", () => {
-		const result = applyHandleOp(
+	it("reports the selected ids together with how many there are", async () => {
+		const result = await applyHandleOp(
 			{ kind: "getSelection" },
 			createFakeHandleControl({ getSelectedIds: () => ["rect-1", "rect-2"] }),
 		);
@@ -477,8 +477,8 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 		expect(result.text).toContain('"rect-1", "rect-2"');
 	});
 
-	it("succeeds on nothing selected, and adds what to do next", () => {
-		const result = applyHandleOp(
+	it("succeeds on nothing selected, and adds what to do next", async () => {
+		const result = await applyHandleOp(
 			{ kind: "getSelection" },
 			createFakeHandleControl(),
 		);
@@ -488,8 +488,8 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 		expect(result.text).toContain("select_objects");
 	});
 
-	it("names the text being edited and the drag in the interaction status", () => {
-		const result = applyHandleOp(
+	it("names the text being edited and the drag in the interaction status", async () => {
+		const result = await applyHandleOp(
 			{ kind: "getInteractionStatus" },
 			createFakeHandleControl({
 				getInteractionStatus: () => ({
@@ -509,8 +509,8 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 		expect(result.text).toContain("busy");
 	});
 
-	it("says outright that it is safe to write when nothing is going on", () => {
-		const result = applyHandleOp(
+	it("says outright that it is safe to write when nothing is going on", async () => {
+		const result = await applyHandleOp(
 			{ kind: "getInteractionStatus" },
 			createFakeHandleControl(),
 		);
@@ -523,20 +523,22 @@ describe("applyHandleOp (hit testing, selection, status)", () => {
 });
 
 describe("applyHandleOp (SVG, coordinate conversion)", () => {
-	it("returns SVG within the budget as it is", () => {
-		const result = applyHandleOp(
+	it("returns SVG within the budget as it is", async () => {
+		const result = await applyHandleOp(
 			{ kind: "toSvg" },
-			createFakeHandleControl({ toSvgString: () => "<svg><rect /></svg>" }),
+			createFakeHandleControl({
+				toSvgString: async () => "<svg><rect /></svg>",
+			}),
 		);
 
 		expect(result).toEqual({ ok: true, text: "<svg><rect /></svg>" });
 	});
 
-	it("returns only the start of SVG over the budget, and adds what to read instead", () => {
+	it("returns only the start of SVG over the budget, and adds what to read instead", async () => {
 		const svg = "<svg>".padEnd(MAX_SVG_CHARS + 100, "x");
-		const result = applyHandleOp(
+		const result = await applyHandleOp(
 			{ kind: "toSvg" },
-			createFakeHandleControl({ toSvgString: () => svg }),
+			createFakeHandleControl({ toSvgString: async () => svg }),
 		);
 
 		expect(result.ok).toBe(true);
@@ -545,8 +547,8 @@ describe("applyHandleOp (SVG, coordinate conversion)", () => {
 		expect(result.text).not.toContain(svg);
 	});
 
-	it("converts a client coordinate into a world coordinate", () => {
-		const result = applyHandleOp(
+	it("converts a client coordinate into a world coordinate", async () => {
+		const result = await applyHandleOp(
 			{ kind: "toWorld", x: 320, y: 240 },
 			createFakeHandleControl({ toWorld: () => ({ x: 100, y: 50 }) }),
 		);
@@ -555,8 +557,8 @@ describe("applyHandleOp (SVG, coordinate conversion)", () => {
 		expect(result.text).toContain("client (320, 240) is world (100, 50)");
 	});
 
-	it("gives a different reason for a conversion before mounting than for no canvas at all", () => {
-		const result = applyHandleOp(
+	it("gives a different reason for a conversion before mounting than for no canvas at all", async () => {
+		const result = await applyHandleOp(
 			{ kind: "toWorld", x: 320, y: 240 },
 			createFakeHandleControl({ toWorld: () => null }),
 		);
@@ -566,8 +568,8 @@ describe("applyHandleOp (SVG, coordinate conversion)", () => {
 		expect(result.text).not.toContain("no canvas");
 	});
 
-	it("converts a world coordinate into a client one, and adds that it goes stale at once", () => {
-		const result = applyHandleOp(
+	it("converts a world coordinate into a client one, and adds that it goes stale at once", async () => {
+		const result = await applyHandleOp(
 			{ kind: "toClient", x: 100, y: 50 },
 			createFakeHandleControl({ toClient: () => ({ x: 320, y: 240 }) }),
 		);
@@ -577,8 +579,8 @@ describe("applyHandleOp (SVG, coordinate conversion)", () => {
 		expect(result.text).toContain("pan and zoom");
 	});
 
-	it("gives that same reason for the conversion back before mounting", () => {
-		const result = applyHandleOp(
+	it("gives that same reason for the conversion back before mounting", async () => {
+		const result = await applyHandleOp(
 			{ kind: "toClient", x: 100, y: 50 },
 			createFakeHandleControl(),
 		);

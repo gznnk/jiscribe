@@ -2,6 +2,7 @@ import { embedCanvasSourceInPng } from "@jiscribe/doc/file/pngCanvasSource";
 
 import {
 	buildSizedExportSvg,
+	inlineExportImages,
 	serializeSvg,
 	type BuildExportSvgOptions,
 } from "./buildExportSvg";
@@ -74,7 +75,8 @@ export type RasterizedPng = {
  * The export SVG being drawn has its text already converted to native
  * `<text>`, so no foreignObject-induced canvas taint occurs. Its faces are
  * embedded into this copy alone (see {@link embedLoadedFontFaces}) — the file
- * the SVG export writes stays free of them. When `options.source` is given, the
+ * the SVG export writes stays free of them. The image bytes are read alongside
+ * them: both are what the synchronous clone could not carry. When `options.source` is given, the
  * `.jis` is embedded as an `iTXt` chunk so the PNG can be reopened for
  * editing (draw.io-style round-trip).
  *
@@ -89,6 +91,7 @@ export const rasterizeSvgToPng = async (
 ): Promise<RasterizedPng> => {
 	const { exportSvg, width, height } = buildSizedExportSvg(svg, options);
 	const scale = resolveScale(options, width, height);
+	await inlineExportImages(exportSvg, options.resolveImageBlob);
 	await embedLoadedFontFaces(exportSvg);
 	const image = await loadSvgImage(serializeSvg(exportSvg));
 

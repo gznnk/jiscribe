@@ -3,7 +3,7 @@ import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
 import { canvasToSvgString, rasterizeSvgToPng } from "../../export";
-import type { ResolveImageHref } from "../../export";
+import type { ResolveImageBlob } from "../../export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries";
 import { calcVisibleWorldRect } from "../utils/calcVisibleWorldRect";
@@ -25,9 +25,15 @@ import {
 export type CanvasExportHandle = {
 	/**
 	 * Builds the self-contained editable SVG string (`.jis.svg` content).
-	 * Returns null when the canvas is not mounted yet.
+	 *
+	 * The live tree is cloned synchronously, before the first await, so the
+	 * culling suspension is over by the time the promise is returned; only the
+	 * `<image>` bytes are read after that.
+	 *
+	 * @param options - Region / source embedding / background (see {@link CanvasExportOptions}); nothing passed is what the export dialog does — fit to content, source embedded
+	 * @returns The serialized SVG, or null when the canvas is not mounted yet
 	 */
-	toSvgString(options?: CanvasExportOptions): string | null;
+	toSvgString(options?: CanvasExportOptions): Promise<string | null>;
 	/**
 	 * Rasterizes the canvas to a PNG with the `.jis` source embedded as an
 	 * iTXt chunk, and with the image's own frame of reference attached
@@ -81,7 +87,7 @@ export type CanvasPngCapture = {
  * @param withCullingSuspended - Runs the snapshot with viewport culling
  *   suspended, so the clone sees every object rather than the on-screen ones
  *   (see useViewportCulling)
- * @param resolveImageHref - Reads the bytes an exported `<image>` carries;
+ * @param resolveImageBlob - Reads the bytes an exported `<image>` carries;
  *   mirrored in a ref, so it may be a new function on every render (it changes
  *   identity as files arrive) without the handle losing its own
  */
@@ -90,15 +96,15 @@ export const useExportHandle = (
 	registries: CanvasRegistries,
 	svgRef: RefObject<SVGSVGElement | null>,
 	withCullingSuspended: <T>(snapshot: () => T) => T,
-	resolveImageHref: ResolveImageHref,
+	resolveImageBlob: ResolveImageBlob,
 ): CanvasExportHandle => {
 	const canvasStateRef = useCanvasStateMirror(canvasState);
 
 	// Read at export time, so a file arriving does not rebuild the handle a host
 	// may be holding on to.
-	const resolveImageHrefRef = useRef(resolveImageHref);
+	const resolveImageBlobRef = useRef(resolveImageBlob);
 	useEffect(() => {
-		resolveImageHrefRef.current = resolveImageHref;
+		resolveImageBlobRef.current = resolveImageBlob;
 	});
 
 	// registries is fixed at mount (see the `initialConfig` prop doc), so this
@@ -111,20 +117,23 @@ export const useExportHandle = (
 				registries.objectVisualBounds,
 				options,
 			),
-			resolveImageHref: (src: string) => resolveImageHrefRef.current(src),
+			resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),
 		}),
 		[canvasStateRef, registries],
 	);
 
 	return useMemo(
 		() => ({
-			toSvgString: (options?: CanvasExportOptions) => {
+			toSvgString: async (options?: CanvasExportOptions) => {
 				const svg = svgRef.current;
-				return svg
-					? withCullingSuspended(() =>
-							canvasToSvgString(svg, buildExportOptions(options)),
-						)
-					: null;
+				if (!svg) {
+					return null;
+				}
+				// The suspension only spans a synchronous callback, which is enough:
+				// canvasToSvgString clones the live tree before its first await.
+				return await withCullingSuspended(() =>
+					canvasToSvgString(svg, buildExportOptions(options)),
+				);
 			},
 
 			capturePng: async (options?: CanvasPngExportOptions) => {

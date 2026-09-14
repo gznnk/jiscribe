@@ -7,7 +7,6 @@ import type {
 import { UNRESOLVED_IMAGE } from "../../rendering/objects/ResolvedImagesContext";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { collectStateImageSources } from "../utils/collectStateImageSources";
-import { readBlobAsDataUri } from "../utils/readBlobAsDataUri";
 
 /**
  * Host implementation that turns an image object's `src` into its bytes.
@@ -114,13 +113,12 @@ export const useDocImages = (
 			void Promise.resolve()
 				.then(async (): Promise<ResolvedImage> => {
 					const blob = await resolveImageNow(src);
-					// The data URI is made here rather than at export time because
-					// the export serializes synchronously and cannot await bytes.
-					const dataUri = await readBlobAsDataUri(blob);
+					// The blob is kept beside its URL because an export carries the
+					// bytes themselves (inlineExportImages), not a URL of this tab's.
 					return {
 						status: "ready",
 						objectUrl: URL.createObjectURL(blob),
-						dataUri,
+						blob,
 					};
 				})
 				.then(settle, () => {

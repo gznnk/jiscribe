@@ -52,8 +52,8 @@ describe("runExportSubmit", () => {
 	});
 
 	describe("host mode (deliverToHost set)", () => {
-		it("delivers the SVG payload to the host", () => {
-			vi.mocked(canvasToSvgString).mockReturnValue("<svg />");
+		it("delivers the SVG payload to the host", async () => {
+			vi.mocked(canvasToSvgString).mockResolvedValue("<svg />");
 
 			runExportSubmit(
 				svg,
@@ -62,6 +62,7 @@ describe("runExportSubmit", () => {
 				deliverToHost,
 				notifyError,
 			);
+			await flushAsync();
 
 			expect(deliverToHost).toHaveBeenCalledWith({
 				format: "svg",
@@ -96,10 +97,10 @@ describe("runExportSubmit", () => {
 			expect(notifyError).not.toHaveBeenCalled();
 		});
 
-		it("notifies exportImageError when SVG serialization throws", () => {
-			vi.mocked(canvasToSvgString).mockImplementation(() => {
-				throw new Error("serialize failed");
-			});
+		it("notifies exportImageError when SVG serialization rejects", async () => {
+			vi.mocked(canvasToSvgString).mockRejectedValue(
+				new Error("serialize failed"),
+			);
 
 			runExportSubmit(
 				svg,
@@ -108,6 +109,7 @@ describe("runExportSubmit", () => {
 				deliverToHost,
 				notifyError,
 			);
+			await flushAsync();
 
 			expect(notifyError).toHaveBeenCalledTimes(1);
 			expect(notifyError).toHaveBeenCalledWith("exportImageError");
@@ -136,6 +138,7 @@ describe("runExportSubmit", () => {
 
 	describe("download mode (no deliverToHost)", () => {
 		it("downloads via exportCanvasToSvg / exportCanvasToPng", async () => {
+			vi.mocked(exportCanvasToSvg).mockResolvedValue(undefined);
 			vi.mocked(exportCanvasToPng).mockResolvedValue(undefined);
 
 			runExportSubmit(
@@ -159,10 +162,10 @@ describe("runExportSubmit", () => {
 			expect(notifyError).not.toHaveBeenCalled();
 		});
 
-		it("notifies exportImageError when the SVG download throws", () => {
-			vi.mocked(exportCanvasToSvg).mockImplementation(() => {
-				throw new Error("download failed");
-			});
+		it("notifies exportImageError when the SVG download rejects", async () => {
+			vi.mocked(exportCanvasToSvg).mockRejectedValue(
+				new Error("download failed"),
+			);
 
 			runExportSubmit(
 				svg,
@@ -171,6 +174,7 @@ describe("runExportSubmit", () => {
 				undefined,
 				notifyError,
 			);
+			await flushAsync();
 
 			expect(notifyError).toHaveBeenCalledTimes(1);
 			expect(notifyError).toHaveBeenCalledWith("exportImageError");

@@ -2,8 +2,9 @@
 // (selection, the camera, measuring, turning into SVG, reading the interaction
 // status) to the canvas on screen. They do not change the document, so nothing
 // is pushed onto the undo history and this is a route apart from applyCanvasOp
-// (capturing is held by captureCanvasImage for the same reason, with the
-// further difference that it is async).
+// (capturing is held by captureCanvasImage for the same reason, and because it
+// carries an image rather than text). Turning into SVG has to await the image
+// files, so applying is async as a whole even though the rest answers at once.
 //
 // Result text is written in a form the AI can copy straight into its next
 // instruction. For the measurements the numbers themselves are the deliverable,
@@ -161,18 +162,18 @@ const describeOverlap = ({ ids, overlap, covers }: ObjectOverlap): string => {
  * Applies an operation that needs a mounted canvas, and builds the result text
  * to hand back to the AI.
  *
- * @param op - Any operation but capturing (capturing is async, so the caller
- *   deals with it first)
+ * @param op - Any operation but capturing (capturing carries an image rather
+ *   than text, so the caller deals with it first)
  * @param handleControl - The way in to the canvas on screen; the host injects it
  * @returns The outcome of applying; when ok=false, text is the error message
  *   written for the AI. A measurement of zero results is still ok=true as long
  *   as there was something to measure, and only nothing to measure at all makes
  *   it ok=false
  */
-export const applyHandleOp = (
+export const applyHandleOp = async (
 	op: Exclude<AiHandleOp, { kind: "captureCanvas" }>,
 	handleControl: AiHandleControl,
-): AiCanvasOpOutcome => {
+): Promise<AiCanvasOpOutcome> => {
 	if (!handleControl.isAvailable()) {
 		return { ok: false, text: NO_CANVAS_TEXT };
 	}
@@ -360,7 +361,7 @@ export const applyHandleOp = (
 			};
 		}
 		case "toSvg": {
-			const svg = handleControl.toSvgString();
+			const svg = await handleControl.toSvgString();
 			if (svg === null) {
 				return { ok: false, text: NO_CANVAS_TEXT };
 			}

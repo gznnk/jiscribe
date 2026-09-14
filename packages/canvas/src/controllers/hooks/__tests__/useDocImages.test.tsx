@@ -89,9 +89,8 @@ const renderHook = (
 
 describe("useDocImages", () => {
 	it("reports a resolved file as ready, with both a blob URL and its bytes", async () => {
-		const resolveImage = vi.fn(
-			async () => new Blob(["px"], { type: "image/png" }),
-		);
+		const pixels = new Blob(["px"], { type: "image/png" });
+		const resolveImage = vi.fn(async () => pixels);
 		const probe = renderHook(objectsOf("ok.png"), resolveImage);
 
 		expect(probe.lookup("ok.png")).toEqual({ status: "loading" });
@@ -104,7 +103,7 @@ describe("useDocImages", () => {
 		expect(resolved.status).toBe("ready");
 		if (resolved.status === "ready") {
 			expect(resolved.objectUrl).toBe(createdObjectUrls[0]);
-			expect(resolved.dataUri.startsWith("data:image/png;base64,")).toBe(true);
+			expect(resolved.blob).toBe(pixels);
 		}
 		probe.unmount();
 	});

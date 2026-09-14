@@ -7,17 +7,19 @@ import {
 	foreignObjectToSvgText,
 	isConnectorLabelForeignObject,
 } from "./foreignObjectToSvgText";
+import { readBlobAsDataUri } from "./readBlobAsDataUri";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 /**
- * Reads the `data:` URI of one image file, as the canvas resolved it
- * (see useDocImages).
+ * Reads the bytes of one image file, as the canvas resolved it
+ * (see useDocImages). The lookup itself is synchronous — the resolution already
+ * happened — so it can be called from inside the synchronous clone.
  *
  * @param src - The `src` an image object stores, taken off the live `<image>`
- * @returns The bytes as a `data:` URI, or undefined for a file that is not resolved — the export then drops that `<image>` rather than keeping a URL nothing outside the tab can read
+ * @returns The file's bytes, or undefined for a file that is not resolved — the export then drops that `<image>` rather than keeping a URL nothing outside the tab can read
  */
-export type ResolveImageHref = (src: string) => string | undefined;
+export type ResolveImageBlob = (src: string) => Blob | undefined;
 
 export type BuildExportSvgOptions = {
 	/** Editing source (`.jis`) to embed. Omit to skip the metadata. */
@@ -32,9 +34,10 @@ export type BuildExportSvgOptions = {
 	 * Reads the bytes an `<image>` is drawn from, so the export carries them
 	 * itself; the live href is a blob URL, which names nothing outside the tab it
 	 * was made in. Omit it — or leave a file unresolved — and those images are
-	 * dropped from the output.
+	 * dropped from the output. Read by {@link inlineExportImages}, not by the
+	 * synchronous {@link buildExportSvg}.
 	 */
-	resolveImageHref?: ResolveImageHref;
+	resolveImageBlob?: ResolveImageBlob;
 	/**
 	 * Region to export, in world coordinates (e.g. fit-to-content bounds).
 	 * It becomes both the viewBox and the logical output size, making the
@@ -127,28 +130,36 @@ export const getSvgSize = (
 };
 
 /**
- * Inlines the bytes of every resolved `<image>` and drops the rest.
+ * Inlines the bytes of every resolved `<image>` in an already-built export tree
+ * and drops the rest, so the file carries its images rather than blob URLs that
+ * name nothing outside the tab.
  *
- * Runs after the styles are baked, since that step pairs the clone with the
- * live tree by document order and this one takes elements out of it.
+ * This is the second stage of the export: {@link buildExportSvg} clones and
+ * bakes synchronously — which is what lets the caller finish the snapshot
+ * before culling resumes — and the bytes, which only a `FileReader` can turn
+ * into a `data:` URI, are read here.
+ *
+ * @param exportSvg - The built export SVG, mutated in place; a live canvas tree would lose its images
+ * @param resolveImageBlob - The lookup, or undefined to resolve nothing — every `<image>` is then dropped, the same as one whose file is unresolved
+ * @returns Nothing; it settles once every `<image>` is either inlined or gone
  */
-const inlineImageHrefs = (
-	clonedSvg: SVGSVGElement,
-	resolveImageHref: ResolveImageHref | undefined,
-): void => {
+export const inlineExportImages = async (
+	exportSvg: SVGSVGElement,
+	resolveImageBlob: ResolveImageBlob | undefined,
+): Promise<void> => {
 	for (const image of Array.from(
-		clonedSvg.querySelectorAll("image[data-image-src]"),
+		exportSvg.querySelectorAll("image[data-image-src]"),
 	)) {
 		const src = image.getAttribute("data-image-src");
 		if (src === null) {
 			continue;
 		}
-		const dataUri = resolveImageHref?.(src);
-		if (dataUri === undefined) {
+		const blob = resolveImageBlob?.(src);
+		if (blob === undefined) {
 			image.remove();
 			continue;
 		}
-		image.setAttribute("href", dataUri);
+		image.setAttribute("href", await readBlobAsDataUri(blob));
 		image.removeAttribute("xlink:href");
 		image.removeAttribute("data-image-src");
 	}
@@ -161,13 +172,17 @@ const inlineImageHrefs = (
  * - Bakes computed paint styles (fill / stroke / opacity) into inline styles
  *   — emotion classes and `var(--jiscribe-*)` do not survive standalone
  * - Removes control overlays (selection handles, ...) and the grid
- * - Replaces each `<image>` href with the file's bytes, dropping the images
- *   whose file is not resolved (a blob URL would be dead in the file)
  * - Converts foreignObject text to native `<text>` — connector labels also get
  *   their box as a `<rect>` (avoids canvas taint and works on GitHub, which
  *   sanitizes foreignObject away)
  * - Lays a solid background `<rect>`
  * - When `source` is given, embeds the `.jis` in `<metadata>`
+ *
+ * It stays synchronous so a caller holding the live tree open (viewport culling
+ * suspended) has the whole clone in hand before it yields. The `<image>` bytes
+ * are the one thing that cannot be read that way, and are inlined afterwards by
+ * {@link inlineExportImages} — until then the clone still carries the live blob
+ * URLs.
  */
 export const buildExportSvg = (
 	svg: SVGSVGElement,
@@ -215,8 +230,6 @@ export const buildExportSvg = (
 		node.remove();
 	}
 
-	inlineImageHrefs(cloned, options.resolveImageHref);
-
 	// Lay the background color as a solid rect covering the whole viewBox
 	const background =
 		options.background ?? getComputedStyle(svg).backgroundColor;
@@ -259,7 +272,10 @@ export const serializeSvg = (svg: SVGSVGElement): string => {
  *
  * The element form exists for the rasterizer, which adds what only a raster
  * needs (the `@font-face` bytes) before serializing; the SVG file export takes
- * {@link buildSizedExportSvgString} and so never carries it.
+ * {@link buildSizedExportSvgString} and so never carries it. It also stays
+ * synchronous, which is what lets both callers finish the clone before their
+ * first await — so each of them owes the tree its own
+ * {@link inlineExportImages}.
  */
 export const buildSizedExportSvg = (
 	svg: SVGSVGElement,
@@ -274,11 +290,16 @@ export const buildSizedExportSvg = (
 	return { exportSvg, width, height };
 };
 
-/** {@link buildSizedExportSvg} serialized, which is what the SVG file export writes. */
-export const buildSizedExportSvgString = (
+/**
+ * {@link buildSizedExportSvg} with its images inlined and serialized, which is
+ * what the SVG file export writes. Only the image bytes are awaited; the clone
+ * itself is taken before the first await.
+ */
+export const buildSizedExportSvgString = async (
 	svg: SVGSVGElement,
 	options: BuildExportSvgOptions = {},
-): { svgXml: string; width: number; height: number } => {
+): Promise<{ svgXml: string; width: number; height: number }> => {
 	const { exportSvg, width, height } = buildSizedExportSvg(svg, options);
+	await inlineExportImages(exportSvg, options.resolveImageBlob);
 	return { svgXml: serializeSvg(exportSvg), width, height };
 };

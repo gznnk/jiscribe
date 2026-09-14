@@ -54,7 +54,7 @@ import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import type { ResolveImageHref } from "../export";
+import type { ResolveImageBlob } from "../export";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -382,10 +382,10 @@ const CanvasComponent = ({
 
 	// An export cannot carry the blob URL a live <image> draws from — it names
 	// nothing outside this tab — so it takes the bytes themselves.
-	const resolveImageHref = useCallback<ResolveImageHref>(
+	const resolveImageBlob = useCallback<ResolveImageBlob>(
 		(src) => {
 			const resolved = lookupResolvedImage(src);
-			return resolved.status === "ready" ? resolved.dataUri : undefined;
+			return resolved.status === "ready" ? resolved.blob : undefined;
 		},
 		[lookupResolvedImage],
 	);
@@ -638,7 +638,7 @@ const CanvasComponent = ({
 		registries,
 		svgRef,
 		withCullingSuspended,
-		resolveImageHref,
+		resolveImageBlob,
 	});
 	const handleExportSubmit = useExportDialog({
 		svgRef,
@@ -648,7 +648,7 @@ const CanvasComponent = ({
 		dispatch,
 		notifyError,
 		withCullingSuspended,
-		resolveImageHref,
+		resolveImageBlob,
 	});
 
 	useImperativeHandle(ref, () => canvasHandle, [canvasHandle]);

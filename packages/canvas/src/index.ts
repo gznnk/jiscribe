@@ -63,7 +63,7 @@ export type {
 	RasterizedPng,
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
-	ResolveImageHref,
+	ResolveImageBlob,
 } from "./export";
 // Toolbar composition (issue #184). The sections are the single source of order
 // and category metadata: each item names, in display order, a pinned preset, a

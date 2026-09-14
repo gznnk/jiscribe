@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { buildExportSvg } from "../buildExportSvg";
+import { buildExportSvg, inlineExportImages } from "../buildExportSvg";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -79,40 +79,64 @@ const mountCanvasSvgWithImage = (src: string): SVGSVGElement => {
 	return svg;
 };
 
-describe("buildExportSvg and the image files", () => {
-	it("carries the bytes of a resolved image instead of its blob URL", () => {
+describe("inlineExportImages", () => {
+	it("carries the bytes of a resolved image instead of its blob URL", async () => {
 		stubMeasureContext();
 		const liveSvg = mountCanvasSvgWithImage("images/logo.png");
+		const logo = new Blob([Uint8Array.of(0, 0, 0)], { type: "image/png" });
 
-		const exported = buildExportSvg(liveSvg, {
-			resolveImageHref: (src) =>
-				src === "images/logo.png" ? "data:image/png;base64,AAA=" : undefined,
-		});
+		const exported = buildExportSvg(liveSvg);
+		await inlineExportImages(exported, (src) =>
+			src === "images/logo.png" ? logo : undefined,
+		);
 
 		const image = exported.querySelector("image");
-		expect(image?.getAttribute("href")).toBe("data:image/png;base64,AAA=");
+		expect(image?.getAttribute("href")).toBe("data:image/png;base64,AAAA");
 		// The marker is the live DOM's own; an exported file has no use for it.
 		expect(image?.hasAttribute("data-image-src")).toBe(false);
 	});
 
-	it("drops an image whose file the lookup does not know", () => {
+	it("names a typeless blob as octet-stream, the File API's own substitute", async () => {
 		stubMeasureContext();
 		const liveSvg = mountCanvasSvgWithImage("images/logo.png");
 
-		const exported = buildExportSvg(liveSvg, {
-			resolveImageHref: () => undefined,
-		});
+		const exported = buildExportSvg(liveSvg);
+		await inlineExportImages(exported, () => new Blob([Uint8Array.of(0)]));
+
+		expect(exported.querySelector("image")?.getAttribute("href")).toBe(
+			"data:application/octet-stream;base64,AA==",
+		);
+	});
+
+	it("drops an image whose file the lookup does not know", async () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvgWithImage("images/logo.png");
+
+		const exported = buildExportSvg(liveSvg);
+		await inlineExportImages(exported, () => undefined);
 
 		expect(exported.querySelector("image")).toBeNull();
 	});
 
-	it("drops every image when no lookup is passed at all", () => {
+	it("drops every image when no lookup is passed at all", async () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvgWithImage("images/logo.png");
+
+		const exported = buildExportSvg(liveSvg);
+		await inlineExportImages(exported, undefined);
+
+		expect(exported.querySelector("image")).toBeNull();
+		expect(exported.outerHTML).not.toContain("blob:");
+	});
+
+	it("leaves the images alone until it runs, so the clone itself is synchronous", () => {
 		stubMeasureContext();
 		const liveSvg = mountCanvasSvgWithImage("images/logo.png");
 
 		const exported = buildExportSvg(liveSvg);
 
-		expect(exported.querySelector("image")).toBeNull();
-		expect(exported.outerHTML).not.toContain("blob:");
+		expect(exported.querySelector("image")?.getAttribute("href")).toBe(
+			"blob:stub/0",
+		);
 	});
 });

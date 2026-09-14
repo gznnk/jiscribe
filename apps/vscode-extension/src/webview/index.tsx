@@ -266,28 +266,20 @@ function App() {
 						break;
 					}
 					if (message.format === "svg") {
-						let svg: string | null;
-						try {
-							svg = handle.toSvgString();
-						} catch (err) {
-							console.error("[Jiscribe] SVG export failed:", err);
-							respond(null);
-							break;
-						}
-						if (!svg) {
-							respond(null);
-							break;
-						}
-						// base64-encode like PNG (via Blob so UTF-8 text survives) so
-						// imageExportResult.data has a single encoding for both formats,
-						// removing the utf8/base64 mismatch hazard (#182).
-						blobToBase64(new Blob([svg], { type: "image/svg+xml" })).then(
-							respond,
-							(err: unknown) => {
+						handle
+							.toSvgString()
+							// base64-encode like PNG (via Blob so UTF-8 text survives) so
+							// imageExportResult.data has a single encoding for both formats,
+							// removing the utf8/base64 mismatch hazard (#182).
+							.then((svg) =>
+								svg
+									? blobToBase64(new Blob([svg], { type: "image/svg+xml" }))
+									: null,
+							)
+							.then(respond, (err: unknown) => {
 								console.error("[Jiscribe] SVG export failed:", err);
 								respond(null);
-							},
-						);
+							});
 						break;
 					}
 					handle
