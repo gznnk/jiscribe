@@ -69,7 +69,16 @@ write and a person can move by hand.
 
 ### With an agent
 
-Register the MCP server in any client that speaks stdio:
+Register the MCP server with whichever agent you use:
+
+```bash
+claude mcp add jiscribe -- npx -y jiscribe-mcp   # Claude Code
+codex mcp add jiscribe -- npx -y jiscribe-mcp    # Codex
+copilot mcp add jiscribe -- npx -y jiscribe-mcp  # GitHub Copilot CLI
+```
+
+Any other client that speaks stdio takes it by hand, under `mcpServers` —
+VSCode calls the same map `servers`:
 
 ```jsonc
 {

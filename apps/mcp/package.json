@@ -1,6 +1,6 @@
 {
 	"name": "jiscribe-mcp",
-	"version": "0.9.0",
+	"version": "0.10.0",
 	"description": "An MCP server that gives an AI the Jiscribe canvas tool set, with a local viewer a person can edit alongside it.",
 	"keywords": [
 		"mcp",
@@ -8,7 +8,9 @@
 		"diagram",
 		"canvas",
 		"svg",
-		"claude"
+		"claude",
+		"codex",
+		"copilot"
 	],
 	"license": "MIT",
 	"repository": {

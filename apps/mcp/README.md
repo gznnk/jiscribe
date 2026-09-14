@@ -7,14 +7,30 @@ hand while the AI works.
 ## Install
 
 ```bash
-claude mcp add jiscribe -- npx -y jiscribe-mcp
+claude mcp add jiscribe -- npx -y jiscribe-mcp   # Claude Code
+codex mcp add jiscribe -- npx -y jiscribe-mcp    # Codex
+copilot mcp add jiscribe -- npx -y jiscribe-mcp  # GitHub Copilot CLI
 ```
 
-Or register it by hand with any MCP client that speaks stdio:
+In VSCode, `code --add-mcp '{"name":"jiscribe","command":"npx","args":["-y","jiscribe-mcp"]}'`
+registers it for Copilot's agent mode.
+
+Or register it by hand with any client that speaks stdio. Most of them take the
+server under `mcpServers`:
 
 ```jsonc
 {
 	"mcpServers": {
+		"jiscribe": { "command": "npx", "args": ["-y", "jiscribe-mcp"] },
+	},
+}
+```
+
+VSCode's own `mcp.json` is the exception — it calls the same map `servers`:
+
+```jsonc
+{
+	"servers": {
 		"jiscribe": { "command": "npx", "args": ["-y", "jiscribe-mcp"] },
 	},
 }
@@ -33,6 +49,10 @@ file and mirrors it into the viewer. When a person moves or retypes something in
 the viewer, it is written back, so the next read shows what they changed. No
 canvas state is kept in the tools themselves.
 
+Every path a tool takes is absolute. The one exception is an `image` shape's
+`src`, which is relative to the directory its `.jis` lives in and cannot climb
+out of it — so a drawing and the pictures it names travel together.
+
 Three families of tools, 69 in all:
 
 - Seven of its own: `read_drawing_guide` / `open_canvas` / `close_canvas` /
@@ -42,7 +62,9 @@ Three families of tools, 69 in all:
 - 46 from `@jiscribe/ai-tools` that a document alone can answer — add, move,
   align, group, style, read, undo — each given a `path` so it names a file
 - 16 more from the same declarations that only a mounted canvas can answer —
-  capture, camera, selection, measurement — run over the viewer's WebSocket
+  capture, camera, selection, measurement — run over the viewer's WebSocket.
+  The one that measures a slot as drawn is registered as `measure_rendered_text`,
+  since `measure_text` above answers from dimensions alone
 
 The handshake carries `instructions` describing this server alone: that files are
 addressed by absolute path, which tools need a viewer, where validation starts.
@@ -55,14 +77,14 @@ to be edited directly rather than through these tools.
 ## The viewer
 
 `open_canvas` starts an HTTP + WebSocket host inside the MCP process (port 5190,
-stepping up one at a time if taken) and opens a Chromium app-mode window — no
-tabs, no address bar. It falls back to the default browser when no Chromium is
-found.
+stepping up one at a time if taken, as far as 5209) and opens a Chromium
+app-mode window — no tabs, no address bar. It falls back to the default browser
+when no Chromium is found.
 
-- `JISCRIBE_MCP_BROWSER` — `tab` for the default browser, or the name or path of
-  an executable to use in app mode and headless mode
-- `JISCRIBE_MCP_NO_OPEN` — set to anything to just return the URL. It means "do
-  not put a window up unasked", so `headless: true` is still honoured
+- `JISCRIBE_MCP_BROWSER` — `tab` (or `default`) for the default browser, or the
+  name or path of an executable to use in app mode and headless mode
+- `JISCRIBE_MCP_NO_OPEN` — set to any non-empty value to just return the URL. It
+  means "do not put a window up unasked", so `headless: true` is still honoured
 - `JISCRIBE_MCP_VIEWER_ROOT` — serve the viewer from another directory
 
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
@@ -75,7 +97,7 @@ visible or not, is used as it is and nothing new is opened. A plain
 headless window can still be looked at.
 
 The host's lifetime follows the windows: once the last viewer closes and none
-comes back within a few seconds, it shuts down and releases the port. A headless
+comes back within five seconds, it shuts down and releases the port. A headless
 window holds that connection like any other, so it keeps the host alive until it
 is closed. Windows are closed by asking the page to close itself over the
 WebSocket — the only way that reaches a Windows-side browser launched from WSL —
