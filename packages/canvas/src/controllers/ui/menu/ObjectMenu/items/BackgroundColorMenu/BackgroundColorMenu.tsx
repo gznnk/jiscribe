@@ -15,6 +15,7 @@ import {
 } from "../../ObjectMenuStyled";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
+import { hasSingleStyleTarget } from "../../utils/hasSingleStyleTarget";
 
 const SECTION_ID = "bg-color";
 
@@ -68,6 +69,10 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 				>
 					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
+						currentColorIsShared={hasSingleStyleTarget(
+							canvasState.selectedIds,
+							canvasState.objects,
+						)}
 						property="fill"
 						onPropertyUpdate={onPropertyUpdate}
 					/>

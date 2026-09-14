@@ -67,6 +67,8 @@ const LabelBorderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				>
 					<ObjectMenuColorPickerGrid
 						currentColor={stroke}
+						// The label of the one selected connector is the whole target.
+						currentColorIsShared
 						property="label.stroke"
 						onPropertyUpdate={onPropertyUpdate}
 					/>

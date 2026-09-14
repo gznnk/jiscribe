@@ -205,6 +205,8 @@ const ConnectorLabelBackgroundItemComponent: React.FC<
 				value={label.fill ?? AUTO_COLOR}
 				property="label.fill"
 				role="canvas"
+				// The label of the one selected connector is the whole target.
+				currentColorIsShared
 				title={messages.menuLabelBackgroundColor}
 				onPropertyUpdate={onPropertyUpdate}
 			/>
@@ -233,6 +235,8 @@ const ConnectorLabelBorderColorItemComponent: React.FC<
 				value={label.stroke ?? AUTO_COLOR}
 				property="label.stroke"
 				role="ink"
+				// The label of the one selected connector is the whole target.
+				currentColorIsShared
 				title={messages.menuLabelBorderColor}
 				onPropertyUpdate={onPropertyUpdate}
 			/>

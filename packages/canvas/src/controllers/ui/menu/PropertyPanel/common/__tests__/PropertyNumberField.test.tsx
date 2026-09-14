@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { PropertyNumberUpdater } from "../PropertyNumberField";
 import { PropertyNumberField } from "../PropertyNumberField";
 
 // Without this React treats every `act` below as unsupported and warns, the
@@ -59,6 +60,31 @@ const pressOn = (target: EventTarget): void => {
 			new MouseEvent("pointerdown", { bubbles: true, button: 0 }),
 		);
 	});
+};
+
+/**
+ * The field under the row that owns the value, which is what a preview comes
+ * back through: `state` is what the row makes of the previewed number — the
+ * number itself for a position, the whole percent an opacity row rounds it to.
+ */
+const LiveField: React.FC<{
+	initialValue: number;
+	state?: (value: number) => number;
+	onUpdate?: PropertyNumberUpdater;
+}> = ({ initialValue, state = (value) => value, onUpdate }) => {
+	const [value, setValue] = useState(initialValue);
+	return (
+		<PropertyNumberField
+			value={value}
+			prefix="X"
+			ariaLabel="X"
+			testId="property-field:x"
+			onUpdate={(next, commit, coalesceHistory) => {
+				setValue(state(next));
+				onUpdate?.(next, commit, coalesceHistory);
+			}}
+		/>
+	);
 };
 
 const spinButton = (direction: "up" | "down"): HTMLButtonElement => {
@@ -180,6 +206,65 @@ describe("PropertyNumberField", () => {
 
 		expect(input.value).toBe("100");
 		expect(onUpdate).not.toHaveBeenCalledWith(expect.anything(), true);
+	});
+
+	it("keeps the digits typed past the one decimal it displays", () => {
+		const input = render(<LiveField initialValue={0} />);
+
+		// One keystroke at a time: the preview of 12.75 comes back displayed as
+		// 12.8, which is not what is being typed into.
+		for (const typed of ["1", "12", "12.", "12.7", "12.75"]) {
+			type(input, typed);
+		}
+
+		expect(input.value).toBe("12.75");
+	});
+
+	it("keeps the digits typed into a row that rounds what it is given", () => {
+		// What an opacity row states: whole percent over the document's 0..1.
+		const input = render(<LiveField initialValue={50} state={Math.round} />);
+
+		for (const typed of ["5", "50", "50.", "50.5"]) {
+			type(input, typed);
+		}
+
+		expect(input.value).toBe("50.5");
+	});
+
+	it("states the value the row settled on once the edit is committed", () => {
+		const input = render(<LiveField initialValue={50} state={Math.round} />);
+
+		type(input, "50.5");
+		blur(input);
+
+		expect(input.value).toBe("51");
+	});
+
+	it("takes over what is typed when the value changes from outside", () => {
+		const onUpdate = vi.fn();
+		const input = render(
+			<PropertyNumberField
+				value={100}
+				prefix="W"
+				ariaLabel="Width"
+				testId="property-field:width"
+				onUpdate={onUpdate}
+			/>,
+		);
+
+		type(input, "12.75");
+		// A handle drag, an undo or a host sync landing while the edit is open.
+		render(
+			<PropertyNumberField
+				value={42}
+				prefix="W"
+				ariaLabel="Width"
+				testId="property-field:width"
+				onUpdate={onUpdate}
+			/>,
+		);
+
+		expect(input.value).toBe("42");
 	});
 
 	it("steps from the value it is given while the selection disagrees", () => {

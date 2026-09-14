@@ -67,6 +67,8 @@ const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				>
 					<ObjectMenuColorPickerGrid
 						currentColor={fill}
+						// The label of the one selected connector is the whole target.
+						currentColorIsShared
 						property="label.fill"
 						onPropertyUpdate={onPropertyUpdate}
 					/>

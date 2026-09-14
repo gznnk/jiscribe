@@ -115,6 +115,11 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 	inputValueRef.current = inputValue;
 	// Whether a parsable edit has been previewed but not yet committed.
 	const pendingCommit = useRef(false);
+	// Whether the preview the field just asked for has yet to come back. What
+	// comes back is no evidence of where it came from — the row states the value
+	// on a scale of its own and rounds it on the way through (percent over 0..1),
+	// so a preview of 50.5 returns as 51 — and only having asked for it is.
+	const awaitingPreviewEcho = useRef(false);
 	// The value to put back on Escape: what the field last agreed with the
 	// selection on, which a commit moves forward. Kept as both the number the
 	// arrow keys step from and the text shown, which are not the same thing while
@@ -130,11 +135,15 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 		null,
 	);
 
-	// Reset only when the agreed text differs from what is typed, treating that
-	// as an external change (a handle drag, an undo). A commit:false preview also
-	// changes `value`, but it then matches inputValue and is skipped.
+	// Reset only on a change from outside (a handle drag, an undo, a host sync).
+	// The field's own preview comes back through here as well, and writing its
+	// text over what is being typed would cut the number short at the digit the
+	// display rounds to ("12.75" reset to "12.8", the next digits landing after
+	// it), so that one change is let through untouched.
 	useEffect(() => {
-		if (agreedText !== inputValueRef.current) {
+		if (awaitingPreviewEcho.current) {
+			awaitingPreviewEcho.current = false;
+		} else if (agreedText !== inputValueRef.current) {
 			setInputValue(agreedText);
 			pendingCommit.current = false;
 		}
@@ -144,11 +153,21 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 		}
 	}, [agreedText, value]);
 
+	// Declared after the effect above, which is the one render the preview is
+	// awaited for: the value and the text it was typed into land in the same
+	// render, so a preview still awaited on the next one never came back at all
+	// (the row settled on the value the field already stated) and must not be
+	// taken for a later change from outside.
+	useEffect(() => {
+		awaitingPreviewEcho.current = false;
+	});
+
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
 		setInputValue(event.target.value);
 		const parsed = Number.parseFloat(event.target.value);
 		if (Number.isFinite(parsed)) {
 			pendingCommit.current = true;
+			awaitingPreviewEcho.current = true;
 			onUpdate(clamp(parsed, min, max), false);
 		}
 	};
@@ -161,12 +180,19 @@ const PropertyNumberFieldComponent: React.FC<PropertyNumberFieldProps> = ({
 			return;
 		}
 		const committed = clamp(parsed, min, max);
-		setInputValue(formatValue(committed));
+		// Once the edit is over the field states what the row settled on rather
+		// than what was typed towards it: the preview has already been through the
+		// row, which may state the value on a scale of its own and round it there
+		// (50.5 percent of an opacity is stated as 51). While the selection
+		// disagrees there is no agreed text to state, so the number committed to
+		// all of it stands in.
+		const committedText = isMixed ? formatValue(committed) : agreedText;
+		setInputValue(committedText);
 		if (pendingCommit.current) {
 			onUpdate(committed, true);
 			pendingCommit.current = false;
 			revertValue.current = committed;
-			revertText.current = formatValue(committed);
+			revertText.current = committedText;
 		}
 	};
 

@@ -15,6 +15,7 @@ import {
 } from "../../ObjectMenuStyled";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
+import { hasSingleStyleTarget } from "../../utils/hasSingleStyleTarget";
 
 const SECTION_ID = "stroke-color";
 
@@ -68,6 +69,10 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 				>
 					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
+						currentColorIsShared={hasSingleStyleTarget(
+							canvasState.selectedIds,
+							canvasState.objects,
+						)}
 						property="stroke"
 						onPropertyUpdate={onPropertyUpdate}
 					/>

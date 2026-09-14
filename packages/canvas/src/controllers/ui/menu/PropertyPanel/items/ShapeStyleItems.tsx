@@ -58,6 +58,9 @@ const FillItemComponent: React.FC<BuiltinItemProps> = ({
 			<PropertyColorField
 				value={selectionValueOr(fill, SHAPE_STYLE_FALLBACK.fill)}
 				isMixed={isMixedSelectionValue(fill)}
+				// Not mixed means every object of the selection was read, the
+				// descendants of a selected group included.
+				currentColorIsShared={!isMixedSelectionValue(fill)}
 				property="fill"
 				role="surface"
 				title={messages.menuBackgroundColor}
@@ -129,6 +132,9 @@ const StrokeColorItemComponent: React.FC<BuiltinItemProps> = ({
 			<PropertyColorField
 				value={selectionValueOr(stroke, SHAPE_STYLE_FALLBACK.stroke)}
 				isMixed={isMixedSelectionValue(stroke)}
+				// Not mixed means every object of the selection was read, the
+				// descendants of a selected group included.
+				currentColorIsShared={!isMixedSelectionValue(stroke)}
 				property="stroke"
 				role="ink"
 				title={messages.menuStrokeColor}

@@ -49,6 +49,8 @@ const BackgroundItemComponent: React.FC<BackgroundItemProps> = ({
 				property="background"
 				role="canvas"
 				writesThroughCallback
+				// The document's own background is the whole target.
+				currentColorIsShared
 				title={messages.propertyPanelRowBackground}
 				onPropertyUpdate={handleColorUpdate}
 			/>

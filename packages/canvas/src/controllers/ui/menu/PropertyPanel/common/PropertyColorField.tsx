@@ -34,6 +34,14 @@ type PropertyColorFieldProps = {
 	 * document rather than the selection.
 	 */
 	writesThroughCallback?: boolean;
+	/**
+	 * Whether `value` is the color every target of a pick already carries, which
+	 * is what lets the picker drop a pick of the color already in place (see
+	 * ObjectMenuColorPickerGrid). Defaults to false, which writes always: a row
+	 * stating a color that a smaller target can override — a stretch of text
+	 * carrying its own — cannot tell.
+	 */
+	currentColorIsShared?: boolean;
 	/** title / aria-label of the trigger. */
 	title: string;
 	onPropertyUpdate: StylePropertyUpdater;
@@ -56,6 +64,7 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 	property,
 	role,
 	writesThroughCallback = false,
+	currentColorIsShared = false,
 	title,
 	onPropertyUpdate,
 }) => {
@@ -96,6 +105,7 @@ const PropertyColorFieldComponent: React.FC<PropertyColorFieldProps> = ({
 				currentColor={isMixed ? "" : value}
 				property={property}
 				writesThroughCallback={writesThroughCallback}
+				currentColorIsShared={currentColorIsShared}
 				onPropertyUpdate={onPropertyUpdate}
 			/>
 		</PropertyDropdownField>

@@ -16,6 +16,7 @@ import {
 } from "../../ObjectMenuStyled";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
+import { hasSingleStyleTarget } from "../../utils/hasSingleStyleTarget";
 
 const SECTION_ID = "line-color";
 
@@ -69,6 +70,10 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 				>
 					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
+						currentColorIsShared={hasSingleStyleTarget(
+							getEffectiveSelectedIds(canvasState),
+							canvasState.objects,
+						)}
 						property="stroke"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
