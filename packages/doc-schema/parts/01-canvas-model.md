@@ -125,6 +125,25 @@ nodes, and arrows; they stay editable, themeable, and connectable.
   `grad`). All markup shares one DOM, so duplicate ids make `url(#id)` references
   resolve to the wrong (first) definition.
 
+### `image` — a picture file beside the `.jis`
+
+Use `image` for a picture that already exists as a file: a photograph, a
+screenshot, an exported figure. Reach for `svg` instead when you have the markup
+itself, and for the built-in shapes for anything you could draw.
+
+- The file may be an ordinary raster image or an SVG file; every host refuses any
+  other extension.
+- `src` is a path **relative to the directory the `.jis` is in**, and stays
+  inside it (`/` separators; `..`, absolute paths and URLs are all rejected).
+- The file is **not embedded**: whoever opens the document resolves it while
+  drawing, so the image has to travel with the `.jis`. One that cannot be
+  resolved is drawn as a placeholder box, which is visible but not the picture.
+- It is an **opaque box** like `svg`: `width` and `height` say where and how big
+  it is drawn, and the picture is stretched to fill that box exactly — give the
+  file's own aspect ratio unless you mean to distort it.
+- Unlike `svg` it **is** a connector target, an image being a node of the diagram
+  rather than decoration. It has no text / stroke / fill of its own.
+
 ## Three things the canvas genuinely does not have
 
 Take the substitute and say so plainly, rather than building an imitation out of

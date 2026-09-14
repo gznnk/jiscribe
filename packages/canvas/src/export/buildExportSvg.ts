@@ -10,6 +10,15 @@ import {
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+/**
+ * Reads the `data:` URI of one image file, as the canvas resolved it
+ * (see useDocImages).
+ *
+ * @param src - The `src` an image object stores, taken off the live `<image>`
+ * @returns The bytes as a `data:` URI, or undefined for a file that is not resolved — the export then drops that `<image>` rather than keeping a URL nothing outside the tab can read
+ */
+export type ResolveImageHref = (src: string) => string | undefined;
+
 export type BuildExportSvgOptions = {
 	/** Editing source (`.jis`) to embed. Omit to skip the metadata. */
 	source?: CanvasDoc;
@@ -19,6 +28,13 @@ export type BuildExportSvgOptions = {
 	 * background rect entirely.
 	 */
 	background?: string;
+	/**
+	 * Reads the bytes an `<image>` is drawn from, so the export carries them
+	 * itself; the live href is a blob URL, which names nothing outside the tab it
+	 * was made in. Omit it — or leave a file unresolved — and those images are
+	 * dropped from the output.
+	 */
+	resolveImageHref?: ResolveImageHref;
 	/**
 	 * Region to export, in world coordinates (e.g. fit-to-content bounds).
 	 * It becomes both the viewBox and the logical output size, making the
@@ -111,12 +127,42 @@ export const getSvgSize = (
 };
 
 /**
+ * Inlines the bytes of every resolved `<image>` and drops the rest.
+ *
+ * Runs after the styles are baked, since that step pairs the clone with the
+ * live tree by document order and this one takes elements out of it.
+ */
+const inlineImageHrefs = (
+	clonedSvg: SVGSVGElement,
+	resolveImageHref: ResolveImageHref | undefined,
+): void => {
+	for (const image of Array.from(
+		clonedSvg.querySelectorAll("image[data-image-src]"),
+	)) {
+		const src = image.getAttribute("data-image-src");
+		if (src === null) {
+			continue;
+		}
+		const dataUri = resolveImageHref?.(src);
+		if (dataUri === undefined) {
+			image.remove();
+			continue;
+		}
+		image.setAttribute("href", dataUri);
+		image.removeAttribute("xlink:href");
+		image.removeAttribute("data-image-src");
+	}
+};
+
+/**
  * Builds a self-contained export SVG from the live Canvas `<svg>` that can be
  * displayed and rasterized in any environment.
  *
  * - Bakes computed paint styles (fill / stroke / opacity) into inline styles
  *   — emotion classes and `var(--jiscribe-*)` do not survive standalone
  * - Removes control overlays (selection handles, ...) and the grid
+ * - Replaces each `<image>` href with the file's bytes, dropping the images
+ *   whose file is not resolved (a blob URL would be dead in the file)
  * - Converts foreignObject text to native `<text>` — connector labels also get
  *   their box as a `<rect>` (avoids canvas taint and works on GitHub, which
  *   sanitizes foreignObject away)
@@ -168,6 +214,8 @@ export const buildExportSvg = (
 	)) {
 		node.remove();
 	}
+
+	inlineImageHrefs(cloned, options.resolveImageHref);
 
 	// Lay the background color as a solid rect covering the whole viewBox
 	const background =

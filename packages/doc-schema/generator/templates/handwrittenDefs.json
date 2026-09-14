@@ -647,6 +647,61 @@
 			}
 		}
 	},
+	"ImageDoc": {
+		"description": "A picture file (raster or SVG) drawn as an opaque box. Use it for photographs, screenshots and exported pictures — anything the built-in shapes cannot draw and inline SVG markup (`svg`) would not hold. The picture itself lives in a separate file that travels with the .jis; this object only names it. It IS a connector target (an image is a node of the diagram), and it has no text, stroke or fill of its own.",
+		"type": "object",
+		"required": ["id", "type", "x", "y", "width", "height", "src"],
+		"additionalProperties": false,
+		"properties": {
+			"id": {
+				"description": "Unique identifier.",
+				"type": "string"
+			},
+			"type": {
+				"description": "Must be \"image\".",
+				"type": "string",
+				"const": "image"
+			},
+			"meta": {
+				"$ref": "#/$defs/MetaDoc"
+			},
+			"x": {
+				"description": "Left-edge X coordinate.",
+				"type": "number"
+			},
+			"y": {
+				"description": "Top-edge Y coordinate.",
+				"type": "number"
+			},
+			"width": {
+				"description": "Display width in pixels (the box the image is stretched into).",
+				"type": "number",
+				"minimum": 0
+			},
+			"height": {
+				"description": "Display height in pixels (the box the image is stretched into).",
+				"type": "number",
+				"minimum": 0
+			},
+			"src": {
+				"description": "Path to the image file, relative to the directory the .jis itself is in. Use \"/\" as the separator and keep the file inside that directory: \"..\", an absolute path and a URL are all rejected by the host that reads it. The file is NOT embedded in the document — the host resolves it when drawing, so put the image beside the .jis (or in a folder under it) and ship the two together. A file that cannot be resolved is drawn as a placeholder box instead of the picture. `width` and `height` are required and the image is stretched to fill that box exactly, so give them the file's own aspect ratio unless you mean to distort it.",
+				"type": "string",
+				"minLength": 1
+			},
+			"rotation": {
+				"$ref": "#/$defs/TransformStyle/properties/rotation"
+			},
+			"flipX": {
+				"$ref": "#/$defs/TransformStyle/properties/flipX"
+			},
+			"flipY": {
+				"$ref": "#/$defs/TransformStyle/properties/flipY"
+			},
+			"lockAspectRatio": {
+				"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+			}
+		}
+	},
 	"ConnectorDoc": {
 		"description": "Connector (arrow) linking two endpoints.",
 		"type": "object",

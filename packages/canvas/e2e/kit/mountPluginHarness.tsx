@@ -18,6 +18,7 @@ import type {
 	CanvasHandle,
 	CanvasParser,
 	CanvasPlugin,
+	ResolveImage,
 	StencilCategory,
 	ToolbarItem,
 	ToolbarSection,
@@ -60,6 +61,12 @@ export type PluginHarnessParams = {
 	 * `toolbarItems` — the same category can appear in both.
 	 */
 	stencilLibrarySections?: StencilCategory[];
+	/**
+	 * Stands in for the host that reads an image object's file. Omit it and every
+	 * image on the page draws its placeholder, which is what a page with no
+	 * images at all wants; pass one whenever a spec drives an `image`.
+	 */
+	resolveImage?: ResolveImage;
 };
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
@@ -68,6 +75,7 @@ type HarnessAppProps = {
 	initialConfig: CanvasConfig;
 	toolbarItems: ToolbarItem[] | undefined;
 	stencilLibrarySections: StencilCategory[] | undefined;
+	resolveImage: ResolveImage | undefined;
 	parser: CanvasParser;
 };
 
@@ -81,6 +89,7 @@ function HarnessApp({
 	initialConfig,
 	toolbarItems,
 	stencilLibrarySections,
+	resolveImage,
 	parser,
 }: HarnessAppProps) {
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(emptyDoc);
@@ -175,6 +184,7 @@ function HarnessApp({
 				doc={loadedDoc}
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
+				resolveImage={resolveImage}
 				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
 				stencilLibrary={
 					stencilLibrarySections
@@ -208,6 +218,7 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 				initialConfig={initialConfig}
 				toolbarItems={params.toolbarItems}
 				stencilLibrarySections={params.stencilLibrarySections}
+				resolveImage={params.resolveImage}
 				parser={parser}
 			/>
 		</React.StrictMode>,

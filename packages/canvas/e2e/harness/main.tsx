@@ -22,8 +22,25 @@ const librarySections: StencilCategory[] = [
 	specShapesStencilCategory,
 ];
 
+// A 1x1 transparent PNG, the smallest file an <image> can actually draw. The
+// page resolves exactly one name and rejects everything else, so a spec can put
+// both halves of the contract — a file that arrives and one that does not — on
+// one canvas.
+const OK_IMAGE_SRC = "ok.png";
+const OK_IMAGE_BYTES =
+	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4z8AAAAMBAQDuFqDsAAAAAElFTkSuQmCC";
+
+const resolveHarnessImage = async (src: string): Promise<Blob> => {
+	if (src !== OK_IMAGE_SRC) {
+		throw new Error(`no such image: ${src}`);
+	}
+	const response = await fetch(`data:image/png;base64,${OK_IMAGE_BYTES}`);
+	return response.blob();
+};
+
 mountPluginHarness({
 	plugins: [specShapesPlugin],
+	resolveImage: resolveHarnessImage,
 	toolbarItems: [
 		{ type: "stencilPreset", presetId: "rect" },
 		{ type: "stencilPreset", presetId: "ellipse" },

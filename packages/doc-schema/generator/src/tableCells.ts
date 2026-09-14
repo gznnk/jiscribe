@@ -2,7 +2,8 @@ import type { ObjectDocDefinition } from "@jiscribe/doc";
 
 /**
  * Table cells for the special types whose cells cannot be derived from features
- * (poly / none geometry, and svg's opaque box). Every type not listed here is
+ * (poly / none geometry, and the opaque boxes of svg / image). Every type not
+ * listed here is
  * derived from features + summary.
  */
 export const SPECIAL_TABLE_CELLS: Readonly<
@@ -27,6 +28,9 @@ export const SPECIAL_TABLE_CELLS: Readonly<
 	},
 	svg: {
 		guideGeometry: "`x`,`y`,`width`,`height` + `svgText`",
+	},
+	image: {
+		guideGeometry: "`x`,`y`,`width`,`height` + `src`",
 	},
 	connector: {
 		guideTypeCell: "`connector` (in `root`)",

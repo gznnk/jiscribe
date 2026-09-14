@@ -8,6 +8,8 @@ import type { CanvasRegistries } from "./registries";
 import { CanvasRegistriesContext } from "./registries/CanvasRegistriesContext";
 import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
+import type { ResolvedImageLookup } from "../rendering/objects/ResolvedImagesContext";
+import { ResolvedImagesContext } from "../rendering/objects/ResolvedImagesContext";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 
@@ -18,6 +20,8 @@ type CanvasProvidersProps = {
 	registries: CanvasRegistries;
 	/** The counter from `useDocFonts`, handed to the render-time measurement sites. */
 	fontsNonce: number;
+	/** The lookup from `useDocImages`, handed to the image shapes. */
+	lookupResolvedImage: ResolvedImageLookup;
 	viewportElementRef: RefObject<HTMLDivElement | null>;
 	children: ReactNode;
 };
@@ -25,7 +29,7 @@ type CanvasProvidersProps = {
 /**
  * Aggregates the context providers a live `<Canvas>` needs (theme, locale,
  * messages, the registry bundle, its three rendering registries, the
- * fonts-loaded counter, and the viewport element ref) into one node, so
+ * fonts-loaded counter, the resolved images, and the viewport element ref) into one node, so
  * Canvas.tsx renders its tree without the deep provider nesting.
  */
 export function CanvasProviders({
@@ -34,6 +38,7 @@ export function CanvasProviders({
 	messages,
 	registries,
 	fontsNonce,
+	lookupResolvedImage,
 	viewportElementRef,
 	children,
 }: CanvasProvidersProps) {
@@ -54,9 +59,11 @@ export function CanvasProviders({
 							objectSvgDefs={registries.objectSvgDefs}
 						>
 							<FontsLoadedNonceContext value={fontsNonce}>
-								<CanvasViewportElementRefContext value={viewportElementRef}>
-									{children}
-								</CanvasViewportElementRefContext>
+								<ResolvedImagesContext value={lookupResolvedImage}>
+									<CanvasViewportElementRefContext value={viewportElementRef}>
+										{children}
+									</CanvasViewportElementRefContext>
+								</ResolvedImagesContext>
 							</FontsLoadedNonceContext>
 						</RenderingRegistriesProvider>
 					</CanvasRegistriesContext>

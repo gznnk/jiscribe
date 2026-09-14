@@ -7,6 +7,7 @@ import { useInteractionHandle } from "./useInteractionHandle";
 import { useMeasureHandle } from "./useMeasureHandle";
 import { useSelectionHandle } from "./useSelectionHandle";
 import { useViewportHandle } from "./useViewportHandle";
+import type { ResolveImageHref } from "../../export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";
@@ -27,6 +28,8 @@ export type UseCanvasHandleParams = {
 	 * after the culling hook rather than beside the other state-derived hooks.
 	 */
 	withCullingSuspended: <T>(snapshot: () => T) => T;
+	/** Reads the bytes an exported `<image>` carries; only the export namespace takes it */
+	resolveImageHref: ResolveImageHref;
 };
 
 /**
@@ -50,6 +53,7 @@ export const useCanvasHandle = ({
 	registries,
 	svgRef,
 	withCullingSuspended,
+	resolveImageHref,
 }: UseCanvasHandleParams): CanvasHandle => {
 	// The canvas stays authoritative for the live camera and selection: the host
 	// reads them out and pushes changes back imperatively, with no controlled prop
@@ -61,6 +65,7 @@ export const useCanvasHandle = ({
 		registries,
 		svgRef,
 		withCullingSuspended,
+		resolveImageHref,
 	);
 	// Read-only counterparts: what the canvas made of the document, and what the
 	// user is doing to it. Only the history handle writes, and only through the

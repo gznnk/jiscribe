@@ -97,6 +97,7 @@ describe("applyObjectDefinition: contentResizer", () => {
 			"polyline",
 			"connector",
 			"svg",
+			"image",
 		]) {
 			expect(registries.objectContentResizer.get(type)).toBeUndefined();
 		}

@@ -7,6 +7,7 @@ export const ObjectTypes = [
 	"group",
 	"connector",
 	"svg",
+	"image",
 ] as const;
 
 export type ObjectType = (typeof ObjectTypes)[number] | (string & {});

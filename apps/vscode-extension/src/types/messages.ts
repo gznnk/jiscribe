@@ -56,7 +56,14 @@ export type WebviewToExtensionMessage =
 			format: "png" | "svg";
 			base64: string;
 			includesSource: boolean;
-	  };
+	  }
+	/**
+	 * Requests the bytes of an image an `image` shape names. `src` is the raw
+	 * string from the doc, relative to the document's folder; the Extension
+	 * checks the rule and reads the file. Answered by imageResolved carrying the
+	 * same `requestId`.
+	 */
+	| { type: "resolveImage"; requestId: ImageRequestId; src: string };
 
 /** Messages sent Extension → Webview via webviewPanel.webview.postMessage(). */
 export type ExtensionToWebviewMessage =
@@ -74,4 +81,40 @@ export type ExtensionToWebviewMessage =
 	 * On saving `.jis.png` / `.jis.svg`, requests the current canvas image
 	 * (source embedded). The Webview responds with imageExportResult.
 	 */
-	| { type: "requestImageExport"; requestId: number; format: "png" | "svg" };
+	| { type: "requestImageExport"; requestId: number; format: "png" | "svg" }
+	/** Answer to resolveImage; see {@link ImageResolvedMessage}. */
+	| ImageResolvedMessage;
+
+/**
+ * Identifies one resolveImage round trip. A page-unique string rather than a
+ * counter: the Webview is discarded and rebuilt whenever its tab hides (#138), and
+ * a plain counter would hand the new page the ids the old page's answers are still
+ * addressed to (see createWebviewImageResolver).
+ */
+export type ImageRequestId = string;
+
+/**
+ * Answer to a resolveImage request, carrying its `requestId`.
+ *
+ * The image bytes travel as base64 over postMessage rather than as a webview
+ * URI, so nothing has to be added to the Webview's CSP or localResourceRoots.
+ * `ok` discriminates the two halves: the Webview turns the success case into a
+ * Blob and rejects the pending request with `error` otherwise.
+ */
+export type ImageResolvedMessage =
+	| {
+			type: "imageResolved";
+			requestId: ImageRequestId;
+			ok: true;
+			/** The image file's bytes, base64-encoded (no data-URL header). */
+			base64: string;
+			/** MIME type derived from the file's extension, for the Blob's type. */
+			mimeType: string;
+	  }
+	| {
+			type: "imageResolved";
+			requestId: ImageRequestId;
+			ok: false;
+			/** Why the image could not be supplied, phrased for a developer's console. */
+			error: string;
+	  };

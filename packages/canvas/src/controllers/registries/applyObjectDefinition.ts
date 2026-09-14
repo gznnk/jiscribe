@@ -13,6 +13,7 @@ import type {
 import { supportsAutoHeightType } from "../../plugin/supportsAutoHeightType";
 import { Connector } from "../../rendering/objects/connector/Connector";
 import { Ellipse } from "../../rendering/objects/primitives/Ellipse";
+import { Image } from "../../rendering/objects/primitives/Image";
 import { Polygon } from "../../rendering/objects/primitives/Polygon";
 import { Polyline } from "../../rendering/objects/primitives/Polyline";
 import { Rect } from "../../rendering/objects/primitives/Rect";
@@ -34,6 +35,12 @@ import {
 	groupToState,
 } from "../../states/objects/primitives/group/GroupMapper";
 import { isValidGroupState } from "../../states/objects/primitives/group/validateGroupState";
+import {
+	imageToDoc,
+	imageToState,
+} from "../../states/objects/primitives/image/ImageMapper";
+import type { ImageState } from "../../states/objects/primitives/image/ImageState";
+import { isValidImageState } from "../../states/objects/primitives/image/validateImageState";
 import {
 	polygonToDoc,
 	polygonToState,
@@ -404,6 +411,16 @@ export const BUILTIN_OBJECT_DEFINITIONS: Record<
 		stateValidator: isValidSvgState,
 		component: Svg,
 		behavior: createFrameBehavior<SvgState>(),
+	}),
+
+	// An image names a file the canvas cannot make, so it is placed the same way
+	// as svg (AI / direct .jis authoring) and registers no factory / stencils.
+	image: defineObject({
+		...builtinObjectDocDefinitions.image,
+		mapper: { toDoc: imageToDoc, toState: imageToState },
+		stateValidator: isValidImageState,
+		component: Image,
+		behavior: createFrameBehavior<ImageState>(),
 	}),
 };
 

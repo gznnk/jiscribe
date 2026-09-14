@@ -181,3 +181,10 @@ export {
 	type UpdateConnectorParams,
 	type ZOrderPlacement,
 } from "./ops";
+// The one rule for a path a doc stores (an image `src`): relative to the `.jis`
+// file's directory and inside it. Every host resolving such a path splits it here.
+export { splitDocRelativePath } from "./file/docRelativePath";
+// The files an image `src` may name, and which a document names at all. Hosts
+// serving image bytes read the MIME type here rather than keeping a list each.
+export { resolveDocImageMimeType } from "./file/docImageMimeType";
+export { collectDocImageSources } from "./ops/query";

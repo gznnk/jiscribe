@@ -10,8 +10,9 @@ export default defineConfig({
 		// and sits outside src/ for that reason. What is left is the logic extracted
 		// away from both — the orchestration in imageDocumentOps, the self-write echo
 		// classification in selfWriteTracker, the write ordering in
-		// latestWriteSerializer, the panel bookkeeping in webviewBridgeRegistry, and
-		// the webview's view-state folding in docViewState.
+		// latestWriteSerializer, the panel bookkeeping in webviewBridgeRegistry, the
+		// image `src` resolution split across docImageResolution and the webview's
+		// resolveImage, and the webview's view-state folding in docViewState.
 		include: ["src/**/__tests__/**/*.{test,spec}.{ts,tsx}"],
 	},
 });

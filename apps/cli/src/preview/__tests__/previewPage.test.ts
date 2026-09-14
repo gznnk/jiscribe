@@ -4,7 +4,11 @@ import { describe, expect, it } from "vitest";
 import { buildPreviewPage } from "../previewPage";
 
 /** Stand-ins for the built page, so these tests do not need a build. */
-const ASSETS = { script: "console.log(1);", style: ".x{color:red}" };
+const ASSETS = {
+	script: "console.log(1);",
+	style: ".x{color:red}",
+	images: {},
+};
 
 /**
  * A document as JSON rather than an object literal: what matters here is the
@@ -28,21 +32,20 @@ const docWithText = (text: string): CanvasDoc =>
 		}),
 	) as CanvasDoc;
 
-/** The `{ doc: … }` the page publishes on `window`, read back out of the HTML. */
-const payloadOf = (page: string): unknown => {
-	const match = /window\.\w+ = (\{ doc: .*\});/.exec(page);
+/** The payload expression as it stands in the page, before any parsing. */
+const payloadSourceOf = (page: string): string => {
+	const match = /window\.\w+ = (\{.*\});/.exec(page);
 	if (match === null) {
 		throw new Error("the page carries no payload");
 	}
-	// The page's own escape is a JavaScript one, so this is read the way the
-	// browser reads it rather than as JSON.
-	return JSON.parse(
-		match[1]
-			.replace(/^\{ doc: /, "")
-			.replace(/\}$/, "")
-			.trim(),
-	);
+	return match[1];
 };
+
+/** What the page publishes on `window`, read back out of the HTML. */
+const payloadOf = (page: string): { doc: unknown; images: unknown } =>
+	// The page's own escapes (< and friends) are JSON escapes too, so what
+	// the browser reads is what JSON.parse reads.
+	JSON.parse(payloadSourceOf(page)) as { doc: unknown; images: unknown };
 
 describe("buildPreviewPage", () => {
 	const page = buildPreviewPage({
@@ -57,7 +60,19 @@ describe("buildPreviewPage", () => {
 	});
 
 	it("carries the document itself, not a path to one", () => {
-		expect(payloadOf(page)).toEqual(docWithText("hello"));
+		expect(payloadOf(page).doc).toEqual(docWithText("hello"));
+	});
+
+	it("carries the document's images, keyed by the src that names them", () => {
+		const illustrated = buildPreviewPage({
+			...ASSETS,
+			images: { "logo.png": "data:image/png;base64,AA==" },
+			doc: docWithText("hello"),
+			title: "x.jis.json",
+		});
+		expect(payloadOf(illustrated).images).toEqual({
+			"logo.png": "data:image/png;base64,AA==",
+		});
 	});
 
 	it("inlines the script and the stylesheet", () => {
@@ -82,9 +97,25 @@ describe("buildPreviewPage", () => {
 		// The payload's own closing tag is the only one before the bundle.
 		expect(hostile).not.toContain("</script><img");
 		expect(hostile).toContain("\\u003c/script");
-		expect(payloadOf(hostile)).toEqual(
+		expect(payloadOf(hostile).doc).toEqual(
 			docWithText("</script><img src=x onerror=alert(1)>"),
 		);
+	});
+
+	it("keeps an image src that contains </script> inside the script", () => {
+		const src = "</script><img src=x onerror=alert(1)>.png";
+		const hostile = buildPreviewPage({
+			...ASSETS,
+			images: { [src]: "data:image/png;base64,AA==" },
+			doc: docWithText("hello"),
+			title: "x.jis.json",
+		});
+		// The keys of the image table are as much attacker-shaped text as the
+		// document's own, being whatever the .jis named its pictures with.
+		expect(payloadSourceOf(hostile)).not.toContain("</script");
+		expect(payloadOf(hostile).images).toEqual({
+			[src]: "data:image/png;base64,AA==",
+		});
 	});
 
 	it("escapes a title that would otherwise carry markup", () => {

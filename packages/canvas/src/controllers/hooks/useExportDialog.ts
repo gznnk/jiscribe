@@ -13,7 +13,7 @@ import {
 	exportCanvasToSvg,
 	rasterizeSvgToPng,
 } from "../../export";
-import type { BuildExportSvgOptions } from "../../export";
+import type { BuildExportSvgOptions, ResolveImageHref } from "../../export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";
@@ -97,6 +97,8 @@ type UseExportDialogParams = {
 	 * baking, text conversion) before its first await.
 	 */
 	withCullingSuspended: <T>(snapshot: () => T) => T;
+	/** Reads the bytes an exported `<image>` carries (see buildExportSvg) */
+	resolveImageHref: ResolveImageHref;
 };
 
 /**
@@ -120,6 +122,7 @@ export const useExportDialog = ({
 	dispatch,
 	notifyError,
 	withCullingSuspended,
+	resolveImageHref,
 }: UseExportDialogParams): ((values: ExportSubmitValues) => void) => {
 	// Always-fresh mirror of the state, read at export time rather than at render
 	// time, so the callback below never has to be rebuilt.
@@ -135,6 +138,13 @@ export const useExportDialog = ({
 		onExportImageRef.current = onExportImage;
 	});
 
+	// Mirrored like the state: it changes identity as files arrive, and the submit
+	// handler is meant to survive that.
+	const resolveImageHrefRef = useRef(resolveImageHref);
+	useEffect(() => {
+		resolveImageHrefRef.current = resolveImageHref;
+	});
+
 	// Export dialog (opened by ExportCommand): pick format + margin, OK
 	return useCallback(
 		(values: ExportSubmitValues) => {
@@ -147,12 +157,15 @@ export const useExportDialog = ({
 				runExportSubmit(
 					svg,
 					values,
-					resolveExportOptions(
-						canvasStateRef.current,
-						registries.objectMapper,
-						registries.objectVisualBounds,
-						values,
-					),
+					{
+						...resolveExportOptions(
+							canvasStateRef.current,
+							registries.objectMapper,
+							registries.objectVisualBounds,
+							values,
+						),
+						resolveImageHref: (src: string) => resolveImageHrefRef.current(src),
+					},
 					onExportImageRef.current,
 					notifyError,
 				),

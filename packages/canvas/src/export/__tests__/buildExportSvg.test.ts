@@ -64,3 +64,55 @@ describe("buildExportSvg while the font gate hides the scene", () => {
 		expect(contentGroup?.querySelector("rect")).not.toBeNull();
 	});
 });
+
+/** A live canvas SVG holding one image object, drawn from a blob URL. */
+const mountCanvasSvgWithImage = (src: string): SVGSVGElement => {
+	const svg = document.createElementNS(SVG_NS, "svg");
+	svg.setAttribute("viewBox", "0 0 400 300");
+	const image = document.createElementNS(SVG_NS, "image");
+	image.setAttribute("href", "blob:stub/0");
+	image.setAttribute("data-image-src", src);
+	image.setAttribute("width", "200");
+	image.setAttribute("height", "120");
+	svg.append(image);
+	document.body.append(svg);
+	return svg;
+};
+
+describe("buildExportSvg and the image files", () => {
+	it("carries the bytes of a resolved image instead of its blob URL", () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvgWithImage("images/logo.png");
+
+		const exported = buildExportSvg(liveSvg, {
+			resolveImageHref: (src) =>
+				src === "images/logo.png" ? "data:image/png;base64,AAA=" : undefined,
+		});
+
+		const image = exported.querySelector("image");
+		expect(image?.getAttribute("href")).toBe("data:image/png;base64,AAA=");
+		// The marker is the live DOM's own; an exported file has no use for it.
+		expect(image?.hasAttribute("data-image-src")).toBe(false);
+	});
+
+	it("drops an image whose file the lookup does not know", () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvgWithImage("images/logo.png");
+
+		const exported = buildExportSvg(liveSvg, {
+			resolveImageHref: () => undefined,
+		});
+
+		expect(exported.querySelector("image")).toBeNull();
+	});
+
+	it("drops every image when no lookup is passed at all", () => {
+		stubMeasureContext();
+		const liveSvg = mountCanvasSvgWithImage("images/logo.png");
+
+		const exported = buildExportSvg(liveSvg);
+
+		expect(exported.querySelector("image")).toBeNull();
+		expect(exported.outerHTML).not.toContain("blob:");
+	});
+});

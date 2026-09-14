@@ -1,9 +1,17 @@
 // The HTTP half of the viewer, exercised over a real socket. What matters here is
-// the write endpoint a person's edits come back through, and that the workspace
-// boundary is actually applied on the way in: everything reaching this server was
-// composed by a browser.
+// the write endpoint a person's edits come back through, the read endpoint the
+// images an object points at come out of, and that the workspace boundary is
+// actually applied on the way in: everything reaching this server was composed by a
+// browser.
 
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+	chmod,
+	mkdir,
+	mkdtemp,
+	readFile,
+	rm,
+	writeFile,
+} from "node:fs/promises";
 import type http from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -133,11 +141,114 @@ describe("PUT /api/file", () => {
 	});
 
 	it("answers 404 on any other api route", async () => {
-		const response = await fetch(`${baseUrl}/api/file`, { method: "GET" });
+		const response = await fetch(`${baseUrl}/api/unknown`, { method: "PUT" });
 
 		expect(response.status).toBe(404);
 		expect(await response.json()).toEqual({ error: "unknown api" });
 	});
+});
+
+describe("GET /api/file", () => {
+	it("serves an image an object points at", async () => {
+		await mkdir(join(workspaceRoot, "images"), { recursive: true });
+		await writeFile(
+			join(workspaceRoot, "images", "logo.png"),
+			"png-bytes",
+			"utf8",
+		);
+
+		const response = await fetch(
+			`${baseUrl}/api/file?path=${encodeURIComponent("images/logo.png")}`,
+		);
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toBe("image/png");
+		expect(response.headers.get("cache-control")).toBe("no-store");
+		expect(await response.text()).toBe("png-bytes");
+	});
+
+	it("answers the content type the extension names, whatever its case", async () => {
+		await writeFile(join(workspaceRoot, "photo.JPG"), "jpeg-bytes", "utf8");
+
+		const response = await fetch(`${baseUrl}/api/file?path=photo.JPG`);
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toBe("image/jpeg");
+	});
+
+	it("refuses a request with no path", async () => {
+		const response = await fetch(`${baseUrl}/api/file`);
+
+		expect(response.status).toBe(400);
+		expect(await response.json()).toEqual({
+			error: expect.stringContaining("path"),
+		});
+	});
+
+	it("refuses a path leading outside the workspace", async () => {
+		const response = await fetch(
+			`${baseUrl}/api/file?path=${encodeURIComponent("../escaped.png")}`,
+		);
+
+		expect(response.status).toBe(400);
+	});
+
+	it("refuses an absolute path, even to a file inside the workspace", async () => {
+		await writeFile(join(workspaceRoot, "logo.png"), "bytes", "utf8");
+
+		const response = await fetch(
+			`${baseUrl}/api/file?path=${encodeURIComponent(join(workspaceRoot, "logo.png"))}`,
+		);
+
+		expect(response.status).toBe(400);
+	});
+
+	it("answers 404 for a file that is not there", async () => {
+		const response = await fetch(`${baseUrl}/api/file?path=missing.png`);
+
+		expect(response.status).toBe(404);
+	});
+
+	it("refuses an extension that is not an image, even when the file is there", async () => {
+		await writeFile(join(workspaceRoot, "diagram.jis.json"), "{}", "utf8");
+
+		const response = await fetch(
+			`${baseUrl}/api/file?path=${encodeURIComponent("diagram.jis.json")}`,
+		);
+
+		expect(response.status).toBe(404);
+	});
+
+	it("answers 404 for a directory named like an image", async () => {
+		await mkdir(join(workspaceRoot, "nested.png"), { recursive: true });
+
+		const response = await fetch(`${baseUrl}/api/file?path=nested.png`);
+
+		expect(response.status).toBe(404);
+	});
+
+	// A file that passes stat and then fails to open is the case that used to take
+	// the whole MCP process down through the read stream's unhandled error event.
+	// root ignores the mode, so there the file would simply be served
+	it.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
+		"breaks off the response for a file it cannot open, and stays up",
+		async () => {
+			const unreadableFile = join(workspaceRoot, "locked.png");
+			await writeFile(unreadableFile, "png-bytes", "utf8");
+			await chmod(unreadableFile, 0o000);
+
+			await expect(
+				(async () => {
+					const response = await fetch(`${baseUrl}/api/file?path=locked.png`);
+					await response.arrayBuffer();
+				})(),
+			).rejects.toThrow();
+
+			// The process survived, so the next request is answered as usual
+			const following = await fetch(`${baseUrl}/`);
+			expect(following.status).toBe(200);
+		},
+	);
 });
 
 describe("GET /assets/", () => {

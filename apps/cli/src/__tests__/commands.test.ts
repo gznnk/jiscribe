@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { runCheckCommand } from "../checkCommand";
 import { runMeasureCommand } from "../measureCommand";
 import { runRenderCommand } from "../renderCommand";
-import { formatDiagnosticLine } from "../reportLines";
+import { formatDiagnosticLine, formatWarningLine } from "../reportLines";
 
 const fixture = (name: string): string =>
 	fileURLToPath(
@@ -61,6 +61,14 @@ describe("formatDiagnosticLine", () => {
 				message: "went wrong",
 			}),
 		).toBe("error a.jis.json - went wrong");
+	});
+});
+
+describe("formatWarningLine", () => {
+	it("takes the same four columns as a diagnostic, so the two mix in one stream", () => {
+		expect(formatWarningLine("a.jis.json", "logo.png is not there")).toBe(
+			"warning a.jis.json - logo.png is not there",
+		);
 	});
 });
 

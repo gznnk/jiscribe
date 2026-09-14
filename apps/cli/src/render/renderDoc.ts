@@ -1,5 +1,6 @@
 import type { CanvasDoc } from "@jiscribe/doc";
 
+import { createDocImageHandler } from "./docImageRoute";
 import { createHarnessAssetHandler, HARNESS_ORIGIN } from "./harnessAssets";
 import { launchBrowser } from "./launchBrowser";
 import type { RenderOptions } from "./renderOptions";
@@ -18,6 +19,11 @@ export type RenderedImage = {
 	pixelSize: { width: number; height: number } | null;
 	/** How the browser that drew it was found, for the command to report. */
 	browserDescription: string;
+	/**
+	 * How many image shapes the page gave up waiting for and drew as
+	 * placeholders; 0 on a run where every image landed.
+	 */
+	unsettledImageCount: number;
 };
 
 /**
@@ -50,23 +56,32 @@ const applyBackground = (
  *
  * The page it drives carries the same Canvas and the same eight shape plugins the
  * editor does, so the drawing is not a reimplementation of the rendering — it is
- * the rendering. What crosses the boundary is a document in and an image out.
+ * the rendering. What crosses the boundary is a document in, the image files it
+ * names as the page asks for them, and the drawn image out.
  *
  * playwright-core is imported here rather than at the top of the program, so
  * `validate`, `diagnose` and `measure` never load a browser driver they have no
  * use for.
  *
  * @param doc - The document to draw, already parsed and validated
+ * @param docDirPath - Directory the input `.jis` sits in; every image `src` is resolved against it and cannot leave it
  * @param options - Format, region, scale, background and the browser to use
+ * @param reportImageUnavailable - Told the reason for each image file the page asked for and could not get; the image is drawn as a placeholder, so the caller is what makes the gap visible
  * @returns The encoded image, its pixel size when it has one, and what drew it
  * @throws When no Chromium can be launched, or the page fails to produce an image
  */
 export const renderDoc = async (
 	doc: CanvasDoc,
+	docDirPath: string,
 	options: RenderOptions,
+	reportImageUnavailable: (reason: string) => void,
 ): Promise<RenderedImage> => {
 	const { chromium } = await import("playwright-core");
 	const serveAsset = createHarnessAssetHandler();
+	const serveDocImage = createDocImageHandler(
+		docDirPath,
+		reportImageUnavailable,
+	);
 	const { browser, description } = await launchBrowser(
 		chromium,
 		options.browser,
@@ -82,7 +97,9 @@ export const renderDoc = async (
 		const page = await context.newPage();
 
 		await page.route(`${HARNESS_ORIGIN}/**`, async (route) => {
-			const asset = serveAsset(new URL(route.request().url()).pathname);
+			const requestUrl = new URL(route.request().url());
+			const asset =
+				serveDocImage(requestUrl) ?? serveAsset(requestUrl.pathname);
 			if (asset === null) {
 				await route.fulfill({ status: 404, body: "" });
 				return;
@@ -147,11 +164,13 @@ export const renderDoc = async (
 					body: Buffer.from(result.svg, "utf8"),
 					pixelSize: null,
 					browserDescription: description,
+					unsettledImageCount: result.unsettledImageCount,
 				}
 			: {
 					body: Buffer.from(result.base64, "base64"),
 					pixelSize: { width: result.pixelWidth, height: result.pixelHeight },
 					browserDescription: description,
+					unsettledImageCount: result.unsettledImageCount,
 				};
 	} finally {
 		await browser.close();

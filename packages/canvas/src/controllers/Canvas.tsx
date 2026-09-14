@@ -35,6 +35,8 @@ import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
 import { useDocFonts } from "./hooks/useDocFonts";
+import type { ResolveImage } from "./hooks/useDocImages";
+import { useDocImages } from "./hooks/useDocImages";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
 import { useExportDialog } from "./hooks/useExportDialog";
@@ -52,6 +54,7 @@ import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
+import type { ResolveImageHref } from "../export";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -235,6 +238,18 @@ type CanvasProps = {
 	 * untouched: it neither resolves nor validates the path.
 	 */
 	onOpenReference?: (payload: OpenReferencePayload) => void;
+	/**
+	 * Reads the bytes of the file an `image` object names, its `src` passed
+	 * through untouched — the canvas neither resolves nor validates the path, the
+	 * way it does not for `meta.reference` either. Omit it and every image in the
+	 * document draws as a placeholder; a rejected promise draws the same
+	 * placeholder for that one file.
+	 *
+	 * Resolutions are kept per `src` and read through a ref, so passing a new
+	 * function each render costs nothing and discards nothing: a host that needs a
+	 * `src` fetched again has to change the `src`.
+	 */
+	resolveImage?: ResolveImage;
 
 	// ── Toolbar (visibility & composition) ──
 	/**
@@ -362,6 +377,7 @@ const CanvasComponent = ({
 	onRedo,
 	onExportImage,
 	onOpenReference,
+	resolveImage,
 	toolbar,
 	stencilLibrary,
 	autoFocus = true,
@@ -414,6 +430,21 @@ const CanvasComponent = ({
 			dispatch({ type: "REMEASURE_TEXT" });
 		},
 	});
+
+	// The files the document names, fetched once each. A shape component is
+	// synchronous, so the awaiting happens here and reaches the rendering layer as
+	// a lookup (see useDocImages).
+	const lookupResolvedImage = useDocImages(state.objects, resolveImage);
+
+	// An export cannot carry the blob URL a live <image> draws from — it names
+	// nothing outside this tab — so it takes the bytes themselves.
+	const resolveImageHref = useCallback<ResolveImageHref>(
+		(src) => {
+			const resolved = lookupResolvedImage(src);
+			return resolved.status === "ready" ? resolved.dataUri : undefined;
+		},
+		[lookupResolvedImage],
+	);
 
 	// Single toast slot shared by every error source (clipboard, export).
 	const { errorNotification, notifyError } = useErrorNotification();
@@ -667,6 +698,7 @@ const CanvasComponent = ({
 		registries,
 		svgRef,
 		withCullingSuspended,
+		resolveImageHref,
 	});
 	const handleExportSubmit = useExportDialog({
 		svgRef,
@@ -676,6 +708,7 @@ const CanvasComponent = ({
 		dispatch,
 		notifyError,
 		withCullingSuspended,
+		resolveImageHref,
 	});
 
 	useImperativeHandle(ref, () => canvasHandle, [canvasHandle]);
@@ -723,6 +756,7 @@ const CanvasComponent = ({
 			messages={mergedMessages}
 			registries={registries}
 			fontsNonce={fontsNonce}
+			lookupResolvedImage={lookupResolvedImage}
 			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot

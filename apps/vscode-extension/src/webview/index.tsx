@@ -24,6 +24,7 @@ import {
 	type DocViewState,
 	initialDocViewState,
 } from "./docViewState";
+import { createWebviewImageResolver } from "./resolveImage";
 import { useVscodeColorScheme } from "./useVscodeColorScheme";
 import { vscodeCanvasThemes } from "./vscodeCanvasTheme";
 import type {
@@ -55,6 +56,13 @@ declare const acquireVsCodeApi: () => {
 // acquireVsCodeApi() can be called only once per page lifetime, so call it once
 // at module level and cache it.
 const vscode = acquireVsCodeApi();
+
+// One resolver per page, not per App mount: the request ids it hands out have to
+// stay unique for as long as the Extension may answer, and a remount would
+// restart the counter while answers to the old ids are still in flight.
+const imageResolver = createWebviewImageResolver((message) => {
+	vscode.postMessage(message);
+});
 
 /**
  * Webview-local state saved via getState/setState. With
@@ -100,6 +108,14 @@ const isExtensionToWebviewMessage = (
 				typeof message.requestId === "number" &&
 				(message.format === "png" || message.format === "svg")
 			);
+		case "imageResolved":
+			if (typeof message.requestId !== "string") {
+				return false;
+			}
+			return message.ok === true
+				? typeof message.base64 === "string" &&
+						typeof message.mimeType === "string"
+				: message.ok === false && typeof message.error === "string";
 		default:
 			return false;
 	}
@@ -283,6 +299,11 @@ function App() {
 						});
 					break;
 				}
+
+				case "imageResolved":
+					// Settles the resolveImage request the canvas is waiting on.
+					imageResolver.handleImageResolved(message);
+					break;
 			}
 		};
 
@@ -354,6 +375,7 @@ function App() {
 					theme={vscodeCanvasThemes[colorScheme]}
 					ref={canvasRef}
 					onExportImage={handleExportImage}
+					resolveImage={imageResolver.resolveImage}
 				/>
 				{docView.error && <DocErrorBanner error={docView.error} />}
 			</div>

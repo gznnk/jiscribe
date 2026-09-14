@@ -1,4 +1,5 @@
 import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { ImageFeatures } from "@jiscribe/doc/model/objects/primitives/image/ImageDoc";
 import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { SvgFeatures } from "@jiscribe/doc/model/objects/primitives/svg/SvgDoc";
 import { TextFeatures } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
@@ -12,6 +13,7 @@ import { isConnectableObject } from "../isConnectableObject";
 const featuresByType = new Map<ObjectType, ObjectFeatures>([
 	["rect", RectFeatures],
 	["text", TextFeatures],
+	["image", ImageFeatures],
 	["svg", SvgFeatures],
 	["connector", ConnectorFeatures],
 ]);
@@ -23,7 +25,7 @@ const objectMapperRegistry = {
 const objectOf = (type: ObjectType): ObjectState => ({ id: "obj-1", type });
 
 describe("isConnectableObject", () => {
-	it.each(["rect", "text"] as const)("accepts %s", (type) => {
+	it.each(["rect", "text", "image"] as const)("accepts %s", (type) => {
 		expect(isConnectableObject(objectOf(type), objectMapperRegistry)).toBe(
 			true,
 		);

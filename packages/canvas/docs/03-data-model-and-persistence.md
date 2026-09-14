@@ -64,6 +64,28 @@ The saved format is `CanvasDoc` (`@jiscribe/doc`, `model/canvas/CanvasDoc.ts`).
 - Numeric fields (coordinates / sizes / rotation) … Rounded to `PRECISION` **where the State turns into a Doc**, not where a gesture or command computes them. The Doc's geometry is derived from the State's (`x = cx - width / 2`), so rounding upstream does not survive the derivation; fixing the precision at the one boundary also covers the paths that round nothing of their own (group transforms, plugin controls, `createDocOps`). The rounding functions live in `@jiscribe/doc`'s `model/objects/utils/roundDocNumbers.ts`.
 - For the full format specification, see `../../doc-schema/assets/jiscribe.schema.json`; `../../doc-schema/assets/ai-guide.md` is the prose introduction to it.
 
+### An `image` names a file; the canvas never reads one
+
+`image` stores `src`, a path relative to the directory the `.jis` lives in and
+inside it (`/` separators, no `..`, no absolute path, no URL). The bytes are not
+in the document, and `width` / `height` are required, so the layout of a document
+holds up wherever its files cannot be reached.
+
+Reading the file is the host's, through the `resolveImage` prop on `<Canvas>` /
+`<CanvasThumbnail>`: it is handed the `src` untouched and answers with a `Blob`,
+the way `onOpenReference` is handed a `meta.reference`. The canvas neither
+resolves nor validates the path — the one reading of it every host shares is
+`splitDocRelativePath` (`@jiscribe/doc`). Omit the prop, reject the promise, or
+have no `<Canvas>` around the tree at all, and the shape draws a placeholder
+rather than nothing; an image never silently disappears from the drawing.
+
+What arrives is kept per `src` (`useDocImages`) as a blob URL the live `<image>`
+draws from, plus the same bytes as a `data:` URI, which is what an export writes:
+`.jis.svg` and PNG both inline the bytes, since a blob URL names nothing outside
+the tab it was made in. An image whose file never arrived is dropped from the
+exported file — it is the placeholder's own drawing that a viewer of a diagram
+gets, never a dead reference.
+
 ### Text Model Asymmetry (a shape's `text` vs. a connector's `label`)
 
 The storage shape of the text-bearing fields is **intentionally asymmetric** between shapes and connectors.

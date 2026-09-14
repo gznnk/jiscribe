@@ -4,6 +4,7 @@ import type {
 	CanvasDoc,
 	CanvasHandle,
 	OpenReferencePayload,
+	ResolveImage,
 	StencilCategory,
 	ToolbarSection,
 } from "@jiscribe/canvas";
@@ -41,6 +42,8 @@ export type CanvasSurfaceProps = {
 	onCommit: (committedDoc: CanvasDoc) => void;
 	/** A request to open an object's meta.reference. Resolving it is the host's job */
 	onOpenReference: (payload: OpenReferencePayload) => void;
+	/** Reads the file an image object's `src` names. Undefined while no file is open */
+	resolveImage: ResolveImage | undefined;
 	/**
 	 * Hands the parent the Canvas handle that capture, camera, selection and
 	 * measurement need. It is valid only while mounted, and is released with null on
@@ -64,6 +67,7 @@ export function CanvasSurface({
 	isConnected,
 	onCommit,
 	onOpenReference,
+	resolveImage,
 	onRegisterCanvas,
 }: CanvasSurfaceProps) {
 	const canvasRef = useRef<CanvasHandle>(null);
@@ -110,6 +114,7 @@ export function CanvasSurface({
 				docLoadId={docLoadId}
 				onCommit={onCommit}
 				onOpenReference={onOpenReference}
+				resolveImage={resolveImage}
 				theme={lightCanvasTheme}
 				initialConfig={initialConfig}
 				stencilLibrary={{ sections: stencilLibrarySections }}

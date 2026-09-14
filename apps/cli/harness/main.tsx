@@ -12,6 +12,8 @@ import type {
 	JiscribeHarness,
 } from "./harnessBridge";
 import { HARNESS_GLOBAL } from "./harnessBridge";
+import { resolveHarnessImage } from "./resolveHarnessImage";
+import { waitForDocImages } from "./waitForDocImages";
 
 // Module scope, so re-rendering never hands Canvas a new config object. The set is
 // the one @jiscribe/doc-tools validates with, so a document the CLI accepts is a
@@ -44,6 +46,7 @@ const mountDoc = (doc: CanvasDoc): Promise<CanvasHandle> => {
 				doc={doc}
 				initialConfig={initialConfig}
 				theme={lightCanvasTheme}
+				resolveImage={resolveHarnessImage}
 				autoFocus={false}
 				ref={(handle: CanvasHandle | null) => {
 					if (handle) {
@@ -69,15 +72,21 @@ const nextFrame = (): Promise<void> =>
  * Fonts are fetched per unicode-range as text needs them, so nothing is pending
  * until something has been drawn — `document.fonts.ready` before the first paint
  * resolves immediately and means nothing. Hence frames first, then fonts, then
- * frames again for the relayout the arriving faces cause.
+ * frames again for the relayout the arriving faces cause. Images are the same
+ * shape of wait: the canvas asks for them once it has drawn the document, and
+ * the snapshot has to be taken after they have landed.
+ *
+ * @returns How many images were still loading when the wait for them gave up, for the caller to pass on
  */
-const settle = async (): Promise<void> => {
+const settle = async (): Promise<number> => {
 	await nextFrame();
 	await nextFrame();
 	await document.fonts.ready;
+	const unsettledImageCount = await waitForDocImages();
 	await nextFrame();
 	await document.fonts.ready;
 	await nextFrame();
+	return unsettledImageCount;
 };
 
 const blobToBase64 = async (blob: Blob): Promise<string> => {
@@ -102,7 +111,9 @@ const render = async (
 	await mountDoc(request.doc);
 	await settle();
 	const handle = await mountDoc(request.doc);
-	await settle();
+	// The second mount is the one photographed, so it is its images that are
+	// either in the snapshot or missing from it.
+	const unsettledImageCount = await settle();
 
 	const exportOptions = {
 		region: request.region,
@@ -116,7 +127,7 @@ const render = async (
 		if (svg === null) {
 			throw new Error("canvas produced no SVG");
 		}
-		return { format: "svg", svg };
+		return { format: "svg", svg, unsettledImageCount };
 	}
 
 	const capture = await handle.export.capturePng({
@@ -132,6 +143,7 @@ const render = async (
 		pixelWidth: capture.pixelWidth,
 		pixelHeight: capture.pixelHeight,
 		region: capture.region,
+		unsettledImageCount,
 	};
 };
 

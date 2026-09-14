@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.10.0+9f6750a7 -->
+<!-- jiscribe guide 0.10.0+351cb9ee -->
 
 # The Jiscribe file format
 
@@ -118,6 +118,7 @@ shape" here and below means every object type except `text` / `polyline` /
 | `container`             | `x`,`y`,`width`,`height`                                       |
 | `sticky`                | `x`,`y`,`width`,`height`                                       |
 | `svg`                   | `x`,`y`,`width`,`height` + `svgText`                           |
+| `image`                 | `x`,`y`,`width`,`height` + `src`                               |
 | `connector` (in `root`) | `source`,`target`,`points:[]`                                  |
 
 <!-- AUTOGEN:END object-geometry -->
@@ -277,6 +278,26 @@ escape hatch for complex visuals".
 	"width": 120,
 	"height": 120,
 	"svgText": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"45\" fill=\"#6d28d9\"/><path d=\"M50 22 L59 43 L82 43 L63 57 L70 78 L50 65 L30 78 L37 57 L18 43 L41 43 Z\" fill=\"#fff\"/></svg>"
+}
+```
+
+### `image` — a file beside the document
+
+`x`,`y` (top-left) + `width`,`height` define the box, and `src` names the file:
+a path relative to the directory the `.jis` is in, inside it, `/`-separated. The
+picture fills the box exactly, so match the file's aspect ratio. Unlike `svg`,
+`image` **is** connectable. What the file has to be and what happens when it is
+missing are in "`image` — a picture file beside the `.jis`".
+
+```json
+{
+	"id": "screenshot-1",
+	"type": "image",
+	"x": 160,
+	"y": 120,
+	"width": 320,
+	"height": 200,
+	"src": "images/dashboard.png"
 }
 ```
 

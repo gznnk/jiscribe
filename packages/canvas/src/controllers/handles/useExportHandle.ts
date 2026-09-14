@@ -1,8 +1,9 @@
 import type { Rect } from "@jiscribe/geometry";
-import { type RefObject, useCallback, useMemo } from "react";
+import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useCanvasStateMirror } from "./useCanvasStateMirror";
 import { canvasToSvgString, rasterizeSvgToPng } from "../../export";
+import type { ResolveImageHref } from "../../export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries";
 import { calcVisibleWorldRect } from "../utils/calcVisibleWorldRect";
@@ -80,25 +81,38 @@ export type CanvasPngCapture = {
  * @param withCullingSuspended - Runs the snapshot with viewport culling
  *   suspended, so the clone sees every object rather than the on-screen ones
  *   (see useViewportCulling)
+ * @param resolveImageHref - Reads the bytes an exported `<image>` carries;
+ *   mirrored in a ref, so it may be a new function on every render (it changes
+ *   identity as files arrive) without the handle losing its own
  */
 export const useExportHandle = (
 	canvasState: CanvasControllerState,
 	registries: CanvasRegistries,
 	svgRef: RefObject<SVGSVGElement | null>,
 	withCullingSuspended: <T>(snapshot: () => T) => T,
+	resolveImageHref: ResolveImageHref,
 ): CanvasExportHandle => {
 	const canvasStateRef = useCanvasStateMirror(canvasState);
+
+	// Read at export time, so a file arriving does not rebuild the handle a host
+	// may be holding on to.
+	const resolveImageHrefRef = useRef(resolveImageHref);
+	useEffect(() => {
+		resolveImageHrefRef.current = resolveImageHref;
+	});
 
 	// registries is fixed at mount (see the `initialConfig` prop doc), so this
 	// callback — and the handle built on it — is stable for the canvas lifetime.
 	const buildExportOptions = useCallback(
-		(options?: CanvasExportOptions) =>
-			resolveExportOptions(
+		(options?: CanvasExportOptions) => ({
+			...resolveExportOptions(
 				canvasStateRef.current,
 				registries.objectMapper,
 				registries.objectVisualBounds,
 				options,
 			),
+			resolveImageHref: (src: string) => resolveImageHrefRef.current(src),
+		}),
 		[canvasStateRef, registries],
 	);
 

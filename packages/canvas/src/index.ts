@@ -35,6 +35,10 @@ export type {
 	CanvasPngExportOptions,
 } from "./controllers/utils/resolveExportOptions";
 export type { CanvasExportImagePayload } from "./controllers/hooks/useExportDialog";
+// The image side of a host integration: `<Canvas resolveImage>` reads the bytes
+// of the file an `image` object names, and the rendering layer reads what came
+// of it through the lookup (a shape component cannot await).
+export type { ResolveImage } from "./controllers/hooks/useDocImages";
 export type { TextSlotMeasurement } from "./controllers/utils/measureTextSlot";
 export type { ObjectOverlap } from "./controllers/utils/findObjectOverlaps";
 export type { CanvasModalKind, DragKind } from "./controllers/CanvasTypes";
@@ -59,6 +63,7 @@ export type {
 	RasterizedPng,
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
+	ResolveImageHref,
 } from "./export";
 // Toolbar composition (issue #184). The sections are the single source of order
 // and category metadata: each item names, in display order, a pinned preset, a

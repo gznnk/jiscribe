@@ -99,6 +99,21 @@ export const requireGroup = (
 	return { ...location, children: object.children as ObjectDoc[] };
 };
 
+/** A group's children, or `[]` for an object holding none. */
+export const readChildren = (object: ObjectRecord): ObjectRecord[] =>
+	Array.isArray(object.children) ? (object.children as ObjectRecord[]) : [];
+
+/** Walk every object in the tree, groups included; a group is visited before its children. */
+export const visitObjects = (
+	siblings: readonly ObjectDoc[],
+	visit: (object: ObjectRecord) => void,
+): void => {
+	for (const object of siblings as readonly ObjectRecord[]) {
+		visit(object);
+		visitObjects(readChildren(object), visit);
+	}
+};
+
 /** Ids of `object` and of every descendant reachable through group children. */
 export const collectObjectIds = (object: ObjectDoc): string[] => {
 	const ids = [object.id];

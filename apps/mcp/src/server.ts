@@ -129,6 +129,7 @@ type DrawingGuide = keyof typeof DRAWING_GUIDE_SPECIFIERS;
 const SERVER_INSTRUCTIONS = [
 	"Jiscribe draws diagrams as .jis files. The file on disk is the single source of truth: no canvas state is kept in the tools, so anything not written to a file does not exist.",
 	"Every document tool takes an absolute `path` naming the file it acts on. There is no concept of a currently open document, and a tool that only reads does not write the file back.",
+	"An image shape is the one path that is not absolute: its `src` is read relative to the .jis file's own directory and cannot leave it, so the image file has to be somewhere under the diagram's own directory before you point at it.",
 	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The 16 tools for capture, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
 	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports schema, parser and text-overflow problems; run it before telling the user a diagram is finished.",
 	"`undo` steps back through edits you made and keeps its history per file, so it cannot take back what a person changed in the viewer.",

@@ -2,6 +2,8 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { memo, useMemo, useRef, useState } from "react";
 
 import { useDocFonts } from "./hooks/useDocFonts";
+import type { ResolveImage } from "./hooks/useDocImages";
+import { useDocImages } from "./hooks/useDocImages";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
@@ -9,6 +11,7 @@ import type { CanvasPlugin } from "../plugin/CanvasPlugin";
 import { CanvasView } from "../rendering/CanvasView";
 import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
+import { ResolvedImagesContext } from "../rendering/objects/ResolvedImagesContext";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
@@ -36,6 +39,12 @@ type CanvasThumbnailProps = {
 	 * plugin-supplied objects have no mapper and `canvasToState` throws.
 	 */
 	plugins?: readonly CanvasPlugin[];
+	/**
+	 * Reads the bytes of the file an `image` object names (see the Canvas
+	 * `resolveImage` prop). Omit it and every image draws as a placeholder, which
+	 * is what a thumbnail of a document whose files the host cannot reach shows.
+	 */
+	resolveImage?: ResolveImage;
 };
 
 /**
@@ -52,6 +61,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	padding = 24,
 	theme = darkCanvasTheme,
 	plugins,
+	resolveImage,
 }) => {
 	const svgRef = useRef<SVGSVGElement>(null);
 
@@ -82,6 +92,8 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[canvasDoc, registries, fontsNonce],
 	);
+
+	const lookupResolvedImage = useDocImages(objects, resolveImage);
 
 	const viewport = useMemo(
 		() =>
@@ -120,17 +132,19 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				objectSvgDefs={registries.objectSvgDefs}
 			>
 				<FontsLoadedNonceContext value={fontsNonce}>
-					<div style={themeCssVars}>
-						<CanvasView
-							objects={objects}
-							rootIds={rootIds}
-							viewport={viewport}
-							svgRef={svgRef}
-							isContentHidden={isContentHidden}
-							background={background}
-							surfaceColor={theme.tokens.canvasBg}
-						/>
-					</div>
+					<ResolvedImagesContext value={lookupResolvedImage}>
+						<div style={themeCssVars}>
+							<CanvasView
+								objects={objects}
+								rootIds={rootIds}
+								viewport={viewport}
+								svgRef={svgRef}
+								isContentHidden={isContentHidden}
+								background={background}
+								surfaceColor={theme.tokens.canvasBg}
+							/>
+						</div>
+					</ResolvedImagesContext>
 				</FontsLoadedNonceContext>
 			</RenderingRegistriesProvider>
 		</CanvasThemeContext>

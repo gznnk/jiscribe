@@ -7,7 +7,8 @@ import { validateDoc } from "@jiscribe/doc-tools";
 import { parseCommandArgs } from "./parseCommandArgs";
 import { renderDoc } from "./render/renderDoc";
 import { resolveRenderOptions } from "./render/renderOptions";
-import { formatDiagnosticLine } from "./reportLines";
+import { formatDiagnosticLine, formatWarningLine } from "./reportLines";
+import { IMAGE_SETTLE_DEADLINE_MS } from "../harness/harnessBridge";
 
 const USAGE =
 	"usage: jiscribe render <file> -o <out.png|out.svg> [--scale <n>] [--region content|viewbox] [--background <css color>] [--browser <channel|path>]\n";
@@ -81,7 +82,22 @@ export const runRenderCommand = async (
 	}
 
 	try {
-		const image = await renderDoc(validation.doc, options);
+		const image = await renderDoc(
+			validation.doc,
+			dirname(options.input),
+			options,
+			(reason) => {
+				process.stderr.write(`${formatWarningLine(options.input, reason)}\n`);
+			},
+		);
+		if (image.unsettledImageCount > 0) {
+			process.stderr.write(
+				`${formatWarningLine(
+					options.input,
+					`${image.unsettledImageCount} image(s) did not load within ${IMAGE_SETTLE_DEADLINE_MS / 1000} s and were drawn as placeholders`,
+				)}\n`,
+			);
+		}
 		mkdirSync(dirname(options.output), { recursive: true });
 		writeFileSync(options.output, image.body);
 		const size =

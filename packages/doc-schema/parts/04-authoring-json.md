@@ -214,6 +214,26 @@ escape hatch for complex visuals".
 }
 ```
 
+### `image` — a file beside the document
+
+`x`,`y` (top-left) + `width`,`height` define the box, and `src` names the file:
+a path relative to the directory the `.jis` is in, inside it, `/`-separated. The
+picture fills the box exactly, so match the file's aspect ratio. Unlike `svg`,
+`image` **is** connectable. What the file has to be and what happens when it is
+missing are in "`image` — a picture file beside the `.jis`".
+
+```json
+{
+	"id": "screenshot-1",
+	"type": "image",
+	"x": 160,
+	"y": 120,
+	"width": 320,
+	"height": 200,
+	"src": "images/dashboard.png"
+}
+```
+
 ## Worked examples
 
 ### Example A: horizontal flowchart (3 rects + arrows)

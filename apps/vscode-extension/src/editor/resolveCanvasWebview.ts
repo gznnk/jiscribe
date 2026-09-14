@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import { resolveDocImage } from "./resolveDocImage";
 import { saveExportedImage } from "./saveExportedImage";
 import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
 import { getCanvasWebviewHtml } from "./webviewHtml";
@@ -81,6 +82,11 @@ export function resolveCanvasWebview(
 
 	const documentKey = options.documentUri.toString();
 
+	const post: CanvasWebviewChannel["post"] = (message) => {
+		options.bridgeRegistry.notifySentToWebview(documentKey, message);
+		panel.webview.postMessage(message);
+	};
+
 	/**
 	 * The panel's inbound protocol, shared by the real Webview and the bridge, so
 	 * an injected message takes exactly the path a posted one does.
@@ -120,6 +126,16 @@ export function resolveCanvasWebview(
 					message.includesSource,
 				);
 				break;
+
+			case "resolveImage":
+				// Read the image an `image` shape names and post its bytes back.
+				void resolveDocImage(
+					post,
+					options.documentUri,
+					message.requestId,
+					message.src,
+				);
+				break;
 		}
 	}
 
@@ -138,10 +154,5 @@ export function resolveCanvasWebview(
 		options.onDispose?.();
 	});
 
-	return {
-		post: (message) => {
-			options.bridgeRegistry.notifySentToWebview(documentKey, message);
-			panel.webview.postMessage(message);
-		},
-	};
+	return { post };
 }

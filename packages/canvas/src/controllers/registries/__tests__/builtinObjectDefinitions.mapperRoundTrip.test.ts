@@ -19,7 +19,7 @@ import { BUILTIN_OBJECT_DEFINITIONS } from "../applyObjectDefinition";
 const definitions = Object.entries(BUILTIN_OBJECT_DEFINITIONS);
 
 /** Types created only programmatically, so there is no factory to build a starting Doc from. */
-const TYPES_WITHOUT_FACTORY = ["group", "connector", "svg"];
+const TYPES_WITHOUT_FACTORY = ["group", "connector", "svg", "image"];
 
 const withFactory = definitions.flatMap(([type, definition]) => {
 	const factory = definition.factory;

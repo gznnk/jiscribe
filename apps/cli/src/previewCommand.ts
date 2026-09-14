@@ -6,9 +6,10 @@ import { validateDoc } from "@jiscribe/doc-tools";
 
 import { parseCommandArgs } from "./parseCommandArgs";
 import { readPreviewAssets } from "./preview/previewAssets";
+import { collectPreviewImages } from "./preview/previewImages";
 import { resolvePreviewOptions } from "./preview/previewOptions";
 import { buildPreviewPage } from "./preview/previewPage";
-import { formatDiagnosticLine } from "./reportLines";
+import { formatDiagnosticLine, formatWarningLine } from "./reportLines";
 
 const USAGE = "usage: jiscribe preview <file> -o <out.html>\n";
 
@@ -69,9 +70,14 @@ export const runPreviewCommand = (argv: readonly string[]): number => {
 	}
 
 	try {
+		const images = collectPreviewImages(validation.doc, dirname(options.input));
+		for (const warning of images.warnings) {
+			process.stderr.write(`${formatWarningLine(options.input, warning)}\n`);
+		}
 		const page = buildPreviewPage({
 			...readPreviewAssets(),
 			doc: validation.doc,
+			images: images.dataUris,
 			title: basename(options.input),
 		});
 		mkdirSync(dirname(options.output), { recursive: true });

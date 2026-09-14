@@ -8,6 +8,13 @@ import type { CanvasDoc } from "@jiscribe/doc";
 export type PreviewPayload = {
 	/** The document to mount; already parsed and validated on the Node side. */
 	doc: CanvasDoc;
+	/**
+	 * Every image the document names, as a `data:` URL keyed by its `src`. Read
+	 * off disk when the page was written, for the same reason the document is:
+	 * the file has nothing beside it to fetch from. A `src` the command could not
+	 * read is absent, and the canvas draws that shape as unresolved.
+	 */
+	images: Readonly<Record<string, string>>;
 };
 
 /** Name the payload is published under on `window`; shared so the two sides cannot drift. */

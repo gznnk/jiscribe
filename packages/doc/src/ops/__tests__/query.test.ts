@@ -12,7 +12,7 @@ import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
-import type { ObjectFilter } from "../query";
+import { collectDocImageSources, type ObjectFilter } from "../query";
 
 const slotOps = createDocOps({
 	plugins: [{ id: "slot-plugin", objects: { "slot-card": cardDefinition } }],
@@ -226,5 +226,45 @@ describe("findObjects", () => {
 		expect(() => docOps.findObjects(doc, { inGroup: "rect-1" })).toThrow(
 			DocOperationError,
 		);
+	});
+});
+
+describe("collectDocImageSources", () => {
+	const docWithRoot = (root: unknown[]): CanvasDoc =>
+		({ version: 1, root }) as unknown as CanvasDoc;
+
+	const imageAt = (id: string, src: string) => ({
+		id,
+		type: "image",
+		x: 0,
+		y: 0,
+		width: 10,
+		height: 10,
+		src,
+	});
+
+	it("lists each src once, in drawing order, descending into groups", () => {
+		const doc = docWithRoot([
+			imageAt("a", "a.png"),
+			{ id: "r", type: "rect", x: 0, y: 0, width: 10, height: 10 },
+			{
+				id: "g",
+				type: "group",
+				children: [imageAt("b", "b.png"), imageAt("a2", "a.png")],
+			},
+		]);
+
+		expect(collectDocImageSources(doc)).toEqual(["a.png", "b.png"]);
+	});
+
+	it("returns an empty list for a document that draws no image", () => {
+		expect(collectDocImageSources(docWithRoot([]))).toEqual([]);
+		expect(
+			collectDocImageSources(
+				docWithRoot([
+					{ id: "r", type: "rect", x: 0, y: 0, width: 1, height: 1 },
+				]),
+			),
+		).toEqual([]);
 	});
 });

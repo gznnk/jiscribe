@@ -61,6 +61,26 @@ CanvasMapper は形状タイプごとの Mapper を、引数で受け取る `Obj
 - 数値フィールド（座標・サイズ・回転）… 丸めは **State → Doc へ変換する地点**で `PRECISION` に揃える。ジェスチャーやコマンドの計算地点では丸めない。Doc の幾何は State から導出されるため（`x = cx - width / 2`）、手前で丸めても導出でずれる。境界 1 か所で決めることで、自前では丸めない経路（グループ変換・プラグインの制御点・`createDocOps`）も同じ精度に乗る。丸め関数は `@jiscribe/doc` の `model/objects/utils/roundDocNumbers.ts` にまとまっている
 - 形式仕様の全文は `../../doc-schema/assets/jiscribe.schema.json` を参照（散文の導入は `../../doc-schema/assets/ai-guide.md`）
 
+### `image` はファイルを指すだけで、キャンバスは読まない
+
+`image` が持つのは `src` ——`.jis` があるディレクトリからの相対パスで、その中に
+収まるもの（区切りは `/`、`..` 不可、絶対パス・URL 不可）。画像本体は文書に入らず、
+`width` / `height` は必須なので、ファイルに手が届かない環境でも文書のレイアウトは
+成り立つ。
+
+ファイルを読むのはホストの仕事で、`<Canvas>` / `<CanvasThumbnail>` の
+`resolveImage` prop がその口。`meta.reference` を `onOpenReference` へ渡すのと
+同じく、`src` を無加工で渡して `Blob` を受け取る。キャンバスはパスを解決も検証も
+しない——ホストが共有する唯一の読み方は `splitDocRelativePath`（`@jiscribe/doc`）。
+prop を省いても、promise が reject しても、そもそも `<Canvas>` の外で描かれても、
+図形はプレースホルダを描く。画像が黙って絵から消えることはない。
+
+届いたものは `src` ごとに保持する（`useDocImages`）。画面の `<image>` が描く blob
+URL と、同じバイト列の `data:` URI の 2 つで、後者が書き出しに使われる。blob URL は
+作られたタブの外では何も指さないので、`.jis.svg` と PNG はどちらもバイト列を埋め込む。
+ファイルが届かなかった画像は書き出しから外す——図を見る人が受け取るのは
+プレースホルダの絵そのものであって、切れた参照ではない。
+
 ### テキストモデルの非対称（図形の `text` とコネクターの `label`）
 
 文字を持つフィールドの格納形が、図形とコネクターで **意図的に非対称** になっている。

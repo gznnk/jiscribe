@@ -71,6 +71,7 @@ export const CANONICAL_TYPE_ORDER = [
 	"container",
 	"sticky",
 	"svg",
+	"image",
 	"connector",
 ] as const;
 
@@ -89,6 +90,7 @@ export const TEMPLATE_DEF_TYPES: ReadonlySet<string> = new Set([
 	"polygon",
 	"group",
 	"svg",
+	"image",
 	"connector",
 ]);
 

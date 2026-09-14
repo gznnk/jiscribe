@@ -49,7 +49,14 @@ describe("applyObjectDefinition: transformHandles", () => {
 
 		expect(registries.objectTransformHandles.get("plain")).toBeUndefined();
 		// Every built-in stays on the default (all handles) too.
-		for (const type of ["rect", "ellipse", "polygon", "polyline", "svg"]) {
+		for (const type of [
+			"rect",
+			"ellipse",
+			"polygon",
+			"polyline",
+			"svg",
+			"image",
+		]) {
 			expect(registries.objectTransformHandles.get(type)).toBeUndefined();
 		}
 	});

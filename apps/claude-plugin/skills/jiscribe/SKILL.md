@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.10.0+9f6750a7 -->
+<!-- jiscribe guide 0.10.0+351cb9ee -->
 
 # Drawing on a Jiscribe canvas
 
@@ -138,6 +138,25 @@ nodes, and arrows; they stay editable, themeable, and connectable.
   `grad`). All markup shares one DOM, so duplicate ids make `url(#id)` references
   resolve to the wrong (first) definition.
 
+### `image` — a picture file beside the `.jis`
+
+Use `image` for a picture that already exists as a file: a photograph, a
+screenshot, an exported figure. Reach for `svg` instead when you have the markup
+itself, and for the built-in shapes for anything you could draw.
+
+- The file may be an ordinary raster image or an SVG file; every host refuses any
+  other extension.
+- `src` is a path **relative to the directory the `.jis` is in**, and stays
+  inside it (`/` separators; `..`, absolute paths and URLs are all rejected).
+- The file is **not embedded**: whoever opens the document resolves it while
+  drawing, so the image has to travel with the `.jis`. One that cannot be
+  resolved is drawn as a placeholder box, which is visible but not the picture.
+- It is an **opaque box** like `svg`: `width` and `height` say where and how big
+  it is drawn, and the picture is stretched to fill that box exactly — give the
+  file's own aspect ratio unless you mean to distort it.
+- Unlike `svg` it **is** a connector target, an image being a node of the diagram
+  rather than decoration. It has no text / stroke / fill of its own.
+
 ## Three things the canvas genuinely does not have
 
 Take the substitute and say so plainly, rather than building an imitation out of
@@ -165,63 +184,64 @@ rather than a `rect` with a label on it.
 
 <!-- AUTOGEN:BEGIN object-quick-reference -->
 
-| `type`                  | Use                                                        |
-| ----------------------- | ---------------------------------------------------------- |
-| `rect`                  | general-purpose node / label box                           |
-| `markdown`              | Markdown-rendered document card                            |
-| `ellipse`               | ellipse / oval node (center-based geometry)                |
-| `text`                  | bare text label / annotation                               |
-| `diamond`               | decision / branch node                                     |
-| `stadium`               | start / end terminator                                     |
-| `parallelogram`         | input / output                                             |
-| `hexagon`               | preparation                                                |
-| `cloud`                 | external system, fuzzy concept                             |
-| `document`              | report, file                                               |
-| `multiDocument`         | report batch / file set                                    |
-| `actor`                 | user, role, stakeholder                                    |
-| `browserWindow`         | web UI node (a symbol, not a frame to lay a screen out in) |
-| `terminalWindow`        | CLI, shell session                                         |
-| `smartphone`            | mobile client                                              |
-| `laptop`                | desktop client, web client                                 |
-| `server`                | host, node, running process                                |
-| `gear`                  | service, batch job, daemon                                 |
-| `package`               | library, artifact, deployment unit                         |
-| `folder`                | directory, grouping                                        |
-| `file`                  | source file, configuration                                 |
-| `envelope`              | message, event                                             |
-| `queue`                 | job queue, message queue                                   |
-| `lock`                  | authentication, protected resource                         |
-| `shield`                | security boundary, trust zone                              |
-| `lucideIcon`            | decorative Lucide icon (no text, not connectable)          |
-| `callout`               | annotation bubble                                          |
-| `note`                  | comment box, UML note                                      |
-| `brace`                 | group marker, grouping annotation                          |
-| `bracketWithStem`       | group marker with a pointer, grouping annotation           |
-| `bracket`               | group marker, grouping annotation                          |
-| `db`                    | data store                                                 |
-| `storedData`            | generic stored data (file / cache)                         |
-| `subroutine`            | predefined process / call                                  |
-| `trapezoid`             | manual operation                                           |
-| `manualInput`           | manual / keyed input                                       |
-| `card`                  | punched-card style data                                    |
-| `delay`                 | wait / delay                                               |
-| `loopLimit`             | loop start (`"flipY": true` for the end)                   |
-| `display`               | output to a display                                        |
-| `extract`               | extract / merge marker                                     |
-| `cross`                 | junction / emphasis marker                                 |
-| `offPageConnector`      | off-page connector (jump to another page)                  |
-| `record`                | titled box + row compartments (UML class / ER entity)      |
-| `umlPackage`            | namespace, module, layer                                   |
-| `umlComponent`          | component, replaceable part                                |
-| `awsIcon`               | AWS service / resource icon (a labelled, connectable node) |
-| `awsGroup`              | AWS boundary frame (VPC, subnet, region, account)          |
-| `polyline`              | open line                                                  |
-| `polygon`               | closed shape from points                                   |
-| `group`                 | container of child objects                                 |
-| `container`             | titled region (module, subsystem, boundary)                |
-| `sticky`                | sticky note (no stroke or `rx`)                            |
-| `svg`                   | raw SVG escape hatch (opaque box)                          |
-| `connector` (in `root`) | edge / arrow between objects                               |
+| `type`                  | Use                                                                |
+| ----------------------- | ------------------------------------------------------------------ |
+| `rect`                  | general-purpose node / label box                                   |
+| `markdown`              | Markdown-rendered document card                                    |
+| `ellipse`               | ellipse / oval node (center-based geometry)                        |
+| `text`                  | bare text label / annotation                                       |
+| `diamond`               | decision / branch node                                             |
+| `stadium`               | start / end terminator                                             |
+| `parallelogram`         | input / output                                                     |
+| `hexagon`               | preparation                                                        |
+| `cloud`                 | external system, fuzzy concept                                     |
+| `document`              | report, file                                                       |
+| `multiDocument`         | report batch / file set                                            |
+| `actor`                 | user, role, stakeholder                                            |
+| `browserWindow`         | web UI node (a symbol, not a frame to lay a screen out in)         |
+| `terminalWindow`        | CLI, shell session                                                 |
+| `smartphone`            | mobile client                                                      |
+| `laptop`                | desktop client, web client                                         |
+| `server`                | host, node, running process                                        |
+| `gear`                  | service, batch job, daemon                                         |
+| `package`               | library, artifact, deployment unit                                 |
+| `folder`                | directory, grouping                                                |
+| `file`                  | source file, configuration                                         |
+| `envelope`              | message, event                                                     |
+| `queue`                 | job queue, message queue                                           |
+| `lock`                  | authentication, protected resource                                 |
+| `shield`                | security boundary, trust zone                                      |
+| `lucideIcon`            | decorative Lucide icon (no text, not connectable)                  |
+| `callout`               | annotation bubble                                                  |
+| `note`                  | comment box, UML note                                              |
+| `brace`                 | group marker, grouping annotation                                  |
+| `bracketWithStem`       | group marker with a pointer, grouping annotation                   |
+| `bracket`               | group marker, grouping annotation                                  |
+| `db`                    | data store                                                         |
+| `storedData`            | generic stored data (file / cache)                                 |
+| `subroutine`            | predefined process / call                                          |
+| `trapezoid`             | manual operation                                                   |
+| `manualInput`           | manual / keyed input                                               |
+| `card`                  | punched-card style data                                            |
+| `delay`                 | wait / delay                                                       |
+| `loopLimit`             | loop start (`"flipY": true` for the end)                           |
+| `display`               | output to a display                                                |
+| `extract`               | extract / merge marker                                             |
+| `cross`                 | junction / emphasis marker                                         |
+| `offPageConnector`      | off-page connector (jump to another page)                          |
+| `record`                | titled box + row compartments (UML class / ER entity)              |
+| `umlPackage`            | namespace, module, layer                                           |
+| `umlComponent`          | component, replaceable part                                        |
+| `awsIcon`               | AWS service / resource icon (a labelled, connectable node)         |
+| `awsGroup`              | AWS boundary frame (VPC, subnet, region, account)                  |
+| `polyline`              | open line                                                          |
+| `polygon`               | closed shape from points                                           |
+| `group`                 | container of child objects                                         |
+| `container`             | titled region (module, subsystem, boundary)                        |
+| `sticky`                | sticky note (no stroke or `rx`)                                    |
+| `svg`                   | raw SVG escape hatch (opaque box)                                  |
+| `image`                 | picture file (raster or SVG) under the .jis directory (opaque box) |
+| `connector` (in `root`) | edge / arrow between objects                                       |
 
 <!-- AUTOGEN:END object-quick-reference -->
 

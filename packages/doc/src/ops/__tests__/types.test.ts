@@ -28,6 +28,7 @@ describe("listTypes", () => {
 			"polyline",
 			"connector",
 			"svg",
+			"image",
 		]);
 	});
 
@@ -65,7 +66,7 @@ describe("listTypes", () => {
 				.listTypes()
 				.filter(({ creatable }) => !creatable)
 				.map(({ type }) => type),
-		).toEqual(["group", "connector", "svg"]);
+		).toEqual(["group", "connector", "svg", "image"]);
 	});
 
 	it("calls a group's geometry none, since it is measured from its children", () => {

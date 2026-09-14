@@ -32,6 +32,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { canvasParser } from "./canvasPlugins";
 import { CanvasSurface } from "./CanvasSurface";
 import { saveFile } from "./files";
+import { createDocImageResolver } from "./resolveDocImage";
 import type {
 	CanvasHostClientMessage,
 	CanvasHostServerMessage,
@@ -129,6 +130,11 @@ const isCanvasHostServerMessage = (
 export function App() {
 	const [doc, setDoc] = useState<CanvasDoc>(emptyDoc);
 	const [openPath, setOpenPath] = useState<string | null>(null);
+	// One resolver per open file: a src is relative to that file's directory
+	const resolveImage = useMemo(
+		() => (openPath === null ? undefined : createDocImageResolver(openPath)),
+		[openPath],
+	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
 
@@ -404,6 +410,7 @@ export function App() {
 				isConnected={isConnected}
 				onCommit={handleCommit}
 				onOpenReference={handleOpenReference}
+				resolveImage={resolveImage}
 				onRegisterCanvas={registerCanvas}
 			/>
 		</div>
