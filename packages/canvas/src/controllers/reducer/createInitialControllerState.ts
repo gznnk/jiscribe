@@ -5,11 +5,13 @@ import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type {
 	Camera,
 	CanvasControllerState,
+	CanvasInitialSidebars,
 	ScrollBoundsConfig,
 } from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resetUiState } from "../utils/resetUiState";
 import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
+import { seedSidebarPanels } from "../utils/sidebarsState";
 
 /**
  * Viewport a canvas starts at, before anything has been measured or the host's
@@ -43,13 +45,18 @@ export const INITIAL_VIEWPORT: Viewport = {
  * The seeded camera is left as given even when the wall limits scrolling: only a
  * view scroll of the user's own is limited, so wherever the host starts the view
  * is where it starts.
+ *
+ * `initialSidebars` seeds the two sidebars the same way (see
+ * `seedSidebarPanels`); omitted, both start closed with every section expanded.
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
 	registries: CanvasRegistries,
 	initialCamera?: Camera,
 	scrollBoundsConfig?: ScrollBoundsConfig,
+	initialSidebars?: CanvasInitialSidebars,
 ): CanvasControllerState => {
+	const seededSidebarPanels = seedSidebarPanels(initialSidebars);
 	const baseState = canvasToState(
 		initialDoc,
 		registries.objectMapper,
@@ -78,8 +85,8 @@ export const createInitialControllerState = (
 		...resetUiState(),
 		// Outside resetUiState: the two sidebars are persistent, so a doc swap must
 		// not close them (see CanvasControllerState).
-		stencilLibraryPanel: { isOpen: false, collapsedSectionIds: [] },
-		propertyPanel: { isOpen: false, collapsedSectionIds: [] },
+		stencilLibraryPanel: seededSidebarPanels.stencilLibraryPanel,
+		propertyPanel: seededSidebarPanels.propertyPanel,
 		activeModal: null,
 		commitVersion: 0,
 		saveRequest: { version: 0, nonce: "" },

@@ -348,6 +348,53 @@ export type PropertyPanelState = {
 	collapsedSectionIds: string[];
 };
 
+/** Ids of the panels a sidebar can show. */
+export type SidebarPanelId = "stencilLibrary" | "properties";
+
+/**
+ * One edge of the canvas. Today each shows a single panel: `"stencilLibrary"`
+ * on the left, `"properties"` on the right.
+ */
+export type SidebarSideState = {
+	/** Whether that edge is showing its panel. Defaults to false. */
+	isOpen: boolean;
+};
+
+/** State a panel keeps across being shown and hidden. */
+export type SidebarPanelState = {
+	/**
+	 * Ids of the collapsed sections; every section not listed is expanded, so the
+	 * empty array (the default) is "all open".
+	 */
+	collapsedSectionIds: string[];
+};
+
+/**
+ * Both sidebars, as the canvas reports them and a host persists them (see
+ * `CanvasConfig.sidebars`).
+ */
+export type CanvasSidebarsState = {
+	/** The left edge, which shows the `"stencilLibrary"` panel. */
+	left: SidebarSideState;
+	/** The right edge, which shows the `"properties"` panel. */
+	right: SidebarSideState;
+	/** Every panel's own state, held whether or not its edge is open. */
+	panels: Record<SidebarPanelId, SidebarPanelState>;
+};
+
+/**
+ * What a host restores through `CanvasConfig.sidebars`: every key optional, a
+ * missing one takes the default.
+ */
+export type CanvasInitialSidebars = {
+	/** The left edge; omitted, it starts closed. */
+	left?: SidebarSideState;
+	/** The right edge; omitted, it starts closed. */
+	right?: SidebarSideState;
+	/** Panel state by id; a panel left out starts with every section expanded. */
+	panels?: Partial<Record<SidebarPanelId, SidebarPanelState>>;
+};
+
 /**
  * Canvas state extended with undo/redo history for the controller layer.
  *

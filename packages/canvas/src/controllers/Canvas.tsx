@@ -21,7 +21,7 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
-import type { Camera } from "./CanvasTypes";
+import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
@@ -45,6 +45,7 @@ import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
+import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
@@ -150,6 +151,14 @@ type CanvasProps = {
 	 * moves go through `ref.current.viewport`.
 	 */
 	onViewportChange?: (viewport: Camera) => void;
+	/**
+	 * Called when either sidebar opens, closes, or has a section collapsed, with
+	 * both edges and every panel's state each time. Read-only on the same terms
+	 * as `onViewportChange`: persist it and hand it back through
+	 * `initialConfig.sidebars` at the next mount, but do not drive the panels
+	 * from it — they are the user's, and there is no controlled prop.
+	 */
+	onSidebarsChange?: (sidebars: CanvasSidebarsState) => void;
 
 	// ── Delegated to the host ──
 	/**
@@ -286,13 +295,15 @@ type CanvasProps = {
 	/**
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
 	 * capability set (object types, commands, plugins) plus the initial camera
-	 * (`viewport`) and how far it may be scrolled (`scrollBounds`). Omit for the
-	 * full default set. Later changes are ignored; to reconfigure, remount with a
-	 * new React `key`.
+	 * (`viewport`), how far it may be scrolled (`scrollBounds`), and how the two
+	 * sidebars start out (`sidebars`, the counterpart of `onSidebarsChange`).
+	 * Omit for the full default set. Later changes are ignored; to reconfigure,
+	 * remount with a new React `key`.
 	 *
 	 * `viewport` and `scrollBounds` outrank the document's own `view.open` /
 	 * `view.scroll`, so pass them only when the host genuinely knows better (a
-	 * restored session, a deep link) and leave them out otherwise.
+	 * restored session, a deep link) and leave them out otherwise. `sidebars`
+	 * competes with nothing: no document declares the editor chrome.
 	 *
 	 * When `objectTypes` is restricted, only pass docs whose object types remain
 	 * enabled — otherwise state construction throws "Mapper not found"
@@ -315,6 +326,7 @@ const CanvasComponent = ({
 	onCommit,
 	onSelectionChange,
 	onViewportChange,
+	onSidebarsChange,
 	onUndo,
 	onRedo,
 	onExportImage,
@@ -362,6 +374,7 @@ const CanvasComponent = ({
 		registries,
 		initialConfig?.viewport,
 		initialConfig?.scrollBounds,
+		initialConfig?.sidebars,
 	);
 
 	// Boxes derived from their content are re-measured through the reducer, the
@@ -415,6 +428,12 @@ const CanvasComponent = ({
 	);
 
 	useNotifyViewportChange(state.viewport, onViewportChange);
+
+	useNotifySidebarsChange(
+		state.stencilLibraryPanel,
+		state.propertyPanel,
+		onSidebarsChange,
+	);
 
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
 

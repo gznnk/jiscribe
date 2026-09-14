@@ -80,4 +80,81 @@ describe("createInitialControllerState", () => {
 		expect(state.viewport.width).toBe(base.viewport.width);
 		expect(state.viewport.height).toBe(base.viewport.height);
 	});
+
+	it("starts both sidebars closed and fully expanded when no initialSidebars is given", () => {
+		const state = createInitialControllerState(docWithRect, registries);
+
+		expect(state.stencilLibraryPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: [],
+		});
+		expect(state.propertyPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: [],
+		});
+	});
+
+	it("seeds both sidebars from initialSidebars", () => {
+		const state = createInitialControllerState(
+			docWithRect,
+			registries,
+			undefined,
+			undefined,
+			{
+				left: { isOpen: true },
+				right: { isOpen: false },
+				panels: {
+					stencilLibrary: { collapsedSectionIds: ["basic"] },
+					properties: { collapsedSectionIds: ["text"] },
+				},
+			},
+		);
+
+		expect(state.stencilLibraryPanel).toEqual({
+			isOpen: true,
+			collapsedSectionIds: ["basic"],
+		});
+		expect(state.propertyPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: ["text"],
+		});
+	});
+
+	it("leaves the properties panel at its default when only stencilLibrary is given", () => {
+		const state = createInitialControllerState(
+			docWithRect,
+			registries,
+			undefined,
+			undefined,
+			{ panels: { stencilLibrary: { collapsedSectionIds: ["basic"] } } },
+		);
+
+		expect(state.stencilLibraryPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: ["basic"],
+		});
+		expect(state.propertyPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: [],
+		});
+	});
+
+	it("leaves the right edge closed when only left is given", () => {
+		const state = createInitialControllerState(
+			docWithRect,
+			registries,
+			undefined,
+			undefined,
+			{ left: { isOpen: true } },
+		);
+
+		expect(state.stencilLibraryPanel).toEqual({
+			isOpen: true,
+			collapsedSectionIds: [],
+		});
+		expect(state.propertyPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: [],
+		});
+	});
 });

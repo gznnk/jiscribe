@@ -4,6 +4,7 @@ import { type Dispatch, useMemo, useReducer } from "react";
 import type {
 	Camera,
 	CanvasControllerState,
+	CanvasInitialSidebars,
 	ScrollBoundsConfig,
 } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
@@ -25,12 +26,17 @@ import type { CanvasRegistries } from "../registries/CanvasRegistries";
  *   it to whatever document is loaded (`view.scroll`). Only read at mount time —
  *   it goes into the initial state, which is what `limitViewScroll` reads it
  *   from; the document half is re-read there per scroll.
+ * @param initialSidebars - How the two sidebars start out, with any key left out
+ *   taking its default (closed, every section expanded). Only read at mount
+ *   time — the panels belong to the user from then on, and their changes come
+ *   back out through `onSidebarsChange`.
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,
 	registries: CanvasRegistries,
 	initialCamera?: Camera,
 	scrollBoundsConfig?: ScrollBoundsConfig,
+	initialSidebars?: CanvasInitialSidebars,
 ): [CanvasControllerState, Dispatch<CanvasAction>] => {
 	const reducer = useMemo(() => createCanvasReducer(registries), [registries]);
 	return useReducer(reducer, undefined, () =>
@@ -39,6 +45,7 @@ export const useCanvasReducer = (
 			registries,
 			initialCamera,
 			scrollBoundsConfig,
+			initialSidebars,
 		),
 	);
 };

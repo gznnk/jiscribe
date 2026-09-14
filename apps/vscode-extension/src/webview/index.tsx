@@ -5,6 +5,7 @@ import {
 	type CanvasDoc,
 	type CanvasExportImagePayload,
 	type CanvasHandle,
+	type CanvasSidebarsState,
 	type StencilCategory,
 	type ToolbarSection,
 } from "@jiscribe/canvas";
@@ -67,12 +68,13 @@ const imageResolver = createWebviewImageResolver((message) => {
 /**
  * Webview-local state saved via getState/setState. With
  * retainContextWhenHidden: false (#138), the Webview is discarded when the tab
- * hides, but this survives the reload — so we save the viewport (camera) and
- * restore it on remount. The document isn't included, as the Extension re-sends
- * it via "ready".
+ * hides, but this survives the reload — so we save the viewport (camera) and the
+ * sidebar open/collapsed state, and restore both on remount. The document isn't
+ * included, as the Extension re-sends it via "ready".
  */
 type PersistedState = {
 	camera?: Camera;
+	sidebars?: CanvasSidebarsState;
 };
 
 const readPersistedCamera = (): Camera | undefined => {
@@ -83,6 +85,16 @@ const readPersistedCamera = (): Camera | undefined => {
 const persistCamera = (camera: Camera): void => {
 	const state = (vscode.getState() as PersistedState | null) ?? {};
 	vscode.setState({ ...state, camera });
+};
+
+const readPersistedSidebars = (): CanvasSidebarsState | undefined => {
+	const state = vscode.getState() as PersistedState | null;
+	return state?.sidebars ?? undefined;
+};
+
+const persistSidebars = (sidebars: CanvasSidebarsState): void => {
+	const state = (vscode.getState() as PersistedState | null) ?? {};
+	vscode.setState({ ...state, sidebars });
 };
 
 /**
@@ -153,15 +165,17 @@ function App() {
 	// saving .jis.svg / .jis.png).
 	const canvasRef = useRef<CanvasHandle>(null);
 
-	// Mount-time canvas configuration, built once: `viewport` seeds the camera from
-	// persisted state (undefined on first open → Canvas uses its doc-derived
-	// default). The canvas owns the live camera after mount; we only persist what
-	// it reports, never drive it back — so a tab-hide reload restores the last
-	// view with no feedback into the canvas. Held in state rather than rebuilt per
-	// render so the mounted canvas sees a stable prop.
+	// Mount-time canvas configuration, built once: `viewport` and `sidebars` seed
+	// the camera and the sidebar open/collapsed state from persisted state
+	// (undefined on first open → Canvas uses its own defaults). The canvas owns
+	// both after mount; we only persist what it reports, never drive it back — so
+	// a tab-hide reload restores the last view with no feedback into the canvas.
+	// Held in state rather than rebuilt per render so the mounted canvas sees a
+	// stable prop.
 	const [mountConfig] = useState<CanvasConfig>(() => ({
 		...initialConfig,
 		viewport: readPersistedCamera(),
+		sidebars: readPersistedSidebars(),
 	}));
 
 	// Persist pan/zoom so the view survives a tab-hide reload (#138,
@@ -169,6 +183,12 @@ function App() {
 	// feeding back into the canvas; it stays authoritative for the live camera.
 	const handleViewportChange = useCallback((next: Camera) => {
 		persistCamera(next);
+	}, []);
+
+	// Same read-only mirror for the sidebars: the canvas reports every change and
+	// we only write it back into the persisted state.
+	const handleSidebarsChange = useCallback((next: CanvasSidebarsState) => {
+		persistSidebars(next);
 	}, []);
 
 	// The Canvas save scheduler throttles high-frequency commits (key repeat,
@@ -361,6 +381,7 @@ function App() {
 					toolbar={{ sections: toolbarSections }}
 					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
+					onSidebarsChange={handleSidebarsChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}
 					onRedo={handleRedo}
