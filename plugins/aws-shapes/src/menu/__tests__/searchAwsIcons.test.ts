@@ -7,6 +7,12 @@ import { AWS_ICON_CATEGORIES, searchAwsIcons } from "../searchAwsIcons";
 /** The cap the picker lays out at once; kept here because the module does not export it */
 const MAX_RESULTS = 105;
 
+/** Every icon name in the category, whatever layer it sits on. */
+const namesInCategory = (category: string): string[] =>
+	Object.entries(AWS_ICON_ENTRIES)
+		.filter(([, entry]) => entry.category === category)
+		.map(([name]) => name);
+
 describe("searchAwsIcons with an empty term", () => {
 	it("shows tier 1 in the palette's order rather than the whole set", () => {
 		const { names, total } = searchAwsIcons({ query: "" });
@@ -15,14 +21,79 @@ describe("searchAwsIcons with an empty term", () => {
 		expect(total).toBe(AWS_TIER1_ICON_NAMES.length);
 	});
 
-	it("narrows tier 1 by category without reaching outside it", () => {
-		const { names } = searchAwsIcons({ query: "", category: "Compute" });
+	// A pressed chip is a choice of its own: answering it out of the palette
+	// would hand back less than the category holds, and nothing at all for the
+	// 13 categories and the whole `group/` layer the palette does not carry
+	it("reaches past the palette for a category once the chip is pressed", () => {
+		const { names, total } = searchAwsIcons({ query: "", category: "Compute" });
 
-		expect(names.length).toBeGreaterThan(0);
-		expect(names.length).toBeLessThan(AWS_TIER1_ICON_NAMES.length);
+		expect(total).toBe(namesInCategory("Compute").length);
+		expect(names.length).toBeGreaterThan(
+			AWS_TIER1_ICON_NAMES.filter(
+				(name) => AWS_ICON_ENTRIES[name]?.category === "Compute",
+			).length,
+		);
 		for (const name of names) {
 			expect(AWS_ICON_ENTRIES[name]?.category).toBe("Compute");
-			expect(AWS_TIER1_ICON_NAMES).toContain(name);
+		}
+	});
+
+	it("answers the group layer, which the palette holds none of", () => {
+		const { names, total } = searchAwsIcons({ query: "", tier: "group" });
+
+		expect(names.length).toBeGreaterThan(0);
+		expect(total).toBe(
+			Object.values(AWS_ICON_ENTRIES).filter((entry) => entry.tier === "group")
+				.length,
+		);
+		expect(names.every((name) => name.startsWith("group/"))).toBe(true);
+		expect(AWS_TIER1_ICON_NAMES.some((name) => name.startsWith("group/"))).toBe(
+			false,
+		);
+	});
+
+	it("leaves no category chip with an empty grid", () => {
+		for (const category of AWS_ICON_CATEGORIES) {
+			expect(searchAwsIcons({ query: "", category }).names.length).toBe(
+				Math.min(namesInCategory(category).length, MAX_RESULTS),
+			);
+		}
+	});
+
+	// The palette is still the shortlist worth seeing first, and with a layer
+	// running past MAX_RESULTS it is the part that survives the truncation
+	it("puts the palette's own icons ahead of the rest it reached for", () => {
+		const { names } = searchAwsIcons({ query: "", tier: "service" });
+
+		const fromPalette = AWS_TIER1_ICON_NAMES.filter(
+			(name) => AWS_ICON_ENTRIES[name]?.tier === "service",
+		);
+		expect(names.slice(0, fromPalette.length)).toEqual(fromPalette);
+	});
+
+	it("truncates a facet that runs long while counting all of it", () => {
+		const { names, total } = searchAwsIcons({ query: "", tier: "service" });
+
+		expect(names).toHaveLength(MAX_RESULTS);
+		expect(total).toBe(
+			Object.values(AWS_ICON_ENTRIES).filter(
+				(entry) => entry.tier === "service",
+			).length,
+		);
+	});
+
+	it("ANDs the facets rather than widening on either", () => {
+		const { names } = searchAwsIcons({
+			query: "",
+			tier: "resource",
+			category: "Compute",
+		});
+
+		expect(names.length).toBeGreaterThan(0);
+		for (const name of names) {
+			const entry = AWS_ICON_ENTRIES[name];
+			expect(entry?.tier).toBe("resource");
+			expect(entry?.category).toBe("Compute");
 		}
 	});
 

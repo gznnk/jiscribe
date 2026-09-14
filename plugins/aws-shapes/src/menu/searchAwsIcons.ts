@@ -6,7 +6,7 @@ import { AWS_TIER1_ICON_NAMES } from "../schema/icon/tier1Icons";
 
 /** What the picker filters by. undefined leaves that axis unfiltered. */
 export type AwsIconFilter = {
-	/** The search term. Empty shows tier 1 as it stands */
+	/** The search term. Empty shows the palette, or all a picked facet holds */
 	query: string;
 	/** Filter by layer; undefined means every layer */
 	tier?: AwsIconTier;
@@ -46,9 +46,11 @@ const matchesFacets = (name: string, filter: AwsIconFilter): boolean => {
  * label and the aliases, and a prefix match sorts above a substring one, a short
  * name above a long one.
  *
- * An empty term shows tier 1, in the palette's order. Laying out all 781 to
- * begin with is not something anyone chooses from, so the reachable ones come
- * first and the search goes down from there.
+ * An empty term with no facet picked shows tier 1, in the palette's order.
+ * Laying out all 781 to begin with is not something anyone chooses from, so the
+ * reachable ones come first and the search goes down from there. A facet is a
+ * choice of its own, so it is answered out of the whole set
+ * ({@link listWithoutTerm}).
  *
  * @param filter - the term and the layer / category filters, which AND together
  * @returns the canonical names to show (at most {@link MAX_RESULTS}) and the
@@ -58,10 +60,41 @@ export const searchAwsIcons = (filter: AwsIconFilter): AwsIconSearchResult => {
 	const needle = normalizeAwsIconName(filter.query);
 	const matched =
 		needle === ""
-			? AWS_TIER1_ICON_NAMES.filter((name) => matchesFacets(name, filter))
+			? listWithoutTerm(filter)
 			: sortByRelevance(findMatches(needle, filter), needle);
 	return { names: matched.slice(0, MAX_RESULTS), total: matched.length };
 };
+
+/**
+ * What an empty term shows: the palette as it stands, or, once a chip is
+ * pressed, every name that chip holds. Tier 1 carries no `group/` icon and
+ * nothing from 13 of the categories, so answering a chosen facet out of the
+ * palette alone would leave those chips with an empty grid.
+ */
+const listWithoutTerm = (filter: AwsIconFilter): string[] =>
+	filter.tier === undefined && filter.category === undefined
+		? [...AWS_TIER1_ICON_NAMES]
+		: sortByPaletteFirst(
+				Object.keys(AWS_ICON_ENTRIES).filter((name) =>
+					matchesFacets(name, filter),
+				),
+			);
+
+/** Where a name sits in the palette; the ones outside it share the rank past its end. */
+const PALETTE_RANK_BY_NAME = new Map(
+	AWS_TIER1_ICON_NAMES.map((name, index) => [name, index]),
+);
+
+/** Palette members first in the palette's order, then the rest alphabetically. */
+const sortByPaletteFirst = (names: string[]): string[] =>
+	[...names].sort(
+		(left, right) =>
+			paletteRank(left) - paletteRank(right) || left.localeCompare(right),
+	);
+
+/** The palette position, or one past its end for a name it does not carry. */
+const paletteRank = (name: string): number =>
+	PALETTE_RANK_BY_NAME.get(name) ?? AWS_TIER1_ICON_NAMES.length;
 
 /** The names whose own name, label or alias holds the term. */
 const findMatches = (needle: string, filter: AwsIconFilter): string[] =>
