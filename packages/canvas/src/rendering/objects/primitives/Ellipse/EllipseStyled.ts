@@ -1,15 +1,11 @@
 import styled from "@emotion/styled";
 
-type EllipseElementProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-	/** Resolved fill color (auto is resolved to the theme surface). */
-	fillColor: string;
-};
+import type { FillPaintProps, StrokePaintProps } from "../../utils/shapePaint";
+import { fillPaint, strokePaint } from "../../utils/shapePaint";
 
-export const EllipseElement = styled.ellipse<EllipseElementProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+export const EllipseElement = styled.ellipse<StrokePaintProps & FillPaintProps>`
+	${strokePaint}
+	${fillPaint}
 	pointer-events: auto;
 	cursor: grab;
 

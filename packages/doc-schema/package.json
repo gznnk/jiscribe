@@ -1,13 +1,14 @@
 {
 	"name": "@jiscribe/doc-schema",
-	"version": "1.0.0",
+	"version": "0.10.0",
 	"private": true,
 	"description": "Generated JSON schema and AI authoring docs for the shipped jiscribe shape set",
 	"type": "module",
 	"exports": {
 		"./schema": "./assets/jiscribe.schema.json",
 		"./guide": "./assets/ai-guide.md",
-		"./reference": "./assets/reference.md"
+		"./canvas-prompt": "./assets/canvas-prompt.md",
+		"./authoring-json": "./assets/authoring-json.md"
 	},
 	"scripts": {
 		"generate": "tsx generator/src/main.ts",
@@ -16,11 +17,12 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {
-		"devDependencies": "The shipped plugins come as @jiscribe/standard-shapes; plugin-lucide-icon-shape is also listed on its own because generateSchema.ts takes COMMON_ICON_GROUPS from it to fill an icon description in."
+		"devDependencies": "The shipped plugins come as @jiscribe/standard-shapes; plugin-lucide-icon-shape and plugin-aws-shapes are also listed on their own because the generators take COMMON_ICON_GROUPS and AWS_GROUP_KINDS from them to fill descriptions and an enum in."
 	},
 	"devDependencies": {
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
+		"@jiscribe/plugin-aws-shapes": "workspace:*",
 		"@jiscribe/plugin-lucide-icon-shape": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"@types/node": "catalog:",

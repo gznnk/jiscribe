@@ -5,6 +5,219 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-09-14
+
+The editor grew two sidebars. Everything a shape can be is now in one panel on
+the right — including the three text switches that used to hide in the floating
+menu — and every shape you can draw is in a searchable list on the left, which
+leaves the toolbar carrying six. Behind them: AWS Architecture Icons, 781 of
+them with the boundary frames to arrange them in, an `image` shape that draws a
+picture file from beside the document, and opacity you can set on a fill and a
+stroke separately. The shape set is now 54 drawable types. Text no longer
+reflows shortly after a document opens, paste works while you are editing text,
+and a syntax error in the JSON no longer tears the canvas down and loses where
+you were looking.
+
+### Added
+
+#### Editing
+
+- **A property sidebar.** It docks at the right edge and carries what the
+  floating object menu carried, in collapsible sections: **Canvas**, **Layout**,
+  **Fill**, **Line**, **Border**, **Arrows**, **Text**, **Label**, **Label
+  border**, **Arrange** and **Meta**, shown according to what is selected. Open
+  it from the toolbar's rightmost button (**Properties**) or from the **…** at
+  the end of the object menu; close it from its own **Close**. While it is open
+  the floating menu is not drawn at all, since the sidebar states everything it
+  did. With nothing selected it offers **Canvas** and its **Background**. With
+  several objects selected it shows only the rows every one of them has, and a
+  row whose values disagree reads **Mixed**. There is no keyboard shortcut.
+- **An object can be given a name and a description.** The **Meta** section
+  writes `meta.name` and `meta.description` on a single shape or connector.
+- **A connector's route and label are editable from the sidebar.** A
+  **Routing** row (**Orthogonal** / **Straight**), a **Reset Route** button at
+  the end of **Line**, and **Label** and **Label border** sections once the
+  connector carries label text. The **Arrows** section is now a single row —
+  start head, a **Swap arrows** button, end head — instead of two.
+- **A shape library.** A searchable list of every shape the editor can draw,
+  docked at the left edge under the toolbar's leftmost toggle: basic,
+  flowchart, UML, container, general, annotation, Lucide icons, **AWS** and
+  **AWS Groups**. Click to draw or drag to place, exactly as from the toolbar.
+  Typing in **Search shapes** flattens the sections into one list of matches
+  (**No matching shapes** when there are none). Opening the library does not
+  move the drawing — the canvas compensates for the width it takes.
+- **A container's header height is editable as a number.** A **Header** row in
+  **Layout**, holding the same value as dragging the header's handle.
+- **Number fields repeat while a spin button is held.** The first step lands
+  immediately, then repeats after 350 ms every 70 ms. One hold is one undo step.
+- **Zoom to Fit**, in the toolbar's view section, on Ctrl/Cmd+0.
+- **The sidebars remember how you left them.** Which ones are open and which
+  sections are collapsed are stored beside the camera, so hiding a tab and
+  coming back finds the panel as you left it. A file you open for the first time
+  starts with both sidebars closed and every section expanded.
+
+#### Shapes
+
+- **AWS Architecture Icons.** `awsIcon` draws any of 781 icons from the AWS
+  asset set by name, layer-prefixed — `service/aws-lambda`,
+  `resource/amazon-ec2/instance`, `general/user` — with short names and aliases
+  (`lambda`, `s3`, `alb`, `igw`) resolving to the full one, and a name that
+  cannot be resolved coming back with suggestions rather than an empty box. The
+  shape library's **AWS** section carries 100 common services for clicking
+  straight onto the canvas, each arriving with its own label as text, and the
+  object menu opens a searchable picker (**AWS Icon**) over all 781, filtered by
+  **All** / **Service** / **Resource** / **General** / **Group** and by
+  category. The icon keeps its aspect ratio, hangs its label below the box, and
+  takes no `fill` or `stroke` — AWS does not permit recolouring the artwork.
+- **`awsGroup` draws the boundary frames** the icons sit inside — 19 kinds,
+  from `aws-cloud` and `region` down to `public-subnet`, `security-group` and
+  `auto-scaling-group`, each bringing its own border colour, line style and
+  corner badge. All 19 are in the library's **AWS Groups** section. The body is
+  click-through so the icons over it stay selectable, and the frame does not
+  carry its contents when it moves; group them when they must travel together.
+- **`image` draws a picture file.** Required `src` is a path relative to the
+  directory the document lives in — `..`, absolute paths and URLs are rejected —
+  and the supported formats are PNG, JPEG, GIF, WebP, AVIF, BMP and SVG. **The
+  bytes are not embedded**, so a document is no longer self-contained: the
+  picture has to travel beside it. A `src` that cannot be read draws a
+  placeholder rather than failing the document. Each picture is read once per
+  view rather than watched, so replacing the file on disk shows through the next
+  time the view is built — switching to another tab and back is enough. There is
+  no toolbar or library entry for it — an `image` is placed by an AI or by
+  writing the JSON, the same way an `svg` is. Exports resolve the bytes and inline them, so a PNG or SVG
+  you export stands alone; a picture that never resolved is left out of the
+  export rather than written as a dead reference.
+- The shape set is now **54 drawable types**.
+
+#### Style
+
+- **Fill and stroke have opacity of their own.** `fillOpacity` and
+  `strokeOpacity` take 0 to 1, default to 1, and multiply whatever alpha the
+  colour already carries — so a shape can be washed out without touching its
+  outline, or the other way round. Both are in the property sidebar as
+  **Opacity** rows, under **Fill** and under **Border**, entered as whole
+  percentages. Arrowheads follow the line's `strokeOpacity`; a sticky note's
+  shadow and a container's header band follow the body's `fillOpacity`.
+  Connector labels are deliberately left out.
+
+### Changed
+
+- **The three text switches moved to the property sidebar.** **Fit Height to
+  Text** is in **Layout**, **Wrap Text in Fixed Width** in **Text**, and the
+  vertical basis is a **Text box** row offering **Shape area** or **Full
+  height**. They are gone from the floating object menu, so reaching them now
+  means opening the sidebar — from the toolbar or from the menu's **…**.
+- **The toolbar carries six shapes**: rectangle, ellipse, polygon, polyline,
+  text and sticky note. Everything that used to sit in a flyout — flowchart,
+  UML, containers, annotations, Lucide icons, markdown — is in the shape
+  library instead.
+- **Text no longer reflows shortly after a document opens.** 0.9.0 measured
+  against whatever face was available, drew, and re-measured when the bundled
+  fonts arrived, so a document visibly settled once. The canvas now asks for
+  exactly the characters the document draws and holds the shapes hidden until
+  those faces are ready — the background and the grid paint immediately, so it
+  is a canvas without shapes yet rather than a blank window — and re-measures
+  before revealing, so the first frame you see is already right. A face that
+  never loads, or two seconds, reveals it anyway.
+- **The canvas follows the editor's light and dark themes.** It was always
+  treated as a dark ground regardless of the theme in use. It now reads the
+  editor's theme kind and follows a change to it without a reload, which is what
+  lets an AWS icon pick between its light and dark rendition.
+- **A shape that omits `fill` or `stroke` now takes its own type's default**
+  rather than a shared fallback. A `markdown`, `umlComponent` or `umlPackage`
+  written without a `fill` renders filled instead of transparent, and a sticky
+  note written by hand or by an AI comes out the same size and alignment as one
+  taken from the palette. **Documents written without these fields can look
+  different.**
+- **Sticky note shadows are lighter and tighter** — offset 2 px with the light
+  straight overhead, so the shadow shows below and to the sides and never above.
+- **`Set up AI` writes a restructured guide.** What was split across a guide and
+  a reference is now cut by the kind of knowledge it holds, and the assets carry
+  the version they were generated at. A `reference.md` left in `.jiscribe/` by
+  an earlier run is removed.
+- **A document saved by this version does not open cleanly in 0.9.0.** An
+  `image`, `awsIcon` or `awsGroup` is dropped as an unknown type — and is gone
+  once that older version saves, along with any connector attached to it — while
+  `fillOpacity` and `strokeOpacity` are ignored, so the shape draws fully
+  opaque, and the bundled schema flags them in the JSON editor. Reading older
+  documents is unaffected.
+
+### Removed
+
+- **Reset route to auto, from the canvas context menu.** It was greyed out on
+  everything but a connector; it is the **Reset Route** button in the property
+  sidebar's **Line** section now.
+
+### Fixed
+
+- **Paste works while you are editing a shape's text.** Nothing was inserted at
+  all: VSCode delivers a webview paste through an `execCommand` of its own, and
+  the insertion the editor attempted inside it was refused as a nested call
+  while the default paste had already been suppressed. Plain text only, as
+  before — pasting an image into text still inserts nothing.
+- **The canvas no longer mistakes its own save for an edit from outside.** Two
+  edits in quick succession could bring the first one's echo back late enough to
+  be read as an external change: the selection cleared, a gesture in progress
+  was interrupted, and an entry appeared in the undo history. The same
+  bookkeeping could drop a genuine external change that arrived while a write
+  was in flight. Echoes are now recognised by comparing the text itself, and the
+  empty change event VSCode fires when a clean file first becomes dirty no
+  longer counts as one — it was re-arming the fault on every edit of a saved
+  file.
+- **An edit made while the previous one is still being written no longer fails
+  to save.** VSCode rejects a workspace edit whose document version has moved,
+  so the second commit was refused, an error was reported, and the canvas and
+  the file drifted apart. Writes are serialized per editor, and writes waiting
+  behind one collapse to the newest text.
+- **A syntax error in the JSON no longer tears the canvas down.** The document
+  was replaced by a full-window error and rebuilt on every recovery, so typing
+  by hand or watching an AI stream meant flashing — and the pan and zoom were
+  lost each time the text came back to valid. The last version that parsed stays
+  on screen and the error becomes a notice in the corner that nothing is blocked
+  by. The full-window notice is now only for a file that has never parsed since
+  it was opened.
+- **Boxes measured while drawing pick up the bundled fonts.** 0.9.0 re-measured
+  what was held in state when the fonts arrived, but a record's header band, a
+  connector label's box and a text shape's hit area are measured during
+  drawing — they kept their fallback-face sizes for as long as the document
+  stayed open, so the box and the glyphs inside it disagreed.
+- **A `delay` that is much taller than it is wide stays inside its own box.**
+  Both of the bulge's radii came from the height, so past a 2:1 ratio the curve
+  and the outline connectors attach to ran out through the left side — a whole
+  width out at 100×400. The horizontal radius is now capped by the width.
+- **A sticky note with `fill` set to `"auto"` is no longer drawn black**, and
+  one written without a `fill` is yellow again rather than transparent. `auto`
+  is a legal value the AI tools produce, and it was being handed to SVG as a
+  literal colour.
+- **Dropdowns in the sidebars open in the right place** when the canvas sits
+  inside a scaled element.
+- **The editor's own controls use the host's font.** Context menu items, the
+  zoom readout, the colour picker's fields and the sidebar's inputs were falling
+  back to the browser's default face.
+- **Toolbar icons are drawn at their own size.** Undo, redo and help were 24 px
+  artwork squeezed into 20 px and came out blurry; the zoom controls are now
+  artwork rather than characters, and the readout is 12 px.
+- **Undo and redo stay enabled while you drag.** They greyed out for the length
+  of the gesture and came back when it ended.
+- **Picking the fill, border or background colour a shape already has no longer
+  throws redo away.** The swatch wrote regardless, and a write is a commit
+  whether or not it changes anything: the document was marked dirty and
+  everything you had undone became unreachable. It now writes only where it
+  would change something — picking the shown colour for several shapes at once
+  still unifies them, since that is a real change to all but one of them.
+- The image editor's change emitter is disposed with the extension, instead of
+  holding every closed `.jis.png` / `.jis.svg` document's edit history for the
+  rest of the session.
+
+### Performance
+
+- **A board of sticky notes zooms smoothly.** Each note's shadow was its own
+  blur filter — an offscreen surface per note — which held 400 of them to 14–30
+  fps while zooming. The shadow is composed from gradients instead, and the same
+  board holds 60.
+- Typing through text that does not parse no longer re-renders the canvas: an
+  error identical to the one before it leaves the state untouched.
+
 ## [0.9.0] - 2026-09-03
 
 Text now decides its own box. A shape can let its height follow what is typed

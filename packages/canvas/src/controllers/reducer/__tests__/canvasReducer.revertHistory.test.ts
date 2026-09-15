@@ -114,7 +114,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("is a no-op while a drag is in progress, like undo itself", () => {
 			const state = createState({
-				eventStartSnapshot: {},
+				activeDrag: { startSnapshot: {}, kind: "other" },
 			} as Partial<CanvasControllerState>);
 
 			expect(applyActions(state, [revertTo(entries.oldest)])).toBe(state);
@@ -127,10 +127,10 @@ describe("canvasReducer (integration)", () => {
 			// Restoring is not a new edit, but the file no longer matches what is on
 			// screen — the same pairing undo makes.
 			expect(reverted.commitVersion).toBe(state.commitVersion);
-			expect(reverted.saveVersion).toBe(state.saveVersion + 1);
+			expect(reverted.saveRequest.version).toBe(state.saveRequest.version + 1);
 		});
 
-		it("keeps the viewport and an open modal, and drops the selection", () => {
+		it("keeps the viewport, an open modal, and a selection the target still holds", () => {
 			const state = createState({
 				selectedIds: ["rect-1"],
 				activeModal: "export",
@@ -140,7 +140,7 @@ describe("canvasReducer (integration)", () => {
 
 			expect(reverted.viewport).toEqual(state.viewport);
 			expect(reverted.activeModal).toBe("export");
-			expect(reverted.selectedIds).toEqual([]);
+			expect(reverted.selectedIds).toEqual(["rect-1"]);
 		});
 	});
 });

@@ -1,4 +1,5 @@
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
 
 /** Type size the name is drawn at, shared with the record so the two read alike. */
@@ -75,7 +76,7 @@ export const UML_PACKAGE_DOC_DEFAULTS: Omit<UmlPackageDoc, "id"> = {
 	height: 108,
 	fill: AUTO_COLOR,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "center",
 	verticalAlign: "middle",

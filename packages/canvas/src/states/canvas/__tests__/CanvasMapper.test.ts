@@ -244,15 +244,6 @@ describe("CanvasMapper", () => {
 				contentResizerRegistry,
 			);
 
-			// Check initial viewport
-			expect(state.viewport).toEqual({
-				minX: 0,
-				minY: 0,
-				width: 1000,
-				height: 800,
-				zoom: 1,
-			});
-
 			// Check flat map completeness
 			expect(Object.keys(state.objects)).toHaveLength(5);
 			expect(state.objects["rect-1"]).toBeDefined();
@@ -290,13 +281,6 @@ describe("CanvasMapper", () => {
 			// Simulate the state created in the previous test
 			const state: CanvasState = {
 				rootIds: ["rect-1", "group-1"],
-				viewport: {
-					minX: 0,
-					minY: 0,
-					width: 1000,
-					height: 800,
-					zoom: 1,
-				},
 				objects: {
 					"rect-1": {
 						id: "rect-1",

@@ -1,17 +1,53 @@
-import { isCssSafeValue, isNumber, isString } from "@jiscribe/basic-validators";
-
+import type { ConnectorLabel } from "./ConnectorDoc";
 import type { ObjectDocValidateFn } from "../../../plugin/ObjectDocValidatorRegistry";
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
+import { STROKE_WIDTH_MIN } from "../base/StrokeStyleDoc";
 import { isConnectorRouting } from "../types/ConnectorRouting";
 import { isOwnedEndpointRef } from "../types/EndpointRef";
+import { FONT_SIZE_MIN } from "../types/RichText";
 import { isStrokeDashType } from "../types/StrokeDashType";
+import type { DocFieldValidator } from "../utils/validateDocUtils";
 import {
+	colorValidator,
+	cssValueValidator,
+	enumValidator,
+	numberRangeValidator,
+	numberValidator,
+	stringValidator,
 	validateArrowFields,
 	validateEndpointRef,
-	validateOptionalNumber,
+	validateFields,
 	validateStrokeStyleFields,
 	validateWaypointFields,
 } from "../utils/validateDocUtils";
+
+/**
+ * The label's optional fields, in the order the diagnostics come out in.
+ * `text` is left out: it is required, which a table checking only the fields
+ * that are there cannot say. The state layer keys a table of its own by the
+ * same type, so a field the label gains has to be given a validator on both
+ * sides or fails to compile on both (validateConnectorState).
+ */
+const connectorLabelValidators = {
+	position: numberRangeValidator(0, 1),
+	// A signed distance from the path, bounded at neither end.
+	offset: numberValidator(),
+	fontColor: colorValidator,
+	fontFamily: cssValueValidator("font-family"),
+	fontSize: numberValidator(FONT_SIZE_MIN),
+	fontWeight: cssValueValidator("font-weight"),
+	// Background (fill) and border (stroke color + strokeWidth). Same vocabulary as shapes.
+	fill: colorValidator,
+	stroke: colorValidator,
+	strokeWidth: numberValidator(STROKE_WIDTH_MIN),
+	strokeDashType: enumValidator(
+		isStrokeDashType,
+		"must be one of: solid, dashed, dotted",
+	),
+} as const satisfies Record<
+	keyof Omit<ConnectorLabel, "text">,
+	DocFieldValidator
+>;
 
 /**
  * Validates a connector's `label` (a nested annotation).
@@ -46,62 +82,9 @@ function validateConnectorLabelFields(
 	const l = label as Record<string, unknown>;
 	const labelPath = `${path}.label`;
 
-	if (!isString(l.text)) {
-		errors.push({ path: `${labelPath}.text`, message: "must be a string" });
-	}
-	if ("position" in l && l.position !== undefined) {
-		if (!isNumber(l.position) || l.position < 0 || l.position > 1) {
-			errors.push({
-				path: `${labelPath}.position`,
-				message: "must be a number between 0 and 1",
-			});
-		}
-	}
-	errors.push(...validateOptionalNumber(l, labelPath, "offset"));
-	if ("fontColor" in l && !isCssSafeValue(l.fontColor)) {
-		errors.push({
-			path: `${labelPath}.fontColor`,
-			message: "must be a safe CSS color value",
-			beyondSchema: true,
-		});
-	}
-	if ("fontFamily" in l && !isCssSafeValue(l.fontFamily)) {
-		errors.push({
-			path: `${labelPath}.fontFamily`,
-			message: "must be a safe CSS font-family value",
-			beyondSchema: true,
-		});
-	}
-	errors.push(...validateOptionalNumber(l, labelPath, "fontSize", 1));
-	if ("fontWeight" in l && !isCssSafeValue(l.fontWeight)) {
-		errors.push({
-			path: `${labelPath}.fontWeight`,
-			message: "must be a safe CSS font-weight value",
-			beyondSchema: true,
-		});
-	}
-	// Background (fill) and border (stroke color + strokeWidth). Same vocabulary as shapes.
-	if ("fill" in l && !isCssSafeValue(l.fill)) {
-		errors.push({
-			path: `${labelPath}.fill`,
-			message: "must be a safe CSS color value",
-			beyondSchema: true,
-		});
-	}
-	if ("stroke" in l && !isCssSafeValue(l.stroke)) {
-		errors.push({
-			path: `${labelPath}.stroke`,
-			message: "must be a safe CSS color value",
-			beyondSchema: true,
-		});
-	}
-	errors.push(...validateOptionalNumber(l, labelPath, "strokeWidth", 0));
-	if ("strokeDashType" in l && !isStrokeDashType(l.strokeDashType)) {
-		errors.push({
-			path: `${labelPath}.strokeDashType`,
-			message: "must be one of: solid, dashed, dotted",
-		});
-	}
+	// The only required field, so it is checked outside the table rather than in it.
+	errors.push(...stringValidator(l.text, `${labelPath}.text`));
+	errors.push(...validateFields(l, labelPath, connectorLabelValidators));
 	return errors;
 }
 

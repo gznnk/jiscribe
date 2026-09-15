@@ -1,14 +1,23 @@
 import { readFileSync } from "node:fs";
 
 import {
+	AUTO_COLOR,
+	DEFAULT_FILL,
+	DEFAULT_FILL_OPACITY,
+	DEFAULT_STROKE_OPACITY,
+	DEFAULT_STROKE_WIDTH,
 	FILL_STYLE_KEYS,
+	OPACITY_MAX,
+	OPACITY_MIN,
 	STROKE_STYLE_KEYS,
+	STROKE_WIDTH_MIN,
 	supportsAutoHeight,
 	TEXT_BODY_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
 	TRANSFORM_STYLE_KEYS,
 	type ObjectDocDefinition,
 } from "@jiscribe/doc";
+import { AWS_GROUP_KINDS } from "@jiscribe/plugin-aws-shapes/doc";
 import { COMMON_ICON_GROUPS } from "@jiscribe/plugin-lucide-icon-shape/doc";
 
 import {
@@ -25,6 +34,79 @@ const handwrittenDefs = JSON.parse(
 	readFileSync(templatePath("handwrittenDefs.json"), "utf8"),
 ) as Record<string, JsonSchemaNode>;
 
+/** The bound and default facts of one shared style property, read off `@jiscribe/doc`. */
+type SharedStyleFacts = {
+	minimum?: number;
+	maximum?: number;
+	default: unknown;
+};
+
+/**
+ * Bounds and defaults of the shared style defs, keyed by def and property. The
+ * template carries only the prose for these: the numbers and the default colors
+ * are the doc package's constants, so the schema cannot drift from what the
+ * validators and renderers hold.
+ */
+const SHARED_STYLE_FACTS: Record<
+	"StrokeStyle" | "FillStyle",
+	Record<string, SharedStyleFacts>
+> = {
+	StrokeStyle: {
+		stroke: { default: AUTO_COLOR },
+		strokeWidth: { minimum: STROKE_WIDTH_MIN, default: DEFAULT_STROKE_WIDTH },
+		strokeOpacity: {
+			minimum: OPACITY_MIN,
+			maximum: OPACITY_MAX,
+			default: DEFAULT_STROKE_OPACITY,
+		},
+	},
+	FillStyle: {
+		fill: { default: DEFAULT_FILL },
+		fillOpacity: {
+			minimum: OPACITY_MIN,
+			maximum: OPACITY_MAX,
+			default: DEFAULT_FILL_OPACITY,
+		},
+	},
+};
+
+/**
+ * Writes {@link SHARED_STYLE_FACTS} into the parsed template, in place, before
+ * anything reads it: the per-type defaults comparison (isBoxShapeCompatible) and
+ * the override nodes both read the shared defaults off `handwrittenDefs`.
+ *
+ * @param defs - The parsed template; a property the facts name must exist there with its prose and carry none of the facts itself
+ */
+function applySharedStyleFacts(defs: Record<string, JsonSchemaNode>): void {
+	for (const [defName, facts] of Object.entries(SHARED_STYLE_FACTS)) {
+		const props = defs[defName].properties as Record<string, JsonSchemaNode>;
+		for (const [prop, { minimum, maximum, default: value }] of Object.entries(
+			facts,
+		)) {
+			const node = props[prop];
+			if (node === undefined) {
+				throw new Error(`${defName}.${prop} is missing from handwrittenDefs`);
+			}
+			for (const key of ["minimum", "maximum", "default"]) {
+				if (key in node) {
+					throw new Error(
+						`${defName}.${prop}.${key} is stated in handwrittenDefs; it comes from @jiscribe/doc`,
+					);
+				}
+			}
+			props[prop] = {
+				...node,
+				description: `${String(node.description)} Default: ${formatDefaultValue(value)}`,
+				...(minimum === undefined ? {} : { minimum }),
+				...(maximum === undefined ? {} : { maximum }),
+				default: value,
+			};
+		}
+	}
+}
+
+applySharedStyleFacts(handwrittenDefs);
+
 /**
  * Names a template description can ask for rather than spell out, so a list that also
  * exists in code is written once. `{{TOKEN}}` is replaced wherever it appears in a
@@ -35,6 +117,17 @@ const DESCRIPTION_TOKENS: Readonly<Record<string, string>> = {
 	COMMON_ICON_GROUPS: COMMON_ICON_GROUPS.map(
 		(group) => `${group.label}: ${group.names.join(", ")}`,
 	).join("; "),
+	AWS_GROUP_KINDS: AWS_GROUP_KINDS.join(", "),
+};
+
+/**
+ * The same for a whole `enum`, which a template writes as the token string in
+ * place of the array. An unknown token throws rather than being left alone: a
+ * leftover `{{...}}` in a description is merely loud, but one in an `enum` is a
+ * schema that rejects every value.
+ */
+const ENUM_TOKENS: Readonly<Record<string, readonly string[]>> = {
+	AWS_GROUP_KINDS,
 };
 
 const expandDescriptionTokens = (node: JsonSchemaNode): JsonSchemaNode => {
@@ -51,6 +144,19 @@ const expandDescriptionTokens = (node: JsonSchemaNode): JsonSchemaNode => {
 	};
 };
 
+const expandEnumToken = (node: JsonSchemaNode): JsonSchemaNode => {
+	const values = node.enum;
+	if (typeof values !== "string") {
+		return node;
+	}
+	const token = /^\{\{(\w+)\}\}$/.exec(values)?.[1];
+	const expanded = token === undefined ? undefined : ENUM_TOKENS[token];
+	if (expanded === undefined) {
+		throw new Error(`No enum is declared for the token ${values}`);
+	}
+	return { ...node, enum: [...expanded] };
+};
+
 const propertyOverrides = Object.fromEntries(
 	Object.entries(
 		JSON.parse(
@@ -61,7 +167,7 @@ const propertyOverrides = Object.fromEntries(
 		Object.fromEntries(
 			Object.entries(properties).map(([name, node]) => [
 				name,
-				expandDescriptionTokens(node),
+				expandDescriptionTokens(expandEnumToken(node)),
 			]),
 		),
 	]),
@@ -106,6 +212,16 @@ const STYLE_PROP_SOURCES: ReadonlyArray<{
 
 function formatDefaultValue(value: unknown): string {
 	return typeof value === "string" ? JSON.stringify(value) : String(value);
+}
+
+/**
+ * The size `createObject` writes when the caller omits the field. Palette entries
+ * override it through `defaultOverrides`, so it is not the palette size.
+ *
+ * @param value - A size field of the type's creation defaults (width / height / rx / ry)
+ */
+function describeOmittedSize(value: unknown): string {
+	return `Size written when a creation omits it: ${formatDefaultValue(value)}`;
 }
 
 /**
@@ -160,12 +276,12 @@ function buildRectGeometryProps(
 		x: { description: RECT_GEOMETRY_DESCRIPTIONS.x, type: "number" },
 		y: { description: RECT_GEOMETRY_DESCRIPTIONS.y, type: "number" },
 		width: {
-			description: `${RECT_GEOMETRY_DESCRIPTIONS.width} Default when created from the palette: ${formatDefaultValue(defaults.width)}`,
+			description: `${RECT_GEOMETRY_DESCRIPTIONS.width} ${describeOmittedSize(defaults.width)}`,
 			type: "number",
 			minimum: 0,
 		},
 		height: {
-			description: `${RECT_GEOMETRY_DESCRIPTIONS.height}${autoHeight ? ` ${AUTO_HEIGHT_NOTE}` : ""} Default when created from the palette: ${formatDefaultValue(defaults.height)}`,
+			description: `${RECT_GEOMETRY_DESCRIPTIONS.height}${autoHeight ? ` ${AUTO_HEIGHT_NOTE}` : ""} ${describeOmittedSize(defaults.height)}`,
 			type: "number",
 			minimum: 0,
 		},
@@ -180,12 +296,12 @@ function buildEllipseGeometryProps(
 		cx: { description: "Center X coordinate.", type: "number" },
 		cy: { description: "Center Y coordinate.", type: "number" },
 		rx: {
-			description: `Horizontal radius in pixels. Default when created from the palette: ${formatDefaultValue(defaults.rx)}`,
+			description: `Horizontal radius in pixels. ${describeOmittedSize(defaults.rx)}`,
 			type: "number",
 			minimum: 0,
 		},
 		ry: {
-			description: `Vertical radius in pixels. Default when created from the palette: ${formatDefaultValue(defaults.ry)}`,
+			description: `Vertical radius in pixels. ${describeOmittedSize(defaults.ry)}`,
 			type: "number",
 			minimum: 0,
 		},

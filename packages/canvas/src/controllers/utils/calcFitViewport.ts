@@ -1,7 +1,7 @@
 import { calcContentBounds } from "./calcContentBounds";
 import { calcViewportForBounds } from "./calcViewportForBounds";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
-import type { Viewport } from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 type FitOptions = {

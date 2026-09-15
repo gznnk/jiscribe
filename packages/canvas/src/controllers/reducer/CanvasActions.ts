@@ -1,9 +1,10 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { Dimensions } from "@jiscribe/geometry";
 
+import type { Viewport } from "../../rendering/Viewport";
 import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { Camera, Viewport } from "../../states/canvas/Viewport";
 import type { CanvasGestureHandling } from "../CanvasGestureHandling";
+import type { Camera } from "../CanvasTypes";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 import type { TextEditFormat } from "../utils/toggleTextEditFormat";
@@ -27,6 +28,15 @@ export type GestureAction = {
 export type ContainerResizeAction = {
 	type: "CONTAINER_RESIZE";
 	dimensions: Dimensions;
+	/**
+	 * Screen pixels the container's left edge moved inside CanvasRoot since the
+	 * last measurement; positive means it moved right (the shape library sidebar
+	 * opening beside the viewport, say). The reducer divides it by the current
+	 * zoom and adds it to `minX`, so the drawing stays pinned to the screen
+	 * instead of being dragged along with the edge. Absent or 0 when the edge
+	 * held still, which is the case for every resize from the right.
+	 */
+	leftEdgeShift?: number;
 };
 
 /**
@@ -34,6 +44,19 @@ export type ContainerResizeAction = {
  */
 export type SyncExternalAction = {
 	type: "SYNC_EXTERNAL";
+	payload: CanvasState;
+};
+
+/**
+ * Load document action - adopts another document (the host opened a file, created
+ * a new one, switched paths) into a canvas that stays mounted. Same replacement
+ * as SYNC_EXTERNAL, except that the undo history goes with the document it
+ * belonged to: keeping it would let one Ctrl+Z pull the previous document's
+ * contents back under the new one's name. Dispatched by useSyncExternalDoc when
+ * the host's `docLoadId` changes.
+ */
+export type LoadDocumentAction = {
+	type: "LOAD_DOCUMENT";
 	payload: CanvasState;
 };
 
@@ -54,9 +77,8 @@ export type SetCameraAction = {
  * loaded — at mount, and again whenever another document is swapped in — and
  * only when the host passed no `initialConfig.viewport`.
  *
- * The size travels with the camera because the two must land in the same commit:
- * a fit is only correct against the viewport it was measured for, and the
- * ResizeObserver's own CONTAINER_RESIZE arrives after the first paint.
+ * The size travels with the camera because a fit is only correct against the
+ * size it was computed from, so the two have to land together.
  */
 export type SetViewportAction = {
 	type: "SET_VIEWPORT";
@@ -143,10 +165,13 @@ export type EndTextEditAction = {
 };
 
 /**
- * Menu property update action - handles real-time preview and commit from ObjectMenu inputs
+ * Style property update action - a style property written through
+ * StylePropertyRegistry with live preview and commit, from the inputs that fire
+ * no gesture: the ObjectMenu's number input and keyboard-driven slider, and the
+ * properties sidebar's callback-writing controls.
  */
-export type MenuPropertyUpdateAction = {
-	type: "MENU_PROPERTY_UPDATE";
+export type StylePropertyUpdateAction = {
+	type: "STYLE_PROPERTY_UPDATE";
 	property: string;
 	value: string;
 	/** true: recorded in history (blur/Enter), false: preview only */
@@ -155,6 +180,111 @@ export type MenuPropertyUpdateAction = {
 	 * true: merge this commit with the preceding one for the same property and
 	 * selection into a single undo entry (slider key repeat). Ignored when
 	 * `commit` is false. Omitted means every commit is its own entry.
+	 */
+	coalesceHistory?: boolean;
+};
+
+/**
+ * The five numbers a properties sidebar states about the selection's frame: its
+ * top-left corner in world coordinates, its size, and its rotation.
+ */
+export type TransformProperty = "x" | "y" | "width" | "height" | "rotation";
+
+/**
+ * Transform property update action - states one number of the selection's frame
+ * outright, where the transform handles would have dragged it there.
+ *
+ * The sibling of {@link StylePropertyUpdateAction} for the geometry the style
+ * registry does not own: the frame it edits is the selected object's, or the
+ * multiSelectGroup's for a multi-selection, and the result matches the
+ * corresponding drag (groups scale their children, connectors follow, a height
+ * stated by hand stops following the text).
+ */
+export type TransformPropertyUpdateAction = {
+	type: "TRANSFORM_PROPERTY_UPDATE";
+	property: TransformProperty;
+	/** World units; `rotation` in degrees. Non-finite, and a non-positive size, leave the state alone. */
+	value: number;
+	/**
+	 * true: recorded in history (blur/Enter) — also when the frame already holds
+	 * the value, since the preview that preceded the commit is what put it there;
+	 * false: preview only
+	 */
+	commit: boolean;
+	/**
+	 * true: merge this commit with the preceding one for the same property and
+	 * selection into a single undo entry (spinner key repeat). Ignored when
+	 * `commit` is false. Omitted means every commit is its own entry.
+	 */
+	coalesceHistory?: boolean;
+};
+
+/**
+ * The document's own settings the properties sidebar states, as opposed to the
+ * selection's. Only the surface color so far; the Canvas section grows here.
+ */
+export type DocumentProperty = "background";
+
+/**
+ * Document property update action - states a setting of the document itself,
+ * which is what the properties sidebar offers while nothing is selected.
+ *
+ * The third property route beside {@link StylePropertyUpdateAction} and
+ * {@link TransformPropertyUpdateAction}, and the only one whose target is not a
+ * selection: it mirrors the headless `setBackground` op, down to `null` meaning
+ * "drop the field and follow the host theme again" rather than "paint it white".
+ */
+export type DocumentPropertyUpdateAction = {
+	type: "DOCUMENT_PROPERTY_UPDATE";
+	property: DocumentProperty;
+	/** A literal CSS color, or null to clear the setting so the theme decides again. */
+	value: string | null;
+	/**
+	 * true: recorded in history (a swatch, blur/Enter) — also when the color is
+	 * already set, since a preview may have put it there; false: preview only
+	 */
+	commit: boolean;
+	/**
+	 * true: merge this commit with the preceding one for the same property into a
+	 * single undo entry. Ignored when `commit` is false. Omitted means every commit
+	 * is its own entry.
+	 */
+	coalesceHistory?: boolean;
+};
+
+/**
+ * The fields of an object's `meta` the properties sidebar states: the note that
+ * travels with the object in the document, which nothing is drawn from.
+ */
+export type MetaProperty = "name" | "description";
+
+/**
+ * Meta property update action - states one of the selected object's meta fields.
+ *
+ * The fourth property route beside {@link StylePropertyUpdateAction},
+ * {@link TransformPropertyUpdateAction} and {@link DocumentPropertyUpdateAction}.
+ * Its target is the one object the sidebar names — a single selected object, or
+ * the selected connector — and never a selected group's descendants: a group
+ * carries a note of its own.
+ */
+export type MetaPropertyUpdateAction = {
+	type: "META_PROPERTY_UPDATE";
+	property: MetaProperty;
+	/**
+	 * The text to state, or null to drop the field. An empty string drops it too,
+	 * so an emptied field leaves no `meta: { name: "" }` behind in the document.
+	 */
+	value: string | null;
+	/**
+	 * true: recorded in history (blur / Enter) — also when the field already holds
+	 * the value, since the preview that preceded the commit is what put it there;
+	 * false: preview only
+	 */
+	commit: boolean;
+	/**
+	 * true: merge this commit with the preceding one for the same property and
+	 * selection into a single undo entry. Ignored when `commit` is false. Omitted
+	 * means every commit is its own entry.
 	 */
 	coalesceHistory?: boolean;
 };
@@ -201,6 +331,7 @@ export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
+	| LoadDocumentAction
 	| SetCameraAction
 	| SetViewportAction
 	| SetSelectionAction
@@ -210,7 +341,10 @@ export type CanvasAction =
 	| UpdateTextEditSelectionAction
 	| ToggleTextFormatAction
 	| EndTextEditAction
-	| MenuPropertyUpdateAction
+	| StylePropertyUpdateAction
+	| TransformPropertyUpdateAction
+	| DocumentPropertyUpdateAction
+	| MetaPropertyUpdateAction
 	| PasteAction
 	| RemeasureTextAction
 	| CloseContextMenuAction

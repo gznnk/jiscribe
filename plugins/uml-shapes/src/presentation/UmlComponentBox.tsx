@@ -23,7 +23,9 @@ export const UmlComponentBox = createFrameObject<UmlComponentState>(
 			"data-id": dataId,
 			transform,
 			strokeColor,
+			strokeAlpha,
 			fillColor,
+			fillAlpha,
 			strokeWidth,
 			strokeDasharray,
 		} = shape;
@@ -35,7 +37,9 @@ export const UmlComponentBox = createFrameObject<UmlComponentState>(
 				<ShapeBodyPath
 					d={buildUmlComponentBodyPath(-width / 2, -height / 2, width, height)}
 					strokeColor={strokeColor}
+					strokeAlpha={strokeAlpha}
 					fillColor={fillColor}
+					fillAlpha={fillAlpha}
 					strokeWidth={strokeWidth}
 					strokeDasharray={strokeDasharray}
 				/>
@@ -44,7 +48,9 @@ export const UmlComponentBox = createFrameObject<UmlComponentState>(
 						key={d}
 						d={d}
 						strokeColor={strokeColor}
+						strokeAlpha={strokeAlpha}
 						fillColor={fillColor}
+						fillAlpha={fillAlpha}
 						strokeWidth={strokeWidth}
 						strokeDasharray={strokeDasharray}
 					/>

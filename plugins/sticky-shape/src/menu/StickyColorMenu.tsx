@@ -4,9 +4,12 @@ import {
 	ObjectMenuButton,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
-	getFirstSelectedWithProp,
+	getSelectedShapeStyle,
 	useCanvasMessages,
+	useObjectShapeStyleDefaultsRegistry,
 	useSubmenuPosition,
+	setPart,
+	togglePart,
 } from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
@@ -18,15 +21,6 @@ import {
 } from "./StickyColorMenuStyled";
 
 const SECTION_ID = "sticky-color";
-
-const getSelectedFillColor = (
-	selectedIds: string[],
-	objects: ObjectMenuItemProps["objects"],
-): string => {
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "fill");
-	const fill = (obj as Record<string, unknown>)?.fill;
-	return typeof fill === "string" ? fill : "transparent";
-};
 
 /**
  * Paper-color menu (sticky only). Replaces the generic fill picker with the
@@ -43,7 +37,13 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const currentColor = getSelectedFillColor(selectedIds, objects);
+	const shapeStyleDefaults = useObjectShapeStyleDefaultsRegistry();
+	const currentColor = getSelectedShapeStyle(
+		selectedIds,
+		objects,
+		shapeStyleDefaults,
+		"fill",
+	).fill;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -55,7 +55,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>
 				<ColorPreviewIcon
@@ -80,7 +80,7 @@ const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 									}
 									data-kind="menu"
 									data-id="object-menu"
-									data-part={`set:fill:${preset.value}`}
+									data-part={setPart("fill", preset.value)}
 									title={messages.colorNames[preset.name] ?? preset.name}
 								/>
 							))}

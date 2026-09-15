@@ -8,7 +8,8 @@ import {
 	ObjectMenuSliderLabel,
 	ObjectMenuSliderNumberInput,
 } from "./ObjectMenuSliderStyled";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import { sliderPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuSliderProps = {
 	value: number;
@@ -27,7 +28,7 @@ type ObjectMenuSliderProps = {
 	step?: number;
 	label?: string;
 	property: string;
-	onPropertyUpdate?: ObjectMenuPropertyUpdater;
+	onPropertyUpdate?: StylePropertyUpdater;
 };
 
 const clamp = (value: number, lower: number, upper: number): number =>
@@ -196,7 +197,7 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 				onPointerUp={handleSliderPointerUp}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`slider:${property}`}
+				data-part={sliderPart(property)}
 				data-gesture="native-pointer"
 			/>
 		</ObjectMenuSliderWrapper>

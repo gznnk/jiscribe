@@ -105,7 +105,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 
 	/**
 	 * Inserts a new waypoint at the specified segment position (segmentIndex) and also updates
-	 * eventStartSnapshot so that subsequent drags can reference the new vertex.
+	 * the drag's start snapshot so that subsequent drags can reference the new vertex.
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
@@ -142,10 +142,13 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 			edgeScrollEnabled: true,
 		};
 
-		if (state.eventStartSnapshot) {
-			nextState.eventStartSnapshot = {
-				...state.eventStartSnapshot,
-				objects: updatedObjects,
+		if (state.activeDrag) {
+			nextState.activeDrag = {
+				...state.activeDrag,
+				startSnapshot: {
+					...state.activeDrag.startSnapshot,
+					objects: updatedObjects,
+				},
 			};
 		}
 
@@ -161,13 +164,13 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		connectorId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const eventStartSnapshot = state.eventStartSnapshot;
-		if (!eventStartSnapshot) {
+		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		if (!dragStartSnapshot) {
 			return state;
 		}
 
 		// Get the starting state from the snapshot that already includes the waypoint inserted at dragStart.
-		const startConnector = eventStartSnapshot.objects[connectorId];
+		const startConnector = dragStartSnapshot.objects[connectorId];
 		if (!isPoly(startConnector) || startConnector.type !== "connector") {
 			return state;
 		}
@@ -180,7 +183,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 		// --- Snap correction between objects ---
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
-		const snapCandidates = eventStartSnapshot.snapCandidates;
+		const snapCandidates = dragStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 		if (snapCandidates && !isSnapSuppressed(event)) {

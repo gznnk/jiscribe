@@ -1,10 +1,14 @@
 import { memo, useRef } from "react";
 
 import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
-import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
-import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
+import {
+	setPart,
+	togglePart,
+} from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
@@ -16,7 +20,8 @@ import {
 	ObjectMenuItemPositioner,
 	ObjectMenuButton,
 } from "../../ObjectMenuStyled";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
 
 const SECTION_ID = "line-style";
 
@@ -27,7 +32,7 @@ const SLIDER_MAX_STROKE_WIDTH = 20;
 
 type LineStyleMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
@@ -37,8 +42,13 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const strokeWidth = getSelectedStrokeWidth(canvasState);
-	const strokeDashType = getSelectedStrokeDashType(canvasState);
+	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const { strokeWidth, strokeDashType } = getSelectedShapeStyle(
+		getEffectiveSelectedIds(canvasState),
+		canvasState.objects,
+		objectShapeStyleDefaults,
+		"stroke",
+	);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -50,7 +60,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLineStyle}
 			>
 				<LineStyleIcon title={messages.menuLineStyle} />
@@ -67,7 +77,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 								isActive={!strokeDashType || strokeDashType === "solid"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:strokeDashType:solid"
+								data-part={setPart("strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
 								<SolidLineIcon title={messages.menuSolidLine} />
@@ -76,7 +86,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 								isActive={strokeDashType === "dashed"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:strokeDashType:dashed"
+								data-part={setPart("strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
 								<DashedLineIcon title={messages.menuDashedLine} />
@@ -85,7 +95,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 								isActive={strokeDashType === "dotted"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:strokeDashType:dotted"
+								data-part={setPart("strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>
 								<DottedLineIcon title={messages.menuDottedLine} />

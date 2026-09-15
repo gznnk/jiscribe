@@ -402,19 +402,30 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		[onToggleFormat, reportSelectionNow],
 	);
 
-	const handlePaste = useCallback((event: ClipboardEvent) => {
-		// Plain text only: what a body is styled in are its runs, not pasted markup.
-		// execCommand keeps the insertion on the browser's undo stack.
-		event.preventDefault();
-		const text = event.clipboardData?.getData("text/plain") ?? "";
-		if (text !== "") {
-			(event.target as HTMLElement).ownerDocument.execCommand(
-				"insertText",
-				false,
-				text,
-			);
-		}
-	}, []);
+	const handlePaste = useCallback(
+		(event: ClipboardEvent) => {
+			// Plain text only: what a body is styled in are its runs, not pasted
+			// markup. execCommand keeps the insertion on the browser's undo stack.
+			event.preventDefault();
+			const text = event.clipboardData?.getData("text/plain") ?? "";
+			if (text === "") {
+				return;
+			}
+			// Deferred to a task: VS Code's webview delivers a paste as
+			// document.execCommand("paste"), so this event fires inside that call,
+			// and Chrome refuses an execCommand nested in a running one. A microtask
+			// is too early (it runs before the outer call returns).
+			const ownerDocument = (event.target as HTMLElement).ownerDocument;
+			setTimeout(() => {
+				const surface = surfaceRef.current;
+				if (!surface || !surface.contains(ownerDocument.activeElement)) {
+					return;
+				}
+				ownerDocument.execCommand("insertText", false, text);
+			}, 0);
+		},
+		[surfaceRef],
+	);
 
 	const handleCompositionStart = useCallback(() => {
 		isComposing.current = true;

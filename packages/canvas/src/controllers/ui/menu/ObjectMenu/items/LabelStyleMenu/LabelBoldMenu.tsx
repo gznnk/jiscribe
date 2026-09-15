@@ -1,7 +1,8 @@
 import { memo } from "react";
 
-import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
+import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { isBoldFontWeight } from "../../../../../utils/isBoldFontWeight";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import {
@@ -35,7 +36,7 @@ const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isBold}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`set:label.fontWeight:${isBold ? "normal" : "bold"}`}
+				data-part={setPart("label.fontWeight", isBold ? "normal" : "bold")}
 				title={messages.menuLabelBold}
 			>
 				<BoldIcon />

@@ -1,23 +1,17 @@
 import type { ConnectorState } from "../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { hasSelectedConnectorShapedRoute } from "../../utils/hasSelectedConnectorShapedRoute";
 import type { ExecutableCommand } from "../CommandTypes";
 
-/**
- * The selected connector, when a single one is selected and its route is hand-shaped.
- * A connector with no vertices is already the engine's to route, so there is nothing to reset.
- */
+/** The selected connector, when a single one is selected and its route is hand-shaped. */
 const selectedShapedConnector = (
 	state: CanvasControllerState,
 ): ConnectorState | null => {
 	const id = state.selectedConnectorId;
-	if (id === null) {
+	if (id === null || !hasSelectedConnectorShapedRoute(id, state.objects)) {
 		return null;
 	}
-	const connector = state.objects[id] as ConnectorState | undefined;
-	if (!connector || connector.type !== "connector") {
-		return null;
-	}
-	return connector.points.length > 0 ? connector : null;
+	return state.objects[id] as ConnectorState;
 };
 
 /**
@@ -51,6 +45,7 @@ export const ResetConnectorRouteCommand: ExecutableCommand = {
 	id: "resetConnectorRoute",
 	label: "Reset Route",
 	category: "edit",
-	canExecute: (state) => selectedShapedConnector(state) !== null,
+	canExecute: (state) =>
+		hasSelectedConnectorShapedRoute(state.selectedConnectorId, state.objects),
 	execute: resetConnectorRoute,
 };

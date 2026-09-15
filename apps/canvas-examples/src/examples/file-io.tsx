@@ -1,7 +1,18 @@
-import { Canvas, extractCanvasSourceFromPng } from "@jiscribe/canvas";
-import type { CanvasParseResult, CanvasDoc } from "@jiscribe/canvas";
+import {
+	Canvas,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_TOOLS_SECTION,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
+	extractCanvasSourceFromPng,
+} from "@jiscribe/canvas";
+import type {
+	CanvasParseResult,
+	CanvasDoc,
+	ToolbarSection,
+} from "@jiscribe/canvas";
 import { createCanvasParser } from "@jiscribe/doc";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import "./file-io.css";
 
 // This example ships no plugin, so the default parser (every built-in type) is enough.
@@ -9,7 +20,7 @@ const canvasParser = createCanvasParser();
 
 const initialDoc: CanvasDoc = { version: 1, root: [] };
 
-const DEFAULT_FILE_NAME = "untitled.jis.json";
+const DEFAULT_FILE_NAME = "untitled.jis";
 
 /** Turn a parse failure result into a string suitable for an alert */
 const formatParseError = (
@@ -27,7 +38,7 @@ const formatParseError = (
 	}
 };
 
-/** File operation buttons inserted into the toolbar.leading slot. */
+/** File operation buttons the toolbar draws in a host slot. */
 function FileToolbarButtons({
 	onOpen,
 	onSave,
@@ -85,11 +96,11 @@ function FileToolbarButtons({
 
 /**
  * File I/O example:
- * - Loading a .jis.json (the Open button in toolbar.leading, then two-stage validation
- *   through the parser)
+ * - Loading a .jis (the Open button in the toolbar's host slot, then two-stage
+ *   validation through the parser)
  * - Saving the document being edited (onCommit copies the latest doc into a ref, and Save
  *   downloads it)
- * - Restoring a PNG exported by jiscribe (its iTXt carries the .jis.json) by dropping it,
+ * - Restoring a PNG exported by jiscribe (its iTXt carries the .jis) by dropping it,
  *   which doubles as a round-trip check
  */
 export function FileIoExample() {
@@ -167,6 +178,36 @@ export function FileIoExample() {
 		URL.revokeObjectURL(url);
 	}, [fileName]);
 
+	// The bar is declared whole, so putting host UI on it means restating the default
+	// sections beside it. Memoized because `node` holds a fresh element every render and a
+	// fresh `sections` array would defeat the toolbar's memo; the deps are what the buttons
+	// close over. The trailing divider marks the boundary with the tools that follow.
+	const toolbarSections = useMemo<ToolbarSection[]>(
+		() => [
+			{
+				id: "file",
+				items: [
+					{
+						type: "slot",
+						id: "file-io",
+						node: (
+							<FileToolbarButtons
+								onOpen={handleOpenClick}
+								onSave={handleSave}
+							/>
+						),
+					},
+					{ type: "divider" },
+				],
+			},
+			DEFAULT_TOOLBAR_TOOLS_SECTION,
+			DEFAULT_TOOLBAR_HISTORY_SECTION,
+			DEFAULT_TOOLBAR_VIEW_SECTION,
+			DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+		],
+		[handleOpenClick, handleSave],
+	);
+
 	return (
 		<div
 			style={{ width: "100%", height: "100%" }}
@@ -176,11 +217,7 @@ export function FileIoExample() {
 			<Canvas
 				doc={loadedDoc}
 				onCommit={handleCommit}
-				toolbar={{
-					leading: (
-						<FileToolbarButtons onOpen={handleOpenClick} onSave={handleSave} />
-					),
-				}}
+				toolbar={{ sections: toolbarSections }}
 			/>
 			<input
 				ref={fileInputRef}

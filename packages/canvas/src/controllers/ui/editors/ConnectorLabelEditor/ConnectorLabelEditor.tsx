@@ -1,3 +1,4 @@
+import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { BoundingBox, Point } from "@jiscribe/geometry";
 import type React from "react";
 import { memo, useCallback, useLayoutEffect } from "react";
@@ -8,7 +9,6 @@ import {
 } from "./ConnectorLabelEditorStyled";
 import {
 	calcConnectorLabelBox,
-	CONNECTOR_LABEL_DEFAULTS,
 	resolveLabelFill,
 } from "../../../../rendering/objects/connector/ConnectorLabel";
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";

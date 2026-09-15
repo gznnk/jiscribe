@@ -26,12 +26,12 @@
 				"type": "number"
 			},
 			"width": {
-				"description": "Width in pixels. Default when created from the palette: 300",
+				"description": "Width in pixels. Size written when a creation omits it: 300",
 				"type": "number",
 				"minimum": 0
 			},
 			"height": {
-				"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Default when created from the palette: 200",
+				"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Size written when a creation omits it: 200",
 				"type": "number",
 				"minimum": 0
 			},
@@ -50,10 +50,16 @@
 			"strokeDashType": {
 				"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 			},
+			"strokeOpacity": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+			},
 			"fill": {
 				"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface. Default: \"auto\" (unlike other shapes, which default to transparent)",
 				"type": "string",
 				"default": "auto"
+			},
+			"fillOpacity": {
+				"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 			},
 			"text": {
 				"description": "Markdown source to render. Default: \"\"",
@@ -143,12 +149,12 @@
 				"type": "number"
 			},
 			"width": {
-				"description": "Bounding-box width in pixels.",
+				"description": "Bounding-box width in pixels. Size written when a creation omits it: 180",
 				"type": "number",
 				"minimum": 0
 			},
 			"height": {
-				"description": "Bounding-box height in pixels. Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). A written \"stereotype\" adds a band of its own above the title, 28 more at the default fontSize. Either header band grows with its content — a larger fontSize, a newline, or text too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
+				"description": "Bounding-box height in pixels. Size written when a creation omits it: 95 (a title band over three attribute rows). Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). A written \"stereotype\" adds a band of its own above the title, 28 more at the default fontSize. Either header band grows with its content — a larger fontSize, a newline, or text too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
 				"type": "number",
 				"minimum": 0
 			},
@@ -161,10 +167,16 @@
 			"strokeDashType": {
 				"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 			},
+			"strokeOpacity": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+			},
 			"fill": {
 				"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface. Default: \"auto\" (unlike most shapes, which default to transparent)",
 				"type": "string",
 				"default": "auto"
+			},
+			"fillOpacity": {
+				"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 			},
 			"text": {
 				"description": "The text slots. Not a string: a record keeps its title and its compartments apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Which slots you write is what gives the box its compartments — write \"attributes\" alone for a two-compartment box (an ER entity, a DTO), add \"operations\" for a UML class, omit both for a plain titled box; \"stereotype\" is a band rather than a compartment and is what marks an interface, an abstract class, or an enum. Default: { \"name\": { \"text\": \"\" }, \"attributes\": { \"text\": [] } }",
@@ -489,6 +501,9 @@
 			},
 			"strokeDashType": {
 				"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+			},
+			"strokeOpacity": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 			}
 		}
 	},
@@ -527,13 +542,19 @@
 			"strokeDashType": {
 				"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 			},
+			"strokeOpacity": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+			},
 			"fill": {
 				"$ref": "#/$defs/FillStyle/properties/fill"
+			},
+			"fillOpacity": {
+				"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 			}
 		}
 	},
 	"GroupDoc": {
-		"description": "A group containing child objects.",
+		"description": "A group containing child objects. It has no position or size of its own: both follow from the children, so there are no x/y/width/height fields to write here.",
 		"type": "object",
 		"required": ["id", "type", "children"],
 		"additionalProperties": false,
@@ -609,8 +630,63 @@
 				"minimum": 0
 			},
 			"svgText": {
-				"description": "Inline SVG markup, starting with a <svg ...> root element. Include a viewBox so the content scales to fit the box (if absent, the markup's width/height, or 100x100, is used). Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered.",
+				"description": "Inline SVG markup, starting with a <svg ...> root element. Include a viewBox so the content scales to fit the box (if absent, the markup's width/height, or 100x100, is used). Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered. Markup that does not parse as SVG is replaced by a placeholder error icon rather than drawing nothing.",
 				"type": "string"
+			},
+			"rotation": {
+				"$ref": "#/$defs/TransformStyle/properties/rotation"
+			},
+			"flipX": {
+				"$ref": "#/$defs/TransformStyle/properties/flipX"
+			},
+			"flipY": {
+				"$ref": "#/$defs/TransformStyle/properties/flipY"
+			},
+			"lockAspectRatio": {
+				"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+			}
+		}
+	},
+	"ImageDoc": {
+		"description": "A picture file (raster or SVG) drawn as an opaque box. Use it for photographs, screenshots and exported pictures — anything the built-in shapes cannot draw and inline SVG markup (`svg`) would not hold. The picture itself lives in a separate file that travels with the .jis; this object only names it. It IS a connector target (an image is a node of the diagram), and it has no text, stroke or fill of its own.",
+		"type": "object",
+		"required": ["id", "type", "x", "y", "width", "height", "src"],
+		"additionalProperties": false,
+		"properties": {
+			"id": {
+				"description": "Unique identifier.",
+				"type": "string"
+			},
+			"type": {
+				"description": "Must be \"image\".",
+				"type": "string",
+				"const": "image"
+			},
+			"meta": {
+				"$ref": "#/$defs/MetaDoc"
+			},
+			"x": {
+				"description": "Left-edge X coordinate.",
+				"type": "number"
+			},
+			"y": {
+				"description": "Top-edge Y coordinate.",
+				"type": "number"
+			},
+			"width": {
+				"description": "Display width in pixels (the box the image is stretched into).",
+				"type": "number",
+				"minimum": 0
+			},
+			"height": {
+				"description": "Display height in pixels (the box the image is stretched into).",
+				"type": "number",
+				"minimum": 0
+			},
+			"src": {
+				"description": "Path to the image file, relative to the directory the .jis itself is in. Use \"/\" as the separator and keep the file inside that directory: \"..\", an absolute path and a URL are all rejected by the host that reads it. The file is NOT embedded in the document — the host resolves it when drawing, so put the image beside the .jis (or in a folder under it) and ship the two together. A file that cannot be resolved is drawn as a placeholder box instead of the picture. `width` and `height` are required and the image is stretched to fill that box exactly, so give them the file's own aspect ratio unless you mean to distort it.",
+				"type": "string",
+				"minLength": 1
 			},
 			"rotation": {
 				"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -645,7 +721,7 @@
 				"$ref": "#/$defs/MetaDoc"
 			},
 			"points": {
-				"description": "Ordered list of the route's vertices from source to target, in world coordinates - the corners the line bends at. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Empty (the normal case) lets the engine route the whole path. Non-empty, these points ARE the path: under the default \"orthogonal\" shape consecutive points must share x or y, and the first/last must share the axis its endpoint is left on, because nothing straightens or re-routes them. Use vertices only when a specific route matters.",
+				"description": "Ordered list of the route's vertices from source to target, in world coordinates - the corners the line bends at. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Empty (the normal case) lets the engine route the whole path. Non-empty, these points ARE the path: under the default \"orthogonal\" shape consecutive points must share x or y, and the first/last must share the axis its endpoint is left on, because nothing straightens or re-routes them. When a connected shape moves, only the vertex next to each endpoint slides along, so the segment touching that endpoint stays axis-aligned; an editor operation writes that slid position back into this list when it commits, so a stored list read back always matches what is drawn. Nothing else re-routes, so a route pinned by vertices survives a big layout change as a detour. Use vertices only when a specific route matters.",
 				"type": "array",
 				"items": {
 					"$ref": "#/$defs/Point"
@@ -682,8 +758,11 @@
 			"strokeDashType": {
 				"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 			},
+			"strokeOpacity": {
+				"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+			},
 			"label": {
-				"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontFamily, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign or verticalAlign — do not add those keys here.",
+				"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontFamily, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign or verticalAlign — do not add those keys here. It is always drawn horizontally, centered on its anchor point on the path: a rotated or diagonal connector does not tilt it.",
 				"type": "object",
 				"required": ["text"],
 				"additionalProperties": false,
@@ -893,7 +972,7 @@
 		}
 	},
 	"MetaDoc": {
-		"description": "Optional metadata attached to any object.",
+		"description": "Optional metadata attached to any object. Beyond the keys listed here it accepts any custom key, which jiscribe carries through untouched.",
 		"type": "object",
 		"properties": {
 			"name": {
@@ -916,15 +995,12 @@
 		"type": "object",
 		"properties": {
 			"stroke": {
-				"description": "Stroke color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time). Default: \"auto\"",
-				"type": "string",
-				"default": "auto"
+				"description": "Stroke color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time).",
+				"type": "string"
 			},
 			"strokeWidth": {
-				"description": "Stroke width in pixels. Default: 2",
-				"type": "number",
-				"minimum": 0,
-				"default": 2
+				"description": "Stroke width in pixels.",
+				"type": "number"
 			},
 			"strokeDashType": {
 				"description": "Dash pattern. Default: \"solid\"",
@@ -934,6 +1010,10 @@
 					}
 				],
 				"default": "solid"
+			},
+			"strokeOpacity": {
+				"description": "Stroke opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the stroke color already carries, so rgba() / #RRGGBBAA still work and combine with it.",
+				"type": "number"
 			}
 		}
 	},
@@ -942,9 +1022,12 @@
 		"type": "object",
 		"properties": {
 			"fill": {
-				"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"transparent\"",
-				"type": "string",
-				"default": "transparent"
+				"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time).",
+				"type": "string"
+			},
+			"fillOpacity": {
+				"description": "Fill opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the fill color already carries, so rgba() / #RRGGBBAA still work and combine with it.",
+				"type": "number"
 			}
 		}
 	},

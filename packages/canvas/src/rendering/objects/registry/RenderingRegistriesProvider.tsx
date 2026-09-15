@@ -1,3 +1,4 @@
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import type { ReactNode } from "react";
 
@@ -11,6 +12,7 @@ import type { ObjectGeometryKeyRegistry } from "./ObjectGeometryKeyRegistry";
 import { ObjectGeometryKeyRegistryContext } from "./ObjectGeometryKeyRegistryContext";
 import type { ObjectOutlineRegistry } from "./ObjectOutlineRegistry";
 import { ObjectOutlineRegistryContext } from "./ObjectOutlineRegistryContext";
+import { ObjectShapeStyleDefaultsRegistryContext } from "./ObjectShapeStyleDefaultsRegistryContext";
 import type { ObjectSvgDefsRegistry } from "./ObjectSvgDefsRegistry";
 import { ObjectSvgDefsRegistryContext } from "./ObjectSvgDefsRegistryContext";
 import type { ObjectTextRegionRegistry } from "./ObjectTextRegionRegistry";
@@ -21,6 +23,7 @@ type RenderingRegistriesProviderProps = {
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
+	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectExtraConnectPoints: ObjectExtraConnectPointsRegistry;
@@ -39,6 +42,7 @@ export function RenderingRegistriesProvider({
 	objectComponent,
 	objectTextRegion,
 	objectTextStyleDefaults,
+	objectShapeStyleDefaults,
 	objectOutline,
 	objectAnchorRegion,
 	objectExtraConnectPoints,
@@ -50,19 +54,23 @@ export function RenderingRegistriesProvider({
 		<ObjectComponentRegistryContext value={objectComponent}>
 			<ObjectTextRegionRegistryContext value={objectTextRegion}>
 				<ObjectTextStyleDefaultsRegistryContext value={objectTextStyleDefaults}>
-					<ObjectOutlineRegistryContext value={objectOutline}>
-						<ObjectAnchorRegionRegistryContext value={objectAnchorRegion}>
-							<ObjectExtraConnectPointsRegistryContext
-								value={objectExtraConnectPoints}
-							>
-								<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
-									<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
-										{children}
-									</ObjectSvgDefsRegistryContext>
-								</ObjectGeometryKeyRegistryContext>
-							</ObjectExtraConnectPointsRegistryContext>
-						</ObjectAnchorRegionRegistryContext>
-					</ObjectOutlineRegistryContext>
+					<ObjectShapeStyleDefaultsRegistryContext
+						value={objectShapeStyleDefaults}
+					>
+						<ObjectOutlineRegistryContext value={objectOutline}>
+							<ObjectAnchorRegionRegistryContext value={objectAnchorRegion}>
+								<ObjectExtraConnectPointsRegistryContext
+									value={objectExtraConnectPoints}
+								>
+									<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
+										<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
+											{children}
+										</ObjectSvgDefsRegistryContext>
+									</ObjectGeometryKeyRegistryContext>
+								</ObjectExtraConnectPointsRegistryContext>
+							</ObjectAnchorRegionRegistryContext>
+						</ObjectOutlineRegistryContext>
+					</ObjectShapeStyleDefaultsRegistryContext>
 				</ObjectTextStyleDefaultsRegistryContext>
 			</ObjectTextRegionRegistryContext>
 		</ObjectComponentRegistryContext>

@@ -23,7 +23,7 @@ import { isGroupState } from "../../states/objects/primitives/group/GroupState";
  * children, connector) are simply absent from the returned map.
  *
  * @param objects - The object map (group structure + kind dispatch)
- * @param keyPoints - Precomputed keyPoints for frames and non-connector polys (from EventStartSnapshot)
+ * @param keyPoints - Precomputed keyPoints for frames and non-connector polys (from DragStartSnapshot)
  * @returns id → bounding box for every object with a valid extent
  */
 export function buildObjectBBoxes(

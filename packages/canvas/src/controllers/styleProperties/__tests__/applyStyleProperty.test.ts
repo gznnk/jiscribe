@@ -10,6 +10,7 @@ import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFea
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createObjectTextVerticalBasisRegistry } from "../../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
@@ -33,7 +34,10 @@ const ExtraShapeExtraStyleProperties = {
 
 // Production-shaped registry: system handlers + the extras under test.
 const styleRegistry = createStylePropertyRegistry();
-initializeStyleProperties(styleRegistry);
+initializeStyleProperties(
+	styleRegistry,
+	createObjectTextVerticalBasisRegistry(),
+);
 styleRegistry.registerExtras(EXTRA_SHAPE_TYPE, ExtraShapeExtraStyleProperties);
 styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 
@@ -366,6 +370,41 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				objects: { r1 },
 			});
 			expect(applyStyleProperty(state, "startArrow", "triangle")).toBe(state);
+		});
+
+		it("fillOpacity is converted to a number and applied", () => {
+			const r1 = rectObj("r1");
+			const state = makeState({
+				selectedIds: ["r1"],
+				objects: { r1 },
+			});
+			const result = applyStyleProperty(state, "fillOpacity", "0.4");
+			const updated = result.objects["r1"] as unknown as {
+				fillOpacity: number;
+			};
+			expect(updated.fillOpacity).toBe(0.4);
+		});
+
+		it("fillOpacity on a polyline -> returns the same reference, it has no fill", () => {
+			const p1 = polylineObj("p1");
+			const state = makeState({
+				selectedIds: ["p1"],
+				objects: { p1 },
+			});
+			expect(applyStyleProperty(state, "fillOpacity", "0.4")).toBe(state);
+		});
+
+		it("strokeOpacity is converted to a number and applied", () => {
+			const p1 = polylineObj("p1");
+			const state = makeState({
+				selectedIds: ["p1"],
+				objects: { p1 },
+			});
+			const result = applyStyleProperty(state, "strokeOpacity", "0.25");
+			const updated = result.objects["p1"] as unknown as {
+				strokeOpacity: number;
+			};
+			expect(updated.strokeOpacity).toBe(0.25);
 		});
 
 		it("arrow property on a polyline -> applied via its arrow feature", () => {

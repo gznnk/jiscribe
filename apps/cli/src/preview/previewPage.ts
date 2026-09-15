@@ -1,6 +1,8 @@
 import type { CanvasDoc } from "@jiscribe/doc";
 
 import type { PreviewAssets } from "./previewAssets";
+import type { PreviewImageDataUris } from "./previewImages";
+import type { PreviewPayload } from "../../preview/previewBridge";
 import {
 	PREVIEW_FONTS_HREF,
 	PREVIEW_GLOBAL,
@@ -10,6 +12,8 @@ import {
 export type PreviewPageParts = PreviewAssets & {
 	/** The validated document the page mounts. */
 	doc: CanvasDoc;
+	/** The document's images, already read; empty for a document naming none. */
+	images: PreviewImageDataUris;
 	/** What the browser tab is called; the input file name, as given. */
 	title: string;
 };
@@ -25,7 +29,7 @@ const escapeHtml = (text: string): string =>
 	text.replace(/[&<>"]/g, (character) => HTML_ESCAPES[character]);
 
 /**
- * The document as a JavaScript expression that cannot end the script it sits in.
+ * The payload as a JavaScript expression that cannot end the script it sits in.
  *
  * `</script` inside a string literal closes the element as far as the HTML parser
  * is concerned, whatever JavaScript thinks, so the `<` is written as its escape;
@@ -44,6 +48,12 @@ const toScriptJson = (value: unknown): string =>
  */
 const escapeClosingTag = (text: string, tag: "script" | "style"): string =>
 	text.split(`</${tag}`).join(`<\\/${tag}`);
+
+/** What the page publishes on `window`, typed so it cannot drift from the page's own reader. */
+const toPayload = (parts: PreviewPageParts): PreviewPayload => ({
+	doc: parts.doc,
+	images: parts.images,
+});
 
 /**
  * Writes one document, the canvas and everything the canvas needs into a single
@@ -83,7 +93,7 @@ export const buildPreviewPage = (
 	<body>
 		<div id="preview-root"></div>
 		<script>
-			window.${PREVIEW_GLOBAL} = { doc: ${toScriptJson(parts.doc)} };
+			window.${PREVIEW_GLOBAL} = ${toScriptJson(toPayload(parts))};
 		</script>
 		<script>${escapeClosingTag(parts.script, "script")}</script>
 	</body>

@@ -1,15 +1,10 @@
 import styled from "@emotion/styled";
+import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
-type StadiumElementProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-	/** Resolved fill color (auto is resolved to the theme surface). */
-	fillColor: string;
-};
-
-export const StadiumElement = styled.rect<StadiumElementProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+export const StadiumElement = styled.rect<StrokePaintProps & FillPaintProps>`
+	${strokePaint}
+	${fillPaint}
 	pointer-events: auto;
 	cursor: grab;
 

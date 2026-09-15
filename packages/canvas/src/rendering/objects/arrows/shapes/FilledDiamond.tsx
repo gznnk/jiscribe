@@ -22,6 +22,7 @@ const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -37,6 +38,7 @@ const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 		<ArrowPolygon
 			points={points}
 			fillColor={color}
+			alpha={opacity}
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}

@@ -23,9 +23,11 @@ const emptyDoc: CanvasFileContent = { version: 1, root: [] };
  */
 const STYLE_SAMPLE_VALUES: Record<string, unknown> = {
 	fill: "#e3f2fd",
+	fillOpacity: 0.5,
 	stroke: "#1565c0",
 	strokeWidth: 2,
 	strokeDashType: "dashed",
+	strokeOpacity: 0.75,
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: "#102a43",

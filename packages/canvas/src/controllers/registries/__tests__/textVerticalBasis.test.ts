@@ -2,10 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import {
-	isSelectionTextVerticalBasisFrame,
-	ToggleTextVerticalBasisCommand,
-} from "../../commands/shape/ToggleTextVerticalBasisCommand";
+import { ToggleTextVerticalBasisCommand } from "../../commands/shape/ToggleTextVerticalBasisCommand";
+import { isSelectionTextVerticalBasisFrame } from "../../utils/textVerticalBasisSelection";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
 const registries = createCanvasRegistries();
@@ -123,5 +121,38 @@ describe("the vertical basis a body is placed against", () => {
 				registries,
 			),
 		).toBe(false);
+	});
+
+	describe("stated outright through the style property", () => {
+		const applyBasis = (state: CanvasControllerState, value: string) =>
+			registries.styleProperty.apply(state, "textVerticalBasis", value);
+
+		it("places every switchable body on the box named, and leaves the rest alone", () => {
+			const state = controllerStateOf(
+				shapeOf("e1", "ellipse"),
+				shapeOf("e2", "ellipse", "frame"),
+				shapeOf("r1", "rect"),
+			);
+
+			const onFrame = applyBasis(state, "frame");
+			expect(basisOf(onFrame, "e1")).toBe("frame");
+			expect(basisOf(onFrame, "e2")).toBe("frame");
+			expect(basisOf(onFrame, "r1")).toBeUndefined();
+
+			// Back on the region the field is removed, that being how the region is read
+			const onRegion = applyBasis(onFrame, "region");
+			expect(basisOf(onRegion, "e1")).toBeUndefined();
+			expect(basisOf(onRegion, "e2")).toBeUndefined();
+		});
+
+		it("returns the state as-is when nothing in the selection can be switched", () => {
+			const state = controllerStateOf(shapeOf("r1", "rect"));
+			expect(applyBasis(state, "frame")).toBe(state);
+		});
+
+		it("refuses a value that names neither box", () => {
+			const state = controllerStateOf(shapeOf("e1", "ellipse"));
+			expect(() => applyBasis(state, "middle")).toThrow(/region.*frame/);
+		});
 	});
 });

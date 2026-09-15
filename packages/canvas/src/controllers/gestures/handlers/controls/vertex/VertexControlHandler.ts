@@ -1,7 +1,6 @@
 import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type { Point } from "@jiscribe/geometry";
 
-import { ORIGIN_SNAP_PX } from "../../../../../constants/axisLock";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,
@@ -11,6 +10,7 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { ORIGIN_SNAP_PX } from "../../utils/axisLock";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -118,12 +118,12 @@ export class VertexControlHandler extends ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
-		const eventStartSnapshot = state.eventStartSnapshot;
-		if (!eventStartSnapshot) {
+		const dragStartSnapshot = state.activeDrag?.startSnapshot;
+		if (!dragStartSnapshot) {
 			return state;
 		}
 
-		const startObject = eventStartSnapshot.objects[objectId];
+		const startObject = dragStartSnapshot.objects[objectId];
 		if (!isPoly(startObject)) {
 			return state;
 		}
@@ -163,7 +163,7 @@ export class VertexControlHandler extends ControlStrategy {
 		}
 
 		// --- Snap correction between objects (skipped while axis-locked / origin-snapping) ---
-		const snapCandidates = eventStartSnapshot.snapCandidates;
+		const snapCandidates = dragStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 		if (snapCandidates && !isSnapSuppressed(event) && !snapToOrigin) {

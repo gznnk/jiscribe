@@ -1,9 +1,10 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { memo, useRef } from "react";
 
-import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveLabelFill } from "../../../../../../rendering/objects/connector/ConnectorLabel";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { getSelectedConnectorLabel } from "../../../../../utils/getSelectedConnectorLabel";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -50,7 +51,7 @@ const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLabelBackgroundColor}
 			>
 				<ColorPreviewIcon
@@ -66,6 +67,8 @@ const LabelBackgroundColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				>
 					<ObjectMenuColorPickerGrid
 						currentColor={fill}
+						// The label of the one selected connector is the whole target.
+						currentColorIsShared
 						property="label.fill"
 						onPropertyUpdate={onPropertyUpdate}
 					/>

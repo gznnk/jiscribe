@@ -1,10 +1,6 @@
 import styled from "@emotion/styled";
-import { ShapeBodyPath } from "@jiscribe/canvas-sdk";
-
-type PictogramStrokeProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-};
+import type { StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { ShapeBodyPath, strokePaint } from "@jiscribe/canvas-sdk";
 
 /** A silhouette of the pictogram; rounded joins keep its many corners soft. */
 export const PictogramBodyPath = styled(ShapeBodyPath)`
@@ -12,8 +8,8 @@ export const PictogramBodyPath = styled(ShapeBodyPath)`
 `;
 
 /** Detail lines. Never hit-tested, so they may cross the body freely. */
-export const PictogramDetailPath = styled.path<PictogramStrokeProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const PictogramDetailPath = styled.path<StrokePaintProps>`
+	${strokePaint}
 	fill: none;
 	stroke-linecap: round;
 	stroke-linejoin: round;

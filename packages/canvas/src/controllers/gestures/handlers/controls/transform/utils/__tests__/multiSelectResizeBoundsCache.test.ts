@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 
-import { MIN_GROUP_DIMENSION } from "../../../../../../../constants/groupDimensions";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../../states/objects/primitives/group/GroupState";
 import type { PolylineState } from "../../../../../../../states/objects/primitives/polyline/PolylineState";
+import { MIN_GROUP_DIMENSION } from "../../../../../../../states/utils/groupDimensions";
 import { transformFrameByGroup } from "../../../../../../behaviors/base/FrameTransform";
 import { transformPolyByGroup } from "../../../../../../behaviors/base/PolyTransform";
 import { calcMultiSelectGroupBounds } from "../calcMultiSelectGroupBounds";

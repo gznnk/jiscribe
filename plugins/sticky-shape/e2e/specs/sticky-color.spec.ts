@@ -8,19 +8,17 @@ import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
  * (StickyColorMenu, presets only), and it was the only one left uncovered. Pressing a
  * preset swatch changes the body fill, and it survives deselect -> reselect.
  *
- * The Sticky body is the second polygon inside the <g> (the first is the shadow), and
- * the fill lands on the SVG fill attribute.
+ * The Sticky body is the one polygon inside the <g> (the shadow is rects), and the
+ * fill is applied through CSS (so that an "auto" fill can resolve to a theme
+ * token), hence the computed value rather than the attribute.
  */
 async function stickyFill(
 	canvas: CanvasDriver,
 	id: string,
 ): Promise<string | null> {
 	return canvas.page.evaluate((stickyId) => {
-		const group = document.querySelector(`[data-id="${stickyId}"]`);
-		const polygons = group ? [...group.querySelectorAll("polygon")] : [];
-		// The first polygon is the shadow, the second one is the body.
-		const main = polygons[1] ?? polygons[0];
-		return main?.getAttribute("fill") ?? null;
+		const body = document.querySelector(`[data-id="${stickyId}"] polygon`);
+		return body ? getComputedStyle(body).fill : null;
 	}, id);
 }
 
@@ -40,7 +38,9 @@ test.describe("Sticky preset colors", () => {
 		await canvas.selectAt(center);
 
 		// The default is Yellow (#fef9c3); switch to the Blue (#bfdbfe) swatch.
-		expect(await stickyFill(canvas, id)).toBe("#fef9c3");
+		expect(await stickyFill(canvas, id)).toBe(
+			await canvas.normalizeColor("#fef9c3"),
+		);
 
 		await canvas.openObjectMenu("sticky-color");
 		await canvas.page.click(selectors.objectMenuSet("fill", "#bfdbfe"));
@@ -48,11 +48,13 @@ test.describe("Sticky preset colors", () => {
 			.poll(() => stickyFill(canvas, id), {
 				message: "picking a preset changes the body fill",
 			})
-			.toBe("#bfdbfe");
+			.toBe(await canvas.normalizeColor("#bfdbfe"));
 
 		// Kept across deselect -> reselect.
 		await canvas.deselect();
 		await canvas.selectAt(center);
-		expect(await stickyFill(canvas, id)).toBe("#bfdbfe");
+		expect(await stickyFill(canvas, id)).toBe(
+			await canvas.normalizeColor("#bfdbfe"),
+		);
 	});
 });

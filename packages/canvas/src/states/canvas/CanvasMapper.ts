@@ -99,13 +99,6 @@ export const canvasToState = (
 	return {
 		objects,
 		rootIds,
-		viewport: {
-			minX: 0,
-			minY: 0,
-			width: 1000,
-			height: 800,
-			zoom: 1,
-		},
 		background: doc.background,
 		view: doc.view,
 	};

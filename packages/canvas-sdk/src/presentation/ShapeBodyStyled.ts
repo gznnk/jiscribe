@@ -1,11 +1,11 @@
 import styled from "@emotion/styled";
+import type {
+	FillPaintProps,
+	StrokePaintProps,
+} from "@jiscribe/canvas/unstable";
+import { fillPaint, strokePaint } from "@jiscribe/canvas/unstable";
 
-type ShapeBodyProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-	/** Resolved fill color (auto is resolved to the theme surface). */
-	fillColor: string;
-};
+type ShapeBodyProps = StrokePaintProps & FillPaintProps;
 
 /**
  * The silhouette of a shape drawn as a polygon; takes `points` from the caller.
@@ -13,8 +13,8 @@ type ShapeBodyProps = {
  * still painted, unlike `fill: none`.
  */
 export const ShapeBodyPolygon = styled.polygon<ShapeBodyProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+	${strokePaint}
+	${fillPaint}
 	pointer-events: auto;
 	cursor: grab;
 
@@ -25,8 +25,8 @@ export const ShapeBodyPolygon = styled.polygon<ShapeBodyProps>`
 
 /** Same as ShapeBodyPolygon, drawn as a path; takes `d` from the caller. */
 export const ShapeBodyPath = styled.path<ShapeBodyProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+	${strokePaint}
+	${fillPaint}
 	pointer-events: auto;
 	cursor: grab;
 

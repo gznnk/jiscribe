@@ -34,12 +34,26 @@ export type ColorSectionId =
 /** Shared by the unscoped and the section-scoped color input selectors below. */
 const CSS_COLOR_INPUT = 'input[placeholder="CSS color"]';
 
+/** Shared by the shape library sidebar selectors below, which all scope into it. */
+const STENCIL_LIBRARY_PANEL =
+	'[data-kind="menu"][data-id="stencil-library-panel"]';
+
+/** Shared by the properties sidebar selectors below, which all scope into it. */
+const PROPERTY_PANEL = '[data-kind="menu"][data-id="property-panel"]';
+
+/**
+ * Shared by the toolbar-scoped selectors below. Scoping them matters because while
+ * the sidebar is open every preset it lists is a second button with the same title
+ * and data-part as the pinned one.
+ */
+const TOOLBAR = '[data-kind="menu"][data-id="toolbar"]';
+
 export const selectors = {
-	/** Toolbar tool button. */
-	toolButton: (tool: ToolTitle) => `button[title="${tool}"]`,
+	/** Toolbar tool button, scoped to the bar so the sidebar's copy cannot match. */
+	toolButton: (tool: ToolTitle) => `${TOOLBAR} button[title="${tool}"]`,
 
 	/** The toolbar bar itself; the only element of the bar carrying data-kind / data-id. */
-	toolbar: '[data-kind="menu"][data-id="toolbar"]',
+	toolbar: TOOLBAR,
 
 	/**
 	 * Toolbar command button (zoom and so on). Written as a descendant selector
@@ -48,7 +62,7 @@ export const selectors = {
 	 * and keeps them apart from the `command:*` parts of the other menus.
 	 */
 	toolbarCommand: (commandId: string) =>
-		`[data-kind="menu"][data-id="toolbar"] [data-part="command:${commandId}"]`,
+		`${TOOLBAR} [data-part="command:${commandId}"]`,
 
 	/** StencilLibrary category button; the toggle that opens a flyout. */
 	categoryButton: (categoryId: string) =>
@@ -58,8 +72,120 @@ export const selectors = {
 	categoryFlyout: (categoryId: string) =>
 		`[data-category-flyout="${categoryId}"]`,
 
-	/** StencilLibrary shape item; pinned and in-flyout share this DOM contract. */
-	shapeItem: (presetId: string) => `[data-part="item:${presetId}"]`,
+	/**
+	 * StencilLibrary shape item; pinned and in-flyout share this DOM contract, and
+	 * both live inside the toolbar, which is what scopes the sidebar's copy out.
+	 */
+	shapeItem: (presetId: string) => `${TOOLBAR} [data-part="item:${presetId}"]`,
+
+	/**
+	 * Toolbar toggle that opens and closes the shape library sidebar. Present only
+	 * when the host declared `stencilLibrary.sections` with something in it, and
+	 * carrying the open state on aria-expanded. Written as a descendant selector for
+	 * the same reason as toolbarCommand.
+	 */
+	stencilLibraryToggle: `${TOOLBAR} [data-part="command:toggleStencilLibrary"]`,
+
+	/**
+	 * The shape library sidebar itself. Mounted only while open, so closed it is
+	 * absent from the DOM: assert `toHaveCount(0)` for closed rather than waiting
+	 * for it to become invisible.
+	 */
+	stencilLibraryPanel: STENCIL_LIBRARY_PANEL,
+
+	/** Close (x) button in the sidebar header. */
+	stencilLibraryPanelClose: `${STENCIL_LIBRARY_PANEL} [data-part="close"]`,
+
+	/**
+	 * Sidebar section header; the disclosure button carrying aria-expanded, whose
+	 * id is the category id the host declared.
+	 */
+	stencilLibrarySection: (sectionId: string) =>
+		`${STENCIL_LIBRARY_PANEL} [data-part="section:${sectionId}"]`,
+
+	/**
+	 * Shape item inside the sidebar. Same DOM contract as shapeItem, scoped to the
+	 * panel so it does not also match the pinned copy on the toolbar.
+	 */
+	stencilLibraryPanelItem: (presetId: string) =>
+		`${STENCIL_LIBRARY_PANEL} [data-part="item:${presetId}"]`,
+
+	/** Search box of the sidebar; filtering collapses the sections into one grid. */
+	stencilLibrarySearch: `${STENCIL_LIBRARY_PANEL} input[type="text"]`,
+
+	/**
+	 * Toolbar toggle that opens and closes the properties sidebar, carrying the
+	 * open state on aria-expanded. Scoped to the toolbar so it does not also match
+	 * the panel's own close button, which routes through the same command.
+	 */
+	propertyPanelToggle: `${TOOLBAR} [data-part="command:togglePropertyPanel"]`,
+
+	/**
+	 * The properties sidebar itself. Mounted only while open, so closed it is
+	 * absent from the DOM: assert `toHaveCount(0)` for closed rather than waiting
+	 * for it to become invisible.
+	 */
+	propertyPanel: PROPERTY_PANEL,
+
+	/** Close (x) button in the properties sidebar header. */
+	propertyPanelClose: `${PROPERTY_PANEL} [data-part="command:togglePropertyPanel"]`,
+
+	/**
+	 * Section header of the properties sidebar; the disclosure button carrying
+	 * aria-expanded. Scoped to the panel, since the ObjectMenu's own section
+	 * toggles share the `toggle:` grammar.
+	 */
+	propertyPanelSection: (sectionId: string) =>
+		`${PROPERTY_PANEL} [data-part="toggle:${sectionId}"]`,
+
+	/**
+	 * A property-writing control inside the sidebar (a swatch, a segment, a
+	 * checkbox). The controls declare themselves as object-menu targets, so this
+	 * differs from `objectMenuSet` only in being scoped to the panel.
+	 */
+	propertyPanelSet: (property: string, value: string) =>
+		`${PROPERTY_PANEL} [data-part="set:${property}:${value}"]`,
+
+	/** A command button inside the sidebar (the Arrange section's stacking-order buttons). */
+	propertyPanelCommand: (commandId: string) =>
+		`${PROPERTY_PANEL} [data-part="command:${commandId}"]`,
+
+	/**
+	 * A number field of the sidebar, found by its test-only hook: `x` / `y` /
+	 * `width` / `height` / `rotation` for the frame, and the style property's own
+	 * name for the rest (`strokeWidth`, `rx`, `fontSize`).
+	 */
+	propertyPanelField: (name: string) =>
+		`${PROPERTY_PANEL} [data-testid="property-field:${name}"]`,
+
+	/**
+	 * One of the two spin buttons beside a number field. Scoped through the
+	 * field's own root (`> ` against the input), so the pair of a Size row does
+	 * not also match its neighbour's buttons; the aria-label is the only thing
+	 * that tells up from down.
+	 */
+	propertyPanelFieldSpin: (name: string, direction: "Increase" | "Decrease") =>
+		`${PROPERTY_PANEL} div:has(> [data-testid="property-field:${name}"]) button[aria-label="${direction}"]`,
+
+	/**
+	 * Title row of the sidebar. Its first child rather than a data-part of its
+	 * own: it is the one place inside the panel a press reaches no control, which
+	 * is what a test of "pressing outside" needs.
+	 */
+	propertyPanelHeader: `${PROPERTY_PANEL} > div:nth-child(1)`,
+
+	/**
+	 * Scrolling body of the sidebar, the child that holds the sections. The
+	 * dropdown panels are portalled to the panel root beside it, so they never
+	 * scroll with the rows they cover.
+	 */
+	propertyPanelBody: `${PROPERTY_PANEL} > div:nth-child(2)`,
+
+	/**
+	 * The open panel of a sidebar dropdown field, portalled to the sidebar's root.
+	 * Present only while open, so assert `toHaveCount(0)` for closed.
+	 */
+	propertyPanelDropdown: `${PROPERTY_PANEL} [data-part="panel"]`,
 
 	/** Shape on the canvas (rect / ellipse / polyline and so on). */
 	object: "[data-kind=object]",
@@ -70,6 +196,14 @@ export const selectors = {
 	 * enumerating objects so the transient element is not counted.
 	 */
 	drawingPreview: '[data-testid="drawing-preview"]',
+
+	/**
+	 * Draft connector drawn while one is being pulled from an anchor. It reuses the
+	 * connector renderer and already carries the id the commit will use, so exclude
+	 * its subtree when enumerating objects or a connector is seen before dragEnd
+	 * puts it in the document.
+	 */
+	pendingConnector: '[data-testid="pending-connector"]',
 
 	/** Connector body polyline; the arrowhead polygon carries the same data-kind. */
 	connectorPolyline: "polyline[data-kind=connector]",

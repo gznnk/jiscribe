@@ -3,6 +3,7 @@ import {
 	dropEmptyGroups,
 	type ObjectRecord,
 	requireObjects,
+	visitObjects,
 } from "./utils/objectAccess";
 import { isConnectorObject } from "./utils/objectGeometry";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
@@ -18,19 +19,6 @@ export type DeleteObjectsResult = {
 
 const endpointOwnerId = (endpoint: unknown): string | undefined =>
 	(endpoint as EndpointRef | undefined)?.owner?.id;
-
-/** Walk every object in the tree, groups included. */
-const visitObjects = (
-	siblings: readonly ObjectDoc[],
-	visit: (object: ObjectRecord) => void,
-): void => {
-	for (const object of siblings as readonly ObjectRecord[]) {
-		visit(object);
-		if (Array.isArray(object.children)) {
-			visitObjects(object.children as ObjectDoc[], visit);
-		}
-	}
-};
 
 /** Splice out every object whose id is in `ids`, recursing into group children. */
 const removeByIds = (siblings: ObjectDoc[], ids: ReadonlySet<string>): void => {

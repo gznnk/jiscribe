@@ -1,6 +1,6 @@
 # @jiscribe/cli
 
-The `jiscribe` command: checking, measuring, diagnosing and drawing `.jis.json`
+The `jiscribe` command: checking, measuring, diagnosing and drawing `.jis`
 documents from a shell. A thin mouth on [`@jiscribe/doc-tools`](../../packages/doc-tools),
 so a person, a CI job and an AI agent are told the same things about a document
 that the editor would tell them.
@@ -22,7 +22,7 @@ jiscribe preview  <file>       write the document into one HTML file that draws 
 
 `validate` / `diagnose` / `measure` print one finding per line
 (`<severity> <file> <objectId> <message>`) and take `--json` for the same content
-as one object. Globs are the shell's: `jiscribe validate 'diagrams/**/*.jis.json'`.
+as one object. Globs are the shell's: `jiscribe validate 'diagrams/**/*.jis'`.
 
 ## render
 
@@ -144,7 +144,7 @@ stylesheet from anywhere but `fonts.googleapis.com`.
 ## Known limits
 
 - `--region viewbox` means the harness page's own 1280x800 view, not a camera
-  stored in the document — a `.jis.json` holds no camera. `content` is the
+  stored in the document — a `.jis` holds no camera. `content` is the
   default and is what a file being handed to someone else wants.
 - A connector label paints its own box in the theme's colour, so `--background`
   with a strongly tinted colour leaves the labels sitting on white. That is the

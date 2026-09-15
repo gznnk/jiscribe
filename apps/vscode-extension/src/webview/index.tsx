@@ -5,17 +5,29 @@ import {
 	type CanvasDoc,
 	type CanvasExportImagePayload,
 	type CanvasHandle,
-	type ToolbarEntry,
+	type CanvasSidebarsState,
+	type StencilCategory,
+	type ToolbarSection,
 } from "@jiscribe/canvas";
-import { standardToolbarLayout } from "@jiscribe/standard-shapes";
+import {
+	standardStencilLibrarySections,
+	standardToolbarSections,
+} from "@jiscribe/standard-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "@jiscribe/canvas/fonts.css";
 import "katex/dist/katex.min.css";
 
-import { CanvasErrorNotice } from "./CanvasErrorNotice";
 import { canvasParser, plugins } from "./canvasParser";
-import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
+import { DocEditingPausedOverlay, DocErrorNotice } from "./DocErrorNotice";
+import {
+	applyParseResult,
+	type DocViewState,
+	initialDocViewState,
+} from "./docViewState";
+import { createWebviewImageResolver } from "./resolveImage";
+import { useVscodeColorScheme } from "./useVscodeColorScheme";
+import { vscodeCanvasThemes } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
 	WebviewToExtensionMessage,
@@ -25,10 +37,11 @@ import type {
 // (packages/canvas/docs/13-authoring-plugins.md).
 const initialConfig: CanvasConfig = { plugins };
 
-// The annotation / flowchart / container / general / icon categories and the markdown preset are
-// not part of core's default layout (they come from plugins), so the host inserts them —
-// here in the arrangement the shape set itself proposes.
-const toolbarLayout: ToolbarEntry[] = standardToolbarLayout;
+// The shape set owns how its stencils are arranged, over the bar and the sidebar
+// both; core's default bar knows none of them, so the host passes both halves.
+const toolbarSections: ToolbarSection[] = standardToolbarSections;
+const stencilLibrarySections: StencilCategory[] =
+	standardStencilLibrarySections;
 
 /**
  * Type of the API available only in the VSCode Webview environment.
@@ -45,15 +58,23 @@ declare const acquireVsCodeApi: () => {
 // at module level and cache it.
 const vscode = acquireVsCodeApi();
 
+// One resolver per page, not per App mount: the request ids it hands out have to
+// stay unique for as long as the Extension may answer, and a remount would
+// restart the counter while answers to the old ids are still in flight.
+const imageResolver = createWebviewImageResolver((message) => {
+	vscode.postMessage(message);
+});
+
 /**
  * Webview-local state saved via getState/setState. With
  * retainContextWhenHidden: false (#138), the Webview is discarded when the tab
- * hides, but this survives the reload — so we save the viewport (camera) and
- * restore it on remount. The document isn't included, as the Extension re-sends
- * it via "ready".
+ * hides, but this survives the reload — so we save the viewport (camera) and the
+ * sidebar open/collapsed state, and restore both on remount. The document isn't
+ * included, as the Extension re-sends it via "ready".
  */
 type PersistedState = {
 	camera?: Camera;
+	sidebars?: CanvasSidebarsState;
 };
 
 const readPersistedCamera = (): Camera | undefined => {
@@ -64,6 +85,16 @@ const readPersistedCamera = (): Camera | undefined => {
 const persistCamera = (camera: Camera): void => {
 	const state = (vscode.getState() as PersistedState | null) ?? {};
 	vscode.setState({ ...state, camera });
+};
+
+const readPersistedSidebars = (): CanvasSidebarsState | undefined => {
+	const state = vscode.getState() as PersistedState | null;
+	return state?.sidebars ?? undefined;
+};
+
+const persistSidebars = (sidebars: CanvasSidebarsState): void => {
+	const state = (vscode.getState() as PersistedState | null) ?? {};
+	vscode.setState({ ...state, sidebars });
 };
 
 /**
@@ -89,6 +120,14 @@ const isExtensionToWebviewMessage = (
 				typeof message.requestId === "number" &&
 				(message.format === "png" || message.format === "svg")
 			);
+		case "imageResolved":
+			if (typeof message.requestId !== "string") {
+				return false;
+			}
+			return message.ok === true
+				? typeof message.base64 === "string" &&
+						typeof message.mimeType === "string"
+				: message.ok === false && typeof message.error === "string";
 		default:
 			return false;
 	}
@@ -109,33 +148,35 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
  * Root component of the Canvas editor.
  *
  * State:
- *   - canvasDoc: validated CanvasDoc (shows the Canvas when valid)
- *   - hasSemanticError: whether there are validation errors (shows the error
- *     notice instead of the Canvas UI)
- *   - parseError: JSON syntax error message (shown when the JSON is broken)
+ *   - docView: last document that parsed clean plus the current text's error
+ *     (see {@link DocViewState}; the canvas stays mounted while an error stands)
  *   - missingEmbeddedSource: image (.jis.svg / .jis.png) has no embedded source
  *
  * Error details are surfaced in the Problems panel by the Extension
- * (DiagnosticProvider), so the Webview only holds whether errors exist. These
- * states are mutually exclusive.
+ * (DiagnosticProvider), so the Webview only holds what it needs to name the
+ * failure.
  */
 function App() {
-	const [canvasDoc, setCanvasDoc] = useState<CanvasDoc | null>(null);
-	const [syncNonce, setSyncNonce] = useState<string | undefined>(undefined);
-	const [hasSemanticError, setHasSemanticError] = useState(false);
-	const [parseError, setParseError] = useState<string>("");
+	const colorScheme = useVscodeColorScheme();
+	const [docView, setDocView] = useState<DocViewState>(initialDocViewState);
 	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
 
 	// Canvas's imperative handle (its `export` namespace renders the image when
 	// saving .jis.svg / .jis.png).
 	const canvasRef = useRef<CanvasHandle>(null);
 
-	// Camera restored from persisted state, read once at mount to seed the canvas
-	// via `initialConfig.viewport` (undefined on first open → Canvas uses its doc-derived
-	// default). The canvas owns the live camera after mount; we only persist what
-	// it reports, never drive it back — so a tab-hide reload restores the last
-	// view with no feedback into the canvas.
-	const [initialCamera] = useState<Camera | undefined>(readPersistedCamera);
+	// Mount-time canvas configuration, built once: `viewport` and `sidebars` seed
+	// the camera and the sidebar open/collapsed state from persisted state
+	// (undefined on first open → Canvas uses its own defaults). The canvas owns
+	// both after mount; we only persist what it reports, never drive it back — so
+	// a tab-hide reload restores the last view with no feedback into the canvas.
+	// Held in state rather than rebuilt per render so the mounted canvas sees a
+	// stable prop.
+	const [mountConfig] = useState<CanvasConfig>(() => ({
+		...initialConfig,
+		viewport: readPersistedCamera(),
+		sidebars: readPersistedSidebars(),
+	}));
 
 	// Persist pan/zoom so the view survives a tab-hide reload (#138,
 	// retainContextWhenHidden: false). A read-only mirror — no setState, no
@@ -144,19 +185,53 @@ function App() {
 		persistCamera(next);
 	}, []);
 
+	// Same read-only mirror for the sidebars: the canvas reports every change and
+	// we only write it back into the persisted state.
+	const handleSidebarsChange = useCallback((next: CanvasSidebarsState) => {
+		persistSidebars(next);
+	}, []);
+
+	// While the editor's text does not parse, the canvas is showing an older
+	// document than the file holds, and a commit replaces the file's whole range
+	// with it. Editing is therefore paused: the overlay takes the pointer events
+	// and the keystrokes are swallowed below, so the user's edit is refused
+	// visibly rather than made and then dropped.
+	const isEditingPaused = docView.error !== null;
+	// Read by handlers that must keep one identity for the canvas's memo, which
+	// would otherwise re-render it on every broken keystroke.
+	const isEditingPausedRef = useRef(isEditingPaused);
+	isEditingPausedRef.current = isEditingPaused;
+
 	// The Canvas save scheduler throttles high-frequency commits (key repeat,
 	// etc.) (#125), so send straight to the Extension without debouncing here.
 	// The written-back payload is always the doc's JSON text regardless of
 	// docType; image docs (.jis.svg / .jis.png) render at save time via
 	// requestImageExport (keeping the commit path off DOM rendering).
-	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
+	const handleCommit = useCallback((doc: CanvasDoc) => {
+		// Backstop for anything that reaches the canvas past the pause (a commit
+		// already scheduled when the text broke).
+		if (isEditingPausedRef.current) {
+			return;
+		}
 		const message: WebviewToExtensionMessage = {
 			type: "update",
 			data: JSON.stringify(doc, null, 2),
-			saveNonce,
 		};
 		vscode.postMessage(message);
 	}, []);
+
+	// The canvas listens for shortcuts on its own container, so the overlay above
+	// it stops the pointer but not the keyboard. Stopping the event here, in the
+	// capture phase, keeps Delete or a paste from changing a canvas whose changes
+	// cannot be written back.
+	const handleKeyDownCapture = useCallback(
+		(event: React.KeyboardEvent<HTMLDivElement>) => {
+			if (isEditingPausedRef.current) {
+				event.stopPropagation();
+			}
+		},
+		[],
+	);
 
 	// Delegate the export dialog's result to the workspace save. Choosing the
 	// destination (save dialog) and deriving the file name are the Extension's job.
@@ -189,7 +264,7 @@ function App() {
 		 * Handler for messages from the Extension.
 		 *
 		 * An "update" message arrives whenever the file contents change; parse and
-		 * validate in two stages and switch the display based on the result.
+		 * validate it, then fold the result into the view state.
 		 */
 		const messageHandler = (event: MessageEvent) => {
 			if (!isExtensionToWebviewMessage(event.data)) {
@@ -207,9 +282,7 @@ function App() {
 					const jsonText = message.data;
 					if (docType !== "json" && jsonText === "") {
 						setMissingEmbeddedSource(true);
-						setCanvasDoc(null);
-						setHasSemanticError(false);
-						setParseError("");
+						setDocView(initialDocViewState);
 						break;
 					}
 					setMissingEmbeddedSource(false);
@@ -217,33 +290,11 @@ function App() {
 					// Delegate JSON syntax → CanvasDoc semantic checks to the shared
 					// parser. It returns a discriminated union without throwing, so the
 					// same logic as the Extension (DiagnosticProvider) covers every case.
+					// A failing result keeps the last valid document mounted and only
+					// records the error, so mid-edit text (which is broken most of the
+					// time) neither rebuilds the canvas nor drops the viewport (#136).
 					const result = canvasParser.parse(jsonText);
-					switch (result.kind) {
-						case "ok":
-							setSyncNonce(message.saveNonce);
-							setCanvasDoc(result.doc);
-							setHasSemanticError(false);
-							setParseError("");
-							break;
-
-						case "structure-error":
-						case "semantic-error":
-							// Structure errors (types, required fields) and semantic errors
-							// (duplicate IDs, etc.) show the error notice. Details go to the
-							// Problems panel, so hold only whether errors exist here.
-							setHasSemanticError(true);
-							setCanvasDoc(null);
-							setParseError("");
-							break;
-
-						case "syntax-error":
-						case "internal-error":
-							// JSON syntax errors and unexpected errors are shown as a message.
-							setParseError(result.message);
-							setHasSemanticError(false);
-							setCanvasDoc(null);
-							break;
-					}
+					setDocView((prev) => applyParseResult(prev, result));
 					break;
 				}
 
@@ -264,28 +315,20 @@ function App() {
 						break;
 					}
 					if (message.format === "svg") {
-						let svg: string | null;
-						try {
-							svg = handle.toSvgString();
-						} catch (err) {
-							console.error("[Jiscribe] SVG export failed:", err);
-							respond(null);
-							break;
-						}
-						if (!svg) {
-							respond(null);
-							break;
-						}
-						// base64-encode like PNG (via Blob so UTF-8 text survives) so
-						// imageExportResult.data has a single encoding for both formats,
-						// removing the utf8/base64 mismatch hazard (#182).
-						blobToBase64(new Blob([svg], { type: "image/svg+xml" })).then(
-							respond,
-							(err: unknown) => {
+						handle
+							.toSvgString()
+							// base64-encode like PNG (via Blob so UTF-8 text survives) so
+							// imageExportResult.data has a single encoding for both formats,
+							// removing the utf8/base64 mismatch hazard (#182).
+							.then((svg) =>
+								svg
+									? blobToBase64(new Blob([svg], { type: "image/svg+xml" }))
+									: null,
+							)
+							.then(respond, (err: unknown) => {
 								console.error("[Jiscribe] SVG export failed:", err);
 								respond(null);
-							},
-						);
+							});
 						break;
 					}
 					handle
@@ -297,6 +340,11 @@ function App() {
 						});
 					break;
 				}
+
+				case "imageResolved":
+					// Settles the resolveImage request the canvas is waiting on.
+					imageResolver.handleImageResolved(message);
+					break;
 			}
 		};
 
@@ -317,13 +365,13 @@ function App() {
 	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
 	// save (#179).
 	useEffect(() => {
-		if (canvasDoc) {
+		if (docView.doc) {
 			vscode.postMessage({ type: "rendered" });
 		}
-	}, [canvasDoc]);
+	}, [docView.doc]);
 
 	// Display priority:
-	// missing source > JSON syntax error > semantic error > Canvas > loading
+	// missing source > Canvas (with the error as an overlay) > error notice > loading
 
 	if (missingEmbeddedSource) {
 		return (
@@ -353,52 +401,36 @@ function App() {
 		);
 	}
 
-	if (parseError) {
+	if (docView.doc) {
 		return (
 			<div
-				style={{
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					justifyContent: "center",
-					width: "100%",
-					height: "100vh",
-					color: "#dc2626",
-					fontFamily: "monospace",
-					padding: "20px",
-					boxSizing: "border-box",
-				}}
+				style={{ width: "100%", height: "100vh", position: "relative" }}
+				onKeyDownCapture={handleKeyDownCapture}
 			>
-				<div style={{ fontWeight: "bold", marginBottom: "8px" }}>
-					JSON Parse Error
-				</div>
-				<div style={{ fontSize: "12px", color: "#6b7280" }}>{parseError}</div>
-			</div>
-		);
-	}
-
-	if (hasSemanticError) {
-		return <CanvasErrorNotice />;
-	}
-
-	if (canvasDoc) {
-		return (
-			<div style={{ width: "100%", height: "100vh" }}>
 				<Canvas
-					doc={canvasDoc}
-					syncNonce={syncNonce}
-					initialConfig={{ ...initialConfig, viewport: initialCamera }}
-					toolbar={{ layout: toolbarLayout }}
+					doc={docView.doc}
+					initialConfig={mountConfig}
+					toolbar={{ sections: toolbarSections }}
+					stencilLibrary={{ sections: stencilLibrarySections }}
 					onViewportChange={handleViewportChange}
+					onSidebarsChange={handleSidebarsChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}
 					onRedo={handleRedo}
-					theme={vscodeCanvasTheme}
+					theme={vscodeCanvasThemes[colorScheme]}
 					ref={canvasRef}
 					onExportImage={handleExportImage}
+					resolveImage={imageResolver.resolveImage}
 				/>
+				{docView.error && <DocEditingPausedOverlay error={docView.error} />}
 			</div>
 		);
+	}
+
+	// No document has parsed clean yet, so there is nothing to keep on screen
+	// behind the error.
+	if (docView.error) {
+		return <DocErrorNotice error={docView.error} />;
 	}
 
 	return (

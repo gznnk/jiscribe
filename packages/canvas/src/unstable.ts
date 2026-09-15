@@ -42,6 +42,12 @@ export { TextOverlay } from "./rendering/objects/base/TextOverlay/TextOverlay";
 // disagree wherever the type's defaults differ from TEXT_STYLE_FALLBACK.
 export { useObjectTextStyleDefaultsRegistry } from "./rendering/objects/registry/ObjectTextStyleDefaultsRegistryContext";
 
+// The stroke / fill counterpart, for the same kind of type: the per-canvas
+// registry of shape-style defaults, keyed by type. Resolve stroke, width, dash
+// and fill through it before drawing, or a document that omits one of them draws
+// differently from the same shape the editor's factory created.
+export { useObjectShapeStyleDefaultsRegistry } from "./rendering/objects/registry/ObjectShapeStyleDefaultsRegistryContext";
+
 // The active theme, for a component that has to read the host's handle
 // dimensions (zoom-adjusted geometry).
 export { useCanvasTheme } from "./theme/CanvasThemeContext";
@@ -77,6 +83,15 @@ export { createSvgTransform } from "./rendering/objects/utils/createSvgTransform
 
 export { resolveAutoColor } from "./rendering/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./rendering/objects/utils/resolveAutoColor";
+
+// The paint declarations of a styled shape element, for a type defining its own
+// styled parts instead of reusing the sdk's ShapeBody*: interpolating these is
+// what puts the color and the opacity beside it on one CSS route (doc 08).
+export { fillPaint, strokePaint } from "./rendering/objects/utils/shapePaint";
+export type {
+	FillPaintProps,
+	StrokePaintProps,
+} from "./rendering/objects/utils/shapePaint";
 
 // The box a text of its own takes — the `text` object's frame, and every label a
 // shape sizes from its content rather than from its box. Laid out as authored, so
@@ -138,6 +153,57 @@ export { useSubmenuPosition } from "./controllers/ui/menu/ObjectMenu/hooks/useSu
 export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 
 export { getFirstSelectedWithProp } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithProp";
+export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithStyleGroup";
+export { getFirstSelectedPropValue } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedPropValue";
+export { getSelectedShapeStyle } from "./controllers/ui/menu/ObjectMenu/utils/getSelectedShapeStyle";
+
+// ---------------------------------------------------------------------------
+// Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)
+// ---------------------------------------------------------------------------
+// A type declares its sidebar sections in `propertyPanel`, and a row it draws
+// itself is a `{ type: "custom"; id; component }` item among the built-in ones.
+// The component is handed PropertyPanelItemProps and nothing else: the selection
+// and the objects it names, plus `onPropertyUpdate` for a style property and
+// `onTransformUpdate` for one of the frame's five numbers. Build the row out of
+// the widgets below so it lines up with the built-in ones — PropertyRow supplies
+// the label column every row shares, except PropertyCheckbox, which is a row of
+// its own from the section's left edge. The widgets that write do it either through
+// the callback (PropertyColorField) or through the same `data-part` grammar the
+// ObjectMenu uses (PropertySegmentedControl / PropertyCheckbox); writing
+// `data-part` by hand is discouraged for the same reason as there.
+// Custom rows are dropped while a text slot is selected, since a plugin row has
+// no way to say it is slot-aware.
+// A section may also carry `isShown`, asked about the selection
+// (PropertyPanelSelection) before the section is drawn: a section whose every row
+// would return null uses it to take its heading away with them.
+
+export type {
+	PropertyPanelSection,
+	PropertyPanelItem,
+	PropertyPanelCustomItem,
+	PropertyPanelItemProps,
+	PropertyPanelSelection,
+	PropertyPanelTransformUpdater,
+} from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
+
+export { PropertyRow } from "./controllers/ui/menu/PropertyPanel/common/PropertyRow";
+export { PropertyNumberField } from "./controllers/ui/menu/PropertyPanel/common/PropertyNumberField";
+export type { PropertyNumberUpdater } from "./controllers/ui/menu/PropertyPanel/common/PropertyNumberField";
+export { PropertyColorField } from "./controllers/ui/menu/PropertyPanel/common/PropertyColorField";
+export { PropertyDropdownField } from "./controllers/ui/menu/PropertyPanel/common/PropertyDropdownField";
+export { PropertySegmentedControl } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
+export type { PropertySegmentedOption } from "./controllers/ui/menu/PropertyPanel/common/PropertySegmentedControl";
+export { PropertyCheckbox } from "./controllers/ui/menu/PropertyPanel/common/PropertyCheckbox";
+
+// The `data-part` grammar the menu targets are read by (command: / toggle: /
+// set: / slider:). Build the strings with these rather than spelling the
+// prefixes, so a plugin's buttons and the core's are read by the same rule.
+export {
+	commandPart,
+	setPart,
+	sliderPart,
+	togglePart,
+} from "./controllers/gestures/handlers/menu/utils/menuParts";
 
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
 export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";
@@ -150,10 +216,10 @@ export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessage
 // Re-exported as `canvasThemeCssVars` because `theme` alone is too generic a name.
 // The value is the `--jiscribe-*` CSS variables plus a dark-theme fallback
 // (see theme/CanvasTheme.ts).
-export { theme as canvasThemeCssVars } from "./constants/theme";
+export { theme as canvasThemeCssVars } from "./theme/themeTokens";
 
 // The scrollbar the canvas's own scrollable panels wear (the text editor, the shortcut
 // help). A plugin panel that scrolls has no other way to match them, and a default
 // browser scrollbar next to a custom one is exactly the kind of seam a plugin should not
 // be introducing.
-export { SCROLLBAR_WIDTH, scrollbarStyles } from "./constants/scrollbarStyles";
+export { SCROLLBAR_WIDTH, scrollbarStyles } from "./theme/themeScrollbarStyles";

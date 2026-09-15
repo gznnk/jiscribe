@@ -1,9 +1,6 @@
 import styled from "@emotion/styled";
-
-type IconStrokeProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-};
+import type { StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * Transparent grab area over the whole box. The line art itself is far too thin to
@@ -25,8 +22,8 @@ export const IconHitArea = styled.rect`
  * repeating it on each. Never hit-tested — {@link IconHitArea} underneath answers
  * for the whole shape, so a stroke crossing the box changes nothing.
  */
-export const IconArtGroup = styled.g<IconStrokeProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const IconArtGroup = styled.g<StrokePaintProps>`
+	${strokePaint}
 	fill: none;
 	stroke-linecap: round;
 	stroke-linejoin: round;
@@ -38,8 +35,8 @@ export const IconArtGroup = styled.g<IconStrokeProps>`
  * parser, which rejects such a name outright, so this is what keeps a shape built
  * in memory visible instead of silently blank.
  */
-export const IconPlaceholderRect = styled.rect<IconStrokeProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const IconPlaceholderRect = styled.rect<StrokePaintProps>`
+	${strokePaint}
 	fill: none;
 	stroke-dasharray: 4 3;
 	pointer-events: none;

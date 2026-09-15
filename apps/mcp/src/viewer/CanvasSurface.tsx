@@ -4,10 +4,15 @@ import type {
 	CanvasDoc,
 	CanvasHandle,
 	OpenReferencePayload,
-	ToolbarEntry,
+	ResolveImage,
+	StencilCategory,
+	ToolbarSection,
 } from "@jiscribe/canvas";
-import { standardToolbarLayout } from "@jiscribe/standard-shapes";
-import { useEffect, useRef } from "react";
+import {
+	standardStencilLibrarySections,
+	standardToolbarSections,
+} from "@jiscribe/standard-shapes";
+import { useEffect, useMemo, useRef } from "react";
 
 import { plugins } from "./canvasPlugins";
 import { FileLabel } from "./FileLabel";
@@ -15,22 +20,30 @@ import { FileLabel } from "./FileLabel";
 // A module-scope constant, so that Canvas is not rebuilt on every re-render
 const initialConfig: CanvasConfig = { plugins };
 
-// The annotation / flowchart / container / general / icon categories and the
-// markdown preset are not in core's default layout (the plugins supply them). Use
-// the arrangement the shape set proposes
-const toolbarLayout: ToolbarEntry[] = standardToolbarLayout;
+// The shape set owns how its stencils are arranged, over the bar and the sidebar
+// both; core's default bar knows none of them, so the host passes both halves.
+const stencilLibrarySections: StencilCategory[] =
+	standardStencilLibrarySections;
 
 export type CanvasSurfaceProps = {
 	/** The doc to draw. Every replacement redraws it */
 	doc: CanvasDoc;
 	/** Workspace-relative path of the open file, shown in the toolbar */
 	relPath: string | null;
+	/**
+	 * Identifies which file the doc was read from, so that opening another one
+	 * drops the previous file's undo history instead of leaving it reachable on the
+	 * new canvas. Undefined while no file is open
+	 */
+	docLoadId: string | undefined;
 	/** Whether the socket to the host is up (drawn beside the file name) */
 	isConnected: boolean;
 	/** Called when a person commits an edit. Not called mid-drag */
 	onCommit: (committedDoc: CanvasDoc) => void;
 	/** A request to open an object's meta.reference. Resolving it is the host's job */
 	onOpenReference: (payload: OpenReferencePayload) => void;
+	/** Reads the file an image object's `src` names. Undefined while no file is open */
+	resolveImage: ResolveImage | undefined;
 	/**
 	 * Hands the parent the Canvas handle that capture, camera, selection and
 	 * measurement need. It is valid only while mounted, and is released with null on
@@ -50,9 +63,11 @@ export type CanvasSurfaceProps = {
 export function CanvasSurface({
 	doc,
 	relPath,
+	docLoadId,
 	isConnected,
 	onCommit,
 	onOpenReference,
+	resolveImage,
 	onRegisterCanvas,
 }: CanvasSurfaceProps) {
 	const canvasRef = useRef<CanvasHandle>(null);
@@ -64,25 +79,46 @@ export function CanvasSurface({
 		};
 	}, [onRegisterCanvas]);
 
+	// The file name rides in a section of its own, ahead of the shape set's bar; the
+	// divider closing it separates the name from the tools. Memoized so the toolbar keeps
+	// its memo: `node` is a fresh element on every render.
+	const toolbarSections = useMemo<ToolbarSection[]>(
+		() => [
+			{
+				id: "file",
+				items: [
+					{
+						type: "slot",
+						id: "file-label",
+						node: (
+							<FileLabel
+								relPath={relPath}
+								isConnected={isConnected}
+								tokens={lightCanvasTheme.tokens}
+							/>
+						),
+					},
+					{ type: "divider" },
+				],
+			},
+			...standardToolbarSections,
+		],
+		[relPath, isConnected],
+	);
+
 	return (
 		<div className="viewer-canvas-host">
 			<Canvas
 				ref={canvasRef}
 				doc={doc}
+				docLoadId={docLoadId}
 				onCommit={onCommit}
 				onOpenReference={onOpenReference}
+				resolveImage={resolveImage}
 				theme={lightCanvasTheme}
 				initialConfig={initialConfig}
-				toolbar={{
-					layout: toolbarLayout,
-					leading: (
-						<FileLabel
-							relPath={relPath}
-							isConnected={isConnected}
-							tokens={lightCanvasTheme.tokens}
-						/>
-					),
-				}}
+				stencilLibrary={{ sections: stencilLibrarySections }}
+				toolbar={{ sections: toolbarSections }}
 			/>
 		</div>
 	);

@@ -5,7 +5,7 @@ import type { CanvasThemeTokens } from "./CanvasTheme";
  *
  * This map is the single source of truth for the `--jiscribe-*` names: the
  * Canvas root injects token values under these names (`buildThemeCssVars`),
- * and the static token object in `constants/theme.ts` references the same
+ * and the static token object in `theme/themeTokens.ts` references the same
  * names, so the two sides cannot drift apart.
  */
 export const THEME_TOKEN_CSS_VARS: Record<keyof CanvasThemeTokens, string> = {

@@ -22,6 +22,11 @@ export type TempCanvasWorkspace = {
 	 * relative one).
 	 */
 	writeDoc: (fileName: string, doc: CanvasFileContent) => Promise<string>;
+	/**
+	 * Writes a file verbatim and returns its absolute path, for text no
+	 * `CanvasFileContent` can express (broken JSON, for instance).
+	 */
+	writeText: (fileName: string, text: string) => Promise<string>;
 	/** Re-reads a `.jis.json` that was written back. */
 	readDoc: (path: string) => Promise<CanvasFileContent>;
 	/** Removes the whole directory. Does not fail if it is not there. */
@@ -38,6 +43,11 @@ export async function createTempCanvasWorkspace(): Promise<TempCanvasWorkspace> 
 		writeDoc: async (fileName, doc) => {
 			const path = join(dir, fileName);
 			await writeFile(path, `${JSON.stringify(doc, null, "\t")}\n`, "utf8");
+			return path;
+		},
+		writeText: async (fileName, text) => {
+			const path = join(dir, fileName);
+			await writeFile(path, text, "utf8");
 			return path;
 		},
 		readDoc: async (path) =>

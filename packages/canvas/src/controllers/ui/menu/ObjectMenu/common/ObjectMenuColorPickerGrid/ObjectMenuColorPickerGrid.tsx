@@ -12,28 +12,64 @@ import {
 	ColorSwatch,
 	ColorTextInput,
 } from "./ObjectMenuColorPickerGridStyled";
+import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
 
 type ObjectMenuColorPickerGridProps = {
 	/** Currently selected color */
 	currentColor: string;
 	/** Property name (e.g. "fill", "stroke") */
 	property: string;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	/**
+	 * Whether a swatch and the Auto button write through `onPropertyUpdate`
+	 * (committing at once) instead of through the `set:` gesture. Set by a picker
+	 * whose target is not the selection — the canvas background — since the
+	 * gesture route ends in the style registry, which only ever writes to
+	 * selected objects. Defaults to false, the floating menu's own route.
+	 */
+	writesThroughCallback?: boolean;
+	/**
+	 * Whether `currentColor` is the color every target of a pick already carries,
+	 * which is what makes picking it provably no change at all. Such a pick is
+	 * dropped, since both routes commit whatever reaches them and the entry that
+	 * changes nothing drops the redo stack with it.
+	 *
+	 * Defaults to false, where every pick writes: a picker showing the first of
+	 * several objects' color cannot tell, and dropping the pick there would take
+	 * away how a selection whose shapes disagree is brought onto one color.
+	 *
+	 * Counting targets is what settles this for a shape's own color, so it does
+	 * not settle it for text: a text style write lands on the slots, or on the
+	 * run being edited, not on the object. A single selected object is therefore
+	 * no proof, and the font color pickers pass nothing here on purpose — see
+	 * gznnk/jiscribe-private#288.
+	 */
+	currentColorIsShared?: boolean;
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 /**
  * Color picker grid.
  * Displays preset color swatches (4×7 grid) and a CSS color text input.
- * Each swatch has data-kind="menu" and updates the property through the gesture system.
+ * Each swatch has data-kind="menu" and updates the property through the gesture system,
+ * unless `writesThroughCallback` opts the picker out of gestures entirely.
+ * The swatch showing `currentColor` writes nothing where the pick is provably
+ * no change (`currentColorIsShared`), a commit of the color already in place
+ * being recorded as a history entry that changes nothing.
  * The text input previews in real time on onChange (commit: false), and
  * commits on onBlur / Enter (commit: true).
  */
 const ObjectMenuColorPickerGridComponent: React.FC<
 	ObjectMenuColorPickerGridProps
-> = ({ currentColor, property, onPropertyUpdate }) => {
+> = ({
+	currentColor,
+	property,
+	writesThroughCallback = false,
+	currentColorIsShared = false,
+	onPropertyUpdate,
+}) => {
 	const messages = useCanvasMessages();
 	const [inputValue, setInputValue] = useState(currentColor);
 	const [isValid, setIsValid] = useState(true);
@@ -88,6 +124,42 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 		[commit],
 	);
 
+	// Whether a pick would state the color the target already has, which is also
+	// what draws the swatch as the selected one.
+	const isCurrentColor = (value: string): boolean =>
+		isAutoColor(value)
+			? isAutoColor(currentColor)
+			: value.toLowerCase() === currentColor.toLowerCase();
+
+	// The two routes a swatch (and the Auto button) can take. The gesture one
+	// keeps the `set:` grammar the floating menu is read by; the callback one
+	// opts out of gestures so no handler applies the write to the selection as
+	// well, and still carries data-part, which is what names the swatch.
+	//
+	// The swatch already picked writes nothing on either route, where the picker
+	// is told the color stands for every target (currentColorIsShared): both
+	// routes commit unconditionally, and a commit of the color in place is
+	// recorded as a history entry that changes nothing, dropping the redo stack
+	// with it. The gesture route is stopped by opting the swatch out rather than
+	// by dropping its data-part, which e2e and the parts grammar still read.
+	const buildPickProps = (value: string) => {
+		const picked = currentColorIsShared && isCurrentColor(value);
+		return writesThroughCallback
+			? {
+					"data-gesture": "none",
+					"data-part": setPart(property, value),
+					onClick: picked
+						? undefined
+						: () => onPropertyUpdate(property, value, true),
+				}
+			: {
+					"data-kind": "menu",
+					"data-id": "object-menu",
+					"data-part": setPart(property, value),
+					"data-gesture": picked ? "none" : undefined,
+				};
+	};
+
 	return (
 		<ColorPickerContainer>
 			<ColorGrid>
@@ -95,10 +167,8 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 					<ColorSwatch
 						key={preset.value}
 						swatchColor={preset.value}
-						selected={preset.value.toLowerCase() === currentColor.toLowerCase()}
-						data-kind="menu"
-						data-id="object-menu"
-						data-part={`set:${property}:${preset.value}`}
+						selected={isCurrentColor(preset.value)}
+						{...buildPickProps(preset.value)}
 						title={messages.colorNames[preset.name] ?? preset.name}
 					/>
 				))}
@@ -106,10 +176,8 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 			<ColorInputRow>
 				<AutoButton
 					type="button"
-					selected={isAutoColor(currentColor)}
-					data-kind="menu"
-					data-id="object-menu"
-					data-part={`set:${property}:${AUTO_COLOR}`}
+					selected={isCurrentColor(AUTO_COLOR)}
+					{...buildPickProps(AUTO_COLOR)}
 					title={messages.colorPickerAutoTitle}
 				>
 					{messages.colorPickerAuto}

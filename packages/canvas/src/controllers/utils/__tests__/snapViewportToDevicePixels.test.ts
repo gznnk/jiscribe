@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Viewport } from "../../../states/canvas/Viewport";
+import type { Viewport } from "../../../rendering/Viewport";
 import { snapViewportToDevicePixels } from "../snapViewportToDevicePixels";
 
 const viewport = (overrides: Partial<Viewport> = {}): Viewport => ({

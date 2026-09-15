@@ -19,7 +19,7 @@ body:
     attributes:
       label: How to reproduce
       description: >
-        Steps, a code snippet, or a .jis.json that shows the problem.
+        Steps, a code snippet, or a .jis that shows the problem.
         If it only happens with a specific document, attaching it helps the most.
     validations:
       required: false

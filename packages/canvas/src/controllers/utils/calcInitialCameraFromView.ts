@@ -7,8 +7,8 @@ import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { BoundingBox, Dimensions } from "@jiscribe/geometry";
 
-import { ZOOM } from "../../constants/zoom";
-import type { Camera } from "../../states/canvas/Viewport";
+import { ZOOM } from "./zoom";
+import type { Camera } from "../CanvasTypes";
 
 /** The zoom range the resulting camera is clamped into. */
 export type ZoomLimits = {

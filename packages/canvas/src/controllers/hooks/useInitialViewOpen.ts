@@ -6,12 +6,12 @@ import {
 import type { Dimensions } from "@jiscribe/geometry";
 import { type Dispatch, type RefObject, useLayoutEffect, useRef } from "react";
 
-import { ZOOM } from "../../constants/zoom";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { calcContentBounds } from "../utils/calcContentBounds";
 import { calcInitialCameraFromView } from "../utils/calcInitialCameraFromView";
+import { ZOOM } from "../utils/zoom";
 
 type InitialViewOpenOptions = {
 	/**
@@ -53,11 +53,12 @@ const stringifyFramingIntent = (view: ViewDoc, open: ViewOpenMode): string => {
  * Applies the document's `view.open` as the canvas's starting camera, once per
  * document.
  *
- * A fit needs the container's real size, which nothing knows at mount — the
- * mapper seeds a placeholder and the ResizeObserver corrects it after the first
- * paint. So the box is measured here in a layout effect and dispatched together
- * with the camera (SET_VIEWPORT), which puts both into the commit that
- * precedes the first paint instead of leaving the drawing to jump afterwards.
+ * A fit needs the container's real size, which the state does not carry at mount
+ * — the mapper seeds a placeholder, and useContainerResize measures the real box
+ * in its own layout effect. So the box is measured here too, in a layout effect,
+ * and dispatched together with the camera (SET_VIEWPORT), which puts both into
+ * one commit before the first paint instead of fitting against the placeholder
+ * and correcting afterwards.
  *
  * "Once" is counted per framing declaration, compared by *content*, not by the
  * `view` object's identity. A host that keeps the document outside the canvas

@@ -1,4 +1,6 @@
 import styled from "@emotion/styled";
+import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * Container ("frame") sub-parts. The BODY never captures pointer events, so a
@@ -9,8 +11,8 @@ import styled from "@emotion/styled";
  */
 
 /** Optional background tint. `pointer-events: none` = never steals interior clicks. */
-export const ContainerBody = styled.rect<{ fillColor: string }>`
-	fill: ${({ fillColor }) => fillColor};
+export const ContainerBody = styled.rect<FillPaintProps>`
+	${fillPaint}
 	stroke: none;
 	pointer-events: none;
 `;
@@ -20,8 +22,8 @@ export const ContainerBody = styled.rect<{ fillColor: string }>`
  * `fillColor` is the resolved headerFill ("auto" → theme surface by default);
  * `pointer-events: all` keeps it grabbable even when the fill is transparent.
  */
-export const ContainerHeader = styled.rect<{ fillColor: string }>`
-	fill: ${({ fillColor }) => fillColor};
+export const ContainerHeader = styled.rect<FillPaintProps>`
+	${fillPaint}
 	pointer-events: all;
 	cursor: grab;
 `;
@@ -31,8 +33,8 @@ export const ContainerHeader = styled.rect<{ fillColor: string }>`
  * color, width, and dash (passed as attributes) — so it reads as part of the
  * frame outline (matches draw.io). `pointer-events: none` keeps it inert.
  */
-export const ContainerDivider = styled.line<{ strokeColor: string }>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const ContainerDivider = styled.line<StrokePaintProps>`
+	${strokePaint}
 	pointer-events: none;
 `;
 
@@ -41,9 +43,9 @@ export const ContainerDivider = styled.line<{ strokeColor: string }>`
  * (default `visiblePainted`) — only the painted stroke does, so the box edge
  * selects the container while the interior stays pass-through.
  */
-export const ContainerOutline = styled.rect<{ strokeColor: string }>`
+export const ContainerOutline = styled.rect<StrokePaintProps>`
 	fill: none;
-	stroke: ${({ strokeColor }) => strokeColor};
+	${strokePaint}
 	cursor: grab;
 
 	&:focus {

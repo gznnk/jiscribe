@@ -80,8 +80,8 @@ export type ObjectDocDefinition = {
 	/**
 	 * AI-facing description of the shape (1–3 sentences, English): what it draws,
 	 * what it is typically used for, and where text is laid out. Verbatim source of
-	 * the type's JSON-schema `$def` description and its reference.md section, so
-	 * write it for an AI that has not seen the rendering.
+	 * the type's JSON-schema `$def` description — the only field-level reference an
+	 * AI gets — so write it for one that has not seen the rendering.
 	 */
 	description?: string;
 
@@ -90,14 +90,6 @@ export type ObjectDocDefinition = {
 	 * flowcharts"). Shorter than {@link description}: a noun phrase, no period.
 	 */
 	summary?: string;
-
-	/**
-	 * Short phrase describing the drawn outline (e.g. "Rectangle with both top
-	 * corners cut off") for shape-catalog tables. Only needed for types listed in
-	 * a grouped catalog section of the generated docs. (Named to avoid clashing
-	 * with ObjectTypeDefinition's `outline` hit-test calculator.)
-	 */
-	outlineDescription?: string;
 
 	/**
 	 * Creation defaults of the shape (its `*_DOC_DEFAULTS`, minus `id`). The doc

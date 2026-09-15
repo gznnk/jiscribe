@@ -2,7 +2,7 @@ import { extname } from "node:path";
 
 /** Everything a preview needs, once the command line has been read and checked. */
 export type PreviewOptions = {
-	/** Path of the `.jis.json` to put in the page. */
+	/** Path of the `.jis` to put in the page. */
 	input: string;
 	/** Path to write the HTML file to. */
 	output: string;

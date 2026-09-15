@@ -26,6 +26,8 @@ type ArrowProps = {
 	x: number;
 	y: number;
 	color: string;
+	/** Opacity of the whole mark, 0..1; see {@link ArrowShapeProps.opacity}. */
+	opacity?: number;
 	radians: number;
 	scale: number;
 	dataKind?: string;
@@ -70,6 +72,7 @@ const ArrowComponent: React.FC<ArrowProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -85,6 +88,7 @@ const ArrowComponent: React.FC<ArrowProps> = ({
 			x={x}
 			y={y}
 			color={color}
+			opacity={opacity}
 			radians={radians}
 			scale={scale}
 			dataKind={dataKind}

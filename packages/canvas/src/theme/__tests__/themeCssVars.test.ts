@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { theme } from "../../constants/theme";
 import type { CanvasThemeTokens } from "../CanvasTheme";
 import { buildThemeCssVars, THEME_TOKEN_CSS_VARS } from "../themeCssVars";
 import { darkCanvasTheme, lightCanvasTheme } from "../themePresets";
+import { theme } from "../themeTokens";
 
 const tokenNames = Object.keys(
 	THEME_TOKEN_CSS_VARS,
@@ -44,7 +44,7 @@ describe("buildThemeCssVars", () => {
 	});
 });
 
-describe("static theme tokens (constants/theme.ts)", () => {
+describe("static theme tokens (theme/themeTokens.ts)", () => {
 	it("each token references its CSS variable with the dark value as fallback", () => {
 		for (const tokenName of tokenNames) {
 			expect(theme[tokenName]).toBe(

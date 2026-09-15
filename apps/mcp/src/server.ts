@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { basename, dirname, isAbsolute, resolve } from "node:path";
 
 import {
@@ -43,14 +45,18 @@ import { createPathLock, type PathLock } from "./pathLock";
  * The tools it exposes come in three groups.
  *
  * 1. The ones this server has of its own (written out directly below)
+ *    - `read_drawing_guide`: hands back one of the two guides `@jiscribe/doc-schema`
+ *      generates. The tool declarations say what each tool does but not what the
+ *      canvas is or how to draw well, and `instructions` is too small to hold it
  *    - `open_canvas`: starts a viewer locally and opens it in a browser. From
  *      then on the same file is where the AI rewriting it and a person correcting
- *      it on screen work together
+ *      it on screen work together. With `headless` it opens a window-less browser
+ *      instead, so the AI gets its eye without anything appearing on screen
  *    - `close_canvas`: closes that window and folds the server up too. A person
  *      closing the window ends up in the same place (the host is folded up once
  *      the last window is gone)
- *    - `validate_canvas` / `diagnose_canvas`: validation, and diagnosis of
- *      drawing problems such as overflow
+ *    - `diagnose_canvas`: validation, plus diagnosis of drawing problems such
+ *      as overflow
  *    - `measure_text`: without holding a diagram, measures whether a string fits
  *      a shape of a given size
  *    - `add_rect` / `add_ellipse`: entry points giving default sizes to the two
@@ -95,9 +101,40 @@ const DEFAULT_ELLIPSE_RY = 50;
  */
 const DEFAULT_FONT_FAMILY = '"Source Sans 3", "Noto Sans JP", sans-serif';
 
-const pathArg = z
-	.string()
-	.describe("Absolute path to the target .jis.json file.");
+const pathArg = z.string().describe("Absolute path to the target .jis file.");
+
+const require = createRequire(import.meta.url);
+
+/**
+ * The module specifier each `read_drawing_guide` value reads. Resolved at run
+ * time through node rather than bundled in, the same way doc-tools reads the JSON
+ * schema: `@jiscribe/doc-schema` stays the single source, and `build.mjs` stages
+ * these beside `dist/index.mjs` so a checkout is not needed.
+ */
+const DRAWING_GUIDE_SPECIFIERS = {
+	drawing: "@jiscribe/doc-schema/canvas-prompt",
+	"json-format": "@jiscribe/doc-schema/authoring-json",
+} as const;
+
+/** The guides `read_drawing_guide` can be asked for; its enum names these keys. */
+type DrawingGuide = keyof typeof DRAWING_GUIDE_SPECIFIERS;
+
+/**
+ * What the server tells a client about itself at handshake time. It stays in the
+ * model's context for the whole session, so it holds only what is true of this
+ * server as an MCP server — how the tools are addressed and what has to happen
+ * before which. The canvas itself, the shapes and the file format are what
+ * `read_drawing_guide` fetches on demand.
+ */
+const SERVER_INSTRUCTIONS = [
+	"Jiscribe draws diagrams as .jis files. The file on disk is the single source of truth: no canvas state is kept in the tools, so anything not written to a file does not exist.",
+	"Every document tool takes an absolute `path` naming the file it acts on. There is no concept of a currently open document, and a tool that only reads does not write the file back.",
+	"An image shape is the one path that is not absolute: its `src` is read relative to the .jis file's own directory and cannot leave it, so the image file has to be somewhere under the diagram's own directory before you point at it.",
+	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The 16 tools for capture, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
+	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports schema, parser and text-overflow problems; run it before telling the user a diagram is finished.",
+	"`undo` steps back through edits you made and keeps its history per file, so it cannot take back what a person changed in the viewer.",
+	"Call `read_drawing_guide` before you start drawing: `drawing` is what the canvas can hold and how to draw on it well, and `json-format` is for when you have decided to edit a .jis file directly instead of through these tools.",
+].join("\n\n");
 
 /**
  * Build an MCP server with the tools registered.
@@ -106,25 +143,53 @@ const pathArg = z
  * different connection needs a different instance.
  */
 export function createJiscribeMcpServer(): McpServer {
-	const server = new McpServer({
-		name: "jiscribe",
-		version: "0.9.0",
-	});
+	const server = new McpServer(
+		{
+			name: "jiscribe",
+			version: "0.10.0",
+		},
+		{ instructions: SERVER_INSTRUCTIONS },
+	);
 
 	// The viewer is started only when open_canvas is first called, and reused after
 	// that. Its lifetime follows the windows: once the last one closes it is folded
 	// up and the port given back
 	let host: CanvasHost | null = null;
 
+	// The client going away has to take the host with it. The HTTP server keeps the
+	// event loop from ever emptying, so a headless window left connected would hold
+	// the whole process open after the last client has gone
+	server.server.onclose = () => {
+		void (async () => {
+			const started = host;
+			if (started === null) {
+				return;
+			}
+			host = null;
+			// Ask the windows to close before the connections are cut. A headless one
+			// has no person to close it, and a window told nothing would only spend
+			// its time looking for a host to reconnect to
+			await started.closeViewers();
+			await started.close();
+		})();
+	};
+
 	/**
 	 * Start the host, arranging for it to be folded up once every window is closed.
 	 *
 	 * @param workspaceRoot The base directory of the file API (absolute path)
+	 * @param shouldOpenBrowser false when the caller opens a headless window
+	 *   itself. undefined leaves it to `JISCRIBE_MCP_NO_OPEN`, which is how a plain
+	 *   open has always decided
 	 * @returns The started host. It has nothing to show yet, so call openFile next
 	 */
-	const startHost = async (workspaceRoot: string): Promise<CanvasHost> => {
+	const startHost = async (
+		workspaceRoot: string,
+		shouldOpenBrowser: boolean | undefined,
+	): Promise<CanvasHost> => {
 		const started: CanvasHost = await startCanvasHost({
 			workspaceRoot,
+			...(shouldOpenBrowser === undefined ? {} : { shouldOpenBrowser }),
 			onViewersGone: () => {
 				void (async () => {
 					// If another host has already taken over, this one is done with and
@@ -158,18 +223,51 @@ export function createJiscribeMcpServer(): McpServer {
 	};
 
 	server.registerTool(
+		registerName("read_drawing_guide"),
+		{
+			description: [
+				"Read one of the two Jiscribe guides: the background the tool list cannot carry.",
+				'"drawing" is what a canvas can hold, what each shape type is for, and how to draw well with it. Read it once before you start drawing, whichever tools you then use.',
+				'"json-format" is the structure of a .jis file. Read it only once you have decided to read or write such a file directly with your own file tools instead of the tools here.',
+				"Neither changes while this session runs, so read one once and work from what you read rather than calling again.",
+				"Both open with a `<!-- jiscribe guide <version>+<digest> -->` stamp naming the generation they came from. A workspace may also hold a .jiscribe/ai-guide.md placed there by the Jiscribe editor extension, stamped the same way; when the two stamps differ, the higher version is the newer text, and the one you read here is the generation these tools belong to.",
+			].join(" "),
+			inputSchema: z
+				.object({
+					guide: z
+						.enum(["drawing", "json-format"])
+						.describe(
+							'Which guide to read: "drawing" for the canvas, its shapes and how to draw on it; "json-format" for the .jis file format.',
+						),
+				})
+				.strict(),
+		},
+		async ({ guide }) => runTool(async () => readDrawingGuide(guide)),
+	);
+
+	server.registerTool(
 		registerName("open_canvas"),
 		{
 			description: [
-				"Open a .jis.json file in a canvas viewer: starts a local web server inside this MCP process and opens the file in a browser window.",
+				"Open a .jis file in a canvas viewer: starts a local web server inside this MCP process and opens the file in a browser window.",
 				"The file stays the single source of truth. The editing tools below write to it and the viewer follows within a moment; when a person moves or retypes shapes in the viewer, it writes the file back, so reading the file again shows what they changed.",
 				"A file that does not exist yet is created as an empty canvas, which is how a new diagram is started.",
 				"Calling it again switches the viewer to another file. Naming a file outside the directory currently being served restarts the server on that file's directory, and the open viewer reconnects on its own.",
 				"Returns the viewer URL, which is worth passing on to the user.",
 			].join(" "),
-			inputSchema: z.object({ path: pathArg }).strict(),
+			inputSchema: z
+				.object({
+					path: pathArg,
+					headless: z
+						.boolean()
+						.default(false)
+						.describe(
+							"Open a headless viewer instead: nothing appears on the user's screen, and the canvas exists only for the tools that need one on screen (capture, camera, selection, measurement). Use it to check your own work; leave it false when the user is meant to watch or edit the diagram. A viewer already open is used as it is, headless or not.",
+						),
+				})
+				.strict(),
 		},
-		async ({ path }) =>
+		async ({ path, headless }) =>
 			runTool(async () => {
 				if (!isAbsolute(path)) {
 					throw new CanvasFileError(
@@ -188,11 +286,30 @@ export function createJiscribeMcpServer(): McpServer {
 					await host.close();
 					host = null;
 				}
-				host ??= await startHost(workspaceRoot);
+				// The environment variable that says not to open a window means "do
+				// not put one up unasked", so an explicit headless request goes ahead
+				const isReusedHost = host !== null;
+				host ??= await startHost(workspaceRoot, headless ? false : undefined);
 				await host.openFile(basename(path));
 
 				const state = isCreated ? "created and opened" : "opened";
-				return `${state} ${basename(path)} — viewer: ${host.url}`;
+				if (!headless) {
+					// A host kept alive by a headless window has nothing on screen, so
+					// a plain open has to put a window up even though the host is
+					// already running. A host started just above opened its own
+					if (isReusedHost && !host.hasVisibleViewer()) {
+						host.openVisibleViewer();
+					}
+					return `${state} ${basename(path)} — viewer: ${host.url}`;
+				}
+				const outcome = await host.openHeadlessViewer();
+				if (!outcome.ok) {
+					return `error: ${state} ${basename(path)}, but no headless viewer could be opened, so the tools that need a canvas on screen have nothing to work with: ${outcome.reason}`;
+				}
+				const openedIn = outcome.didOpenWindow
+					? "a headless viewer (nothing is on the user's screen)"
+					: "the viewer window already open";
+				return `${state} ${basename(path)} in ${openedIn} — viewer: ${host.url}`;
 			}),
 	);
 
@@ -201,7 +318,7 @@ export function createJiscribeMcpServer(): McpServer {
 		{
 			description: [
 				"Close the canvas viewer window and stop the local web server that open_canvas started.",
-				"Use it when the diagram is finished and the window is in the way; the .jis.json file is untouched and open_canvas brings it back.",
+				"Use it when the diagram is finished and the window is in the way; the .jis file is untouched and open_canvas brings it back.",
 				"A window the browser refuses to close is reported as still open, and the server is left running for it.",
 			].join(" "),
 			inputSchema: z.object({}).strict(),
@@ -216,7 +333,10 @@ export function createJiscribeMcpServer(): McpServer {
 					// Stopping the server while a window remains leaves that window
 					// looking for somewhere to reconnect. It would join whichever host
 					// takes this port next, so it is not stopped
-					return `error: ${remainingCount} viewer window(s) refused to close, so the local server is left running; close the window(s) by hand`;
+					const advice = host.hasHeadlessViewer()
+						? "a headless viewer cannot be closed by hand, so the port is held until this MCP session ends, which folds the server and lets that window close itself"
+						: "close the window(s) by hand";
+					return `error: ${remainingCount} viewer window(s) refused to close, so the local server is left running; ${advice}`;
 				}
 				await host.close();
 				host = null;
@@ -227,30 +347,11 @@ export function createJiscribeMcpServer(): McpServer {
 	);
 
 	server.registerTool(
-		registerName("validate_canvas"),
-		{
-			description:
-				"Validate a Jiscribe .jis.json document against both the official JSON schema and the canvas parser. Returns whether it is valid and any diagnostics.",
-			inputSchema: z
-				.object({
-					content: z
-						.string()
-						.describe(
-							"The .jis.json document text (CanvasDoc JSON) to validate.",
-						),
-				})
-				.strict(),
-		},
-		async ({ content }) =>
-			textResult(formatDiagnostics(validateDoc(content).diagnostics)),
-	);
-
-	server.registerTool(
 		registerName("diagnose_canvas"),
 		{
 			description: [
-				"Check an existing .jis.json file: validation (schema + parser) plus a diagnosis of whether each shape's text actually fits inside it.",
-				"Takes a path rather than the document text, so a large diagram never has to be sent through the conversation.",
+				"Check an existing .jis file: validation (schema + parser) plus a diagnosis of whether each shape's text actually fits inside it.",
+				"Names the file by path, so a large diagram never has to be sent through the conversation; this is the only validation entry point, and it reports JSON syntax errors too.",
 				"Overflow is only diagnosed when the file itself validates, since a shape with an invalid size has no meaningful content box.",
 				"Returns one line per finding, or valid: true when there is nothing to report.",
 			].join(" "),
@@ -308,7 +409,7 @@ export function createJiscribeMcpServer(): McpServer {
 		registerName("add_rect"),
 		{
 			description:
-				"Add a rectangle to a .jis.json file (read → modify → validate → write). Returns the new object id.",
+				"Add a rectangle to a .jis file (read → modify → validate → write). Returns the new object id.",
 			inputSchema: z
 				.object({
 					path: pathArg,
@@ -350,7 +451,7 @@ export function createJiscribeMcpServer(): McpServer {
 		registerName("add_ellipse"),
 		{
 			description:
-				"Add an ellipse to a .jis.json file (read → modify → validate → write). Returns the new object id.",
+				"Add an ellipse to a .jis file (read → modify → validate → write). Returns the new object id.",
 			inputSchema: z
 				.object({
 					path: pathArg,
@@ -580,6 +681,36 @@ function registerHandleTools(
  */
 function round(value: number): number {
 	return Math.round(value * 10) / 10;
+}
+
+/**
+ * Read one guide off disk, resolved through `@jiscribe/doc-schema`'s exports.
+ *
+ * A missing or empty file is thrown rather than answered with nothing: it means
+ * the build failed to stage the guide, and an empty answer would let a
+ * distribution ship without any of this and never say so.
+ *
+ * @param guide Which of the two guides to read; the tool's enum names the same
+ *   keys, so an unknown one cannot reach here
+ * @throws CanvasFileError when the guide cannot be resolved, read, or is empty
+ */
+function readDrawingGuide(guide: DrawingGuide): string {
+	const specifier = DRAWING_GUIDE_SPECIFIERS[guide];
+	let markdown: string;
+	try {
+		markdown = readFileSync(require.resolve(specifier), "utf8");
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		throw new CanvasFileError(
+			`the "${guide}" guide could not be read from ${specifier}, so this installation is incomplete: ${reason}`,
+		);
+	}
+	if (markdown.trim() === "") {
+		throw new CanvasFileError(
+			`the "${guide}" guide at ${specifier} is empty, so this installation is incomplete`,
+		);
+	}
+	return markdown;
 }
 
 /**

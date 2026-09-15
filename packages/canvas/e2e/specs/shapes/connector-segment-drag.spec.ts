@@ -1,5 +1,6 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { selectors } from "../../support/selectors";
 
 /**
  * Spec verifying, at the UI level, deciding a route by hand by grabbing segments of an orthogonal
@@ -215,14 +216,12 @@ test.describe("segment drag on an orthogonal connector", () => {
 			.poll(async () => longestVerticalRunX(canvas, connectorId))
 			.not.toBeCloseTo((initial[1].x + initial[2].x) / 2, 0);
 
-		// Resetting the route is an operation, not a mode, so it lives in the context menu rather
-		// than the routing menu.
-		const onLine = await readPoints(canvas, connectorId);
-		await canvas.openContextMenu({
-			x: (onLine[0].x + onLine[1].x) / 2,
-			y: onLine[0].y,
-		});
-		await canvas.clickContextMenuCommand("resetConnectorRoute");
+		// Resetting the route is an operation, not a mode, so it is a button in the sidebar's
+		// Line section rather than an entry of the routing menu.
+		await canvas.openPropertyPanel();
+		await canvas.page
+			.locator(selectors.propertyPanelCommand("resetConnectorRoute"))
+			.click();
 
 		await expect
 			.poll(async () => readPoints(canvas, connectorId), {

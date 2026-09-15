@@ -2,7 +2,8 @@ import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
-import type { Camera, Viewport } from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
+import type { Camera } from "../CanvasTypes";
 
 /**
  * Start of the visible span on one axis after the smallest pan that reveals

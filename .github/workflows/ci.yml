@@ -71,3 +71,47 @@ jobs:
 
       - name: Shipped fonts.css drift check
         run: pnpm check:fonts
+
+  # VSCode 拡張の e2e テスト。本物の VSCode（engines.vscode の下限 1.85.0 と stable）を
+  # 起動して拡張を動かすため、checks とは別ジョブにして並列に回す。
+  vscode-e2e:
+    name: vscode extension e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      # checks ジョブと同じ手順。pnpm 11 以降は action-setup ではなく後継の pnpm/setup を使う。
+      - name: Setup pnpm
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@22
+          cache: true
+          install: false
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # VSCode 本体のダウンロード（1 バージョンあたり 100MB 超）をランまたぎで残す。
+      # キーは .vscode-test.mjs のハッシュなので、あのファイルのバージョン指定を
+      # 変えたときだけ取り直す。stable が上流で上がった日は、キャッシュに当たるぶん
+      # 新しい stable だけ毎回ダウンロードすることになる（それでも 1.85.0 は残る）。
+      - name: Cache VSCode downloads
+        uses: actions/cache@v5
+        with:
+          path: apps/vscode-extension/.vscode-test
+          key: vscode-test-${{ runner.os }}-${{ hashFiles('apps/vscode-extension/.vscode-test.mjs') }}
+          restore-keys: |
+            vscode-test-${{ runner.os }}-
+
+      # VSCode は画面を要求する。runner にはないので xvfb 越しに起動する。
+      # XDG_RUNTIME_DIR は 1.85.0 のためにある。あちらは IPC のソケットを
+      # $XDG_RUNTIME_DIR（未設定なら /run/user/<uid>）にしか作れず、その
+      # ディレクトリが無い環境では EACCES で起動できずに固まる。新しい VSCode は
+      # tmpdir へ逃げるので効くのは 1.85.0 側だけ。
+      - name: E2E tests
+        run: |
+          export XDG_RUNTIME_DIR="$RUNNER_TEMP/xdg-runtime"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          xvfb-run -a pnpm --filter jiscribe test:e2e

@@ -1,25 +1,27 @@
-import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_DOC_DEFAULTS,
+	ConnectorFeatures,
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { defaultRoutingForAnchors } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
 import {
 	isFreeEndpointRef,
 	isSameEndpoint,
 } from "@jiscribe/doc/model/objects/types/EndpointRef";
-import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { isTransformedFrame, type Point } from "@jiscribe/geometry";
 
+import { isAnchorHandleId } from "./ConnectionAnchorTypes";
 import type { AnchorSnapContext } from "./utils/calcNearestAnchor";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
 import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
-import { resolveEndpointOwner } from "../../../../../rendering/layers/content/utils/endpoints/resolveEndpointOwner";
+import { resolveEndpointOwner } from "../../../../../connectors/endpoints/resolveEndpointOwner";
 import type { ExtraConnectPoint } from "../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
-import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { isConnectableObject } from "../../../../utils/isConnectableObject";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
@@ -148,7 +150,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		const connectorId = crypto.randomUUID();
 
 		// Create a temporary connector with source anchor and free target
-		const pendingConnector: ConnectorState = {
+		const connector: ConnectorState = {
 			id: connectorId,
 			type: "connector",
 			// features must be stamped on creation: the style-property handlers read it directly
@@ -168,15 +170,16 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			},
 			// routing is omitted. When omitted, orthogonal (right-angle segments) is the default.
 			// Specify "straight" explicitly only when segments at any angle are wanted.
-			stroke: AUTO_COLOR,
-			strokeWidth: 2,
+			stroke: CONNECTOR_DOC_DEFAULTS.stroke,
+			strokeWidth: CONNECTOR_DOC_DEFAULTS.strokeWidth,
+			// The arrow head is this gesture's own choice, not a default of the type:
+			// a connector created through the doc-ops (ops/connectors) gets none.
 			endArrow: "ConcaveTriangle",
 		} as ConnectorState;
 
 		return {
 			...state,
-			pendingConnector,
-			editingEndpoint: "target", // on new creation, always edit target
+			connectorDraft: { kind: "create", connector },
 			edgeScrollEnabled: true,
 			// Clear any selection to avoid confusion
 			selectedIds: [],
@@ -188,10 +191,10 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 
 	/**
 	 * Handles drag start for endpoint editing.
-	 * Like polyline vertex editing, edits the entity directly without using pendingConnector (overlay).
+	 * Like polyline vertex editing, edits the entity directly without an overlay copy.
 	 * Therefore objects / rootIds are left unchanged (preserving z-order), and the selection is kept
 	 * so that ConnectorControls' endpoint handles follow the entity.
-	 * The actual endpoint update is performed by handleDrag based on eventStartSnapshot.
+	 * The actual endpoint update is performed by handleDrag based on the drag's start snapshot.
 	 */
 	private handleEditDragStart(
 		state: CanvasControllerState,
@@ -213,8 +216,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 
 		return {
 			...state,
-			editingConnectorId: connectorId,
-			editingEndpoint: endpoint,
+			connectorDraft: { kind: "edit", connectorId, endpoint },
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
@@ -278,7 +280,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 
 	/**
 	 * Handles dragging from a connection anchor.
-	 * In edit mode, updates the entity (objects) directly; in create mode, updates pendingConnector.
+	 * In edit mode, updates the entity (objects) directly; in create mode, updates the draft.
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
@@ -288,13 +290,14 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		// Determine which endpoint is being edited from targetPart
 		// Format: "anchor:<pos>" (create) or "endpoint:<source|target>" (edit)
 		const endpointToUpdate = getEditingEndpoint(event.targetPart);
-		const { editingConnectorId } = state;
+		const { connectorDraft } = state;
 
 		// Edit mode: rewrite the entity directly, like polyline vertex editing (no overlay).
-		// The base is the original connector from eventStartSnapshot, so the fixed side and intermediate points always keep their start-time values.
-		if (editingConnectorId) {
+		// The base is the original connector from the drag's start snapshot, so the fixed side and intermediate points always keep their start-time values.
+		if (connectorDraft?.kind === "edit") {
+			const { connectorId } = connectorDraft;
 			const baseConnector =
-				state.eventStartSnapshot?.objects[editingConnectorId];
+				state.activeDrag?.startSnapshot.objects[connectorId];
 			if (!baseConnector || baseConnector.type !== "connector") {
 				return state;
 			}
@@ -325,9 +328,9 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 
 			// COW view over the previous frame's map (rebased internally, #213)
 			const updatedObjects = createCowObjects(state.objects);
-			updatedObjects[editingConnectorId] = {
+			updatedObjects[connectorId] = {
 				...routed,
-				id: editingConnectorId,
+				id: connectorId,
 			};
 
 			return {
@@ -336,23 +339,25 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			};
 		}
 
-		// Create mode: update pendingConnector (the entity does not exist yet).
-		const { pendingConnector } = state;
-		if (!pendingConnector) {
+		// Create mode: update the drafted connector (the entity does not exist yet).
+		if (connectorDraft?.kind !== "create") {
 			return state;
 		}
 
 		const updated = this.buildEditedConnector(
 			state,
 			event,
-			pendingConnector,
+			connectorDraft.connector,
 			endpointToUpdate,
 			registries,
 		);
 
 		return {
 			...state,
-			pendingConnector: this.withAnchorDerivedRouting(updated),
+			connectorDraft: {
+				kind: "create",
+				connector: this.withAnchorDerivedRouting(updated),
+			},
 		};
 	}
 
@@ -384,17 +389,18 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		event: CanvasEvent,
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		const { editingConnectorId } = state;
+		const { connectorDraft } = state;
 
 		// Edit mode: the entity has been edited directly. Apply the final state and decide whether to commit.
-		if (editingConnectorId) {
-			const original = state.eventStartSnapshot?.objects[editingConnectorId];
+		if (connectorDraft?.kind === "edit") {
+			const { connectorId } = connectorDraft;
+			const original = state.activeDrag?.startSnapshot.objects[connectorId];
 
 			// If the endpoint has not effectively changed since the start, it is a no-op.
 			// Leaving objects as-is (during handleDrag the entity ends at final position = start position)
 			// avoids handleGesture's auto-commit detection (a change in the objects reference) so nothing is pushed to history.
 			const dragResult = this.handleDrag(state, event, registries);
-			const finalConnector = dragResult.objects[editingConnectorId];
+			const finalConnector = dragResult.objects[connectorId];
 
 			// Invariant guard: if committing the edit would make both ends free, discard the edit and revert.
 			// Normally unreachable since the UI (ConnectorControls) hides the owned-end handle, but this
@@ -408,10 +414,9 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 					...state,
 					objects:
 						original?.type === "connector"
-							? { ...state.objects, [editingConnectorId]: original }
+							? { ...state.objects, [connectorId]: original }
 							: state.objects,
-					editingConnectorId: null,
-					editingEndpoint: null,
+					connectorDraft: null,
 					edgeScrollEnabled: false,
 				};
 			}
@@ -427,8 +432,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			if (isNoOp) {
 				return {
 					...state,
-					editingConnectorId: null,
-					editingEndpoint: null,
+					connectorDraft: null,
 					edgeScrollEnabled: false,
 				};
 			}
@@ -437,15 +441,13 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			// by handleGesture detecting the objects change, so it is not incremented here).
 			return {
 				...dragResult,
-				editingConnectorId: null,
-				editingEndpoint: null,
+				connectorDraft: null,
 				edgeScrollEnabled: false,
 			};
 		}
 
-		// Create mode: commit pendingConnector.
-		const { pendingConnector } = state;
-		if (!pendingConnector) {
+		// Create mode: commit the drafted connector.
+		if (connectorDraft?.kind !== "create") {
 			return {
 				...state,
 				edgeScrollEnabled: false,
@@ -453,14 +455,15 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		}
 
 		const dragResult = this.handleDrag(state, event, registries);
-		const finalConnector = dragResult.pendingConnector;
-		if (!finalConnector) {
+		const finalDraft = dragResult.connectorDraft;
+		if (finalDraft?.kind !== "create") {
 			return {
 				...dragResult,
+				connectorDraft: null,
 				edgeScrollEnabled: false,
-				editingEndpoint: null,
 			};
 		}
+		const finalConnector = finalDraft.connector;
 
 		return {
 			...dragResult,
@@ -471,8 +474,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			// Insert a new connector at the front, treated like a shape (front is the universal default for new creation).
 			// rootIds is in back→front order, so append to the end.
 			rootIds: [...dragResult.rootIds, finalConnector.id],
-			pendingConnector: null,
-			editingEndpoint: null,
+			connectorDraft: null,
 			edgeScrollEnabled: false,
 			commitVersion: state.commitVersion + 1,
 		};

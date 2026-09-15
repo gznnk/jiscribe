@@ -26,7 +26,7 @@ const HANDLE_DIMENSIONS = {
 
 /**
  * Standard dark theme. Also the built-in default: token values double as the
- * `var(--jiscribe-*, <fallback>)` fallbacks baked into `constants/theme.ts`,
+ * `var(--jiscribe-*, <fallback>)` fallbacks baked into `theme/themeTokens.ts`,
  * so fragments rendered outside a themed root (e.g. exported SVG) fall back
  * to these colors.
  */
@@ -60,6 +60,7 @@ export const darkCanvasTheme: CanvasTheme = {
 		objectSurface: "#252526",
 	},
 	handleDimensions: HANDLE_DIMENSIONS,
+	colorScheme: "dark",
 };
 
 /** Standard light theme. */
@@ -93,4 +94,5 @@ export const lightCanvasTheme: CanvasTheme = {
 		objectSurface: "#f3f3f3",
 	},
 	handleDimensions: HANDLE_DIMENSIONS,
+	colorScheme: "light",
 };

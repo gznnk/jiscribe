@@ -10,7 +10,8 @@ export type StencilIconProps = {
 };
 
 /**
- * A single item in the stencil palette shown in the StencilLibrary (toolbar).
+ * A single item in the stencil palette (the toolbar's pinned tools and category
+ * flyouts, and the shape library sidebar).
  *
  * Presets are not 1:1 with object types (e.g. "rect" and "process" are both
  * variants of the rect type). Creation always goes through the objectType's
@@ -18,7 +19,7 @@ export type StencilIconProps = {
  */
 export type Stencil = {
 	/**
-	 * Stable identifier; the lookup key for label overrides and toolbar layout. Shared by
+	 * Stable identifier; the lookup key for label overrides and toolbar sections. Shared by
 	 * every plugin a host applies, so a plugin offering several presets of one type
 	 * prefixes them (`lucideIconFileText`). No colon: it separates the id from the `item`
 	 * token in the DOM (`data-part="item:{id}"`), and StencilRegistry refuses one that has it.

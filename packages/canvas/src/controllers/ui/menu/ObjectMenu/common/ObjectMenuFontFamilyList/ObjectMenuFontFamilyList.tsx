@@ -7,6 +7,7 @@ import {
 	FontFamilyList,
 	FontFamilyListOption,
 } from "./ObjectMenuFontFamilyListStyled";
+import { setPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessages } from "../../../../../messages/CanvasMessagesTypes";
 
@@ -79,7 +80,7 @@ const ObjectMenuFontFamilyListComponent: React.FC<
 					isActive={activeFontFamily === font.stack}
 					data-kind="menu"
 					data-id="object-menu"
-					data-part={`set:${property}:${font.stack}`}
+					data-part={setPart(property, font.stack)}
 					// The stack carries quotes and commas, which a CSS attribute
 					// selector cannot match on; this is what e2e targets instead.
 					data-font={font.id}

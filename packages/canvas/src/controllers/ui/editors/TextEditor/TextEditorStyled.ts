@@ -8,7 +8,7 @@ import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
 import {
 	SCROLLBAR_WIDTH,
 	scrollbarStyles,
-} from "../../../../constants/scrollbarStyles";
+} from "../../../../theme/themeScrollbarStyles";
 
 /**
  * Wrapper that carries the shape's position/transform and aligns the editable

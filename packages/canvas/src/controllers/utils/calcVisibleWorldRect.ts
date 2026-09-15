@@ -1,6 +1,6 @@
 import type { Rect } from "@jiscribe/geometry";
 
-import type { Viewport } from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
 
 /**
  * The part of the world the view shows: the camera's top-left corner and the

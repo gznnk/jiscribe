@@ -1,4 +1,6 @@
 import { DEFAULT_FONT_FAMILY } from "../../../../text/style/fontFamilies";
+import { DEFAULT_FILL } from "../../base/FillStyleDoc";
+import { DEFAULT_STROKE_WIDTH } from "../../base/StrokeStyleDoc";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
@@ -28,9 +30,9 @@ export const RECT_DOC_DEFAULTS: Omit<RectDoc, "id"> = {
 	y: 0,
 	width: 100,
 	height: 100,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	rx: 0,
 	text: "",
 	textAlign: "center",

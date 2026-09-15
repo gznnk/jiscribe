@@ -35,6 +35,10 @@ export type {
 	CanvasPngExportOptions,
 } from "./controllers/utils/resolveExportOptions";
 export type { CanvasExportImagePayload } from "./controllers/hooks/useExportDialog";
+// The image side of a host integration: `<Canvas resolveImage>` reads the bytes
+// of the file an `image` object names, and the rendering layer reads what came
+// of it through the lookup (a shape component cannot await).
+export type { ResolveImage } from "./controllers/hooks/useDocImages";
 export type { TextSlotMeasurement } from "./controllers/utils/measureTextSlot";
 export type { ObjectOverlap } from "./controllers/utils/findObjectOverlaps";
 export type { CanvasModalKind, DragKind } from "./controllers/CanvasTypes";
@@ -59,18 +63,30 @@ export type {
 	RasterizedPng,
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
+	ResolveImageBlob,
 } from "./export";
-// StencilLibrary toolbar arrangement (pinned presets + category flyouts, issue #184).
-// The layout is the single source of order and category metadata: each entry names,
-// in display order, a pinned preset or a category flyout (label / icon / `presetIds`
-// carried inline). Pass a custom `toolbar.layout` to `<Canvas>`; built-in category
-// entries are exported for hosts composing layouts, and plugins export their own
-// (e.g. `containerToolbarEntry`).
+// Toolbar composition (issue #184). The sections are the single source of order
+// and category metadata: each item names, in display order, a pinned preset, a
+// category flyout, a command button, the zoom group, a sidebar toggle, a divider
+// or a host UI slot. Pass a custom `toolbar.sections` to `<Canvas>`; the default
+// bar is itself such an array, and each of its four sections is exported on its
+// own so a host replacing only the tools can reuse the rest. A `StencilCategory` is the
+// same object whether it becomes a flyout there or a section of the shape library
+// sidebar (`stencilLibrary.sections`); core exports `basicStencilCategory` and
+// plugins export their own (e.g. `containerStencilCategory`).
 export {
-	DEFAULT_TOOLBAR_LAYOUT,
-	basicToolbarEntry,
-	type ToolbarEntry,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_SECTIONS,
+	DEFAULT_TOOLBAR_TOOLS_SECTION,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
+	type ToolbarItem,
+	type ToolbarSection,
 } from "./controllers/ui/menu/Toolbar";
+export {
+	basicStencilCategory,
+	type StencilCategory,
+} from "./controllers/ui/objects/StencilCategory";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export type {
 	CanvasMessages,
@@ -80,10 +96,19 @@ export type {
 	CanvasTheme,
 	CanvasThemeTokens,
 	CanvasHandleDimensions,
+	CanvasColorScheme,
 } from "./theme/CanvasTheme";
 export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
-export type { Camera, Viewport } from "./states/canvas/Viewport";
-export type { ScrollBoundsConfig } from "./controllers/CanvasTypes";
+export type { Viewport } from "./rendering/Viewport";
+export type {
+	Camera,
+	CanvasInitialSidebars,
+	CanvasSidebarsState,
+	ScrollBoundsConfig,
+	SidebarPanelId,
+	SidebarPanelState,
+	SidebarSideState,
+} from "./controllers/CanvasTypes";
 export type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 // A UI consumer reads `view` to decide whether to pass settings of its own
 // (`initialConfig.viewport` overrules `view.open`, `initialConfig.scrollBounds`
@@ -104,7 +129,7 @@ export type { CanvasParseResult, CanvasParser } from "@jiscribe/doc/parse";
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
 // Pass a `CanvasConfig` (capability set + view setup) to `<Canvas initialConfig={...}>`;
 // its capability subset `CanvasCapabilities` is what the lower-level factory consumes.
-// The factory and the full object-type descriptor table are exported for advanced/custom
+// The factory and the built-in object-type descriptor table are exported for advanced/custom
 // setups. Plugin declarations (packages/canvas/docs/12-plugin-architecture.md)
 // go through `CanvasConfig.plugins`; there is no raw-registry escape hatch.
 export type {
@@ -114,7 +139,7 @@ export type {
 } from "./controllers/registries";
 export {
 	createCanvasRegistries,
-	ALL_OBJECT_DEFINITIONS,
+	BUILTIN_OBJECT_DEFINITIONS,
 } from "./controllers/registries";
 
 // Shape-definition vocabulary for plugin authors (#144 Stage 1, src/plugin).
@@ -170,10 +195,20 @@ export type {
 	CustomItem,
 	BuiltinItemKey,
 	ObjectMenuItemProps,
-	ObjectMenuPropertyUpdater,
+	StylePropertyUpdater,
 	OpenReferencePayload,
 	OpenReferenceHandler,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
+export type {
+	PropertyPanelSection,
+	PropertyPanelItem,
+	PropertyPanelBuiltinItem,
+	PropertyPanelBuiltinItemKey,
+	PropertyPanelCustomItem,
+	PropertyPanelItemProps,
+	PropertyPanelSelection,
+	PropertyPanelTransformUpdater,
+} from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 export type {
 	SelectionControlContext,
 	SelectionControlDefinition,
@@ -199,6 +234,15 @@ export type {
 	ObjectTextSlotStyleDefaults,
 	ObjectTextStyleDefaultsRegistry,
 } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+// Per-type stroke / fill defaults: the registry a canvas resolves an unset
+// stroke, width, dash or fill through, reachable as
+// `CanvasRegistries["objectShapeStyleDefaults"]`.
+export type {
+	ObjectShapeStyleDefaults,
+	ObjectShapeStyleDefaultsRegistry,
+	ResolvedShapeStyle,
+	ShapeStyleGroup,
+} from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 export type {
 	ObjectTextEditOverflowResolver,
 	TextEditOverflow,

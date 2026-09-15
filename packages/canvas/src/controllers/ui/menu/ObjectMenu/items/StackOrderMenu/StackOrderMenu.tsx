@@ -2,6 +2,10 @@
 
 import { StackOrderMenuRow } from "./StackOrderMenuStyled";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import {
+	commandPart,
+	togglePart,
+} from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCommandState } from "../../../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
@@ -48,7 +52,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 			>
 				<StackOrderIcon />
 			</ObjectMenuButton>
@@ -71,7 +75,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 									disabled={!enabled}
 									data-kind="menu"
 									data-id="object-menu"
-									data-part={`command:${commandId}`}
+									data-part={commandPart(commandId)}
 								>
 									<Icon title={getCommandLabel(messages, command)} />
 								</ObjectMenuButton>

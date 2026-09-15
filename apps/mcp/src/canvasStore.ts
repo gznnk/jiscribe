@@ -35,7 +35,7 @@ export async function readCanvasFileText(path: string): Promise<string> {
 }
 
 /**
- * Read the `.jis.json` at an absolute path and return it as a validated
+ * Read the `.jis` at an absolute path and return it as a validated
  * CanvasDoc.
  *
  * It goes through `canvasParser` (the authoritative validator, UI-independent and
@@ -60,7 +60,7 @@ export async function loadCanvasFile(path: string): Promise<CanvasDoc> {
  *
  * The modified document goes through `canvasParser` again, and an invalid one
  * fails with diagnostics instead of being written. This is what keeps a broken
- * `.jis.json` from being left behind.
+ * `.jis` from being left behind.
  *
  * The replacement is atomic (`./atomicWrite`), so the watching host and outside
  * editors never see it half written.
@@ -91,7 +91,7 @@ export async function saveCanvasFile(
 }
 
 /**
- * Bring the target `.jis.json` into a state where it can be opened. A missing one
+ * Bring the target `.jis` into a state where it can be opened. A missing one
  * is created as an empty canvas; an existing one is only validated, its contents
  * untouched.
  *

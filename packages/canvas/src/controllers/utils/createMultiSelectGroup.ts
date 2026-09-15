@@ -2,10 +2,14 @@ import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcUnionBoundingBox } from "./buildObjectBBoxes";
 import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
-import { MIN_GROUP_DIMENSION } from "../../constants/groupDimensions";
-import { MULTI_SELECT_GROUP } from "../../constants/multiSelectGroup";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
+import { MIN_GROUP_DIMENSION } from "../../states/utils/groupDimensions";
+
+export const MULTI_SELECT_GROUP = {
+	/** Fixed ID for the temporary multi-select group object */
+	ID: "@@multi-select-group@@",
+} as const;
 
 /**
  * Build a transient multi-select group state that wraps the current selection.
@@ -17,7 +21,7 @@ import type { GroupState } from "../../states/objects/primitives/group/GroupStat
  * @param selectedIds - IDs of the currently selected objects
  * @param allObjects - All objects, used to resolve children and geometry
  * @param existingMultiSelectGroup - Prior multi-select group, whose lockAspectRatio is preserved
- * @param precomputedBBoxes - Optional "id → root-level bbox" map (from EventStartSnapshot).
+ * @param precomputedBBoxes - Optional "id → root-level bbox" map (from DragStartSnapshot).
  *   When supplied, bounds are the union of the selected ids' precomputed bboxes instead of a
  *   fresh recursive traversal — used by the marquee hot path. selectedIds there are always
  *   top-level shapes/groups present in the map, so the union is identical to the traversal.
@@ -55,7 +59,7 @@ export function createMultiSelectGroup(
 	const lockAspectRatio = existingMultiSelectGroup?.lockAspectRatio ?? true;
 
 	// Return the GroupState (rotation 0, no flip)
-	// keyPoints is managed via EventStartSnapshot.keyPoints, so it is not set here
+	// keyPoints is managed via DragStartSnapshot.keyPoints, so it is not set here
 	return {
 		type: "group",
 		id: MULTI_SELECT_GROUP.ID,

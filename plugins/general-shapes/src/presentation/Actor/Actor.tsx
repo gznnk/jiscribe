@@ -38,13 +38,16 @@ export const Actor = createFrameObject<ActorState>((state, shape) => {
 				cy={headCy}
 				r={headR}
 				strokeColor={shape.strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				fillColor={shape.fillColor}
+				fillAlpha={shape.fillAlpha}
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>
 			<ActorLimbs
 				d={limbsPath}
 				strokeColor={shape.strokeColor}
+				strokeAlpha={shape.strokeAlpha}
 				strokeWidth={shape.strokeWidth}
 				strokeDasharray={shape.strokeDasharray}
 			/>

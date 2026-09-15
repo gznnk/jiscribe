@@ -216,6 +216,12 @@
 					"$ref": "#/$defs/UmlComponentDoc"
 				},
 				{
+					"$ref": "#/$defs/AwsIconDoc"
+				},
+				{
+					"$ref": "#/$defs/AwsGroupDoc"
+				},
+				{
 					"$ref": "#/$defs/PolylineDoc"
 				},
 				{
@@ -232,6 +238,9 @@
 				},
 				{
 					"$ref": "#/$defs/SvgDoc"
+				},
+				{
+					"$ref": "#/$defs/ImageDoc"
 				},
 				{
 					"$ref": "#/$defs/ConnectorDoc"
@@ -381,6 +390,12 @@
 					"$ref": "#/$defs/UmlComponentDoc"
 				},
 				{
+					"$ref": "#/$defs/AwsIconDoc"
+				},
+				{
+					"$ref": "#/$defs/AwsGroupDoc"
+				},
+				{
 					"$ref": "#/$defs/PolylineDoc"
 				},
 				{
@@ -397,6 +412,9 @@
 				},
 				{
 					"$ref": "#/$defs/SvgDoc"
+				},
+				{
+					"$ref": "#/$defs/ImageDoc"
 				}
 			],
 			"$comment": "Branches are tagged by the \"type\" field; each branch pins it with a const, which is what selects the matching branch."
@@ -428,12 +446,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 100",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 100",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 100",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 100",
 					"type": "number",
 					"minimum": 0
 				},
@@ -452,8 +470,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -526,12 +550,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Width in pixels. Default when created from the palette: 300",
+					"description": "Width in pixels. Size written when a creation omits it: 300",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Default when created from the palette: 200",
+					"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Size written when a creation omits it: 200",
 					"type": "number",
 					"minimum": 0
 				},
@@ -550,10 +574,16 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface. Default: \"auto\" (unlike other shapes, which default to transparent)",
 					"type": "string",
 					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"description": "Markdown source to render. Default: \"\"",
@@ -643,12 +673,12 @@
 					"type": "number"
 				},
 				"rx": {
-					"description": "Horizontal radius in pixels. Default when created from the palette: 50",
+					"description": "Horizontal radius in pixels. Size written when a creation omits it: 50",
 					"type": "number",
 					"minimum": 0
 				},
 				"ry": {
-					"description": "Vertical radius in pixels. Default when created from the palette: 50",
+					"description": "Vertical radius in pixels. Size written when a creation omits it: 50",
 					"type": "number",
 					"minimum": 0
 				},
@@ -661,8 +691,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -801,7 +837,7 @@
 			}
 		},
 		"DiamondDoc": {
-			"description": "Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond. Text is laid out within the full bounding box (not clipped to the diamond interior).",
+			"description": "Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond, with its four vertices at the midpoints of the box's edges — so a connector on topCenter / rightCenter / bottomCenter / leftCenter lands exactly on a point. Text is laid out within the full bounding box (not clipped to the diamond interior).",
 			"type": "object",
 			"allOf": [
 				{
@@ -913,7 +949,7 @@
 			}
 		},
 		"ActorDoc": {
-			"description": "Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The stick figure fills the whole box. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best.",
+			"description": "Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. The stick figure fills the whole box. \"fill\" paints the head circle only — the limbs are strokes and take no fill. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best.",
 			"type": "object",
 			"allOf": [
 				{
@@ -987,12 +1023,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 70",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 70",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 120",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1005,8 +1041,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1082,12 +1124,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 140",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 140",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 100",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 100",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1100,8 +1142,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1305,12 +1353,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 100",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 100",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 120",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1323,8 +1371,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1405,12 +1459,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 64",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 64",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 64",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 64",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1422,6 +1476,9 @@
 				},
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -1485,12 +1542,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 110",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 110",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1503,8 +1560,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1577,12 +1640,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 180",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 180",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 110",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 110",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1595,8 +1658,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1692,12 +1761,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 24",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1709,6 +1778,9 @@
 				},
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1792,12 +1864,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 24",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1809,6 +1881,9 @@
 				},
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -1886,12 +1961,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 24",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
@@ -1903,6 +1978,9 @@
 				},
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -2167,12 +2245,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels.",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 180",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). A written \"stereotype\" adds a band of its own above the title, 28 more at the default fontSize. Either header band grows with its content — a larger fontSize, a newline, or text too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 95 (a title band over three attribute rows). Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). A written \"stereotype\" adds a band of its own above the title, 28 more at the default fontSize. Either header band grows with its content — a larger fontSize, a newline, or text too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2185,10 +2263,16 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface. Default: \"auto\" (unlike most shapes, which default to transparent)",
 					"type": "string",
 					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"description": "The text slots. Not a string: a record keeps its title and its compartments apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Which slots you write is what gives the box its compartments — write \"attributes\" alone for a two-compartment box (an ER entity, a DTO), add \"operations\" for a UML class, omit both for a plain titled box; \"stereotype\" is a band rather than a compartment and is what marks an interface, an abstract class, or an enum. Default: { \"name\": { \"text\": \"\" }, \"attributes\": { \"text\": [] } }",
@@ -2498,12 +2582,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 108",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 108",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2516,10 +2600,16 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"auto\" (overrides the shared default \"transparent\").",
 					"type": "string",
 					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -2597,12 +2687,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 90",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 90",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2615,16 +2705,251 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"auto\" (overrides the shared default \"transparent\").",
 					"type": "string",
 					"default": "auto"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
 				},
 				"textAlign": {
 					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"bold\" (overrides the shared default \"normal\").",
+					"type": "string",
+					"default": "bold"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"AwsIconDoc": {
+			"description": "One icon from the official AWS Architecture Icons set, drawn as a node: it holds text and can be a connector endpoint, so arrows attach to it directly. `icon` names the picture, as a layer-prefixed kebab-case name — \"service/aws-lambda\" (an AWS service), \"resource/amazon-ec2/instance\" (a resource of a service), \"general/user\" (a generic figure). Common short names resolve too (\"lambda\", \"s3\", \"ec2\", \"alb\", \"igw\"), as does a name with the \"amazon-\"/\"aws-\" prefix or the layer prefix dropped where that is unambiguous; a name that resolves to nothing is a validation error carrying suggestions. `text` is drawn as a label below the box, auto-sized to itself, so keep it to the short service name (\"Lambda\", \"S3\"). There is no stroke or fill: AWS forbids recolouring its icons. Keep the box square (the 64x64 default) — the drawing is scaled uniformly and centred, so a non-square box only adds margin. Put these inside an awsGroup frame to show which VPC or subnet they live in.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"awsIcon\".",
+					"type": "string",
+					"const": "awsIcon"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"icon": {
+					"description": "Which icon to draw, as a layer-prefixed kebab-case name from the official AWS Architecture Icons set: \"service/<service>\" for an AWS service (\"service/aws-lambda\"), \"resource/<service>/<resource>\" for a resource of one (\"resource/amazon-ec2/instance\"), \"general/<thing>\" for a generic figure (\"general/user\"), \"group/<boundary>\" for a boundary badge (\"group/region\"). The short names people say resolve too (\"lambda\", \"s3\", \"ec2\", \"alb\", \"igw\", \"nat\"), as does a name with the \"amazon-\" / \"aws-\" prefix or the layer prefix dropped wherever that is unambiguous (\"ec2/instance\", \"cloudfront\"). A name that resolves to nothing is rejected with the nearest candidates named, so a wrong guess costs one correction rather than a broken document. Do not invent a name from another icon set. Omitted = \"service/amazon-ec2\".",
+					"type": "string",
+					"default": "service/amazon-ec2",
+					"examples": [
+						"service/aws-lambda",
+						"service/amazon-simple-storage-service",
+						"resource/amazon-ec2/instance",
+						"resource/amazon-vpc/internet-gateway",
+						"general/user"
+					]
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 64",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 64",
+					"type": "number",
+					"minimum": 0
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"$ref": "#/$defs/TextStyle/properties/fontSize"
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"fontStyle": {
+					"$ref": "#/$defs/TextStyle/properties/fontStyle"
+				},
+				"textDecoration": {
+					"$ref": "#/$defs/TextStyle/properties/textDecoration"
+				},
+				"textVerticalBasis": {
+					"$ref": "#/$defs/TextStyle/properties/textVerticalBasis"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"description": "Lock aspect ratio during resize. Default: true (overrides the shared default false).",
+					"type": "boolean",
+					"default": true
+				}
+			}
+		},
+		"AwsGroupDoc": {
+			"description": "A boundary frame of an AWS architecture diagram: the VPC, subnet, availability zone or account that the icons inside belong to. `kind` picks which one, and the border colour, the line style and the corner badge all follow from it — one of: aws-cloud, aws-cloud-plain, region, availability-zone, vpc, public-subnet, private-subnet, security-group, auto-scaling-group, aws-account, corporate-data-center, server-contents, ec2-instance-contents, spot-fleet, iot-greengrass-deployment, iot-greengrass, elastic-beanstalk-container, step-functions-workflow, generic. `text` is the frame's title, drawn at the top left beside the badge, never in the body. Objects go inside it by geometry alone: give them coordinates within the box and place them after the frame in `root` so they paint on top. The body is click-through, so the icons lying over it stay selectable, and the frame does not carry its contents when it moves — wrap them in a GroupDoc when they must move together. Nest them the way AWS does: aws-cloud > region > vpc > public-subnet / private-subnet. Setting `stroke` or `strokeDashType` overrides what the kind would have chosen.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"awsGroup\".",
+					"type": "string",
+					"const": "awsGroup"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"kind": {
+					"description": "Which boundary this frame is. The border color, the line style and the corner badge all follow from it, and nesting them the way AWS does (aws-cloud > region > vpc > public-subnet / private-subnet) is what makes the diagram read. Setting `stroke` or `strokeDashType` overrides what the kind would have chosen. Omitted = \"generic\", a frame tied to no AWS service.",
+					"type": "string",
+					"enum": [
+						"aws-cloud",
+						"aws-cloud-plain",
+						"region",
+						"availability-zone",
+						"vpc",
+						"public-subnet",
+						"private-subnet",
+						"security-group",
+						"auto-scaling-group",
+						"aws-account",
+						"corporate-data-center",
+						"server-contents",
+						"ec2-instance-contents",
+						"spot-fleet",
+						"iot-greengrass-deployment",
+						"iot-greengrass",
+						"elastic-beanstalk-container",
+						"step-functions-workflow",
+						"generic"
+					],
+					"default": "generic"
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 320",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 200",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
+				"fill": {
+					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"description": "Horizontal text alignment. Default: \"left\" (overrides the shared default \"center\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/TextAlign"
+						}
+					],
+					"default": "left"
 				},
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -2711,6 +3036,9 @@
 				},
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
 				}
 			}
 		},
@@ -2749,13 +3077,19 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				}
 			}
 		},
 		"GroupDoc": {
-			"description": "A group containing child objects.",
+			"description": "A group containing child objects. It has no position or size of its own: both follow from the children, so there are no x/y/width/height fields to write here.",
 			"type": "object",
 			"required": ["id", "type", "children"],
 			"additionalProperties": false,
@@ -2831,12 +3165,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 240",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 240",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box height in pixels. Size written when a creation omits it: 160",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2849,8 +3183,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -2934,12 +3274,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 160",
+					"description": "Bounding-box width in pixels. Size written when a creation omits it: 200",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Default when created from the palette: 120",
+					"description": "Bounding-box height in pixels. Optional: omit it and the height follows the text — the box is sized to the smallest one the wrapped text fits in, and re-sized whenever the text or the width changes. Size written when a creation omits it: 150",
 					"type": "number",
 					"minimum": 0
 				},
@@ -2948,14 +3288,29 @@
 					"type": "string",
 					"default": "#fef9c3"
 				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
+				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
 				},
 				"textAlign": {
-					"$ref": "#/$defs/TextStyle/properties/textAlign"
+					"description": "Horizontal text alignment. Default: \"left\" (overrides the shared default \"center\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/TextAlign"
+						}
+					],
+					"default": "left"
 				},
 				"verticalAlign": {
-					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+					"description": "Vertical text alignment. Default: \"top\" (overrides the shared default \"middle\").",
+					"allOf": [
+						{
+							"$ref": "#/$defs/VerticalAlign"
+						}
+					],
+					"default": "top"
 				},
 				"fontColor": {
 					"description": "Font color as a CSS color string, or \"auto\" to follow the theme foreground. Sticky notes override the usual \"auto\" default with \"#000000\" (black), because a sticky is drawn on a light paper-colored background. Default: \"#000000\"",
@@ -3034,8 +3389,63 @@
 					"minimum": 0
 				},
 				"svgText": {
-					"description": "Inline SVG markup, starting with a <svg ...> root element. Include a viewBox so the content scales to fit the box (if absent, the markup's width/height, or 100x100, is used). Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered.",
+					"description": "Inline SVG markup, starting with a <svg ...> root element. Include a viewBox so the content scales to fit the box (if absent, the markup's width/height, or 100x100, is used). Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered. Markup that does not parse as SVG is replaced by a placeholder error icon rather than drawing nothing.",
 					"type": "string"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"ImageDoc": {
+			"description": "A picture file (raster or SVG) drawn as an opaque box. Use it for photographs, screenshots and exported pictures — anything the built-in shapes cannot draw and inline SVG markup (`svg`) would not hold. The picture itself lives in a separate file that travels with the .jis; this object only names it. It IS a connector target (an image is a node of the diagram), and it has no text, stroke or fill of its own.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height", "src"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"image\".",
+					"type": "string",
+					"const": "image"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"x": {
+					"description": "Left-edge X coordinate.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Display width in pixels (the box the image is stretched into).",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Display height in pixels (the box the image is stretched into).",
+					"type": "number",
+					"minimum": 0
+				},
+				"src": {
+					"description": "Path to the image file, relative to the directory the .jis itself is in. Use \"/\" as the separator and keep the file inside that directory: \"..\", an absolute path and a URL are all rejected by the host that reads it. The file is NOT embedded in the document — the host resolves it when drawing, so put the image beside the .jis (or in a folder under it) and ship the two together. A file that cannot be resolved is drawn as a placeholder box instead of the picture. `width` and `height` are required and the image is stretched to fill that box exactly, so give them the file's own aspect ratio unless you mean to distort it.",
+					"type": "string",
+					"minLength": 1
 				},
 				"rotation": {
 					"$ref": "#/$defs/TransformStyle/properties/rotation"
@@ -3070,7 +3480,7 @@
 					"$ref": "#/$defs/MetaDoc"
 				},
 				"points": {
-					"description": "Ordered list of the route's vertices from source to target, in world coordinates - the corners the line bends at. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Empty (the normal case) lets the engine route the whole path. Non-empty, these points ARE the path: under the default \"orthogonal\" shape consecutive points must share x or y, and the first/last must share the axis its endpoint is left on, because nothing straightens or re-routes them. Use vertices only when a specific route matters.",
+					"description": "Ordered list of the route's vertices from source to target, in world coordinates - the corners the line bends at. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Empty (the normal case) lets the engine route the whole path. Non-empty, these points ARE the path: under the default \"orthogonal\" shape consecutive points must share x or y, and the first/last must share the axis its endpoint is left on, because nothing straightens or re-routes them. When a connected shape moves, only the vertex next to each endpoint slides along, so the segment touching that endpoint stays axis-aligned; an editor operation writes that slid position back into this list when it commits, so a stored list read back always matches what is drawn. Nothing else re-routes, so a route pinned by vertices survives a big layout change as a detour. Use vertices only when a specific route matters.",
 					"type": "array",
 					"items": {
 						"$ref": "#/$defs/Point"
@@ -3107,8 +3517,11 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"label": {
-					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontFamily, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign or verticalAlign — do not add those keys here.",
+					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontFamily, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign or verticalAlign — do not add those keys here. It is always drawn horizontally, centered on its anchor point on the path: a rotated or diagonal connector does not tilt it.",
 					"type": "object",
 					"required": ["text"],
 					"additionalProperties": false,
@@ -3222,7 +3635,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / container / sticky (NOT lucideIcon / polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / awsIcon / awsGroup / container / sticky / image (NOT lucideIcon / polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,
@@ -3318,7 +3731,7 @@
 			}
 		},
 		"MetaDoc": {
-			"description": "Optional metadata attached to any object.",
+			"description": "Optional metadata attached to any object. Beyond the keys listed here it accepts any custom key, which jiscribe carries through untouched.",
 			"type": "object",
 			"properties": {
 				"name": {
@@ -3359,6 +3772,13 @@
 						}
 					],
 					"default": "solid"
+				},
+				"strokeOpacity": {
+					"description": "Stroke opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the stroke color already carries, so rgba() / #RRGGBBAA still work and combine with it. Default: 1",
+					"type": "number",
+					"minimum": 0,
+					"maximum": 1,
+					"default": 1
 				}
 			}
 		},
@@ -3370,6 +3790,13 @@
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"transparent\"",
 					"type": "string",
 					"default": "transparent"
+				},
+				"fillOpacity": {
+					"description": "Fill opacity, 0 (invisible) to 1 (opaque). It multiplies the alpha the fill color already carries, so rgba() / #RRGGBBAA still work and combine with it. Default: 1",
+					"type": "number",
+					"minimum": 0,
+					"maximum": 1,
+					"default": 1
 				}
 			}
 		},
@@ -3552,8 +3979,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"
@@ -3642,8 +4075,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
+				"strokeOpacity": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeOpacity"
+				},
 				"fill": {
 					"$ref": "#/$defs/FillStyle/properties/fill"
+				},
+				"fillOpacity": {
+					"$ref": "#/$defs/FillStyle/properties/fillOpacity"
 				},
 				"text": {
 					"$ref": "#/$defs/TextStyle/properties/text"

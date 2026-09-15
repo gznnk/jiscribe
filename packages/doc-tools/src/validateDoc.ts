@@ -117,7 +117,7 @@ const toSemanticDiagnostics = (
 	}));
 
 /**
- * Checks one `.jis.json` text against both validators the format has: the
+ * Checks one `.jis` text against both validators the format has: the
  * official JSON schema (`@jiscribe/doc-schema/schema`, what an editor completes and
  * validates against) and the canvas parser loaded with the shipped shape set
  * (what actually opens the file). The two overlap but neither contains the

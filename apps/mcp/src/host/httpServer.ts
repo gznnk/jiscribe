@@ -4,18 +4,23 @@
 // There are only two things it serves: the viewer's HTML, folded into one file at
 // build time, and the fonts its CSS refers to (split by unicode-range, so the
 // browser only fetches the ranges it actually draws). On top of that it has an
-// endpoint for writing back what a person fixed.
+// endpoint for writing back what a person fixed, and one for reading an image an
+// object points at.
 //
-// It has no endpoint for reading because the viewer receives the doc over the
-// WebSocket (there is no need to read a file over HTTP).
+// Reading is for images alone: the doc reaches the viewer over the WebSocket, while
+// the files an image shape's `src` names are on disk only.
 
 import { createReadStream } from "node:fs";
 import { mkdir, stat } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
+import { pipeline } from "node:stream";
+
+import { resolveDocImageMimeType } from "@jiscribe/doc";
 
 import { resolveWorkspacePath, WorkspacePathError } from "./workspacePaths";
 import { writeFileAtomically } from "../atomicWrite";
+import { FILE_API_PATH_PARAM, FILE_API_PATHNAME } from "../shared/fileApiRoute";
 
 /** Only what serving the fonts needs. An extension not listed here is not served */
 const assetContentTypes: Record<string, string> = {
@@ -58,6 +63,32 @@ const sendApiError = (response: http.ServerResponse, error: unknown): void => {
 	sendJson(response, 500, { error: String(error) });
 };
 
+/**
+ * Sends a file's bytes as the response body, the headers having been written
+ * already.
+ *
+ * `pipe` alone would leave the read stream's `error` unhandled and take the whole
+ * MCP process down, which a file that passes `stat` and then fails to open (EACCES)
+ * is enough to trigger. A failing pipeline destroys the response instead, so the
+ * browser's fetch rejects and the viewer draws its placeholder.
+ */
+const pipeFileToResponse = (
+	file: string,
+	response: http.ServerResponse,
+): void => {
+	pipeline(createReadStream(file), response, (error) => {
+		// stderr is the only channel left (stdout carries the MCP protocol), and a
+		// request the browser itself gave up on is not worth reporting
+		if (
+			error !== null &&
+			error !== undefined &&
+			!isNodeErrorWithCode(error, "ERR_STREAM_PREMATURE_CLOSE")
+		) {
+			console.error(`Failed to serve ${file}: ${String(error)}`);
+		}
+	});
+};
+
 const readRequestBody = (request: http.IncomingMessage): Promise<Buffer> =>
 	new Promise((resolve, reject) => {
 		const chunks: Buffer[] = [];
@@ -72,9 +103,11 @@ const handleWriteFile = async (
 	requestUrl: URL,
 	response: http.ServerResponse,
 ): Promise<void> => {
-	const relPath = requestUrl.searchParams.get("path") ?? "";
+	const relPath = requestUrl.searchParams.get(FILE_API_PATH_PARAM) ?? "";
 	if (relPath === "") {
-		throw new WorkspacePathError("path query parameter is required");
+		throw new WorkspacePathError(
+			`${FILE_API_PATH_PARAM} query parameter is required`,
+		);
 	}
 	const resolvedFile = resolveWorkspacePath(workspaceRoot, relPath);
 	const body = await readRequestBody(request);
@@ -83,6 +116,42 @@ const handleWriteFile = async (
 	await mkdir(path.dirname(resolvedFile), { recursive: true });
 	await writeFileAtomically(resolvedFile, body);
 	sendJson(response, 200, { ok: true });
+};
+
+const handleReadImageFile = async (
+	workspaceRoot: string,
+	requestUrl: URL,
+	response: http.ServerResponse,
+): Promise<void> => {
+	const relPath = requestUrl.searchParams.get(FILE_API_PATH_PARAM) ?? "";
+	if (relPath === "") {
+		throw new WorkspacePathError(
+			`${FILE_API_PATH_PARAM} query parameter is required`,
+		);
+	}
+	const resolvedFile = resolveWorkspacePath(workspaceRoot, relPath);
+	// Images are the only workspace files the viewer reads, so any other extension
+	// stays unreadable rather than this becoming a way to fetch any file under the
+	// root. The list is @jiscribe/doc's, shared with every host
+	const contentType = resolveDocImageMimeType(relPath);
+	if (contentType === null) {
+		sendJson(response, 404, { error: "not found" });
+		return;
+	}
+	// A missing file lands in the caller's catch as ENOENT, which becomes a 404
+	const fileStat = await stat(resolvedFile);
+	if (!fileStat.isFile()) {
+		sendJson(response, 404, { error: "not found" });
+		return;
+	}
+	response.writeHead(200, {
+		"Content-Type": contentType,
+		"Content-Length": fileStat.size,
+		// Unlike the built assets, this is a workspace file a person can replace at
+		// any moment under the name it already has
+		"Cache-Control": "no-store",
+	});
+	pipeFileToResponse(resolvedFile, response);
 };
 
 const serveAsset = async (
@@ -116,7 +185,7 @@ const serveAsset = async (
 			// for a long time
 			"Cache-Control": "public, max-age=31536000, immutable",
 		});
-		createReadStream(resolvedFile).pipe(response);
+		pipeFileToResponse(resolvedFile, response);
 	} catch {
 		sendJson(response, 404, { error: "not found" });
 	}
@@ -124,8 +193,8 @@ const serveAsset = async (
 
 export type ViewerHttpServerOptions = {
 	/**
-	 * What file writes are relative to (absolute path). Nothing outside it can be
-	 * written
+	 * What file writes and image reads are relative to (absolute path). Nothing
+	 * outside it can be written or read
 	 */
 	workspaceRoot: string;
 	/** The viewer's HTML, folded into one file and embedded at build time */
@@ -137,8 +206,8 @@ export type ViewerHttpServerOptions = {
 /**
  * Creates the HTTP server that serves the viewer. Listening is left to the caller.
  *
- * @param options Nothing outside workspaceRoot can be written. viewerHtml is
- *   returned as it is at `/`
+ * @param options Nothing outside workspaceRoot can be written or read. viewerHtml
+ *   is returned as it is at `/`
  */
 export function createViewerHttpServer(
 	options: ViewerHttpServerOptions,
@@ -151,8 +220,16 @@ export function createViewerHttpServer(
 				`http://${request.headers.host ?? "localhost"}`,
 			);
 			try {
-				if (requestUrl.pathname === "/api/file" && request.method === "PUT") {
+				if (
+					requestUrl.pathname === FILE_API_PATHNAME &&
+					request.method === "PUT"
+				) {
 					await handleWriteFile(workspaceRoot, request, requestUrl, response);
+				} else if (
+					requestUrl.pathname === FILE_API_PATHNAME &&
+					request.method === "GET"
+				) {
+					await handleReadImageFile(workspaceRoot, requestUrl, response);
 				} else if (requestUrl.pathname.startsWith("/api/")) {
 					sendJson(response, 404, { error: "unknown api" });
 				} else if (

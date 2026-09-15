@@ -32,6 +32,8 @@ import { ToggleTextVerticalBasisCommand } from "../commands/shape/ToggleTextVert
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ShortcutHelpCommand } from "../commands/view/ShortcutHelpCommand";
+import { TogglePropertyPanelCommand } from "../commands/view/TogglePropertyPanelCommand";
+import { ToggleStencilLibraryCommand } from "../commands/view/ToggleStencilLibraryCommand";
 import { ZoomInCommand } from "../commands/view/ZoomInCommand";
 import { ZoomOutCommand } from "../commands/view/ZoomOutCommand";
 import { ZoomToFitCommand } from "../commands/view/ZoomToFitCommand";
@@ -87,6 +89,8 @@ export const ALL_COMMANDS: Command[] = [
 	ZoomToFitCommand,
 	ZoomToSelectionCommand,
 	ShortcutHelpCommand,
+	ToggleStencilLibraryCommand,
+	TogglePropertyPanelCommand,
 	// Export command (opens the dialog; the export itself runs via callback)
 	ExportCommand,
 ];
@@ -94,9 +98,9 @@ export const ALL_COMMANDS: Command[] = [
 /**
  * Clears the bundle's command registry and registers the enabled commands.
  *
- * Clears first (like the other `initialize*` bundle populators) so re-running it
- * — tests, partial init, hot reload — never leaves stale commands behind: the
- * registry always ends up with exactly the listed command ids.
+ * Clears first so re-running it — tests, partial init, hot reload — never leaves
+ * stale commands behind: the registry always ends up with exactly the listed
+ * command ids.
  *
  * @param registries Target bundle to populate.
  * @param commandIds When provided, only commands whose id is included are

@@ -1,4 +1,6 @@
 import styled from "@emotion/styled";
+import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * Record sub-parts. The compartment rects are the shape's hit regions and carry
@@ -11,8 +13,8 @@ import styled from "@emotion/styled";
  */
 
 /** One compartment: the title band and every row compartment are drawn alike. */
-export const RecordCompartment = styled.rect<{ fillColor: string }>`
-	fill: ${({ fillColor }) => fillColor};
+export const RecordCompartment = styled.rect<FillPaintProps>`
+	${fillPaint}
 	stroke: none;
 	pointer-events: all;
 	cursor: grab;
@@ -24,8 +26,8 @@ export const RecordCompartment = styled.rect<{ fillColor: string }>`
  * `pointer-events: none` keeps it from stealing the hit from the compartment it
  * divides — which would lose the slot's data-part.
  */
-export const RecordDivider = styled.line<{ strokeColor: string }>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const RecordDivider = styled.line<StrokePaintProps>`
+	${strokePaint}
 	pointer-events: none;
 `;
 
@@ -33,9 +35,9 @@ export const RecordDivider = styled.line<{ strokeColor: string }>`
  * Border. `fill: none` so it never covers the compartments beneath it; only the
  * painted stroke captures, which keeps the box edge grabbable.
  */
-export const RecordOutline = styled.rect<{ strokeColor: string }>`
+export const RecordOutline = styled.rect<StrokePaintProps>`
 	fill: none;
-	stroke: ${({ strokeColor }) => strokeColor};
+	${strokePaint}
 	cursor: grab;
 
 	&:focus {

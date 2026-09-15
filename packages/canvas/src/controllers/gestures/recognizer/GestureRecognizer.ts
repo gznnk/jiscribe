@@ -24,20 +24,22 @@ import type {
 	ScrollDelta,
 } from "./GestureRecognizerTypes";
 import {
+	createGetHovered,
+	getGestureTarget,
+	getInputValue,
+	isGestureOptedOut,
+	isNativePointerTarget,
+	readInputValue,
+} from "./targeting";
+import {
 	calcFlingVelocity,
 	calcPinchDist,
 	calcPinchMid,
 	calculateScrollDelta,
-	createGetHovered,
 	detectEdgeProximity,
 	type FlingSample,
-	getGestureTarget,
-	getInputValue,
 	getWorldPoint,
 	isDoubleClick,
-	isGestureOptedOut,
-	isNativePointerTarget,
-	readInputValue,
 } from "./utils";
 
 /** Fields every queued event carries, whatever produced it (DOM event, wheel conversion, long-press timer). */
@@ -488,7 +490,7 @@ export class GestureRecognizer {
 					!this.pressed.isNativePointerTarget &&
 					canConvertDrag
 				) {
-					// Close the pan drag first so the eventStartSnapshot lifecycle
+					// Close the pan drag first so the activeDrag lifecycle
 					// completes (dragStart saved it; only dragEnd clears it). A pan
 					// changes no doc, so this dragEnd commits nothing.
 					if (this.pressed.dragging) {

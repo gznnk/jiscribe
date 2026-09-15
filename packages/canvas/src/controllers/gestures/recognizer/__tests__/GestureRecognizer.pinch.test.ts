@@ -5,6 +5,7 @@ import type {
 	Gesture,
 	GestureRecognizerConfig,
 } from "../GestureRecognizerTypes";
+import type * as RecognizerTargeting from "../targeting";
 import type * as RecognizerUtils from "../utils";
 
 /**
@@ -27,8 +28,24 @@ import type * as RecognizerUtils from "../utils";
 
 const mockUtil = vi.hoisted(() => ({
 	isNativePointer: false,
-	gestureTarget: { id: "obj-1", kind: "rect" } as RecognizerUtils.GestureTarget,
+	gestureTarget: {
+		id: "obj-1",
+		kind: "rect",
+	} as RecognizerTargeting.GestureTarget,
 }));
+
+vi.mock("../targeting", async (importActual) => {
+	const actual = await importActual<typeof RecognizerTargeting>();
+	return {
+		...actual,
+		getGestureTarget: () => mockUtil.gestureTarget,
+		createGetHovered: () => () => [],
+		getInputValue: () => undefined,
+		readInputValue: () => undefined,
+		isGestureOptedOut: () => false,
+		isNativePointerTarget: () => mockUtil.isNativePointer,
+	};
+});
 
 vi.mock("../utils", async (importActual) => {
 	const actual = await importActual<typeof RecognizerUtils>();
@@ -43,12 +60,6 @@ vi.mock("../utils", async (importActual) => {
 			x: clientX,
 			y: clientY,
 		}),
-		getGestureTarget: () => mockUtil.gestureTarget,
-		createGetHovered: () => () => [],
-		getInputValue: () => undefined,
-		readInputValue: () => undefined,
-		isGestureOptedOut: () => false,
-		isNativePointerTarget: () => mockUtil.isNativePointer,
 		detectEdgeProximity: () => ({ isNearEdge: false }),
 		calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
 	};

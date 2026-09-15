@@ -4,7 +4,7 @@ import { memo } from "react";
 
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import type { ArrowShapeProps } from "../ArrowTypes";
-import { ArrowCircle, ArrowPath } from "./ArrowStyled";
+import { ArrowCircle, ArrowGroup, ArrowPath } from "./ArrowStyled";
 import {
 	buildCrowFootBar,
 	buildCrowFootSpine,
@@ -32,6 +32,7 @@ const CrowFootZeroOneArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -43,7 +44,12 @@ const CrowFootZeroOneArrowComponent: React.FC<ArrowShapeProps> = ({
 	const d = `${buildCrowFootSpine(CIRCLE_NEAR_EDGE)} ${buildCrowFootBar(CROW_FOOT_BAR_OFFSET)}`;
 
 	return (
-		<g transform={transform} data-kind={dataKind} data-id={dataId}>
+		<ArrowGroup
+			transform={transform}
+			alpha={opacity}
+			data-kind={dataKind}
+			data-id={dataId}
+		>
 			<ArrowPath d={d} strokeColor={color} strokeWidth={1} />
 			<ArrowCircle
 				cx={-(CIRCLE_NEAR_EDGE + CROW_FOOT_CIRCLE_RADIUS)}
@@ -52,7 +58,7 @@ const CrowFootZeroOneArrowComponent: React.FC<ArrowShapeProps> = ({
 				strokeColor={color}
 				strokeWidth={1}
 			/>
-		</g>
+		</ArrowGroup>
 	);
 };
 

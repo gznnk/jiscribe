@@ -1,0 +1,12 @@
+{
+	"name": "jiscribe",
+	"description": "The Jiscribe canvas plugin: an AI draws and edits .jis diagrams, and a person can edit them alongside in a local viewer.",
+	"owner": { "name": "gznnk" },
+	"plugins": [
+		{
+			"name": "jiscribe",
+			"description": "Draw and edit Jiscribe canvas diagrams — flowcharts, architecture diagrams, sticky-note boards — through the jiscribe MCP tools.",
+			"source": "./apps/claude-plugin"
+		}
+	]
+}

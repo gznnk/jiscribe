@@ -3,7 +3,7 @@
 //
 // There are two kinds of thing to carry.
 //
-// 1. File synchronisation. The source of truth is the .jis.json in the workspace;
+// 1. File synchronisation. The source of truth is the .jis in the workspace;
 //    the AI rewrites it through the MCP tools, and a person fixes it in the viewer
 //    and saves. A one-way notification is enough here.
 // 2. Operations that need a mounted canvas (capture, camera, selection,
@@ -11,6 +11,14 @@
 //    the viewer, which makes it a round trip under a requestId.
 
 import type { AiHandleOp } from "@jiscribe/ai-tools";
+
+/**
+ * The query naming a viewer that nobody can see (the AI's eye). The host puts it
+ * on the page URL it opens and the page puts it back on the WebSocket URL, so
+ * both the page and the socket can be told apart from a window a person is
+ * looking at. Written without the leading "?" so it reads as a search parameter
+ */
+export const HEADLESS_VIEWER_QUERY = "headless=1";
 
 /** Server to viewer */
 export type CanvasHostServerMessage =

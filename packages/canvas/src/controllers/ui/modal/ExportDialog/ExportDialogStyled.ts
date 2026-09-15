@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../constants/theme";
+import { theme } from "../../../../theme/themeTokens";
 
 /**
  * The whole form: the field grid plus the footer buttons. A <form> so Enter

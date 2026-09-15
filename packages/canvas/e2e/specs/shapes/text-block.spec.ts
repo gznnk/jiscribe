@@ -202,9 +202,9 @@ test.describe("text block layout", () => {
 	});
 });
 
-/** The layout switch, found by the label it carries in each of its two states. */
+/** The layout switch of the sidebar, which carries its state on aria-checked. */
 const layoutSwitch = (canvas: CanvasDriver) =>
-	canvas.page.locator(selectors.objectMenuCommand("toggleTextLayout"));
+	canvas.page.locator(selectors.propertyPanelCommand("toggleTextLayout"));
 
 /** A point inside the label text's first line, which is where it is clicked. */
 const LABEL_POINT = { x: LABEL_X + 20, y: LABEL_Y + 10 };
@@ -214,16 +214,17 @@ test.describe("the switch between the two layouts", () => {
 		canvas,
 	}) => {
 		await loadDoc(canvas, labelDocText, "label-text");
+		await canvas.openPropertyPanel();
 		await canvas.selectAt(LABEL_POINT);
 		const measured = await overlayBoxOf(canvas, "label-text");
 
 		const toggle = layoutSwitch(canvas);
-		await expect(toggle).toHaveAttribute("title", "Wrap Text in Fixed Width");
+		await expect(toggle).toHaveAttribute("aria-checked", "false");
 
 		// The box does not move: the width it was measured into is the width it is
 		// now told to wrap in.
 		await toggle.click();
-		await expect(toggle).toHaveAttribute("title", "Fit Width to Text");
+		await expect(toggle).toHaveAttribute("aria-checked", "true");
 		const wrapped = await overlayBoxOf(canvas, "label-text");
 		expect(wrapped.width).toBeCloseTo(measured.width, 1);
 		expect(wrapped.height).toBeCloseTo(measured.height, 1);
@@ -255,7 +256,7 @@ test.describe("the switch between the two layouts", () => {
 		// Switched back, the box shrinks to the longest line again — the width it
 		// was dragged to was the wrap's, not the text's.
 		await toggle.click();
-		await expect(toggle).toHaveAttribute("title", "Wrap Text in Fixed Width");
+		await expect(toggle).toHaveAttribute("aria-checked", "false");
 		const remeasured = await overlayBoxOf(canvas, "label-text");
 		expect(remeasured.width).toBeCloseTo(measured.width, 1);
 		expect(remeasured.height).toBeCloseTo(measured.height, 1);
@@ -263,6 +264,7 @@ test.describe("the switch between the two layouts", () => {
 
 	test("edits at the width it was just given", async ({ canvas }) => {
 		await loadDoc(canvas, labelDocText, "label-text");
+		await canvas.openPropertyPanel();
 		await canvas.selectAt(LABEL_POINT);
 		await layoutSwitch(canvas).click();
 		const wrapped = await overlayBoxOf(canvas, "label-text");

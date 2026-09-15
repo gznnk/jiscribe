@@ -5,9 +5,9 @@ import {
 	type Point,
 } from "@jiscribe/geometry";
 
-import { resolveEndpoint } from "../../../../../../rendering/layers/content/utils/endpoints/resolveEndpoint";
+import { calcEdgeAnchorDirection } from "../../../../../../connectors/calcConnectPoint";
+import { resolveEndpoint } from "../../../../../../connectors/endpoints/resolveEndpoint";
 import type { ExtraConnectPoint } from "../../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
-import { calcEdgeAnchorDirection } from "../../../../../../rendering/objects/utils/calcConnectPoint";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 
 /**

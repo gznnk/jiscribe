@@ -1,6 +1,6 @@
 import { calcPolyBoundingBox, type Point, type Rect } from "@jiscribe/geometry";
 
-import { type ObjectRecord } from "./objectAccess";
+import { type ObjectRecord, readChildren } from "./objectAccess";
 import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/RichText";
@@ -180,9 +180,6 @@ const readObjectHeight = (
 	});
 	return height;
 };
-
-export const readChildren = (object: ObjectRecord): ObjectRecord[] =>
-	Array.isArray(object.children) ? (object.children as ObjectRecord[]) : [];
 
 /** Smallest box containing all of `boxes`, or null when there are none. */
 export const unionBounds = (boxes: readonly Rect[]): Rect | null => {

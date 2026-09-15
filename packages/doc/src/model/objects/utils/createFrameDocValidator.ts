@@ -14,6 +14,7 @@ import type { AutoHeightDeclaration } from "../../../plugin/supportsAutoHeight";
 import { supportsAutoHeight } from "../../../plugin/supportsAutoHeight";
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import type { GeometryType } from "../types/GeometryType";
+import { GEOMETRY_SIZE_MIN } from "../types/GeometryType";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
 
 /** A geometry's coordinate check, told whether this type may leave `height` out. */
@@ -34,18 +35,18 @@ const geometryFieldValidators: Record<GeometryType, GeometryFieldValidator> = {
 	rect: (o, path, autoHeight) => [
 		...validateRequiredNumber(o, path, "x"),
 		...validateRequiredNumber(o, path, "y"),
-		...validateRequiredNumber(o, path, "width", 0),
+		...validateRequiredNumber(o, path, "width", GEOMETRY_SIZE_MIN),
 		// A type whose box holds its text may leave the height out, the height then
 		// following the text (see supportsAutoHeight); every other type owes one.
 		...(autoHeight
-			? validateOptionalNumber(o, path, "height", 0)
-			: validateRequiredNumber(o, path, "height", 0)),
+			? validateOptionalNumber(o, path, "height", GEOMETRY_SIZE_MIN)
+			: validateRequiredNumber(o, path, "height", GEOMETRY_SIZE_MIN)),
 	],
 	ellipse: (o, path) => [
 		...validateRequiredNumber(o, path, "cx"),
 		...validateRequiredNumber(o, path, "cy"),
-		...validateRequiredNumber(o, path, "rx", 0),
-		...validateRequiredNumber(o, path, "ry", 0),
+		...validateRequiredNumber(o, path, "rx", GEOMETRY_SIZE_MIN),
+		...validateRequiredNumber(o, path, "ry", GEOMETRY_SIZE_MIN),
 	],
 	poly: (o, path) => validatePolyFields(o, path),
 	point: (o, path) => [

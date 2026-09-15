@@ -280,27 +280,3 @@ describe("the handles a text offers", () => {
 		});
 	});
 });
-
-describe("the menu a text offers", () => {
-	it("holds the layout switch", () => {
-		const sections = registries.objectMenu.getSections("text");
-
-		expect(
-			sections.some((section) =>
-				section.items.some((item) => item.type === "textLayout"),
-			),
-		).toBe(true);
-	});
-
-	it("offers it to no other type", () => {
-		for (const type of ["rect", "ellipse", "polygon", "connector"]) {
-			const sections = registries.objectMenu.getSections(type);
-			expect(
-				sections.some((section) =>
-					section.items.some((item) => item.type === "textLayout"),
-				),
-				type,
-			).toBe(false);
-		}
-	});
-});

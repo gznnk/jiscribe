@@ -15,13 +15,17 @@ export type ExportCanvasToSvgOptions = BuildExportSvgOptions & {
 
 /**
  * Converts the Canvas `<svg>` to a self-contained SVG string displayable in
- * any environment. When `source` is given, the `.jis.json` is embedded in
+ * any environment. When `source` is given, the `.jis` is embedded in
  * `<metadata>` so the file remains re-editable.
+ *
+ * Only the image bytes are awaited (see `inlineExportImages`); the live tree is
+ * cloned before the first await, so a caller may resume viewport culling as
+ * soon as this returns its promise.
  */
-export const canvasToSvgString = (
+export const canvasToSvgString = async (
 	svg: SVGSVGElement,
 	options: BuildExportSvgOptions = {},
-): string => buildSizedExportSvgString(svg, options).svgXml;
+): Promise<string> => (await buildSizedExportSvgString(svg, options)).svgXml;
 
 /**
  * Downloads the Canvas `<svg>` as an SVG. With `source` it is an editable
@@ -29,11 +33,11 @@ export const canvasToSvgString = (
  * visuals with the editing source stored in metadata. Without `source` it is
  * a plain image (`.svg`).
  */
-export const exportCanvasToSvg = (
+export const exportCanvasToSvg = async (
 	svg: SVGSVGElement,
 	options: ExportCanvasToSvgOptions = {},
-): void => {
-	const svgString = canvasToSvgString(svg, options);
+): Promise<void> => {
+	const svgString = await canvasToSvgString(svg, options);
 	const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
 	const extension = options.source ? ".jis.svg" : ".svg";
 	downloadBlob(

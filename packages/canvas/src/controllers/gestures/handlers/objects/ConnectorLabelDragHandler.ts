@@ -1,7 +1,10 @@
-import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import {
+	CONNECTOR_LABEL_DEFAULTS,
+	type ConnectorLabel,
+} from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 
-import { calcConnectorLabelAnchor } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelAnchor";
-import { calcConnectorLabelPlacement } from "../../../../rendering/layers/content/utils/label/calcConnectorLabelPlacement";
+import { calcConnectorLabelAnchor } from "../../../../connectors/label/calcConnectorLabelAnchor";
+import { calcConnectorLabelPlacement } from "../../../../connectors/label/calcConnectorLabelPlacement";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isConnectorState,
@@ -9,11 +12,7 @@ import {
 } from "../../../../states/objects/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import {
-	applyLabelPlacement,
-	DEFAULT_LABEL_OFFSET,
-	DEFAULT_LABEL_POSITION,
-} from "../../../utils/applyLabelPlacement";
+import { applyLabelPlacement } from "../../../utils/applyLabelPlacement";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createCowObjects } from "../../../utils/cowObjects";
@@ -33,10 +32,10 @@ const isSamePlacement = (
 	label: ConnectorLabel,
 	otherLabel: ConnectorLabel,
 ): boolean =>
-	(label.position ?? DEFAULT_LABEL_POSITION) ===
-		(otherLabel.position ?? DEFAULT_LABEL_POSITION) &&
-	(label.offset ?? DEFAULT_LABEL_OFFSET) ===
-		(otherLabel.offset ?? DEFAULT_LABEL_OFFSET);
+	(label.position ?? CONNECTOR_LABEL_DEFAULTS.position) ===
+		(otherLabel.position ?? CONNECTOR_LABEL_DEFAULTS.position) &&
+	(label.offset ?? CONNECTOR_LABEL_DEFAULTS.offset) ===
+		(otherLabel.offset ?? CONNECTOR_LABEL_DEFAULTS.offset);
 
 /** Narrows an object to a connector that actually has a label box to grab. */
 const getLabeledConnector = (
@@ -82,7 +81,7 @@ const handleDragStart = (
 /**
  * Rewrites the connector's label placement from the cursor position.
  *
- * The path is always resolved from eventStartSnapshot, so every frame is
+ * The path is always resolved from the drag's start snapshot, so every frame is
  * measured against the same polyline and the ratio cannot drift as the label
  * moves. The pointer is corrected by the grab offset (the gap between where the
  * label was grabbed and its anchor), so grabbing a corner of the box does not
@@ -101,7 +100,7 @@ const handleDrag = (
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const snapshot = state.eventStartSnapshot;
+	const snapshot = state.activeDrag?.startSnapshot;
 	if (!connectorId || !snapshot) {
 		return state;
 	}
@@ -172,7 +171,7 @@ const handleDragEnd = (
 	const connectorId = event.targetId;
 	const dragResult = handleDrag(state, event, registries);
 	const started = connectorId
-		? getLabeledConnector(state.eventStartSnapshot?.objects[connectorId])
+		? getLabeledConnector(state.activeDrag?.startSnapshot.objects[connectorId])
 		: null;
 	const finished = connectorId
 		? getLabeledConnector(dragResult.objects[connectorId])

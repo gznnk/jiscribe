@@ -27,7 +27,7 @@
 			"fill": "#E3F2FD",
 			"stroke": "#1565C0",
 			"strokeWidth": 2,
-			"text": "編集層 (controllers)",
+			"text": "制御層 (controllers)",
 			"textAlign": "left",
 			"verticalAlign": "top",
 			"fontSize": 14,
@@ -203,28 +203,28 @@
 			"type": "rect",
 			"x": 230,
 			"y": 470,
-			"width": 160,
+			"width": 190,
 			"height": 70,
 			"rx": 6,
 			"fill": "#FFFFFF",
 			"stroke": "#6A1B9A",
 			"strokeWidth": 2,
-			"text": "utils\n端点解決 / 直交ルーティング",
+			"text": "純ロジック\n端点解決 / ルーティング など",
 			"fontSize": 12,
 			"fontColor": "#1F2937"
 		},
 		{
 			"id": "pres-contracts",
 			"type": "rect",
-			"x": 410,
+			"x": 440,
 			"y": 470,
-			"width": 170,
+			"width": 180,
 			"height": 70,
 			"rx": 6,
 			"fill": "#FFFFFF",
 			"stroke": "#6A1B9A",
 			"strokeWidth": 2,
-			"text": "registry 契約\ncomponent / textRegion / outline",
+			"text": "registry 契約\ncomponent / outline など",
 			"fontSize": 12,
 			"fontColor": "#1F2937"
 		},
@@ -254,7 +254,7 @@
 			"fill": "#FFFFFF",
 			"stroke": "#2E7D32",
 			"strokeWidth": 2,
-			"text": "states/ — State 型 + Mapper\n+ ObjectMapperRegistry",
+			"text": "states/ — State 型 + Mapper\n+ states 層のレジストリ",
 			"fontSize": 13,
 			"fontColor": "#1F2937"
 		},
@@ -269,7 +269,7 @@
 			"fill": "#FFFFFF",
 			"stroke": "#2E7D32",
 			"strokeWidth": 2,
-			"text": "@jiscribe/doc — Doc 型 + 検証\n(model / plugin / parse / ops)",
+			"text": "@jiscribe/doc — Doc 型 + 検証\n+ パース・doc 操作など",
 			"fontSize": 13,
 			"fontColor": "#1F2937"
 		},
@@ -285,7 +285,7 @@
 			"stroke": "auto",
 			"strokeWidth": 1,
 			"strokeDashType": "dashed",
-			"text": "実線: 実装・ユーティリティ参照　／　破線: 型のみの参照\nstates へ向かう線は途中で1本に合流させている（各ノード個別の依存）\n@jiscribe/doc の型・定数（EndpointRef / AUTO_COLOR など）と constants/ への参照は全域から存在するため省略",
+			"text": "実線: 値の参照（実装・ユーティリティ）　／　破線: 型のみの参照\n主なフォルダと主な依存だけを描いている。states へ向かう線は途中で1本に合流させている（各ノード個別の依存）\n@jiscribe/doc の型・定数（EndpointRef / AUTO_COLOR など）と theme/ への参照は全域から存在するため省略",
 			"textAlign": "left",
 			"fontSize": 12,
 			"fontColor": "auto"
@@ -394,7 +394,7 @@
 			"strokeWidth": 2,
 			"endArrow": "FilledTriangle",
 			"label": {
-				"text": "スナップ / 再アンカー",
+				"text": "端点スナップ など",
 				"fontSize": 12,
 				"fontColor": "auto"
 			}
@@ -425,9 +425,10 @@
 			"strokeWidth": 2,
 			"endArrow": "FilledTriangle",
 			"label": {
-				"text": "削除時 Free 化 / BBox / 可視判定",
+				"text": "端点 Free 化 / BBox など",
 				"fontSize": 12,
-				"fontColor": "auto"
+				"fontColor": "auto",
+				"position": 0.25
 			}
 		},
 		{
@@ -715,7 +716,6 @@
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
-			"strokeDashType": "dashed",
 			"endArrow": "FilledTriangle"
 		},
 		{
@@ -746,7 +746,8 @@
 			"label": {
 				"text": "Doc から変換",
 				"fontSize": 12,
-				"fontColor": "auto"
+				"fontColor": "auto",
+				"offset": 45
 			}
 		},
 		{
@@ -891,7 +892,8 @@
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
-			"endArrow": "FilledTriangle"
+			"endArrow": "FilledTriangle",
+			"strokeDashType": "dashed"
 		},
 		{
 			"id": "e18",
@@ -1090,7 +1092,8 @@
 			},
 			"stroke": "auto",
 			"strokeWidth": 2,
-			"endArrow": "FilledTriangle"
+			"endArrow": "FilledTriangle",
+			"strokeDashType": "dashed"
 		}
 	]
 }

@@ -26,8 +26,9 @@ const makeState = (params: {
 	past: DocSnapshot[];
 	present: DocSnapshot;
 	future: DocSnapshot[];
-	eventStartSnapshot?: unknown;
+	activeDrag?: unknown;
 	textEditState?: unknown;
+	selectedIds?: string[];
 }): CanvasControllerState =>
 	({
 		history: {
@@ -36,11 +37,14 @@ const makeState = (params: {
 			future: params.future,
 		},
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: params.eventStartSnapshot ?? null,
+		activeDrag: params.activeDrag ?? null,
 		textEditState: params.textEditState ?? null,
+		selectedIds: params.selectedIds ?? [],
+		selectedConnectorId: null,
+		multiSelectGroup: null,
 		internalClipboard: null,
 		commitVersion: 5,
-		saveVersion: 0,
+		saveRequest: { version: 0, nonce: "" },
 		registries,
 	}) as unknown as CanvasControllerState;
 
@@ -64,20 +68,39 @@ describe("RedoCommand", () => {
 		expect(next.history.future).toEqual([]);
 	});
 
-	it("clears the selection, increments saveVersion, and leaves commitVersion unchanged", () => {
+	it("keeps the selection the restored entry still holds", () => {
+		const state = makeState({
+			past: [],
+			present: snapshotPrev,
+			future: [snapshotNext],
+			selectedIds: ["r1"],
+		});
+		expect(RedoCommand.execute(state, registries).selectedIds).toEqual(["r1"]);
+	});
+
+	it("raises a save request and leaves commitVersion unchanged", () => {
 		const state = makeState({
 			past: [],
 			present: snapshotPrev,
 			future: [snapshotNext],
 		});
 		const next = RedoCommand.execute(state, registries);
-		expect(next.selectedIds).toEqual([]);
-		expect(next.saveVersion).toBe(1);
+		expect(next.saveRequest.version).toBe(1);
 		expect(next.commitVersion).toBe(5);
 	});
 
 	it("returns the state unchanged when future is empty", () => {
 		const state = makeState({ past: [], present: snapshotPrev, future: [] });
+		expect(RedoCommand.execute(state, registries)).toBe(state);
+	});
+
+	it("returns the state unchanged during a drag", () => {
+		const state = makeState({
+			past: [],
+			present: snapshotPrev,
+			future: [snapshotNext],
+			activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
+		});
 		expect(RedoCommand.execute(state, registries)).toBe(state);
 	});
 
@@ -104,18 +127,18 @@ describe("RedoCommand", () => {
 			).toBe(false);
 		});
 
-		it("is not executable during a drag", () => {
+		it("stays offered during a drag; the drag is guarded on execution", () => {
 			expect(
 				RedoCommand.canExecute(
 					makeState({
 						past: [],
 						present: snapshotPrev,
 						future: [snapshotNext],
-						eventStartSnapshot: { foo: 1 },
+						activeDrag: { startSnapshot: { foo: 1 }, kind: "other" },
 					}),
 					registries,
 				),
-			).toBe(false);
+			).toBe(true);
 		});
 
 		it("is not executable while editing text", () => {

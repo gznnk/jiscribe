@@ -2,7 +2,7 @@
 // that belong to no notation and stand for things, people and places", which keeps it
 // apart both from the vocabulary of a specific notation such as flowchart / UML (each its
 // own package) and from decorative shapes (star / heart / banners and the like, which add
-// no meaning to a diagram). Nothing is left behind in core (generalToolbarEntry ships all
+// no meaning to a diagram). Nothing is left behind in core (generalStencilCategory ships all
 // of these shapes from here as well).
 // Each shape's ObjectDocDefinition / ObjectTypeDefinition is derived wholesale from
 // features/defaults by createFrameObjectDoc / createFrameObjectDefinition
@@ -63,7 +63,7 @@ export * from "./presentation/Smartphone";
 export * from "./presentation/TerminalWindow";
 export * from "./presentation/shared";
 
-export { generalToolbarEntry } from "./stencil/GeneralToolbarEntry";
+export { generalStencilCategory } from "./stencil/GeneralStencilCategory";
 
 export {
 	actorDefinition,

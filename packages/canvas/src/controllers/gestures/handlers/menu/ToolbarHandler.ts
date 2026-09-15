@@ -1,3 +1,4 @@
+import { parseMenuPart } from "./utils/menuParts";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type {
 	CanvasEvent,
@@ -24,8 +25,6 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  * commands (zoom ±, etc.) have no double-click-specific meaning, so doubleClick is also
  * treated as a single execution. This makes "rapid clicking = execute every time" hold.
  */
-const COMMAND_PREFIX = "command:";
-
 export const ToolbarHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
 		return (
@@ -49,9 +48,9 @@ export const ToolbarHandler: GestureHandler = {
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
-			const commandId = event.targetPart.slice(COMMAND_PREFIX.length);
-			return handleCommand(nextState, commandId, registries);
+		const part = parseMenuPart(event.targetPart);
+		if (isActivation && part?.kind === "command") {
+			return handleCommand(nextState, part.commandId, registries);
 		}
 
 		return nextState;

@@ -1,6 +1,13 @@
 /// <reference types="vite/client" />
 
-import React, { useCallback, useEffect, useState } from "react";
+import { createCanvasParser } from "@jiscribe/doc";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import ReactDOM from "react-dom/client";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
@@ -8,12 +15,22 @@ import { PageScrollApp } from "./PageScrollApp";
 import type {
 	CanvasConfig,
 	CanvasDoc,
+	CanvasHandle,
 	CanvasParser,
 	CanvasPlugin,
-	ToolbarEntry,
+	ResolveImage,
+	StencilCategory,
+	ToolbarItem,
+	ToolbarSection,
 } from "../../src";
-import { Canvas, darkCanvasTheme, extractCanvasSourceFromPng } from "../../src";
-import { createCanvasParser } from "../../src/doc";
+import {
+	Canvas,
+	darkCanvasTheme,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
+	extractCanvasSourceFromPng,
+} from "../../src";
 import "./harness.css";
 
 /** What a harness page has to say about itself; everything else is fixed by the kit. */
@@ -26,31 +43,57 @@ export type PluginHarnessParams = {
 	 */
 	plugins: readonly CanvasPlugin[];
 	/**
-	 * Toolbar arrangement, mirroring how a host app composes one. Omit to take the
-	 * canvas default layout, which pins the core presets only and shows nothing a
-	 * plugin contributes; pass a layout whenever a spec drives a plugin's preset or
-	 * category flyout. `CanvasDriver.goto()` waits for the "Rectangle" tool, so keep
-	 * the `rect` preset in any layout passed here.
+	 * The shape tools of the bar only — not the whole bar. The kit opens the tool
+	 * section with the shape library toggle and appends core's history, view and
+	 * properties sections, so a page declaring its plugin's presets keeps the
+	 * sidebar toggle, undo / redo, zoom, help and the properties toggle without
+	 * naming them. Omit to take the canvas default bar, whose tools pin the
+	 * core presets only and show nothing a plugin contributes; pass items whenever
+	 * a spec drives a plugin's preset or category flyout. `CanvasDriver.goto()`
+	 * waits for the "Rectangle" tool, so keep the `rect` preset in any items passed
+	 * here.
 	 */
-	toolbarLayout?: ToolbarEntry[];
+	toolbarItems?: ToolbarItem[];
+	/**
+	 * Sections of the shape library sidebar, mirroring how a host app declares one.
+	 * Omit and neither the sidebar nor the toolbar toggle that opens it is
+	 * rendered; pass sections whenever a spec drives the sidebar. Independent of
+	 * `toolbarItems` — the same category can appear in both.
+	 */
+	stencilLibrarySections?: StencilCategory[];
+	/**
+	 * Stands in for the host that reads an image object's file. Omit it and every
+	 * image on the page draws its placeholder, which is what a page with no
+	 * images at all wants; pass one whenever a spec drives an `image`.
+	 */
+	resolveImage?: ResolveImage;
 };
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
 type HarnessAppProps = {
 	initialConfig: CanvasConfig;
-	toolbarLayout: ToolbarEntry[] | undefined;
+	toolbarItems: ToolbarItem[] | undefined;
+	stencilLibrarySections: StencilCategory[] | undefined;
+	resolveImage: ResolveImage | undefined;
 	parser: CanvasParser;
 };
 
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
  * two-canvas setup and ?pageScroll to the canvas embedded in a scrolling document.
- * Restoring a dropped jiscribe export PNG (with .jis.json in its iTXt) is a
+ * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
-function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
+function HarnessApp({
+	initialConfig,
+	toolbarItems,
+	stencilLibrarySections,
+	resolveImage,
+	parser,
+}: HarnessAppProps) {
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(emptyDoc);
+	const canvasHandleRef = useRef<CanvasHandle>(null);
 
 	// Hook for a spec to trigger external sync (a doc swap from the parent, SYNC_EXTERNAL).
 	// scenario/external-sync-cancels-drag.spec depends on it.
@@ -67,6 +110,15 @@ function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
 			setLoadedDoc(result.doc);
 		};
 	}, [parser]);
+
+	// The imperative handle reaches a host through the ref prop and nowhere else:
+	// none of what it answers is readable off the DOM. api/canvas-handle.spec
+	// drives it through this. Only the default page has one canvas to publish.
+	useEffect(() => {
+		(
+			window as unknown as { __canvasHandle?: CanvasHandle | null }
+		).__canvasHandle = canvasHandleRef.current;
+	}, []);
 
 	const handleDrop = useCallback(
 		async (e: React.DragEvent) => {
@@ -94,6 +146,30 @@ function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
 		e.preventDefault();
 	}, []);
 
+	// The tool section is the two the core default opens with plus the page's items, so a
+	// page that declares only its plugin's presets still gets the shape library toggle when
+	// it declared a library. Without a library both are dropped by resolution — the toggle
+	// as unusable, the divider as stranded — leaving the bar as the page declared it.
+	const toolbarSections = useMemo<ToolbarSection[] | undefined>(
+		() =>
+			toolbarItems
+				? [
+						{
+							id: "tools",
+							items: [
+								{ type: "stencilLibraryToggle" },
+								{ type: "divider" },
+								...toolbarItems,
+							],
+						},
+						DEFAULT_TOOLBAR_HISTORY_SECTION,
+						DEFAULT_TOOLBAR_VIEW_SECTION,
+						DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+					]
+				: undefined,
+		[toolbarItems],
+	);
+
 	const query = new URLSearchParams(window.location.search);
 	if (query.has("multi")) {
 		return <MultiCanvasApp />;
@@ -104,10 +180,17 @@ function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
+				ref={canvasHandleRef}
 				doc={loadedDoc}
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
-				toolbar={toolbarLayout ? { layout: toolbarLayout } : undefined}
+				resolveImage={resolveImage}
+				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
+				stencilLibrary={
+					stencilLibrarySections
+						? { sections: stencilLibrarySections }
+						: undefined
+				}
 			/>
 		</div>
 	);
@@ -118,7 +201,7 @@ function HarnessApp({ initialConfig, toolbarLayout, parser }: HarnessAppProps) {
  * `index.html` provides. Call it once from the harness entry module; the layout
  * stylesheet comes with it.
  *
- * @param params - The plugin set and toolbar the page is built around. See {@link PluginHarnessParams}.
+ * @param params - The plugin set, toolbar and sidebars the page is built around. See {@link PluginHarnessParams}.
  */
 export function mountPluginHarness(params: PluginHarnessParams): void {
 	const initialConfig: CanvasConfig = { plugins: params.plugins };
@@ -133,7 +216,9 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 		<React.StrictMode>
 			<HarnessApp
 				initialConfig={initialConfig}
-				toolbarLayout={params.toolbarLayout}
+				toolbarItems={params.toolbarItems}
+				stencilLibrarySections={params.stencilLibrarySections}
+				resolveImage={params.resolveImage}
 				parser={parser}
 			/>
 		</React.StrictMode>,

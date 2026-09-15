@@ -8,7 +8,7 @@
 /*
  * Sized and coloured like the canvas's own toolbar buttons (32px box, 24px icon). The
  * --jiscribe-* custom properties are injected on the Canvas root and inherit into the
- * toolbar.leading slot, so host buttons follow the theme prop without knowing its values.
+ * toolbar's host slot, so host buttons follow the theme prop without knowing its values.
  */
 .file-toolbar-button {
 	display: flex;

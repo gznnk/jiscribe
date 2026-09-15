@@ -13,7 +13,11 @@ import {
 	type ImageDocState,
 	type JiscribeImageKind,
 } from "./imageDocumentOps";
-import { resolveCanvasWebview } from "./resolveCanvasWebview";
+import {
+	resolveCanvasWebview,
+	type CanvasWebviewChannel,
+} from "./resolveCanvasWebview";
+import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
 import type { ExtensionToWebviewMessage } from "../types/messages";
 
 /**
@@ -44,7 +48,7 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	 * @param savedBytes - image bytes last written to (or read from) the file;
 	 *   the base for the save fallback that re-embeds the latest source when the
 	 *   Webview can't respond
-	 * @param sourceText - current `.jis.json` source; null means no embedded
+	 * @param sourceText - current `.jis` source; null means no embedded
 	 *   source (shown as an uneditable error)
 	 */
 	constructor(
@@ -79,6 +83,14 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	}
 }
 
+/** The live panel of one image document, with the channel to its Webview. */
+interface ImageEditorPanel {
+	/** The panel itself; whether it is visible decides if the Webview can render. */
+	readonly panel: vscode.WebviewPanel;
+	/** The only way to post to that panel's Webview (see resolveCanvasWebview). */
+	readonly channel: CanvasWebviewChannel;
+}
+
 /**
  * Custom editor provider that opens source-embedded images (`.jis.png` /
  * `.jis.svg`, analogous to draw.io's `.drawio.png` / `.drawio.svg`) in the
@@ -105,7 +117,21 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
  * checkExternalChange).
  */
 export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<JiscribeImageDocument> {
-	constructor(private readonly context: vscode.ExtensionContext) {}
+	/**
+	 * @param context - the extension context, owning the changeEmitter's lifetime
+	 *   and providing the Webview bundle's root URI
+	 * @param bridgeRegistry - registry every resolved panel is announced to, so
+	 *   the e2e suite can act as the Webview (see webviewBridgeRegistry)
+	 */
+	constructor(
+		private readonly context: vscode.ExtensionContext,
+		private readonly bridgeRegistry: WebviewBridgeRegistry,
+	) {
+		// The provider lives for the whole session, and changeEmitter holds the
+		// undo/redo closures of every edit (each capturing a full source string),
+		// so tie its release to the extension instead of leaving it unowned.
+		context.subscriptions.push(this.changeEmitter);
+	}
 
 	// dirty / undo / redo notification channel. Firing this event tells VSCode
 	// the document was edited; VSCode manages the undo/redo stack and calls the
@@ -115,13 +141,10 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	>();
 	public readonly onDidChangeCustomDocument = this.changeEmitter.event;
 
-	// Visible panel per document (at most one, since
+	// Live panel per document (at most one, since
 	// supportsMultipleEditorsPerDocument: false). Used for save-time image
 	// requests and reflecting undo/redo.
-	private readonly panels = new Map<
-		JiscribeImageDocument,
-		vscode.WebviewPanel
-	>();
+	private readonly panels = new Map<JiscribeImageDocument, ImageEditorPanel>();
 
 	// Pending requestImageExport responses, keyed by requestId.
 	private nextRequestId = 1;
@@ -298,13 +321,12 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		webviewPanel: vscode.WebviewPanel,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
-		this.panels.set(document, webviewPanel);
-
-		resolveCanvasWebview(webviewPanel, {
+		const channel = resolveCanvasWebview(webviewPanel, {
 			extensionUri: this.context.extensionUri,
 			documentUri: document.uri,
+			bridgeRegistry: this.bridgeRegistry,
 
-			onReady: () => this.updateWebview(webviewPanel, document),
+			onReady: () => this.updateWebview(channel, document),
 
 			onUpdate: (data) => {
 				// Canvas edit. Unlike the text editor, don't write to the file; just
@@ -345,11 +367,13 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			// Drop the panel only if it is still the one registered; a reopened tab
 			// may already have replaced it.
 			onDispose: () => {
-				if (this.panels.get(document) === webviewPanel) {
+				if (this.panels.get(document)?.panel === webviewPanel) {
 					this.panels.delete(document);
 				}
 			},
 		});
+
+		this.panels.set(document, { panel: webviewPanel, channel });
 	}
 
 	/** Save (overwrite in place). */
@@ -452,18 +476,18 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		document: JiscribeImageDocument,
 		kind: JiscribeImageKind,
 	): Promise<string | null> {
-		const panel = this.panels.get(document);
-		if (!panel || !panel.visible) {
+		const editorPanel = this.panels.get(document);
+		if (!editorPanel || !editorPanel.panel.visible) {
 			return Promise.resolve(null);
 		}
-		return this.requestImageFromWebview(panel, kind);
+		return this.requestImageFromWebview(editorPanel.channel, kind);
 	}
 
 	/** Send the current source JSON to the Webview (reflecting undo/redo/revert). */
 	private pushSourceToWebview(document: JiscribeImageDocument): void {
-		const panel = this.panels.get(document);
-		if (panel) {
-			this.updateWebview(panel, document);
+		const editorPanel = this.panels.get(document);
+		if (editorPanel) {
+			this.updateWebview(editorPanel.channel, document);
 		}
 	}
 
@@ -471,9 +495,13 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	 * Send the document's current source to the Webview. When there's no embedded
 	 * source, send an empty string so the Webview switches to its "no editable
 	 * source" display.
+	 *
+	 * @param channel - the document's panel channel; posting through the panel
+	 *   directly would hide the message from the bridge registry
+	 * @param document - the document whose current source is sent
 	 */
 	private updateWebview(
-		panel: vscode.WebviewPanel,
+		channel: CanvasWebviewChannel,
 		document: JiscribeImageDocument,
 	): void {
 		const message: ExtensionToWebviewMessage = {
@@ -481,12 +509,19 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			data: document.sourceText ?? "",
 			docType: document.kind,
 		};
-		panel.webview.postMessage(message);
+		channel.post(message);
 	}
 
-	/** Ask the Webview to generate the image and await the response (with timeout). */
+	/**
+	 * Ask the Webview to generate the image and await the response (with timeout).
+	 *
+	 * @param channel - the document's panel channel; the caller has already
+	 *   checked that its panel is visible, since a discarded Webview never answers
+	 * @param format - image format to render, which for Save As is the
+	 *   destination's kind rather than the document's
+	 */
 	private requestImageFromWebview(
-		panel: vscode.WebviewPanel,
+		channel: CanvasWebviewChannel,
 		format: JiscribeImageKind,
 	): Promise<string | null> {
 		const requestId = this.nextRequestId++;
@@ -504,7 +539,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 				clearTimeout(timeout);
 				resolve(data);
 			});
-			panel.webview.postMessage(message);
+			channel.post(message);
 		});
 	}
 }

@@ -3,7 +3,8 @@ import type { ObjectType } from "../model/objects/types/ObjectType";
 
 /**
  * Registry that manages the `ObjectFactory` for each object type.
- * Registration happens via `applyObjectDefinition()` in `initializeObjectRegistry()`.
+ * On the canvas side, registration happens via `applyObjectDefinition()` when
+ * `createCanvasRegistries()` builds a bundle.
  *
  * To add a new object type, create an `ObjectFactory` in that type's folder and
  * declare it as the `factory` of that type's definition (`builtinObjectDocDefinitions`

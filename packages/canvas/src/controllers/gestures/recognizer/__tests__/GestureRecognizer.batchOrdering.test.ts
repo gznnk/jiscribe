@@ -5,11 +5,25 @@ import type {
 	Gesture,
 	GestureRecognizerConfig,
 } from "../GestureRecognizerTypes";
+import type * as RecognizerTargeting from "../targeting";
 import type * as RecognizerUtils from "../utils";
 
 // DOM-layout-dependent utilities (getSvgPoint / createGetHovered, etc.) do not work in
 // the node environment, so replace them with deterministic stubs to the extent needed to
 // verify the ordering logic.
+vi.mock("../targeting", async (importActual) => {
+	const actual = await importActual<typeof RecognizerTargeting>();
+	return {
+		...actual,
+		getGestureTarget: () => ({ id: "obj-1", kind: "rect" }),
+		createGetHovered: () => () => [],
+		getInputValue: () => undefined,
+		readInputValue: () => undefined,
+		isGestureOptedOut: () => false,
+		isNativePointerTarget: () => false,
+	};
+});
+
 vi.mock("../utils", async (importActual) => {
 	const actual = await importActual<typeof RecognizerUtils>();
 	return {
@@ -23,12 +37,6 @@ vi.mock("../utils", async (importActual) => {
 			x: clientX,
 			y: clientY,
 		}),
-		getGestureTarget: () => ({ id: "obj-1", kind: "rect" }),
-		createGetHovered: () => () => [],
-		getInputValue: () => undefined,
-		readInputValue: () => undefined,
-		isGestureOptedOut: () => false,
-		isNativePointerTarget: () => false,
 		detectEdgeProximity: () => ({ isNearEdge: false }),
 		calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
 	};

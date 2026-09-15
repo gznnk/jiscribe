@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Viewport } from "../../../states/canvas/Viewport";
+import type { Viewport } from "../../../rendering/Viewport";
 import { clampScrolledCamera } from "../clampScrolledCamera";
 
 /** 200 x 100 world units of view at zoom 1; zoom halves/doubles that. */

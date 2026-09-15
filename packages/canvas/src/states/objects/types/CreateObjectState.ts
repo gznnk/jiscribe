@@ -15,7 +15,7 @@ import type { TransformState } from "../base/TransformState";
  * The runtime geometry each geometry type takes.
  *
  * - `none`: No geometry properties
- * - `rect`/`ellipse`: Frame (keyPoints are stored in EventStartSnapshot.keyPoints)
+ * - `rect`/`ellipse`: Frame (keyPoints are stored in DragStartSnapshot.keyPoints)
  * - `poly`: Poly (points array)
  * - `point`: Frame, its size derived from the content the doc does not store
  *

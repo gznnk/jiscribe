@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { ZOOM } from "../../../constants/zoom";
 import type { ObjectVisualBoundsRegistry } from "../../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { calcSelectionBounds } from "../calcSelectionBounds";
 import { calcSelectionFitViewport } from "../calcSelectionFitViewport";
 import { calcViewportForBounds } from "../calcViewportForBounds";
+import { ZOOM } from "../zoom";
 
 /** Axis-aligned Frame-family state: bbox is left=cx-w/2, top=cy-h/2, ... */
 const rect = (

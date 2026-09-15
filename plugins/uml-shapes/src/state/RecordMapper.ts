@@ -1,7 +1,6 @@
 import { isObject } from "@jiscribe/basic-validators";
 import type { ObjectMapperType } from "@jiscribe/canvas";
 import { createFrameMapper } from "@jiscribe/canvas-sdk";
-import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 import type { RichText, TextSlot } from "@jiscribe/doc";
 import { isRichText, isTextSlot, normalizeRichText } from "@jiscribe/doc";
 
@@ -86,10 +85,12 @@ const frameMapper = createFrameMapper<RecordDoc, RecordState>(RecordFeatures);
 
 /**
  * RecordDoc <-> RecordState conversion. Frame-family shared logic, plus the slot
- * normal form and the documented fill default on the way in. On the way out the
- * shared logic already emits the keyed object as is, a `"slots"` type's doc and
- * state holding the same value — and since nothing but the content shape is
- * filled in here, a round trip writes back only what the document carried.
+ * normal form on the way in. An omitted `fill` is left omitted: the type's own
+ * default is resolved per read against RECORD_DOC_DEFAULTS
+ * (ObjectShapeStyleDefaultsRegistry), the same way its typography is. On the way
+ * out the shared logic already emits the keyed object as is, a `"slots"` type's
+ * doc and state holding the same value — and since nothing but the content shape
+ * is filled in here, a round trip writes back only what the document carried.
  */
 export const recordToState: ObjectMapperType<
 	RecordDoc,
@@ -98,9 +99,6 @@ export const recordToState: ObjectMapperType<
 	const state = frameMapper.toState(doc);
 	return {
 		...state,
-		// An omitted fill reads as the documented "auto" (theme surface), not the
-		// shared undefined-fallback (transparent).
-		fill: state.fill ?? AUTO_COLOR,
 		text: normalizeRecordText(state.text),
 	};
 };

@@ -1,7 +1,8 @@
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal, type BoundingBox } from "@jiscribe/geometry";
 
-import type { Camera, Viewport } from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
+import type { Camera } from "../CanvasTypes";
 
 /**
  * `value` clamped between two range ends, whichever way round they are given,

@@ -2,6 +2,10 @@
 
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import {
+	setPart,
+	togglePart,
+} from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
@@ -75,7 +79,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuTextAlignment}
 			>
 				<AlignLeftIcon />
@@ -94,7 +98,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 									isActive={textAlign === value}
 									data-kind="menu"
 									data-id="object-menu"
-									data-part={`set:textAlign:${value}`}
+									data-part={setPart("textAlign", value)}
 									title={messages[messageKey]}
 								>
 									<Icon />
@@ -109,7 +113,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 										isActive={verticalAlign === value}
 										data-kind="menu"
 										data-id="object-menu"
-										data-part={`set:verticalAlign:${value}`}
+										data-part={setPart("verticalAlign", value)}
 										title={messages[messageKey]}
 									>
 										<Icon />

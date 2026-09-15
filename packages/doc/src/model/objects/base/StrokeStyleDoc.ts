@@ -9,6 +9,20 @@ import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 export const DEFAULT_STROKE_WIDTH = 2;
 
 /**
+ * Smallest admissible `strokeWidth` — the `minimum` the JSON schema states for
+ * it. Read by both boundaries that check the field: the doc validator
+ * (validateDocUtils) and the paste guard (validateStateUtils), a connector's
+ * label included.
+ */
+export const STROKE_WIDTH_MIN = 0;
+
+/**
+ * Opacity a stroke is drawn with when `strokeOpacity` is omitted — fully opaque,
+ * so an absent field leaves whatever alpha the color itself carries untouched.
+ */
+export const DEFAULT_STROKE_OPACITY = 1;
+
+/**
  * Properties related to stroke (outline) styling.
  */
 export type StrokeStyleDoc = {
@@ -18,6 +32,8 @@ export type StrokeStyleDoc = {
 	strokeWidth?: number;
 	/** Stroke dash type (e.g. 'solid', 'dashed', 'dotted'). */
 	strokeDashType?: StrokeDashType;
+	/** Stroke opacity from 0 (invisible) to 1 (opaque), multiplying the color's own alpha. */
+	strokeOpacity?: number;
 };
 
 /**
@@ -29,4 +45,5 @@ export const STROKE_STYLE_KEYS = exhaustiveKeysOf<StrokeStyleDoc>()([
 	"stroke",
 	"strokeWidth",
 	"strokeDashType",
+	"strokeOpacity",
 ] as const);

@@ -2,17 +2,16 @@ import type { Rect } from "@jiscribe/geometry";
 
 import {
 	type ObjectRecord,
+	readChildren,
 	requireGroup,
 	requireObject,
+	visitObjects,
 } from "./utils/objectAccess";
-import {
-	type DocDefinitions,
-	getObjectBounds,
-	readChildren,
-} from "./utils/objectGeometry";
+import { type DocDefinitions, getObjectBounds } from "./utils/objectGeometry";
 import { readObjectText } from "./utils/textFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
+import { ImageFeatures } from "../model/objects/primitives/image/ImageDoc";
 
 /**
  * Read one object as it sits in the document.
@@ -165,4 +164,26 @@ export const findObjects = (
 	return listObjects(doc, definitions).filter((summary) =>
 		matchesFilter(summary, filter, types, lowercaseText),
 	);
+};
+
+/**
+ * Every image file a document names, as the `src` strings its image objects
+ * carry.
+ *
+ * The bytes live outside the document, so this is the list a host has to be
+ * able to read before the drawing is complete. The strings are passed on
+ * untouched: whether one is a legal document-relative path is for whoever
+ * resolves it to say (`splitDocRelativePath`).
+ *
+ * @param doc - Read but not modified; objects are visited in drawing order, descending into group children
+ * @returns Each distinct `src` once, in first-seen order; `[]` for a document that draws no image
+ */
+export const collectDocImageSources = (doc: CanvasDoc): string[] => {
+	const sources = new Set<string>();
+	visitObjects(doc.root, (object) => {
+		if (object.type === ImageFeatures.type && typeof object.src === "string") {
+			sources.add(object.src);
+		}
+	});
+	return [...sources];
 };

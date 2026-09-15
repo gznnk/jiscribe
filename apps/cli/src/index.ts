@@ -1,5 +1,5 @@
 // The jiscribe command line: a thin mouth on @jiscribe/doc-tools, so a person, a
-// CI job and an AI agent all get the same answers about a .jis.json that the
+// CI job and an AI agent all get the same answers about a .jis that the
 // editor would give. Every command prints one finding per line and takes --json
 // for the same content as one object.
 //
@@ -29,7 +29,7 @@ const USAGE = `usage: jiscribe <command> [options]
                         -o <out.html>
 
 Options are per command; run one with no arguments for its own usage.
-Globs are left to the shell: jiscribe validate diagrams/**/*.jis.json
+Globs are left to the shell: jiscribe validate diagrams/**/*.jis
 `;
 
 const run = async (argv: readonly string[]): Promise<number> => {

@@ -13,7 +13,7 @@ import {
 	exportCanvasToSvg,
 	rasterizeSvgToPng,
 } from "../../export";
-import type { BuildExportSvgOptions } from "../../export";
+import type { BuildExportSvgOptions, ResolveImageBlob } from "../../export";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../registries";
@@ -31,12 +31,12 @@ export type CanvasExportImagePayload = {
 	format: ExportImageFormat;
 	/** Encoded image bytes (PNG, or serialized SVG text) */
 	data: Blob;
-	/** Whether the `.jis.json` source is embedded (re-editable image) */
+	/** Whether the `.jis` source is embedded (re-editable image) */
 	includesSource: boolean;
 };
 
 /**
- * Runs the chosen export (with source: SVG embeds the .jis.json in
+ * Runs the chosen export (with source: SVG embeds the .jis in
  * <metadata>, PNG in an iTXt chunk; without: a plain image). The result is
  * handed to the host via deliverToHost when set, downloaded otherwise.
  * Failures surface through notifyError (error toast).
@@ -61,8 +61,13 @@ export const runExportSubmit = (
 					includesSource: values.includeSource,
 				});
 			if (values.format === "svg") {
-				const svgText = canvasToSvgString(svg, exportOptions);
-				deliver(new Blob([svgText], { type: "image/svg+xml;charset=utf-8" }));
+				canvasToSvgString(svg, exportOptions).then(
+					(svgText) =>
+						deliver(
+							new Blob([svgText], { type: "image/svg+xml;charset=utf-8" }),
+						),
+					reportExportError,
+				);
 			} else {
 				rasterizeSvgToPng(svg, exportOptions).then(
 					({ blob }) => deliver(blob),
@@ -72,7 +77,7 @@ export const runExportSubmit = (
 			return;
 		}
 		if (values.format === "svg") {
-			exportCanvasToSvg(svg, exportOptions);
+			exportCanvasToSvg(svg, exportOptions).catch(reportExportError);
 		} else {
 			exportCanvasToPng(svg, exportOptions).catch(reportExportError);
 		}
@@ -92,11 +97,13 @@ type UseExportDialogParams = {
 	/**
 	 * Runs the snapshot with viewport culling suspended (full object tree in
 	 * the DOM), since every export path clones the live SVG. The synchronous
-	 * part of the snapshot must complete the clone — for the PNG path this
-	 * holds because rasterizeSvgToPng builds the export SVG (clone, style
-	 * baking, text conversion) before its first await.
+	 * part of the snapshot must complete the clone — both paths hold because
+	 * they build the export SVG (clone, style baking, text conversion) before
+	 * their first await, which is the one reading the image bytes.
 	 */
 	withCullingSuspended: <T>(snapshot: () => T) => T;
+	/** Reads the bytes an exported `<image>` carries (see buildExportSvg) */
+	resolveImageBlob: ResolveImageBlob;
 };
 
 /**
@@ -120,6 +127,7 @@ export const useExportDialog = ({
 	dispatch,
 	notifyError,
 	withCullingSuspended,
+	resolveImageBlob,
 }: UseExportDialogParams): ((values: ExportSubmitValues) => void) => {
 	// Always-fresh mirror of the state, read at export time rather than at render
 	// time, so the callback below never has to be rebuilt.
@@ -135,6 +143,13 @@ export const useExportDialog = ({
 		onExportImageRef.current = onExportImage;
 	});
 
+	// Mirrored like the state: it changes identity as files arrive, and the submit
+	// handler is meant to survive that.
+	const resolveImageBlobRef = useRef(resolveImageBlob);
+	useEffect(() => {
+		resolveImageBlobRef.current = resolveImageBlob;
+	});
+
 	// Export dialog (opened by ExportCommand): pick format + margin, OK
 	return useCallback(
 		(values: ExportSubmitValues) => {
@@ -147,12 +162,15 @@ export const useExportDialog = ({
 				runExportSubmit(
 					svg,
 					values,
-					resolveExportOptions(
-						canvasStateRef.current,
-						registries.objectMapper,
-						registries.objectVisualBounds,
-						values,
-					),
+					{
+						...resolveExportOptions(
+							canvasStateRef.current,
+							registries.objectMapper,
+							registries.objectVisualBounds,
+							values,
+						),
+						resolveImageBlob: (src: string) => resolveImageBlobRef.current(src),
+					},
 					onExportImageRef.current,
 					notifyError,
 				),

@@ -1,6 +1,7 @@
 ﻿import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { commandPart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCommandState } from "../../../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
@@ -39,7 +40,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 				disabled={!enabled}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`command:${commandId}`}
+				data-part={commandPart(commandId)}
 			>
 				<GroupIcon title={getCommandLabel(messages, command)} />
 			</ObjectMenuButton>

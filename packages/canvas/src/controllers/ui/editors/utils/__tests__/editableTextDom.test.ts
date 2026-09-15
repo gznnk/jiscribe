@@ -3,7 +3,7 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { describe, expect, it } from "vitest";
 
-import { theme } from "../../../../../constants/theme";
+import { theme } from "../../../../../theme/themeTokens";
 import {
 	focusEditableAtEnd,
 	hasUnexpectedMarkup,

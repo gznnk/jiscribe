@@ -8,6 +8,7 @@ import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
 import { calcVisibleWorldRect } from "./calcVisibleWorldRect";
 import type { BuildExportSvgOptions, RasterizeSvgOptions } from "../../export";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
+import type { Viewport } from "../../rendering/Viewport";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
@@ -54,7 +55,7 @@ export type CanvasExportOptions = {
 	 */
 	margin?: number;
 	/**
-	 * Whether to embed the `.jis.json` source in the image (default true),
+	 * Whether to embed the `.jis` source in the image (default true),
 	 * making the file re-editable. Without the source, the default download
 	 * name drops the `.jis` marker (plain `.png` / `.svg`).
 	 */
@@ -99,7 +100,7 @@ type ResolvedExportRegion = {
 
 /** Resolves a {@link CanvasExportRegion} against the state it is measured in. */
 const resolveExportRegion = (
-	state: Pick<CanvasState, "objects" | "viewport">,
+	state: Pick<CanvasState, "objects"> & { viewport: Viewport },
 	visualBounds: Pick<ObjectVisualBoundsRegistry, "get"> | null | undefined,
 	region: CanvasExportRegion,
 	margin: ResolvedViewPadding,
@@ -123,7 +124,7 @@ const resolveExportRegion = (
 };
 
 /**
- * Shared options of the SVG/PNG export: the .jis.json source and the viewBox the
+ * Shared options of the SVG/PNG export: the .jis source and the viewBox the
  * region resolves to (by default the content bounds + margin), so the image is
  * independent of the current pan/zoom and window size. A region with nothing to
  * measure — an empty canvas, ids that are all missing — falls back to exporting
@@ -142,14 +143,16 @@ const resolveExportRegion = (
  * @param state - The objects to export, their z-order, the camera a `"viewport"`
  *   region is read from, and the `view` whose padding frames a content region
  * @param objectMapper - Per-canvas ObjectMapperRegistry, used to serialize the
- *   embedded `.jis.json` source
+ *   embedded `.jis` source
  * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; without it the
  *   viewBox is fitted to the geometry boxes and the default 16px margin is all
  *   that keeps a shape's outside decoration from being cropped
  * @param options - Region / margin / source embedding / background overrides
  */
 export const resolveExportOptions = (
-	state: Pick<CanvasState, "objects" | "rootIds" | "viewport" | "view">,
+	state: Pick<CanvasState, "objects" | "rootIds" | "view"> & {
+		viewport: Viewport;
+	},
 	objectMapper: ObjectMapperRegistry,
 	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
 	{

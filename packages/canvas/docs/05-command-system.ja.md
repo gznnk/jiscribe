@@ -15,9 +15,9 @@ Command パターンで一元管理するしくみ。
 コンテキストメニュー ┼─ dispatch({type:"COMMAND", commandId}) ─→ canvasReducer
 ツールバー         ┘        │
                             ▼
-                  handleCommand(state, commandId)
+                  handleCommand(state, commandId, registries)
                             │
-                  commandRegistry.get(id) → Command.execute(state) ⇒ 新しい state
+                  registries.command.get(id) → Command.execute(state, registries) ⇒ 新しい state
 ```
 
 これにより操作ロジックの重複がなくなり（DRY）、`GESTURE` と同じ Reducer パターンに
@@ -25,49 +25,37 @@ Command パターンで一元管理するしくみ。
 
 ### Command 型
 
-```ts
-type Command = {
-	id: string;
-	label: string;
-	category?: "edit" | "view" | "arrange" | "selection";
-	canExecute: (state: CanvasState) => boolean; // メニューの有効/無効化に使用
-	execute: (state: CanvasState) => CanvasState; // 純粋関数（副作用なし）
-	shortcuts?: PlatformKeyBindings; // mac / win / default を個別指定可
-};
-```
+コマンドの定義は `Command`（`commands/CommandTypes.ts`）。ID・メニューに出すラベル・任意の
+ショートカット（mac / win / 既定を個別に指定できる）に加えて、次の 2 つの関数を持つ。
 
+- `canExecute` … 今の state で実行できるかを返す。メニュー項目の有効/無効や UI 表示に使う
+- `execute` … 新しい state を返す純粋関数（副作用なし）。**省略できる**。クリップボードを非同期に
+  読む Paste のように純粋な状態遷移にできないコマンドは、定義（ラベル・ショートカット）だけを
+  登録し、実行は `useKeyboardShortcuts` の `callbacks` で配線する
+
+どちらも state（`CanvasControllerState`）とキャンバスのレジストリ束（`ICanvasRegistries`）を受け取る。
 `execute` が純粋関数なので、Command 単体でテストできる（[テスト](./09-testing.ja.md)）。
-`canExecute` で実行可否を動的に判定し、メニュー項目の有効/無効や UI 表示に使う。
 
 ### 主要コンポーネント
 
-- `CommandRegistry`（`commands/CommandRegistry.ts`）… `register` / `get` / `getAll` / `findByShortcut`
-- `handleCommand`（`commands/handlers/handleCommand.ts`）… `get` → `canExecute` → `execute` を仲介
-- `useKeyboardShortcuts`（`hooks/`）… keydown を `findByShortcut` で解決して dispatch（入力フィールド上では無効化）
+- `CommandRegistry`（`commands/CommandRegistry.ts`）… キャンバスごとに 1 つあり、レジストリ束の `registries.command` として引く。ID で引く `get`、キーイベントから引く `findByShortcut` など
+- `handleCommand`（`commands/handlers/handleCommand.ts`）… `get` で引いたコマンドが `execute` を持たないとき、または `canExecute` が偽のときは state をそのまま返し、それ以外は `execute` を呼ぶ
+- `useKeyboardShortcuts`（`hooks/`）… keydown を `findByShortcut` で解決して dispatch（入力フィールド上では無効化）。`callbacks` に実行を渡されたコマンドはそちらを呼ぶ
 - `CommandUtils`… プラットフォーム判定・`getPlatformShortcuts` / `formatShortcut`（`⌘A` ↔ `Ctrl+A`）
 - 登録は `registries/`（`initializeCommands`）でまとめて行う
 
 ## カテゴリと収録コマンド
 
-コマンドは目的別にディレクトリ分割されている（`controllers/commands/`）。
+コマンドは目的別にディレクトリ分割されている（`controllers/commands/` 配下。例: `selection/`・`arrange/`・`view/`）。
+キャンバスに登録されるコマンドの一覧は `ALL_COMMANDS`（`controllers/registries/initializeCommands.ts`）が正本。
+`createCanvasRegistries` は既定でそのすべてを登録し、設定で有効なコマンドを絞った場合はその部分集合だけを登録する。
 
-| ディレクトリ | コマンド                                                                                                                                                            |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `selection/` | SelectAll / DeselectAll（Ctrl+Shift+A）/ EscapeSelection（Escape）/ SelectNextTextSlot / SelectPreviousTextSlot（Tab / Shift+Tab）/ Delete / Cut / Copy / Duplicate |
-| `arrange/`   | `MoveCommands`（矢印キーの nudge: 上下左右 × 通常/Shift の 8 コマンド）/ BringToFront / BringForward / SendBackward / SendToBack                                    |
-| `arrow/`     | SwapArrows（コネクター端点の入れ替え）                                                                                                                              |
-| `connector/` | SetRoutingStraight / SetRoutingOrthogonal（コネクターの経路切り替え）                                                                                               |
-| `group/`     | Group / Ungroup                                                                                                                                                     |
-| `history/`   | Undo / Redo                                                                                                                                                         |
-| `text/`      | StartTextEdit                                                                                                                                                       |
-| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection / ResetZoom                                                                                                          |
-
-> なお `Command.category` フィールドが現状取り得る値は `selection` / `edit` / `arrange` / `view` の 4 つで、
-> UI 上のグルーピングに使う。ディレクトリ構成（上表）の方が細かいのは、実装上の整理単位だからである。
+`Command.category` は UI 上のグルーピングに使う分類で、取りうる値は `CommandTypes.ts` にある。
+ディレクトリ構成の方が細かいのは、実装上の整理単位だからである。
 
 ## Undo / Redo（history）
 
-履歴は `CanvasState` の `history`（`past` / `present` / `future`）として持つ。
+履歴は `CanvasControllerState`（`controllers/CanvasTypes.ts`）の `history`（`past` / `present` / `future`）として持つ。
 コミットが必要な操作で `commitVersion` が進むと、`canvasReducer` が `present` を
 `past` に積んで履歴を記録する。連続操作（連続ナッジ等）は時間ウィンドウ内で 1 エントリに
 集約される。記録・集約の詳細は [状態更新フロー](./06-state-update-flow.ja.md) を参照。
@@ -78,11 +66,14 @@ type Command = {
 
 ## クリップボード：copy / cut / paste / duplicate
 
-`copy` / `cut` はシステムクリップボードへ書き出し（`useClipboardWrite`）、`paste` は
-読み出して `PASTE` アクションで適用する（`useClipboardPaste` → `handlePaste`）。
+`copy` / `cut` は選択を内部クリップボード（state の `internalClipboard`）へ書き、`useClipboardWrite` が
+それをシステムクリップボードへ書き出す。`paste` はシステムクリップボードを読み出し（読めないか不正なら
+内部クリップボードを使う）、`PASTE` アクションで適用する（`useClipboardPaste` → `handlePaste`）。
 `duplicate` はクリップボードを介さずに選択を複製する。
 
-> **untrusted 入力の検証**: クリップボード経由で外部から入る JSON は信頼できないため、
-> 貼り付け時に検証して不正なデータを弾く必要がある（[設計思想](./01-design-philosophy.ja.md) の
-> 「境界での防御」）。関連 issue: **#40 / #46**。
-> </content>
+> **untrusted 入力の検証**: クリップボード経由で外部から入る JSON は信頼できないため、貼り付けの
+> 境界で検証する（[設計思想](./01-design-philosophy.ja.md) の「境界での防御」）。`useClipboardPaste` は
+> 読み出した JSON を `isClipboardData`（`commands/selection/ClipboardData.ts`。各オブジェクトを
+> `ObjectStateValidatorRegistry` で検証する）に通し、通らないものは採らない。`handlePaste` は貼り付ける
+> オブジェクトの `features` を、運ばれてきた値ではなく自キャンバスのレジストリから付け直す。
+> 関連 issue: **#40 / #46**。

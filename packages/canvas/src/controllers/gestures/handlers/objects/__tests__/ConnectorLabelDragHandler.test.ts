@@ -41,7 +41,7 @@ const labeledConnector = (
 		...(label ? { label } : {}),
 	}) as unknown as ConnectorState;
 
-/** State holding the connector, plus the eventStartSnapshot handleGesture would have taken. */
+/** State holding the connector, plus the drag handleGesture would have opened. */
 const stateWith = (connector: ConnectorState): CanvasControllerState => {
 	const base = createInitialControllerState(emptyDoc, registries);
 	const objects = { ...base.objects, [connector.id]: connector };
@@ -49,15 +49,18 @@ const stateWith = (connector: ConnectorState): CanvasControllerState => {
 		...base,
 		objects,
 		rootIds: [...base.rootIds, connector.id],
-		eventStartSnapshot: {
-			objects,
-			keyPoints: {},
-			bboxes: {},
-			snapCandidates: { x: [], y: [] },
-			selectedIds: [],
-			selectedIdsWithDescendants: new Set(),
-			multiSelectGroup: null,
-			viewport: base.viewport,
+		activeDrag: {
+			startSnapshot: {
+				objects,
+				keyPoints: {},
+				bboxes: {},
+				snapCandidates: { x: [], y: [] },
+				selectedIds: [],
+				selectedIdsWithDescendants: new Set(),
+				multiSelectGroup: null,
+				viewport: base.viewport,
+			},
+			kind: "other",
 		},
 	});
 };
@@ -306,7 +309,7 @@ describe("ConnectorLabelDragHandler - drag", () => {
 
 		const withoutSnapshot = {
 			...withLabel,
-			eventStartSnapshot: null,
+			activeDrag: null,
 		} as CanvasControllerState;
 		expect(
 			ConnectorLabelDragHandler.handle(

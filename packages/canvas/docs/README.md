@@ -2,12 +2,12 @@
 
 # canvas Design Documentation
 
-A set of documents that organize the design of `@jiscribe/canvas` into 13 pillars.
+A set of documents that organize the design of `@jiscribe/canvas` pillar by pillar.
 For a high-level overview, we recommend reading [Design Philosophy](./01-design-philosophy.md) and
 [Architecture](./02-architecture.md) first.
 
 For a map of the entire design documentation set (a mind map), see [00-overview.jis.json](./00-overview.jis.json).
-It is in jiscribe format, so you can view it as a diagram by opening it in the VSCode extension or the demo app.
+It is in jiscribe format, so you can view it as a diagram by opening it in the VSCode extension or in the "File I/O" example of canvas-examples (`apps/canvas-examples`).
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 | --- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | 1   | [Design Philosophy](./01-design-philosophy.md)                   | The four decision criteria: performance first, pure functions, handler responsibilities, and defense at the boundaries |
 | 2   | [Architecture](./02-architecture.md)                             | Layer separation (`@jiscribe/doc` + states → rendering → controllers, plus registries) and unidirectional dependencies |
-| 3   | [Data Model and Persistence](./03-data-model-and-persistence.md) | Doc ↔ State conversion via the Mapper, the `.jis.json` specification, and the parser's two-stage validation            |
+| 3   | [Data Model and Persistence](./03-data-model-and-persistence.md) | Doc ↔ State conversion via the Mapper, the `.jis` specification, and the parser's two-stage validation                 |
 | 4   | [Gesture System](./04-gesture-system.md)                         | GestureRecognizer, handler composition, and the `data-gesture` linking attribute                                       |
 | 5   | [Command System](./05-command-system.md)                         | CommandRegistry, unification of shortcuts/menus/toolbar, and Undo/Redo                                                 |
 | 6   | [State Update Flow (Reducer)](./06-state-update-flow.md)         | The `canvasReducer` actions and the mechanism for recording and aggregating history                                    |
@@ -31,5 +31,5 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 
 Materials intended for AI, such as the format specification and authoring procedures, are located under `packages/doc-schema/assets/` (a separate track from this design documentation).
 
-- [Canvas Doc Reference](../../doc-schema/assets/reference.md)
 - [AI Authoring Guide](../../doc-schema/assets/ai-guide.md)
+- [Canvas Doc JSON Schema](../../doc-schema/assets/jiscribe.schema.json) — the field-level reference

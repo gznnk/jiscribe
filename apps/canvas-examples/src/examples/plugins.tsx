@@ -1,29 +1,45 @@
-import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@jiscribe/canvas";
-import { Canvas } from "@jiscribe/canvas";
+import type {
+	CanvasConfig,
+	CanvasDoc,
+	StencilCategory,
+	ToolbarSection,
+} from "@jiscribe/canvas";
+import {
+	basicStencilCategory,
+	Canvas,
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
+} from "@jiscribe/canvas";
 import { createCanvasParser } from "@jiscribe/doc";
 import {
 	annotationPlugin,
-	annotationToolbarEntry,
+	annotationStencilCategory,
 } from "@jiscribe/plugin-annotation-shapes";
 import {
+	awsGroupStencilCategory,
+	awsShapesPlugin,
+	awsStencilCategory,
+} from "@jiscribe/plugin-aws-shapes";
+import {
 	containerPlugin,
-	containerToolbarEntry,
+	containerStencilCategory,
 } from "@jiscribe/plugin-container-shapes";
 import {
 	flowchartPlugin,
-	flowchartToolbarEntry,
+	flowchartStencilCategory,
 } from "@jiscribe/plugin-flowchart-shapes";
 import {
 	generalPlugin,
-	generalToolbarEntry,
+	generalStencilCategory,
 } from "@jiscribe/plugin-general-shapes";
 import {
 	lucideIconPlugin,
-	lucideIconToolbarEntry,
+	lucideIconStencilCategory,
 } from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
-import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
+import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 // One plugin ships one shape family, complete with its doc schema, its rendering and
 // editing behaviour, and its toolbar stencils. The shapes on this canvas come from:
@@ -35,7 +51,8 @@ import { umlPlugin, umlToolbarEntry } from "@jiscribe/plugin-uml-shapes";
 //   sticky     sticky
 //   markdown   markdown
 //   lucide     lucideIcon
-// Only rect / ellipse / polyline / polygon / text / connector are core.
+// Only rect / ellipse / polyline / polygon / text / connector are core. The aws plugin is
+// registered alongside them; its shapes are reached through the shape library below.
 const plugins = [
 	flowchartPlugin,
 	containerPlugin,
@@ -45,6 +62,7 @@ const plugins = [
 	generalPlugin,
 	annotationPlugin,
 	lucideIconPlugin,
+	awsShapesPlugin,
 ];
 
 // The same array has to reach BOTH sides, and neither side complains when it does not:
@@ -56,22 +74,52 @@ const plugins = [
 const initialConfig: CanvasConfig = { plugins };
 const pluginParser = createCanvasParser({ plugins });
 
-// Core's default layout knows nothing of plugin shapes, so the host lays them out: the
-// categories come from the plugins (flowchartToolbarEntry and friends) and the sticky /
-// markdown presets are single-shape entries referenced by preset id.
-const toolbarLayout: ToolbarEntry[] = [
-	{ kind: "preset", presetId: "rect" },
-	{ kind: "preset", presetId: "ellipse" },
-	{ kind: "preset", presetId: "polyline" },
-	{ kind: "preset", presetId: "polygon" },
-	{ kind: "preset", presetId: "sticky" },
-	{ kind: "preset", presetId: "markdown" },
-	flowchartToolbarEntry,
-	umlToolbarEntry,
-	containerToolbarEntry,
-	generalToolbarEntry,
-	annotationToolbarEntry,
-	lucideIconToolbarEntry,
+// Core's default bar knows nothing of plugin shapes, so the host arranges them, over
+// two surfaces: the bar pins the handful of presets a diagram is mostly built out of, and
+// the shape library sidebar (`stencilLibrary.sections`, behind the toggle at the bar's far
+// left) holds the whole set grouped into sections. Both are declared the same way — the
+// categories come from the plugins (flowchartStencilCategory and friends) and single shapes
+// are referenced by preset id.
+//
+// `toolbar.sections` is the whole bar, so the host names the library toggle itself and
+// reuses core's remaining three sections rather than restating undo / redo / zoom / help /
+// properties.
+const toolbarSections: ToolbarSection[] = [
+	{
+		id: "tools",
+		items: [
+			{ type: "stencilLibraryToggle" },
+			{ type: "divider" },
+			{ type: "stencilPreset", presetId: "rect" },
+			{ type: "stencilPreset", presetId: "ellipse" },
+			{ type: "stencilPreset", presetId: "polygon" },
+			{ type: "stencilPreset", presetId: "polyline" },
+			{ type: "stencilPreset", presetId: "text" },
+			{ type: "stencilPreset", presetId: "sticky" },
+			// One category left on the bar as a flyout: the same object also feeds the sidebar below.
+			{ type: "stencilCategory", category: lucideIconStencilCategory },
+		],
+	},
+	DEFAULT_TOOLBAR_HISTORY_SECTION,
+	DEFAULT_TOOLBAR_VIEW_SECTION,
+	DEFAULT_TOOLBAR_PROPERTIES_SECTION,
+];
+
+// The sidebar carries every shape on the canvas: core's primitives (with the two
+// single-shape plugin presets folded in beside them) and one section per plugin category.
+const stencilLibrarySections: StencilCategory[] = [
+	{
+		...basicStencilCategory,
+		presetIds: [...basicStencilCategory.presetIds, "sticky", "markdown"],
+	},
+	flowchartStencilCategory,
+	umlStencilCategory,
+	containerStencilCategory,
+	generalStencilCategory,
+	annotationStencilCategory,
+	lucideIconStencilCategory,
+	awsStencilCategory,
+	awsGroupStencilCategory,
 ];
 
 const legendMarkdown = [
@@ -291,16 +339,17 @@ const buildPluginsDoc = (): CanvasDoc => {
 const pluginsDoc = buildPluginsDoc();
 
 /**
- * Assembling a canvas out of shape plugins: the eight shipped plugins are registered at
+ * Assembling a canvas out of shape plugins: the nine shipped plugins are registered at
  * once, and their shapes are drawn, edited and validated exactly like the core ones. Open
- * the toolbar to draw more of them.
+ * the shape library (the toggle at the toolbar's far left) to draw more of them.
  */
 export function PluginsExample() {
 	return (
 		<Canvas
 			doc={pluginsDoc}
 			initialConfig={initialConfig}
-			toolbar={{ layout: toolbarLayout }}
+			toolbar={{ sections: toolbarSections }}
+			stencilLibrary={{ sections: stencilLibrarySections }}
 		/>
 	);
 }

@@ -2,3 +2,6 @@ dist/
 node_modules/
 dist/canvas-doc.schema.json
 *.vsix
+# e2e tests: the bundled test files, and the VSCode builds they download
+out/
+.vscode-test/

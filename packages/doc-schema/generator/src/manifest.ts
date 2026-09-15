@@ -6,8 +6,8 @@ import { standardDocPlugins } from "@jiscribe/standard-shapes/doc";
 
 /**
  * Total order of the types shipped in the official schema and AI docs. The
- * schema unions (AnyObjectDoc / GroupChildDoc), the ai-guide / reference tables,
- * and the $defs ordering all follow it. Add one line here when shipping a new
+ * schema unions (AnyObjectDoc / GroupChildDoc), the ai-guide tables, and the
+ * $defs ordering all follow it. Add one line here when shipping a new
  * shape (a missing or leftover entry fails generation).
  */
 export const CANONICAL_TYPE_ORDER = [
@@ -61,12 +61,17 @@ export const CANONICAL_TYPE_ORDER = [
 	// The rest of uml-shapes: notation shapes that are one box each, unlike record
 	"umlPackage",
 	"umlComponent",
+	// The two shapes of aws-shapes: one AWS Architecture Icon, and the boundary
+	// frame drawn around a group of them
+	"awsIcon",
+	"awsGroup",
 	"polyline",
 	"polygon",
 	"group",
 	"container",
 	"sticky",
 	"svg",
+	"image",
 	"connector",
 ] as const;
 
@@ -85,50 +90,9 @@ export const TEMPLATE_DEF_TYPES: ReadonlySet<string> = new Set([
 	"polygon",
 	"group",
 	"svg",
+	"image",
 	"connector",
 ]);
-
-/**
- * Types collapsed into one row of the "Box-shape catalog" table in reference.md
- * instead of getting an individual section. Types listed here must declare
- * `outlineDescription`.
- */
-export const GROUPED_REFERENCE_TYPES = [
-	"diamond",
-	"stadium",
-	"parallelogram",
-	"hexagon",
-	"cloud",
-	"document",
-	"multiDocument",
-	"actor",
-	"db",
-	"storedData",
-	"subroutine",
-	"trapezoid",
-	"manualInput",
-	"card",
-	"delay",
-	"loopLimit",
-	"display",
-	"extract",
-	"cross",
-	"offPageConnector",
-] as const;
-
-/** Types that get an individual section under Object details in reference.md (emitted in this order). */
-export const DETAIL_SECTION_TYPES = [
-	"rect",
-	"ellipse",
-	"text",
-	"lucideIcon",
-	"callout",
-	"note",
-	"brace",
-	"bracketWithStem",
-	"bracket",
-	"container",
-] as const;
 
 /**
  * Built-ins plus the standard shape set. Which plugins ship is @jiscribe/standard-shapes'
@@ -177,8 +141,8 @@ function aggregateDefinitions(
 
 /**
  * Validate and return the shipped-shape manifest. Missing declarations
- * (description / summary / outlineDescription / defaults) and mismatches between
- * the shipped list and the aggregated definitions are all detected here.
+ * (description / summary / defaults) and mismatches between the shipped list and
+ * the aggregated definitions are all detected here.
  */
 export function loadManifest(): ReadonlyMap<
 	CanonicalType,
@@ -218,14 +182,6 @@ export function loadManifest(): ReadonlyMap<
 					`Type "${type}" has no defaults (required to generate its $def)`,
 				);
 			}
-		}
-		if (
-			(GROUPED_REFERENCE_TYPES as readonly string[]).includes(type) &&
-			!definition.outlineDescription
-		) {
-			errors.push(
-				`Type "${type}" has no outlineDescription (required for its row in the aggregate table)`,
-			);
 		}
 		manifest.set(type, definition);
 	}

@@ -4,7 +4,7 @@
 // diagnostics of the VSCode extension, and the like. It imports only ./schema/** and
 // @jiscribe/doc / @jiscribe/canvas-sdk/doc, and never pulls in
 // presentation / state / stencil.
-// description / summary / outlineDescription / defaults are the single source of
+// description / summary / defaults are the single source of
 // the generated JSON schema and AI docs (pnpm generate:schema).
 import { createFrameObjectDoc } from "@jiscribe/canvas-sdk/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
@@ -96,7 +96,6 @@ export const cardDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Card: a rectangle with the top-left corner cut off, used for punched-card style data in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
 	summary: "punched-card style data",
-	outlineDescription: "Rectangle with the top-left corner cut off",
 });
 
 export const crossDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -106,7 +105,6 @@ export const crossDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Cross (plus) marker, used to mark junctions and for emphasis. Uses the same rect-based geometry (x/y/width/height) as RectDoc. The arms fill the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long note, and leaving the text out keeps a bare marker.",
 	summary: "junction / emphasis marker",
-	outlineDescription: "Plus sign, label below",
 });
 
 export const dbDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -116,7 +114,6 @@ export const dbDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Database cylinder shape, typically used for data stores in architecture or ER diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cylinder. Text is laid out in the body region below the top cap ellipse (not the full bounding box).",
 	summary: "data store",
-	outlineDescription: "Cylinder with an elliptical top",
 });
 
 export const delayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -126,7 +123,6 @@ export const delayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Delay shape: a rectangle whose right edge is a semicircular bulge, used for wait/delay steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
 	summary: "wait / delay",
-	outlineDescription: "Rectangle whose right edge is a semicircle",
 });
 
 export const diamondDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -134,9 +130,8 @@ export const diamondDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	textRegion: calcDiamondTextRegion,
 	defaults: DIAMOND_DOC_DEFAULTS,
 	description:
-		"Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond. Text is laid out within the full bounding box (not clipped to the diamond interior).",
+		"Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a diamond, with its four vertices at the midpoints of the box's edges — so a connector on topCenter / rightCenter / bottomCenter / leftCenter lands exactly on a point. Text is laid out within the full bounding box (not clipped to the diamond interior).",
 	summary: "decision / branch node",
-	outlineDescription: "Rhombus with vertices at the edge midpoints",
 });
 
 export const displayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -146,7 +141,6 @@ export const displayDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Display shape with a pointed left edge and a rounded right cap, used for output-to-display steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
 	summary: "output to a display",
-	outlineDescription: "Pointed left edge, rounded right cap",
 });
 
 export const documentDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -156,7 +150,6 @@ export const documentDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Document shape (rect with a wavy bottom edge), typically used for reports/files in flowcharts or deliverables in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a document. Text is laid out above the bottom wave band.",
 	summary: "report, file",
-	outlineDescription: "Sheet with a wavy bottom edge",
 });
 
 export const extractDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -166,7 +159,6 @@ export const extractDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		'The flowchart "extract" symbol — an upward triangle (apex at the top), used for extract/merge/marker nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc. The triangle fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and leaving the text out keeps a bare marker.',
 	summary: "extract / merge marker",
-	outlineDescription: "Upward triangle, apex at the top, label below",
 });
 
 export const hexagonDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -176,7 +168,6 @@ export const hexagonDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Hexagon shape with pointed left/right caps, typically used for preparation steps in flowcharts or emphasis nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a hexagon. Text is laid out with a small horizontal inset to stay inside the caps.",
 	summary: "preparation",
-	outlineDescription: "Hexagon with pointed left/right caps",
 });
 
 export const loopLimitDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
@@ -187,7 +178,6 @@ export const loopLimitDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 		description:
 			'Loop-limit shape (a rectangle with both top corners cut off), marking the start of a loop in flowcharts; set "flipY": true to mark the loop end. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text sits below the top bevels.',
 		summary: 'loop start (`"flipY": true` for the end)',
-		outlineDescription: "Rectangle with both top corners cut off",
 	},
 );
 
@@ -199,7 +189,6 @@ export const manualInputDocDefinition: ObjectDocDefinition =
 		description:
 			"Manual-input shape whose top edge slopes up toward the right, used for keyed/manual entry steps. Uses the same rect-based geometry (x/y/width/height) as RectDoc; text sits below the sloping top edge.",
 		summary: "manual / keyed input",
-		outlineDescription: "Top edge slopes up toward the right",
 	});
 
 export const multiDocumentDocDefinition: ObjectDocDefinition =
@@ -210,7 +199,6 @@ export const multiDocumentDocDefinition: ObjectDocDefinition =
 		description:
 			"Multi-document shape (three stacked document sheets), used for report batches / file sets in flowcharts. The front sheet sits at the bottom-left and the two back sheets step toward the top-right. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is confined to the front sheet, above its bottom wave band.",
 		summary: "report batch / file set",
-		outlineDescription: "Three stacked wavy-bottom sheets",
 	});
 
 export const offPageConnectorDocDefinition: ObjectDocDefinition =
@@ -221,7 +209,6 @@ export const offPageConnectorDocDefinition: ObjectDocDefinition =
 		description:
 			"Off-page connector: a home-plate pentagon (rectangle tapering to a downward point) marking a jump to another page/section of a flowchart, usually paired with an on-page connector by a short label. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a pentagon. Text sits in the rectangular band above the point.",
 		summary: "off-page connector (jump to another page)",
-		outlineDescription: "Home-plate pentagon pointing down",
 	});
 
 export const parallelogramDocDefinition: ObjectDocDefinition =
@@ -232,7 +219,6 @@ export const parallelogramDocDefinition: ObjectDocDefinition =
 		description:
 			"Parallelogram shape (top edge shifted right), typically used for input/output steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a parallelogram. Text is laid out with a small horizontal inset to stay inside the slanted sides.",
 		summary: "input / output",
-		outlineDescription: "Parallelogram, top edge shifted right",
 	});
 
 export const stadiumDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
@@ -242,7 +228,6 @@ export const stadiumDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	description:
 		"Stadium (pill) shape with fully rounded ends, typically used for start/end terminators in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a stadium. Text is laid out within the full bounding box.",
 	summary: "start / end terminator",
-	outlineDescription: "Rectangle with fully rounded (semicircular) ends",
 });
 
 export const storedDataDocDefinition: ObjectDocDefinition =
@@ -253,7 +238,6 @@ export const storedDataDocDefinition: ObjectDocDefinition =
 		description:
 			"Stored-data shape (a rectangle whose left/right edges are arcs both bowing left, like a drum segment) — the generic storage symbol for files / caches that are not specifically a database (use DbDoc for databases). Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out between the two side arcs.",
 		summary: "generic stored data (file / cache)",
-		outlineDescription: "Rectangle with both side edges bowed left",
 	});
 
 export const subroutineDocDefinition: ObjectDocDefinition =
@@ -264,7 +248,6 @@ export const subroutineDocDefinition: ObjectDocDefinition =
 		description:
 			"Predefined-process (subroutine) box: a rectangle with a vertical bar near each side, for calls to a defined sub-procedure. Uses the same rect-based geometry (x/y/width/height) as RectDoc; text is inset horizontally to stay between the bars.",
 		summary: "predefined process / call",
-		outlineDescription: "Rectangle with a vertical bar near each side",
 	});
 
 export const trapezoidDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
@@ -275,7 +258,6 @@ export const trapezoidDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
 		description:
 			"Trapezoid (wide top, narrow bottom), typically used for manual-operation steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a trapezoid.",
 		summary: "manual operation",
-		outlineDescription: "Wide top, narrow bottom",
 	},
 );
 

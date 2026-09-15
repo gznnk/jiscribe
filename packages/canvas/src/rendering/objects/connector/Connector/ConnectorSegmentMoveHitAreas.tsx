@@ -1,7 +1,7 @@
 import { calcEuclideanDistance, type Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../constants/connectorHitArea";
+import { CONNECTOR_HIT_STROKE_WIDTH } from "./connectorHitArea";
 import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connector/isConnectorSegmentFreelyMovable";
 
 // Bands of two segments overlap around the vertex they share, so a segment shorter than the band

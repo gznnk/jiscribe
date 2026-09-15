@@ -2,10 +2,14 @@ import type { ConnectorRouting } from "@jiscribe/doc/model/objects/types/Connect
 import { memo, useRef } from "react";
 
 import { RoutingMenuRow } from "./RoutingMenuStyled";
-import { getSelectedRouting } from "./utils/getSelectedRouting";
-import { isSelectedConnectorSelfLoop } from "./utils/isSelectedConnectorSelfLoop";
+import {
+	commandPart,
+	togglePart,
+} from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
+import { getSelectedRouting } from "../../../../../utils/getSelectedRouting";
+import { isSelectedConnectorSelfLoop } from "../../../../../utils/isSelectedConnectorSelfLoop";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";
 import { StraightConnectorIcon } from "../../../../icons/StraightConnectorIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -57,8 +61,8 @@ const ROUTING_OPTIONS: RoutingOption[] = [
  * horizontal row. Each option fires `command:setRouting*`, delegating to SetConnectorRoutingCommand.
  *
  * Only the shape lives here. Dropping the vertices a segment drag left behind is an action rather
- * than a mode, so it sits in the context menu (ResetConnectorRouteCommand) instead of alongside two
- * buttons that show which shape is active.
+ * than a mode, so it sits in the context menu and the properties sidebar
+ * (ResetConnectorRouteCommand) instead of alongside two buttons that show which shape is active.
  *
  * Self-loops are fixed to orthogonal, so this returns null. An emptied section is
  * collapsed along with its divider via ObjectMenuSection's `:empty`.
@@ -93,7 +97,7 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuConnectorRouting}
 			>
 				<CurrentIcon title={messages.menuConnectorRouting} />
@@ -111,7 +115,7 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 								isActive={routing === currentRouting}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part={`command:${commandId}`}
+								data-part={commandPart(commandId)}
 								title={messages[messageKey]}
 							>
 								<Icon title={messages[messageKey]} />

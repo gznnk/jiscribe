@@ -1,4 +1,6 @@
 import { DEFAULT_FONT_FAMILY } from "../../../../text/style/fontFamilies";
+import { DEFAULT_FILL } from "../../base/FillStyleDoc";
+import { DEFAULT_STROKE_WIDTH } from "../../base/StrokeStyleDoc";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
@@ -27,9 +29,9 @@ export const ELLIPSE_DOC_DEFAULTS: Omit<EllipseDoc, "id"> = {
 	cy: 0,
 	rx: 50,
 	ry: 50,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "center",
 	verticalAlign: "middle",

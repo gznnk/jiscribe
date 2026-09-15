@@ -30,8 +30,10 @@ import type { ObjectStateValidator } from "../../registry/ObjectStateValidatorRe
  *
  * @param features - Feature descriptor of the type being validated; its `geometry`
  *   must be "poly"
- * @param minPoints - Minimum length of `points`, matching the type's Doc-side rule
- *   (polygon: 3 / polyline: 2 / connector: 0, whose points are waypoints only)
+ * @param minPoints - Minimum length of `points`. Pass the constant the type
+ *   declares beside its features (POLYGON_MIN_POINTS / POLYLINE_MIN_POINTS),
+ *   which its Doc-side validator reads as well; a connector passes 0, its points
+ *   being waypoints between endpoints the EndpointRefs hold
  * @param isExtraValid - Shape-specific checks beyond the feature groups
  */
 export const createPolyStateValidator = (

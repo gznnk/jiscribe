@@ -25,7 +25,7 @@ const baseState = (
 		objects: { "rec-1": recordObject },
 		selectedIds: ["rec-1"],
 		selectedTextSlot: null,
-		eventStartSnapshot: null,
+		activeDrag: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
@@ -64,9 +64,7 @@ describe("getTextSlotCycleTarget", () => {
 
 	it("returns null during a drag", () => {
 		expect(
-			getTextSlotCycleTarget(
-				baseState({ eventStartSnapshot: { foo: 1 } as never }),
-			),
+			getTextSlotCycleTarget(baseState({ activeDrag: { foo: 1 } as never })),
 		).toBeNull();
 	});
 });

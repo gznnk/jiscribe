@@ -1,7 +1,7 @@
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { roundToDecimal } from "@jiscribe/geometry";
 
-import { ZOOM, stepZoomIn } from "../../../constants/zoom";
+import { ZOOM, stepZoomIn } from "../../utils/zoom";
 import type { ExecutableCommand } from "../CommandTypes";
 
 export const ZoomInCommand: ExecutableCommand = {

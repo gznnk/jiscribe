@@ -322,7 +322,7 @@ describe("addObject with styling", () => {
 		expect(() =>
 			docOps.addObject(doc, "polygon", { x: 0, y: 0, fontSize: 20 }),
 		).toThrow(
-			'object type "polygon" cannot be styled with "fontSize": the styling it takes is "fill", "stroke", "strokeWidth", "strokeDashType"',
+			'object type "polygon" cannot be styled with "fontSize": the styling it takes is "fill", "fillOpacity", "stroke", "strokeWidth", "strokeDashType", "strokeOpacity"',
 		);
 		expect(doc.root).toHaveLength(0);
 	});

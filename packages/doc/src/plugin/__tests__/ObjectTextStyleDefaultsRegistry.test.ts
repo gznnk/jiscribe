@@ -179,3 +179,23 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 		).toEqual({});
 	});
 });
+
+describe("ObjectTextStyleDefaultsRegistry.registerDefinition", () => {
+	it("registers what the definition's defaults declare for the body", () => {
+		const registry = createObjectTextStyleDefaultsRegistry();
+		registry.registerDefinition("text", {
+			features: TextFeatures,
+			defaults: { type: "text", textAlign: "left", fontSize: 14 },
+		});
+		expect(registry.get("text", BODY_TEXT_SLOT_ID)).toEqual({
+			textAlign: "left",
+			fontSize: 14,
+		});
+	});
+
+	it("registers nothing for a definition declaring no defaults", () => {
+		const registry = createObjectTextStyleDefaultsRegistry();
+		registry.registerDefinition("text", { features: TextFeatures });
+		expect(registry.get("text", BODY_TEXT_SLOT_ID)).toBeUndefined();
+	});
+});

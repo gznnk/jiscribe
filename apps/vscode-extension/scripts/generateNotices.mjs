@@ -1,7 +1,7 @@
 /**
  * Writes THIRD-PARTY-NOTICES.txt from what the built extension actually ships.
  *
- * Three kinds of thing end up in the package, and each is found from the build
+ * Four kinds of thing end up in the package, and each is found from the build
  * output rather than from a hand-kept list, so a dependency that comes, goes or
  * moves a version cannot slip past:
  *
@@ -11,6 +11,10 @@
  *   @fontsource packages by the name esbuild kept in front of its hash
  * - the Lucide icon drawings generated into the shape plugin's source, whose
  *   version the generated file states in its header
+ * - the AWS Architecture Icons generated into the AWS shape plugin's source,
+ *   listed only when the source maps name that generated file. They are not
+ *   open source, so their section reproduces the plugin's LICENSE-ICONS.md
+ *   instead of a package's license file
  *
  * Run `pnpm --filter jiscribe generate:notices` after a build; `--check` fails
  * instead of writing, which is what CI runs.
@@ -85,6 +89,27 @@ const ICON_DATA_PATH = join(
 	"iconData.generated.ts",
 );
 
+/** The generated AWS icon data, relative to the repository root. */
+const AWS_ICON_DATA_RELATIVE_PATH = [
+	"plugins",
+	"aws-shapes",
+	"src",
+	"schema",
+	"icon",
+	"iconData.generated.ts",
+];
+
+/** Where the AWS release date is stated, as the header of the generated icon data. */
+const AWS_ICON_DATA_PATH = join(repoRoot, ...AWS_ICON_DATA_RELATIVE_PATH);
+
+/** The terms the AWS icons are redistributed under, kept next to the data. */
+const AWS_ICON_LICENSE_PATH = join(
+	repoRoot,
+	"plugins",
+	"aws-shapes",
+	"LICENSE-ICONS.md",
+);
+
 /**
  * Directory of one package inside the pnpm store.
  *
@@ -138,9 +163,9 @@ function declaredLicense(dir) {
 	return JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).license;
 }
 
-/** Every third-party package the source maps name, as `name -> version`. */
-function bundledFromSourceMaps() {
-	const bundled = new Map();
+/** Every input path the source maps name, across all bundles. */
+function sourceMapInputs() {
+	const inputs = [];
 	for (const file of SOURCE_MAPS) {
 		let map;
 		try {
@@ -150,15 +175,26 @@ function bundledFromSourceMaps() {
 				`dist/${file} is missing. Build the extension first (pnpm build:vscode).`,
 			);
 		}
-		for (const source of map.sources ?? []) {
-			// .pnpm/<name>@<version>[_<peer suffix>]/node_modules/<name>/...
-			const hit = source.match(/\.pnpm\/((?:@[^/+]+\+)?[^@/]+)@([^_/]+)/);
-			if (!hit) {
-				continue;
-			}
-			const name = hit[1].startsWith("@") ? hit[1].replace("+", "/") : hit[1];
-			bundled.set(name, hit[2]);
+		inputs.push(...(map.sources ?? []));
+	}
+	return inputs;
+}
+
+/**
+ * Every third-party package the source maps name, as `name -> version`.
+ *
+ * @param inputs - Source map inputs, from {@link sourceMapInputs}
+ */
+function bundledFromSourceMaps(inputs) {
+	const bundled = new Map();
+	for (const source of inputs) {
+		// .pnpm/<name>@<version>[_<peer suffix>]/node_modules/<name>/...
+		const hit = source.match(/\.pnpm\/((?:@[^/+]+\+)?[^@/]+)@([^_/]+)/);
+		if (!hit) {
+			continue;
 		}
+		const name = hit[1].startsWith("@") ? hit[1].replace("+", "/") : hit[1];
+		bundled.set(name, hit[2]);
 	}
 	if (bundled.size === 0) {
 		throw new Error(
@@ -166,6 +202,18 @@ function bundledFromSourceMaps() {
 		);
 	}
 	return bundled;
+}
+
+/**
+ * Whether the AWS icon drawings are compiled into the extension. Source map
+ * inputs are relative to dist/, so the generated file is matched by its path
+ * under the repository, not by an absolute one.
+ *
+ * @param inputs - Source map inputs, from {@link sourceMapInputs}
+ */
+function shipsAwsIcons(inputs) {
+	const suffix = `/${AWS_ICON_DATA_RELATIVE_PATH.join("/")}`;
+	return inputs.some((source) => source.endsWith(suffix));
 }
 
 /**
@@ -212,6 +260,31 @@ function lucideVersion() {
 }
 
 /**
+ * The AWS Architecture Icons release the icon data was generated from, as an
+ * ISO date. The header states it the way AWS names the asset package, MMDDYYYY.
+ */
+function awsIconsRelease() {
+	const header = readFileSync(AWS_ICON_DATA_PATH, "utf8").slice(0, 200);
+	const hit = header.match(/asset package \((\d{2})(\d{2})(\d{4})\)/);
+	if (!hit) {
+		throw new Error(
+			`${AWS_ICON_DATA_PATH} no longer states the asset package release`,
+		);
+	}
+	const [, month, day, year] = hit;
+	return `${year}-${month}-${day}`;
+}
+
+/**
+ * The AWS icons' section: the plugin's LICENSE-ICONS.md reproduced whole, minus
+ * its title, which the section heading replaces.
+ */
+function awsIconsSection() {
+	const text = readFileSync(AWS_ICON_LICENSE_PATH, "utf8");
+	return text.replace(/^# [^\n]*\n+/, "").replace(/\n+$/, "");
+}
+
+/**
  * One section for all the fonts. Their license bodies are identical below the
  * copyright line, so the OFL is reproduced once and each font contributes only
  * its own notice; the identity is asserted rather than assumed.
@@ -254,8 +327,10 @@ function fontSection(names, version) {
 }
 
 function generate() {
-	const bundled = bundledFromSourceMaps();
+	const inputs = sourceMapInputs();
+	const bundled = bundledFromSourceMaps(inputs);
 	bundled.set("lucide", lucideVersion());
+	const awsIcons = shipsAwsIcons(inputs);
 
 	const fontPackages = bundledFontPackages();
 	// One version for all of them, so the heading can name it once. packageDir
@@ -278,7 +353,16 @@ function generate() {
 			sortKey: "@fontsource/",
 			heading: `@fontsource/* (${fontPackages.length} packages, all ${fontVersion}) — ${declaredLicense(packageDir(fontPackages[0], fontVersion))}`,
 			body: fontSection(fontPackages, fontVersion),
-		});
+		})
+		.concat(
+			awsIcons
+				? {
+						sortKey: "aws architecture icons",
+						heading: `AWS Architecture Icons (release ${awsIconsRelease()}) — AWS terms, not open source`,
+						body: awsIconsSection(),
+					}
+				: [],
+		);
 
 	const listed = [...bundled]
 		.map(([name, version]) => ({
@@ -290,6 +374,14 @@ function generate() {
 				sortKey: name,
 				line: `${name}@${fontVersion} (${declaredLicense(packageDir(name, fontVersion))})`,
 			})),
+		)
+		.concat(
+			awsIcons
+				? {
+						sortKey: "aws architecture icons",
+						line: `AWS Architecture Icons ${awsIconsRelease()} (AWS terms, not open source)`,
+					}
+				: [],
 		);
 
 	const byName = (a, b) =>
@@ -301,10 +393,11 @@ function generate() {
 		"THIRD-PARTY SOFTWARE NOTICES",
 		"=".repeat(28),
 		"",
-		"The Jiscribe extension bundles the following third-party open-source",
-		"packages — code compiled into the extension, the Lucide icon drawings",
-		"generated into it, and the font files shipped alongside it. Their license",
-		"texts are reproduced below.",
+		"The Jiscribe extension bundles the following third-party software and",
+		"assets — code compiled into the extension, the icon drawings generated into",
+		"it, and the font files shipped alongside it. Their license texts are",
+		"reproduced below. All of them are open source except the AWS Architecture",
+		"Icons, whose section states the terms they are redistributed under.",
 		"",
 		"Package list:",
 		...listed.map((one) => `  - ${one.line}`),

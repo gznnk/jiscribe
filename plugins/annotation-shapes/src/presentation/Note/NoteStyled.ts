@@ -1,22 +1,14 @@
 import styled from "@emotion/styled";
-
-type NoteStrokeProps = {
-	/** Resolved stroke color (auto is resolved to the theme foreground). */
-	strokeColor: string;
-};
-
-type NoteBodyProps = NoteStrokeProps & {
-	/** Resolved fill color (auto is resolved to the theme surface). */
-	fillColor: string;
-};
+import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
+import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 
 /**
  * The note's silhouette. `pointer-events: auto` keeps a `transparent` fill
  * grabbable — the interior is still painted, unlike `fill: none`.
  */
-export const NoteBodyPath = styled.path<NoteBodyProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+export const NoteBodyPath = styled.path<StrokePaintProps & FillPaintProps>`
+	${strokePaint}
+	${fillPaint}
 	stroke-linejoin: round;
 	pointer-events: auto;
 	cursor: grab;
@@ -31,8 +23,8 @@ export const NoteBodyPath = styled.path<NoteBodyProps>`
  * rather than a triangle of its own, and never hit-tested, so it cannot take a
  * grab away from the body it sits on.
  */
-export const NoteFoldPath = styled.path<NoteStrokeProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
+export const NoteFoldPath = styled.path<StrokePaintProps>`
+	${strokePaint}
 	fill: none;
 	stroke-linecap: round;
 	stroke-linejoin: round;

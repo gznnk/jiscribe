@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { resolveDocSnapshot } from "../../utils/resolveDocSnapshot";
-import { createInitialControllerState } from "../createInitialControllerState";
+import {
+	createInitialControllerState,
+	INITIAL_VIEWPORT,
+} from "../createInitialControllerState";
 
 const registries = createTestRegistries();
 
@@ -27,11 +30,11 @@ describe("createInitialControllerState", () => {
 
 		expect(state.objects["rect-1"]).toMatchObject({ cx: 5, cy: 5 });
 		expect(state.selectedIds).toEqual([]);
-		expect(state.eventStartSnapshot).toBeNull();
+		expect(state.activeDrag).toBeNull();
 		expect(state.multiSelectGroup).toBeNull();
 		expect(state.textEditState).toBeNull();
 		expect(state.commitVersion).toBe(0);
-		expect(state.saveVersion).toBe(0);
+		expect(state.saveRequest.version).toBe(0);
 	});
 
 	it("history has empty past/future and the initial Doc as present", () => {
@@ -50,16 +53,17 @@ describe("createInitialControllerState", () => {
 		const b = createInitialControllerState(docWithRect, registries);
 
 		expect(a).not.toBe(b);
-		expect(a.keyPointsCache).not.toBe(b.keyPointsCache);
+		expect(a.dragStartCaches).not.toBe(b.dragStartCaches);
 		expect(a.history).not.toBe(b.history);
 	});
 
-	it("keeps the doc-derived default viewport when no initialCamera is given", () => {
+	it("starts at INITIAL_VIEWPORT when no initialCamera is given", () => {
 		const state = createInitialControllerState(docWithRect, registries);
 
-		// Mapper default: pan at origin, zoom 1 (width/height are placeholders the
-		// ResizeObserver corrects at runtime).
-		expect(state.viewport).toMatchObject({ minX: 0, minY: 0, zoom: 1 });
+		expect(state.viewport).toEqual(INITIAL_VIEWPORT);
+		// A copy, so freezing or replacing one canvas's viewport cannot reach the
+		// constant every other canvas starts from.
+		expect(state.viewport).not.toBe(INITIAL_VIEWPORT);
 	});
 
 	it("seeds the viewport camera from initialCamera without touching width/height", () => {
@@ -72,8 +76,85 @@ describe("createInitialControllerState", () => {
 
 		// Camera adopted so the first paint lands at the host's pan/zoom (no flash).
 		expect(state.viewport).toMatchObject({ minX: 10, minY: 20, zoom: 2 });
-		// Width/height stay the mapper default (host does not control pixel size).
+		// Width/height stay the placeholder (host does not control pixel size).
 		expect(state.viewport.width).toBe(base.viewport.width);
 		expect(state.viewport.height).toBe(base.viewport.height);
+	});
+
+	it("starts both sidebars closed and fully expanded when no initialSidebars is given", () => {
+		const state = createInitialControllerState(docWithRect, registries);
+
+		expect(state.stencilLibraryPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: [],
+		});
+		expect(state.propertyPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: [],
+		});
+	});
+
+	it("seeds both sidebars from initialSidebars", () => {
+		const state = createInitialControllerState(
+			docWithRect,
+			registries,
+			undefined,
+			undefined,
+			{
+				left: { isOpen: true },
+				right: { isOpen: false },
+				panels: {
+					stencilLibrary: { collapsedSectionIds: ["basic"] },
+					properties: { collapsedSectionIds: ["text"] },
+				},
+			},
+		);
+
+		expect(state.stencilLibraryPanel).toEqual({
+			isOpen: true,
+			collapsedSectionIds: ["basic"],
+		});
+		expect(state.propertyPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: ["text"],
+		});
+	});
+
+	it("leaves the properties panel at its default when only stencilLibrary is given", () => {
+		const state = createInitialControllerState(
+			docWithRect,
+			registries,
+			undefined,
+			undefined,
+			{ panels: { stencilLibrary: { collapsedSectionIds: ["basic"] } } },
+		);
+
+		expect(state.stencilLibraryPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: ["basic"],
+		});
+		expect(state.propertyPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: [],
+		});
+	});
+
+	it("leaves the right edge closed when only left is given", () => {
+		const state = createInitialControllerState(
+			docWithRect,
+			registries,
+			undefined,
+			undefined,
+			{ left: { isOpen: true } },
+		);
+
+		expect(state.stencilLibraryPanel).toEqual({
+			isOpen: true,
+			collapsedSectionIds: [],
+		});
+		expect(state.propertyPanel).toEqual({
+			isOpen: false,
+			collapsedSectionIds: [],
+		});
 	});
 });

@@ -22,6 +22,7 @@ const HollowCircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -39,6 +40,7 @@ const HollowCircleArrowComponent: React.FC<ArrowShapeProps> = ({
 			cy={0}
 			r={radius}
 			strokeColor={color}
+			alpha={opacity}
 			strokeWidth={1}
 			transform={transform}
 			data-kind={dataKind}

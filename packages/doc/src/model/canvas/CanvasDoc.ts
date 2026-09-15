@@ -15,7 +15,7 @@ export type CanvasDocV1 = {
 	/**
 	 * Legacy JSON-Schema pointer. The bundled `$schema` feature was retired, so this
 	 * field is no longer produced or consumed by jiscribe. It is kept here only so an
-	 * existing `.jis.json` carrying a `$schema` line is *tolerated* on input (parse
+	 * existing `.jis` carrying a `$schema` line is *tolerated* on input (parse
 	 * accepts it rather than erroring) — it is deliberately NOT round-tripped: the save
 	 * path (`canvasToDoc`) drops it, because CanvasState has no place to hold it and
 	 * reintroducing a persisted schema pointer only re-creates the confusion the removal

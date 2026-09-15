@@ -5,19 +5,25 @@ import {
 	calcFullTextRegion,
 	createSvgTransform,
 	readRichTextSlot,
+	resolveAutoColor,
+	useObjectShapeStyleDefaultsRegistry,
 	useObjectTextStyleDefaultsRegistry,
 } from "@jiscribe/canvas-sdk";
 import type React from "react";
 import { memo } from "react";
 
+import { StickyShadow } from "./StickyShadow";
+import { StickyBody } from "./StickyStyled";
 import type { StickyState } from "../state/StickyState";
 
 type StickyProps = StickyState & TextEditable;
 
 /**
- * Drawn by hand rather than through `createFrameObject`: the paper sits under a
- * blurred offset shadow, so the type owns a group of two polygons instead of the
- * single styled shape that helper draws.
+ * Drawn by hand rather than through `createFrameObject`: the paper sits over a
+ * drop shadow, so the type owns a group of its own instead of the single styled
+ * shape that helper draws. Everything that helper resolves has to
+ * be resolved here instead — the paper's `"auto"` fill as much as the text-style
+ * defaults below.
  */
 const StickyComponent: React.FC<StickyProps> = (props) => {
 	const {
@@ -31,6 +37,7 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		scaleY,
 		rotation,
 		fill,
+		fillOpacity,
 		text,
 		isEditing = false,
 	} = props;
@@ -49,6 +56,15 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		bodySlot,
 	);
 
+	// Hand-drawn shapes have to resolve the type's own stroke / fill defaults
+	// themselves as well, which is what makes a document that leaves `fill` out
+	// draw the paper yellow rather than the shared transparent.
+	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
+		type,
+		{ fill, fillOpacity },
+	);
+	const fillColor = resolveAutoColor(shapeStyle.fill, "surface");
+
 	const left = -width / 2;
 	const right = width / 2;
 	const top = -height / 2;
@@ -63,29 +79,21 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		.map(([px, py]) => `${px},${py}`)
 		.join(" ");
 
-	const shadowPoints = [
-		[left + 3, top],
-		[right - 3, top],
-		[right + 3, bottom + 5],
-		[left - 3, bottom + 5],
-	]
-		.map(([px, py]) => `${px},${py}`)
-		.join(" ");
-
 	return (
 		<g data-kind="object" data-id={id} style={{ cursor: "grab" }}>
-			{/* Shadow */}
-			<polygon
-				points={shadowPoints}
-				fill="rgba(0,0,0,0.08)"
+			<StickyShadow
+				width={width}
+				height={height}
 				transform={transformAttr}
-				pointerEvents="none"
-				filter="url(#sticky-blur)"
+				// A translucent note lying on an opaque shadow would read as a hole
+				// rather than as a sheet, so the shadow fades with the paper.
+				fillOpacity={shapeStyle.fillOpacity}
 			/>
 			{/* Main sticky note */}
-			<polygon
+			<StickyBody
 				points={points}
-				fill={fill ?? "#fef9c3"}
+				fillColor={fillColor}
+				fillAlpha={shapeStyle.fillOpacity}
 				transform={transformAttr}
 			/>
 			<TextOverlay

@@ -1,11 +1,34 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 
+import type { Viewport } from "../../rendering/Viewport";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
-import type { Camera } from "../../states/canvas/Viewport";
-import type { CanvasControllerState, ScrollBoundsConfig } from "../CanvasTypes";
+import type {
+	Camera,
+	CanvasControllerState,
+	CanvasInitialSidebars,
+	ScrollBoundsConfig,
+} from "../CanvasTypes";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { resetUiState } from "../utils/resetUiState";
 import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
+import { seedSidebarPanels } from "../utils/sidebarsState";
+
+/**
+ * Viewport a canvas starts at, before anything has been measured or the host's
+ * camera applied.
+ *
+ * Width/height are a placeholder that useContainerResize replaces with the
+ * container's real size in a layout effect, ahead of the first paint. They are
+ * non-zero because a framing computed from them (fit-all / fit-width) divides
+ * by them.
+ */
+export const INITIAL_VIEWPORT: Viewport = {
+	minX: 0,
+	minY: 0,
+	width: 1000,
+	height: 800,
+	zoom: 1,
+};
 
 /**
  * Builds the initial CanvasControllerState from a CanvasDoc.
@@ -13,20 +36,27 @@ import { createDocSnapshotFromDoc } from "../utils/resolveDocSnapshot";
  * Both production (useCanvasReducer) and integration tests share this so the
  * default values of the initial state do not drift apart.
  *
- * `initialCamera` seeds the viewport's pan/zoom at construction so the first
- * paint lands at the host's camera instead of the doc default (0,0). Width/height
- * stay at the mapper default and are corrected by the ResizeObserver.
+ * The viewport starts at {@link INITIAL_VIEWPORT}; `initialCamera` seeds its
+ * pan/zoom at construction so the first paint lands at the host's camera
+ * instead of the origin. Width/height stay at the placeholder until
+ * useContainerResize measures the container in a layout effect, before the
+ * first paint.
  *
  * The seeded camera is left as given even when the wall limits scrolling: only a
  * view scroll of the user's own is limited, so wherever the host starts the view
  * is where it starts.
+ *
+ * `initialSidebars` seeds the two sidebars the same way (see
+ * `seedSidebarPanels`); omitted, both start closed with every section expanded.
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
 	registries: CanvasRegistries,
 	initialCamera?: Camera,
 	scrollBoundsConfig?: ScrollBoundsConfig,
+	initialSidebars?: CanvasInitialSidebars,
 ): CanvasControllerState => {
+	const seededSidebarPanels = seedSidebarPanels(initialSidebars);
 	const baseState = canvasToState(
 		initialDoc,
 		registries.objectMapper,
@@ -34,9 +64,9 @@ export const createInitialControllerState = (
 	);
 	const viewport =
 		initialCamera === undefined
-			? baseState.viewport
+			? { ...INITIAL_VIEWPORT }
 			: {
-					...baseState.viewport,
+					...INITIAL_VIEWPORT,
 					minX: initialCamera.minX,
 					minY: initialCamera.minY,
 					zoom: initialCamera.zoom,
@@ -53,10 +83,13 @@ export const createInitialControllerState = (
 			measuredView: undefined,
 		},
 		...resetUiState(),
+		// Outside resetUiState: the two sidebars are persistent, so a doc swap must
+		// not close them (see CanvasControllerState).
+		stencilLibraryPanel: seededSidebarPanels.stencilLibraryPanel,
+		propertyPanel: seededSidebarPanels.propertyPanel,
 		activeModal: null,
 		commitVersion: 0,
-		saveVersion: 0,
-		saveNonce: "",
+		saveRequest: { version: 0, nonce: "" },
 		historyCoalesce: { recorded: null, pending: null },
 		internalClipboard: null,
 		history: {

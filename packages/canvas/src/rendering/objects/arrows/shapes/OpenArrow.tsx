@@ -14,6 +14,7 @@ const OpenArrowArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -29,6 +30,7 @@ const OpenArrowArrowComponent: React.FC<ArrowShapeProps> = ({
 		<ArrowPolyline
 			points={points}
 			strokeColor={color}
+			alpha={opacity}
 			strokeWidth={1}
 			strokeLinejoin="miter"
 			transform={transform}

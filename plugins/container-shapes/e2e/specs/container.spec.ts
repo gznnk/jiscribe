@@ -6,18 +6,15 @@ import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
  * - frame / boundary / zone can be created from the container flyout and render as a composite <g>
  * - the body passes clicks through, so only the header band selects it (pass-through)
  * - the boundary preset gets a dashed border
+ * - the plugin's own properties-sidebar rows state the header color and the header height
  *
  * Moving children together is the existing group's job, so it is not checked here.
  */
 
 const CATEGORY = "container";
 
-/** The canvas computed cursor. crosshair means draw mode is on. */
-async function canvasCursor(canvas: CanvasDriver): Promise<string> {
-	return canvas.page
-		.locator('[data-kind="canvas"]')
-		.evaluate((el) => getComputedStyle(el).cursor);
-}
+/** A preset swatch of the color picker, so the click lands one committed value. */
+const HEADER_BLUE = "#3b82f6";
 
 /** Creates presetId from the container flyout by diagonal drag and returns the new object's {id, tag}. */
 async function createFromFlyout(
@@ -34,10 +31,10 @@ async function createFromFlyout(
 	await expect(item).toBeVisible();
 	await item.click();
 	await expect
-		.poll(() => canvasCursor(canvas), {
+		.poll(() => canvas.isDrawingMode(), {
 			message: `clicking ${presetId} enters draw mode`,
 		})
-		.toBe("crosshair");
+		.toBe(true);
 
 	await canvas.drag(from, to);
 	await expect
@@ -192,6 +189,87 @@ test.describe("container palette / behavior", () => {
 				}, frame.id),
 			)
 			.toContain("100");
+	});
+
+	test("changes the header color from the sidebar's own row and undoes it", async ({
+		canvas,
+	}) => {
+		const frame = await createFromFlyout(
+			canvas,
+			"frame",
+			{ x: 300, y: 220 },
+			{ x: 560, y: 420 },
+		);
+		// Fills of every rect the container draws (header, body, border), so the
+		// header's own can be told apart by what appears and disappears.
+		const rectFills = () =>
+			canvas.page.evaluate((id) => {
+				const group = document.querySelector(`[data-id="${id}"]`);
+				if (!group) {
+					return [];
+				}
+				return [...group.querySelectorAll("rect")].map(
+					(rect) => getComputedStyle(rect).fill,
+				);
+			}, frame.id);
+
+		// The plugin's `header-fill` row: a custom item of the Fill section, whose
+		// trigger is named by the plugin's own dictionary.
+		await canvas.openPropertyPanel();
+		await canvas.page.click(
+			`${selectors.propertyPanel} [aria-label="Header Color"]`,
+		);
+		await canvas.page.click(
+			selectors.propertyPanelSet("headerFill", HEADER_BLUE),
+		);
+
+		const blue = await canvas.normalizeColor(HEADER_BLUE);
+		await expect.poll(rectFills).toContain(blue);
+
+		await canvas.undo();
+		await expect.poll(rectFills).not.toContain(blue);
+
+		// The plugin lists its sidebar by hand, so the two opacity rows are checked
+		// here rather than trusted to the default panel.
+		await expect(
+			canvas.page.locator(selectors.propertyPanelField("fillOpacity")),
+		).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.propertyPanelField("strokeOpacity")),
+		).toBeVisible();
+	});
+
+	test("states the header height from the sidebar's own row and undoes it", async ({
+		canvas,
+	}) => {
+		const frame = await createFromFlyout(
+			canvas,
+			"frame",
+			{ x: 300, y: 220 },
+			{ x: 560, y: 420 },
+		);
+		// The header band is the second rect the container draws (the body comes
+		// first); its height is the number the row states.
+		const headerHeight = () =>
+			canvas.page.evaluate((id) => {
+				const rect = document.querySelectorAll(`[data-id="${id}"] rect`)[1];
+				return rect ? Number(rect.getAttribute("height")) : null;
+			}, frame.id);
+		const before = await headerHeight();
+
+		// The plugin's `header-height` row: a custom item of the Layout section,
+		// written as the headerHeight extra style property.
+		await canvas.openPropertyPanel();
+		const field = canvas.page.locator(
+			selectors.propertyPanelField("headerHeight"),
+		);
+		await expect(field).toHaveValue(String(before));
+		await field.fill("48");
+		await field.press("Enter");
+		await expect.poll(headerHeight).toBe(48);
+
+		await canvas.undo();
+		await expect.poll(headerHeight).toBe(before);
 	});
 
 	test("changes the header color independently (headerFill)", async ({

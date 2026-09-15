@@ -4,7 +4,7 @@
  * Only what the PNG round-trip needs is implemented: walking the chunk
  * sequence, inserting an `iTXt` chunk before `IEND`, and reading it back.
  * `iTXt` is used (rather than `tEXt`/`zTXt`) because the embedded
- * `.jis.json` contains non-Latin-1 text and `iTXt` is natively UTF-8.
+ * `.jis` contains non-Latin-1 text and `iTXt` is natively UTF-8.
  * The chunk is written uncompressed: the JSON is small, and skipping zlib
  * keeps extraction synchronous and dependency-free.
  */

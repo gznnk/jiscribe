@@ -9,6 +9,7 @@ import type {
 	Gesture,
 	GestureRecognizerConfig,
 } from "../GestureRecognizerTypes";
+import type * as RecognizerTargeting from "../targeting";
 import type * as RecognizerUtils from "../utils";
 
 /**
@@ -24,6 +25,19 @@ import type * as RecognizerUtils from "../utils";
  * against them, so controlling them is what makes the emitted distances exact.
  */
 
+vi.mock("../targeting", async (importActual) => {
+	const actual = await importActual<typeof RecognizerTargeting>();
+	return {
+		...actual,
+		getGestureTarget: () => ({ id: "canvas", kind: "canvas" }),
+		createGetHovered: () => () => [],
+		getInputValue: () => undefined,
+		readInputValue: () => undefined,
+		isGestureOptedOut: () => false,
+		isNativePointerTarget: () => false,
+	};
+});
+
 vi.mock("../utils", async (importActual) => {
 	const actual = await importActual<typeof RecognizerUtils>();
 	return {
@@ -37,12 +51,6 @@ vi.mock("../utils", async (importActual) => {
 			x: clientX,
 			y: clientY,
 		}),
-		getGestureTarget: () => ({ id: "canvas", kind: "canvas" }),
-		createGetHovered: () => () => [],
-		getInputValue: () => undefined,
-		readInputValue: () => undefined,
-		isGestureOptedOut: () => false,
-		isNativePointerTarget: () => false,
 		detectEdgeProximity: () => ({ isNearEdge: false }),
 		calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
 	};

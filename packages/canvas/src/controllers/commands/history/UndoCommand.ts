@@ -1,5 +1,6 @@
 import {
 	canNavigateHistory,
+	canOfferHistoryNavigation,
 	restoreHistorySnapshot,
 } from "../../utils/restoreHistorySnapshot";
 import type { ExecutableCommand } from "../CommandTypes";
@@ -21,11 +22,12 @@ export const UndoCommand: ExecutableCommand = {
 	},
 
 	canExecute: (state) =>
-		canNavigateHistory(state) && state.history.past.length > 0,
+		canOfferHistoryNavigation(state) && state.history.past.length > 0,
 
 	execute: (state, registries) => {
 		const { past, present, future } = state.history;
-		if (past.length === 0) {
+		// The drag guard lives here rather than in canExecute (see canNavigateHistory).
+		if (past.length === 0 || !canNavigateHistory(state)) {
 			return state;
 		}
 

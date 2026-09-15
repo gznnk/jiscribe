@@ -21,13 +21,6 @@ import { selectors } from "../../support/selectors";
 /** The test-only plugin's category, holding the single `tile` preset. */
 const SPEC_CATEGORY = "spec";
 
-/** Computed cursor of the canvas (data-kind="canvas"). crosshair = drawing mode on. */
-async function canvasCursor(canvas: CanvasDriver): Promise<string> {
-	return canvas.page
-		.locator('[data-kind="canvas"]')
-		.evaluate((el) => getComputedStyle(el).cursor);
-}
-
 /**
  * A viewport point on the toolbar that hits the bar itself, not a button. Scans
  * the bar's midline and takes the middle of the gaps, so it holds whatever
@@ -74,10 +67,10 @@ test.describe("StencilLibrary category flyout", () => {
 		const before = (await canvas.captureObjects()).length;
 		await tileItem.click();
 		await expect
-			.poll(() => canvasCursor(canvas), {
+			.poll(() => canvas.isDrawingMode(), {
 				message: "clicking a shape in the flyout enters drawing mode",
 			})
-			.toBe("crosshair");
+			.toBe(true);
 		await expect(
 			canvas.page.locator(selectors.categoryFlyout(SPEC_CATEGORY)),
 		).toHaveCount(0);

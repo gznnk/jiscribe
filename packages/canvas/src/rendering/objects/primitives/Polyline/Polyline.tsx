@@ -1,4 +1,3 @@
-import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
 import { calcVectorAngleRad } from "@jiscribe/geometry";
 import type React from "react";
 import { memo } from "react";
@@ -6,6 +5,7 @@ import { memo } from "react";
 import { PolylineElement, PolylineHitArea } from "./PolylineStyled";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import { Arrow, getArrowLineInset } from "../../arrows";
+import { useObjectShapeStyleDefaultsRegistry } from "../../registry/ObjectShapeStyleDefaultsRegistryContext";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { insetPolylineEnds } from "../../utils/insetPolylineEnds";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
@@ -14,25 +14,32 @@ type PolylineProps = PolylineState;
 
 const PolylineComponent: React.FC<PolylineProps> = ({
 	id,
+	type,
 	points,
 	stroke,
-	strokeWidth = DEFAULT_STROKE_WIDTH,
+	strokeWidth,
 	strokeDashType,
+	strokeOpacity,
 	startArrow,
 	endArrow,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
+	const shapeStyle = useObjectShapeStyleDefaultsRegistry().resolveShapeStyle(
+		type,
+		{ stroke, strokeWidth, strokeDashType, strokeOpacity },
+	);
+	const resolvedStrokeWidth = shapeStyle.strokeWidth;
 	// Resolve auto (theme-following) — and an unspecified stroke, like every
 	// other renderer — to the theme foreground (ink) (issue #38).
-	const strokeColor = resolveAutoColor(stroke, "ink");
+	const strokeColor = resolveAutoColor(shapeStyle.stroke, "ink");
 
 	// For hollow arrows, terminate the line at the arrow's base so it does not
 	// pass through the hollow area. The arrow itself is drawn at the original
 	// endpoint (tip), so the visible endpoint position is unchanged.
 	const linePoints = insetPolylineEnds(
 		points,
-		getArrowLineInset(startArrow) * strokeWidth,
-		getArrowLineInset(endArrow) * strokeWidth,
+		getArrowLineInset(startArrow) * resolvedStrokeWidth,
+		getArrowLineInset(endArrow) * resolvedStrokeWidth,
 	);
 	const linePointsAttr = linePoints.map((p) => `${p.x},${p.y}`).join(" ");
 
@@ -65,8 +72,12 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 			<PolylineElement
 				points={linePointsAttr}
 				strokeColor={strokeColor}
-				strokeWidth={strokeWidth}
-				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
+				strokeAlpha={shapeStyle.strokeOpacity}
+				strokeWidth={resolvedStrokeWidth}
+				strokeDasharray={getStrokeDasharray(
+					shapeStyle.strokeDashType,
+					resolvedStrokeWidth,
+				)}
 			/>
 			{startArrow && startArrow !== "None" && points.length >= 1 && (
 				<Arrow
@@ -74,8 +85,9 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					x={points[0].x}
 					y={points[0].y}
 					color={strokeColor}
+					opacity={shapeStyle.strokeOpacity}
 					radians={startAngleRadians}
-					scale={strokeWidth}
+					scale={resolvedStrokeWidth}
 					dataKind="object"
 					dataId={id}
 				/>
@@ -86,8 +98,9 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					x={points[points.length - 1].x}
 					y={points[points.length - 1].y}
 					color={strokeColor}
+					opacity={shapeStyle.strokeOpacity}
 					radians={endAngleRadians}
-					scale={strokeWidth}
+					scale={resolvedStrokeWidth}
 					dataKind="object"
 					dataId={id}
 				/>

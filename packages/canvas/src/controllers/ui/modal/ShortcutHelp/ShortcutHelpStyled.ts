@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 
-import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
-import { theme } from "../../../../constants/theme";
+import { scrollbarStyles } from "../../../../theme/themeScrollbarStyles";
+import { theme } from "../../../../theme/themeTokens";
 
 export const Body = styled.div`
 	flex: 1;

@@ -1,6 +1,7 @@
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
 import { calcFullBoxTextRegion } from "./ObjectDocTextRegion";
 import {
+	CONNECTOR_DOC_DEFAULTS,
 	CONNECTOR_EXTRA_KEYS,
 	ConnectorFeatures,
 } from "../model/objects/connector/ConnectorDoc";
@@ -14,6 +15,11 @@ import { EllipseObjectFactory } from "../model/objects/primitives/ellipse/Ellips
 import { validateEllipseDoc } from "../model/objects/primitives/ellipse/validateEllipseDoc";
 import { GroupFeatures } from "../model/objects/primitives/group/GroupDoc";
 import { validateGroupDoc } from "../model/objects/primitives/group/validateGroupDoc";
+import {
+	IMAGE_EXTRA_KEYS,
+	ImageFeatures,
+} from "../model/objects/primitives/image/ImageDoc";
+import { validateImageDoc } from "../model/objects/primitives/image/validateImageDoc";
 import {
 	POLYGON_DOC_DEFAULTS,
 	PolygonFeatures,
@@ -48,22 +54,26 @@ import { validateTextDoc } from "../model/objects/primitives/text/validateTextDo
 /**
  * One {@link ObjectDocDefinition} per built-in object type — the single source of
  * truth for the headless (doc) layer of the built-ins. The UI table
- * (`ALL_OBJECT_DEFINITIONS`) spreads each entry and adds its render/interaction
+ * (`BUILTIN_OBJECT_DEFINITIONS`) spreads each entry and adds its render/interaction
  * fields, and `resolveDocDefinitions` uses them verbatim as the default preset
  * that `createCanvasParser` / `createDocOps` fall back to.
  *
  * When adding a new built-in type, add its entry here (otherwise parse-time
  * structure validation and connectability checks report it as unknown). `factory`
- * is present only for types created programmatically (group / connector / svg have none).
+ * is present only for types created programmatically (group / connector / svg /
+ * image have none).
  *
  * `textRegion` is declared by every type that holds text: it is what a headless
  * overflow check measures against (`@jiscribe/doc-tools`), and the UI table
  * registers the same calculator, so the two cannot drift. The types carrying no
- * text at all (group / polygon / polyline / connector / svg) leave it out.
+ * text at all (group / polygon / polyline / connector / svg / image) leave it out.
  *
  * `description` / `summary` / `defaults` feed the generated JSON schema and AI docs
  * (`pnpm generate:schema`); types whose schema `$def` is a handwritten template
- * (group / connector / svg / polyline / polygon) carry only `summary`.
+ * (group / connector / svg / image / polyline / polygon) carry no `description`.
+ * `defaults` is declared past that whenever the type has creation defaults to
+ * state at all, the draw-time style registries reading the very same field
+ * (ObjectShapeStyleDefaultsRegistry); only group, svg and image leave it out.
  */
 export const builtinObjectDocDefinitions = {
 	rect: {
@@ -123,11 +133,19 @@ export const builtinObjectDocDefinitions = {
 		validateDoc: validateConnectorDoc,
 		extraKeys: CONNECTOR_EXTRA_KEYS,
 		summary: "edge / arrow between objects",
+		defaults: CONNECTOR_DOC_DEFAULTS,
 	},
 	svg: {
 		features: SvgFeatures,
 		validateDoc: validateSvgDoc,
 		extraKeys: SVG_EXTRA_KEYS,
 		summary: "raw SVG escape hatch (opaque box)",
+	},
+	image: {
+		features: ImageFeatures,
+		validateDoc: validateImageDoc,
+		extraKeys: IMAGE_EXTRA_KEYS,
+		summary:
+			"picture file (raster or SVG) under the .jis directory (opaque box)",
 	},
 } satisfies Readonly<Record<string, ObjectDocDefinition>>;

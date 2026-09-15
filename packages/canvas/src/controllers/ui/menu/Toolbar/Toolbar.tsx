@@ -1,29 +1,28 @@
-import { memo, useMemo } from "react";
+import { Fragment, memo, useMemo } from "react";
 
-import { DEFAULT_TOOLBAR_LAYOUT, type ToolbarEntry } from "./toolbarLayout";
+import { ToolbarCommandButton } from "./ToolbarCommandButton";
+import {
+	DEFAULT_TOOLBAR_SECTIONS,
+	type ToolbarSection,
+} from "./toolbarSections";
 import {
 	ToolbarContainer,
 	ToolbarDivider,
 	ToolbarGroup,
 	ToolbarHostSlot,
-	ToolbarIconButton,
-	ZoomReadout,
+	ToolbarToggleButton,
 } from "./ToolbarStyled";
+import { ToolbarZoomGroup } from "./ToolbarZoomGroup";
+import {
+	resolveToolbarSections,
+	type ResolvedToolbarItem,
+} from "./utils/resolveToolbarSections";
+import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
-import { HelpIcon } from "../../icons/HelpIcon";
-import type { Stencil } from "../../objects/Stencil";
+import { SidebarIcon } from "../../icons/SidebarIcon";
 import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
-
-/** A layout entry with its presets looked up in the registry, ready to draw. */
-type ResolvedToolbarEntry =
-	| { kind: "preset"; preset: Stencil }
-	| {
-			kind: "category";
-			entry: Extract<ToolbarEntry, { kind: "category" }>;
-			presets: Stencil[];
-	  };
 
 type ToolbarProps = {
 	/** ID of the stencil currently being drawn (for the tool's active state) */
@@ -32,60 +31,147 @@ type ToolbarProps = {
 	openCategoryId: string | null;
 	/** Current zoom factor (1 = 100%) */
 	zoom: number;
-	/** Whether zooming in is possible (canExecute of the zoomIn command) */
-	canZoomIn: boolean;
-	/** Whether zooming out is possible (canExecute of the zoomOut command) */
-	canZoomOut: boolean;
-	/** Top-level arrangement of the shape tools (pinned presets + category flyouts) */
-	layout?: ToolbarEntry[];
-	/** Host UI at the left edge (see CanvasProps.toolbar.leading) */
-	leading?: React.ReactNode;
-	/** Host UI at the right edge (see CanvasProps.toolbar.trailing) */
-	trailing?: React.ReactNode;
+	/** The whole bar in display order (see CanvasProps.toolbar.sections) */
+	sections?: ToolbarSection[];
+	/**
+	 * Whether the host's `stencilLibrary.sections` resolved to at least one
+	 * section. The sidebar toggle is drawn only then; Canvas resolves the sections
+	 * and answers this, so the bar never looks them up itself.
+	 */
+	hasLibrary: boolean;
+	/** Whether the shape library sidebar is currently open (reducer state) */
+	isLibraryOpen: boolean;
+	/** Whether the properties sidebar is currently open (reducer state) */
+	isPropertyPanelOpen: boolean;
+};
+
+/** Stable within a resolved bar; the index only serves the anonymous items. */
+const toolbarItemKey = (item: ResolvedToolbarItem, index: number): string => {
+	switch (item.type) {
+		case "stencilPreset":
+			return `stencilPreset:${item.preset.id}`;
+		case "stencilCategory":
+			return `stencilCategory:${item.category.id}`;
+		case "command":
+			return `command:${item.commandId}`;
+		case "slot":
+			return `slot:${item.id}`;
+		default:
+			return `${item.type}:${index}`;
+	}
 };
 
 /**
  * Unified toolbar centered at the top.
- * Combines the shape tools (StencilLibrary), zoom readout, and help (?) into a single bar.
+ * Draws the sections it is given: the shape tools (StencilLibrary), the two
+ * sidebar toggles, the zoom readout and any command buttons and host slots the
+ * host declared.
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
- * - Zoom +/-, the readout and help go through the command system (ToolbarHandler →
- *   handleCommand), the same path as the keyboard shortcuts and the context menu.
- *   The help modal itself is rendered by Canvas from reducer state.
+ * - Zoom +/-, the readout and every `command` item go through the command
+ *   system (ToolbarHandler → handleCommand), the same path as the keyboard
+ *   shortcuts and the context menu. So do the two sidebar toggles: the shape
+ *   library one shows only when the host declared a library with something in
+ *   it, the properties one only when the host asked for that item. The help
+ *   modal and the panels themselves are rendered by Canvas from reducer state.
+ *
+ * Everything the bar draws from arrives as a prop except whether each command
+ * can currently run, which comes through ToolbarCommandStateContext: the props
+ * change rarely, while command availability changes on nearly every dispatch.
+ * Reading that context here would re-render the whole bar each time, so only
+ * the two leaves that show it subscribe (ToolbarCommandButton,
+ * ToolbarZoomGroup) and the bar itself stays memoized.
  */
 const ToolbarComponent: React.FC<ToolbarProps> = ({
 	activePresetId,
 	openCategoryId,
 	zoom,
-	canZoomIn,
-	canZoomOut,
-	layout = DEFAULT_TOOLBAR_LAYOUT,
-	leading,
-	trailing,
+	sections = DEFAULT_TOOLBAR_SECTIONS,
+	hasLibrary,
+	isLibraryOpen,
+	isPropertyPanelOpen,
 }) => {
 	const messages = useCanvasMessages();
-	const { stencil } = useCanvasRegistries();
+	const { stencil, command } = useCanvasRegistries();
 
-	// Resolved once per (layout, registry) pair, not inline in the render map:
-	// the bar re-renders on every zoom step, and a per-render `presets` array
-	// would defeat StencilCategoryMenu's memo. Resolution also drops what has
-	// nothing to show — a preset that isn't registered (e.g. a plugin not
-	// applied) is silently skipped, and a category left with no resolvable
-	// presets loses its button/flyout entirely rather than rendering empty.
-	const resolvedEntries = useMemo(
-		() =>
-			layout.flatMap((entry): ResolvedToolbarEntry[] => {
-				if (entry.kind === "preset") {
-					const preset = stencil.get(entry.presetId);
-					return preset ? [{ kind: "preset", preset }] : [];
-				}
-				const presets = entry.presetIds
-					.map((id) => stencil.get(id))
-					.filter((preset) => preset !== undefined);
-				return presets.length > 0 ? [{ kind: "category", entry, presets }] : [];
-			}),
-		[layout, stencil],
+	// Resolved once per (sections, registries, hasLibrary) tuple, not inline in
+	// the render map: the bar re-renders on every zoom step, and a per-render
+	// `presets` array would defeat StencilCategoryMenu's memo.
+	const resolvedSections = useMemo(
+		() => resolveToolbarSections(sections, { stencil, command, hasLibrary }),
+		[sections, stencil, command, hasLibrary],
 	);
+
+	// The first end-aligned section carries the auto margin that pushes it and
+	// everything after it against the right edge.
+	const firstEndSectionId = resolvedSections.find(
+		(section) => section.align === "end",
+	)?.id;
+
+	const renderItem = (item: ResolvedToolbarItem): React.ReactNode => {
+		switch (item.type) {
+			case "stencilPreset":
+				return (
+					<StencilLibraryItem
+						preset={item.preset}
+						isActive={activePresetId === item.preset.id}
+					/>
+				);
+			case "stencilCategory":
+				return (
+					<StencilCategoryMenu
+						id={item.category.id}
+						label={item.category.label}
+						icon={item.category.icon}
+						presets={item.presets}
+						isOpen={openCategoryId === item.category.id}
+						activePresetId={activePresetId}
+					/>
+				);
+			case "command":
+				return (
+					<ToolbarCommandButton
+						commandId={item.commandId}
+						icon={item.icon}
+						label={item.label}
+					/>
+				);
+			case "zoom":
+				return <ToolbarZoomGroup zoom={zoom} />;
+			case "stencilLibraryToggle":
+				return (
+					<ToolbarToggleButton
+						type="button"
+						aria-label={messages.toolbarStencilLibrary}
+						title={messages.toolbarStencilLibrary}
+						aria-expanded={isLibraryOpen}
+						data-part={commandPart("toggleStencilLibrary")}
+						isOpen={isLibraryOpen}
+					>
+						<SidebarIcon edge="left" />
+					</ToolbarToggleButton>
+				);
+			case "propertyPanelToggle":
+				return (
+					<ToolbarToggleButton
+						type="button"
+						aria-label={messages.toolbarPropertyPanel}
+						title={messages.toolbarPropertyPanel}
+						aria-expanded={isPropertyPanelOpen}
+						data-part={commandPart("togglePropertyPanel")}
+						isOpen={isPropertyPanelOpen}
+					>
+						<SidebarIcon edge="right" />
+					</ToolbarToggleButton>
+				);
+			case "divider":
+				return <ToolbarDivider />;
+			case "slot":
+				return (
+					<ToolbarHostSlot data-gesture="none">{item.node}</ToolbarHostSlot>
+				);
+		}
+	};
 
 	// The open category flyout (`openCategoryId`) lives in reducer state; the
 	// toggle goes through StencilCategoryToggleHandler and dismissal through the
@@ -99,84 +185,18 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	// and still win.
 	return (
 		<ToolbarContainer data-kind="menu" data-id="toolbar">
-			{/* Left: host slot (when provided) and shape tools */}
-			<ToolbarGroup>
-				{leading != null && (
-					<>
-						<ToolbarHostSlot data-gesture="none">{leading}</ToolbarHostSlot>
-						<ToolbarDivider />
-					</>
-				)}
-				{resolvedEntries.map((resolved) =>
-					resolved.kind === "preset" ? (
-						<StencilLibraryItem
-							key={`preset:${resolved.preset.id}`}
-							preset={resolved.preset}
-							isActive={activePresetId === resolved.preset.id}
-						/>
-					) : (
-						<StencilCategoryMenu
-							key={`category:${resolved.entry.id}`}
-							id={resolved.entry.id}
-							label={resolved.entry.label}
-							icon={resolved.entry.icon}
-							presets={resolved.presets}
-							isOpen={openCategoryId === resolved.entry.id}
-							activePresetId={activePresetId}
-						/>
-					),
-				)}
-			</ToolbarGroup>
-
-			{/* Right: zoom readout and help */}
-			<ToolbarGroup>
-				{/* Zoom actions go through the command system (ToolbarHandler → handleCommand),
-					    the same path as keyboard shortcuts and the context menu. */}
-				<ToolbarIconButton
-					type="button"
-					aria-label={messages.toolbarZoomOut}
-					title={messages.toolbarZoomOut}
-					disabled={!canZoomOut}
-					data-part="command:zoomOut"
+			{resolvedSections.map((section) => (
+				<ToolbarGroup
+					key={section.id}
+					startsEndGroup={section.id === firstEndSectionId}
 				>
-					−
-				</ToolbarIconButton>
-				<ZoomReadout
-					type="button"
-					aria-label={messages.toolbarResetZoom}
-					title={messages.toolbarResetZoom}
-					data-part="command:resetZoom"
-				>
-					{Math.round(zoom * 100)}%
-				</ZoomReadout>
-				<ToolbarIconButton
-					type="button"
-					aria-label={messages.toolbarZoomIn}
-					title={messages.toolbarZoomIn}
-					disabled={!canZoomIn}
-					data-part="command:zoomIn"
-				>
-					+
-				</ToolbarIconButton>
-
-				<ToolbarDivider />
-
-				<ToolbarIconButton
-					type="button"
-					aria-label={messages.toolbarShowShortcutHelp}
-					title={messages.toolbarShortcutHelp}
-					data-testid="shortcut-help:open"
-					data-part="command:shortcutHelp"
-				>
-					<HelpIcon />
-				</ToolbarIconButton>
-				{trailing != null && (
-					<>
-						<ToolbarDivider />
-						<ToolbarHostSlot data-gesture="none">{trailing}</ToolbarHostSlot>
-					</>
-				)}
-			</ToolbarGroup>
+					{section.items.map((item, index) => (
+						<Fragment key={toolbarItemKey(item, index)}>
+							{renderItem(item)}
+						</Fragment>
+					))}
+				</ToolbarGroup>
+			))}
 		</ToolbarContainer>
 	);
 };

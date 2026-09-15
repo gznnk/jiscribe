@@ -13,6 +13,7 @@ import {
 import type { CanvasGestureHandling } from "./CanvasGestureHandling";
 import { CanvasProviders } from "./CanvasProviders";
 import {
+	CanvasBody,
 	CanvasRoot,
 	Container,
 	ScrollSyncedOverlay,
@@ -20,7 +21,8 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
-import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
+import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
+import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
@@ -32,15 +34,18 @@ import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useCooperativeTouchClaim } from "./hooks/useCooperativeTouchClaim";
 import { useDevicePixelRatio } from "./hooks/useDevicePixelRatio";
+import { useDocFonts } from "./hooks/useDocFonts";
+import type { ResolveImage } from "./hooks/useDocImages";
+import { useDocImages } from "./hooks/useDocImages";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import type { CanvasExportImagePayload } from "./hooks/useExportDialog";
 import { useExportDialog } from "./hooks/useExportDialog";
-import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useInitialViewOpen } from "./hooks/useInitialViewOpen";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
+import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
@@ -50,6 +55,7 @@ import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
+import type { ResolveImageBlob } from "../export";
 import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -70,253 +76,268 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
-import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
-import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
-import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
-import type { Camera } from "../states/canvas/Viewport";
 import type {
-	ObjectMenuPropertyUpdater,
+	StylePropertyUpdater,
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
-import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
+import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
+import type {
+	PropertyPanelDocumentUpdater,
+	PropertyPanelMetaUpdater,
+	PropertyPanelTransformUpdater,
+} from "./ui/menu/PropertyPanel/PropertyPanelTypes";
+import { StencilLibraryPanel } from "./ui/menu/StencilLibrary/StencilLibraryPanel";
+import { resolveStencilCategories } from "./ui/menu/StencilLibrary/utils/resolveStencilCategory";
+import {
+	DEFAULT_TOOLBAR_SECTIONS,
+	Toolbar,
+	ToolbarCommandStateContext,
+	type ToolbarSection,
+} from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import { ShortcutHelpModal } from "./ui/modal/ShortcutHelp/ShortcutHelpModal";
+import type { StencilCategory } from "./ui/objects/StencilCategory";
+import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
+import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
+import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
+import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
 type CanvasProps = {
-	// ── Model & persistence (the core contract) ──
+	// ── Document ──
 	/**
-	 * The CanvasDoc to display.
-	 *
-	 * **Caller responsibility**: always pass a valid doc that has gone through
-	 * `createCanvasParser` (two-stage validation). Canvas does not re-validate
-	 * internally and assumes unique IDs, referential integrity, and acyclicity.
-	 * Passing an unvalidated doc (with broken references or cycles) can hang
-	 * internal traversals. Validation is done at the external-input boundary (host)
-	 * → see packages/canvas/docs/01-design-philosophy.md principle 4.
+	 * The document to display. Must already have passed `createCanvasParser`:
+	 * the canvas does not re-validate and assumes unique ids, referential
+	 * integrity and acyclicity, so a broken doc can hang its traversals
+	 * (docs/01-design-philosophy.md, principle 4).
 	 */
 	doc: CanvasDoc;
 	/**
-	 * Nonce from the most recent incoming sync message. Matched against the
-	 * delivered save nonces so a fold-back of our own save is recognized and
-	 * dropped instead of being treated as an external change (see useSyncExternalDoc).
+	 * Identifies the load `doc` came from — a file path, a counter bumped on every
+	 * read — as long as two documents never share one. Change it when a different
+	 * document goes onto a mounted canvas: the undo history is dropped, so Ctrl+Z
+	 * cannot bring the previous document back under the new name. Keep it for
+	 * changes to the same document (an external rewrite, the host re-sending after
+	 * its own undo/redo), which stay undoable. Omitted, every incoming doc is an
+	 * external edit and the history is kept.
+	 */
+	docLoadId?: string;
+	/**
+	 * Nonce of the most recent incoming sync message. When it matches a nonce
+	 * handed out by `onCommit`, the doc is our own save folding back and is
+	 * dropped instead of applied as an external change (see useSyncExternalDoc).
 	 */
 	syncNonce?: string;
 	/**
-	 * Callback invoked when a committable action occurs (e.g., dragEnd, click).
-	 * Use this to persist or sync the canvas state to external storage.
-	 * The second argument is the saveNonce that should be echoed back via syncNonce.
+	 * Called on every committable action (drag end, click, …) with the doc to
+	 * persist and a save nonce the host echoes back through `syncNonce`.
 	 */
 	onCommit?: (doc: CanvasDoc, saveNonce: string) => void;
 
-	// ── Host notifications (read-out only) ──
+	// ── Read-outs ──
 	/**
-	 * Callback invoked when the selection changes, receiving the new set of
-	 * selected IDs (empty when nothing is selected). Shapes and the connector
-	 * are mutually exclusive and reported together as one ordered list. Use this
-	 * to drive host UI outside the canvas (e.g. an external property panel).
+	 * Called when the selection changes with the selected ids in order (empty
+	 * when nothing is selected). Shapes and the connector are mutually exclusive
+	 * and reported through the same list.
 	 */
 	onSelectionChange?: (selectedIds: string[]) => void;
 	/**
-	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
-	 * `ref.current.viewport.setViewport` (not on container resize). Read-only: use
-	 * it to persist or mirror the view. Do **not** feed it back into
-	 * `initialConfig.viewport` (mount-only) or drive the view from it — the canvas
-	 * owns the live camera; a mirror-back would fight continuous gestures. Push
-	 * programmatic changes via `ref.current.viewport` instead.
+	 * Called when the camera changes — on gestures and on
+	 * `ref.current.viewport.setViewport`, not on container resize. Read-only:
+	 * persist or mirror it, but do not feed it back into `initialConfig.viewport`
+	 * or drive the view from it; the canvas owns the live camera and programmatic
+	 * moves go through `ref.current.viewport`.
 	 */
 	onViewportChange?: (viewport: Camera) => void;
+	/**
+	 * Called when either sidebar opens, closes, or has a section collapsed, with
+	 * both edges and every panel's state each time. Read-only on the same terms
+	 * as `onViewportChange`: persist it and hand it back through
+	 * `initialConfig.sidebars` at the next mount, but do not drive the panels
+	 * from it — they are the user's, and there is no controlled prop.
+	 */
+	onSidebarsChange?: (sidebars: CanvasSidebarsState) => void;
 
-	// ── Appearance & localization (live) ──
+	// ── Delegated to the host ──
 	/**
-	 * Theme injected by the host (default: `darkCanvasTheme`). Appearance tokens
-	 * are exposed to styles as `--jiscribe-*` CSS custom properties on the
-	 * Canvas root; handle dimensions and the default font are distributed via
-	 * context. A VSCode host passes tokens holding `var(--vscode-...)` values
-	 * to follow the editor theme; other hosts can pass `lightCanvasTheme` or
-	 * their own `CanvasTheme`.
-	 */
-	theme?: CanvasTheme;
-	/**
-	 * Background grid settings. The grid is hidden by default — omit this prop
-	 * for no grid, pass `{ show: true }` to display it (25 world units unless
-	 * `size` says otherwise). Live: can be changed at runtime. Since an object
-	 * literal breaks `<Canvas>`'s memo, a host rendering this inline can
-	 * `useMemo` it to avoid extra re-renders.
-	 *
-	 * The grid line color is not a setting here — it is derived from the effective
-	 * canvas surface (theme background, or the doc's `background`) so it stays
-	 * readable on any color.
-	 */
-	grid?: {
-		/**
-		 * Whether to render the grid (default `false`). The grid is a viewing aid
-		 * only — it is already excluded from image export — so this toggles the
-		 * on-screen display without changing exported images.
-		 */
-		show?: boolean;
-		/**
-		 * Base grid spacing in world units (default `25`). Sets the medium grid
-		 * interval; bold lines fall every 4× this value and the multi-level grid
-		 * adapts to zoom (see the canvas's grid layer). Ignored while the grid
-		 * is hidden.
-		 */
-		size?: number;
-	};
-	/**
-	 * Active locale (default `"en"`). Selects the canvas's built-in dictionary
-	 * (en / ja) and is exposed to plugins via `useCanvasLocale`. Resolution is
-	 * exact → language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
-	 */
-	locale?: string;
-	/**
-	 * Partial overrides applied on top of the locale-resolved dictionary
-	 * (tooltips, menus, toasts). Use this to tweak individual strings; use
-	 * `locale` to pick the language.
-	 */
-	messages?: Partial<CanvasMessages>;
-
-	// ── Host-integration escape hatches ──
-	/**
-	 * When provided, Ctrl+Z is delegated to this callback instead of Canvas's
-	 * internal undo stack. Use this in VSCode to forward undo to the host editor.
+	 * When provided, Ctrl+Z goes here instead of the internal undo stack (a
+	 * VSCode host forwards it to the editor).
 	 */
 	onUndo?: () => void;
-	/**
-	 * When provided, Ctrl+Shift+Z / Ctrl+Y is delegated to this callback instead
-	 * of Canvas's internal redo stack.
-	 */
+	/** When provided, Ctrl+Shift+Z / Ctrl+Y goes here instead of the internal redo stack. */
 	onRedo?: () => void;
 	/**
-	 * When provided, the export dialog delivers the exported image here instead
-	 * of triggering a browser download. Use this when the host owns file saving
-	 * (e.g. the VSCode extension writing into the workspace).
+	 * When provided, the export dialog delivers the image here instead of
+	 * triggering a browser download (a host that owns file saving, such as the
+	 * VSCode extension writing into the workspace).
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
 	/**
 	 * Called when "open reference" is pressed for an object carrying
-	 * `meta.reference`. Omit it and the menu item is never offered — opening a
-	 * file is the host's business. The canvas passes the reference through
-	 * untouched: it neither resolves nor validates the path.
+	 * `meta.reference`. Omit it and the menu item is never offered. The reference
+	 * is passed through untouched: the canvas neither resolves nor validates it.
 	 */
 	onOpenReference?: (payload: OpenReferencePayload) => void;
-
-	// ── Toolbar (visibility & host UI slots) ──
 	/**
-	 * Host-provided toolbar customization: visibility (`show`), UI slots at the
-	 * edges (`leading` / `trailing`) and an override of the shape-tool arrangement
-	 * (`layout`). Grouped for cohesion; since the JSX slots already break
-	 * `<Canvas>`'s memo, a host rendering this inline can `useMemo` the object to
-	 * avoid extra re-renders.
+	 * Reads the bytes of the file an `image` object names, its `src` passed
+	 * through untouched. Omit it and every image draws as a placeholder; a
+	 * rejected promise draws the placeholder for that one file. Resolutions are
+	 * kept per `src` and the function is read through a ref, so a new function
+	 * each render costs nothing and discards nothing: to fetch a `src` again,
+	 * change the `src`.
+	 */
+	resolveImage?: ResolveImage;
+
+	// ── Appearance & localization (live) ──
+	/**
+	 * Theme (default `darkCanvasTheme`). Appearance tokens reach styles as
+	 * `--jiscribe-*` CSS custom properties on the canvas root; handle dimensions
+	 * and the default font are distributed via context. A VSCode host passes
+	 * tokens holding `var(--vscode-...)` values to follow the editor theme.
+	 */
+	theme?: CanvasTheme;
+	/**
+	 * Background grid. Omit for no grid, `{ show: true }` to display it. Its line
+	 * color is not a setting: it is derived from the effective surface (theme
+	 * background, or the doc's `background`) so it stays readable on any color.
+	 * An inline object literal defeats `<Canvas>`'s memo; `useMemo` it.
+	 */
+	grid?: {
+		/**
+		 * Whether to render the grid (default `false`). A viewing aid only: it is
+		 * never part of an exported image.
+		 */
+		show?: boolean;
+		/**
+		 * Base spacing in world units (default `25`). Bold lines fall every 4× this
+		 * value and the multi-level grid adapts to zoom. Ignored while hidden.
+		 */
+		size?: number;
+	};
+	/**
+	 * Active locale (default `"en"`). Selects the built-in dictionary (en / ja)
+	 * and is exposed to plugins via `useCanvasLocale`. Resolution is exact →
+	 * language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
+	 */
+	locale?: string;
+	/**
+	 * Partial overrides on top of the locale-resolved dictionary (tooltips,
+	 * menus, toasts). Tweaks individual strings; `locale` picks the language.
+	 */
+	messages?: Partial<CanvasMessages>;
+
+	// ── Chrome ──
+	/**
+	 * Toolbar visibility and composition. An inline object literal defeats
+	 * `<Canvas>`'s memo; `useMemo` it.
 	 */
 	toolbar?: {
 		/**
 		 * Whether to render the toolbar (default `true`). `false` removes the whole
-		 * bar — shape tools, zoom controls, the help button and the `leading` /
-		 * `trailing` slots — and the canvas area takes the full height. Keyboard
-		 * shortcuts still work (`?` opens the shortcut help, rendered outside the
-		 * bar), but the default UI is left with no entry point for drawing new
-		 * shapes, so this suits read-mostly hosts (previews, embedded viewers).
+		 * bar — shape tools, zoom controls, the help button and any host `slot`
+		 * items — and the canvas area takes the full height. Keyboard shortcuts
+		 * still work (`?` opens the shortcut help, rendered outside the bar), but
+		 * nothing is left to start drawing a new shape from, so this suits
+		 * read-mostly hosts (previews, embedded viewers).
 		 */
 		show?: boolean;
 		/**
-		 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
-		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+		 * Replaces the whole bar: sections of pinned presets, category flyouts,
+		 * command buttons, the zoom group, the two sidebar toggles, dividers and
+		 * host UI slots (see {@link ToolbarSection}). Omit for
+		 * {@link DEFAULT_TOOLBAR_SECTIONS}, which pins every core preset directly
+		 * and opens no flyout — anything a plugin supplies must be named here by
+		 * the host, which can reuse the default's other three sections
+		 * (`DEFAULT_TOOLBAR_HISTORY_SECTION` / `DEFAULT_TOOLBAR_VIEW_SECTION` /
+		 * `DEFAULT_TOOLBAR_PROPERTIES_SECTION`) rather than restating them. Host UI
+		 * packed against the end belongs before the properties section, which is
+		 * meant to keep the far right.
 		 */
-		leading?: React.ReactNode;
+		sections?: ToolbarSection[];
+	};
+	/**
+	 * The shape library sidebar. Omit and neither the sidebar nor its toolbar
+	 * toggle is rendered.
+	 */
+	stencilLibrary?: {
 		/**
-		 * Host UI inserted at the right edge of the toolbar (e.g. a settings button).
-		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+		 * Sections in display order. Each section lists its presets by id; an id
+		 * naming no registered preset is skipped and a section left empty is
+		 * dropped. Two sections sharing an `id`, or one section naming the same
+		 * preset id twice, throws rather than rendering a section or an item that
+		 * cannot be told from its twin.
 		 */
-		trailing?: React.ReactNode;
-		/**
-		 * Overrides the top-level arrangement of the shape tools: an ordered mix of
-		 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
-		 * for the default layout, which pins every core preset directly and opens no
-		 * flyout — anything a plugin supplies must be added here by the host.
-		 */
-		layout?: ToolbarEntry[];
+		sections: StencilCategory[];
 	};
 
-	// ── Focus behavior ──
+	// ── Interaction with the host page ──
 	/**
 	 * Focus the canvas on mount so keyboard shortcuts work immediately (default
-	 * true). Shortcuts are scoped to the focused canvas; set false when embedding
-	 * multiple canvases (or when the host manages focus) so mounting does not
-	 * steal focus. Top-level (not in `initialConfig`) to match the React-idiomatic
-	 * `autoFocus` spelling.
+	 * `true`). Shortcuts are scoped to the focused canvas; set `false` when
+	 * embedding several canvases, or when the host manages focus, so mounting
+	 * does not steal it.
 	 */
 	autoFocus?: boolean;
-
-	// ── Host page coexistence ──
 	/**
 	 * How the canvas shares gestures with the page embedding it
-	 * ({@link CanvasGestureHandling}), default `"greedy"`. Set `"cooperative"` when
-	 * embedding the canvas in a document that scrolls: the wheel and a one-finger
-	 * background drag move the page past it, a one-finger drag on a shape still
-	 * drags the shape, and the view itself pans with two fingers. Zooming is
-	 * untouched: Ctrl+wheel, pinch and the toolbar's zoom controls keep working
-	 * under either value. Reactive, so a host can hand the canvas the gestures on
-	 * an explicit opt-in (a click, an "interact" button).
+	 * ({@link CanvasGestureHandling}), default `"greedy"`. `"cooperative"` is for a
+	 * canvas inside a scrolling document: the wheel and a one-finger background
+	 * drag move the page past it, a one-finger drag on a shape still drags the
+	 * shape, and the view pans with two fingers. Zooming (Ctrl+wheel, pinch, the
+	 * toolbar) works under either value. Live, so a host can hand the canvas the
+	 * gestures on an explicit opt-in (a click, an "interact" button).
 	 */
 	gestureHandling?: CanvasGestureHandling;
 
-	// ── Mount-time setup (read once; remount with a new key to change) ──
+	// ── Mount-time setup ──
 	/**
 	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
-	 * capability set (available object types, commands, plugins) plus the view
-	 * setup — the initial camera (`viewport`) and how far it may be scrolled
-	 * (`scrollBounds`, left to the document unless set). Restricts what this canvas can
-	 * create/handle (plugin-style extensibility and feature-gating), independently
-	 * of any other `<Canvas>` on the page. Omit for the full default set.
+	 * capability set (object types, commands, plugins) plus the initial camera
+	 * (`viewport`), how far it may be scrolled (`scrollBounds`), and how the two
+	 * sidebars start out (`sidebars`, the counterpart of `onSidebarsChange`).
+	 * Omit for the full default set. Later changes are ignored; to reconfigure,
+	 * remount with a new React `key`.
 	 *
-	 * **`viewport` and `scrollBounds` outrank the document.** A doc that declares
-	 * `view.open` / `view.scroll` frames and walls itself; passing a camera or a
-	 * scroll limit here overrules it. So pass one only when the host genuinely
-	 * knows better — a restored session, a deep link, a surface that is not a
-	 * document viewer — and leave it out otherwise, where the document's own
-	 * intent is the better answer.
+	 * `viewport` and `scrollBounds` outrank the document's own `view.open` /
+	 * `view.scroll`, so pass them only when the host genuinely knows better (a
+	 * restored session, a deep link) and leave them out otherwise. `sidebars`
+	 * competes with nothing: no document declares the editor chrome.
 	 *
-	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
-	 * whose object types remain enabled — otherwise state construction throws
-	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
-	 *
-	 * Later changes are ignored (the configuration is part of a canvas's identity).
-	 * To reconfigure, remount with a new React `key`
-	 * (`<Canvas key={configId} initialConfig={...} />`).
+	 * When `objectTypes` is restricted, only pass docs whose object types remain
+	 * enabled — otherwise state construction throws "Mapper not found"
+	 * (docs/01-design-philosophy.md, principle 4).
 	 */
 	initialConfig?: CanvasConfig;
-
-	// ── Imperative handle ──
 	/**
-	 * Receives the imperative Canvas handle ({@link CanvasHandle}), grouping every
-	 * imperative API by subsystem: `ref.current.viewport` to move pan/zoom
-	 * (fit-to-content, jump-to-node, a scripted intro), `ref.current.selection` to
-	 * select objects programmatically, `ref.current.export` to get the exported
-	 * image, and `ref.current.measure` / `history` / `interaction` to read back how
-	 * the canvas drew what it was given. Imperative by design so the view cannot
-	 * feed back into a render loop the way a controlled value prop would.
+	 * Receives the imperative handle ({@link CanvasHandle}), grouped by
+	 * subsystem: `viewport` to move pan/zoom, `selection` to select objects,
+	 * `export` to get the exported image, and `measure` / `history` /
+	 * `interaction` to read back how the canvas drew what it was given.
 	 */
 	ref?: React.Ref<CanvasHandle>;
 };
 
 const CanvasComponent = ({
 	doc,
+	docLoadId,
 	syncNonce,
 	onCommit,
 	onSelectionChange,
 	onViewportChange,
-	theme = darkCanvasTheme,
-	grid,
-	locale = "en",
-	messages,
+	onSidebarsChange,
 	onUndo,
 	onRedo,
 	onExportImage,
 	onOpenReference,
+	resolveImage,
+	theme = darkCanvasTheme,
+	grid,
+	locale = "en",
+	messages,
 	toolbar,
+	stencilLibrary,
 	autoFocus = true,
 	gestureHandling = "greedy",
 	initialConfig,
@@ -338,10 +359,8 @@ const CanvasComponent = ({
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	// The stable instance is both closed over by the reducer and provided via context, so
-	// the two can never desync. Canvas is the provider, so its own hooks must take
-	// `registries` as an explicit argument — reading context here yields the default,
-	// missing any plugin types.
+	// Canvas is the registries provider, so its own hooks take `registries` as an
+	// argument: reading the context here yields the default, missing plugin types.
 	const [registries] = useState(() =>
 		initialConfig
 			? createCanvasRegistries(initialConfig)
@@ -355,26 +374,40 @@ const CanvasComponent = ({
 		registries,
 		initialConfig?.viewport,
 		initialConfig?.scrollBounds,
+		initialConfig?.sidebars,
 	);
 
-	// Web fonts land after the first paint, so every content-derived box mapped
-	// before then was measured against a fallback face. Nothing in the doc moves
-	// when the real one arrives, which is why this needs a signal of its own; a
-	// pass that moves no box returns the same state, so the nonce firing more
-	// than once costs nothing.
-	const fontsLoadedNonce = useFontsLoadedNonce();
-	useEffect(() => {
-		if (fontsLoadedNonce > 0) {
+	// Boxes derived from their content are re-measured through the reducer, the
+	// one pass the slots cannot ask for; the counter covers the sites that measure
+	// while they render instead (see useDocFonts).
+	const { fontsNonce, isContentHidden } = useDocFonts({
+		collectRequests: () =>
+			collectDocFontRequests(state.objects, registries.objectTextStyleDefaults),
+		onFacesChanged: () => {
 			dispatch({ type: "REMEASURE_TEXT" });
-		}
-	}, [fontsLoadedNonce, dispatch]);
+		},
+	});
+
+	// The files the document names, fetched once each. A shape component is
+	// synchronous, so the awaiting happens here and reaches the rendering layer as
+	// a lookup (see useDocImages).
+	const lookupResolvedImage = useDocImages(state.objects, resolveImage);
+
+	// An export cannot carry the blob URL a live <image> draws from — it names
+	// nothing outside this tab — so it takes the bytes themselves.
+	const resolveImageBlob = useCallback<ResolveImageBlob>(
+		(src) => {
+			const resolved = lookupResolvedImage(src);
+			return resolved.status === "ready" ? resolved.blob : undefined;
+		},
+		[lookupResolvedImage],
+	);
 
 	// Single toast slot shared by every error source (clipboard, export).
 	const { errorNotification, notifyError } = useErrorNotification();
 
 	useClipboardWrite(state.internalClipboard, notifyError);
 
-	// Declared before useSyncExternalDoc so resetGestureState is available to it.
 	const { pointerHandlers, wheelHandler, resetGestureState } =
 		useGestureRecognizer({
 			dispatch,
@@ -396,11 +429,18 @@ const CanvasComponent = ({
 
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
+	useNotifySidebarsChange(
+		state.stencilLibraryPanel,
+		state.propertyPanel,
+		onSidebarsChange,
+	);
+
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
 
 	useSyncExternalDoc({
 		canvasDoc: doc,
 		syncNonce,
+		docLoadId,
 		canvasState: state,
 		dispatch,
 		resetGestureState,
@@ -415,7 +455,13 @@ const CanvasComponent = ({
 	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).
 	useCooperativeTouchClaim(rootRef, gestureHandling);
 
-	useContainerResize(canvasRef, dispatch);
+	// Both sidebars take their width out of the viewport, so either one opening or
+	// closing has to be re-measured before the next paint.
+	useContainerResize(
+		canvasRef,
+		dispatch,
+		`${state.stencilLibraryPanel.isOpen}:${state.propertyPanel.isOpen}`,
+	);
 
 	// The document's own framing intent, applied only where the host expressed
 	// none: `initialConfig.viewport` is a camera the host already decided on, and
@@ -435,8 +481,7 @@ const CanvasComponent = ({
 		registries,
 	);
 
-	// Held stable so the wrapper object does not defeat ContextMenu's memo;
-	// an inline literal would fail its shallow compare on every render.
+	// Stable so ContextMenu's memo holds.
 	const contextMenuCallbacks = useMemo(
 		() => ({ paste: handlePaste }),
 		[handlePaste],
@@ -456,10 +501,49 @@ const CanvasComponent = ({
 	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
-	const handleMenuPropertyUpdate = useCallback<ObjectMenuPropertyUpdater>(
+	const handleStylePropertyUpdate = useCallback<StylePropertyUpdater>(
 		(property, value, commit, coalesceHistory = false) => {
 			dispatch({
-				type: "MENU_PROPERTY_UPDATE",
+				type: "STYLE_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
+		},
+		[dispatch],
+	);
+
+	const handleTransformUpdate = useCallback<PropertyPanelTransformUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "TRANSFORM_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
+		},
+		[dispatch],
+	);
+
+	const handleDocumentUpdate = useCallback<PropertyPanelDocumentUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "DOCUMENT_PROPERTY_UPDATE",
+				property,
+				value,
+				commit,
+				coalesceHistory,
+			});
+		},
+		[dispatch],
+	);
+
+	const handleMetaUpdate = useCallback<PropertyPanelMetaUpdater>(
+		(property, value, commit, coalesceHistory = false) => {
+			dispatch({
+				type: "META_PROPERTY_UPDATE",
 				property,
 				value,
 				commit,
@@ -567,14 +651,13 @@ const CanvasComponent = ({
 		registries.objectVisualBounds,
 	);
 
-	// Built here rather than beside the other state-derived hooks because the
-	// export namespace needs the culling suspension declared just above.
 	const canvasHandle = useCanvasHandle({
 		dispatch,
 		canvasState: state,
 		registries,
 		svgRef,
 		withCullingSuspended,
+		resolveImageBlob,
 	});
 	const handleExportSubmit = useExportDialog({
 		svgRef,
@@ -584,15 +667,15 @@ const CanvasComponent = ({
 		dispatch,
 		notifyError,
 		withCullingSuspended,
+		resolveImageBlob,
 	});
 
 	useImperativeHandle(ref, () => canvasHandle, [canvasHandle]);
 
-	// The camera the scene is drawn with. It is the committed one moved onto the
-	// device pixel grid, so text stops creeping inside its shape as the viewport
-	// pans (see snapViewportToDevicePixels). Every layer that positions itself
-	// from the camera has to take this one, or the SVG and the HTML overlays
-	// above it would sit a fraction of a pixel apart.
+	// The committed camera moved onto the device pixel grid (see
+	// snapViewportToDevicePixels). Every layer that positions itself from the
+	// camera must take this one, or the SVG and the HTML overlays above it would
+	// sit a fraction of a pixel apart.
 	const devicePixelRatio = useDevicePixelRatio();
 	const drawnViewport = useMemo(
 		() => snapViewportToDevicePixels(state.viewport, devicePixelRatio),
@@ -602,12 +685,25 @@ const CanvasComponent = ({
 
 	const selectedTextSlot = resolveSelectedTextSlot(state);
 
-	// Delegated to the command's canExecute as the single source of truth. Canvas provides
-	// the registries context, so it resolves against its directly-held bundle, not a hook.
-	const canZoomIn =
-		resolveCommandState(state, registries, "zoomIn")?.enabled ?? false;
-	const canZoomOut =
-		resolveCommandState(state, registries, "zoomOut")?.enabled ?? false;
+	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
+
+	// What the bar's command buttons read to draw themselves disabled. A plain
+	// closure, not memoized: `state` changes on nearly every dispatch (see
+	// useCommandState).
+	const resolveToolbarCommandState = (commandId: string) =>
+		resolveCommandState(state, registries, commandId);
+
+	// Sections whose ids resolve to registered presets. Resolved here (not in the
+	// panel) so an unmounted-but-declared library still decides whether the
+	// sidebar can open at all.
+	const librarySections = useMemo(
+		() =>
+			resolveStencilCategories(
+				stencilLibrary?.sections ?? [],
+				registries.stencil,
+			),
+		[stencilLibrary?.sections, registries],
+	);
 
 	return (
 		<CanvasProviders
@@ -615,6 +711,8 @@ const CanvasComponent = ({
 			locale={locale}
 			messages={mergedMessages}
 			registries={registries}
+			fontsNonce={fontsNonce}
+			lookupResolvedImage={lookupResolvedImage}
 			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot
@@ -626,140 +724,160 @@ const CanvasComponent = ({
 				{...pointerHandlers}
 			>
 				{toolbar?.show !== false && (
-					<Toolbar
-						activePresetId={state.shapeDrawing?.preset.id ?? null}
-						openCategoryId={state.stencilLibraryOpenCategory}
-						zoom={state.viewport.zoom}
-						canZoomIn={canZoomIn}
-						canZoomOut={canZoomOut}
-						layout={toolbar?.layout}
-						leading={toolbar?.leading}
-						trailing={toolbar?.trailing}
-					/>
-				)}
-				<Viewport
-					data-id="canvas"
-					data-kind="canvas"
-					ref={canvasRef}
-					cursor={state.shapeDrawing ? "crosshair" : undefined}
-				>
-					<Container>
-						<CanvasView
-							objects={draftObjects}
-							rootIds={state.rootIds}
-							viewport={drawnViewport}
-							svgRef={svgRef}
-							textEditObjectId={state.textEditState?.objectId ?? null}
-							textEditSlotId={
-								state.textEditState?.kind === "shape"
-									? state.textEditState.slotId
-									: null
-							}
-							isDrawMode={!!state.shapeDrawing}
-							visibleObjectIds={visibleObjectIds}
-							showGrid={grid?.show}
-							gridSize={grid?.size}
-							background={state.background}
-							surfaceColor={theme.tokens.canvasBg}
-						>
-							<PendingConnectorOverlay
-								pendingConnector={state.pendingConnector}
-								objects={state.objects}
-							/>
-							<SelectionOverlay
-								selectedIds={state.selectedIds}
-								objects={draftObjects}
-								multiSelectGroup={state.multiSelectGroup}
-								selectedTextSlot={selectedTextSlot}
-							/>
-							<ConnectorControlsLayer
-								selectedConnectorId={state.selectedConnectorId}
-								objects={state.objects}
-								zoom={state.viewport.zoom}
-								selectedVertex={state.selectedVertex}
-							/>
-							<TransformControlsLayer
-								selectedIds={state.selectedIds}
-								objects={state.objects}
-								multiSelectGroup={state.multiSelectGroup}
-								zoom={state.viewport.zoom}
-								isTextEditing={!!state.textEditState}
-								isTextSlotSelected={selectedTextSlot !== null}
-								activeDragKind={state.activeDragKind}
-							/>
-							<ConnectionAnchorsLayer
-								selectedIds={state.selectedIds}
-								objects={state.objects}
-								zoom={state.viewport.zoom}
-								pendingConnector={state.pendingConnector}
-								editingConnectorId={state.editingConnectorId}
-								editingEndpoint={state.editingEndpoint}
-								isTextEditing={!!state.textEditState}
-								activeDragKind={state.activeDragKind}
-							/>
-							<VertexControlsLayer
-								selectedIds={state.selectedIds}
-								objects={state.objects}
-								zoom={state.viewport.zoom}
-								selectedVertex={state.selectedVertex}
-							/>
-							<SelectionControlsLayer
-								selectedIds={state.selectedIds}
-								objects={state.objects}
-								zoom={state.viewport.zoom}
-								isTextEditing={!!state.textEditState}
-							/>
-							<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
-							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
-							<AreaSelectionRect areaSelection={state.areaSelection} />
-							<SnapGuides
-								snapFeedback={state.snapFeedback}
-								zoom={state.viewport.zoom}
-							/>
-							<AxisLockGuide
-								axisLockFeedback={state.axisLockFeedback}
-								viewport={state.viewport}
-							/>
-						</CanvasView>
-						{/* HTML that follows scroll and scales with zoom */}
-						<ZoomScaledOverlay
-							style={{
-								left: -minX * zoom,
-								top: -minY * zoom,
-								transform: `scale(${zoom})`,
-							}}
-						>
-							<TextEditorLayer
-								textEditState={state.textEditState}
-								objects={draftObjects}
-								onTextChange={handleTextEditChange}
-								onEscape={handleTextEditEscape}
-								onCaretMove={revealCaret}
-								onSelectionChange={handleTextEditSelectionChange}
-								onToggleFormat={handleTextEditToggleFormat}
-							/>
-						</ZoomScaledOverlay>
-						{/* HTML whose position follows zoom but whose size does not */}
-						<ScrollSyncedOverlay
-							style={{ left: -minX * zoom, top: -minY * zoom }}
-						>
-							<ObjectMenu
-								canvasState={menuCanvasState}
-								onPropertyUpdate={handleMenuPropertyUpdate}
-								onOpenReference={handleOpenReference}
-							/>
-						</ScrollSyncedOverlay>
-					</Container>
-					<ViewportOverlay>
-						<ErrorToast notification={errorNotification} />
-						<ContextMenu
-							position={state.contextMenuPosition}
-							canvasState={state}
-							callbacks={contextMenuCallbacks}
+					<ToolbarCommandStateContext value={resolveToolbarCommandState}>
+						<Toolbar
+							activePresetId={state.shapeDrawing?.preset.id ?? null}
+							openCategoryId={state.stencilLibraryOpenCategory}
+							zoom={state.viewport.zoom}
+							sections={toolbarSections}
+							hasLibrary={librarySections.length > 0}
+							isLibraryOpen={state.stencilLibraryPanel.isOpen}
+							isPropertyPanelOpen={state.propertyPanel.isOpen}
 						/>
-					</ViewportOverlay>
-				</Viewport>
-				{/* Every modal is rendered here, as a sibling of the toolbar/viewport, so
+					</ToolbarCommandStateContext>
+				)}
+				<CanvasBody>
+					{state.stencilLibraryPanel.isOpen && librarySections.length > 0 && (
+						<StencilLibraryPanel
+							sections={librarySections}
+							collapsedSectionIds={
+								state.stencilLibraryPanel.collapsedSectionIds
+							}
+							activePresetId={state.shapeDrawing?.preset.id ?? null}
+						/>
+					)}
+					<Viewport
+						data-id="canvas"
+						data-kind="canvas"
+						ref={canvasRef}
+						cursor={state.shapeDrawing ? "crosshair" : undefined}
+					>
+						<Container>
+							<CanvasView
+								objects={draftObjects}
+								rootIds={state.rootIds}
+								viewport={drawnViewport}
+								svgRef={svgRef}
+								isContentHidden={isContentHidden}
+								textEditObjectId={state.textEditState?.objectId ?? null}
+								textEditSlotId={
+									state.textEditState?.kind === "shape"
+										? state.textEditState.slotId
+										: null
+								}
+								isDrawMode={!!state.shapeDrawing}
+								visibleObjectIds={visibleObjectIds}
+								showGrid={grid?.show}
+								gridSize={grid?.size}
+								background={state.background}
+								surfaceColor={theme.tokens.canvasBg}
+							>
+								<PendingConnectorOverlay
+									connectorDraft={state.connectorDraft}
+									objects={state.objects}
+								/>
+								<SelectionOverlay
+									selectedIds={state.selectedIds}
+									objects={draftObjects}
+									multiSelectGroup={state.multiSelectGroup}
+									selectedTextSlot={selectedTextSlot}
+								/>
+								<ConnectorControlsLayer
+									selectedConnectorId={state.selectedConnectorId}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									selectedVertex={state.selectedVertex}
+								/>
+								<TransformControlsLayer
+									selectedIds={state.selectedIds}
+									objects={state.objects}
+									multiSelectGroup={state.multiSelectGroup}
+									zoom={state.viewport.zoom}
+									isTextEditing={!!state.textEditState}
+									isTextSlotSelected={selectedTextSlot !== null}
+									activeDragKind={state.activeDrag?.kind ?? null}
+								/>
+								<ConnectionAnchorsLayer
+									selectedIds={state.selectedIds}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									connectorDraft={state.connectorDraft}
+									isTextEditing={!!state.textEditState}
+									activeDragKind={state.activeDrag?.kind ?? null}
+								/>
+								<VertexControlsLayer
+									selectedIds={state.selectedIds}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									selectedVertex={state.selectedVertex}
+								/>
+								<SelectionControlsLayer
+									selectedIds={state.selectedIds}
+									objects={state.objects}
+									zoom={state.viewport.zoom}
+									isTextEditing={!!state.textEditState}
+								/>
+								<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
+								<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
+								<AreaSelectionRect areaSelection={state.areaSelection} />
+								<SnapGuides
+									snapFeedback={state.snapFeedback}
+									zoom={state.viewport.zoom}
+								/>
+								<AxisLockGuide
+									axisLockFeedback={state.axisLockFeedback}
+									viewport={state.viewport}
+								/>
+							</CanvasView>
+							{/* HTML that follows scroll and scales with zoom */}
+							<ZoomScaledOverlay
+								style={{
+									left: -minX * zoom,
+									top: -minY * zoom,
+									transform: `scale(${zoom})`,
+								}}
+							>
+								<TextEditorLayer
+									textEditState={state.textEditState}
+									objects={draftObjects}
+									onTextChange={handleTextEditChange}
+									onEscape={handleTextEditEscape}
+									onCaretMove={revealCaret}
+									onSelectionChange={handleTextEditSelectionChange}
+									onToggleFormat={handleTextEditToggleFormat}
+								/>
+							</ZoomScaledOverlay>
+							{/* HTML whose position follows zoom but whose size does not */}
+							<ScrollSyncedOverlay
+								style={{ left: -minX * zoom, top: -minY * zoom }}
+							>
+								<ObjectMenu
+									canvasState={menuCanvasState}
+									onPropertyUpdate={handleStylePropertyUpdate}
+									onOpenReference={handleOpenReference}
+								/>
+							</ScrollSyncedOverlay>
+						</Container>
+						<ViewportOverlay>
+							<ErrorToast notification={errorNotification} />
+							<ContextMenu
+								position={state.contextMenuPosition}
+								canvasState={state}
+								callbacks={contextMenuCallbacks}
+							/>
+						</ViewportOverlay>
+					</Viewport>
+					{state.propertyPanel.isOpen && (
+						<PropertyPanel
+							canvasState={menuCanvasState}
+							onPropertyUpdate={handleStylePropertyUpdate}
+							onTransformUpdate={handleTransformUpdate}
+							onDocumentUpdate={handleDocumentUpdate}
+							onMetaUpdate={handleMetaUpdate}
+						/>
+					)}
+				</CanvasBody>
+				{/* Every modal is rendered here, as a sibling of the toolbar/body row, so
 				    its backdrop covers the whole canvas including the toolbar */}
 				{state.activeModal === "export" && (
 					<ExportDialog

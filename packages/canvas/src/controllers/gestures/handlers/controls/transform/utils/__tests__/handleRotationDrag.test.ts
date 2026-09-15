@@ -63,14 +63,17 @@ const makeState = (
 		selectedIds,
 		multiSelectGroup,
 		viewport: VIEWPORT,
-		eventStartSnapshot: {
-			objects,
-			keyPoints: {},
-			snapCandidates: { x: [], y: [] },
-			selectedIds,
-			selectedIdsWithDescendants: new Set(selectedIds),
-			multiSelectGroup,
-			viewport: VIEWPORT,
+		activeDrag: {
+			startSnapshot: {
+				objects,
+				keyPoints: {},
+				snapCandidates: { x: [], y: [] },
+				selectedIds,
+				selectedIdsWithDescendants: new Set(selectedIds),
+				multiSelectGroup,
+				viewport: VIEWPORT,
+			},
+			kind: "other",
 		},
 	}) as unknown as CanvasControllerState;
 
@@ -218,11 +221,11 @@ describe("handleRotationDrag", () => {
 	});
 
 	describe("guards", () => {
-		it("returns the state as is when there is no eventStartSnapshot", () => {
+		it("returns the state as is when no drag is open", () => {
 			const state = {
 				objects: { "rect-1": makeRect("rect-1", 50, 25) },
 				selectedIds: ["rect-1"],
-				eventStartSnapshot: null,
+				activeDrag: null,
 			} as unknown as CanvasControllerState;
 			expect(
 				handleRotationDrag(

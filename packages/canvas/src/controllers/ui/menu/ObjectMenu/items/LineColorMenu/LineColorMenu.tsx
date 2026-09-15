@@ -3,7 +3,9 @@ import { memo, useRef } from "react";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -12,24 +14,15 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
+import { hasSingleStyleTarget } from "../../utils/hasSingleStyleTarget";
 
 const SECTION_ID = "line-color";
 
 type LineColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
-};
-
-const getSelectedStrokeColor = (state: CanvasControllerState): string => {
-	const obj = getFirstSelectedWithProp(
-		getEffectiveSelectedIds(state),
-		state.objects,
-		"stroke",
-	);
-	const stroke = (obj as Record<string, unknown>)?.stroke;
-	return typeof stroke === "string" ? stroke : "#374151";
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 /**
@@ -43,7 +36,13 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const currentColor = getSelectedStrokeColor(canvasState);
+	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const currentColor = getSelectedShapeStyle(
+		getEffectiveSelectedIds(canvasState),
+		canvasState.objects,
+		objectShapeStyleDefaults,
+		"stroke",
+	).stroke;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -55,7 +54,7 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLineColor}
 			>
 				<ColorPreviewIcon
@@ -71,6 +70,10 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 				>
 					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
+						currentColorIsShared={hasSingleStyleTarget(
+							getEffectiveSelectedIds(canvasState),
+							canvasState.objects,
+						)}
 						property="stroke"
 						onPropertyUpdate={onPropertyUpdate}
 					/>

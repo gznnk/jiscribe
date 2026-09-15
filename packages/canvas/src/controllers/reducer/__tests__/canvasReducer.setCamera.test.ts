@@ -69,7 +69,7 @@ describe("canvasReducer / SET_CAMERA", () => {
 		);
 
 		expect(next.history).toBe(state.history);
-		expect(next.saveVersion).toBe(state.saveVersion);
+		expect(next.saveRequest.version).toBe(state.saveRequest.version);
 		expect(next.commitVersion).toBe(state.commitVersion);
 	});
 });

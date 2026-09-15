@@ -33,9 +33,9 @@ describe("createJiscribeMcpServer", () => {
 		// only look at their count and at duplicates
 		const names = await client.listToolNames();
 		expect(names.slice(0, 7)).toEqual([
+			"read_drawing_guide",
 			"open_canvas",
 			"close_canvas",
-			"validate_canvas",
 			"diagnose_canvas",
 			"measure_text",
 			"add_rect",

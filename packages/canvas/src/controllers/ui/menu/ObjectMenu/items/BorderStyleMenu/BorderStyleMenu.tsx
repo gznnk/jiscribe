@@ -1,14 +1,17 @@
+import { isNumber } from "@jiscribe/basic-validators";
 import { memo, useRef } from "react";
 
 import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
-import { getSelectedCornerRadius } from "./utils/getSelectedCornerRadius";
-import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
-import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import {
+	setPart,
+	togglePart,
+} from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
@@ -20,7 +23,9 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import { getFirstSelectedPropValue } from "../../utils/getFirstSelectedPropValue";
+import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
 
 const SECTION_ID = "border-style";
 
@@ -32,6 +37,8 @@ const SLIDER_MAX_STROKE_WIDTH = 20;
 
 const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
+// An omitted rx draws square corners, the SVG attribute's own default.
+const DEFAULT_CORNER_RADIUS = 0;
 // Slider covers the common range; larger radii via the number input.
 const SLIDER_MAX_CORNER_RADIUS = 20;
 
@@ -39,7 +46,7 @@ type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 /**
@@ -54,9 +61,20 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const strokeWidth = getSelectedStrokeWidth(canvasState);
-	const strokeDashType = getSelectedStrokeDashType(canvasState);
-	const cornerRadius = getSelectedCornerRadius(canvasState);
+	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const { strokeWidth, strokeDashType } = getSelectedShapeStyle(
+		canvasState.selectedIds,
+		canvasState.objects,
+		objectShapeStyleDefaults,
+		"stroke",
+	);
+	const cornerRadius =
+		getFirstSelectedPropValue(
+			canvasState.selectedIds,
+			canvasState.objects,
+			"rx",
+			isNumber,
+		) ?? DEFAULT_CORNER_RADIUS;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -68,7 +86,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuBorderStyle}
 			>
 				<DashedCircleIcon title={messages.menuBorderStyle} />
@@ -86,7 +104,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								isActive={!strokeDashType || strokeDashType === "solid"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:strokeDashType:solid"
+								data-part={setPart("strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
 								<SolidLineIcon title={messages.menuSolidLine} />
@@ -95,7 +113,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								isActive={strokeDashType === "dashed"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:strokeDashType:dashed"
+								data-part={setPart("strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
 								<DashedLineIcon title={messages.menuDashedLine} />
@@ -104,7 +122,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								isActive={strokeDashType === "dotted"}
 								data-kind="menu"
 								data-id="object-menu"
-								data-part="set:strokeDashType:dotted"
+								data-part={setPart("strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>
 								<DottedLineIcon title={messages.menuDottedLine} />

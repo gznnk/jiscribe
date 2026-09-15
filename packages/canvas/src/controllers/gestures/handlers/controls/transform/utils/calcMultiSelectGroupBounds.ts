@@ -1,8 +1,8 @@
 import { calcOrientedFrameFromPoints } from "@jiscribe/geometry";
 
-import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import { MIN_GROUP_DIMENSION } from "../../../../../../states/utils/groupDimensions";
 import { calcObjectsBoundingBox } from "../../../../../utils/calcObjectBoundingBox";
 import { collectObjectPoints } from "../../../../../utils/collectObjectPoints";
 

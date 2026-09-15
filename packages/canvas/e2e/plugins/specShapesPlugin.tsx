@@ -1,7 +1,8 @@
 /**
  * Shapes that exist only so the core e2e specs have something to drive: a
  * drag-drawn `tile` listed in a category flyout, a click-placed `pin` pinned on
- * the bar, and a `card` that roots its render in a `<g>` and carries a text slot.
+ * the bar, a `card` that roots its render in a `<g>` and carries a text slot, and
+ * a `panel` that declares creation defaults of its own.
  * Core supplies none of those traits itself any more — every categorized shape
  * moved to a plugin, and sticky, the last click-placed and last `<g>`-rooted one,
  * to `@jiscribe/plugin-sticky-shape` — so the specs covering the StencilLibrary
@@ -16,6 +17,12 @@
  */
 
 // Relative, never through @jiscribe/canvas-sdk: canvas may not depend on the kit it ships.
+import {
+	AUTO_COLOR,
+	DEFAULT_FONT_FAMILY,
+	createFrameDocValidator,
+	createFrameObjectFactory,
+} from "@jiscribe/doc/unstable";
 import { memo } from "react";
 
 import type {
@@ -24,8 +31,8 @@ import type {
 	CreateObjectType,
 	ObjectFeatures,
 	ObjectTypeDefinition,
+	StencilCategory,
 	StencilIconProps,
-	ToolbarEntry,
 } from "../../src";
 import { BODY_TEXT_SLOT_ID } from "../../src";
 import type { FrameShapeProps, TextEditable } from "../../src/unstable";
@@ -40,12 +47,6 @@ import {
 	readTextSlot,
 	resolveAutoColor,
 } from "../../src/unstable";
-import {
-	AUTO_COLOR,
-	DEFAULT_FONT_FAMILY,
-	createFrameDocValidator,
-	createFrameObjectFactory,
-} from "../../src/unstable-doc";
 
 /** Stencil icon edge length in px, the size StencilLibraryItem asks for. */
 const ICON_SIZE = 24;
@@ -132,6 +133,75 @@ const tileDefinition: ObjectTypeDefinition<TileDoc, TileState> = {
 	stencils: [
 		{ id: "tile", objectType: "tile", label: "Tile", icon: SpecShapeIcon },
 	],
+};
+
+/**
+ * The panel's box. Same shape as `drawSpecShapeBox`, but the fill goes through
+ * CSS: an `"auto"` fill resolves to a `var(--jiscribe-*)` token, which an SVG
+ * presentation attribute cannot read.
+ */
+const drawPanelBox = (
+	state: { width: number; height: number },
+	{ strokeColor, fillColor, ...shape }: FrameShapeProps,
+) => (
+	<rect
+		{...shape}
+		x={-state.width / 2}
+		y={-state.height / 2}
+		width={state.width}
+		height={state.height}
+		stroke={strokeColor}
+		style={{ fill: fillColor }}
+		pointerEvents="auto"
+	/>
+);
+
+const PanelFeatures = {
+	type: "panel",
+	geometry: "rect",
+	transform: true,
+	stroke: true,
+	fill: true,
+} as const satisfies ObjectFeatures;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const PanelDocBrand: unique symbol;
+type PanelDoc = CreateObjectType<typeof PanelFeatures, typeof PanelDocBrand>;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const PanelStateBrand: unique symbol;
+type PanelState = CreateObjectState<
+	typeof PanelFeatures,
+	typeof PanelStateBrand
+>;
+
+const PANEL_DOC_DEFAULTS: Omit<PanelDoc, "id"> = {
+	type: "panel",
+	x: 0,
+	y: 0,
+	width: 100,
+	height: 100,
+	fill: AUTO_COLOR,
+	stroke: AUTO_COLOR,
+	strokeWidth: 4,
+} as const as PanelDoc;
+
+/**
+ * The only spec shape declaring its creation defaults to the registries
+ * (`defaults`), and the only one whose fill is AUTO_COLOR rather than
+ * transparent: the type a document has to omit `fill` / `strokeWidth` on for the
+ * three-step resolution to be visible (default-fill.spec.ts). Off the toolbar and
+ * out of every category, so it exists only for documents to name.
+ */
+const panelDefinition: ObjectTypeDefinition<PanelDoc, PanelState> = {
+	features: PanelFeatures,
+	defaults: PANEL_DOC_DEFAULTS,
+	validateDoc: createFrameDocValidator(PanelFeatures),
+	factory: createFrameObjectFactory(PANEL_DOC_DEFAULTS),
+	mapper: createFrameMapper<PanelDoc, PanelState>(PanelFeatures),
+	stateValidator: createFrameStateValidator(PanelFeatures),
+	behavior: createFrameBehavior<PanelState>(),
+	component: createFrameObject<PanelState>(drawPanelBox),
 };
 
 const PinFeatures = {
@@ -304,7 +374,7 @@ const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
 
 /**
  * The test-only plugin the core e2e harness registers. Registration only makes
- * the stencils exist; `specShapesToolbarEntry` and pinned `pin` / `card` entries
+ * the stencils exist; `specShapesStencilCategory` and pinned `pin` / `card` entries
  * are what put them on the bar.
  */
 export const specShapesPlugin: CanvasPlugin = {
@@ -313,16 +383,16 @@ export const specShapesPlugin: CanvasPlugin = {
 		tile: tileDefinition,
 		pin: pinDefinition,
 		card: cardDefinition,
+		panel: panelDefinition,
 	},
 };
 
 /**
- * Category entry holding the `tile` preset, so the flyout spec has a category to
- * open. Composed into the harness `toolbar.layout` the same way a host composes a
- * plugin's own entry.
+ * Category holding the `tile` preset, so the flyout spec has a category to
+ * open. Composed into the harness `toolbarItems` and `stencilLibrarySections`
+ * the same way a host composes a plugin's own category.
  */
-export const specShapesToolbarEntry: ToolbarEntry = {
-	kind: "category",
+export const specShapesStencilCategory: StencilCategory = {
 	id: "spec",
 	label: "Spec",
 	icon: SpecShapeIcon,

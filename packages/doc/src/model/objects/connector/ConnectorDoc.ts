@@ -1,7 +1,9 @@
 import type { Point } from "@jiscribe/geometry";
 import type { Prettify } from "@jiscribe/utility-types";
 
+import { DEFAULT_FONT_FAMILY } from "../../../text/style/fontFamilies";
 import type { FillStyleDoc } from "../base/FillStyleDoc";
+import { DEFAULT_STROKE_WIDTH } from "../base/StrokeStyleDoc";
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
 import type { TextStyleDoc } from "../base/TextStyleDoc";
 import type { ConnectorRouting } from "../types/ConnectorRouting";
@@ -9,6 +11,7 @@ import type { CreateObjectType } from "../types/CreateObjectType";
 import type { EndpointRef } from "../types/EndpointRef";
 import type { ExtraStylePropertyDescriptor } from "../types/ExtraStyleProperty";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
+import { AUTO_COLOR } from "../utils/autoColor";
 
 /** Feature descriptor for the connector object type (poly geometry, strokeable, arrow ends, not connectable). */
 export const ConnectorFeatures = {
@@ -18,6 +21,26 @@ export const ConnectorFeatures = {
 	arrow: true,
 	connectable: false,
 } as const satisfies ObjectFeatures;
+
+/**
+ * Creation defaults of a connector, sitting where every other type's do
+ * (`RECT_DOC_DEFAULTS` and friends) and reached through the type's `defaults`
+ * (builtinObjectDocDefinitions).
+ *
+ * Only the style the type adopts is stated. Geometry and endpoints are never
+ * defaulted: `source` / `target` are what the caller is creating, and `points`
+ * is the route the engine chooses when nothing is stored. Arrow ends are not
+ * here either — a connector drawn by dragging takes one from the gesture
+ * (ConnectionAnchorEventHandler), while one created through the doc-ops
+ * (`ops/connectors`) deliberately gets none.
+ */
+export const CONNECTOR_DOC_DEFAULTS: Required<
+	Pick<ConnectorDoc, "type" | "stroke" | "strokeWidth">
+> = {
+	type: "connector",
+	stroke: AUTO_COLOR,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
+};
 
 /**
  * Connector-specific styleable properties beyond the ObjectFeatures flags
@@ -58,11 +81,43 @@ export type ConnectorLabel = Pick<
 	Pick<StrokeStyleDoc, "stroke" | "strokeWidth" | "strokeDashType"> & {
 		/** The label string. Empty means hidden (no label). */
 		text: string;
-		/** Position along the path, as a ratio from 0 (source) to 1 (target). Default 0.5 (midpoint). */
+		/** Position along the path, as a ratio from 0 (source) to 1 (target); omitted means {@link CONNECTOR_LABEL_DEFAULTS}. */
 		position?: number;
-		/** Signed offset perpendicular to the path (world units). Default 0. */
+		/** Signed offset perpendicular to the path (world units); omitted means {@link CONNECTOR_LABEL_DEFAULTS}. */
 		offset?: number;
 	};
+
+/**
+ * What an omitted {@link ConnectorLabel} field means to whoever reads the label.
+ *
+ * Distinct from {@link CONNECTOR_DOC_DEFAULTS}, which is what a newly created
+ * connector is *written* with: nothing here is ever stored. A reader substitutes
+ * these for keys that are not in the document, so a label reads the same outside
+ * the canvas (doc-tools, the MCP tools, the AI docs) as inside it.
+ *
+ * Only the keys a reader has to resolve are here. `text` has no default (a label
+ * without it does not exist), and `fill` / `stroke` / `strokeWidth` are absent on
+ * purpose — omitting those means "no border" and "keep the knockout", which is a
+ * behaviour rather than a value to substitute (see {@link ConnectorLabel}).
+ */
+export const CONNECTOR_LABEL_DEFAULTS: Required<
+	Pick<
+		ConnectorLabel,
+		| "fontColor"
+		| "fontSize"
+		| "fontFamily"
+		| "fontWeight"
+		| "position"
+		| "offset"
+	>
+> = {
+	fontColor: AUTO_COLOR,
+	fontSize: 16,
+	fontFamily: DEFAULT_FONT_FAMILY,
+	fontWeight: "normal",
+	position: 0.5,
+	offset: 0,
+};
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const ConnectorDocBrand: unique symbol;

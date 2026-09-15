@@ -1,3 +1,5 @@
+import { DEFAULT_FILL } from "../../base/FillStyleDoc";
+import { DEFAULT_STROKE_WIDTH } from "../../base/StrokeStyleDoc";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
@@ -19,6 +21,14 @@ export type PolygonDoc = CreateObjectType<
 >;
 
 /**
+ * Fewest points a polygon may hold. A closed shape needs three: two would enclose
+ * nothing but a degenerate line segment. Both boundaries read the count from here
+ * — the doc validator and the paste-side state validator — so a poly type declares
+ * it once beside its features (the schema's `minItems: 3` says the same).
+ */
+export const POLYGON_MIN_POINTS = 3;
+
+/**
  * Creation defaults of a polygon, sitting where every other type's do
  * (`RECT_DOC_DEFAULTS` and friends) and reached through the type's
  * `defaults` (builtinObjectDocDefinitions) rather than living as private
@@ -31,7 +41,7 @@ export type PolygonDoc = CreateObjectType<
  */
 export const POLYGON_DOC_DEFAULTS: Omit<PolygonDoc, "id" | "points"> = {
 	type: "polygon",
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 } as const as PolygonDoc;

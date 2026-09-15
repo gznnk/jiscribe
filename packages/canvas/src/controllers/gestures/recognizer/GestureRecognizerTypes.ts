@@ -1,7 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 import type React from "react";
 
-import type { Viewport } from "../../../states/canvas/Viewport";
+import type { Viewport } from "../../../rendering/Viewport";
 
 export type Mods = {
 	shift: boolean;

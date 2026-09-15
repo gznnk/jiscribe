@@ -32,7 +32,7 @@ export interface ImageDocState {
 	 * fallback. Empty while the file holds no image yet (created empty, unsaved).
 	 */
 	savedBytes: Uint8Array;
-	/** Current `.jis.json` source; null means no embedded source (uneditable error). */
+	/** Current `.jis` source; null means no embedded source (uneditable error). */
 	sourceText: string | null;
 	/** A prior fallback save left a stale image on disk; reconcile when visible (#179). */
 	needsImageReconcile: boolean;

@@ -31,6 +31,58 @@ const docCuratedEntriesOnly = {
 		"@jiscribe/doc has no deep import surface. Take it from @jiscribe/doc, ./unstable, ./png-source or ./svg-source.",
 };
 
+/**
+ * The stack inside packages/canvas/src/controllers, low to high. A layer may not
+ * import a *value* from a layer above it; types are allowed. That is the invariant
+ * the code already holds — every backward edge in the folder graph is a type
+ * contract (ObjectBehaviorTypes, SelectionControlRegistry, CanvasActions …), which
+ * is what keeps the folder-level two-way pairs from being concrete import cycles,
+ * the same trick applyObjectDefinition plays for plugin <-> registries.
+ *
+ * Left out on purpose:
+ * - registries/ is the wiring layer; reaching into every layer is its job.
+ * - the files directly under controllers/ are shared vocabulary (CanvasTypes) and
+ *   the composition root (Canvas.tsx), not a layer.
+ *
+ * madge (pnpm dep:check) only reports cycles, so nothing else catches a value edge
+ * that runs the wrong way.
+ */
+const CONTROLLER_LAYERS = [
+	"messages",
+	"utils",
+	"behaviors",
+	"commands",
+	"styleProperties",
+	"gestures",
+	"reducer",
+	"hooks",
+	"handles",
+	"ui",
+];
+
+// The patterns match the import specifier, which is relative here, so they are
+// written as "**/<layer>/**" rather than by full path.
+const controllerLayerFences = CONTROLLER_LAYERS.slice(0, -1).map(
+	(layer, i) => ({
+		files: [`packages/canvas/src/controllers/${layer}/**`],
+		ignores: ["**/__tests__/**", "**/__benchmarks__/**"],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: CONTROLLER_LAYERS.slice(i + 1).map((up) => `**/${up}/**`),
+							allowTypeImports: true,
+							message: `controllers/${layer} is below these layers and cannot import a value from them (types are allowed). Move the value down, or take it as a type.`,
+						},
+					],
+				},
+			],
+		},
+	}),
+);
+
 export default tseslint.config(
 	{
 		ignores: [
@@ -41,6 +93,10 @@ export default tseslint.config(
 			// playwright-report/, and test-results/ carries traces — both generated.
 			"**/playwright-report",
 			"**/test-results",
+			// VSCode extension e2e tests: the bundled test files, and the VSCode
+			// builds @vscode/test-electron downloads next to them.
+			"apps/vscode-extension/out",
+			"apps/vscode-extension/.vscode-test",
 		],
 	},
 	{
@@ -150,7 +206,8 @@ export default tseslint.config(
 		},
 	},
 	{
-		// Playwright e2e: excluded because a fixture's use() is mistaken for a React Hook
+		// e2e suites: a Playwright fixture's use() is mistaken for a React Hook. The
+		// glob also covers the VSCode extension's e2e/, where the rule has nothing to match.
 		files: ["**/e2e/**", "**/playwright*.config.ts"],
 		rules: {
 			"react-hooks/rules-of-hooks": "off",
@@ -214,19 +271,63 @@ export default tseslint.config(
 			],
 		},
 	},
+	...controllerLayerFences,
 	{
-		// The headless (doc) entry points that are not the doc package itself: the canvas
-		// re-export shims onto @jiscribe/doc, and the shipped set's headless half, whose
-		// whole point is that a Node host can take the eight plugins without a rendering
-		// layer coming with them. Each may name @jiscribe/doc, and nothing else that
-		// drags the UI in.
-		files: [
-			"packages/canvas/src/doc.ts",
-			"packages/canvas/src/unstable-doc.ts",
-			"packages/canvas/src/png-source.ts",
-			"packages/canvas/src/svg-source.ts",
-			"packages/standard-shapes/src/doc.ts",
-		],
+		// rendering/ is the pure drawing layer: components that draw what their Props hand
+		// them and reach no controller, so a shape can be drawn by the export path and by
+		// isolated tests with nothing wired up. What separates it from controllers/ui is purity,
+		// not the kind of component — the menus, modals, icons and editors live under
+		// controllers/ui precisely because they are not pure. Types are allowed: a
+		// drawing component takes controller-owned types as Props.
+		files: ["packages/canvas/src/rendering/**"],
+		ignores: ["**/__tests__/**", "**/__benchmarks__/**"],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["**/controllers/**"],
+							allowTypeImports: true,
+							message:
+								"rendering is the pure drawing layer and cannot take a value from controllers. A component that needs state or a command belongs under controllers/ui.",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		// connectors/ is the connector geometry — endpoint resolution, orthogonal routing
+		// and label placement — pulled out of the drawing layer because none of it draws.
+		// It is read by rendering and, just as much, by ui / gestures / controllers-utils,
+		// so it has to sit under all of them. Types are allowed: the resolvers take
+		// ObjectState and the per-shape registries as parameters, which is the same
+		// "every backward edge is a type contract" invariant the controller layers hold.
+		files: ["packages/canvas/src/connectors/**"],
+		ignores: ["**/__tests__/**"],
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["**/controllers/**", "**/rendering/**"],
+							allowTypeImports: true,
+							message:
+								"connectors computes geometry and cannot take a value from rendering or controllers. Take what you need as a parameter (the registries already arrive that way).",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		// The headless (doc) entry point that is not the doc package itself: the shipped
+		// set's headless half, whose whole point is that a Node host can take the eight
+		// plugins without a rendering layer coming with them. It may name @jiscribe/doc,
+		// and nothing else that drags the UI in.
+		files: ["packages/standard-shapes/src/doc.ts"],
 		rules: {
 			"no-restricted-imports": [
 				"error",
@@ -441,10 +542,6 @@ export default tseslint.config(
 								"Use @jiscribe/canvas-sdk instead (@jiscribe/canvas-sdk/doc for headless).",
 						},
 						{
-							name: "@jiscribe/canvas/unstable-doc",
-							message: "Use @jiscribe/canvas-sdk/doc instead.",
-						},
-						{
 							name: "@jiscribe/doc/unstable",
 							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
@@ -482,10 +579,6 @@ export default tseslint.config(
 								"This would break the headless (doc) layer. Use @jiscribe/canvas-sdk/doc.",
 						},
 						{
-							name: "@jiscribe/canvas/unstable-doc",
-							message: "Use @jiscribe/canvas-sdk/doc instead.",
-						},
-						{
 							name: "@jiscribe/doc/unstable",
 							message: "Use @jiscribe/canvas-sdk/doc instead.",
 						},
@@ -518,9 +611,10 @@ export default tseslint.config(
 								"**/stencil/**",
 								"**/controls/**",
 								"**/menu/**",
+								"**/propertyPanel/**",
 							],
 							message:
-								"The headless (doc) layer cannot depend on the presentation / state / stencil / controls / menu layers.",
+								"The headless (doc) layer cannot depend on the presentation / state / stencil / controls / menu / propertyPanel layers.",
 						},
 						docCuratedEntriesOnly,
 					],

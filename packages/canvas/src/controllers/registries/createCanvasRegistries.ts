@@ -1,13 +1,14 @@
 import { createObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
+import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 
+import {
+	BUILTIN_OBJECT_DEFINITIONS,
+	applyObjectDefinition,
+} from "./applyObjectDefinition";
 import type { CanvasCapabilities, CanvasRegistries } from "./CanvasRegistries";
 import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
-import {
-	ALL_OBJECT_DEFINITIONS,
-	applyObjectDefinition,
-} from "./initializeObjectRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import { createObjectComponentRegistry } from "../../rendering/objects/registry/ObjectComponentRegistry";
@@ -30,6 +31,7 @@ import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTrans
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import { createPropertyPanelRegistry } from "../ui/menu/PropertyPanel/PropertyPanelRegistry";
 import { createStencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
@@ -59,6 +61,7 @@ export const createCanvasRegistries = (
 		objectComponent: createObjectComponentRegistry(),
 		objectTextRegion: createObjectTextRegionRegistry(),
 		objectTextStyleDefaults: createObjectTextStyleDefaultsRegistry(),
+		objectShapeStyleDefaults: createObjectShapeStyleDefaultsRegistry(),
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
@@ -72,13 +75,17 @@ export const createCanvasRegistries = (
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),
+		propertyPanel: createPropertyPanelRegistry(),
 		stencil: createStencilRegistry(),
 		objectFactory: createObjectFactoryRegistry(),
 		styleProperty: createStylePropertyRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);
-	initializeStyleProperties(registries.styleProperty);
+	initializeStyleProperties(
+		registries.styleProperty,
+		registries.objectTextVerticalBasis,
+	);
 
 	// Tracks which object types are already claimed and by whom, so a plugin
 	// colliding with a built-in or an earlier plugin throws instead of
@@ -86,9 +93,9 @@ export const createCanvasRegistries = (
 	const typeOrigins = new Map<string, string>();
 
 	const objectTypes =
-		config?.objectTypes ?? Object.keys(ALL_OBJECT_DEFINITIONS);
+		config?.objectTypes ?? Object.keys(BUILTIN_OBJECT_DEFINITIONS);
 	for (const type of objectTypes) {
-		const definition = ALL_OBJECT_DEFINITIONS[type];
+		const definition = BUILTIN_OBJECT_DEFINITIONS[type];
 		if (definition) {
 			applyObjectDefinition(registries, type, definition);
 			typeOrigins.set(type, "a built-in object type");

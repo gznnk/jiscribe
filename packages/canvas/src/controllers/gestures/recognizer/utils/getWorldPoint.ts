@@ -1,7 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 
 import { getSvgPoint } from "./getSvgPoint";
-import type { Viewport } from "../../../../states/canvas/Viewport";
+import type { Viewport } from "../../../../rendering/Viewport";
 
 /**
  * Converts client coordinates to world coordinates from the state viewport

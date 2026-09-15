@@ -76,6 +76,7 @@ export const createGroupMarkerObject = (buildPath: GroupMarkerPathBuilder) =>
 						resolveGroupMarkerTipPosition(state),
 					)}
 					strokeColor={shape.strokeColor}
+					strokeAlpha={shape.strokeAlpha}
 					strokeWidth={shape.strokeWidth}
 					strokeDasharray={shape.strokeDasharray}
 				/>

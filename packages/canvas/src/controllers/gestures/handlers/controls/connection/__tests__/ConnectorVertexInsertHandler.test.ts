@@ -44,14 +44,17 @@ const makeState = (points: Point[]): CanvasControllerState => {
 		selectedConnectorId: "conn-1",
 		selectedVertex: null,
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: {
-			objects: { "conn-1": connector },
-			keyPoints: {},
-			snapCandidates: null,
-			selectedIds: [],
-			selectedIdsWithDescendants: new Set(),
-			multiSelectGroup: null,
-			viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+		activeDrag: {
+			startSnapshot: {
+				objects: { "conn-1": connector },
+				keyPoints: {},
+				snapCandidates: null,
+				selectedIds: [],
+				selectedIdsWithDescendants: new Set(),
+				multiSelectGroup: null,
+				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+			},
+			kind: "other",
 		},
 	} as unknown as CanvasControllerState;
 };
@@ -84,8 +87,8 @@ describe("ConnectorVertexInsertHandler", () => {
 			registries,
 		);
 		expect(pointsOf(next)).toEqual([{ x: 50, y: 50 }]);
-		// eventStartSnapshot is also updated for the subsequent drag
-		expect(pointsOf(next.eventStartSnapshot as never)).toEqual([
+		// the drag's start snapshot is also updated for the subsequent drag
+		expect(pointsOf(next.activeDrag?.startSnapshot as never)).toEqual([
 			{ x: 50, y: 50 },
 		]);
 	});

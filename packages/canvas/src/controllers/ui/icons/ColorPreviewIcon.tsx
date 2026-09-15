@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { theme } from "../../../constants/theme";
+import { theme } from "../../../theme/themeTokens";
 
 type ColorPreviewIconProps = {
 	color: string;

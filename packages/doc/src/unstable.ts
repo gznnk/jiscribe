@@ -58,6 +58,11 @@ export type {
 // or it measures at a size nothing is drawn at.
 export { TEXT_STYLE_FALLBACK } from "./text/style/textStyleFallback";
 
+// The stroke / fill counterpart: the last resort ObjectShapeStyleDefaultsRegistry
+// resolves to, for a host that shows a shape style with nothing selected to
+// resolve it from.
+export { SHAPE_STYLE_FALLBACK } from "./model/objects/utils/shapeStyleFallback";
+
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
 // carry their own per-row dimensions must derive row height from this value, or their rows
 // drift from the rendered line height.
@@ -75,6 +80,11 @@ export {
 // resolving a type's text region (`ObjectDocDefinition.textRegion`), which takes
 // a slot id as the rendering layer's does.
 export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
+
+// Where the text-style defaults of a type come from, for a headless consumer
+// that resolves a slot's styling itself: the registry the canvas fills is a
+// rendering-side thing, and this is the reading that fills it.
+export { extractTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";
 
 // Text measurement, which the wrapping and the box sizes both follow from. Headless
 // because it needs no DOM of its own: layoutVisualLines reproduces the display-side

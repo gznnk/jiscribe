@@ -1,20 +1,31 @@
-import { memo, useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import type React from "react";
 
 import { ContentGroup, Svg } from "./CanvasViewStyled";
 import { CanvasDefs } from "./defs/CanvasDefs";
-import type { CanvasState } from "../states/canvas/CanvasState";
 import { deriveGridLineColor } from "./layers/background/deriveGridLineColor";
 import { Grid } from "./layers/background/Grid";
 import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
+import type { Viewport } from "./Viewport";
+import type { CanvasState } from "../states/canvas/CanvasState";
 
 type CanvasViewProps = {
+	viewport: Viewport;
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	children?: React.ReactNode;
 	textEditObjectId?: string | null;
 	/** Slot the open editor targets, so only that slot's text is hidden (see ObjectsRenderer). */
 	textEditSlotId?: string | null;
 	isDrawMode?: boolean;
+	/**
+	 * Hides the drawn scene while leaving it laid out (default false). Set while
+	 * the document's faces are being fetched, so the first frame anyone sees is
+	 * measured against them rather than the fallback (see useDocFontsPreload);
+	 * the ground below it — the background and the grid — keeps showing. An image
+	 * export taken inside that window still draws the scene: the hiding is an
+	 * emotion class, which buildExportSvg strips from its clone.
+	 */
+	isContentHidden?: boolean;
 	/**
 	 * Viewport culling: IDs to render (see ObjectsRenderer). Omit to render the
 	 * full tree (export / thumbnail / any path that snapshots the DOM).
@@ -31,9 +42,14 @@ type CanvasViewProps = {
 	 * (see the layout effect below).
 	 */
 	surfaceColor?: string;
-} & Pick<CanvasState, "objects" | "rootIds" | "viewport" | "background">;
+} & Pick<CanvasState, "objects" | "rootIds" | "background">;
 
-const CanvasViewComponent: React.FC<CanvasViewProps> = ({
+/**
+ * Not memoized on purpose: Canvas passes the overlay layers as `children`,
+ * new JSX every render, so a memo here could never bail out. The heavy part,
+ * ObjectsRenderer, keeps its own memo.
+ */
+export const CanvasView: React.FC<CanvasViewProps> = ({
 	objects,
 	rootIds,
 	viewport,
@@ -42,6 +58,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	textEditObjectId,
 	textEditSlotId,
 	isDrawMode = false,
+	isContentHidden = false,
 	visibleObjectIds,
 	showGrid = false,
 	gridSize = 25,
@@ -94,7 +111,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 					height={height / zoom}
 				/>
 			)}
-			<ContentGroup isDrawMode={isDrawMode}>
+			<ContentGroup isDrawMode={isDrawMode} isContentHidden={isContentHidden}>
 				{/* Traverse rootIds (in z-order) and render objects and connectors interleaved */}
 				<ObjectsRenderer
 					objects={objects}
@@ -111,5 +128,3 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 		</Svg>
 	);
 };
-
-export const CanvasView = memo(CanvasViewComponent);

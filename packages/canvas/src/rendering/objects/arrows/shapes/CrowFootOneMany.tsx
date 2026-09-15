@@ -30,6 +30,7 @@ const CrowFootOneManyArrowComponent: React.FC<ArrowShapeProps> = ({
 	x,
 	y,
 	color,
+	opacity,
 	radians,
 	scale,
 	dataKind,
@@ -48,6 +49,7 @@ const CrowFootOneManyArrowComponent: React.FC<ArrowShapeProps> = ({
 		<ArrowPath
 			d={d}
 			strokeColor={color}
+			alpha={opacity}
 			strokeWidth={1}
 			strokeLinejoin="miter"
 			transform={transform}

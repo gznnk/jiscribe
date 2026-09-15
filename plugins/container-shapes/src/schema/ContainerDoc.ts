@@ -1,4 +1,5 @@
 import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_FILL, DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type {
 	CreateObjectType,
 	ExtraStylePropertyDescriptor,
@@ -34,6 +35,7 @@ export const ContainerFeatures = {
 /** Container-specific styleable properties beyond the ObjectFeatures flags (see ExtraStylePropertyRegistry). */
 export const ContainerExtraStyleProperties = {
 	headerFill: { valueType: "string" },
+	headerHeight: { valueType: "number" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -51,16 +53,16 @@ export type ContainerDoc = CreateObjectType<
 >;
 
 /** Theme-derived doc defaults for a newly created container (tier 2: AUTO_COLOR / DEFAULT_FONT_FAMILY). */
-export const CONTAINER_DOC_DEFAULTS: Omit<ContainerDoc, "id"> = {
+export const CONTAINER_DOC_DEFAULTS = {
 	type: "container",
 	x: 0,
 	y: 0,
 	width: 240,
 	height: 160,
-	fill: "transparent",
+	fill: DEFAULT_FILL,
 	headerFill: AUTO_COLOR,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: "",
 	textAlign: "left",
 	verticalAlign: "middle",
@@ -68,4 +70,4 @@ export const CONTAINER_DOC_DEFAULTS: Omit<ContainerDoc, "id"> = {
 	fontSize: 14,
 	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "bold",
-} as const as ContainerDoc;
+} as const satisfies Omit<ContainerDoc, "id" | typeof ContainerDocBrand>;

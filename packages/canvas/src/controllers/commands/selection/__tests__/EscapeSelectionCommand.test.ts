@@ -18,7 +18,7 @@ const baseState = (
 		multiSelectGroup: null,
 		areaSelection: null,
 		shapeDrawing: null,
-		eventStartSnapshot: null,
+		activeDrag: null,
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
 		edgeScrollEnabled: false,
@@ -133,7 +133,7 @@ describe("EscapeSelectionCommand", () => {
 		it("is not executable during an object drag (other than area selection)", () => {
 			const state = baseState({
 				selectedIds: ["a"],
-				eventStartSnapshot: { foo: 1 } as never,
+				activeDrag: { startSnapshot: { foo: 1 }, kind: "other" } as never,
 				areaSelection: null,
 			});
 			expect(EscapeSelectionCommand.canExecute(state, registries)).toBe(false);
@@ -141,7 +141,7 @@ describe("EscapeSelectionCommand", () => {
 
 		it("is executable during an area-selection drag", () => {
 			const state = baseState({
-				eventStartSnapshot: { foo: 1 } as never,
+				activeDrag: { startSnapshot: { foo: 1 }, kind: "other" } as never,
 				areaSelection: { x: 0, y: 0 } as never,
 			});
 			expect(EscapeSelectionCommand.canExecute(state, registries)).toBe(true);

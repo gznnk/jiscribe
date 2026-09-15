@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { ZOOM } from "../../../constants/zoom";
 import { calcViewportForBounds } from "../calcViewportForBounds";
+import { ZOOM } from "../zoom";
 
 describe("calcViewportForBounds", () => {
 	it("fits the content centered with the requested padding", () => {

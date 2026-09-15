@@ -1,10 +1,8 @@
 import { useEffect, useRef } from "react";
 
-import {
-	type Camera,
-	isSameCamera,
-	type Viewport,
-} from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
+import type { Camera } from "../CanvasTypes";
+import { isSameCamera } from "../utils/isSameCamera";
 
 /**
  * Notifies the host when the camera (pan/zoom) changes.

@@ -1,5 +1,6 @@
 import { TextFeatures } from "./TextDoc";
 import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidatorRegistry";
+import { GEOMETRY_SIZE_MIN } from "../../types/GeometryType";
 import { isTextLayout } from "../../types/TextLayout";
 import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
 import { validateRequiredNumber } from "../../utils/validateDocUtils";
@@ -38,7 +39,7 @@ const validateTextLayoutFields: ObjectDocValidateFn = (o, path) => {
 			},
 		];
 	}
-	return validateRequiredNumber(o, path, "width", 0);
+	return validateRequiredNumber(o, path, "width", GEOMETRY_SIZE_MIN);
 };
 
 /** Validates a TextDoc (Frame-family shared logic generated from features; `point` checks x / y only). */

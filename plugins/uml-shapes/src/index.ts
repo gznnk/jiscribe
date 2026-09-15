@@ -47,7 +47,7 @@ export {
 export { RecordStencils } from "./stencil/RecordStencils";
 export { UmlPackageIcon } from "./stencil/UmlPackageIcon";
 export { UmlComponentIcon } from "./stencil/UmlComponentIcon";
-export { umlToolbarEntry } from "./stencil/UmlToolbarEntry";
+export { umlStencilCategory } from "./stencil/UmlStencilCategory";
 
 export {
 	recordDefinition,

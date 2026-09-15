@@ -8,6 +8,10 @@
 // Its other job is answering the queries only the drawn result can answer (capture,
 // camera, selection, measurement). Reading the file does not tell the AI those, so
 // it comes here to ask.
+//
+// The same page is used for the window a person looks at and for the headless one
+// the AI looks through (?headless=1). The headless one has nobody to close it, so
+// it is the one page that closes itself when the host stays unreachable.
 
 import type { AiHandleOp } from "@jiscribe/ai-tools";
 import {
@@ -28,10 +32,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { canvasParser } from "./canvasPlugins";
 import { CanvasSurface } from "./CanvasSurface";
 import { saveFile } from "./files";
+import { createDocImageResolver } from "./resolveDocImage";
 import type {
 	CanvasHostClientMessage,
 	CanvasHostServerMessage,
 } from "../shared/canvasHostProtocol";
+import { HEADLESS_VIEWER_QUERY } from "../shared/canvasHostProtocol";
 
 /**
  * How long to wait after the edits settle before writing out. Writing on every
@@ -46,6 +52,24 @@ const SAVE_DEBOUNCE_MS = 500;
  */
 const RECONNECT_BASE_DELAY_MS = 1_000;
 const RECONNECT_MAX_DELAY_MS = 5_000;
+
+/**
+ * How long a headless window keeps trying to reconnect before closing itself.
+ * This is a liveness check on the host, not an idle timeout: the AI may spend
+ * minutes thinking without saying a word, and the window has to stay open through
+ * that. The reconnect backoff tops out at 5 seconds and the host waits 5 seconds
+ * before deciding the viewers are gone, so 15 seconds of silence is several failed
+ * attempts past the point where a host that was coming back would have come back.
+ * Without this, a window nobody can see would sit there for as long as the machine
+ * runs, since there is no one to close it
+ */
+const HEADLESS_GIVE_UP_MS = 15_000;
+
+/** Whether this window is the AI's eye rather than one a person is looking at */
+const isHeadlessWindow = window.location.search
+	.slice(1)
+	.split("&")
+	.includes(HEADLESS_VIEWER_QUERY);
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
@@ -106,6 +130,11 @@ const isCanvasHostServerMessage = (
 export function App() {
 	const [doc, setDoc] = useState<CanvasDoc>(emptyDoc);
 	const [openPath, setOpenPath] = useState<string | null>(null);
+	// One resolver per open file: a src is relative to that file's directory
+	const resolveImage = useMemo(
+		() => (openPath === null ? undefined : createDocImageResolver(openPath)),
+		[openPath],
+	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
 
@@ -134,15 +163,15 @@ export function App() {
 	);
 
 	/**
-	 * Answers the queries about the drawn result. Capture alone is asynchronous and
-	 * carries an image, so its path is separate on the canvas-agent side as well
+	 * Answers the queries about the drawn result. Capture alone carries an image
+	 * rather than text, so its path is separate on the canvas-agent side as well
 	 */
 	const runHandleOp = useCallback(
 		async (op: AiHandleOp) => {
 			try {
 				return op.kind === "captureCanvas"
 					? await captureCanvasImage(capturePng)
-					: applyHandleOp(op, handleControl);
+					: await applyHandleOp(op, handleControl);
 			} catch (error) {
 				// Throwing without answering would leave the host with nothing to do but
 				// wait 15 seconds and time out, and the AI with no reason at all
@@ -251,10 +280,20 @@ export function App() {
 		let isDisposed = false;
 		let reconnectDelayMs = RECONNECT_BASE_DELAY_MS;
 		let reconnectTimer: number | null = null;
+		let giveUpTimer: number | null = null;
+
+		const cancelGiveUp = (): void => {
+			if (giveUpTimer !== null) {
+				window.clearTimeout(giveUpTimer);
+				giveUpTimer = null;
+			}
+		};
 
 		const connect = (): void => {
+			// The query goes on the socket as well as the page: it is how the host
+			// tells a headless window from one a person can see
 			const socket = new WebSocket(
-				`${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`,
+				`${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws${isHeadlessWindow ? `?${HEADLESS_VIEWER_QUERY}` : ""}`,
 			);
 			socketRef.current = socket;
 
@@ -263,6 +302,7 @@ export function App() {
 					return;
 				}
 				reconnectDelayMs = RECONNECT_BASE_DELAY_MS;
+				cancelGiveUp();
 				setIsConnected(true);
 			});
 			socket.addEventListener("message", (event) => {
@@ -314,6 +354,12 @@ export function App() {
 					return;
 				}
 				setIsConnected(false);
+				if (isHeadlessWindow && giveUpTimer === null) {
+					giveUpTimer = window.setTimeout(() => {
+						giveUpTimer = null;
+						window.close();
+					}, HEADLESS_GIVE_UP_MS);
+				}
 				reconnectTimer = window.setTimeout(connect, reconnectDelayMs);
 				reconnectDelayMs = Math.min(
 					reconnectDelayMs * 2,
@@ -326,6 +372,7 @@ export function App() {
 
 		return () => {
 			isDisposed = true;
+			cancelGiveUp();
 			if (reconnectTimer !== null) {
 				window.clearTimeout(reconnectTimer);
 			}
@@ -359,9 +406,11 @@ export function App() {
 			<CanvasSurface
 				doc={doc}
 				relPath={openPath}
+				docLoadId={openPath ?? undefined}
 				isConnected={isConnected}
 				onCommit={handleCommit}
 				onOpenReference={handleOpenReference}
+				resolveImage={resolveImage}
 				onRegisterCanvas={registerCanvas}
 			/>
 		</div>

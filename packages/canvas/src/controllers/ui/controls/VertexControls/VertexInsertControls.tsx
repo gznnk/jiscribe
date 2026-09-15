@@ -1,8 +1,8 @@
 import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { theme } from "../../../../constants/theme";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { theme } from "../../../../theme/themeTokens";
 
 // Handle colors may hold var(--jiscribe-*), so they are applied via style
 // (fill/stroke) rather than SVG presentation attributes.

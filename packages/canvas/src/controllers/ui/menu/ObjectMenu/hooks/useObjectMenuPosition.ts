@@ -61,10 +61,11 @@ export function useObjectMenuPosition(
 		viewport,
 		contextMenuPosition,
 		areaSelection,
-		activeDragKind,
+		activeDrag,
 		inertialScrolling,
 		objectMenuOpenId,
 		textEditState,
+		propertyPanel,
 	} = state;
 
 	// The menu sits below the selection's drawn extent, so a shape whose label
@@ -95,7 +96,7 @@ export function useObjectMenuPosition(
 	// fling a released pan leaves behind. The linger is what keeps the handover
 	// between the two from flashing the menu (see REAPPEAR_DELAY_MS).
 	const isViewMoving =
-		(activeDragKind !== null && objectMenuOpenId === null) || inertialScrolling;
+		(activeDrag !== null && objectMenuOpenId === null) || inertialScrolling;
 	const isViewUnsettled = useLingeringFlag(isViewMoving, REAPPEAR_DELAY_MS);
 
 	const shouldRender = useMemo(() => {
@@ -126,6 +127,12 @@ export function useObjectMenuPosition(
 		if (areaSelection !== null) {
 			return false;
 		}
+		// The properties sidebar states everything the menu does, so while it is
+		// open the menu would only duplicate it and cover the drawing beside the
+		// selection.
+		if (propertyPanel.isOpen) {
+			return false;
+		}
 		return true;
 	}, [
 		selectedIds,
@@ -134,6 +141,7 @@ export function useObjectMenuPosition(
 		isViewUnsettled,
 		areaSelection,
 		textEditState,
+		propertyPanel.isOpen,
 	]);
 
 	useLayoutEffect(() => {

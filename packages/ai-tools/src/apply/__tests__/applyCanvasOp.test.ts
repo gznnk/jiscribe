@@ -376,6 +376,23 @@ describe("applyCanvasOp", () => {
 			stroke: "#c62828",
 		});
 	});
+
+	it("writes the paint opacities onto the object", () => {
+		const { apply, currentDoc } = createFakeDocBridge();
+		apply({ kind: "addObject", type: "rect", x: 0, y: 0 });
+
+		const result = apply({
+			kind: "setStyle",
+			ids: ["rect-1"],
+			style: { fillOpacity: 0.5, strokeOpacity: 0.25 },
+		});
+
+		expect(result.ok).toBe(true);
+		expect(rootObject(currentDoc(), "rect-1")).toMatchObject({
+			fillOpacity: 0.5,
+			strokeOpacity: 0.25,
+		});
+	});
 });
 
 describe("operations that change where things sit", () => {

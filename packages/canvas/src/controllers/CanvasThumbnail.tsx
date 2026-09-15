@@ -1,12 +1,17 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { memo, useMemo, useRef, useState } from "react";
 
-import { useFontsLoadedNonce } from "./hooks/useFontsLoadedNonce";
+import { useDocFonts } from "./hooks/useDocFonts";
+import type { ResolveImage } from "./hooks/useDocImages";
+import { useDocImages } from "./hooks/useDocImages";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
+import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import type { CanvasPlugin } from "../plugin/CanvasPlugin";
 import { CanvasView } from "../rendering/CanvasView";
+import { FontsLoadedNonceContext } from "../rendering/objects/FontsLoadedNonceContext";
 import { RenderingRegistriesProvider } from "../rendering/objects/registry/RenderingRegistriesProvider";
+import { ResolvedImagesContext } from "../rendering/objects/ResolvedImagesContext";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
@@ -34,6 +39,12 @@ type CanvasThumbnailProps = {
 	 * plugin-supplied objects have no mapper and `canvasToState` throws.
 	 */
 	plugins?: readonly CanvasPlugin[];
+	/**
+	 * Reads the bytes of the file an `image` object names (see the Canvas
+	 * `resolveImage` prop). Omit it and every image draws as a placeholder, which
+	 * is what a thumbnail of a document whose files the host cannot reach shows.
+	 */
+	resolveImage?: ResolveImage;
 };
 
 /**
@@ -50,6 +61,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	padding = 24,
 	theme = darkCanvasTheme,
 	plugins,
+	resolveImage,
 }) => {
 	const svgRef = useRef<SVGSVGElement>(null);
 
@@ -59,13 +71,16 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 		plugins ? createCanvasRegistries({ plugins }) : defaultCanvasRegistries,
 	);
 
-	// Content-derived boxes are measured against the fonts loaded at the time of
-	// mapping, and a thumbnail has no reducer to re-measure through — so the nonce
-	// is a memo key rather than an effect: a web font landing after the first paint
-	// re-maps the doc against the face it is actually drawn in. It is an
-	// invalidation signal, not an argument, which is why the dependency is one the
-	// callback does not read.
-	const fontsLoadedNonce = useFontsLoadedNonce();
+	// A thumbnail has no reducer to re-measure through, so the counter is a memo
+	// key on the mapping itself (see useDocFonts). It is an invalidation signal,
+	// not an argument, which is why the dependency is one the callback does not
+	// read — and why the faces can be collected off the objects mapped below: the
+	// collection runs in the preload's mount effect, by which point the first
+	// render has produced them.
+	const { fontsNonce, isContentHidden } = useDocFonts({
+		collectRequests: () =>
+			collectDocFontRequests(objects, registries.objectTextStyleDefaults),
+	});
 
 	const { objects, rootIds, background } = useMemo(
 		() =>
@@ -75,8 +90,10 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				registries.objectContentResizer,
 			),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[canvasDoc, registries, fontsLoadedNonce],
+		[canvasDoc, registries, fontsNonce],
 	);
+
+	const lookupResolvedImage = useDocImages(objects, resolveImage);
 
 	const viewport = useMemo(
 		() =>
@@ -107,22 +124,28 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				objectComponent={registries.objectComponent}
 				objectTextRegion={registries.objectTextRegion}
 				objectTextStyleDefaults={registries.objectTextStyleDefaults}
+				objectShapeStyleDefaults={registries.objectShapeStyleDefaults}
 				objectOutline={registries.objectOutline}
 				objectAnchorRegion={registries.objectAnchorRegion}
 				objectExtraConnectPoints={registries.objectExtraConnectPoints}
 				objectGeometryKey={registries.objectGeometryKey}
 				objectSvgDefs={registries.objectSvgDefs}
 			>
-				<div style={themeCssVars}>
-					<CanvasView
-						objects={objects}
-						rootIds={rootIds}
-						viewport={viewport}
-						svgRef={svgRef}
-						background={background}
-						surfaceColor={theme.tokens.canvasBg}
-					/>
-				</div>
+				<FontsLoadedNonceContext value={fontsNonce}>
+					<ResolvedImagesContext value={lookupResolvedImage}>
+						<div style={themeCssVars}>
+							<CanvasView
+								objects={objects}
+								rootIds={rootIds}
+								viewport={viewport}
+								svgRef={svgRef}
+								isContentHidden={isContentHidden}
+								background={background}
+								surfaceColor={theme.tokens.canvasBg}
+							/>
+						</div>
+					</ResolvedImagesContext>
+				</FontsLoadedNonceContext>
 			</RenderingRegistriesProvider>
 		</CanvasThemeContext>
 	);

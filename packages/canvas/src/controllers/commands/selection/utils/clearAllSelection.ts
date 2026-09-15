@@ -13,7 +13,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
  *   (any drag other than area selection), where clearing would strand the drag
  */
 export const isSelectionClearable = (state: CanvasControllerState): boolean => {
-	if (state.eventStartSnapshot !== null && state.areaSelection === null) {
+	if (state.activeDrag !== null && state.areaSelection === null) {
 		return false;
 	}
 	return (

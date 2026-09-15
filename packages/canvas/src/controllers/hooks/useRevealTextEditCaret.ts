@@ -1,7 +1,7 @@
 import type { BoundingBox } from "@jiscribe/geometry";
 import { type Dispatch, useCallback, useLayoutEffect, useRef } from "react";
 
-import type { Viewport } from "../../states/canvas/Viewport";
+import type { Viewport } from "../../rendering/Viewport";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { calcCameraToRevealBox } from "../utils/calcCameraToRevealBox";
 

@@ -10,7 +10,8 @@ import { Canvas, darkCanvasTheme } from "@jiscribe/canvas";
 import type { CanvasConfig } from "@jiscribe/canvas";
 import {
 	standardPlugins,
-	standardToolbarLayout,
+	standardStencilLibrarySections,
+	standardToolbarSections,
 } from "@jiscribe/standard-shapes";
 import { createRoot } from "react-dom/client";
 
@@ -55,6 +56,27 @@ const loadFonts = async (): Promise<void> => {
 	);
 };
 
+/**
+ * Hands the canvas an image the page carries, for its `resolveImage`.
+ *
+ * The table was filled when the file was written, so a `src` missing from it is
+ * one the command could not read — and there is nowhere else to look, the page
+ * being the whole of what was handed over. Looked up as an own property: a `src`
+ * of "constructor" would otherwise find Object.prototype's and be handed to
+ * fetch as an image.
+ */
+const resolvePreviewImage = async (
+	images: Readonly<Record<string, string>>,
+	src: string,
+): Promise<Blob> => {
+	if (!Object.hasOwn(images, src)) {
+		throw new Error(`this preview carries no image for "${src}"`);
+	}
+	const dataUri = images[src];
+	const response = await fetch(dataUri);
+	return await response.blob();
+};
+
 const mount = async (): Promise<void> => {
 	const container = document.getElementById("preview-root");
 	if (!container) {
@@ -71,7 +93,9 @@ const mount = async (): Promise<void> => {
 		<Canvas
 			doc={payload.doc}
 			initialConfig={initialConfig}
-			toolbar={{ layout: standardToolbarLayout }}
+			resolveImage={(src: string) => resolvePreviewImage(payload.images, src)}
+			toolbar={{ sections: standardToolbarSections }}
+			stencilLibrary={{ sections: standardStencilLibrarySections }}
 		/>,
 	);
 };

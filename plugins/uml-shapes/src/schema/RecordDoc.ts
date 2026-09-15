@@ -3,6 +3,7 @@ import {
 	DEFAULT_FONT_FAMILY,
 	TEXT_LINE_HEIGHT,
 } from "@jiscribe/canvas-sdk/doc";
+import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type {
 	CreateObjectType,
 	ObjectFeatures,
@@ -244,7 +245,7 @@ export const RECORD_DOC_DEFAULTS: Omit<RecordDoc, "id"> = {
 	height: RECORD_BAND_HEIGHT + calcRecordListHeight(3),
 	fill: AUTO_COLOR,
 	stroke: AUTO_COLOR,
-	strokeWidth: 2,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
 	text: {
 		name: { text: "", ...RECORD_SLOT_STYLE_DEFAULTS_BY_ID.name },
 		// `as RichText[]` keeps `as const` from typing the empty rows as a readonly

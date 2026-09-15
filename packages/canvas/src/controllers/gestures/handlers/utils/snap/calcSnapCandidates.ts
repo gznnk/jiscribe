@@ -6,15 +6,16 @@ import type { SnapCandidate, SnapCandidates } from "../../../../CanvasTypes";
 
 /**
  * Generates snap candidates from all Frame objects.
- * Call it at dragStart with a precomputed keyPointsCache.
+ * Call it at dragStart with the keyPoints already computed for that frame.
  * Exclusions (selected / descendants) must be applied by the caller as filteredCandidates.
  *
  * @param objects - Object map
- * @param keyPointsCache - Precomputed keyPoints cache (passed from EventStartSnapshot)
+ * @param keyPointsById - Object ID → keyPoints, the same map the DragStartSnapshot
+ *   holds; an object missing from it contributes no candidate
  */
 export const calcSnapCandidates = (
 	objects: Record<string, ObjectState>,
-	keyPointsCache: Record<string, FrameKeyPoints>,
+	keyPointsById: Record<string, FrameKeyPoints>,
 ): SnapCandidates => {
 	const xCandidates: SnapCandidate[] = [];
 	const yCandidates: SnapCandidate[] = [];
@@ -23,7 +24,7 @@ export const calcSnapCandidates = (
 		if (obj.type === "group") {
 			continue;
 		}
-		const keyPoints = keyPointsCache[id];
+		const keyPoints = keyPointsById[id];
 		if (!keyPoints) {
 			continue;
 		}

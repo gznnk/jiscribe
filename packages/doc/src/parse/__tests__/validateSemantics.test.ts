@@ -369,7 +369,7 @@ describe("validateSemantics (connectable via the real registry)", () => {
 		],
 	});
 
-	it.each(["rect", "ellipse", "text"])(
+	it.each(["rect", "ellipse", "text", "image"])(
 		"%s is connectable (no error)",
 		(type) => {
 			expect(validateSemantics(targetDoc(type), builtinRegistry)).toEqual([]);

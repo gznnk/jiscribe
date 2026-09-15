@@ -84,6 +84,40 @@ describe("setStyle", () => {
 		expectValid(doc);
 	});
 
+	it("sets a fill opacity on a type that has a fill to soften", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+
+		const result = docOps.setStyle(doc, ["rect-1"], { fillOpacity: 0.4 });
+
+		expect(result).toEqual({ styledIds: ["rect-1"], ignored: [] });
+		expect(readObject(doc, "rect-1")).toMatchObject({ fillOpacity: 0.4 });
+		expectValid(doc);
+	});
+
+	it("reports a fill opacity as ignored on a type that has no fill", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "polyline", {
+			x: 0,
+			y: 0,
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 },
+			],
+		});
+
+		const result = docOps.setStyle(doc, ["polyline-1"], {
+			fillOpacity: 0.4,
+			strokeOpacity: 0.6,
+		});
+
+		expect(readObject(doc, "polyline-1")).toMatchObject({ strokeOpacity: 0.6 });
+		expect(result.ignored).toEqual([
+			{ id: "polyline-1", properties: ["fillOpacity"] },
+		]);
+		expectValid(doc);
+	});
+
 	it("leaves every object untouched when any id is missing", () => {
 		const doc = twoConnectedRects();
 
@@ -107,6 +141,10 @@ describe("setStyle: values the document could not hold", () => {
 		["a dash type the document has no name for", { strokeDashType: "double" }],
 		["a stroke width of infinity", { strokeWidth: Number.POSITIVE_INFINITY }],
 		["a font size of infinity", { fontSize: Number.POSITIVE_INFINITY }],
+		["a fill opacity below the range", { fillOpacity: -0.1 }],
+		["a fill opacity above the range", { fillOpacity: 1.5 }],
+		["a fill opacity written as text", { fillOpacity: "0.5" }],
+		["a stroke opacity that is not a number", { strokeOpacity: Number.NaN }],
 	])("refuses %s", (_label, style) => {
 		const doc = emptyDoc();
 		docOps.addObject(doc, "rect", { x: 0, y: 0 });

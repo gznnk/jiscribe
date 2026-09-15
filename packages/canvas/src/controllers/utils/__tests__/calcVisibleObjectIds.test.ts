@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Viewport } from "../../../states/canvas/Viewport";
+import type { Viewport } from "../../../rendering/Viewport";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import {

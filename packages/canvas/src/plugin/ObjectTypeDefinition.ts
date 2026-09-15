@@ -8,6 +8,7 @@ import type { ObjectTransformHandlesDeclaration } from "../controllers/ui/contro
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
+import type { PropertyPanelSection } from "../controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../rendering/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectExtraConnectPointsCalculator } from "../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
@@ -73,7 +74,7 @@ export type ObjectTypeDefinition<
 	 * references by `url(#…)`. Rendered once per canvas inside the canvas-wide
 	 * `<defs>`, regardless of how many objects of this type exist — including
 	 * zero, so a reference never outlives its target. Element ids are
-	 * document-global, so prefix them with this type's name (`sticky-blur`) to
+	 * document-global, so prefix them with this type's name (`sticky-shadow`) to
 	 * stay clear of other types (see ObjectSvgDefsRegistry).
 	 */
 	svgDefs?: FC;
@@ -159,7 +160,8 @@ export type ObjectTypeDefinition<
 	/**
 	 * Stencils this type contributes to the palette (multiple allowed per type).
 	 * Registration only makes them exist; where they show and in what order is
-	 * decided by `toolbar.layout` (a pinned entry, or a category entry's `presetIds`).
+	 * decided by `toolbar.sections` (a pinned item, or a category's `presetIds`)
+	 * and `stencilLibrary.sections` (a sidebar section's `presetIds`).
 	 */
 	stencils?: Stencil[];
 
@@ -169,6 +171,16 @@ export type ObjectTypeDefinition<
 	 * (return null and the emptied section collapses).
 	 */
 	menu?: ObjectMenuSection[];
+
+	/**
+	 * Properties-sidebar sections for this type. Omitted = derived from features
+	 * (see createDefaultPropertyPanel); a declared array replaces it entirely;
+	 * `[]` means no sections. Static per type; a row of the type's own goes in as
+	 * a `custom` item (PropertyPanelCustomItem), and per-instance visibility
+	 * belongs to that component (returning null leaves the row out, though the
+	 * section's own header stays).
+	 */
+	propertyPanel?: PropertyPanelSection[];
 };
 
 /**

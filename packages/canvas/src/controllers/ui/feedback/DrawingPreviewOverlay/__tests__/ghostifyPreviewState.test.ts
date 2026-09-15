@@ -1,9 +1,9 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { describe, it, expect } from "vitest";
 
-import { theme } from "../../../../../constants/theme";
 import { resolveAutoColor } from "../../../../../rendering/objects/utils/resolveAutoColor";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import { theme } from "../../../../../theme/themeTokens";
 import { ghostifyPreviewState } from "../ghostifyPreviewState";
 
 const state = (extra: Record<string, unknown> = {}): ObjectState =>

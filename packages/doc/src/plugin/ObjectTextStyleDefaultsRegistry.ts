@@ -114,6 +114,32 @@ export class ObjectTextStyleDefaultsRegistry {
 	}
 
 	/**
+	 * Registers whatever text-style defaults a type's definition declares
+	 * ({@link extractTextSlotStyleDefaults}); a definition declaring none leaves
+	 * the registry as it was.
+	 *
+	 * @param type - The object type the definition describes
+	 * @param definition - The declaring half of an ObjectDocDefinition: its features, creation defaults and per-slot map
+	 */
+	registerDefinition(
+		type: ObjectType,
+		definition: {
+			features: ObjectFeatures;
+			defaults?: Readonly<Record<string, unknown>>;
+			textSlotStyleDefaults?: ObjectTextSlotStyleDefaults;
+		},
+	): void {
+		const defaults = extractTextSlotStyleDefaults(
+			definition.features,
+			definition.defaults,
+			definition.textSlotStyleDefaults,
+		);
+		if (defaults !== undefined) {
+			this.register(type, defaults);
+		}
+	}
+
+	/**
 	 * The defaults of one slot, or undefined when the type declares none for it.
 	 *
 	 * @param type - The object type the slot belongs to

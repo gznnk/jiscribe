@@ -1,5 +1,6 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
@@ -11,13 +12,16 @@ import type { ObjectOutlineRegistry } from "../../rendering/objects/registry/Obj
 import type { ObjectSvgDefsRegistry } from "../../rendering/objects/registry/ObjectSvgDefsRegistry";
 import type { ObjectTextRegionRegistry } from "../../rendering/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
-import type { Camera } from "../../states/canvas/Viewport";
 import type { ObjectAutoHeightRegistry } from "../../states/registry/ObjectAutoHeightRegistry";
 import type { ObjectContentResizerRegistry } from "../../states/registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";
-import type { ScrollBoundsConfig } from "../CanvasTypes";
+import type {
+	Camera,
+	CanvasInitialSidebars,
+	ScrollBoundsConfig,
+} from "../CanvasTypes";
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
@@ -26,6 +30,7 @@ import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransf
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import type { PropertyPanelRegistry } from "../ui/menu/PropertyPanel/PropertyPanelRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
@@ -64,6 +69,12 @@ export type CanvasRegistries = {
 	 * type-agnostic default.
 	 */
 	objectTextStyleDefaults: ObjectTextStyleDefaultsRegistry;
+	/**
+	 * Per-type stroke / fill defaults, read by every side that draws or reports a
+	 * shape style so a field the author left unset resolves to what that type is
+	 * drawn with rather than a type-agnostic default.
+	 */
+	objectShapeStyleDefaults: ObjectShapeStyleDefaultsRegistry;
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
@@ -77,6 +88,7 @@ export type CanvasRegistries = {
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
+	propertyPanel: PropertyPanelRegistry;
 	stencil: StencilRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	styleProperty: StylePropertyRegistry;
@@ -106,8 +118,8 @@ export type CanvasCapabilities = {
 
 /**
  * Mount-time configuration for `<Canvas initialConfig={...}>`: the capability
- * set (`CanvasCapabilities`) plus the view setup — where the camera starts and
- * how far it may be scrolled. Read **once at mount** — the
+ * set (`CanvasCapabilities`) plus the view setup — where the camera starts, how
+ * far it may be scrolled, and how the sidebars open. Read **once at mount** — the
  * configuration is part of a canvas's identity, so later changes are ignored; to
  * reconfigure, remount with a new React `key` (`<Canvas key={configId} .../>`).
  *
@@ -144,4 +156,17 @@ export type CanvasConfig = CanvasCapabilities & {
 	 * only be scrolled back toward the range, never further away.
 	 */
 	scrollBounds?: ScrollBoundsConfig;
+	/**
+	 * How the two sidebars start out ({@link CanvasInitialSidebars}), so a host
+	 * can restore what the user left open. Every key is optional and a missing one
+	 * takes its default: an edge starts closed, a panel starts with every section
+	 * expanded.
+	 *
+	 * Read once at mount and never again: the panels are the user's from then on,
+	 * and passing a new value does not move them. Their live state is reported
+	 * through `onSidebarsChange` — read-only, so there is no controlled mode to
+	 * feed it back into. Loading another document (a new `docLoadId` included)
+	 * leaves the panels as the user left them.
+	 */
+	sidebars?: CanvasInitialSidebars;
 };

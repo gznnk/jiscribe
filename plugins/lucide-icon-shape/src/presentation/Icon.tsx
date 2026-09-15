@@ -41,6 +41,7 @@ export const Icon = createFrameObject<IconState>((state, shape) => {
 				<IconArtGroup
 					transform={`translate(${offset} ${offset}) scale(${scale})`}
 					strokeColor={shape.strokeColor}
+					strokeAlpha={shape.strokeAlpha}
 					strokeWidth={artStrokeWidth}
 					strokeDasharray={shape.strokeDasharray}
 				>
@@ -56,6 +57,7 @@ export const Icon = createFrameObject<IconState>((state, shape) => {
 					width={artSize}
 					height={artSize}
 					strokeColor={shape.strokeColor}
+					strokeAlpha={shape.strokeAlpha}
 					strokeWidth={shape.strokeWidth}
 				/>
 			)}

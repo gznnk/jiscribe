@@ -66,9 +66,6 @@ type FrameObjectDocCommonParams = {
 	/** One-line usage summary for doc tables (see `ObjectDocDefinition.summary`). */
 	summary?: string;
 
-	/** Short phrase describing the drawn outline (see `ObjectDocDefinition.outlineDescription`). */
-	outlineDescription?: string;
-
 	/**
 	 * Doc checks beyond the ones features implies (the closed slot set of a
 	 * `text: "slots"` type, say), run after them. Returns the diagnostics it found;
@@ -137,7 +134,6 @@ export const createFrameObjectDoc = ({
 	autoHeight,
 	description,
 	summary,
-	outlineDescription,
 	validateExtra,
 	factory,
 	supportsBounds,
@@ -154,7 +150,6 @@ export const createFrameObjectDoc = ({
 	autoHeight,
 	description,
 	summary,
-	outlineDescription,
 	defaults,
 	textSlotStyleDefaults,
 });

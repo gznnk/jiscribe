@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 
 import type { CanvasGestureHandling } from "./CanvasGestureHandling";
-import { theme } from "../constants/theme";
+import { theme } from "../theme/themeTokens";
 
 type CanvasRootProps = {
 	gestureHandling: CanvasGestureHandling;
@@ -13,7 +13,8 @@ type ViewportProps = {
 
 /**
  * Outermost container that takes up full available space and stacks the
- * toolbar above the canvas viewport (flex column).
+ * toolbar above the body row (shape library sidebar + canvas viewport +
+ * properties sidebar, see CanvasBody) as a flex column.
  *
  * The gesture recognizer's pointerHandlers / pointer capture are attached to this element.
  * By containing both the toolbar (data-kind="menu") and the canvas region,
@@ -55,6 +56,19 @@ export const CanvasRoot = styled.div<CanvasRootProps>`
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;
 
+	/* Form controls do not inherit the font by default (the UA gives them its
+	   own), which would set every text-bearing button and input in the canvas UI
+	   — the context menu's items, the zoom readout, the color picker's Auto and
+	   its text field, the sidebar's controls — in a different face from the
+	   labels beside them, and, for Japanese, in whatever the OS falls back to.
+	   Claimed once here so no panel has to remember it. */
+	& button,
+	& input,
+	& select,
+	& textarea {
+		font-family: inherit;
+	}
+
 	/* The per-element claim. Effective as-is for the HTML pieces (menus); for the
 	   SVG shape elements Chromium and WebKit ignore touch-action, so the working
 	   claim for those is the touchstart guard in useCooperativeTouchClaim. */
@@ -81,8 +95,20 @@ export const CanvasRoot = styled.div<CanvasRootProps>`
 `;
 
 /**
- * Canvas drawing region that sits below the toolbar (flex child filling the
- * remaining space).
+ * Row below the toolbar, holding the shape library sidebar, the viewport and the
+ * properties sidebar side by side (each sidebar only while open). `min-height: 0`
+ * lets a sidebar's own list scroll instead of stretching the row past the canvas.
+ */
+export const CanvasBody = styled.div`
+	display: flex;
+	flex-direction: row;
+	flex: 1 1 auto;
+	min-height: 0;
+`;
+
+/**
+ * Canvas drawing region, the middle flex child of CanvasBody that takes the width
+ * the two sidebars leave.
  *
  * Edge-scroll detection is based on this element's rectangle (measured via
  * useContainerResize) and the screen position of the contained SVG (getScreenCTM).
@@ -93,6 +119,9 @@ export const Viewport = styled.div<ViewportProps>`
 	position: relative;
 	flex: 1 1 auto;
 	min-height: 0;
+	/* Row flex child: without this the viewport refuses to shrink below its
+	   content and the sidebars push it off the right edge. */
+	min-width: 0;
 	overflow: hidden;
 	${(props) => props.cursor && `cursor: ${props.cursor};`}
 `;

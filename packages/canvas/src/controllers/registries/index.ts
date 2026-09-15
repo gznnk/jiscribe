@@ -1,6 +1,5 @@
-// Individual initializers (each populates a given bundle). Exposed for tests
-// and partial initialization; production builds bundles via createCanvasRegistries.
-export { initializeObjectRegistry } from "./initializeObjectRegistry";
+// Initializers that populate a given bundle. A canvas gets its bundle from
+// createCanvasRegistries, which calls these along with initializeStyleProperties.
 export { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
 export { initializeCommands } from "./initializeCommands";
 
@@ -18,7 +17,7 @@ export {
 // Plugin vocabulary (ObjectTypeDefinition / defineObject / CanvasPlugin) lives in
 // `src/plugin`; `applyObjectDefinition` is the wiring that applies it here.
 export {
-	ALL_OBJECT_DEFINITIONS,
+	BUILTIN_OBJECT_DEFINITIONS,
 	applyObjectDefinition,
-} from "./initializeObjectRegistry";
+} from "./applyObjectDefinition";
 export { ALL_COMMANDS } from "./initializeCommands";

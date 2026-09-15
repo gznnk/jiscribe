@@ -5,7 +5,7 @@ export type RenderRegion = "content" | "viewbox";
 
 /** Everything a render needs, once the command line has been read and checked. */
 export type RenderOptions = {
-	/** Path of the `.jis.json` to draw. */
+	/** Path of the `.jis` to draw. */
 	input: string;
 	/** Path to write; its extension decided {@link format}. */
 	output: string;

@@ -11,3 +11,12 @@
  *   the anchor, and the stored coordinate, where they were.
  */
 export type GeometryType = "none" | "rect" | "ellipse" | "poly" | "point";
+
+/**
+ * Smallest value a geometry's extent may take — the `minimum` the JSON schema
+ * states for a width, a height, and a radius. Read at both boundaries, which
+ * name those fields differently (a doc writes `width`/`height` or `rx`/`ry`, a
+ * state always `width`/`height`) yet bound them alike: `createFrameDocValidator`
+ * on the doc side, `isValidFrameState` on the state side.
+ */
+export const GEOMETRY_SIZE_MIN = 0;

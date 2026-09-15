@@ -1,11 +1,10 @@
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
 
-import type { Viewport } from "./Viewport";
 import type { ObjectState } from "../objects/base/ObjectState";
 
 /**
- * Normalized runtime state of the canvas: all objects, their root-level
- * stacking order, and the current viewport.
+ * Normalized runtime state of the canvas: all objects and their root-level
+ * stacking order.
  */
 export type CanvasState = {
 	/**
@@ -23,11 +22,6 @@ export type CanvasState = {
 	 * directly under root.
 	 */
 	rootIds: string[];
-
-	/**
-	 * Current viewport state.
-	 */
-	viewport: Viewport;
 
 	/**
 	 * Canvas surface color (doc content, round-tripped through save/history).

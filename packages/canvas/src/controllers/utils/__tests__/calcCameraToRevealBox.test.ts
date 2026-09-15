@@ -1,7 +1,7 @@
 import type { BoundingBox } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { Viewport } from "../../../states/canvas/Viewport";
+import type { Viewport } from "../../../rendering/Viewport";
 import { calcCameraToRevealBox } from "../calcCameraToRevealBox";
 
 /** Visible world rect (0, 0)-(400, 300) at zoom 1. */

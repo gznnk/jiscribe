@@ -1,16 +1,19 @@
 import * as vscode from "vscode";
 
+import { GENERATED_NOTICE } from "./generatedFileNotice";
+import { removeGeneratedReference } from "./staleReferenceRemoval";
+
 /**
  * "Set up AI" command.
  *
  * Places the guide/schema plus per-agent adapters (Skill / rules /
- * instructions) so a workspace's AI agents can generate and edit `.jis.json`
+ * instructions) so a workspace's AI agents can generate and edit `.jis`
  * correctly. See docs/03_ai-integration/setup_ai_design.md.
  *
- * - The canonical copy lives once in `.jiscribe/` (ai-guide.md + reference.md +
+ * - The canonical copy lives once in `.jiscribe/` (ai-guide.md +
  *   jiscribe.schema.json).
  * - Each agent's own-file adapter is a thin pointer to `.jiscribe/ai-guide.md`,
- *   which is the single entry point to the full reference and schema.
+ *   which is the single entry point to the schema beside it.
  * - Only files we generate are overwritten; user-managed files (CLAUDE.md,
  *   .gitignore, etc.) are never touched.
  *
@@ -18,13 +21,11 @@ import * as vscode from "vscode";
  * (docs/03_ai-integration/mcp_design.md).
  */
 
-// Header marking a generated file (discourages manual edits).
-const GENERATED_NOTICE =
-	"<!-- Generated and managed by the Jiscribe extension's “Set up AI” command. Manual edits are overwritten on re-run. -->";
-
-// Shared adapter body (excluding frontmatter). `.jiscribe/ai-guide.md` is the
-// single entry point, so we don't duplicate references here.
-const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis\` / \`.jiscribe\` / \`.jis.json\` / \`.jiscribe.json\`), read \`.jiscribe/ai-guide.md\` at the workspace root and follow it. It links to the full reference and schema.
+// Shared adapter body (excluding frontmatter). It names where to go and nothing
+// else: an adapter that also summarised what the guide holds would be a copy that
+// goes stale the next time the guide changes, and each of these files is written
+// once into a workspace we never see again.
+const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis\` / \`.jiscribe\` / \`.jis.json\` / \`.jiscribe.json\`), read \`.jiscribe/ai-guide.md\` at the workspace root and follow it.
 `;
 
 /** Claude Code Skill: .claude/skills/jiscribe/SKILL.md */
@@ -177,9 +178,8 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 	}
 
 	try {
-		const [guide, reference, schema] = await Promise.all([
+		const [guide, schema] = await Promise.all([
 			readDistAsset(context, "ai-guide.md"),
-			readDistAsset(context, "reference.md"),
 			readDistAsset(context, "jiscribe.schema.json"),
 		]);
 
@@ -187,7 +187,6 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		const jiscribeDir = vscode.Uri.joinPath(root, ".jiscribe");
 		await vscode.workspace.fs.createDirectory(jiscribeDir);
 		const guideUri = vscode.Uri.joinPath(jiscribeDir, "ai-guide.md");
-		const referenceUri = vscode.Uri.joinPath(jiscribeDir, "reference.md");
 		const schemaUri = vscode.Uri.joinPath(jiscribeDir, "jiscribe.schema.json");
 		// Prepend the generated header to Markdown (not the JSON schema).
 		const withNotice = (asset: Uint8Array): Uint8Array =>
@@ -195,8 +194,15 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 				`${GENERATED_NOTICE}\n\n${new TextDecoder().decode(asset)}`,
 			);
 		await writeFile(guideUri, withNotice(guide));
-		await writeFile(referenceUri, withNotice(reference));
 		await writeFile(schemaUri, schema);
+		// A reference.md left by an earlier version goes, but only the copy we
+		// wrote (see removeGeneratedReference). Absent is the normal case.
+		const referenceUri = vscode.Uri.joinPath(jiscribeDir, "reference.md");
+		const referenceOutcome = await removeGeneratedReference({
+			read: async () => vscode.workspace.fs.readFile(referenceUri),
+			delete: async (useTrash) =>
+				vscode.workspace.fs.delete(referenceUri, { useTrash }),
+		});
 
 		// Place the adapter for each selected agent.
 		for (const target of targets) {
@@ -207,8 +213,14 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		}
 
 		const names = targets.map((t) => t.label).join(", ");
+		// A reference.md we did not write is the one thing the command leaves as it
+		// found it, so say so rather than let it look like a file we forgot.
+		const keptNote =
+			referenceOutcome === "kept"
+				? " Left .jiscribe/reference.md as it is: it is not a generated file, and the setup no longer uses it."
+				: "";
 		const action = await vscode.window.showInformationMessage(
-			`Set up AI: Created .jiscribe/ and config for ${names}. Ask your AI assistant to draw a Jiscribe diagram.`,
+			`Set up AI: Created .jiscribe/ and config for ${names}.${keptNote} Ask your AI assistant to draw a Jiscribe diagram.`,
 			"Open Guide",
 		);
 		if (action === "Open Guide") {

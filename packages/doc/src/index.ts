@@ -47,11 +47,22 @@ export type { CreateObjectType } from "./model/objects/types/CreateObjectType";
 // group cannot be left out. Consumers that enumerate style properties of their own —
 // the AI schema generator's property table is the one outside this package — build
 // their lists from these rather than spelling the names again.
-export { FILL_STYLE_KEYS } from "./model/objects/base/FillStyleDoc";
 export {
+	DEFAULT_FILL,
+	DEFAULT_FILL_OPACITY,
+	FILL_STYLE_KEYS,
+} from "./model/objects/base/FillStyleDoc";
+export {
+	DEFAULT_STROKE_OPACITY,
 	DEFAULT_STROKE_WIDTH,
 	STROKE_STYLE_KEYS,
+	STROKE_WIDTH_MIN,
 } from "./model/objects/base/StrokeStyleDoc";
+// The bounds the paint fields are held to and the color that follows the theme, for
+// schemas stated outside this package (the JSON schema generator, the AI tool
+// declarations) to read rather than restate.
+export { OPACITY_MAX, OPACITY_MIN } from "./model/objects/utils/opacity";
+export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
 export { TRANSFORM_STYLE_KEYS } from "./model/objects/base/TransformDoc";
@@ -120,6 +131,14 @@ export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
 export type { ObjectTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";
+// The stroke / fill defaults a type declares through its creation defaults, and
+// what one shape's style resolves to once type and last resort are folded in.
+export { extractShapeStyleDefaults } from "./plugin/ObjectShapeStyleDefaultsRegistry";
+export type {
+	ObjectShapeStyleDefaults,
+	ResolvedShapeStyle,
+	ShapeStyleGroup,
+} from "./plugin/ObjectShapeStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
 export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidatorRegistry";
 export type { SemanticDiagnostic } from "./model/types/SemanticDiagnostic";
@@ -162,3 +181,10 @@ export {
 	type UpdateConnectorParams,
 	type ZOrderPlacement,
 } from "./ops";
+// The one rule for a path a doc stores (an image `src`): relative to the `.jis`
+// file's directory and inside it. Every host resolving such a path splits it here.
+export { splitDocRelativePath } from "./file/docRelativePath";
+// The files an image `src` may name, and which a document names at all. Hosts
+// serving image bytes read the MIME type here rather than keeping a list each.
+export { resolveDocImageMimeType } from "./file/docImageMimeType";
+export { collectDocImageSources } from "./ops/query";

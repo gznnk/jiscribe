@@ -7,7 +7,7 @@ import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 /**
- * Embeds a CanvasDoc (the `.jis.json` content) into the SVG's `<metadata>`.
+ * Embeds a CanvasDoc (the `.jis` content) into the SVG's `<metadata>`.
  *
  * Like draw.io's editable SVG, the editing source is stored in the same file
  * as the visuals (`<text>`, ...) so it can be restored for re-editing. The

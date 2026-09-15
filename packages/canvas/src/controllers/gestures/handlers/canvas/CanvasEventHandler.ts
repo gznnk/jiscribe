@@ -4,10 +4,10 @@ import { roundToDecimal } from "@jiscribe/geometry";
 
 import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
-import { ZOOM } from "../../../../constants/zoom";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
+import { ZOOM } from "../../../utils/zoom";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import {
@@ -136,7 +136,7 @@ export const CanvasEventHandler: GestureHandler = {
 				nextState = {
 					...nextState,
 					viewport: calcPannedViewport(
-						state.eventStartSnapshot?.viewport ?? state.viewport,
+						state.activeDrag?.startSnapshot.viewport ?? state.viewport,
 						event.clientDelta,
 					),
 				};
@@ -201,7 +201,8 @@ export const CanvasEventHandler: GestureHandler = {
 				let endY = event.last.y;
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-				const snapCandidates = nextState.eventStartSnapshot?.snapCandidates;
+				const snapCandidates =
+					nextState.activeDrag?.startSnapshot.snapCandidates;
 				if (snapCandidates && !isSnapSuppressed(event)) {
 					const result = findSnap(
 						snapCandidates,
@@ -307,7 +308,7 @@ export const CanvasEventHandler: GestureHandler = {
 				nextState = {
 					...nextState,
 					viewport: calcPannedViewport(
-						state.eventStartSnapshot?.viewport ?? state.viewport,
+						state.activeDrag?.startSnapshot.viewport ?? state.viewport,
 						event.clientDelta,
 					),
 				};
@@ -351,7 +352,7 @@ export const CanvasEventHandler: GestureHandler = {
 
 				// bboxes were built once at dragStart; objects do not move during a marquee,
 				// so containment is a pure O(N) scan with no per-frame bbox recomputation (#124).
-				const bboxes = nextState.eventStartSnapshot?.bboxes ?? {};
+				const bboxes = nextState.activeDrag?.startSnapshot.bboxes ?? {};
 				const hitIds = collectIdsInArea(
 					bboxes,
 					areaMinX,

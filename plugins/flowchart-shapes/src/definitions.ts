@@ -136,7 +136,7 @@ import { TrapezoidIcon } from "./stencil/TrapezoidIcon";
  * the headless doc definition from `./doc` (features / validateDoc / factory) and adding
  * the render / interaction / editor UI parts with `createFrameObjectDefinition`, which
  * derives mapper / stateValidator / behavior from features. They map one-to-one onto
- * core's registration entries (ALL_OBJECT_DEFINITIONS in initializeObjectRegistry.ts),
+ * core's registration entries (BUILTIN_OBJECT_DEFINITIONS in applyObjectDefinition.ts),
  * with nothing left out on purpose. No menu is declared, so the default menu is derived
  * from features (packages/canvas/docs/12-plugin-architecture.md).
  *

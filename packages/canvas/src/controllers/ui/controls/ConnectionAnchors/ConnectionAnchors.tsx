@@ -3,14 +3,14 @@ import { calcNonZeroSign, degreesToRadians } from "@jiscribe/geometry";
 import type { Point, Rect, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { theme } from "../../../../constants/theme";
-import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import {
 	calcConnectPoint,
 	calcExtraConnectPoint,
 	calcOutwardVector,
-} from "../../../../rendering/objects/utils/calcConnectPoint";
+} from "../../../../connectors/calcConnectPoint";
+import type { ExtraConnectPoint } from "../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { theme } from "../../../../theme/themeTokens";
 
 // Anchor colors may hold var(--jiscribe-*), so they are applied via style
 // (fill/stroke) rather than SVG presentation attributes.

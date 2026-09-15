@@ -2,7 +2,9 @@
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
+import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -11,24 +13,15 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import type { ObjectMenuPropertyUpdater } from "../../ObjectMenuTypes";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
+import { getSelectedShapeStyle } from "../../utils/getSelectedShapeStyle";
+import { hasSingleStyleTarget } from "../../utils/hasSingleStyleTarget";
 
 const SECTION_ID = "bg-color";
 
 type BackgroundColorMenuProps = {
 	canvasState: CanvasControllerState;
-	onPropertyUpdate: ObjectMenuPropertyUpdater;
-};
-
-const getSelectedFillColor = (state: CanvasControllerState): string => {
-	const obj = getFirstSelectedWithProp(
-		state.selectedIds,
-		state.objects,
-		"fill",
-	);
-	const fill = (obj as Record<string, unknown>)?.fill;
-	return typeof fill === "string" ? fill : "transparent";
+	onPropertyUpdate: StylePropertyUpdater;
 };
 
 /**
@@ -42,7 +35,13 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const currentColor = getSelectedFillColor(canvasState);
+	const { objectShapeStyleDefaults } = useCanvasRegistries();
+	const currentColor = getSelectedShapeStyle(
+		canvasState.selectedIds,
+		canvasState.objects,
+		objectShapeStyleDefaults,
+		"fill",
+	).fill;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
@@ -54,7 +53,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 				isActive={isOpen}
 				data-kind="menu"
 				data-id="object-menu"
-				data-part={`toggle:${SECTION_ID}`}
+				data-part={togglePart(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>
 				<ColorPreviewIcon
@@ -70,6 +69,10 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 				>
 					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
+						currentColorIsShared={hasSingleStyleTarget(
+							canvasState.selectedIds,
+							canvasState.objects,
+						)}
 						property="fill"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
