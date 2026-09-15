@@ -5,6 +5,24 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 export const DUPLICATE_OFFSET = { x: 20, y: 20 };
 
 /**
+ * Whether the objects created by the previous Duplicate/Paste are exactly the current
+ * selection, which is the condition for chaining the next one off them.
+ *
+ * @param state - Compared as sets, so the order of selectedIds does not matter
+ */
+export function isLastDuplicateStillSelected(
+	state: CanvasControllerState,
+): boolean {
+	const { lastDuplicate, selectedIds } = state;
+	if (!lastDuplicate || lastDuplicate.newIds.length !== selectedIds.length) {
+		return false;
+	}
+
+	const lastSet = new Set(lastDuplicate.newIds);
+	return selectedIds.every((id) => lastSet.has(id));
+}
+
+/**
  * Computes the move-aware offset.
  *
  * - When the objects created by the previous duplicate are currently selected:
@@ -17,16 +35,7 @@ export function computeDuplicateOffset(state: CanvasControllerState): {
 	y: number;
 } {
 	const { lastDuplicate, selectedIds } = state;
-	if (!lastDuplicate) {
-		return DUPLICATE_OFFSET;
-	}
-
-	// Check whether the selection set matches the previous duplicate result
-	if (lastDuplicate.newIds.length !== selectedIds.length) {
-		return DUPLICATE_OFFSET;
-	}
-	const lastSet = new Set(lastDuplicate.newIds);
-	if (!selectedIds.every((id) => lastSet.has(id))) {
+	if (!lastDuplicate || !isLastDuplicateStillSelected(state)) {
 		return DUPLICATE_OFFSET;
 	}
 

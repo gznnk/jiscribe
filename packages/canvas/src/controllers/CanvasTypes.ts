@@ -643,16 +643,18 @@ export type CanvasControllerState = CanvasState & {
 	internalClipboard: ClipboardData | null;
 
 	/**
-	 * Previous Duplicate, for move-aware offset calculation: on the next Duplicate, if
-	 * selectedIds still equals newIds, an unmoved selection reuses `offset` and a moved one
-	 * adopts the delta as the new offset.
+	 * Previous Duplicate or Paste (both write it), for move-aware offset calculation: on the
+	 * next Duplicate or Paste, if selectedIds still equals newIds, an unmoved selection reuses
+	 * `offset` and a moved one adopts the delta as the new offset.
 	 */
 	lastDuplicate: {
 		newIds: string[];
-		/** Selection center X immediately after the duplicate */
+		/** Selection center X immediately after the duplicate/paste */
 		cx: number;
-		/** Selection center Y immediately after the duplicate */
+		/** Selection center Y immediately after the duplicate/paste */
 		cy: number;
+		/** The step to repeat, not necessarily the delta applied: a paste that had to
+		 * re-center on the view records the plain offset so the walk restarts there */
 		offset: { x: number; y: number };
 	} | null;
 };

@@ -163,7 +163,7 @@ describe("canvasReducer (integration)", () => {
 			expect(pastedId).not.toBe("text-1");
 			expect(boxOf(after, pastedId)).toEqual({
 				...measuredBoxOf("hello"),
-				// PASTE_OFFSET, applied to the corner the box grows from.
+				// DUPLICATE_OFFSET, applied to the corner the box grows from.
 				left: TEXT_ORIGIN.x + 20,
 				top: TEXT_ORIGIN.y + 20,
 			});

@@ -8,7 +8,7 @@ import type { ObjectStateValidatorRegistry } from "../../../states/registry/Obje
 /**
  * Serialized payload written to and read from the system clipboard on copy/paste.
  * Carries a self-contained set of top-level elements plus their descendants, keyed by id,
- * along with their z-order and the copy-time center used to position the paste.
+ * along with their z-order and the copy-time center.
  */
 export type ClipboardData = {
 	__type: "jiscribe-canvas-clipboard";
@@ -22,6 +22,10 @@ export type ClipboardData = {
 	 * relative stacking order of the copied set.
 	 */
 	rootIds: string[];
+	/**
+	 * Selection center at copy time. Part of the v1 format but not read back: paste
+	 * derives the center from the objects, since a foreign clipboard can carry any value here.
+	 */
 	center: Point;
 };
 
