@@ -196,6 +196,50 @@ export type CanvasMessageStrings = {
 	menuOpenReference: string;
 	/** Title of the ellipsis at the end of the ObjectMenu that opens the properties sidebar. */
 	menuPropertyPanel: string;
+
+	// Comments
+	/** Title of the ObjectMenu's comment button, and the label in the panel's header. */
+	menuComments: string;
+	/** Word after the number in the panel header's "· 2 open". */
+	commentsOpenCount: string;
+	/** Label of the button posting a reply, and of the one that opens its composer. */
+	commentsReply: string;
+	/** placeholder of the composer under an expanded thread. */
+	commentsReplyPlaceholder: string;
+	/** Label of the footer button that starts a thread. */
+	commentsNewThread: string;
+	/** placeholder of the composer that footer button opens. */
+	commentsNewThreadPlaceholder: string;
+	/** Label of the button posting the first comment of a thread. */
+	commentsPost: string;
+	/** title / aria-label of the check button that resolves a thread. */
+	commentsResolve: string;
+	/** Label of the button that reopens a resolved thread. */
+	commentsReopen: string;
+	/** Heading of the collapsed section holding the resolved threads, followed by their count. */
+	commentsResolvedSection: string;
+	/** Part of "resolved by" that precedes the name; empty in languages that put it after. */
+	commentsResolvedByPrefix: string;
+	/** Part of "resolved by" that follows the name; empty in languages that put it before. */
+	commentsResolvedBySuffix: string;
+	/** Word after the number in a collapsed thread's "2 replies". */
+	commentsReplies: string;
+	/** title / aria-label of the pencil button on one's own comment. */
+	commentsEdit: string;
+	/** title / aria-label of the trash button on one's own comment; it deletes without asking. */
+	commentsDelete: string;
+	/** Label of the button committing an edit. */
+	commentsSave: string;
+	/** Label of the button dropping an edit. */
+	commentsCancel: string;
+	/** Hint beside a composer's button naming the chord that submits it. */
+	commentsSubmitHint: string;
+	/** Shown in place of the footer button while the host set no author name. */
+	commentsReadOnly: string;
+	/** Mark on a comment whose body was changed after it was posted. */
+	commentsEdited: string;
+	/** aria-label of the panel's close (x) button. */
+	commentsClose: string;
 };
 
 /**

@@ -1,3 +1,4 @@
+import type { CommentDoc } from "@jiscribe/doc/model/objects/base/CommentThreadDoc";
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import type { Dimensions } from "@jiscribe/geometry";
 
@@ -290,6 +291,66 @@ export type MetaPropertyUpdateAction = {
 };
 
 /**
+ * One change to the comment threads of an object (`meta.comments`). The object
+ * is named outright rather than taken from the selection, since the panel can
+ * be opened from a marker while the sidebar hides the ObjectMenu.
+ *
+ * Ids and timestamps are minted by the caller, so the reducer stays pure.
+ */
+export type CommentOp =
+	| {
+			kind: "addThread";
+			objectId: string;
+			threadId: string;
+			/** The comment that opens the thread. */
+			comment: CommentDoc;
+	  }
+	| {
+			kind: "addReply";
+			objectId: string;
+			threadId: string;
+			comment: CommentDoc;
+	  }
+	| {
+			kind: "editComment";
+			objectId: string;
+			threadId: string;
+			commentId: string;
+			body: string;
+			/** ISO 8601; written to the comment's `editedAt`. */
+			editedAt: string;
+	  }
+	| {
+			kind: "deleteComment";
+			objectId: string;
+			threadId: string;
+			/** Deleting a thread's last remaining comment drops the thread. */
+			commentId: string;
+	  }
+	| {
+			kind: "resolveThread";
+			objectId: string;
+			threadId: string;
+			/** Display name of whoever resolves it; written to `resolvedBy`. */
+			resolvedBy: string;
+	  }
+	| { kind: "reopenThread"; objectId: string; threadId: string };
+
+/**
+ * Comment update action - applies one {@link CommentOp} to an object's
+ * `meta.comments`.
+ *
+ * The fifth property route beside {@link MetaPropertyUpdateAction} and the
+ * three style routes: every effective op is committed at once (history entry
+ * plus save request), with no preview step and no coalescing. An op naming an
+ * unknown object, thread or comment leaves the state as it is.
+ */
+export type CommentUpdateAction = {
+	type: "COMMENT_UPDATE";
+	op: CommentOp;
+};
+
+/**
  * Paste action - applies clipboard data to canvas state
  */
 export type PasteAction = {
@@ -345,6 +406,7 @@ export type CanvasAction =
 	| TransformPropertyUpdateAction
 	| DocumentPropertyUpdateAction
 	| MetaPropertyUpdateAction
+	| CommentUpdateAction
 	| PasteAction
 	| RemeasureTextAction
 	| CloseContextMenuAction

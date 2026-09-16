@@ -158,6 +158,14 @@ export { ObjectTypes } from "@jiscribe/doc/model/objects/types/ObjectType";
 export type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 export type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 export type { MetaDoc } from "@jiscribe/doc/model/objects/base/MetaDoc";
+export type {
+	CommentDoc,
+	CommentThreadDoc,
+} from "@jiscribe/doc/model/objects/base/CommentThreadDoc";
+export {
+	readCommentThreads,
+	countOpenCommentThreads,
+} from "@jiscribe/doc/model/objects/base/CommentThreadDoc";
 export type { ObjectState } from "./states/objects/base/ObjectState";
 export type { MetaState } from "./states/objects/base/MetaState";
 export type { CreateObjectType } from "@jiscribe/doc/model/objects/types/CreateObjectType";

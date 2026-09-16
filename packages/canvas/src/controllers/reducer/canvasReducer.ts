@@ -4,6 +4,7 @@ import {
 } from "@jiscribe/doc/model/objects/types/RichText";
 
 import type { CanvasAction } from "./CanvasActions";
+import { handleCommentUpdate } from "./handlers/handleCommentUpdate";
 import {
 	canApplyMetaProperty,
 	handleMetaPropertyUpdate,
@@ -367,6 +368,20 @@ export const createCanvasReducer =
 						: null,
 					registries,
 				);
+			}
+
+			case "COMMENT_UPDATE": {
+				// The fifth property route: the threads an object carries in the
+				// document. Like the meta route it changes nothing that is drawn, and
+				// unlike it there is no preview step — a posted comment is posted — so
+				// every op that changes the threads is committed at once, and one that
+				// changes none is a no-op whatever the selection is. The op names its
+				// object outright, so there is no target to check beside it.
+				const updated = handleCommentUpdate(state, action.op);
+				if (updated === state) {
+					return state;
+				}
+				return commitPropertyUpdate(updated, state, null, registries);
 			}
 
 			case "SYNC_EXTERNAL": {

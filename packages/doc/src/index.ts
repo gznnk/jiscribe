@@ -40,6 +40,16 @@ export {
 	resolveViewPadding,
 } from "./model/canvas/ViewDoc";
 export type { ObjectDoc } from "./model/objects/base/ObjectDoc";
+export type {
+	CommentDoc,
+	CommentThreadDoc,
+} from "./model/objects/base/CommentThreadDoc";
+export {
+	isCommentDoc,
+	isCommentThreadDoc,
+	readCommentThreads,
+	countOpenCommentThreads,
+} from "./model/objects/base/CommentThreadDoc";
 export type { ObjectType } from "./model/objects/types/ObjectType";
 export type { ObjectFeatures } from "./model/objects/types/ObjectFeatures";
 export type { CreateObjectType } from "./model/objects/types/CreateObjectType";

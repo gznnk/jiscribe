@@ -53,6 +53,7 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
+import type { CommentOp } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
 import type { ResolveImageBlob } from "../export";
@@ -60,6 +61,7 @@ import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
+import { CommentMarkerLayer } from "./ui/comments/CommentMarkerLayer";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
 import { SelectionControlsLayer } from "./ui/controls/SelectionControlsLayer";
@@ -81,6 +83,7 @@ import type {
 	OpenReferenceHandler,
 	OpenReferencePayload,
 } from "./ui/menu/ObjectMenu/ObjectMenuTypes";
+import { isObjectMenuSuppressed } from "./ui/menu/ObjectMenu/utils/isObjectMenuSuppressed";
 import { PropertyPanel } from "./ui/menu/PropertyPanel/PropertyPanel";
 import type {
 	PropertyPanelDocumentUpdater,
@@ -180,6 +183,14 @@ type CanvasProps = {
 	 * is passed through untouched: the canvas neither resolves nor validates it.
 	 */
 	onOpenReference?: (payload: OpenReferencePayload) => void;
+	/**
+	 * Display name written onto the comments posted from the canvas, and compared
+	 * against a comment's `author` to decide which ones offer edit and delete.
+	 * Omit it (or pass a blank string) and the comment panel is read-only: the
+	 * threads and the markers over the objects carrying them still show, but
+	 * nothing can be written, resolved or reopened.
+	 */
+	commentAuthor?: string;
 	/**
 	 * Reads the bytes of the file an `image` object names, its `src` passed
 	 * through untouched. Omit it and every image draws as a placeholder; a
@@ -331,6 +342,7 @@ const CanvasComponent = ({
 	onRedo,
 	onExportImage,
 	onOpenReference,
+	commentAuthor,
 	resolveImage,
 	theme = darkCanvasTheme,
 	grid,
@@ -549,6 +561,13 @@ const CanvasComponent = ({
 				commit,
 				coalesceHistory,
 			});
+		},
+		[dispatch],
+	);
+
+	const handleCommentUpdate = useCallback(
+		(op: CommentOp) => {
+			dispatch({ type: "COMMENT_UPDATE", op });
 		},
 		[dispatch],
 	);
@@ -855,6 +874,16 @@ const CanvasComponent = ({
 									canvasState={menuCanvasState}
 									onPropertyUpdate={handleStylePropertyUpdate}
 									onOpenReference={handleOpenReference}
+									commentAuthor={commentAuthor}
+									onCommentUpdate={handleCommentUpdate}
+								/>
+								<CommentMarkerLayer
+									canvasState={menuCanvasState}
+									isObjectMenuSuppressed={isObjectMenuSuppressed(
+										menuCanvasState,
+									)}
+									commentAuthor={commentAuthor}
+									onCommentUpdate={handleCommentUpdate}
 								/>
 							</ScrollSyncedOverlay>
 						</Container>

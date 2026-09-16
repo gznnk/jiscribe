@@ -103,6 +103,17 @@
 				"url": "./dist/jiscribe.schema.json"
 			}
 		],
+		"configuration": {
+			"title": "Jiscribe",
+			"properties": {
+				"jiscribe.commentAuthor": {
+					"type": "string",
+					"default": "",
+					"scope": "resource",
+					"markdownDescription": "The display name written onto comments posted from the canvas. When empty, the git `user.name` of the file's repository is used; when neither exists, comments are read-only."
+				}
+			}
+		},
 		"commands": [
 			{
 				"command": "jiscribe.setupAi",

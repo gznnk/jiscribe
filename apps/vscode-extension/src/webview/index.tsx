@@ -115,6 +115,8 @@ const isExtensionToWebviewMessage = (
 	switch (message.type) {
 		case "update":
 			return typeof message.data === "string";
+		case "commentAuthor":
+			return message.author === undefined || typeof message.author === "string";
 		case "requestImageExport":
 			return (
 				typeof message.requestId === "number" &&
@@ -160,6 +162,10 @@ function App() {
 	const colorScheme = useVscodeColorScheme();
 	const [docView, setDocView] = useState<DocViewState>(initialDocViewState);
 	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
+	// Name written onto the comments posted here, resolved by the Extension and
+	// sent after the initial update; undefined until then, which is what keeps the
+	// comment panel read-only when there is no name to post under.
+	const [commentAuthor, setCommentAuthor] = useState<string | undefined>();
 
 	// Canvas's imperative handle (its `export` namespace renders the image when
 	// saving .jis.svg / .jis.png).
@@ -298,6 +304,10 @@ function App() {
 					break;
 				}
 
+				case "commentAuthor":
+					setCommentAuthor(message.author);
+					break;
+
 				case "requestImageExport": {
 					// Saving .jis.png / .jis.svg: render the current canvas and return it.
 					// Always respond even on failure (data: null) so the Extension
@@ -420,6 +430,7 @@ function App() {
 					theme={vscodeCanvasThemes[colorScheme]}
 					ref={canvasRef}
 					onExportImage={handleExportImage}
+					commentAuthor={commentAuthor}
 					resolveImage={imageResolver.resolveImage}
 				/>
 				{docView.error && <DocEditingPausedOverlay error={docView.error} />}

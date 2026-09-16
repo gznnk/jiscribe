@@ -86,6 +86,19 @@ the tab it was made in. An image whose file never arrived is dropped from the
 exported file — it is the placeholder's own drawing that a viewer of a diagram
 gets, never a dead reference.
 
+### `meta.comments` is a conversation, not a drawing
+
+`meta.comments` holds the comment threads left on an object: a thread carries an
+id, its resolution (`resolved` / `resolvedBy`, both absent while it is open) and
+at least one comment (`author` / `body` / `createdAt`, plus `editedAt` once it is
+edited). `meta` is free-form and never validated on load, so a reader narrows it
+through `readCommentThreads` (`@jiscribe/doc`), which drops what is not a
+well-formed thread; the next write of that object drops those entries for good.
+Nothing is drawn from the threads, so a duplicate of the object carries none of
+them (`cloneObjects`) — a thread belongs to the object it was left on, and the
+copy starts a conversation of its own. They are part of the document, so an
+export that embeds the `.jis` (`.jis.svg` / `.jis.png`) carries them along.
+
 ### Text Model Asymmetry (a shape's `text` vs. a connector's `label`)
 
 The storage shape of the text-bearing fields is **intentionally asymmetric** between shapes and connectors.
@@ -118,9 +131,13 @@ subtleties (live preview + a single history entry) without reimplementing them. 
 action is rejected because it would duplicate these commit subtleties. What the style registry does not own takes a
 sibling action instead: the frame's own numbers (position / size / rotation) take `TRANSFORM_PROPERTY_UPDATE`, the
 document's own settings (such as the canvas surface `background`) take `DOCUMENT_PROPERTY_UPDATE`, and an object's
-`meta` takes `META_PROPERTY_UPDATE`. None of them keeps a second copy of the commit subtleties; they share the commit tail
+`meta` takes `META_PROPERTY_UPDATE`, and its comment threads take `COMMENT_UPDATE` as a fifth route of their own. None of them keeps a second copy of the commit subtleties; they share the commit tail
 (`commitPropertyUpdate` in `controllers/reducer/canvasReducer.ts`). `DOCUMENT_PROPERTY_UPDATE` differs in that its target
 is the doc rather than a selection, and `null` clears the field the way the headless `setBackground` op does, handing the surface back to the theme.
+`COMMENT_UPDATE` differs in what it carries and when it commits: an op over an array of threads rather than one string field,
+naming its object outright rather than reading the selection (the panel opens from a marker, with no ObjectMenu in sight), and
+with no preview step to record — a posted comment is posted, so every op that changes the threads is committed at once and
+none of them coalesces.
 
 ## The Parser's Two-Stage Validation (Defense at the Boundary)
 

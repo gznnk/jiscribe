@@ -1,5 +1,6 @@
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
+import { CommentMarkerHandler } from "../gestures/handlers/comments/CommentMarkerHandler";
 import { ConnectionAnchorEventHandler } from "../gestures/handlers/controls/connection/ConnectionAnchorEventHandler";
 import { ConnectorVertexInsertHandler } from "../gestures/handlers/controls/connection/ConnectorVertexInsertHandler";
 import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventHandler";
@@ -13,7 +14,7 @@ import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHand
 /**
  * Initialize the GestureHandlerRegistry with all gesture handlers.
  * The registry holds one handler per targetKind: canvas, connector, object,
- * control, and menu.
+ * control, menu, and the comment markers drawn over objects that carry threads.
  *
  * Every per-target router's supports() gates on its own targetKind plus
  * isPerTargetInteraction (the left button, tap/drag types), and only
@@ -64,5 +65,6 @@ export const initializeGestureHandlerRegistry = (
 		.register("connector-handler", ConnectorEventHandler)
 		.register("object-handler", ObjectEventHandler)
 		.register("control-handler", controlEventHandler)
-		.register("menu-handler", MenuEventHandler);
+		.register("menu-handler", MenuEventHandler)
+		.register("comment-marker-handler", CommentMarkerHandler);
 };

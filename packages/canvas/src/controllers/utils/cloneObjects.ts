@@ -5,7 +5,9 @@ import {
 import type { Point } from "@jiscribe/geometry";
 
 import { moveObjectTree } from "./moveObjectTree";
+import type { MetaState } from "../../states/objects/base/MetaState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import { withMetaEntry } from "../../states/objects/base/withMetaEntry";
 import type { ConnectorState } from "../../states/objects/connector/ConnectorState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
@@ -44,6 +46,16 @@ const offsetFreeEndpoint = (ref: EndpointRef, offset: Point): EndpointRef => {
 };
 
 /**
+ * The meta a clone carries: the source's without its comment threads, or undefined
+ * once that was all it held. A thread is a conversation about the object it was
+ * left on, so a duplicate starts with none of its own.
+ */
+const stripClonedMeta = (meta: MetaState | undefined): MetaState | undefined =>
+	meta?.comments === undefined
+		? meta
+		: withMetaEntry(meta, "comments", undefined);
+
+/**
  * Clones a set of top-level elements, assigns fresh IDs, and moves them by the given offset.
  *
  * - `topLevelIds` are the top-level elements (objects + connectors) ordered by z-order
@@ -53,6 +65,8 @@ const offsetFreeEndpoint = (ref: EndpointRef, offset: Point): EndpointRef => {
  *   free endpoints and waypoints hold absolute coordinates and must be translated to
  *   keep the connector congruent).
  * - All parentId / childIds / connector endpoint references are remapped to the new IDs.
+ * - `meta.comments` is dropped from every clone (see stripClonedMeta); the rest of `meta`
+ *   is carried over as it is.
  * - `allObjects` must also include the descendants of `topLevelIds`.
  *
  * Even when the input is not a closed forest (e.g. via an external clipboard, where a child
@@ -108,6 +122,7 @@ export function cloneObjects(
 			...srcObj,
 			id: clonedId,
 			parentId: remappedParentId,
+			meta: stripClonedMeta(srcObj.meta),
 		};
 
 		// Group: remap childIds to new IDs (keep only children present in the clone set)

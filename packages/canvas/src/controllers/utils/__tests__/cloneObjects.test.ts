@@ -147,6 +147,70 @@ describe("cloneObjects", () => {
 		]);
 	});
 
+	it("carries the rest of meta over but leaves the comment threads behind", () => {
+		const { newObjects, idRemap } = cloneObjects(
+			["A"],
+			objects({
+				A: {
+					id: "A",
+					type: "rect",
+					meta: {
+						name: "Server",
+						comments: [
+							{
+								id: "t1",
+								comments: [
+									{
+										id: "t1-c1",
+										author: "Ada",
+										body: "Looks off to me",
+										createdAt: "2026-09-16T09:00:00.000Z",
+									},
+								],
+							},
+						],
+					},
+				},
+			}),
+			ZERO,
+			registries.objectBehavior,
+		);
+
+		// A thread is a conversation about the original; the duplicate starts none.
+		expect(newObjects[idRemap.get("A")!].meta).toEqual({ name: "Server" });
+	});
+
+	it("drops meta entirely when the comment threads were all it held", () => {
+		const { newObjects, idRemap } = cloneObjects(
+			["A"],
+			objects({
+				A: {
+					id: "A",
+					type: "rect",
+					meta: {
+						comments: [
+							{
+								id: "t1",
+								comments: [
+									{
+										id: "t1-c1",
+										author: "Ada",
+										body: "Looks off to me",
+										createdAt: "2026-09-16T09:00:00.000Z",
+									},
+								],
+							},
+						],
+					},
+				},
+			}),
+			ZERO,
+			registries.objectBehavior,
+		);
+
+		expect(newObjects[idRemap.get("A")!].meta).toBeUndefined();
+	});
+
 	it("does not double-register when a topLevelIds root and a promoted root overlap", () => {
 		// equivalent to an internal copy: the selected child C is in topLevelIds, but parent G is outside the set.
 		const { newTopLevelIds, idRemap } = cloneObjects(
