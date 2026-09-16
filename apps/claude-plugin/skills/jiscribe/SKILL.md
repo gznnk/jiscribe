@@ -3,7 +3,7 @@ name: jiscribe
 description: Use when creating or editing a Jiscribe canvas diagram — a .jis / .jiscribe file, or a flowchart, architecture diagram, sticky-note board or chart the user wants drawn on a Jiscribe canvas.
 ---
 
-<!-- jiscribe guide 0.10.0+351cb9ee -->
+<!-- jiscribe guide 0.10.0+e55f579d -->
 
 # Drawing on a Jiscribe canvas
 
@@ -211,7 +211,7 @@ rather than a `rect` with a label on it.
 | `queue`                 | job queue, message queue                                           |
 | `lock`                  | authentication, protected resource                                 |
 | `shield`                | security boundary, trust zone                                      |
-| `lucideIcon`            | decorative Lucide icon (no text, not connectable)                  |
+| `lucideIcon`            | Lucide icon (line-art pictogram, no text of its own)               |
 | `callout`               | annotation bubble                                                  |
 | `note`                  | comment box, UML note                                              |
 | `brace`                 | group marker, grouping annotation                                  |

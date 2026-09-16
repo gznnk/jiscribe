@@ -38,7 +38,7 @@ The top level must always have `version` / `root` (the array may be empty).
 **MUST NOT**
 
 - Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only the intermediate vertices (usually empty).
-- Do not attach a connector endpoint (`owner`) to a `lucideIcon`, `polyline`, `polygon`, `group`, `svg`, or `connector`. Every other box shape is connectable, and so is `text`; for those six non-connectable types, use a `free` endpoint to point near them.
+- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Every box shape is connectable, and so is `text`; for those five non-connectable types, use a `free` endpoint to point near them.
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
 - Do not give a `text` a `height` — its height is always measured from the text itself. `width` belongs to its `textLayout: "block"` form alone, where it is required and is the width the text wraps in; the default label form measures its width too, and `fontSize` is what makes it bigger.
 - Do not reuse the same `id`.
@@ -83,7 +83,7 @@ connector attached to it follows the text as it grows.
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"edge"` (+ `side`, `t`) / `"free"` (+ `point`)
 - `connectPoint` `id`: `"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"` (for the center, use `"kind": "center"` instead — it is not a `connectPoint` id). On `brace` / `bracket` / `bracketWithStem` also `"tip"`, the marker's cusp / spine middle / stem end — use it whenever a connector points at a group marker
 - `edge`: a free position along one local edge, `{ "kind": "edge", "side": "top", "t": 0.25 }`. Only when a named anchor cannot express where the line has to land (several parallel lines into one edge); `t` runs left→right on top/bottom, top→bottom on left/right, and `0.5` is the edge midpoint — write that as a `connectPoint` instead
-- `owner` may reference **any box shape except `lucideIcon`, and `text`** — that is, every type except `lucideIcon` / `polyline` / `polygon` / `group` / `svg` / `connector`. You **cannot** attach an endpoint to those six (`lucideIcon` is decoration, not a node: place it beside the shape it marks and connect to that shape). To point an arrow at/from one of them, use a `free` endpoint placed near it instead.
+- `owner` may reference **any box shape, and `text`** — that is, every type except `polyline` / `polygon` / `group` / `svg` / `connector`. You **cannot** attach an endpoint to those five. To point an arrow at/from one of them, use a `free` endpoint placed near it instead. On a `lucideIcon` the endpoint meets the box, which the drawing is centred in, so a non-square box lands the line off the pictogram.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
 
 ### Connector label
@@ -414,7 +414,7 @@ missing are in "`image` — a picture file beside the `.jis`".
 
 - ❌ Putting a connector inside a group's `children` → ✅ keep connectors at the top level of `root`.
 - ❌ A connector with both endpoints `free` (no owner) → ✅ at least one endpoint must reference an object.
-- ❌ Attaching a connector endpoint (`owner`) to a `lucideIcon`/`polyline`/`polygon`/`group`/`svg` → ✅ every other box shape and `text` are connectable; use a `free` endpoint placed near the target instead.
+- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ every box shape and `text` are connectable; use a `free` endpoint placed near the target instead.
 - ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
 - ❌ Putting a connector's edge label in a top-level `text` field → ✅ use a nested `label`: `"label": { "text": "Yes" }`.
 - ❌ Giving a `group` `x`/`y`/`width`/`height` → ✅ position it via the `children` coordinates.

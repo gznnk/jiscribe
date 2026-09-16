@@ -18,8 +18,8 @@ export const lucideIconDocDefinition: ObjectDocDefinition =
 		defaults: ICON_DOC_DEFAULTS,
 		extraKeys: ["icon"] satisfies readonly (keyof IconDoc)[],
 		description:
-			'A named pictogram from the bundled Lucide icon set, drawn as line art. Decoration, not a node: it holds no text and cannot be a connector endpoint, so place it beside the shape it marks (a rect, a container header, a sticky) and connect arrows to that shape instead. For a picture that is itself a node, use a labelled pictogram such as "server", "package" or "db". The drawing is scaled uniformly to the smaller side of the box and centred, so keep the box square (the 64x64 default) unless margin is wanted. `stroke` is the icon\'s own color and `strokeWidth` its line weight, both honoured at any size.',
-		summary: "decorative Lucide icon (no text, not connectable)",
+			'A named pictogram from the bundled Lucide icon set, drawn as line art. It holds no text of its own, so a label goes in a neighbouring shape (a rect, a container header, a sticky) or use a labelled pictogram such as "server", "package" or "db" instead. A connector endpoint may name it; the endpoint meets its box, not the drawn silhouette. The drawing is scaled uniformly to the smaller side of the box and centred, so keep the box square (the 64x64 default) unless margin is wanted. `stroke` is the icon\'s own color and `strokeWidth` its line weight, both honoured at any size.',
+		summary: "Lucide icon (line-art pictogram, no text of its own)",
 		// An icon is placed at its default size and resized afterwards; drag-drawing a
 		// box only to have the icon centre itself in the smaller side reads as a bug.
 		supportsBounds: false,
