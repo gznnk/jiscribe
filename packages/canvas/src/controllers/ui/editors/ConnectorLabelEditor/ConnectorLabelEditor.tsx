@@ -14,7 +14,8 @@ import {
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 import { useCaretReporter } from "../hooks/useCaretReporter";
 import { fitTextAreaHeight } from "../utils/fitTextAreaHeight";
-import type { CaretLocalRect, CaretTarget } from "../utils/readCaretLocalRect";
+import type { CaretTarget } from "../utils/measureCaretInSurface";
+import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
 /**
  * Opens the label editor the way an in-place editor opens: focused, with the

@@ -24,6 +24,37 @@ const ZOOM_STEP_LIMIT = 8;
  */
 const LABEL_LINE_COUNT = 20;
 
+/** Lines filled into the fixed-size rectangle below, enough to overflow its region. */
+const OVERFLOW_LINE_COUNT = 30;
+
+/** Lines the rectangle holds before a paste, already more than its region shows. */
+const PRESET_LINE_COUNT = 10;
+
+/** Lines pasted in one go, which moves the caret far past the bottom of the region. */
+const PASTE_LINE_COUNT = 30;
+
+/** Top-left of a rectangle small enough that a few dozen lines of text overflow it. */
+const FIXED_REGION_START = { x: 200, y: 200 };
+
+/** Bottom-right of that rectangle; it sits well inside the canvas area. */
+const FIXED_REGION_END = { x: 420, y: 320 };
+
+/** Center of that rectangle, where the text editor is opened. */
+const FIXED_REGION_CENTER = {
+	x: (FIXED_REGION_START.x + FIXED_REGION_END.x) / 2,
+	y: (FIXED_REGION_START.y + FIXED_REGION_END.y) / 2,
+};
+
+/**
+ * How far the open editor's surface is scrolled from the bottom of its scroll
+ * range, in px; 0 means the last line of the text is against the bottom of the clip.
+ */
+async function scrollDistanceFromBottom(canvas: CanvasDriver): Promise<number> {
+	return canvas
+		.textEditorSurface()
+		.evaluate((el) => el.scrollTop - (el.scrollHeight - el.clientHeight));
+}
+
 /** Midpoint of a connector's first segment, which is always a point on the line. */
 async function firstSegmentMidpoint(
 	canvas: CanvasDriver,
@@ -326,6 +357,80 @@ test.describe("text edit reveal", () => {
 				message: "the typed label reaches the editor",
 			})
 			.toBe("label");
+
+		expect(await canvas.getViewBox()).toBe(before);
+
+		await canvas.cancelText();
+	});
+
+	test("leaves the camera alone when reopening a shape whose text overflows it", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", FIXED_REGION_START, FIXED_REGION_END);
+		await canvas.deselect();
+
+		await canvas.typeTextAt(FIXED_REGION_CENTER, "");
+		await canvas
+			.textEditorSurface()
+			.fill(new Array(OVERFLOW_LINE_COUNT).fill("line").join("\n"));
+		await canvas.commitText();
+
+		const before = await canvas.getViewBox();
+
+		// Reopening puts the caret at the end from script, which no browser scrolls a
+		// surface for; without the editor scrolling itself the caret would be reported
+		// a whole clipped text below the box and the camera would chase it.
+		await canvas.typeTextAt(FIXED_REGION_CENTER, "");
+		await expect
+			.poll(() => scrollDistanceFromBottom(canvas), {
+				message: "the surface shows the last line the caret sits on",
+			})
+			.toBe(0);
+
+		expect(await canvas.getViewBox()).toBe(before);
+
+		await canvas.cancelText();
+	});
+
+	test("keeps the caret inside the box when a paste pushes it past the region", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", FIXED_REGION_START, FIXED_REGION_END);
+		await canvas.deselect();
+
+		await canvas.typeTextAt(FIXED_REGION_CENTER, "");
+		await canvas
+			.textEditorSurface()
+			.fill(new Array(PRESET_LINE_COUNT).fill("line").join("\n"));
+		await expect
+			.poll(() => scrollDistanceFromBottom(canvas), {
+				message: "the filled text settles against the bottom of the clip",
+			})
+			.toBe(0);
+
+		const before = await canvas.getViewBox();
+
+		const pasted = new Array(PASTE_LINE_COUNT).fill("pasted").join("\n");
+		await canvas.page.evaluate(
+			(text) => navigator.clipboard.writeText(text),
+			pasted,
+		);
+		await canvas.page.keyboard.press("Control+End");
+		await canvas.page.keyboard.press("Control+v");
+
+		await expect
+			.poll(() => canvas.textEditorText(), {
+				message: "the pasted lines reach the editor",
+			})
+			.toContain(pasted);
+
+		// The reveal a browser does for a paste runs after the input event the caret
+		// report rides on, so the editor has to have scrolled itself by now.
+		await expect
+			.poll(() => scrollDistanceFromBottom(canvas), {
+				message: "the surface follows the caret the paste left at the end",
+			})
+			.toBe(0);
 
 		expect(await canvas.getViewBox()).toBe(before);
 
