@@ -68,7 +68,7 @@ CanvasMapper は形状タイプごとの Mapper を、引数で受け取る `Obj
 `width` / `height` は必須なので、ファイルに手が届かない環境でも文書のレイアウトは
 成り立つ。
 
-ファイルを読むのはホストの仕事で、`<Canvas>` / `<CanvasThumbnail>` の
+ファイルを読むのはホストの仕事で、`<Canvas>` の
 `resolveImage` prop がその口。`meta.reference` を `onOpenReference` へ渡すのと
 同じく、`src` を無加工で渡して `Blob` を受け取る。キャンバスはパスを解決も検証も
 しない——ホストが共有する唯一の読み方は `splitDocRelativePath`（`@jiscribe/doc`）。

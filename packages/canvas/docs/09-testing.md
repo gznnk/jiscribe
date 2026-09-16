@@ -37,7 +37,7 @@ and sociable behavior tests are placed right next to the files they target
 - The default environment is `environment: "node"`: without going through the DOM, a test verifies input state → output state directly.
   Only tests that need DOM APIs (rendering a React hook or component to check it, and the like)
   switch to jsdom with `// @vitest-environment jsdom` at the top of the file
-  (e.g. `controllers/hooks/__tests__/useSyncExternalDoc.test.tsx`, `controllers/__tests__/CanvasThumbnail.test.tsx`).
+  (e.g. `controllers/hooks/__tests__/useSyncExternalDoc.test.tsx`, `controllers/ui/menu/ObjectMenu/common/ObjectMenuColorPickerGrid/__tests__/ObjectMenuColorPickerGrid.test.tsx`).
   jsdom is an in-process simulated DOM, so these stay in the unit layer
 - Run: `pnpm --filter @jiscribe/canvas test` (`vitest run`).
   `test:coverage` / `test:ui` are also provided (for what coverage excludes, see `coverage.exclude` in `vitest.config.ts`)

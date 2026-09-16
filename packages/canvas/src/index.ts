@@ -43,7 +43,6 @@ export type { TextSlotMeasurement } from "./controllers/utils/measureTextSlot";
 export type { ObjectOverlap } from "./controllers/utils/findObjectOverlaps";
 export type { CanvasModalKind, DragKind } from "./controllers/CanvasTypes";
 export type { ResolvedSelection } from "./controllers/utils/resolveRequestedSelection";
-export { CanvasThumbnail } from "./controllers/CanvasThumbnail";
 export {
 	exportCanvasToPng,
 	exportCanvasToSvg,

@@ -33,8 +33,8 @@ type RenderingRegistriesProviderProps = {
 };
 
 /**
- * Bundles the rendering-layer registry contexts so consumers (`Canvas`,
- * `CanvasThumbnail`) provide them in one node instead of a nested stack. Takes
+ * Bundles the rendering-layer registry contexts so `Canvas` can provide them
+ * in one node instead of a nested stack. Takes
  * the registries individually rather than the controllers-layer
  * `CanvasRegistries` bundle (docs/02-architecture.md layering).
  */

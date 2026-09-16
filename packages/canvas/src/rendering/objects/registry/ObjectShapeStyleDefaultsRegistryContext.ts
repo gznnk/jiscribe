@@ -13,7 +13,7 @@ import { createContext, useContext } from "react";
  * The default is a fresh empty registry, so rendering without a Provider draws
  * every unset stroke and fill with the shared last resort
  * (SHAPE_STYLE_FALLBACK).
- * `Canvas` and `CanvasThumbnail` always provide the canvas's own registry.
+ * `Canvas` always provides the canvas's own registry.
  */
 export const ObjectShapeStyleDefaultsRegistryContext =
 	createContext<ObjectShapeStyleDefaultsRegistry>(

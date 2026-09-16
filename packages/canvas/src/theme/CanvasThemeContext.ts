@@ -10,7 +10,7 @@ import { darkCanvasTheme } from "./themePresets";
  * Consumers read the JS-consumed parts (handle dimensions, fontFamily);
  * CSS-consumed tokens flow through `--jiscribe-*` custom properties instead
  * (see `theme/themeCssVars.ts`). The default value keeps components working
- * outside a Provider (e.g. in unit tests, CanvasThumbnail).
+ * outside a Provider (e.g. in unit tests).
  */
 export const CanvasThemeContext = createContext<CanvasTheme>(darkCanvasTheme);
 

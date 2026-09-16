@@ -17,8 +17,8 @@ type FitOptions = {
  * Pure function that computes a Viewport fitting all content (every object
  * except groups).
  *
- * Shared by `ZoomToFitCommand` (Ctrl+0), the imperative `viewport.fitToContent`
- * and the read-only `CanvasThumbnail` so the fit behavior does not drift.
+ * Shared by `ZoomToFitCommand` (Ctrl+0) and the imperative
+ * `viewport.fitToContent` so the fit behavior does not drift.
  * Returns `null` when there is no extent to fit (no objects / all degenerate).
  *
  * @param objects - The object map to fit; groups contribute through their children
