@@ -103,9 +103,11 @@ visible or not, is used as it is and nothing new is opened. A plain
 headless window can still be looked at.
 
 The host's lifetime follows the windows: once the last viewer closes and none
-comes back within five seconds, it shuts down and releases the port. A headless
-window holds that connection like any other, so it keeps the host alive until it
-is closed. Windows are closed by asking the page to close itself over the
+comes back within an hour, it shuts down and releases the port. The grace is that
+long because a browser puts a window left in the background to sleep, and the
+page only reconnects when the person returns to it; the host has to still be
+there when they do. A headless window holds that connection like any other, so
+it keeps the host alive until it is closed. Windows are closed by asking the page to close itself over the
 WebSocket — the only way that reaches a Windows-side browser launched from WSL —
 which happens on `close_canvas` and when the MCP client disconnects. A headless
 page that cannot reach the host for 15 seconds closes itself, which is what

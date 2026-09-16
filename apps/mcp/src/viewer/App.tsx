@@ -82,9 +82,9 @@ const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
  * How long a headless window keeps trying to reconnect before closing itself.
  * This is a liveness check on the host, not an idle timeout: the AI may spend
  * minutes thinking without saying a word, and the window has to stay open through
- * that. The reconnect backoff tops out at 5 seconds and the host waits 5 seconds
- * before deciding the viewers are gone, so 15 seconds of silence is several failed
- * attempts past the point where a host that was coming back would have come back.
+ * that. The reconnect backoff tops out at 5 seconds, so 15 seconds of silence is
+ * several failed attempts in a row, which a host that was merely restarting on
+ * the same port would have answered.
  * Without this, a window nobody can see would sit there for as long as the machine
  * runs, since there is no one to close it
  */
