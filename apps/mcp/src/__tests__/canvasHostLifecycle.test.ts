@@ -20,7 +20,7 @@ import type { BrowserOpenOptions } from "../host/openBrowser";
 const TEST_PORT = 5290;
 
 /**
- * The grace period is 5 seconds by default; it is shortened here because the
+ * The grace period is an hour by default; it is shortened here because the
  * shutdown itself is what we want to see
  */
 const TEST_IDLE_DELAY_MS = 50;

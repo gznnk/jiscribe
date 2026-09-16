@@ -66,10 +66,14 @@ const VIEWER_CLOSE_TIMEOUT_MS = 5_000;
 
 /**
  * The grace period between the last viewer leaving and onViewersGone being called.
- * It is there so a momentary disconnect on reload does not tear the host down, and
- * it is a few times the viewer's reconnect interval (which starts at 1 second)
+ * It is long because the connection is lost while nobody is closing anything: a
+ * browser discards or freezes a window left in the background, and the page only
+ * reconnects once a person comes back to it. With the host gone by then there is
+ * nowhere to reconnect to, and the AI has to open the canvas again. The port is
+ * given back when the MCP client leaves in any case, so holding it for the length
+ * of a break costs nothing (the process outlives the host either way)
  */
-const IDLE_SHUTDOWN_DELAY_MS = 5_000;
+const IDLE_SHUTDOWN_DELAY_MS = 60 * 60 * 1_000;
 
 /**
  * How long to wait for a headless window to connect back after it was spawned. A
@@ -221,9 +225,9 @@ export type CanvasHostOptions = {
 	onViewersGone?: () => void;
 	/**
 	 * The grace period between the last viewer leaving and onViewersGone being
-	 * called (milliseconds, default 5000). It is there so a momentary disconnect on
-	 * reload does not tear the host down, so shorten it only when there is a reason
-	 * not to wait (tests)
+	 * called (milliseconds, default one hour). It covers a window a browser put to
+	 * sleep in the background, which reconnects only when a person returns to it,
+	 * so shorten it only when there is a reason not to wait (tests)
 	 */
 	idleShutdownDelayMs?: number;
 	/**
