@@ -99,12 +99,20 @@ export const ObjectMenuSliderFooter = styled.div`
 
 /**
  * Label for the menu slider.
+ *
+ * The dropdown panel has no width of its own: as an absolutely positioned box
+ * anchored with `left: 50%` it has almost no available width, so it settles at
+ * its min-content width. A breakable label contributes only its longest
+ * unbreakable run to that minimum, and Japanese breaks between any two
+ * characters ("フォントサイズ"), so the label wrapped instead of widening the
+ * panel. `nowrap` puts the whole label into the minimum.
  */
 export const ObjectMenuSliderLabel = styled.label`
 	font-size: 12px;
 	font-weight: 600;
 	color: ${theme.foreground};
 	user-select: none;
+	white-space: nowrap;
 `;
 
 /**
