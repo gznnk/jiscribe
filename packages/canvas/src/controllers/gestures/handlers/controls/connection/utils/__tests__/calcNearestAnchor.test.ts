@@ -111,6 +111,23 @@ describe("calcNearestAnchor", () => {
 			});
 		});
 
+		it("measures the depth against an ellipse's arc rather than its bounding box", () => {
+			// (260,190) is 40px inside the box's top edge but only 30px inside the
+			// arc, which at local x = 60 sits at y = -40.
+			const ellipse = {
+				...roomyFrame,
+				features: { type: "ellipse", geometry: "ellipse" } as const,
+			};
+			expect(calcNearestAnchor(ellipse, 260, 190)).toEqual({
+				kind: "edge",
+				side: "top",
+				t: 0.8,
+			});
+			expect(calcNearestAnchor(roomyFrame, 260, 190)).toEqual({
+				kind: "center",
+			});
+		});
+
 		it("measures the depth against the outline rather than the bounding box", () => {
 			// An outline that tapers toward the top: (240,200) is under 10px inside the
 			// drawn edge though it is 50px inside the bounding box.
