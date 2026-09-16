@@ -25,6 +25,7 @@ import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
+import { useBlockBrowserZoom } from "./hooks/useBlockBrowserZoom";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
@@ -450,6 +451,10 @@ const CanvasComponent = ({
 
 	// Scoped to canvasRef so wheel events outside the canvas are not captured.
 	useCanvasWheel(canvasRef, wheelHandler, gestureHandling);
+
+	// The chrome around the drawing region (toolbar, sidebars, modals) is outside
+	// that scope, so a Ctrl+wheel there would zoom the browser instead.
+	useBlockBrowserZoom(rootRef);
 
 	// Cooperative: a touch starting on a shape stays a shape drag instead of
 	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).

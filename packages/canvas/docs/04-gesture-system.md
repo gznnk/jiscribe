@@ -11,6 +11,10 @@ Raw pointer events are received on the canvas root element (`CanvasRoot`) and wh
 viewport element beneath it (`Viewport`) (`controllers/Canvas.tsx`), and
 the `GestureRecognizer` (`controllers/gestures/recognizer/`) converts them into a `Gesture`.
 
+A wheel outside the viewport never becomes a gesture, but a Ctrl-held one is still cancelled at the
+root (`useBlockBrowserZoom`): over the toolbar or a sidebar the browser would otherwise zoom the
+whole page, and a trackpad pinch arrives as the same event.
+
 The kinds of gesture are defined by `GestureType` (`controllers/gestures/recognizer/GestureRecognizerTypes.ts`).
 Besides press, drag start / move / end and click / doubleClick, there are wheel, pinch, longPress,
 inertial scrolling, and more.
