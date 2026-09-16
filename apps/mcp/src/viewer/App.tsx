@@ -28,11 +28,13 @@ import type {
 	OpenReferencePayload,
 } from "@jiscribe/canvas";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 
 import { canvasParser } from "./canvasPlugins";
 import { CanvasSurface } from "./CanvasSurface";
 import { saveFile } from "./files";
 import { createDocImageResolver } from "./resolveDocImage";
+import { viewerTheme } from "./viewerTheme";
 import type {
 	CanvasHostClientMessage,
 	CanvasHostServerMessage,
@@ -53,8 +55,25 @@ const SAVE_DEBOUNCE_MS = 500;
 const RECONNECT_BASE_DELAY_MS = 1_000;
 const RECONNECT_MAX_DELAY_MS = 5_000;
 
-/** How long the transient notice stays up before it fades out of the way */
+/**
+ * How long the transient notice stays up, fading in and back out included. The
+ * element is dropped on the same timer the animation runs on, so it is passed to
+ * the animation rather than repeated in the stylesheet
+ */
 const NOTICE_DURATION_MS = 2_000;
+
+/**
+ * The notice sits outside the Canvas root, where the theme's `--jiscribe-*` do
+ * not reach, so its colors are read from the same theme the canvas is drawn with
+ */
+const noticeStyle: CSSProperties = {
+	background: viewerTheme.tokens.surface,
+	color: viewerTheme.tokens.foreground,
+	borderColor: viewerTheme.tokens.border,
+	borderRadius: viewerTheme.tokens.radius,
+	boxShadow: viewerTheme.tokens.shadow,
+	animationDuration: `${NOTICE_DURATION_MS}ms`,
+};
 
 /** What Ctrl+S is answered with, in place of the browser's save dialog */
 const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
@@ -142,7 +161,12 @@ export function App() {
 		[openPath],
 	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+	// The id remounts the element, so pressing again while one is up replays the
+	// animation instead of leaving a notice that is already fading
+	const [notice, setNotice] = useState<{
+		id: number;
+		message: string;
+	} | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
 
 	const latestDocRef = useRef<CanvasDoc>(emptyDoc);
@@ -153,6 +177,7 @@ export function App() {
 	const socketRef = useRef<WebSocket | null>(null);
 	const saveTimerRef = useRef<number | null>(null);
 	const noticeTimerRef = useRef<number | null>(null);
+	const noticeCountRef = useRef(0);
 	const canvasHandleRef = useRef<CanvasHandle | null>(null);
 
 	const registerCanvas = useCallback((handle: CanvasHandle | null) => {
@@ -270,13 +295,14 @@ export function App() {
 	);
 
 	const showNotice = useCallback((message: string): void => {
-		setNoticeMessage(message);
+		noticeCountRef.current += 1;
+		setNotice({ id: noticeCountRef.current, message });
 		if (noticeTimerRef.current !== null) {
 			window.clearTimeout(noticeTimerRef.current);
 		}
 		noticeTimerRef.current = window.setTimeout(() => {
 			noticeTimerRef.current = null;
-			setNoticeMessage(null);
+			setNotice(null);
 		}, NOTICE_DURATION_MS);
 	}, []);
 
@@ -480,9 +506,14 @@ export function App() {
 				resolveImage={resolveImage}
 				onRegisterCanvas={registerCanvas}
 			/>
-			{noticeMessage !== null && (
-				<div className="viewer-notice" role="status">
-					{noticeMessage}
+			{notice !== null && (
+				<div
+					key={notice.id}
+					className="viewer-notice"
+					role="status"
+					style={noticeStyle}
+				>
+					{notice.message}
 				</div>
 			)}
 		</div>
