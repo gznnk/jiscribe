@@ -28,11 +28,13 @@ import type {
 	OpenReferencePayload,
 } from "@jiscribe/canvas";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 
 import { canvasParser } from "./canvasPlugins";
 import { CanvasSurface } from "./CanvasSurface";
 import { saveFile } from "./files";
 import { createDocImageResolver } from "./resolveDocImage";
+import { viewerTheme } from "./viewerTheme";
 import type {
 	CanvasHostClientMessage,
 	CanvasHostServerMessage,
@@ -52,6 +54,29 @@ const SAVE_DEBOUNCE_MS = 500;
  */
 const RECONNECT_BASE_DELAY_MS = 1_000;
 const RECONNECT_MAX_DELAY_MS = 5_000;
+
+/**
+ * How long the transient notice stays up, fading in and back out included. The
+ * element is dropped on the same timer the animation runs on, so it is passed to
+ * the animation rather than repeated in the stylesheet
+ */
+const NOTICE_DURATION_MS = 2_000;
+
+/**
+ * The notice sits outside the Canvas root, where the theme's `--jiscribe-*` do
+ * not reach, so its colors are read from the same theme the canvas is drawn with
+ */
+const noticeStyle: CSSProperties = {
+	background: viewerTheme.tokens.surface,
+	color: viewerTheme.tokens.foreground,
+	borderColor: viewerTheme.tokens.border,
+	borderRadius: viewerTheme.tokens.radius,
+	boxShadow: viewerTheme.tokens.shadow,
+	animationDuration: `${NOTICE_DURATION_MS}ms`,
+};
+
+/** What Ctrl+S is answered with, in place of the browser's save dialog */
+const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
 
 /**
  * How long a headless window keeps trying to reconnect before closing itself.
@@ -136,6 +161,12 @@ export function App() {
 		[openPath],
 	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	// The id remounts the element, so pressing again while one is up replays the
+	// animation instead of leaving a notice that is already fading
+	const [notice, setNotice] = useState<{
+		id: number;
+		message: string;
+	} | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
 
 	const latestDocRef = useRef<CanvasDoc>(emptyDoc);
@@ -145,6 +176,8 @@ export function App() {
 	const syncedTextRef = useRef<string | null>(null);
 	const socketRef = useRef<WebSocket | null>(null);
 	const saveTimerRef = useRef<number | null>(null);
+	const noticeTimerRef = useRef<number | null>(null);
+	const noticeCountRef = useRef(0);
 	const canvasHandleRef = useRef<CanvasHandle | null>(null);
 
 	const registerCanvas = useCallback((handle: CanvasHandle | null) => {
@@ -204,14 +237,20 @@ export function App() {
 		[],
 	);
 
-	const saveNow = useCallback(async (): Promise<void> => {
+	/**
+	 * Writes the current doc out, unless it is already what the host has.
+	 *
+	 * @returns Whether the file now holds these edits. False only on a failed write,
+	 *   which is reported in the error bar
+	 */
+	const saveNow = useCallback(async (): Promise<boolean> => {
 		const targetPath = openPathRef.current;
 		if (targetPath === null) {
-			return;
+			return true;
 		}
 		const text = serializeDoc(latestDocRef.current);
 		if (text === syncedTextRef.current) {
-			return;
+			return true;
 		}
 		// Record it before saving, so that if the host's watch picks this write up and
 		// sends it back, it can be rejected on the match
@@ -225,7 +264,7 @@ export function App() {
 			// and never written
 			syncedTextRef.current = previousSyncedText;
 			setErrorMessage(`保存に失敗しました: ${String(error)}`);
-			return;
+			return false;
 		}
 		const socket = socketRef.current;
 		if (socket !== null && socket.readyState === WebSocket.OPEN) {
@@ -237,6 +276,7 @@ export function App() {
 				} satisfies CanvasHostClientMessage),
 			);
 		}
+		return true;
 	}, []);
 
 	const handleCommit = useCallback(
@@ -253,6 +293,18 @@ export function App() {
 		},
 		[saveNow],
 	);
+
+	const showNotice = useCallback((message: string): void => {
+		noticeCountRef.current += 1;
+		setNotice({ id: noticeCountRef.current, message });
+		if (noticeTimerRef.current !== null) {
+			window.clearTimeout(noticeTimerRef.current);
+		}
+		noticeTimerRef.current = window.setTimeout(() => {
+			noticeTimerRef.current = null;
+			setNotice(null);
+		}, NOTICE_DURATION_MS);
+	}, []);
 
 	/**
 	 * Writes out the buffered edits, then closes the window. close_canvas reads
@@ -381,6 +433,47 @@ export function App() {
 		};
 	}, [applyIncomingDoc, closeWindow, runHandleOp]);
 
+	// Ctrl+S is a person asking to save what is already saving itself. Left to the
+	// browser it opens the save dialog, which would write a copy of the page rather
+	// than the canvas, so it is taken over: the buffered edits go out now, and the
+	// notice says the edits did not need the keystroke
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent): void => {
+			if (
+				event.key.toLowerCase() !== "s" ||
+				!(event.ctrlKey || event.metaKey) ||
+				event.altKey
+			) {
+				return;
+			}
+			event.preventDefault();
+			if (saveTimerRef.current !== null) {
+				window.clearTimeout(saveTimerRef.current);
+				saveTimerRef.current = null;
+			}
+			void saveNow().then((isSaved) => {
+				// A failed write shows up in the error bar; saying it is saved on top of
+				// that would be the opposite of the truth
+				if (isSaved) {
+					showNotice(AUTO_SAVE_NOTICE);
+				}
+			});
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [saveNow, showNotice]);
+
+	useEffect(
+		() => () => {
+			if (noticeTimerRef.current !== null) {
+				window.clearTimeout(noticeTimerRef.current);
+			}
+		},
+		[],
+	);
+
 	// Write out the buffered edits before the tab closes. It is a write from a page
 	// on its way out, so there is no guarantee it arrives; catching what was waiting
 	// on the debounce is treated as the best that can be hoped for
@@ -413,6 +506,16 @@ export function App() {
 				resolveImage={resolveImage}
 				onRegisterCanvas={registerCanvas}
 			/>
+			{notice !== null && (
+				<div
+					key={notice.id}
+					className="viewer-notice"
+					role="status"
+					style={noticeStyle}
+				>
+					{notice.message}
+				</div>
+			)}
 		</div>
 	);
 }
