@@ -136,14 +136,18 @@ const CommentPanelComponent: React.FC<CommentPanelProps> = ({
 
 	const author = commentAuthor?.trim() ?? "";
 	const canPost = author !== "";
+	// An object without a thread opens straight onto the composer: the first
+	// comment is the only thing the panel could be for.
+	const isNewThreadComposerShown =
+		canPost && (isNewThreadOpen || threads.length === 0);
 
 	// The footer button is what opens the composer, so the caret belongs in it
 	// straight away rather than after a second press.
 	useLayoutEffect(() => {
-		if (isNewThreadOpen) {
+		if (isNewThreadComposerShown) {
 			newThreadTextAreaRef.current?.focus();
 		}
-	}, [isNewThreadOpen]);
+	}, [isNewThreadComposerShown]);
 
 	const mintComment = useCallback(
 		(body: string): CommentDoc => ({
@@ -363,9 +367,28 @@ const CommentPanelComponent: React.FC<CommentPanelProps> = ({
 						{formatCommentTime(root.createdAt, locale)}
 					</CommentTimestamp>
 				</CommentHeading>
-				<CommentThreadReplyCount>
-					{replyCount > 0 ? `${replyCount} ${messages.commentsReplies}` : ""}
-				</CommentThreadReplyCount>
+				{thread.resolved === true && canPost ? (
+					// Reopening is one click from the folded list; the row's own click
+					// (expanding) must not fire with it.
+					<CommentSecondaryButton
+						data-gesture="none"
+						data-testid="comment-reopen"
+						onClick={(event) => {
+							event.stopPropagation();
+							onCommentUpdate({
+								kind: "reopenThread",
+								objectId,
+								threadId: thread.id,
+							});
+						}}
+					>
+						{messages.commentsReopen}
+					</CommentSecondaryButton>
+				) : (
+					<CommentThreadReplyCount>
+						{replyCount > 0 ? `${replyCount} ${messages.commentsReplies}` : ""}
+					</CommentThreadReplyCount>
+				)}
 				<CommentThreadPreview>{root.body.split("\n")[0]}</CommentThreadPreview>
 			</CommentThreadCollapsedRow>
 		);
@@ -491,7 +514,7 @@ const CommentPanelComponent: React.FC<CommentPanelProps> = ({
 							{renderThread(thread)}
 						</CommentThreadResolvedFrame>
 					))}
-				{isNewThreadOpen && (
+				{isNewThreadComposerShown && (
 					<CommentComposer>
 						<CommentTextArea
 							ref={newThreadTextAreaRef}

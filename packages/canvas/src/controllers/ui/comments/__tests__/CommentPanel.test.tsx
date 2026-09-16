@@ -177,12 +177,13 @@ describe("CommentPanel", () => {
 		expect(
 			queryAll("comment-thread").map((thread) => thread.dataset.threadId),
 		).toEqual(["open-1", "done-1", "done-2"]);
-		// Only the expanded thread offers the way back, so one has to be opened first.
-		expect(queryAll("comment-reopen").length).toBe(0);
+		// Every folded resolved row offers the way back without being opened first,
+		// and opening one keeps a single reopen button on it.
+		expect(queryAll("comment-reopen").length).toBe(2);
 
 		click(queryAll("comment-thread")[1]);
 
-		expect(queryAll("comment-reopen").length).toBe(1);
+		expect(queryAll("comment-reopen").length).toBe(2);
 	});
 
 	it("posts a reply carrying the author it was given", () => {
@@ -296,11 +297,10 @@ describe("CommentPanel", () => {
 		expect(op.body).toBe("reworded");
 	});
 
-	it("opens a new-thread composer from the footer and posts a thread", () => {
+	it("opens straight onto the new-thread composer when there is no thread, and posts one", () => {
 		const onCommentUpdate = renderPanel([]);
 
-		expect(queryAll("comment-composer").length).toBe(0);
-		click(queryOne("comment-new-thread"));
+		expect(queryAll("comment-composer").length).toBe(1);
 		type(queryOne("comment-composer"), "first note");
 		click(queryOne("comment-submit"));
 

@@ -67,6 +67,12 @@ export type PluginHarnessParams = {
 	 * images at all wants; pass one whenever a spec drives an `image`.
 	 */
 	resolveImage?: ResolveImage;
+	/**
+	 * Stands in for the signed-in user comments are posted as. Omit it and the
+	 * comment panel is read-only — threads still read, nothing can be written —
+	 * which is also what `?noCommentAuthor` forces on a page that does pass one.
+	 */
+	commentAuthor?: string;
 };
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
@@ -76,12 +82,15 @@ type HarnessAppProps = {
 	toolbarItems: ToolbarItem[] | undefined;
 	stencilLibrarySections: StencilCategory[] | undefined;
 	resolveImage: ResolveImage | undefined;
+	commentAuthor: string | undefined;
 	parser: CanvasParser;
 };
 
 /**
  * Default page mounting a single Canvas on an empty document; ?multi switches to the
  * two-canvas setup and ?pageScroll to the canvas embedded in a scrolling document.
+ * ?noCommentAuthor keeps the default page but drops `commentAuthor`, which is the
+ * read-only comment panel a host that names no author gets.
  * Restoring a dropped jiscribe export PNG (with .jis in its iTXt) is a
  * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
@@ -90,6 +99,7 @@ function HarnessApp({
 	toolbarItems,
 	stencilLibrarySections,
 	resolveImage,
+	commentAuthor,
 	parser,
 }: HarnessAppProps) {
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(emptyDoc);
@@ -185,6 +195,7 @@ function HarnessApp({
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
 				resolveImage={resolveImage}
+				commentAuthor={query.has("noCommentAuthor") ? undefined : commentAuthor}
 				toolbar={toolbarSections ? { sections: toolbarSections } : undefined}
 				stencilLibrary={
 					stencilLibrarySections
@@ -219,6 +230,7 @@ export function mountPluginHarness(params: PluginHarnessParams): void {
 				toolbarItems={params.toolbarItems}
 				stencilLibrarySections={params.stencilLibrarySections}
 				resolveImage={params.resolveImage}
+				commentAuthor={params.commentAuthor}
 				parser={parser}
 			/>
 		</React.StrictMode>,

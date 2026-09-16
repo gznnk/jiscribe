@@ -29,14 +29,17 @@ export const COMMENT_MARKER_WIDTH = 24;
 export const COMMENT_MARKER_HEIGHT = 20;
 
 /**
- * How far the marker hangs over the object's top-right corner (px). Positive
- * values pull it back inside the bounding box, so the bubble overlaps the
- * corner instead of floating away from it.
+ * How far the marker's right edge sits inside the object's right edge (px). The
+ * rotation handle hangs off the same corner on the outside (TransformControls),
+ * so the bubble stays inside the corner horizontally to leave it clear.
  */
-export const COMMENT_MARKER_OVERHANG_X = 6;
+export const COMMENT_MARKER_OVERHANG_X = COMMENT_MARKER_WIDTH + 8;
 
-/** How far above the object's top edge the marker sits (px). */
-export const COMMENT_MARKER_OVERHANG_Y = 18;
+/**
+ * How far above the object's top edge the marker's top sits (px): the bubble
+ * plus a gap, so its tail ends just short of the edge.
+ */
+export const COMMENT_MARKER_OVERHANG_Y = COMMENT_MARKER_HEIGHT + 6;
 
 /** Gap between the marker and the panel opened beside it (px). */
 export const COMMENT_MARKER_PANEL_GAP = 8;

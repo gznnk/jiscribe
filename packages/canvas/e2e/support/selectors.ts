@@ -269,6 +269,87 @@ export const selectors = {
 	objectMenuColorInput: (sectionId: string) =>
 		`div:has(> [data-part="toggle:${sectionId}"]) ${CSS_COLOR_INPUT}`,
 
+	/**
+	 * Comment marker over an object that carries threads. Pass an object id to
+	 * name one, or omit it to match every marker on the canvas — which is what a
+	 * count assertion wants. `data-state` tells an open marker ("open") from one
+	 * whose threads are all resolved ("resolved").
+	 */
+	commentMarker: (objectId?: string) =>
+		objectId === undefined
+			? '[data-kind="comment-marker"]'
+			: `[data-kind="comment-marker"][data-id="${objectId}"]`,
+
+	/**
+	 * The comment panel, whichever surface drew it. Mounted only while the
+	 * comments section is open, so assert `toHaveCount(0)` for closed.
+	 */
+	commentPanel: '[data-testid="comment-panel"]',
+
+	/**
+	 * The comment panel on one of its two surfaces: "menu" for the ObjectMenu
+	 * dropdown, "marker" for the panel opened beside a marker while that menu is
+	 * withheld (the properties sidebar being open is the case that happens).
+	 */
+	commentPanelPlacement: (placement: "menu" | "marker") =>
+		`[data-testid="comment-panel"][data-placement="${placement}"]`,
+
+	/**
+	 * One thread row in the panel, carrying `data-thread-id`, `data-resolved` and
+	 * `data-expanded`. Only the expanded one lists its comments; the rest are
+	 * one-line rows.
+	 */
+	commentThread: '[data-testid="comment-thread"]',
+
+	/** One comment inside the expanded thread, carrying `data-comment-id`. */
+	comment: '[data-testid="comment"]',
+
+	/** Body text of one comment; the element a posted body is read back off. */
+	commentBody: '[data-testid="comment-body"]',
+
+	/**
+	 * The TEXTAREA a comment is written in. The reply box of the expanded thread
+	 * and the new-thread box share it, and both are mounted only while their
+	 * composer is showing, so scope by visibility when both could stand.
+	 */
+	commentComposer: '[data-testid="comment-composer"]',
+
+	/** Submit button of a composer; Ctrl/Meta+Enter in the textarea does the same. */
+	commentSubmit: '[data-testid="comment-submit"]',
+
+	/** Footer button that opens the new-thread composer; absent while read-only. */
+	commentNewThread: '[data-testid="comment-new-thread"]',
+
+	/** Resolve button, on the opening comment of an open thread only. */
+	commentResolve: '[data-testid="comment-resolve"]',
+
+	/** Reopen button, in the resolved banner of a resolved thread. */
+	commentReopen: '[data-testid="comment-reopen"]',
+
+	/** Disclosure for the resolved threads; drawn only once there is one. */
+	commentResolvedToggle: '[data-testid="comment-resolved-toggle"]',
+
+	/** Edit button of one's own comment; revealed on hover but clickable throughout. */
+	commentEdit: '[data-testid="comment-edit"]',
+
+	/** Delete button of one's own comment; revealed on hover but clickable throughout. */
+	commentDelete: '[data-testid="comment-delete"]',
+
+	/** The TEXTAREA replacing a comment's body while it is being edited. */
+	commentEditInput: '[data-testid="comment-edit-input"]',
+
+	/** Save button of an edit in progress. */
+	commentEditSave: '[data-testid="comment-edit-save"]',
+
+	/** Close (x) button of the panel header, which shuts either placement. */
+	commentClose: '[data-testid="comment-close"]',
+
+	/** Notice standing in the footer while no `commentAuthor` was given. */
+	commentReadonly: '[data-testid="comment-readonly"]',
+
+	/** Open-thread count on the menu button; absent while the object has none. */
+	commentCount: '[data-testid="comment-count"]',
+
 	/** TEXTAREA shown while editing text. */
 	textEditor: '[data-testid="text-editor"]',
 

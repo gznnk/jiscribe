@@ -41,6 +41,9 @@ const resolveHarnessImage = async (src: string): Promise<Blob> => {
 mountPluginHarness({
 	plugins: [specShapesPlugin],
 	resolveImage: resolveHarnessImage,
+	// The name posted comments are signed with. ?noCommentAuthor drops it again,
+	// which is the read-only panel ui/object-menu-comments covers.
+	commentAuthor: "Tester",
 	toolbarItems: [
 		{ type: "stencilPreset", presetId: "rect" },
 		{ type: "stencilPreset", presetId: "ellipse" },
