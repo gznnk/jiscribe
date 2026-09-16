@@ -18,11 +18,11 @@ const withConnectorSelected = (rootIds: string[]): CanvasControllerState =>
 
 /**
  * Integration test verifying that stack-order commands work even when a connector
- * is selected, going through the same entry point as an ObjectMenu StackOrder click
- * (ObjectMenuHandler → handleCommand).
+ * is selected, going through the same entry point as a press on the sidebar's
+ * Arrange section or the context menu (ObjectMenuHandler → handleCommand).
  */
-describe("stack order when a connector is selected (via StackOrder / handleCommand)", () => {
-	it("satisfies the condition (isArrangeableSelection) for showing the StackOrder menu", () => {
+describe("stack order when a connector is selected (via handleCommand)", () => {
+	it("satisfies the condition (isArrangeableSelection) for showing the Arrange section", () => {
 		expect(
 			isArrangeableSelection(
 				withConnectorSelected(["rect-1", "rect-2", "conn-1"]),

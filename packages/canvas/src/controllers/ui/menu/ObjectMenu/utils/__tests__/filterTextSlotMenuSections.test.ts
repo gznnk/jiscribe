@@ -20,7 +20,7 @@ describe("filterTextSlotMenuSections", () => {
 				id: "text",
 				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 			},
-			{ id: "transform", items: [{ type: "aspectRatio" }] },
+			{ id: "system-group", items: [{ type: "group" }] },
 		];
 
 		expect(filterTextSlotMenuSections(sections)).toEqual([

@@ -93,8 +93,8 @@ const CANVAS_SECTION_LABEL = "Canvas";
 /**
  * Identity and English wording of the Arrange section: the stacking-order
  * commands, which belong to the selection rather than to any type, so the
- * panel adds the section itself after the per-type ones (the ObjectMenu's
- * system stack-order section, in sidebar form).
+ * panel adds the section itself after the per-type ones. The floating menu
+ * offers no stacking order; the sidebar, the context menu and the shortcuts do.
  */
 const ARRANGE_SECTION_ID = "arrange";
 const ARRANGE_SECTION_LABEL = "Arrange";

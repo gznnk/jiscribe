@@ -129,15 +129,15 @@ elements. The sidebar's copy is `selectors.stencilLibraryPanelItem`.
 
 ### data-part of object-menu (data-id="object-menu")
 
-| data-part                                        | What it opens                                                                            |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `toggle:bg-color`                                | background color (property: `fill`)                                                      |
-| `toggle:stroke-color`                            | border color (`stroke`)                                                                  |
-| `toggle:line-color`                              | line color (`stroke`, for lines and connectors)                                          |
-| `toggle:font-color`                              | font color (`fontColor`)                                                                 |
-| `toggle:line-style` / `border-style`             | line type and width (and corner radius)                                                  |
-| `toggle:font-size` / `alignment` / `stack-order` | font size / alignment / stacking order                                                   |
-| `set:<property>:<value>`                         | immediate-apply buttons (for example `set:strokeDashType:dashed`, preset color swatches) |
+| data-part                            | What it opens                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `toggle:bg-color`                    | background color (property: `fill`)                                                      |
+| `toggle:stroke-color`                | border color (`stroke`)                                                                  |
+| `toggle:line-color`                  | line color (`stroke`, for lines and connectors)                                          |
+| `toggle:font-color`                  | font color (`fontColor`)                                                                 |
+| `toggle:line-style` / `border-style` | line type and width (and corner radius)                                                  |
+| `toggle:font-size` / `alignment`     | font size / alignment                                                                    |
+| `set:<property>:<value>`             | immediate-apply buttons (for example `set:strokeDashType:dashed`, preset color swatches) |
 
 The color picker has a **text input for a CSS color** (`input[placeholder="CSS color"]`)
 where any hex value or `transparent` can be typed and **confirmed with Enter**. Use it for

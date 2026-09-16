@@ -53,7 +53,6 @@ export const awsIconDefinition: ObjectTypeDefinition<AwsIconDoc, AwsIconState> =
 				items: [{ type: "custom", id: "icon", component: AwsIconPickerMenu }],
 			},
 			{ id: "text", items: [{ type: "fontStyle" }] },
-			{ id: "transform", items: [{ type: "aspectRatio" }] },
 		],
 	});
 
@@ -90,6 +89,5 @@ export const awsGroupDefinition: ObjectTypeDefinition<
 			],
 		},
 		{ id: "text", items: [{ type: "fontStyle" }, { type: "textAlignment" }] },
-		{ id: "transform", items: [{ type: "aspectRatio" }] },
 	],
 });

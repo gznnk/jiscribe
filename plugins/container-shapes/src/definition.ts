@@ -115,9 +115,5 @@ export const containerDefinition: ObjectTypeDefinition<
 			id: "text",
 			items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 		},
-		{
-			id: "transform",
-			items: [{ type: "aspectRatio" }],
-		},
 	],
 });

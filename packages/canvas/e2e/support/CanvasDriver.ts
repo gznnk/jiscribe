@@ -1327,12 +1327,17 @@ export class CanvasDriver {
 		await this.pressCommand("Control+Minus");
 	}
 
-	/** Open the ObjectMenu z-order section and run an arrange command. */
+	/**
+	 * Run a stacking-order command from the properties sidebar's Arrange section.
+	 * The sidebar is opened and closed around the click, so the canvas is back at
+	 * its full width when this returns and measured screen points still hold.
+	 */
 	async arrange(
 		commandId: "bringToFront" | "bringForward" | "sendBackward" | "sendToBack",
 	) {
-		await this.openObjectMenu("stack-order");
-		await this.page.click(selectors.objectMenuCommand(commandId));
+		await this.openPropertyPanel();
+		await this.page.click(selectors.propertyPanelCommand(commandId));
+		await this.closePropertyPanel();
 	}
 
 	/** DOM-order index among shapes, excluding connectors; later elements are in front in SVG. */

@@ -7,20 +7,19 @@ import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSl
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
 import type {
-	PropertyPanelItem,
 	PropertyPanelSection,
 	PropertyPanelSelection,
 } from "../PropertyPanelTypes";
+import {
+	ensurePropertyPanelItems,
+	propertyPanelItemKey,
+} from "../utils/appendPropertyPanelItems";
 
 /** The one section whose rows a selected text slot can receive. */
 const TEXT_SECTION_ID = "text";
 
-/**
- * Identity of a row for the multi-type merge: the discriminator for a built-in
- * kind, the declared id for a plugin's own row.
- */
-const itemKey = (item: PropertyPanelItem): string =>
-	item.type === "custom" ? item.id : item.type;
+/** The section the aspect-ratio lock belongs to, as the default panel builds it. */
+const LAYOUT_SECTION = { id: "layout", label: "Layout" };
 
 /**
  * Narrows the sections down to the rows a selected text slot can receive: the
@@ -92,8 +91,23 @@ const collectSelectionSections = (
 
 	return mergeSectionsByKey(
 		[...selectedTypes].map((type) => propertyPanelRegistry.getSections(type)),
-		itemKey,
+		propertyPanelItemKey,
 	);
+};
+
+/**
+ * Whether the selection holds an aspect-ratio lock of its own, rather than
+ * reaching the one on each selected object: a multi-selection and a group both
+ * carry `lockAspectRatio` on the box drawn around their members, so the row
+ * belongs to them whatever those members are. The same test builds the
+ * ObjectMenu's aspect-ratio section (buildSystemSections).
+ */
+const holdsOwnAspectRatioLock = (state: CanvasControllerState): boolean => {
+	const { selectedIds, objects, multiSelectGroup } = state;
+	if (multiSelectGroup) {
+		return true;
+	}
+	return selectedIds.length === 1 && objects[selectedIds[0]]?.type === "group";
 };
 
 /**
@@ -124,6 +138,11 @@ const filterShownSections = (
  * offered there has to be something a stretch of the text being edited can take,
  * and reshaping the shape mid-edit is not it.
  *
+ * A multi-selection and a group are given the aspect-ratio lock whatever they
+ * hold: the lock is theirs rather than their members', and the merge would drop
+ * the row as soon as one selected type lacks it (a `point` shape has no size to
+ * hold in proportion, so the default panel gives it none).
+ *
  * @param state - The current canvas controller state; the selection, the objects it names and the text focus are read
  * @param propertyPanelRegistry - Per-canvas PropertyPanelRegistry, asked once per concrete type in the selection
  * @returns The sections in display order; empty when nothing is selected, the selected types share nothing, or every section turned the selection down
@@ -137,7 +156,16 @@ export const getPropertyPanelSections = (
 		resolveSelectedTextSlot(state) === null &&
 		state.textEditState?.kind !== "shape"
 	) {
-		return filterShownSections(sections, state);
+		// This path alone: the branch below hands a selected slot the text section
+		// and nothing else, and the box the lock governs is not the slot's.
+		return filterShownSections(
+			holdsOwnAspectRatioLock(state)
+				? ensurePropertyPanelItems(sections, LAYOUT_SECTION, {
+						type: "lockAspectRatio",
+					})
+				: sections,
+			state,
+		);
 	}
 	return filterShownSections(filterTextSlotSections(sections), state);
 };

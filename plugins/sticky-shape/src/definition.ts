@@ -11,8 +11,8 @@ import { StickyStencils } from "./stencil/StickyStencils";
 
 /**
  * The menu is declared rather than derived from features because the paper color
- * replaces the generic fill picker; the rest (text styling, aspect ratio) matches
- * what the default menu would give a `fill` + `body` type.
+ * replaces the generic fill picker; the rest (text styling) matches what the
+ * default menu would give a `fill` + `body` type.
  */
 export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 	createFrameObjectDefinition<StickyDoc, StickyState>({
@@ -30,10 +30,6 @@ export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 			{
 				id: "text",
 				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-			},
-			{
-				id: "transform",
-				items: [{ type: "aspectRatio" }],
 			},
 		],
 	});
