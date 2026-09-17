@@ -19,6 +19,7 @@ import {
 } from "vitest";
 import WebSocket from "ws";
 
+import { readSessionToken } from "./hostSessionToken";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import type {
 	CanvasHostClientMessage,
@@ -105,7 +106,8 @@ type FakeViewer = {
 };
 
 /**
- * Connects in place of a viewer and records what the host sends it.
+ * Connects in place of a viewer and records what the host sends it. The token the
+ * host hands out at /api/session is picked up first, as the page does.
  *
  * @param host The host to connect to
  * @param onRequest Called with every handleOpRequest, for a viewer that answers.
@@ -115,7 +117,9 @@ const connectFakeViewer = async (
 	host: CanvasHost,
 	onRequest?: (requestId: string, viewer: FakeViewer) => void,
 ): Promise<FakeViewer> => {
-	const socket = new WebSocket(`${host.url.replace("http", "ws")}/ws`);
+	const socket = new WebSocket(
+		`${host.url.replace("http", "ws")}/ws?token=${await readSessionToken(host.url)}`,
+	);
 	openSockets.push(socket);
 	const viewer: FakeViewer = {
 		socket,

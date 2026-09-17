@@ -27,7 +27,11 @@ import type { AiHandleOp } from "@jiscribe/ai-tools";
 import { WebSocketServer, type WebSocket } from "ws";
 
 import { CanvasHostError } from "./canvasHostError";
-import { createViewerHttpServer } from "./httpServer";
+import {
+	createViewerHttpServer,
+	isAllowedHostHeader,
+	isAllowedOrigin,
+} from "./httpServer";
 import { openBrowser } from "./openBrowser";
 import type { BrowserOpenOptions } from "./openBrowser";
 import { resolveViewerAssets } from "./viewerAssets";
@@ -36,6 +40,7 @@ import {
 	isCanvasHostClientMessage,
 	type CanvasHostServerMessage,
 } from "../shared/canvasHostProtocol";
+import { SESSION_TOKEN_QUERY_PARAM } from "../shared/fileApiRoute";
 
 /** The port tried first. Kept apart from studio's 5180 */
 const DEFAULT_PORT = 5190;
@@ -289,6 +294,17 @@ const listenOnAvailablePort = async (
 };
 
 /**
+ * Reads the session token off a WebSocket URL.
+ *
+ * @param requestUrl The upgrade request's target, which carries no origin
+ * @returns The token as written, or null when the URL carries none
+ */
+const readSessionTokenQuery = (requestUrl: string | undefined): string | null =>
+	new URL(requestUrl ?? "/", "http://localhost").searchParams.get(
+		SESSION_TOKEN_QUERY_PARAM,
+	);
+
+/**
  * Waits until every connection passed in has closed.
  *
  * @param sockets What to wait on; already-closed ones mixed in are fine
@@ -340,10 +356,24 @@ export async function startCanvasHost(
 ): Promise<CanvasHost> {
 	const workspaceRoot = path.resolve(options.workspaceRoot);
 	const { viewerHtml, assetRootPath } = resolveViewerAssets();
+	// The file on display, and the text last handed out as its content. Kept so that
+	// nothing is said when the change the watcher picked up is our own write (or a
+	// person's save) coming back
+	let openPath: string | null = null;
+	let lastKnownText: string | null = null;
+	let watchedFile: string | null = null;
+
+	// One token per host, handed out at /api/session and demanded of every write and
+	// every WebSocket. A window left over from the host that served another
+	// workspace on this port reconnects with the token it was given, is refused, and
+	// rejoins once it has picked this host's up
+	const sessionToken = randomUUID();
 	const server = createViewerHttpServer({
 		workspaceRoot,
 		viewerHtml,
 		assetRootPath,
+		sessionToken,
+		getOpenPath: () => openPath,
 	});
 	const port = await listenOnAvailablePort(
 		server,
@@ -353,7 +383,35 @@ export async function startCanvasHost(
 
 	let isClosed = false;
 	const sockets = new Set<WebSocket>();
-	const webSocketServer = new WebSocketServer({ server, path: "/ws" });
+	const webSocketServer = new WebSocketServer({
+		server,
+		path: "/ws",
+		verifyClient: ({ req }, done) => {
+			// The port the upgrade arrived on is this server's own, the same way the
+			// HTTP handler reads it
+			const listeningPort = req.socket.localPort ?? 0;
+			if (!isAllowedHostHeader(req.headers.host, listeningPort)) {
+				done(false, 400, "unexpected Host header");
+				return;
+			}
+			const originHeader = req.headers.origin;
+			// A browser always puts an Origin on a WebSocket, so a missing one is a
+			// client that is not a browser (a test, a script) and is taken as it
+			// comes; a foreign one is a page on another site reaching in
+			if (
+				originHeader !== undefined &&
+				!isAllowedOrigin(originHeader, listeningPort)
+			) {
+				done(false, 403, "unexpected Origin header");
+				return;
+			}
+			if (readSessionTokenQuery(req.url) !== sessionToken) {
+				done(false, 401, "invalid session token");
+				return;
+			}
+			done(true);
+		},
+	});
 
 	// State for tying the host's lifetime to the windows'. Tearing down before
 	// anything has ever connected leaves a browser that is still starting up with
@@ -468,13 +526,6 @@ export async function startCanvasHost(
 		pendingHandleOps.delete(requestId);
 		pending.settle(outcome);
 	};
-
-	// The file on display, and the text last handed out as its content. Kept so that
-	// nothing is said when the change the watcher picked up is our own write (or a
-	// person's save) coming back
-	let openPath: string | null = null;
-	let lastKnownText: string | null = null;
-	let watchedFile: string | null = null;
 
 	const broadcast = (message: CanvasHostServerMessage): void => {
 		const frame = JSON.stringify(message);

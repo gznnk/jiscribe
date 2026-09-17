@@ -1,6 +1,6 @@
-// The one HTTP route the canvas host and the viewer share: the endpoint a person's
-// edits are written back through (PUT) and the images an object points at are read
-// out of (GET).
+// The HTTP routes the canvas host and the viewer share: the endpoint a person's
+// edits are written back through (PUT), the images an object points at are read out
+// of (GET), and the one the viewer picks this host's session token up from.
 //
 // The doc itself never travels this way — it goes over the WebSocket
 // (./canvasHostProtocol). This route exists because the files an image shape's
@@ -14,6 +14,26 @@ export const FILE_API_PATHNAME = "/api/file";
  * `/`-separated. A path leading outside the workspace is rejected by the host
  */
 export const FILE_API_PATH_PARAM = "path";
+
+/**
+ * Where the viewer reads this host's session token from, answered as
+ * `{ "token": string }`. Nothing but the Host check guards it: no CORS header is
+ * ever sent, so a page on another origin can call it and never read the answer
+ */
+export const SESSION_API_PATHNAME = "/api/session";
+
+/**
+ * The header a write carries its session token in. Written in the canonical case
+ * for the viewer to send; Node lowercases what it receives, so the host looks it up
+ * accordingly
+ */
+export const SESSION_TOKEN_HEADER = "X-Jiscribe-Token";
+
+/**
+ * The query parameter the session token goes on the WebSocket URL as. A header is
+ * not an option there: the browser's WebSocket lets nothing but the URL through
+ */
+export const SESSION_TOKEN_QUERY_PARAM = "token";
 
 /**
  * Builds the URL the viewer fetches one workspace file through.

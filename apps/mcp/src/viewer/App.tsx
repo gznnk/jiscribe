@@ -32,7 +32,7 @@ import type { CSSProperties } from "react";
 
 import { canvasParser } from "./canvasPlugins";
 import { CanvasSurface } from "./CanvasSurface";
-import { saveFile } from "./files";
+import { fetchSessionToken, saveFile } from "./files";
 import { createDocImageResolver } from "./resolveDocImage";
 import { viewerTheme } from "./viewerTheme";
 import type {
@@ -40,6 +40,7 @@ import type {
 	CanvasHostServerMessage,
 } from "../shared/canvasHostProtocol";
 import { HEADLESS_VIEWER_QUERY } from "../shared/canvasHostProtocol";
+import { SESSION_TOKEN_QUERY_PARAM } from "../shared/fileApiRoute";
 
 /**
  * How long to wait after the edits settle before writing out. Writing on every
@@ -175,6 +176,11 @@ export function App() {
 	// does not cause a redraw
 	const syncedTextRef = useRef<string | null>(null);
 	const socketRef = useRef<WebSocket | null>(null);
+	// The token this host handed out, picked up again before every connect. A host
+	// that was restarted on the same port hands out a new one, and the write that
+	// would have gone to the old one is refused rather than landing in a workspace
+	// nobody is looking at
+	const sessionTokenRef = useRef<string | null>(null);
 	const saveTimerRef = useRef<number | null>(null);
 	const noticeTimerRef = useRef<number | null>(null);
 	const noticeCountRef = useRef(0);
@@ -257,7 +263,7 @@ export function App() {
 		const previousSyncedText = syncedTextRef.current;
 		syncedTextRef.current = text;
 		try {
-			await saveFile(targetPath, text);
+			await saveFile(targetPath, text, sessionTokenRef.current);
 			setErrorMessage(null);
 		} catch (error) {
 			// Left recorded, saving the same content again would be rejected at the top
@@ -341,11 +347,46 @@ export function App() {
 			}
 		};
 
-		const connect = (): void => {
-			// The query goes on the socket as well as the page: it is how the host
-			// tells a headless window from one a person can see
+		/**
+		 * Puts the next attempt on the clock, and starts a headless window counting
+		 * towards closing itself. A socket that closed and a token that could not be
+		 * fetched arrive here alike: either way the host is not answering
+		 */
+		const scheduleReconnect = (): void => {
+			setIsConnected(false);
+			if (isHeadlessWindow && giveUpTimer === null) {
+				giveUpTimer = window.setTimeout(() => {
+					giveUpTimer = null;
+					window.close();
+				}, HEADLESS_GIVE_UP_MS);
+			}
+			reconnectTimer = window.setTimeout(() => {
+				reconnectTimer = null;
+				void connect();
+			}, reconnectDelayMs);
+			reconnectDelayMs = Math.min(reconnectDelayMs * 2, RECONNECT_MAX_DELAY_MS);
+		};
+
+		const connect = async (): Promise<void> => {
+			// The token is read again on every attempt rather than held on to: the
+			// host this page reconnects to is not necessarily the one it first met
+			let sessionToken: string;
+			try {
+				sessionToken = await fetchSessionToken();
+			} catch {
+				if (!isDisposed) {
+					scheduleReconnect();
+				}
+				return;
+			}
+			if (isDisposed) {
+				return;
+			}
+			sessionTokenRef.current = sessionToken;
+			// The headless query goes on the socket as well as the page: it is how the
+			// host tells a window nobody can see from one a person is looking at
 			const socket = new WebSocket(
-				`${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws${isHeadlessWindow ? `?${HEADLESS_VIEWER_QUERY}` : ""}`,
+				`${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws?${SESSION_TOKEN_QUERY_PARAM}=${encodeURIComponent(sessionToken)}${isHeadlessWindow ? `&${HEADLESS_VIEWER_QUERY}` : ""}`,
 			);
 			socketRef.current = socket;
 
@@ -405,22 +446,11 @@ export function App() {
 				if (isDisposed) {
 					return;
 				}
-				setIsConnected(false);
-				if (isHeadlessWindow && giveUpTimer === null) {
-					giveUpTimer = window.setTimeout(() => {
-						giveUpTimer = null;
-						window.close();
-					}, HEADLESS_GIVE_UP_MS);
-				}
-				reconnectTimer = window.setTimeout(connect, reconnectDelayMs);
-				reconnectDelayMs = Math.min(
-					reconnectDelayMs * 2,
-					RECONNECT_MAX_DELAY_MS,
-				);
+				scheduleReconnect();
 			});
 		};
 
-		connect();
+		void connect();
 
 		return () => {
 			isDisposed = true;

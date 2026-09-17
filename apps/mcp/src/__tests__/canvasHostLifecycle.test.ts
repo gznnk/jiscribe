@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { afterEach, beforeAll, afterAll, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 
+import { readSessionToken } from "./hostSessionToken";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import type { BrowserOpenOptions } from "../host/openBrowser";
 
@@ -113,7 +114,7 @@ const connectFakeViewer = async (
 	kind: "visible" | "headless" = "visible",
 ): Promise<WebSocket> => {
 	const socket = new WebSocket(
-		`${host.url.replace("http", "ws")}/ws${kind === "headless" ? "?headless=1" : ""}`,
+		`${host.url.replace("http", "ws")}/ws?token=${await readSessionToken(host.url)}${kind === "headless" ? "&headless=1" : ""}`,
 	);
 	openSockets.push(socket);
 	socket.on("message", (data) => {
