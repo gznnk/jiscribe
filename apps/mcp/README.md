@@ -87,6 +87,16 @@ when no Chromium is found.
   means "do not put a window up unasked", so `headless: true` is still honoured
 - `JISCRIBE_MCP_VIEWER_ROOT` — serve the viewer from another directory
 
+The host listens on `127.0.0.1` only and answers to `localhost`,
+`127.0.0.1` and `[::1]` alone — a request under any other `Host` is refused,
+which is what DNS rebinding looks like from here. A WebSocket or a write from
+a page on another origin is refused too, and both carry a per-host session
+token the page fetches from `/api/session` (a window left over from a host
+that served another directory on the same port cannot write into this one).
+The file API writes only the file on display and reads only the images a
+diagram points at, never a path outside the diagram's directory, symbolic
+links included.
+
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
 16 screen-side tools have something to work with while the user's screen stays
 as it was. It names a Chromium executable directly and never falls back to a

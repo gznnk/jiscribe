@@ -14,6 +14,47 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ## [Unreleased]
 
+### Security
+
+- **The viewer's host checks who is talking to it.** It answered any page a
+  browser had open: a WebSocket from another origin was handed the open
+  diagram in full and could answer the AI's on-screen queries (capture,
+  selection, measurement) with whatever it liked, and a page that had rebound
+  its DNS name to `127.0.0.1` could write any file under the diagram's
+  directory through the file API. Now the `Host` header has to be one of
+  `localhost` / `127.0.0.1` / `[::1]`, an `Origin` has to be the host's own,
+  and every WebSocket and every write carries a session token the page
+  fetches from the new `GET /api/session`. Writes are accepted only for the
+  file on display and are capped at 16 MiB; image responses carry a sandbox
+  CSP so an SVG in the workspace cannot run script on the host's origin; the
+  workspace boundary is checked through `realpath`, so a symbolic link cannot
+  lead a read or a write outside it.
+- **Every tool that takes `path` applies the same rule.** The 46 document
+  tools from `@jiscribe/ai-tools` accepted a relative path and resolved it
+  against the MCP process's working directory, while `add_rect` and
+  `diagnose_canvas` refused the same argument. All of them now require an
+  absolute path naming a `.jis` / `.jis.json` / `.jiscribe` /
+  `.jiscribe.json` file, so a tool can no longer be talked into creating or
+  overwriting a file of another kind.
+- A malformed `Host` header no longer takes the MCP process down (the URL was
+  built outside the handler's error path). The temporary file an atomic write
+  goes through is created with the destination's own mode rather than the
+  umask default.
+
+### Fixed
+
+- **`undo` takes back `add_rect` and `add_ellipse`.** They wrote around the
+  undo history, so an `undo` after either was refused as "the canvas changed
+  after your last edit", and the steps before it were out of reach as well.
+  Both now go through the same path as `add_object`; `add_ellipse` reports the
+  center it was given alongside the top-left the document holds.
+- A write-back that failed (a full disk, a read-only directory) left the undo
+  history one step ahead of the file, refusing every later `undo` for the
+  same reason. The history is put back when the write fails.
+- Two `open_canvas` calls arriving together could start two hosts and leave
+  one running with nothing pointing at it; the two tools that own the host now
+  run one at a time.
+
 ### Changed
 
 - **The host waits an hour, not five seconds, for a viewer to come back.** A
