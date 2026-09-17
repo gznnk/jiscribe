@@ -1,7 +1,3 @@
-:root {
-	color-scheme: dark;
-}
-
 html,
 body,
 #root {
@@ -9,9 +5,10 @@ body,
 	margin: 0;
 }
 
+/* The colors are the canvas theme's, put on .viewer-root from App: a stylesheet
+   cannot read the theme, and the theme's own `--jiscribe-*` reach no further than
+   the Canvas root */
 body {
-	background: #202124;
-	color: #e8eaed;
 	font-family:
 		system-ui,
 		-apple-system,
@@ -47,10 +44,10 @@ body {
 	color: var(--app-error-foreground, currentColor);
 }
 
+/* Colors from the canvas theme (App's errorStyle) */
 .viewer-error {
 	padding: 8px 12px;
-	border-bottom: 1px solid #3a3d40;
-	color: #ff8a80;
+	border-bottom: 1px solid;
 	font-size: 13px;
 	white-space: pre-wrap;
 }

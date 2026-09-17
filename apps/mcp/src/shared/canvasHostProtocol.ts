@@ -24,9 +24,21 @@ export const HEADLESS_VIEWER_QUERY = "headless=1";
 /** Server to viewer */
 export type CanvasHostServerMessage =
 	// Arrives right after connecting, and whenever the file to open changes
-	| { type: "openCanvas"; relPath: string; docText: string }
+	| {
+			type: "openCanvas";
+			relPath: string;
+			docText: string;
+			/** The revision of docText, to be sent back on the write that replaces it */
+			revision: string;
+	  }
 	// The open file was rewritten from outside (an AI tool, another editor)
-	| { type: "docChanged"; relPath: string; docText: string }
+	| {
+			type: "docChanged";
+			relPath: string;
+			docText: string;
+			/** The revision of docText, to be sent back on the write that replaces it */
+			revision: string;
+	  }
 	// The file cannot be read, or is broken. The viewer only shows the message
 	| { type: "docError"; relPath: string; message: string }
 	// A query about the drawn result, to be answered with the requestId attached
@@ -39,11 +51,11 @@ export type CanvasHostServerMessage =
 	// cut, so there is no reply to this one
 	| { type: "closeViewer" };
 
+// A person's save is not in here: it goes through the file API (PUT), which is
+// where the host learns of it and where the revision it carries is checked.
+
 /** Viewer to server */
 export type CanvasHostClientMessage =
-	// A person edited the canvas and the viewer finished saving. The server keeps
-	// this text as the latest it knows of, cancelling out the watch's self-echo
-	| { type: "saved"; relPath: string; docText: string }
 	// The answer to a flushEdits: the buffered edits are written out, or the write
 	// failed and the viewer is showing why. Either way the host waits no longer
 	| { type: "flushed"; requestId: string }
@@ -76,10 +88,6 @@ export function isCanvasHostClientMessage(
 		return false;
 	}
 	switch (value.type) {
-		case "saved":
-			return (
-				typeof value.relPath === "string" && typeof value.docText === "string"
-			);
 		case "flushed":
 			return typeof value.requestId === "string";
 		case "handleOpResult":

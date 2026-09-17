@@ -207,6 +207,11 @@ export function createJiscribeMcpServer(): McpServer {
 		});
 	};
 
+	// Let operations on the same file through one at a time. Being cut in on
+	// between load → modify → write back makes the later write-back discard the
+	// earlier change along with it
+	const withPathLock = createPathLock();
+
 	/**
 	 * Start the host, arranging for it to be folded up once every window is closed.
 	 *
@@ -223,6 +228,9 @@ export function createJiscribeMcpServer(): McpServer {
 		const started: CanvasHost = await startCanvasHost({
 			workspaceRoot,
 			...(shouldOpenBrowser === undefined ? {} : { shouldOpenBrowser }),
+			// A person's save goes through the gate the tools go through, so it never
+			// lands in the middle of a tool's load → modify → write back
+			withFileLock: withPathLock,
 			onViewersGone: () => {
 				void (async () => {
 					// If another host has already taken over, this one is done with and
@@ -237,11 +245,6 @@ export function createJiscribeMcpServer(): McpServer {
 		});
 		return started;
 	};
-
-	// Let operations on the same file through one at a time. Being cut in on
-	// between load → modify → write back makes the later write-back discard the
-	// earlier change along with it
-	const withPathLock = createPathLock();
 
 	/**
 	 * Let the two tools that own the host through one at a time. `host ??= await

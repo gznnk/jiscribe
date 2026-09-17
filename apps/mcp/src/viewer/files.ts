@@ -1,5 +1,6 @@
 import {
 	buildFileApiUrl,
+	REVISION_HEADER,
 	SESSION_API_PATHNAME,
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
@@ -33,6 +34,41 @@ export async function fetchSessionToken(): Promise<string> {
 }
 
 /**
+ * The status a write against a revision the file has moved on from comes back
+ * as. Named after the HTTP condition rather than the JSON body, since the body
+ * is only there to say why
+ */
+const PRECONDITION_FAILED_STATUS = 412;
+
+/** How a write ended, short of an error */
+export type SaveFileResult =
+	/** The file now holds the text, under this revision */
+	| { kind: "saved"; revision: string }
+	/**
+	 * Nothing was written: the file had moved on from the revision the write
+	 * quoted. The newer text follows over the WebSocket as a docChanged frame,
+	 * which is what redraws the canvas, so there is nothing to carry back here
+	 */
+	| { kind: "conflict" };
+
+const readJsonBody = async (response: Response): Promise<unknown> => {
+	try {
+		return await response.json();
+	} catch {
+		// A body that is not JSON says nothing the status line does not
+		return null;
+	}
+};
+
+const readStringField = (value: unknown, field: string): string | null => {
+	if (typeof value !== "object" || value === null || !(field in value)) {
+		return null;
+	}
+	const fieldValue = (value as Record<string, unknown>)[field];
+	return typeof fieldValue === "string" ? fieldValue : null;
+};
+
+/**
  * Writes the canvas a person fixed back to the workspace.
  *
  * The doc itself is never read back through HTTP — it arrives over the WebSocket.
@@ -43,37 +79,45 @@ export async function fetchSessionToken(): Promise<string> {
  * @param text The text to write (the whole `.jis`)
  * @param sessionToken The token from `fetchSessionToken`. null stands for a page
  *   that has not reached the host yet, and the write is not even attempted
- * @throws An Error carrying the error message the server returned
+ * @param revision The revision of the text this page last had from the host. The
+ *   server writes only on a match, which is what keeps this write from landing on
+ *   top of an edit made somewhere else in the meantime
+ * @returns The new revision on a write that landed, or the bare conflict when the
+ *   file had moved on. A conflict is not to be retried
+ * @throws An Error carrying the error message the server returned, which covers a
+ *   write refused for any other reason (no token, the wrong file, a missing
+ *   If-Match)
  */
 export async function saveFile(
 	relPath: string,
 	text: string,
 	sessionToken: string | null,
-): Promise<void> {
+	revision: string,
+): Promise<SaveFileResult> {
 	if (sessionToken === null) {
 		throw new Error("the canvas host has not been reached yet");
 	}
 	const response = await fetch(buildFileApiUrl(relPath), {
 		method: "PUT",
-		headers: { [SESSION_TOKEN_HEADER]: sessionToken },
+		headers: {
+			[SESSION_TOKEN_HEADER]: sessionToken,
+			[REVISION_HEADER]: revision,
+		},
 		body: text,
 	});
+	const body = await readJsonBody(response);
 	if (response.ok) {
-		return;
-	}
-	let message = `${response.status} ${response.statusText}`;
-	try {
-		const body: unknown = await response.json();
-		if (
-			typeof body === "object" &&
-			body !== null &&
-			"error" in body &&
-			typeof body.error === "string"
-		) {
-			message = body.error;
+		const savedRevision = readStringField(body, "revision");
+		if (savedRevision === null) {
+			throw new Error("the canvas host took the write without a revision");
 		}
-	} catch {
-		// An error body that is not JSON is reported as the status line it came as
+		return { kind: "saved", revision: savedRevision };
 	}
-	throw new Error(message);
+	if (response.status === PRECONDITION_FAILED_STATUS) {
+		return { kind: "conflict" };
+	}
+	throw new Error(
+		readStringField(body, "error") ??
+			`${response.status} ${response.statusText}`,
+	);
 }

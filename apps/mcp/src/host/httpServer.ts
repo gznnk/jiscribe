@@ -15,9 +15,13 @@
 // and the workspace: the Host header has to name this server (which is what a DNS
 // rebinding attack cannot produce), an Origin header that is there has to be this
 // server's own, and a write has to carry the token only a same-origin page can read.
+//
+// What a write then does to the file is not decided here: the body is handed to
+// writeOpenFile, which takes the same per-file lock the AI's tools do and refuses a
+// write whose revision is no longer the one on disk.
 
 import { createReadStream } from "node:fs";
-import { mkdir, stat } from "node:fs/promises";
+import { stat } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { pipeline } from "node:stream";
@@ -29,10 +33,10 @@ import {
 	resolveWorkspacePathReal,
 	WorkspacePathError,
 } from "./workspacePaths";
-import { writeFileAtomically } from "../atomicWrite";
 import {
 	FILE_API_PATH_PARAM,
 	FILE_API_PATHNAME,
+	REVISION_HEADER,
 	SESSION_API_PATHNAME,
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
@@ -271,17 +275,16 @@ const handleWriteFile = async (
 ): Promise<void> => {
 	const relPath = readRelPathParam(requestUrl);
 	// The boundary comes first, so a path nobody could open is answered as the bad
-	// path it is rather than as the wrong file
-	const resolvedFile = await resolveWorkspacePathReal(
-		options.workspaceRoot,
-		relPath,
-	);
-	// The viewer writes back the file it was told to show and nothing else, so a
-	// path that is not that one is a request nobody drew
-	const openPath = options.getOpenPath();
-	if (relPath !== openPath) {
-		sendJson(response, 409, {
-			error: `the canvas on display is ${openPath ?? "none"}, not ${relPath}`,
+	// path it is rather than as the wrong file or the wrong revision. The write
+	// itself resolves the path again, since it is the one that opens the file
+	await resolveWorkspacePathReal(options.workspaceRoot, relPath);
+	const ifMatch = request.headers[REVISION_HEADER.toLowerCase()];
+	// A write that names no revision is one that cannot be told apart from a write
+	// over somebody else's work, so it is refused before the body is even read. An
+	// empty header is as good as none: Node hands one over as an empty string
+	if (typeof ifMatch !== "string" || ifMatch === "") {
+		sendJson(response, 428, {
+			error: `${REVISION_HEADER} is required, naming the revision this write replaces`,
 		});
 		return;
 	}
@@ -302,11 +305,25 @@ const handleWriteFile = async (
 		});
 		return;
 	}
-	// The parent directory has already resolved inside the workspace, so it is safe
-	// to create
-	await mkdir(path.dirname(resolvedFile), { recursive: true });
-	await writeFileAtomically(resolvedFile, body);
-	sendJson(response, 200, { ok: true });
+	const outcome = await options.writeOpenFile(relPath, body, ifMatch);
+	if (outcome.kind === "not-open") {
+		// The viewer writes back the file it was told to show and nothing else, so a
+		// path that is not that one is a request nobody drew
+		sendJson(response, 409, {
+			error: `the canvas on display is not ${relPath}`,
+		});
+		return;
+	}
+	if (outcome.kind === "revision-mismatch") {
+		// The current revision goes back with the refusal, so the viewer can tell
+		// what it is now behind and reload rather than ask again
+		sendJson(response, 412, {
+			error: `the file has changed since revision ${ifMatch}`,
+			revision: outcome.revision,
+		});
+		return;
+	}
+	sendJson(response, 200, { ok: true, revision: outcome.revision });
 };
 
 const handleReadImageFile = async (
@@ -387,10 +404,22 @@ const serveAsset = async (
 	}
 };
 
+/** What became of a write the viewer sent (see ViewerHttpServerOptions.writeOpenFile) */
+export type WriteOpenFileOutcome =
+	/** It landed, and this is the revision of what is now on disk */
+	| { kind: "written"; revision: string }
+	/** The path named is not the file on display, so nothing was written */
+	| { kind: "not-open" }
+	/**
+	 * The file no longer holds the revision the write names, so nothing was
+	 * written; the revision carried here is the one it holds now
+	 */
+	| { kind: "revision-mismatch"; revision: string };
+
 export type ViewerHttpServerOptions = {
 	/**
-	 * What file writes and image reads are relative to (absolute path). Nothing
-	 * outside it can be written or read
+	 * What image reads are relative to (absolute path). Nothing outside it can be
+	 * read, and the write route checks a path against it before handing it on
 	 */
 	workspaceRoot: string;
 	/** The viewer's HTML, folded into one file and embedded at build time */
@@ -404,11 +433,24 @@ export type ViewerHttpServerOptions = {
 	 */
 	sessionToken: string;
 	/**
-	 * The file on display (relative to workspaceRoot), or null when there is none.
-	 * A write naming anything else is refused, which keeps the endpoint to the one
-	 * file the viewer is actually showing
+	 * Performs one write from the viewer. The checks this route cannot make on its
+	 * own are the callee's: that the file named is the one on display, and that the
+	 * revision named is the one it holds. It runs under the same per-file lock the
+	 * AI's tools take, so a person's save and a tool's rewrite never overlap
+	 *
+	 * @param relPath The file to write, relative to workspaceRoot and already
+	 *   checked to be inside it
+	 * @param body The bytes to write, as they arrived
+	 * @param ifMatch The revision the write replaces, as the viewer was last given
+	 *   it. Never empty: a request naming none is refused before this is called
+	 * @returns What became of the write. A path or permission failure is thrown
+	 *   instead, and answered as the 400 / 404 / 500 it is
 	 */
-	getOpenPath: () => string | null;
+	writeOpenFile: (
+		relPath: string,
+		body: Buffer,
+		ifMatch: string,
+	) => Promise<WriteOpenFileOutcome>;
 };
 
 /**

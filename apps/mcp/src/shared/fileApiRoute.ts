@@ -30,6 +30,15 @@ export const SESSION_API_PATHNAME = "/api/session";
 export const SESSION_TOKEN_HEADER = "X-Jiscribe-Token";
 
 /**
+ * The header a write carries the revision of the text it is replacing in: the one
+ * the host last gave for that file (openCanvas / docChanged). A write naming any
+ * other revision is refused rather than landing on top of what arrived in between.
+ * Written in the canonical case for the viewer to send; Node lowercases what it
+ * receives, so the host looks it up accordingly
+ */
+export const REVISION_HEADER = "If-Match";
+
+/**
  * The query parameter the session token goes on the WebSocket URL as. A header is
  * not an option there: the browser's WebSocket lets nothing but the URL through
  */

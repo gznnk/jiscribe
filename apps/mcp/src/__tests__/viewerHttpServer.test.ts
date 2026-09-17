@@ -3,6 +3,10 @@
 // images an object points at come out of, and that what guards them is actually
 // applied on the way in: everything reaching this server was composed by a browser,
 // and not necessarily by the one showing the viewer.
+//
+// The writing itself is the host's (canvasHost's writeOpenFile, covered in
+// canvasHostViewerLink): here it stands in as a fake, so that what each of its
+// outcomes comes back to the browser as can be read off one place.
 
 import {
 	chmod,
@@ -20,8 +24,12 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createViewerHttpServer } from "../host/httpServer";
 import {
+	createViewerHttpServer,
+	type WriteOpenFileOutcome,
+} from "../host/httpServer";
+import {
+	REVISION_HEADER,
 	SESSION_API_PATHNAME,
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
@@ -35,12 +43,27 @@ const SESSION_TOKEN = "11111111-2222-3333-4444-555555555555";
 /** The file the tests write back to unless they say otherwise */
 const OPEN_REL_PATH = "diagram.jis.json";
 
+/** The revision a write claims to be replacing, unless it says otherwise */
+const CURRENT_REVISION = "a".repeat(64);
+
+/** The revision the fake writer reports back for what it wrote */
+const WRITTEN_REVISION = "b".repeat(64);
+
+/** One write as the fake writer took it in */
+type RecordedWrite = { relPath: string; body: string; ifMatch: string };
+
 let workspaceRoot: string;
 /** The directory the assets sit in, so a file just outside them can be placed */
 let assetParentPath: string;
 let assetRootPath: string;
-/** What getOpenPath answers with, which a write has to name */
-let openPath: string | null;
+/**
+ * What the writer behind the route answers with. The writing itself belongs to the
+ * host (canvasHost's writeOpenFile), so what is checked here is that each outcome
+ * comes back as the status and body it is meant to
+ */
+let writeOutcome: WriteOpenFileOutcome;
+/** The writes that made it past the guards, in the order they arrived */
+let recordedWrites: RecordedWrite[];
 let server: http.Server;
 let baseUrl: string;
 let port: number;
@@ -71,8 +94,8 @@ const listenOnEphemeralPort = async (target: http.Server): Promise<number> => {
  *
  * @param relPath The path to write, put on the query unencoded
  * @param body What to write
- * @param headers Anything to send besides the session token, or a token of its own
- *   to override it
+ * @param headers Anything to send besides the session token and the revision, or
+ *   one of its own to override either
  */
 const putFile = async (
 	relPath: string,
@@ -81,7 +104,11 @@ const putFile = async (
 ): Promise<Response> =>
 	await fetch(`${baseUrl}/api/file?path=${encodeURIComponent(relPath)}`, {
 		method: "PUT",
-		headers: { [SESSION_TOKEN_HEADER]: SESSION_TOKEN, ...headers },
+		headers: {
+			[SESSION_TOKEN_HEADER]: SESSION_TOKEN,
+			[REVISION_HEADER]: CURRENT_REVISION,
+			...headers,
+		},
 		body,
 	});
 
@@ -112,13 +139,17 @@ beforeEach(async () => {
 	assetParentPath = await mkdtemp(join(tmpdir(), "jiscribe-http-assets-"));
 	assetRootPath = join(assetParentPath, "assets");
 	await mkdir(assetRootPath, { recursive: true });
-	openPath = OPEN_REL_PATH;
+	writeOutcome = { kind: "written", revision: WRITTEN_REVISION };
+	recordedWrites = [];
 	server = createViewerHttpServer({
 		workspaceRoot,
 		viewerHtml: VIEWER_HTML,
 		assetRootPath,
 		sessionToken: SESSION_TOKEN,
-		getOpenPath: () => openPath,
+		writeOpenFile: (relPath, body, ifMatch) => {
+			recordedWrites.push({ relPath, body: body.toString("utf8"), ifMatch });
+			return Promise.resolve(writeOutcome);
+		},
 	});
 	port = await listenOnEphemeralPort(server);
 	baseUrl = `http://127.0.0.1:${port}`;
@@ -137,30 +168,19 @@ afterEach(async () => {
 });
 
 describe("PUT /api/file", () => {
-	it("writes what the viewer saved", async () => {
+	it("hands the write to the host and answers with the revision it landed at", async () => {
 		const body = '{"version":1,"root":[]}\n';
 
 		const response = await putFile(OPEN_REL_PATH, body);
 
 		expect(response.status).toBe(200);
-		expect(await response.json()).toEqual({ ok: true });
-		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
-			body,
-		);
-	});
-
-	it("creates the directories on the way to the file", async () => {
-		openPath = "docs/nested/diagram.jis.json";
-
-		const response = await putFile(openPath, "{}");
-
-		expect(response.status).toBe(200);
-		expect(
-			await readFile(
-				join(workspaceRoot, "docs", "nested", "diagram.jis.json"),
-				"utf8",
-			),
-		).toBe("{}");
+		expect(await response.json()).toEqual({
+			ok: true,
+			revision: WRITTEN_REVISION,
+		});
+		expect(recordedWrites).toEqual([
+			{ relPath: OPEN_REL_PATH, body, ifMatch: CURRENT_REVISION },
+		]);
 	});
 
 	it("takes the write from the page it serves", async () => {
@@ -179,21 +199,21 @@ describe("PUT /api/file", () => {
 		});
 
 		expect(response.status).toBe(403);
-		await expect(
-			readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8"),
-		).rejects.toThrow();
+		expect(recordedWrites).toEqual([]);
 	});
 
 	it("refuses a write carrying no session token", async () => {
 		const response = await fetch(
 			`${baseUrl}/api/file?path=${encodeURIComponent(OPEN_REL_PATH)}`,
-			{ method: "PUT", body: "{}" },
+			{
+				method: "PUT",
+				headers: { [REVISION_HEADER]: CURRENT_REVISION },
+				body: "{}",
+			},
 		);
 
 		expect(response.status).toBe(401);
-		await expect(
-			readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8"),
-		).rejects.toThrow();
+		expect(recordedWrites).toEqual([]);
 	});
 
 	it("refuses a write carrying the token of another host", async () => {
@@ -204,29 +224,54 @@ describe("PUT /api/file", () => {
 		});
 
 		expect(response.status).toBe(401);
+		expect(recordedWrites).toEqual([]);
+	});
+
+	it("refuses a write naming no revision, and hands it to nobody", async () => {
+		// A write that names none cannot be told apart from one made over somebody
+		// else's work, so it is refused before the body is even read
+		const response = await fetch(
+			`${baseUrl}/api/file?path=${encodeURIComponent(OPEN_REL_PATH)}`,
+			{
+				method: "PUT",
+				headers: { [SESSION_TOKEN_HEADER]: SESSION_TOKEN },
+				body: "{}",
+			},
+		);
+
+		expect(response.status).toBe(428);
+		expect(await response.json()).toEqual({
+			error: expect.stringContaining(REVISION_HEADER),
+		});
+		expect(recordedWrites).toEqual([]);
 	});
 
 	it("refuses a write for a file other than the one on display", async () => {
+		writeOutcome = { kind: "not-open" };
+
 		const response = await putFile("other.jis.json", "{}");
 
 		expect(response.status).toBe(409);
 		expect(await response.json()).toEqual({
-			error: expect.stringContaining(OPEN_REL_PATH),
+			error: expect.stringContaining("other.jis.json"),
 		});
-		await expect(
-			readFile(join(workspaceRoot, "other.jis.json"), "utf8"),
-		).rejects.toThrow();
 	});
 
-	it("refuses a write while nothing is on display", async () => {
-		openPath = null;
+	it("refuses a write over a revision the file no longer holds, and says which it holds", async () => {
+		// The viewer reads the revision off the refusal, so it knows it is behind
+		// rather than asking again with the same one
+		writeOutcome = { kind: "revision-mismatch", revision: WRITTEN_REVISION };
 
 		const response = await putFile(OPEN_REL_PATH, "{}");
 
-		expect(response.status).toBe(409);
+		expect(response.status).toBe(412);
+		expect(await response.json()).toEqual({
+			error: expect.stringContaining(CURRENT_REVISION),
+			revision: WRITTEN_REVISION,
+		});
 	});
 
-	it("refuses a body past the cap, and writes nothing", async () => {
+	it("refuses a body past the cap, and hands it to nobody", async () => {
 		// 16MiB and one byte: the first chunk past the cap is where it gives up,
 		// rather than after the whole upload has been held in memory
 		const response = await putFile(
@@ -235,15 +280,16 @@ describe("PUT /api/file", () => {
 		);
 
 		expect(response.status).toBe(413);
-		await expect(
-			readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8"),
-		).rejects.toThrow();
+		expect(recordedWrites).toEqual([]);
 	});
 
 	it("refuses a request with no path", async () => {
 		const response = await fetch(`${baseUrl}/api/file`, {
 			method: "PUT",
-			headers: { [SESSION_TOKEN_HEADER]: SESSION_TOKEN },
+			headers: {
+				[SESSION_TOKEN_HEADER]: SESSION_TOKEN,
+				[REVISION_HEADER]: CURRENT_REVISION,
+			},
 			body: "{}",
 		});
 
@@ -253,22 +299,18 @@ describe("PUT /api/file", () => {
 		});
 	});
 
-	it("refuses a path leading outside the workspace, and writes nothing", async () => {
-		const escapePath = join(workspaceRoot, "..", "escaped.jis.json");
-		openPath = "../escaped.jis.json";
-
-		const response = await putFile(openPath, "{}");
+	it("refuses a path leading outside the workspace, and hands it to nobody", async () => {
+		const response = await putFile("../escaped.jis.json", "{}");
 
 		expect(response.status).toBe(400);
-		await expect(readFile(escapePath, "utf8")).rejects.toThrow();
+		expect(recordedWrites).toEqual([]);
 	});
 
 	it("refuses an absolute path", async () => {
-		openPath = join(workspaceRoot, OPEN_REL_PATH);
-
-		const response = await putFile(openPath, "{}");
+		const response = await putFile(join(workspaceRoot, OPEN_REL_PATH), "{}");
 
 		expect(response.status).toBe(400);
+		expect(recordedWrites).toEqual([]);
 	});
 
 	it.skipIf(process.platform === "win32")(
@@ -278,12 +320,13 @@ describe("PUT /api/file", () => {
 			// outside it, and only resolving the link says so
 			const outsidePath = join(assetParentPath, "escaped.jis.json");
 			await writeFile(outsidePath, "original", "utf8");
-			openPath = "linked.jis.json";
-			await symlink(outsidePath, join(workspaceRoot, openPath));
+			const linkedPath = "linked.jis.json";
+			await symlink(outsidePath, join(workspaceRoot, linkedPath));
 
-			const response = await putFile(openPath, "overwritten");
+			const response = await putFile(linkedPath, "overwritten");
 
 			expect(response.status).toBe(400);
+			expect(recordedWrites).toEqual([]);
 			expect(await readFile(outsidePath, "utf8")).toBe("original");
 		},
 	);
@@ -546,12 +589,10 @@ describe("the Host header", () => {
 	it("refuses a write under a foreign name, and writes nothing", async () => {
 		expect(
 			await sendRawRequest(
-				`PUT /api/file?path=${OPEN_REL_PATH} HTTP/1.1\r\nHost: rebound.example\r\n${SESSION_TOKEN_HEADER}: ${SESSION_TOKEN}\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}`,
+				`PUT /api/file?path=${OPEN_REL_PATH} HTTP/1.1\r\nHost: rebound.example\r\n${SESSION_TOKEN_HEADER}: ${SESSION_TOKEN}\r\n${REVISION_HEADER}: ${CURRENT_REVISION}\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}`,
 			),
 		).toBe("HTTP/1.1 400 Bad Request");
-		await expect(
-			readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8"),
-		).rejects.toThrow();
+		expect(recordedWrites).toEqual([]);
 	});
 
 	it("answers a malformed one instead of going down over it", async () => {

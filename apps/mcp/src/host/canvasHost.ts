@@ -5,8 +5,10 @@
 // The single source of truth is one .jis file in the workspace. The AI
 // rewrites it through the path-based tools (add_rect and the rest), and the host
 // watches the file and mirrors it into the viewer. A fix a person makes in the
-// viewer is saved back, so the next time the AI reads the file it gets the shape
-// the person left it in.
+// viewer is saved back through the file API (writeOpenFile), so the next time the
+// AI reads the file it gets the shape the person left it in. That write goes
+// through the same per-file lock the tools do and names the revision it replaces,
+// so neither side lands on top of the other without noticing.
 //
 // Only the queries the file has no answer for (capture, camera, selection,
 // measurement) are put to the viewer under a requestId (runHandleOp). The one
@@ -19,9 +21,9 @@
 // closing goes through the closeViewer frame rather than the browser's window.
 
 import type { ChildProcess } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { unwatchFile, watchFile } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import type http from "node:http";
 import path from "node:path";
 
@@ -33,10 +35,13 @@ import {
 	createViewerHttpServer,
 	isAllowedHostHeader,
 	isAllowedOrigin,
+	type WriteOpenFileOutcome,
 } from "./httpServer";
 import { openBrowser } from "./openBrowser";
 import type { BrowserOpenOptions } from "./openBrowser";
 import { resolveViewerAssets } from "./viewerAssets";
+import { resolveWorkspacePathReal } from "./workspacePaths";
+import { writeFileAtomically } from "../atomicWrite";
 import {
 	HEADLESS_VIEWER_QUERY,
 	isCanvasHostClientMessage,
@@ -140,7 +145,9 @@ export type CanvasHost = {
 	readonly workspaceRoot: string;
 	/**
 	 * Switches the file on display. A connected viewer gets it immediately; with
-	 * none connected, the next viewer to connect opens it
+	 * none connected, the next viewer to connect opens it. Calls are taken one at
+	 * a time in the order they are made, and one overtaken by a newer call leaves
+	 * the newer call's file on display rather than its own
 	 *
 	 * @param relPath Path relative to workspaceRoot
 	 */
@@ -269,6 +276,17 @@ export type CanvasHostOptions = {
 	 */
 	headlessConnectTimeoutMs?: number;
 	/**
+	 * Runs one file's task with the tasks queued ahead of it for that file, so a
+	 * write from the viewer and a rewrite from an AI tool never overlap. The MCP
+	 * server passes its own path lock, the one every tool goes through; left out,
+	 * a task runs straight away, which is enough where nothing else writes (tests)
+	 *
+	 * @param filePath The file the task touches (absolute path, as the tools
+	 *   resolve it — the lock is keyed on it)
+	 * @param task What to run once the file is free
+	 */
+	withFileLock?: <T>(filePath: string, task: () => Promise<T>) => Promise<T>;
+	/**
 	 * What launches the browser. It is only ever passed by tests, which have no
 	 * browser to launch and want the URL the window would have been given
 	 */
@@ -370,6 +388,29 @@ const waitForSocketsToClose = async (
 };
 
 /**
+ * The revision a text is handed out under, and has to be named by again when it is
+ * written back.
+ *
+ * @param docText The text as the viewer was given it, or as it was just written
+ * @returns The lowercase hex SHA-256 of the text's UTF-8 bytes
+ */
+const calcDocRevision = (docText: string): string =>
+	createHash("sha256").update(docText, "utf8").digest("hex");
+
+/**
+ * Reads a file, answering null for one that cannot be read at all.
+ *
+ * @param file The file to read (absolute path)
+ */
+const readFileQuietly = async (file: string): Promise<string | null> => {
+	try {
+		return await readFile(file, "utf8");
+	} catch {
+		return null;
+	}
+};
+
+/**
  * Starts the canvas host. It brings up HTTP + WebSocket and opens the viewer in a
  * browser (by default Chromium's `--app=`, which gives a window with no frame and
  * no tabs).
@@ -388,7 +429,31 @@ export async function startCanvasHost(
 	// person's save) coming back
 	let openPath: string | null = null;
 	let lastKnownText: string | null = null;
+	// The revision of lastKnownText, so that the two are never out of step. Set
+	// through recordKnownText / clearKnownText alone
+	let lastKnownRevision: string | null = null;
 	let watchedFile: string | null = null;
+
+	/**
+	 * Records the text the open file is now believed to hold.
+	 *
+	 * @param text The text as it was read or written
+	 * @returns Its revision, which is what the viewer is given alongside it
+	 */
+	const recordKnownText = (text: string): string => {
+		lastKnownText = text;
+		lastKnownRevision = calcDocRevision(text);
+		return lastKnownRevision;
+	};
+
+	/** Forgets the text, for a file that cannot be read at all */
+	const clearKnownText = (): void => {
+		lastKnownText = null;
+		lastKnownRevision = null;
+	};
+
+	const withFileLock: NonNullable<CanvasHostOptions["withFileLock"]> =
+		options.withFileLock ?? ((_filePath, task) => task());
 
 	// One token per host, handed out at /api/session and demanded of every write and
 	// every WebSocket. A window left over from the host that served another
@@ -400,13 +465,16 @@ export async function startCanvasHost(
 		viewerHtml,
 		assetRootPath,
 		sessionToken,
-		getOpenPath: () => openPath,
+		writeOpenFile: (relPath, body, ifMatch) =>
+			writeOpenFile(relPath, body, ifMatch),
 	});
 	const port = await listenOnAvailablePort(
 		server,
 		options.port ?? DEFAULT_PORT,
 	);
-	const url = `http://localhost:${port}`;
+	// The address it binds, rather than a name: a machine that resolves localhost to
+	// ::1 first would otherwise be sent to whatever listens on that port there
+	const url = `http://127.0.0.1:${port}`;
 
 	let isClosed = false;
 	const sockets = new Set<WebSocket>();
@@ -640,6 +708,71 @@ export async function startCanvasHost(
 		}
 	};
 
+	/**
+	 * Takes in one write from the viewer: the file on display, at the revision the
+	 * window that wrote it was last given.
+	 *
+	 * It runs under the lock the AI's tools take, so a person's save and a tool's
+	 * rewrite are never in the air at once, and the revision is compared against
+	 * what the file holds at that moment.
+	 *
+	 * @param relPath The file to write, relative to workspaceRoot
+	 * @param body The bytes to write, as they arrived
+	 * @param ifMatch The revision this write replaces
+	 * @returns What became of it. A path leading out of the workspace, or a write
+	 *   that fails, is thrown rather than returned
+	 */
+	const writeOpenFile = async (
+		relPath: string,
+		body: Buffer,
+		ifMatch: string,
+	): Promise<WriteOpenFileOutcome> => {
+		return await withFileLock(
+			path.resolve(workspaceRoot, relPath),
+			async (): Promise<WriteOpenFileOutcome> => {
+				// Read again under the lock: the file on display may have moved on
+				// while this write waited its turn
+				if (relPath !== openPath) {
+					return { kind: "not-open" };
+				}
+				const resolvedFile = await resolveWorkspacePathReal(
+					workspaceRoot,
+					relPath,
+				);
+				// What the file holds is read rather than taken from lastKnownText: a
+				// tool's write is on disk before the watch (which polls) has told
+				// anyone, and comparing against what was last handed out would let
+				// this write land on top of it
+				const currentText = await readFileQuietly(resolvedFile);
+				// A file nobody can read holds nothing this write could overwrite, so
+				// it is let through rather than refused over a revision there is none of
+				if (currentText !== null) {
+					const currentRevision = calcDocRevision(currentText);
+					if (ifMatch !== currentRevision) {
+						return { kind: "revision-mismatch", revision: currentRevision };
+					}
+				}
+				// The parent directory has already resolved inside the workspace, so it
+				// is safe to create
+				await mkdir(path.dirname(resolvedFile), { recursive: true });
+				await writeFileAtomically(resolvedFile, body);
+				// Recorded from the bytes that were written, so the watch reads its own
+				// write back as something already known and says nothing
+				const writtenText = body.toString("utf8");
+				const revision = recordKnownText(writtenText);
+				// Every window is told, the one that wrote included: it drops the echo
+				// against the text it sent and takes the revision with it
+				broadcast({
+					type: "docChanged",
+					relPath,
+					docText: writtenText,
+					revision,
+				});
+				return { kind: "written", revision };
+			},
+		);
+	};
+
 	const stopWatching = (): void => {
 		if (watchedFile !== null) {
 			unwatchFile(watchedFile);
@@ -661,8 +794,12 @@ export async function startCanvasHost(
 				if (text === null || text === lastKnownText) {
 					return;
 				}
-				lastKnownText = text;
-				broadcast({ type: "docChanged", relPath, docText: text });
+				broadcast({
+					type: "docChanged",
+					relPath,
+					docText: text,
+					revision: recordKnownText(text),
+				});
 			})();
 		});
 	};
@@ -695,24 +832,7 @@ export async function startCanvasHost(
 				});
 				return;
 			}
-			if (frame.type === "flushed") {
-				recordFlushAnswer(frame.requestId, socket);
-				return;
-			}
-			// Pass a person's save on to the other windows, and record it as the
-			// latest text we know of. The viewer writes the file before sending this,
-			// so the watch can still read that write first and broadcast it; what
-			// keeps the second broadcast from happening is this record, and what
-			// rejects the echo at the window that saved is its own record, taken
-			// before the write (see the viewer's saveNow)
-			if (frame.relPath === openPath) {
-				lastKnownText = frame.docText;
-				broadcast({
-					type: "docChanged",
-					relPath: frame.relPath,
-					docText: frame.docText,
-				});
-			}
+			recordFlushAnswer(frame.requestId, socket);
 		});
 		socket.on("close", () => {
 			sockets.delete(socket);
@@ -737,12 +857,17 @@ export async function startCanvasHost(
 		});
 		// The order connections arrive in does not matter: if a file to open is
 		// already chosen, send it right away
-		if (openPath !== null && lastKnownText !== null) {
+		if (
+			openPath !== null &&
+			lastKnownText !== null &&
+			lastKnownRevision !== null
+		) {
 			socket.send(
 				JSON.stringify({
 					type: "openCanvas",
 					relPath: openPath,
 					docText: lastKnownText,
+					revision: lastKnownRevision,
 				} satisfies CanvasHostServerMessage),
 			);
 		}
@@ -835,6 +960,132 @@ export async function startCanvasHost(
 		});
 	};
 
+	/**
+	 * The open still running, so a second call joins it instead of spawning a
+	 * Chromium of its own: both would pass the "nobody is connected" test, and only
+	 * the last child handed over would be remembered to be killed
+	 */
+	let headlessOpening: Promise<HeadlessViewerOutcome> | null = null;
+
+	const runHeadlessOpen = async (): Promise<HeadlessViewerOutcome> => {
+		if (isClosed) {
+			return { ok: false, reason: "the canvas host is already shut down" };
+		}
+		if (countOpenSockets() > 0) {
+			return { ok: true, didOpenWindow: false };
+		}
+		// Held on an object because the callback that fills it in runs while the
+		// wait below is in flight
+		const launchOutcome: { failure: string | null } = { failure: null };
+		launchBrowser(`${url}?${HEADLESS_VIEWER_QUERY}`, {
+			mode: "headless",
+			onSpawn: (child) => {
+				// The host can be folded up while the browser is still coming up.
+				// Holding on to a process the closed host will never kill would
+				// leave a window-less Chromium behind for good
+				if (isClosed) {
+					child.kill();
+					return;
+				}
+				headlessBrowserProcess = child;
+			},
+			onFailure: (reason) => {
+				launchOutcome.failure = reason;
+				// Nothing is coming, so the wait below is not left to run its
+				// full course. Only the headless open ever waits, so this cannot
+				// cut short a wait someone else started
+				settleViewerWaiters(false);
+			},
+		});
+		// Having no candidate at all is known before any of them is spawned, so
+		// there is nothing to wait for
+		if (launchOutcome.failure !== null) {
+			return { ok: false, reason: launchOutcome.failure };
+		}
+		const isConnected = await waitForViewer(
+			options.headlessConnectTimeoutMs ?? HEADLESS_CONNECT_TIMEOUT_MS,
+		);
+		if (isConnected) {
+			return { ok: true, didOpenWindow: true };
+		}
+		return {
+			ok: false,
+			reason:
+				launchOutcome.failure ??
+				"a headless browser was started but its page never connected back",
+		};
+	};
+
+	const openHeadlessViewer = (): Promise<HeadlessViewerOutcome> => {
+		if (headlessOpening !== null) {
+			return headlessOpening;
+		}
+		const opening = runHeadlessOpen().finally(() => {
+			if (headlessOpening === opening) {
+				headlessOpening = null;
+			}
+		});
+		headlessOpening = opening;
+		return opening;
+	};
+
+	/**
+	 * The openFile queued last, which the next call waits on. Without it two calls
+	 * interleave over their reads, and the file on display ends up paired with the
+	 * other one's text and watch
+	 */
+	let openFileChain: Promise<void> = Promise.resolve();
+
+	/** How many openFile calls have been made, which names the newest of them */
+	let openFileCallCount = 0;
+
+	const openFile = (relPath: string): Promise<void> => {
+		openFileCallCount += 1;
+		const callNumber = openFileCallCount;
+		// A call overtaken while it waited has nothing left to say: the file the
+		// newer call names is the one to end up on display
+		const isNewestCall = (): boolean => callNumber === openFileCallCount;
+		const run = async (): Promise<void> => {
+			if (!isNewestCall()) {
+				return;
+			}
+			// The windows may still be holding a person's edits on the save debounce,
+			// and the write those edits are about to go out as is refused once the
+			// file on display has moved on (the file API takes a write only for that
+			// file). So they are asked for while the old path is still the open one
+			if (openPath !== null && openPath !== relPath) {
+				await flushViewers(
+					options.flushEditsTimeoutMs ?? FLUSH_EDITS_TIMEOUT_MS,
+				);
+				if (!isNewestCall()) {
+					return;
+				}
+			}
+			openPath = relPath;
+			const text = await readOpenFileText(relPath);
+			if (!isNewestCall()) {
+				return;
+			}
+			startWatching(relPath);
+			if (text === null) {
+				clearKnownText();
+				return;
+			}
+			broadcast({
+				type: "openCanvas",
+				relPath,
+				docText: text,
+				revision: recordKnownText(text),
+			});
+		};
+		const queued = openFileChain.then(run, run);
+		openFileChain = queued.then(
+			() => undefined,
+			() => undefined,
+		);
+		return queued;
+	};
+
 	return {
 		url,
 		workspaceRoot,
@@ -885,72 +1136,8 @@ export async function startCanvasHost(
 		hasVisibleViewer,
 		openVisibleViewer,
 		hasHeadlessViewer,
-		openHeadlessViewer: async () => {
-			if (isClosed) {
-				return { ok: false, reason: "the canvas host is already shut down" };
-			}
-			if (countOpenSockets() > 0) {
-				return { ok: true, didOpenWindow: false };
-			}
-			// Held on an object because the callback that fills it in runs while the
-			// wait below is in flight
-			const launchOutcome: { failure: string | null } = { failure: null };
-			launchBrowser(`${url}?${HEADLESS_VIEWER_QUERY}`, {
-				mode: "headless",
-				onSpawn: (child) => {
-					// The host can be folded up while the browser is still coming up.
-					// Holding on to a process the closed host will never kill would
-					// leave a window-less Chromium behind for good
-					if (isClosed) {
-						child.kill();
-						return;
-					}
-					headlessBrowserProcess = child;
-				},
-				onFailure: (reason) => {
-					launchOutcome.failure = reason;
-					// Nothing is coming, so the wait below is not left to run its
-					// full course. Only the headless open ever waits, so this cannot
-					// cut short a wait someone else started
-					settleViewerWaiters(false);
-				},
-			});
-			// Having no candidate at all is known before any of them is spawned, so
-			// there is nothing to wait for
-			if (launchOutcome.failure !== null) {
-				return { ok: false, reason: launchOutcome.failure };
-			}
-			const isConnected = await waitForViewer(
-				options.headlessConnectTimeoutMs ?? HEADLESS_CONNECT_TIMEOUT_MS,
-			);
-			if (isConnected) {
-				return { ok: true, didOpenWindow: true };
-			}
-			return {
-				ok: false,
-				reason:
-					launchOutcome.failure ??
-					"a headless browser was started but its page never connected back",
-			};
-		},
-		openFile: async (relPath) => {
-			// The windows may still be holding a person's edits on the save debounce,
-			// and the write those edits are about to go out as is refused once the
-			// file on display has moved on (the file API takes a write only for that
-			// file). So they are asked for while the old path is still the open one
-			if (openPath !== null && openPath !== relPath) {
-				await flushViewers(
-					options.flushEditsTimeoutMs ?? FLUSH_EDITS_TIMEOUT_MS,
-				);
-			}
-			openPath = relPath;
-			const text = await readOpenFileText(relPath);
-			lastKnownText = text;
-			startWatching(relPath);
-			if (text !== null) {
-				broadcast({ type: "openCanvas", relPath, docText: text });
-			}
-		},
+		openHeadlessViewer,
+		openFile,
 		close: async () => {
 			if (isClosed) {
 				return;

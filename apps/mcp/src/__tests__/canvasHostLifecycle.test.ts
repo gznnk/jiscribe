@@ -295,6 +295,23 @@ describe("openHeadlessViewer", () => {
 		});
 	});
 
+	it("opens one browser when two calls arrive together", async () => {
+		// Both would find nobody connected and spawn a Chromium of their own, and
+		// only the second child would be remembered for the host to kill
+		const recorder = createBrowserLaunchRecorder();
+		const host = await startTestHost({ launchBrowser: recorder.launchBrowser });
+
+		const first = host.openHeadlessViewer();
+		const second = host.openHeadlessViewer();
+		await waitFor(() => recorder.launchedUrls.length > 0);
+		await connectFakeViewer(host, () => {});
+
+		expect(await first).toEqual({ ok: true, didOpenWindow: true });
+		// The second call joined the first rather than opening a window of its own
+		expect(await second).toEqual({ ok: true, didOpenWindow: true });
+		expect(recorder.launchedUrls).toHaveLength(1);
+	});
+
 	it("opens nothing when a viewer is already connected", async () => {
 		const recorder = createBrowserLaunchRecorder();
 		const host = await startTestHost({ launchBrowser: recorder.launchBrowser });
