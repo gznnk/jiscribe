@@ -19,8 +19,8 @@ type PropertyCheckboxProps = {
 	part: string;
 	/**
 	 * Text beside the box. Names the state the box stands for ("Lock Aspect
-	 * Ratio"), the same words the ObjectMenu's button uses, so the two read as
-	 * one setting; it does not change with `isOn`.
+	 * Ratio") rather than the press that follows, so it does not change with
+	 * `isOn`.
 	 */
 	label: string;
 	/** title of the control; says what the press will do, not what is set. Defaults to `label`. */

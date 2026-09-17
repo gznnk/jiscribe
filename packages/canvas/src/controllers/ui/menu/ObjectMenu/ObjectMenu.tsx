@@ -10,12 +10,10 @@ import { FontColorMenu } from "./items/FontColorMenu";
 import { FontFamilyMenu } from "./items/FontFamilyMenu";
 import { FontSizeMenu } from "./items/FontSizeMenu";
 import { GroupMenu } from "./items/GroupMenu";
-import { KeepAspectRatioMenu } from "./items/KeepAspectRatioMenu";
 import { LineColorMenu } from "./items/LineColorMenu";
 import { LineStyleMenu } from "./items/LineStyleMenu";
 import { OpenReferenceMenu } from "./items/OpenReferenceMenu";
 import { PropertyPanelMenu } from "./items/PropertyPanelMenu";
-import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import { TextFormatMenu } from "./items/TextFormatMenu";
 import {
@@ -31,7 +29,6 @@ import type {
 } from "./ObjectMenuTypes";
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
 
 type ObjectMenuProps = {
@@ -113,12 +110,6 @@ const renderItem = (
 					vertical={item.vertical}
 				/>
 			);
-		case "aspectRatio":
-			return (
-				<KeepAspectRatioMenu key="aspectRatio" canvasState={canvasState} />
-			);
-		case "stackOrder":
-			return <StackOrderMenu key="stackOrder" canvasState={canvasState} />;
 		case "group":
 			return <GroupMenu key="group" canvasState={canvasState} />;
 		case "openReference":
@@ -154,27 +145,9 @@ const buildSystemSections = (
 ): ObjectMenuSection[] => {
 	const systemSections: ObjectMenuSection[] = [];
 
-	// To show StackOrder including connector selection (selectedConnectorId), use
-	// isArrangeableSelection, which judges by the effective selection rather than selectedIds alone.
-	if (isArrangeableSelection(canvasState)) {
-		systemSections.push({
-			id: "system-stack-order",
-			items: [{ type: "stackOrder" }],
-		});
-	}
-
 	const { selectedIds, objects } = canvasState;
 	const singleSelected =
 		selectedIds.length === 1 ? objects[selectedIds[0]] : undefined;
-
-	// Like multiSelectGroup, a group holds its own lockAspectRatio, so show the
-	// aspect-ratio menu regardless of the type composition of its descendants
-	if (canvasState.multiSelectGroup || singleSelected?.type === "group") {
-		systemSections.push({
-			id: "system-aspect-ratio",
-			items: [{ type: "aspectRatio" }],
-		});
-	}
 
 	const shouldShowGroup =
 		selectedIds.length > 1 || singleSelected?.type === "group";

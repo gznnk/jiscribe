@@ -8,12 +8,12 @@ import {
 } from "../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
-import { getSelectedLockAspectRatio } from "../../ObjectMenu/items/KeepAspectRatioMenu/utils/getSelectedLockAspectRatio";
 import { PropertyCheckbox } from "../common/PropertyCheckbox";
 import { PropertyNumberField } from "../common/PropertyNumberField";
 import { PropertyRow } from "../common/PropertyRow";
 import { PropertyPanelFieldGrid } from "../PropertyPanelStyled";
 import { getSelectedFrameValues } from "../utils/getSelectedFrameValues";
+import { getSelectedLockAspectRatio } from "../utils/getSelectedLockAspectRatio";
 
 /** A box may not be driven to zero, the floor the transform drag applies too. */
 const MIN_DIMENSION = 1;

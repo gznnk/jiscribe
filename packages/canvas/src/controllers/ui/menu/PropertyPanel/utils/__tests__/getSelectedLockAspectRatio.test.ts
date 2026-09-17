@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import type { CanvasControllerState } from "../../../../../../../../controllers/CanvasTypes";
-import type { ObjectState } from "../../../../../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { getSelectedLockAspectRatio } from "../getSelectedLockAspectRatio";
 
 const obj = (id: string, extra?: Record<string, unknown>): ObjectState =>

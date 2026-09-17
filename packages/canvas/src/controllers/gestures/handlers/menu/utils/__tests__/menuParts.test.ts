@@ -14,9 +14,9 @@ describe("menuParts", () => {
 			kind: "command",
 			commandId: "zoomIn",
 		});
-		expect(parseMenuPart(togglePart("stack-order"))).toEqual({
+		expect(parseMenuPart(togglePart("font-size"))).toEqual({
 			kind: "toggle",
-			id: "stack-order",
+			id: "font-size",
 		});
 		expect(parseMenuPart(setPart("fill", "#dc2626"))).toEqual({
 			kind: "set",

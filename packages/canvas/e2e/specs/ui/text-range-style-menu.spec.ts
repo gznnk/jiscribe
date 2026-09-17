@@ -41,13 +41,13 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 		await editAndSelect(canvas, "Payment failed", 7);
 
 		await expect(canvas.page.locator(selectors.objectMenu)).toBeVisible();
-		// The text items are there; the object-level ones are not, since reshaping
-		// or restacking the shape is not what the menu is open for.
+		// The text items are there; the object-level ones are not, since restyling
+		// the shape itself is not what the menu is open for.
 		await expect(
 			canvas.page.locator(selectors.objectMenuToggle("font-size")),
 		).toBeVisible();
 		await expect(
-			canvas.page.locator(selectors.objectMenuToggle("stack-order")),
+			canvas.page.locator(selectors.objectMenuToggle("bg-color")),
 		).toHaveCount(0);
 	});
 

@@ -9,8 +9,6 @@ export type BuiltinItemKey =
 	| "borderStyle"
 	| "fontStyle"
 	| "textAlignment"
-	| "aspectRatio"
-	| "stackOrder"
 	| "group"
 	| "openReference";
 

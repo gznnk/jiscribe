@@ -19,10 +19,9 @@ const STACK_ORDER_COMMAND_IDS = [
 ] as const;
 
 /**
- * The stacking-order commands as named buttons, one per command, in the order
- * the ObjectMenu's own stack-order flyout lists them. Each is disabled while its
- * command cannot run on the selection (objects under different parents) rather
- * than hidden, so the grid keeps its shape.
+ * The stacking-order commands as named buttons, one per command, front to back.
+ * Each is disabled while its command cannot run on the selection (objects under
+ * different parents) rather than hidden, so the grid keeps its shape.
  */
 const StackOrderItemComponent: React.FC<
 	Pick<BuiltinItemProps, "canvasState">
