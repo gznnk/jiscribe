@@ -131,7 +131,7 @@ export function App() {
 
 	/**
 	 * Answers the queries about the drawn result. Capture alone carries an image
-	 * rather than text, so its path is separate on the canvas-agent side as well
+	 * rather than text, so it has a path of its own
 	 */
 	const runHandleOp = useCallback(
 		async (op: AiHandleOp) => {

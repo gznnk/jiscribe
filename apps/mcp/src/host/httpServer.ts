@@ -41,13 +41,15 @@ import {
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
 
-/** Only what serving the fonts needs. An extension not listed here is not served */
+/**
+ * Only what serving the fonts needs, which is everything there is to serve: the
+ * build folds the viewer's own JS and CSS into index.html, leaving the fonts beside
+ * it. An extension not listed here is not served
+ */
 const assetContentTypes: Record<string, string> = {
 	".woff": "font/woff",
 	".woff2": "font/woff2",
 	".ttf": "font/ttf",
-	".css": "text/css; charset=utf-8",
-	".js": "text/javascript; charset=utf-8",
 };
 
 /**
@@ -184,7 +186,8 @@ const sendJson = (
 	response.end(JSON.stringify(body));
 };
 
-const isNodeErrorWithCode = (
+/** Whether the error is a node one carrying this errno code (ENOENT and the like) */
+const hasErrorCode = (
 	value: unknown,
 	code: string,
 ): value is NodeJS.ErrnoException =>
@@ -195,10 +198,7 @@ const sendApiError = (response: http.ServerResponse, error: unknown): void => {
 		sendJson(response, 400, { error: error.message });
 		return;
 	}
-	if (
-		isNodeErrorWithCode(error, "ENOENT") ||
-		isNodeErrorWithCode(error, "ENOTDIR")
-	) {
+	if (hasErrorCode(error, "ENOENT") || hasErrorCode(error, "ENOTDIR")) {
 		sendJson(response, 404, { error: "not found" });
 		return;
 	}
@@ -224,7 +224,7 @@ const pipeFileToResponse = (
 		if (
 			error !== null &&
 			error !== undefined &&
-			!isNodeErrorWithCode(error, "ERR_STREAM_PREMATURE_CLOSE")
+			!hasErrorCode(error, "ERR_STREAM_PREMATURE_CLOSE")
 		) {
 			console.error(`Failed to serve ${file}: ${String(error)}`);
 		}

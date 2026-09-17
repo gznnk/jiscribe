@@ -2,8 +2,8 @@
 // files.
 //
 // What add_object / set_height_mode do is held by the @jiscribe/ai-tools
-// declarations and by canvas-agent's applyCanvasOp (this server only adds a
-// path and joins the two). So the wording of the reply is not pinned down;
+// declarations and by its applyCanvasOp (this server only adds a path and joins
+// the two). So the wording of the reply is not pinned down;
 // success or failure and the contents of the file decide.
 // add_rect is this server's own tool, so its default size is checked too.
 

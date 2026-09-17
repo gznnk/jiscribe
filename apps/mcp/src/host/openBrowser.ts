@@ -1,6 +1,7 @@
 import type { ChildProcess } from "node:child_process";
 
 import {
+	calcAppOpenCommandCount,
 	calcBrowserOpenCommands,
 	calcBrowserOpenPreference,
 } from "./browserOpenCommands";
@@ -134,13 +135,14 @@ export function openBrowser(
 			return;
 		}
 	}
-	const keepProfileWith =
+	const attachProfileLifetime =
 		profile === null ? null : createProfileKeeper(profile);
+	const browserCommand = options.browserCommand ?? preference.browserCommand;
 	const commands = calcBrowserOpenCommands(
 		url,
 		process.platform,
 		mode,
-		options.browserCommand ?? preference.browserCommand,
+		browserCommand,
 		profile?.paths,
 	);
 	if (commands.length === 0) {
@@ -153,10 +155,9 @@ export function openBrowser(
 	// window that looks different, so where it dropped is left on the record
 	const appCommandCount =
 		mode === "app"
-			? commands.length -
-				calcBrowserOpenCommands(url, process.platform, "tab").length
+			? calcAppOpenCommandCount(url, process.platform, browserCommand)
 			: 0;
-	spawnFirstAvailable(commands, 0, {
+	spawnFirstAvailable(commands, {
 		onAdvance: (nextIndex) => {
 			if (nextIndex === appCommandCount && appCommandCount > 0) {
 				console.error(
@@ -166,7 +167,7 @@ export function openBrowser(
 		},
 		onSpawn: (child) => {
 			options.onSpawn?.(child);
-			keepProfileWith?.(child);
+			attachProfileLifetime?.(child);
 		},
 		onExhausted: (lastReason) => {
 			reportFailure(
