@@ -175,6 +175,78 @@ describe("add_rect", () => {
 	});
 });
 
+describe("add_ellipse", () => {
+	beforeEach(async () => {
+		targetPath = await workspace.writeDoc(
+			`ellipse-${testIndex++}.jis.json`,
+			emptyDoc,
+		);
+	});
+
+	it("falls back to the tool's default radii and keeps the center it was given", async () => {
+		const result = await client.callTool("add_ellipse", {
+			path: targetPath,
+			cx: 200,
+			cy: 100,
+		});
+		// ai-tools names the top-left corner the document holds; the center the
+		// tool took is added so the reply reads back what was asked
+		expect(result.text).toBe(
+			'added ellipse "ellipse-1" at (120, 50), center (200, 100)',
+		);
+
+		const [object] = (await workspace.readDoc(targetPath)).root;
+		expect(object).toMatchObject({
+			type: "ellipse",
+			cx: 200,
+			cy: 100,
+			rx: 80,
+			ry: 50,
+		});
+	});
+});
+
+describe("undo after the tools of this server's own", () => {
+	beforeEach(async () => {
+		targetPath = await workspace.writeDoc(
+			`undo-${testIndex++}.jis.json`,
+			emptyDoc,
+		);
+	});
+
+	it("takes back an add_rect, the same history holding both tool families", async () => {
+		await client.callTool("add_object", {
+			path: targetPath,
+			type: "rect",
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 50,
+		});
+		await client.callTool("add_rect", { path: targetPath, x: 200, y: 0 });
+
+		const undone = await client.callTool("undo", { path: targetPath });
+
+		expect(undone.text).not.toMatch(/^error:/);
+		const doc = await workspace.readDoc(targetPath);
+		expect(doc.root).toHaveLength(1);
+		expect(doc.root[0]).toMatchObject({ x: 0, y: 0 });
+	});
+
+	it("takes back an add_ellipse", async () => {
+		await client.callTool("add_ellipse", {
+			path: targetPath,
+			cx: 100,
+			cy: 100,
+		});
+
+		const undone = await client.callTool("undo", { path: targetPath });
+
+		expect(undone.text).not.toMatch(/^error:/);
+		expect((await workspace.readDoc(targetPath)).root).toEqual([]);
+	});
+});
+
 describe("set_height_mode", () => {
 	beforeEach(async () => {
 		targetPath = await workspace.writeDoc(

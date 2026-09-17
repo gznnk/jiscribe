@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { basename, dirname, isAbsolute, resolve } from "node:path";
+import { basename, dirname } from "node:path";
 
 import {
 	createCanvasToolDescriptors,
@@ -8,6 +8,7 @@ import {
 	type AiCanvasOpOutcome,
 	type AiDocOp,
 	type CanvasToolArgs,
+	type CanvasToolDescriptor,
 } from "@jiscribe/ai-tools";
 import {
 	applyCanvasOp,
@@ -32,11 +33,12 @@ import {
 	loadCanvasFile,
 	readCanvasFileText,
 	saveCanvasFile,
+	toCanvasFilePath,
 } from "./canvasStore";
 import { formatDiagnostics } from "./diagnosticReport";
 import { startCanvasHost, type CanvasHost } from "./host/canvasHost";
 import { CanvasHostError } from "./host/canvasHostError";
-import { createPathLock, type PathLock } from "./pathLock";
+import { createPathLock } from "./pathLock";
 
 /**
  * The tool definitions of the Jiscribe MCP server. Starting it over stdio is
@@ -93,6 +95,20 @@ const DEFAULT_RECT_WIDTH = 160;
 const DEFAULT_RECT_HEIGHT = 80;
 const DEFAULT_ELLIPSE_RX = 80;
 const DEFAULT_ELLIPSE_RY = 50;
+
+/**
+ * The lock key `open_canvas` and `close_canvas` share. Both swap the one host
+ * this server holds, so they are let through one at a time; a NUL byte cannot
+ * appear in a file name, so this key can never queue behind a real file.
+ */
+const HOST_LOCK_KEY = "\0canvas-host";
+
+/**
+ * How many files' undo histories are kept at once. The map is only ever added
+ * to, so without a cap a long session holds every file it has touched; the
+ * least recently used entry goes first.
+ */
+const MAX_HISTORY_FILES = 64;
 
 /**
  * The font stack a document with no font specified is drawn in (the same sans as
@@ -171,7 +187,10 @@ export function createJiscribeMcpServer(): McpServer {
 			// its time looking for a host to reconnect to
 			await started.closeViewers();
 			await started.close();
-		})();
+		})().catch((error: unknown) => {
+			// stdout carries the MCP protocol, so nothing but stderr can be written to
+			console.error("failed to fold up the canvas host on close:", error);
+		});
 	};
 
 	/**
@@ -209,6 +228,85 @@ export function createJiscribeMcpServer(): McpServer {
 	// between load → modify → write back makes the later write-back discard the
 	// earlier change along with it
 	const withPathLock = createPathLock();
+
+	/**
+	 * Let the two tools that own the host through one at a time. `host ??= await
+	 * startHost(...)` reads the variable before the await and assigns after it, so
+	 * two calls arriving together would each start a host and one would be left
+	 * running with nothing pointing at it.
+	 */
+	const withHostLock = <T>(task: () => Promise<T>): Promise<T> =>
+		withPathLock(HOST_LOCK_KEY, task);
+
+	// undo can only go back while things are "as the AI left them", so the history
+	// is held per edited file
+	const historyByPath = new Map<string, CanvasOpHistory>();
+	const getOrCreateHistory = (filePath: string): CanvasOpHistory => {
+		const existing = historyByPath.get(filePath);
+		if (existing !== undefined) {
+			// Re-inserting puts it back at the end, which makes the Map's own order a
+			// least-recently-used one
+			historyByPath.delete(filePath);
+			historyByPath.set(filePath, existing);
+			return existing;
+		}
+		const created = createCanvasOpHistory();
+		historyByPath.set(filePath, created);
+		if (historyByPath.size > MAX_HISTORY_FILES) {
+			const oldestPath = historyByPath.keys().next().value;
+			if (oldestPath !== undefined) {
+				historyByPath.delete(oldestPath);
+			}
+		}
+		return created;
+	};
+
+	/**
+	 * Hand one file to an operation as a document. A read-only operation does not
+	 * call replaceDoc, and then nothing is written back either (so the viewer is
+	 * not shaken by a pointless update).
+	 */
+	const applyDocOpToFile = async (
+		path: string,
+		op: AiDocOp,
+	): Promise<AiCanvasOpOutcome> => {
+		const filePath = toCanvasFilePath(path);
+		return await withPathLock(filePath, async () => {
+			const loadedDoc = await loadCanvasFile(filePath);
+			let nextDoc: CanvasDoc | null = null;
+			const history = getOrCreateHistory(filePath);
+			const outcome = applyCanvasOp(
+				op,
+				{
+					getDoc: () => nextDoc ?? loadedDoc,
+					replaceDoc: (replacement) => {
+						nextDoc = replacement;
+					},
+				},
+				history,
+				docOps,
+			);
+			if (nextDoc !== null) {
+				try {
+					await saveCanvasFile(filePath, nextDoc);
+				} catch (error) {
+					// The file still holds what it held, so the history is put back the
+					// way it was. Left as it is, its newest entry would describe a
+					// document nobody wrote, and every later undo would be refused as
+					// someone else's work
+					if (op.kind === "undo") {
+						// undo took its entry out; nextDoc is what that entry held before,
+						// and the file still holds what it recorded after
+						history.push(nextDoc, loadedDoc);
+					} else {
+						history.pop(nextDoc);
+					}
+					throw error;
+				}
+			}
+			return outcome;
+		});
+	};
 
 	// Check at startup that the built-in tools and the ai-tools ones do not collide
 	// by name. Registering the same name twice makes the later one win and one of
@@ -269,47 +367,45 @@ export function createJiscribeMcpServer(): McpServer {
 		},
 		async ({ path, headless }) =>
 			runTool(async () => {
-				if (!isAbsolute(path)) {
-					throw new CanvasFileError(
-						`path must be an absolute path, but got: ${path}`,
+				const filePath = toCanvasFilePath(path);
+				return await withHostLock(async () => {
+					const isCreated = await withPathLock(filePath, () =>
+						ensureCanvasFile(filePath),
 					);
-				}
-				const isCreated = await withPathLock(path, () =>
-					ensureCanvasFile(path),
-				);
-				const workspaceRoot = resolve(dirname(path));
+					const workspaceRoot = dirname(filePath);
 
-				// The file API cannot get outside the workspace, so being pointed at
-				// another directory restarts the host on that directory (the viewer
-				// reconnects on its own)
-				if (host !== null && host.workspaceRoot !== workspaceRoot) {
-					await host.close();
-					host = null;
-				}
-				// The environment variable that says not to open a window means "do
-				// not put one up unasked", so an explicit headless request goes ahead
-				const isReusedHost = host !== null;
-				host ??= await startHost(workspaceRoot, headless ? false : undefined);
-				await host.openFile(basename(path));
-
-				const state = isCreated ? "created and opened" : "opened";
-				if (!headless) {
-					// A host kept alive by a headless window has nothing on screen, so
-					// a plain open has to put a window up even though the host is
-					// already running. A host started just above opened its own
-					if (isReusedHost && !host.hasVisibleViewer()) {
-						host.openVisibleViewer();
+					// The file API cannot get outside the workspace, so being pointed at
+					// another directory restarts the host on that directory (the viewer
+					// reconnects on its own)
+					if (host !== null && host.workspaceRoot !== workspaceRoot) {
+						await host.close();
+						host = null;
 					}
-					return `${state} ${basename(path)} — viewer: ${host.url}`;
-				}
-				const outcome = await host.openHeadlessViewer();
-				if (!outcome.ok) {
-					return `error: ${state} ${basename(path)}, but no headless viewer could be opened, so the tools that need a canvas on screen have nothing to work with: ${outcome.reason}`;
-				}
-				const openedIn = outcome.didOpenWindow
-					? "a headless viewer (nothing is on the user's screen)"
-					: "the viewer window already open";
-				return `${state} ${basename(path)} in ${openedIn} — viewer: ${host.url}`;
+					// The environment variable that says not to open a window means "do
+					// not put one up unasked", so an explicit headless request goes ahead
+					const isReusedHost = host !== null;
+					host ??= await startHost(workspaceRoot, headless ? false : undefined);
+					await host.openFile(basename(filePath));
+
+					const state = isCreated ? "created and opened" : "opened";
+					if (!headless) {
+						// A host kept alive by a headless window has nothing on screen, so
+						// a plain open has to put a window up even though the host is
+						// already running. A host started just above opened its own
+						if (isReusedHost && !host.hasVisibleViewer()) {
+							host.openVisibleViewer();
+						}
+						return `${state} ${basename(filePath)} — viewer: ${host.url}`;
+					}
+					const outcome = await host.openHeadlessViewer();
+					if (!outcome.ok) {
+						return `error: ${state} ${basename(filePath)}, but no headless viewer could be opened, so the tools that need a canvas on screen have nothing to work with: ${outcome.reason}`;
+					}
+					const openedIn = outcome.didOpenWindow
+						? "a headless viewer (nothing is on the user's screen)"
+						: "the viewer window already open";
+					return `${state} ${basename(filePath)} in ${openedIn} — viewer: ${host.url}`;
+				});
 			}),
 	);
 
@@ -324,26 +420,28 @@ export function createJiscribeMcpServer(): McpServer {
 			inputSchema: z.object({}).strict(),
 		},
 		async () =>
-			runTool(async () => {
-				if (host === null) {
-					return "no canvas viewer is open";
-				}
-				const { closedCount, remainingCount } = await host.closeViewers();
-				if (remainingCount > 0) {
-					// Stopping the server while a window remains leaves that window
-					// looking for somewhere to reconnect. It would join whichever host
-					// takes this port next, so it is not stopped
-					const advice = host.hasHeadlessViewer()
-						? "a headless viewer cannot be closed by hand, so the port is held until this MCP session ends, which folds the server and lets that window close itself"
-						: "close the window(s) by hand";
-					return `error: ${remainingCount} viewer window(s) refused to close, so the local server is left running; ${advice}`;
-				}
-				await host.close();
-				host = null;
-				return closedCount === 0
-					? "no viewer window was open; stopped the local server"
-					: `closed ${closedCount} viewer window(s) and stopped the local server`;
-			}),
+			runTool(async () =>
+				withHostLock(async () => {
+					if (host === null) {
+						return "no canvas viewer is open";
+					}
+					const { closedCount, remainingCount } = await host.closeViewers();
+					if (remainingCount > 0) {
+						// Stopping the server while a window remains leaves that window
+						// looking for somewhere to reconnect. It would join whichever host
+						// takes this port next, so it is not stopped
+						const advice = host.hasHeadlessViewer()
+							? "a headless viewer cannot be closed by hand, so the port is held until this MCP session ends, which folds the server and lets that window close itself"
+							: "close the window(s) by hand";
+						return `error: ${remainingCount} viewer window(s) refused to close, so the local server is left running; ${advice}`;
+					}
+					await host.close();
+					host = null;
+					return closedCount === 0
+						? "no viewer window was open; stopped the local server"
+						: `closed ${closedCount} viewer window(s) and stopped the local server`;
+				}),
+			),
 	);
 
 	server.registerTool(
@@ -359,7 +457,10 @@ export function createJiscribeMcpServer(): McpServer {
 		},
 		async ({ path }) =>
 			runTool(async () => {
-				const text = await withPathLock(path, () => readCanvasFileText(path));
+				const filePath = toCanvasFilePath(path);
+				const text = await withPathLock(filePath, () =>
+					readCanvasFileText(filePath),
+				);
 				const result = validateDoc(text);
 				const diagnostics: Diagnostic[] = [...result.diagnostics];
 				if (result.ok && result.doc !== undefined) {
@@ -433,17 +534,19 @@ export function createJiscribeMcpServer(): McpServer {
 				.strict(),
 		},
 		async ({ path, ...params }) =>
-			runMutation(withPathLock, path, (doc) => {
+			runTool(async () => {
 				// Fill in the tool's default 160x80 at the boundary, rather than falling
 				// through to addObject's factory defaults.
-				const id = docOps.addObject(doc, "rect", {
+				const outcome = await applyDocOpToFile(path, {
+					kind: "addObject",
+					type: "rect",
 					x: params.x,
 					y: params.y,
 					width: params.width ?? DEFAULT_RECT_WIDTH,
 					height: params.height ?? DEFAULT_RECT_HEIGHT,
 					...(params.text !== undefined ? { text: params.text } : {}),
 				});
-				return `added rect "${id}" at (${params.x}, ${params.y})`;
+				return toOutcomeText(outcome);
 			}),
 	);
 
@@ -475,66 +578,31 @@ export function createJiscribeMcpServer(): McpServer {
 				.strict(),
 		},
 		async ({ path, ...params }) =>
-			runMutation(withPathLock, path, (doc) => {
+			runTool(async () => {
 				const rx = params.rx ?? DEFAULT_ELLIPSE_RX;
 				const ry = params.ry ?? DEFAULT_ELLIPSE_RY;
-				const id = docOps.addObject(doc, "ellipse", {
+				const outcome = await applyDocOpToFile(path, {
+					kind: "addObject",
+					type: "ellipse",
 					x: params.cx - rx,
 					y: params.cy - ry,
 					width: rx * 2,
 					height: ry * 2,
 					...(params.text !== undefined ? { text: params.text } : {}),
 				});
-				return `added ellipse "${id}" at (${params.cx}, ${params.cy})`;
+				// ai-tools reports the top-left the document holds; the tool took a
+				// center, so it is named as well or the AI reads the reply as a misplacement
+				return outcome.ok
+					? `${outcome.text}, center (${params.cx}, ${params.cy})`
+					: toOutcomeText(outcome);
 			}),
 	);
 
-	// undo can only go back while things are "as the AI left them", so the history
-	// is held per edited file
-	const historyByPath = new Map<string, CanvasOpHistory>();
-	const takeHistory = (filePath: string): CanvasOpHistory => {
-		const existing = historyByPath.get(filePath);
-		if (existing !== undefined) {
-			return existing;
-		}
-		const created = createCanvasOpHistory();
-		historyByPath.set(filePath, created);
-		return created;
-	};
-
-	/**
-	 * Hand one file to an operation as a document. A read-only operation does not
-	 * call replaceDoc, and then nothing is written back either (so the viewer is
-	 * not shaken by a pointless update).
-	 */
-	const applyDocOpToFile = async (
-		filePath: string,
-		op: AiDocOp,
-	): Promise<AiCanvasOpOutcome> => {
-		const absolutePath = resolve(filePath);
-		return await withPathLock(absolutePath, async () => {
-			const loadedDoc = await loadCanvasFile(absolutePath);
-			let nextDoc: CanvasDoc | null = null;
-			const outcome = applyCanvasOp(
-				op,
-				{
-					getDoc: () => nextDoc ?? loadedDoc,
-					replaceDoc: (replacement) => {
-						nextDoc = replacement;
-					},
-				},
-				takeHistory(absolutePath),
-				docOps,
-			);
-			if (nextDoc !== null) {
-				await saveCanvasFile(absolutePath, nextDoc);
-			}
-			return outcome;
-		});
-	};
-
-	registerDocTools(server, registerName, applyDocOpToFile);
-	registerHandleTools(server, registerName, () => host);
+	// The declarations are read twice, once for each group, so they are built once
+	// and handed to both
+	const toolDescriptors = createCanvasToolDescriptors(canvasCapabilities);
+	registerDocTools(server, registerName, toolDescriptors, applyDocOpToFile);
+	registerHandleTools(server, registerName, toolDescriptors, () => host);
 
 	return server;
 }
@@ -549,14 +617,17 @@ export function createJiscribeMcpServer(): McpServer {
  *
  * @param server Where the tools are registered
  * @param registerName The registration entry that rejects duplicate names
+ * @param descriptors Every declaration ai-tools offers; the ones needing the
+ *   screen are skipped here and picked up by registerHandleTools
  * @param applyToFile What actually applies one operation to one file
  */
 function registerDocTools(
 	server: McpServer,
 	registerName: (name: string) => string,
+	descriptors: readonly CanvasToolDescriptor[],
 	applyToFile: (filePath: string, op: AiDocOp) => Promise<AiCanvasOpOutcome>,
 ): void {
-	for (const descriptor of createCanvasToolDescriptors(canvasCapabilities)) {
+	for (const descriptor of descriptors) {
 		if (descriptor.drives.some((ref) => ref.startsWith("handle."))) {
 			continue;
 		}
@@ -576,8 +647,7 @@ function registerDocTools(
 						// disagree
 						return `internal error: ${descriptor.name} is declared to need only a document but produced a canvas-handle operation`;
 					}
-					const outcome = await applyToFile(path, op);
-					return outcome.ok ? outcome.text : `error: ${outcome.text}`;
+					return toOutcomeText(await applyToFile(path, op));
 				}),
 		);
 	}
@@ -620,14 +690,17 @@ const HANDLE_TOOL_DESCRIPTION_NOTES: Readonly<Record<string, string>> = {
  *
  * @param server The server to register on
  * @param registerName The registration entry that rejects duplicate names
+ * @param descriptors Every declaration ai-tools offers; the ones a document
+ *   alone can answer are skipped here and picked up by registerDocTools
  * @param getHost The current host. null when called before open_canvas
  */
 function registerHandleTools(
 	server: McpServer,
 	registerName: (name: string) => string,
+	descriptors: readonly CanvasToolDescriptor[],
 	getHost: () => CanvasHost | null,
 ): void {
-	for (const descriptor of createCanvasToolDescriptors(canvasCapabilities)) {
+	for (const descriptor of descriptors) {
 		if (!descriptor.drives.some((ref) => ref.startsWith("handle."))) {
 			continue;
 		}
@@ -669,7 +742,7 @@ function registerHandleTools(
 						],
 					};
 				}
-				return textResult(outcome.ok ? outcome.text : `error: ${outcome.text}`);
+				return textResult(toOutcomeText(outcome));
 			},
 		);
 	}
@@ -790,6 +863,21 @@ type ToolContent =
 /** One tool call's reply */
 type ToolReply = { content: ToolContent[] };
 
+/**
+ * The text one applied operation is reported with. applyCanvasOp already writes
+ * `internal error:` in front of a failure that is not the AI's doing, and that
+ * prefix is kept rather than doubled up, so the first token of a reply is either
+ * `error:` or `internal error:` — the same two runTool produces.
+ */
+function toOutcomeText(outcome: AiCanvasOpOutcome): string {
+	if (outcome.ok) {
+		return outcome.text;
+	}
+	return outcome.text.startsWith("internal error:")
+		? outcome.text
+		: `error: ${outcome.text}`;
+}
+
 /** Build an MCP tool's return value (a single piece of text). */
 function textResult(text: string): ToolReply {
 	return { content: [{ type: "text", text }] };
@@ -802,9 +890,7 @@ function textResult(text: string): ToolReply {
  * CanvasFileError, CanvasHostError and DocOperationError are returned as they are
  * as user-facing messages; anything else is formatted as an internal error.
  */
-async function runTool(
-	handler: () => Promise<string>,
-): Promise<ReturnType<typeof textResult>> {
+async function runTool(handler: () => Promise<string>): Promise<ToolReply> {
 	try {
 		return textResult(await handler());
 	} catch (error) {
@@ -818,25 +904,4 @@ async function runTool(
 		const reason = error instanceof Error ? error.message : String(error);
 		return textResult(`internal error: ${reason}`);
 	}
-}
-
-/**
- * The shared path for "load → modify → validated write-back".
- *
- * `mutate` modifies the document directly and returns the short summary handed
- * back to the AI.
- */
-async function runMutation(
-	withPathLock: PathLock,
-	path: string,
-	mutate: (doc: Awaited<ReturnType<typeof loadCanvasFile>>) => string,
-): Promise<ReturnType<typeof textResult>> {
-	return runTool(async () =>
-		withPathLock(path, async () => {
-			const doc = await loadCanvasFile(path);
-			const summary = mutate(doc);
-			await saveCanvasFile(path, doc);
-			return summary;
-		}),
-	);
 }

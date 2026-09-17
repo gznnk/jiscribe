@@ -20,9 +20,10 @@ import { basename, dirname, join } from "node:path";
  * leftover cannot be mistaken for the real thing (it does not end in `.jis`,
  * so it is not picked up as a canvas).
  *
- * When the destination already exists, its permissions are carried over. Without
- * that, the newly created file keeps the default mode (from umask), which can be
- * looser than the original.
+ * When the destination already exists, its permissions are carried over, from the
+ * moment the temporary file is created onward. Without that, the newly created
+ * file keeps the default mode (from umask), which can be looser than the
+ * original.
  *
  * When the destination is a symbolic link, the link itself is replaced by an
  * ordinary file (overwriting directly would rewrite what the link points at).
@@ -46,7 +47,14 @@ export async function writeFileAtomically(
 		.then((stats) => stats.mode)
 		.catch(() => null);
 	try {
-		await writeFile(tempPath, contents);
+		// The mode is given at creation so the contents are never readable through a
+		// wider mode than the destination had, and set again afterwards because umask
+		// can take bits off the one asked for at creation
+		await writeFile(
+			tempPath,
+			contents,
+			previousMode === null ? undefined : { mode: previousMode },
+		);
 		if (previousMode !== null) {
 			await chmod(tempPath, previousMode);
 		}
