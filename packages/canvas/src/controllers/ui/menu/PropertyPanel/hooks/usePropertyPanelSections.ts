@@ -6,6 +6,7 @@ import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
+import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
 import type {
 	PropertyPanelSection,
 	PropertyPanelSelection,
@@ -15,23 +16,18 @@ import {
 	propertyPanelItemKey,
 } from "../utils/appendPropertyPanelItems";
 
-/** The one section whose rows a selected text slot can receive. */
-const TEXT_SECTION_ID = "text";
-
-/** The section the aspect-ratio lock belongs to, as the default panel builds it. */
-const LAYOUT_SECTION = { id: "layout", label: "Layout" };
-
 /**
  * Narrows the sections down to the rows a selected text slot can receive: the
- * text section's built-in rows. Custom rows go with the other sections, since a
- * plugin row has no way to say it is slot-aware. A section left empty is dropped
- * so no accordion header survives on its own.
+ * text section's built-in rows, the one section a slot can take anything from.
+ * Custom rows go with the other sections, since a plugin row has no way to say
+ * it is slot-aware. A section left empty is dropped so no accordion header
+ * survives on its own.
  */
 const filterTextSlotSections = (
 	sections: PropertyPanelSection[],
 ): PropertyPanelSection[] =>
 	sections
-		.filter((section) => section.id === TEXT_SECTION_ID)
+		.filter((section) => section.id === PROPERTY_PANEL_SECTIONS.text.id)
 		.map((section) => ({
 			...section,
 			items: section.items.filter((item) => item.type !== "custom"),
@@ -99,8 +95,7 @@ const collectSelectionSections = (
  * Whether the selection holds an aspect-ratio lock of its own, rather than
  * reaching the one on each selected object: a multi-selection and a group both
  * carry `lockAspectRatio` on the box drawn around their members, so the row
- * belongs to them whatever those members are. The same test builds the
- * ObjectMenu's aspect-ratio section (buildSystemSections).
+ * belongs to them whatever those members are.
  */
 const holdsOwnAspectRatioLock = (state: CanvasControllerState): boolean => {
 	const { selectedIds, objects, multiSelectGroup } = state;
@@ -160,7 +155,7 @@ export const getPropertyPanelSections = (
 		// and nothing else, and the box the lock governs is not the slot's.
 		return filterShownSections(
 			holdsOwnAspectRatioLock(state)
-				? ensurePropertyPanelItems(sections, LAYOUT_SECTION, {
+				? ensurePropertyPanelItems(sections, PROPERTY_PANEL_SECTIONS.layout, {
 						type: "lockAspectRatio",
 					})
 				: sections,
