@@ -76,8 +76,8 @@ to be edited directly rather than through these tools.
 
 ## The viewer
 
-`open_canvas` starts an HTTP + WebSocket host inside the MCP process (port 5190,
-stepping up one at a time if taken, as far as 5209) and opens a Chromium
+`open_canvas` starts an HTTP + WebSocket host inside the MCP process (on
+`127.0.0.1`, port 5190, stepping up one at a time if taken, as far as 5209) and opens a Chromium
 app-mode window — no tabs, no address bar. It falls back to the default browser
 when no Chromium is found.
 
@@ -95,7 +95,12 @@ token the page fetches from `/api/session` (a window left over from a host
 that served another directory on the same port cannot write into this one).
 The file API writes only the file on display and reads only the images a
 diagram points at, never a path outside the diagram's directory, symbolic
-links included.
+links included. Every write names the revision the window last synced
+(`If-Match`, the SHA-256 the host put on the `openCanvas` / `docChanged`
+frame) and goes through the same per-file lock the tools use, so a person's
+save and the AI's write cannot overwrite each other unnoticed: a save behind
+the file is refused with 412 and the window shows the newer document instead.
+The URL the host returns is `http://127.0.0.1:<port>`, the address it binds.
 
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
 16 screen-side tools have something to work with while the user's screen stays

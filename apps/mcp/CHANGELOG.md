@@ -66,6 +66,31 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 - **Switching to a file in another directory no longer opens a second
   window.** The window the previous host had reconnects on its own, so the new
   host waits for it before deciding to open one.
+- **A person's save and the AI's write no longer overwrite each other
+  unnoticed.** The viewer's write carried no version and bypassed the lock
+  the tools take, so whichever landed last won and the other edit vanished.
+  Every `openCanvas` / `docChanged` frame now carries the file's revision
+  (its SHA-256), the write names it in `If-Match`, and the host checks it
+  under the same per-file lock: a save behind the file is refused with 412
+  and the window takes the newer document. The `saved` frame is gone; the
+  host broadcasts the change itself.
+- Two `open_canvas` calls on different files arriving together could leave
+  the host showing one file while watching the other; opening is now
+  serialised. Two headless opens arriving together no longer start two
+  browsers.
+- The viewer keeps its window when the canvas throws while drawing (a headless
+  one closes itself, since nobody can see the message), refuses to save while
+  the file on disk does not parse (an outside editor mid-edit would have been
+  overwritten with the last good document), and draws its error bar and file
+  label in the canvas theme's colours instead of a fixed dark scheme.
+- The URL `open_canvas` returns is `http://127.0.0.1:<port>`, the address the
+  host binds, rather than `localhost`.
+- The throwaway profile a headless browser runs on is created by the host
+  (`mkdtemp`, owner-only) and records its owner; profiles left behind by a
+  killed server of any pid are swept, not only those of the current one.
+- The published package carries its `LICENSE`; `--watch` builds stage the
+  runtime files `diagnose_canvas` and text measurement read; the inlined
+  viewer script escapes `<!--` as well as `</script`.
 
 ### Changed
 
