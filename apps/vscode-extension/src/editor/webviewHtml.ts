@@ -13,8 +13,6 @@ export const getCanvasWebviewHtml = (
 	webview: vscode.Webview,
 	extensionUri: vscode.Uri,
 ): string => {
-	// Webview-accessible URI for dist/webview.js (a Webview needs this URI form,
-	// not a plain file path).
 	const scriptUri = webview.asWebviewUri(
 		vscode.Uri.joinPath(extensionUri, "dist", "webview.js"),
 	);
@@ -24,7 +22,7 @@ export const getCanvasWebviewHtml = (
 		vscode.Uri.joinPath(extensionUri, "dist", "webview.css"),
 	);
 
-	const nonce = getNonce();
+	const nonce = createNonce();
 
 	return /* html */ `
 		<!DOCTYPE html>
@@ -59,10 +57,6 @@ export const getCanvasWebviewHtml = (
 		</head>
 		<body>
 			<div id="root"></div>
-			<!--
-				Script goes at the end of body so it runs after the DOM is built,
-				guaranteeing document.getElementById("root") finds the element.
-			-->
 			<script nonce="${nonce}" src="${scriptUri}"></script>
 		</body>
 		</html>
@@ -70,6 +64,6 @@ export const getCanvasWebviewHtml = (
 };
 
 /** A single-use CSP nonce from the CSPRNG (22 base64 characters of 128 bits). */
-function getNonce(): string {
+function createNonce(): string {
 	return randomBytes(16).toString("base64url");
 }

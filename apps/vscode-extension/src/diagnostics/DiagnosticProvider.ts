@@ -147,7 +147,6 @@ export class DiagnosticProvider {
 
 		const text = document.getText();
 
-		// Clear the previous diagnostics before re-validating.
 		this.collection.delete(document.uri);
 
 		// parse() never throws; it returns a discriminated union.
@@ -165,14 +164,14 @@ export class DiagnosticProvider {
 			case "structure-error": {
 				// Report only validator-only rules; the JSON schema covers the rest.
 				const beyondSchema = result.diagnostics.filter(
-					(diag) => diag.beyondSchema,
+					(diagnostic) => diagnostic.beyondSchema,
 				);
 				if (beyondSchema.length === 0) {
 					return;
 				}
 				this.collection.set(
 					document.uri,
-					this.renderDiagnostics(text, document, beyondSchema),
+					this.renderDiagnostics(document, beyondSchema),
 				);
 				return;
 			}
@@ -180,7 +179,7 @@ export class DiagnosticProvider {
 			case "semantic-error":
 				this.collection.set(
 					document.uri,
-					this.renderDiagnostics(text, document, result.diagnostics),
+					this.renderDiagnostics(document, result.diagnostics),
 				);
 				return;
 
@@ -203,13 +202,12 @@ export class DiagnosticProvider {
 	 * the top of the file.
 	 */
 	private renderDiagnostics(
-		text: string,
 		document: vscode.TextDocument,
 		diagnostics: SemanticDiagnostic[],
 	): vscode.Diagnostic[] {
 		return diagnostics.map((diagnostic) => {
 			const range = diagnostic.id
-				? this.findIdRange(text, document, diagnostic.id)
+				? this.findIdRange(document, diagnostic.id)
 				: FALLBACK_DIAGNOSTIC_RANGE;
 
 			return new vscode.Diagnostic(
@@ -229,24 +227,15 @@ export class DiagnosticProvider {
 	 * (e.g. a duplicate-ID error), this points at the first occurrence; exact
 	 * resolution would need parser-level position tracking.
 	 *
-	 * @param text     Full file text
 	 * @param document VSCode document (used for offset→line/column conversion)
 	 * @param id       ID string to locate
 	 */
-	private findIdRange(
-		text: string,
-		document: vscode.TextDocument,
-		id: string,
-	): vscode.Range {
-		// Escape regex metacharacters (. * + ? etc.) that may appear in the ID.
+	private findIdRange(document: vscode.TextDocument, id: string): vscode.Range {
 		const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-		// \s* allows whitespace around the key's colon.
 		const regex = new RegExp(`"id"\\s*:\\s*"${escapedId}"`);
-		const match = regex.exec(text);
+		const match = regex.exec(document.getText());
 
 		if (match) {
-			// match.index is a character offset from the start of the file.
 			const startPos = document.positionAt(match.index);
 			const endPos = document.positionAt(match.index + match[0].length);
 			return new vscode.Range(startPos, endPos);

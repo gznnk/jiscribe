@@ -6,6 +6,7 @@ import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
 import { getCanvasWebviewHtml } from "./webviewHtml";
 import type {
 	ExtensionToWebviewMessage,
+	JiscribeDocType,
 	WebviewToExtensionMessage,
 } from "../types/messages";
 import { isWebviewToExtensionMessage } from "../types/webviewMessageGuard";
@@ -58,6 +59,20 @@ export interface CanvasWebviewChannel {
 	 *   (retainContextWhenHidden: false) drops it, as postMessage always has
 	 */
 	post(message: ExtensionToWebviewMessage): void;
+	/**
+	 * Post the document's current contents, the one message both editors send.
+	 *
+	 * @param update - the contents to send: `data` as the docType prescribes
+	 *   (JSON text for every kind, empty when an image carries no source),
+	 *   `docType` naming the edited file's kind, and `version` the
+	 *   `vscode.TextDocument.version` it was read at, omitted by the image editor
+	 *   because a CustomDocument has none
+	 */
+	postUpdate(update: {
+		data: string;
+		docType: JiscribeDocType;
+		version?: number;
+	}): void;
 }
 
 /**
@@ -98,6 +113,10 @@ export function resolveCanvasWebview(
 	const post: CanvasWebviewChannel["post"] = (message) => {
 		options.bridgeRegistry.notifySentToWebview(documentKey, message);
 		panel.webview.postMessage(message);
+	};
+
+	const postUpdate: CanvasWebviewChannel["postUpdate"] = (update) => {
+		post({ type: "update", ...update });
 	};
 
 	/**
@@ -182,5 +201,5 @@ export function resolveCanvasWebview(
 		options.onDispose?.();
 	});
 
-	return { post };
+	return { post, postUpdate };
 }

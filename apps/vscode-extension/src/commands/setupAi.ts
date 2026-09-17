@@ -10,7 +10,7 @@ import { collectDirectoryPrefixes } from "./writeDestinationPaths";
  *
  * Places the guide/schema plus per-agent adapters (Skill / rules /
  * instructions) so a workspace's AI agents can generate and edit `.jis`
- * correctly. See docs/03_ai-integration/setup_ai_design.md.
+ * correctly.
  *
  * - The canonical copy lives once in `.jiscribe/` (ai-guide.md +
  *   jiscribe.schema.json).
@@ -23,8 +23,7 @@ import { collectDirectoryPrefixes } from "./writeDestinationPaths";
  * - Nothing is written through a symbolic link: a destination, or any directory
  *   on the way to one, that is a link aborts the command.
  *
- * NOTE: auto-generating MCP server config is deferred
- * (docs/03_ai-integration/mcp_design.md).
+ * NOTE: auto-generating MCP server config is deferred.
  */
 
 // Shared adapter body (excluding frontmatter). It names where to go and nothing
@@ -150,15 +149,15 @@ async function pickTargets(
 	root: vscode.Uri,
 ): Promise<AgentTarget[] | undefined> {
 	const detected = await Promise.all(
-		TARGETS.map((t) => detectAgent(root, t.markerDir)),
+		TARGETS.map((target) => detectAgent(root, target.markerDir)),
 	);
 	// Default ON for detected markers; if none are detected, all ON (first run).
 	const anyDetected = detected.some(Boolean);
-	const items = TARGETS.map((target, i) => ({
+	const items = TARGETS.map((target, index) => ({
 		label: target.label,
 		detail: target.detail,
 		target,
-		picked: anyDetected ? detected[i] : true,
+		picked: anyDetected ? detected[index] : true,
 	}));
 
 	const picked = await vscode.window.showQuickPick(items, {
@@ -166,10 +165,6 @@ async function pickTargets(
 		placeHolder: "Select the AI agents to set up for this workspace",
 	});
 	return picked?.map((item) => item.target);
-}
-
-async function writeFile(uri: vscode.Uri, content: Uint8Array): Promise<void> {
-	await vscode.workspace.fs.writeFile(uri, content);
 }
 
 /** A file to write, held until every destination has been judged safe. */
@@ -318,7 +313,7 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 			}
 			const directory = vscode.Uri.joinPath(root, ...planned.path.slice(0, -1));
 			await vscode.workspace.fs.createDirectory(directory);
-			await writeFile(
+			await vscode.workspace.fs.writeFile(
 				vscode.Uri.joinPath(root, ...planned.path),
 				planned.content,
 			);
@@ -328,7 +323,10 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		// command's own output rather than anything a user would write by hand,
 		// so it goes down unconditionally.
 		await vscode.workspace.fs.createDirectory(jiscribeDir);
-		await writeFile(vscode.Uri.joinPath(root, ...schemaPath), schema);
+		await vscode.workspace.fs.writeFile(
+			vscode.Uri.joinPath(root, ...schemaPath),
+			schema,
+		);
 
 		// A reference.md left by an earlier version goes, but only the copy we
 		// wrote (see removeGeneratedReference). Absent is the normal case.
@@ -339,7 +337,7 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 				vscode.workspace.fs.delete(referenceUri, { useTrash }),
 		});
 
-		const names = targets.map((t) => t.label).join(", ");
+		const names = targets.map((target) => target.label).join(", ");
 		// A reference.md we did not write is the one thing the command leaves as it
 		// found it, so say so rather than let it look like a file we forgot.
 		const keptNote =
@@ -357,9 +355,9 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		if (action === "Open Guide") {
 			await vscode.window.showTextDocument(guideUri);
 		}
-	} catch (err) {
+	} catch (error) {
 		vscode.window.showErrorMessage(
-			`Set up AI failed: ${err instanceof Error ? err.message : String(err)}`,
+			`Set up AI failed: ${error instanceof Error ? error.message : String(error)}`,
 		);
 	}
 }

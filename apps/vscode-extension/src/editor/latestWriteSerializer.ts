@@ -3,11 +3,13 @@
  * extracted from JiscribeEditorProvider so it can be unit-tested without VSCode
  * (the same shape as selfWriteTracker).
  *
- * A WorkspaceEdit records the document's version when it is built and VSCode
- * refuses it at apply time if the version has moved since ("has changed in the
- * meantime", logged as "IGNORING workspace edit"). So a second commit built
- * while the first `applyEdit` is still in flight is refused outright — the user
- * gets a "not saved" error and the canvas and the file drift apart.
+ * `applyEdit` stamps the edit with the document version the extension host
+ * knows at the call, and VSCode refuses it if the document has moved past that
+ * version ("has changed in the meantime", logged as "IGNORING workspace edit").
+ * The change event of a write reaches the extension host after the write is
+ * issued, so a second `applyEdit` called while the first is still in flight
+ * carries the version from before it and is refused outright — the user gets a
+ * "not saved" error and the canvas and the file drift apart.
  *
  * Waiting writes collapse to the newest text rather than forming a queue,
  * because each commit is the canvas' whole document: a text superseded by a

@@ -1,3 +1,4 @@
+import { darkCanvasTheme, lightCanvasTheme } from "@jiscribe/canvas";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -43,14 +44,43 @@ describe("readVscodeThemeKind", () => {
 });
 
 describe("vscodeCanvasThemes", () => {
-	it("differ in colorScheme alone", () => {
+	it("map the same --vscode-* variables onto both grounds", () => {
 		expect(vscodeCanvasThemes.dark.colorScheme).toBe("dark");
 		expect(vscodeCanvasThemes.light.colorScheme).toBe("light");
-		expect(vscodeCanvasThemes.light.tokens).toBe(
-			vscodeCanvasThemes.dark.tokens,
+		const mappedTokens = Object.entries(vscodeCanvasThemes.dark.tokens).filter(
+			([, value]) => String(value).includes("var(--vscode-"),
 		);
+		expect(mappedTokens.length).toBeGreaterThan(0);
+		for (const [name, value] of mappedTokens) {
+			expect(
+				vscodeCanvasThemes.light.tokens[
+					name as keyof typeof vscodeCanvasThemes.light.tokens
+				],
+			).toBe(value);
+		}
+	});
+
+	it("take every other token from the preset of their own ground", () => {
+		const unmappedTokenNames = Object.keys(darkCanvasTheme.tokens).filter(
+			(name) =>
+				!String(
+					vscodeCanvasThemes.dark.tokens[
+						name as keyof typeof darkCanvasTheme.tokens
+					],
+				).includes("var(--vscode-"),
+		);
+		expect(unmappedTokenNames).toContain("transparentChecker");
+		for (const name of unmappedTokenNames) {
+			const tokenName = name as keyof typeof darkCanvasTheme.tokens;
+			expect(vscodeCanvasThemes.dark.tokens[tokenName]).toBe(
+				darkCanvasTheme.tokens[tokenName],
+			);
+			expect(vscodeCanvasThemes.light.tokens[tokenName]).toBe(
+				lightCanvasTheme.tokens[tokenName],
+			);
+		}
 		expect(vscodeCanvasThemes.light.handleDimensions).toEqual(
-			vscodeCanvasThemes.dark.handleDimensions,
+			lightCanvasTheme.handleDimensions,
 		);
 	});
 });

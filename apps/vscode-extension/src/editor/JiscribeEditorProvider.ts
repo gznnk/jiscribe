@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { createCommitGate, type CommitGate } from "./commitGate";
+import { describeErrorDetail } from "./describeErrorDetail";
 import { createLatestWriteSerializer } from "./latestWriteSerializer";
 import {
 	resolveCanvasWebview,
@@ -11,9 +12,9 @@ import {
 	type DocumentEndOfLine,
 	type SelfWriteTracker,
 } from "./selfWriteTracker";
+import { uriFileName } from "./uriFileName";
 import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
 import { toWebviewDocSource } from "../canvasDocSource";
-import type { ExtensionToWebviewMessage } from "../types/messages";
 
 /** The document's line ending as the string its text actually holds. */
 function documentEndOfLine(document: vscode.TextDocument): DocumentEndOfLine {
@@ -73,6 +74,10 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		// commitGate).
 		const commitGate = createCommitGate();
 
+		// Declared before the panel is resolved, because onDispose closes over it
+		// while it is still unassigned (see the registration below).
+		let changeDocumentSubscription: vscode.Disposable | undefined = undefined;
+
 		const channel = resolveCanvasWebview(webviewPanel, {
 			extensionUri: this.context.extensionUri,
 			documentUri: document.uri,
@@ -100,14 +105,14 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 
 			// The Webview's own listener is disposed by resolveCanvasWebview; this
 			// one is ours and leaks without it.
-			onDispose: () => changeDocumentSubscription.dispose(),
+			onDispose: () => changeDocumentSubscription?.dispose(),
 		});
 
 		// Registered after the panel is resolved, so the channel the handler posts
 		// through exists by the time any event can arrive.
-		const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
-			(e) => {
-				if (e.document.uri.toString() !== document.uri.toString()) {
+		changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
+			(event) => {
+				if (event.document.uri.toString() !== document.uri.toString()) {
 					return;
 				}
 
@@ -115,7 +120,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 				// document turns dirty, right after the content event of the same
 				// edit. The text did not move, so there is nothing to forward, and
 				// letting it reach the tracker would clear the queue on every commit.
-				if (e.contentChanges.length === 0) {
+				if (event.contentChanges.length === 0) {
 					return;
 				}
 
@@ -164,11 +169,11 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 					this.notifySaveFailure(document, undefined);
 				}
 			},
-			(err: unknown) => {
+			(error: unknown) => {
 				// Nothing reached the document, so drop the tracked text; otherwise it
 				// would swallow a later external change that happens to match it.
 				selfWriteTracker.untrack(trackedText);
-				this.notifySaveFailure(document, err);
+				this.notifySaveFailure(document, error);
 			},
 		);
 	}
@@ -178,10 +183,10 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 * error alone goes unnoticed and the user keeps editing as if saved, so
 	 * always surface a visible error message.
 	 */
-	private notifySaveFailure(document: vscode.TextDocument, err: unknown) {
-		console.error("[Jiscribe] Failed to write to file:", err);
-		const detail = err instanceof Error ? `: ${err.message}` : "";
-		const baseName = document.uri.path.split("/").pop() ?? document.uri.path;
+	private notifySaveFailure(document: vscode.TextDocument, error: unknown) {
+		console.error("[Jiscribe] Failed to write to file:", error);
+		const detail = describeErrorDetail(error);
+		const baseName = uriFileName(document.uri);
 		vscode.window.showErrorMessage(
 			`Jiscribe: Failed to write canvas changes to "${baseName}"${detail}. Your latest edits are NOT saved.`,
 		);
@@ -205,14 +210,12 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		commitGate: CommitGate,
 	) {
 		const version = document.version;
-		const message: ExtensionToWebviewMessage = {
-			type: "update",
+		commitGate.stamp(version);
+		channel.postUpdate({
 			data: toWebviewDocSource(document.getText()),
 			docType: "json",
 			version,
-		};
-		commitGate.stamp(version);
-		channel.post(message);
+		});
 	}
 
 	/**
@@ -224,17 +227,15 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 */
 	private async updateTextDocument(
 		document: vscode.TextDocument,
-		json: string,
+		text: string,
 	): Promise<boolean> {
 		const edit = new vscode.WorkspaceEdit();
 
-		// Range covering the whole document. lineCount is 1-based but the end line
-		// index is 0-based, so lineCount - 1 is the last line.
 		const lastLine = document.lineAt(document.lineCount - 1);
 		edit.replace(
 			document.uri,
 			new vscode.Range(0, 0, document.lineCount - 1, lastLine.text.length),
-			json,
+			text,
 		);
 
 		return vscode.workspace.applyEdit(edit);
