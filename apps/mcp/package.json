@@ -27,7 +27,8 @@
 	"files": [
 		"dist",
 		"!dist/**/*.map",
-		"CHANGELOG.md"
+		"CHANGELOG.md",
+		"LICENSE"
 	],
 	"bin": {
 		"jiscribe-mcp": "dist/index.mjs"
