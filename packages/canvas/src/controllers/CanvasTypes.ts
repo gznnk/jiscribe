@@ -534,6 +534,12 @@ export type CanvasControllerState = CanvasState & {
 		 * folding and multiSelectGroup rebuilding (#219).
 		 */
 		hitIds: string[];
+		/**
+		 * Selection the marquee started from, kept only when an additive modifier was
+		 * held at dragStart; every frame selects these plus the current hit set. Empty
+		 * for a plain marquee, which replaces the selection.
+		 */
+		baseIds: string[];
 	} | null;
 
 	/** null means all ObjectMenu sections are collapsed */

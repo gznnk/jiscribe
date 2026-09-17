@@ -27,6 +27,8 @@ const makeState = (
 
 const noMods: Mods = { ctrl: false, meta: false, shift: false, alt: false };
 const ctrlMods: Mods = { ctrl: true, meta: false, shift: false, alt: false };
+const metaMods: Mods = { ctrl: false, meta: true, shift: false, alt: false };
+const shiftMods: Mods = { ctrl: false, meta: false, shift: true, alt: false };
 
 // Shared object set
 // root-rect: a root-level rectangle
@@ -155,6 +157,31 @@ describe("determineSelection", () => {
 				noMods,
 			);
 			expect(result).toEqual(["group-top"]);
+		});
+	});
+
+	describe("additive modifiers (ctrl / meta / shift)", () => {
+		it.each([
+			["ctrl", ctrlMods],
+			["meta", metaMods],
+			["shift", shiftMods],
+		])("adds to the selection with %s held", (_name, mods) => {
+			const state = makeState(["root-rect"], {
+				"root-rect": rectObj("root-rect"),
+				"other-rect": rectObj("other-rect"),
+			});
+			const result = determineSelection(rectObj("other-rect"), state, mods);
+			expect(result).toEqual(["root-rect", "other-rect"]);
+		});
+
+		it.each([
+			["ctrl", ctrlMods],
+			["meta", metaMods],
+			["shift", shiftMods],
+		])("toggles an already selected object off with %s held", (_name, mods) => {
+			const state = makeState(["root-rect"], baseObjects);
+			const result = determineSelection(rectObj("root-rect"), state, mods);
+			expect(result).toEqual([]);
 		});
 	});
 

@@ -645,6 +645,19 @@ export class CanvasDriver {
 		await this.waitForGestureBatch();
 	}
 
+	/**
+	 * Shift-click a content coordinate to add to or toggle the selection. Shift is
+	 * additive alongside Ctrl/Meta; it only locks an axis once a drag starts.
+	 */
+	async shiftClickAt(point: { x: number; y: number }) {
+		await this.measureOrigin();
+		const screen = this.toScreen(point);
+		await this.page.keyboard.down("Shift");
+		await this.page.mouse.click(screen.x, screen.y);
+		await this.page.keyboard.up("Shift");
+		await this.waitForGestureBatch();
+	}
+
 	/** Click empty space to deselect, committing any text edit in progress. */
 	async deselect() {
 		await this.measureOrigin();

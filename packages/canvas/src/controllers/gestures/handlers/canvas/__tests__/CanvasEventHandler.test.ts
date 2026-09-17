@@ -253,13 +253,21 @@ describe("CanvasEventHandler", () => {
 				endX: 0,
 				endY: 0,
 				hitIds: [],
+				baseIds: [],
 			});
 			expect(nextState.multiSelectGroup).toBeNull();
 		});
 
 		it("a changed hit set recomputes the selection and stores the new hitIds", () => {
 			const state = makeMarqueeState({
-				areaSelection: { startX: 0, startY: 0, endX: 5, endY: 5, hitIds: [] },
+				areaSelection: {
+					startX: 0,
+					startY: 0,
+					endX: 5,
+					endY: 5,
+					hitIds: [],
+					baseIds: [],
+				},
 			} as Partial<CanvasControllerState>);
 			const nextState = CanvasEventHandler.handle(
 				state,
@@ -271,9 +279,83 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.areaSelection?.hitIds).toEqual(["a", "b"]);
 		});
 
+		it("an additive dragStart keeps the selection and records it as baseIds", () => {
+			const state = makeMarqueeState({
+				selectedIds: ["b"],
+				multiSelectGroup: { id: "kept" },
+			} as Partial<CanvasControllerState>);
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({
+					type: "dragStart",
+					start: { x: 0, y: 0 },
+					last: { x: 0, y: 0 },
+					mods: { shift: true, alt: false, ctrl: false, meta: false },
+				}),
+				registries,
+			);
+			expect(nextState.areaSelection?.baseIds).toEqual(["b"]);
+			expect(nextState.selectedIds).toEqual(["b"]);
+			expect(nextState.multiSelectGroup).toEqual({ id: "kept" });
+			// A marquee only picks up objects, so the connector channel still goes
+			expect(nextState.selectedConnectorId).toBeNull();
+		});
+
+		it("an additive drag selects the base plus the newly enclosed ids", () => {
+			const state = makeMarqueeState({
+				selectedIds: ["b"],
+				areaSelection: {
+					startX: 0,
+					startY: 0,
+					endX: 0,
+					endY: 0,
+					hitIds: [],
+					baseIds: ["b"],
+				},
+			} as Partial<CanvasControllerState>);
+			// The marquee (0,0)-(25,25) encloses a alone; b comes from the base.
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({ type: "drag", last: { x: 25, y: 25 } }),
+				registries,
+			);
+			expect(nextState.selectedIds).toEqual(["b", "a"]);
+			expect(nextState.areaSelection?.hitIds).toEqual(["a"]);
+			expect(nextState.multiSelectGroup).not.toBeNull();
+		});
+
+		it("an additive drag falls back to the base when the hit set empties", () => {
+			const state = makeMarqueeState({
+				selectedIds: ["b", "a"],
+				areaSelection: {
+					startX: 0,
+					startY: 0,
+					endX: 25,
+					endY: 25,
+					hitIds: ["a"],
+					baseIds: ["b"],
+				},
+			} as Partial<CanvasControllerState>);
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({ type: "drag", last: { x: 5, y: 5 } }),
+				registries,
+			);
+			expect(nextState.selectedIds).toEqual(["b"]);
+			expect(nextState.areaSelection?.hitIds).toEqual([]);
+			expect(nextState.multiSelectGroup).toBeNull();
+		});
+
 		it("an identical hit set early-outs, keeping selectedIds / multiSelectGroup by reference", () => {
 			const state = makeMarqueeState({
-				areaSelection: { startX: 0, startY: 0, endX: 5, endY: 5, hitIds: [] },
+				areaSelection: {
+					startX: 0,
+					startY: 0,
+					endX: 5,
+					endY: 5,
+					hitIds: [],
+					baseIds: [],
+				},
 			} as Partial<CanvasControllerState>);
 			const firstFrame = CanvasEventHandler.handle(
 				state,
@@ -293,6 +375,30 @@ describe("CanvasEventHandler", () => {
 			expect(secondFrame.areaSelection?.endX).toBe(55);
 			expect(secondFrame.areaSelection?.endY).toBe(55);
 		});
+	});
+
+	it("a press with an additive modifier keeps the selection but still closes menus", () => {
+		const state = makeState({
+			textEditState: null,
+			multiSelectGroup: { id: "kept" },
+			contextMenuPosition: { clientX: 10, clientY: 10 },
+			objectMenuOpenId: "a",
+			stencilLibraryOpenCategory: "flowchart",
+		} as Partial<CanvasControllerState>);
+		const nextState = CanvasEventHandler.handle(
+			state,
+			makeEvent({
+				type: "pressed",
+				button: 0,
+				mods: { shift: true, alt: false, ctrl: false, meta: false },
+			}),
+			registries,
+		);
+		expect(nextState.selectedIds).toEqual(["a"]);
+		expect(nextState.multiSelectGroup).toEqual({ id: "kept" });
+		expect(nextState.contextMenuPosition).toBeNull();
+		expect(nextState.objectMenuOpenId).toBeNull();
+		expect(nextState.stencilLibraryOpenCategory).toBeNull();
 	});
 
 	it("a background press closes an open StencilLibrary category flyout", () => {
