@@ -48,6 +48,7 @@ import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
+import { usePropertyPanelState } from "./hooks/usePropertyPanelState";
 import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
@@ -616,6 +617,11 @@ const CanvasComponent = ({
 		[state, draftObjects],
 	);
 
+	// The sidebar stays on screen through every pan and drag, unlike the ObjectMenu,
+	// which hides itself while the view moves; so its memo is protected here instead,
+	// by handing it the same state object until something it shows has changed.
+	const propertyPanelState = usePropertyPanelState(menuCanvasState);
+
 	const revealCaret = useRevealTextEditCaret({
 		viewport: state.viewport,
 		dispatch,
@@ -874,7 +880,7 @@ const CanvasComponent = ({
 					</Viewport>
 					{state.propertyPanel.isOpen && (
 						<PropertyPanel
-							canvasState={menuCanvasState}
+							canvasState={propertyPanelState}
 							onPropertyUpdate={handleStylePropertyUpdate}
 							onTransformUpdate={handleTransformUpdate}
 							onDocumentUpdate={handleDocumentUpdate}
