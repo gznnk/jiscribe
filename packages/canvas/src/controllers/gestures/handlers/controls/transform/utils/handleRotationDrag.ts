@@ -15,6 +15,16 @@ import type { ICanvasRegistries } from "../../../../../registries/ICanvasRegistr
 import { createCowObjects } from "../../../../../utils/cowObjects";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 
+/** Angle step the rotation snaps to while Shift is held, in degrees */
+const ROTATION_SNAP_STEP_DEG = 15;
+
+/**
+ * Rounds an angle to the nearest multiple of the snap step.
+ * The result is not normalized, so 352.5 or above gives 360.
+ */
+const snapAngleToStepDeg = (degrees: number): number =>
+	Math.round(degrees / ROTATION_SNAP_STEP_DEG) * ROTATION_SNAP_STEP_DEG;
+
 /**
  * Handles dragging on the rotation anchor (rotation handle).
  */
@@ -72,9 +82,13 @@ export function handleRotationDrag(
 		startFrame.cy,
 	);
 
-	// Compute the new rotation angle (0-360 degrees, rounded to an integer)
+	// Compute the new rotation angle (0-360 degrees, rounded to an integer;
+	// snapped to ROTATION_SNAP_STEP_DEG steps while Shift is held)
+	const rawRotationDeg = radiansToDegrees(radian - rotatePointRadian);
 	const newRotation = normalizeAngleDeg(
-		roundToDecimal(radiansToDegrees(radian - rotatePointRadian), 0),
+		event.mods.shift
+			? snapAngleToStepDeg(rawRotationDeg)
+			: roundToDecimal(rawRotationDeg, 0),
 	);
 
 	// Build the updated object map from dragStartSnapshot (COW view, #213)
