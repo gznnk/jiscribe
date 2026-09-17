@@ -33,7 +33,11 @@ export function isWebviewToExtensionMessage(
 		case "rendered":
 			return true;
 		case "update":
-			return typeof message.data === "string";
+			return (
+				typeof message.data === "string" &&
+				(message.baseVersion === undefined ||
+					typeof message.baseVersion === "number")
+			);
 		case "imageExportResult":
 			return (
 				typeof message.requestId === "number" &&

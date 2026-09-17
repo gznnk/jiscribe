@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import { createCommitGate, type CommitGate } from "./commitGate";
 import { createLatestWriteSerializer } from "./latestWriteSerializer";
 import {
 	resolveCanvasWebview,
@@ -23,9 +24,11 @@ function documentEndOfLine(document: vscode.TextDocument): DocumentEndOfLine {
  * Custom editor provider that shows the Canvas UI when a .jis file opens.
  *
  * Data flow:
- *   file change → Extension → Webview (postMessage)
+ *   file change → Extension → Webview (postMessage), stamped with the document
+ *     version the text was read at
  *   canvas edit → Webview → Extension (postMessage) → write back via WorkspaceEdit,
- *     one at a time (latestWriteSerializer)
+ *     one at a time (latestWriteSerializer), unless the commit was built before a
+ *     newer document the Webview has already been sent (commitGate)
  *
  * Image documents (.jis.svg / .jis.png) can't be handled by full-text
  * replacement, so JiscribeImageEditorProvider (re-render the image at save time)
@@ -65,18 +68,35 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 			this.writeCommit(document, selfWriteTracker, text),
 		);
 
+		// Versions of the updates posted below, so a commit built before a change
+		// made outside the canvas is dropped rather than written over it (see
+		// commitGate).
+		const commitGate = createCommitGate();
+
 		const channel = resolveCanvasWebview(webviewPanel, {
 			extensionUri: this.context.extensionUri,
 			documentUri: document.uri,
 			bridgeRegistry: this.bridgeRegistry,
 
 			// Webview is initialized; send the initial file contents.
-			onReady: () => this.updateWebview(channel, document),
+			onReady: () => this.updateWebview(channel, document, commitGate),
 
 			// Write the canvas edit back to the file, behind whatever write is still
 			// in flight. A commit that arrives while an older one waits supersedes
 			// it, so the file ends at the canvas' latest state either way.
-			onUpdate: (data) => writeSerializer.enqueue(data),
+			onUpdate: (data, baseVersion) => {
+				if (!commitGate.accepts(baseVersion)) {
+					// Dropped, and nothing is posted back: the newer document went to
+					// this same Webview before the commit arrived, so the canvas has
+					// already been handed the file's state and re-posting it would only
+					// send the same text a second time.
+					console.warn(
+						`[Jiscribe] Dropped a canvas commit built against document version ${String(baseVersion)}: the Webview has since been sent version ${String(commitGate.lastForwardedVersion)}, changed outside the canvas.`,
+					);
+					return;
+				}
+				writeSerializer.enqueue(data);
+			},
 
 			// The Webview's own listener is disposed by resolveCanvasWebview; this
 			// one is ours and leaks without it.
@@ -106,7 +126,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 					return;
 				}
 
-				this.updateWebview(channel, document);
+				this.updateWebview(channel, document, commitGate);
 			},
 		);
 	}
@@ -168,23 +188,30 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	}
 
 	/**
-	 * Send the file's current contents to the Webview. Called when the file
-	 * changes externally or when the Webview signals it's ready.
+	 * Send the file's current contents to the Webview, stamped with the version
+	 * they were read at. Called when the file changes externally or when the
+	 * Webview signals it's ready.
 	 *
 	 * @param channel - the resolved panel's channel; posting through the panel
 	 *   directly would hide the message from the bridge registry
 	 * @param document - the edited document, re-indented on the way out
 	 *   (toWebviewDocSource)
+	 * @param commitGate - told about the stamp here, the one place an update is
+	 *   built, so no posted version can go unrecorded
 	 */
 	private updateWebview(
 		channel: CanvasWebviewChannel,
 		document: vscode.TextDocument,
+		commitGate: CommitGate,
 	) {
+		const version = document.version;
 		const message: ExtensionToWebviewMessage = {
 			type: "update",
 			data: toWebviewDocSource(document.getText()),
 			docType: "json",
+			version,
 		};
+		commitGate.stamp(version);
 		channel.post(message);
 	}
 

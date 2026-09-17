@@ -114,7 +114,10 @@ const isExtensionToWebviewMessage = (
 	const message = value as Record<string, unknown>;
 	switch (message.type) {
 		case "update":
-			return typeof message.data === "string";
+			return (
+				typeof message.data === "string" &&
+				(message.version === undefined || typeof message.version === "number")
+			);
 		case "requestImageExport":
 			return (
 				typeof message.requestId === "number" &&
@@ -202,6 +205,13 @@ function App() {
 	const isEditingPausedRef = useRef(isEditingPaused);
 	isEditingPausedRef.current = isEditingPaused;
 
+	// Version stamped on the newest update from the Extension, quoted back on
+	// every commit so the Extension can drop one built before a change made
+	// outside the canvas (see the `update` messages in types/messages.ts). A ref
+	// rather than state: it must be readable from the handlers below without
+	// rebuilding them, and it changes nothing on screen.
+	const lastReceivedDocumentVersionRef = useRef<number | undefined>(undefined);
+
 	// The Canvas save scheduler throttles high-frequency commits (key repeat,
 	// etc.) (#125), so send straight to the Extension without debouncing here.
 	// The written-back payload is always the doc's JSON text regardless of
@@ -216,6 +226,7 @@ function App() {
 		const message: WebviewToExtensionMessage = {
 			type: "update",
 			data: JSON.stringify(doc, null, 2),
+			baseVersion: lastReceivedDocumentVersionRef.current,
 		};
 		vscode.postMessage(message);
 	}, []);
@@ -275,6 +286,12 @@ function App() {
 			switch (message.type) {
 				case "update": {
 					const docType = message.docType ?? "json";
+
+					// Recorded before anything can reject this text: whatever the canvas
+					// ends up showing, this is the document state the Extension has
+					// handed over, and the next commit is built on top of it. Image docs
+					// carry no version, leaving it undefined.
+					lastReceivedDocumentVersionRef.current = message.version;
 
 					// For image docs (svg / png), the Extension has already extracted
 					// the embedded source and sends JSON text. Empty string means no
@@ -364,8 +381,15 @@ function App() {
 	// useImperativeHandle during commit, before this effect), so requestImageExport
 	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
 	// save (#179).
+	//
+	// Reported once per mount: the message says this Webview can export from now
+	// on, which no later document update changes, while the Extension answers it
+	// by re-rendering and rewriting the image. The dependency stays, so the one
+	// report still waits for the first doc to parse.
+	const hasReportedRendered = useRef(false);
 	useEffect(() => {
-		if (docView.doc) {
+		if (docView.doc && !hasReportedRendered.current) {
+			hasReportedRendered.current = true;
 			vscode.postMessage({ type: "rendered" });
 		}
 	}, [docView.doc]);

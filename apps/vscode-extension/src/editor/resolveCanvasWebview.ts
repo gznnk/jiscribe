@@ -28,8 +28,13 @@ export interface CanvasWebviewOptions {
 	bridgeRegistry: WebviewBridgeRegistry;
 	/** The Webview initialized and wants the document's current contents. */
 	onReady: () => void;
-	/** A canvas edit arrived; `data` is the doc's JSON text. */
-	onUpdate: (data: string) => void;
+	/**
+	 * A canvas edit arrived; `data` is the doc's JSON text and `baseVersion` the
+	 * `version` of the newest update this Webview had received when the edit was
+	 * committed, undefined when none carried one (see the `update` messages in
+	 * types/messages.ts).
+	 */
+	onUpdate: (data: string, baseVersion: number | undefined) => void;
 	/**
 	 * Response to requestImageExport; `data` is null when the image could not be
 	 * generated. Image editor only — omit it and such messages are ignored.
@@ -116,7 +121,7 @@ export function resolveCanvasWebview(
 				break;
 
 			case "update":
-				options.onUpdate(message.data);
+				options.onUpdate(message.data, message.baseVersion);
 				break;
 
 			case "imageExportResult":

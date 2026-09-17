@@ -26,8 +26,12 @@ export type WebviewToExtensionMessage =
 	/**
 	 * Requests writing canvas edits back. `data` is always the doc's JSON text
 	 * (for image docs the Extension tracks dirty state and renders at save time).
+	 * `baseVersion` is the `version` of the newest Extension → Webview `update`
+	 * this Webview had received when it built the commit, so the Extension can
+	 * tell a commit that predates a change made outside the canvas from a current
+	 * one; undefined when no update carried a version (image docs).
 	 */
-	| { type: "update"; data: string }
+	| { type: "update"; data: string; baseVersion?: number }
 	/** Undo requested on the canvas (delegated to the host editor's undo command). */
 	| { type: "undo" }
 	/** Redo requested on the canvas (delegated to the host editor's redo command). */
@@ -39,11 +43,12 @@ export type WebviewToExtensionMessage =
 	 */
 	| { type: "imageExportResult"; requestId: number; data: string | null }
 	/**
-	 * The canvas mounted and can now export an image. Sent after every (re)mount
-	 * once the doc renders, so the Extension can reconcile a stale image left by a
-	 * hidden-tab save (#179): a save while the Webview was discarded falls back to
-	 * "old image + new source", and this lets the Extension re-render and rewrite
-	 * once the tab is visible again.
+	 * The canvas mounted and can now export an image. Sent once per (re)mount, the
+	 * first time a doc renders, so the Extension can reconcile a stale image left
+	 * by a hidden-tab save (#179): a save while the Webview was discarded falls
+	 * back to "old image + new source", and this lets the Extension re-render and
+	 * rewrite once the tab is visible again. Later document updates do not repeat
+	 * it — they say nothing new about this Webview's ability to export.
 	 */
 	| { type: "rendered" }
 	/**
@@ -76,6 +81,12 @@ export type ExtensionToWebviewMessage =
 			type: "update";
 			data: string;
 			docType?: JiscribeDocType;
+			/**
+			 * `vscode.TextDocument.version` the `data` was read at, quoted back as
+			 * `baseVersion` on every commit the Webview builds from it. Present for
+			 * the text editor; the image editor has no document version and omits it.
+			 */
+			version?: number;
 	  }
 	/**
 	 * On saving `.jis.png` / `.jis.svg`, requests the current canvas image

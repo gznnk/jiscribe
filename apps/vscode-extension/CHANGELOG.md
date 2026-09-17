@@ -34,6 +34,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outside the workspace and have the command write there.
 - The CSP nonce is drawn from the cryptographic random source.
 
+### Fixed
+
+- **A canvas edit no longer overwrites a text edit made while it was on its
+  way.** Each document sent to the canvas now carries the document's version,
+  and each commit returns the version it was built on; a commit built before an
+  external change the canvas has already been shown is dropped instead of
+  replacing that change. The window was widened by the commit scheduler, which
+  delays a burst of edits into one commit.
+- **A hidden-tab save no longer rewrites the file while you have unsaved
+  edits.** The repair that re-renders a stale image once the tab is visible
+  again now waits until the document is clean, so pressing Undo after such a
+  save cannot put the undone state on disk behind a "saved" tab.
+- **An external change back to a previously saved image is picked up.** The
+  editor remembered the bytes of its last write for good, so a file restored to
+  exactly those bytes (a `git stash pop`, say) was mistaken for its own echo and
+  ignored; the next save then overwrote it. The record is now consumed by the
+  echo it exists for and cleared when the disk is adopted.
+- **The Problems panel follows edits.** Diagnostics were refreshed only on open
+  and save, so a file rewritten by an AI agent, or edited in a text editor
+  beside the canvas, kept stale entries until the next save. They now refresh
+  shortly after every change. The read-only side of a git diff is no longer
+  validated.
+
 ## [0.10.0] - 2026-09-14
 
 The editor grew two sidebars. Everything a shape can be is now in one panel on

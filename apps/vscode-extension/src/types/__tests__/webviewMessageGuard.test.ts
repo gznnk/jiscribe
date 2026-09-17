@@ -11,6 +11,8 @@ const validMessages: WebviewToExtensionMessage[] = [
 	{ type: "rendered" },
 	{ type: "update", data: '{"objects":[]}' },
 	{ type: "update", data: "" },
+	{ type: "update", data: '{"objects":[]}', baseVersion: 0 },
+	{ type: "update", data: '{"objects":[]}', baseVersion: 12 },
 	{ type: "imageExportResult", requestId: 1, data: "QUJD" },
 	{ type: "imageExportResult", requestId: 2, data: null },
 	{
@@ -62,6 +64,23 @@ describe("isWebviewToExtensionMessage", () => {
 		expect(isWebviewToExtensionMessage({ type: "update", data: null })).toBe(
 			false,
 		);
+	});
+
+	it("rejects an update whose baseVersion is present but not a number", () => {
+		expect(
+			isWebviewToExtensionMessage({
+				type: "update",
+				data: "{}",
+				baseVersion: "4",
+			}),
+		).toBe(false);
+		expect(
+			isWebviewToExtensionMessage({
+				type: "update",
+				data: "{}",
+				baseVersion: null,
+			}),
+		).toBe(false);
 	});
 
 	it("rejects an imageExportResult with a wrong requestId or data", () => {

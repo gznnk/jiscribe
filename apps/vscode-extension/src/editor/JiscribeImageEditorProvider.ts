@@ -62,9 +62,11 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	public reconcileInFlight = false;
 
 	/**
-	 * Bytes of this editor's most recent write to the file, recorded before the
-	 * write lands so a watcher event racing the save still recognizes it as our
-	 * own; null until the first write.
+	 * Bytes of an own write whose watcher event has not arrived yet, recorded
+	 * before the write lands so an event racing the save still recognizes it as
+	 * our own; cleared again once classifyExternalChange matches it (or the disk
+	 * state is adopted), so the same bytes written by someone else later still
+	 * count as an external change. Null until the first write.
 	 */
 	public lastOwnWrite: Uint8Array | null = null;
 
@@ -229,7 +231,6 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		const changeKind = classifyExternalChange(
 			document,
 			diskBytes,
-			document.lastOwnWrite,
 			this.isDocumentDirty(document),
 		);
 		if (changeKind === "own-echo") {
@@ -367,7 +368,9 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 
 			onRendered: () => {
 				// The canvas is mounted and can export now. If a prior hidden-tab save
-				// left a stale image on disk (#179), re-render and rewrite it.
+				// left a stale image on disk (#179), re-render and rewrite it — unless
+				// the document is dirty, in which case the repair waits for a render on
+				// a clean document rather than writing unsaved edits.
 				void reconcileImageDocument(document, this.makeSeams(document));
 			},
 
@@ -454,7 +457,8 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 
 	/**
 	 * Build the VSCode-backed effects the ops delegate to: webview render, file
-	 * read/write on the document's URI, and (for save) the cancel token.
+	 * read/write on the document's URI, the tab's dirty flag, and (for save) the
+	 * cancel token.
 	 */
 	private makeSeams(
 		document: JiscribeImageDocument,
@@ -469,6 +473,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 				document.lastOwnWrite = bytes;
 				await vscode.workspace.fs.writeFile(document.uri, bytes);
 			},
+			isDirty: () => this.isDocumentDirty(document),
 			isCancelled: token ? () => token.isCancellationRequested : undefined,
 		};
 	}
