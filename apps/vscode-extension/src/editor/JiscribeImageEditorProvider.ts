@@ -89,6 +89,12 @@ interface ImageEditorPanel {
 	readonly panel: vscode.WebviewPanel;
 	/** The only way to post to that panel's Webview (see resolveCanvasWebview). */
 	readonly channel: CanvasWebviewChannel;
+	/**
+	 * Unanswered requestImageExport calls of this panel, keyed by requestId. Held
+	 * per panel rather than per provider so a Webview can only answer a save its
+	 * own document asked for.
+	 */
+	readonly pendingExports: Map<number, (data: string | null) => void>;
 }
 
 /**
@@ -146,12 +152,9 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	// requests and reflecting undo/redo.
 	private readonly panels = new Map<JiscribeImageDocument, ImageEditorPanel>();
 
-	// Pending requestImageExport responses, keyed by requestId.
+	// Source of requestIds for requestImageExport. Provider-wide, so an id never
+	// repeats across panels; the pending responses themselves live on the panel.
 	private nextRequestId = 1;
-	private readonly pendingExports = new Map<
-		number,
-		(data: string | null) => void
-	>();
 
 	/** Read the file (or its backup) and build the document. */
 	public async openCustomDocument(
@@ -321,6 +324,10 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		webviewPanel: vscode.WebviewPanel,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
+		// Created before the panel record so onImageExportResult can close over it
+		// without reaching for a record that does not exist yet.
+		const pendingExports = new Map<number, (data: string | null) => void>();
+
 		const channel = resolveCanvasWebview(webviewPanel, {
 			extensionUri: this.context.extensionUri,
 			documentUri: document.uri,
@@ -351,9 +358,9 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			},
 
 			onImageExportResult: (requestId, data) => {
-				const resolve = this.pendingExports.get(requestId);
+				const resolve = pendingExports.get(requestId);
 				if (resolve) {
-					this.pendingExports.delete(requestId);
+					pendingExports.delete(requestId);
 					resolve(data);
 				}
 			},
@@ -373,7 +380,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			},
 		});
 
-		this.panels.set(document, { panel: webviewPanel, channel });
+		this.panels.set(document, { panel: webviewPanel, channel, pendingExports });
 	}
 
 	/** Save (overwrite in place). */
@@ -480,7 +487,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		if (!editorPanel || !editorPanel.panel.visible) {
 			return Promise.resolve(null);
 		}
-		return this.requestImageFromWebview(editorPanel.channel, kind);
+		return this.requestImageFromWebview(editorPanel, kind);
 	}
 
 	/** Send the current source JSON to the Webview (reflecting undo/redo/revert). */
@@ -515,13 +522,15 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	/**
 	 * Ask the Webview to generate the image and await the response (with timeout).
 	 *
-	 * @param channel - the document's panel channel; the caller has already
-	 *   checked that its panel is visible, since a discarded Webview never answers
+	 * @param editorPanel - the document's live panel; the caller has already
+	 *   checked that it is visible, since a discarded Webview never answers. The
+	 *   pending response is registered on this panel, so only its own Webview can
+	 *   resolve it
 	 * @param format - image format to render, which for Save As is the
 	 *   destination's kind rather than the document's
 	 */
 	private requestImageFromWebview(
-		channel: CanvasWebviewChannel,
+		editorPanel: ImageEditorPanel,
 		format: JiscribeImageKind,
 	): Promise<string | null> {
 		const requestId = this.nextRequestId++;
@@ -532,14 +541,14 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		};
 		return new Promise<string | null>((resolve) => {
 			const timeout = setTimeout(() => {
-				this.pendingExports.delete(requestId);
+				editorPanel.pendingExports.delete(requestId);
 				resolve(null);
 			}, IMAGE_EXPORT_TIMEOUT_MS);
-			this.pendingExports.set(requestId, (data) => {
+			editorPanel.pendingExports.set(requestId, (data) => {
 				clearTimeout(timeout);
 				resolve(data);
 			});
-			channel.post(message);
+			editorPanel.channel.post(message);
 		});
 	}
 }

@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 import * as vscode from "vscode";
 
 /**
@@ -31,15 +33,14 @@ export const getCanvasWebviewHtml = (
 			<meta charset="UTF-8">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<!--
-				Content-Security-Policy (whitelist model, reduces XSS risk):
-				  default-src 'none'            → allow nothing by default
-				  img-src ...                   → allowed image sources (blob: is needed
-				                                  for the SVG→<img> rasterize step of PNG export)
-				  style-src ... 'unsafe-inline' → allow inline styles
-				  font-src ...                  → allowed font sources
-				  script-src 'nonce-...'        → run only scripts with the matching nonce
+				default-src 'none' and only what the bundle needs. img-src carries no
+				https: or data:, so a document cannot make the Webview fetch anything
+				(a markdown image would otherwise leak that the file was opened, #28);
+				doc images arrive as base64 over postMessage (resolveDocImage) and the
+				PNG export rasterizes its SVG through a blob: URL, whose nested data:
+				URIs are inline to the SVG rather than fetched by the page.
 			-->
-			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https: data: blob:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 			<title>Jiscribe Canvas Editor</title>
 			<link rel="stylesheet" href="${styleUri}">
 			<style>
@@ -68,12 +69,7 @@ export const getCanvasWebviewHtml = (
 	`;
 };
 
-/** Generate a single-use 32-char alphanumeric nonce for the CSP. */
+/** A single-use CSP nonce from the CSPRNG (22 base64 characters of 128 bits). */
 function getNonce(): string {
-	const chars =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	return Array.from(
-		{ length: 32 },
-		() => chars[Math.floor(Math.random() * chars.length)],
-	).join("");
+	return randomBytes(16).toString("base64url");
 }

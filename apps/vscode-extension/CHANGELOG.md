@@ -5,6 +5,35 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- **The editor no longer fetches anything a document names.** The Webview's
+  Content-Security-Policy allowed images from any `https:` URL, so a Markdown
+  block reading `![](https://…)` in a file you opened would make VS Code request
+  that URL — enough to tell its owner the file was opened, and when, and from
+  where. The policy now allows only the extension's own bundle and the blob the
+  PNG export rasterizes through, and Markdown images are dropped by the
+  renderer itself so the same holds everywhere the engine draws them. Use the
+  `image` shape to draw a picture; its `src` is read from beside the document.
+- **The Webview can read only the extension's bundle.** Its local resource
+  roots were VS Code's default — every workspace folder — while it needs
+  nothing outside the extension's `dist/`. Document images already travel over
+  the message channel and are unaffected.
+- **Messages from the Webview are checked before they are acted on.** A
+  malformed one is logged and dropped instead of reaching the file handlers.
+- **A save answers only the editor that asked.** The image editor's pending
+  render requests are now kept per panel, so one document's Webview cannot
+  supply the bytes another document is saving.
+- **Set up AI asks before replacing a file it did not write.** A file at one of
+  its destinations that does not start with its generated-file notice is yours;
+  the command now lists such files and offers to overwrite or skip them rather
+  than replacing them silently. It also refuses to write through a symbolic
+  link, so a repository cannot point `.jiscribe/` or `.claude/skills/jiscribe/`
+  outside the workspace and have the command write there.
+- The CSP nonce is drawn from the cryptographic random source.
+
 ## [0.10.0] - 2026-09-14
 
 The editor grew two sidebars. Everything a shape can be is now in one panel on
