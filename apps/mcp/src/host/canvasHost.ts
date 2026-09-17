@@ -9,7 +9,9 @@
 // the person left it in.
 //
 // Only the queries the file has no answer for (capture, camera, selection,
-// measurement) are put to the viewer under a requestId (runHandleOp).
+// measurement) are put to the viewer under a requestId (runHandleOp). The one
+// other round trip is the flush the windows are asked for before the file on
+// display changes (flushViewers).
 //
 // The window is either one a person looks at or a headless one the AI looks
 // through (openHeadlessViewer). Both are viewers as far as everything here is
@@ -68,6 +70,14 @@ const HANDLE_OP_TIMEOUT_MS = 15_000;
  * allows for that one round trip
  */
 const VIEWER_CLOSE_TIMEOUT_MS = 5_000;
+
+/**
+ * How long openFile waits for the windows to write out the edits they have
+ * buffered before it moves to another file. It is the viewer's save debounce plus
+ * one round trip of the write, with room to spare: overshooting costs a person's
+ * last edit, while waiting too long only holds up a file switch nobody is watching
+ */
+export const FLUSH_EDITS_TIMEOUT_MS = 3_000;
 
 /**
  * The grace period between the last viewer leaving and onViewersGone being called.
@@ -140,6 +150,17 @@ export type CanvasHost = {
 	 * is set
 	 */
 	getOpenPath: () => string | null;
+	/**
+	 * Asks every open window to write out the edits it is still holding on its save
+	 * debounce, and waits for them to say they are done. A window that closes while
+	 * being waited on counts as answered, and with none open it returns straight
+	 * away.
+	 *
+	 * @param timeoutMs How long to wait (milliseconds) before going on without the
+	 *   windows that have not answered. A write the viewer reports as failed counts
+	 *   as an answer, so this only catches a frozen or too-old window
+	 */
+	flushViewers: (timeoutMs: number) => Promise<void>;
 	/**
 	 * Asks the viewer for an operation only the drawn result can answer (capture,
 	 * camera, selection, measurement).
@@ -235,6 +256,12 @@ export type CanvasHostOptions = {
 	 * so shorten it only when there is a reason not to wait (tests)
 	 */
 	idleShutdownDelayMs?: number;
+	/**
+	 * How long openFile waits for the windows to write out their buffered edits
+	 * before it switches file (milliseconds, default 3000). Shortening it only makes
+	 * sense where no window is going to answer at all (tests)
+	 */
+	flushEditsTimeoutMs?: number;
 	/**
 	 * How long openHeadlessViewer waits for the window it spawned to connect
 	 * (milliseconds, default 20000). Shortening it only makes sense where no
@@ -514,6 +541,68 @@ export async function startCanvasHost(
 		}
 	>();
 
+	/**
+	 * flushEdits requests awaiting an answer, kept the same way as pendingHandleOps:
+	 * every socket asked is held, so that windows leaving without a word end the wait
+	 * instead of making the file switch sit out the whole timeout
+	 */
+	const pendingFlushes = new Map<
+		string,
+		{
+			askedSockets: Set<WebSocket>;
+			settle: () => void;
+			timer: ReturnType<typeof setTimeout>;
+		}
+	>();
+
+	const settleFlush = (requestId: string): void => {
+		const pending = pendingFlushes.get(requestId);
+		if (pending === undefined) {
+			return;
+		}
+		clearTimeout(pending.timer);
+		pendingFlushes.delete(requestId);
+		pending.settle();
+	};
+
+	/**
+	 * Marks one window as done with a flush, and ends the wait it was the last one
+	 * holding up.
+	 *
+	 * @param requestId The flush being answered. An answer to one already settled is
+	 *   let go, so a word arriving late cannot count towards the next flush
+	 * @param socket The connection that answered
+	 */
+	const recordFlushAnswer = (requestId: string, socket: WebSocket): void => {
+		const pending = pendingFlushes.get(requestId);
+		if (pending === undefined) {
+			return;
+		}
+		if (
+			pending.askedSockets.delete(socket) &&
+			pending.askedSockets.size === 0
+		) {
+			settleFlush(requestId);
+		}
+	};
+
+	/**
+	 * Drops one socket from every flush still waiting, and ends the waits it was the
+	 * last one holding up.
+	 *
+	 * @param socket The connection that went away
+	 */
+	const dropSocketFromFlushes = (socket: WebSocket): void => {
+		for (const [requestId, pending] of pendingFlushes) {
+			if (
+				pending.askedSockets.delete(socket) &&
+				pending.askedSockets.size === 0
+			) {
+				settleFlush(requestId);
+			}
+		}
+	};
+
 	const settleHandleOp = (
 		requestId: string,
 		outcome: HandleOpOutcome,
@@ -606,13 +695,23 @@ export async function startCanvasHost(
 				});
 				return;
 			}
-			// Record a person's save as the latest text we know of. The viewer writes
-			// the file before sending this, so the watch can still read that write
-			// first and broadcast it; what rejects the echo either way is the viewer's
-			// own record, taken before the write (see the viewer's saveDoc). Winning
-			// the race here only spares the round trip.
+			if (frame.type === "flushed") {
+				recordFlushAnswer(frame.requestId, socket);
+				return;
+			}
+			// Pass a person's save on to the other windows, and record it as the
+			// latest text we know of. The viewer writes the file before sending this,
+			// so the watch can still read that write first and broadcast it; what
+			// keeps the second broadcast from happening is this record, and what
+			// rejects the echo at the window that saved is its own record, taken
+			// before the write (see the viewer's saveNow)
 			if (frame.relPath === openPath) {
 				lastKnownText = frame.docText;
+				broadcast({
+					type: "docChanged",
+					relPath: frame.relPath,
+					docText: frame.docText,
+				});
 			}
 		});
 		socket.on("close", () => {
@@ -620,6 +719,9 @@ export async function startCanvasHost(
 			if (sockets.size === 0) {
 				scheduleIdleShutdown();
 			}
+			// A window that left wrote out what it could on its way (beforeunload), and
+			// there is nothing more to wait for either way
+			dropSocketFromFlushes(socket);
 			// Once every socket asked has left, nobody is left to answer that request
 			for (const [requestId, pending] of pendingHandleOps) {
 				if (
@@ -701,6 +803,38 @@ export async function startCanvasHost(
 	const closeViewers = (): Promise<ViewerCloseOutcome> =>
 		closeSockets(openSockets());
 
+	/**
+	 * Asks every open window to write out what it is holding, and waits for the
+	 * answers.
+	 *
+	 * @param timeoutMs How long to wait before going on without the windows that
+	 *   stayed silent
+	 */
+	const flushViewers = async (timeoutMs: number): Promise<void> => {
+		const askedSockets = openSockets();
+		if (askedSockets.length === 0) {
+			return;
+		}
+		const requestId = randomUUID();
+		await new Promise<void>((resolve) => {
+			const timer = setTimeout(() => {
+				settleFlush(requestId);
+			}, timeoutMs);
+			pendingFlushes.set(requestId, {
+				askedSockets: new Set(askedSockets),
+				settle: resolve,
+				timer,
+			});
+			const frame = JSON.stringify({
+				type: "flushEdits",
+				requestId,
+			} satisfies CanvasHostServerMessage);
+			for (const socket of askedSockets) {
+				socket.send(frame);
+			}
+		});
+	};
+
 	return {
 		url,
 		workspaceRoot,
@@ -746,6 +880,7 @@ export async function startCanvasHost(
 			});
 		},
 		closeViewers,
+		flushViewers,
 		waitForViewer,
 		hasVisibleViewer,
 		openVisibleViewer,
@@ -799,6 +934,15 @@ export async function startCanvasHost(
 			};
 		},
 		openFile: async (relPath) => {
+			// The windows may still be holding a person's edits on the save debounce,
+			// and the write those edits are about to go out as is refused once the
+			// file on display has moved on (the file API takes a write only for that
+			// file). So they are asked for while the old path is still the open one
+			if (openPath !== null && openPath !== relPath) {
+				await flushViewers(
+					options.flushEditsTimeoutMs ?? FLUSH_EDITS_TIMEOUT_MS,
+				);
+			}
 			openPath = relPath;
 			const text = await readOpenFileText(relPath);
 			lastKnownText = text;
@@ -842,6 +986,11 @@ export async function startCanvasHost(
 					ok: false,
 					text: "the canvas host was shut down before the viewer answered",
 				});
+			}
+			// Nothing written after this point would reach the file API anyway, so a
+			// flush still in the air is let go rather than waited out
+			for (const requestId of [...pendingFlushes.keys()]) {
+				settleFlush(requestId);
 			}
 			// Cut without waiting for the closing handshake. The decision to tear down
 			// is already made, so there is no point being held up by the other end (a

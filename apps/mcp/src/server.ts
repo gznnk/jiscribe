@@ -36,7 +36,11 @@ import {
 	toCanvasFilePath,
 } from "./canvasStore";
 import { formatDiagnostics } from "./diagnosticReport";
-import { startCanvasHost, type CanvasHost } from "./host/canvasHost";
+import {
+	FLUSH_EDITS_TIMEOUT_MS,
+	startCanvasHost,
+	type CanvasHost,
+} from "./host/canvasHost";
 import { CanvasHostError } from "./host/canvasHostError";
 import { createPathLock } from "./pathLock";
 
@@ -102,6 +106,16 @@ const DEFAULT_ELLIPSE_RY = 50;
  * appear in a file name, so this key can never queue behind a real file.
  */
 const HOST_LOCK_KEY = "\0canvas-host";
+
+/**
+ * How long a host started in place of one that was serving another directory
+ * waits for the window the closed host had to reconnect, before putting a window
+ * of its own up. The viewer's reconnect backoff starts at a second and the token
+ * it fetches before connecting adds a round trip, so this leaves room for a
+ * couple of attempts; overshooting only delays a window nobody has yet, while
+ * cutting it short leaves a person with two.
+ */
+const RECONNECT_GRACE_MS = 4_000;
 
 /**
  * How many files' undo histories are kept at once. The map is only ever added
@@ -377,22 +391,38 @@ export function createJiscribeMcpServer(): McpServer {
 					// The file API cannot get outside the workspace, so being pointed at
 					// another directory restarts the host on that directory (the viewer
 					// reconnects on its own)
+					let hadVisibleViewer = false;
 					if (host !== null && host.workspaceRoot !== workspaceRoot) {
+						// The window the old host had comes back to the port on its own,
+						// so the host replacing it must not open one of its own before it
+						// is clear that window is not returning
+						hadVisibleViewer = host.hasVisibleViewer();
+						// A save the window is still holding has nowhere to go once this
+						// host is gone, so it is asked for before the teardown
+						await host.flushViewers(FLUSH_EDITS_TIMEOUT_MS);
 						await host.close();
 						host = null;
 					}
 					// The environment variable that says not to open a window means "do
 					// not put one up unasked", so an explicit headless request goes ahead
 					const isReusedHost = host !== null;
-					host ??= await startHost(workspaceRoot, headless ? false : undefined);
+					host ??= await startHost(
+						workspaceRoot,
+						headless || hadVisibleViewer ? false : undefined,
+					);
 					await host.openFile(basename(filePath));
 
 					const state = isCreated ? "created and opened" : "opened";
 					if (!headless) {
 						// A host kept alive by a headless window has nothing on screen, so
 						// a plain open has to put a window up even though the host is
-						// already running. A host started just above opened its own
-						if (isReusedHost && !host.hasVisibleViewer()) {
+						// already running. A host started just above opened its own,
+						// except where it is waiting for the window the closed host had
+						if (hadVisibleViewer) {
+							if (!(await host.waitForViewer(RECONNECT_GRACE_MS))) {
+								host.openVisibleViewer();
+							}
+						} else if (isReusedHost && !host.hasVisibleViewer()) {
 							host.openVisibleViewer();
 						}
 						return `${state} ${basename(filePath)} — viewer: ${host.url}`;

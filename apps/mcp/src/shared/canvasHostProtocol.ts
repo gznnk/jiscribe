@@ -5,7 +5,8 @@
 //
 // 1. File synchronisation. The source of truth is the .jis in the workspace;
 //    the AI rewrites it through the MCP tools, and a person fixes it in the viewer
-//    and saves. A one-way notification is enough here.
+//    and saves. A one-way notification is enough here, except for the flush before
+//    the host moves to another file, which has to be waited on.
 // 2. Operations that need a mounted canvas (capture, camera, selection,
 //    measurement). The file holds no answer, so there is nothing for it but to ask
 //    the viewer, which makes it a round trip under a requestId.
@@ -30,6 +31,10 @@ export type CanvasHostServerMessage =
 	| { type: "docError"; relPath: string; message: string }
 	// A query about the drawn result, to be answered with the requestId attached
 	| { type: "handleOpRequest"; requestId: string; op: AiHandleOp }
+	// A request to write out the edits still sitting on the save debounce, answered
+	// with "flushed" once they are on disk. The host sends it before it moves to
+	// another file, since the file API takes a write only for the file on display
+	| { type: "flushEdits"; requestId: string }
 	// A request to close the window. Whether it closed shows in the connection being
 	// cut, so there is no reply to this one
 	| { type: "closeViewer" };
@@ -39,6 +44,9 @@ export type CanvasHostClientMessage =
 	// A person edited the canvas and the viewer finished saving. The server keeps
 	// this text as the latest it knows of, cancelling out the watch's self-echo
 	| { type: "saved"; relPath: string; docText: string }
+	// The answer to a flushEdits: the buffered edits are written out, or the write
+	// failed and the viewer is showing why. Either way the host waits no longer
+	| { type: "flushed"; requestId: string }
 	// The answer to a handleOpRequest. With ok=false, text is the failure reason as
 	// it goes to the AI
 	| {
@@ -72,6 +80,8 @@ export function isCanvasHostClientMessage(
 			return (
 				typeof value.relPath === "string" && typeof value.docText === "string"
 			);
+		case "flushed":
+			return typeof value.requestId === "string";
 		case "handleOpResult":
 			return (
 				typeof value.requestId === "string" &&

@@ -3,7 +3,7 @@
 // what only a drawn canvas knows. No browser is needed for either — a ws client
 // stands in for the viewer, and the file is edited from the test.
 
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -25,12 +25,23 @@ import type {
 	CanvasHostClientMessage,
 	CanvasHostServerMessage,
 } from "../shared/canvasHostProtocol";
+import { SESSION_TOKEN_HEADER } from "../shared/fileApiRoute";
 
 /** Where the ports these tests use start; the host gives way upward if one is taken */
 const TEST_PORT = 5390;
 
 /** The file every test opens, relative to the workspace root */
 const OPEN_REL_PATH = "diagram.jis.json";
+
+/** The file the tests that switch away from OPEN_REL_PATH move to */
+const OTHER_REL_PATH = "other.jis.json";
+
+/**
+ * How long the host waits for the windows to answer a flush. Shortened from the
+ * three seconds it ships with, so that the tests where nobody answers do not sit
+ * out the real wait
+ */
+const TEST_FLUSH_TIMEOUT_MS = 200;
 
 /**
  * How long to leave the watch (which polls at 300ms) to pick a write up before
@@ -85,12 +96,21 @@ afterEach(async () => {
 	await rm(workspaceRoot, { recursive: true, force: true });
 });
 
-/** Starts a host on the temporary workspace, with no browser put up */
-const startTestHost = async (): Promise<CanvasHost> => {
+/**
+ * Starts a host on the temporary workspace, with no browser put up.
+ *
+ * @param options What to override on top of the temporary workspace and the short
+ *   flush timeout
+ */
+const startTestHost = async (
+	options: { flushEditsTimeoutMs?: number } = {},
+): Promise<CanvasHost> => {
 	const host = await startCanvasHost({
 		workspaceRoot,
 		port: TEST_PORT,
 		shouldOpenBrowser: false,
+		flushEditsTimeoutMs: TEST_FLUSH_TIMEOUT_MS,
+		...options,
 	});
 	openHosts.push(host);
 	return host;
@@ -112,10 +132,13 @@ type FakeViewer = {
  * @param host The host to connect to
  * @param onRequest Called with every handleOpRequest, for a viewer that answers.
  *   Left out, the window stands for one that never answers
+ * @param onFlush Called with every flushEdits, and answering is then its own
+ *   business. Left out, the window answers at once, as one holding no edits does
  */
 const connectFakeViewer = async (
 	host: CanvasHost,
 	onRequest?: (requestId: string, viewer: FakeViewer) => void,
+	onFlush?: (requestId: string, viewer: FakeViewer) => void,
 ): Promise<FakeViewer> => {
 	const socket = new WebSocket(
 		`${host.url.replace("http", "ws")}/ws?token=${await readSessionToken(host.url)}`,
@@ -133,6 +156,13 @@ const connectFakeViewer = async (
 		viewer.receivedFrames.push(frame);
 		if (frame.type === "handleOpRequest") {
 			onRequest?.(frame.requestId, viewer);
+		}
+		if (frame.type === "flushEdits") {
+			if (onFlush === undefined) {
+				viewer.send({ type: "flushed", requestId: frame.requestId });
+				return;
+			}
+			onFlush(frame.requestId, viewer);
 		}
 	});
 	await new Promise<void>((resolve, reject) => {
@@ -203,9 +233,10 @@ describe("the file watch", () => {
 		expect(calcChangedTexts(viewer)).toEqual([rewrittenText]);
 	});
 
-	it("does not send back what the viewer itself saved", async () => {
-		// The host would otherwise answer a person's save with the very text they
-		// just wrote, and the viewer would reload over what they are editing
+	it("does not send a save on a second time when it sees the write land", async () => {
+		// The save is passed on to the windows the moment the frame arrives; sending
+		// it again off the back of the write would reload the canvas the person who
+		// saved is still editing
 		await writeOpenFile(emptyDocText);
 		const host = await startTestHost();
 		const viewer = await connectFakeViewer(host, (requestId, connected) => {
@@ -232,33 +263,30 @@ describe("the file watch", () => {
 		await writeOpenFile(savedText);
 		await new Promise((resolve) => setTimeout(resolve, WATCH_SETTLE_MS));
 
-		expect(calcChangedTexts(viewer)).toEqual([]);
+		// The one frame is the save being passed on, not the watch reading it back
+		expect(calcChangedTexts(viewer)).toEqual([savedText]);
 
 		// The control: the watch is still running, so the silence above was the
 		// echo being cancelled and not a watch that never fired
 		const outsideText = '{"version":1,"root":[{"type":"text"}]}\n';
 		await writeOpenFile(outsideText);
-		await waitFor(() => calcChangedTexts(viewer).length > 0);
-		expect(calcChangedTexts(viewer)).toEqual([outsideText]);
+		await waitFor(() => calcChangedTexts(viewer).length > 1);
+		expect(calcChangedTexts(viewer)).toEqual([savedText, outsideText]);
 	});
 
 	it("stops watching the file it was told to stop showing", async () => {
 		await writeOpenFile(emptyDocText);
-		await writeFile(
-			join(workspaceRoot, "other.jis.json"),
-			emptyDocText,
-			"utf8",
-		);
+		await writeFile(join(workspaceRoot, OTHER_REL_PATH), emptyDocText, "utf8");
 		const host = await startTestHost();
 		const viewer = await connectFakeViewer(host);
 		await host.openFile(OPEN_REL_PATH);
-		await host.openFile("other.jis.json");
+		await host.openFile(OTHER_REL_PATH);
 
 		await writeOpenFile('{"version":1,"root":[{"type":"rect"}]}\n');
 		await new Promise((resolve) => setTimeout(resolve, WATCH_SETTLE_MS));
 
 		expect(calcChangedTexts(viewer)).toEqual([]);
-		expect(host.getOpenPath()).toBe("other.jis.json");
+		expect(host.getOpenPath()).toBe(OTHER_REL_PATH);
 	});
 
 	it("tells the viewer why a file it cannot read stays blank", async () => {
@@ -270,6 +298,144 @@ describe("the file watch", () => {
 		await waitFor(() =>
 			viewer.receivedFrames.some((frame) => frame.type === "docError"),
 		);
+	});
+});
+
+describe("a person's save", () => {
+	it("reaches the windows that did not make it", async () => {
+		// The AI's headless window is one of these: left unsaid, it would answer the
+		// next capture with the picture from before the person's edit
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const savingViewer = await connectFakeViewer(host);
+		const watchingViewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		const savedText = '{"version":1,"root":[{"type":"ellipse"}]}\n';
+
+		savingViewer.send({
+			type: "saved",
+			relPath: OPEN_REL_PATH,
+			docText: savedText,
+		});
+
+		await waitFor(() => calcChangedTexts(watchingViewer).length > 0);
+		expect(calcChangedTexts(watchingViewer)).toEqual([savedText]);
+		// The window that saved is sent it too, and drops it against the text it
+		// recorded before writing (the viewer's applyIncomingDoc)
+		expect(calcChangedTexts(savingViewer)).toEqual([savedText]);
+	});
+
+	it("is ignored when it names a file other than the one on display", async () => {
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+
+		viewer.send({
+			type: "saved",
+			relPath: OTHER_REL_PATH,
+			docText: '{"version":1,"root":[{"type":"rect"}]}\n',
+		});
+		await new Promise((resolve) => setTimeout(resolve, WATCH_SETTLE_MS));
+
+		expect(calcChangedTexts(viewer)).toEqual([]);
+	});
+});
+
+describe("flushViewers", () => {
+	/** Writes back the way the viewer's own save does: the host's token, the open file */
+	const putOpenFile = async (
+		host: CanvasHost,
+		relPath: string,
+		text: string,
+	): Promise<number> => {
+		const response = await fetch(`${host.url}/api/file?path=${relPath}`, {
+			method: "PUT",
+			headers: { [SESSION_TOKEN_HEADER]: await readSessionToken(host.url) },
+			body: text,
+		});
+		return response.status;
+	};
+
+	it("lets the buffered edits land before the file on display changes", async () => {
+		// The file API takes a write only for the file on display, so edits still
+		// sitting on the viewer's save debounce are lost to a 409 the moment
+		// openFile moves on
+		await writeOpenFile(emptyDocText);
+		await writeFile(join(workspaceRoot, OTHER_REL_PATH), emptyDocText, "utf8");
+		const host = await startTestHost({ flushEditsTimeoutMs: 5_000 });
+		const savedText = '{"version":1,"root":[{"type":"ellipse"}]}\n';
+		// What happened, in the order it happened, so that the write is shown to
+		// have landed before the switch reached the window
+		const events: string[] = [];
+		const viewer = await connectFakeViewer(host, undefined, (requestId) => {
+			void (async () => {
+				events.push(
+					`put:${String(await putOpenFile(host, OPEN_REL_PATH, savedText))}`,
+				);
+				viewer.send({ type: "flushed", requestId });
+			})();
+		});
+		await host.openFile(OPEN_REL_PATH);
+		viewer.receivedFrames.length = 0;
+		viewer.socket.on("message", (data) => {
+			const frame = JSON.parse(String(data)) as CanvasHostServerMessage;
+			if (frame.type === "openCanvas" && frame.relPath === OTHER_REL_PATH) {
+				events.push("openCanvas:other");
+			}
+		});
+
+		await host.openFile(OTHER_REL_PATH);
+		await waitFor(() => events.includes("openCanvas:other"));
+
+		expect(events).toEqual(["put:200", "openCanvas:other"]);
+		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
+			savedText,
+		);
+	});
+
+	it("asks nobody when the same file is opened again", async () => {
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+
+		await host.openFile(OPEN_REL_PATH);
+
+		expect(
+			viewer.receivedFrames.filter((frame) => frame.type === "flushEdits"),
+		).toHaveLength(0);
+	});
+
+	it("goes on when a window never answers", async () => {
+		await writeOpenFile(emptyDocText);
+		await writeFile(join(workspaceRoot, OTHER_REL_PATH), emptyDocText, "utf8");
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host, undefined, () => {
+			// A window too old to know the frame, or one that is frozen
+		});
+		await host.openFile(OPEN_REL_PATH);
+
+		await host.openFile(OTHER_REL_PATH);
+
+		expect(host.getOpenPath()).toBe(OTHER_REL_PATH);
+		expect(
+			viewer.receivedFrames.filter((frame) => frame.type === "flushEdits"),
+		).toHaveLength(1);
+	});
+
+	it("is not held up by a window that leaves without answering", async () => {
+		await writeOpenFile(emptyDocText);
+		await writeFile(join(workspaceRoot, OTHER_REL_PATH), emptyDocText, "utf8");
+		const host = await startTestHost({ flushEditsTimeoutMs: 30_000 });
+		const viewer = await connectFakeViewer(host, undefined, () => {
+			viewer.socket.close();
+		});
+		await host.openFile(OPEN_REL_PATH);
+
+		await host.openFile(OTHER_REL_PATH);
+
+		expect(host.getOpenPath()).toBe(OTHER_REL_PATH);
 	});
 });
 

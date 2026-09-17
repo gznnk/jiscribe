@@ -146,6 +146,8 @@ const isCanvasHostServerMessage = (
 				typeof frame.op === "object" &&
 				frame.op !== null
 			);
+		case "flushEdits":
+			return typeof frame.requestId === "string";
 		case "closeViewer":
 			return true;
 		default:
@@ -182,6 +184,9 @@ export function App() {
 	// nobody is looking at
 	const sessionTokenRef = useRef<string | null>(null);
 	const saveTimerRef = useRef<number | null>(null);
+	// The write that is on its way, so that a second save queues behind it rather
+	// than racing it, and so that closing or flushing can wait for it
+	const inFlightSaveRef = useRef<Promise<boolean> | null>(null);
 	const noticeTimerRef = useRef<number | null>(null);
 	const noticeCountRef = useRef(0);
 	const canvasHandleRef = useRef<CanvasHandle | null>(null);
@@ -244,12 +249,10 @@ export function App() {
 	);
 
 	/**
-	 * Writes the current doc out, unless it is already what the host has.
-	 *
-	 * @returns Whether the file now holds these edits. False only on a failed write,
-	 *   which is reported in the error bar
+	 * Writes the current doc out, unless it is already what the host has. Only
+	 * saveNow calls it, which is what keeps two writes from being in the air at once
 	 */
-	const saveNow = useCallback(async (): Promise<boolean> => {
+	const writeCurrentDoc = useCallback(async (): Promise<boolean> => {
 		const targetPath = openPathRef.current;
 		if (targetPath === null) {
 			return true;
@@ -285,6 +288,48 @@ export function App() {
 		return true;
 	}, []);
 
+	/**
+	 * Writes the current doc out, behind whatever write is already on its way.
+	 *
+	 * @returns Whether the file now holds these edits. False only on a failed write,
+	 *   which is reported in the error bar
+	 */
+	const saveNow = useCallback(async (): Promise<boolean> => {
+		const precedingSave = inFlightSaveRef.current;
+		const running = (async (): Promise<boolean> => {
+			// A write started while another is in flight would race it, and the file
+			// would end up holding whichever answer the host happened to take last.
+			// How that one ended is its own caller's business: failing along with it
+			// would spread one failure over every save that follows
+			await precedingSave?.catch(() => false);
+			return await writeCurrentDoc();
+		})();
+		inFlightSaveRef.current = running;
+		try {
+			return await running;
+		} finally {
+			// Only while this is still the newest write: a save that queued behind it
+			// is what the next one has to wait for
+			if (inFlightSaveRef.current === running) {
+				inFlightSaveRef.current = null;
+			}
+		}
+	}, [writeCurrentDoc]);
+
+	/**
+	 * Takes the edits off the debounce and writes them out now, waiting for any
+	 * write already on its way.
+	 *
+	 * @returns Whether the file holds every edit made here
+	 */
+	const flushPendingSave = useCallback(async (): Promise<boolean> => {
+		if (saveTimerRef.current !== null) {
+			window.clearTimeout(saveTimerRef.current);
+			saveTimerRef.current = null;
+		}
+		return await saveNow();
+	}, [saveNow]);
+
 	const handleCommit = useCallback(
 		(committedDoc: CanvasDoc): void => {
 			latestDocRef.current = committedDoc;
@@ -318,13 +363,9 @@ export function App() {
 	 * even when it could not close
 	 */
 	const closeWindow = useCallback(async (): Promise<void> => {
-		if (saveTimerRef.current !== null) {
-			window.clearTimeout(saveTimerRef.current);
-			saveTimerRef.current = null;
-			await saveNow();
-		}
+		await flushPendingSave();
 		window.close();
-	}, [saveNow]);
+	}, [flushPendingSave]);
 
 	const handleOpenReference = useCallback((payload: OpenReferencePayload) => {
 		if (EXTERNAL_URL_PATTERN.test(payload.reference)) {
@@ -419,6 +460,25 @@ export function App() {
 					case "closeViewer":
 						void closeWindow();
 						break;
+					case "flushEdits": {
+						const { requestId } = frame;
+						// The host is about to move to another file, after which this
+						// window's write would be refused. A failed write is already in the
+						// error bar, so the answer goes out either way rather than leaving
+						// the host to sit out its timeout
+						void flushPendingSave().finally(() => {
+							if (socket.readyState !== WebSocket.OPEN) {
+								return;
+							}
+							socket.send(
+								JSON.stringify({
+									type: "flushed",
+									requestId,
+								} satisfies CanvasHostClientMessage),
+							);
+						});
+						break;
+					}
 					case "handleOpRequest": {
 						const { requestId, op } = frame;
 						void runHandleOp(op).then((outcome) => {
@@ -442,7 +502,12 @@ export function App() {
 				}
 			});
 			socket.addEventListener("close", () => {
-				socketRef.current = null;
+				// Under StrictMode the first socket's close lands after the second one
+				// has taken the ref, and clearing it unconditionally would leave the
+				// live socket unreachable to saveNow and the flush answer
+				if (socketRef.current === socket) {
+					socketRef.current = null;
+				}
 				if (isDisposed) {
 					return;
 				}
@@ -461,7 +526,7 @@ export function App() {
 			socketRef.current?.close();
 			socketRef.current = null;
 		};
-	}, [applyIncomingDoc, closeWindow, runHandleOp]);
+	}, [applyIncomingDoc, closeWindow, flushPendingSave, runHandleOp]);
 
 	// Ctrl+S is a person asking to save what is already saving itself. Left to the
 	// browser it opens the save dialog, which would write a copy of the page rather
@@ -477,11 +542,7 @@ export function App() {
 				return;
 			}
 			event.preventDefault();
-			if (saveTimerRef.current !== null) {
-				window.clearTimeout(saveTimerRef.current);
-				saveTimerRef.current = null;
-			}
-			void saveNow().then((isSaved) => {
+			void flushPendingSave().then((isSaved) => {
 				// A failed write shows up in the error bar; saying it is saved on top of
 				// that would be the opposite of the truth
 				if (isSaved) {
@@ -493,7 +554,7 @@ export function App() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [saveNow, showNotice]);
+	}, [flushPendingSave, showNotice]);
 
 	useEffect(
 		() => () => {

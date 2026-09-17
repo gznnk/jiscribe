@@ -14,6 +14,12 @@ const savedFrame = {
 	docText: '{"version":1,"root":[]}',
 };
 
+/** As above, for the answer to a flush */
+const flushedFrame = {
+	type: "flushed",
+	requestId: "66666666-7777-8888-9999-000000000000",
+};
+
 /** As above, for the round-trip answer */
 const handleOpResultFrame = {
 	type: "handleOpResult",
@@ -26,6 +32,7 @@ describe("isCanvasHostClientMessage", () => {
 	it.each([
 		["a saved frame", savedFrame],
 		["a saved frame with an empty doc", { ...savedFrame, docText: "" }],
+		["a flushed frame", flushedFrame],
 		["a handleOpResult frame", handleOpResultFrame],
 		["a failed handleOpResult frame", { ...handleOpResultFrame, ok: false }],
 		[
@@ -58,6 +65,11 @@ describe("isCanvasHostClientMessage", () => {
 		[
 			"a saved frame whose docText is not a string",
 			{ ...savedFrame, docText: null },
+		],
+		["a flushed frame with no requestId", { type: "flushed" }],
+		[
+			"a flushed frame whose requestId is not a string",
+			{ ...flushedFrame, requestId: 1 },
 		],
 		[
 			"a handleOpResult frame with no requestId",

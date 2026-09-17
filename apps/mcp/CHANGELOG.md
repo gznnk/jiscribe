@@ -54,6 +54,18 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 - Two `open_canvas` calls arriving together could start two hosts and leave
   one running with nothing pointing at it; the two tools that own the host now
   run one at a time.
+- **A person's save reaches the other windows.** The host recorded it only to
+  cancel its own echo, so a headless window the AI looks through, or a second
+  tab, kept drawing the diagram as it was before the edit and `capture_canvas`
+  returned a stale picture.
+- **Edits a person is still holding are written out before the file on
+  display changes.** `open_canvas` on another file (or another directory) now
+  asks every window to save first and waits for the answers, instead of moving
+  on while a debounced save was on its way and refusing it. `close_canvas`
+  likewise waits for a write already in flight.
+- **Switching to a file in another directory no longer opens a second
+  window.** The window the previous host had reconnects on its own, so the new
+  host waits for it before deciding to open one.
 
 ### Changed
 
