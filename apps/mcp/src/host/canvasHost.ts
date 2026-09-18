@@ -237,6 +237,10 @@ export async function startCanvasHost(
 			}
 			flushBroker.answer(frame.requestId, socket);
 		});
+		// ws emits a frame that breaks the protocol (an oversized one, a bad opcode)
+		// here and closes the socket itself; unheard, it would take the whole MCP
+		// process down with it
+		socket.on("error", () => {});
 		socket.on("close", () => {
 			viewerRegistry.unregister(socket);
 			// A window that left wrote out what it could on its way (beforeunload), and

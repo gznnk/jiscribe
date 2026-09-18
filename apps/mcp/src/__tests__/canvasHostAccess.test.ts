@@ -13,7 +13,10 @@ import WebSocket, { type ClientOptions } from "ws";
 import { readSessionToken } from "./hostSessionToken";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import { createPathLock } from "../pathLock";
-import { SESSION_TOKEN_HEADER } from "../shared/fileApiRoute";
+import {
+	MAX_WRITE_BODY_BYTES,
+	SESSION_TOKEN_HEADER,
+} from "../shared/fileApiRoute";
 
 /** Where the ports these tests use start; the host gives way upward if one is taken */
 const TEST_PORT = 5490;
@@ -160,6 +163,26 @@ describe("the WebSocket upgrade", () => {
 				headers: { Host: "rebound.example" },
 			}),
 		).toBe(400);
+	});
+});
+
+describe("a frame that breaks the WebSocket protocol", () => {
+	it("closes that socket alone and leaves the host serving", async () => {
+		const host = await startTestHost();
+		const token = await readSessionToken(host.url);
+		const socket = new WebSocket(
+			`${host.url.replace("http", "ws")}/ws?token=${token}`,
+		);
+		openSockets.push(socket);
+		await new Promise((resolve) => socket.once("open", resolve));
+
+		const closeCode = await new Promise<number>((resolve) => {
+			socket.once("close", resolve);
+			socket.send("x".repeat(MAX_WRITE_BODY_BYTES + 1));
+		});
+
+		expect(closeCode).toBe(1009);
+		expect(await tryConnect(host, `token=${token}`)).toBeNull();
 	});
 });
 

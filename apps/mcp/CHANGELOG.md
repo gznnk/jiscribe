@@ -47,6 +47,11 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ### Fixed
 
+- **A malformed WebSocket frame no longer kills the server.** A frame the
+  viewer's host could not accept (one over 16 MiB, a bad opcode, text that is
+  not UTF-8) was raised as an uncaught error, taking the host, the undo
+  history and the MCP session down together. Such a socket is now closed on
+  its own and everything else keeps running.
 - **`undo` takes back `add_rect` and `add_ellipse`.** They wrote around the
   undo history, so an `undo` after either was refused as "the canvas changed
   after your last edit", and the steps before it were out of reach as well.
