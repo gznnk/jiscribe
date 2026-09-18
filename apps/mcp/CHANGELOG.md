@@ -87,6 +87,15 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
   is now also known by the host that sent it (its session token), and the
   viewer writes it back to that host alone; a reconnect to the same host keeps
   the history.
+- **A drag released as `open_canvas` moves to another file no longer lands in
+  that file.** The canvas hands a commit over a frame or two after the release,
+  which could be after the viewer had answered the host's flush and taken the
+  next file; the debounced save then wrote the previous file's objects into the
+  new one (same directory), or was refused (another directory). The viewer now
+  gives the canvas two frames to hand over what it is holding before it answers
+  the flush, so the edit reaches its own file; one that still arrives after the
+  switch is not written anywhere and the error bar names the file it was lost
+  from.
 - **A person's save and the AI's write no longer overwrite each other
   unnoticed.** The viewer's write carried no version and bypassed the lock
   the tools take, so whichever landed last won and the other edit vanished.

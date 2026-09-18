@@ -74,6 +74,31 @@ const noticeStyle: CSSProperties = {
 	animationDuration: `${NOTICE_DURATION_MS}ms`,
 };
 
+/**
+ * The longest {@link waitForCanvasFrames} waits. A window in the background is given
+ * no frames at all, and the host gives up on the whole flush after 3 seconds
+ */
+const CANVAS_FRAMES_TIMEOUT_MS = 200;
+
+/**
+ * Waits two frames, for an edit the canvas is still holding to reach onCommit: it
+ * takes pointer input up on an animation frame and hands the commit over in an
+ * effect after drawing it, so a drag released just before the host asks for a flush
+ * would otherwise be committed after the answer. Best effort — a render slower than
+ * a frame can still miss it, and the edit is then dropped and reported rather than
+ * written anywhere (see useDocSync)
+ */
+const waitForCanvasFrames = (): Promise<void> =>
+	new Promise((resolve) => {
+		const timer = window.setTimeout(resolve, CANVAS_FRAMES_TIMEOUT_MS);
+		window.requestAnimationFrame(() => {
+			window.requestAnimationFrame(() => {
+				window.clearTimeout(timer);
+				resolve();
+			});
+		});
+	});
+
 /** What Ctrl+S is answered with, in place of the browser's save dialog */
 const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
 
@@ -160,15 +185,24 @@ export function App() {
 	}, []);
 
 	/**
+	 * Writes out the edits, the ones the canvas has yet to hand over included, before
+	 * the host moves on to another file or closes this window
+	 */
+	const flushEditsForHost = useCallback(async (): Promise<boolean> => {
+		await waitForCanvasFrames();
+		return await flushPendingSave();
+	}, [flushPendingSave]);
+
+	/**
 	 * Writes out the buffered edits, then closes the window. close_canvas reads
 	 * whether it closed here from the connection being cut, so nothing is returned
 	 * even when it could not close
 	 */
 	const closeWindow = useCallback((): void => {
-		void flushPendingSave().finally(() => {
+		void flushEditsForHost().finally(() => {
 			window.close();
 		});
-	}, [flushPendingSave]);
+	}, [flushEditsForHost]);
 
 	const handleDocError = useCallback(
 		(relPath: string, message: string): void => {
@@ -202,7 +236,7 @@ export function App() {
 		onDocFrame: applyIncomingDoc,
 		onDocError: handleDocError,
 		onCloseViewer: closeWindow,
-		onFlushEdits: flushPendingSave,
+		onFlushEdits: flushEditsForHost,
 		onHandleOp: runHandleOp,
 	});
 

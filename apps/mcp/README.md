@@ -108,7 +108,11 @@ overwrite each other unnoticed: a save behind the file is refused with 412 and
 the window shows the newer document instead. The window knows a document by
 the host that sent it as well as by its path, so a file of the same name in
 another directory starts afresh — its undo history does not reach back into
-the previous file — while a reconnect to the same host keeps it.
+the previous file — while a reconnect to the same host keeps it. An edit is
+written only to the document it was made on: before another file goes on
+display the window writes out what it holds, and an edit the canvas hands over
+after the switch is reported in the error bar rather than saved into the new
+file.
 
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
 16 screen-side tools have something to work with while the user's screen stays

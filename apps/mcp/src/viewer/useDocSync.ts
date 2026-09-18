@@ -10,13 +10,24 @@
 // - while the text that arrived cannot be parsed, saving is blocked. The doc on
 //   screen is then older than the file, so writing it out would undo whatever is
 //   being edited outside
+//
+// And an edit is written to the document it was made on and to no other. The doc
+// waiting to be written is kept together with the document it belongs to, and an
+// edit the canvas hands over after another document has come in is refused rather
+// than written into that one
 
 import type { CanvasDoc } from "@jiscribe/canvas";
-import { useCallback, useRef, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react";
 
 import { canvasParser } from "./canvasPlugins";
 import { saveFile, type SaveFileResult } from "./files";
-import { isOwnEcho, type DocIdentity } from "./ownEcho";
+import { isOwnEcho, isSameDoc, type DocIdentity } from "./ownEcho";
 
 /**
  * How long to wait after the edits settle before writing out. Writing on every
@@ -32,6 +43,13 @@ const BROKEN_FILE_NOTE =
 /** Shown when the host refused the write because the file had moved on */
 const SAVE_CONFLICT_MESSAGE =
 	"他の編集で更新されたため、この変更は保存されませんでした";
+
+/**
+ * Shown for an edit made on a document that is no longer the one on display. The
+ * host takes writes for that one only, so the edit has nowhere left to go
+ */
+const formatLostEditMessage = (relPath: string): string =>
+	`${relPath}: 別のファイルに切り替わったため、直前の変更は保存されませんでした`;
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
@@ -81,7 +99,10 @@ export type DocSync = {
 		docText: string,
 		revision: string,
 	) => void;
-	/** Takes a committed edit and puts the write on the debounce */
+	/**
+	 * Takes a committed edit and puts the write on the debounce. An edit made on a
+	 * document that has since been replaced is dropped, and said so in the error bar
+	 */
 	handleCommit: (committedDoc: CanvasDoc) => void;
 	/**
 	 * Writes the current doc out, the edits still sitting on the debounce taken
@@ -103,8 +124,11 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 	const [doc, setDoc] = useState<CanvasDoc>(emptyDoc);
 	const [openDoc, setOpenDoc] = useState<DocIdentity | null>(null);
 
-	const latestDocRef = useRef<CanvasDoc>(emptyDoc);
-	const openDocRef = useRef<DocIdentity | null>(null);
+	// The doc to write out, together with the document it belongs to. Read as one,
+	// so that a write can only ever send a document's own doc to it
+	const latestDocRef = useRef<{ identity: DocIdentity; doc: CanvasDoc } | null>(
+		null,
+	);
 	// The last text known to be the same here as on the host. Kept so a save's echo
 	// does not cause a redraw
 	const syncedTextRef = useRef<string | null>(null);
@@ -124,13 +148,34 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 	// leaves the message up and only the next one clears it
 	const hasUnexplainedConflictRef = useRef(false);
 
+	// The document the canvas's commits are made on. It trails openDoc: the canvas
+	// takes a new document up in an effect of the render that hands it over, so a
+	// commit it delivers until then is still on the one before. This follows in the
+	// render after — the canvas's own update was queued ahead of it by that effect
+	// (a child's effects run before its parent's), so the render that brings this
+	// state brings the canvas's new document too — and the ref moves in a layout
+	// effect, as the canvas's mirror of its own state does, so the two agree for a
+	// commit handed over at any moment
+	const [committedOnDoc, setCommittedOnDoc] = useState<DocIdentity | null>(
+		null,
+	);
+	const committedOnDocRef = useRef<DocIdentity | null>(null);
+	useEffect(() => {
+		setCommittedOnDoc((previous) =>
+			isSameDoc(previous, openDoc) ? previous : openDoc,
+		);
+	}, [openDoc]);
+	useLayoutEffect(() => {
+		committedOnDocRef.current = committedOnDoc;
+	}, [committedOnDoc]);
+
 	const applyIncomingDoc = useCallback(
 		(identity: DocIdentity, docText: string, revision: string): void => {
 			if (
 				isOwnEcho(
 					{ identity, docText },
 					{
-						identity: openDocRef.current,
+						identity: latestDocRef.current?.identity ?? null,
 						syncedText: syncedTextRef.current,
 					},
 				)
@@ -147,12 +192,26 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 				return;
 			}
 			brokenFileErrorRef.current = null;
+			// Edits still on the debounce belong to the document being replaced, and
+			// the host no longer takes writes for it
+			const previousDoc = latestDocRef.current?.identity ?? null;
+			const pendingSaveTimer = saveTimerRef.current;
+			const hasLostEdit =
+				pendingSaveTimer !== null && !isSameDoc(previousDoc, identity);
+			if (hasLostEdit) {
+				window.clearTimeout(pendingSaveTimer);
+				saveTimerRef.current = null;
+			}
 			syncedTextRef.current = docText;
 			revisionRef.current = revision;
-			openDocRef.current = identity;
-			latestDocRef.current = result.doc;
+			latestDocRef.current = { identity, doc: result.doc };
 			setOpenDoc(identity);
 			setDoc(result.doc);
+			if (hasLostEdit && previousDoc !== null) {
+				hasUnexplainedConflictRef.current = false;
+				reportError(formatLostEditMessage(previousDoc.relPath));
+				return;
+			}
 			if (hasUnexplainedConflictRef.current) {
 				hasUnexplainedConflictRef.current = false;
 				return;
@@ -171,10 +230,11 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		// page that has reconnected to another host holds a token for that one before
 		// that host's document has arrived, and quoting it would land this doc in a
 		// file of the same name there
-		const targetDoc = openDocRef.current;
-		if (targetDoc === null) {
+		const latestDoc = latestDocRef.current;
+		if (latestDoc === null) {
 			return false;
 		}
+		const targetDoc = latestDoc.identity;
 		const revision = revisionRef.current;
 		if (revision === null) {
 			// Both are set from the same frame, so this cannot be reached through the
@@ -185,7 +245,7 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			reportError(brokenFileErrorRef.current);
 			return false;
 		}
-		const text = serializeDoc(latestDocRef.current);
+		const text = serializeDoc(latestDoc.doc);
 		if (text === syncedTextRef.current) {
 			return true;
 		}
@@ -266,7 +326,21 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 
 	const handleCommit = useCallback(
 		(committedDoc: CanvasDoc): void => {
-			latestDocRef.current = committedDoc;
+			const committedOn = committedOnDocRef.current;
+			const latestDoc = latestDocRef.current;
+			if (latestDoc === null || !isSameDoc(committedOn, latestDoc.identity)) {
+				// Made on the document drawn before. Written out, it would land in the
+				// one now open, and drawn, it would put the old objects on its canvas.
+				// An edit made before any document arrived has no file to be lost from
+				if (committedOn !== null) {
+					reportError(formatLostEditMessage(committedOn.relPath));
+				}
+				return;
+			}
+			latestDocRef.current = {
+				identity: latestDoc.identity,
+				doc: committedDoc,
+			};
 			setDoc(committedDoc);
 			if (saveTimerRef.current !== null) {
 				window.clearTimeout(saveTimerRef.current);
@@ -276,7 +350,7 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 				void saveNow();
 			}, SAVE_DEBOUNCE_MS);
 		},
-		[saveNow],
+		[reportError, saveNow],
 	);
 
 	return {
