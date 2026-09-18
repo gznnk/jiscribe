@@ -24,9 +24,9 @@ import { delay, waitFor } from "./support/timing";
  * What reaches the Problems panel when a canvas file is opened in the canvas
  * editor.
  *
- * DiagnosticProvider validates on open and on save only — never on a plain
- * change — and reports only what the JSON schema cannot express, so these tests
- * are written around both limits rather than against them.
+ * DiagnosticProvider validates on open, on save and on a change once it settles,
+ * and reports only what the JSON schema cannot express, so these tests are
+ * written around that last limit rather than against it.
  */
 
 /** Prefix DiagnosticProvider puts on every message it raises. */
@@ -93,14 +93,35 @@ describe("canvas file diagnostics", () => {
 
 		const document = await vscode.workspace.openTextDocument(uri);
 		await replaceWholeDocument(document, canvasDocJson(["r1", "r2"]));
-		// The provider re-validates on open and on save, so the edit alone leaves
-		// the stale diagnostic standing; saving is what clears it.
+		// A save re-validates straight away rather than waiting out the debounce,
+		// so the panel is right the moment the file lands on disk.
 		await document.save();
 
 		await waitFor(
 			() => jiscribeDiagnostics(uri).length === 0,
 			"the diagnostic to be cleared",
 		);
+	});
+
+	it("reports an edit that was never saved, which is how an agent's rewrite arrives", async () => {
+		const uri = await writeFixtureFile(
+			fixtureDirectory,
+			"changed-without-save.jis",
+			canvasDocJson(["r1", "r2"]),
+		);
+
+		await openInCustomEditor(uri, CANVAS_EDITOR_VIEW_TYPE);
+
+		const document = await vscode.workspace.openTextDocument(uri);
+		await replaceWholeDocument(document, duplicateIdCanvasDocJson());
+
+		await waitFor(
+			() => jiscribeDiagnostics(uri).length > 0,
+			"a diagnostic on the duplicate id the unsaved edit introduced",
+		);
+
+		// closeAllEditors cannot run against a dirty editor (see customEditor.ts).
+		await document.save();
 	});
 
 	it("leaves broken JSON to the JSON language service", async () => {

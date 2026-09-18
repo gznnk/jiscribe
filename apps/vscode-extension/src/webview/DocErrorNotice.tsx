@@ -1,4 +1,22 @@
+import type { CSSProperties } from "react";
+
 import type { DocViewError } from "./docViewState";
+
+/**
+ * The full-screen box every notice in this file is: one centred column filling
+ * the Webview, with the message's own colour and font layered on top.
+ */
+const centeredNoticeStyle: CSSProperties = {
+	display: "flex",
+	flexDirection: "column",
+	alignItems: "center",
+	justifyContent: "center",
+	width: "100%",
+	height: "100vh",
+	padding: "20px",
+	boxSizing: "border-box",
+	textAlign: "center",
+};
 
 /**
  * Headline and detail for an error, shared by the full-screen notice and the
@@ -27,17 +45,9 @@ export function DocErrorNotice({ error }: { error: DocViewError }) {
 	return (
 		<div
 			style={{
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				justifyContent: "center",
-				width: "100%",
-				height: "100vh",
+				...centeredNoticeStyle,
 				color: "#dc2626",
 				fontFamily: error.kind === "parse" ? "monospace" : "sans-serif",
-				padding: "20px",
-				boxSizing: "border-box",
-				textAlign: "center",
 			}}
 		>
 			<div style={{ fontWeight: "bold", marginBottom: "8px" }}>{title}</div>
@@ -95,6 +105,44 @@ export function DocEditingPausedOverlay({ error }: { error: DocViewError }) {
 					text parses again.
 				</div>
 			</div>
+		</div>
+	);
+}
+
+/**
+ * Full-screen notice for an image document (.jis.svg / .jis.png) that carries no
+ * embedded jiscribe source. Nothing can be edited in that case, so it replaces
+ * the canvas rather than covering it.
+ */
+export function MissingEmbeddedSourceNotice() {
+	return (
+		<div
+			style={{
+				...centeredNoticeStyle,
+				color: "#6b7280",
+				fontFamily: "monospace",
+			}}
+		>
+			<div style={{ fontWeight: "bold", marginBottom: "8px" }}>
+				No embedded jiscribe source
+			</div>
+			<div style={{ fontSize: "12px" }}>
+				This image does not contain an editable jiscribe canvas. Only images
+				exported from jiscribe (.jis.png / .jis.svg) can be edited.
+			</div>
+		</div>
+	);
+}
+
+/**
+ * Full-screen placeholder for the gap between mount and the first document: the
+ * Extension answers "ready" with the file contents, and nothing can be drawn
+ * until it does.
+ */
+export function LoadingNotice() {
+	return (
+		<div style={{ ...centeredNoticeStyle, color: "#6b7280" }}>
+			Loading canvas...
 		</div>
 	);
 }

@@ -1,27 +1,21 @@
-import { darkCanvasTheme } from "@jiscribe/canvas";
+import { darkCanvasTheme, lightCanvasTheme } from "@jiscribe/canvas";
 import type { CanvasColorScheme, CanvasTheme } from "@jiscribe/canvas";
 
 /**
- * Maps the `--vscode-*` CSS variables that the VSCode webview auto-injects
- * onto the canvas's neutral theme tokens.
+ * The `--vscode-*` CSS variables the VSCode webview injects, mapped onto the
+ * canvas's neutral theme tokens.
  *
- * The canvas itself knows nothing about VSCode: it resolves its appearance
- * from the injected `CanvasTheme`. This host-side mapping layer passes
- * `var(--vscode-..., <dark fallback>)` strings as token values, so the canvas
- * automatically blends with the user's editor theme (Dark / Light / High
- * Contrast). The fallbacks match `darkCanvasTheme` and only apply if a
- * `--vscode-*` variable is missing.
+ * The canvas knows nothing about VSCode: it resolves its appearance from the
+ * injected `CanvasTheme`. Passing `var(--vscode-..., <fallback>)` strings as
+ * token values makes it follow the user's editor theme (Dark / Light / High
+ * Contrast) on its own. The fallbacks are the dark preset's and only apply where
+ * a `--vscode-*` variable is missing, which no supported VSCode does.
  *
- * Handle colors/dimensions and the default font are inherited from
- * `darkCanvasTheme` (fixed brand accents, not part of the VSCode palette).
- *
- * The tokens are the same for every editor theme, but `colorScheme` is not: it
- * is read as a JS value, not a CSS variable, so it cannot follow the editor on
- * its own. `vscodeCanvasThemes` holds one theme per scheme and the webview picks
- * by the body's theme kind (useVscodeColorScheme).
+ * Tokens not listed here (handle colors and dimensions, the transparency
+ * checker, the radius, the scrollbar track) come from the preset the theme is
+ * built on, dark or light, so nothing dark leaks into the light theme.
  */
-const vscodeCanvasTokens: CanvasTheme["tokens"] = {
-	...darkCanvasTheme.tokens,
+const vscodeCanvasTokens = {
 	canvasBg: "var(--vscode-editor-background, #1e1e1e)",
 	surface: "var(--vscode-editorWidget-background, #252526)",
 	surfaceHover:
@@ -47,18 +41,25 @@ const vscodeCanvasTokens: CanvasTheme["tokens"] = {
 	scrollbarThumbHover: "var(--vscode-scrollbarSlider-hoverBackground, #9ca3af)",
 	objectInk: "var(--vscode-editor-foreground, #ffffff)",
 	objectSurface: "var(--vscode-editorWidget-background, #252526)",
-};
+} satisfies Partial<CanvasTheme["tokens"]>;
 
-/** The canvas theme for each editor ground; the two differ in `colorScheme` alone. */
+/** The preset with its tokens overridden by the `--vscode-*` mapping. */
+const withVscodeTokens = (preset: CanvasTheme): CanvasTheme => ({
+	...preset,
+	tokens: { ...preset.tokens, ...vscodeCanvasTokens },
+});
+
+/**
+ * The canvas theme for each editor ground. The tokens are the same mapping for
+ * both, but `colorScheme` is read as a JS value rather than a CSS variable, so
+ * it cannot follow the editor on its own; the webview picks the theme by the
+ * body's theme kind (useVscodeColorScheme).
+ */
 export const vscodeCanvasThemes: Readonly<
 	Record<CanvasColorScheme, CanvasTheme>
 > = {
-	dark: { ...darkCanvasTheme, colorScheme: "dark", tokens: vscodeCanvasTokens },
-	light: {
-		...darkCanvasTheme,
-		colorScheme: "light",
-		tokens: vscodeCanvasTokens,
-	},
+	dark: withVscodeTokens(darkCanvasTheme),
+	light: withVscodeTokens(lightCanvasTheme),
 };
 
 /**
