@@ -13,6 +13,7 @@ import WebSocket from "ws";
 import { readSessionToken } from "./hostSessionToken";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import type { BrowserOpenOptions } from "../host/openBrowser";
+import { createPathLock } from "../pathLock";
 
 /**
  * Where the ports these tests use start. If one is taken the host gives way
@@ -75,6 +76,7 @@ const startTestHost = async (
 		port: TEST_PORT,
 		shouldOpenBrowser: false,
 		idleShutdownDelayMs: TEST_IDLE_DELAY_MS,
+		withFileLock: createPathLock(),
 		...options,
 	});
 	openHosts.push(host);
@@ -378,6 +380,7 @@ describe("visible viewers", () => {
 			port: TEST_PORT,
 			idleShutdownDelayMs: TEST_IDLE_DELAY_MS,
 			launchBrowser: recorder.launchBrowser,
+			withFileLock: createPathLock(),
 		});
 		openHosts.push(host);
 

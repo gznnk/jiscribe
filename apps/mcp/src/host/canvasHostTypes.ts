@@ -186,14 +186,14 @@ export type CanvasHostOptions = {
 	/**
 	 * Runs one file's task with the tasks queued ahead of it for that file, so a
 	 * write from the viewer and a rewrite from an AI tool never overlap. The MCP
-	 * server passes its own path lock, the one every tool goes through; left out,
-	 * a task runs straight away, which is enough where nothing else writes (tests)
+	 * server passes the path lock every tool goes through; a host started with a
+	 * lock of its own would let the two land on top of each other
 	 *
 	 * @param filePath The file the task touches (absolute path, as the tools
 	 *   resolve it — the lock is keyed on it)
 	 * @param task What to run once the file is free
 	 */
-	withFileLock?: <T>(filePath: string, task: () => Promise<T>) => Promise<T>;
+	withFileLock: <T>(filePath: string, task: () => Promise<T>) => Promise<T>;
 	/**
 	 * What launches the browser. It is only ever passed by tests, which have no
 	 * browser to launch and want the URL the window would have been given

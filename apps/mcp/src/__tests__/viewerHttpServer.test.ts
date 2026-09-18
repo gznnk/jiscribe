@@ -271,6 +271,17 @@ describe("PUT /api/file", () => {
 		});
 	});
 
+	it("refuses a body that is not a canvas document, and says why", async () => {
+		writeOutcome = { kind: "invalid-doc", message: "- root: must be array" };
+
+		const response = await putFile(OPEN_REL_PATH, "{}");
+
+		expect(response.status).toBe(422);
+		expect(await response.json()).toEqual({
+			error: expect.stringContaining("must be array"),
+		});
+	});
+
 	it("refuses a body past the cap, and hands it to nobody", async () => {
 		// 16MiB and one byte: the first chunk past the cap is where it gives up,
 		// rather than after the whole upload has been held in memory

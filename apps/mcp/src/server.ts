@@ -38,6 +38,7 @@ import {
 import { formatDiagnostics } from "./diagnosticReport";
 import {
 	FLUSH_EDITS_TIMEOUT_MS,
+	isBrowserOpeningAllowed,
 	startCanvasHost,
 	type CanvasHost,
 } from "./host/canvasHost";
@@ -258,24 +259,20 @@ export function createJiscribeMcpServer(): McpServer {
 	// undo can only go back while things are "as the AI left them", so the history
 	// is held per edited file
 	const historyByPath = new Map<string, CanvasOpHistory>();
-	const getOrCreateHistory = (filePath: string): CanvasOpHistory => {
-		const existing = historyByPath.get(filePath);
-		if (existing !== undefined) {
-			// Re-inserting puts it back at the end, which makes the Map's own order a
-			// least-recently-used one
-			historyByPath.delete(filePath);
-			historyByPath.set(filePath, existing);
-			return existing;
-		}
-		const created = createCanvasOpHistory();
-		historyByPath.set(filePath, created);
+	const rememberHistory = (
+		filePath: string,
+		history: CanvasOpHistory,
+	): void => {
+		// Re-inserting puts it back at the end, which makes the Map's own order a
+		// least-recently-used one
+		historyByPath.delete(filePath);
+		historyByPath.set(filePath, history);
 		if (historyByPath.size > MAX_HISTORY_FILES) {
 			const oldestPath = historyByPath.keys().next().value;
 			if (oldestPath !== undefined) {
 				historyByPath.delete(oldestPath);
 			}
 		}
-		return created;
 	};
 
 	/**
@@ -291,7 +288,9 @@ export function createJiscribeMcpServer(): McpServer {
 		return await withPathLock(filePath, async () => {
 			const loadedDoc = await loadCanvasFile(filePath);
 			let nextDoc: CanvasDoc | null = null;
-			const history = getOrCreateHistory(filePath);
+			// A read leaves no step to take back, so it neither creates a history nor
+			// counts as a use of one (which would push a real one out of the cap)
+			const history = historyByPath.get(filePath) ?? createCanvasOpHistory();
 			const outcome = applyCanvasOp(
 				op,
 				{
@@ -304,6 +303,7 @@ export function createJiscribeMcpServer(): McpServer {
 				docOps,
 			);
 			if (nextDoc !== null) {
+				rememberHistory(filePath, history);
 				try {
 					await saveCanvasFile(filePath, nextDoc);
 				} catch (error) {
@@ -416,13 +416,21 @@ export function createJiscribeMcpServer(): McpServer {
 					await host.openFile(basename(filePath));
 
 					const state = isCreated ? "created and opened" : "opened";
+					// The window the closed host had is given time to come back before
+					// anything is opened in its place, visible or not. With no window
+					// allowed on screen there is nothing to open instead, so nothing to
+					// wait for
+					const didWindowReturn =
+						hadVisibleViewer && (headless || isBrowserOpeningAllowed())
+							? await host.waitForViewer(RECONNECT_GRACE_MS)
+							: false;
 					if (!headless) {
 						// A host kept alive by a headless window has nothing on screen, so
 						// a plain open has to put a window up even though the host is
 						// already running. A host started just above opened its own,
-						// except where it is waiting for the window the closed host had
+						// except where it was waiting for the window the closed host had
 						if (hadVisibleViewer) {
-							if (!(await host.waitForViewer(RECONNECT_GRACE_MS))) {
+							if (!didWindowReturn) {
 								host.openVisibleViewer();
 							}
 						} else if (isReusedHost && !host.hasVisibleViewer()) {

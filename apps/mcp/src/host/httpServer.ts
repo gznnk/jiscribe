@@ -314,6 +314,12 @@ const handleWriteFile = async (
 		});
 		return;
 	}
+	if (outcome.kind === "invalid-doc") {
+		sendJson(response, 422, {
+			error: `the document is not a valid canvas file:\n${outcome.message}`,
+		});
+		return;
+	}
 	if (outcome.kind === "revision-mismatch") {
 		// The current revision goes back with the refusal, so the viewer can tell
 		// what it is now behind and reload rather than ask again
@@ -414,7 +420,9 @@ export type WriteOpenFileOutcome =
 	 * The file no longer holds the revision the write names, so nothing was
 	 * written; the revision carried here is the one it holds now
 	 */
-	| { kind: "revision-mismatch"; revision: string };
+	| { kind: "revision-mismatch"; revision: string }
+	/** The body is not a document the tools could load, so nothing was written */
+	| { kind: "invalid-doc"; message: string };
 
 export type ViewerHttpServerOptions = {
 	/**

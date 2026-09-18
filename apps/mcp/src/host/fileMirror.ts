@@ -18,6 +18,9 @@ import path from "node:path";
 import type { WriteOpenFileOutcome } from "./httpServer";
 import { resolveWorkspacePathReal } from "./workspacePaths";
 import { writeFileAtomically } from "../atomicWrite";
+import { canvasParser } from "../canvasDefinitions";
+import { formatParseResult } from "../canvasStore";
+import { isErrnoWithCode } from "../nodeErrors";
 import type { CanvasHostServerMessage } from "../shared/canvasHostProtocol";
 
 /**
@@ -38,15 +41,20 @@ const calcDocRevision = (docText: string): string =>
 	createHash("sha256").update(docText, "utf8").digest("hex");
 
 /**
- * Reads a file, answering null for one that cannot be read at all.
+ * Reads a file, answering null for one that does not exist. Any other failure
+ * (no permission, a directory) is thrown: a file that is there but cannot be read
+ * is not one to write over.
  *
  * @param file The file to read (absolute path)
  */
-const readFileQuietly = async (file: string): Promise<string | null> => {
+const readFileIfExists = async (file: string): Promise<string | null> => {
 	try {
 		return await readFile(file, "utf8");
-	} catch {
-		return null;
+	} catch (error) {
+		if (isErrnoWithCode(error, "ENOENT")) {
+			return null;
+		}
+		throw error;
 	}
 };
 
@@ -88,7 +96,8 @@ export type FileMirror = {
 	 * window that wrote it was last given.
 	 *
 	 * @param relPath The file to write, relative to workspaceRoot
-	 * @param body The bytes to write, as they arrived
+	 * @param body The bytes to write; they are read as UTF-8 to be parsed and to
+	 *   compute the revision
 	 * @param ifMatch The revision this write replaces
 	 * @returns What became of it. A path leading out of the workspace, or a write
 	 *   that fails, is thrown rather than returned
@@ -222,11 +231,13 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 						return;
 					}
 				}
-				openPath = relPath;
 				const text = await readOpenFileText(relPath);
 				if (!isNewestCall()) {
 					return;
 				}
+				// Only now is this the file on display: until here a write for the file
+				// still showing is taken, and one for this file is not
+				openPath = relPath;
 				startWatching(relPath);
 				if (text === null) {
 					clearKnownText();
@@ -255,6 +266,13 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 					if (relPath !== openPath) {
 						return { kind: "not-open" };
 					}
+					// The tools re-parse before they write and so does this route: a
+					// window must not be able to leave a file the tools refuse to load
+					const writtenText = body.toString("utf8");
+					const parsed = canvasParser.parse(writtenText);
+					if (parsed.kind !== "ok") {
+						return { kind: "invalid-doc", message: formatParseResult(parsed) };
+					}
 					const resolvedFile = await resolveWorkspacePathReal(
 						workspaceRoot,
 						relPath,
@@ -263,9 +281,9 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 					// tool's write is on disk before the watch (which polls) has told
 					// anyone, and comparing against what was last handed out would let
 					// this write land on top of it
-					const currentText = await readFileQuietly(resolvedFile);
-					// A file nobody can read holds nothing this write could overwrite, so
-					// it is let through rather than refused over a revision there is none of
+					const currentText = await readFileIfExists(resolvedFile);
+					// A file that is gone holds nothing this write could overwrite, so it
+					// is let through rather than refused over a revision there is none of
 					if (currentText !== null) {
 						const currentRevision = calcDocRevision(currentText);
 						if (ifMatch !== currentRevision) {
@@ -278,7 +296,6 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 					await writeFileAtomically(resolvedFile, body);
 					// Recorded from the bytes that were written, so the watch reads its own
 					// write back as something already known and says nothing
-					const writtenText = body.toString("utf8");
 					const revision = recordKnownText(writtenText);
 					// Every window is told, the one that wrote included: it drops the echo
 					// against the text it sent and takes the revision with it

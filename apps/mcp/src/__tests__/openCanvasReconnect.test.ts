@@ -37,7 +37,7 @@ const mocked = vi.hoisted(() => ({
 	 * window that reconnects has to find the new host where the old one was, which
 	 * only holds if no other host on this machine took the port in between
 	 */
-	testPort: 5490,
+	testPort: 5590,
 	/**
 	 * What the host's wait for the reconnecting window is shortened to. The tool
 	 * layer's own grace is four seconds, which is a long time to spend twice
@@ -217,6 +217,23 @@ describe("open_canvas across workspaces", () => {
 		await reconnectViewer(opened.viewerUrl, opened.sessionToken);
 		await switching;
 
+		expect(mocked.openBrowser).toHaveBeenCalledTimes(1);
+	});
+
+	it("waits for that window before a headless open would start a browser of its own", async () => {
+		const opened = await openCanvasAt(join(workspaceRoot, "g.jis.json"));
+		await connectViewer(opened.viewerUrl, opened.sessionToken);
+		expect(mocked.openBrowser).toHaveBeenCalledTimes(1);
+
+		const switching = client.callTool("open_canvas", {
+			path: join(otherWorkspaceRoot, "h.jis.json"),
+			headless: true,
+		});
+		await reconnectViewer(opened.viewerUrl, opened.sessionToken);
+		const result = await switching;
+
+		// The window that came back is the one used; no headless Chromium is started
+		expect(result.text).toMatch(/the viewer window already open/);
 		expect(mocked.openBrowser).toHaveBeenCalledTimes(1);
 	});
 

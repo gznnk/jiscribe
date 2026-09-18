@@ -27,7 +27,11 @@ import * as canvasHostModule from "../host/canvasHost";
  * How long starting the host is held back for, in ms. It is read inside the mock
  * factory, which runs before the module body, so it is hoisted with it
  */
-const timing = vi.hoisted(() => ({ startDelayMs: 50 }));
+const timing = vi.hoisted(() => ({
+	startDelayMs: 50,
+	/** Pinned so that the hosts started here never meet another suite's on 5190 */
+	port: 5690,
+}));
 
 // Two hosts starting at once cannot be told apart by the reply: the later one
 // overwrites the variable both replies read the URL from, so both read the same
@@ -43,7 +47,7 @@ vi.mock("../host/canvasHost", async (importActual) => {
 				await new Promise((resolve) =>
 					setTimeout(resolve, timing.startDelayMs),
 				);
-				return await actual.startCanvasHost(options);
+				return await actual.startCanvasHost({ ...options, port: timing.port });
 			},
 		),
 	};

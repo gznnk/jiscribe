@@ -82,6 +82,14 @@ export const FLUSH_EDITS_TIMEOUT_MS = 3_000;
 const MAX_WEBSOCKET_PAYLOAD_BYTES = 32 * 1024 * 1024;
 
 /**
+ * Whether a window may be put on the user's screen. `JISCRIBE_MCP_NO_OPEN` is the
+ * escape hatch for a machine with no browser; it is read on every open rather than
+ * once at startup, so it holds wherever the call comes from
+ */
+export const isBrowserOpeningAllowed = (): boolean =>
+	(process.env.JISCRIBE_MCP_NO_OPEN ?? "") === "";
+
+/**
  * Reads the session token off a WebSocket URL.
  *
  * @param requestUrl The upgrade request's target, which carries no origin
@@ -193,7 +201,7 @@ export async function startCanvasHost(
 	const fileMirror = createFileMirror({
 		workspaceRoot,
 		broadcast: viewerRegistry.broadcast,
-		withFileLock: options.withFileLock ?? ((_filePath, task) => task()),
+		withFileLock: options.withFileLock,
 		flushEdits: () =>
 			flushViewers(options.flushEditsTimeoutMs ?? FLUSH_EDITS_TIMEOUT_MS),
 	});
@@ -248,11 +256,6 @@ export async function startCanvasHost(
 		isHostClosed: () => isClosed,
 		connectTimeoutMs: options.headlessConnectTimeoutMs,
 	});
-
-	// The escape hatch for a machine with no browser. It is read on every open
-	// rather than once at startup, so it holds wherever the call comes from
-	const isBrowserOpeningAllowed = (): boolean =>
-		(process.env.JISCRIBE_MCP_NO_OPEN ?? "") === "";
 
 	// shouldOpenBrowser is about this moment alone: a host started for a headless
 	// window puts nothing up now, and still opens one later if asked

@@ -12,6 +12,7 @@ import WebSocket, { type ClientOptions } from "ws";
 
 import { readSessionToken } from "./hostSessionToken";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
+import { createPathLock } from "../pathLock";
 import { SESSION_TOKEN_HEADER } from "../shared/fileApiRoute";
 
 /** Where the ports these tests use start; the host gives way upward if one is taken */
@@ -66,6 +67,7 @@ const startTestHost = async (): Promise<CanvasHost> => {
 		workspaceRoot,
 		port: TEST_PORT,
 		shouldOpenBrowser: false,
+		withFileLock: createPathLock(),
 	});
 	openHosts.push(host);
 	await host.openFile(OPEN_REL_PATH);

@@ -17,6 +17,7 @@ import type { RefObject } from "react";
 
 import { canvasParser } from "./canvasPlugins";
 import { saveFile, type SaveFileResult } from "./files";
+import { isOwnEcho } from "./ownEcho";
 
 /**
  * How long to wait after the edits settle before writing out. Writing on every
@@ -124,12 +125,25 @@ export function useDocSync({
 	// The write that is on its way, so that a second save queues behind it rather
 	// than racing it, and so that closing or flushing can wait for it
 	const inFlightSaveRef = useRef<Promise<boolean> | null>(null);
+	// Set when the host refused a write over a newer file. The frame carrying that
+	// newer text follows within the watch interval and would clear the error bar,
+	// taking the one explanation of why the edit vanished with it; so that frame
+	// leaves the message up and only the next one clears it
+	const hasUnexplainedConflictRef = useRef(false);
 
 	const applyIncomingDoc = useCallback(
 		(relPath: string, docText: string, revision: string): void => {
-			if (docText === syncedTextRef.current) {
-				// This page's own write coming back. The drawing is already this text;
-				// all that is new is the revision the next write has to quote
+			if (
+				isOwnEcho(
+					{ relPath, docText },
+					{
+						openPath: openPathRef.current,
+						syncedText: syncedTextRef.current,
+					},
+				)
+			) {
+				// The drawing is already this text; all that is new is the revision the
+				// next write has to quote
 				revisionRef.current = revision;
 				return;
 			}
@@ -146,6 +160,10 @@ export function useDocSync({
 			latestDocRef.current = result.doc;
 			setOpenPath(relPath);
 			setDoc(result.doc);
+			if (hasUnexplainedConflictRef.current) {
+				hasUnexplainedConflictRef.current = false;
+				return;
+			}
 			reportError(null);
 		},
 		[reportError],
@@ -157,11 +175,14 @@ export function useDocSync({
 	 */
 	const writeCurrentDoc = useCallback(async (): Promise<boolean> => {
 		const targetPath = openPathRef.current;
-		const revision = revisionRef.current;
-		// A revision comes with every doc frame, so having a path without one would
-		// be the host breaking its own contract
-		if (targetPath === null || revision === null) {
+		if (targetPath === null) {
 			return false;
+		}
+		const revision = revisionRef.current;
+		if (revision === null) {
+			// Both are set from the same frame, so this cannot be reached through the
+			// host's protocol
+			throw new Error(`no revision is known for ${targetPath}`);
 		}
 		if (brokenFileErrorRef.current !== null) {
 			reportError(brokenFileErrorRef.current);
@@ -202,6 +223,7 @@ export function useDocSync({
 			// canvas with it; writing again here is how the other edit would be lost.
 			// The revision is left as it was, since it belongs with the text put back
 			restoreSyncedText();
+			hasUnexplainedConflictRef.current = true;
 			reportError(SAVE_CONFLICT_MESSAGE);
 			return false;
 		}
@@ -210,6 +232,7 @@ export function useDocSync({
 		if (syncedTextRef.current === text) {
 			revisionRef.current = result.revision;
 		}
+		hasUnexplainedConflictRef.current = false;
 		reportError(null);
 		return true;
 	}, [reportError, sessionTokenRef]);

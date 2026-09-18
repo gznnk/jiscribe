@@ -4,7 +4,7 @@
 // browser is needed for any of them — a ws client stands in for the viewer, the
 // save goes out as the PUT the viewer makes, and the file is edited from the test.
 
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import type * as fsPromises from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
@@ -144,6 +144,7 @@ const startTestHost = async (
 		port: TEST_PORT,
 		shouldOpenBrowser: false,
 		flushEditsTimeoutMs: TEST_FLUSH_TIMEOUT_MS,
+		withFileLock: createPathLock(),
 		...options,
 	});
 	openHosts.push(host);
@@ -288,8 +289,12 @@ const putOpenFile = async (
 
 const emptyDocText = '{"version":1,"root":[]}\n';
 
-/** What a person's save puts in the file, in the tests that make one */
-const savedDocText = '{"version":1,"root":[{"type":"ellipse"}]}\n';
+/**
+ * What a person's save puts in the file, in the tests that make one. A document
+ * the host's parser accepts: a write carrying anything less is refused
+ */
+const savedDocText =
+	'{"version":1,"root":[{"type":"rect","id":"saved-1","x":0,"y":0,"width":10,"height":10}]}\n';
 
 describe("the file watch", () => {
 	it("sends the file to a viewer that connects after it was opened", async () => {
@@ -451,6 +456,60 @@ describe("a person's save", () => {
 		);
 	});
 
+	it("is refused when the body is not a canvas document, and changes nothing", async () => {
+		// The tools re-parse before they write; a window is held to the same bar
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+
+		const outcome = await putOpenFile(
+			host,
+			OPEN_REL_PATH,
+			'{"version":1,"root":"not a list"}\n',
+			readLatestRevision(viewer),
+		);
+
+		expect(outcome.status).toBe(422);
+		expect(outcome.body.error).toMatch(/not a valid canvas file/);
+		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
+			emptyDocText,
+		);
+	});
+
+	it.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
+		"fails rather than replacing a file it cannot read",
+		async () => {
+			// Only a file that is gone may be written without a revision to check;
+			// one that is there but unreadable is not ours to overwrite
+			await writeOpenFile(emptyDocText);
+			const host = await startTestHost();
+			const viewer = await connectFakeViewer(host);
+			await host.openFile(OPEN_REL_PATH);
+			await waitFor(() =>
+				viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+			);
+			const revision = readLatestRevision(viewer);
+			const openFile = join(workspaceRoot, OPEN_REL_PATH);
+			await chmod(openFile, 0o000);
+			try {
+				const outcome = await putOpenFile(
+					host,
+					OPEN_REL_PATH,
+					savedDocText,
+					revision,
+				);
+				expect(outcome.status).toBe(500);
+			} finally {
+				await chmod(openFile, 0o600);
+			}
+			expect(await readFile(openFile, "utf8")).toBe(emptyDocText);
+		},
+	);
+
 	it("is refused when it names no revision at all", async () => {
 		await writeOpenFile(emptyDocText);
 		const host = await startTestHost();
@@ -564,6 +623,47 @@ describe("a person's save", () => {
 });
 
 describe("openFile", () => {
+	it("keeps the file showing until the next one has been read", async () => {
+		// While the next file is still being read, a save for the one on screen is
+		// what a window can send, and it has to be taken; the file on display moves
+		// only once there is something to show in its place
+		await writeOpenFile(emptyDocText);
+		await writeFile(join(workspaceRoot, OTHER_REL_PATH), emptyDocText, "utf8");
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OTHER_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+		const revision = readLatestRevision(viewer);
+		const heldRead: { release: (() => void) | null } = { release: null };
+		heldReads.set(
+			OPEN_REL_PATH,
+			new Promise<void>((resolve) => {
+				heldRead.release = resolve;
+			}),
+		);
+
+		const switching = host.openFile(OPEN_REL_PATH);
+		// The flush is answered at once by the fake viewer; give the read time to be
+		// held before looking
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "flushEdits"),
+		);
+		expect(host.getOpenPath()).toBe(OTHER_REL_PATH);
+		const outcome = await putOpenFile(
+			host,
+			OTHER_REL_PATH,
+			savedDocText,
+			revision,
+		);
+		expect(outcome.status).toBe(200);
+
+		heldRead.release?.();
+		await switching;
+		expect(host.getOpenPath()).toBe(OPEN_REL_PATH);
+	});
+
 	it("leaves the newest call's file on display when two are in the air", async () => {
 		// The first call's read is held up, so the second one overtakes it. Nothing
 		// of the first may land after that: the file on display, the text the

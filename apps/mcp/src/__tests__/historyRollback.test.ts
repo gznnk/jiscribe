@@ -135,13 +135,18 @@ describe.skipIf(!isPermissionEnforced)(
 			await client.callTool("add_rect", { path: lockedPath, x: 0, y: 0 });
 
 			await chmod(readOnlyDir, 0o500);
-			const refused = await client.callTool("add_rect", {
-				path: lockedPath,
-				x: 200,
-				y: 0,
-			});
+			let refused: { text: string };
+			try {
+				refused = await client.callTool("add_rect", {
+					path: lockedPath,
+					x: 200,
+					y: 0,
+				});
+			} finally {
+				// Put back whatever happened, or the teardown cannot remove the directory
+				await chmod(readOnlyDir, 0o700);
+			}
 			expect(refused.text).toMatch(/^error: failed to write file:/);
-			await chmod(readOnlyDir, 0o700);
 
 			const undone = await client.callTool("undo", { path: lockedPath });
 
