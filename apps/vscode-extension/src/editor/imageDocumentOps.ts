@@ -267,12 +267,11 @@ export async function reconcileImageDocument(
 		if (seams.isDirty()) {
 			return;
 		}
-		// An edit/undo changed the source mid-render, so the file is now dirty and
-		// its render will be written by the normal save flow. Writing here would push
-		// unsaved edits to disk; skip and clear the flag (the save path owns
-		// reconciliation from now on).
+		// The source moved under the render while the document stayed clean: the
+		// disk was adopted meanwhile (which cleared the flag itself), so what was
+		// rendered no longer matches the file. Leave the flag as it is for whatever
+		// signal comes next rather than write a picture of the previous source.
 		if (doc.sourceText !== sourceAtStart) {
-			doc.needsImageReconcile = false;
 			return;
 		}
 		const bytes = decodeRenderResult(data);

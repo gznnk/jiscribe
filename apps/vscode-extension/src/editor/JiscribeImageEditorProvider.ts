@@ -331,6 +331,13 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	 * Whether the document's tab shows unsaved edits. VSCode owns the dirty flag
 	 * (we only fire edit events), so read it off the tab; a document whose tab is
 	 * already gone counts as clean.
+	 *
+	 * The tab model here is a mirror the renderer updates over RPC, so it can lag
+	 * the renderer's own state. The one caller that reads it right after a change
+	 * is the reconcile on "rendered": by the time that message has gone renderer →
+	 * Webview → renderer → here, the tab update the undo or redo caused has been
+	 * delivered ahead of it, the renderer sending both in order. Nothing else
+	 * reads the flag within one turn of a change.
 	 */
 	private isDocumentDirty(document: JiscribeImageDocument): boolean {
 		const documentKey = document.uri.toString();

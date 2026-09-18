@@ -230,21 +230,23 @@ describe("reconcileImageDocument", () => {
 		expect(doc.needsImageReconcile).toBe(true);
 	});
 
-	it("does not write unsaved edits when the source changes mid-render", async () => {
+	it("writes nothing when the source moves under a render on a clean document", async () => {
 		const doc = makeDoc("svg", svgBytes(svgWithSource("NEW")), "NEW");
 		doc.needsImageReconcile = true;
-		// Simulate an edit landing while the render is in flight.
+		// The disk is adopted while the render is in flight: the source changes and
+		// the adoption clears the flag itself (see adoptDiskBytes).
 		const { seams, writes } = makeSeams({
 			render: async () => {
-				doc.sourceText = "EDITED";
-				return svgRenderResult(svgWithSource("EDITED"));
+				doc.sourceText = "ADOPTED";
+				doc.needsImageReconcile = false;
+				return svgRenderResult(svgWithSource("NEW"));
 			},
 		});
 
 		await reconcileImageDocument(doc, seams);
 
 		expect(writes).toHaveLength(0);
-		// Ownership passes to the normal save flow, so the flag is cleared.
+		// Left as the adoption set it: the reconcile owns no flag it did not act on.
 		expect(doc.needsImageReconcile).toBe(false);
 	});
 
