@@ -93,7 +93,7 @@ export const CommentPanelBody = styled.div`
 	scrollbar-color: ${theme.scrollbarThumb} ${theme.scrollbarTrack};
 `;
 
-/** Footer row: the way to start a thread, or the notice that says why there is none. */
+/** Footer row: the way to start a thread, or the notice that says why there is none. Absent while the new-thread composer is out. */
 export const CommentPanelFooter = styled.div`
 	display: flex;
 	align-items: center;
@@ -337,12 +337,6 @@ export const CommentComposerActions = styled.div`
 	align-items: center;
 	justify-content: flex-end;
 	gap: 8px;
-`;
-
-export const CommentComposerHint = styled.span`
-	font-size: 11px;
-	color: ${theme.foregroundMuted};
-	margin-right: auto;
 `;
 
 /** Filled button that posts what the composer holds. */

@@ -22,24 +22,14 @@ export const COMMENT_PANEL_HEADER_HEIGHT = 36;
 /** Tallest the scrolling thread list grows before it scrolls (px). */
 export const COMMENT_PANEL_BODY_MAX_HEIGHT = 420;
 
-/** Width of the marker's speech bubble (px); fixed on screen, so unaffected by zoom. */
+/** Width of the marker's pin (px); fixed on screen, so unaffected by zoom. */
 export const COMMENT_MARKER_WIDTH = 24;
 
-/** Height of the marker's speech bubble (px), excluding its tail. */
-export const COMMENT_MARKER_HEIGHT = 20;
+/** Height of the marker's pin (px). */
+export const COMMENT_MARKER_HEIGHT = 24;
 
-/**
- * How far the marker's right edge sits inside the object's right edge (px). The
- * rotation handle hangs off the same corner on the outside (TransformControls),
- * so the bubble stays inside the corner horizontally to leave it clear.
- */
-export const COMMENT_MARKER_OVERHANG_X = COMMENT_MARKER_WIDTH + 8;
-
-/**
- * How far above the object's top edge the marker's top sits (px): the bubble
- * plus a gap, so its tail ends just short of the edge.
- */
-export const COMMENT_MARKER_OVERHANG_Y = COMMENT_MARKER_HEIGHT + 6;
+/** Gap between the bottom of the marker and the object's top edge (px). */
+export const COMMENT_MARKER_GAP_Y = 6;
 
 /** Gap between the marker and the panel opened beside it (px). */
 export const COMMENT_MARKER_PANEL_GAP = 8;

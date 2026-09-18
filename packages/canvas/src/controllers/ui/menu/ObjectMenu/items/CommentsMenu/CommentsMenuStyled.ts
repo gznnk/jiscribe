@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { theme } from "../../../../../../theme/themeTokens";
+import { CommentCountBadgeBase } from "../../../../comments/CommentsStyled";
 
 /**
  * Anchor of the badge inside the button. The button itself is the shared
@@ -15,27 +15,8 @@ export const CommentIconWithBadge = styled.span`
 	justify-content: center;
 `;
 
-/**
- * Count of open threads, over the comment icon's top-right corner. Drawn only
- * while there is one, so it never reads as an empty badge, and it takes no
- * pointer events: the press belongs to the button underneath it.
- */
-export const CommentCountBadge = styled.span`
-	position: absolute;
+/** The menu button's count badge, over the comment icon's top-right corner. */
+export const CommentCountBadge = styled(CommentCountBadgeBase)`
 	top: -3px;
 	right: -5px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 14px;
-	height: 14px;
-	padding: 0 3px;
-	box-sizing: border-box;
-	border-radius: 7px;
-	background-color: ${theme.accent};
-	color: #ffffff;
-	font-size: 10px;
-	font-weight: 600;
-	line-height: 1;
-	pointer-events: none;
 `;

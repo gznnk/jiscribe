@@ -5,49 +5,61 @@ import {
 	COMMENT_MARKER_HEIGHT,
 	COMMENT_MARKER_WIDTH,
 } from "./CommentsConstants";
+import { CommentCountBadgeBase } from "./CommentsStyled";
 import { theme } from "../../../theme/themeTokens";
 
-/** Class the bubble outline carries, so the root's CSS can recolor it on hover. */
-export const COMMENT_MARKER_BUBBLE_CLASS = "jiscribe-comment-marker-bubble";
-
 /**
- * The marker over an object's top-right corner.
+ * The marker over an object's top edge: a pin rounded on three corners, the
+ * square one pointing down at the object.
  *
  * Its size is in px and does not follow the zoom — only the position does, so
  * `left` / `top` are passed through the `style` prop, which changes every frame
  * during a pan (see #131). The overlay it sits in takes no pointer events, so
- * the marker takes them back.
+ * the marker takes them back. Kept to the menu surface's own colors, so it reads
+ * as a note on the diagram rather than competing with it; the accent is left to
+ * the count badge and the active state.
  */
 export const CommentMarkerRoot = styled.div<{
 	isActive: boolean;
 	isAllResolved: boolean;
 }>`
 	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	width: ${COMMENT_MARKER_WIDTH}px;
 	height: ${COMMENT_MARKER_HEIGHT}px;
+	box-sizing: border-box;
+	border: 1px solid
+		${(props) => (props.isActive ? theme.accent : theme.foregroundMuted)};
+	border-radius: ${COMMENT_MARKER_WIDTH / 2}px ${COMMENT_MARKER_WIDTH / 2}px
+		${COMMENT_MARKER_WIDTH / 2}px 3px;
+	background-color: ${(props) =>
+		props.isActive ? theme.accent : theme.surface};
+	box-shadow: ${theme.shadow};
+	color: ${(props) =>
+		props.isActive
+			? "#ffffff"
+			: props.isAllResolved
+				? theme.foregroundMuted
+				: theme.foreground};
 	pointer-events: auto;
 	cursor: pointer;
 	user-select: none;
-	opacity: ${(props) => (props.isAllResolved ? 0.55 : 1)};
-	/* Inherited by the count and the check inside the bubble. */
-	color: ${(props) => (props.isActive ? "#ffffff" : theme.foreground)};
 
-	.${COMMENT_MARKER_BUBBLE_CLASS} {
-		fill: ${(props) => (props.isActive ? theme.accent : theme.surface)};
-		stroke: ${(props) =>
-			props.isActive ? theme.canvasBg : theme.foregroundMuted};
-	}
-
-	&:hover .${COMMENT_MARKER_BUBBLE_CLASS} {
-		stroke: ${theme.foreground};
+	&:hover {
+		border-color: ${theme.foreground};
 	}
 `;
 
-/** The count drawn inside the bubble; its color comes from the root. */
-export const CommentMarkerLabel = styled.text`
-	font-size: 11px;
-	font-weight: 600;
-	fill: currentColor;
+/**
+ * The pin's own count badge: over its top-right corner, with a ring in the
+ * canvas color so it stays apart from the pin once that turns accent too.
+ */
+export const CommentMarkerCountBadge = styled(CommentCountBadgeBase)`
+	top: -7px;
+	right: -7px;
+	box-shadow: 0 0 0 1.5px ${theme.canvasBg};
 `;
 
 /**

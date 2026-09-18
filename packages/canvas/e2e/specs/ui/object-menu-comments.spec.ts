@@ -91,7 +91,10 @@ test.describe("comments on a shape", () => {
 
 		await expect(page.locator(selectors.commentThread)).toHaveCount(1);
 		await expect(page.locator(selectors.comment)).toHaveCount(1);
-		await expect(page.locator(selectors.commentMarker(rectId))).toHaveText("1");
+		await expect(page.locator(selectors.commentMarker(rectId))).toHaveAttribute(
+			"data-open-count",
+			"1",
+		);
 		await expect(page.locator(selectors.commentCount)).toHaveText("1");
 		await expect(
 			page.locator(selectors.commentPanelPlacement("menu")),

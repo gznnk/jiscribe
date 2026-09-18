@@ -25,7 +25,6 @@ import {
 	CommentBody,
 	CommentComposer,
 	CommentComposerActions,
-	CommentComposerHint,
 	CommentContent,
 	CommentHeading,
 	CommentIconButton,
@@ -452,9 +451,6 @@ const CommentPanelComponent: React.FC<CommentPanelProps> = ({
 							}}
 						/>
 						<CommentComposerActions>
-							<CommentComposerHint>
-								{messages.commentsSubmitHint}
-							</CommentComposerHint>
 							<CommentSubmitButton
 								data-gesture="none"
 								data-testid="comment-submit"
@@ -531,9 +527,6 @@ const CommentPanelComponent: React.FC<CommentPanelProps> = ({
 							}}
 						/>
 						<CommentComposerActions>
-							<CommentComposerHint>
-								{messages.commentsSubmitHint}
-							</CommentComposerHint>
 							<CommentSubmitButton
 								data-gesture="none"
 								data-testid="comment-submit"
@@ -546,21 +539,26 @@ const CommentPanelComponent: React.FC<CommentPanelProps> = ({
 					</CommentComposer>
 				)}
 			</CommentPanelBody>
-			<CommentPanelFooter>
-				{canPost ? (
-					<CommentPanelFooterButton
-						data-gesture="none"
-						data-testid="comment-new-thread"
-						onClick={() => setIsNewThreadOpen(true)}
-					>
-						{`+ ${messages.commentsNewThread}`}
-					</CommentPanelFooterButton>
-				) : (
+			{/* While the composer is out, the button that opens it has nothing to do */}
+			{!canPost ? (
+				<CommentPanelFooter>
 					<CommentPanelReadOnlyNotice data-testid="comment-readonly">
 						{messages.commentsReadOnly}
 					</CommentPanelReadOnlyNotice>
-				)}
-			</CommentPanelFooter>
+				</CommentPanelFooter>
+			) : (
+				!isNewThreadComposerShown && (
+					<CommentPanelFooter>
+						<CommentPanelFooterButton
+							data-gesture="none"
+							data-testid="comment-new-thread"
+							onClick={() => setIsNewThreadOpen(true)}
+						>
+							{`+ ${messages.commentsNewThread}`}
+						</CommentPanelFooterButton>
+					</CommentPanelFooter>
+				)
+			)}
 		</CommentPanelRoot>
 	);
 };

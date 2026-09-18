@@ -153,7 +153,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	commentsDelete: "削除",
 	commentsSave: "保存",
 	commentsCancel: "キャンセル",
-	commentsSubmitHint: "Ctrl/⌘ + Enter",
 	commentsReadOnly: "名前が設定されていないため投稿できません",
 	commentsEdited: "編集済み",
 	commentsClose: "閉じる",

@@ -5,9 +5,9 @@ type GlyphProps = {
 };
 
 /**
- * The small glyphs the comment panel's 20px buttons carry. They live here
- * rather than in `ui/icons` because nothing outside the panel draws them: the
- * menu button's own icon is `CommentIcon`.
+ * The small glyphs the comment panel's 20px buttons and the marker's pin carry.
+ * They live here rather than in `ui/icons` because nothing outside the comments
+ * folder draws them: the menu button's own icon is `CommentIcon`.
  *
  * All three are on the 24 grid at stroke width 2, like the menu icons.
  */

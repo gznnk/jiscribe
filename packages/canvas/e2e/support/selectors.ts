@@ -273,7 +273,8 @@ export const selectors = {
 	 * Comment marker over an object that carries threads. Pass an object id to
 	 * name one, or omit it to match every marker on the canvas — which is what a
 	 * count assertion wants. `data-state` tells an open marker ("open") from one
-	 * whose threads are all resolved ("resolved").
+	 * whose threads are all resolved ("resolved"), and `data-open-count` carries
+	 * the number of open threads, which the pin itself only prints from two up.
 	 */
 	commentMarker: (objectId?: string) =>
 		objectId === undefined
@@ -317,7 +318,7 @@ export const selectors = {
 	/** Submit button of a composer; Ctrl/Meta+Enter in the textarea does the same. */
 	commentSubmit: '[data-testid="comment-submit"]',
 
-	/** Footer button that opens the new-thread composer; absent while read-only. */
+	/** Footer button that opens the new-thread composer; absent while read-only or while that composer is out. */
 	commentNewThread: '[data-testid="comment-new-thread"]',
 
 	/** Resolve button, on the opening comment of an open thread only. */

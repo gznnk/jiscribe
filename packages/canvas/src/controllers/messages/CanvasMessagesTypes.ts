@@ -232,8 +232,6 @@ export type CanvasMessageStrings = {
 	commentsSave: string;
 	/** Label of the button dropping an edit. */
 	commentsCancel: string;
-	/** Hint beside a composer's button naming the chord that submits it. */
-	commentsSubmitHint: string;
 	/** Shown in place of the footer button while the host set no author name. */
 	commentsReadOnly: string;
 	/** Mark on a comment whose body was changed after it was posted. */

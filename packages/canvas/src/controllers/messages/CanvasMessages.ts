@@ -159,7 +159,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	commentsDelete: "Delete",
 	commentsSave: "Save",
 	commentsCancel: "Cancel",
-	commentsSubmitHint: "Ctrl/⌘ + Enter",
 	commentsReadOnly: "Set a display name to post comments",
 	commentsEdited: "edited",
 	commentsClose: "Close",

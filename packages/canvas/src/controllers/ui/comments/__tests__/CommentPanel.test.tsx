@@ -301,6 +301,7 @@ describe("CommentPanel", () => {
 		const onCommentUpdate = renderPanel([]);
 
 		expect(queryAll("comment-composer").length).toBe(1);
+		expect(queryAll("comment-new-thread").length).toBe(0);
 		type(queryOne("comment-composer"), "first note");
 		click(queryOne("comment-submit"));
 
@@ -312,6 +313,14 @@ describe("CommentPanel", () => {
 		expect(op.kind).toBe("addThread");
 		expect(op.threadId).not.toBe("");
 		expect(op.comment.body).toBe("first note");
+	});
+
+	it("hides the new-thread button while its composer is open", () => {
+		renderPanel([makeThread("thread-1", "2026-02-01T09:00:00.000Z")]);
+
+		click(queryOne("comment-new-thread"));
+
+		expect(queryAll("comment-new-thread").length).toBe(0);
 	});
 
 	it("is read-only without an author name", () => {

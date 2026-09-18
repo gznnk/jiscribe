@@ -9,8 +9,8 @@ import { CommentMarker } from "./CommentMarker";
 import { CommentMarkerPanelWrapper } from "./CommentMarkerStyled";
 import { CommentPanel } from "./CommentPanel";
 import {
-	COMMENT_MARKER_OVERHANG_X,
-	COMMENT_MARKER_OVERHANG_Y,
+	COMMENT_MARKER_GAP_Y,
+	COMMENT_MARKER_HEIGHT,
 	COMMENT_MARKER_PANEL_GAP,
 	COMMENT_MARKER_WIDTH,
 	COMMENTS_SECTION_ID,
@@ -87,8 +87,15 @@ const CommentMarkerLayerComponent: React.FC<CommentMarkerLayerProps> = ({
 				objectId: obj.id,
 				threads,
 				openCount: countOpenCommentThreads(threads),
-				left: bbox.right * zoom - COMMENT_MARKER_OVERHANG_X,
-				top: bbox.top * zoom - COMMENT_MARKER_OVERHANG_Y,
+				// Sits just above the top edge, right-aligned with the object. The rotation
+				// handle hangs off the corner diagonally outside (TransformControls),
+				// which leaves this spot clear. Rounded to whole px: a fractional offset
+				// renders the pin's dots between pixels, blurred.
+				left: Math.round(bbox.right * zoom) - COMMENT_MARKER_WIDTH,
+				top:
+					Math.round(bbox.top * zoom) -
+					COMMENT_MARKER_HEIGHT -
+					COMMENT_MARKER_GAP_Y,
 			});
 		}
 		return placed;
