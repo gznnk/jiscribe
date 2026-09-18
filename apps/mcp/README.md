@@ -149,3 +149,14 @@ runtime) — which is what gets published, so a checkout is not needed to run it
 
 To work on the viewer alone, `pnpm --filter jiscribe-mcp dev:viewer` serves it
 from vite on 5196 and proxies to the host on 5190.
+
+`pnpm --filter jiscribe-mcp test:e2e` runs the Playwright suite in `e2e/`, which
+drives the real viewer in a real Chromium against a real host and the server as
+it is shipped. It builds first (the build above, some twenty seconds) because the
+host serves `dist/client/` and refuses to start without it. What it covers is the
+half the vitest suite cannot see: the file being drawn, a tool's write reaching
+the page, a person's edit reaching the file, a second file taking the page over,
+the edits buffered in the page being written out before another file goes up,
+`capture_canvas` answered by the drawn canvas, and a write refused for a file
+that moved on. The hosts take the usual port (5190 upwards), so nothing else may
+be serving a canvas while it runs.

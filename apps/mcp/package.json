@@ -40,6 +40,7 @@
 		"lint": "eslint .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
+		"test:e2e": "playwright test",
 		"dev:viewer": "vite"
 	},
 	"comments": {
@@ -60,6 +61,7 @@
 		"@jiscribe/doc-tools": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
 		"@modelcontextprotocol/sdk": "^1.30.0",
+		"@playwright/test": "^1.62.1",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
