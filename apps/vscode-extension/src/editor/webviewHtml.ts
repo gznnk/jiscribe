@@ -2,12 +2,14 @@ import { randomBytes } from "node:crypto";
 
 import * as vscode from "vscode";
 
+import { buildCanvasWebviewCsp } from "./webviewCsp";
+
 /**
  * Build the HTML shown in the Canvas editor's Webview, shared by both the
  * `.jis` (text) and `.jis.png` (binary) custom editors.
  *
- * Sets a Content-Security-Policy that blocks all but the allowed script,
- * identified by a single-use random nonce.
+ * Sets the Content-Security-Policy from buildCanvasWebviewCsp, which runs only
+ * the bundle script identified by a single-use random nonce.
  */
 export const getCanvasWebviewHtml = (
 	webview: vscode.Webview,
@@ -23,6 +25,7 @@ export const getCanvasWebviewHtml = (
 	);
 
 	const nonce = createNonce();
+	const csp = buildCanvasWebviewCsp(webview.cspSource, nonce);
 
 	return /* html */ `
 		<!DOCTYPE html>
@@ -30,15 +33,7 @@ export const getCanvasWebviewHtml = (
 		<head>
 			<meta charset="UTF-8">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-			<!--
-				default-src 'none' and only what the bundle needs. img-src carries no
-				https: or data:, so a document cannot make the Webview fetch anything
-				(a markdown image would otherwise leak that the file was opened, #28);
-				doc images arrive as base64 over postMessage (resolveDocImage) and the
-				PNG export rasterizes its SVG through a blob: URL, whose nested data:
-				URIs are inline to the SVG rather than fetched by the page.
-			-->
-			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+			<meta http-equiv="Content-Security-Policy" content="${csp}">
 			<title>Jiscribe Canvas Editor</title>
 			<link rel="stylesheet" href="${styleUri}">
 			<style>
