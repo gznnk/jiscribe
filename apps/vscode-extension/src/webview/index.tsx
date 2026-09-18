@@ -216,12 +216,6 @@ function App() {
 				case "update": {
 					const docType = message.docType ?? "json";
 
-					// Recorded before anything can reject this text: whatever the canvas
-					// ends up showing, this is the document state the Extension has
-					// handed over, and the next commit is built on top of it. Image docs
-					// carry no version, leaving it undefined.
-					lastReceivedDocumentVersionRef.current = message.version;
-
 					// For image docs (svg / png), the Extension has already extracted
 					// the embedded source and sends JSON text. Empty string means no
 					// embedded source.
@@ -240,6 +234,14 @@ function App() {
 					// records the error, so mid-edit text (which is broken most of the
 					// time) neither rebuilds the canvas nor drops the viewport (#136).
 					const result = canvasParser.parse(jsonText);
+					// Recorded only for text the canvas adopts: while the text is broken
+					// the canvas stays on the older document, and a commit still on its
+					// way from it must keep quoting that document's version, so the
+					// Extension drops it rather than writing the older canvas over the
+					// text being repaired. Image docs carry no version.
+					if (result.kind === "ok") {
+						lastReceivedDocumentVersionRef.current = message.version;
+					}
 					setDocView((prev) => applyParseResult(prev, result));
 					break;
 				}
@@ -279,20 +281,15 @@ function App() {
 		};
 	}, []);
 
-	// Notify the Extension once the canvas has rendered and its export handle is
-	// available. This effect runs after the Canvas commits (the handle is set via
-	// useImperativeHandle during commit, before this effect), so requestImageExport
-	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
-	// save (#179).
-	//
-	// Reported once per mount: the message says this Webview can export from now
-	// on, which no later document update changes, while the Extension answers it
-	// by re-rendering and rewriting the image. The dependency stays, so the one
-	// report still waits for the first doc to parse.
-	const hasReportedRendered = useRef(false);
+	// Notify the Extension whenever a document has rendered and the export
+	// handle is available. This effect runs after the Canvas commits (the handle
+	// is set via useImperativeHandle during commit, before this effect), so
+	// requestImageExport can succeed. Lets the Extension reconcile a stale image
+	// after a hidden-tab save (#179). Sent for every document, not once per
+	// mount: a reconcile the Extension had to skip while the document was dirty
+	// gets its next chance when an undo or redo brings a new document here.
 	useEffect(() => {
-		if (docView.doc && !hasReportedRendered.current) {
-			hasReportedRendered.current = true;
+		if (docView.doc) {
 			vscode.postMessage({ type: "rendered" });
 		}
 	}, [docView.doc]);

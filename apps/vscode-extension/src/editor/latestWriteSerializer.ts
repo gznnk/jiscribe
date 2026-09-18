@@ -18,62 +18,63 @@
  */
 
 /** Serializer over one document's writes; see the module comment. */
-export interface LatestWriteSerializer {
+export interface LatestWriteSerializer<TWrite> {
 	/**
-	 * Write a text, after whatever is already in flight.
+	 * Write, after whatever is already in flight.
 	 *
-	 * @param text - the whole document to write; while a write is in flight this
-	 *   replaces any other waiting text, so only the last one before that write
-	 *   settles is written. Never throws, whatever the write does
+	 * @param write - the whole document to write, with whatever the writer needs
+	 *   beside it; while a write is in flight this replaces any other waiting one,
+	 *   so only the last enqueued before that write settles is written. Never
+	 *   throws, whatever the write does
 	 */
-	enqueue(text: string): void;
+	enqueue(write: TWrite): void;
 }
 
 /**
  * Create a serializer over one write function.
  *
- * @param write - performs one whole-document write; called with nothing else of
- *   its own in flight, and its rejection is swallowed (the provider's write
- *   reports its own failures to the user) so a failed write cannot stop the
- *   waiting text from being written
- * @returns the serializer; it holds at most one waiting text, so it is per
+ * @param performWrite - performs one whole-document write; called with nothing
+ *   else of its own in flight, and its rejection is swallowed (the provider's
+ *   write reports its own failures to the user) so a failed write cannot stop
+ *   the waiting one from being written
+ * @returns the serializer; it holds at most one waiting write, so it is per
  *   editor and must not be shared between documents
  */
-export function createLatestWriteSerializer(
-	write: (text: string) => Promise<void>,
-): LatestWriteSerializer {
+export function createLatestWriteSerializer<TWrite>(
+	performWrite: (write: TWrite) => Promise<void>,
+): LatestWriteSerializer<TWrite> {
 	let isWriteInFlight = false;
-	// The single text waiting for the in-flight write, if any.
-	let pendingText: string | undefined;
+	// The single write waiting for the in-flight one, if any.
+	let pendingWrite: TWrite | undefined;
 
-	function startWrite(text: string): void {
+	function startWrite(write: TWrite): void {
 		isWriteInFlight = true;
-		void writeThenContinue(text);
+		void writeThenContinue(write);
 	}
 
-	async function writeThenContinue(text: string): Promise<void> {
+	async function writeThenContinue(write: TWrite): Promise<void> {
 		try {
-			await write(text);
+			await performWrite(write);
 		} catch {
-			// See the `write` parameter: failures are the caller's to report, and
-			// rethrowing here would leave the waiting text unwritten.
+			// See `performWrite`: failures are the caller's to report, and rethrowing
+			// here would leave the waiting write unwritten.
 		}
 
 		isWriteInFlight = false;
-		const nextText = pendingText;
-		pendingText = undefined;
-		if (nextText !== undefined) {
-			startWrite(nextText);
+		const nextWrite = pendingWrite;
+		pendingWrite = undefined;
+		if (nextWrite !== undefined) {
+			startWrite(nextWrite);
 		}
 	}
 
 	return {
-		enqueue(text: string): void {
+		enqueue(write: TWrite): void {
 			if (isWriteInFlight) {
-				pendingText = text;
+				pendingWrite = write;
 				return;
 			}
-			startWrite(text);
+			startWrite(write);
 		},
 	};
 }

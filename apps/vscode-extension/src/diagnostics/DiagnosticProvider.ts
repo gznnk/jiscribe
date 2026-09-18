@@ -171,7 +171,7 @@ export class DiagnosticProvider {
 				}
 				this.collection.set(
 					document.uri,
-					this.renderDiagnostics(document, beyondSchema),
+					this.renderDiagnostics(document, text, beyondSchema),
 				);
 				return;
 			}
@@ -179,7 +179,7 @@ export class DiagnosticProvider {
 			case "semantic-error":
 				this.collection.set(
 					document.uri,
-					this.renderDiagnostics(document, result.diagnostics),
+					this.renderDiagnostics(document, text, result.diagnostics),
 				);
 				return;
 
@@ -200,14 +200,18 @@ export class DiagnosticProvider {
 	 * Convert SemanticDiagnostic[] into VSCode Diagnostic[]. Highlights the
 	 * location of each diagnostic's id when it has one, otherwise falls back to
 	 * the top of the file.
+	 *
+	 * @param text - the document's text, taken once by the caller rather than
+	 *   materialized again for every diagnostic
 	 */
 	private renderDiagnostics(
 		document: vscode.TextDocument,
+		text: string,
 		diagnostics: SemanticDiagnostic[],
 	): vscode.Diagnostic[] {
 		return diagnostics.map((diagnostic) => {
 			const range = diagnostic.id
-				? this.findIdRange(document, diagnostic.id)
+				? this.findIdRange(document, text, diagnostic.id)
 				: FALLBACK_DIAGNOSTIC_RANGE;
 
 			return new vscode.Diagnostic(
@@ -228,12 +232,17 @@ export class DiagnosticProvider {
 	 * resolution would need parser-level position tracking.
 	 *
 	 * @param document VSCode document (used for offset→line/column conversion)
+	 * @param text     the document's text, as the caller already holds it
 	 * @param id       ID string to locate
 	 */
-	private findIdRange(document: vscode.TextDocument, id: string): vscode.Range {
+	private findIdRange(
+		document: vscode.TextDocument,
+		text: string,
+		id: string,
+	): vscode.Range {
 		const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 		const regex = new RegExp(`"id"\\s*:\\s*"${escapedId}"`);
-		const match = regex.exec(document.getText());
+		const match = regex.exec(text);
 
 		if (match) {
 			const startPos = document.positionAt(match.index);

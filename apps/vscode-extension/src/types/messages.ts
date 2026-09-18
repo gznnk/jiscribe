@@ -43,12 +43,14 @@ export type WebviewToExtensionMessage =
 	 */
 	| { type: "imageExportResult"; requestId: number; data: string | null }
 	/**
-	 * The canvas mounted and can now export an image. Sent once per (re)mount, the
-	 * first time a doc renders, so the Extension can reconcile a stale image left
-	 * by a hidden-tab save (#179): a save while the Webview was discarded falls
-	 * back to "old image + new source", and this lets the Extension re-render and
-	 * rewrite once the tab is visible again. Later document updates do not repeat
-	 * it — they say nothing new about this Webview's ability to export.
+	 * The canvas has rendered a document and can export an image. Sent after every
+	 * document the Webview adopts (the first after a (re)mount, and each update
+	 * after that), so the Extension can reconcile a stale image left by a
+	 * hidden-tab save (#179): a save while the Webview was discarded falls back to
+	 * "old image + new source", and this lets the Extension re-render and rewrite
+	 * once the tab is visible again. Repeats are harmless: the reconcile is a
+	 * no-op unless one is pending and the document is clean, and a repeat is what
+	 * gives a reconcile skipped while the document was dirty its next chance.
 	 */
 	| { type: "rendered" }
 	/**

@@ -40,7 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   way.** Each document sent to the canvas now carries the document's version,
   and each commit returns the version it was built on; a commit built before an
   external change the canvas has already been shown is dropped instead of
-  replacing that change. The window was widened by the commit scheduler, which
+  replacing that change, and a message says so, since that canvas edit is the
+  one that is lost. The window was widened by the commit scheduler, which
   delays a burst of edits into one commit.
 - **A hidden-tab save no longer rewrites the file while you have unsaved
   edits.** The repair that re-renders a stale image once the tab is visible
