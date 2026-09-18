@@ -1,6 +1,7 @@
 import {
 	buildFileApiUrl,
 	REVISION_HEADER,
+	REVISION_MISMATCH_STATUS,
 	SESSION_API_PATHNAME,
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
@@ -32,13 +33,6 @@ export async function fetchSessionToken(): Promise<string> {
 	}
 	return body.token;
 }
-
-/**
- * The status a write against a revision the file has moved on from comes back
- * as. Named after the HTTP condition rather than the JSON body, since the body
- * is only there to say why
- */
-const PRECONDITION_FAILED_STATUS = 412;
 
 /** How a write ended, short of an error */
 export type SaveFileResult =
@@ -113,7 +107,7 @@ export async function saveFile(
 		}
 		return { kind: "saved", revision: savedRevision };
 	}
-	if (response.status === PRECONDITION_FAILED_STATUS) {
+	if (response.status === REVISION_MISMATCH_STATUS) {
 		return { kind: "conflict" };
 	}
 	throw new Error(

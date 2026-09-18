@@ -15,7 +15,7 @@ import { unwatchFile, watchFile } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { WriteOpenFileOutcome } from "./httpServer";
+import type { WriteOpenFileOutcome } from "./canvasHostTypes";
 import { resolveWorkspacePathReal } from "./workspacePaths";
 import { writeFileAtomically } from "../atomicWrite";
 import { canvasParser } from "../canvasDefinitions";

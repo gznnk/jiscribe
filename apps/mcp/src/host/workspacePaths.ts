@@ -1,6 +1,8 @@
 import { realpath } from "node:fs/promises";
 import path from "node:path";
 
+import { isErrnoWithCode } from "../nodeErrors";
+
 /**
  * An error standing for a request to reach outside the workspace. The HTTP layer
  * maps it to 400
@@ -31,9 +33,6 @@ const isInsideRoot = (rootPath: string, targetPath: string): boolean => {
 	return comparableTarget.startsWith(comparableRoot + path.sep);
 };
 
-const isNodeErrorWithCode = (value: unknown, code: string): boolean =>
-	value instanceof Error && (value as NodeJS.ErrnoException).code === code;
-
 /**
  * Resolves the links out of a path whose last segments may not exist yet: the
  * deepest ancestor that does exist is resolved, and what is left is joined back on.
@@ -50,8 +49,8 @@ const realpathDeepestExisting = async (targetPath: string): Promise<string> => {
 			// ENOTDIR stands for an ancestor that is a file, which is as good a reason
 			// to keep walking up as a missing one
 			if (
-				!isNodeErrorWithCode(error, "ENOENT") &&
-				!isNodeErrorWithCode(error, "ENOTDIR")
+				!isErrnoWithCode(error, "ENOENT") &&
+				!isErrnoWithCode(error, "ENOTDIR")
 			) {
 				throw error;
 			}
@@ -108,8 +107,9 @@ export function resolveWorkspacePath(
  *   itself
  * @param relPath Path relative to the workspace root, `/`- or platform-separated.
  *   The file need not exist: the deepest ancestor that does is the one resolved
- * @returns The absolute path to open, which is the lexical one rather than the
- *   resolved one — a link inside the workspace keeps pointing at what it did
+ * @returns The absolute path to open: the lexical one, not the resolved one. A
+ *   write through atomicWrite then replaces a link at that path with a plain
+ *   file rather than following it (see writeFileAtomically)
  * @throws WorkspacePathError When either the path itself or where it leads is
  *   outside the workspace
  */

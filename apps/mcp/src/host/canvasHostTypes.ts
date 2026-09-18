@@ -141,7 +141,7 @@ export type CanvasHost = {
 export type CanvasHostOptions = {
 	/** The directory the file API is relative to (absolute path) */
 	workspaceRoot: string;
-	/** The port tried first (default 5190). While it is taken, steps one port up */
+	/** The port tried first (DEFAULT_PORT when omitted). While it is taken, steps one port up */
 	port?: number;
 	/**
 	 * With false, starting the host opens no browser and only the URL is returned;
@@ -166,20 +166,20 @@ export type CanvasHostOptions = {
 	onViewersGone?: () => void;
 	/**
 	 * The grace period between the last viewer leaving and onViewersGone being
-	 * called (milliseconds, default one hour). It covers a window a browser put to
+	 * called (milliseconds; the default is IDLE_SHUTDOWN_DELAY_MS, an hour). It covers a window a browser put to
 	 * sleep in the background, which reconnects only when a person returns to it,
 	 * so shorten it only when there is a reason not to wait (tests)
 	 */
 	idleShutdownDelayMs?: number;
 	/**
 	 * How long openFile waits for the windows to write out their buffered edits
-	 * before it switches file (milliseconds, default 3000). Shortening it only makes
+	 * before it switches file (milliseconds; the default is FLUSH_EDITS_TIMEOUT_MS). Shortening it only makes
 	 * sense where no window is going to answer at all (tests)
 	 */
 	flushEditsTimeoutMs?: number;
 	/**
 	 * How long openHeadlessViewer waits for the window it spawned to connect
-	 * (milliseconds, default 20000). Shortening it only makes sense where no
+	 * (milliseconds; the default is HEADLESS_CONNECT_TIMEOUT_MS). Shortening it only makes sense where no
 	 * browser is going to arrive at all (tests)
 	 */
 	headlessConnectTimeoutMs?: number;
@@ -200,3 +200,17 @@ export type CanvasHostOptions = {
 	 */
 	launchBrowser?: (url: string, browserOptions: BrowserOpenOptions) => void;
 };
+
+/** What became of a write the viewer sent (see the file mirror's writeOpenFile) */
+export type WriteOpenFileOutcome =
+	/** It landed, and this is the revision of what is now on disk */
+	| { kind: "written"; revision: string }
+	/** The path named is not the file on display, so nothing was written */
+	| { kind: "not-open" }
+	/**
+	 * The file no longer holds the revision the write names, so nothing was
+	 * written; the revision carried here is the one it holds now
+	 */
+	| { kind: "revision-mismatch"; revision: string }
+	/** The body is not a document the tools could load, so nothing was written */
+	| { kind: "invalid-doc"; message: string };

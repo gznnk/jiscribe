@@ -10,9 +10,11 @@ import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
 import { fetchSessionToken } from "./files";
-import { isCanvasHostServerMessage } from "./viewerFrameGuard";
 import type { CanvasHostClientMessage } from "../shared/canvasHostProtocol";
-import { HEADLESS_VIEWER_QUERY } from "../shared/canvasHostProtocol";
+import {
+	HEADLESS_VIEWER_QUERY,
+	isCanvasHostServerMessage,
+} from "../shared/canvasHostProtocol";
 import { SESSION_TOKEN_QUERY_PARAM } from "../shared/fileApiRoute";
 
 /**

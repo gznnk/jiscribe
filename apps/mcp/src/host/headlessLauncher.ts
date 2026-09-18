@@ -105,8 +105,9 @@ export const createHeadlessLauncher = (
 			onFailure: (reason) => {
 				launchFailure = reason;
 				// Nothing is coming, so the wait below is not left to run its
-				// full course. Only the headless open ever waits, so this cannot
-				// cut short a wait someone else started
+				// full course. open_canvas waits on the same waiters after a
+				// workspace switch, but the tool layer runs opens one at a time, so
+				// no wait of its own is in the air alongside this one
 				viewerRegistry.settleViewerWaiters(false);
 			},
 		});

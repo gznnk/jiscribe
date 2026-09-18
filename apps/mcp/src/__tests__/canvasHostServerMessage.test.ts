@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { isCanvasHostServerMessage } from "../viewer/viewerFrameGuard";
+import { isCanvasHostServerMessage } from "../shared/canvasHostProtocol";
 
 describe("isCanvasHostServerMessage", () => {
 	it.each([

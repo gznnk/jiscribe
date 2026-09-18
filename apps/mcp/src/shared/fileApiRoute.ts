@@ -53,3 +53,17 @@ export const SESSION_TOKEN_QUERY_PARAM = "token";
  */
 export const buildFileApiUrl = (relPath: string): string =>
 	`${FILE_API_PATHNAME}?${FILE_API_PATH_PARAM}=${encodeURIComponent(relPath)}`;
+
+/**
+ * The status a write gets when the file no longer holds the revision it names.
+ * The viewer branches on it (the newer text follows as a frame), so it is the one
+ * status both sides spell out
+ */
+export const REVISION_MISMATCH_STATUS = 412;
+
+/**
+ * The most a write may carry, and the most one WebSocket frame may weigh. A canvas
+ * is text and a capture a base64 PNG; neither comes near this, and what the cap
+ * stops is a request buffered in full before anyone looks at it
+ */
+export const MAX_WRITE_BODY_BYTES = 16 * 1024 * 1024;

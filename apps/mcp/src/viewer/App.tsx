@@ -37,7 +37,7 @@ import { createDocImageResolver } from "./resolveDocImage";
 import { useCanvasHostSocket } from "./useCanvasHostSocket";
 import { useDocSync } from "./useDocSync";
 import { viewerTheme } from "./viewerTheme";
-import { HEADLESS_VIEWER_QUERY } from "../shared/canvasHostProtocol";
+import { isHeadlessViewerSearch } from "../shared/canvasHostProtocol";
 
 /**
  * How long the transient notice stays up, fading in and back out included. The
@@ -77,10 +77,7 @@ const noticeStyle: CSSProperties = {
 const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
 
 /** Whether this window is the AI's eye rather than one a person is looking at */
-const isHeadlessWindow = window.location.search
-	.slice(1)
-	.split("&")
-	.includes(HEADLESS_VIEWER_QUERY);
+const isHeadlessWindow = isHeadlessViewerSearch(window.location.search);
 
 const EXTERNAL_URL_PATTERN = /^https?:\/\//i;
 

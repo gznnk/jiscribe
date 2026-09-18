@@ -32,21 +32,21 @@ import type {
 } from "./canvasHostTypes";
 import { createFileMirror } from "./fileMirror";
 import { createHeadlessLauncher } from "./headlessLauncher";
-import {
-	createViewerHttpServer,
-	isAllowedHostHeader,
-	isAllowedOrigin,
-} from "./httpServer";
+import { createViewerHttpServer } from "./httpServer";
 import { listenOnAvailablePort } from "./listenOnAvailablePort";
 import { openBrowser } from "./openBrowser";
+import { isAllowedHostHeader, isAllowedOrigin } from "./requestGuards";
 import { resolveViewerAssets } from "./viewerAssets";
 import { createViewerRegistry } from "./viewerRegistry";
 import { createViewerRequestBroker } from "./viewerRequestBroker";
 import {
-	HEADLESS_VIEWER_QUERY,
+	isHeadlessViewerSearch,
 	isCanvasHostClientMessage,
 } from "../shared/canvasHostProtocol";
-import { SESSION_TOKEN_QUERY_PARAM } from "../shared/fileApiRoute";
+import {
+	MAX_WRITE_BODY_BYTES,
+	SESSION_TOKEN_QUERY_PARAM,
+} from "../shared/fileApiRoute";
 
 export type {
 	CanvasHost,
@@ -68,18 +68,11 @@ const HANDLE_OP_TIMEOUT_MS = 15_000;
 
 /**
  * How long openFile waits for the windows to write out the edits they have
- * buffered before it moves to another file. It is the viewer's save debounce plus
- * one round trip of the write, with room to spare: overshooting costs a person's
- * last edit, while waiting too long only holds up a file switch nobody is watching
+ * buffered before it moves to another file. A window answers after one write round
+ * trip (plus one already in flight); the rest is room, since running out costs a
+ * person's last edit while waiting only holds up a file switch
  */
 export const FLUSH_EDITS_TIMEOUT_MS = 3_000;
-
-/**
- * The most a frame from a window may weigh. A capture comes back as a base64 PNG,
- * which is the only frame anywhere near this; ws would otherwise take 100MB of
- * whatever a page on this machine cares to send before looking at it
- */
-const MAX_WEBSOCKET_PAYLOAD_BYTES = 32 * 1024 * 1024;
 
 /**
  * Whether a window may be put on the user's screen. `JISCRIBE_MCP_NO_OPEN` is the
@@ -96,9 +89,19 @@ export const isBrowserOpeningAllowed = (): boolean =>
  * @returns The token as written, or null when the URL carries none
  */
 const readSessionTokenQuery = (requestUrl: string | undefined): string | null =>
-	new URL(requestUrl ?? "/", "http://localhost").searchParams.get(
-		SESSION_TOKEN_QUERY_PARAM,
-	);
+	new URLSearchParams(readSearch(requestUrl)).get(SESSION_TOKEN_QUERY_PARAM);
+
+/**
+ * The query of a request target, without its `?`. Done by hand rather than with
+ * URL, which throws on a target it cannot parse
+ *
+ * @param requestUrl The upgrade request's target, or undefined when it has none
+ */
+const readSearch = (requestUrl: string | undefined): string => {
+	const url = requestUrl ?? "";
+	const queryIndex = url.indexOf("?");
+	return queryIndex < 0 ? "" : url.slice(queryIndex + 1);
+};
 
 /**
  * Starts the canvas host. It brings up HTTP + WebSocket and opens the viewer in a
@@ -146,7 +149,8 @@ export async function startCanvasHost(
 	const webSocketServer = new WebSocketServer({
 		server,
 		path: "/ws",
-		maxPayload: MAX_WEBSOCKET_PAYLOAD_BYTES,
+		// ws would otherwise take 100MB from any page on this machine before looking
+		maxPayload: MAX_WRITE_BODY_BYTES,
 		verifyClient: ({ req }, done) => {
 			// The port the upgrade arrived on is this server's own, the same way the
 			// HTTP handler reads it
@@ -209,7 +213,7 @@ export async function startCanvasHost(
 	webSocketServer.on("connection", (socket, request) => {
 		viewerRegistry.register(
 			socket,
-			(request.url ?? "").includes(HEADLESS_VIEWER_QUERY),
+			isHeadlessViewerSearch(readSearch(request.url)),
 		);
 		socket.on("message", (data) => {
 			let frame: unknown;
@@ -322,19 +326,12 @@ export async function startCanvasHost(
 			// in leaves at the guard above
 			isClosed = true;
 			viewerRegistry.settleViewerWaiters(false);
-			// A headless window has nobody to close it, and cutting the socket first
-			// would only leave it reconnecting. The closeViewer frame is the way that
-			// works everywhere, so it goes before the teardown. Only the headless
-			// windows are asked: a window a person is looking at is left to reconnect
-			// to whatever host comes next, which is what a workspace switch relies on.
-			//
-			// The kill goes first because it is the one step with a deadline over it:
-			// the caller ends the process outright shortly after the waits here are due
-			// (FORCED_EXIT_DELAY_MS in index.ts), and a kill left behind them is never
-			// reached. Killing the child reaches the browser only when it is a local
-			// one. A Windows-side .exe spawned from WSL is reached through an interop
-			// proxy, and the kill takes the proxy while the browser lives on, which is
-			// why the frame still goes out
+			// Only the headless windows are asked to close: a person's window is left
+			// to reconnect to the next host, which a workspace switch relies on. The
+			// kill comes before any wait, since the process is ended outright shortly
+			// after the waits are due (FORCED_EXIT_DELAY_MS in index.ts); the frame
+			// still goes out because a Windows-side browser launched from WSL outlives
+			// the kill (it only takes the interop proxy)
 			if (headlessLauncher.killBrowser()) {
 				await viewerRegistry.closeSockets(viewerRegistry.openHeadlessSockets());
 			}

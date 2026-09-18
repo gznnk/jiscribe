@@ -16,7 +16,7 @@ export class CanvasFileError extends Error {}
  * The extensions a canvas document is allowed to carry. A path ending in none of
  * them is refused, so a tool given the wrong file never rewrites it as a canvas.
  */
-const CANVAS_FILE_EXTENSIONS = [
+export const CANVAS_FILE_EXTENSIONS = [
 	".jis",
 	".jis.json",
 	".jiscribe",

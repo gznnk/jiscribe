@@ -21,6 +21,15 @@ import type { AiHandleOp } from "@jiscribe/ai-tools";
  */
 export const HEADLESS_VIEWER_QUERY = "headless=1";
 
+/**
+ * Whether a URL's query marks a headless viewer. Read the same way on the page
+ * and on the upgrade request, so the two cannot disagree over a window.
+ *
+ * @param search The query string, with or without its leading `?`
+ */
+export const isHeadlessViewerSearch = (search: string): boolean =>
+	search.replace(/^\?/, "").split("&").includes(HEADLESS_VIEWER_QUERY);
+
 /** Server to viewer */
 export type CanvasHostServerMessage =
 	// Arrives right after connecting, and whenever the file to open changes
@@ -98,6 +107,48 @@ export function isCanvasHostClientMessage(
 				(value.imagePngBase64 === undefined ||
 					typeof value.imagePngBase64 === "string")
 			);
+		default:
+			return false;
+	}
+}
+
+/**
+ * Checks whether a received frame has the shape of a message from the canvas
+ * host. The mirror image of isCanvasHostClientMessage, for the page.
+ *
+ * @param value A frame that has already been through JSON.parse; anything that
+ *   failed to parse is the caller's to throw away. A doc frame without the
+ *   revision the next write has to quote is rejected along with the malformed
+ *   ones, since writing back without it is refused by the host anyway
+ */
+export function isCanvasHostServerMessage(
+	value: unknown,
+): value is CanvasHostServerMessage {
+	if (!isRecord(value)) {
+		return false;
+	}
+	switch (value.type) {
+		case "openCanvas":
+		case "docChanged":
+			return (
+				typeof value.relPath === "string" &&
+				typeof value.docText === "string" &&
+				typeof value.revision === "string"
+			);
+		case "docError":
+			return (
+				typeof value.relPath === "string" && typeof value.message === "string"
+			);
+		case "handleOpRequest":
+			return (
+				typeof value.requestId === "string" &&
+				typeof value.op === "object" &&
+				value.op !== null
+			);
+		case "flushEdits":
+			return typeof value.requestId === "string";
+		case "closeViewer":
+			return true;
 		default:
 			return false;
 	}

@@ -28,15 +28,20 @@ import { pipeline } from "node:stream";
 
 import { resolveDocImageMimeType } from "@jiscribe/doc";
 
+import type { WriteOpenFileOutcome } from "./canvasHostTypes";
+import { isAllowedHostHeader, isAllowedOrigin } from "./requestGuards";
 import {
 	resolveWorkspacePath,
 	resolveWorkspacePathReal,
 	WorkspacePathError,
 } from "./workspacePaths";
+import { isErrnoWithCode } from "../nodeErrors";
 import {
 	FILE_API_PATH_PARAM,
 	FILE_API_PATHNAME,
+	MAX_WRITE_BODY_BYTES,
 	REVISION_HEADER,
+	REVISION_MISMATCH_STATUS,
 	SESSION_API_PATHNAME,
 	SESSION_TOKEN_HEADER,
 } from "../shared/fileApiRoute";
@@ -52,127 +57,12 @@ const assetContentTypes: Record<string, string> = {
 	".ttf": "font/ttf",
 };
 
-/**
- * The names this server answers to. Everything else is a name that resolved to
- * 127.0.0.1 without being one of ours, which is what DNS rebinding looks like
- */
-const loopbackHostNames: readonly string[] = [
-	"localhost",
-	"127.0.0.1",
-	"[::1]",
-];
-
-/**
- * The most a write may carry. A canvas is text and nowhere near this, so the cap is
- * not a limit anyone meets by drawing; what it stops is a request that would be
- * buffered in full before it is looked at
- */
-const MAX_WRITE_BODY_BYTES = 16 * 1024 * 1024;
-
 /** Raised by readRequestBody, and answered with 413 */
 class RequestBodyTooLargeError extends Error {
 	constructor(maxBytes: number) {
 		super(`request body is larger than ${maxBytes} bytes`);
 		this.name = "RequestBodyTooLargeError";
 	}
-}
-
-/**
- * Splits a Host header into the name and the port written on it.
- *
- * @param hostHeader The header as it arrived, which for IPv6 carries the brackets
- * @returns The name (brackets kept) and the port as written, or null when the
- *   header is not a host at all — a malformed one reaches here as readily as a
- *   browser's does
- */
-const splitHostHeader = (
-	hostHeader: string,
-): { name: string; port: string | null } | null => {
-	if (hostHeader.startsWith("[")) {
-		const closingIndex = hostHeader.indexOf("]");
-		if (closingIndex < 0) {
-			return null;
-		}
-		const name = hostHeader.slice(0, closingIndex + 1);
-		const rest = hostHeader.slice(closingIndex + 1);
-		if (rest === "") {
-			return { name, port: null };
-		}
-		return rest.startsWith(":") ? { name, port: rest.slice(1) } : null;
-	}
-	const colonIndex = hostHeader.indexOf(":");
-	if (colonIndex < 0) {
-		return { name: hostHeader, port: null };
-	}
-	// A second colon means an IPv6 address written without its brackets, which is
-	// not a Host header any browser composes
-	if (hostHeader.includes(":", colonIndex + 1)) {
-		return null;
-	}
-	return {
-		name: hostHeader.slice(0, colonIndex),
-		port: hostHeader.slice(colonIndex + 1),
-	};
-};
-
-/**
- * Whether a request's Host header names this server itself.
- *
- * @param hostHeader The Host header as it arrived, or undefined when there is none
- *   (HTTP/1.1 requires one, so a request without it is refused)
- * @param listeningPort The port the request arrived on. A Host header carrying any
- *   other port is refused; one carrying no port at all is taken as this server
- * @returns Whether the request may be answered
- */
-export function isAllowedHostHeader(
-	hostHeader: string | undefined,
-	listeningPort: number,
-): boolean {
-	if (hostHeader === undefined) {
-		return false;
-	}
-	const parsed = splitHostHeader(hostHeader);
-	if (parsed === null) {
-		return false;
-	}
-	if (!loopbackHostNames.includes(parsed.name.toLowerCase())) {
-		return false;
-	}
-	return parsed.port === null || parsed.port === String(listeningPort);
-}
-
-/**
- * Whether an Origin header is this server's own origin.
- *
- * @param originHeader The Origin header as it arrived. A page always sends one on a
- *   write and on a WebSocket, so an absent one stands for a client that is not a
- *   browser (curl, a test) and is left to the caller to allow
- * @param listeningPort The port the request arrived on, which the origin has to
- *   name (a bare `http://localhost` counts as port 80)
- * @returns Whether the origin is this server's own
- */
-export function isAllowedOrigin(
-	originHeader: string,
-	listeningPort: number,
-): boolean {
-	let originUrl: URL;
-	try {
-		originUrl = new URL(originHeader);
-	} catch {
-		return false;
-	}
-	if (originUrl.protocol !== "http:") {
-		return false;
-	}
-	// URL drops the brackets an IPv6 host is written with, so it is compared under
-	// the same spelling the allowlist uses
-	const name =
-		originUrl.hostname === "::1" ? "[::1]" : originUrl.hostname.toLowerCase();
-	if (!loopbackHostNames.includes(name)) {
-		return false;
-	}
-	const originPort = originUrl.port === "" ? 80 : Number(originUrl.port);
-	return originPort === listeningPort;
 }
 
 const sendJson = (
@@ -186,19 +76,12 @@ const sendJson = (
 	response.end(JSON.stringify(body));
 };
 
-/** Whether the error is a node one carrying this errno code (ENOENT and the like) */
-const hasErrorCode = (
-	value: unknown,
-	code: string,
-): value is NodeJS.ErrnoException =>
-	value instanceof Error && (value as NodeJS.ErrnoException).code === code;
-
 const sendApiError = (response: http.ServerResponse, error: unknown): void => {
 	if (error instanceof WorkspacePathError) {
 		sendJson(response, 400, { error: error.message });
 		return;
 	}
-	if (hasErrorCode(error, "ENOENT") || hasErrorCode(error, "ENOTDIR")) {
+	if (isErrnoWithCode(error, "ENOENT") || isErrnoWithCode(error, "ENOTDIR")) {
 		sendJson(response, 404, { error: "not found" });
 		return;
 	}
@@ -224,7 +107,7 @@ const pipeFileToResponse = (
 		if (
 			error !== null &&
 			error !== undefined &&
-			!hasErrorCode(error, "ERR_STREAM_PREMATURE_CLOSE")
+			!isErrnoWithCode(error, "ERR_STREAM_PREMATURE_CLOSE")
 		) {
 			console.error(`Failed to serve ${file}: ${String(error)}`);
 		}
@@ -323,7 +206,7 @@ const handleWriteFile = async (
 	if (outcome.kind === "revision-mismatch") {
 		// The current revision goes back with the refusal, so the viewer can tell
 		// what it is now behind and reload rather than ask again
-		sendJson(response, 412, {
+		sendJson(response, REVISION_MISMATCH_STATUS, {
 			error: `the file has changed since revision ${ifMatch}`,
 			revision: outcome.revision,
 		});
@@ -409,20 +292,6 @@ const serveAsset = async (
 		sendJson(response, 404, { error: "not found" });
 	}
 };
-
-/** What became of a write the viewer sent (see ViewerHttpServerOptions.writeOpenFile) */
-export type WriteOpenFileOutcome =
-	/** It landed, and this is the revision of what is now on disk */
-	| { kind: "written"; revision: string }
-	/** The path named is not the file on display, so nothing was written */
-	| { kind: "not-open" }
-	/**
-	 * The file no longer holds the revision the write names, so nothing was
-	 * written; the revision carried here is the one it holds now
-	 */
-	| { kind: "revision-mismatch"; revision: string }
-	/** The body is not a document the tools could load, so nothing was written */
-	| { kind: "invalid-doc"; message: string };
 
 export type ViewerHttpServerOptions = {
 	/**

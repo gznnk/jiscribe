@@ -31,6 +31,8 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { isErrnoWithCode } from "../nodeErrors";
+
 /** Where a headless Chromium is told to keep its profile, in the forms it can need */
 export type HeadlessProfilePaths = {
 	/** For a browser that reads a path the way this process does (absolute) */
@@ -125,7 +127,7 @@ export const probeWindowsTempDir = (): WindowsTempOutcome => {
 	if (echoed.error !== undefined) {
 		// No cmd.exe at all is the ordinary state of a machine that is not WSL, and
 		// reads as a broken probe unless it is said plainly
-		if ("code" in echoed.error && echoed.error.code === "ENOENT") {
+		if (isErrnoWithCode(echoed.error, "ENOENT")) {
 			return {
 				ok: false,
 				reason:
@@ -217,10 +219,7 @@ const isProcessAlive = (pid: number): boolean => {
 	} catch (error) {
 		// Only "no such process" says it is gone; EPERM is a process this user is
 		// not allowed to signal, which is a process all the same
-		return !(
-			error instanceof Error &&
-			(error as NodeJS.ErrnoException).code === "ESRCH"
-		);
+		return !isErrnoWithCode(error, "ESRCH");
 	}
 };
 

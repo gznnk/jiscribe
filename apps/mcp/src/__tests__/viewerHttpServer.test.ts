@@ -24,10 +24,8 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-	createViewerHttpServer,
-	type WriteOpenFileOutcome,
-} from "../host/httpServer";
+import type { WriteOpenFileOutcome } from "../host/canvasHostTypes";
+import { createViewerHttpServer } from "../host/httpServer";
 import {
 	REVISION_HEADER,
 	SESSION_API_PATHNAME,

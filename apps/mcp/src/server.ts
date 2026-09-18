@@ -33,6 +33,7 @@ import {
 	loadCanvasFile,
 	readCanvasFileText,
 	saveCanvasFile,
+	CANVAS_FILE_EXTENSIONS,
 	toCanvasFilePath,
 } from "./canvasStore";
 import { formatDiagnostics } from "./diagnosticReport";
@@ -61,7 +62,7 @@ import { createPathLock } from "./pathLock";
  *      instead, so the AI gets its eye without anything appearing on screen
  *    - `close_canvas`: closes that window and folds the server up too. A person
  *      closing the window ends up in the same place (the host is folded up once
- *      the last window is gone)
+ *      the last window is gone and none has come back within the grace period)
  *    - `diagnose_canvas`: validation, plus diagnosis of drawing problems such
  *      as overflow
  *    - `measure_text`: without holding a diagram, measures whether a string fits
@@ -159,7 +160,7 @@ type DrawingGuide = keyof typeof DRAWING_GUIDE_SPECIFIERS;
  */
 const SERVER_INSTRUCTIONS = [
 	"Jiscribe draws diagrams as .jis files. The file on disk is the single source of truth: no canvas state is kept in the tools, so anything not written to a file does not exist.",
-	"Every document tool takes an absolute `path` naming the file it acts on. There is no concept of a currently open document, and a tool that only reads does not write the file back.",
+	`Every document tool takes an absolute \`path\` naming the file it acts on, and the file has to be a canvas file: ${CANVAS_FILE_EXTENSIONS.join(", ")}. There is no concept of a currently open document, and a tool that only reads does not write the file back.`,
 	"An image shape is the one path that is not absolute: its `src` is read relative to the .jis file's own directory and cannot leave it, so the image file has to be somewhere under the diagram's own directory before you point at it.",
 	"`open_canvas` puts a file in a viewer: a window the user watches and can edit by hand, or a window-less one with `headless: true`. The 16 tools for capture, camera, selection and on-screen measurement have nothing to work with until a viewer is connected, so call it first; everything else works without one.",
 	"`diagnose_canvas` is the only validation entry point. Give it a path and it reports schema, parser and text-overflow problems; run it before telling the user a diagram is finished.",
@@ -183,8 +184,8 @@ export function createJiscribeMcpServer(): McpServer {
 	);
 
 	// The viewer is started only when open_canvas is first called, and reused after
-	// that. Its lifetime follows the windows: once the last one closes it is folded
-	// up and the port given back
+	// that. Its lifetime follows the windows: once the last one closes and none
+	// comes back within the grace period it is folded up and the port given back
 	let host: CanvasHost | null = null;
 
 	// The client going away has to take the host with it. The HTTP server keeps the
@@ -561,12 +562,12 @@ export function createJiscribeMcpServer(): McpServer {
 						.number()
 						.min(0)
 						.optional()
-						.describe("Width in px (default 160)."),
+						.describe(`Width in px (default ${DEFAULT_RECT_WIDTH}).`),
 					height: z
 						.number()
 						.min(0)
 						.optional()
-						.describe("Height in px (default 80)."),
+						.describe(`Height in px (default ${DEFAULT_RECT_HEIGHT}).`),
 					text: z
 						.string()
 						.optional()
@@ -576,7 +577,7 @@ export function createJiscribeMcpServer(): McpServer {
 		},
 		async ({ path, ...params }) =>
 			runTool(async () => {
-				// Fill in the tool's default 160x80 at the boundary, rather than falling
+				// Fill in the tool's own defaults at the boundary, rather than falling
 				// through to addObject's factory defaults.
 				const outcome = await applyDocOpToFile(path, {
 					kind: "addObject",
@@ -605,12 +606,12 @@ export function createJiscribeMcpServer(): McpServer {
 						.number()
 						.min(0)
 						.optional()
-						.describe("X radius in px (default 80)."),
+						.describe(`X radius in px (default ${DEFAULT_ELLIPSE_RX}).`),
 					ry: z
 						.number()
 						.min(0)
 						.optional()
-						.describe("Y radius in px (default 50)."),
+						.describe(`Y radius in px (default ${DEFAULT_ELLIPSE_RY}).`),
 					text: z
 						.string()
 						.optional()

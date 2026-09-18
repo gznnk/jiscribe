@@ -5,15 +5,10 @@
 import type http from "node:http";
 
 import { CanvasHostError } from "./canvasHostError";
+import { isErrnoWithCode } from "../nodeErrors";
 
 /** How many times to step one port up when the port is already in use */
 const PORT_ATTEMPT_COUNT = 20;
-
-const isAddressInUseError = (error: unknown): boolean =>
-	typeof error === "object" &&
-	error !== null &&
-	"code" in error &&
-	(error as { code?: unknown }).code === "EADDRINUSE";
 
 /**
  * Tries to listen until a free port is found.
@@ -34,7 +29,7 @@ export const listenOnAvailablePort = async (
 		const isListening = await new Promise<boolean>((resolve, reject) => {
 			const handleError = (error: unknown): void => {
 				server.removeListener("listening", handleListening);
-				if (isAddressInUseError(error)) {
+				if (isErrnoWithCode(error, "EADDRINUSE")) {
 					resolve(false);
 					return;
 				}
