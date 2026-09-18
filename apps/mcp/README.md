@@ -49,9 +49,12 @@ file and mirrors it into the viewer. When a person moves or retypes something in
 the viewer, it is written back, so the next read shows what they changed. No
 canvas state is kept in the tools themselves.
 
-Every path a tool takes is absolute. The one exception is an `image` shape's
-`src`, which is relative to the directory its `.jis` lives in and cannot climb
-out of it — so a drawing and the pictures it names travel together.
+Every path a tool takes is absolute and names a canvas file (`.jis`, or the
+longer `.jis.json` / `.jiscribe` / `.jiscribe.json`); anything else is refused,
+so a tool can never rewrite a file of another kind. The one exception is an
+`image` shape's `src`, which is relative to the directory its `.jis` lives in
+and cannot climb out of it — so a drawing and the pictures it names travel
+together.
 
 Three families of tools, 69 in all:
 
@@ -77,9 +80,10 @@ to be edited directly rather than through these tools.
 ## The viewer
 
 `open_canvas` starts an HTTP + WebSocket host inside the MCP process (on
-`127.0.0.1`, port 5190, stepping up one at a time if taken, as far as 5209) and opens a Chromium
-app-mode window — no tabs, no address bar. It falls back to the default browser
-when no Chromium is found.
+`127.0.0.1`, port 5190, stepping up one at a time if taken, as far as 5209; the
+URL it returns names that address) and opens a Chromium app-mode window — no
+tabs, no address bar. It falls back to the default browser when no Chromium is
+found.
 
 - `JISCRIBE_MCP_BROWSER` — `tab` (or `default`) for the default browser, or the
   name or path of an executable to use in app mode and headless mode
@@ -94,22 +98,24 @@ a page on another origin is refused too, and both carry a per-host session
 token the page fetches from `/api/session` (a window left over from a host
 that served another directory on the same port cannot write into this one).
 The file API writes only the file on display and reads only the images a
-diagram points at, never a path outside the diagram's directory, symbolic
-links included. Every write names the revision the window last synced
-(`If-Match`, the SHA-256 the host put on the `openCanvas` / `docChanged`
-frame) and goes through the same per-file lock the tools use, so a person's
-save and the AI's write cannot overwrite each other unnoticed: a save behind
-the file is refused with 412 and the window shows the newer document instead.
-The URL the host returns is `http://127.0.0.1:<port>`, the address it binds.
+diagram points at (reads check the `Host` alone, since a page elsewhere can
+embed such an image but not read it), never a path outside the diagram's
+directory, symbolic links included. Every write is parsed as a canvas document
+first, names the revision the window last synced (`If-Match`, the SHA-256 the
+host put on the `openCanvas` / `docChanged` frame) and goes through the same
+per-file lock the tools use, so a person's save and the AI's write cannot
+overwrite each other unnoticed: a save behind the file is refused with 412 and
+the window shows the newer document instead.
 
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
 16 screen-side tools have something to work with while the user's screen stays
 as it was. It names a Chromium executable directly and never falls back to a
 tab, since no default browser has a headless mode; with none installed the tool
 says so rather than leaving the AI blind. It runs on a throwaway profile in a
-temporary directory, removed when the window goes, so it never contends with the
-browser the user already has open — and carries none of their extensions,
-sessions or history. Under WSL, where the browser is a Windows-side one, that
+temporary directory the host creates for it, removed when the window goes (and
+swept on the next launch if a killed server left it behind), so it never
+contends with the browser the user already has open — and carries none of their
+extensions, sessions or history. Under WSL, where the browser is a Windows-side one, that
 directory is this user's Windows `TEMP`, which Windows itself is asked for; if it
 cannot be had, those browsers are left out of the attempt and the tool says why,
 rather than falling back to a profile someone else on the machine can reach. A viewer that is already connected,

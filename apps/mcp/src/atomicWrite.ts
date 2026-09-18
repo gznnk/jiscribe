@@ -10,10 +10,10 @@ import { basename, dirname, join } from "node:path";
  * either the old contents or the new ones. Overwriting directly with `writeFile`
  * can be read at whatever length it has reached mid-write.
  *
- * What this guards is not what pathLock (src/pathLock.ts) guards. That one
- * prevents tools from cutting in on each other, and the host's file watcher and
- * outside editors do not go through it. This one holds for every reader, by
- * whichever route.
+ * What this guards is not what pathLock (src/pathLock.ts) guards. That one keeps
+ * the tools' writes and the viewer's from cutting in on each other, and the host's
+ * file watcher and outside editors do not go through it. This one holds for every
+ * reader, by whichever route.
  *
  * The temporary file is given a name starting with a dot, and is removed when the
  * write fails. It is left behind only when the process is killed, and that

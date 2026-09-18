@@ -35,7 +35,11 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
   `diagnose_canvas` refused the same argument. All of them now require an
   absolute path naming a `.jis` / `.jis.json` / `.jiscribe` /
   `.jiscribe.json` file, so a tool can no longer be talked into creating or
-  overwriting a file of another kind.
+  overwriting a file of another kind. **This is a breaking change**: a prompt
+  or client that passed a relative path, or a file not named that way, is
+  refused.
+- The viewer's write is parsed as a canvas document before it lands, the way
+  the tools' writes are, and refused with 422 otherwise.
 - A malformed `Host` header no longer takes the MCP process down (the URL was
   built outside the handler's error path). The temporary file an atomic write
   goes through is created with the destination's own mode rather than the
@@ -65,7 +69,11 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
   likewise waits for a write already in flight.
 - **Switching to a file in another directory no longer opens a second
   window.** The window the previous host had reconnects on its own, so the new
-  host waits for it before deciding to open one.
+  host waits for it before deciding to open one, visible or headless.
+- **Opening a second new file in the same directory left the viewer on the
+  first.** Two freshly created files hold the same empty canvas, and the viewer
+  took the second's text for the echo of its own save; from then on its saves
+  named the first file and were refused. It now checks the file name as well.
 - **A person's save and the AI's write no longer overwrite each other
   unnoticed.** The viewer's write carried no version and bypassed the lock
   the tools take, so whichever landed last won and the other edit vanished.
@@ -81,8 +89,8 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 - The viewer keeps its window when the canvas throws while drawing (a headless
   one closes itself, since nobody can see the message), refuses to save while
   the file on disk does not parse (an outside editor mid-edit would have been
-  overwritten with the last good document), and draws its error bar and file
-  label in the canvas theme's colours instead of a fixed dark scheme.
+  overwritten with the last good document), and draws its error bar in the
+  canvas theme's colours instead of a fixed dark scheme.
 - The URL `open_canvas` returns is `http://127.0.0.1:<port>`, the address the
   host binds, rather than `localhost`.
 - The throwaway profile a headless browser runs on is created by the host
@@ -94,6 +102,9 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ### Changed
 
+- **A viewer window left open from 0.10.0 or earlier cannot reconnect to this
+  release.** It carries neither the session token nor the revision the host now
+  demands. Close it; `open_canvas` opens a new one.
 - **The host waits an hour, not five seconds, for a viewer to come back.** A
   browser puts a window left in the background to sleep and the page reconnects
   only when the person returns to it; by then the host had shut down and the
