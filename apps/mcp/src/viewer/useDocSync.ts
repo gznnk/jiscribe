@@ -13,11 +13,10 @@
 
 import type { CanvasDoc } from "@jiscribe/canvas";
 import { useCallback, useRef, useState } from "react";
-import type { RefObject } from "react";
 
 import { canvasParser } from "./canvasPlugins";
 import { saveFile, type SaveFileResult } from "./files";
-import { isOwnEcho } from "./ownEcho";
+import { isOwnEcho, type DocIdentity } from "./ownEcho";
 
 /**
  * How long to wait after the edits settle before writing out. Writing on every
@@ -59,12 +58,6 @@ const formatParseError = (
 };
 
 export type DocSyncOptions = {
-	/**
-	 * The token the socket picked up on its last connect, read at write time
-	 * rather than held, since a reconnect to a restarted host brings a new one.
-	 * null stands for a page that has not reached the host yet
-	 */
-	sessionTokenRef: RefObject<string | null>;
 	/** Puts a message in the error bar, or clears it with null */
 	reportError: (message: string | null) => void;
 };
@@ -72,15 +65,19 @@ export type DocSyncOptions = {
 export type DocSync = {
 	/** The doc to draw. A new object on every incoming frame and every edit */
 	doc: CanvasDoc;
-	/** Workspace-relative path of the open file, null before one has arrived */
-	openPath: string | null;
+	/**
+	 * The document drawn — its file and the host it came from — null before one has
+	 * arrived. Writes go back to that host alone, under its token
+	 */
+	openDoc: DocIdentity | null;
 	/**
 	 * Takes in an openCanvas or docChanged frame. Text equal to what the host is
-	 * known to hold is this page's own write coming back: only the revision is
-	 * taken from it, so that the canvas is not redrawn under the person's hands
+	 * known to hold for the same document is this page's own write coming back:
+	 * only the revision is taken from it, so that the canvas is not redrawn under
+	 * the person's hands
 	 */
 	applyIncomingDoc: (
-		relPath: string,
+		identity: DocIdentity,
 		docText: string,
 		revision: string,
 	) => void;
@@ -98,20 +95,16 @@ export type DocSync = {
 /**
  * Holds the doc the canvas draws and keeps it and the file in step.
  *
- * @param options Where the session token is read from at write time, and where a
- *   failure goes on screen
- * @returns The doc and the open path to draw with, the way an incoming frame goes
+ * @param options Where a failure goes on screen
+ * @returns The doc and the document it belongs to, to draw with, the way an incoming frame goes
  *   in, and the two ways a person's edits reach the file (on commit, flushed)
  */
-export function useDocSync({
-	sessionTokenRef,
-	reportError,
-}: DocSyncOptions): DocSync {
+export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 	const [doc, setDoc] = useState<CanvasDoc>(emptyDoc);
-	const [openPath, setOpenPath] = useState<string | null>(null);
+	const [openDoc, setOpenDoc] = useState<DocIdentity | null>(null);
 
 	const latestDocRef = useRef<CanvasDoc>(emptyDoc);
-	const openPathRef = useRef<string | null>(null);
+	const openDocRef = useRef<DocIdentity | null>(null);
 	// The last text known to be the same here as on the host. Kept so a save's echo
 	// does not cause a redraw
 	const syncedTextRef = useRef<string | null>(null);
@@ -132,12 +125,12 @@ export function useDocSync({
 	const hasUnexplainedConflictRef = useRef(false);
 
 	const applyIncomingDoc = useCallback(
-		(relPath: string, docText: string, revision: string): void => {
+		(identity: DocIdentity, docText: string, revision: string): void => {
 			if (
 				isOwnEcho(
-					{ relPath, docText },
+					{ identity, docText },
 					{
-						openPath: openPathRef.current,
+						identity: openDocRef.current,
 						syncedText: syncedTextRef.current,
 					},
 				)
@@ -156,9 +149,9 @@ export function useDocSync({
 			brokenFileErrorRef.current = null;
 			syncedTextRef.current = docText;
 			revisionRef.current = revision;
-			openPathRef.current = relPath;
+			openDocRef.current = identity;
 			latestDocRef.current = result.doc;
-			setOpenPath(relPath);
+			setOpenDoc(identity);
 			setDoc(result.doc);
 			if (hasUnexplainedConflictRef.current) {
 				hasUnexplainedConflictRef.current = false;
@@ -174,15 +167,19 @@ export function useDocSync({
 	 * saveNow calls it, which is what keeps two writes from being in the air at once
 	 */
 	const writeCurrentDoc = useCallback(async (): Promise<boolean> => {
-		const targetPath = openPathRef.current;
-		if (targetPath === null) {
+		// Written back to the host the doc came from, under that host's token: a
+		// page that has reconnected to another host holds a token for that one before
+		// that host's document has arrived, and quoting it would land this doc in a
+		// file of the same name there
+		const targetDoc = openDocRef.current;
+		if (targetDoc === null) {
 			return false;
 		}
 		const revision = revisionRef.current;
 		if (revision === null) {
 			// Both are set from the same frame, so this cannot be reached through the
 			// host's protocol
-			throw new Error(`no revision is known for ${targetPath}`);
+			throw new Error(`no revision is known for ${targetDoc.relPath}`);
 		}
 		if (brokenFileErrorRef.current !== null) {
 			reportError(brokenFileErrorRef.current);
@@ -208,9 +205,9 @@ export function useDocSync({
 		let result: SaveFileResult;
 		try {
 			result = await saveFile(
-				targetPath,
+				targetDoc.relPath,
 				text,
-				sessionTokenRef.current,
+				targetDoc.sessionToken,
 				revision,
 			);
 		} catch (error) {
@@ -235,7 +232,7 @@ export function useDocSync({
 		hasUnexplainedConflictRef.current = false;
 		reportError(null);
 		return true;
-	}, [reportError, sessionTokenRef]);
+	}, [reportError]);
 
 	const saveNow = useCallback(async (): Promise<boolean> => {
 		const precedingSave = inFlightSaveRef.current;
@@ -284,7 +281,7 @@ export function useDocSync({
 
 	return {
 		doc,
-		openPath,
+		openDoc,
 		applyIncomingDoc,
 		handleCommit,
 		flushPendingSave,

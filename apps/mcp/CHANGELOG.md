@@ -79,6 +79,14 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
   first.** Two freshly created files hold the same empty canvas, and the viewer
   took the second's text for the echo of its own save; from then on its saves
   named the first file and were refused. It now checks the file name as well.
+- **Ctrl+Z after switching to a same-named file in another directory no
+  longer writes the previous file into it.** The viewer knew a document by its
+  path relative to the directory served, which a file of the same name in
+  another directory shares, so the canvas kept the previous file's undo
+  history and an undo wrote that file's content over the new one. A document
+  is now also known by the host that sent it (its session token), and the
+  viewer writes it back to that host alone; a reconnect to the same host keeps
+  the history.
 - **A person's save and the AI's write no longer overwrite each other
   unnoticed.** The viewer's write carried no version and bypassed the lock
   the tools take, so whichever landed last won and the other edit vanished.

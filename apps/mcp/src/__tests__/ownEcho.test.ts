@@ -1,15 +1,41 @@
 import { describe, expect, it } from "vitest";
 
-import { isOwnEcho } from "../viewer/ownEcho";
+import { calcDocLoadId, isOwnEcho, type DocIdentity } from "../viewer/ownEcho";
 
 const emptyDocText = '{"version":1,"root":[]}\n';
+
+/** A file as the first host names it */
+const firstHostDoc: DocIdentity = {
+	sessionToken: "first-host",
+	relPath: "a.jis.json",
+};
+
+/**
+ * A file of the same name in another directory, which a host of its own serves
+ * (the host restarts on the new directory)
+ */
+const secondHostDoc: DocIdentity = {
+	sessionToken: "second-host",
+	relPath: "a.jis.json",
+};
 
 describe("isOwnEcho", () => {
 	it("recognises the synced text coming back for the synced file", () => {
 		expect(
 			isOwnEcho(
-				{ relPath: "a.jis.json", docText: emptyDocText },
-				{ openPath: "a.jis.json", syncedText: emptyDocText },
+				{ identity: firstHostDoc, docText: emptyDocText },
+				{ identity: firstHostDoc, syncedText: emptyDocText },
+			),
+		).toBe(true);
+	});
+
+	it("still recognises it after a reconnect to the same host", () => {
+		// The frame after a dropped connection is a fresh object from the same host;
+		// it has to stay the same document, or an edit held through the drop is lost
+		expect(
+			isOwnEcho(
+				{ identity: { ...firstHostDoc }, docText: emptyDocText },
+				{ identity: firstHostDoc, syncedText: emptyDocText },
 			),
 		).toBe(true);
 	});
@@ -19,8 +45,23 @@ describe("isOwnEcho", () => {
 		// has to move the page to it rather than keep the first's path
 		expect(
 			isOwnEcho(
-				{ relPath: "b.jis.json", docText: emptyDocText },
-				{ openPath: "a.jis.json", syncedText: emptyDocText },
+				{
+					identity: { ...firstHostDoc, relPath: "b.jis.json" },
+					docText: emptyDocText,
+				},
+				{ identity: firstHostDoc, syncedText: emptyDocText },
+			),
+		).toBe(false);
+	});
+
+	it("does not take a same-named file from another host for an echo", () => {
+		// The same text and the same relative path, but another directory: taking it
+		// for an echo would keep the previous file's doc, and the next save would
+		// write it into this one
+		expect(
+			isOwnEcho(
+				{ identity: secondHostDoc, docText: emptyDocText },
+				{ identity: firstHostDoc, syncedText: emptyDocText },
 			),
 		).toBe(false);
 	});
@@ -28,8 +69,8 @@ describe("isOwnEcho", () => {
 	it("does not take a different text for an echo", () => {
 		expect(
 			isOwnEcho(
-				{ relPath: "a.jis.json", docText: '{"version":1,"root":[{}]}\n' },
-				{ openPath: "a.jis.json", syncedText: emptyDocText },
+				{ identity: firstHostDoc, docText: '{"version":1,"root":[{}]}\n' },
+				{ identity: firstHostDoc, syncedText: emptyDocText },
 			),
 		).toBe(false);
 	});
@@ -37,9 +78,34 @@ describe("isOwnEcho", () => {
 	it("treats nothing as an echo before anything has been synced", () => {
 		expect(
 			isOwnEcho(
-				{ relPath: "a.jis.json", docText: emptyDocText },
-				{ openPath: null, syncedText: null },
+				{ identity: firstHostDoc, docText: emptyDocText },
+				{ identity: null, syncedText: null },
 			),
 		).toBe(false);
+	});
+});
+
+describe("calcDocLoadId", () => {
+	it("keeps the load id across a reconnect to the same host", () => {
+		// A changed id drops the undo history, which a dropped network must not do
+		expect(calcDocLoadId({ ...firstHostDoc })).toBe(
+			calcDocLoadId(firstHostDoc),
+		);
+	});
+
+	it("changes the load id for a same-named file from another host", () => {
+		// The canvas's undo history belongs to the previous file; kept, Ctrl+Z would
+		// write that file's content into this one
+		expect(calcDocLoadId(secondHostDoc)).not.toBe(calcDocLoadId(firstHostDoc));
+	});
+
+	it("changes the load id for another file from the same host", () => {
+		expect(calcDocLoadId({ ...firstHostDoc, relPath: "b.jis.json" })).not.toBe(
+			calcDocLoadId(firstHostDoc),
+		);
+	});
+
+	it("gives no load id while nothing is open", () => {
+		expect(calcDocLoadId(null)).toBeUndefined();
 	});
 });

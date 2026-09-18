@@ -33,6 +33,7 @@ import type { CSSProperties } from "react";
 
 import { CanvasErrorBoundary } from "./CanvasErrorBoundary";
 import { CanvasSurface } from "./CanvasSurface";
+import { calcDocLoadId } from "./ownEcho";
 import { createDocImageResolver } from "./resolveDocImage";
 import { useCanvasHostSocket } from "./useCanvasHostSocket";
 import { useDocSync } from "./useDocSync";
@@ -95,15 +96,13 @@ export function App() {
 		message: string;
 	} | null>(null);
 
-	// The token of the host currently connected to: the socket picks it up, and the
-	// writes, which go over HTTP rather than this socket, quote it
-	const sessionTokenRef = useRef<string | null>(null);
 	const noticeTimerRef = useRef<number | null>(null);
 	const noticeCountRef = useRef(0);
 	const canvasHandleRef = useRef<CanvasHandle | null>(null);
 
-	const { doc, openPath, applyIncomingDoc, handleCommit, flushPendingSave } =
-		useDocSync({ sessionTokenRef, reportError: setErrorMessage });
+	const { doc, openDoc, applyIncomingDoc, handleCommit, flushPendingSave } =
+		useDocSync({ reportError: setErrorMessage });
+	const openPath = openDoc?.relPath ?? null;
 
 	// One resolver per open file: a src is relative to that file's directory
 	const resolveImage = useMemo(
@@ -200,7 +199,6 @@ export function App() {
 
 	const isConnected = useCanvasHostSocket({
 		isHeadlessWindow,
-		sessionTokenRef,
 		onDocFrame: applyIncomingDoc,
 		onDocError: handleDocError,
 		onCloseViewer: closeWindow,
@@ -274,7 +272,7 @@ export function App() {
 				<CanvasSurface
 					doc={doc}
 					relPath={openPath}
-					docLoadId={openPath ?? undefined}
+					docLoadId={calcDocLoadId(openDoc)}
 					isConnected={isConnected}
 					onCommit={handleCommit}
 					onOpenReference={handleOpenReference}

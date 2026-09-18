@@ -7,9 +7,9 @@
 
 import type { AiCanvasOpOutcome, AiHandleOp } from "@jiscribe/ai-tools";
 import { useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
 
 import { fetchSessionToken } from "./files";
+import type { DocIdentity } from "./ownEcho";
 import type { CanvasHostClientMessage } from "../shared/canvasHostProtocol";
 import {
 	HEADLESS_VIEWER_QUERY,
@@ -44,12 +44,15 @@ export type CanvasHostSocketOptions = {
 	 */
 	isHeadlessWindow: boolean;
 	/**
-	 * Where the token of the host currently connected to is left, for the writes
-	 * that do not go over this socket to quote. Written on every connect
+	 * An openCanvas or docChanged frame: the document to draw — its file and the
+	 * token of the host that sent it, which is what the write back has to quote —
+	 * its text and revision
 	 */
-	sessionTokenRef: RefObject<string | null>;
-	/** An openCanvas or docChanged frame: the file to draw, its text and revision */
-	onDocFrame: (relPath: string, docText: string, revision: string) => void;
+	onDocFrame: (
+		identity: DocIdentity,
+		docText: string,
+		revision: string,
+	) => void;
 	/** A file the host could not read, named separately from what it says */
 	onDocError: (relPath: string, message: string) => void;
 	/** A request to close this window. Nothing is sent back */
@@ -67,7 +70,7 @@ export type CanvasHostSocketOptions = {
  * Keeps this page attached to the canvas host for as long as it is mounted.
  *
  * @param options The handlers each frame is passed to, plus what this window is
- *   (headless or a person's) and where the session token is left. The handlers are
+ *   (headless or a person's). The handlers are
  *   read at frame time, so they may be fresh objects on every render — the socket
  *   is not reconnected over them
  * @returns Whether the socket is up, which is what the file label's badge shows
@@ -82,7 +85,7 @@ export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
 	});
 
 	useEffect(() => {
-		const { isHeadlessWindow, sessionTokenRef } = optionsRef.current;
+		const { isHeadlessWindow } = optionsRef.current;
 		let isDisposed = false;
 		let reconnectDelayMs = RECONNECT_BASE_DELAY_MS;
 		let reconnectTimer: number | null = null;
@@ -141,7 +144,6 @@ export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
 			if (isDisposed) {
 				return;
 			}
-			sessionTokenRef.current = sessionToken;
 			// The headless query goes on the socket as well as the page: it is how the
 			// host tells a window nobody can see from one a person is looking at
 			const openedSocket = new WebSocket(
@@ -171,7 +173,11 @@ export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
 				switch (frame.type) {
 					case "openCanvas":
 					case "docChanged":
-						handlers.onDocFrame(frame.relPath, frame.docText, frame.revision);
+						handlers.onDocFrame(
+							{ sessionToken, relPath: frame.relPath },
+							frame.docText,
+							frame.revision,
+						);
 						break;
 					case "docError":
 						handlers.onDocError(frame.relPath, frame.message);

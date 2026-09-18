@@ -105,7 +105,10 @@ first, names the revision the window last synced (`If-Match`, the SHA-256 the
 host put on the `openCanvas` / `docChanged` frame) and goes through the same
 per-file lock the tools use, so a person's save and the AI's write cannot
 overwrite each other unnoticed: a save behind the file is refused with 412 and
-the window shows the newer document instead.
+the window shows the newer document instead. The window knows a document by
+the host that sent it as well as by its path, so a file of the same name in
+another directory starts afresh — its undo history does not reach back into
+the previous file — while a reconnect to the same host keeps it.
 
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
 16 screen-side tools have something to work with while the user's screen stays
@@ -157,6 +160,7 @@ host serves `dist/client/` and refuses to start without it. What it covers is th
 half the vitest suite cannot see: the file being drawn, a tool's write reaching
 the page, a person's edit reaching the file, a second file taking the page over,
 the edits buffered in the page being written out before another file goes up,
+an undo that stays with its own file across a switch to another directory,
 `capture_canvas` answered by the drawn canvas, and a write refused for a file
 that moved on. The hosts take the usual port (5190 upwards), so nothing else may
 be serving a canvas while it runs.

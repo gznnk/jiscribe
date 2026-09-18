@@ -71,8 +71,9 @@ const readStringField = (value: unknown, field: string): string | null => {
  * @param relPath Path relative to the workspace root. A path leading outside, or
  *   one other than the file on display, is rejected by the server
  * @param text The text to write (the whole `.jis`)
- * @param sessionToken The token from `fetchSessionToken`. null stands for a page
- *   that has not reached the host yet, and the write is not even attempted
+ * @param sessionToken The token of the host the text was read from, as
+ *   `fetchSessionToken` got it. A host restarted since refuses it, so the write
+ *   cannot reach a file of the same name that another host now serves
  * @param revision The revision of the text this page last had from the host. The
  *   server writes only on a match, which is what keeps this write from landing on
  *   top of an edit made somewhere else in the meantime
@@ -85,12 +86,9 @@ const readStringField = (value: unknown, field: string): string | null => {
 export async function saveFile(
 	relPath: string,
 	text: string,
-	sessionToken: string | null,
+	sessionToken: string,
 	revision: string,
 ): Promise<SaveFileResult> {
-	if (sessionToken === null) {
-		throw new Error("the canvas host has not been reached yet");
-	}
 	const response = await fetch(buildFileApiUrl(relPath), {
 		method: "PUT",
 		headers: {
