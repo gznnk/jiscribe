@@ -62,9 +62,9 @@ type FrameObjectDocCommonParams = {
 
 	/**
 	 * Pass `false` for a shape whose body is a plain string only, drawn from its
-	 * source rather than from styled runs (see `ObjectDocDefinition.inlineTextStyle`).
+	 * source rather than from styled runs (see `ObjectDocDefinition.textRuns`).
 	 */
-	inlineTextStyle?: false;
+	textRuns?: false;
 
 	/** AI-facing description of the shape (see `ObjectDocDefinition.description`). */
 	description?: string;
@@ -138,7 +138,7 @@ export const createFrameObjectDoc = ({
 	extraKeys,
 	textRegion,
 	autoHeight,
-	inlineTextStyle,
+	textRuns,
 	description,
 	summary,
 	validateExtra,
@@ -155,7 +155,7 @@ export const createFrameObjectDoc = ({
 	factory: factory ?? createFrameObjectFactory(defaults, { supportsBounds }),
 	textRegion,
 	autoHeight,
-	inlineTextStyle,
+	textRuns,
 	description,
 	summary,
 	defaults,

@@ -3,7 +3,7 @@
 //
 // The tools themselves no longer write anything the schema rejects, so the
 // write that trips the check is forced: docOps is built with markdown's
-// `inlineTextStyle: false` taken back out, which is exactly how set_text_style
+// `textRuns: false` taken back out, which is exactly how set_text_style
 // used to leave a run array in a markdown body.
 
 import type { CanvasDocPlugin } from "@jiscribe/doc";
@@ -30,7 +30,7 @@ vi.mock("../canvasDefinitions", async (importActual) => {
 					...plugin,
 					objects: {
 						...plugin.objects,
-						markdown: { ...markdownDefinition, inlineTextStyle: undefined },
+						markdown: { ...markdownDefinition, textRuns: undefined },
 					},
 				};
 	});

@@ -20,7 +20,7 @@ export const markdownDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	autoHeight: false,
 	// The body is Markdown source: a run styled on its own would be flattened away
 	// by the renderer, and the schema holds `text` to a string.
-	inlineTextStyle: false,
+	textRuns: false,
 	// The schema $def is a handwritten template (nearly every property description
 	// is Markdown-specific), so only summary is consumed — it fills the generated
 	// doc tables.

@@ -640,9 +640,9 @@ function assertTemplateHeightRequirement(
 
 /**
  * Fail generation when a handwritten $def disagrees with the type's definition
- * about whether its text may be styled in part. The ops write rich-text runs into
- * a text that takes inline styling, so a template holding `text` to a plain
- * string has to be matched by `inlineTextStyle: false`, and the other way round.
+ * about whether its text may be held as runs. The ops write runs into a text that
+ * takes them, so a template holding `text` to a plain string has to be matched by
+ * `textRuns: false`, and the other way round.
  */
 function assertTemplateTextShape(
 	type: string,
@@ -656,10 +656,10 @@ function assertTemplateTextShape(
 		return;
 	}
 	const isPlainStringText = textProperty.type === "string";
-	const refusesInlineStyle = definition.inlineTextStyle === false;
-	if (isPlainStringText !== refusesInlineStyle) {
+	const refusesTextRuns = definition.textRuns === false;
+	if (isPlainStringText !== refusesTextRuns) {
 		throw new Error(
-			`The handwritten $def "${defName}" holds text to ${isPlainStringText ? "a plain string" : "rich text"}, but type "${type}" ${refusesInlineStyle ? "refuses" : "takes"} inline text styling (templates/handwrittenDefs.json, inlineTextStyle)`,
+			`The handwritten $def "${defName}" holds text to ${isPlainStringText ? "a plain string" : "rich text"}, but type "${type}" ${refusesTextRuns ? "refuses" : "takes"} text runs (templates/handwrittenDefs.json, textRuns)`,
 		);
 	}
 }

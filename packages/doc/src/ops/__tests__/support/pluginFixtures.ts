@@ -160,5 +160,5 @@ export const plainBodyDefinition: ObjectDocDefinition = {
 		height: 100,
 		text: "",
 	}),
-	inlineTextStyle: false,
+	textRuns: false,
 };
