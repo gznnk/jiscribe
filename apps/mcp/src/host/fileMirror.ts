@@ -17,7 +17,11 @@ import path from "node:path";
 
 import type { WriteOpenFileOutcome } from "./canvasHostTypes";
 import { resolveWorkspacePathReal } from "./workspacePaths";
-import { writeFileAtomically } from "../atomicWrite";
+import {
+	prepareAtomicWrite,
+	readFileSnapshot,
+	type FileSnapshot,
+} from "../atomicWrite";
 import { canvasParser } from "../canvasDefinitions";
 import { formatParseResult } from "../canvasStore";
 import { isErrnoWithCode } from "../nodeErrors";
@@ -50,6 +54,26 @@ const calcDocRevision = (docText: string): string =>
 const readFileIfExists = async (file: string): Promise<string | null> => {
 	try {
 		return await readFile(file, "utf8");
+	} catch (error) {
+		if (isErrnoWithCode(error, "ENOENT")) {
+			return null;
+		}
+		throw error;
+	}
+};
+
+/**
+ * Reads a file with the identity it was read under (see readFileSnapshot),
+ * answering null for one that does not exist. Any other failure is thrown, as
+ * readFileIfExists does.
+ *
+ * @param file The file to read (absolute path)
+ */
+const readSnapshotIfExists = async (
+	file: string,
+): Promise<FileSnapshot | null> => {
+	try {
+		return await readFileSnapshot(file);
 	} catch (error) {
 		if (isErrnoWithCode(error, "ENOENT")) {
 			return null;
@@ -287,23 +311,46 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 						workspaceRoot,
 						relPath,
 					);
-					// What the file holds is read rather than taken from lastKnownText: a
-					// tool's write is on disk before the watch (which polls) has told
-					// anyone, and comparing against what was last handed out would let
-					// this write land on top of it
-					const currentText = await readFileIfExists(resolvedFile);
-					// A file that is gone holds nothing this write could overwrite, so it
-					// is let through rather than refused over a revision there is none of
-					if (currentText !== null) {
-						const currentRevision = calcDocRevision(currentText);
-						if (ifMatch !== currentRevision) {
-							return { kind: "revision-mismatch", revision: currentRevision };
-						}
-					}
 					// The parent directory has already resolved inside the workspace, so it
 					// is safe to create
 					await mkdir(path.dirname(resolvedFile), { recursive: true });
-					await writeFileAtomically(resolvedFile, body);
+					// Written out in full before the revision is looked at, so that only a
+					// stat stands between the check and the rename
+					const prepared = await prepareAtomicWrite(resolvedFile, body);
+					try {
+						// What the file holds is read rather than taken from lastKnownText: a
+						// tool's write is on disk before the watch (which polls) has told
+						// anyone, and comparing against what was last handed out would let
+						// this write land on top of it
+						const snapshot = await readSnapshotIfExists(resolvedFile);
+						// A file that is gone holds nothing this write could overwrite, so it
+						// is let through rather than refused over a revision there is none of
+						if (snapshot !== null) {
+							const currentRevision = calcDocRevision(
+								snapshot.contents.toString("utf8"),
+							);
+							if (ifMatch !== currentRevision) {
+								return { kind: "revision-mismatch", revision: currentRevision };
+							}
+						}
+						// Our lock does not hold back a writer outside this process, which
+						// may have written the file since it was read. That write is kept
+						// and this one refused, as if it had been read in the first place
+						const isCommitted = await prepared.commitIfUnchanged(
+							snapshot?.identity ?? null,
+						);
+						if (!isCommitted) {
+							const changedText = await readFileIfExists(resolvedFile);
+							// A file removed meanwhile has no revision; that of an empty text
+							// stands in, which no document the viewer holds can carry
+							return {
+								kind: "revision-mismatch",
+								revision: calcDocRevision(changedText ?? ""),
+							};
+						}
+					} finally {
+						await prepared.abort();
+					}
 					// Recorded from the bytes that were written, so the watch reads its own
 					// write back as something already known and says nothing
 					const revision = recordKnownText(writtenText);

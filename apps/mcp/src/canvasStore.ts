@@ -3,7 +3,11 @@ import { basename, dirname, isAbsolute, resolve } from "node:path";
 
 import type { CanvasDoc, CanvasParseResult } from "@jiscribe/doc";
 
-import { writeFileAtomically } from "./atomicWrite";
+import {
+	prepareAtomicWrite,
+	readFileSnapshot,
+	type FileIdentity,
+} from "./atomicWrite";
 import { canvasParser } from "./canvasDefinitions";
 import { formatDiagnostics } from "./diagnosticReport";
 import { findIntroducedErrors } from "./introducedErrors";
@@ -113,6 +117,11 @@ export type LoadedCanvasFile = {
 	 * result against ({@link saveCanvasFile}).
 	 */
 	text: string;
+	/**
+	 * The file as it was when read. A write-back refuses to land once the file
+	 * has changed from it ({@link saveCanvasFile}).
+	 */
+	identity: FileIdentity;
 };
 
 /**
@@ -124,7 +133,18 @@ export type LoadedCanvasFile = {
  * file (appending to a broken doc would only spread how it is broken).
  */
 export async function loadCanvasFile(path: string): Promise<LoadedCanvasFile> {
-	const text = await readCanvasFileText(path);
+	const filePath = await toCanvasFilePath(path);
+
+	let text: string;
+	let identity: FileIdentity;
+	try {
+		const snapshot = await readFileSnapshot(filePath);
+		text = snapshot.contents.toString("utf8");
+		identity = snapshot.identity;
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		throw new CanvasFileError(`failed to read file: ${reason}`);
+	}
 
 	const result = canvasParser.parse(text);
 	if (result.kind !== "ok") {
@@ -133,7 +153,7 @@ export async function loadCanvasFile(path: string): Promise<LoadedCanvasFile> {
 		);
 	}
 
-	return { doc: result.doc, text };
+	return { doc: result.doc, text, identity };
 }
 
 /**
@@ -148,19 +168,26 @@ export async function loadCanvasFile(path: string): Promise<LoadedCanvasFile> {
  * a file only diagnose rejects (see findIntroducedErrors).
  *
  * The replacement is atomic (`./atomicWrite`), so the watching host and outside
- * editors never see it half written.
+ * editors never see it half written. A file written since it was loaded, by a
+ * writer that does not take our lock (an editor, another process), is not
+ * written over: the write is refused and that change kept. The check sits right
+ * before the rename and narrows the gap to it without closing it (see
+ * PreparedAtomicWrite.commitIfUnchanged).
  *
  * @param path Absolute path to write to, named as a canvas file
  *   ({@link toCanvasFilePath}). The parent directory is created when missing
  * @param doc The CanvasDoc to write out
- * @param loadedText The text `doc` was loaded from ({@link LoadedCanvasFile});
- *   an error it already carried is not held against the write. Omitted for a
- *   file being created, where any error refuses it
+ * @param loaded The file as `doc` was loaded from it ({@link loadCanvasFile}):
+ *   an error its text already carried is not held against the write, and the
+ *   write is refused if the file has changed from it since. Omitted for a file
+ *   being created, where any error refuses it and whatever is there is replaced
+ * @throws CanvasFileError when the document is refused, the file changed after
+ *   it was loaded, or the write fails; the file is left as it was
  */
 export async function saveCanvasFile(
 	path: string,
 	doc: CanvasDoc,
-	loadedText?: string,
+	loaded?: LoadedCanvasFile,
 ): Promise<void> {
 	const filePath = await toCanvasFilePath(path);
 	const serialized = serializeCanvasFile(doc);
@@ -172,30 +199,46 @@ export async function saveCanvasFile(
 		);
 	}
 
-	const introducedErrors = findIntroducedErrors(loadedText, serialized);
+	const introducedErrors = findIntroducedErrors(loaded?.text, serialized);
 	if (introducedErrors.length > 0) {
 		throw new CanvasFileError(
 			`refused to write (the edit would leave the file failing diagnose_canvas, which it did not before):\n${formatDiagnostics(introducedErrors)}`,
 		);
 	}
 
-	await writeCanvasText(filePath, serialized);
+	await writeCanvasText(filePath, serialized, loaded?.identity);
 }
 
 /**
  * Writes a canvas file's text as it is, creating the parent directory when
  * missing. Validating it is the caller's business.
+ *
+ * @param expectedIdentity The file as it was read, which it must still be for
+ *   the write to land. Omitted, whatever is there is replaced
  */
 const writeCanvasText = async (
 	filePath: string,
 	text: string,
+	expectedIdentity?: FileIdentity,
 ): Promise<void> => {
+	let isCommitted: boolean;
 	try {
 		await mkdir(dirname(filePath), { recursive: true });
-		await writeFileAtomically(filePath, text);
+		const prepared = await prepareAtomicWrite(filePath, text);
+		if (expectedIdentity === undefined) {
+			await prepared.commit();
+			isCommitted = true;
+		} else {
+			isCommitted = await prepared.commitIfUnchanged(expectedIdentity);
+		}
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : String(error);
 		throw new CanvasFileError(`failed to write file: ${reason}`);
+	}
+	if (!isCommitted) {
+		throw new CanvasFileError(
+			`refused to write: ${filePath} was changed by something else while this edit was being made, and that change is kept. Read the file again and redo the edit`,
+		);
 	}
 };
 

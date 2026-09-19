@@ -201,7 +201,11 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
   (its SHA-256), the write names it in `If-Match`, and the host checks it
   under the same per-file lock: a save behind the file is refused with 412
   and the window takes the newer document. The `saved` frame is gone; the
-  host broadcasts the change itself.
+  host broadcasts the change itself. A write from outside the lock — the AI
+  saving the file directly, or an editor — that lands between that check and
+  the save's rename is no longer replaced unseen either: the save, and a
+  tool's write-back the same way, looks at the file once more right before
+  the rename and is refused if it has changed, keeping that write.
 - Two `open_canvas` calls on different files arriving together could leave
   the host showing one file while watching the other; opening is now
   serialised. Two headless opens arriving together no longer start two

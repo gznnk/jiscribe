@@ -4,7 +4,14 @@
 // browser is needed for any of them — a ws client stands in for the viewer, the
 // save goes out as the PUT the viewer makes, and the file is edited from the test.
 
-import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+	chmod,
+	mkdtemp,
+	readdir,
+	readFile,
+	rm,
+	writeFile,
+} from "node:fs/promises";
 import type * as fsPromises from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
@@ -35,9 +42,27 @@ import { REVISION_HEADER, SESSION_TOKEN_HEADER } from "../shared/fileApiRoute";
  * which is how two openFile calls are made to overlap. Anything else is read as
  * usual
  */
-const { heldReads } = vi.hoisted(() => ({
+const { heldReads, outsideWrite } = vi.hoisted(() => ({
 	heldReads: new Map<string, Promise<void>>(),
+	/**
+	 * A write made to the file named, bypassing the host's lock, at the first stat
+	 * of it after it has been read. That lands it after a save has compared the
+	 * revision and before the save's rename, which is the gap no lock of ours
+	 * covers
+	 */
+	outsideWrite: {
+		fileName: null as string | null,
+		text: "",
+		hasBeenRead: false,
+	},
 }));
+
+/** Notes that the file behind a path has been read, for outsideWrite */
+const noteRead = (file: unknown): void => {
+	if (typeof file === "string" && basename(file) === outsideWrite.fileName) {
+		outsideWrite.hasBeenRead = true;
+	}
+};
 
 vi.mock("node:fs/promises", async (importOriginal) => {
 	const actual = await importOriginal<typeof fsPromises>();
@@ -52,8 +77,25 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 			if (hold !== undefined) {
 				await hold;
 			}
+			noteRead(file);
 			return await actual.readFile(file, options);
 		},
+		open: async (...args: Parameters<typeof actual.open>) => {
+			noteRead(args[0]);
+			return await actual.open(...args);
+		},
+		stat: (async (...args: Parameters<typeof actual.stat>) => {
+			const file = args[0];
+			if (
+				typeof file === "string" &&
+				basename(file) === outsideWrite.fileName &&
+				outsideWrite.hasBeenRead
+			) {
+				outsideWrite.fileName = null;
+				await actual.writeFile(file, outsideWrite.text, "utf8");
+			}
+			return await actual.stat(...args);
+		}) as typeof actual.stat,
 	};
 });
 
@@ -118,6 +160,8 @@ afterEach(async () => {
 	// clock back here
 	vi.useRealTimers();
 	heldReads.clear();
+	outsideWrite.fileName = null;
+	outsideWrite.hasBeenRead = false;
 	for (const socket of openSockets.splice(0)) {
 		socket.close();
 	}
@@ -475,6 +519,45 @@ describe("a person's save", () => {
 		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
 			toolText,
 		);
+	});
+
+	it("is refused when the file changes from outside the lock after the revision was checked", async () => {
+		// Another process writing the file directly takes none of our locks. Landing
+		// between the revision check and the rename, it was replaced by the save
+		// without a word: the save answered 200, and the watch, finding the saved
+		// text already known, told nobody
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+		const revision = readLatestRevision(viewer);
+		const outsideText =
+			'{"version":1,"root":[{"type":"rect","id":"outside-1","x":5,"y":5,"width":20,"height":20}]}\n';
+		outsideWrite.fileName = OPEN_REL_PATH;
+		outsideWrite.text = outsideText;
+
+		const outcome = await putOpenFile(
+			host,
+			OPEN_REL_PATH,
+			savedDocText,
+			revision,
+		);
+
+		// The injection has to have fired, or the test says nothing
+		expect(outsideWrite.fileName).toBeNull();
+		expect(outcome.status).toBe(412);
+		expect(outcome.body.revision).toMatch(/^[0-9a-f]{64}$/);
+		expect(outcome.body.revision).not.toBe(revision);
+		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
+			outsideText,
+		);
+		// The save's temporary file went with the refusal
+		expect(await readdir(workspaceRoot)).toEqual([OPEN_REL_PATH]);
+		// The outside write reaches the windows, as any outside edit does
+		await waitFor(() => calcChangedTexts(viewer).includes(outsideText));
 	});
 
 	it("is refused when the body is not a canvas document, and changes nothing", async () => {
