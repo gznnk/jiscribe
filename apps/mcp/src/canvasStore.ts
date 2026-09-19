@@ -5,6 +5,7 @@ import type { CanvasDoc, CanvasParseResult } from "@jiscribe/doc";
 
 import { writeFileAtomically } from "./atomicWrite";
 import { canvasParser } from "./canvasDefinitions";
+import { realpathDeepestExisting } from "./realpathDeepestExisting";
 
 /**
  * An error thrown by file I/O and validation, carrying a message that can be
@@ -23,6 +24,15 @@ export const CANVAS_FILE_EXTENSIONS = [
 	".jiscribe.json",
 ] as const;
 
+/** Whether a path's file name carries a canvas extension and something before it */
+const hasCanvasExtension = (path: string): boolean => {
+	const fileName = basename(path).toLowerCase();
+	return CANVAS_FILE_EXTENSIONS.some(
+		(extension) =>
+			fileName.endsWith(extension) && fileName.length > extension.length,
+	);
+};
+
 /**
  * Check one tool argument as a canvas file path and give back the form every
  * caller works from.
@@ -30,33 +40,49 @@ export const CANVAS_FILE_EXTENSIONS = [
  * This is the single gate: a stdio server's cwd is not guaranteed to match the
  * workspace, so a relative path would name a different file for each caller and
  * is refused rather than resolved. Every tool taking a `path` runs it through
- * here, so the lock key and the undo history key are the same string for the
- * same file whichever tool named it.
+ * here, and the path is resolved through its symbolic links, so the lock key,
+ * the undo history key and the file actually read and written are the same
+ * string for the same file however it was spelled (`/tmp` against
+ * `/private/tmp`, a linked project directory).
  *
  * @param path The path as the AI gave it; must be absolute and end in one of
- *   `.jis`, `.jis.json`, `.jiscribe` or `.jiscribe.json` (case is ignored)
- * @returns The path with `.` and `..` segments folded out (path.resolve)
- * @throws CanvasFileError when the path is relative or names another kind of file
+ *   `.jis`, `.jis.json`, `.jiscribe` or `.jiscribe.json` (case is ignored). The
+ *   file need not exist: the deepest existing ancestor is resolved and the rest
+ *   joined back on (see realpathDeepestExisting)
+ * @returns The resolved path. When the file is itself a link, this is where the
+ *   link leads, so a write updates the target instead of replacing the link
+ * @throws CanvasFileError when the path is relative, names another kind of file,
+ *   leads through a link to another kind of file, or cannot be resolved (a link
+ *   cycle, an unreadable directory)
  */
-export function toCanvasFilePath(path: string): string {
+export async function toCanvasFilePath(path: string): Promise<string> {
 	if (!isAbsolute(path)) {
 		throw new CanvasFileError(
 			`path must be an absolute path, but got: ${path}`,
 		);
 	}
-
-	const fileName = basename(path).toLowerCase();
-	const hasCanvasExtension = CANVAS_FILE_EXTENSIONS.some(
-		(extension) =>
-			fileName.endsWith(extension) && fileName.length > extension.length,
-	);
-	if (!hasCanvasExtension) {
+	if (!hasCanvasExtension(path)) {
 		throw new CanvasFileError(
 			`path must name a canvas file (${CANVAS_FILE_EXTENSIONS.join(", ")}), but got: ${path}`,
 		);
 	}
 
-	return resolve(path);
+	let canonicalPath: string;
+	try {
+		canonicalPath = await realpathDeepestExisting(resolve(path));
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		throw new CanvasFileError(`failed to resolve path: ${reason}`);
+	}
+	// A link named like a canvas can lead anywhere; reading through it would put
+	// the target's first line into the parse error, and writing would overwrite it.
+	// The target is not named, so the refusal reveals nothing about it either
+	if (!hasCanvasExtension(canonicalPath)) {
+		throw new CanvasFileError(
+			`path must name a canvas file (${CANVAS_FILE_EXTENSIONS.join(", ")}), but ${path} is a link to another kind of file`,
+		);
+	}
+	return canonicalPath;
 }
 
 /**
@@ -66,7 +92,7 @@ export function toCanvasFilePath(path: string): string {
  * is performed, so a caller that wants to diagnose a broken file uses this one.
  */
 export async function readCanvasFileText(path: string): Promise<string> {
-	const filePath = toCanvasFilePath(path);
+	const filePath = await toCanvasFilePath(path);
 
 	try {
 		return await readFile(filePath, "utf8");
@@ -115,7 +141,7 @@ export async function saveCanvasFile(
 	path: string,
 	doc: CanvasDoc,
 ): Promise<void> {
-	const filePath = toCanvasFilePath(path);
+	const filePath = await toCanvasFilePath(path);
 	const serialized = serializeCanvasFile(doc);
 
 	const result = canvasParser.parse(serialized);
@@ -147,7 +173,7 @@ export async function saveCanvasFile(
  * @returns true when newly created, false when it already existed
  */
 export async function ensureCanvasFile(path: string): Promise<boolean> {
-	const filePath = toCanvasFilePath(path);
+	const filePath = await toCanvasFilePath(path);
 
 	try {
 		await access(filePath);

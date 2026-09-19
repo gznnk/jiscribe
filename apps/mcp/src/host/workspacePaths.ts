@@ -1,7 +1,6 @@
-import { realpath } from "node:fs/promises";
 import path from "node:path";
 
-import { isErrnoWithCode } from "../nodeErrors";
+import { realpathDeepestExisting } from "../realpathDeepestExisting";
 
 /**
  * An error standing for a request to reach outside the workspace. The HTTP layer
@@ -31,37 +30,6 @@ const isInsideRoot = (rootPath: string, targetPath: string): boolean => {
 	// Always compare with the separator on the boundary, to reject a different
 	// directory that matches on the prefix, such as "/work" against "/work2"
 	return comparableTarget.startsWith(comparableRoot + path.sep);
-};
-
-/**
- * Resolves the links out of a path whose last segments may not exist yet: the
- * deepest ancestor that does exist is resolved, and what is left is joined back on.
- * A write creates its file, so demanding that the target already exists would leave
- * every new file unchecked.
- */
-const realpathDeepestExisting = async (targetPath: string): Promise<string> => {
-	const missingSegments: string[] = [];
-	let candidate = targetPath;
-	for (;;) {
-		try {
-			return path.join(await realpath(candidate), ...missingSegments);
-		} catch (error) {
-			// ENOTDIR stands for an ancestor that is a file, which is as good a reason
-			// to keep walking up as a missing one
-			if (
-				!isErrnoWithCode(error, "ENOENT") &&
-				!isErrnoWithCode(error, "ENOTDIR")
-			) {
-				throw error;
-			}
-			const parentPath = path.dirname(candidate);
-			if (parentPath === candidate) {
-				return path.join(candidate, ...missingSegments);
-			}
-			missingSegments.unshift(path.basename(candidate));
-			candidate = parentPath;
-		}
-	}
 };
 
 /**

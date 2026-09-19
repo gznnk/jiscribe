@@ -32,8 +32,8 @@ import { basename, dirname, join } from "node:path";
  *
  * When the destination is a symbolic link, the link itself is replaced by an
  * ordinary file (overwriting directly would rewrite what the link points at).
- * Using a link for a `.jis` is not an intended use, so resolving it is not
- * taken on.
+ * A caller that means to update what the link leads to resolves it first, as
+ * toCanvasFilePath (src/canvasStore.ts) does for every tool.
  *
  * @param filePath The destination to replace. Its parent directory must exist
  * @param contents The contents to write

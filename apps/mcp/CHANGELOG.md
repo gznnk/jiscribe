@@ -47,6 +47,16 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ### Fixed
 
+- **One file named two ways is one file.** The per-file lock and the undo
+  history were keyed by the path as written, so a file reached both directly
+  and through a linked directory (`/tmp` against `/private/tmp` on macOS, a
+  symlinked project) was two files to the server: parallel additions through
+  both spellings all reported success while about half of them were lost, and
+  `undo` through the other spelling found nothing to take back. Every `path`
+  is now resolved through its symbolic links, and that is what is locked,
+  remembered, read and written. A `.jis` that is itself a link is updated
+  where it leads instead of being replaced by a plain file, and a
+  canvas-named link to another kind of file is refused rather than read.
 - **A malformed WebSocket frame no longer kills the server.** A frame the
   viewer's host could not accept (one over 16 MiB, a bad opcode, text that is
   not UTF-8) was raised as an uncaught error, taking the host, the undo

@@ -1,3 +1,6 @@
+import { mkdir, symlink } from "node:fs/promises";
+import { join } from "node:path";
+
 import {
 	afterAll,
 	afterEach,
@@ -106,5 +109,33 @@ describe("concurrent calls against one file", () => {
 
 		expect((await workspace.readDoc(first)).root).toHaveLength(1);
 		expect((await workspace.readDoc(second)).root).toHaveLength(1);
+	});
+	it("serialises calls naming one file through a linked directory and directly, dropping none", async () => {
+		// The lock is keyed by path, so two spellings of one file used to be two
+		// locks: every call reported success and about half the additions were gone
+		await mkdir(join(workspace.dirPath, "real"));
+		await symlink(
+			join(workspace.dirPath, "real"),
+			join(workspace.dirPath, "alias"),
+			"dir",
+		);
+		const realPath = await workspace.writeDoc(join("real", "b.jis"), emptyDoc);
+		const aliasPath = join(workspace.dirPath, "alias", "b.jis");
+		const callCount = 60;
+
+		const results = await Promise.all(
+			Array.from({ length: callCount }, (_, index) =>
+				client.callTool("add_rect", {
+					path: index % 2 === 0 ? realPath : aliasPath,
+					x: index * 40,
+					y: 0,
+				}),
+			),
+		);
+
+		expect(
+			results.filter((result) => result.text.startsWith("error:")),
+		).toEqual([]);
+		expect((await workspace.readDoc(realPath)).root).toHaveLength(callCount);
 	});
 });

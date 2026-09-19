@@ -51,7 +51,10 @@ canvas state is kept in the tools themselves.
 
 Every path a tool takes is absolute and names a canvas file (`.jis`, or the
 longer `.jis.json` / `.jiscribe` / `.jiscribe.json`); anything else is refused,
-so a tool can never rewrite a file of another kind. The one exception is an
+so a tool can never rewrite a file of another kind. The path is resolved
+through its symbolic links first: one file named two ways is one file to the
+lock and the undo history, a `.jis` that is a link is edited where it leads,
+and a link to a file of another kind is refused. The one exception is an
 `image` shape's `src`, which is relative to the directory its `.jis` lives in
 and cannot climb out of it — so a drawing and the pictures it names travel
 together.

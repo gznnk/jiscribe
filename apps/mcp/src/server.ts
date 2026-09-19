@@ -285,7 +285,7 @@ export function createJiscribeMcpServer(): McpServer {
 		path: string,
 		op: AiDocOp,
 	): Promise<AiCanvasOpOutcome> => {
-		const filePath = toCanvasFilePath(path);
+		const filePath = await toCanvasFilePath(path);
 		return await withPathLock(filePath, async () => {
 			const loadedDoc = await loadCanvasFile(filePath);
 			let nextDoc: CanvasDoc | null = null;
@@ -385,11 +385,13 @@ export function createJiscribeMcpServer(): McpServer {
 		},
 		async ({ path, headless }) =>
 			runTool(async () => {
-				const filePath = toCanvasFilePath(path);
+				const filePath = await toCanvasFilePath(path);
 				return await withHostLock(async () => {
 					const isCreated = await withPathLock(filePath, () =>
 						ensureCanvasFile(filePath),
 					);
+					// filePath is resolved through its links, so the key a person's save
+					// locks on (this root joined with the file name) is the tools' key
 					const workspaceRoot = dirname(filePath);
 
 					// The file API cannot get outside the workspace, so being pointed at
@@ -499,7 +501,7 @@ export function createJiscribeMcpServer(): McpServer {
 		},
 		async ({ path }) =>
 			runTool(async () => {
-				const filePath = toCanvasFilePath(path);
+				const filePath = await toCanvasFilePath(path);
 				const text = await withPathLock(filePath, () =>
 					readCanvasFileText(filePath),
 				);

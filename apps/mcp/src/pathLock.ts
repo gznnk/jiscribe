@@ -1,6 +1,10 @@
 import { resolve } from "node:path";
 
-/** win32 does not distinguish case in paths, so the key follows the same rule */
+/**
+ * win32 does not distinguish case in paths, so the key follows the same rule.
+ * realpath settles the case of what exists, but not of a file not yet created,
+ * which two calls may still name in different cases
+ */
 const toLockKey = (filePath: string): string => {
 	const resolvedPath = resolve(filePath);
 	return process.platform === "win32"
@@ -12,7 +16,9 @@ const toLockKey = (filePath: string): string => {
  * A gate that runs one file's task only once the tasks queued ahead of it for
  * that file have finished.
  *
- * @param filePath The target file (it need not be absolute; it is resolved before being used as the key)
+ * @param filePath The target file (it need not be absolute; it is resolved before being used as the key).
+ *   The key is lexical, so a caller naming one file two ways through links
+ *   resolves them first (toCanvasFilePath in src/canvasStore.ts)
  * @param task The task to run. It runs even when a task ahead of it failed
  */
 export type PathLock = <T>(
