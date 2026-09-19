@@ -176,8 +176,8 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
   which could be after the viewer had answered the host's flush and taken the
   next file; the debounced save then wrote the previous file's objects into the
   new one (same directory), or was refused (another directory). The viewer now
-  gives the canvas two frames to hand over what it is holding before it answers
-  the flush, so the edit reaches its own file; one that still arrives after the
+  waits for the canvas to hand over what it is holding before it answers the
+  flush, so the edit reaches its own file; one that still arrives after the
   switch is not written anywhere and the error bar names the file it was lost
   from.
 - **A person's save and the AI's write no longer overwrite each other

@@ -13,6 +13,13 @@ import {
 /** How far the rectangle is dragged, in screen pixels */
 const DRAG_DX = 70;
 
+/**
+ * How long the host is made to take before it asks for the flush: longer than the
+ * stretch that first lost an edit this way (the server's one-time schema compile,
+ * about a quarter of a second)
+ */
+const HOST_DELAY_MS = 300;
+
 /** What Ctrl+S answers with once the page holds nothing the file does not */
 const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
 
@@ -196,6 +203,37 @@ test("an edit the canvas is still holding when the host asks for a flush reaches
 
 	await dragWithoutReleasing(page);
 	await releaseOnHostFrame(page, { type: "flushEdits" });
+	const opened = await mcp.callTool("open_canvas", { path: secondPath });
+	expect(opened.isError).toBe(false);
+	await expectFileOnDisplay(page, "c.jis.json");
+
+	expect((await workspace.readDoc(firstPath)).root[0].x).toBeGreaterThan(
+		SINGLE_RECT.x,
+	);
+	expect((await workspace.readDoc(secondPath)).root).toEqual([]);
+	await expectNoViewerError(page);
+});
+
+// The same, with the flush arriving well after the release, as it does from a host
+// busy with something first (a large file to read, a slow disk). The page has drawn
+// no frame in the meantime, and the first one after such a stretch runs ahead of the
+// render the release queued — so counting frames answered the flush before the canvas
+// handed the edit over, and it was lost to the switch.
+test("an edit the canvas is still holding reaches its own file when the flush comes late", async ({
+	page,
+	mcp,
+	workspace,
+	openInViewer,
+}) => {
+	const firstPath = await workspace.writeDoc("a.jis.json", singleRectDoc());
+	const secondPath = join(workspace.dirPath, "c.jis.json");
+	await openInViewer(firstPath);
+
+	await dragWithoutReleasing(page);
+	await releaseOnHostFrame(page, { type: "flushEdits" });
+	// A stretch with nothing drawn, which is what a slow host leaves the page with.
+	// There is no event to wait on: the point is time passing without one
+	await page.waitForTimeout(HOST_DELAY_MS);
 	const opened = await mcp.callTool("open_canvas", { path: secondPath });
 	expect(opened.isError).toBe(false);
 	await expectFileOnDisplay(page, "c.jis.json");

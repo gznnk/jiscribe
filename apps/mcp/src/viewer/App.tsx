@@ -32,10 +32,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 import { CanvasErrorBoundary } from "./CanvasErrorBoundary";
-import { waitForCanvasFrames } from "./canvasFrames";
 import { CanvasSurface } from "./CanvasSurface";
 import { calcDocLoadId } from "./ownEcho";
 import { createDocImageResolver } from "./resolveDocImage";
+import { useCanvasCommitWait } from "./useCanvasCommitWait";
 import { useCanvasHostSocket } from "./useCanvasHostSocket";
 import { useDocSync } from "./useDocSync";
 import { viewerTheme } from "./viewerTheme";
@@ -115,6 +115,7 @@ export function App() {
 		handleCommit,
 		flushPendingSave,
 	} = useDocSync({ reportError: setErrorMessage, isPersonInteracting });
+	const waitForCanvasCommit = useCanvasCommitWait();
 	const openPath = openDoc?.relPath ?? null;
 
 	// One resolver per open file: a src is relative to that file's directory
@@ -175,13 +176,13 @@ export function App() {
 	/**
 	 * Writes out the edits, the ones the canvas has yet to hand over included, before
 	 * the host moves on to another file or closes this window. A drag released just
-	 * before is committed a frame or two later; missed, it is dropped and reported
-	 * rather than written anywhere (see useDocSync)
+	 * before is committed a render later (useCanvasCommitWait); missed, it is dropped
+	 * and reported rather than written anywhere (see useDocSync)
 	 */
 	const flushEditsForHost = useCallback(async (): Promise<boolean> => {
-		await waitForCanvasFrames();
+		await waitForCanvasCommit();
 		return await flushPendingSave({ isLeavingDocument: true });
-	}, [flushPendingSave]);
+	}, [flushPendingSave, waitForCanvasCommit]);
 
 	/**
 	 * Writes out the buffered edits, then closes the window. close_canvas reads

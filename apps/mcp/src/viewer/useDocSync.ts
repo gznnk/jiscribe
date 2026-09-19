@@ -39,7 +39,6 @@ import {
 	useState,
 } from "react";
 
-import { waitForCanvasFrames } from "./canvasFrames";
 import { canvasParser } from "./canvasPlugins";
 import { saveFile, type SaveFileResult } from "./files";
 import {
@@ -48,6 +47,7 @@ import {
 	type CanvasMergeConflict,
 } from "./mergeCanvasDocs";
 import { classifyIncomingDoc, isSameDoc, type DocIdentity } from "./ownEcho";
+import { useCanvasCommitWait } from "./useCanvasCommitWait";
 
 /**
  * How long to wait after the edits settle before writing out. Writing on every
@@ -320,6 +320,7 @@ export function useDocSync({
 	const saveNowRef = useRef<(() => Promise<boolean>) | null>(null);
 	// The watch goes through this, for the same reason
 	const takeInHeldFrameRef = useRef<(() => void) | null>(null);
+	const waitForCanvasCommit = useCanvasCommitWait();
 
 	// The document the canvas's commits are made on. It trails openDoc: the canvas
 	// takes a new document up in an effect of the render that hands it over, so a
@@ -641,38 +642,41 @@ export function useDocSync({
 
 	/**
 	 * Waits for the person to let go, then takes in the file held back. Past a drag's
-	 * end or the editor closing, the canvas hands the commit over a frame or two
-	 * later, and that is waited for too: taken in before it, the file would be
-	 * merged without the person's last edit, which would then arrive on top of the
-	 * merged doc as an edit of the doc before it, and write the other side's changes
-	 * away.
+	 * end or the editor closing, the canvas hands the commit over a render later
+	 * (useCanvasCommitWait), and that is waited for too: taken in before it, the
+	 * file would be merged without the person's last edit, which would then arrive
+	 * on top of the merged doc as an edit of the doc before it, and write the other
+	 * side's changes away.
 	 *
 	 * @param delayMs How long to wait before looking: 0 for a file that has just
 	 *   arrived, the poll interval while the person is still at it
 	 */
-	const watchHeldFrame = useCallback((delayMs: number): void => {
-		if (heldFrameTimerRef.current !== null) {
-			return;
-		}
-		const timer = window.setTimeout(() => {
-			void (async () => {
-				if (!isPersonInteractingRef.current()) {
-					await waitForCanvasFrames();
-				}
-				// Still this watch's turn: taking the frame in early clears the timer
-				if (heldFrameTimerRef.current !== timer) {
-					return;
-				}
-				heldFrameTimerRef.current = null;
-				if (isPersonInteractingRef.current()) {
-					watchHeldFrame(HELD_DOC_POLL_MS);
-					return;
-				}
-				takeInHeldFrameRef.current?.();
-			})();
-		}, delayMs);
-		heldFrameTimerRef.current = timer;
-	}, []);
+	const watchHeldFrame = useCallback(
+		(delayMs: number): void => {
+			if (heldFrameTimerRef.current !== null) {
+				return;
+			}
+			const timer = window.setTimeout(() => {
+				void (async () => {
+					if (!isPersonInteractingRef.current()) {
+						await waitForCanvasCommit();
+					}
+					// Still this watch's turn: taking the frame in early clears the timer
+					if (heldFrameTimerRef.current !== timer) {
+						return;
+					}
+					heldFrameTimerRef.current = null;
+					if (isPersonInteractingRef.current()) {
+						watchHeldFrame(HELD_DOC_POLL_MS);
+						return;
+					}
+					takeInHeldFrameRef.current?.();
+				})();
+			}, delayMs);
+			heldFrameTimerRef.current = timer;
+		},
+		[waitForCanvasCommit],
+	);
 	useEffect(
 		() => () => {
 			if (heldFrameTimerRef.current !== null) {

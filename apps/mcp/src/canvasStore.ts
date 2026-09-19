@@ -179,14 +179,25 @@ export async function saveCanvasFile(
 		);
 	}
 
+	await writeCanvasText(filePath, serialized);
+}
+
+/**
+ * Writes a canvas file's text as it is, creating the parent directory when
+ * missing. Validating it is the caller's business.
+ */
+const writeCanvasText = async (
+	filePath: string,
+	text: string,
+): Promise<void> => {
 	try {
 		await mkdir(dirname(filePath), { recursive: true });
-		await writeFileAtomically(filePath, serialized);
+		await writeFileAtomically(filePath, text);
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : String(error);
 		throw new CanvasFileError(`failed to write file: ${reason}`);
 	}
-}
+};
 
 /**
  * Bring the target `.jis` into a state where it can be opened. A missing one
@@ -206,7 +217,12 @@ export async function ensureCanvasFile(path: string): Promise<boolean> {
 	try {
 		await access(filePath);
 	} catch {
-		await saveCanvasFile(filePath, { version: 1, root: [] });
+		// Not through saveCanvasFile: an empty canvas has nothing to validate, and
+		// the schema validator's one-time compile would otherwise land on opening
+		await writeCanvasText(
+			filePath,
+			serializeCanvasFile({ version: 1, root: [] }),
+		);
 		return true;
 	}
 

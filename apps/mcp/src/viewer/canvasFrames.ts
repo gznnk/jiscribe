@@ -5,11 +5,10 @@
 const CANVAS_FRAMES_TIMEOUT_MS = 200;
 
 /**
- * Waits two frames, for an edit the canvas is still holding to reach onCommit: it
- * takes pointer input up on an animation frame and hands the commit over in an
- * effect after drawing it, so a drag released just before would otherwise be
- * committed after whatever the caller does next. Best effort — a render slower than
- * a frame can still miss it.
+ * Waits two frames, for the canvas to take up pointer input it has queued for an
+ * animation frame (a drag released just before). The render and the effect that
+ * hand the resulting commit over are not covered; useCanvasCommitWait waits for
+ * those after this.
  *
  * @returns A promise settled after two animation frames, or after
  *   {@link CANVAS_FRAMES_TIMEOUT_MS} when the window is given none
