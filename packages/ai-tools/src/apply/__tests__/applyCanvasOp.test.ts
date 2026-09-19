@@ -1658,3 +1658,99 @@ describe("undo", () => {
 		expect(currentDoc()).toBe(userEditedDoc);
 	});
 });
+
+describe("applyCanvasOp on a document holding a type this build does not know", () => {
+	/** A shape from a plugin the tools were not built with, as the file holds it */
+	const unknownObject = {
+		id: "gadget-1",
+		type: "gadget",
+		x: 200,
+		y: 0,
+		width: 60,
+		height: 40,
+		gearCount: 3,
+	};
+
+	/** rect-1, the unknown object, and a connector between them, loaded the way a host loads a file */
+	const loadedDoc = (): CanvasDoc => {
+		const result = createCanvasParser({ plugins: docPlugins }).parse(
+			JSON.stringify({
+				version: 1,
+				root: [
+					{ id: "rect-1", type: "rect", x: 0, y: 0, width: 100, height: 60 },
+					unknownObject,
+					{
+						id: "connector-1",
+						type: "connector",
+						points: [],
+						source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
+						target: { owner: { id: "gadget-1" }, anchor: { kind: "center" } },
+					},
+				],
+			}),
+		);
+		expect(result.kind).toBe("ok");
+		return (result as { doc: CanvasDoc }).doc;
+	};
+
+	const rootIds = (doc: CanvasDoc): string[] =>
+		doc.root.map((object) => object.id);
+
+	it("keeps it in place through an edit, and undo gives it back as well", () => {
+		const { apply, currentDoc } = createFakeDocBridge(loadedDoc());
+
+		expect(apply({ kind: "addObject", type: "rect", x: 0, y: 200 }).ok).toBe(
+			true,
+		);
+		expect(rootIds(currentDoc())).toEqual([
+			"rect-1",
+			"gadget-1",
+			"connector-1",
+			"rect-2",
+		]);
+		expect(rootObject(currentDoc(), "gadget-1")).toEqual(unknownObject);
+
+		expect(apply({ kind: "undo" }).ok).toBe(true);
+		expect(currentDoc()).toEqual(loadedDoc());
+	});
+
+	it("deletes it by its id, taking the connector attached to it", () => {
+		const { apply, currentDoc } = createFakeDocBridge(loadedDoc());
+
+		const result = apply({ kind: "deleteObjects", ids: ["gadget-1"] });
+
+		expect(result.ok).toBe(true);
+		expect(rootIds(currentDoc())).toEqual(["rect-1"]);
+	});
+
+	it("lists it flagged, with the box its frame fields state, and says what that means", () => {
+		const { apply } = createFakeDocBridge(loadedDoc());
+
+		const result = apply({ kind: "listObjects" });
+
+		expect(result.ok).toBe(true);
+		expect(result.text).toContain(
+			"1 of them flagged unknownType: a type this build does not know",
+		);
+		const summaries = JSON.parse(
+			result.text.slice(result.text.lastIndexOf("\n") + 1),
+		) as unknown[];
+		expect(summaries[1]).toEqual({
+			id: "gadget-1",
+			type: "gadget",
+			bounds: { x: 200, y: 0, width: 60, height: 40 },
+			parentId: null,
+			text: null,
+			unknownType: true,
+		});
+	});
+
+	it("refuses to move it, naming why", () => {
+		const { apply } = createFakeDocBridge(loadedDoc());
+
+		const result = apply({ kind: "setPosition", id: "gadget-1", x: 0 });
+
+		expect(result.ok).toBe(false);
+		expect(result.text).toContain("a type this build does not know");
+	});
+});

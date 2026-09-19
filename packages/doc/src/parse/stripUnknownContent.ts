@@ -15,7 +15,7 @@ import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorReg
 export type StripUnknownContentResult = {
 	/** The input with unknown content removed (the input itself when nothing was removed). */
 	data: unknown;
-	/** One diagnostic per removed object or field, in document order. */
+	/** One diagnostic per removed object or field and per opaque object kept, in document order. */
 	warnings: SemanticDiagnostic[];
 };
 
@@ -108,13 +108,17 @@ const stripUnknownViewFields = (
  * Removes unknown content from a candidate document before structure validation, so
  * the rest of the document still displays, and since saving re-serializes the
  * stripped doc, the removed content disappears on save. Unknown means:
- *   - objects whose `type` is not registered in the registry
+ *   - objects whose `type` is not registered in the registry and that carry no id
  *   - pure-enum fields (see {@link pureEnumFields}) holding a value outside the
  *     known set, at any nesting depth (flat, connector label, text slots, …)
  *   - connectors with an endpoint anchored to an unknown kind (see
  *     {@link findUnknownAnchorKind}); the anchor is not droppable on its own
  *   - a document-root `view.open` / `view.scroll` naming a mode outside the known
  *     set (see {@link stripUnknownViewFields})
+ *
+ * An object of an unregistered type that does carry an id is not removed: it stays
+ * in place as an opaque object (`OpaqueObjectDoc`), untouched inside, with a
+ * warning saying so, and the editors write it back as it is.
  *
  * Object removal cascades to keep the remaining doc valid:
  *   - a group whose children all get removed is removed with them (an empty group
@@ -128,7 +132,8 @@ const stripUnknownViewFields = (
  * @param data - The JSON.parse result of a candidate document. Anything without an
  *   object shape and a `root` array is returned unchanged (no warnings).
  * @param registry - Decides which types are known via `getFeatures`.
- * @returns The (possibly) stripped data and a warning per removed object or field.
+ * @returns The (possibly) stripped data and a warning per removed object or field
+ *   and per opaque object kept.
  *   Warning paths use the input's indices, so they point into the text the user sees.
  */
 export function stripUnknownContent(
@@ -261,11 +266,22 @@ export function stripUnknownContent(
 		}
 
 		if (registry.getFeatures(o.type as string) === undefined) {
+			// Kept verbatim as an opaque object: nothing inside it is read, so its
+			// enum values are not ours to strip and its children are not walked.
+			// Only an id makes it something the rest of the document can refer to
+			// and the editors can keep in place, so one without is still removed.
+			if (isString(o.id) && (o.id as string).length > 0) {
+				warnings.push({
+					path: `${path}.type`,
+					message: `Object type "${o.type as string}" is not a type this build knows: the object is kept as it is but not drawn.`,
+					id: o.id as string,
+				});
+				return node;
+			}
 			collectRemovedIds(o);
 			warnings.push({
 				path: `${path}.type`,
-				message: `Unknown object type "${o.type as string}": the object was ignored and will be dropped on save.`,
-				...(isString(o.id) ? { id: o.id as string } : {}),
+				message: `Unknown object type "${o.type as string}" on an object without an id: the object was ignored and will be dropped on save.`,
 			});
 			return undefined;
 		}
@@ -309,7 +325,7 @@ export function stripUnknownContent(
 				warnings.push({
 					path,
 					message:
-						"All children had unknown object types: the group was dropped with them.",
+						"All children had unknown object types and no id: the group was dropped with them.",
 					...(isString(enumStripped.id)
 						? { id: enumStripped.id as string }
 						: {}),

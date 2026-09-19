@@ -388,3 +388,108 @@ describe("set_height_mode", () => {
 		expect(await workspace.readDoc(targetPath)).toEqual(heightModeDoc);
 	});
 });
+
+describe("a file holding an object of a type this build does not know", () => {
+	/**
+	 * A shape from a plugin this server does not ship, written between two rects
+	 * with a connector to it. The schema rejects its type, so the file fails
+	 * diagnose_canvas before any tool touches it.
+	 */
+	const unknownObject = {
+		id: "gadget-1",
+		type: "gadget",
+		x: 200,
+		y: 0,
+		width: 60,
+		height: 40,
+		gearCount: 3,
+	};
+	const docWithUnknownObject: CanvasFileContent = {
+		version: 1,
+		root: [
+			{ id: "rect-1", type: "rect", x: 0, y: 0, width: 100, height: 60 },
+			unknownObject,
+			{ id: "rect-2", type: "rect", x: 400, y: 0, width: 100, height: 60 },
+			{
+				id: "connector-1",
+				type: "connector",
+				points: [],
+				source: { owner: { id: "rect-1" }, anchor: { kind: "center" } },
+				target: { owner: { id: "gadget-1" }, anchor: { kind: "center" } },
+			},
+		],
+	};
+
+	const rootIdsOf = (doc: CanvasFileContent): unknown[] =>
+		doc.root.map((object) => object.id);
+
+	beforeEach(async () => {
+		targetPath = await workspace.writeDoc(
+			`unknown-${testIndex++}.jis.json`,
+			docWithUnknownObject,
+		);
+	});
+
+	it("keeps it where it was, as written, when add_rect writes the file back", async () => {
+		const result = await client.callTool("add_rect", {
+			path: targetPath,
+			x: 0,
+			y: 200,
+		});
+		// The schema error the file already carried is not held against the edit.
+		expect(result.text).toBe('added rect "rect-3" at (0, 200)');
+
+		const written = await workspace.readDoc(targetPath);
+		expect(rootIdsOf(written)).toEqual([
+			"rect-1",
+			"gadget-1",
+			"rect-2",
+			"connector-1",
+			"rect-3",
+		]);
+		expect(written.root[1]).toEqual(unknownObject);
+		expect(written.root[3]).toEqual(docWithUnknownObject.root[3]);
+	});
+
+	it("keeps it through undo too", async () => {
+		await client.callTool("add_rect", { path: targetPath, x: 0, y: 200 });
+
+		const undone = await client.callTool("undo", { path: targetPath });
+		expect(undone.text).not.toMatch(/^error:/);
+
+		expect(await workspace.readDoc(targetPath)).toEqual(docWithUnknownObject);
+	});
+
+	it("deletes it by id with delete_objects, taking its connector", async () => {
+		const result = await client.callTool("delete_objects", {
+			path: targetPath,
+			ids: ["gadget-1"],
+		});
+		expect(result.text).not.toMatch(/^error:/);
+
+		expect(rootIdsOf(await workspace.readDoc(targetPath))).toEqual([
+			"rect-1",
+			"rect-2",
+		]);
+	});
+
+	it("shows it in list_objects, flagged as a type this build does not know", async () => {
+		const result = await client.callTool("list_objects", { path: targetPath });
+
+		expect(result.text).toContain("flagged unknownType");
+		expect(result.text).toContain(
+			'{"id":"gadget-1","type":"gadget","bounds":{"x":200,"y":0,"width":60,"height":40},"parentId":null,"text":null,"unknownType":true}',
+		);
+	});
+
+	it("is reported by diagnose_canvas as kept, not as dropped", async () => {
+		const result = await client.callTool("diagnose_canvas", {
+			path: targetPath,
+		});
+
+		expect(result.text).toContain(
+			'Object type "gadget" is not a type this build knows: the object is kept as it is but not drawn.',
+		);
+		expect(result.text).not.toContain("dropped on save");
+	});
+});

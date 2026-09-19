@@ -130,15 +130,17 @@ returns its result as a **discriminated union without throwing exceptions** (`Ca
 prevents errors from slipping through.
 
 Each failure surfaces as its own `kind` (a JSON syntax error, a structure error, a semantic error, or an unexpected
-exception during validation). Success (`ok`) carries, besides the doc, `warnings` reporting what was removed.
+exception during validation). Success (`ok`) carries, besides the doc, `warnings` reporting what was removed or kept unread.
 
 Validation happens in two stages, preceded by a step that removes unknown content. If the structure does not hold,
 semantic validation is not reached.
 
-1. **Removing unknown content `stripUnknownContent`** — Removes objects of unregistered types (cascading to groups
-   left empty and connectors pointing at removed shapes) and unknown values of enum fields. These are not errors:
+1. **Removing unknown content `stripUnknownContent`** — Removes unknown values of enum fields. These are not errors:
    they are reported as the `ok` result's `warnings` and the rest of the document still loads. `ok.doc` is the
-   stripped doc, so saving it is what makes the removal stick.
+   stripped doc, so saving it is what makes the removal stick. An object of an unregistered type is not removed: it
+   stays in place as an **opaque object** (`OpaqueObjectDoc`), untouched inside, and is reported in `warnings` as
+   well. It needs an id to be referred to and kept in place, so only one without an id is removed (cascading to
+   groups left empty and to connectors pointing at what it held).
 2. **Structural validation `validateStructure`** — Validates each node's type and required fields.
    Type-specific validation is delegated to the doc-validator registry the parser built, and only the recursion into a
    `group`'s `children` is handled here as a structural rule.
@@ -146,12 +148,30 @@ semantic validation is not reached.
    traversing the entire document.
    - **Uniqueness of IDs**: IDs must not be duplicated across the root tree (including connectors).
      Because `CanvasDoc` is a nested tree, a "parent-child cycle" cannot occur structurally; any case that looks like a cycle is effectively "different objects sharing the same ID" — that is, nothing more than an ID duplication.
-   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (decided by the type's `features.connectable`; e.g. group and connector are not).
+   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (decided by the type's `features.connectable`; e.g. group and connector are not). An id of an opaque object, or inside its `children`, only has to exist: its type cannot be judged.
    - **Self-loop ends**: a self-loop, where source and target point to the same object, is permitted, but a `center` anchor on either end is a semantic error (both ends must be pinned to a connectPoint). While its `points` are empty, a self-loop is drawn as a rectangular loop via a dedicated orthogonal route; vertices replace that fixed ring with the authored path (see `resolveConnectorPoints` / `routeSelfLoop`).
 
 The doc-validator registry used for validation is needed only at parse time, so each parser builds its
 own from the definition set it is given. Nothing global is mutated, so two parsers with different plugin
 sets can coexist in one process.
+
+### Round-tripping Opaque Objects
+
+An object of a type the reader does not know (a plugin shape the host does not ship, a shape from a newer
+version) survives every edit path and is written back where it was. What counts as unknown is decided by each
+reader: the parser by its registry, a DocOps instance by its definitions, the canvas by its mapper.
+
+- **Canvas**: `canvasToState` keeps an object of a type with no mapper out of `objects` and holds it in
+  `CanvasState.opaqueObjects`, together with where it sat (its container, and the known siblings drawn before
+  it). A group all of whose children are opaque, and a connector with an end on something `objects` will not
+  hold, are held aside whole the same way. Drawing, hit-testing, selection and editing all read `objects`, so
+  these are neither drawn nor touchable. `canvasToDoc` puts them back: after the nearest preceding sibling still
+  there, or, when their group itself is gone, where the group was. The one exception is an opaque connector
+  whose shape at one end was deleted, which is not written back — the same way deleting a shape takes its
+  connectors.
+- **DocOps**: the ops never walk into an opaque object (a `children` array on it does not make it a group). It
+  can be deleted, restacked and grouped, but the ops that edit what is inside an object — move, resize, style
+  — leave it alone. `listObjects` lists it flagged `unknownType: true`.
 
 ### A Headless Package
 

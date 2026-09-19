@@ -26,6 +26,13 @@ const unknownShape = (id: string, over: Record<string, unknown> = {}) => ({
 	y: 0,
 	...over,
 });
+/** An unknown type with nothing to keep it in place by: the one the strip still removes. */
+const idlessShape = (over: Record<string, unknown> = {}) => ({
+	type: "hexagram",
+	x: 0,
+	y: 0,
+	...over,
+});
 const group = (id: string, children: unknown[]) => ({
 	id,
 	type: "group",
@@ -65,7 +72,7 @@ describe("stripUnknownContent", () => {
 			$schema: "https://example/s.json",
 			version: 1,
 			background: "#fff",
-			root: [rect("r1"), unknownShape("u1")],
+			root: [rect("r1"), idlessShape()],
 		});
 		const stripped = result.data as Record<string, unknown>;
 		expect(stripped.$schema).toBe("https://example/s.json");
@@ -74,28 +81,69 @@ describe("stripUnknownContent", () => {
 		expect(rootIds(result.data)).toEqual(["r1"]);
 	});
 
-	it("removes an unknown-type object at the root with a warning", () => {
-		const result = strip(doc([rect("r1"), unknownShape("u1")]));
-		expect(rootIds(result.data)).toEqual(["r1"]);
+	it("keeps an unknown-type object at the root in place, with a warning", () => {
+		const unknownObject = unknownShape("u1");
+		const result = strip(doc([rect("r1"), unknownObject, rect("r2")]));
+		expect(rootIds(result.data)).toEqual(["r1", "u1", "r2"]);
+		expect((result.data as { root: unknown[] }).root[1]).toBe(unknownObject);
 		expect(result.warnings).toHaveLength(1);
 		expect(result.warnings[0].path).toBe("root[1].type");
 		expect(result.warnings[0].id).toBe("u1");
-		expect(result.warnings[0].message).toContain(
-			'Unknown object type "hexagram"',
+		expect(result.warnings[0].message).toBe(
+			'Object type "hexagram" is not a type this build knows: the object is kept as it is but not drawn.',
 		);
 	});
 
-	it("removes an unknown-type child but keeps the group and its siblings", () => {
-		const result = strip(doc([group("g1", [rect("r1"), unknownShape("u1")])]));
+	it("keeps an unknown-type child in its place among the group's children", () => {
+		const result = strip(
+			doc([group("g1", [rect("r1"), unknownShape("u1"), rect("r2")])]),
+		);
 		const g = (result.data as { root: { children: { id: string }[] }[] })
 			.root[0];
-		expect(g.children.map((c) => c.id)).toEqual(["r1"]);
+		expect(g.children.map((c) => c.id)).toEqual(["r1", "u1", "r2"]);
+		expect(result.warnings.map((w) => w.path)).toEqual([
+			"root[0].children[1].type",
+		]);
+	});
+
+	it("keeps a group whose children all have unknown types", () => {
+		const result = strip(doc([group("g1", [unknownShape("u1")]), rect("r1")]));
+		expect(rootIds(result.data)).toEqual(["g1", "r1"]);
+		expect(result.warnings.map((w) => w.id)).toEqual(["u1"]);
+	});
+
+	it("leaves the inside of an unknown-type object alone: no enum strip, no walk into its children", () => {
+		const unknownObject = unknownShape("u1", {
+			strokeDashType: "wavy",
+			children: [unknownShape("u2"), { type: "nope" }],
+		});
+		const result = strip(doc([unknownObject]));
+		expect((result.data as { root: unknown[] }).root[0]).toBe(unknownObject);
+		expect(result.warnings.map((w) => w.path)).toEqual(["root[0].type"]);
+	});
+
+	it("keeps a connector attached to an unknown-type object", () => {
+		const result = strip(
+			doc([
+				rect("r1"),
+				unknownShape("u1"),
+				connector("c1", ownedRef("r1"), ownedRef("u1")),
+			]),
+		);
+		expect(rootIds(result.data)).toEqual(["r1", "u1", "c1"]);
+	});
+
+	it("removes an unknown-type object without an id, which nothing could keep in place", () => {
+		const result = strip(doc([rect("r1"), idlessShape()]));
+		expect(rootIds(result.data)).toEqual(["r1"]);
 		expect(result.warnings).toHaveLength(1);
-		expect(result.warnings[0].path).toBe("root[0].children[1].type");
+		expect(result.warnings[0].path).toBe("root[1].type");
+		expect(result.warnings[0].id).toBeUndefined();
+		expect(result.warnings[0].message).toContain("will be dropped on save");
 	});
 
 	it("removes a group whose children were all removed", () => {
-		const result = strip(doc([group("g1", [unknownShape("u1")]), rect("r1")]));
+		const result = strip(doc([group("g1", [idlessShape()]), rect("r1")]));
 		expect(rootIds(result.data)).toEqual(["r1"]);
 		expect(result.warnings.map((w) => w.path)).toEqual([
 			"root[0].children[0].type",
@@ -104,38 +152,24 @@ describe("stripUnknownContent", () => {
 	});
 
 	it("cascades emptied-group removal through nested groups", () => {
-		const result = strip(
-			doc([group("g1", [group("g2", [unknownShape("u1")])])]),
-		);
+		const result = strip(doc([group("g1", [group("g2", [idlessShape()])])]));
 		expect(rootIds(result.data)).toEqual([]);
-		expect(result.warnings.map((w) => w.id)).toEqual(["u1", "g2", "g1"]);
-	});
-
-	it("removes a connector whose endpoint owner was removed", () => {
-		const result = strip(
-			doc([
-				rect("r1"),
-				unknownShape("u1"),
-				connector("c1", ownedRef("r1"), ownedRef("u1")),
-				connector("c2", ownedRef("r1"), freeRef(5, 5)),
-			]),
-		);
-		expect(rootIds(result.data)).toEqual(["r1", "c2"]);
-		const connectorWarning = result.warnings.find((w) => w.id === "c1");
-		expect(connectorWarning?.path).toBe("root[2]");
+		expect(result.warnings.map((w) => w.id)).toEqual([undefined, "g2", "g1"]);
 	});
 
 	it("removes a connector attached to a descendant of a removed subtree", () => {
-		// The unknown type carries children of its own: the whole subtree goes,
+		// The removed object carries children of its own: the whole subtree goes,
 		// and connectors to any of its descendants go with it.
 		const result = strip(
 			doc([
 				rect("r1"),
-				unknownShape("u1", { children: [rect("r2")] }),
+				idlessShape({ children: [rect("r2")] }),
 				connector("c1", ownedRef("r1"), ownedRef("r2")),
 			]),
 		);
 		expect(rootIds(result.data)).toEqual(["r1"]);
+		const connectorWarning = result.warnings.find((w) => w.id === "c1");
+		expect(connectorWarning?.path).toBe("root[2]");
 	});
 
 	it("keeps a connector whose owner never existed (left to validateSemantics)", () => {
@@ -383,7 +417,7 @@ describe("stripUnknownContent", () => {
 			const result = strip({
 				version: 1,
 				view: { open: "nope" },
-				root: [rect("r1"), unknownShape("u1")],
+				root: [rect("r1"), idlessShape()],
 			});
 			expect((result.data as { view: object }).view).toEqual({});
 			expect(rootIds(result.data)).toEqual(["r1"]);

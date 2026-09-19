@@ -133,7 +133,7 @@ const toSemanticDiagnostics = (
  * not fitting, which is ~50 wrong answers around each real one.
  *
  * @param text - The whole file as text, not a parsed object: a JSON syntax error is one of the results, and it is reported as a single error diagnostic with no path
- * @returns `ok` false when any diagnostic is an error; `doc` is present whenever the parser accepted the text, holding the document with unknown types and enum values stripped (each strip reported as a warning)
+ * @returns `ok` false when any diagnostic is an error; `doc` is present whenever the parser accepted the text, holding the document with unknown enum values stripped and objects of unknown types kept as they are (each reported as a warning)
  */
 export const validateDoc = (text: string): ValidateDocResult => {
 	let data: unknown;

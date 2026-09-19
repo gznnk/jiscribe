@@ -61,18 +61,79 @@ describe("parseWithRegistry", () => {
 			}
 		});
 
-		it("returns ok with warnings for an unknown type (the object is stripped)", () => {
+		it("returns ok with warnings for an unknown type (the object is kept as it is)", () => {
+			const unknownObject = {
+				id: "u",
+				type: "rectangle",
+				strokeDashType: "wavy",
+				children: [{ id: "inner", type: "nope" }],
+			};
+			const result = parse(text(validDoc([rect("r1"), unknownObject])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual(["r1", "u"]);
+				// Nothing inside it is ours: not even an unknown enum value is stripped.
+				expect(result.doc.root[1]).toEqual(unknownObject);
+				expect(result.warnings).toHaveLength(1);
+				expect(result.warnings[0].message).toBe(
+					'Object type "rectangle" is not a type this build knows: the object is kept as it is but not drawn.',
+				);
+			}
+		});
+
+		it("drops an unknown-type object that has no id, which nothing could keep in place", () => {
 			const result = parse(
-				text(validDoc([rect("r1"), { id: "u", type: "rectangle" }])),
+				text(validDoc([rect("r1"), { type: "rectangle", x: 0 }])),
 			);
 			expect(result.kind).toBe("ok");
 			if (result.kind === "ok") {
 				expect(result.doc.root.map((o) => o.id)).toEqual(["r1"]);
-				expect(result.warnings).toHaveLength(1);
-				expect(result.warnings[0].message).toContain(
-					'Unknown object type "rectangle"',
-				);
+				expect(result.warnings[0].message).toContain("will be dropped on save");
 			}
+		});
+
+		it("accepts a connector attached to an unknown-type object or to what it holds", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						{ id: "u1", type: "hexagram", children: [{ id: "u1-inner" }] },
+						{
+							id: "c1",
+							type: "connector",
+							points: [],
+							source: { owner: { id: "r1" }, anchor: { kind: "center" } },
+							target: { owner: { id: "u1" }, anchor: { kind: "center" } },
+						},
+						{
+							id: "c2",
+							type: "connector",
+							points: [],
+							source: { owner: { id: "r1" }, anchor: { kind: "center" } },
+							target: {
+								owner: { id: "u1-inner" },
+								anchor: { kind: "center" },
+							},
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual([
+					"r1",
+					"u1",
+					"c1",
+					"c2",
+				]);
+			}
+		});
+
+		it("still rejects an id an unknown-type object shares with another object", () => {
+			const result = parse(
+				text(validDoc([rect("dup"), { id: "dup", type: "hexagram" }])),
+			);
+			expect(result.kind).toBe("semantic-error");
 		});
 
 		it("returns ok with warnings for an unknown enum value (the field is stripped)", () => {
@@ -111,11 +172,11 @@ describe("parseWithRegistry", () => {
 			}
 		});
 
-		it("returns ok with an empty root when every entry has an unknown type", () => {
+		it("keeps every entry when all of them have an unknown type", () => {
 			const result = parse(text(validDoc([{ id: "u1", type: "hexagram" }])));
 			expect(result.kind).toBe("ok");
 			if (result.kind === "ok") {
-				expect(result.doc.root).toEqual([]);
+				expect(result.doc.root).toEqual([{ id: "u1", type: "hexagram" }]);
 				expect(result.warnings).toHaveLength(1);
 			}
 		});

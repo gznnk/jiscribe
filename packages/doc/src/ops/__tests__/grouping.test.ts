@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
 	docOps,
+	docWithUnknownObject,
 	emptyDoc,
 	expectValid,
 	readObject,
 	rootIds,
 	twoConnectedRects,
+	unknownObjectFields,
 } from "./support/docFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
@@ -412,7 +414,67 @@ describe("objects measured from their children", () => {
 		} as unknown as ObjectDoc);
 
 		expect(() => docOps.setPosition(doc, "gadget-1", { x: 10 })).toThrow(
-			/"gadget"\) has no position that can be changed/,
+			/gadget-1 is "gadget", a type this build does not know: it is kept as it is/,
+		);
+	});
+});
+
+describe("an object of a type this instance does not know", () => {
+	it("is grouped and released in its place among the members", () => {
+		const doc = docWithUnknownObject();
+
+		const groupId = docOps.groupObjects(doc, [
+			"rect-1",
+			"hexagram-1",
+			"rect-2",
+		]);
+		expect(docOps.getGroupMembers(doc, groupId)).toEqual([
+			"rect-1",
+			"hexagram-1",
+			"rect-2",
+		]);
+		expectValid(doc);
+
+		docOps.dissolveGroup(doc, groupId);
+		expect(rootIds(doc)).toEqual([
+			"rect-1",
+			"hexagram-1",
+			"rect-2",
+			"connector-1",
+			"connector-2",
+		]);
+		expectValid(doc);
+	});
+
+	it("is left as written when the group holding it moves, its geometry not being ours", () => {
+		const doc = docWithUnknownObject();
+		const groupId = docOps.groupObjects(doc, ["rect-1", "hexagram-1"]);
+
+		docOps.translateObjects(doc, [groupId], 10, 20);
+
+		expect(readObject(doc, "rect-1")).toMatchObject({ x: 10, y: 20 });
+		expect(readObject(doc, "hexagram-1")).toEqual(
+			unknownObjectFields("hexagram-1"),
+		);
+	});
+
+	it("does not count toward the box of the group holding it", () => {
+		const doc = docWithUnknownObject();
+		const groupId = docOps.groupObjects(doc, ["rect-1", "hexagram-1"]);
+
+		expect(docOps.getObjectBounds(doc, groupId)).toEqual({
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+		});
+	});
+
+	it("cannot be moved on its own", () => {
+		const doc = docWithUnknownObject();
+
+		expect(() => docOps.setPosition(doc, "hexagram-1", { x: 0 })).toThrow(
+			/a type this build does not know/,
 		);
 	});
 });

@@ -47,6 +47,22 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ### Fixed
 
+- **An object of a type this server does not ship survives an edit.** A
+  shape from a plugin the server lacks, or from a newer version, was dropped
+  from the file by any tool that wrote it back — `add_rect` replied only
+  `added rect ...` — and `undo` could not bring it back, since the history
+  held the document without it; saving from the viewer lost it the same way.
+  Only `diagnose_canvas` said so, as "will be dropped on save". Such an object
+  is now kept exactly as written, in its place among its siblings, through
+  every tool, `undo` and the viewer. The viewer does not draw it, and a
+  connector attached to it is kept too, undrawn. `list_objects` and
+  `find_objects` show it flagged `unknownType`, with the box its
+  `x` / `y` / `width` / `height` state; `delete_objects`, `reorder_objects`
+  and the group tools act on it, while a tool that would edit what is inside
+  it (moving, resizing, styling) refuses or skips it and says why.
+  `diagnose_canvas` now reports it as `Object type "…" is not a type this
+build knows: the object is kept as it is but not drawn.`, beside the schema
+  error its type still draws.
 - **A tool no longer leaves a file that `diagnose_canvas` rejects.** A call
   could succeed and write something the parser lets through but the schema
   forbids: `add_object` / `add_objects` stored a `text` on `lucideIcon`,

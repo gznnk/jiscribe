@@ -4,11 +4,13 @@ import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
 import {
 	docOps,
+	docWithUnknownObject,
 	emptyDoc,
 	expectValid,
 	readObject,
 	rootIds,
 	twoRects,
+	unknownObjectFields,
 } from "./support/docFixtures";
 import { badgeDefinition } from "./support/pluginFixtures";
 
@@ -270,6 +272,25 @@ describe("addObject", () => {
 		expect(() => docOps.addObject(doc, "group", { x: 0, y: 0 })).toThrow(
 			DocOperationError,
 		);
+	});
+});
+
+describe("addObject beside an object of a type this instance does not know", () => {
+	it("leaves that object where it was and as it was written", () => {
+		const doc = docWithUnknownObject();
+
+		docOps.addObject(doc, "rect", { x: 0, y: 200 });
+
+		expect(rootIds(doc)).toEqual([
+			"rect-1",
+			"hexagram-1",
+			"rect-2",
+			"connector-1",
+			"connector-2",
+			"rect-3",
+		]);
+		expect(doc.root[1]).toEqual(unknownObjectFields("hexagram-1"));
+		expectValid(doc);
 	});
 });
 

@@ -10,6 +10,10 @@ export type CanvasDocAny = CanvasDocV1;
  * It holds objects and connectors (type === "connector") mixed together, so the
  * order is directly the stacking order. Connectors are never group children and
  * exist only directly under root.
+ *
+ * An entry of a type the reader does not know is an `OpaqueObjectDoc`: kept
+ * where it is and written back unchanged, so the tree may hold objects no one
+ * reading it understands.
  */
 export type CanvasDocV1 = {
 	/**

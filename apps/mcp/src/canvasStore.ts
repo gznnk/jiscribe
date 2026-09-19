@@ -229,10 +229,10 @@ export function formatParseResult(result: CanvasParseResult): string {
 			if (result.warnings.length === 0) {
 				return "valid: true";
 			}
-			// Dropping unknown types and unknown enum values passes silently on the
-			// display and save routes, but is handed to the AI as a diagnostic so it
-			// corrects itself (the policy is to have it fixed through diagnostics rather
-			// than by the engine correcting it automatically).
+			// Keeping unknown types unread and dropping unknown enum values pass
+			// silently on the display and save routes, but are handed to the AI as a
+			// diagnostic so it corrects itself (the policy is to have it fixed through
+			// diagnostics rather than by the engine correcting it automatically).
 			const lines = result.warnings.map(
 				(warning) => `- ${warning.path}: ${warning.message}`,
 			);

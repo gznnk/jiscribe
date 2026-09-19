@@ -2,8 +2,8 @@
 // doc plugins (for parsing) come out of one place.
 //
 // **It must be the same set as the server's canvasDefinitions.ts.** Once they drift,
-// the viewer rejects a shape the AI added through a tool as an unknown type, and the
-// screen stops updating.
+// the viewer holds a shape the AI added through a tool as an unknown type, and never
+// draws it.
 
 import { createCanvasParser } from "@jiscribe/doc";
 import { standardPlugins } from "@jiscribe/standard-shapes";

@@ -65,18 +65,57 @@ const star = (id: string, over: Record<string, unknown> = {}) => ({
 
 describe("createCanvasParser", () => {
 	describe("without the plugin definition registered", () => {
-		it("strips the plugin-type object and reports it as an ok warning", () => {
+		it("keeps the plugin-type object as it is and reports it as an ok warning", () => {
 			const parser = createCanvasParser();
 			const result = parser.parse(
 				text({ version: 1, root: [rect("r1"), star("s1")] }),
 			);
 			expect(result.kind).toBe("ok");
 			if (result.kind === "ok") {
-				expect(result.doc.root.map((o) => o.id)).toEqual(["r1"]);
+				expect(result.doc.root.map((o) => o.id)).toEqual(["r1", "s1"]);
+				expect(result.doc.root[1]).toEqual(star("s1"));
 				expect(result.warnings).toHaveLength(1);
 				expect(result.warnings[0].message).toContain(
-					'Unknown object type "star"',
+					'Object type "star" is not a type this build knows',
 				);
+			}
+		});
+	});
+
+	describe("a document holding objects of types the parser does not know", () => {
+		it("serializes back to the text it was parsed from, nesting and z-order included", () => {
+			const doc = {
+				version: 1,
+				root: [
+					star("s1"),
+					rect("r1"),
+					{
+						id: "g1",
+						type: "group",
+						children: [rect("r2"), star("s2", { strokeDashType: "wavy" })],
+					},
+					{
+						id: "c1",
+						type: "connector",
+						points: [],
+						source: { owner: { id: "r1" }, anchor: { kind: "center" } },
+						target: { owner: { id: "s2" }, anchor: { kind: "center" } },
+					},
+					star("s3"),
+				],
+			};
+			const sourceText = JSON.stringify(doc, null, "\t");
+
+			const result = createCanvasParser().parse(sourceText);
+
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(JSON.stringify(result.doc, null, "\t")).toBe(sourceText);
+				expect(result.warnings.map((warning) => warning.id)).toEqual([
+					"s1",
+					"s2",
+					"s3",
+				]);
 			}
 		});
 	});
@@ -225,12 +264,12 @@ describe("createCanvasParser", () => {
 			}
 		});
 
-		it("strips a type no built-in supplies and reports it as an ok warning", () => {
+		it("keeps a type no built-in supplies and reports it as an ok warning", () => {
 			const doc = { version: 1, root: [{ id: "x", type: "rectangle" }] };
 			const result = createCanvasParser().parse(text(doc));
 			expect(result.kind).toBe("ok");
 			if (result.kind === "ok") {
-				expect(result.doc.root).toEqual([]);
+				expect(result.doc.root).toEqual(doc.root);
 				expect(result.warnings).toHaveLength(1);
 			}
 		});

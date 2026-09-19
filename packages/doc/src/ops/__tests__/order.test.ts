@@ -4,6 +4,7 @@ import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import { DocOperationError } from "../errors";
 import {
 	docOps,
+	docWithUnknownObject,
 	emptyDoc,
 	expectValid,
 	readObject,
@@ -107,6 +108,31 @@ describe("reorderObjects", () => {
 			docOps.reorderObjects(doc, ["rect-1", "missing"], "front"),
 		).toThrow(DocOperationError);
 		expect(rootIds(doc)).toEqual(["rect-1", "rect-2", "rect-3", "rect-4"]);
+	});
+});
+
+describe("an object of a type this instance does not know", () => {
+	it("is restacked like any other, and keeps its place when others move", () => {
+		const doc = docWithUnknownObject();
+
+		docOps.reorderObjects(doc, ["rect-2"], "back");
+		expect(rootIds(doc)).toEqual([
+			"rect-2",
+			"rect-1",
+			"hexagram-1",
+			"connector-1",
+			"connector-2",
+		]);
+
+		docOps.reorderObjects(doc, ["hexagram-1"], "front");
+		expect(rootIds(doc)).toEqual([
+			"rect-2",
+			"rect-1",
+			"connector-1",
+			"connector-2",
+			"hexagram-1",
+		]);
+		expectValid(doc);
 	});
 });
 
