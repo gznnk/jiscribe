@@ -18,11 +18,12 @@ const NUDGE_STEP = 10;
 const SAVE_FAILED_PREFIX = "保存に失敗しました";
 
 /**
- * What the viewer says when a newer file is drawn over edits it has not saved yet
- * (UNSAVED_EDITS_OVERWRITTEN_MESSAGE in src/viewer/useDocSync.ts)
+ * What the viewer says when a newer file changed the object an edit it has not
+ * saved yet was made to, the object's id following it (formatMergeConflictMessage
+ * in src/viewer/useDocSync.ts)
  */
-const UNSAVED_EDITS_OVERWRITTEN_MESSAGE =
-	"保存できていなかった変更は、ファイルが他で更新されたため取り消されました";
+const MERGE_CONFLICT_PREFIX =
+	"他の編集で更新されたため、次の変更は保存されませんでした: ";
 
 /**
  * How long the edit is given to reach the file once the host can be reached again.
@@ -106,7 +107,7 @@ test("saves an edit made just before going offline once back online", async ({
 	await expectNoViewerError(page);
 });
 
-test("says so when a tool's write is drawn over an edit that could not be saved", async ({
+test("says so when a tool's write to the same object wins over an edit that could not be saved", async ({
 	page,
 	canvas,
 	mcp,
@@ -142,6 +143,6 @@ test("says so when a tool's write is drawn over an edit that could not be saved"
 	expect(edited.isError).toBe(false);
 
 	await expect(page.locator(".viewer-error")).toHaveText(
-		UNSAVED_EDITS_OVERWRITTEN_MESSAGE,
+		`${MERGE_CONFLICT_PREFIX}${SINGLE_RECT.id}`,
 	);
 });

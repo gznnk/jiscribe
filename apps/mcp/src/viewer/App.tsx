@@ -32,6 +32,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 import { CanvasErrorBoundary } from "./CanvasErrorBoundary";
+import { waitForCanvasFrames } from "./canvasFrames";
 import { CanvasSurface } from "./CanvasSurface";
 import { calcDocLoadId } from "./ownEcho";
 import { createDocImageResolver } from "./resolveDocImage";
@@ -74,31 +75,6 @@ const noticeStyle: CSSProperties = {
 	animationDuration: `${NOTICE_DURATION_MS}ms`,
 };
 
-/**
- * The longest {@link waitForCanvasFrames} waits. A window in the background is given
- * no frames at all, and the host gives up on the whole flush after 3 seconds
- */
-const CANVAS_FRAMES_TIMEOUT_MS = 200;
-
-/**
- * Waits two frames, for an edit the canvas is still holding to reach onCommit: it
- * takes pointer input up on an animation frame and hands the commit over in an
- * effect after drawing it, so a drag released just before the host asks for a flush
- * would otherwise be committed after the answer. Best effort — a render slower than
- * a frame can still miss it, and the edit is then dropped and reported rather than
- * written anywhere (see useDocSync)
- */
-const waitForCanvasFrames = (): Promise<void> =>
-	new Promise((resolve) => {
-		const timer = window.setTimeout(resolve, CANVAS_FRAMES_TIMEOUT_MS);
-		window.requestAnimationFrame(() => {
-			window.requestAnimationFrame(() => {
-				window.clearTimeout(timer);
-				resolve();
-			});
-		});
-	});
-
 /** What Ctrl+S is answered with, in place of the browser's save dialog */
 const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
 
@@ -125,6 +101,12 @@ export function App() {
 	const noticeCountRef = useRef(0);
 	const canvasHandleRef = useRef<CanvasHandle | null>(null);
 
+	const isPersonInteracting = useCallback(
+		(): boolean =>
+			canvasHandleRef.current?.interaction.getStatus().isBusy ?? false,
+		[],
+	);
+
 	const {
 		doc,
 		openDoc,
@@ -132,7 +114,7 @@ export function App() {
 		applyDocError,
 		handleCommit,
 		flushPendingSave,
-	} = useDocSync({ reportError: setErrorMessage });
+	} = useDocSync({ reportError: setErrorMessage, isPersonInteracting });
 	const openPath = openDoc?.relPath ?? null;
 
 	// One resolver per open file: a src is relative to that file's directory
@@ -192,11 +174,13 @@ export function App() {
 
 	/**
 	 * Writes out the edits, the ones the canvas has yet to hand over included, before
-	 * the host moves on to another file or closes this window
+	 * the host moves on to another file or closes this window. A drag released just
+	 * before is committed a frame or two later; missed, it is dropped and reported
+	 * rather than written anywhere (see useDocSync)
 	 */
 	const flushEditsForHost = useCallback(async (): Promise<boolean> => {
 		await waitForCanvasFrames();
-		return await flushPendingSave();
+		return await flushPendingSave({ isLeavingDocument: true });
 	}, [flushPendingSave]);
 
 	/**
@@ -254,9 +238,10 @@ export function App() {
 			}
 			event.preventDefault();
 			void flushPendingSave().then((isSaved) => {
-				// A write that did not land shows up in the error bar, and with no file
-				// open there is nothing to say; saying it is saved on top of either
-				// would be the opposite of the truth
+				// A write that did not land shows up in the error bar, with no file open
+				// there is nothing to say, and edits waiting for a gesture to end are
+				// saved once it has; saying it is saved on top of any of them would be
+				// the opposite of the truth
 				if (isSaved) {
 					showNotice(AUTO_SAVE_NOTICE);
 				}
@@ -282,7 +267,7 @@ export function App() {
 	// on the debounce is treated as the best that can be hoped for
 	useEffect(() => {
 		const handleBeforeUnload = (): void => {
-			void flushPendingSave();
+			void flushPendingSave({ isLeavingDocument: true });
 		};
 		window.addEventListener("beforeunload", handleBeforeUnload);
 		return () => {

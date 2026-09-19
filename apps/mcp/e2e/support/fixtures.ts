@@ -85,6 +85,29 @@ export async function selectObject(
 }
 
 /**
+ * The middle of one drawn object, in the driver's content coordinates. Measures the
+ * canvas origin first, for the reason {@link selectObject} gives, so it also leaves
+ * nothing selected.
+ *
+ * @param canvas The driver over the viewer page
+ * @param id The object's `data-id`
+ */
+export async function objectCenter(
+	canvas: CanvasDriver,
+	id: string,
+): Promise<{ x: number; y: number }> {
+	await canvas.deselect();
+	const box = await canvas.objectById(id).boundingBox();
+	if (box === null) {
+		throw new Error(`${id} is not drawn, so it has no middle`);
+	}
+	return canvas.toContent({
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+	});
+}
+
+/**
  * Closes the window and folds the host, so the next test finds the default port
  * free.
  *

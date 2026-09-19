@@ -47,6 +47,22 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ### Fixed
 
+- **A person's edit and a write from elsewhere to the same file both land.**
+  A write from the AI or another window replaced the viewer's document
+  outright: a drag still inside the 500 ms save debounce, or an edit whose
+  save had failed, was drawn over and never reached the file; and any write —
+  even to an object nobody was touching — closed the text editor and cut off a
+  drag in progress, so typed text and the drag went nowhere. The viewer now
+  merges the edits the file does not hold yet onto the newer file, object by
+  object at every depth, with group membership, stacking order and the
+  document's own fields (background, view) merged apart; the result is drawn
+  and written under the newer revision. Where both sides changed the same
+  object, or one deleted what the other changed, the file wins and the error
+  bar names what of the person's was not saved. While a drag, a resize or the
+  text editor is under way, a newer file is held back and taken in once the
+  person lets go. A save refused because the file had moved on (412) is no
+  longer reported as lost: the newer file follows, and the edit is merged
+  onto it.
 - **An edit whose save failed on the way is sent again.** When the viewer's
   write did not reach the host (the network dropped, the host was restarting
   or answered with a 5xx), the error bar said so but nothing ever sent the
@@ -57,8 +73,7 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
   its connection comes back, and says so in the error bar while it does. A
   refusal about the write itself — a conflict, a host restarted since (401),
   another file on display (409), a file that may not be written to (now 403
-  rather than 500), an invalid document — is shown and not sent again. A newer file drawn over edits that were never saved now says so
-  instead of replacing them silently.
+  rather than 500), an invalid document — is shown and not sent again.
 - **A file put back as it was brings the viewer back.** When a `.jis` that
   had been broken, deleted or unreadable was restored byte for byte (an
   editor or git rewriting the same content, a writer caught half way through
@@ -67,8 +82,8 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
   page was quietly never saved, until the next change from outside threw
   those edits away. The same text after such an error now clears it, and
   edits made in the meantime — made on that very text — are written out. A
-  broken file replaced by different content still draws that content, and
-  now says the edits made while it was broken were not saved. The host also
+  broken file replaced by different content draws that content, with the
+  edits made while it was broken merged onto it. The host also
   sends a file that went missing and came back with its old content, which it
   used to hold back as already known.
 - **One file named two ways is one file.** The per-file lock and the undo

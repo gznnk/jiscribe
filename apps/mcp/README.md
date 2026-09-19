@@ -107,8 +107,12 @@ directory, symbolic links included. Every write is parsed as a canvas document
 first, names the revision the window last synced (`If-Match`, the SHA-256 the
 host put on the `openCanvas` / `docChanged` frame) and goes through the same
 per-file lock the tools use, so a person's save and the AI's write cannot
-overwrite each other unnoticed: a save behind the file is refused with 412 and
-the window shows the newer document instead. The window knows a document by
+overwrite each other unnoticed: a save behind the file is refused with 412.
+Edits the file does not hold yet are not drawn over by a newer file either:
+the window merges them onto it object by object and writes the result, and
+where both sides changed the same object the file wins and the error bar says
+which change was not saved. A newer file that arrives mid-drag or while text is
+being typed waits until the person lets go. The window knows a document by
 the host that sent it as well as by its path, so a file of the same name in
 another directory starts afresh — its undo history does not reach back into
 the previous file — while a reconnect to the same host keeps it. An edit is

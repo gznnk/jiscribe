@@ -5,8 +5,16 @@
 // one side from throwing away the other's work:
 //
 // - every write quotes the revision of the text it replaces, and the host refuses
-//   it when the file has moved on since (a conflict is not retried — the newer
-//   text is already on its way as a docChanged frame)
+//   it when the file has moved on since (a conflict is not retried as it is — the
+//   newer text is already on its way as a docChanged frame, and the edits are
+//   merged onto that)
+// - a newer file for the document drawn does not replace edits it does not hold
+//   yet: they are merged onto it, object by object (./mergeCanvasDocs), and the
+//   result is drawn and written. Where both changed the same object the file wins,
+//   and the error bar names what of the person's was dropped
+// - while the person has something in hand — a drag, a resize, text being typed —
+//   a newer file is held back rather than drawn, since drawing it would cut that
+//   off; it is taken in, merged with what the person committed, once they let go
 // - while the text that arrived cannot be parsed, saving is blocked. The doc on
 //   screen is then older than the file, so writing it out would undo whatever is
 //   being edited outside
@@ -15,8 +23,7 @@
 //   goes, and the edits made meanwhile — on that very text — are written out
 // - edits the file does not hold yet are remembered as such until a write carrying
 //   them lands. A write that failed on the way (no answer, a 5xx) is sent again on
-//   a backoff and at once when the connection comes back; a newer file drawn over
-//   them is said so in the error bar rather than taking them silently
+//   a backoff and at once when the connection comes back
 //
 // And an edit is written to the document it was made on and to no other. The doc
 // waiting to be written is kept together with the document it belongs to, and an
@@ -32,8 +39,14 @@ import {
 	useState,
 } from "react";
 
+import { waitForCanvasFrames } from "./canvasFrames";
 import { canvasParser } from "./canvasPlugins";
 import { saveFile, type SaveFileResult } from "./files";
+import {
+	isSameJsonValue,
+	mergeCanvasDocs,
+	type CanvasMergeConflict,
+} from "./mergeCanvasDocs";
 import { classifyIncomingDoc, isSameDoc, type DocIdentity } from "./ownEcho";
 
 /**
@@ -48,11 +61,11 @@ const BROKEN_FILE_NOTE =
 	"ファイルが壊れています。読めるようになるまで、この画面の編集は保存されません";
 
 /**
- * Shown when a readable file replaced edits made while it was broken. They could
- * not be saved then, and the file has since moved on from the text they were made on
+ * How often a file held back behind the person's gesture checks whether the
+ * gesture has ended. The canvas says what the person is doing when asked but has
+ * nothing to call when it changes, so it is asked
  */
-const BROKEN_FILE_EDITS_LOST_MESSAGE =
-	"ファイルが外で書き直されたため、壊れていた間の変更は保存されませんでした";
+const HELD_DOC_POLL_MS = 100;
 
 /**
  * The first wait before a write that failed on the way is sent again, doubled on
@@ -78,14 +91,35 @@ const formatSaveFailedMessage = (
 
 /**
  * Shown when a newer file for the same document is drawn over edits the host
- * never took
+ * never took, because they could not be merged onto it at all (the merged doc did
+ * not parse — a connector attached to an object the other side deleted)
  */
 const UNSAVED_EDITS_OVERWRITTEN_MESSAGE =
 	"保存できていなかった変更は、ファイルが他で更新されたため取り消されました";
 
-/** Shown when the host refused the write because the file had moved on */
-const SAVE_CONFLICT_MESSAGE =
-	"他の編集で更新されたため、この変更は保存されませんでした";
+/** Names one dropped change for the error bar: the object's id, or the field's key */
+const describeMergeConflict = (conflict: CanvasMergeConflict): string => {
+	switch (conflict.kind) {
+		case "object":
+		case "placement":
+			return conflict.id;
+		case "order":
+			return conflict.id === null ? "重なり順" : `${conflict.id} の重なり順`;
+		case "field":
+			return conflict.key;
+	}
+};
+
+/**
+ * The error bar's text for the person's changes a merge dropped, because the file
+ * had changed the same things another way.
+ *
+ * @param conflicts What was dropped, as the merge names it; at least one
+ */
+const formatMergeConflictMessage = (
+	conflicts: readonly CanvasMergeConflict[],
+): string =>
+	`他の編集で更新されたため、次の変更は保存されませんでした: ${conflicts.map(describeMergeConflict).join("、")}`;
 
 /**
  * Shown for an edit made on a document that is no longer the one on display. The
@@ -102,6 +136,46 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
  */
 const serializeDoc = (doc: CanvasDoc): string =>
 	`${JSON.stringify(doc, null, "\t")}\n`;
+
+/**
+ * How the person's unsaved edits went onto a newer file: merged (conflicts naming
+ * what was dropped), or not at all
+ */
+type UnsavedEditsMerge =
+	| { kind: "merged"; doc: CanvasDoc; conflicts: CanvasMergeConflict[] }
+	| { kind: "failed" };
+
+/**
+ * Merges the edits on screen onto a newer file for the same document.
+ *
+ * @param baseText The text the edits were made on (unsavedEditsRef's baseText)
+ * @param mineDoc The doc on screen, the edits in it
+ * @param theirsDoc The newer file, parsed
+ * @returns The merged doc, parsed again so that the canvas is handed nothing the
+ *   parser has not passed; failed when the base or the merge does not parse
+ */
+const mergeUnsavedEdits = (
+	baseText: string,
+	mineDoc: CanvasDoc,
+	theirsDoc: CanvasDoc,
+): UnsavedEditsMerge => {
+	const baseResult = canvasParser.parse(baseText);
+	if (baseResult.kind !== "ok") {
+		return { kind: "failed" };
+	}
+	const { doc, conflicts } = mergeCanvasDocs({
+		base: baseResult.doc,
+		mine: mineDoc,
+		theirs: theirsDoc,
+	});
+	if (doc === theirsDoc) {
+		return { kind: "merged", doc, conflicts };
+	}
+	const mergedResult = canvasParser.parse(serializeDoc(doc));
+	return mergedResult.kind === "ok"
+		? { kind: "merged", doc: mergedResult.doc, conflicts }
+		: { kind: "failed" };
+};
 
 const formatParseError = (
 	result: Exclude<ReturnType<typeof canvasParser.parse>, { kind: "ok" }>,
@@ -121,7 +195,16 @@ const formatParseError = (
 export type DocSyncOptions = {
 	/** Puts a message in the error bar, or clears it with null */
 	reportError: (message: string | null) => void;
+	/**
+	 * Whether the person has something in hand that drawing a new doc would cut off
+	 * (the canvas handle's `interaction.getStatus().isBusy`). Read on every frame
+	 * and while one is held back, so a fresh function each render is fine
+	 */
+	isPersonInteracting: () => boolean;
 };
+
+/** A doc frame as it arrived, kept until it can be taken in */
+type DocFrame = { identity: DocIdentity; docText: string; revision: string };
 
 export type DocSync = {
 	/** The doc to draw. A new object on every incoming frame and every edit */
@@ -137,7 +220,9 @@ export type DocSync = {
 	 * only the revision is taken from it, so that the canvas is not redrawn under
 	 * the person's hands. After the file was broken or could not be read, the same
 	 * text is the file recovering instead: the error is cleared, and edits made
-	 * meanwhile are written out
+	 * meanwhile are written out. Newer text for the same document is held back
+	 * while the person is in the middle of something, and merged with the edits the
+	 * file does not hold yet when it is drawn
 	 */
 	applyIncomingDoc: (
 		identity: DocIdentity,
@@ -158,9 +243,18 @@ export type DocSync = {
 	 * Writes the current doc out, the edits still sitting on the debounce taken
 	 * along and behind whatever write is already on its way. False means the file
 	 * does not hold these edits, and why is in the error bar — a failed write, a
-	 * file that has moved on, a file too broken to parse, or none open at all
+	 * file that has moved on, a file too broken to parse, or none open at all — or,
+	 * with nothing in the error bar, that a newer file is held back behind the
+	 * person's gesture and the edits go out merged onto it once that ends.
+	 *
+	 * @param options.isLeavingDocument Whether the page is about to leave this
+	 *   document (another file opening, the window closing). A newer file held back
+	 *   is then taken in and merged at once, the gesture going with it, since after
+	 *   this the host takes no writes for it
 	 */
-	flushPendingSave: () => Promise<boolean>;
+	flushPendingSave: (options?: {
+		isLeavingDocument?: boolean;
+	}) => Promise<boolean>;
 };
 
 /**
@@ -170,7 +264,10 @@ export type DocSync = {
  * @returns The doc and the document it belongs to, to draw with, the way an incoming frame goes
  *   in, and the two ways a person's edits reach the file (on commit, flushed)
  */
-export function useDocSync({ reportError }: DocSyncOptions): DocSync {
+export function useDocSync({
+	reportError,
+	isPersonInteracting,
+}: DocSyncOptions): DocSync {
 	const [doc, setDoc] = useState<CanvasDoc>(emptyDoc);
 	const [openDoc, setOpenDoc] = useState<DocIdentity | null>(null);
 
@@ -196,11 +293,18 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 	// The write that is on its way, so that a second save queues behind it rather
 	// than racing it, and so that closing or flushing can wait for it
 	const inFlightSaveRef = useRef<Promise<boolean> | null>(null);
-	// Set when the host refused a write over a newer file. The frame carrying that
-	// newer text follows within the watch interval and would clear the error bar,
-	// taking the one explanation of why the edit vanished with it; so that frame
-	// leaves the message up and only the next one clears it
-	const hasUnexplainedConflictRef = useRef(false);
+	// What a merge dropped, said in the error bar. The merge's own write clears the
+	// bar when it lands, so this is what it says instead, until the person's next
+	// edit
+	const mergeConflictMessageRef = useRef<string | null>(null);
+	// A newer file for the document drawn, held back while the person has something
+	// in hand, and the timer watching for them to let go
+	const heldFrameRef = useRef<DocFrame | null>(null);
+	const heldFrameTimerRef = useRef<number | null>(null);
+	const isPersonInteractingRef = useRef(isPersonInteracting);
+	useEffect(() => {
+		isPersonInteractingRef.current = isPersonInteracting;
+	});
 	// Set from the first edit the host does not hold yet until a write carrying all
 	// of them lands, whether or not a save is scheduled. baseText is the text the
 	// host held when they were made, which is what a newer file drawn over them has
@@ -214,6 +318,8 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 	// The retry goes through this rather than saveNow itself, which is what
 	// schedules it
 	const saveNowRef = useRef<(() => Promise<boolean>) | null>(null);
+	// The watch goes through this, for the same reason
+	const takeInHeldFrameRef = useRef<(() => void) | null>(null);
 
 	// The document the canvas's commits are made on. It trails openDoc: the canvas
 	// takes a new document up in an effect of the render that hands it over, so a
@@ -265,6 +371,14 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			reportError(brokenFileErrorRef.current);
 			return false;
 		}
+		// The file has moved on to the one held back, so this write would only be
+		// refused; the edits go out merged onto it once it is taken in
+		if (
+			heldFrameRef.current !== null &&
+			isSameDoc(heldFrameRef.current.identity, targetDoc)
+		) {
+			return false;
+		}
 		const text = serializeDoc(latestDoc.doc);
 		if (text === syncedTextRef.current) {
 			// Edited back to what the host holds: nothing is owed any longer
@@ -314,35 +428,34 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		hasUndeliveredEditsRef.current = false;
 		saveRetryDelayMsRef.current = SAVE_RETRY_BASE_DELAY_MS;
 		if (result.kind === "conflict") {
-			// The newer document arrives as a docChanged frame, which redraws the
-			// canvas with it; writing again here is how the other edit would be lost.
-			// The revision is left as it was, since it belongs with the text put back
+			// The newer document arrives as a docChanged frame, and these edits, still
+			// owed, are merged onto it then; writing them again as they are is how the
+			// other edit would be lost. The revision is left as it was, since it
+			// belongs with the text put back
 			restoreSyncedText();
-			hasUnexplainedConflictRef.current = true;
-			reportError(SAVE_CONFLICT_MESSAGE);
 			return false;
 		}
 		// Only while this write is still what the host is believed to hold: a frame
-		// that landed in the meantime brought the revision belonging to its own text
+		// that landed in the meantime brought the revision belonging to its own text,
+		// and has settled what is owed on top of it
 		if (syncedTextRef.current === text) {
 			revisionRef.current = result.revision;
-		}
-		// Edits committed while the write was out are the ones still owed, and they
-		// were made on top of what it wrote
-		const currentDoc = latestDocRef.current;
-		if (
-			currentDoc !== null &&
-			isSameDoc(currentDoc.identity, targetDoc) &&
-			serializeDoc(currentDoc.doc) !== text
-		) {
-			unsavedEditsRef.current = { baseText: text };
-		} else {
-			unsavedEditsRef.current = null;
+			// Edits committed while the write was out are the ones still owed, and
+			// they were made on top of what it wrote
+			const currentDoc = latestDocRef.current;
+			if (
+				currentDoc !== null &&
+				isSameDoc(currentDoc.identity, targetDoc) &&
+				serializeDoc(currentDoc.doc) !== text
+			) {
+				unsavedEditsRef.current = { baseText: text };
+			} else {
+				unsavedEditsRef.current = null;
+			}
 		}
 		// The host has the file again, written from this page
 		isFileMissingRef.current = false;
-		hasUnexplainedConflictRef.current = false;
-		reportError(null);
+		reportError(mergeConflictMessageRef.current);
 		return true;
 	}, [reportError]);
 
@@ -385,7 +498,8 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		saveNowRef.current = saveNow;
 	}, [saveNow]);
 
-	const flushPendingSave = useCallback(async (): Promise<boolean> => {
+	/** Writes out now what is on the debounce, behind any write already out */
+	const saveWithoutDebounce = useCallback(async (): Promise<boolean> => {
 		if (saveTimerRef.current !== null) {
 			window.clearTimeout(saveTimerRef.current);
 			saveTimerRef.current = null;
@@ -393,15 +507,16 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		return await saveNow();
 	}, [saveNow]);
 
-	const applyIncomingDoc = useCallback(
-		(identity: DocIdentity, docText: string, revision: string): void => {
-			const wasFileBroken = brokenFileErrorRef.current !== null;
+	/** Draws a doc frame, or settles what it says without drawing (an echo, a recovery) */
+	const takeInDoc = useCallback(
+		({ identity, docText, revision }: DocFrame): void => {
 			const incomingKind = classifyIncomingDoc(
 				{ identity, docText },
 				{
 					identity: latestDocRef.current?.identity ?? null,
 					syncedText: syncedTextRef.current,
-					isFileUnusable: wasFileBroken || isFileMissingRef.current,
+					isFileUnusable:
+						brokenFileErrorRef.current !== null || isFileMissingRef.current,
 					hasUndeliveredEdits: hasUndeliveredEditsRef.current,
 				},
 			);
@@ -425,10 +540,9 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 				revisionRef.current = revision;
 				brokenFileErrorRef.current = null;
 				isFileMissingRef.current = false;
-				hasUnexplainedConflictRef.current = false;
 				saveRetryDelayMsRef.current = SAVE_RETRY_BASE_DELAY_MS;
 				reportError(null);
-				void flushPendingSave();
+				void saveWithoutDebounce();
 				return;
 			}
 			const result = canvasParser.parse(docText);
@@ -440,67 +554,182 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			}
 			brokenFileErrorRef.current = null;
 			isFileMissingRef.current = false;
-			// Edits still on the debounce, or not yet taken by the host, belong to the
-			// document being replaced, and the host no longer takes writes for it
 			const previousDoc = latestDocRef.current?.identity ?? null;
 			const isSameDocument = isSameDoc(previousDoc, identity);
-			const pendingSaveTimer = saveTimerRef.current;
+			// Edits still on the debounce, or not yet taken by the host, belong to the
+			// document being replaced, and the host no longer takes writes for it
 			const hasLostEdit =
 				!isSameDocument &&
-				(pendingSaveTimer !== null || unsavedEditsRef.current !== null);
-			if (hasLostEdit && pendingSaveTimer !== null) {
-				window.clearTimeout(pendingSaveTimer);
+				(saveTimerRef.current !== null || unsavedEditsRef.current !== null);
+			// On the same document they go onto the newer file instead, and whatever
+			// comes of that is written below rather than on the debounce
+			if (saveTimerRef.current !== null) {
+				window.clearTimeout(saveTimerRef.current);
 				saveTimerRef.current = null;
 			}
-			// Drawn over edits the host never took, for the same document. Edits undone
-			// back to the text they were made on are nothing to lose
 			const unsavedEdits = unsavedEditsRef.current;
-			const hasOverwrittenUnsavedEdits =
-				isSameDocument &&
-				unsavedEdits !== null &&
-				latestDocRef.current !== null &&
-				serializeDoc(latestDocRef.current.doc) !== unsavedEdits.baseText;
-			// Whatever was owed is now drawn over, so there is nothing left to send
-			unsavedEditsRef.current = null;
+			const merge =
+				isSameDocument && unsavedEdits !== null && latestDocRef.current !== null
+					? mergeUnsavedEdits(
+							unsavedEdits.baseText,
+							latestDocRef.current.doc,
+							result.doc,
+						)
+					: null;
+			// Key order and the like aside, a merge that came to the file's own doc has
+			// nothing to write, and the file's is drawn as it is
+			const mergedDoc =
+				merge?.kind === "merged" && !isSameJsonValue(merge.doc, result.doc)
+					? merge.doc
+					: null;
+			const docToDraw = mergedDoc ?? result.doc;
+			// Whatever was owed is now drawn, merged or over, so the old write is not
+			// sent again; what the merge added is owed on top of this text
+			unsavedEditsRef.current =
+				mergedDoc === null ? null : { baseText: docText };
 			hasUndeliveredEditsRef.current = false;
 			saveRetryDelayMsRef.current = SAVE_RETRY_BASE_DELAY_MS;
 			if (saveRetryTimerRef.current !== null) {
 				window.clearTimeout(saveRetryTimerRef.current);
 				saveRetryTimerRef.current = null;
 			}
-			// Edits the broken file kept from being saved, now drawn over by a file
-			// that has moved on from the text they were made on
-			const hasLostBrokenFileEdit =
-				wasFileBroken &&
-				latestDocRef.current !== null &&
-				isSameDocument &&
-				serializeDoc(latestDocRef.current.doc) !== syncedTextRef.current;
 			syncedTextRef.current = docText;
 			revisionRef.current = revision;
-			latestDocRef.current = { identity, doc: result.doc };
+			latestDocRef.current = { identity, doc: docToDraw };
 			setOpenDoc(identity);
-			setDoc(result.doc);
+			setDoc(docToDraw);
+			mergeConflictMessageRef.current =
+				merge?.kind === "merged" && merge.conflicts.length > 0
+					? formatMergeConflictMessage(merge.conflicts)
+					: null;
+			if (mergedDoc !== null) {
+				void saveNow();
+			}
 			if (hasLostEdit && previousDoc !== null) {
-				hasUnexplainedConflictRef.current = false;
 				reportError(formatLostEditMessage(previousDoc.relPath));
 				return;
 			}
-			if (hasLostBrokenFileEdit) {
-				hasUnexplainedConflictRef.current = false;
-				reportError(BROKEN_FILE_EDITS_LOST_MESSAGE);
-				return;
-			}
-			if (hasUnexplainedConflictRef.current) {
-				hasUnexplainedConflictRef.current = false;
-				return;
-			}
-			if (hasOverwrittenUnsavedEdits) {
+			if (merge?.kind === "failed") {
 				reportError(UNSAVED_EDITS_OVERWRITTEN_MESSAGE);
 				return;
 			}
-			reportError(null);
+			reportError(mergeConflictMessageRef.current);
 		},
-		[flushPendingSave, reportError],
+		[reportError, saveNow, saveWithoutDebounce],
+	);
+
+	/** Forgets the file held back, and stops watching for the gesture to end */
+	const dropHeldFrame = useCallback((): void => {
+		heldFrameRef.current = null;
+		if (heldFrameTimerRef.current !== null) {
+			window.clearTimeout(heldFrameTimerRef.current);
+			heldFrameTimerRef.current = null;
+		}
+	}, []);
+
+	/** Takes in the file held back behind the person's gesture, if there is one */
+	const takeInHeldFrame = useCallback((): void => {
+		const heldFrame = heldFrameRef.current;
+		dropHeldFrame();
+		if (heldFrame !== null) {
+			takeInDoc(heldFrame);
+		}
+	}, [dropHeldFrame, takeInDoc]);
+	useEffect(() => {
+		takeInHeldFrameRef.current = takeInHeldFrame;
+	}, [takeInHeldFrame]);
+
+	/**
+	 * Waits for the person to let go, then takes in the file held back. Past a drag's
+	 * end or the editor closing, the canvas hands the commit over a frame or two
+	 * later, and that is waited for too: taken in before it, the file would be
+	 * merged without the person's last edit, which would then arrive on top of the
+	 * merged doc as an edit of the doc before it, and write the other side's changes
+	 * away.
+	 *
+	 * @param delayMs How long to wait before looking: 0 for a file that has just
+	 *   arrived, the poll interval while the person is still at it
+	 */
+	const watchHeldFrame = useCallback((delayMs: number): void => {
+		if (heldFrameTimerRef.current !== null) {
+			return;
+		}
+		const timer = window.setTimeout(() => {
+			void (async () => {
+				if (!isPersonInteractingRef.current()) {
+					await waitForCanvasFrames();
+				}
+				// Still this watch's turn: taking the frame in early clears the timer
+				if (heldFrameTimerRef.current !== timer) {
+					return;
+				}
+				heldFrameTimerRef.current = null;
+				if (isPersonInteractingRef.current()) {
+					watchHeldFrame(HELD_DOC_POLL_MS);
+					return;
+				}
+				takeInHeldFrameRef.current?.();
+			})();
+		}, delayMs);
+		heldFrameTimerRef.current = timer;
+	}, []);
+	useEffect(
+		() => () => {
+			if (heldFrameTimerRef.current !== null) {
+				window.clearTimeout(heldFrameTimerRef.current);
+			}
+		},
+		[],
+	);
+
+	const flushPendingSave = useCallback(
+		async (options?: { isLeavingDocument?: boolean }): Promise<boolean> => {
+			if (
+				options?.isLeavingDocument === true ||
+				!isPersonInteractingRef.current()
+			) {
+				takeInHeldFrame();
+			}
+			return await saveWithoutDebounce();
+		},
+		[saveWithoutDebounce, takeInHeldFrame],
+	);
+
+	const applyIncomingDoc = useCallback(
+		(identity: DocIdentity, docText: string, revision: string): void => {
+			const frame: DocFrame = { identity, docText, revision };
+			const heldFrame = heldFrameRef.current;
+			if (heldFrame !== null) {
+				if (isSameDoc(heldFrame.identity, identity)) {
+					// The file has moved on again: this is what gets taken in
+					heldFrameRef.current = frame;
+					return;
+				}
+				// Another document takes the page over, the gesture along with it. The
+				// held file is left behind: the host asks for the edits to be written out
+				// before it moves on, and that takes it in (flushPendingSave)
+				dropHeldFrame();
+			}
+			// A newer file for the document drawn waits for the person's gesture, and
+			// for the commit that ends it, whether or not one looks under way: the
+			// commit of a drag released a moment ago is still on its way
+			const isNewerFile =
+				classifyIncomingDoc(frame, {
+					identity: latestDocRef.current?.identity ?? null,
+					syncedText: syncedTextRef.current,
+					isFileUnusable:
+						brokenFileErrorRef.current !== null || isFileMissingRef.current,
+					hasUndeliveredEdits: hasUndeliveredEditsRef.current,
+				}) === "new" &&
+				isSameDoc(identity, latestDocRef.current?.identity ?? null);
+			if (isNewerFile) {
+				heldFrameRef.current = frame;
+				watchHeldFrame(isPersonInteractingRef.current() ? HELD_DOC_POLL_MS : 0);
+				return;
+			}
+			takeInDoc(frame);
+		},
+		[dropHeldFrame, takeInDoc, watchHeldFrame],
 	);
 
 	const applyDocError = useCallback(
@@ -509,10 +738,12 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			// read) says nothing about the text this page synced
 			if (isSameDoc(identity, latestDocRef.current?.identity ?? null)) {
 				isFileMissingRef.current = true;
+				// Older than what the host now says of the file
+				dropHeldFrame();
 			}
 			reportError(`${identity.relPath}: ${message}`);
 		},
-		[reportError],
+		[dropHeldFrame, reportError],
 	);
 
 	const handleCommit = useCallback(
@@ -535,6 +766,8 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			if (unsavedEditsRef.current === null && syncedTextRef.current !== null) {
 				unsavedEditsRef.current = { baseText: syncedTextRef.current };
 			}
+			// The person has moved on from what a merge dropped
+			mergeConflictMessageRef.current = null;
 			setDoc(committedDoc);
 			if (saveTimerRef.current !== null) {
 				window.clearTimeout(saveTimerRef.current);

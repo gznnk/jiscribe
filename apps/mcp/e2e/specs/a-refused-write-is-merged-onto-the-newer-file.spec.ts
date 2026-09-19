@@ -1,24 +1,26 @@
 import { FILE_API_PATHNAME } from "../../src/shared/fileApiRoute";
 import { SINGLE_RECT, singleRectDoc } from "../support/canvasDocs";
-import { expect, selectObject, test } from "../support/fixtures";
+import {
+	expect,
+	expectNoViewerError,
+	selectObject,
+	test,
+} from "../support/fixtures";
 
-/**
- * What the viewer puts in the error bar when the host refused a write over a newer
- * file (SAVE_CONFLICT_MESSAGE in src/viewer/useDocSync.ts). Repeated here rather
- * than imported, since it belongs to the module the page is built from
- */
-const SAVE_CONFLICT_MESSAGE =
-	"他の編集で更新されたため、この変更は保存されませんでした";
+/** One large nudge, which the canvas moves the selection by */
+const NUDGE_STEP = 10;
 
 // The 412 path, arranged by holding the page's write in the browser while a tool
-// rewrites the same file underneath it.
+// rewrites the same file underneath it. The refused edit is not given up: the newer
+// file arrives, the edit is merged onto it, and the merge is written under the
+// newer revision.
 //
 // The write has to be in the air already: a tool's write that lands before the save
 // debounce elapses is simply redrawn, and the page then has nothing left to save.
 // So the order is driven off the requests themselves rather than off time — the
 // write is let go only once the page has drawn the tool's shape, which is proof the
 // revision it quotes is no longer the file's.
-test("says so in the page when a tool's write overtakes an unsaved edit", async ({
+test("merges an edit whose write a tool's write overtook onto the newer file", async ({
 	page,
 	canvas,
 	mcp,
@@ -70,10 +72,17 @@ test("says so in the page when a tool's write overtakes an unsaved edit", async 
 
 	releaseWrite();
 
-	await expect(page.locator(".viewer-error")).toHaveText(SAVE_CONFLICT_MESSAGE);
-	// The refused write is the person's, so the file keeps the tool's version of the
-	// rectangle: where it was placed, not where it was nudged to
-	const doc = await workspace.readDoc(filePath);
-	expect(doc.root).toHaveLength(2);
-	expect(doc.root[0].x).toBe(SINGLE_RECT.x);
+	await expect
+		.poll(
+			async () => {
+				const doc = await workspace.readDoc(filePath);
+				return doc.root.map((object) => [object.id, object.x]);
+			},
+			{ message: "the file holds the nudge and the tool's shape both" },
+		)
+		.toEqual([
+			[SINGLE_RECT.id, SINGLE_RECT.x + NUDGE_STEP],
+			[addedId, 240],
+		]);
+	await expectNoViewerError(page);
 });

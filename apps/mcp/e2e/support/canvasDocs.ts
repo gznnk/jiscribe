@@ -21,3 +21,27 @@ export const singleRectDoc = (): CanvasFileContent => ({
 	version: 1,
 	root: [{ type: "rect", ...SINGLE_RECT, text: "hello" }],
 });
+
+/**
+ * The rectangle {@link twoRectDoc} holds beside {@link SINGLE_RECT}, far enough
+ * right that dragging the first one about does not reach it.
+ */
+export const SECOND_RECT = {
+	id: "r2",
+	x: 480,
+	y: 40,
+	width: 120,
+	height: 80,
+} as const;
+
+/**
+ * A document holding {@link SINGLE_RECT} and {@link SECOND_RECT}, for one side to
+ * edit one of them while the other side edits the other.
+ */
+export const twoRectDoc = (): CanvasFileContent => ({
+	version: 1,
+	root: [
+		{ type: "rect", ...SINGLE_RECT, text: "hello" },
+		{ type: "rect", ...SECOND_RECT, text: "there" },
+	],
+});
