@@ -653,6 +653,19 @@ export class CanvasDriver {
 		await this.waitForGestureBatch();
 	}
 
+	/**
+	 * Shift-click a content coordinate to add to or toggle the selection. Shift is
+	 * additive alongside Ctrl/Meta; it only locks an axis once a drag starts.
+	 */
+	async shiftClickAt(point: { x: number; y: number }) {
+		await this.measureOrigin();
+		const screen = this.toScreen(point);
+		await this.page.keyboard.down("Shift");
+		await this.page.mouse.click(screen.x, screen.y);
+		await this.page.keyboard.up("Shift");
+		await this.waitForGestureBatch();
+	}
+
 	/** Click empty space to deselect, committing any text edit in progress. */
 	async deselect() {
 		await this.measureOrigin();
@@ -1364,12 +1377,17 @@ export class CanvasDriver {
 		await this.pressCommand("Control+Minus");
 	}
 
-	/** Open the ObjectMenu z-order section and run an arrange command. */
+	/**
+	 * Run a stacking-order command from the properties sidebar's Arrange section.
+	 * The sidebar is opened and closed around the click, so the canvas is back at
+	 * its full width when this returns and measured screen points still hold.
+	 */
 	async arrange(
 		commandId: "bringToFront" | "bringForward" | "sendBackward" | "sendToBack",
 	) {
-		await this.openObjectMenu("stack-order");
-		await this.page.click(selectors.objectMenuCommand(commandId));
+		await this.openPropertyPanel();
+		await this.page.click(selectors.propertyPanelCommand(commandId));
+		await this.closePropertyPanel();
 	}
 
 	/** DOM-order index among shapes, excluding connectors; later elements are in front in SVG. */

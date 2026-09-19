@@ -43,11 +43,6 @@ export const createDefaultMenu = (
 			items: [{ type: "fontStyle" }, textAlignment],
 		});
 	}
-	// A point's box is measured from its content and offers no resize, so the
-	// aspect-ratio lock would govern an operation that does not exist.
-	if (features.transform && features.geometry !== "point") {
-		sections.push({ id: "transform", items: [{ type: "aspectRatio" }] });
-	}
 
 	return sections;
 };

@@ -12,6 +12,16 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 `.jis` file can hold — moves with the engine, and the
 [release notes](https://github.com/gznnk/jiscribe/releases) cover that.
 
+## [Unreleased]
+
+### Changed
+
+- **The host waits an hour, not five seconds, for a viewer to come back.** A
+  browser puts a window left in the background to sleep and the page reconnects
+  only when the person returns to it; by then the host had shut down and the
+  canvas had to be opened again. The port is still released when the MCP client
+  disconnects or on `close_canvas`.
+
 ## [0.10.0] - 2026-09-14
 
 The AI can now fetch the drawing guide instead of being expected to know it, and

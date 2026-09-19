@@ -17,6 +17,7 @@ import {
 	resolveCanvasWebview,
 	type CanvasWebviewChannel,
 } from "./resolveCanvasWebview";
+import { uriFileName } from "./uriFileName";
 import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
 import type { ExtensionToWebviewMessage } from "../types/messages";
 
@@ -62,9 +63,11 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	public reconcileInFlight = false;
 
 	/**
-	 * Bytes of this editor's most recent write to the file, recorded before the
-	 * write lands so a watcher event racing the save still recognizes it as our
-	 * own; null until the first write.
+	 * Bytes of an own write whose watcher event has not arrived yet, recorded
+	 * before the write lands so an event racing the save still recognizes it as
+	 * our own; cleared again once classifyExternalChange matches it (or the disk
+	 * state is adopted), so the same bytes written by someone else later still
+	 * count as an external change. Null until the first write.
 	 */
 	public lastOwnWrite: Uint8Array | null = null;
 
@@ -72,10 +75,43 @@ class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	public conflictPromptOpen = false;
 
 	/** Debounce timer for coalescing file-watcher events (one check per burst). */
-	public externalCheckTimer: ReturnType<typeof setTimeout> | undefined;
+	private externalCheckTimer: ReturnType<typeof setTimeout> | undefined;
 
 	/** Watches the document's file for external changes; lives with the document. */
-	public fileWatcher: vscode.FileSystemWatcher | undefined;
+	private fileWatcher: vscode.FileSystemWatcher | undefined;
+
+	/**
+	 * Watch this document's file so a change made outside this editor (MCP, git,
+	 * another tool) is picked up instead of being clobbered by the next save.
+	 *
+	 * @param onChange - called once per burst of watcher events on this file,
+	 *   EXTERNAL_CHANGE_DEBOUNCE_MS after the last of them; events on the other
+	 *   files of the watched folder never reach it
+	 */
+	public watchExternalChanges(onChange: () => void): void {
+		// Watch the parent directory with `*` and filter by URI. The pattern is a
+		// glob with no escape syntax, so putting the file name into it would make
+		// a name containing a metacharacter (`[`, `{`, ...) silently never match.
+		const watcher = vscode.workspace.createFileSystemWatcher(
+			new vscode.RelativePattern(vscode.Uri.joinPath(this.uri, ".."), "*"),
+		);
+		const documentKey = this.uri.toString();
+		const onFileEvent = (uri: vscode.Uri) => {
+			if (uri.toString() !== documentKey) {
+				return;
+			}
+			clearTimeout(this.externalCheckTimer);
+			this.externalCheckTimer = setTimeout(
+				onChange,
+				EXTERNAL_CHANGE_DEBOUNCE_MS,
+			);
+		};
+		// Create covers replace-by-rename writers, whose change may surface as a
+		// re-creation of the path.
+		watcher.onDidChange(onFileEvent);
+		watcher.onDidCreate(onFileEvent);
+		this.fileWatcher = watcher;
+	}
 
 	dispose(): void {
 		clearTimeout(this.externalCheckTimer);
@@ -89,6 +125,12 @@ interface ImageEditorPanel {
 	readonly panel: vscode.WebviewPanel;
 	/** The only way to post to that panel's Webview (see resolveCanvasWebview). */
 	readonly channel: CanvasWebviewChannel;
+	/**
+	 * Unanswered requestImageExport calls of this panel, keyed by requestId. Held
+	 * per panel rather than per provider so a Webview can only answer a save its
+	 * own document asked for.
+	 */
+	readonly pendingExports: Map<number, (data: string | null) => void>;
 }
 
 /**
@@ -146,12 +188,9 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	// requests and reflecting undo/redo.
 	private readonly panels = new Map<JiscribeImageDocument, ImageEditorPanel>();
 
-	// Pending requestImageExport responses, keyed by requestId.
+	// Source of requestIds for requestImageExport. Provider-wide, so an id never
+	// repeats across panels; the pending responses themselves live on the panel.
 	private nextRequestId = 1;
-	private readonly pendingExports = new Map<
-		number,
-		(data: string | null) => void
-	>();
 
 	/** Read the file (or its backup) and build the document. */
 	public async openCustomDocument(
@@ -163,7 +202,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		const readUri = openContext.backupId
 			? vscode.Uri.parse(openContext.backupId)
 			: uri;
-		const kind = kindFromPath(uri.path);
+		const kind = imageKindFromPath(uri.path);
 		const bytes = await vscode.workspace.fs.readFile(readUri);
 		const document = new JiscribeImageDocument(
 			uri,
@@ -171,41 +210,10 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			bytes,
 			readSourceFromImageFile(kind, bytes),
 		);
-		this.watchExternalChanges(document);
-		return document;
-	}
-
-	/**
-	 * Watch the document's file so a change made outside this editor (MCP, git,
-	 * another tool) is picked up instead of being clobbered by the next save. The
-	 * watcher is disposed with the document.
-	 */
-	private watchExternalChanges(document: JiscribeImageDocument): void {
-		// Watch the parent directory with `*` and filter by URI. The pattern is a
-		// glob with no escape syntax, so putting the file name into it would make
-		// a name containing a metacharacter (`[`, `{`, ...) silently never match.
-		const watcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(vscode.Uri.joinPath(document.uri, ".."), "*"),
+		document.watchExternalChanges(
+			() => void this.checkExternalChange(document),
 		);
-		const documentKey = document.uri.toString();
-		const onFileEvent = (uri: vscode.Uri) => {
-			if (uri.toString() === documentKey) {
-				this.scheduleExternalCheck(document);
-			}
-		};
-		// Create covers replace-by-rename writers, whose change may surface as a
-		// re-creation of the path.
-		watcher.onDidChange(onFileEvent);
-		watcher.onDidCreate(onFileEvent);
-		document.fileWatcher = watcher;
-	}
-
-	/** Debounced entry: one checkExternalChange per burst of watcher events. */
-	private scheduleExternalCheck(document: JiscribeImageDocument): void {
-		clearTimeout(document.externalCheckTimer);
-		document.externalCheckTimer = setTimeout(() => {
-			void this.checkExternalChange(document);
-		}, EXTERNAL_CHANGE_DEBOUNCE_MS);
+		return document;
 	}
 
 	/**
@@ -226,7 +234,6 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		const changeKind = classifyExternalChange(
 			document,
 			diskBytes,
-			document.lastOwnWrite,
 			this.isDocumentDirty(document),
 		);
 		if (changeKind === "own-echo") {
@@ -255,7 +262,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		}
 		document.conflictPromptOpen = true;
 		try {
-			const fileName = document.uri.path.split("/").pop() ?? document.uri.path;
+			const fileName = uriFileName(document.uri);
 			const reloadChoice = "Reload from Disk";
 			const choice = await vscode.window.showWarningMessage(
 				`"${fileName}" changed on disk, and this editor has unsaved edits. ` +
@@ -276,19 +283,12 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			}
 			const beforeText = document.sourceText;
 			adoptDiskBytes(document, diskBytes);
-			const afterText = document.sourceText;
-			this.changeEmitter.fire({
+			this.fireSourceEdit(
 				document,
-				label: "Reload from disk",
-				undo: () => {
-					document.sourceText = beforeText;
-					this.pushSourceToWebview(document);
-				},
-				redo: () => {
-					document.sourceText = afterText;
-					this.pushSourceToWebview(document);
-				},
-			});
+				"Reload from disk",
+				beforeText,
+				document.sourceText,
+			);
 			this.pushSourceToWebview(document);
 		} finally {
 			document.conflictPromptOpen = false;
@@ -296,9 +296,48 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	}
 
 	/**
+	 * Report a source change to VSCode as one undoable edit. VSCode keeps the
+	 * stack and calls undo / redo back, so both directions are closures over the
+	 * texts rather than a diff.
+	 *
+	 * @param document - the changed document; its sourceText already holds
+	 *   `afterText` by the time this is called
+	 * @param label - what the edit is called in the undo menu
+	 * @param beforeText - the source to restore on undo, null when the document
+	 *   had no embedded source
+	 * @param afterText - the source to restore on redo, null likewise
+	 */
+	private fireSourceEdit(
+		document: JiscribeImageDocument,
+		label: string,
+		beforeText: string | null,
+		afterText: string | null,
+	): void {
+		this.changeEmitter.fire({
+			document,
+			label,
+			undo: () => {
+				document.sourceText = beforeText;
+				this.pushSourceToWebview(document);
+			},
+			redo: () => {
+				document.sourceText = afterText;
+				this.pushSourceToWebview(document);
+			},
+		});
+	}
+
+	/**
 	 * Whether the document's tab shows unsaved edits. VSCode owns the dirty flag
 	 * (we only fire edit events), so read it off the tab; a document whose tab is
 	 * already gone counts as clean.
+	 *
+	 * The tab model here is a mirror the renderer updates over RPC, so it can lag
+	 * the renderer's own state. The one caller that reads it right after a change
+	 * is the reconcile on "rendered": by the time that message has gone renderer →
+	 * Webview → renderer → here, the tab update the undo or redo caused has been
+	 * delivered ahead of it, the renderer sending both in order. Nothing else
+	 * reads the flag within one turn of a change.
 	 */
 	private isDocumentDirty(document: JiscribeImageDocument): boolean {
 		const documentKey = document.uri.toString();
@@ -321,6 +360,10 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		webviewPanel: vscode.WebviewPanel,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
+		// Created before the panel record so onImageExportResult can close over it
+		// without reaching for a record that does not exist yet.
+		const pendingExports = new Map<number, (data: string | null) => void>();
+
 		const channel = resolveCanvasWebview(webviewPanel, {
 			extensionUri: this.context.extensionUri,
 			documentUri: document.uri,
@@ -329,39 +372,30 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			onReady: () => this.updateWebview(channel, document),
 
 			onUpdate: (data) => {
-				// Canvas edit. Unlike the text editor, don't write to the file; just
-				// mark dirty via the edit event (the actual write happens at save).
-				// undo/redo are called back by VSCode, so capture the before/after
-				// source in the closure to revert / re-apply.
+				// Nothing reaches the file here: the edit event only marks the
+				// document dirty, and the write happens at save time.
 				const beforeText = document.sourceText;
-				const afterText = data;
-				document.sourceText = afterText;
-				this.changeEmitter.fire({
-					document,
-					label: "Canvas edit",
-					undo: () => {
-						document.sourceText = beforeText;
-						this.pushSourceToWebview(document);
-					},
-					redo: () => {
-						document.sourceText = afterText;
-						this.pushSourceToWebview(document);
-					},
-				});
+				document.sourceText = data;
+				this.fireSourceEdit(document, "Canvas edit", beforeText, data);
 			},
 
 			onImageExportResult: (requestId, data) => {
-				const resolve = this.pendingExports.get(requestId);
+				const resolve = pendingExports.get(requestId);
 				if (resolve) {
-					this.pendingExports.delete(requestId);
+					pendingExports.delete(requestId);
 					resolve(data);
 				}
 			},
 
 			onRendered: () => {
 				// The canvas is mounted and can export now. If a prior hidden-tab save
-				// left a stale image on disk (#179), re-render and rewrite it.
-				void reconcileImageDocument(document, this.makeSeams(document));
+				// left a stale image on disk (#179), re-render and rewrite it — unless
+				// the document is dirty, in which case the repair waits for a render on
+				// a clean document rather than writing unsaved edits.
+				void reconcileImageDocument(
+					document,
+					this.createImageDocSeams(document),
+				);
 			},
 
 			// Drop the panel only if it is still the one registered; a reopened tab
@@ -373,7 +407,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			},
 		});
 
-		this.panels.set(document, { panel: webviewPanel, channel });
+		this.panels.set(document, { panel: webviewPanel, channel, pendingExports });
 	}
 
 	/** Save (overwrite in place). */
@@ -381,7 +415,10 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		document: JiscribeImageDocument,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		await saveImageDocument(document, this.makeSeams(document, token));
+		await saveImageDocument(
+			document,
+			this.createImageDocSeams(document, token),
+		);
 	}
 
 	/**
@@ -394,10 +431,10 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		destination: vscode.Uri,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		const destinationKind = kindFromPath(destination.path);
+		const destinationKind = imageKindFromPath(destination.path);
 		const { bytes } = await computeExportBytes(
 			document,
-			this.makeSeams(document),
+			this.createImageDocSeams(document),
 			destinationKind,
 		);
 		if (token.isCancellationRequested) {
@@ -416,7 +453,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		document: JiscribeImageDocument,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
-		await revertImageDocument(document, this.makeSeams(document));
+		await revertImageDocument(document, this.createImageDocSeams(document));
 		this.pushSourceToWebview(document);
 	}
 
@@ -447,9 +484,10 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 
 	/**
 	 * Build the VSCode-backed effects the ops delegate to: webview render, file
-	 * read/write on the document's URI, and (for save) the cancel token.
+	 * read/write on the document's URI, the tab's dirty flag, and (for save) the
+	 * cancel token.
 	 */
-	private makeSeams(
+	private createImageDocSeams(
 		document: JiscribeImageDocument,
 		token?: vscode.CancellationToken,
 	): ImageDocSeams {
@@ -462,6 +500,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 				document.lastOwnWrite = bytes;
 				await vscode.workspace.fs.writeFile(document.uri, bytes);
 			},
+			isDirty: () => this.isDocumentDirty(document),
 			isCancelled: token ? () => token.isCancellationRequested : undefined,
 		};
 	}
@@ -480,7 +519,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		if (!editorPanel || !editorPanel.panel.visible) {
 			return Promise.resolve(null);
 		}
-		return this.requestImageFromWebview(editorPanel.channel, kind);
+		return this.requestImageFromWebview(editorPanel, kind);
 	}
 
 	/** Send the current source JSON to the Webview (reflecting undo/redo/revert). */
@@ -504,24 +543,24 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		channel: CanvasWebviewChannel,
 		document: JiscribeImageDocument,
 	): void {
-		const message: ExtensionToWebviewMessage = {
-			type: "update",
+		channel.postUpdate({
 			data: document.sourceText ?? "",
 			docType: document.kind,
-		};
-		channel.post(message);
+		});
 	}
 
 	/**
 	 * Ask the Webview to generate the image and await the response (with timeout).
 	 *
-	 * @param channel - the document's panel channel; the caller has already
-	 *   checked that its panel is visible, since a discarded Webview never answers
+	 * @param editorPanel - the document's live panel; the caller has already
+	 *   checked that it is visible, since a discarded Webview never answers. The
+	 *   pending response is registered on this panel, so only its own Webview can
+	 *   resolve it
 	 * @param format - image format to render, which for Save As is the
 	 *   destination's kind rather than the document's
 	 */
 	private requestImageFromWebview(
-		channel: CanvasWebviewChannel,
+		editorPanel: ImageEditorPanel,
 		format: JiscribeImageKind,
 	): Promise<string | null> {
 		const requestId = this.nextRequestId++;
@@ -532,14 +571,14 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		};
 		return new Promise<string | null>((resolve) => {
 			const timeout = setTimeout(() => {
-				this.pendingExports.delete(requestId);
+				editorPanel.pendingExports.delete(requestId);
 				resolve(null);
 			}, IMAGE_EXPORT_TIMEOUT_MS);
-			this.pendingExports.set(requestId, (data) => {
+			editorPanel.pendingExports.set(requestId, (data) => {
 				clearTimeout(timeout);
 				resolve(data);
 			});
-			channel.post(message);
+			editorPanel.channel.post(message);
 		});
 	}
 }
@@ -549,6 +588,6 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
  * A Save As destination is free text, so a plain `.svg` (no `.jis.`) must
  * still get SVG bytes.
  */
-function kindFromPath(path: string): JiscribeImageKind {
+function imageKindFromPath(path: string): JiscribeImageKind {
 	return path.toLowerCase().endsWith(".svg") ? "svg" : "png";
 }

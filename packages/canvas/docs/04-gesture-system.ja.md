@@ -11,6 +11,10 @@
 ビューポート要素（`Viewport`）で受け取り（`controllers/Canvas.tsx`）、
 `GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
 
+ビューポートの外の wheel はジェスチャーにならないが、Ctrl 押下のものだけはルートで
+打ち消す（`useBlockBrowserZoom`）。ツールバーやサイドバーの上では、そのままだと
+ブラウザがページ全体をズームしてしまうため。トラックパッドのピンチも同じイベントで届く。
+
 ジェスチャーの種類の正本は `GestureType`（`controllers/gestures/recognizer/GestureRecognizerTypes.ts`）。
 押下・ドラッグの開始／途中／終了・click / doubleClick のほか、wheel・pinch・longPress・慣性スクロールなどがある。
 

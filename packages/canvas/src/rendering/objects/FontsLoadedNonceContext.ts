@@ -16,7 +16,7 @@ import { createContext, useContext } from "react";
 export const FontsLoadedNonceContext = createContext<number>(0);
 
 /**
- * Subscribes to the surrounding `<Canvas>` / `<CanvasThumbnail>` fonts-loaded counter, so a
+ * Subscribes to the surrounding `<Canvas>` fonts-loaded counter, so a
  * memoized component re-renders when a face arrives.
  *
  * Distinct from `useDocFonts`, which is the `document.fonts` side `Canvas`

@@ -180,9 +180,17 @@ export type MarkdownRendererOptions = {
 	highlight?: CodeHighlighter;
 };
 
-/** Sanitization config preserving the attributes that linkAttributes adds. */
+/**
+ * Sanitization config: keeps the attributes linkAttributes adds, and drops
+ * `<img>` altogether. markdown-it turns `![alt](url)` into an image tag that
+ * DOMPurify would otherwise let through, and a host that renders it fetches
+ * whatever URL the document names — enough to report that the file was opened,
+ * from a page whose scripts cannot reach the network (#28). The `image` object
+ * is the way to draw a picture: its `src` goes through the host's resolver.
+ */
 const sanitizeConfig = {
 	ADD_ATTR: ["target", "rel"],
+	FORBID_TAGS: ["img"],
 };
 
 /**

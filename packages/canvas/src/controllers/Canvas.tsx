@@ -25,6 +25,7 @@ import type { Camera, CanvasSidebarsState } from "./CanvasTypes";
 import { isGestureOptedOut } from "./gestures/recognizer/targeting/isGestureOptedOut";
 import type { CanvasHandle } from "./handles/CanvasHandle";
 import { useCanvasHandle } from "./handles/useCanvasHandle";
+import { useBlockBrowserZoom } from "./hooks/useBlockBrowserZoom";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
@@ -47,6 +48,7 @@ import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifySidebarsChange } from "./hooks/useNotifySidebarsChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
+import { usePropertyPanelState } from "./hooks/usePropertyPanelState";
 import { useRevealTextEditCaret } from "./hooks/useRevealTextEditCaret";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
@@ -463,6 +465,10 @@ const CanvasComponent = ({
 	// Scoped to canvasRef so wheel events outside the canvas are not captured.
 	useCanvasWheel(canvasRef, wheelHandler, gestureHandling);
 
+	// The chrome around the drawing region (toolbar, sidebars, modals) is outside
+	// that scope, so a Ctrl+wheel there would zoom the browser instead.
+	useBlockBrowserZoom(rootRef);
+
 	// Cooperative: a touch starting on a shape stays a shape drag instead of
 	// becoming a page scroll (browsers ignore touch-action on inner SVG elements).
 	useCooperativeTouchClaim(rootRef, gestureHandling);
@@ -629,6 +635,11 @@ const CanvasComponent = ({
 				: { ...state, objects: draftObjects },
 		[state, draftObjects],
 	);
+
+	// The sidebar stays on screen through every pan and drag, unlike the ObjectMenu,
+	// which hides itself while the view moves; so its memo is protected here instead,
+	// by handing it the same state object until something it shows has changed.
+	const propertyPanelState = usePropertyPanelState(menuCanvasState);
 
 	const revealCaret = useRevealTextEditCaret({
 		viewport: state.viewport,
@@ -898,7 +909,7 @@ const CanvasComponent = ({
 					</Viewport>
 					{state.propertyPanel.isOpen && (
 						<PropertyPanel
-							canvasState={menuCanvasState}
+							canvasState={propertyPanelState}
 							onPropertyUpdate={handleStylePropertyUpdate}
 							onTransformUpdate={handleTransformUpdate}
 							onDocumentUpdate={handleDocumentUpdate}

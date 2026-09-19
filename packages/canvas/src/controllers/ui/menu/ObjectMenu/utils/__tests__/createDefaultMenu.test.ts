@@ -10,7 +10,7 @@ const features = (extra: Partial<ObjectFeatures>): ObjectFeatures => ({
 });
 
 describe("createDefaultMenu", () => {
-	it("rect-like (all flags + radius) -> style(radius:true) / text / transform", () => {
+	it("rect-like (all flags + radius) -> style(radius:true) / text", () => {
 		const sections = createDefaultMenu(
 			features({
 				transform: true,
@@ -33,7 +33,6 @@ describe("createDefaultMenu", () => {
 				id: "text",
 				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 			},
-			{ id: "transform", items: [{ type: "aspectRatio" }] },
 		]);
 	});
 
@@ -50,13 +49,11 @@ describe("createDefaultMenu", () => {
 		]);
 	});
 
-	it("group-like (transform only) -> transform", () => {
+	it("group-like (transform only) -> no sections", () => {
 		const sections = createDefaultMenu(
 			features({ geometry: "none", transform: true }),
 		);
-		expect(sections).toEqual([
-			{ id: "transform", items: [{ type: "aspectRatio" }] },
-		]);
+		expect(sections).toEqual([]);
 	});
 
 	it("text-like (point geometry) -> text only, with the vertical row dropped", () => {

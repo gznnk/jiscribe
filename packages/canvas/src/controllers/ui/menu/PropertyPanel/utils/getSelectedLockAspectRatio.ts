@@ -1,9 +1,10 @@
-import type { CanvasControllerState } from "../../../../../../../controllers/CanvasTypes";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 
 /**
- * Gets the lockAspectRatio value of the selected object(s).
- * For a multi-selection the multiSelectGroup value takes precedence; for a single
- * selection the selected object's value is returned. Defaults to false when neither has one.
+ * Reads the lockAspectRatio the Layout section's lock row shows for the current
+ * selection. For a multi-selection the multiSelectGroup value takes precedence; for a
+ * single selection the selected object's value is returned. Defaults to false when
+ * neither has one.
  */
 export const getSelectedLockAspectRatio = (
 	state: CanvasControllerState,

@@ -12,8 +12,8 @@ import {
  * bundle for the same reason as ObjectTextRegionRegistryContext).
  *
  * The default is a fresh empty registry, so rendering without a Provider offers
- * only the four edge midpoints. `Canvas` and `CanvasThumbnail` always provide
- * the canvas's own registry.
+ * only the four edge midpoints. `Canvas` always provides the canvas's own
+ * registry.
  */
 export const ObjectExtraConnectPointsRegistryContext =
 	createContext<ObjectExtraConnectPointsRegistry>(

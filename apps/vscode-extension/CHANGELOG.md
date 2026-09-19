@@ -17,6 +17,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-resource, so a folder in a multi-root workspace can carry its own name,
   and changing it reaches an open canvas without reopening it.
 
+### Security
+
+- **The editor no longer fetches anything a document names.** The Webview's
+  Content-Security-Policy allowed images from any `https:` URL, so a Markdown
+  block reading `![](https://…)` in a file you opened would make VS Code request
+  that URL — enough to tell its owner the file was opened, and when, and from
+  where. The policy now allows only the extension's own bundle and the blob the
+  PNG export rasterizes through, and Markdown images are dropped by the
+  renderer itself so the same holds everywhere the engine draws them. Use the
+  `image` shape to draw a picture; its `src` is read from beside the document.
+- **The Webview can read only the extension's bundle.** Its local resource
+  roots were VS Code's default — every workspace folder — while it needs
+  nothing outside the extension's `dist/`. Document images already travel over
+  the message channel and are unaffected.
+- **Messages from the Webview are checked before they are acted on.** A
+  malformed one is logged and dropped instead of reaching the file handlers.
+- **A save answers only the editor that asked.** The image editor's pending
+  render requests are now kept per panel, so one document's Webview cannot
+  supply the bytes another document is saving.
+- **Set up AI asks before replacing a file it did not write.** A file at one of
+  its destinations that does not start with its generated-file notice is yours;
+  the command now lists such files and offers to overwrite or skip them rather
+  than replacing them silently. It also refuses to write through a symbolic
+  link, so a repository cannot point `.jiscribe/` or `.claude/skills/jiscribe/`
+  outside the workspace and have the command write there.
+- The CSP nonce is drawn from the cryptographic random source.
+
+### Fixed
+
+- **A canvas edit no longer overwrites a text edit made while it was on its
+  way.** Each document sent to the canvas now carries the document's version,
+  and each commit returns the version it was built on; a commit built before an
+  external change the canvas has already been shown is dropped instead of
+  replacing that change, and a message says so, since that canvas edit is the
+  one that is lost. The window was widened by the commit scheduler, which
+  delays a burst of edits into one commit.
+- **A hidden-tab save no longer rewrites the file while you have unsaved
+  edits.** The repair that re-renders a stale image once the tab is visible
+  again now waits until the document is clean, so pressing Undo after such a
+  save cannot put the undone state on disk behind a "saved" tab.
+- **An external change back to a previously saved image is picked up.** The
+  editor remembered the bytes of its last write for good, so a file restored to
+  exactly those bytes (a `git stash pop`, say) was mistaken for its own echo and
+  ignored; the next save then overwrote it. The record is now consumed by the
+  echo it exists for and cleared when the disk is adopted.
+- **The Problems panel follows edits.** Diagnostics were refreshed only on open
+  and save, so a file rewritten by an AI agent, or edited in a text editor
+  beside the canvas, kept stale entries until the next save. They now refresh
+  shortly after every change. The read-only side of a git diff is no longer
+  validated.
+
 ## [0.10.0] - 2026-09-14
 
 The editor grew two sidebars. Everything a shape can be is now in one panel on

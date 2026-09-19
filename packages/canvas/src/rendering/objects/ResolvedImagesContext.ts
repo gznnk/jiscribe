@@ -46,8 +46,8 @@ export const ResolvedImagesContext = createContext<ResolvedImageLookup>(
 );
 
 /**
- * Subscribes to the surrounding `<Canvas>` / `<CanvasThumbnail>` image
- * resolutions, so a memoized shape re-renders when its file arrives.
+ * Subscribes to the surrounding `<Canvas>` image resolutions, so a memoized
+ * shape re-renders when its file arrives.
  *
  * @returns The lookup; call it with the shape's own `src`
  */

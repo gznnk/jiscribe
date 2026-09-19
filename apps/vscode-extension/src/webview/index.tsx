@@ -18,20 +18,26 @@ import { createRoot } from "react-dom/client";
 import "@jiscribe/canvas/fonts.css";
 import "katex/dist/katex.min.css";
 
+import { blobToBase64 } from "./blobToBase64";
 import { canvasParser, plugins } from "./canvasParser";
-import { DocEditingPausedOverlay, DocErrorNotice } from "./DocErrorNotice";
+import {
+	DocEditingPausedOverlay,
+	DocErrorNotice,
+	LoadingNotice,
+	MissingEmbeddedSourceNotice,
+} from "./DocErrorNotice";
 import {
 	applyParseResult,
 	type DocViewState,
 	initialDocViewState,
 } from "./docViewState";
+import { exportImageAsBase64 } from "./exportViaCanvasHandle";
+import { createPersistedState, type VscodeStateApi } from "./persistedState";
 import { createWebviewImageResolver } from "./resolveImage";
 import { useVscodeColorScheme } from "./useVscodeColorScheme";
 import { vscodeCanvasThemes } from "./vscodeCanvasTheme";
-import type {
-	ExtensionToWebviewMessage,
-	WebviewToExtensionMessage,
-} from "../types/messages";
+import { isExtensionToWebviewMessage } from "../types/extensionMessageGuard";
+import type { WebviewToExtensionMessage } from "../types/messages";
 
 // The shipped shapes are supplied by @jiscribe/standard-shapes
 // (packages/canvas/docs/13-authoring-plugins.md).
@@ -48,10 +54,8 @@ const stencilLibrarySections: StencilCategory[] =
  * acquireVsCodeApi() is a global VSCode injects into the Webview; it doesn't
  * exist in a normal browser, so we only declare its type.
  */
-declare const acquireVsCodeApi: () => {
+declare const acquireVsCodeApi: () => VscodeStateApi & {
 	postMessage(message: WebviewToExtensionMessage): void;
-	getState(): unknown;
-	setState(state: unknown): void;
 };
 
 // acquireVsCodeApi() can be called only once per page lifetime, so call it once
@@ -65,86 +69,12 @@ const imageResolver = createWebviewImageResolver((message) => {
 	vscode.postMessage(message);
 });
 
-/**
- * Webview-local state saved via getState/setState. With
- * retainContextWhenHidden: false (#138), the Webview is discarded when the tab
- * hides, but this survives the reload — so we save the viewport (camera) and the
- * sidebar open/collapsed state, and restore both on remount. The document isn't
- * included, as the Extension re-sends it via "ready".
- */
-type PersistedState = {
-	camera?: Camera;
-	sidebars?: CanvasSidebarsState;
-};
-
-const readPersistedCamera = (): Camera | undefined => {
-	const state = vscode.getState() as PersistedState | null;
-	return state?.camera ?? undefined;
-};
-
-const persistCamera = (camera: Camera): void => {
-	const state = (vscode.getState() as PersistedState | null) ?? {};
-	vscode.setState({ ...state, camera });
-};
-
-const readPersistedSidebars = (): CanvasSidebarsState | undefined => {
-	const state = vscode.getState() as PersistedState | null;
-	return state?.sidebars ?? undefined;
-};
-
-const persistSidebars = (sidebars: CanvasSidebarsState): void => {
-	const state = (vscode.getState() as PersistedState | null) ?? {};
-	vscode.setState({ ...state, sidebars });
-};
-
-/**
- * Minimal shape validation for messages arriving from the Extension.
- *
- * The CSP is `default-src 'none'`, so there is no cross-origin frame that could
- * postMessage here; this is a defense-in-depth gate (#183) that whitelists known
- * `type`s and checks each variant's required fields before dispatch, so an
- * unexpected sender cannot drive the update / export handlers.
- */
-const isExtensionToWebviewMessage = (
-	value: unknown,
-): value is ExtensionToWebviewMessage => {
-	if (typeof value !== "object" || value === null) {
-		return false;
-	}
-	const message = value as Record<string, unknown>;
-	switch (message.type) {
-		case "update":
-			return typeof message.data === "string";
-		case "commentAuthor":
-			return message.author === undefined || typeof message.author === "string";
-		case "requestImageExport":
-			return (
-				typeof message.requestId === "number" &&
-				(message.format === "png" || message.format === "svg")
-			);
-		case "imageResolved":
-			if (typeof message.requestId !== "string") {
-				return false;
-			}
-			return message.ok === true
-				? typeof message.base64 === "string" &&
-						typeof message.mimeType === "string"
-				: message.ok === false && typeof message.error === "string";
-		default:
-			return false;
-	}
-};
-
-/** Convert a Blob to a base64 string (without the data-URL header). */
-const blobToBase64 = (blob: Blob): Promise<string> =>
-	new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => {
-			resolve((reader.result as string).split(",")[1] ?? "");
-		};
-		reader.onerror = () => reject(reader.error);
-		reader.readAsDataURL(blob);
-	});
+const {
+	readPersistedCamera,
+	persistCamera,
+	readPersistedSidebars,
+	persistSidebars,
+} = createPersistedState(vscode);
 
 /**
  * Root component of the Canvas editor.
@@ -208,6 +138,13 @@ function App() {
 	const isEditingPausedRef = useRef(isEditingPaused);
 	isEditingPausedRef.current = isEditingPaused;
 
+	// Version stamped on the newest update from the Extension, quoted back on
+	// every commit so the Extension can drop one built before a change made
+	// outside the canvas (see the `update` messages in types/messages.ts). A ref
+	// rather than state: it must be readable from the handlers below without
+	// rebuilding them, and it changes nothing on screen.
+	const lastReceivedDocumentVersionRef = useRef<number | undefined>(undefined);
+
 	// The Canvas save scheduler throttles high-frequency commits (key repeat,
 	// etc.) (#125), so send straight to the Extension without debouncing here.
 	// The written-back payload is always the doc's JSON text regardless of
@@ -222,6 +159,7 @@ function App() {
 		const message: WebviewToExtensionMessage = {
 			type: "update",
 			data: JSON.stringify(doc, null, 2),
+			baseVersion: lastReceivedDocumentVersionRef.current,
 		};
 		vscode.postMessage(message);
 	}, []);
@@ -272,7 +210,7 @@ function App() {
 		 * An "update" message arrives whenever the file contents change; parse and
 		 * validate it, then fold the result into the view state.
 		 */
-		const messageHandler = (event: MessageEvent) => {
+		const handleExtensionMessage = (event: MessageEvent) => {
 			if (!isExtensionToWebviewMessage(event.data)) {
 				return;
 			}
@@ -300,6 +238,14 @@ function App() {
 					// records the error, so mid-edit text (which is broken most of the
 					// time) neither rebuilds the canvas nor drops the viewport (#136).
 					const result = canvasParser.parse(jsonText);
+					// Recorded only for text the canvas adopts: while the text is broken
+					// the canvas stays on the older document, and a commit still on its
+					// way from it must keep quoting that document's version, so the
+					// Extension drops it rather than writing the older canvas over the
+					// text being repaired. Image docs carry no version.
+					if (result.kind === "ok") {
+						lastReceivedDocumentVersionRef.current = message.version;
+					}
 					setDocView((prev) => applyParseResult(prev, result));
 					break;
 				}
@@ -309,45 +255,20 @@ function App() {
 					break;
 
 				case "requestImageExport": {
-					// Saving .jis.png / .jis.svg: render the current canvas and return it.
-					// Always respond even on failure (data: null) so the Extension
-					// switches to its fallback (old image + re-embedded new source).
-					const respond = (data: string | null) => {
+					// Saving .jis.png / .jis.svg. Always answer, with data: null when
+					// nothing could be rendered, so the Extension switches to its
+					// fallback (old image + re-embedded new source) instead of waiting.
+					const { requestId } = message;
+					const postExportResult = (data: string | null) => {
 						vscode.postMessage({
 							type: "imageExportResult",
-							requestId: message.requestId,
+							requestId,
 							data,
 						});
 					};
-					const handle = canvasRef.current?.export;
-					if (!handle) {
-						respond(null);
-						break;
-					}
-					if (message.format === "svg") {
-						handle
-							.toSvgString()
-							// base64-encode like PNG (via Blob so UTF-8 text survives) so
-							// imageExportResult.data has a single encoding for both formats,
-							// removing the utf8/base64 mismatch hazard (#182).
-							.then((svg) =>
-								svg
-									? blobToBase64(new Blob([svg], { type: "image/svg+xml" }))
-									: null,
-							)
-							.then(respond, (err: unknown) => {
-								console.error("[Jiscribe] SVG export failed:", err);
-								respond(null);
-							});
-						break;
-					}
-					handle
-						.capturePng()
-						.then((capture) => (capture ? blobToBase64(capture.blob) : null))
-						.then(respond, (err: unknown) => {
-							console.error("[Jiscribe] PNG export failed:", err);
-							respond(null);
-						});
+					exportImageAsBase64(canvasRef.current?.export, message.format).then(
+						postExportResult,
+					);
 					break;
 				}
 
@@ -358,22 +279,23 @@ function App() {
 			}
 		};
 
-		window.addEventListener("message", messageHandler);
+		window.addEventListener("message", handleExtensionMessage);
 
 		// Tell the Extension the Webview is ready and request the initial contents.
 		vscode.postMessage({ type: "ready" });
 
-		// Cleanup: remove the listener on unmount to avoid a memory leak.
 		return () => {
-			window.removeEventListener("message", messageHandler);
+			window.removeEventListener("message", handleExtensionMessage);
 		};
-	}, []); // empty deps = run once on mount
+	}, []);
 
-	// Notify the Extension once the canvas has rendered and its export handle is
-	// available. This effect runs after the Canvas commits (the handle is set via
-	// useImperativeHandle during commit, before this effect), so requestImageExport
-	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
-	// save (#179).
+	// Notify the Extension whenever a document has rendered and the export
+	// handle is available. This effect runs after the Canvas commits (the handle
+	// is set via useImperativeHandle during commit, before this effect), so
+	// requestImageExport can succeed. Lets the Extension reconcile a stale image
+	// after a hidden-tab save (#179). Sent for every document, not once per
+	// mount: a reconcile the Extension had to skip while the document was dirty
+	// gets its next chance when an undo or redo brings a new document here.
 	useEffect(() => {
 		if (docView.doc) {
 			vscode.postMessage({ type: "rendered" });
@@ -384,31 +306,7 @@ function App() {
 	// missing source > Canvas (with the error as an overlay) > error notice > loading
 
 	if (missingEmbeddedSource) {
-		return (
-			<div
-				style={{
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					justifyContent: "center",
-					width: "100%",
-					height: "100vh",
-					color: "#6b7280",
-					fontFamily: "monospace",
-					padding: "20px",
-					boxSizing: "border-box",
-					textAlign: "center",
-				}}
-			>
-				<div style={{ fontWeight: "bold", marginBottom: "8px" }}>
-					No embedded jiscribe source
-				</div>
-				<div style={{ fontSize: "12px" }}>
-					This image does not contain an editable jiscribe canvas. Only images
-					exported from jiscribe (.jis.png / .jis.svg) can be edited.
-				</div>
-			</div>
-		);
+		return <MissingEmbeddedSourceNotice />;
 	}
 
 	if (docView.doc) {
@@ -444,24 +342,9 @@ function App() {
 		return <DocErrorNotice error={docView.error} />;
 	}
 
-	return (
-		<div
-			style={{
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				width: "100%",
-				height: "100vh",
-				color: "#6b7280",
-			}}
-		>
-			Loading canvas...
-		</div>
-	);
+	return <LoadingNotice />;
 }
 
-// The script tag sits at the end of body, so the DOM is guaranteed built when
-// this runs. The null check is kept to stay safe against future HTML changes.
 const container = document.getElementById("root");
 if (container) {
 	const root = createRoot(container);

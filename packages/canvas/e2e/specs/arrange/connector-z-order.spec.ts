@@ -1,16 +1,17 @@
 import { test, expect } from "../../fixtures";
+import { selectors } from "../../support/selectors";
 
 /**
- * ObjectMenu's StackOrder section is available for a selected connector too, and it can
- * move the connector to the back / front.
+ * The properties sidebar's Arrange section is offered for a selected connector too,
+ * and it can move the connector to the back / front.
  *
  * In SVG, DOM order is paint order (later elements are in front). captureObjects()
  * returns shapes and connectors in DOM order, so the z-order is checked through the
  * connector's position relative to the rectangles.
  * (objectIndex() covers only [data-kind=object] and excludes connectors.)
  */
-test.describe("connector stacking order (StackOrder menu)", () => {
-	test("shows StackOrder for a selected connector and moves it to the back / front", async ({
+test.describe("connector stacking order (Arrange section)", () => {
+	test("offers Arrange for a selected connector and moves it to the back / front", async ({
 		canvas,
 	}) => {
 		const rectA = await canvas.drawShape(
@@ -48,10 +49,12 @@ test.describe("connector stacking order (StackOrder menu)", () => {
 		// Click on the line to select the connector
 		await canvas.selectAt({ x: 500, y: 350 });
 
-		// The StackOrder section shows up for a connector selection too
+		// The Arrange section shows up for a connector selection too
+		await canvas.openPropertyPanel();
 		await expect(
-			canvas.page.locator('[data-part="toggle:stack-order"]'),
+			canvas.page.locator(selectors.propertyPanelSection("arrange")),
 		).toBeVisible();
+		await canvas.closePropertyPanel();
 
 		// Send to back: from in front of both rectangles to behind them
 		await canvas.arrange("sendToBack");
@@ -62,11 +65,6 @@ test.describe("connector stacking order (StackOrder menu)", () => {
 					(await canvas.zOrderIndex(rectA)),
 			)
 			.toBe(true);
-
-		// Re-select to reset the menu state: arrange opens by toggle, so a second
-		// consecutive call would close it.
-		await canvas.deselect();
-		await canvas.selectAt({ x: 500, y: 350 });
 
 		// Bring to front: in front of both rectangles again
 		await canvas.arrange("bringToFront");

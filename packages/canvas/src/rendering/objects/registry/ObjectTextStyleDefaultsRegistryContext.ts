@@ -12,7 +12,7 @@ import { createContext, useContext } from "react";
  *
  * The default is a fresh empty registry, so rendering without a Provider draws
  * every unset text style with the shared last resort (TEXT_STYLE_FALLBACK).
- * `Canvas` and `CanvasThumbnail` always provide the canvas's own registry.
+ * `Canvas` always provides the canvas's own registry.
  */
 export const ObjectTextStyleDefaultsRegistryContext =
 	createContext<ObjectTextStyleDefaultsRegistry>(

@@ -11,6 +11,7 @@ export default defineConfig({
 		// away from both — the orchestration in imageDocumentOps, the self-write echo
 		// classification in selfWriteTracker, the write ordering in
 		// latestWriteSerializer, the panel bookkeeping in webviewBridgeRegistry, the
+		// Webview CSP in webviewCsp, the
 		// image `src` resolution split across docImageResolution and the webview's
 		// resolveImage, the setting-or-git decision in commentAuthorResolution, and
 		// the webview's view-state folding in docViewState.

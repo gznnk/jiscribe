@@ -115,7 +115,7 @@ style」という 2 方式混在を解消）。
 - **中立トークン**: `theme`（`theme/themeTokens.ts`）は中立な `--jiscribe-*` CSS カスタムプロパティを
   参照し、フォールバックにはダークプリセット値を持つ（`var(--jiscribe-foreground, #cccccc)`）。
   テーマは CSS 解決時に決まるため、emotion スタイルは静的なモジュール定数のままでよい。
-- **注入**: ホストは Canvas / CanvasThumbnail の `theme` prop に `CanvasTheme`
+- **注入**: ホストは Canvas の `theme` prop に `CanvasTheme`
   （`theme/CanvasTheme.ts`）を渡す。Canvas ルートが `theme.tokens` を `--jiscribe-*`
   カスタムプロパティとして注入する（`theme/themeCssVars.ts`）。カスタムプロパティは継承されるため、
   配下のすべてのスタイルが解決できる。
@@ -136,12 +136,10 @@ style」という 2 方式混在を解消）。
     dispatch に変え、`reconcileObjectContentSizes` を `forceRemeasure` 付きで再実行する。
     スロットからは要求できない唯一のパス。これが受け持つのは誰も待っていなかった到着で、マウント時の
     doc 自身の字面は後述の事前読み込みゲートが受け持ち、そちらは決着時に自前で再計測を dispatch
-    する。どちらのフックも直接は使わない。Canvas と CanvasThumbnail の入口は
+    する。どちらのフックも直接は使わない。Canvas の入口は
     `useDocFonts`（`controllers/hooks/useDocFonts.ts`）で、この 2 つはその後ろにいる —
     2 つの信号を 1 つのカウンタと 1 つの `onFacesChanged` コールバックに畳み、内容をまだ
-    隠しているかどうかも返す。`CanvasThumbnail` は dispatch する reducer を
-    持たないので、2 つの信号を `canvasToState` の memo キーとして使う。箱が 1 つも動かなければ
-    同じ state 参照が返るので、2 つのイベントが重なっても無駄はない。dispatch が届くのは state に
+    隠しているかどうかも返す。dispatch が届くのは state に
     現れる箱だけなので、描画層へもカウンタを `FontsLoadedNonceContext` として配る。こちらは
     このカウンタとゲートの決着を足したもので、どちらも「計測し直せ」以上のことを言わない。レンダー中に
     計測するもの（レコードの帯・コネクターのラベル箱・テキストの当たり帯）はこれを購読しており、

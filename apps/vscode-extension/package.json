@@ -124,7 +124,8 @@
 		"menus": {
 			"commandPalette": [
 				{
-					"command": "jiscribe.setupAi"
+					"command": "jiscribe.setupAi",
+					"when": "workspaceFolderCount != 0"
 				}
 			]
 		}

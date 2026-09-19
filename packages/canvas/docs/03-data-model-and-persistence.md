@@ -71,8 +71,8 @@ inside it (`/` separators, no `..`, no absolute path, no URL). The bytes are not
 in the document, and `width` / `height` are required, so the layout of a document
 holds up wherever its files cannot be reached.
 
-Reading the file is the host's, through the `resolveImage` prop on `<Canvas>` /
-`<CanvasThumbnail>`: it is handed the `src` untouched and answers with a `Blob`,
+Reading the file is the host's, through the `resolveImage` prop on `<Canvas>`:
+it is handed the `src` untouched and answers with a `Blob`,
 the way `onOpenReference` is handed a `meta.reference`. The canvas neither
 resolves nor validates the path — the one reading of it every host shares is
 `splitDocRelativePath` (`@jiscribe/doc`). Omit the prop, reject the promise, or

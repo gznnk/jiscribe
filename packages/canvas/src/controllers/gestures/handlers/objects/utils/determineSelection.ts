@@ -5,6 +5,7 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { Mods } from "../../../registry/ObjectBehaviorTypes";
+import { isAdditiveSelectionMod } from "../../utils/isAdditiveSelectionMod";
 
 /**
  * Determines the new selection IDs based on hierarchical selection logic.
@@ -12,7 +13,8 @@ import type { Mods } from "../../../registry/ObjectBehaviorTypes";
  *
  * @param objectState - The object that was clicked/dragged
  * @param canvasState - Current canvas controller state
- * @param mods - Keyboard modifiers (ctrl, meta, etc.)
+ * @param mods - Keyboard modifiers; ctrl / meta / shift make the selection
+ *   additive (see isAdditiveSelectionMod)
  * @returns New selection IDs array, or null if no change should be made
  */
 export function determineSelection(
@@ -21,7 +23,7 @@ export function determineSelection(
 	mods: Mods,
 ): string[] | null {
 	const { id } = objectState;
-	const isAdditive = mods.ctrl || mods.meta;
+	const isAdditive = isAdditiveSelectionMod(mods);
 	const isCurrentlySelected = canvasState.selectedIds.includes(id);
 
 	// Get ancestors of the clicked object
@@ -39,11 +41,11 @@ export function determineSelection(
 			// Not selected: select it
 			newSelectionTargetId = id;
 		} else if (isAdditive) {
-			// Already selected + Ctrl: deselect it
+			// Already selected + additive modifier: deselect it
 			newSelectionTargetId = id;
 			shouldSelectTarget = false;
 		} else {
-			// Already selected + no Ctrl: no change
+			// Already selected without an additive modifier: no change
 			return null;
 		}
 	} else {
@@ -68,7 +70,7 @@ export function determineSelection(
 						// Select the clicked child
 						newSelectionTargetId = id;
 					} else {
-						// Ctrl: deselect the parent
+						// Additive modifier: deselect the parent
 						newSelectionTargetId = selectedAncestorId;
 						shouldSelectTarget = false;
 					}
@@ -83,7 +85,7 @@ export function determineSelection(
 						// Select next level down toward the clicked item
 						newSelectionTargetId = ancestors[selectedAncestorIdx + 1];
 					} else {
-						// Ctrl: deselect the selected ancestor
+						// Additive modifier: deselect the selected ancestor
 						newSelectionTargetId = selectedAncestorId;
 						shouldSelectTarget = false;
 					}
@@ -122,7 +124,7 @@ export function determineSelection(
 					// Select the clicked item (same level as sibling)
 					newSelectionTargetId = id;
 				} else if (isAdditive) {
-					// Ctrl + already selected: deselect
+					// Additive modifier + already selected: deselect
 					newSelectionTargetId = id;
 					shouldSelectTarget = false;
 				} else {
@@ -165,7 +167,7 @@ export function determineSelection(
 								newSelectionTargetId = reversedAncestors[commonAncestorIdx - 1];
 							}
 						} else if (isAdditive) {
-							// Ctrl: deselect
+							// Additive modifier: deselect
 							newSelectionTargetId = id;
 							shouldSelectTarget = false;
 						} else {
@@ -177,7 +179,7 @@ export function determineSelection(
 						if (!isCurrentlySelected) {
 							newSelectionTargetId = ancestors[0];
 						} else if (isAdditive) {
-							// Ctrl: deselect
+							// Additive modifier: deselect
 							newSelectionTargetId = id;
 							shouldSelectTarget = false;
 						} else {
@@ -190,7 +192,7 @@ export function determineSelection(
 					if (!isCurrentlySelected) {
 						newSelectionTargetId = ancestors[0];
 					} else if (isAdditive) {
-						// Ctrl: deselect
+						// Additive modifier: deselect
 						newSelectionTargetId = id;
 						shouldSelectTarget = false;
 					} else {
@@ -207,7 +209,7 @@ export function determineSelection(
 	let selectedIds: string[];
 
 	if (isAdditive) {
-		// Ctrl/Meta mode: toggle or add
+		// Additive mode: toggle or add
 		if (shouldSelectTarget) {
 			// Add to selection (if not already there)
 			selectedIds = canvasState.selectedIds.includes(newSelectionTargetId)

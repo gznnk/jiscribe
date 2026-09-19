@@ -12,8 +12,8 @@ import {
  * ObjectTextRegionRegistryContext).
  *
  * The default is a fresh empty registry, so rendering without a Provider keys
- * the memo on the frame fields alone. `Canvas` and `CanvasThumbnail` always
- * provide the canvas's own registry.
+ * the memo on the frame fields alone. `Canvas` always provides the canvas's
+ * own registry.
  */
 export const ObjectGeometryKeyRegistryContext =
 	createContext<ObjectGeometryKeyRegistry>(createObjectGeometryKeyRegistry());

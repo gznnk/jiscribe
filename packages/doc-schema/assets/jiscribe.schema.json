@@ -1428,7 +1428,7 @@
 			}
 		},
 		"LucideIconDoc": {
-			"description": "A named pictogram from the bundled Lucide icon set, drawn as line art. Decoration, not a node: it holds no text and cannot be a connector endpoint, so place it beside the shape it marks (a rect, a container header, a sticky) and connect arrows to that shape instead. For a picture that is itself a node, use a labelled pictogram such as \"server\", \"package\" or \"db\". The drawing is scaled uniformly to the smaller side of the box and centred, so keep the box square (the 64x64 default) unless margin is wanted. `stroke` is the icon's own color and `strokeWidth` its line weight, both honoured at any size.",
+			"description": "A named pictogram from the bundled Lucide icon set, drawn as line art. It holds no text of its own, so a label goes in a neighbouring shape (a rect, a container header, a sticky) or use a labelled pictogram such as \"server\", \"package\" or \"db\" instead. A connector endpoint may name it; the endpoint meets its box, not the drawn silhouette. The drawing is scaled uniformly to the smaller side of the box and centred, so keep the box square (the 64x64 default) unless margin is wanted. `stroke` is the icon's own color and `strokeWidth` its line weight, both honoured at any size.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -3635,7 +3635,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / awsIcon / awsGroup / container / sticky / image (NOT lucideIcon / polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / text / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / lucideIcon / callout / note / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / umlPackage / umlComponent / awsIcon / awsGroup / container / sticky / image (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

@@ -17,6 +17,7 @@ import {
 import { delay, waitFor } from "./support/timing";
 import {
 	connectWebviewBridge,
+	latestUpdateVersion,
 	postAsWebview,
 	recordMessagesToWebview,
 	updateMessages,
@@ -53,6 +54,18 @@ interface OpenedCanvasEditor {
 	 * opening, so the file's initial contents are not counted as an echo.
 	 */
 	updatesSinceOpen(): UpdateToWebviewMessage[];
+	/**
+	 * The document version the Webview would quote on its next commit: the one
+	 * stamped on the newest update it was sent.
+	 */
+	latestReceivedVersion(): number | undefined;
+	/**
+	 * Post a canvas commit as the Webview does, built on the document state it
+	 * last received.
+	 *
+	 * @param text - the whole doc as the canvas commits it, with "\n" separators
+	 */
+	commit(text: string): void;
 	/** Release the message listener; call it before the test ends. */
 	dispose(): void;
 }
@@ -80,6 +93,13 @@ async function openCanvasEditor(
 	return {
 		document,
 		updatesSinceOpen: () => updateMessages(recorder).slice(updateCountAtOpen),
+		latestReceivedVersion: () => latestUpdateVersion(recorder),
+		commit: (text) =>
+			postAsWebview(bridge, uri, {
+				type: "update",
+				data: text,
+				baseVersion: latestUpdateVersion(recorder),
+			}),
 		dispose: () => recorder.dispose(),
 	};
 }
@@ -116,10 +136,7 @@ describe("canvas editor and a commit from the Webview", () => {
 
 		// The Webview always commits with "\n", whatever the file holds.
 		const committedText = canvasDocJson(["r1", "r2"]);
-		postAsWebview(bridge, uri, {
-			type: "update",
-			data: committedText,
-		});
+		editor.commit(committedText);
 
 		await waitFor(
 			() =>
@@ -154,10 +171,7 @@ describe("canvas editor and a commit from the Webview", () => {
 		);
 
 		const committedText = canvasDocJson(["r1", "r2"]);
-		postAsWebview(bridge, uri, {
-			type: "update",
-			data: committedText,
-		});
+		editor.commit(committedText);
 		await waitFor(
 			() => editor.document.getText() === committedText,
 			"the commit to reach the document",
@@ -209,14 +223,8 @@ describe("canvas editor and a commit from the Webview", () => {
 		// (see latestWriteSerializer) instead of applying each commit as it arrives.
 		const firstText = canvasDocJson(["bb"]);
 		const secondText = canvasDocJson(["cc"]);
-		postAsWebview(bridge, uri, {
-			type: "update",
-			data: firstText,
-		});
-		postAsWebview(bridge, uri, {
-			type: "update",
-			data: secondText,
-		});
+		editor.commit(firstText);
+		editor.commit(secondText);
 
 		await waitFor(
 			() => editor.document.getText() === secondText,
@@ -235,6 +243,63 @@ describe("canvas editor and a commit from the Webview", () => {
 		await editor.document.save();
 	});
 
+	it("refuses a commit built before a change made outside the canvas", async () => {
+		const uri = await writeFixtureFile(
+			fixtureDirectory,
+			"commit-stale.jis",
+			canvasDocJson(["r1"]),
+		);
+		const editor = await openCanvasEditor(bridge, uri);
+
+		// What the Webview quotes while it still holds the file as opened. The
+		// canvas' save scheduler delays a commit (#125), so one built here can
+		// arrive after the change below.
+		const staleBaseVersion = editor.latestReceivedVersion();
+		assert.equal(
+			typeof staleBaseVersion,
+			"number",
+			"the update sent on opening carried no document version",
+		);
+
+		// Someone edits the same document outside the canvas (a side-by-side text
+		// editor, another extension), and the editor forwards it.
+		const externalText = compactCanvasDocJson(["r1", "x1"]);
+		await replaceWholeDocument(editor.document, externalText);
+		await waitFor(
+			() => editor.updatesSinceOpen().length >= 1,
+			"the update for the change made outside the editor",
+		);
+		const forwardedVersion = editor.latestReceivedVersion() ?? -1;
+		assert.ok(
+			forwardedVersion > (staleBaseVersion ?? -1),
+			"the forwarded update repeated the version the Webview already held",
+		);
+
+		// The delayed commit, arriving with the canvas' pre-change document. Written
+		// as it stands, it would replace the whole file and take the external change
+		// with it.
+		postAsWebview(bridge, uri, {
+			type: "update",
+			data: canvasDocJson(["r1", "r2"]),
+			baseVersion: staleBaseVersion,
+		});
+		await delay(QUIET_WINDOW_MS);
+
+		assert.equal(
+			editor.document.getText(),
+			externalText,
+			"the stale commit was written over the change made outside the canvas",
+		);
+		assert.equal(
+			editor.updatesSinceOpen().length,
+			1,
+			"dropping the commit sent the Webview something beyond the external change",
+		);
+
+		editor.dispose();
+		await editor.document.save();
+	});
+
 	it("ends at the last of three consecutive commits", async () => {
 		const uri = await writeFixtureFile(
 			fixtureDirectory,
@@ -247,18 +312,9 @@ describe("canvas editor and a commit from the Webview", () => {
 		// can be written, and whether it reaches the document at all is not part of
 		// the contract (see latestWriteSerializer).
 		const lastText = canvasDocJson(["dd"]);
-		postAsWebview(bridge, uri, {
-			type: "update",
-			data: canvasDocJson(["bb"]),
-		});
-		postAsWebview(bridge, uri, {
-			type: "update",
-			data: canvasDocJson(["cc"]),
-		});
-		postAsWebview(bridge, uri, {
-			type: "update",
-			data: lastText,
-		});
+		editor.commit(canvasDocJson(["bb"]));
+		editor.commit(canvasDocJson(["cc"]));
+		editor.commit(lastText);
 
 		await waitFor(
 			() => editor.document.getText() === lastText,

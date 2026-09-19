@@ -1,5 +1,6 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 
+import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
 import type {
 	PropertyPanelItem,
 	PropertyPanelSection,
@@ -36,12 +37,11 @@ export const createDefaultPropertyPanel = (
 						{ type: "rotation" },
 						{ type: "lockAspectRatio" },
 					];
-		sections.push({ id: "layout", label: "Layout", items });
+		sections.push({ ...PROPERTY_PANEL_SECTIONS.layout, items });
 	}
 	if (features.fill) {
 		sections.push({
-			id: "fill",
-			label: "Fill",
+			...PROPERTY_PANEL_SECTIONS.fill,
 			items: [{ type: "fill" }, { type: "fillOpacity" }],
 		});
 	}
@@ -56,15 +56,14 @@ export const createDefaultPropertyPanel = (
 			if (features.radius) {
 				items.push({ type: "radius" });
 			}
-			sections.push({ id: "stroke", label: "Border", items });
+			sections.push({ ...PROPERTY_PANEL_SECTIONS.stroke, items });
 		} else {
-			sections.push({ id: "line", label: "Line", items });
+			sections.push({ ...PROPERTY_PANEL_SECTIONS.line, items });
 		}
 	}
 	if (features.arrow) {
 		sections.push({
-			id: "arrow",
-			label: "Arrows",
+			...PROPERTY_PANEL_SECTIONS.arrow,
 			items: [{ type: "arrowHeads" }],
 		});
 	}
@@ -82,7 +81,7 @@ export const createDefaultPropertyPanel = (
 		if (features.geometry !== "point") {
 			items.push({ type: "verticalAlign" });
 		}
-		sections.push({ id: "text", label: "Text", items });
+		sections.push({ ...PROPERTY_PANEL_SECTIONS.text, items });
 	}
 
 	return sections;

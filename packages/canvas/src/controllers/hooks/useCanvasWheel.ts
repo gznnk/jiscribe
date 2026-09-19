@@ -12,6 +12,11 @@ import { shouldUseNativeWheel } from "../gestures/recognizer/targeting/shouldUse
  * - Multiple Canvases can be placed on the same page, each handling only the wheel
  *   events within its own area (no need to separately track an "active Canvas").
  *
+ * The canvas's own chrome (toolbar, sidebars, modals) is outside this scope as well, so
+ * a wheel there stays the browser's and never moves the view. Only the Ctrl-held one is
+ * claimed back, by useBlockBrowserZoom at the root, which cancels it so the browser
+ * does not zoom the page.
+ *
  * Over scrollable elements marked with data-gesture="native-wheel" (the shortcut
  * help modal's body, or an editing surface whose text outgrew the room it has),
  * native scrolling is left in place and preventDefault is not called. A surface

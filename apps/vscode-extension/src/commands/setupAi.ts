@@ -1,24 +1,29 @@
 import * as vscode from "vscode";
 
+import { classifyExistingFile } from "./existingFileOwnership";
 import { GENERATED_NOTICE } from "./generatedFileNotice";
 import { removeGeneratedReference } from "./staleReferenceRemoval";
+import { collectDirectoryPrefixes } from "./writeDestinationPaths";
 
 /**
  * "Set up AI" command.
  *
  * Places the guide/schema plus per-agent adapters (Skill / rules /
  * instructions) so a workspace's AI agents can generate and edit `.jis`
- * correctly. See docs/03_ai-integration/setup_ai_design.md.
+ * correctly.
  *
  * - The canonical copy lives once in `.jiscribe/` (ai-guide.md +
  *   jiscribe.schema.json).
  * - Each agent's own-file adapter is a thin pointer to `.jiscribe/ai-guide.md`,
  *   which is the single entry point to the schema beside it.
- * - Only files we generate are overwritten; user-managed files (CLAUDE.md,
- *   .gitignore, etc.) are never touched.
+ * - A file carrying the generated notice is ours and is overwritten. A file at
+ *   one of those paths without it is the user's own, and is replaced only after
+ *   they confirm. Files outside the set (CLAUDE.md, .gitignore, etc.) are never
+ *   touched.
+ * - Nothing is written through a symbolic link: a destination, or any directory
+ *   on the way to one, that is a link aborts the command.
  *
- * NOTE: auto-generating MCP server config is deferred
- * (docs/03_ai-integration/mcp_design.md).
+ * NOTE: auto-generating MCP server config is deferred.
  */
 
 // Shared adapter body (excluding frontmatter). It names where to go and nothing
@@ -144,15 +149,15 @@ async function pickTargets(
 	root: vscode.Uri,
 ): Promise<AgentTarget[] | undefined> {
 	const detected = await Promise.all(
-		TARGETS.map((t) => detectAgent(root, t.markerDir)),
+		TARGETS.map((target) => detectAgent(root, target.markerDir)),
 	);
 	// Default ON for detected markers; if none are detected, all ON (first run).
 	const anyDetected = detected.some(Boolean);
-	const items = TARGETS.map((target, i) => ({
+	const items = TARGETS.map((target, index) => ({
 		label: target.label,
 		detail: target.detail,
 		target,
-		picked: anyDetected ? detected[i] : true,
+		picked: anyDetected ? detected[index] : true,
 	}));
 
 	const picked = await vscode.window.showQuickPick(items, {
@@ -162,8 +167,80 @@ async function pickTargets(
 	return picked?.map((item) => item.target);
 }
 
-async function writeFile(uri: vscode.Uri, content: Uint8Array): Promise<void> {
-	await vscode.workspace.fs.writeFile(uri, content);
+/** The canonical guide every adapter points at, as segments relative to the workspace root. */
+const GUIDE_PATH = [".jiscribe", "ai-guide.md"];
+
+/** A file to write, held until every destination has been judged safe. */
+interface PlannedWrite {
+	/** Destination, as path segments relative to the workspace root. */
+	path: string[];
+	/** Bytes to write, carrying {@link GENERATED_NOTICE} on the first line. */
+	content: Uint8Array;
+}
+
+/** Workspace-relative path, as the messages spell it. */
+function toRelativePath(segments: readonly string[]): string {
+	return segments.join("/");
+}
+
+/**
+ * The outermost component of the destinations that is a symbolic link.
+ *
+ * A repository can ship `.jiscribe` or `.claude/skills/jiscribe` as a link
+ * pointing out of the workspace, and `vscode.workspace.fs` follows it, so the
+ * command would write into whatever it names. A component that is not there is
+ * fine: the command creates it, and creation does not follow anything.
+ *
+ * @param root - workspace folder every path is resolved against
+ * @param destinationPaths - the files about to be written, as segments relative to `root`
+ * @returns the workspace-relative path of the first link found, walking directories before files; undefined when the way is clear
+ */
+async function findSymbolicLinkOnTheWay(
+	root: vscode.Uri,
+	destinationPaths: readonly string[][],
+): Promise<string | undefined> {
+	const components = [
+		...collectDirectoryPrefixes(destinationPaths),
+		...destinationPaths,
+	];
+	for (const segments of components) {
+		let entry: vscode.FileStat;
+		try {
+			entry = await vscode.workspace.fs.stat(
+				vscode.Uri.joinPath(root, ...segments),
+			);
+		} catch {
+			// Not there, so there is nothing to follow.
+			continue;
+		}
+		if ((entry.type & vscode.FileType.SymbolicLink) !== 0) {
+			return toRelativePath(segments);
+		}
+	}
+	return undefined;
+}
+
+/**
+ * Ask what to do about destinations holding a file the command did not write.
+ *
+ * @param foreignPaths - the workspace-relative paths in question, at least one
+ * @returns the paths to leave alone (empty when the user takes the overwrite), or undefined when they dismissed the dialog and the command must write nothing at all
+ */
+async function askAboutForeignFiles(
+	foreignPaths: readonly string[],
+): Promise<readonly string[] | undefined> {
+	const listed = foreignPaths.join(", ");
+	const subject = foreignPaths.length === 1 ? "was" : "were";
+	const choice = await vscode.window.showWarningMessage(
+		`Set up AI: ${listed} ${subject} not generated by this command. Overwriting replaces what is there.`,
+		{ modal: true },
+		"Overwrite",
+		"Skip Them",
+	);
+	if (choice === undefined) {
+		return undefined;
+	}
+	return choice === "Overwrite" ? [] : foreignPaths;
 }
 
 async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
@@ -183,18 +260,77 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 			readDistAsset(context, "jiscribe.schema.json"),
 		]);
 
-		// Canonical copy: .jiscribe/ (referenced by every adapter).
-		const jiscribeDir = vscode.Uri.joinPath(root, ".jiscribe");
-		await vscode.workspace.fs.createDirectory(jiscribeDir);
-		const guideUri = vscode.Uri.joinPath(jiscribeDir, "ai-guide.md");
-		const schemaUri = vscode.Uri.joinPath(jiscribeDir, "jiscribe.schema.json");
 		// Prepend the generated header to Markdown (not the JSON schema).
 		const withNotice = (asset: Uint8Array): Uint8Array =>
 			new TextEncoder().encode(
 				`${GENERATED_NOTICE}\n\n${new TextDecoder().decode(asset)}`,
 			);
-		await writeFile(guideUri, withNotice(guide));
-		await writeFile(schemaUri, schema);
+		// The canonical guide plus each selected agent's adapter: every file that
+		// carries the notice, and so every file whose ownership can be read back.
+		const plannedWrites: PlannedWrite[] = [
+			{ path: GUIDE_PATH, content: withNotice(guide) },
+			...targets.map((target) => ({
+				path: target.adapterPath,
+				content: new TextEncoder().encode(target.content),
+			})),
+		];
+		const jiscribeDir = vscode.Uri.joinPath(root, ".jiscribe");
+		const guideUri = vscode.Uri.joinPath(root, ...GUIDE_PATH);
+		const schemaPath = [".jiscribe", "jiscribe.schema.json"];
+
+		const linkedPath = await findSymbolicLinkOnTheWay(root, [
+			...plannedWrites.map((planned) => planned.path),
+			schemaPath,
+		]);
+		if (linkedPath) {
+			vscode.window.showErrorMessage(
+				`Set up AI: ${linkedPath} is a symbolic link, and this command does not write through one. Replace it with a real file or directory, then run the command again.`,
+			);
+			return;
+		}
+
+		const ownerships = await Promise.all(
+			plannedWrites.map((planned) =>
+				classifyExistingFile(async () =>
+					vscode.workspace.fs.readFile(
+						vscode.Uri.joinPath(root, ...planned.path),
+					),
+				),
+			),
+		);
+		const foreignPaths = plannedWrites
+			.filter((_, index) => ownerships[index] === "foreign")
+			.map((planned) => toRelativePath(planned.path));
+		let skippedPaths: readonly string[] = [];
+		if (foreignPaths.length > 0) {
+			const answer = await askAboutForeignFiles(foreignPaths);
+			if (answer === undefined) {
+				return;
+			}
+			skippedPaths = answer;
+		}
+
+		for (const planned of plannedWrites) {
+			if (skippedPaths.includes(toRelativePath(planned.path))) {
+				continue;
+			}
+			const directory = vscode.Uri.joinPath(root, ...planned.path.slice(0, -1));
+			await vscode.workspace.fs.createDirectory(directory);
+			await vscode.workspace.fs.writeFile(
+				vscode.Uri.joinPath(root, ...planned.path),
+				planned.content,
+			);
+		}
+
+		// The schema carries no notice to read ownership off, and it is this
+		// command's own output rather than anything a user would write by hand,
+		// so it goes down unconditionally.
+		await vscode.workspace.fs.createDirectory(jiscribeDir);
+		await vscode.workspace.fs.writeFile(
+			vscode.Uri.joinPath(root, ...schemaPath),
+			schema,
+		);
+
 		// A reference.md left by an earlier version goes, but only the copy we
 		// wrote (see removeGeneratedReference). Absent is the normal case.
 		const referenceUri = vscode.Uri.joinPath(jiscribeDir, "reference.md");
@@ -204,31 +340,32 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 				vscode.workspace.fs.delete(referenceUri, { useTrash }),
 		});
 
-		// Place the adapter for each selected agent.
-		for (const target of targets) {
-			const dir = vscode.Uri.joinPath(root, ...target.adapterPath.slice(0, -1));
-			await vscode.workspace.fs.createDirectory(dir);
-			const fileUri = vscode.Uri.joinPath(root, ...target.adapterPath);
-			await writeFile(fileUri, new TextEncoder().encode(target.content));
-		}
-
-		const names = targets.map((t) => t.label).join(", ");
+		const names = targets.map((target) => target.label).join(", ");
 		// A reference.md we did not write is the one thing the command leaves as it
 		// found it, so say so rather than let it look like a file we forgot.
 		const keptNote =
 			referenceOutcome === "kept"
 				? " Left .jiscribe/reference.md as it is: it is not a generated file, and the setup no longer uses it."
 				: "";
+		const skippedNote =
+			skippedPaths.length > 0
+				? ` Left ${skippedPaths.join(", ")} as ${skippedPaths.length === 1 ? "it is" : "they are"}: not generated by this command.`
+				: "";
+		// The adapters name the guide by path, so a kept guide is the one the
+		// agents will read; say so rather than let "Created" imply it is ours.
+		const guideNote = skippedPaths.includes(toRelativePath(GUIDE_PATH))
+			? " The agent config points at that guide of yours."
+			: "";
 		const action = await vscode.window.showInformationMessage(
-			`Set up AI: Created .jiscribe/ and config for ${names}.${keptNote} Ask your AI assistant to draw a Jiscribe diagram.`,
+			`Set up AI: Created .jiscribe/ and config for ${names}.${keptNote}${skippedNote}${guideNote} Ask your AI assistant to draw a Jiscribe diagram.`,
 			"Open Guide",
 		);
 		if (action === "Open Guide") {
 			await vscode.window.showTextDocument(guideUri);
 		}
-	} catch (err) {
+	} catch (error) {
 		vscode.window.showErrorMessage(
-			`Set up AI failed: ${err instanceof Error ? err.message : String(err)}`,
+			`Set up AI failed: ${error instanceof Error ? error.message : String(error)}`,
 		);
 	}
 }

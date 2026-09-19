@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 
+import { createCommitGate, type CommitGate } from "./commitGate";
+import { describeErrorDetail } from "./describeErrorDetail";
 import { createLatestWriteSerializer } from "./latestWriteSerializer";
 import {
 	resolveCanvasWebview,
@@ -10,22 +12,32 @@ import {
 	type DocumentEndOfLine,
 	type SelfWriteTracker,
 } from "./selfWriteTracker";
+import { uriFileName } from "./uriFileName";
 import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
 import { toWebviewDocSource } from "../canvasDocSource";
-import type { ExtensionToWebviewMessage } from "../types/messages";
 
 /** The document's line ending as the string its text actually holds. */
 function documentEndOfLine(document: vscode.TextDocument): DocumentEndOfLine {
 	return document.eol === vscode.EndOfLine.CRLF ? "\r\n" : "\n";
 }
 
+/** One canvas commit as the Webview sent it, carried through the write queue. */
+interface CanvasCommit {
+	/** The whole document as JSON text, with "\n" separators. */
+	text: string;
+	/** The `version` of the newest update the Webview had received when it built the commit. */
+	baseVersion: number | undefined;
+}
+
 /**
  * Custom editor provider that shows the Canvas UI when a .jis file opens.
  *
  * Data flow:
- *   file change → Extension → Webview (postMessage)
+ *   file change → Extension → Webview (postMessage), stamped with the document
+ *     version the text was read at
  *   canvas edit → Webview → Extension (postMessage) → write back via WorkspaceEdit,
- *     one at a time (latestWriteSerializer)
+ *     one at a time (latestWriteSerializer), unless the commit was built before a
+ *     newer document the Webview has already been sent (commitGate)
  *
  * Image documents (.jis.svg / .jis.png) can't be handled by full-text
  * replacement, so JiscribeImageEditorProvider (re-render the image at save time)
@@ -59,11 +71,21 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		// external change by content (see selfWriteTracker).
 		const selfWriteTracker = createSelfWriteTracker();
 
+		// Versions of the updates posted below, so a commit built before a change
+		// made outside the canvas is dropped rather than written over it (see
+		// commitGate).
+		const commitGate = createCommitGate();
+
 		// One write at a time, so a commit is never built against a document version
 		// VSCode has already moved past (see latestWriteSerializer).
-		const writeSerializer = createLatestWriteSerializer((text) =>
-			this.writeCommit(document, selfWriteTracker, text),
+		const writeSerializer = createLatestWriteSerializer(
+			(commit: CanvasCommit) =>
+				this.writeCommit(document, selfWriteTracker, commitGate, commit),
 		);
+
+		// Declared before the panel is resolved, because onDispose closes over it
+		// while it is still unassigned (see the registration below).
+		let changeDocumentSubscription: vscode.Disposable | undefined = undefined;
 
 		const channel = resolveCanvasWebview(webviewPanel, {
 			extensionUri: this.context.extensionUri,
@@ -71,23 +93,30 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 			bridgeRegistry: this.bridgeRegistry,
 
 			// Webview is initialized; send the initial file contents.
-			onReady: () => this.updateWebview(channel, document),
+			onReady: () => this.updateWebview(channel, document, commitGate),
 
 			// Write the canvas edit back to the file, behind whatever write is still
 			// in flight. A commit that arrives while an older one waits supersedes
 			// it, so the file ends at the canvas' latest state either way.
-			onUpdate: (data) => writeSerializer.enqueue(data),
+			// Gated here as well as at write time: a stale commit must not replace
+			// a current one still waiting behind the in-flight write.
+			onUpdate: (data, baseVersion) => {
+				const commit: CanvasCommit = { text: data, baseVersion };
+				if (this.isCommitCurrent(document, commitGate, commit)) {
+					writeSerializer.enqueue(commit);
+				}
+			},
 
 			// The Webview's own listener is disposed by resolveCanvasWebview; this
 			// one is ours and leaks without it.
-			onDispose: () => changeDocumentSubscription.dispose(),
+			onDispose: () => changeDocumentSubscription?.dispose(),
 		});
 
 		// Registered after the panel is resolved, so the channel the handler posts
 		// through exists by the time any event can arrive.
-		const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
-			(e) => {
-				if (e.document.uri.toString() !== document.uri.toString()) {
+		changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
+			(event) => {
+				if (event.document.uri.toString() !== document.uri.toString()) {
 					return;
 				}
 
@@ -95,7 +124,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 				// document turns dirty, right after the content event of the same
 				// edit. The text did not move, so there is nothing to forward, and
 				// letting it reach the tracker would clear the queue on every commit.
-				if (e.contentChanges.length === 0) {
+				if (event.contentChanges.length === 0) {
 					return;
 				}
 
@@ -106,9 +135,39 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 					return;
 				}
 
-				this.updateWebview(channel, document);
+				this.updateWebview(channel, document, commitGate);
 			},
 		);
+	}
+
+	/**
+	 * Whether a commit may still be written, telling the user when it may not.
+	 *
+	 * A dropped commit is a canvas edit that is lost: the canvas has been handed
+	 * the file's newer state, so the edit made on the older one is gone. Like a
+	 * failed write (notifySaveFailure), that has to be visible, not a console line.
+	 *
+	 * @param document - the edited document, named in the message
+	 * @param commitGate - this editor's gate, holding the newest version posted
+	 * @param commit - the commit as the Webview sent it
+	 * @returns true when the commit is built on the newest document the Webview
+	 *   was sent
+	 */
+	private isCommitCurrent(
+		document: vscode.TextDocument,
+		commitGate: CommitGate,
+		commit: CanvasCommit,
+	): boolean {
+		if (commitGate.accepts(commit.baseVersion)) {
+			return true;
+		}
+		console.warn(
+			`[Jiscribe] Dropped a canvas commit built against document version ${String(commit.baseVersion)}: the Webview has since been sent version ${String(commitGate.lastForwardedVersion)}, changed outside the canvas.`,
+		);
+		vscode.window.showWarningMessage(
+			`Jiscribe: A canvas edit to "${uriFileName(document.uri)}" was not written because the file changed outside the canvas meanwhile. The canvas shows the file's current state; redo the edit there.`,
+		);
+		return false;
 	}
 
 	/**
@@ -119,16 +178,30 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 * @param selfWriteTracker - this editor's tracker, told about the text right
 	 *   before it is written (applyEdit is async and onDidChangeTextDocument can
 	 *   fire before it resolves)
-	 * @param text - the whole document as the Webview committed it, with "\n"
-	 *   separators
+	 * @param commitGate - re-checked here, right before the write, for a commit
+	 *   that waited behind an in-flight write while an external change was
+	 *   forwarded. In practice VSCode's own version check is what refuses such a
+	 *   write (the renderer applies edits in order, so the in-flight write's
+	 *   reply reaches this host before the change event of anything applied
+	 *   after it, and the waiting commit is then applied against a version the
+	 *   document has left), but that path ends in "Failed to write" rather than
+	 *   the dropped-commit message, and nothing in that ordering is this
+	 *   extension's to rely on
+	 * @param commit - the whole document as the Webview committed it, with "\n"
+	 *   separators, and the version it was built on
 	 * @returns a promise that resolves once the outcome has been handled, whatever
 	 *   that outcome was, so the serializer can start the next write
 	 */
 	private writeCommit(
 		document: vscode.TextDocument,
 		selfWriteTracker: SelfWriteTracker,
-		text: string,
+		commitGate: CommitGate,
+		commit: CanvasCommit,
 	): Promise<void> {
+		if (!this.isCommitCurrent(document, commitGate, commit)) {
+			return Promise.resolve();
+		}
+		const text = commit.text;
 		const trackedText = selfWriteTracker.track(
 			text,
 			documentEndOfLine(document),
@@ -144,11 +217,11 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 					this.notifySaveFailure(document, undefined);
 				}
 			},
-			(err: unknown) => {
+			(error: unknown) => {
 				// Nothing reached the document, so drop the tracked text; otherwise it
 				// would swallow a later external change that happens to match it.
 				selfWriteTracker.untrack(trackedText);
-				this.notifySaveFailure(document, err);
+				this.notifySaveFailure(document, error);
 			},
 		);
 	}
@@ -158,34 +231,39 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 * error alone goes unnoticed and the user keeps editing as if saved, so
 	 * always surface a visible error message.
 	 */
-	private notifySaveFailure(document: vscode.TextDocument, err: unknown) {
-		console.error("[Jiscribe] Failed to write to file:", err);
-		const detail = err instanceof Error ? `: ${err.message}` : "";
-		const baseName = document.uri.path.split("/").pop() ?? document.uri.path;
+	private notifySaveFailure(document: vscode.TextDocument, error: unknown) {
+		console.error("[Jiscribe] Failed to write to file:", error);
+		const detail = describeErrorDetail(error);
+		const baseName = uriFileName(document.uri);
 		vscode.window.showErrorMessage(
 			`Jiscribe: Failed to write canvas changes to "${baseName}"${detail}. Your latest edits are NOT saved.`,
 		);
 	}
 
 	/**
-	 * Send the file's current contents to the Webview. Called when the file
-	 * changes externally or when the Webview signals it's ready.
+	 * Send the file's current contents to the Webview, stamped with the version
+	 * they were read at. Called when the file changes externally or when the
+	 * Webview signals it's ready.
 	 *
 	 * @param channel - the resolved panel's channel; posting through the panel
 	 *   directly would hide the message from the bridge registry
 	 * @param document - the edited document, re-indented on the way out
 	 *   (toWebviewDocSource)
+	 * @param commitGate - told about the stamp here, the one place an update is
+	 *   built, so no posted version can go unrecorded
 	 */
 	private updateWebview(
 		channel: CanvasWebviewChannel,
 		document: vscode.TextDocument,
+		commitGate: CommitGate,
 	) {
-		const message: ExtensionToWebviewMessage = {
-			type: "update",
+		const version = document.version;
+		commitGate.stamp(version);
+		channel.postUpdate({
 			data: toWebviewDocSource(document.getText()),
 			docType: "json",
-		};
-		channel.post(message);
+			version,
+		});
 	}
 
 	/**
@@ -197,17 +275,15 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 */
 	private async updateTextDocument(
 		document: vscode.TextDocument,
-		json: string,
+		text: string,
 	): Promise<boolean> {
 		const edit = new vscode.WorkspaceEdit();
 
-		// Range covering the whole document. lineCount is 1-based but the end line
-		// index is 0-based, so lineCount - 1 is the last line.
 		const lastLine = document.lineAt(document.lineCount - 1);
 		edit.replace(
 			document.uri,
 			new vscode.Range(0, 0, document.lineCount - 1, lastLine.text.length),
-			json,
+			text,
 		);
 
 		return vscode.workspace.applyEdit(edit);

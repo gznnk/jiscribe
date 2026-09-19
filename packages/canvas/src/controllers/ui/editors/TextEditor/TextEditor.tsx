@@ -28,7 +28,8 @@ import {
 	renderEditableRichText,
 	setEditableSelection,
 } from "../utils/editableTextDom";
-import type { CaretLocalRect, CaretTarget } from "../utils/readCaretLocalRect";
+import type { CaretTarget } from "../utils/measureCaretInSurface";
+import type { CaretLocalRect } from "../utils/readCaretLocalRect";
 
 /** Keys that toggle a format while held with the platform's command modifier. */
 const FORMAT_KEYS: Record<string, TextEditFormat | undefined> = {
