@@ -10,7 +10,10 @@
 //   4. できた成果物に tools/list を投げ、ツール定義の分量を報告する。
 //
 // 通常ビルド: node build.mjs / 監視: node build.mjs --watch
-// （--watch は 3 だけを監視する。ビューアを触るなら vite の dev サーバーを使う）
+// （--watch が監視するのは 3 だけだが、入る前に 2 の staging を一度だけ行う。
+// これが無いと watch しか走らせたことのない clone の dist/ は staging を
+// 一度も持たず、diagnose_canvas が落ちて日本語の計測が黙って推定へ落ちる。
+// staging は冪等なので毎回でも安全。ビューアを触るなら vite の dev サーバーを使う）
 
 import { spawn } from "child_process";
 import { cp, mkdir, readdir, readFile, rm, writeFile } from "fs/promises";
@@ -27,9 +30,22 @@ const clientDir = join(__dirname, "dist", "client");
 /**
  * インラインする中身が、埋め込み先のタグを閉じてしまわないようにする。
  * `</script>` や `</style>` が本文に現れると、そこで要素が終わってしまう。
+ *
+ * script はもう1つ罠がある。本文中の `<!--` の後に `<script` が現れると、
+ * HTML パーサはそこで「二重エスケープ」状態へ入り、以降の本物の `</script>`
+ * を閉じタグとして扱わなくなる（仕様上の script data 状態遷移）。`<\!--` は
+ * JS の文字列・正規表現リテラルの中では素通りする一方、パーサからは
+ * `<!--` に見えなくなるので、これで無害化する。
  */
-const escapeForInlineTag = (source, tagName) =>
-	source.replaceAll(new RegExp(`</(${tagName})`, "gi"), String.raw`<\/$1`);
+const escapeForInlineTag = (source, tagName) => {
+	const withEscapedClosingTag = source.replaceAll(
+		new RegExp(`</(${tagName})`, "gi"),
+		String.raw`<\/$1`,
+	);
+	return tagName === "script"
+		? withEscapedClosingTag.replaceAll("<!--", String.raw`<\!--`)
+		: withEscapedClosingTag;
+};
 
 /** vite が出した index.html へ、参照している JS と CSS を畳み込む */
 const inlineViewerHtml = async () => {
@@ -441,6 +457,7 @@ const reportToolPayload = async () => {
 };
 
 if (isWatch) {
+	await stageRuntimeDependencies();
 	const ctx = await esbuild.context(config);
 	await ctx.watch();
 	console.log("Watching for changes...");

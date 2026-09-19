@@ -37,9 +37,10 @@ the half a canvas is rendered with, and pulls the whole rendering layer.
 
 A host has to give the same set to `<Canvas>` **and** to its parser, and neither
 side complains when it does not. Register only with the canvas and the parser
-strips every plugin object out of the document as an unknown type; register only
-with the parser and the canvas has no definition to draw them with. Either way
-the shapes go missing.
+keeps every plugin object as an unknown type it never validates; register only
+with the parser and the canvas has no definition to draw them with, so it holds
+them unread. Either way the file keeps them, but in the second case the shapes
+go missing from the screen.
 
 `standardPlugins` and `standardDocPlugins` are the same nine in the same order,
 which is what makes the pair safe to use without checking.

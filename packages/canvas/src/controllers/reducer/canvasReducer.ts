@@ -532,6 +532,7 @@ const adoptDocumentState = (
 	rootIds: payload.rootIds,
 	background: payload.background,
 	view: payload.view,
+	opaqueObjects: payload.opaqueObjects,
 	...resetUiState(),
 	// Adopting a document is a history boundary. Since past is set directly without
 	// going through recordHistoryIfNeeded, explicitly reset the coalesce state here

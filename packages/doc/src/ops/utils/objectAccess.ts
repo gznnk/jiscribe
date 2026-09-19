@@ -20,6 +20,18 @@ export type ObjectLocation = {
 };
 
 /**
+ * The children of a group, or `[]` for any other object. Only a group's are walked: an
+ * object of a type the definitions do not know is held as it is (`OpaqueObjectDoc`), so a
+ * `children` array it may carry is part of what it holds rather than objects of the doc.
+ */
+export const readChildren = (object: ObjectDoc): ObjectRecord[] => {
+	const children = (object as ObjectRecord).children;
+	return object.type === GroupFeatures.type && Array.isArray(children)
+		? (children as ObjectRecord[])
+		: [];
+};
+
+/**
  * Locate an object by id, recursing into group children.
  *
  * @param doc - Searched but not modified
@@ -35,12 +47,9 @@ export const findObject = (
 			if (object.id === id) {
 				return { object: object as ObjectRecord, siblings, index };
 			}
-			const children = (object as ObjectRecord).children;
-			if (Array.isArray(children)) {
-				const found = visit(children as ObjectDoc[]);
-				if (found !== undefined) {
-					return found;
-				}
+			const found = visit(readChildren(object));
+			if (found !== undefined) {
+				return found;
 			}
 		}
 		return undefined;
@@ -99,10 +108,6 @@ export const requireGroup = (
 	return { ...location, children: object.children as ObjectDoc[] };
 };
 
-/** A group's children, or `[]` for an object holding none. */
-export const readChildren = (object: ObjectRecord): ObjectRecord[] =>
-	Array.isArray(object.children) ? (object.children as ObjectRecord[]) : [];
-
 /** Walk every object in the tree, groups included; a group is visited before its children. */
 export const visitObjects = (
 	siblings: readonly ObjectDoc[],
@@ -114,7 +119,11 @@ export const visitObjects = (
 	}
 };
 
-/** Ids of `object` and of every descendant reachable through group children. */
+/**
+ * Ids of `object` and of every descendant reachable through `children`. Unlike
+ * {@link readChildren} this goes inside an opaque object too, since a connector may be
+ * attached to what it holds and has to go when it does.
+ */
 export const collectObjectIds = (object: ObjectDoc): string[] => {
 	const ids = [object.id];
 	const children = (object as ObjectRecord).children;
@@ -139,11 +148,11 @@ export const dropEmptyGroups = (doc: CanvasDoc): string[] => {
 	const visit = (siblings: ObjectDoc[]): void => {
 		// Back to front so a removal leaves the indexes still to visit untouched.
 		for (let index = siblings.length - 1; index >= 0; index -= 1) {
-			const children = (siblings[index] as ObjectRecord).children;
-			if (!Array.isArray(children)) {
+			if (siblings[index].type !== GroupFeatures.type) {
 				continue;
 			}
-			visit(children as ObjectDoc[]);
+			const children = readChildren(siblings[index]);
+			visit(children);
 			if (children.length === 0) {
 				droppedIds.push(siblings[index].id);
 				siblings.splice(index, 1);

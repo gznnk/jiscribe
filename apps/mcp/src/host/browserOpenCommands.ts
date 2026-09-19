@@ -16,26 +16,32 @@ export type BrowserOpenCommand = readonly [string, ...string[]];
 export type BrowserOpenMode = "app" | "tab" | "headless";
 
 /**
- * Windows-side Chromium reachable from WSL. Chrome first, then Edge, which is
- * always there
+ * The Chromium installations on Windows, in the order they are tried: Chrome
+ * first, then Edge, which is always there. On Windows itself only headless names
+ * them, the other modes going through `start`, which finds the browser under App
+ * Paths; from WSL they are named in every mode, through toWslPath
  */
 const WINDOWS_CHROMIUM_PATHS = [
-	"/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
-	"/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe",
-	"/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
-	"/mnt/c/Program Files/Microsoft/Edge/Application/msedge.exe",
-] as const;
-
-/**
- * The same installations seen from Windows itself. Only headless uses them: the
- * other modes go through `start`, which finds the browser under App Paths
- */
-const WINDOWS_NATIVE_CHROMIUM_PATHS = [
 	"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
 	"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
 	"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
 	"C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
 ] as const;
+
+/**
+ * Rewrites a Windows path as the one WSL reaches the same file through.
+ *
+ * @param windowsPath An absolute path on a drive, written as Windows writes it
+ *   (`C:\\Program Files\\...`). That is all this handles: the drive letter is
+ *   taken to be the first character, and nothing is escaped or normalised
+ * @returns The path under `/mnt/`, with the drive letter lowercased and every
+ *   backslash turned into a slash
+ */
+export const toWslPath = (windowsPath: string): string =>
+	`/mnt/${windowsPath[0].toLowerCase()}${windowsPath.slice(2).replaceAll("\\", "/")}`;
+
+/** The same installations as WSL reaches them, in the same order */
+const WSL_CHROMIUM_PATHS = WINDOWS_CHROMIUM_PATHS.map(toWslPath);
 
 /** Chromium executable names tried on Linux (WSL included) */
 const LINUX_CHROMIUM_COMMANDS = [
@@ -143,7 +149,7 @@ const calcAppOpenCommands = (
 	// on plain Linux is fine
 	return [
 		...LINUX_CHROMIUM_COMMANDS.map((command) => [command, appArg] as const),
-		...WINDOWS_CHROMIUM_PATHS.map((path) => [path, appArg] as const),
+		...WSL_CHROMIUM_PATHS.map((path) => [path, appArg] as const),
 	];
 };
 
@@ -215,7 +221,7 @@ const calcHeadlessOpenCommands = (
 		return toCommands(browserCommand);
 	}
 	if (platform === "win32") {
-		return WINDOWS_NATIVE_CHROMIUM_PATHS.flatMap(toCommands);
+		return WINDOWS_CHROMIUM_PATHS.flatMap(toCommands);
 	}
 	if (platform === "darwin") {
 		return MACOS_CHROMIUM_BINARIES.flatMap(toCommands);
@@ -224,7 +230,7 @@ const calcHeadlessOpenCommands = (
 	// with ENOENT on plain Linux
 	return [
 		...LINUX_CHROMIUM_COMMANDS.flatMap(toCommands),
-		...WINDOWS_CHROMIUM_PATHS.flatMap(toCommands),
+		...WSL_CHROMIUM_PATHS.flatMap(toCommands),
 	];
 };
 
@@ -279,6 +285,25 @@ export const calcBrowserOpenCommands = (
 		...tabCommands,
 	];
 };
+
+/**
+ * How many candidates of an app-mode launch open a window with no frame, which is
+ * the point in the list where it drops to a plain tab.
+ *
+ * @param url The URL to open. It changes what the candidates carry, not how many
+ *   of them there are
+ * @param platform The value of `process.platform`. Anything but win32 / darwin is
+ *   treated as Linux
+ * @param browserCommand The executable named for app mode, which leaves exactly
+ *   one candidate. When omitted, the known Chromiums are counted
+ * @returns The number of leading candidates in `calcBrowserOpenCommands(url,
+ *   platform, "app", browserCommand)` that are not the tab fallback
+ */
+export const calcAppOpenCommandCount = (
+	url: string,
+	platform: NodeJS.Platform,
+	browserCommand?: string,
+): number => calcAppOpenCommands(url, platform, browserCommand).length;
 
 /**
  * Reads the environment variable `JISCRIBE_MCP_BROWSER` as a way of opening.

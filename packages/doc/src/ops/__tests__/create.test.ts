@@ -4,11 +4,13 @@ import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
 import {
 	docOps,
+	docWithUnknownObject,
 	emptyDoc,
 	expectValid,
 	readObject,
 	rootIds,
 	twoRects,
+	unknownObjectFields,
 } from "./support/docFixtures";
 import { badgeDefinition } from "./support/pluginFixtures";
 
@@ -273,6 +275,25 @@ describe("addObject", () => {
 	});
 });
 
+describe("addObject beside an object of a type this instance does not know", () => {
+	it("leaves that object where it was and as it was written", () => {
+		const doc = docWithUnknownObject();
+
+		docOps.addObject(doc, "rect", { x: 0, y: 200 });
+
+		expect(rootIds(doc)).toEqual([
+			"rect-1",
+			"hexagram-1",
+			"rect-2",
+			"connector-1",
+			"connector-2",
+			"rect-3",
+		]);
+		expect(doc.root[1]).toEqual(unknownObjectFields("hexagram-1"));
+		expectValid(doc);
+	});
+});
+
 describe("addObject with styling", () => {
 	it("overrides the factory defaults and keeps the doc valid", () => {
 		const doc = emptyDoc();
@@ -323,6 +344,38 @@ describe("addObject with styling", () => {
 			docOps.addObject(doc, "polygon", { x: 0, y: 0, fontSize: 20 }),
 		).toThrow(
 			'object type "polygon" cannot be styled with "fontSize": the styling it takes is "fill", "fillOpacity", "stroke", "strokeWidth", "strokeDashType", "strokeOpacity"',
+		);
+		expect(doc.root).toHaveLength(0);
+	});
+});
+
+describe("addObject with text", () => {
+	// The factory would spread the text in as one more field, which the schema
+	// rejects on a type holding none; setText refuses the same object already.
+	it.each(["polygon", "polyline"])(
+		"refuses text on %s, which holds none",
+		(type) => {
+			const doc = emptyDoc();
+
+			expect(() =>
+				docOps.addObject(doc, type, { x: 0, y: 0, text: "hi" }),
+			).toThrow(
+				`object type "${type}" holds no text of its own and takes no text`,
+			);
+			expect(doc.root).toHaveLength(0);
+		},
+	);
+
+	it("refuses the whole batch when one entry carries text its type cannot hold", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObjects(doc, [
+				{ type: "rect", x: 0, y: 0, text: "kept" },
+				{ type: "polyline", x: 0, y: 0, text: "hi" },
+			]),
+		).toThrow(
+			/^entries\[1\] \(polyline\): object type "polyline" holds no text/,
 		);
 		expect(doc.root).toHaveLength(0);
 	});

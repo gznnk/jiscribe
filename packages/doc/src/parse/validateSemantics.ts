@@ -15,7 +15,8 @@ import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorReg
  *   Because CanvasDoc is a nested tree, a parent/child cycle cannot occur structurally;
  *   any case that looks like a cycle is really "a different object with the same ID" = an ID duplicate.
  * - B. Connector referential integrity:
- *   - The owner.id of an owned endpoint must exist
+ *   - The owner.id of an owned endpoint must exist (an object of an unknown type, or one
+ *     nested inside it, counts: it is kept as an opaque object, see OpaqueObjectDoc)
  *   - The referenced object must be a connectable type (group/polyline/polygon/connector are not allowed)
  *   - A self-loop must not use a `center` anchor on either end
  *
@@ -33,6 +34,9 @@ export function validateSemantics(
 	const seenIds = new Set<string>();
 	// id → type map, used to look up the actual type of a reference target during referential-integrity checks.
 	const idToType = new Map<string, ObjectType>();
+	// Ids found inside opaque objects. Their structure is not ours to read, so they are
+	// neither checked for uniqueness nor typed, but a connector may still be attached there.
+	const opaqueInnerIds = new Set<string>();
 
 	// --- A. ID uniqueness across the root tree + build the id→type map ---
 	const traverse = (objects: ObjectDoc[], currentPath: string) => {
@@ -48,6 +52,11 @@ export function validateSemantics(
 			}
 			seenIds.add(obj.id);
 			idToType.set(obj.id, obj.type);
+
+			if (registry.getFeatures(obj.type) === undefined) {
+				collectOpaqueInnerIds(obj, opaqueInnerIds);
+				return;
+			}
 
 			if (obj.type === "group") {
 				const group = obj as GroupDoc;
@@ -77,12 +86,14 @@ export function validateSemantics(
 				connector.source,
 				`${connPath}.source`,
 				idToType,
+				opaqueInnerIds,
 				registry,
 			);
 			const targetErrors = validateEndpoint(
 				connector.target,
 				`${connPath}.target`,
 				idToType,
+				opaqueInnerIds,
 				registry,
 			);
 			errors.push(...sourceErrors, ...targetErrors);
@@ -114,13 +125,37 @@ export function validateSemantics(
 }
 
 /**
+ * Adds every id nested inside an opaque object, whatever the key holding it. Only
+ * `children` arrays are descended, as the old unknown-type cascade did: that is where
+ * a container type from elsewhere would put the objects a connector can reach.
+ */
+function collectOpaqueInnerIds(obj: ObjectDoc, ids: Set<string>): void {
+	const children = (obj as { children?: unknown }).children;
+	if (!Array.isArray(children)) {
+		return;
+	}
+	for (const child of children as unknown[]) {
+		if (typeof child !== "object" || child === null) {
+			continue;
+		}
+		const childId = (child as { id?: unknown }).id;
+		if (typeof childId === "string") {
+			ids.add(childId);
+		}
+		collectOpaqueInnerIds(child as ObjectDoc, ids);
+	}
+}
+
+/**
  * For an owned endpoint (has an owner), validates that the reference target exists and is connectable.
  * A free endpoint (no owner) has nothing to validate across the document, so it returns nothing.
+ * A target inside or of an opaque object passes: its type is not one this registry can judge.
  */
 function validateEndpoint(
 	endpoint: EndpointRef | undefined,
 	path: string,
 	idToType: Map<string, ObjectType>,
+	opaqueInnerIds: ReadonlySet<string>,
 	registry: ObjectDocValidatorRegistry,
 ): SemanticDiagnostic[] {
 	const ownerId = endpoint?.owner?.id;
@@ -130,6 +165,9 @@ function validateEndpoint(
 
 	const refType = idToType.get(ownerId);
 	if (refType == null) {
+		if (opaqueInnerIds.has(ownerId)) {
+			return [];
+		}
 		return [
 			{
 				path,
@@ -137,6 +175,10 @@ function validateEndpoint(
 				id: ownerId,
 			},
 		];
+	}
+
+	if (registry.getFeatures(refType) === undefined) {
+		return [];
 	}
 
 	if (!registry.isConnectable(refType)) {

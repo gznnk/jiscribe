@@ -197,27 +197,27 @@ describe("validateStructure: common node fields", () => {
 
 // ─── Unknown type ────────────────────────────────────────────────────
 describe("validateStructure: unknown type", () => {
-	it("yields an Unknown object type error for an unknown type at the root", () => {
-		const errors = validateStructure(doc([{ id: "x1", type: "rectangle" }]));
-		expect(has(errors, "root[0].type", 'Unknown object type "rectangle"')).toBe(
-			true,
-		);
-	});
-
-	it("also rejects an unknown type in a group's children", () => {
+	it("accepts an unknown type at the root as an opaque object", () => {
 		const errors = validateStructure(
-			doc([group("g1", [{ id: "c1", type: "nope" }])]),
+			doc([{ id: "x1", type: "rectangle", width: "not checked" }]),
 		);
-		expect(
-			has(errors, "root[0].children[0].type", 'Unknown object type "nope"'),
-		).toBe(true);
+		expect(errors).toEqual([]);
 	});
 
-	it("does not emit an Unknown error for a known type", () => {
-		const errors = validateStructure(doc([group("g1", [rect("r1")])]));
-		expect(errors.some((e) => e.message.includes("Unknown object type"))).toBe(
-			false,
+	it("accepts an unknown type in a group's children without walking its own children", () => {
+		const errors = validateStructure(
+			doc([
+				group("g1", [
+					{ id: "c1", type: "nope", children: [{ id: "bad", type: "rect" }] },
+				]),
+			]),
 		);
+		expect(errors).toEqual([]);
+	});
+
+	it("still requires an unknown-type object to carry an id", () => {
+		const errors = validateStructure(doc([{ type: "rectangle" }]));
+		expect(has(errors, "root[0].id", "must be a non-empty string")).toBe(true);
 	});
 });
 

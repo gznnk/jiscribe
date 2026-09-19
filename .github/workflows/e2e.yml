@@ -55,7 +55,8 @@ jobs:
             vscode-test-${{ runner.os }}-
 
       # Every suite: canvas (core), each plugin's own, canvas-examples' coexistence
-      # spec, and the VSCode extension's, which drives a real VSCode instead of a
+      # spec, the MCP server's, which drives the real viewer against the real host,
+      # and the VSCode extension's, which drives a real VSCode instead of a
       # browser. Sequential on purpose — each starts its own harness dev server, and
       # the timing-sensitive specs (inertial pan) go flaky when suites compete for CPU.
       #
@@ -85,4 +86,6 @@ jobs:
             plugins/*/test-results/
             apps/canvas-examples/playwright-report/
             apps/canvas-examples/test-results/
+            apps/mcp/playwright-report/
+            apps/mcp/test-results/
           retention-days: 7

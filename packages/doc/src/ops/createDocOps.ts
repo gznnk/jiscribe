@@ -403,7 +403,8 @@ export type DocOps = {
 	getObjectBounds(doc: CanvasDoc, id: string): Rect | null;
 	/**
 	 * Summarize every object, group children included and flattened, in drawing order. What a
-	 * caller reads instead of the whole doc when it only needs to know what is there.
+	 * caller reads instead of the whole doc when it only needs to know what is there. An object
+	 * of a type this instance does not know is listed too, flagged `unknownType`.
 	 */
 	listObjects(doc: CanvasDoc): ObjectSummary[];
 	/**

@@ -1,8 +1,15 @@
 ﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
+import type { OpaqueObjectDoc } from "@jiscribe/doc/model/objects/base/OpaqueObjectDoc";
 import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import type { Point } from "@jiscribe/geometry";
 
+import { collectOpaqueDocs } from "./collectOpaqueDocs";
+import type {
+	OpaqueObjectAnchor,
+	OpaqueObjectPlacement,
+} from "./OpaqueObjectPlacement";
+import { restoreOpaqueObjects } from "./restoreOpaqueObjects";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
@@ -25,8 +32,15 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * layer stays decoupled from the controller-layer registries; both of these are
  * states-layer registries (docs/02-architecture.md).
  *
+ * An object whose type `mapper` does not carry is not mapped: it is held aside
+ * in `opaqueObjects` with where it sat, along with the groups and connectors that
+ * cannot stand without it ({@link collectOpaqueDocs}), and {@link canvasToDoc}
+ * writes it back unchanged. So nothing that reads `objects` meets it — it is not
+ * drawn and cannot be selected — and no save loses it.
+ *
  * @param doc - A doc that has passed `createCanvasParser` (see above); its tree order becomes the z-order
- * @param mapper - The per-canvas object mapper registry; a doc naming a type it does not carry throws
+ * @param mapper - The per-canvas object mapper registry; an object of a type it does not carry is held
+ *   as an opaque object rather than mapped
  * @param contentResizer - The per-canvas content-resizer registry; a type registered there has its
  *   box re-derived here from the content it holds. A registry holding nothing leaves every box
  *   exactly as the doc stored it
@@ -37,7 +51,6 @@ export const canvasToState = (
 	contentResizer: ObjectContentResizerRegistry,
 ): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
-	const rootIds: string[] = [];
 
 	// Memo shared across this single bottom-up pass: group ID → collected child
 	// points. Lets a parent group reuse a nested group's points instead of
@@ -45,10 +58,55 @@ export const canvasToState = (
 	// O(N × nesting depth). See calculateGroupOrientedBounds.
 	const groupPointCache = new Map<string, Point[]>();
 
+	const opaqueDocs = collectOpaqueDocs(
+		doc.root,
+		(type) => mapper.getFeatures(type) !== undefined,
+	);
+	const opaqueObjects: OpaqueObjectPlacement[] = [];
+
+	// Maps one container's children in order, holding the opaque ones aside, and
+	// returns the ids of the mapped ones. Anchors are built only where something
+	// can use them — an opaque object, or a group that may hold one — and share the
+	// container's id list, which is complete by the time anything reads it.
+	const processSiblings = (
+		siblingDocs: readonly ObjectDoc[],
+		parentId: string | undefined,
+		outerAnchors: readonly OpaqueObjectAnchor[],
+	): string[] => {
+		const loadedSiblingIds: string[] = [];
+		siblingDocs.forEach((siblingDoc) => {
+			const isOpaque = opaqueDocs.has(siblingDoc);
+			const anchors =
+				opaqueDocs.size > 0 && (isOpaque || siblingDoc.type === "group")
+					? [
+							{
+								parentId,
+								loadedSiblingIds,
+								precedingCount: loadedSiblingIds.length,
+							},
+							...outerAnchors,
+						]
+					: outerAnchors;
+			if (isOpaque) {
+				opaqueObjects.push({
+					doc: siblingDoc as OpaqueObjectDoc,
+					anchors,
+				});
+				return;
+			}
+			loadedSiblingIds.push(processObject(siblingDoc, parentId, anchors));
+		});
+		return loadedSiblingIds;
+	};
+
 	// Recurse over the validated tree. It is finite and cannot encode a
 	// parent/child cycle, so no recursion guard is needed; ID uniqueness and
 	// reference integrity are the validator's responsibility. Returns the ID.
-	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
+	const processObject = (
+		objDoc: ObjectDoc,
+		parentId: string | undefined,
+		anchors: readonly OpaqueObjectAnchor[],
+	): string => {
 		const mappedState = mapper.toState(objDoc);
 		// The registration wraps each resizer with its type's own text-style
 		// defaults, so the context this hands over carries nothing of its own.
@@ -64,8 +122,10 @@ export const canvasToState = (
 			const groupState = objState as GroupState;
 
 			// State holds children as a flat ID list; the nested Docs are recursed.
-			groupState.childIds = groupDoc.children.map((childDoc) =>
-				processObject(childDoc, groupState.id),
+			groupState.childIds = processSiblings(
+				groupDoc.children,
+				groupState.id,
+				anchors,
 			);
 
 			const bounds = calculateGroupOrientedBounds(
@@ -91,28 +151,30 @@ export const canvasToState = (
 	// z-order as-is. The connector invariant (at least one endpoint is owned)
 	// is already guaranteed by validateSemantics at the boundary, so it is not
 	// re-checked here.
-	doc.root.forEach((objDoc) => {
-		const id = processObject(objDoc);
-		rootIds.push(id);
-	});
+	const rootIds = processSiblings(doc.root, undefined, []);
 
 	return {
 		objects,
 		rootIds,
 		background: doc.background,
 		view: doc.view,
+		...(opaqueObjects.length > 0 ? { opaqueObjects } : {}),
 	};
 };
 
 /**
  * Converts CanvasState (flat structure) to CanvasDoc (tree structure).
  * This reconstructs the tree for serialization/storage.
- * Only the object map, root order, surface background and display declaration
- * are read, so any state carrying those fields (e.g. a DocSnapshot source) can
- * be converted.
+ * Only the object map, root order, surface background, display declaration and
+ * opaque objects are read, so any state carrying those fields (e.g. a DocSnapshot
+ * source) can be converted. The opaque objects go back where they sat
+ * ({@link restoreOpaqueObjects}).
  */
 export const canvasToDoc = (
-	state: Pick<CanvasState, "objects" | "rootIds" | "background" | "view">,
+	state: Pick<
+		CanvasState,
+		"objects" | "rootIds" | "background" | "view" | "opaqueObjects"
+	>,
 	mapper: ObjectMapperRegistry,
 ): CanvasDoc => {
 	// Helper to reconstruct an object tree from an ID.
@@ -138,6 +200,8 @@ export const canvasToDoc = (
 		return objDoc;
 	};
 
+	const rootDocs = state.rootIds.map((id) => reconstructObject(id));
+
 	return {
 		version: 1,
 		// Only emitted when set, so a doc that never had a background round-trips
@@ -147,6 +211,9 @@ export const canvasToDoc = (
 		// byte-identically.
 		...(state.view !== undefined ? { view: state.view } : {}),
 		// root is a single array mixing objects and connectors in z-order.
-		root: state.rootIds.map((id) => reconstructObject(id)),
+		root:
+			state.opaqueObjects !== undefined && state.opaqueObjects.length > 0
+				? restoreOpaqueObjects(rootDocs, state.opaqueObjects)
+				: rootDocs,
 	};
 };

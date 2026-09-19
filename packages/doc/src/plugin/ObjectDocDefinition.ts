@@ -78,6 +78,18 @@ export type ObjectDocDefinition = {
 	autoHeight?: false;
 
 	/**
+	 * Set to `false` by a `features.text: "body"` type whose `text` is a plain string
+	 * only — one whose body is not drawn from styled runs, so a stretch styled on its
+	 * own would be dropped on screen and fail the type's schema (`markdown` renders its
+	 * source). doc-ops then refuses `setInlineTextStyle` on it; styling the whole body
+	 * through `setStyle` is unaffected.
+	 *
+	 * There is no `true`, for the same reason as {@link autoHeight}: leaving it out is
+	 * the normal case, a body taking runs.
+	 */
+	inlineTextStyle?: false;
+
+	/**
 	 * AI-facing description of the shape (1–3 sentences, English): what it draws,
 	 * what it is typically used for, and where text is laid out. Verbatim source of
 	 * the type's JSON-schema `$def` description — the only field-level reference an

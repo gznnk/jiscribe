@@ -10,8 +10,10 @@ import { join } from "node:path";
 import { afterEach, beforeAll, afterAll, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 
+import { readSessionToken } from "./hostSessionToken";
 import { startCanvasHost, type CanvasHost } from "../host/canvasHost";
 import type { BrowserOpenOptions } from "../host/openBrowser";
+import { createPathLock } from "../pathLock";
 
 /**
  * Where the ports these tests use start. If one is taken the host gives way
@@ -74,6 +76,7 @@ const startTestHost = async (
 		port: TEST_PORT,
 		shouldOpenBrowser: false,
 		idleShutdownDelayMs: TEST_IDLE_DELAY_MS,
+		withFileLock: createPathLock(),
 		...options,
 	});
 	openHosts.push(host);
@@ -113,7 +116,7 @@ const connectFakeViewer = async (
 	kind: "visible" | "headless" = "visible",
 ): Promise<WebSocket> => {
 	const socket = new WebSocket(
-		`${host.url.replace("http", "ws")}/ws${kind === "headless" ? "?headless=1" : ""}`,
+		`${host.url.replace("http", "ws")}/ws?token=${await readSessionToken(host.url)}${kind === "headless" ? "&headless=1" : ""}`,
 	);
 	openSockets.push(socket);
 	socket.on("message", (data) => {
@@ -294,6 +297,23 @@ describe("openHeadlessViewer", () => {
 		});
 	});
 
+	it("opens one browser when two calls arrive together", async () => {
+		// Both would find nobody connected and spawn a Chromium of their own, and
+		// only the second child would be remembered for the host to kill
+		const recorder = createBrowserLaunchRecorder();
+		const host = await startTestHost({ launchBrowser: recorder.launchBrowser });
+
+		const first = host.openHeadlessViewer();
+		const second = host.openHeadlessViewer();
+		await waitFor(() => recorder.launchedUrls.length > 0);
+		await connectFakeViewer(host, () => {});
+
+		expect(await first).toEqual({ ok: true, didOpenWindow: true });
+		// The second call joined the first rather than opening a window of its own
+		expect(await second).toEqual({ ok: true, didOpenWindow: true });
+		expect(recorder.launchedUrls).toHaveLength(1);
+	});
+
 	it("opens nothing when a viewer is already connected", async () => {
 		const recorder = createBrowserLaunchRecorder();
 		const host = await startTestHost({ launchBrowser: recorder.launchBrowser });
@@ -360,6 +380,7 @@ describe("visible viewers", () => {
 			port: TEST_PORT,
 			idleShutdownDelayMs: TEST_IDLE_DELAY_MS,
 			launchBrowser: recorder.launchBrowser,
+			withFileLock: createPathLock(),
 		});
 		openHosts.push(host);
 
