@@ -27,6 +27,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { canvasCapabilities, docOps } from "./canvasDefinitions";
+import { createCanvasFileLock } from "./canvasFileLock";
 import {
 	CanvasFileError,
 	ensureCanvasFile,
@@ -34,7 +35,6 @@ import {
 	readCanvasFileText,
 	saveCanvasFile,
 	CANVAS_FILE_EXTENSIONS,
-	toCanvasFilePath,
 } from "./canvasStore";
 import { formatDiagnostics } from "./diagnosticReport";
 import {
@@ -213,6 +213,9 @@ export function createJiscribeMcpServer(): McpServer {
 	// between load → modify → write back makes the later write-back discard the
 	// earlier change along with it
 	const withPathLock = createPathLock();
+	// Every tool naming a canvas file goes through this, so the calls on one file
+	// run in the order they arrived even though resolving the path is asynchronous
+	const withCanvasFileLock = createCanvasFileLock(withPathLock);
 
 	/**
 	 * Start the host, arranging for it to be folded up once every window is closed.
@@ -285,8 +288,7 @@ export function createJiscribeMcpServer(): McpServer {
 		path: string,
 		op: AiDocOp,
 	): Promise<AiCanvasOpOutcome> => {
-		const filePath = await toCanvasFilePath(path);
-		return await withPathLock(filePath, async () => {
+		return await withCanvasFileLock(path, async (filePath) => {
 			const { doc: loadedDoc, text: loadedText } =
 				await loadCanvasFile(filePath);
 			let nextDoc: CanvasDoc | null = null;
@@ -386,10 +388,13 @@ export function createJiscribeMcpServer(): McpServer {
 		},
 		async ({ path, headless }) =>
 			runTool(async () => {
-				const filePath = await toCanvasFilePath(path);
 				return await withHostLock(async () => {
-					const isCreated = await withPathLock(filePath, () =>
-						ensureCanvasFile(filePath),
+					const { filePath, isCreated } = await withCanvasFileLock(
+						path,
+						async (resolvedPath) => ({
+							filePath: resolvedPath,
+							isCreated: await ensureCanvasFile(resolvedPath),
+						}),
 					);
 					// filePath is resolved through its links, so the key a person's save
 					// locks on (this root joined with the file name) is the tools' key
@@ -502,10 +507,7 @@ export function createJiscribeMcpServer(): McpServer {
 		},
 		async ({ path }) =>
 			runTool(async () => {
-				const filePath = await toCanvasFilePath(path);
-				const text = await withPathLock(filePath, () =>
-					readCanvasFileText(filePath),
-				);
+				const text = await withCanvasFileLock(path, readCanvasFileText);
 				const result = validateDoc(text);
 				const diagnostics: Diagnostic[] = [...result.diagnostics];
 				if (result.ok && result.doc !== undefined) {

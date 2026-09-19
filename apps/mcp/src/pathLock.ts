@@ -18,7 +18,7 @@ const toLockKey = (filePath: string): string => {
  *
  * @param filePath The target file (it need not be absolute; it is resolved before being used as the key).
  *   The key is lexical, so a caller naming one file two ways through links
- *   resolves them first (toCanvasFilePath in src/canvasStore.ts)
+ *   resolves them first (src/canvasFileLock.ts)
  * @param task The task to run. It runs even when a task ahead of it failed
  */
 export type PathLock = <T>(
