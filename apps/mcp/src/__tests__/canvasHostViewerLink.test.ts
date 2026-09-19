@@ -58,10 +58,10 @@ const { heldReads, outsideWrite, transientRead } = vi.hoisted(() => ({
 		isPersistent: false,
 	},
 	/**
-	 * What the file named holds for the next open of it alone, put back to what it
-	 * held before as soon as that read is done: a writer caught half way through,
-	 * or a change made and undone again, in either case gone before the watch
-	 * (which polls) can see it
+	 * What the file named holds for the next read of it alone (a readFile, or an
+	 * open), put back to what it held before as soon as that read is done: a writer
+	 * caught half way through, or a change made and undone again, in either case
+	 * gone before the watch (which polls) can see it
 	 */
 	transientRead: {
 		fileName: null as string | null,
@@ -90,7 +90,20 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 				await hold;
 			}
 			noteRead(file);
-			return await actual.readFile(file, options);
+			if (
+				typeof file !== "string" ||
+				basename(file) !== transientRead.fileName
+			) {
+				return await actual.readFile(file, options);
+			}
+			transientRead.fileName = null;
+			const settledText = await actual.readFile(file, "utf8");
+			await actual.writeFile(file, transientRead.text, "utf8");
+			try {
+				return await actual.readFile(file, options);
+			} finally {
+				await actual.writeFile(file, settledText, "utf8");
+			}
 		},
 		open: async (...args: Parameters<typeof actual.open>) => {
 			const file = args[0];
@@ -476,6 +489,45 @@ describe("the file watch", () => {
 
 		await waitFor(() => calcChangedTexts(viewer).length > 0);
 		expect(calcChangedTexts(viewer)).toEqual([emptyDocText]);
+	});
+
+	it("waits out a writer it catches half way through, and sends only the finished file", async () => {
+		// Sent as it was caught, the half would put the broken-file error up until
+		// the next poll brought the rest
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+		const finishedText = '{"version":1,"root":[{"type":"rect"}]}\n';
+		transientRead.fileName = OPEN_REL_PATH;
+		transientRead.text = finishedText.slice(0, 20);
+
+		await writeOpenFile(finishedText);
+
+		await waitFor(() => calcChangedTexts(viewer).length > 0);
+		expect(transientRead.fileName).toBeNull();
+		// Long enough for the watch to have reported anything else it was going to
+		await new Promise((resolve) => setTimeout(resolve, WATCH_SETTLE_MS));
+		expect(calcChangedTexts(viewer)).toEqual([finishedText]);
+	});
+
+	it("still sends a file that stays broken, once it has waited", async () => {
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+		const brokenText = '{"version":1,"root":[';
+
+		await writeOpenFile(brokenText);
+
+		await waitFor(() => calcChangedTexts(viewer).length > 0);
+		expect(calcChangedTexts(viewer)).toEqual([brokenText]);
 	});
 
 	it("tells the viewer why a file it cannot read stays blank", async () => {

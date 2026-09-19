@@ -41,13 +41,15 @@ import type { CanvasHostServerMessage } from "../shared/canvasHostProtocol";
 const WATCH_INTERVAL_MS = 300;
 
 /**
- * How long a person's write keeps looking at a file that will not hold still —
- * caught half written, or rewritten under the write with the text it already
- * held — before it settles on what it saw last, and how long it waits between
- * looks. The file's lock is held all the while, so the tools wait on it too
+ * How long a read keeps looking at a file that will not hold still — caught half
+ * written, or (for a person's write) rewritten under it with the text it already
+ * held — before it settles on what it saw last. A person's write holds the file's
+ * lock all the while, so the tools wait on it too
  */
-const WRITE_SETTLE_TIMEOUT_MS = 500;
-const WRITE_SETTLE_RETRY_MS = 25;
+const SETTLE_TIMEOUT_MS = 500;
+
+/** How long a read that has not settled waits before it looks again */
+const SETTLE_RETRY_MS = 25;
 
 /**
  * The revision a text is handed out under, and has to be named by again when it is
@@ -93,6 +95,9 @@ const isPossiblyHalfWritten = (text: string): boolean =>
 const waitMs = async (delayMs: number): Promise<void> => {
 	await new Promise((resolve) => setTimeout(resolve, delayMs));
 };
+
+/** When a read starting now stops looking again at a file that will not hold still */
+const calcSettleDeadline = (): number => Date.now() + SETTLE_TIMEOUT_MS;
 
 export type FileMirrorOptions = {
 	/** What the paths on display are relative to (absolute path) */
@@ -199,6 +204,35 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 	};
 
 	/**
+	 * Reads the file on display until what it finds may be taken as finished, or
+	 * until the deadline has passed and what it saw last is taken as it is. Every
+	 * look is numbered on its own, so the one returned competes with the reads made
+	 * meanwhile as the look it was, not as the first.
+	 *
+	 * @param read One look at the file
+	 * @param isUnsettled Whether a look caught the file part of the way through a
+	 *   write, and is worth looking past
+	 * @param settleDeadline From calcSettleDeadline. Passed in, so that a caller
+	 *   that looks again for reasons of its own spends the same time on it
+	 * @returns What the last look found, with the number beginRead gave it
+	 */
+	const readUntilSettled = async <T>(
+		read: () => Promise<T>,
+		isUnsettled: (result: T) => boolean,
+		settleDeadline: number,
+	): Promise<{ readNumber: number; result: T }> => {
+		for (;;) {
+			const isLastLook = Date.now() >= settleDeadline;
+			const readNumber = beginRead();
+			const result = await read();
+			if (isLastLook || !isUnsettled(result)) {
+				return { readNumber, result };
+			}
+			await waitMs(SETTLE_RETRY_MS);
+		}
+	};
+
+	/**
 	 * Records the text the open file is now believed to hold.
 	 *
 	 * @param text The text as it was read or written
@@ -273,8 +307,19 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 				if (openPath !== relPath) {
 					return;
 				}
-				const readNumber = beginRead();
-				const text = await readOpenFileText(relPath);
+				// Held back until the file parses or the time runs out, so that a writer
+				// caught half way through does not flash the broken-file error for a
+				// poll. Outside the lock like the rest of the watch: the lock would hold
+				// the tools and a person's write up behind a read, and the numbering
+				// keeps a look that is overtaken meanwhile from being taken
+				const { readNumber, result: text } = await readUntilSettled(
+					async () => await readOpenFileText(relPath),
+					(result) =>
+						openPath === relPath &&
+						result !== null &&
+						isPossiblyHalfWritten(result),
+					calcSettleDeadline(),
+				);
 				if (text !== null) {
 					passOnReadText(relPath, readNumber, text);
 					return;
@@ -373,7 +418,7 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 					// The parent directory has already resolved inside the workspace, so it
 					// is safe to create
 					await mkdir(path.dirname(resolvedFile), { recursive: true });
-					const settleDeadline = Date.now() + WRITE_SETTLE_TIMEOUT_MS;
+					const settleDeadline = calcSettleDeadline();
 					// Written out in full before the revision is looked at, so that only a
 					// stat stands between the check and the rename
 					let prepared = await prepareAtomicWrite(resolvedFile, body);
@@ -383,9 +428,24 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 							// What the file holds is read rather than taken from lastKnownText:
 							// a tool's write is on disk before the watch (which polls) has told
 							// anyone, and comparing against what was last handed out would let
-							// this write land on top of it
-							const readNumber = beginRead();
-							const snapshot = await readSnapshotIfExists(resolvedFile);
+							// this write land on top of it. Refused over a writer caught half
+							// way through, the window would be sent that half, and nothing
+							// after it when the writer finishes with the text the window
+							// already has
+							const { readNumber, result: snapshot } = await readUntilSettled(
+								async () => await readSnapshotIfExists(resolvedFile),
+								(result) => {
+									if (result === null) {
+										return false;
+									}
+									const text = result.contents.toString("utf8");
+									return (
+										ifMatch !== calcDocRevision(text) &&
+										isPossiblyHalfWritten(text)
+									);
+								},
+								settleDeadline,
+							);
 							// A file that is gone holds nothing this write could overwrite, so
 							// it is let through rather than refused over a revision there is
 							// none of
@@ -393,13 +453,6 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 								const currentText = snapshot.contents.toString("utf8");
 								const currentRevision = calcDocRevision(currentText);
 								if (ifMatch !== currentRevision) {
-									// Refused over a writer caught half way through, the window
-									// would be sent that half, and nothing after it when the writer
-									// finishes with the text the window already has
-									if (!isLastLook && isPossiblyHalfWritten(currentText)) {
-										await waitMs(WRITE_SETTLE_RETRY_MS);
-										continue;
-									}
 									passOnReadText(relPath, readNumber, currentText);
 									return {
 										kind: "revision-mismatch",
@@ -420,7 +473,7 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 							if (isLastLook) {
 								return { kind: "file-unsettled" };
 							}
-							await waitMs(WRITE_SETTLE_RETRY_MS);
+							await waitMs(SETTLE_RETRY_MS);
 							prepared = await prepareAtomicWrite(resolvedFile, body);
 						}
 					} finally {

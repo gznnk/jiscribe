@@ -213,7 +213,10 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
   the save names again once it is looked at — rewritten with the same bytes,
   or caught half way through such a rewrite — takes the save instead of
   refusing it, the host looking again for up to 500 ms; one that will not hold
-  still that long is answered with 503, which the viewer sends again.
+  still that long is answered with 503, which the viewer sends again. The
+  host's watch waits the same way before it passes on a file it catches half
+  written, so a writer that saves in pieces no longer flashes the broken-file
+  error; a file that stays broken is still reported.
 - Two `open_canvas` calls on different files arriving together could leave
   the host showing one file while watching the other; opening is now
   serialised. Two headless opens arriving together no longer start two
