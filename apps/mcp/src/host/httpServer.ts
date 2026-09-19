@@ -39,7 +39,9 @@ import { isErrnoWithCode } from "../nodeErrors";
 import {
 	FILE_API_PATH_PARAM,
 	FILE_API_PATHNAME,
+	INVALID_SESSION_STATUS,
 	MAX_WRITE_BODY_BYTES,
+	NOT_ON_DISPLAY_STATUS,
 	REVISION_HEADER,
 	REVISION_MISMATCH_STATUS,
 	SESSION_API_PATHNAME,
@@ -202,7 +204,7 @@ const handleWriteFile = async (
 	if (outcome.kind === "not-open") {
 		// The viewer writes back the file it was told to show and nothing else, so a
 		// path that is not that one is a request nobody drew
-		sendJson(response, 409, {
+		sendJson(response, NOT_ON_DISPLAY_STATUS, {
 			error: `the canvas on display is not ${relPath}`,
 		});
 		return;
@@ -392,7 +394,9 @@ export function createViewerHttpServer(
 					if (
 						request.headers[SESSION_TOKEN_HEADER.toLowerCase()] !== sessionToken
 					) {
-						sendJson(response, 401, { error: "invalid session token" });
+						sendJson(response, INVALID_SESSION_STATUS, {
+							error: "invalid session token",
+						});
 						return;
 					}
 					await handleWriteFile(options, request, requestUrl, response);

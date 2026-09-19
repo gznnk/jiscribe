@@ -56,10 +56,22 @@ export const buildFileApiUrl = (relPath: string): string =>
 
 /**
  * The status a write gets when the file no longer holds the revision it names.
- * The viewer branches on it (the newer text follows as a frame), so it is the one
- * status both sides spell out
+ * The viewer branches on it (the newer text follows as a frame), so both sides
+ * spell it out, as they do the two below
  */
 export const REVISION_MISMATCH_STATUS = 412;
+
+/**
+ * The status a write gets when it carries a session token other than this host's:
+ * the document it was made on came from a host that is gone
+ */
+export const INVALID_SESSION_STATUS = 401;
+
+/**
+ * The status a write gets when it names a file other than the one on display: the
+ * host has moved on from the document it was made on
+ */
+export const NOT_ON_DISPLAY_STATUS = 409;
 
 /**
  * The most a write may carry, and the most one WebSocket frame may weigh. A canvas

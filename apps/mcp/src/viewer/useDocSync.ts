@@ -28,7 +28,9 @@
 // And an edit is written to the document it was made on and to no other. The doc
 // waiting to be written is kept together with the document it belongs to, and an
 // edit the canvas hands over after another document has come in is refused rather
-// than written into that one
+// than written into that one. What cannot reach its document any more — an edit
+// refused that way or by the host, or a drag or typed text the canvas drops as it
+// takes the next document — is named in the error bar, never lost without a word
 
 import type { CanvasDoc } from "@jiscribe/canvas";
 import {
@@ -122,11 +124,40 @@ const formatMergeConflictMessage = (
 	`他の編集で更新されたため、次の変更は保存されませんでした: ${conflicts.map(describeMergeConflict).join("、")}`;
 
 /**
- * Shown for an edit made on a document that is no longer the one on display. The
- * host takes writes for that one only, so the edit has nowhere left to go
+ * What the person may have in hand that the canvas drops when it takes another
+ * document: text being typed in the editor, or a drag not yet let go. Nothing of
+ * either has reached onCommit, and the canvas has no way to be told to finish it
  */
-const formatLostEditMessage = (relPath: string): string =>
-	`${relPath}: 別のファイルに切り替わったため、直前の変更は保存されませんでした`;
+export type WorkInHand = "text" | "drag";
+
+const workInHandNames: Record<WorkInHand, string> = {
+	text: "入力中のテキスト",
+	drag: "ドラッグ中の操作",
+};
+
+/**
+ * Shown for what was made on a document that is no longer the one on display. The
+ * host takes writes for that one only, so it has nowhere left to go.
+ *
+ * @param relPath The document it was made on
+ * @param lost Whether committed edits were lost, and what the person had in hand
+ *   that went with the document; neither given reads as the committed edits
+ */
+const formatLostEditMessage = (
+	relPath: string,
+	lost: { hasCommittedEdits: boolean; workInHand: WorkInHand | null } = {
+		hasCommittedEdits: true,
+		workInHand: null,
+	},
+): string => {
+	const lostNames = [
+		...(lost.hasCommittedEdits || lost.workInHand === null
+			? ["直前の変更"]
+			: []),
+		...(lost.workInHand === null ? [] : [workInHandNames[lost.workInHand]]),
+	];
+	return `${relPath}: 別のファイルに切り替わったため、${lostNames.join("と")}は保存されませんでした`;
+};
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
@@ -201,6 +232,12 @@ export type DocSyncOptions = {
 	 * and while one is held back, so a fresh function each render is fine
 	 */
 	isPersonInteracting: () => boolean;
+	/**
+	 * What the person has in hand right now that drawing another document would drop
+	 * (see WorkInHand), null for nothing. Read as another document is drawn, while
+	 * the canvas still holds the one before
+	 */
+	readWorkInHand: () => WorkInHand | null;
 };
 
 /** A doc frame as it arrived, kept until it can be taken in */
@@ -249,8 +286,9 @@ export type DocSync = {
 	 *
 	 * @param options.isLeavingDocument Whether the page is about to leave this
 	 *   document (another file opening, the window closing). A newer file held back
-	 *   is then taken in and merged at once, the gesture going with it, since after
-	 *   this the host takes no writes for it
+	 *   is then taken in and merged at once, the gesture going with it (named in
+	 *   the error bar once the next document arrives), since after this the host
+	 *   takes no writes for it
 	 */
 	flushPendingSave: (options?: {
 		isLeavingDocument?: boolean;
@@ -267,6 +305,7 @@ export type DocSync = {
 export function useDocSync({
 	reportError,
 	isPersonInteracting,
+	readWorkInHand,
 }: DocSyncOptions): DocSync {
 	const [doc, setDoc] = useState<CanvasDoc>(emptyDoc);
 	const [openDoc, setOpenDoc] = useState<DocIdentity | null>(null);
@@ -302,9 +341,18 @@ export function useDocSync({
 	const heldFrameRef = useRef<DocFrame | null>(null);
 	const heldFrameTimerRef = useRef<number | null>(null);
 	const isPersonInteractingRef = useRef(isPersonInteracting);
+	const readWorkInHandRef = useRef(readWorkInHand);
 	useEffect(() => {
 		isPersonInteractingRef.current = isPersonInteracting;
+		readWorkInHandRef.current = readWorkInHand;
 	});
+	// What the person had in hand when a newer file for the same document was drawn
+	// over it on the way out of that document (flushPendingSave's isLeavingDocument).
+	// It is gone by the time the next document arrives, which is what says so
+	const droppedWorkInHandRef = useRef<{
+		identity: DocIdentity;
+		workInHand: WorkInHand;
+	} | null>(null);
 	// Set from the first edit the host does not hold yet until a write carrying all
 	// of them lands, whether or not a save is scheduled. baseText is the text the
 	// host held when they were made, which is what a newer file drawn over them has
@@ -413,6 +461,14 @@ export function useDocSync({
 			restoreSyncedText();
 			hasUndeliveredEditsRef.current = false;
 			reportError(formatSaveFailedMessage(String(error), false));
+			return false;
+		}
+		if (result.kind === "document-gone") {
+			// The same loss the next document's arrival reports, said as such now
+			// rather than as a refusal the person can do nothing about
+			restoreSyncedText();
+			hasUndeliveredEditsRef.current = false;
+			reportError(formatLostEditMessage(targetDoc.relPath));
 			return false;
 		}
 		if (result.kind === "failed") {
@@ -562,6 +618,21 @@ export function useDocSync({
 			const hasLostEdit =
 				!isSameDocument &&
 				(saveTimerRef.current !== null || unsavedEditsRef.current !== null);
+			// So does whatever the person has in hand, which the canvas drops as it
+			// takes this doc — or dropped already, drawing a newer file on the way out
+			const workInHand = readWorkInHandRef.current();
+			const droppedWorkInHand = droppedWorkInHandRef.current;
+			if (!isSameDocument) {
+				droppedWorkInHandRef.current = null;
+			} else if (previousDoc !== null && workInHand !== null) {
+				droppedWorkInHandRef.current = { identity: previousDoc, workInHand };
+			}
+			const lostWorkInHand = isSameDocument
+				? null
+				: (workInHand ??
+					(isSameDoc(droppedWorkInHand?.identity ?? null, previousDoc)
+						? (droppedWorkInHand?.workInHand ?? null)
+						: null));
 			// On the same document they go onto the newer file instead, and whatever
 			// comes of that is written below rather than on the debounce
 			if (saveTimerRef.current !== null) {
@@ -606,8 +677,13 @@ export function useDocSync({
 			if (mergedDoc !== null) {
 				void saveNow();
 			}
-			if (hasLostEdit && previousDoc !== null) {
-				reportError(formatLostEditMessage(previousDoc.relPath));
+			if ((hasLostEdit || lostWorkInHand !== null) && previousDoc !== null) {
+				reportError(
+					formatLostEditMessage(previousDoc.relPath, {
+						hasCommittedEdits: hasLostEdit,
+						workInHand: lostWorkInHand,
+					}),
+				);
 				return;
 			}
 			if (merge?.kind === "failed") {

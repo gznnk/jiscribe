@@ -179,7 +179,14 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
   waits for the canvas to hand over what it is holding before it answers the
   flush, so the edit reaches its own file; one that still arrives after the
   switch is not written anywhere and the error bar names the file it was lost
-  from.
+  from. A drag still held when the flush comes is given up to 1.5 seconds to be
+  let go and is then saved the same way. What the switch still takes — text
+  being typed in the editor, a drag held past that, which the canvas drops as
+  it takes the next file — is named in the error bar as well instead of
+  vanishing, and an edit the host refuses because the page's file is no longer
+  on display (or, across directories, because it came from the host that has
+  gone) reads as that same one message rather than a raw "invalid session
+  token" ahead of it.
 - **A person's save and the AI's write no longer overwrite each other
   unnoticed.** The viewer's write carried no version and bypassed the lock
   the tools take, so whichever landed last won and the other edit vanished.

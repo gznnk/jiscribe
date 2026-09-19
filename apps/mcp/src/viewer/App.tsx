@@ -37,7 +37,7 @@ import { calcDocLoadId } from "./ownEcho";
 import { createDocImageResolver } from "./resolveDocImage";
 import { useCanvasCommitWait } from "./useCanvasCommitWait";
 import { useCanvasHostSocket } from "./useCanvasHostSocket";
-import { useDocSync } from "./useDocSync";
+import { useDocSync, type WorkInHand } from "./useDocSync";
 import { viewerTheme } from "./viewerTheme";
 import { isHeadlessViewerSearch } from "../shared/canvasHostProtocol";
 
@@ -75,6 +75,16 @@ const noticeStyle: CSSProperties = {
 	animationDuration: `${NOTICE_DURATION_MS}ms`,
 };
 
+/**
+ * How long a flush waits for a drag in progress to be let go before it answers.
+ * The canvas has no way to end a drag from outside, and the host gives up on the
+ * flush after 3 seconds, which leaves the rest for the commit and the write
+ */
+const DRAG_RELEASE_WAIT_MS = 1_500;
+
+/** How often that wait looks, the canvas having nothing to call when a drag ends */
+const DRAG_RELEASE_POLL_MS = 50;
+
 /** What Ctrl+S is answered with, in place of the browser's save dialog */
 const AUTO_SAVE_NOTICE = "変更は自動で保存されます";
 
@@ -107,6 +117,34 @@ export function App() {
 		[],
 	);
 
+	const readWorkInHand = useCallback((): WorkInHand | null => {
+		const status = canvasHandleRef.current?.interaction.getStatus();
+		if (status === undefined) {
+			return null;
+		}
+		if (status.editingTextId !== null) {
+			return "text";
+		}
+		return status.drag === null ? null : "drag";
+	}, []);
+
+	/**
+	 * Waits for a drag in progress to be let go, up to DRAG_RELEASE_WAIT_MS, so that
+	 * it ends as the person ends it rather than being dropped with the document
+	 */
+	const waitForDragRelease = useCallback(async (): Promise<void> => {
+		const deadline = performance.now() + DRAG_RELEASE_WAIT_MS;
+		while (
+			(canvasHandleRef.current?.interaction.getStatus().drag ?? null) !==
+				null &&
+			performance.now() < deadline
+		) {
+			await new Promise((resolve) => {
+				window.setTimeout(resolve, DRAG_RELEASE_POLL_MS);
+			});
+		}
+	}, []);
+
 	const {
 		doc,
 		openDoc,
@@ -114,7 +152,11 @@ export function App() {
 		applyDocError,
 		handleCommit,
 		flushPendingSave,
-	} = useDocSync({ reportError: setErrorMessage, isPersonInteracting });
+	} = useDocSync({
+		reportError: setErrorMessage,
+		isPersonInteracting,
+		readWorkInHand,
+	});
 	const waitForCanvasCommit = useCanvasCommitWait();
 	const openPath = openDoc?.relPath ?? null;
 
@@ -175,14 +217,18 @@ export function App() {
 
 	/**
 	 * Writes out the edits, the ones the canvas has yet to hand over included, before
-	 * the host moves on to another file or closes this window. A drag released just
-	 * before is committed a render later (useCanvasCommitWait); missed, it is dropped
-	 * and reported rather than written anywhere (see useDocSync)
+	 * the host moves on to another file or closes this window. A drag still under
+	 * way is given a moment to be let go, and a drag released is committed a render
+	 * later (useCanvasCommitWait). Text still being typed cannot be committed from
+	 * here (the canvas offers no way to), so it goes with the document, as does a
+	 * drag held past the wait or a commit missed: each is dropped and named in the
+	 * error bar rather than written anywhere (see useDocSync)
 	 */
 	const flushEditsForHost = useCallback(async (): Promise<boolean> => {
+		await waitForDragRelease();
 		await waitForCanvasCommit();
 		return await flushPendingSave({ isLeavingDocument: true });
-	}, [flushPendingSave, waitForCanvasCommit]);
+	}, [flushPendingSave, waitForCanvasCommit, waitForDragRelease]);
 
 	/**
 	 * Writes out the buffered edits, then closes the window. close_canvas reads

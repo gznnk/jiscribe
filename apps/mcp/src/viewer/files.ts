@@ -1,5 +1,7 @@
 import {
 	buildFileApiUrl,
+	INVALID_SESSION_STATUS,
+	NOT_ON_DISPLAY_STATUS,
 	REVISION_HEADER,
 	REVISION_MISMATCH_STATUS,
 	SESSION_API_PATHNAME,
@@ -45,6 +47,12 @@ export type SaveFileResult =
 	 */
 	| { kind: "conflict" }
 	/**
+	 * Nothing was written, and nothing for this document ever will be: the host has
+	 * moved on to another file, or is another host than the one the doc came from
+	 * (a switch to another directory restarts it). Not to be sent again
+	 */
+	| { kind: "document-gone" }
+	/**
 	 * Nothing was written, for a reason the message gives. Transient when the same
 	 * write may go through if sent again unchanged: the host could not be reached, or
 	 * failed on its side (see {@link isTransientWriteStatus})
@@ -59,8 +67,9 @@ export type SaveFileResult =
  * (408, 429) are. Every other refusal is about the write itself and would be
  * answered the same way again: a stale session token after the host restarted
  * (401), a file no longer on display (409), a file that may not be written to
- * (403), a body the host will not take (413, 422), a missing revision (428). A revision that no longer matches (412) is a
- * conflict, which is never to be sent again.
+ * (403), a body the host will not take (413, 422), a missing revision (428). A
+ * revision that no longer matches (412) is a conflict, which is never to be sent
+ * again.
  *
  * @param status The HTTP status of an answer that was not a success
  */
@@ -100,7 +109,8 @@ const readStringField = (value: unknown, field: string): string | null => {
  *   server writes only on a match, which is what keeps this write from landing on
  *   top of an edit made somewhere else in the meantime
  * @returns The new revision on a write that landed, the bare conflict when the
- *   file had moved on (not to be retried), or the failure — the network error, or
+ *   file had moved on (not to be retried), document-gone when the host no longer
+ *   takes writes for the document at all, or the failure — the network error, or
  *   the error message the server returned for any other refusal — together with
  *   whether sending it again may help
  * @throws An Error when the host took the write but answered without a revision,
@@ -137,6 +147,12 @@ export async function saveFile(
 	}
 	if (response.status === REVISION_MISMATCH_STATUS) {
 		return { kind: "conflict" };
+	}
+	if (
+		response.status === INVALID_SESSION_STATUS ||
+		response.status === NOT_ON_DISPLAY_STATUS
+	) {
+		return { kind: "document-gone" };
 	}
 	return {
 		kind: "failed",
