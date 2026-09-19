@@ -23,6 +23,7 @@ import {
 	createTempCanvasWorkspace,
 	type TempCanvasWorkspace,
 } from "../../src/__tests__/tempCanvasWorkspace";
+import { noticeDurationsMs } from "../../src/viewer/noticeDurations";
 
 /**
  * The URL `open_canvas` reports, which is the page to navigate to. It closes the
@@ -65,12 +66,8 @@ export async function expectNoViewerError(page: Page): Promise<void> {
 	await expect(lostEditsNotice(page)).toHaveCount(0);
 }
 
-/**
- * How long a notice saying edits did not reach the file stays up (the warning
- * duration in src/viewer/App.tsx). Repeated here rather than imported, since it
- * belongs to the module the page is built from
- */
-export const LOST_EDITS_NOTICE_DURATION_MS = 6_000;
+/** How long a notice saying edits did not reach the file stays up */
+export const LOST_EDITS_NOTICE_DURATION_MS = noticeDurationsMs.warning;
 
 /**
  * The notices saying edits of the person's did not reach the file. They are
