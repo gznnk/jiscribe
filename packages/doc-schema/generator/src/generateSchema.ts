@@ -638,6 +638,32 @@ function assertTemplateHeightRequirement(
 	}
 }
 
+/**
+ * Fail generation when a handwritten $def disagrees with the type's definition
+ * about whether its text may be styled in part. The ops write rich-text runs into
+ * a text that takes inline styling, so a template holding `text` to a plain
+ * string has to be matched by `inlineTextStyle: false`, and the other way round.
+ */
+function assertTemplateTextShape(
+	type: string,
+	defName: string,
+	definition: ObjectDocDefinition,
+): void {
+	const properties = handwrittenDefs[defName].properties as
+		Record<string, JsonSchemaNode> | undefined;
+	const textProperty = properties?.text;
+	if (textProperty === undefined) {
+		return;
+	}
+	const isPlainStringText = textProperty.type === "string";
+	const refusesInlineStyle = definition.inlineTextStyle === false;
+	if (isPlainStringText !== refusesInlineStyle) {
+		throw new Error(
+			`The handwritten $def "${defName}" holds text to ${isPlainStringText ? "a plain string" : "rich text"}, but type "${type}" ${refusesInlineStyle ? "refuses" : "takes"} inline text styling (templates/handwrittenDefs.json, inlineTextStyle)`,
+		);
+	}
+}
+
 const UNION_COMMENT =
 	'Branches are tagged by the "type" field; each branch pins it with a const, which is what selects the matching branch.';
 
@@ -674,6 +700,7 @@ export function generateSchema(
 		if (TEMPLATE_DEF_TYPES.has(type)) {
 			defs[defName] = handwrittenDefs[defName];
 			assertTemplateHeightRequirement(type, defName, manifest.get(type)!);
+			assertTemplateTextShape(type, defName, manifest.get(type)!);
 			continue;
 		}
 		defs[defName] = buildShapeDef(type, manifest.get(type)!);

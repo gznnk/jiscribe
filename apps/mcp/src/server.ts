@@ -287,7 +287,8 @@ export function createJiscribeMcpServer(): McpServer {
 	): Promise<AiCanvasOpOutcome> => {
 		const filePath = await toCanvasFilePath(path);
 		return await withPathLock(filePath, async () => {
-			const loadedDoc = await loadCanvasFile(filePath);
+			const { doc: loadedDoc, text: loadedText } =
+				await loadCanvasFile(filePath);
 			let nextDoc: CanvasDoc | null = null;
 			// A read leaves no step to take back, so it neither creates a history nor
 			// counts as a use of one (which would push a real one out of the cap)
@@ -306,7 +307,7 @@ export function createJiscribeMcpServer(): McpServer {
 			if (nextDoc !== null) {
 				rememberHistory(filePath, history);
 				try {
-					await saveCanvasFile(filePath, nextDoc);
+					await saveCanvasFile(filePath, nextDoc, loadedText);
 				} catch (error) {
 					// The file still holds what it held, so the history is put back the
 					// way it was. Left as it is, its newest entry would describe a

@@ -8,7 +8,7 @@ import {
 	twoConnectedRects,
 	twoRects,
 } from "./support/docFixtures";
-import { cardDefinition } from "./support/pluginFixtures";
+import { cardDefinition, plainBodyDefinition } from "./support/pluginFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 import { createFrameObjectFactory } from "../../model/objects/utils/createFrameObjectFactory";
@@ -125,6 +125,29 @@ describe("setText", () => {
 				fontWeight: "bold",
 			}),
 		).toThrow(DocOperationError);
+	});
+
+	it("refuses a type whose text is a plain string only, leaving it untouched", () => {
+		const plainOps = createDocOps({
+			plugins: [
+				{ id: "plain-plugin", objects: { "plain-card": plainBodyDefinition } },
+			],
+		});
+		const doc = emptyDoc();
+		plainOps.addObject(doc, "plain-card", { x: 0, y: 0, text: "hello world" });
+
+		expect(() =>
+			plainOps.setInlineTextStyle(doc, "plain-card-1", {
+				match: "world",
+				fontWeight: "bold",
+			}),
+		).toThrow(
+			'plain-card-1 ("plain-card") holds its text as a plain string that takes no styling on part of it, so use setStyle to style the whole of it',
+		);
+		expect(readObject(doc, "plain-card-1").text).toBe("hello world");
+		// The whole body still takes styling.
+		plainOps.setStyle(doc, ["plain-card-1"], { fontWeight: "bold" });
+		expect(readObject(doc, "plain-card-1").fontWeight).toBe("bold");
 	});
 
 	it("keeps the styling of the characters a rewrite leaves in place", () => {

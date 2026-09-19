@@ -152,6 +152,80 @@ describe("add_object", () => {
 		);
 		expect((await workspace.readDoc(targetPath)).root).toEqual([]);
 	});
+
+	// set_text / get_text already call these types textless; creating one with a
+	// text wrote a field the schema rejects.
+	it.each(["lucideIcon", "polygon", "polyline"])(
+		"refuses text on %s, which holds none, and leaves the file alone",
+		async (type) => {
+			const result = await client.callTool("add_object", {
+				path: targetPath,
+				type,
+				x: 0,
+				y: 0,
+				text: "hi",
+			});
+			expect(result.text).toMatch(
+				new RegExp(
+					`^error: object type "${type}" holds no text of its own and takes no text`,
+				),
+			);
+			expect((await workspace.readDoc(targetPath)).root).toEqual([]);
+		},
+	);
+
+	it("refuses an add_objects batch with one textless entry given text", async () => {
+		const result = await client.callTool("add_objects", {
+			path: targetPath,
+			objects: [
+				{ type: "rect", x: 0, y: 0, text: "kept out too" },
+				{ type: "lucideIcon", x: 200, y: 0, text: "hi" },
+			],
+		});
+		expect(result.text).toMatch(
+			/^error: entries\[1\] \(lucideIcon\): object type "lucideIcon" holds no text/,
+		);
+		expect((await workspace.readDoc(targetPath)).root).toEqual([]);
+	});
+});
+
+describe("set_text_style", () => {
+	beforeEach(async () => {
+		targetPath = await workspace.writeDoc(
+			`text-style-${testIndex++}.jis.json`,
+			emptyDoc,
+		);
+	});
+
+	// A markdown body is source text: the schema holds it to a string, which a
+	// run array is not.
+	it("refuses styling part of a markdown body, and leaves the file alone", async () => {
+		await client.callTool("add_object", {
+			path: targetPath,
+			type: "markdown",
+			x: 0,
+			y: 0,
+		});
+		await client.callTool("set_text", {
+			path: targetPath,
+			id: "markdown-1",
+			text: "hello world",
+		});
+		const before = await workspace.readDoc(targetPath);
+
+		const result = await client.callTool("set_text_style", {
+			path: targetPath,
+			id: "markdown-1",
+			match: "world",
+			fontWeight: "bold",
+		});
+
+		expect(result.text).toMatch(
+			/^error: markdown-1 \("markdown"\) holds its text as a plain string/,
+		);
+		expect(await workspace.readDoc(targetPath)).toEqual(before);
+		expect(before.root[0]).toMatchObject({ text: "hello world" });
+	});
 });
 
 describe("add_rect", () => {

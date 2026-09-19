@@ -141,3 +141,24 @@ export const badgeDefinition: ObjectDocDefinition = {
 		strokeWidth: 2,
 	}),
 };
+
+/**
+ * A body-text shape holding its text as a plain string only, the way the markdown
+ * plugin's source does: a stretch of it cannot be styled on its own.
+ */
+export const plainBodyDefinition: ObjectDocDefinition = {
+	features: {
+		type: "plain-card",
+		geometry: "rect",
+		text: "body",
+		connectable: true,
+	},
+	validateDoc: () => [],
+	factory: createFrameObjectFactory({
+		type: "plain-card",
+		width: 200,
+		height: 100,
+		text: "",
+	}),
+	inlineTextStyle: false,
+};

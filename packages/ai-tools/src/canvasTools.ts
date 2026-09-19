@@ -743,7 +743,7 @@ export const createCanvasToolDescriptors = (
 			.string()
 			.optional()
 			.describe(
-				"Label text inside the object. Only for shapes with a single text body: record keeps its title and rows in keyed text slots and rejects a plain string, so use set_text there.",
+				"Label text inside the object. Only for shapes with a single text body: record keeps its title and rows in keyed text slots and rejects a plain string, so use set_text there, and a type holding no text at all (polygon, polyline, lucideIcon — list_types shows text null) refuses it, so label it with a neighbouring shape.",
 			),
 		points: z
 			.array(pointSchema)
@@ -1263,7 +1263,7 @@ export const createCanvasToolDescriptors = (
 			"This is the only tool that reaches inside a text. set_style is the other side of that line: it styles the whole object, so its fontColor / fontSize reach every character, and applying it afterwards overrides what you set here.",
 			"The stretch is named by the characters themselves (match), never by an offset; occurrence picks which one when the text holds several, and omitting it decorates every occurrence.",
 			"Only typography a run of characters carries on its own is settable: fontColor, fontSize, fontFamily, fontWeight, fontStyle, textDecoration. textAlign and verticalAlign place the whole body and belong to set_style.",
-			"Fails when match does not occur in the text, and on text that can only be styled as a whole (a connector label, a slot holding rows) — use set_style there.",
+			"Fails when match does not occur in the text, and on text that can only be styled as a whole (a connector label, a slot holding rows, a markdown body, whose source is plain text) — use set_style there.",
 		].join(" "),
 		{
 			id: z.string().describe("id of the object whose text is decorated."),

@@ -328,6 +328,38 @@ describe("addObject with styling", () => {
 	});
 });
 
+describe("addObject with text", () => {
+	// The factory would spread the text in as one more field, which the schema
+	// rejects on a type holding none; setText refuses the same object already.
+	it.each(["polygon", "polyline"])(
+		"refuses text on %s, which holds none",
+		(type) => {
+			const doc = emptyDoc();
+
+			expect(() =>
+				docOps.addObject(doc, type, { x: 0, y: 0, text: "hi" }),
+			).toThrow(
+				`object type "${type}" holds no text of its own and takes no text`,
+			);
+			expect(doc.root).toHaveLength(0);
+		},
+	);
+
+	it("refuses the whole batch when one entry carries text its type cannot hold", () => {
+		const doc = emptyDoc();
+
+		expect(() =>
+			docOps.addObjects(doc, [
+				{ type: "rect", x: 0, y: 0, text: "kept" },
+				{ type: "polyline", x: 0, y: 0, text: "hi" },
+			]),
+		).toThrow(
+			/^entries\[1\] \(polyline\): object type "polyline" holds no text/,
+		);
+		expect(doc.root).toHaveLength(0);
+	});
+});
+
 describe("addObject with arrowheads", () => {
 	it("gives a polyline its arrowheads on the spot", () => {
 		const doc = emptyDoc();

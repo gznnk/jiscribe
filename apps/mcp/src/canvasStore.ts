@@ -5,6 +5,8 @@ import type { CanvasDoc, CanvasParseResult } from "@jiscribe/doc";
 
 import { writeFileAtomically } from "./atomicWrite";
 import { canvasParser } from "./canvasDefinitions";
+import { formatDiagnostics } from "./diagnosticReport";
+import { findIntroducedErrors } from "./introducedErrors";
 import { realpathDeepestExisting } from "./realpathDeepestExisting";
 
 /**
@@ -102,15 +104,26 @@ export async function readCanvasFileText(path: string): Promise<string> {
 	}
 }
 
+/** A canvas file as {@link loadCanvasFile} read it. */
+export type LoadedCanvasFile = {
+	/** The document the parser made of it. */
+	doc: CanvasDoc;
+	/**
+	 * The file's text exactly as read, which is what a write-back compares its
+	 * result against ({@link saveCanvasFile}).
+	 */
+	text: string;
+};
+
 /**
  * Read the `.jis` at an absolute path and return it as a validated
- * CanvasDoc.
+ * CanvasDoc, together with the text it was parsed from.
  *
  * It goes through `canvasParser` (the authoritative validator, UI-independent and
  * plugin shapes included) at load time, so no modification is let near an invalid
  * file (appending to a broken doc would only spread how it is broken).
  */
-export async function loadCanvasFile(path: string): Promise<CanvasDoc> {
+export async function loadCanvasFile(path: string): Promise<LoadedCanvasFile> {
 	const text = await readCanvasFileText(path);
 
 	const result = canvasParser.parse(text);
@@ -120,7 +133,7 @@ export async function loadCanvasFile(path: string): Promise<CanvasDoc> {
 		);
 	}
 
-	return result.doc;
+	return { doc: result.doc, text };
 }
 
 /**
@@ -128,7 +141,11 @@ export async function loadCanvasFile(path: string): Promise<CanvasDoc> {
  *
  * The modified document goes through `canvasParser` again, and an invalid one
  * fails with diagnostics instead of being written. This is what keeps a broken
- * `.jis` from being left behind.
+ * `.jis` from being left behind. It then goes through the validator
+ * `diagnose_canvas` runs, and a document carrying an error the file it was
+ * loaded from did not is refused as well: the parser leaves properties the
+ * schema forbids alone, so a tool writing one would otherwise succeed and leave
+ * a file only diagnose rejects (see findIntroducedErrors).
  *
  * The replacement is atomic (`./atomicWrite`), so the watching host and outside
  * editors never see it half written.
@@ -136,10 +153,14 @@ export async function loadCanvasFile(path: string): Promise<CanvasDoc> {
  * @param path Absolute path to write to, named as a canvas file
  *   ({@link toCanvasFilePath}). The parent directory is created when missing
  * @param doc The CanvasDoc to write out
+ * @param loadedText The text `doc` was loaded from ({@link LoadedCanvasFile});
+ *   an error it already carried is not held against the write. Omitted for a
+ *   file being created, where any error refuses it
  */
 export async function saveCanvasFile(
 	path: string,
 	doc: CanvasDoc,
+	loadedText?: string,
 ): Promise<void> {
 	const filePath = await toCanvasFilePath(path);
 	const serialized = serializeCanvasFile(doc);
@@ -148,6 +169,13 @@ export async function saveCanvasFile(
 	if (result.kind !== "ok") {
 		throw new CanvasFileError(
 			`refused to write (resulting document is invalid):\n${formatParseResult(result)}`,
+		);
+	}
+
+	const introducedErrors = findIntroducedErrors(loadedText, serialized);
+	if (introducedErrors.length > 0) {
+		throw new CanvasFileError(
+			`refused to write (the edit would leave the file failing diagnose_canvas, which it did not before):\n${formatDiagnostics(introducedErrors)}`,
 		);
 	}
 

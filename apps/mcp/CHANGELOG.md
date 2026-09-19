@@ -47,6 +47,21 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ### Fixed
 
+- **A tool no longer leaves a file that `diagnose_canvas` rejects.** A call
+  could succeed and write something the parser lets through but the schema
+  forbids: `add_object` / `add_objects` stored a `text` on `lucideIcon`,
+  `polygon` and `polyline` (the very types `set_text` and `get_text` call
+  textless), and `set_text_style` turned a markdown body into styled runs
+  where the schema, and the renderer, take a plain string only. Both are now
+  refused with an error naming why, and the file is left as it was. Behind
+  them, every write-back runs the validator `diagnose_canvas` runs and refuses
+  a document carrying an error the file did not have when the tool read it.
+  The comparison is against the file as it was, so one already failing the
+  schema for a reason of its own (a key the format does not know) stays
+  editable, and what it held is written back untouched. The check costs one
+  validation per write — about 15 ms at 200 objects and 140 ms at 2,000 — and
+  a second one only when the file holds contents this server has not seen
+  (the first edit of it, or one after someone else wrote it).
 - **A person's edit and a write from elsewhere to the same file both land.**
   A write from the AI or another window replaced the viewer's document
   outright: a drag still inside the 500 ms save debounce, or an edit whose
