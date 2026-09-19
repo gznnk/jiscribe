@@ -43,7 +43,29 @@ export type SaveFileResult =
 	 * quoted. The newer text follows over the WebSocket as a docChanged frame,
 	 * which is what redraws the canvas, so there is nothing to carry back here
 	 */
-	| { kind: "conflict" };
+	| { kind: "conflict" }
+	/**
+	 * Nothing was written, for a reason the message gives. Transient when the same
+	 * write may go through if sent again unchanged: the host could not be reached, or
+	 * failed on its side (see {@link isTransientWriteStatus})
+	 */
+	| { kind: "failed"; message: string; isTransient: boolean };
+
+/**
+ * Whether a write the host answered with this status may go through if sent again
+ * unchanged.
+ *
+ * Only the host failing on its side (5xx) and the two statuses that say "later"
+ * (408, 429) are. Every other refusal is about the write itself and would be
+ * answered the same way again: a stale session token after the host restarted
+ * (401), a file no longer on display (409), a file that may not be written to
+ * (403), a body the host will not take (413, 422), a missing revision (428). A revision that no longer matches (412) is a
+ * conflict, which is never to be sent again.
+ *
+ * @param status The HTTP status of an answer that was not a success
+ */
+export const isTransientWriteStatus = (status: number): boolean =>
+	(status >= 500 && status <= 599) || status === 408 || status === 429;
 
 const readJsonBody = async (response: Response): Promise<unknown> => {
 	try {
@@ -77,11 +99,12 @@ const readStringField = (value: unknown, field: string): string | null => {
  * @param revision The revision of the text this page last had from the host. The
  *   server writes only on a match, which is what keeps this write from landing on
  *   top of an edit made somewhere else in the meantime
- * @returns The new revision on a write that landed, or the bare conflict when the
- *   file had moved on. A conflict is not to be retried
- * @throws An Error carrying the error message the server returned, which covers a
- *   write refused for any other reason (no token, the wrong file, a missing
- *   If-Match)
+ * @returns The new revision on a write that landed, the bare conflict when the
+ *   file had moved on (not to be retried), or the failure — the network error, or
+ *   the error message the server returned for any other refusal — together with
+ *   whether sending it again may help
+ * @throws An Error when the host took the write but answered without a revision,
+ *   which no host speaking this protocol does
  */
 export async function saveFile(
 	relPath: string,
@@ -89,14 +112,21 @@ export async function saveFile(
 	sessionToken: string,
 	revision: string,
 ): Promise<SaveFileResult> {
-	const response = await fetch(buildFileApiUrl(relPath), {
-		method: "PUT",
-		headers: {
-			[SESSION_TOKEN_HEADER]: sessionToken,
-			[REVISION_HEADER]: revision,
-		},
-		body: text,
-	});
+	let response: Response;
+	try {
+		response = await fetch(buildFileApiUrl(relPath), {
+			method: "PUT",
+			headers: {
+				[SESSION_TOKEN_HEADER]: sessionToken,
+				[REVISION_HEADER]: revision,
+			},
+			body: text,
+		});
+	} catch (error) {
+		// fetch rejects only when no answer came back at all: offline, the host gone
+		// or restarting, the request cut off
+		return { kind: "failed", message: String(error), isTransient: true };
+	}
 	const body = await readJsonBody(response);
 	if (response.ok) {
 		const savedRevision = readStringField(body, "revision");
@@ -108,8 +138,11 @@ export async function saveFile(
 	if (response.status === REVISION_MISMATCH_STATUS) {
 		return { kind: "conflict" };
 	}
-	throw new Error(
-		readStringField(body, "error") ??
+	return {
+		kind: "failed",
+		message:
+			readStringField(body, "error") ??
 			`${response.status} ${response.statusText}`,
-	);
+		isTransient: isTransientWriteStatus(response.status),
+	};
 }

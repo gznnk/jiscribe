@@ -71,9 +71,11 @@ export const isOwnEcho = (
  *
  * - `"echo"`: this page's own write coming back; nothing changed for the page
  * - `"back-to-synced"`: the file holds the synced text again after the page was
- *   told it could not be used (unparsable, unreadable, gone). The same text as an
- *   echo, but the page has seen something else in between, so it is a recovery:
- *   the error has to go and the page's edits, made on that very text, can be saved
+ *   told it could not be used (unparsable, unreadable, gone), or after a write of
+ *   the page's edits failed on the way (the frame a reconnect brings). The same
+ *   text as an echo, but the page has seen something else in between, so it is a
+ *   recovery: the error has to go and the page's edits, made on that very text,
+ *   can be saved
  * - `"new"`: anything else, which is drawn in place of what is on screen
  */
 export type IncomingDocKind = "echo" | "back-to-synced" | "new";
@@ -83,8 +85,9 @@ export type IncomingDocKind = "echo" | "back-to-synced" | "new";
  *
  * @param incoming The frame's document and text
  * @param synced What {@link isOwnEcho} compares against, plus whether the page has
- *   been told since that the file could not be used. That flag only turns an echo
- *   into `"back-to-synced"`; it never makes a different text or document one
+ *   been told since that the file could not be used, and whether it holds edits
+ *   whose write failed on the way. Either flag only turns an echo into
+ *   `"back-to-synced"`; neither makes a different text or document one
  */
 export const classifyIncomingDoc = (
 	incoming: { identity: DocIdentity; docText: string },
@@ -92,10 +95,13 @@ export const classifyIncomingDoc = (
 		identity: DocIdentity | null;
 		syncedText: string | null;
 		isFileUnusable: boolean;
+		hasUndeliveredEdits: boolean;
 	},
 ): IncomingDocKind => {
 	if (!isOwnEcho(incoming, synced)) {
 		return "new";
 	}
-	return synced.isFileUnusable ? "back-to-synced" : "echo";
+	return synced.isFileUnusable || synced.hasUndeliveredEdits
+		? "back-to-synced"
+		: "echo";
 };

@@ -85,6 +85,16 @@ const sendApiError = (response: http.ServerResponse, error: unknown): void => {
 		sendJson(response, 404, { error: "not found" });
 		return;
 	}
+	// The file or its directory refuses the write, which sending it again will not
+	// change: a 5xx would read as the host failing, and the viewer would retry it
+	if (
+		isErrnoWithCode(error, "EACCES") ||
+		isErrnoWithCode(error, "EPERM") ||
+		isErrnoWithCode(error, "EROFS")
+	) {
+		sendJson(response, 403, { error: "the file cannot be written to" });
+		return;
+	}
 	sendJson(response, 500, { error: String(error) });
 };
 

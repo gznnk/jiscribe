@@ -523,7 +523,7 @@ describe("a person's save", () => {
 					savedDocText,
 					revision,
 				);
-				expect(outcome.status).toBe(500);
+				expect(outcome.status).toBe(403);
 			} finally {
 				await chmod(openFile, 0o600);
 			}

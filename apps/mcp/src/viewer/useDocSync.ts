@@ -13,6 +13,10 @@
 // - the file coming back to the text last synced after the page was told it could
 //   not be used (broken, unreadable, gone) is a recovery and not an echo: the error
 //   goes, and the edits made meanwhile — on that very text — are written out
+// - edits the file does not hold yet are remembered as such until a write carrying
+//   them lands. A write that failed on the way (no answer, a 5xx) is sent again on
+//   a backoff and at once when the connection comes back; a newer file drawn over
+//   them is said so in the error bar rather than taking them silently
 //
 // And an edit is written to the document it was made on and to no other. The doc
 // waiting to be written is kept together with the document it belongs to, and an
@@ -49,6 +53,35 @@ const BROKEN_FILE_NOTE =
  */
 const BROKEN_FILE_EDITS_LOST_MESSAGE =
 	"ファイルが外で書き直されたため、壊れていた間の変更は保存されませんでした";
+
+/**
+ * The first wait before a write that failed on the way is sent again, doubled on
+ * every failure after it up to the most
+ */
+const SAVE_RETRY_BASE_DELAY_MS = 1_000;
+const SAVE_RETRY_MAX_DELAY_MS = 10_000;
+
+/**
+ * The error bar's text for a write that did not land.
+ *
+ * @param message What the network or the host said
+ * @param isRetrying Whether the write is to be sent again; said so, since the
+ *   edit is still on screen and a person has to know whether to redo it
+ */
+const formatSaveFailedMessage = (
+	message: string,
+	isRetrying: boolean,
+): string =>
+	isRetrying
+		? `保存に失敗しました。つながりしだい保存し直します: ${message}`
+		: `保存に失敗しました: ${message}`;
+
+/**
+ * Shown when a newer file for the same document is drawn over edits the host
+ * never took
+ */
+const UNSAVED_EDITS_OVERWRITTEN_MESSAGE =
+	"保存できていなかった変更は、ファイルが他で更新されたため取り消されました";
 
 /** Shown when the host refused the write because the file had moved on */
 const SAVE_CONFLICT_MESSAGE =
@@ -168,6 +201,19 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 	// taking the one explanation of why the edit vanished with it; so that frame
 	// leaves the message up and only the next one clears it
 	const hasUnexplainedConflictRef = useRef(false);
+	// Set from the first edit the host does not hold yet until a write carrying all
+	// of them lands, whether or not a save is scheduled. baseText is the text the
+	// host held when they were made, which is what a newer file drawn over them has
+	// to be told apart from (and a merge would start from)
+	const unsavedEditsRef = useRef<{ baseText: string } | null>(null);
+	// Set while the last write failed on the way and is owed again. It is what makes
+	// the frame a reconnect brings for the same text a recovery rather than an echo
+	const hasUndeliveredEditsRef = useRef(false);
+	const saveRetryTimerRef = useRef<number | null>(null);
+	const saveRetryDelayMsRef = useRef(SAVE_RETRY_BASE_DELAY_MS);
+	// The retry goes through this rather than saveNow itself, which is what
+	// schedules it
+	const saveNowRef = useRef<(() => Promise<boolean>) | null>(null);
 
 	// The document the canvas's commits are made on. It trails openDoc: the canvas
 	// takes a new document up in an effect of the render that hands it over, so a
@@ -203,6 +249,11 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		if (latestDoc === null) {
 			return false;
 		}
+		// Whatever brought this write about, a retry waiting on the clock is it
+		if (saveRetryTimerRef.current !== null) {
+			window.clearTimeout(saveRetryTimerRef.current);
+			saveRetryTimerRef.current = null;
+		}
 		const targetDoc = latestDoc.identity;
 		const revision = revisionRef.current;
 		if (revision === null) {
@@ -216,6 +267,10 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		}
 		const text = serializeDoc(latestDoc.doc);
 		if (text === syncedTextRef.current) {
+			// Edited back to what the host holds: nothing is owed any longer
+			unsavedEditsRef.current = null;
+			hasUndeliveredEditsRef.current = false;
+			saveRetryDelayMsRef.current = SAVE_RETRY_BASE_DELAY_MS;
 			return true;
 		}
 		// Record it before saving, so that if the host's watch picks this write up and
@@ -241,9 +296,23 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			);
 		} catch (error) {
 			restoreSyncedText();
-			reportError(`保存に失敗しました: ${String(error)}`);
+			hasUndeliveredEditsRef.current = false;
+			reportError(formatSaveFailedMessage(String(error), false));
 			return false;
 		}
+		if (result.kind === "failed") {
+			restoreSyncedText();
+			// Sent again only while the edits are still those of the document drawn;
+			// a document drawn meanwhile has already said what became of them
+			const isRetrying =
+				result.isTransient &&
+				isSameDoc(latestDocRef.current?.identity ?? null, targetDoc);
+			hasUndeliveredEditsRef.current = isRetrying;
+			reportError(formatSaveFailedMessage(result.message, isRetrying));
+			return false;
+		}
+		hasUndeliveredEditsRef.current = false;
+		saveRetryDelayMsRef.current = SAVE_RETRY_BASE_DELAY_MS;
 		if (result.kind === "conflict") {
 			// The newer document arrives as a docChanged frame, which redraws the
 			// canvas with it; writing again here is how the other edit would be lost.
@@ -257,6 +326,18 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		// that landed in the meantime brought the revision belonging to its own text
 		if (syncedTextRef.current === text) {
 			revisionRef.current = result.revision;
+		}
+		// Edits committed while the write was out are the ones still owed, and they
+		// were made on top of what it wrote
+		const currentDoc = latestDocRef.current;
+		if (
+			currentDoc !== null &&
+			isSameDoc(currentDoc.identity, targetDoc) &&
+			serializeDoc(currentDoc.doc) !== text
+		) {
+			unsavedEditsRef.current = { baseText: text };
+		} else {
+			unsavedEditsRef.current = null;
 		}
 		// The host has the file again, written from this page
 		isFileMissingRef.current = false;
@@ -280,12 +361,29 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			return await running;
 		} finally {
 			// Only while this is still the newest write: a save that queued behind it
-			// is what the next one has to wait for
+			// is what the next one has to wait for, and it decides on a retry itself
 			if (inFlightSaveRef.current === running) {
 				inFlightSaveRef.current = null;
+				if (
+					hasUndeliveredEditsRef.current &&
+					saveRetryTimerRef.current === null
+				) {
+					const retryDelayMs = saveRetryDelayMsRef.current;
+					saveRetryDelayMsRef.current = Math.min(
+						retryDelayMs * 2,
+						SAVE_RETRY_MAX_DELAY_MS,
+					);
+					saveRetryTimerRef.current = window.setTimeout(() => {
+						saveRetryTimerRef.current = null;
+						void saveNowRef.current?.();
+					}, retryDelayMs);
+				}
 			}
 		}
 	}, [writeCurrentDoc]);
+	useEffect(() => {
+		saveNowRef.current = saveNow;
+	}, [saveNow]);
 
 	const flushPendingSave = useCallback(async (): Promise<boolean> => {
 		if (saveTimerRef.current !== null) {
@@ -304,22 +402,31 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 					identity: latestDocRef.current?.identity ?? null,
 					syncedText: syncedTextRef.current,
 					isFileUnusable: wasFileBroken || isFileMissingRef.current,
+					hasUndeliveredEdits: hasUndeliveredEditsRef.current,
 				},
 			);
 			if (incomingKind === "echo") {
 				// The drawing is already this text; all that is new is the revision the
-				// next write has to quote
+				// next write has to quote. The host holding the whole drawing also settles
+				// what the write's own answer, still on its way, would have
 				revisionRef.current = revision;
+				if (
+					latestDocRef.current !== null &&
+					serializeDoc(latestDocRef.current.doc) === docText
+				) {
+					unsavedEditsRef.current = null;
+				}
 				return;
 			}
 			if (incomingKind === "back-to-synced") {
 				// The drawing is still this text plus whatever was edited while the file
-				// could not be used. Those edits were made on this very text, so writing
-				// them now overwrites nothing from outside
+				// could not be used or could not be reached. Those edits were made on this
+				// very text, so writing them now overwrites nothing from outside
 				revisionRef.current = revision;
 				brokenFileErrorRef.current = null;
 				isFileMissingRef.current = false;
 				hasUnexplainedConflictRef.current = false;
+				saveRetryDelayMsRef.current = SAVE_RETRY_BASE_DELAY_MS;
 				reportError(null);
 				void flushPendingSave();
 				return;
@@ -333,22 +440,40 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			}
 			brokenFileErrorRef.current = null;
 			isFileMissingRef.current = false;
-			// Edits still on the debounce belong to the document being replaced, and
-			// the host no longer takes writes for it
+			// Edits still on the debounce, or not yet taken by the host, belong to the
+			// document being replaced, and the host no longer takes writes for it
 			const previousDoc = latestDocRef.current?.identity ?? null;
+			const isSameDocument = isSameDoc(previousDoc, identity);
 			const pendingSaveTimer = saveTimerRef.current;
 			const hasLostEdit =
-				pendingSaveTimer !== null && !isSameDoc(previousDoc, identity);
-			if (hasLostEdit) {
+				!isSameDocument &&
+				(pendingSaveTimer !== null || unsavedEditsRef.current !== null);
+			if (hasLostEdit && pendingSaveTimer !== null) {
 				window.clearTimeout(pendingSaveTimer);
 				saveTimerRef.current = null;
+			}
+			// Drawn over edits the host never took, for the same document. Edits undone
+			// back to the text they were made on are nothing to lose
+			const unsavedEdits = unsavedEditsRef.current;
+			const hasOverwrittenUnsavedEdits =
+				isSameDocument &&
+				unsavedEdits !== null &&
+				latestDocRef.current !== null &&
+				serializeDoc(latestDocRef.current.doc) !== unsavedEdits.baseText;
+			// Whatever was owed is now drawn over, so there is nothing left to send
+			unsavedEditsRef.current = null;
+			hasUndeliveredEditsRef.current = false;
+			saveRetryDelayMsRef.current = SAVE_RETRY_BASE_DELAY_MS;
+			if (saveRetryTimerRef.current !== null) {
+				window.clearTimeout(saveRetryTimerRef.current);
+				saveRetryTimerRef.current = null;
 			}
 			// Edits the broken file kept from being saved, now drawn over by a file
 			// that has moved on from the text they were made on
 			const hasLostBrokenFileEdit =
 				wasFileBroken &&
 				latestDocRef.current !== null &&
-				isSameDoc(previousDoc, identity) &&
+				isSameDocument &&
 				serializeDoc(latestDocRef.current.doc) !== syncedTextRef.current;
 			syncedTextRef.current = docText;
 			revisionRef.current = revision;
@@ -367,6 +492,10 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 			}
 			if (hasUnexplainedConflictRef.current) {
 				hasUnexplainedConflictRef.current = false;
+				return;
+			}
+			if (hasOverwrittenUnsavedEdits) {
+				reportError(UNSAVED_EDITS_OVERWRITTEN_MESSAGE);
 				return;
 			}
 			reportError(null);
@@ -403,6 +532,9 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 				identity: latestDoc.identity,
 				doc: committedDoc,
 			};
+			if (unsavedEditsRef.current === null && syncedTextRef.current !== null) {
+				unsavedEditsRef.current = { baseText: syncedTextRef.current };
+			}
 			setDoc(committedDoc);
 			if (saveTimerRef.current !== null) {
 				window.clearTimeout(saveTimerRef.current);

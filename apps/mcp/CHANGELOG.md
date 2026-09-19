@@ -47,6 +47,18 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ### Fixed
 
+- **An edit whose save failed on the way is sent again.** When the viewer's
+  write did not reach the host (the network dropped, the host was restarting
+  or answered with a 5xx), the error bar said so but nothing ever sent the
+  edit again, even after the connection came back; and the next change to the
+  same file from outside drew over the edit and cleared the error, so it was
+  lost without a word. The viewer now remembers edits the file does not hold
+  yet, sends them again on a backoff (1 s doubling to 10 s) and at once when
+  its connection comes back, and says so in the error bar while it does. A
+  refusal about the write itself — a conflict, a host restarted since (401),
+  another file on display (409), a file that may not be written to (now 403
+  rather than 500), an invalid document — is shown and not sent again. A newer file drawn over edits that were never saved now says so
+  instead of replacing them silently.
 - **A file put back as it was brings the viewer back.** When a `.jis` that
   had been broken, deleted or unreadable was restored byte for byte (an
   editor or git rewriting the same content, a writer caught half way through

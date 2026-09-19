@@ -60,6 +60,8 @@ let assetRootPath: string;
  * comes back as the status and body it is meant to
  */
 let writeOutcome: WriteOpenFileOutcome;
+/** What the host's write throws instead of answering, when set */
+let writeFailure: unknown;
 /** The writes that made it past the guards, in the order they arrived */
 let recordedWrites: RecordedWrite[];
 let server: http.Server;
@@ -138,6 +140,7 @@ beforeEach(async () => {
 	assetRootPath = join(assetParentPath, "assets");
 	await mkdir(assetRootPath, { recursive: true });
 	writeOutcome = { kind: "written", revision: WRITTEN_REVISION };
+	writeFailure = null;
 	recordedWrites = [];
 	server = createViewerHttpServer({
 		workspaceRoot,
@@ -146,6 +149,9 @@ beforeEach(async () => {
 		sessionToken: SESSION_TOKEN,
 		writeOpenFile: (relPath, body, ifMatch) => {
 			recordedWrites.push({ relPath, body: body.toString("utf8"), ifMatch });
+			if (writeFailure !== null) {
+				return Promise.reject(writeFailure);
+			}
 			return Promise.resolve(writeOutcome);
 		},
 	});
@@ -166,6 +172,21 @@ afterEach(async () => {
 });
 
 describe("PUT /api/file", () => {
+	it("answers 403 for a file the host may not write to", async () => {
+		// A 5xx would tell the viewer the host failed, and it would keep retrying a
+		// write that is refused the same way every time
+		writeFailure = Object.assign(new Error("EACCES: permission denied"), {
+			code: "EACCES",
+		});
+
+		const response = await putFile(OPEN_REL_PATH, "{}");
+
+		expect(response.status).toBe(403);
+		expect(await response.json()).toEqual({
+			error: "the file cannot be written to",
+		});
+	});
+
 	it("hands the write to the host and answers with the revision it landed at", async () => {
 		const body = '{"version":1,"root":[]}\n';
 

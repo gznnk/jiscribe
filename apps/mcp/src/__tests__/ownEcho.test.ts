@@ -94,6 +94,7 @@ describe("classifyIncomingDoc", () => {
 	const syncedFirstHostDoc = {
 		identity: firstHostDoc,
 		syncedText: emptyDocText,
+		hasUndeliveredEdits: false,
 	};
 
 	it("takes the synced text for an echo while the file has stayed usable", () => {
@@ -116,15 +117,32 @@ describe("classifyIncomingDoc", () => {
 		).toBe("back-to-synced");
 	});
 
+	it("takes the synced text for a recovery while a failed write is owed", () => {
+		// The frame a reconnect brings for the same file: taken for an echo, nothing
+		// would send the edits whose write was cut off on the way
+		expect(
+			classifyIncomingDoc(
+				{ identity: firstHostDoc, docText: emptyDocText },
+				{
+					...syncedFirstHostDoc,
+					isFileUnusable: false,
+					hasUndeliveredEdits: true,
+				},
+			),
+		).toBe("back-to-synced");
+	});
+
 	it("takes a different text for a new one whatever the file went through", () => {
 		const otherText = '{"version":1,"root":[{}]}\n';
 		for (const isFileUnusable of [false, true]) {
-			expect(
-				classifyIncomingDoc(
-					{ identity: firstHostDoc, docText: otherText },
-					{ ...syncedFirstHostDoc, isFileUnusable },
-				),
-			).toBe("new");
+			for (const hasUndeliveredEdits of [false, true]) {
+				expect(
+					classifyIncomingDoc(
+						{ identity: firstHostDoc, docText: otherText },
+						{ ...syncedFirstHostDoc, isFileUnusable, hasUndeliveredEdits },
+					),
+				).toBe("new");
+			}
 		}
 	});
 
@@ -143,7 +161,12 @@ describe("classifyIncomingDoc", () => {
 		expect(
 			classifyIncomingDoc(
 				{ identity: firstHostDoc, docText: emptyDocText },
-				{ identity: null, syncedText: null, isFileUnusable: true },
+				{
+					identity: null,
+					syncedText: null,
+					isFileUnusable: true,
+					hasUndeliveredEdits: true,
+				},
 			),
 		).toBe("new");
 	});
