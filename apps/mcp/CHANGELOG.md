@@ -47,6 +47,18 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 
 ### Fixed
 
+- **A file put back as it was brings the viewer back.** When a `.jis` that
+  had been broken, deleted or unreadable was restored byte for byte (an
+  editor or git rewriting the same content, a writer caught half way through
+  by the host's poll), the viewer took it for its own save coming back: the
+  error stayed up for good, and after a broken file every edit made in the
+  page was quietly never saved, until the next change from outside threw
+  those edits away. The same text after such an error now clears it, and
+  edits made in the meantime — made on that very text — are written out. A
+  broken file replaced by different content still draws that content, and
+  now says the edits made while it was broken were not saved. The host also
+  sends a file that went missing and came back with its old content, which it
+  used to hold back as already known.
 - **One file named two ways is one file.** The per-file lock and the undo
   history were keyed by the path as written, so a file reached both directly
   and through a linked directory (`/tmp` against `/private/tmp` on macOS, a

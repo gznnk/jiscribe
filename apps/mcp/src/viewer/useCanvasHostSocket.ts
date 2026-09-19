@@ -53,8 +53,11 @@ export type CanvasHostSocketOptions = {
 		docText: string,
 		revision: string,
 	) => void;
-	/** A file the host could not read, named separately from what it says */
-	onDocError: (relPath: string, message: string) => void;
+	/**
+	 * A file the host could not read: the document, named the way onDocFrame names
+	 * it, and the reason the host gave
+	 */
+	onDocError: (identity: DocIdentity, message: string) => void;
 	/** A request to close this window. Nothing is sent back */
 	onCloseViewer: () => void;
 	/**
@@ -180,7 +183,10 @@ export function useCanvasHostSocket(options: CanvasHostSocketOptions): boolean {
 						);
 						break;
 					case "docError":
-						handlers.onDocError(frame.relPath, frame.message);
+						handlers.onDocError(
+							{ sessionToken, relPath: frame.relPath },
+							frame.message,
+						);
 						break;
 					case "closeViewer":
 						handlers.onCloseViewer();

@@ -376,6 +376,27 @@ describe("the file watch", () => {
 		expect(host.getOpenPath()).toBe(OTHER_REL_PATH);
 	});
 
+	it("sends a file put back as it was after it went missing", async () => {
+		// The windows were told the file is gone, so the same text coming back is
+		// news to them; held back as already known, it would leave their error up
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+
+		await rm(join(workspaceRoot, OPEN_REL_PATH));
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "docError"),
+		);
+		await writeOpenFile(emptyDocText);
+
+		await waitFor(() => calcChangedTexts(viewer).length > 0);
+		expect(calcChangedTexts(viewer)).toEqual([emptyDocText]);
+	});
+
 	it("tells the viewer why a file it cannot read stays blank", async () => {
 		const host = await startTestHost();
 		const viewer = await connectFakeViewer(host);

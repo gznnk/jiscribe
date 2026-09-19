@@ -65,3 +65,37 @@ export const isOwnEcho = (
 	synced.syncedText !== null &&
 	isSameDoc(incoming.identity, synced.identity) &&
 	incoming.docText === synced.syncedText;
+
+/**
+ * What an incoming doc frame is to this page.
+ *
+ * - `"echo"`: this page's own write coming back; nothing changed for the page
+ * - `"back-to-synced"`: the file holds the synced text again after the page was
+ *   told it could not be used (unparsable, unreadable, gone). The same text as an
+ *   echo, but the page has seen something else in between, so it is a recovery:
+ *   the error has to go and the page's edits, made on that very text, can be saved
+ * - `"new"`: anything else, which is drawn in place of what is on screen
+ */
+export type IncomingDocKind = "echo" | "back-to-synced" | "new";
+
+/**
+ * Tells what an incoming doc frame is to this page (see IncomingDocKind).
+ *
+ * @param incoming The frame's document and text
+ * @param synced What {@link isOwnEcho} compares against, plus whether the page has
+ *   been told since that the file could not be used. That flag only turns an echo
+ *   into `"back-to-synced"`; it never makes a different text or document one
+ */
+export const classifyIncomingDoc = (
+	incoming: { identity: DocIdentity; docText: string },
+	synced: {
+		identity: DocIdentity | null;
+		syncedText: string | null;
+		isFileUnusable: boolean;
+	},
+): IncomingDocKind => {
+	if (!isOwnEcho(incoming, synced)) {
+		return "new";
+	}
+	return synced.isFileUnusable ? "back-to-synced" : "echo";
+};

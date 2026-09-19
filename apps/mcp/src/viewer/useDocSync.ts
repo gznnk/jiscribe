@@ -10,6 +10,9 @@
 // - while the text that arrived cannot be parsed, saving is blocked. The doc on
 //   screen is then older than the file, so writing it out would undo whatever is
 //   being edited outside
+// - the file coming back to the text last synced after the page was told it could
+//   not be used (broken, unreadable, gone) is a recovery and not an echo: the error
+//   goes, and the edits made meanwhile — on that very text — are written out
 //
 // And an edit is written to the document it was made on and to no other. The doc
 // waiting to be written is kept together with the document it belongs to, and an
@@ -27,7 +30,7 @@ import {
 
 import { canvasParser } from "./canvasPlugins";
 import { saveFile, type SaveFileResult } from "./files";
-import { isOwnEcho, isSameDoc, type DocIdentity } from "./ownEcho";
+import { classifyIncomingDoc, isSameDoc, type DocIdentity } from "./ownEcho";
 
 /**
  * How long to wait after the edits settle before writing out. Writing on every
@@ -39,6 +42,13 @@ const SAVE_DEBOUNCE_MS = 500;
 /** Put under the parse error while the text from the host cannot be read */
 const BROKEN_FILE_NOTE =
 	"ファイルが壊れています。読めるようになるまで、この画面の編集は保存されません";
+
+/**
+ * Shown when a readable file replaced edits made while it was broken. They could
+ * not be saved then, and the file has since moved on from the text they were made on
+ */
+const BROKEN_FILE_EDITS_LOST_MESSAGE =
+	"ファイルが外で書き直されたため、壊れていた間の変更は保存されませんでした";
 
 /** Shown when the host refused the write because the file had moved on */
 const SAVE_CONFLICT_MESSAGE =
@@ -92,13 +102,20 @@ export type DocSync = {
 	 * Takes in an openCanvas or docChanged frame. Text equal to what the host is
 	 * known to hold for the same document is this page's own write coming back:
 	 * only the revision is taken from it, so that the canvas is not redrawn under
-	 * the person's hands
+	 * the person's hands. After the file was broken or could not be read, the same
+	 * text is the file recovering instead: the error is cleared, and edits made
+	 * meanwhile are written out
 	 */
 	applyIncomingDoc: (
 		identity: DocIdentity,
 		docText: string,
 		revision: string,
 	) => void;
+	/**
+	 * Takes in a docError frame: the host could not read the file. Shown in the
+	 * error bar, and for the document drawn, remembered until the file is back
+	 */
+	applyDocError: (identity: DocIdentity, message: string) => void;
 	/**
 	 * Takes a committed edit and puts the write on the debounce. An edit made on a
 	 * document that has since been replaced is dropped, and said so in the error bar
@@ -138,6 +155,10 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 	// doubles as the block on saving: what is drawn is older than the file, and
 	// writing it out would take the outside editor's work with it
 	const brokenFileErrorRef = useRef<string | null>(null);
+	// Set while the host cannot read the file drawn (gone, no permission). Saving
+	// is not blocked — writing recreates the file, and there is nothing outside to
+	// overwrite — but the synced text coming back is then a recovery, not an echo
+	const isFileMissingRef = useRef(false);
 	const saveTimerRef = useRef<number | null>(null);
 	// The write that is on its way, so that a second save queues behind it rather
 	// than racing it, and so that closing or flushing can wait for it
@@ -168,58 +189,6 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 	useLayoutEffect(() => {
 		committedOnDocRef.current = committedOnDoc;
 	}, [committedOnDoc]);
-
-	const applyIncomingDoc = useCallback(
-		(identity: DocIdentity, docText: string, revision: string): void => {
-			if (
-				isOwnEcho(
-					{ identity, docText },
-					{
-						identity: latestDocRef.current?.identity ?? null,
-						syncedText: syncedTextRef.current,
-					},
-				)
-			) {
-				// The drawing is already this text; all that is new is the revision the
-				// next write has to quote
-				revisionRef.current = revision;
-				return;
-			}
-			const result = canvasParser.parse(docText);
-			if (result.kind !== "ok") {
-				brokenFileErrorRef.current = `${formatParseError(result)}\n${BROKEN_FILE_NOTE}`;
-				reportError(brokenFileErrorRef.current);
-				return;
-			}
-			brokenFileErrorRef.current = null;
-			// Edits still on the debounce belong to the document being replaced, and
-			// the host no longer takes writes for it
-			const previousDoc = latestDocRef.current?.identity ?? null;
-			const pendingSaveTimer = saveTimerRef.current;
-			const hasLostEdit =
-				pendingSaveTimer !== null && !isSameDoc(previousDoc, identity);
-			if (hasLostEdit) {
-				window.clearTimeout(pendingSaveTimer);
-				saveTimerRef.current = null;
-			}
-			syncedTextRef.current = docText;
-			revisionRef.current = revision;
-			latestDocRef.current = { identity, doc: result.doc };
-			setOpenDoc(identity);
-			setDoc(result.doc);
-			if (hasLostEdit && previousDoc !== null) {
-				hasUnexplainedConflictRef.current = false;
-				reportError(formatLostEditMessage(previousDoc.relPath));
-				return;
-			}
-			if (hasUnexplainedConflictRef.current) {
-				hasUnexplainedConflictRef.current = false;
-				return;
-			}
-			reportError(null);
-		},
-		[reportError],
-	);
 
 	/**
 	 * Writes the current doc out, unless it is already what the host has. Only
@@ -289,6 +258,8 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		if (syncedTextRef.current === text) {
 			revisionRef.current = result.revision;
 		}
+		// The host has the file again, written from this page
+		isFileMissingRef.current = false;
 		hasUnexplainedConflictRef.current = false;
 		reportError(null);
 		return true;
@@ -324,6 +295,97 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		return await saveNow();
 	}, [saveNow]);
 
+	const applyIncomingDoc = useCallback(
+		(identity: DocIdentity, docText: string, revision: string): void => {
+			const wasFileBroken = brokenFileErrorRef.current !== null;
+			const incomingKind = classifyIncomingDoc(
+				{ identity, docText },
+				{
+					identity: latestDocRef.current?.identity ?? null,
+					syncedText: syncedTextRef.current,
+					isFileUnusable: wasFileBroken || isFileMissingRef.current,
+				},
+			);
+			if (incomingKind === "echo") {
+				// The drawing is already this text; all that is new is the revision the
+				// next write has to quote
+				revisionRef.current = revision;
+				return;
+			}
+			if (incomingKind === "back-to-synced") {
+				// The drawing is still this text plus whatever was edited while the file
+				// could not be used. Those edits were made on this very text, so writing
+				// them now overwrites nothing from outside
+				revisionRef.current = revision;
+				brokenFileErrorRef.current = null;
+				isFileMissingRef.current = false;
+				hasUnexplainedConflictRef.current = false;
+				reportError(null);
+				void flushPendingSave();
+				return;
+			}
+			const result = canvasParser.parse(docText);
+			if (result.kind !== "ok") {
+				brokenFileErrorRef.current = `${formatParseError(result)}\n${BROKEN_FILE_NOTE}`;
+				isFileMissingRef.current = false;
+				reportError(brokenFileErrorRef.current);
+				return;
+			}
+			brokenFileErrorRef.current = null;
+			isFileMissingRef.current = false;
+			// Edits still on the debounce belong to the document being replaced, and
+			// the host no longer takes writes for it
+			const previousDoc = latestDocRef.current?.identity ?? null;
+			const pendingSaveTimer = saveTimerRef.current;
+			const hasLostEdit =
+				pendingSaveTimer !== null && !isSameDoc(previousDoc, identity);
+			if (hasLostEdit) {
+				window.clearTimeout(pendingSaveTimer);
+				saveTimerRef.current = null;
+			}
+			// Edits the broken file kept from being saved, now drawn over by a file
+			// that has moved on from the text they were made on
+			const hasLostBrokenFileEdit =
+				wasFileBroken &&
+				latestDocRef.current !== null &&
+				isSameDoc(previousDoc, identity) &&
+				serializeDoc(latestDocRef.current.doc) !== syncedTextRef.current;
+			syncedTextRef.current = docText;
+			revisionRef.current = revision;
+			latestDocRef.current = { identity, doc: result.doc };
+			setOpenDoc(identity);
+			setDoc(result.doc);
+			if (hasLostEdit && previousDoc !== null) {
+				hasUnexplainedConflictRef.current = false;
+				reportError(formatLostEditMessage(previousDoc.relPath));
+				return;
+			}
+			if (hasLostBrokenFileEdit) {
+				hasUnexplainedConflictRef.current = false;
+				reportError(BROKEN_FILE_EDITS_LOST_MESSAGE);
+				return;
+			}
+			if (hasUnexplainedConflictRef.current) {
+				hasUnexplainedConflictRef.current = false;
+				return;
+			}
+			reportError(null);
+		},
+		[flushPendingSave, reportError],
+	);
+
+	const applyDocError = useCallback(
+		(identity: DocIdentity, message: string): void => {
+			// An error about another file (one the host was switched to and could not
+			// read) says nothing about the text this page synced
+			if (isSameDoc(identity, latestDocRef.current?.identity ?? null)) {
+				isFileMissingRef.current = true;
+			}
+			reportError(`${identity.relPath}: ${message}`);
+		},
+		[reportError],
+	);
+
 	const handleCommit = useCallback(
 		(committedDoc: CanvasDoc): void => {
 			const committedOn = committedOnDocRef.current;
@@ -357,6 +419,7 @@ export function useDocSync({ reportError }: DocSyncOptions): DocSync {
 		doc,
 		openDoc,
 		applyIncomingDoc,
+		applyDocError,
 		handleCommit,
 		flushPendingSave,
 	};

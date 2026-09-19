@@ -125,8 +125,14 @@ export function App() {
 	const noticeCountRef = useRef(0);
 	const canvasHandleRef = useRef<CanvasHandle | null>(null);
 
-	const { doc, openDoc, applyIncomingDoc, handleCommit, flushPendingSave } =
-		useDocSync({ reportError: setErrorMessage });
+	const {
+		doc,
+		openDoc,
+		applyIncomingDoc,
+		applyDocError,
+		handleCommit,
+		flushPendingSave,
+	} = useDocSync({ reportError: setErrorMessage });
 	const openPath = openDoc?.relPath ?? null;
 
 	// One resolver per open file: a src is relative to that file's directory
@@ -204,13 +210,6 @@ export function App() {
 		});
 	}, [flushEditsForHost]);
 
-	const handleDocError = useCallback(
-		(relPath: string, message: string): void => {
-			setErrorMessage(`${relPath}: ${message}`);
-		},
-		[],
-	);
-
 	/**
 	 * What is left when the canvas has thrown. The socket stays up, so the AI is
 	 * still answered (with "there is no canvas"), but a headless window has nothing
@@ -234,7 +233,7 @@ export function App() {
 	const isConnected = useCanvasHostSocket({
 		isHeadlessWindow,
 		onDocFrame: applyIncomingDoc,
-		onDocError: handleDocError,
+		onDocError: applyDocError,
 		onCloseViewer: closeWindow,
 		onFlushEdits: flushEditsForHost,
 		onHandleOp: runHandleOp,

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { calcDocLoadId, isOwnEcho, type DocIdentity } from "../viewer/ownEcho";
+import {
+	calcDocLoadId,
+	classifyIncomingDoc,
+	isOwnEcho,
+	type DocIdentity,
+} from "../viewer/ownEcho";
 
 const emptyDocText = '{"version":1,"root":[]}\n';
 
@@ -82,6 +87,65 @@ describe("isOwnEcho", () => {
 				{ identity: null, syncedText: null },
 			),
 		).toBe(false);
+	});
+});
+
+describe("classifyIncomingDoc", () => {
+	const syncedFirstHostDoc = {
+		identity: firstHostDoc,
+		syncedText: emptyDocText,
+	};
+
+	it("takes the synced text for an echo while the file has stayed usable", () => {
+		expect(
+			classifyIncomingDoc(
+				{ identity: firstHostDoc, docText: emptyDocText },
+				{ ...syncedFirstHostDoc, isFileUnusable: false },
+			),
+		).toBe("echo");
+	});
+
+	it("takes the synced text for a recovery after the file could not be used", () => {
+		// A broken or missing file put back byte for byte: taken for an echo, the
+		// error would stay up and a broken file would go on refusing every save
+		expect(
+			classifyIncomingDoc(
+				{ identity: firstHostDoc, docText: emptyDocText },
+				{ ...syncedFirstHostDoc, isFileUnusable: true },
+			),
+		).toBe("back-to-synced");
+	});
+
+	it("takes a different text for a new one whatever the file went through", () => {
+		const otherText = '{"version":1,"root":[{}]}\n';
+		for (const isFileUnusable of [false, true]) {
+			expect(
+				classifyIncomingDoc(
+					{ identity: firstHostDoc, docText: otherText },
+					{ ...syncedFirstHostDoc, isFileUnusable },
+				),
+			).toBe("new");
+		}
+	});
+
+	it("takes another document with the synced text for a new one", () => {
+		// Recovery is of the document synced; a same-named file from another host
+		// has to be drawn, not written over with this page's edits
+		expect(
+			classifyIncomingDoc(
+				{ identity: secondHostDoc, docText: emptyDocText },
+				{ ...syncedFirstHostDoc, isFileUnusable: true },
+			),
+		).toBe("new");
+	});
+
+	it("takes anything for a new one before anything has been synced", () => {
+		expect(
+			classifyIncomingDoc(
+				{ identity: firstHostDoc, docText: emptyDocText },
+				{ identity: null, syncedText: null, isFileUnusable: true },
+			),
+		).toBe("new");
 	});
 });
 

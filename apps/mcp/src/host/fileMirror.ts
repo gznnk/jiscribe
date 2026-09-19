@@ -185,8 +185,18 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 				if (openPath !== relPath) {
 					return;
 				}
+				const textBeforeRead = lastKnownText;
 				const text = await readOpenFileText(relPath);
-				if (text === null || text === lastKnownText) {
+				if (text === null) {
+					// The windows have just been told the file cannot be read, so the
+					// same text coming back is news to them and has to be sent. Left
+					// alone if a person's write recorded its own text meanwhile
+					if (lastKnownText === textBeforeRead) {
+						clearKnownText();
+					}
+					return;
+				}
+				if (text === lastKnownText) {
 					return;
 				}
 				broadcast({
