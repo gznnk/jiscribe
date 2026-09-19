@@ -44,6 +44,7 @@ import {
 	isCanvasHostClientMessage,
 } from "../shared/canvasHostProtocol";
 import {
+	INVALID_SESSION_STATUS,
 	MAX_WRITE_BODY_BYTES,
 	SESSION_TOKEN_QUERY_PARAM,
 } from "../shared/fileApiRoute";
@@ -171,7 +172,7 @@ export async function startCanvasHost(
 				return;
 			}
 			if (readSessionTokenQuery(req.url) !== sessionToken) {
-				done(false, 401, "invalid session token");
+				done(false, INVALID_SESSION_STATUS, "invalid session token");
 				return;
 			}
 			done(true);
