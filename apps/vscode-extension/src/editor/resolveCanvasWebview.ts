@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import { resolveCommentAuthor } from "./resolveCommentAuthor";
 import { resolveDocImage } from "./resolveDocImage";
 import { saveExportedImage } from "./saveExportedImage";
 import type { WebviewBridgeRegistry } from "./webviewBridgeRegistry";
@@ -119,6 +120,23 @@ export function resolveCanvasWebview(
 		post({ type: "update", ...update });
 	};
 
+	// Resolving the author reads the git configuration, so the panel can be gone
+	// by the time the answer arrives; posting into a disposed one throws.
+	let panelDisposed = false;
+
+	/**
+	 * Tell the Webview whose name to write onto the comments it posts. Sent after
+	 * the initial update rather than inside it, so the document's contents are
+	 * not held back by the git lookup.
+	 */
+	async function postCommentAuthor(): Promise<void> {
+		const author = await resolveCommentAuthor(options.documentUri);
+		if (panelDisposed) {
+			return;
+		}
+		post({ type: "commentAuthor", author });
+	}
+
 	/**
 	 * The panel's inbound protocol, shared by the real Webview and the bridge, so
 	 * an injected message takes exactly the path a posted one does. Messages from
@@ -129,6 +147,7 @@ export function resolveCanvasWebview(
 		switch (message.type) {
 			case "ready":
 				options.onReady();
+				void postCommentAuthor();
 				break;
 
 			case "undo":
@@ -195,9 +214,26 @@ export function resolveCanvasWebview(
 		receiveFromWebview: handleWebviewMessage,
 	});
 
+	// The setting is scoped per resource, so ask whether the change reaches this
+	// document rather than reacting to every jiscribe.* edit.
+	const configurationListener = vscode.workspace.onDidChangeConfiguration(
+		(event) => {
+			if (
+				event.affectsConfiguration(
+					"jiscribe.commentAuthor",
+					options.documentUri,
+				)
+			) {
+				void postCommentAuthor();
+			}
+		},
+	);
+
 	panel.onDidDispose(() => {
+		panelDisposed = true;
 		messageListener.dispose();
 		bridgeRegistration.dispose();
+		configurationListener.dispose();
 		options.onDispose?.();
 	});
 

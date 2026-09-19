@@ -707,6 +707,8 @@ export function generateSchema(
 
 	const sharedStructureDefNames = [
 		"MetaDoc",
+		"CommentThreadDoc",
+		"CommentDoc",
 		"StrokeStyle",
 		"FillStyle",
 		"TextStyle",

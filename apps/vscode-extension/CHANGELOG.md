@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Comments can be posted from the canvas.** The extension tells the canvas
+  which name to write onto them, taken from the new **`jiscribe.commentAuthor`**
+  setting; left empty (its default), the git `user.name` configured where the
+  file sits is used instead. With neither, the comment panel stays read-only —
+  the threads already in the file and their markers still show. The setting is
+  per-resource, so a folder in a multi-root workspace can carry its own name,
+  and changing it reaches an open canvas without reopening it.
+
 ### Security
 
 - **The editor no longer fetches anything a document names.** The Webview's

@@ -10,6 +10,7 @@ import { useLingeringFlag } from "./useLingeringFlag";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
+import { isObjectMenuSuppressed } from "../utils/isObjectMenuSuppressed";
 
 /** Distance between the ObjectMenu and the object (px) */
 const DISTANCE_FROM_OBJECT = 40;
@@ -59,13 +60,10 @@ export function useObjectMenuPosition(
 		selectedTextSlot,
 		objects,
 		viewport,
-		contextMenuPosition,
-		areaSelection,
 		activeDrag,
 		inertialScrolling,
 		objectMenuOpenId,
 		textEditState,
-		propertyPanel,
 	} = state;
 
 	// The menu sits below the selection's drawn extent, so a shape whose label
@@ -99,50 +97,9 @@ export function useObjectMenuPosition(
 		(activeDrag !== null && objectMenuOpenId === null) || inertialScrolling;
 	const isViewUnsettled = useLingeringFlag(isViewMoving, REAPPEAR_DELAY_MS);
 
-	const shouldRender = useMemo(() => {
-		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
-		if (!hasSelection) {
-			return false;
-		}
-		if (contextMenuPosition !== null) {
-			return false;
-		}
-		// A shape's text editor keeps the menu: its text items are how a stretch of
-		// the text being edited is styled (TextSlotStyleProperty), and the menu is
-		// the only place the color and the size of one live. The menu itself never
-		// commits the edit — ObjectMenuHandler runs no commit, and the press does
-		// not even move the focus off the editing surface (ObjectMenu) — so the session
-		// survives a menu interaction instead of being left dangling (U6).
-		// A connector label is still hidden: it is one text with one styling, so
-		// there is nothing the menu could do mid-edit that it cannot do after.
-		if (textEditState !== null && textEditState.kind !== "shape") {
-			return false;
-		}
-		// Away while the view moves under the selection — a drag of any kind, and
-		// the fling that continues a released pan, which would otherwise fly the
-		// menu across the screen.
-		if (isViewUnsettled) {
-			return false;
-		}
-		if (areaSelection !== null) {
-			return false;
-		}
-		// The properties sidebar states everything the menu does, so while it is
-		// open the menu would only duplicate it and cover the drawing beside the
-		// selection.
-		if (propertyPanel.isOpen) {
-			return false;
-		}
-		return true;
-	}, [
-		selectedIds,
-		selectedConnectorId,
-		contextMenuPosition,
-		isViewUnsettled,
-		areaSelection,
-		textEditState,
-		propertyPanel.isOpen,
-	]);
+	// The state-only reasons live in isObjectMenuSuppressed, which the comment
+	// marker layer asks the same question of; only the timing-based one is here.
+	const shouldRender = !isObjectMenuSuppressed(state) && !isViewUnsettled;
 
 	useLayoutEffect(() => {
 		if (menuRef.current && shouldRender) {

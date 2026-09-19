@@ -33,6 +33,8 @@ export function isExtensionToWebviewMessage(
 				typeof message.data === "string" &&
 				(message.version === undefined || typeof message.version === "number")
 			);
+		case "commentAuthor":
+			return message.author === undefined || typeof message.author === "string";
 		case "requestImageExport":
 			return (
 				typeof message.requestId === "number" &&

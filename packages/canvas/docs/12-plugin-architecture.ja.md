@@ -185,7 +185,9 @@ CodeMirror の `EditorView`）。
 
 **`menu`。**optional で 3 通りの意味を持つ。省略は `features` からの既定導出、
 配列の宣言は全置換、`[]` はメニュー無し。導出規則は `createDefaultMenu` と
-その unit テストが正である。
+その unit テストが正である。宣言で落とせないのは、型ではなく選択に属するものとして
+型別セクションの後ろに付くシステムセクション（`stackOrder`・`aspectRatio`・
+`group`・`openReference`・`comments`）である。
 
 **`propertyPanel`。**プロパティサイドバーのセクションで、意味は `menu` と同じ
 3 通り。省略は `features` からの既定導出、配列の宣言は全置換、`[]` は

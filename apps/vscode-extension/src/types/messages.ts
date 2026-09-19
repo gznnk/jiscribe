@@ -91,6 +91,14 @@ export type ExtensionToWebviewMessage =
 			version?: number;
 	  }
 	/**
+	 * The display name to write onto comments posted from the canvas, resolved
+	 * from the `jiscribe.commentAuthor` setting or the document's git
+	 * `user.name` (see resolveCommentAuthor). Sent after the initial update and
+	 * again whenever the setting changes for this document; `author` undefined
+	 * means neither source had one, which leaves the comment panel read-only.
+	 */
+	| { type: "commentAuthor"; author: string | undefined }
+	/**
 	 * On saving `.jis.png` / `.jis.svg`, requests the current canvas image
 	 * (source embedded). The Webview responds with imageExportResult.
 	 */

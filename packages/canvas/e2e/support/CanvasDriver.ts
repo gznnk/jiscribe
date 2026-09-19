@@ -69,8 +69,16 @@ export class CanvasDriver {
 
 	constructor(readonly page: Page) {}
 
-	async goto() {
-		await this.page.goto("/", { waitUntil: "networkidle" });
+	/**
+	 * Open the harness page and wait until the toolbar is there to be driven.
+	 *
+	 * @param query - Query string picking a variant of the default page, the leading "?"
+	 *   included ("?noCommentAuthor" mounts the canvas without a comment author). Omit it
+	 *   for the page every spec takes. ?multi and ?pageScroll are not driven through here:
+	 *   they replace the page with one this driver's single-canvas assumptions do not hold for.
+	 */
+	async goto(query = "") {
+		await this.page.goto(`/${query}`, { waitUntil: "networkidle" });
 		await expect(
 			this.page.locator(selectors.toolButton("Rectangle")),
 		).toBeVisible();
@@ -944,6 +952,35 @@ export class CanvasDriver {
 	/** Toggle an ObjectMenu dropdown section open. */
 	async openObjectMenu(sectionId: string) {
 		await this.page.click(selectors.objectMenuToggle(sectionId));
+	}
+
+	/**
+	 * Open the comment panel from the ObjectMenu's comment button and wait for it.
+	 * Not openObjectMenu: the panel's own close button carries the same
+	 * `toggle:comments` part so that one button shuts either placement, and the
+	 * test hook on it is what tells the two apart.
+	 */
+	async openComments() {
+		await this.page.click(
+			`${selectors.objectMenuToggle("comments")}:not([data-testid])`,
+		);
+		await expect(this.page.locator(selectors.commentPanel)).toBeVisible();
+	}
+
+	/**
+	 * Write a comment in the composer the panel is showing and submit it, waiting
+	 * for the posted body to appear. Whether that is a new thread or a reply is
+	 * whatever the panel has open — the two share one composer contract, and the
+	 * fill fails outright if both are up at once.
+	 *
+	 * @param text - Body to post; leading and trailing whitespace is trimmed off by the panel
+	 */
+	async postComment(text: string) {
+		await this.page.locator(selectors.commentComposer).fill(text);
+		await this.page.click(selectors.commentSubmit);
+		await expect(
+			this.page.locator(selectors.commentBody).filter({ hasText: text }),
+		).toBeVisible();
 	}
 
 	/**

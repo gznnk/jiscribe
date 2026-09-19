@@ -10,7 +10,8 @@ export type BuiltinItemKey =
 	| "fontStyle"
 	| "textAlignment"
 	| "group"
-	| "openReference";
+	| "openReference"
+	| "comments";
 
 /**
  * Applies a style property change to the current selection, from an ObjectMenu

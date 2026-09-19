@@ -13,7 +13,8 @@ export default defineConfig({
 		// latestWriteSerializer, the panel bookkeeping in webviewBridgeRegistry, the
 		// Webview CSP in webviewCsp, the
 		// image `src` resolution split across docImageResolution and the webview's
-		// resolveImage, and the webview's view-state folding in docViewState.
+		// resolveImage, the setting-or-git decision in commentAuthorResolution, and
+		// the webview's view-state folding in docViewState.
 		include: ["src/**/__tests__/**/*.{test,spec}.{ts,tsx}"],
 	},
 });

@@ -6,6 +6,7 @@ import { AlignmentMenu } from "./items/AlignmentMenu";
 import { ArrowHeadMenu } from "./items/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./items/BackgroundColorMenu";
 import { BorderStyleMenu } from "./items/BorderStyleMenu";
+import { CommentsMenu } from "./items/CommentsMenu";
 import { FontColorMenu } from "./items/FontColorMenu";
 import { FontFamilyMenu } from "./items/FontFamilyMenu";
 import { FontSizeMenu } from "./items/FontSizeMenu";
@@ -29,12 +30,19 @@ import type {
 } from "./ObjectMenuTypes";
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { CommentOp } from "../../../reducer/CanvasActions";
+import { resolveMetaTargetId } from "../../../utils/resolveMetaTargetId";
 import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
+import { COMMENTS_SECTION_ID } from "../../comments/CommentsConstants";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
 	onPropertyUpdate: StylePropertyUpdater;
 	onOpenReference?: OpenReferenceHandler;
+	/** Display name written onto posted comments; absent or blank makes the panel read-only. */
+	commentAuthor?: string;
+	/** Applies one comment op to the document. */
+	onCommentUpdate: (op: CommentOp) => void;
 };
 
 const renderItem = (
@@ -42,6 +50,8 @@ const renderItem = (
 	canvasState: CanvasControllerState,
 	onPropertyUpdate: StylePropertyUpdater,
 	onOpenReference: OpenReferenceHandler | undefined,
+	commentAuthor: string | undefined,
+	onCommentUpdate: (op: CommentOp) => void,
 ): React.ReactNode => {
 	switch (item.type) {
 		case "arrowHead":
@@ -125,6 +135,15 @@ const renderItem = (
 					onOpenReference={onOpenReference}
 				/>
 			);
+		case "comments":
+			return (
+				<CommentsMenu
+					key="comments"
+					canvasState={canvasState}
+					commentAuthor={commentAuthor}
+					onCommentUpdate={onCommentUpdate}
+				/>
+			);
 		case "custom":
 			return (
 				<item.component
@@ -165,6 +184,15 @@ const buildSystemSections = (
 		});
 	}
 
+	// Last of the system sections, so the comment button sits directly left of the
+	// ellipsis. A thread belongs to one object, so a multi-selection names none.
+	if (resolveMetaTargetId(canvasState) !== null) {
+		systemSections.push({
+			id: COMMENTS_SECTION_ID,
+			items: [{ type: "comments" }],
+		});
+	}
+
 	return systemSections;
 };
 
@@ -191,6 +219,8 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
 	onOpenReference,
+	commentAuthor,
+	onCommentUpdate,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	// Reported to the positioning hook, which holds the menu still while it is
@@ -241,7 +271,14 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 			}
 			renderedItemKeys.add(key);
 			sectionItems.push(
-				renderItem(item, canvasState, onPropertyUpdate, onOpenReference),
+				renderItem(
+					item,
+					canvasState,
+					onPropertyUpdate,
+					onOpenReference,
+					commentAuthor,
+					onCommentUpdate,
+				),
 			);
 		});
 		return (

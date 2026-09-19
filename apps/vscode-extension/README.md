@@ -57,6 +57,9 @@ The bundled shape sets cover the diagrams a software team actually needs:
 - **Intuitive Canvas Operations**
   - Draw shapes, wire them with connectors that stay attached as you rearrange, and group what belongs together.
   - Style everything in place—fills, strokes, fonts, z-order—from the floating object menu.
+- **Comments on Shapes**
+  - Leave comment threads on a shape or a connector from the object menu, and resolve them when they are settled. They live in the same `.jis` file, so your AI assistant reads and writes them too.
+  - Posting needs a name: set **`jiscribe.commentAuthor`**, or leave it empty and the git `user.name` of the file's repository is used. With neither, the panel is read-only — existing threads and their markers still show.
 - **Top-tier Developer Experience**
   - Powerful auto-completion via the integrated JSON schema.
   - Find syntax errors and broken connections at a glance (integrated with the Problems panel).

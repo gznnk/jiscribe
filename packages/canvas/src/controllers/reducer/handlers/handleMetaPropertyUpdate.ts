@@ -1,6 +1,5 @@
-import type { MetaState } from "../../../states/objects/base/MetaState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { rebrand } from "../../../states/objects/utils/rebrand";
+import { withMetaEntry } from "../../../states/objects/base/withMetaEntry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { copyObjectsRecord } from "../../utils/cowObjects";
 import { resolveMetaTargetId } from "../../utils/resolveMetaTargetId";
@@ -9,28 +8,6 @@ import type { MetaProperty } from "../CanvasActions";
 /** An emptied field is no note at all, so both spellings of empty drop the key. */
 const normalizeMetaValue = (value: string | null): string | undefined =>
 	value === null || value === "" ? undefined : value;
-
-/**
- * The object's `meta` with one field stated, or undefined once the last field is
- * gone — an object that carries no note carries no `meta` either, which is the
- * shape the parser produces for a document without one.
- */
-const buildUpdatedMeta = (
-	srcMeta: MetaState | undefined,
-	property: MetaProperty,
-	value: string | undefined,
-): MetaState | undefined => {
-	const updatedEntries: Record<string, unknown> = { ...srcMeta };
-	if (value === undefined) {
-		delete updatedEntries[property];
-	} else {
-		updatedEntries[property] = value;
-	}
-	if (Object.keys(updatedEntries).length === 0) {
-		return undefined;
-	}
-	return rebrand<MetaState>(updatedEntries);
-};
 
 /**
  * Whether a meta edit has an object to land on at all. Says nothing about
@@ -77,7 +54,7 @@ export const handleMetaPropertyUpdate = (
 
 	const updatedObject: ObjectState = {
 		...srcObject,
-		meta: buildUpdatedMeta(srcObject.meta, property, statedValue),
+		meta: withMetaEntry(srcObject.meta, property, statedValue),
 	};
 	// A plain Record rather than a write into the map handed in: persistent state
 	// must not accumulate copy-on-write views (cowObjects), and this route builds

@@ -202,7 +202,10 @@ shape's intent. `mapTextDocToState` drops such keys, so they never reach state.
 
 **`menu`.** Optional, with three meanings: omitted derives the default menu from
 `features`; a declared array replaces it entirely; `[]` means no menu. The
-derivation rules are defined by `createDefaultMenu` and its unit tests.
+derivation rules are defined by `createDefaultMenu` and its unit tests. What a
+declaration cannot drop are the system sections the menu adds after the per-type
+ones, which belong to the selection rather than to any type: `stackOrder`,
+`aspectRatio`, `group`, `openReference` and `comments`.
 
 **`propertyPanel`.** The properties sidebar's sections, with the same three
 meanings: omitted derives them from `features`; a declared array replaces them
