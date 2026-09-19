@@ -582,6 +582,53 @@ describe("GET /", () => {
 	});
 });
 
+describe("HEAD", () => {
+	it("answers / as GET does, without the body", async () => {
+		const response = await fetch(`${baseUrl}/`, { method: "HEAD" });
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toBe(
+			"text/html; charset=utf-8",
+		);
+		expect(await response.text()).toBe("");
+	});
+
+	it("answers an asset as GET does, without the body", async () => {
+		await writeFile(join(assetRootPath, "noto.woff2"), "font-bytes", "utf8");
+
+		const response = await fetch(`${baseUrl}/assets/noto.woff2`, {
+			method: "HEAD",
+		});
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toBe("font/woff2");
+		expect(response.headers.get("content-length")).toBe(
+			String("font-bytes".length),
+		);
+		expect(await response.text()).toBe("");
+	});
+
+	it("answers 404 for an asset that is not there, as GET does", async () => {
+		const response = await fetch(`${baseUrl}/assets/missing.woff2`, {
+			method: "HEAD",
+		});
+
+		expect(response.status).toBe(404);
+	});
+
+	it("answers an image as GET does, without the body", async () => {
+		await writeFile(join(workspaceRoot, "picture.png"), "png-bytes", "utf8");
+
+		const response = await fetch(`${baseUrl}/api/file?path=picture.png`, {
+			method: "HEAD",
+		});
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toBe("image/png");
+		expect(await response.text()).toBe("");
+	});
+});
+
 describe("the Host header", () => {
 	it("refuses a name that is not this server's", async () => {
 		// What a DNS rebinding attack cannot do is put our own name on the request:

@@ -11,7 +11,12 @@
 import { basename } from "node:path";
 
 import { CanvasDriver } from "@jiscribe/canvas/testing";
-import { test as base, expect, type Page } from "@playwright/test";
+import {
+	test as base,
+	expect,
+	type Locator,
+	type Page,
+} from "@playwright/test";
 
 import { connectMcpStdioClient, type McpStdioClient } from "./mcpStdioClient";
 import {
@@ -48,14 +53,34 @@ export async function expectFileOnDisplay(
 }
 
 /**
- * Asserts the viewer is showing no error bar. Worth stating wherever a test drives
- * an edit through the page: a write that was refused leaves the canvas looking
- * right and says so only here.
+ * Asserts the viewer is showing no error bar and no notice of lost edits. Worth
+ * stating wherever a test drives an edit through the page: a write that was
+ * refused, or an edit that went nowhere, leaves the canvas looking right and says
+ * so only there.
  *
  * @param page The viewer page
  */
 export async function expectNoViewerError(page: Page): Promise<void> {
 	await expect(page.locator(".viewer-error")).toHaveCount(0);
+	await expect(lostEditsNotice(page)).toHaveCount(0);
+}
+
+/**
+ * How long a notice saying edits did not reach the file stays up (the warning
+ * duration in src/viewer/App.tsx). Repeated here rather than imported, since it
+ * belongs to the module the page is built from
+ */
+export const LOST_EDITS_NOTICE_DURATION_MS = 6_000;
+
+/**
+ * The notices saying edits of the person's did not reach the file. They are
+ * alerts, where the Ctrl+S notice is a status, and unlike the error bar they go on
+ * their own.
+ *
+ * @param page The viewer page
+ */
+export function lostEditsNotice(page: Page): Locator {
+	return page.locator(".viewer-notice[role=alert]");
 }
 
 /**

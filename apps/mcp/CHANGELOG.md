@@ -88,8 +88,15 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
   object at every depth, with group membership, stacking order and the
   document's own fields (background, view) merged apart; the result is drawn
   and written under the newer revision. Where both sides changed the same
-  object, or one deleted what the other changed, the file wins and the error
-  bar names what of the person's was not saved. While a drag, a resize or the
+  object, or one deleted what the other changed, the file wins and a notice
+  names what of the person's was not saved — by the text on the object, or
+  its type where it has none, rather than by its id (a UUID for a pasted
+  object), and as a count past three. That notice, like the one for an edit
+  lost to a file switch, goes on its own after six seconds: it reports
+  something that happened, and left in the error bar it stayed up for good
+  once nothing more changed, looking like a failure still going on. The error
+  bar is kept for what lasts until it is resolved — a broken or missing file,
+  a write that failed. While a drag, a resize or the
   text editor is under way, a newer file is held back and taken in once the
   person lets go. A save refused because the file had moved on (412) is no
   longer reported as lost: the newer file follows, and the edit is merged
@@ -212,6 +219,9 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
 - The published package carries its `LICENSE`; `--watch` builds stage the
   runtime files `diagnose_canvas` and text measurement read; the inlined
   viewer script escapes `<!--` as well as `</script`.
+- A `HEAD` request is answered as `GET` is, without the body, wherever `GET`
+  is served (the viewer page, its fonts, an image, the session token); it
+  used to be a 404.
 
 ### Changed
 

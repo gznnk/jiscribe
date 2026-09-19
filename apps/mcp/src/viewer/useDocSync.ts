@@ -11,7 +11,7 @@
 // - a newer file for the document drawn does not replace edits it does not hold
 //   yet: they are merged onto it, object by object (./mergeCanvasDocs), and the
 //   result is drawn and written. Where both changed the same object the file wins,
-//   and the error bar names what of the person's was dropped
+//   and a notice names what of the person's was dropped
 // - while the person has something in hand — a drag, a resize, text being typed —
 //   a newer file is held back rather than drawn, since drawing it would cut that
 //   off; it is taken in, merged with what the person committed, once they let go
@@ -30,7 +30,13 @@
 // edit the canvas hands over after another document has come in is refused rather
 // than written into that one. What cannot reach its document any more — an edit
 // refused that way or by the host, or a drag or typed text the canvas drops as it
-// takes the next document — is named in the error bar, never lost without a word
+// takes the next document — is named in a notice, never lost without a word
+//
+// What is shown goes one of two ways. A state that holds until something changes —
+// a file that cannot be parsed or read, a write that failed and is owed — stays in
+// the error bar until it is resolved (reportError). Edits that did not make it into
+// the file are something that happened, with nothing left to resolve, so they are
+// said once and go on their own (reportLostEdits)
 
 import type { CanvasDoc } from "@jiscribe/canvas";
 import {
@@ -48,6 +54,7 @@ import {
 	mergeCanvasDocs,
 	type CanvasMergeConflict,
 } from "./mergeCanvasDocs";
+import { formatMergeConflictMessage } from "./mergeConflictMessage";
 import { classifyIncomingDoc, isSameDoc, type DocIdentity } from "./ownEcho";
 import { useCanvasCommitWait } from "./useCanvasCommitWait";
 
@@ -98,30 +105,6 @@ const formatSaveFailedMessage = (
  */
 const UNSAVED_EDITS_OVERWRITTEN_MESSAGE =
 	"保存できていなかった変更は、ファイルが他で更新されたため取り消されました";
-
-/** Names one dropped change for the error bar: the object's id, or the field's key */
-const describeMergeConflict = (conflict: CanvasMergeConflict): string => {
-	switch (conflict.kind) {
-		case "object":
-		case "placement":
-			return conflict.id;
-		case "order":
-			return conflict.id === null ? "重なり順" : `${conflict.id} の重なり順`;
-		case "field":
-			return conflict.key;
-	}
-};
-
-/**
- * The error bar's text for the person's changes a merge dropped, because the file
- * had changed the same things another way.
- *
- * @param conflicts What was dropped, as the merge names it; at least one
- */
-const formatMergeConflictMessage = (
-	conflicts: readonly CanvasMergeConflict[],
-): string =>
-	`他の編集で更新されたため、次の変更は保存されませんでした: ${conflicts.map(describeMergeConflict).join("、")}`;
 
 /**
  * What the person may have in hand that the canvas drops when it takes another
@@ -224,8 +207,17 @@ const formatParseError = (
 };
 
 export type DocSyncOptions = {
-	/** Puts a message in the error bar, or clears it with null */
+	/**
+	 * Puts a state that holds until it is resolved (a broken or missing file, a
+	 * failed write) in the error bar, or clears it with null
+	 */
 	reportError: (message: string | null) => void;
+	/**
+	 * Tells the person that edits of theirs did not make it into the file. Said once
+	 * and left to go on its own: nothing about it is left to resolve, and the error
+	 * bar is kept for what is
+	 */
+	reportLostEdits: (message: string) => void;
 	/**
 	 * Whether the person has something in hand that drawing a new doc would cut off
 	 * (the canvas handle's `interaction.getStatus().isBusy`). Read on every frame
@@ -273,21 +265,22 @@ export type DocSync = {
 	applyDocError: (identity: DocIdentity, message: string) => void;
 	/**
 	 * Takes a committed edit and puts the write on the debounce. An edit made on a
-	 * document that has since been replaced is dropped, and said so in the error bar
+	 * document that has since been replaced is dropped, and said so (reportLostEdits)
 	 */
 	handleCommit: (committedDoc: CanvasDoc) => void;
 	/**
 	 * Writes the current doc out, the edits still sitting on the debounce taken
 	 * along and behind whatever write is already on its way. False means the file
-	 * does not hold these edits, and why is in the error bar — a failed write, a
-	 * file that has moved on, a file too broken to parse, or none open at all — or,
-	 * with nothing in the error bar, that a newer file is held back behind the
-	 * person's gesture and the edits go out merged onto it once that ends.
+	 * does not hold these edits: a failed write or a file too broken to parse (said
+	 * in the error bar), edits lost with a document no longer on display (said in a
+	 * notice), no document open, or a file that has moved on — held back behind the
+	 * person's gesture, or on its way after refusing the write — which the edits go
+	 * out merged onto once it is taken in.
 	 *
 	 * @param options.isLeavingDocument Whether the page is about to leave this
 	 *   document (another file opening, the window closing). A newer file held back
 	 *   is then taken in and merged at once, the gesture going with it (named in
-	 *   the error bar once the next document arrives), since after this the host
+	 *   a notice once the next document arrives), since after this the host
 	 *   takes no writes for it
 	 */
 	flushPendingSave: (options?: {
@@ -304,6 +297,7 @@ export type DocSync = {
  */
 export function useDocSync({
 	reportError,
+	reportLostEdits,
 	isPersonInteracting,
 	readWorkInHand,
 }: DocSyncOptions): DocSync {
@@ -332,10 +326,6 @@ export function useDocSync({
 	// The write that is on its way, so that a second save queues behind it rather
 	// than racing it, and so that closing or flushing can wait for it
 	const inFlightSaveRef = useRef<Promise<boolean> | null>(null);
-	// What a merge dropped, said in the error bar. The merge's own write clears the
-	// bar when it lands, so this is what it says instead, until the person's next
-	// edit
-	const mergeConflictMessageRef = useRef<string | null>(null);
 	// A newer file for the document drawn, held back while the person has something
 	// in hand, and the timer watching for them to let go
 	const heldFrameRef = useRef<DocFrame | null>(null);
@@ -353,6 +343,10 @@ export function useDocSync({
 		identity: DocIdentity;
 		workInHand: WorkInHand;
 	} | null>(null);
+	// The document whose work in hand was said lost as the next one was drawn. The
+	// canvas hands that work over as a commit on it a moment later, which is the
+	// same loss and is not said a second time
+	const lostWorkInHandDocRef = useRef<DocIdentity | null>(null);
 	// Set from the first edit the host does not hold yet until a write carrying all
 	// of them lands, whether or not a save is scheduled. baseText is the text the
 	// host held when they were made, which is what a newer file drawn over them has
@@ -465,10 +459,17 @@ export function useDocSync({
 		}
 		if (result.kind === "document-gone") {
 			// The same loss the next document's arrival reports, said as such now
-			// rather than as a refusal the person can do nothing about
+			// rather than as a refusal the person can do nothing about — and said
+			// once: the edits are no longer owed, so that arrival does not say it
+			// again. What the bar said of this write (a retry) no longer holds,
+			// unless it is about the document drawn since
 			restoreSyncedText();
 			hasUndeliveredEditsRef.current = false;
-			reportError(formatLostEditMessage(targetDoc.relPath));
+			if (isSameDoc(latestDocRef.current?.identity ?? null, targetDoc)) {
+				unsavedEditsRef.current = null;
+				reportError(null);
+			}
+			reportLostEdits(formatLostEditMessage(targetDoc.relPath));
 			return false;
 		}
 		if (result.kind === "failed") {
@@ -512,9 +513,9 @@ export function useDocSync({
 		}
 		// The host has the file again, written from this page
 		isFileMissingRef.current = false;
-		reportError(mergeConflictMessageRef.current);
+		reportError(null);
 		return true;
-	}, [reportError]);
+	}, [reportError, reportLostEdits]);
 
 	const saveNow = useCallback(async (): Promise<boolean> => {
 		const precedingSave = inFlightSaveRef.current;
@@ -640,13 +641,10 @@ export function useDocSync({
 				saveTimerRef.current = null;
 			}
 			const unsavedEdits = unsavedEditsRef.current;
+			const docOnScreen = latestDocRef.current?.doc ?? null;
 			const merge =
-				isSameDocument && unsavedEdits !== null && latestDocRef.current !== null
-					? mergeUnsavedEdits(
-							unsavedEdits.baseText,
-							latestDocRef.current.doc,
-							result.doc,
-						)
+				isSameDocument && unsavedEdits !== null && docOnScreen !== null
+					? mergeUnsavedEdits(unsavedEdits.baseText, docOnScreen, result.doc)
 					: null;
 			// Key order and the like aside, a merge that came to the file's own doc has
 			// nothing to write, and the file's is drawn as it is
@@ -670,29 +668,35 @@ export function useDocSync({
 			latestDocRef.current = { identity, doc: docToDraw };
 			setOpenDoc(identity);
 			setDoc(docToDraw);
-			mergeConflictMessageRef.current =
-				merge?.kind === "merged" && merge.conflicts.length > 0
-					? formatMergeConflictMessage(merge.conflicts)
-					: null;
+			// The file is drawn, so nothing the bar said of the one before holds
+			reportError(null);
 			if (mergedDoc !== null) {
 				void saveNow();
 			}
+			if (!isSameDocument) {
+				lostWorkInHandDocRef.current =
+					lostWorkInHand === null ? null : previousDoc;
+			}
 			if ((hasLostEdit || lostWorkInHand !== null) && previousDoc !== null) {
-				reportError(
+				reportLostEdits(
 					formatLostEditMessage(previousDoc.relPath, {
 						hasCommittedEdits: hasLostEdit,
 						workInHand: lostWorkInHand,
 					}),
 				);
-				return;
+			} else if (merge?.kind === "failed") {
+				reportLostEdits(UNSAVED_EDITS_OVERWRITTEN_MESSAGE);
+			} else if (merge?.kind === "merged" && merge.conflicts.length > 0) {
+				// An object the file deleted is in the doc on screen alone
+				reportLostEdits(
+					formatMergeConflictMessage(
+						merge.conflicts,
+						docOnScreen === null ? [result.doc] : [result.doc, docOnScreen],
+					),
+				);
 			}
-			if (merge?.kind === "failed") {
-				reportError(UNSAVED_EDITS_OVERWRITTEN_MESSAGE);
-				return;
-			}
-			reportError(mergeConflictMessageRef.current);
 		},
-		[reportError, saveNow, saveWithoutDebounce],
+		[reportError, reportLostEdits, saveNow, saveWithoutDebounce],
 	);
 
 	/** Forgets the file held back, and stops watching for the gesture to end */
@@ -834,8 +838,11 @@ export function useDocSync({
 				// Made on the document drawn before. Written out, it would land in the
 				// one now open, and drawn, it would put the old objects on its canvas.
 				// An edit made before any document arrived has no file to be lost from
-				if (committedOn !== null) {
-					reportError(formatLostEditMessage(committedOn.relPath));
+				if (
+					committedOn !== null &&
+					!isSameDoc(committedOn, lostWorkInHandDocRef.current)
+				) {
+					reportLostEdits(formatLostEditMessage(committedOn.relPath));
 				}
 				return;
 			}
@@ -846,8 +853,6 @@ export function useDocSync({
 			if (unsavedEditsRef.current === null && syncedTextRef.current !== null) {
 				unsavedEditsRef.current = { baseText: syncedTextRef.current };
 			}
-			// The person has moved on from what a merge dropped
-			mergeConflictMessageRef.current = null;
 			setDoc(committedDoc);
 			if (saveTimerRef.current !== null) {
 				window.clearTimeout(saveTimerRef.current);
@@ -857,7 +862,7 @@ export function useDocSync({
 				void saveNow();
 			}, SAVE_DEBOUNCE_MS);
 		},
-		[reportError, saveNow],
+		[reportLostEdits, saveNow],
 	);
 
 	return {

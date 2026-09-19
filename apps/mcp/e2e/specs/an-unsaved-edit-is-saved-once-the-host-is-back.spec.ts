@@ -3,6 +3,7 @@ import { SINGLE_RECT, singleRectDoc } from "../support/canvasDocs";
 import {
 	expect,
 	expectNoViewerError,
+	lostEditsNotice,
 	selectObject,
 	test,
 } from "../support/fixtures";
@@ -18,9 +19,9 @@ const NUDGE_STEP = 10;
 const SAVE_FAILED_PREFIX = "保存に失敗しました";
 
 /**
- * What the viewer says when a newer file changed the object an edit it has not
- * saved yet was made to, the object's id following it (formatMergeConflictMessage
- * in src/viewer/useDocSync.ts)
+ * What the viewer's notice says when a newer file changed the object an edit it
+ * has not saved yet was made to, the object's name following it
+ * (MERGE_CONFLICT_MESSAGE_PREFIX in src/viewer/mergeConflictMessage.ts)
  */
 const MERGE_CONFLICT_PREFIX =
 	"他の編集で更新されたため、次の変更は保存されませんでした: ";
@@ -142,7 +143,10 @@ test("says so when a tool's write to the same object wins over an edit that coul
 	});
 	expect(edited.isError).toBe(false);
 
-	await expect(page.locator(".viewer-error")).toHaveText(
-		`${MERGE_CONFLICT_PREFIX}${SINGLE_RECT.id}`,
+	// Named by the text the tool gave it, which is what the page now draws. The
+	// failed write is no longer owed, so the error bar goes with it
+	await expect(lostEditsNotice(page)).toHaveText(
+		`${MERGE_CONFLICT_PREFIX}「from the AI」`,
 	);
+	await expect(page.locator(".viewer-error")).toHaveCount(0);
 });

@@ -110,16 +110,18 @@ per-file lock the tools use, so a person's save and the AI's write cannot
 overwrite each other unnoticed: a save behind the file is refused with 412.
 Edits the file does not hold yet are not drawn over by a newer file either:
 the window merges them onto it object by object and writes the result, and
-where both sides changed the same object the file wins and the error bar says
-which change was not saved. A newer file that arrives mid-drag or while text is
+where both sides changed the same object the file wins and a notice names —
+by the text on it, or its type — what was not saved. A newer file that arrives mid-drag or while text is
 being typed waits until the person lets go. The window knows a document by
 the host that sent it as well as by its path, so a file of the same name in
 another directory starts afresh — its undo history does not reach back into
 the previous file — while a reconnect to the same host keeps it. An edit is
 written only to the document it was made on: before another file goes on
 display the window writes out what it holds, and an edit the canvas hands over
-after the switch is reported in the error bar rather than saved into the new
-file.
+after the switch is reported in a notice rather than saved into the new file.
+Such notices go on their own after a few seconds, since there is nothing left
+to resolve; the error bar is kept for what lasts until it is fixed — a broken
+or missing file, a write that failed.
 
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
 16 screen-side tools have something to work with while the user's screen stays

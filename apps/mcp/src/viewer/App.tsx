@@ -3,8 +3,13 @@
 //
 // The file is the source of truth, so nothing here owns the doc. Keeping the two in
 // step is ./useDocSync, and holding the connection is ./useCanvasHostSocket; what is
-// left here is the page itself — the canvas, the error bar, the notice — and the
+// left here is the page itself — the canvas, the error bar, the notices — and the
 // wiring between the two.
+//
+// The error bar holds a state until it is resolved (a broken or missing file, a
+// failed write, a canvas that threw). A notice says that something happened — a
+// save that needed no keystroke, edits that did not make it into the file — and
+// goes on its own, since there is nothing about it left to resolve.
 //
 // Its other job is answering the queries only the drawn result can answer (capture,
 // camera, selection, measurement). Reading the file does not tell the AI those, so
@@ -42,11 +47,22 @@ import { viewerTheme } from "./viewerTheme";
 import { isHeadlessViewerSearch } from "../shared/canvasHostProtocol";
 
 /**
- * How long the transient notice stays up, fading in and back out included. The
- * element is dropped on the same timer the animation runs on, so it is passed to
- * the animation rather than repeated in the stylesheet
+ * What a notice says: that all is well (`info`), or that something of the person's
+ * went somewhere other than they meant (`warning`: edits not saved, a reference
+ * the viewer cannot open)
  */
-const NOTICE_DURATION_MS = 2_000;
+type NoticeKind = "info" | "warning";
+
+/**
+ * How long a notice stays up, fading in and back out included. The element is
+ * dropped on the same timer the animation runs on, so it is passed to the
+ * animation rather than repeated in the stylesheet. A warning names what was lost,
+ * which takes longer to read than a line saying nothing had to be done
+ */
+const noticeDurationsMs: Record<NoticeKind, number> = {
+	info: 2_000,
+	warning: 6_000,
+};
 
 /**
  * The chrome sits outside the Canvas root, where the theme's `--jiscribe-*` do
@@ -66,14 +82,27 @@ const errorStyle: CSSProperties = {
 	borderBottomColor: viewerTheme.tokens.borderSubtle,
 };
 
-const noticeStyle: CSSProperties = {
-	background: viewerTheme.tokens.surface,
-	color: viewerTheme.tokens.foreground,
-	borderColor: viewerTheme.tokens.border,
-	borderRadius: viewerTheme.tokens.radius,
-	boxShadow: viewerTheme.tokens.shadow,
-	animationDuration: `${NOTICE_DURATION_MS}ms`,
+const noticeStyles: Record<NoticeKind, CSSProperties> = {
+	info: {
+		background: viewerTheme.tokens.surface,
+		color: viewerTheme.tokens.foreground,
+		borderColor: viewerTheme.tokens.border,
+		borderRadius: viewerTheme.tokens.radius,
+		boxShadow: viewerTheme.tokens.shadow,
+		animationDuration: `${noticeDurationsMs.info}ms`,
+	},
+	warning: {
+		background: viewerTheme.tokens.surface,
+		color: viewerTheme.tokens.errorFg,
+		borderColor: viewerTheme.tokens.border,
+		borderRadius: viewerTheme.tokens.radius,
+		boxShadow: viewerTheme.tokens.shadow,
+		animationDuration: `${noticeDurationsMs.warning}ms`,
+	},
 };
+
+/** One notice on screen. The id remounts the element when the same text is said again */
+type Notice = { id: number; kind: NoticeKind; message: string };
 
 /**
  * How long a flush waits for a drag in progress to be let go before it answers.
@@ -100,14 +129,12 @@ export function App() {
 	const [canvasErrorMessage, setCanvasErrorMessage] = useState<string | null>(
 		null,
 	);
-	// The id remounts the element, so pressing again while one is up replays the
-	// animation instead of leaving a notice that is already fading
-	const [notice, setNotice] = useState<{
-		id: number;
-		message: string;
-	} | null>(null);
+	// Stacked, so that a warning is not pushed out by the next Ctrl+S before it has
+	// been read
+	const [notices, setNotices] = useState<Notice[]>([]);
 
-	const noticeTimerRef = useRef<number | null>(null);
+	// Each notice's own timer, by its id
+	const noticeTimersRef = useRef(new Map<number, number>());
 	const noticeCountRef = useRef(0);
 	const canvasHandleRef = useRef<CanvasHandle | null>(null);
 
@@ -145,6 +172,35 @@ export function App() {
 		}
 	}, []);
 
+	/**
+	 * Shows a notice for its kind's duration. The same text said again while it is
+	 * up replaces it, replaying the animation, rather than stacking a copy; the
+	 * replaced one's timer then finds nothing left to take down
+	 */
+	const showNotice = useCallback((message: string, kind: NoticeKind): void => {
+		noticeCountRef.current += 1;
+		const id = noticeCountRef.current;
+		const noticeTimers = noticeTimersRef.current;
+		setNotices((previous) => [
+			...previous.filter((shown) => shown.message !== message),
+			{ id, kind, message },
+		]);
+		noticeTimers.set(
+			id,
+			window.setTimeout(() => {
+				noticeTimers.delete(id);
+				setNotices((previous) => previous.filter((shown) => shown.id !== id));
+			}, noticeDurationsMs[kind]),
+		);
+	}, []);
+
+	const reportLostEdits = useCallback(
+		(message: string): void => {
+			showNotice(message, "warning");
+		},
+		[showNotice],
+	);
+
 	const {
 		doc,
 		openDoc,
@@ -154,6 +210,7 @@ export function App() {
 		flushPendingSave,
 	} = useDocSync({
 		reportError: setErrorMessage,
+		reportLostEdits,
 		isPersonInteracting,
 		readWorkInHand,
 	});
@@ -203,26 +260,14 @@ export function App() {
 		[capturePng, handleControl],
 	);
 
-	const showNotice = useCallback((message: string): void => {
-		noticeCountRef.current += 1;
-		setNotice({ id: noticeCountRef.current, message });
-		if (noticeTimerRef.current !== null) {
-			window.clearTimeout(noticeTimerRef.current);
-		}
-		noticeTimerRef.current = window.setTimeout(() => {
-			noticeTimerRef.current = null;
-			setNotice(null);
-		}, NOTICE_DURATION_MS);
-	}, []);
-
 	/**
 	 * Writes out the edits, the ones the canvas has yet to hand over included, before
 	 * the host moves on to another file or closes this window. A drag still under
 	 * way is given a moment to be let go, and a drag released is committed a render
 	 * later (useCanvasCommitWait). Text still being typed cannot be committed from
 	 * here (the canvas offers no way to), so it goes with the document, as does a
-	 * drag held past the wait or a commit missed: each is dropped and named in the
-	 * error bar rather than written anywhere (see useDocSync)
+	 * drag held past the wait or a commit missed: each is dropped and named in a
+	 * notice rather than written anywhere (see useDocSync)
 	 */
 	const flushEditsForHost = useCallback(async (): Promise<boolean> => {
 		await waitForDragRelease();
@@ -253,13 +298,19 @@ export function App() {
 		}
 	}, []);
 
-	const handleOpenReference = useCallback((payload: OpenReferencePayload) => {
-		if (EXTERNAL_URL_PATTERN.test(payload.reference)) {
-			window.open(payload.reference, "_blank", "noopener,noreferrer");
-			return;
-		}
-		setErrorMessage(`このビューアが開けない参照です: ${payload.reference}`);
-	}, []);
+	const handleOpenReference = useCallback(
+		(payload: OpenReferencePayload) => {
+			if (EXTERNAL_URL_PATTERN.test(payload.reference)) {
+				window.open(payload.reference, "_blank", "noopener,noreferrer");
+				return;
+			}
+			showNotice(
+				`このビューアが開けない参照です: ${payload.reference}`,
+				"warning",
+			);
+		},
+		[showNotice],
+	);
 
 	const isConnected = useCanvasHostSocket({
 		isHeadlessWindow,
@@ -290,7 +341,7 @@ export function App() {
 				// saved once it has; saying it is saved on top of any of them would be
 				// the opposite of the truth
 				if (isSaved) {
-					showNotice(AUTO_SAVE_NOTICE);
+					showNotice(AUTO_SAVE_NOTICE, "info");
 				}
 			});
 		};
@@ -300,14 +351,14 @@ export function App() {
 		};
 	}, [flushPendingSave, showNotice]);
 
-	useEffect(
-		() => () => {
-			if (noticeTimerRef.current !== null) {
-				window.clearTimeout(noticeTimerRef.current);
+	useEffect(() => {
+		const noticeTimers = noticeTimersRef.current;
+		return () => {
+			for (const timer of noticeTimers.values()) {
+				window.clearTimeout(timer);
 			}
-		},
-		[],
-	);
+		};
+	}, []);
 
 	// Write out the buffered edits before the tab closes. It is a write from a page
 	// on its way out, so there is no guarantee it arrives; catching what was waiting
@@ -345,14 +396,18 @@ export function App() {
 					onRegisterCanvas={registerCanvas}
 				/>
 			</CanvasErrorBoundary>
-			{notice !== null && (
-				<div
-					key={notice.id}
-					className="viewer-notice"
-					role="status"
-					style={noticeStyle}
-				>
-					{notice.message}
+			{notices.length > 0 && (
+				<div className="viewer-notices">
+					{notices.map((notice) => (
+						<div
+							key={notice.id}
+							className="viewer-notice"
+							role={notice.kind === "warning" ? "alert" : "status"}
+							style={noticeStyles[notice.kind]}
+						>
+							{notice.message}
+						</div>
+					))}
 				</div>
 			)}
 		</div>

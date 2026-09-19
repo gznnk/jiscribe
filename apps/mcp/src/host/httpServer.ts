@@ -102,7 +102,8 @@ const sendApiError = (response: http.ServerResponse, error: unknown): void => {
 
 /**
  * Sends a file's bytes as the response body, the headers having been written
- * already.
+ * already. A HEAD request is answered with the headers alone, the file left
+ * unopened.
  *
  * `pipe` alone would leave the read stream's `error` unhandled and take the whole
  * MCP process down, which a file that passes `stat` and then fails to open (EACCES)
@@ -113,6 +114,10 @@ const pipeFileToResponse = (
 	file: string,
 	response: http.ServerResponse,
 ): void => {
+	if (response.req.method === "HEAD") {
+		response.end();
+		return;
+	}
 	pipeline(createReadStream(file), response, (error) => {
 		// stderr is the only channel left (stdout carries the MCP protocol), and a
 		// request the browser itself gave up on is not worth reporting
@@ -374,6 +379,10 @@ export function createViewerHttpServer(
 				sendJson(response, 400, { error: "malformed request url" });
 				return;
 			}
+			// HEAD is answered as GET is, the body dropped: node writes none for a HEAD
+			// response whatever is passed to end()
+			const isReadMethod =
+				request.method === "GET" || request.method === "HEAD";
 			try {
 				if (
 					requestUrl.pathname === FILE_API_PATHNAME &&
@@ -400,25 +409,19 @@ export function createViewerHttpServer(
 						return;
 					}
 					await handleWriteFile(options, request, requestUrl, response);
-				} else if (
-					requestUrl.pathname === FILE_API_PATHNAME &&
-					request.method === "GET"
-				) {
+				} else if (requestUrl.pathname === FILE_API_PATHNAME && isReadMethod) {
 					await handleReadImageFile(workspaceRoot, requestUrl, response);
 				} else if (
 					requestUrl.pathname === SESSION_API_PATHNAME &&
-					request.method === "GET"
+					isReadMethod
 				) {
 					response.setHeader("Cache-Control", "no-store");
 					sendJson(response, 200, { token: sessionToken });
 				} else if (requestUrl.pathname.startsWith("/api/")) {
 					sendJson(response, 404, { error: "unknown api" });
-				} else if (
-					request.method === "GET" &&
-					requestUrl.pathname.startsWith("/assets/")
-				) {
+				} else if (isReadMethod && requestUrl.pathname.startsWith("/assets/")) {
 					await serveAsset(assetRootPath, requestUrl.pathname, response);
-				} else if (request.method === "GET" && requestUrl.pathname === "/") {
+				} else if (isReadMethod && requestUrl.pathname === "/") {
 					response.writeHead(200, {
 						"Content-Type": "text/html; charset=utf-8",
 					});

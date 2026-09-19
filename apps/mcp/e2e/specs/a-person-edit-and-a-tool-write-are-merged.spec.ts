@@ -5,6 +5,8 @@ import { SECOND_RECT, SINGLE_RECT, twoRectDoc } from "../support/canvasDocs";
 import {
 	expect,
 	expectNoViewerError,
+	LOST_EDITS_NOTICE_DURATION_MS,
+	lostEditsNotice,
 	objectCenter,
 	test,
 } from "../support/fixtures";
@@ -16,10 +18,10 @@ const DRAG_DELTA = { x: 150, y: 100 } as const;
 const TOOL_POSITION = { x: 700, y: 400 } as const;
 
 /**
- * What the viewer puts in the error bar for a change of the person's that lost to
- * one made elsewhere, the object's id following it (formatMergeConflictMessage in
- * src/viewer/useDocSync.ts). Repeated here rather than imported, since it belongs
- * to the module the page is built from
+ * What the viewer's notice says of a change of the person's that lost to one made
+ * elsewhere, the object's name following it (MERGE_CONFLICT_MESSAGE_PREFIX in
+ * src/viewer/mergeConflictMessage.ts). Repeated here rather than imported, since
+ * it belongs to the module the page is built from
  */
 const MERGE_CONFLICT_PREFIX =
 	"他の編集で更新されたため、次の変更は保存されませんでした: ";
@@ -122,9 +124,11 @@ test("lets a tool's write win over a drag of the same object, and says so", asyn
 	expect(moved.text).not.toContain("error:");
 	releaseWrites();
 
-	await expect(page.locator(".viewer-error")).toHaveText(
-		`${MERGE_CONFLICT_PREFIX}${SINGLE_RECT.id}`,
+	// Named by the text on it, which is what the person sees
+	await expect(lostEditsNotice(page)).toHaveText(
+		`${MERGE_CONFLICT_PREFIX}「hello」`,
 	);
+	await expect(page.locator(".viewer-error")).toHaveCount(0);
 	// The file is the tool's, and the page draws it rather than the drag: the tool
 	// put the first rectangle right of the second
 	const doc = await workspace.readDoc(filePath);
@@ -137,4 +141,41 @@ test("lets a tool's write win over a drag of the same object, and says so", asyn
 			{ message: "the page draws the tool's position, not the drag" },
 		)
 		.toBeGreaterThan(secondBox?.x ?? Infinity);
+});
+
+// A regression for the notice of a dropped change staying up for good. It was put
+// in the error bar and cleared only by the person's next edit or the next change
+// to the file, so once both sides had settled it went on standing there, not to be
+// told apart from a failure still going on.
+test("the notice of a change lost to a tool's write goes on its own", async ({
+	page,
+	canvas,
+	mcp,
+	workspace,
+	openInViewer,
+}) => {
+	const filePath = await workspace.writeDoc("drawing.jis.json", twoRectDoc());
+	await openInViewer(filePath);
+	const releaseWrites = await holdWrites(page);
+
+	const from = await objectCenter(canvas, SINGLE_RECT.id);
+	await canvas.drag(from, {
+		x: from.x + DRAG_DELTA.x,
+		y: from.y + DRAG_DELTA.y,
+	});
+	const moved = await mcp.callTool("set_position", {
+		path: filePath,
+		id: SINGLE_RECT.id,
+		...TOOL_POSITION,
+	});
+	expect(moved.text).not.toContain("error:");
+	releaseWrites();
+
+	await expect(lostEditsNotice(page)).toHaveText(
+		`${MERGE_CONFLICT_PREFIX}「hello」`,
+	);
+	await expect(lostEditsNotice(page)).toHaveCount(0, {
+		timeout: LOST_EDITS_NOTICE_DURATION_MS + 1_000,
+	});
+	await expectNoViewerError(page);
 });

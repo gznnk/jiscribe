@@ -8,6 +8,7 @@ import {
 	expect,
 	expectFileOnDisplay,
 	expectNoViewerError,
+	lostEditsNotice,
 	objectCenter,
 	test,
 } from "../support/fixtures";
@@ -21,27 +22,43 @@ const DRAG_DX = 70;
  */
 const RELEASE_AFTER_MS = 300;
 
-/** The error bar's text for what a switch took from under the person's hands */
+/** The notice's text for what a switch took from under the person's hands */
 const lostInHandPattern = (fileName: string, whatWasLost: string): RegExp =>
 	new RegExp(`^${fileName}: .*${whatWasLost}.*保存されませんでした$`);
 
 /** What the page leaves on its window for the cross-directory spec to read */
-type ErrorBarLogWindow = Window & { errorBarTexts: string[] };
+type NoticeLogWindow = Window & { lostEditsNoticeTexts: string[] };
 
 /**
- * Records every text the error bar shows, so that a message replaced a moment
- * later still counts
+ * Records the text of every notice of lost edits put up, so that one gone again a
+ * moment later still counts, and one said twice counts twice
  */
-const installErrorBarLog = (): void => {
-	const logWindow = window as unknown as ErrorBarLogWindow;
-	logWindow.errorBarTexts = [];
-	new MutationObserver(() => {
-		const text = document.querySelector(".viewer-error")?.textContent ?? null;
-		if (text !== null && logWindow.errorBarTexts.at(-1) !== text) {
-			logWindow.errorBarTexts.push(text);
+const installLostEditsNoticeLog = (): void => {
+	const logWindow = window as unknown as NoticeLogWindow;
+	logWindow.lostEditsNoticeTexts = [];
+	const noticeSelector = ".viewer-notice[role=alert]";
+	new MutationObserver((mutations) => {
+		for (const mutation of mutations) {
+			for (const addedNode of mutation.addedNodes) {
+				if (!(addedNode instanceof Element)) {
+					continue;
+				}
+				const notices = addedNode.matches(noticeSelector)
+					? [addedNode]
+					: [...addedNode.querySelectorAll(noticeSelector)];
+				for (const notice of notices) {
+					logWindow.lostEditsNoticeTexts.push(notice.textContent ?? "");
+				}
+			}
 		}
-	}).observe(document, { subtree: true, childList: true, characterData: true });
+	}).observe(document, { subtree: true, childList: true });
 };
+
+/** The texts the log above has recorded */
+const readLostEditsNoticeLog = async (page: Page): Promise<string[]> =>
+	await page.evaluate(
+		() => (window as unknown as NoticeLogWindow).lostEditsNoticeTexts,
+	);
 
 /** Presses the rectangle and drags it, leaving the button down */
 async function dragWithoutReleasing(page: Page): Promise<void> {
@@ -107,7 +124,7 @@ test("a drag still held when the file switches is said to be lost", async ({
 	await expectFileOnDisplay(page, "c.jis.json");
 	await page.mouse.up();
 
-	await expect(page.locator(".viewer-error")).toHaveText(
+	await expect(lostEditsNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "ドラッグ中の操作"),
 	);
 	expect((await workspace.readDoc(firstPath)).root[0].x).toBe(SINGLE_RECT.x);
@@ -131,7 +148,7 @@ test("text still being typed when the file switches is said to be lost", async (
 	).toBe(false);
 	await expectFileOnDisplay(page, "c.jis.json");
 
-	await expect(page.locator(".viewer-error")).toHaveText(
+	await expect(lostEditsNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "入力中のテキスト"),
 	);
 	expect((await workspace.readDoc(firstPath)).root[0].text).toBe("hello");
@@ -149,7 +166,7 @@ test("an edit refused by the host of another directory is said to be lost once, 
 	workspace,
 	openInViewer,
 }) => {
-	await page.addInitScript(installErrorBarLog);
+	await page.addInitScript(installLostEditsNoticeLog);
 	await mkdir(join(workspace.dirPath, "one"));
 	await mkdir(join(workspace.dirPath, "two"));
 	const firstPath = await workspace.writeDoc(
@@ -183,20 +200,19 @@ test("an edit refused by the host of another directory is said to be lost once, 
 	const opening = mcp.callTool("open_canvas", { path: secondPath });
 	await isSocketHeld;
 	await canvas.commitText();
-	await expect(page.locator(".viewer-error")).toHaveText(
+	await expect(lostEditsNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "直前の変更"),
 	);
 
 	releaseSocket();
 	expect((await opening).isError).toBe(false);
 	await expectFileOnDisplay(page, "b.jis.json");
-	await expect(page.locator(".viewer-error")).toHaveText(
-		lostInHandPattern("a.jis.json", "直前の変更"),
-	);
-	const errorBarTexts = await page.evaluate(
-		() => (window as unknown as ErrorBarLogWindow).errorBarTexts,
-	);
-	expect(errorBarTexts).toHaveLength(1);
+	// The page has taken the next document, which is when the loss would be said a
+	// second time; the refusal itself is not shown at all
+	await expect(page.locator(".viewer-error")).toHaveCount(0);
+	const noticeTexts = await readLostEditsNoticeLog(page);
+	expect(noticeTexts).toHaveLength(1);
+	expect(noticeTexts[0]).toMatch(lostInHandPattern("a.jis.json", "直前の変更"));
 	expect((await workspace.readDoc(firstPath)).root[0].text).toBe("hello");
 });
 
@@ -207,7 +223,7 @@ test("text still being typed when the page moves to another directory is said to
 	workspace,
 	openInViewer,
 }) => {
-	await page.addInitScript(installErrorBarLog);
+	await page.addInitScript(installLostEditsNoticeLog);
 	await mkdir(join(workspace.dirPath, "one"));
 	await mkdir(join(workspace.dirPath, "two"));
 	const firstPath = await workspace.writeDoc(
@@ -223,12 +239,9 @@ test("text still being typed when the page moves to another directory is said to
 	).toBe(false);
 	await expectFileOnDisplay(page, "b.jis.json");
 
-	await expect(page.locator(".viewer-error")).toHaveText(
+	await expect(lostEditsNotice(page)).toHaveText(
 		lostInHandPattern("a.jis.json", "入力中のテキスト"),
 	);
-	const errorBarTexts = await page.evaluate(
-		() => (window as unknown as ErrorBarLogWindow).errorBarTexts,
-	);
-	expect(errorBarTexts).toHaveLength(1);
+	expect(await readLostEditsNoticeLog(page)).toHaveLength(1);
 	expect((await workspace.readDoc(firstPath)).root[0].text).toBe("hello");
 });

@@ -4,6 +4,7 @@ import { SINGLE_RECT, singleRectDoc } from "../support/canvasDocs";
 import {
 	expect,
 	expectNoViewerError,
+	LOST_EDITS_NOTICE_DURATION_MS,
 	selectObject,
 	test,
 } from "../support/fixtures";
@@ -31,6 +32,27 @@ const PAST_SAVE_DEBOUNCE_MS = 1_000;
 // page's own coming back looks like; the page took it for that, and so kept the
 // broken-file or missing-file error up — and, for a broken one, kept refusing to
 // save — until some other change came along and threw the unsaved edits away.
+
+// The other half of lost edits going as a notice: a broken file is a state rather
+// than something that happened, and the error saying so outlasts any notice
+test("keeps the broken-file error up for as long as the file is broken", async ({
+	page,
+	workspace,
+	openInViewer,
+}) => {
+	const filePath = await workspace.writeDoc(
+		"drawing.jis.json",
+		singleRectDoc(),
+	);
+	await openInViewer(filePath);
+
+	await writeFile(filePath, "{ not json", "utf8");
+	await expect(page.locator(".viewer-error")).toContainText(BROKEN_FILE_NOTE);
+
+	// Nothing to wait on: the point is that nothing happens
+	await page.waitForTimeout(LOST_EDITS_NOTICE_DURATION_MS + 1_000);
+	await expect(page.locator(".viewer-error")).toContainText(BROKEN_FILE_NOTE);
+});
 
 test("clears the broken-file error and saves again once the file is put back as it was", async ({
 	page,
