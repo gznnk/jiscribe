@@ -9,6 +9,12 @@
 // The text last handed out is remembered so that our own write, read back by the
 // watch a moment later, is recognised as already known and says nothing — reloading
 // the canvas under the person who just saved it is what that would otherwise do.
+//
+// A write refused because the file has moved on promises the window the newer file,
+// which it merges its edits onto. The watch cannot keep that promise alone — a
+// change undone before it polls is never seen — so the refusal hands out what it
+// read itself, and a file that holds the named revision again by the time it is
+// looked at is written rather than refused.
 
 import { createHash } from "node:crypto";
 import { unwatchFile, watchFile } from "node:fs";
@@ -35,6 +41,15 @@ import type { CanvasHostServerMessage } from "../shared/canvasHostProtocol";
 const WATCH_INTERVAL_MS = 300;
 
 /**
+ * How long a person's write keeps looking at a file that will not hold still —
+ * caught half written, or rewritten under the write with the text it already
+ * held — before it settles on what it saw last, and how long it waits between
+ * looks. The file's lock is held all the while, so the tools wait on it too
+ */
+const WRITE_SETTLE_TIMEOUT_MS = 500;
+const WRITE_SETTLE_RETRY_MS = 25;
+
+/**
  * The revision a text is handed out under, and has to be named by again when it is
  * written back.
  *
@@ -45,27 +60,10 @@ const calcDocRevision = (docText: string): string =>
 	createHash("sha256").update(docText, "utf8").digest("hex");
 
 /**
- * Reads a file, answering null for one that does not exist. Any other failure
- * (no permission, a directory) is thrown: a file that is there but cannot be read
- * is not one to write over.
- *
- * @param file The file to read (absolute path)
- */
-const readFileIfExists = async (file: string): Promise<string | null> => {
-	try {
-		return await readFile(file, "utf8");
-	} catch (error) {
-		if (isErrnoWithCode(error, "ENOENT")) {
-			return null;
-		}
-		throw error;
-	}
-};
-
-/**
  * Reads a file with the identity it was read under (see readFileSnapshot),
- * answering null for one that does not exist. Any other failure is thrown, as
- * readFileIfExists does.
+ * answering null for one that does not exist. Any other failure (no permission, a
+ * directory) is thrown: a file that is there but cannot be read is not one to
+ * write over.
  *
  * @param file The file to read (absolute path)
  */
@@ -80,6 +78,20 @@ const readSnapshotIfExists = async (
 		}
 		throw error;
 	}
+};
+
+/**
+ * Whether a text read from the file may be a writer caught part of the way
+ * through: it does not even get past the syntax. A document that parses but breaks
+ * the schema is finished and wrong, and waiting would not change it.
+ *
+ * @param text The text as read
+ */
+const isPossiblyHalfWritten = (text: string): boolean =>
+	canvasParser.parse(text).kind === "syntax-error";
+
+const waitMs = async (delayMs: number): Promise<void> => {
+	await new Promise((resolve) => setTimeout(resolve, delayMs));
 };
 
 export type FileMirrorOptions = {
@@ -158,6 +170,33 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 	// through recordKnownText / clearKnownText alone
 	let lastKnownRevision: string | null = null;
 	let watchedFile: string | null = null;
+	// Reads of the file are numbered as they start, and one is taken only while no
+	// read started after it has been. Two reads in the air (the watch's and a
+	// write's) can finish in either order, and the one to finish last did not
+	// necessarily see the file last
+	let readCount = 0;
+	let takenReadNumber = 0;
+
+	/** Numbers a read of the open file, just before it starts */
+	const beginRead = (): number => {
+		readCount += 1;
+		return readCount;
+	};
+
+	/**
+	 * Claims a read's result as the newest word on the file.
+	 *
+	 * @param readNumber What beginRead gave the read
+	 * @returns false when a read started after it has already been taken, and what
+	 *   it found is to be dropped
+	 */
+	const takeRead = (readNumber: number): boolean => {
+		if (readNumber < takenReadNumber) {
+			return false;
+		}
+		takenReadNumber = readNumber;
+		return true;
+	};
 
 	/**
 	 * Records the text the open file is now believed to hold.
@@ -175,6 +214,31 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 	const clearKnownText = (): void => {
 		lastKnownText = null;
 		lastKnownRevision = null;
+	};
+
+	/**
+	 * Passes a text read from the file on display on to the windows, unless they
+	 * have it already or a newer read has spoken for the file since.
+	 *
+	 * @param readNumber What beginRead gave the read the text came from
+	 */
+	const passOnReadText = (
+		relPath: string,
+		readNumber: number,
+		text: string,
+	): void => {
+		if (relPath !== openPath || !takeRead(readNumber)) {
+			return;
+		}
+		if (text === lastKnownText) {
+			return;
+		}
+		broadcast({
+			type: "docChanged",
+			relPath,
+			docText: text,
+			revision: recordKnownText(text),
+		});
 	};
 
 	/**
@@ -209,26 +273,18 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 				if (openPath !== relPath) {
 					return;
 				}
-				const textBeforeRead = lastKnownText;
+				const readNumber = beginRead();
 				const text = await readOpenFileText(relPath);
-				if (text === null) {
-					// The windows have just been told the file cannot be read, so the
-					// same text coming back is news to them and has to be sent. Left
-					// alone if a person's write recorded its own text meanwhile
-					if (lastKnownText === textBeforeRead) {
-						clearKnownText();
-					}
+				if (text !== null) {
+					passOnReadText(relPath, readNumber, text);
 					return;
 				}
-				if (text === lastKnownText) {
-					return;
+				// The windows have just been told the file cannot be read, so the same
+				// text coming back is news to them and has to be sent. Left alone if a
+				// newer read or a person's write has spoken for the file meanwhile
+				if (openPath === relPath && takeRead(readNumber)) {
+					clearKnownText();
 				}
-				broadcast({
-					type: "docChanged",
-					relPath,
-					docText: text,
-					revision: recordKnownText(text),
-				});
 			})();
 		});
 	};
@@ -273,6 +329,9 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 				// still showing is taken, and one for this file is not
 				openPath = relPath;
 				startWatching(relPath);
+				// A read still in the air is of the file displayed until now, and is not
+				// to be taken for this one
+				takeRead(beginRead());
 				if (text === null) {
 					clearKnownText();
 					return;
@@ -314,45 +373,64 @@ export const createFileMirror = (options: FileMirrorOptions): FileMirror => {
 					// The parent directory has already resolved inside the workspace, so it
 					// is safe to create
 					await mkdir(path.dirname(resolvedFile), { recursive: true });
+					const settleDeadline = Date.now() + WRITE_SETTLE_TIMEOUT_MS;
 					// Written out in full before the revision is looked at, so that only a
 					// stat stands between the check and the rename
-					const prepared = await prepareAtomicWrite(resolvedFile, body);
+					let prepared = await prepareAtomicWrite(resolvedFile, body);
 					try {
-						// What the file holds is read rather than taken from lastKnownText: a
-						// tool's write is on disk before the watch (which polls) has told
-						// anyone, and comparing against what was last handed out would let
-						// this write land on top of it
-						const snapshot = await readSnapshotIfExists(resolvedFile);
-						// A file that is gone holds nothing this write could overwrite, so it
-						// is let through rather than refused over a revision there is none of
-						if (snapshot !== null) {
-							const currentRevision = calcDocRevision(
-								snapshot.contents.toString("utf8"),
-							);
-							if (ifMatch !== currentRevision) {
-								return { kind: "revision-mismatch", revision: currentRevision };
+						for (;;) {
+							const isLastLook = Date.now() >= settleDeadline;
+							// What the file holds is read rather than taken from lastKnownText:
+							// a tool's write is on disk before the watch (which polls) has told
+							// anyone, and comparing against what was last handed out would let
+							// this write land on top of it
+							const readNumber = beginRead();
+							const snapshot = await readSnapshotIfExists(resolvedFile);
+							// A file that is gone holds nothing this write could overwrite, so
+							// it is let through rather than refused over a revision there is
+							// none of
+							if (snapshot !== null) {
+								const currentText = snapshot.contents.toString("utf8");
+								const currentRevision = calcDocRevision(currentText);
+								if (ifMatch !== currentRevision) {
+									// Refused over a writer caught half way through, the window
+									// would be sent that half, and nothing after it when the writer
+									// finishes with the text the window already has
+									if (!isLastLook && isPossiblyHalfWritten(currentText)) {
+										await waitMs(WRITE_SETTLE_RETRY_MS);
+										continue;
+									}
+									passOnReadText(relPath, readNumber, currentText);
+									return {
+										kind: "revision-mismatch",
+										revision: currentRevision,
+									};
+								}
 							}
-						}
-						// Our lock does not hold back a writer outside this process, which
-						// may have written the file since it was read. That write is kept
-						// and this one refused, as if it had been read in the first place
-						const isCommitted = await prepared.commitIfUnchanged(
-							snapshot?.identity ?? null,
-						);
-						if (!isCommitted) {
-							const changedText = await readFileIfExists(resolvedFile);
-							// A file removed meanwhile has no revision; that of an empty text
-							// stands in, which no document the viewer holds can carry
-							return {
-								kind: "revision-mismatch",
-								revision: calcDocRevision(changedText ?? ""),
-							};
+							// Our lock does not hold back a writer outside this process, which
+							// may have written the file since it was read. That write is kept,
+							// and the file looked at again: it may hold what this write names
+							// all the same (the same bytes written again, an editor saving
+							// unchanged), and then there is nothing to refuse
+							if (
+								await prepared.commitIfUnchanged(snapshot?.identity ?? null)
+							) {
+								break;
+							}
+							if (isLastLook) {
+								return { kind: "file-unsettled" };
+							}
+							await waitMs(WRITE_SETTLE_RETRY_MS);
+							prepared = await prepareAtomicWrite(resolvedFile, body);
 						}
 					} finally {
 						await prepared.abort();
 					}
 					// Recorded from the bytes that were written, so the watch reads its own
-					// write back as something already known and says nothing
+					// write back as something already known and says nothing. Numbered after
+					// the rename, so a read that saw the file before it and finishes later
+					// is not taken over this
+					takeRead(beginRead());
 					const revision = recordKnownText(writtenText);
 					// Every window is told, the one that wrote included: it drops the echo
 					// against the text it sent and takes the revision with it

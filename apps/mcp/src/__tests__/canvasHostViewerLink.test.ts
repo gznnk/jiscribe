@@ -42,18 +42,30 @@ import { REVISION_HEADER, SESSION_TOKEN_HEADER } from "../shared/fileApiRoute";
  * which is how two openFile calls are made to overlap. Anything else is read as
  * usual
  */
-const { heldReads, outsideWrite } = vi.hoisted(() => ({
+const { heldReads, outsideWrite, transientRead } = vi.hoisted(() => ({
 	heldReads: new Map<string, Promise<void>>(),
 	/**
 	 * A write made to the file named, bypassing the host's lock, at the first stat
 	 * of it after it has been read. That lands it after a save has compared the
 	 * revision and before the save's rename, which is the gap no lock of ours
-	 * covers
+	 * covers. Persistent, it is made again at every such stat, as a writer that
+	 * never leaves the file alone would
 	 */
 	outsideWrite: {
 		fileName: null as string | null,
 		text: "",
 		hasBeenRead: false,
+		isPersistent: false,
+	},
+	/**
+	 * What the file named holds for the next open of it alone, put back to what it
+	 * held before as soon as that read is done: a writer caught half way through,
+	 * or a change made and undone again, in either case gone before the watch
+	 * (which polls) can see it
+	 */
+	transientRead: {
+		fileName: null as string | null,
+		text: "",
 	},
 }));
 
@@ -81,8 +93,29 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 			return await actual.readFile(file, options);
 		},
 		open: async (...args: Parameters<typeof actual.open>) => {
-			noteRead(args[0]);
-			return await actual.open(...args);
+			const file = args[0];
+			noteRead(file);
+			if (
+				typeof file !== "string" ||
+				basename(file) !== transientRead.fileName
+			) {
+				return await actual.open(...args);
+			}
+			transientRead.fileName = null;
+			const settledText = await actual.readFile(file, "utf8");
+			await actual.writeFile(file, transientRead.text, "utf8");
+			const handle = await actual.open(...args);
+			const readHandle = handle.readFile.bind(handle);
+			handle.readFile = (async (
+				...readArgs: Parameters<typeof handle.readFile>
+			) => {
+				try {
+					return await readHandle(...readArgs);
+				} finally {
+					await actual.writeFile(file, settledText, "utf8");
+				}
+			}) as typeof handle.readFile;
+			return handle;
 		},
 		stat: (async (...args: Parameters<typeof actual.stat>) => {
 			const file = args[0];
@@ -91,7 +124,9 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 				basename(file) === outsideWrite.fileName &&
 				outsideWrite.hasBeenRead
 			) {
-				outsideWrite.fileName = null;
+				if (!outsideWrite.isPersistent) {
+					outsideWrite.fileName = null;
+				}
 				await actual.writeFile(file, outsideWrite.text, "utf8");
 			}
 			return await actual.stat(...args);
@@ -162,6 +197,8 @@ afterEach(async () => {
 	heldReads.clear();
 	outsideWrite.fileName = null;
 	outsideWrite.hasBeenRead = false;
+	outsideWrite.isPersistent = false;
+	transientRead.fileName = null;
 	for (const socket of openSockets.splice(0)) {
 		socket.close();
 	}
@@ -558,6 +595,129 @@ describe("a person's save", () => {
 		expect(await readdir(workspaceRoot)).toEqual([OPEN_REL_PATH]);
 		// The outside write reaches the windows, as any outside edit does
 		await waitFor(() => calcChangedTexts(viewer).includes(outsideText));
+	});
+
+	it("lands when the file only held the revision it names back after the check", async () => {
+		// Rewritten with the same bytes between the check and the rename: nothing
+		// the write would replace has changed. Refused, the window would wait for a
+		// newer file that never comes, since the watch finds the text already known
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+		outsideWrite.fileName = OPEN_REL_PATH;
+		outsideWrite.text = emptyDocText;
+
+		const outcome = await putOpenFile(
+			host,
+			OPEN_REL_PATH,
+			savedDocText,
+			readLatestRevision(viewer),
+		);
+
+		expect(outsideWrite.fileName).toBeNull();
+		expect(outcome.status).toBe(200);
+		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
+			savedDocText,
+		);
+		await waitFor(() => calcChangedTexts(viewer).includes(savedDocText));
+	});
+
+	it("lands when the check catches the file half rewritten with what it held", async () => {
+		// A writer rewriting the file in place with the same text, caught part of the
+		// way through. By the time the watch looks the file is as it was, so a
+		// refusal would never be followed by a newer file
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+		transientRead.fileName = OPEN_REL_PATH;
+		transientRead.text = emptyDocText.slice(0, 10);
+
+		const outcome = await putOpenFile(
+			host,
+			OPEN_REL_PATH,
+			savedDocText,
+			readLatestRevision(viewer),
+		);
+
+		expect(transientRead.fileName).toBeNull();
+		expect(outcome.status).toBe(200);
+		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
+			savedDocText,
+		);
+		await waitFor(() => calcChangedTexts(viewer).includes(savedDocText));
+	});
+
+	it("sends the file it was refused over, even one gone before the watch looks", async () => {
+		// The refusal promises the window a newer file to merge its edits onto. A
+		// change undone before the watch polls is one the watch never reports, and
+		// the window would sit on the edits for good
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+		const revision = readLatestRevision(viewer);
+		const transientText = '{"version":1,"root":[{"type":"rect"}]}\n';
+		transientRead.fileName = OPEN_REL_PATH;
+		transientRead.text = transientText;
+
+		const outcome = await putOpenFile(
+			host,
+			OPEN_REL_PATH,
+			savedDocText,
+			revision,
+		);
+
+		expect(transientRead.fileName).toBeNull();
+		expect(outcome.status).toBe(412);
+		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
+			emptyDocText,
+		);
+		// The file the refusal was over, under the revision it came back with
+		await waitFor(() => calcChangedTexts(viewer).includes(transientText));
+		expect(readLatestRevision(viewer)).toBe(outcome.body.revision);
+		// Then the file as it is again, which is what the window's next write names
+		await waitFor(() => calcChangedTexts(viewer).includes(emptyDocText));
+		expect(calcChangedTexts(viewer)).toEqual([transientText, emptyDocText]);
+	});
+
+	it("asks for the write again when the file will not hold still long enough to take it", async () => {
+		// The file keeps holding the revision the write names, so there is no newer
+		// file to send, and a refusal would leave the window waiting for one
+		await writeOpenFile(emptyDocText);
+		const host = await startTestHost();
+		const viewer = await connectFakeViewer(host);
+		await host.openFile(OPEN_REL_PATH);
+		await waitFor(() =>
+			viewer.receivedFrames.some((frame) => frame.type === "openCanvas"),
+		);
+		outsideWrite.fileName = OPEN_REL_PATH;
+		outsideWrite.text = emptyDocText;
+		outsideWrite.isPersistent = true;
+
+		const outcome = await putOpenFile(
+			host,
+			OPEN_REL_PATH,
+			savedDocText,
+			readLatestRevision(viewer),
+		);
+
+		// A status the viewer sends the write again on (isTransientWriteStatus)
+		expect(outcome.status).toBe(503);
+		expect(await readFile(join(workspaceRoot, OPEN_REL_PATH), "utf8")).toBe(
+			emptyDocText,
+		);
+		expect(await readdir(workspaceRoot)).toEqual([OPEN_REL_PATH]);
 	});
 
 	it("is refused when the body is not a canvas document, and changes nothing", async () => {

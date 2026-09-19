@@ -229,6 +229,14 @@ const handleWriteFile = async (
 		});
 		return;
 	}
+	if (outcome.kind === "file-unsettled") {
+		// A 5xx, so the viewer sends the same write again on its backoff and says so
+		// in the error bar (isTransientWriteStatus)
+		sendJson(response, 503, {
+			error: "the file kept changing while this write waited to land",
+		});
+		return;
+	}
 	sendJson(response, 200, { ok: true, revision: outcome.revision });
 };
 

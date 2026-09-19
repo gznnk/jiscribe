@@ -205,7 +205,15 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
   saving the file directly, or an editor — that lands between that check and
   the save's rename is no longer replaced unseen either: the save, and a
   tool's write-back the same way, looks at the file once more right before
-  the rename and is refused if it has changed, keeping that write.
+  the rename and is refused if it has changed, keeping that write. A refused
+  save is always followed by the file it was refused over, which the window
+  merges its edits onto: a change undone before the host's poll (every
+  300 ms) used to be seen by the save alone, and the edit then sat unsaved
+  with nothing on screen until the next one. A file that holds the revision
+  the save names again once it is looked at — rewritten with the same bytes,
+  or caught half way through such a rewrite — takes the save instead of
+  refusing it, the host looking again for up to 500 ms; one that will not hold
+  still that long is answered with 503, which the viewer sends again.
 - Two `open_canvas` calls on different files arriving together could leave
   the host showing one file while watching the other; opening is now
   serialised. Two headless opens arriving together no longer start two

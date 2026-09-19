@@ -209,8 +209,15 @@ export type WriteOpenFileOutcome =
 	| { kind: "not-open" }
 	/**
 	 * The file no longer holds the revision the write names, so nothing was
-	 * written; the revision carried here is the one it holds now
+	 * written; the revision carried here is the one it holds now, and the text
+	 * behind it has gone to the windows as a docChanged frame
 	 */
 	| { kind: "revision-mismatch"; revision: string }
+	/**
+	 * The file held the revision the write names, but kept being rewritten under
+	 * it for longer than the write waits, so nothing was written. Sent again, the
+	 * same write may land
+	 */
+	| { kind: "file-unsettled" }
 	/** The body is not a document the tools could load, so nothing was written */
 	| { kind: "invalid-doc"; message: string };
