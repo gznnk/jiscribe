@@ -62,6 +62,22 @@ describe("writeFileAtomically", () => {
 		expect((await stat(target)).mode & 0o777).toBe(0o600);
 	});
 
+	// Root may write to anything, so there is nothing to refuse
+	it.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
+		"refuses a file that may not be written to",
+		async () => {
+			const target = join(dir, "read-only.jis.json");
+			await writeFile(target, "old", "utf8");
+			await chmod(target, 0o444);
+
+			await expect(writeFileAtomically(target, "new")).rejects.toMatchObject({
+				code: "EACCES",
+			});
+			expect(await readFile(target, "utf8")).toBe("old");
+			expect(await readdir(dir)).toEqual(["read-only.jis.json"]);
+		},
+	);
+
 	it("leaves the original alone when the write fails", async () => {
 		// The parent does not exist, so it fails from the creation of the
 		// temporary file onward

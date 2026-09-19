@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { chmod, rename, rm, stat, writeFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { access, chmod, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 
 /**
@@ -25,6 +26,10 @@ import { basename, dirname, join } from "node:path";
  * file keeps the default mode (from umask), which can be looser than the
  * original.
  *
+ * A destination the process may not write to is refused, as writing it directly
+ * would be. The rename only needs the directory to be writable, so without the
+ * check a read-only file would be replaced all the same.
+ *
  * When the destination is a symbolic link, the link itself is replaced by an
  * ordinary file (overwriting directly would rewrite what the link points at).
  * Using a link for a `.jis` is not an intended use, so resolving it is not
@@ -46,6 +51,9 @@ export async function writeFileAtomically(
 	const previousMode = await stat(filePath)
 		.then((stats) => stats.mode)
 		.catch(() => null);
+	if (previousMode !== null) {
+		await access(filePath, constants.W_OK);
+	}
 	try {
 		// The mode is given at creation so the contents are never readable through a
 		// wider mode than the destination had, and set again afterwards because umask

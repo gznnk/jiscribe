@@ -52,6 +52,10 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
   not UTF-8) was raised as an uncaught error, taking the host, the undo
   history and the MCP session down together. Such a socket is now closed on
   its own and everything else keeps running.
+- **A read-only `.jis` is no longer overwritten.** A write replaces the file
+  by renaming a temporary one over it, which only the directory's permission
+  governs, so a file made read-only was replaced all the same. It is now
+  refused with `EACCES`, as a direct write would be.
 - **`undo` takes back `add_rect` and `add_ellipse`.** They wrote around the
   undo history, so an `undo` after either was refused as "the canvas changed
   after your last edit", and the steps before it were out of reach as well.
