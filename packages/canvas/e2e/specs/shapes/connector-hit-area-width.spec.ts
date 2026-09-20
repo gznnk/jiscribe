@@ -13,21 +13,6 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * to the connector's points.
  */
 
-type Vec = { x: number; y: number };
-
-function parsePoints(attr: string | null): Vec[] {
-	if (!attr) {
-		throw new Error("cannot read the points attribute");
-	}
-	return attr
-		.trim()
-		.split(/\s+/)
-		.map((pair) => {
-			const [x, y] = pair.split(",").map(Number);
-			return { x, y };
-		});
-}
-
 /** Locator for the ObjectMenu line-color toggle that appears when a connector is selected */
 function lineColorToggle(canvas: CanvasDriver) {
 	return canvas.page.locator('[data-part="toggle:line-color"]');
@@ -52,9 +37,7 @@ test.describe("connector hit area width", () => {
 	}) => {
 		const connectorId = await buildHorizontalConnector(canvas);
 
-		const points = parsePoints(
-			await canvas.objectById(connectorId).getAttribute("points"),
-		);
+		const points = await canvas.connectorPoints(connectorId);
 		// The route is straight (2 vertices), so the hit area is probed at its midpoint.
 		expect(points.length).toBe(2);
 		const mid = {

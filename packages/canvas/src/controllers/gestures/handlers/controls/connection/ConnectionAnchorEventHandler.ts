@@ -12,7 +12,7 @@ import { isTransformedFrame, type Point } from "@jiscribe/geometry";
 import { isAnchorHandleId } from "./ConnectionAnchorTypes";
 import type { AnchorSnapContext } from "./utils/calcNearestAnchor";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
-import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
+import { findConnectableTargetAt } from "./utils/findConnectableTargetAt";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
@@ -20,7 +20,10 @@ import { resolveEndpointOwner } from "../../../../../connectors/endpoints/resolv
 import type { ExtraConnectPoint } from "../../../../../rendering/objects/registry/ObjectExtraConnectPointsRegistry";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connector/ConnectorState";
-import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	DragStartSnapshot,
+} from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { isConnectableObject } from "../../../../utils/isConnectableObject";
@@ -235,6 +238,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		baseConnector: ConnectorState,
 		endpointToUpdate: "source" | "target",
 		registries: ICanvasRegistries,
+		snapshot: DragStartSnapshot,
 	): ConnectorState {
 		// The fixed endpoint (the one not being edited). Passed to computeEditedEndpoint
 		// to avoid the same anchor on a self-loop.
@@ -243,11 +247,16 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				? baseConnector.target
 				: baseConnector.source;
 
-		// Include the same object as a hover target too (self-loops allowed).
-		const hoveredTarget = findConnectableHoverTarget({
-			hovered: event.getHovered(),
+		// Geometric, not DOM: a container passes its interior through so a shape inside
+		// stays selectable, which would otherwise make its middle unconnectable. The boxes
+		// come from the drag's start snapshot — nothing being connected to moves mid-drag.
+		// The same object stays a candidate, so a self-loop can land back on its own shape.
+		const hoveredTarget = findConnectableTargetAt({
+			point: event.last,
+			bboxes: snapshot.bboxes,
 			objects: state.objects,
-			objectMapperRegistry: registries.objectMapper,
+			rootIds: state.rootIds,
+			registries,
 		});
 
 		// When the edited end lands free (no hover target), snap it onto the fixed end's exit
@@ -292,12 +301,18 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 		const endpointToUpdate = getEditingEndpoint(event.targetPart);
 		const { connectorDraft } = state;
 
+		// Every dragStart opens one (handleGesture), so this is the entry condition of a
+		// function that only means anything mid-drag, not a recovery path.
+		const snapshot = state.activeDrag?.startSnapshot;
+		if (!snapshot) {
+			return state;
+		}
+
 		// Edit mode: rewrite the entity directly, like polyline vertex editing (no overlay).
 		// The base is the original connector from the drag's start snapshot, so the fixed side and intermediate points always keep their start-time values.
 		if (connectorDraft?.kind === "edit") {
 			const { connectorId } = connectorDraft;
-			const baseConnector =
-				state.activeDrag?.startSnapshot.objects[connectorId];
+			const baseConnector = snapshot.objects[connectorId];
 			if (!baseConnector || baseConnector.type !== "connector") {
 				return state;
 			}
@@ -309,6 +324,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 				base,
 				endpointToUpdate,
 				registries,
+				snapshot,
 			);
 
 			// Re-anchor parity with creation: when the connector has no explicit routing and
@@ -350,6 +366,7 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			connectorDraft.connector,
 			endpointToUpdate,
 			registries,
+			snapshot,
 		);
 
 		return {

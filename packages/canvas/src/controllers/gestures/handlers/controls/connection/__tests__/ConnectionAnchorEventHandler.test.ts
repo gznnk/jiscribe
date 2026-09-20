@@ -1,7 +1,8 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
+import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDoc";
 import { isOrthogonalRouting } from "@jiscribe/doc/model/objects/types/ConnectorRouting";
-import type { Point } from "@jiscribe/geometry";
+import type { BoundingBox, Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
@@ -67,18 +68,58 @@ const edgeSourceConnector = (
 		endArrow: "ConcaveTriangle",
 	}) as unknown as ConnectorState;
 
-/** A connectable object without frame geometry: calcNearestAnchor always resolves it to center. */
-const blobObject = {
-	id: "blob",
+/**
+ * A connectable shape wide enough that a drop on its middle sits deeper than
+ * CENTER_ANCHOR_DEPTH_PX, so calcNearestAnchor resolves it to center rather than
+ * to a position on an edge.
+ */
+const centerTarget = {
+	id: "target",
 	type: "rect",
-	features: { connectable: true },
+	features: RectFeatures,
+	cx: 80,
+	cy: 80,
+	width: 200,
+	height: 200,
+	rotation: 0,
+	scaleX: 1,
+	scaleY: 1,
 } as unknown as ObjectState;
 
-/** Add the center-resolving blob to a state's objects (top-level only; snapshot not needed for hover). */
-const withBlob = (state: CanvasControllerState): CanvasControllerState => ({
-	...state,
-	objects: { ...state.objects, blob: blobObject },
-});
+/** Its root-level box, which is what the drop resolution scans (findConnectableTargetAt). */
+const centerTargetBox: BoundingBox = {
+	left: -20,
+	top: -20,
+	right: 180,
+	bottom: 180,
+};
+
+/**
+ * Puts the center-resolving target on a state, in objects, rootIds and the drag's
+ * start snapshot alike — the drop is resolved geometrically, so the box is what
+ * makes it reachable.
+ */
+const withTarget = (state: CanvasControllerState): CanvasControllerState => {
+	const activeDrag = state.activeDrag;
+	if (!activeDrag) {
+		throw new Error("withTarget expects a state with a drag in progress");
+	}
+	return {
+		...state,
+		objects: { ...state.objects, [centerTarget.id]: centerTarget },
+		rootIds: [...state.rootIds, centerTarget.id],
+		activeDrag: {
+			...activeDrag,
+			startSnapshot: {
+				...activeDrag.startSnapshot,
+				bboxes: {
+					...activeDrag.startSnapshot.bboxes,
+					[centerTarget.id]: centerTargetBox,
+				},
+			},
+		},
+	};
+};
 
 /**
  * Build a state that injects connectors into objects / rootIds and also prepares the
@@ -113,13 +154,12 @@ const stateWithConnectors = (
 	});
 };
 
-/** Build a drag-type CanvasEvent. `hoveredIds` lets a drop resolve onto a shape. */
+/** Build a drag-type CanvasEvent. Where `last` falls is what a drop resolves onto. */
 const dragEvent = (
 	type: "dragStart" | "dragEnd",
 	targetId: string,
 	targetPart: string,
 	last: Point,
-	hoveredIds: string[] = [],
 ): CanvasEvent =>
 	({
 		type,
@@ -134,7 +174,7 @@ const dragEvent = (
 		clientLast: { x: 0, y: 0 },
 		clientDelta: { x: 0, y: 0 },
 		mods: { shift: false, ctrl: false, alt: false, meta: false },
-		getHovered: () => hoveredIds.map((id) => ({ id })),
+		getHovered: () => [],
 		time: 0,
 		button: 0,
 	}) as unknown as CanvasEvent;
@@ -425,22 +465,15 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 	});
 
 	it("defaults to straight routing when a new connector lands on a center anchor", () => {
-		// A connectable object without frame geometry always resolves to a center anchor
-		// (calcNearestAnchor returns center for non-frame targets).
 		const base = stateWithConnectors([]);
-		const state: CanvasControllerState = {
+		const state = withTarget({
 			...base,
 			objects: {
 				...base.objects,
 				"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
-				blob: {
-					id: "blob",
-					type: "rect",
-					features: { connectable: true },
-				} as unknown as ObjectState,
 			},
-			rootIds: ["rect-1", "blob"],
-		};
+			rootIds: ["rect-1"],
+		});
 
 		const afterStart = handler.handle(
 			state,
@@ -449,9 +482,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		);
 		const afterEnd = handler.handle(
 			afterStart,
-			dragEvent("dragEnd", "rect-1", "anchor:rightCenter", { x: 80, y: 80 }, [
-				"blob",
-			]),
+			dragEvent("dragEnd", "rect-1", "anchor:rightCenter", { x: 80, y: 80 }),
 			registries,
 		);
 
@@ -466,7 +497,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 	// edited anchor actually changed.
 	describe("re-anchoring an existing connector derives routing from the new anchors", () => {
 		it("flips an unset-routing connector to straight when its endpoint is re-anchored onto a center", () => {
-			const state = withBlob(
+			const state = withTarget(
 				stateWithConnectors([edgeSourceConnector("c1", { x: 10, y: 10 })]),
 			);
 
@@ -477,9 +508,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			);
 			const afterEnd = handler.handle(
 				afterStart,
-				dragEvent("dragEnd", "c1", "endpoint:target", { x: 80, y: 80 }, [
-					"blob",
-				]),
+				dragEvent("dragEnd", "c1", "endpoint:target", { x: 80, y: 80 }),
 				registries,
 			);
 
@@ -515,7 +544,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		});
 
 		it("preserves an explicit routing choice when re-anchored onto a center", () => {
-			const state = withBlob(
+			const state = withTarget(
 				stateWithConnectors([
 					edgeSourceConnector("c1", { x: 10, y: 10 }, "orthogonal"),
 				]),
@@ -528,9 +557,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 			);
 			const afterEnd = handler.handle(
 				afterStart,
-				dragEvent("dragEnd", "c1", "endpoint:target", { x: 80, y: 80 }, [
-					"blob",
-				]),
+				dragEvent("dragEnd", "c1", "endpoint:target", { x: 80, y: 80 }),
 				registries,
 			);
 

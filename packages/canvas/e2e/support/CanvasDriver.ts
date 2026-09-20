@@ -1404,6 +1404,31 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * A connector's drawn vertices, parsed from the `points` attribute of the
+	 * element carrying its data-id. Content coordinates, which equal world
+	 * coordinates at zoom 1.
+	 *
+	 * @param id - The connector's data-id
+	 * @returns The vertices in drawing order, so the first is the source end and
+	 *   the last the target end
+	 * @throws When the element carries no `points` attribute, which means the id
+	 *   is not a connector (or a polyline)
+	 */
+	async connectorPoints(id: string): Promise<Array<{ x: number; y: number }>> {
+		const attr = await this.objectById(id).getAttribute("points");
+		if (!attr) {
+			throw new Error(`${id} has no points attribute`);
+		}
+		return attr
+			.trim()
+			.split(/\s+/)
+			.map((pair) => {
+				const [x, y] = pair.split(",").map(Number);
+				return { x, y };
+			});
+	}
+
+	/**
 	 * A shape's drawn fill or stroke, read from computed style. Colors come from emotion CSS
 	 * rather than SVG presentation attributes, so they must be verified through getComputedStyle
 	 * (#38 / theme following).
