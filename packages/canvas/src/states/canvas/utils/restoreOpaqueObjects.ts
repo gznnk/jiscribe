@@ -4,11 +4,11 @@ import { ConnectorFeatures } from "@jiscribe/doc/model/objects/connector/Connect
 import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import { GroupFeatures } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 
+import { readEndpointOwnerId } from "../../utils/readEndpointOwnerId";
 import type {
 	OpaqueObjectLoadedPlace,
 	OpaqueObjectPlacement,
-} from "./OpaqueObjectPlacement";
-import { readEndpointOwnerId } from "../utils/readEndpointOwnerId";
+} from "../OpaqueObjectPlacement";
 
 /** Where one opaque object goes back: a container, and the child it follows. */
 type InsertionPoint = {

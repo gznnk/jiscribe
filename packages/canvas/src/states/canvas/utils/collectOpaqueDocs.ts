@@ -4,7 +4,7 @@ import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/Grou
 import { GroupFeatures } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 
-import { readEndpointOwnerId } from "../utils/readEndpointOwnerId";
+import { readEndpointOwnerId } from "../../utils/readEndpointOwnerId";
 
 /**
  * The docs a canvas holds aside as opaque objects rather than mapping them into

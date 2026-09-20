@@ -4,14 +4,14 @@ import type { OpaqueObjectDoc } from "@jiscribe/doc/model/objects/base/OpaqueObj
 import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import type { Point } from "@jiscribe/geometry";
 
-import { collectOpaqueDocs } from "./collectOpaqueDocs";
+import type { CanvasState } from "./CanvasState";
 import type {
 	OpaqueObjectLoadedPlace,
 	OpaqueObjectPlacement,
 } from "./OpaqueObjectPlacement";
-import { restoreOpaqueObjects } from "./restoreOpaqueObjects";
-import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import { collectOpaqueDocs } from "./utils/collectOpaqueDocs";
+import { restoreOpaqueObjects } from "./utils/restoreOpaqueObjects";
+import type { ObjectState } from "../objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
 import type { ObjectContentResizerRegistry } from "../registry/ObjectContentResizerRegistry";
 import type { ObjectMapperRegistry } from "../registry/ObjectMapperRegistry";
