@@ -307,9 +307,9 @@ type CanvasProps = {
 	 * restored session, a deep link) and leave them out otherwise. `sidebars`
 	 * competes with nothing: no document declares the editor chrome.
 	 *
-	 * When `objectTypes` is restricted, only pass docs whose object types remain
-	 * enabled — otherwise state construction throws "Mapper not found"
-	 * (docs/01-design-philosophy.md, principle 4).
+	 * When `objectTypes` is restricted, an object of a type left out is held as
+	 * an opaque object: kept in place and written back on save, but not drawn
+	 * (see `canvasToState`).
 	 */
 	initialConfig?: CanvasConfig;
 	/**

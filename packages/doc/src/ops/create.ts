@@ -45,7 +45,10 @@ export type AddObjectParams = StyleParams & {
 	 * Rejected for point-geometry types (`text`), whose box comes from the content.
 	 */
 	height?: number;
-	/** Body text; omitted leaves whatever text the factory defaults to. */
+	/**
+	 * Body text; omitted leaves whatever text the factory defaults to. Refused by a type
+	 * holding no text at all (`features.text` unset: polygon, polyline, lucideIcon).
+	 */
 	text?: string;
 	/**
 	 * Vertices in world coordinates, replacing the outline the factory would decide (a regular
@@ -138,6 +141,25 @@ const requireStorableSize = (
 			`object type "${type}" sizes itself from its content and takes no width/height`,
 		);
 	}
+};
+
+/**
+ * Refuse a body text the type has no place for, writing nothing — the rule `setText`
+ * holds an existing object to. The factory spreads `text` in as one more field whatever
+ * the type, so a type holding no text would store one the schema rejects and nothing
+ * draws. A slotted type is left to its own `validateDoc`, which names the slots it keeps.
+ */
+const requireTextSupport = (
+	type: string,
+	params: AddObjectParams,
+	definition: ObjectDocDefinition,
+): void => {
+	if (params.text === undefined || definition.features.text !== undefined) {
+		return;
+	}
+	throw new DocOperationError(
+		`object type "${type}" holds no text of its own and takes no text: put the label in a neighbouring shape instead`,
+	);
 };
 
 /** Check that the type can be created with the layout and height mode asked for. */
@@ -233,6 +255,7 @@ const buildObject = (
 			: requireRotationDegrees(params.rotation);
 
 	requireStorableSize(type, params, definition);
+	requireTextSupport(type, params, definition);
 	requireLayoutSupport(type, params, definition);
 	requireApplicableStyle(type, params, definition);
 
@@ -363,7 +386,8 @@ const buildObject = (
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
  * @throws {@link DocOperationError} for an unknown type, for one without a factory
  *   (group / connector / svg and the like), when width/height are given for a
- *   point-geometry type that cannot store them, when the factory rejects the given size,
+ *   point-geometry type that cannot store them, for `text` on a type holding no text,
+ *   when the factory rejects the given size,
  *   when `points` are given to a type not built from vertices or are too few, for a
  *   rotation that is not finite, for a `textLayout` on a type that declares none, for
  *   `autoHeight` on a type whose height cannot follow its text or alongside a `height`,

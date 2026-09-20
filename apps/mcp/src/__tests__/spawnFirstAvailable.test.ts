@@ -56,7 +56,7 @@ const runCandidates = (
 	const advancedTo: number[] = [];
 	const spawned: ChildProcess[] = [];
 	const exhaustedReasons: string[] = [];
-	spawnFirstAvailable(commands, 0, {
+	spawnFirstAvailable(commands, {
 		onAdvance: (nextIndex) => {
 			advancedTo.push(nextIndex);
 		},

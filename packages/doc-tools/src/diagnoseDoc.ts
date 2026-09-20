@@ -55,11 +55,15 @@ import { resolveContentBox } from "./resolveContentBox";
 const calcOverflowTolerance = (fontSize: number): number =>
 	(fontSize * (TEXT_LINE_HEIGHT - 1)) / 2;
 
-/** The whole document's objects, group children included, in document order. */
+/**
+ * The whole document's objects, group children included, in document order. Only a
+ * group is walked into: what an object of an unknown type holds is kept unread
+ * (`OpaqueObjectDoc`), so it is not checked either.
+ */
 const flattenObjects = (objects: readonly ObjectDoc[]): ObjectDoc[] =>
 	objects.flatMap((object) => {
 		const children = (object as { children?: ObjectDoc[] }).children;
-		return Array.isArray(children)
+		return object.type === "group" && Array.isArray(children)
 			? [object, ...flattenObjects(children)]
 			: [object];
 	});

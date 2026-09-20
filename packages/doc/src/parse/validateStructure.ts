@@ -30,16 +30,10 @@ function validateObjectNode(
 		return errors;
 	}
 
-	// Reject unregistered (unknown) types here. Letting one through makes validation
-	// return ok, but then mapper resolution in canvasToState throws and crashes the
-	// whole editor. In the parse pipeline stripUnknownContent removes them (with a
-	// warning) before this runs, so this check is a safety net for direct callers.
-	// A type is registered if the registry has features for it.
+	// An unregistered type is an opaque object (see OpaqueObjectDoc): held as it is,
+	// so nothing past its id and type is ours to check, and its children — if it has
+	// any — are not walked either. The id was checked above.
 	if (registry.getFeatures(o.type as string) === undefined) {
-		errors.push({
-			path: `${path}.type`,
-			message: `Unknown object type "${o.type as string}".`,
-		});
 		return errors;
 	}
 

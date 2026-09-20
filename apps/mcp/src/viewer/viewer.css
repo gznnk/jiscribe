@@ -1,7 +1,3 @@
-:root {
-	color-scheme: dark;
-}
-
 html,
 body,
 #root {
@@ -9,9 +5,10 @@ body,
 	margin: 0;
 }
 
+/* The colors are the canvas theme's, put on .viewer-root from App: a stylesheet
+   cannot read the theme, and the theme's own `--jiscribe-*` reach no further than
+   the Canvas root */
 body {
-	background: #202124;
-	color: #e8eaed;
 	font-family:
 		system-ui,
 		-apple-system,
@@ -47,10 +44,10 @@ body {
 	color: var(--app-error-foreground, currentColor);
 }
 
+/* Colors from the canvas theme (App's errorStyle) */
 .viewer-error {
 	padding: 8px 12px;
-	border-bottom: 1px solid #3a3d40;
-	color: #ff8a80;
+	border-bottom: 1px solid;
 	font-size: 13px;
 	white-space: pre-wrap;
 }
@@ -62,47 +59,57 @@ body {
 }
 
 /* Floats over the canvas: a notice that says nothing had to be done is not worth
-   reflowing what the person was looking at. Its colors come from the canvas theme
-   (App's noticeStyle), which also sets how long the animation runs */
-.viewer-notice {
+   reflowing what the person was looking at. Notices stack upwards, the newest at
+   the bottom, and are never in the way of the shape under them */
+.viewer-notices {
 	position: fixed;
 	bottom: 24px;
 	left: 50%;
 	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	width: max-content;
+	max-width: calc(100vw - 32px);
+	transform: translateX(-50%);
+	pointer-events: none;
+}
+
+/* Its colors come from the canvas theme (App's noticeStyles), which also sets how
+   long the animation runs */
+.viewer-notice {
 	padding: 8px 16px;
 	border: 1px solid;
 	font-size: 13px;
-	/* Never in the way of the shape under it */
-	pointer-events: none;
 	animation-name: viewer-notice-cycle;
 	animation-timing-function: ease-out;
 	animation-fill-mode: both;
 }
 
 /* One animation for the whole life of the notice: in, hold, out. The percentages
-   are against the duration App passes, so 6% / 8% are roughly 120ms / 160ms */
+   are against the duration App passes, so at 2 s 6% / 8% are roughly 120ms / 160ms */
 @keyframes viewer-notice-cycle {
 	from {
 		opacity: 0;
-		transform: translate(-50%, 8px);
+		transform: translateY(8px);
 	}
 	6% {
 		opacity: 1;
-		transform: translate(-50%, 0);
+		transform: translateY(0);
 	}
 	92% {
 		opacity: 1;
-		transform: translate(-50%, 0);
+		transform: translateY(0);
 	}
 	to {
 		opacity: 0;
-		transform: translate(-50%, 4px);
+		transform: translateY(4px);
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.viewer-notice {
 		animation-name: none;
-		transform: translateX(-50%);
 	}
 }

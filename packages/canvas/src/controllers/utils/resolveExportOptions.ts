@@ -140,8 +140,10 @@ const resolveExportRegion = (
  * `BuildExportSvgOptions` here, so an image is the same image however it was
  * asked for.
  *
- * @param state - The objects to export, their z-order, the camera a `"viewport"`
- *   region is read from, and the `view` whose padding frames a content region
+ * @param state - The whole canvas state, plus the camera a `"viewport"` region is
+ *   read from. Whole rather than the fields each step names, because the embedded
+ *   `.jis` source is written from every document field it holds — a narrower type
+ *   would drop what it left out (the background, the objects held as opaque)
  * @param objectMapper - Per-canvas ObjectMapperRegistry, used to serialize the
  *   embedded `.jis` source
  * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; without it the
@@ -150,9 +152,7 @@ const resolveExportRegion = (
  * @param options - Region / margin / source embedding / background overrides
  */
 export const resolveExportOptions = (
-	state: Pick<CanvasState, "objects" | "rootIds" | "view"> & {
-		viewport: Viewport;
-	},
+	state: CanvasState & { viewport: Viewport },
 	objectMapper: ObjectMapperRegistry,
 	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
 	{

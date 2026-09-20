@@ -528,10 +528,9 @@ const adoptDocumentState = (
 	past: readonly DocSnapshot[],
 ): CanvasControllerState => ({
 	...state,
-	objects: payload.objects,
-	rootIds: payload.rootIds,
-	background: payload.background,
-	view: payload.view,
+	// Spread whole, so a field added to the document side of CanvasState is
+	// adopted here without this list having to be remembered
+	...payload,
 	...resetUiState(),
 	// Adopting a document is a history boundary. Since past is set directly without
 	// going through recordHistoryIfNeeded, explicitly reset the coalesce state here

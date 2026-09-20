@@ -64,6 +64,35 @@ describe("validateDoc", () => {
 		).toBe(true);
 	});
 
+	it("keeps an object of a type the shipped set lacks, which only the schema refuses", () => {
+		const unknownObject = { id: "u", type: "rectangle", x: 0, y: 0 };
+		const result = validateDoc(
+			JSON.stringify({ version: 1, root: [unknownObject] }),
+		);
+		expect(result.ok).toBe(false);
+		expect(result.doc?.root).toEqual([unknownObject]);
+		expect(
+			result.diagnostics.map(({ severity, objectId, message }) => ({
+				severity,
+				objectId,
+				message,
+			})),
+		).toEqual([
+			{
+				severity: "error",
+				objectId: "u",
+				message:
+					'schema: /root/0/type must be a known object type, got "rectangle"',
+			},
+			{
+				severity: "warning",
+				objectId: "u",
+				message:
+					'Object type "rectangle" is not a type this build knows: the object is kept as it is but not drawn.',
+			},
+		]);
+	});
+
 	it("names the object a schema error falls in, not only its position", () => {
 		const result = validateDoc(
 			JSON.stringify({

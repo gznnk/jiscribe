@@ -6,6 +6,7 @@ import {
 	dropEmptyGroups,
 	type ObjectLocation,
 	type ObjectRecord,
+	readChildren,
 	rejectIds,
 	requireGroup,
 	requireObject,
@@ -42,14 +43,11 @@ const findHoldingGroup = (
 ): ObjectLocation | undefined => {
 	const visit = (siblings: ObjectDoc[]): ObjectLocation | undefined => {
 		for (const [index, object] of siblings.entries()) {
-			const children = (object as ObjectRecord).children;
-			if (!Array.isArray(children)) {
-				continue;
-			}
-			if ((children as ObjectDoc[]).some((child) => child.id === id)) {
+			const children = readChildren(object);
+			if (children.some((child) => child.id === id)) {
 				return { object: object as ObjectRecord, siblings, index };
 			}
-			const found = visit(children as ObjectDoc[]);
+			const found = visit(children);
 			if (found !== undefined) {
 				return found;
 			}

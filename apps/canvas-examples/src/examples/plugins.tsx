@@ -67,10 +67,11 @@ const plugins = [
 
 // The same array has to reach BOTH sides, and neither side complains when it does not:
 // initialConfig registers the shapes for rendering and editing, createCanvasParser
-// teaches doc validation the same types. Register only with Canvas and the parser strips
-// every plugin object out of the doc as an unknown type (it lands in result.warnings, not
-// in an error); register only with the parser and the doc validates but Canvas has no
-// definition to draw the shapes with. Either way the shapes just go missing.
+// teaches doc validation the same types. Register only with Canvas and the parser keeps
+// every plugin object as an unknown type it never validates (it lands in result.warnings,
+// not in an error); register only with the parser and the doc validates but Canvas has no
+// definition to draw the shapes with, so it holds them unread and they go missing from
+// the screen.
 const initialConfig: CanvasConfig = { plugins };
 const pluginParser = createCanvasParser({ plugins });
 

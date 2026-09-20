@@ -40,6 +40,9 @@ export {
 	resolveViewPadding,
 } from "./model/canvas/ViewDoc";
 export type { ObjectDoc } from "./model/objects/base/ObjectDoc";
+// An object of a type the reader does not know, which the parser, the doc-ops and
+// the canvas all keep in place and write back as it was.
+export type { OpaqueObjectDoc } from "./model/objects/base/OpaqueObjectDoc";
 export type { ObjectType } from "./model/objects/types/ObjectType";
 export type { ObjectFeatures } from "./model/objects/types/ObjectFeatures";
 export type { CreateObjectType } from "./model/objects/types/CreateObjectType";

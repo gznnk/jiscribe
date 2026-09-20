@@ -126,7 +126,7 @@ State を Props として受け取り SVG を描画するコンポーネント�
 
 `createCanvasRegistries` は空のレジストリ群を作り、`initialize*`（`initializeGestureHandlerRegistry` / `initializeCommands` など）と型ごとの `applyObjectDefinition` で**そのバンドル**を埋める（object type は既定で全部、または `config` の部分集合。`config.plugins` の型も同じ `applyObjectDefinition` で足す。順序は `createCanvasRegistries` の JSDoc 参照）。唯一の例外は doc バリデータのレジストリで、これは `@jiscribe/doc` に閉じ、`createCanvasParser` が渡された定義集合からパーサーごとに構築する：入力境界のパース時検証でのみ使われ（`<Canvas>` 生成前）、ヘッドレスパッケージが UI 依存を引き込まないようにするため → [データモデル](./03-data-model-and-persistence.ja.md)。
 
-> **意味論の注意**: `config.objectTypes` で型を絞った場合、呼び出し側は有効な型だけを含む doc を渡す責任を負う。無効な型を含む doc は `canvasToState` が `"Mapper not found"` を throw する（「呼び出し側が valid/consistent な doc を渡す」契約と一致 → [設計思想](./01-design-philosophy.ja.md) 原則4）。既定 config（全型）は後方互換。
+> **意味論の注意**: `config.objectTypes` で型を絞った場合、無効にした型のオブジェクトはキャンバスが知らない型と同じに扱う。`canvasToState` はそれを不透明オブジェクトとして脇に保持し（描画されず、選択もできない）、`canvasToDoc` が元の位置へそのまま書き戻す（[データモデルと永続化](./03-data-model-and-persistence.ja.md) 参照）。既定 config（全型）は後方互換。
 
 > **`CanvasMapper` について**: `CanvasDoc ↔ CanvasState` の全体変換は形状ごとの Mapper を多態的に呼ぶ必要があるため、`states/canvas/CanvasMapper.ts` はグローバル参照ではなく、要るレジストリを 1 つずつ引数で受け取る（`ObjectMapperRegistry` など。シグネチャは `CanvasMapper.ts` 参照）。呼び出し側が canvas 自身のバンドル（純粋ツリーに通されるもの、例: `createInitialControllerState`）から該当するもの（`registries.objectMapper` など）を渡す。受け取るのはどれも `states/registry/` にある states 層自身のレジストリなので、レイヤーをまたぐ例外ではない。
 
@@ -206,7 +206,7 @@ graph TD
 5. **Component**: `rendering/objects/primitives/<Shape>/<Shape>.tsx`
 6. **登録**: 定義は headless 側と UI 側の 2 段で、UI 側が headless 側を取り込む。
    - `@jiscribe/doc` の `plugin/builtinObjectDocDefinitions.ts` — headless 側の定義（Doc バリデータ・features・factory など）。`createCanvasParser` / `createDocOps` が既定で使う定義集合はここから作られる
-   - `controllers/registries/applyObjectDefinition.ts` の `BUILTIN_OBJECT_DEFINITIONS` — 上の定義を spread し（`...builtinObjectDocDefinitions.<shape>`）、Mapper / Component / behavior / State バリデータなど UI 側を足す。spread せずに UI 側だけに書くと、UI では動くのにパーサーが未知の型として除去する
+   - `controllers/registries/applyObjectDefinition.ts` の `BUILTIN_OBJECT_DEFINITIONS` — 上の定義を spread し（`...builtinObjectDocDefinitions.<shape>`）、Mapper / Component / behavior / State バリデータなど UI 側を足す。spread せずに UI 側だけに書くと、UI では動くのにパーサーが未知の型として扱い、検証しないまま素通しにする
 7. **AI 向けスキーマ**: [`packages/doc-schema/README.md`](../../doc-schema/README.md) の「図形を追加するとき」に従って、スキーマと AI 向けドキュメントを再生成する
 
 既存ロジックの分岐を増やさず、登録だけで形状横断処理（変形・スナップ・描画）に乗る。

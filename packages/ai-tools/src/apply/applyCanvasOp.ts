@@ -60,6 +60,20 @@ const describeSummaries = (summaries: readonly ObjectSummary[]): string => {
 	].join("\n");
 };
 
+/**
+ * The note a summary list carries when some of it is of a type this build does not
+ * know; empty otherwise. Without it the flag reads as one more field, and the AI goes
+ * on to move or restyle an object no op can reach
+ */
+const unknownTypeNote = (summaries: readonly ObjectSummary[]): string => {
+	const unknownCount = summaries.filter(
+		(summary) => summary.unknownType === true,
+	).length;
+	return unknownCount === 0
+		? ""
+		: ` (${unknownCount} of them flagged unknownType: a type this build does not know, kept in the file as written and not drawn; deleting, reordering and grouping reach it, nothing else does)`;
+};
+
 /** How the getText result sentence names the text it read; with no slot given it is the body */
 const slotLabel = (id: string, slot: string | undefined): string =>
 	slot === undefined ? `"${id}"` : `slot "${slot}" of "${id}"`;
@@ -111,21 +125,21 @@ const applyDocRead = (
 			const summaries = docOps.listObjects(doc);
 			return summaries.length === 0
 				? "the canvas is empty: it holds no objects at all"
-				: `${summaries.length} object(s), in drawing order (back to front), each group followed by what it holds:\n${describeSummaries(summaries)}`;
+				: `${summaries.length} object(s), in drawing order (back to front), each group followed by what it holds${unknownTypeNote(summaries)}:\n${describeSummaries(summaries)}`;
 		}
 		case "findObjects": {
 			const { kind: _kind, ...filter } = op;
 			const summaries = docOps.findObjects(doc, filter);
 			return summaries.length === 0
 				? `no object matches: the canvas holds ${docOps.listObjects(doc).length} object(s), and every condition you gave has to hold at once, so drop one of them or widen it`
-				: `${summaries.length} match(es), in drawing order (back to front):\n${describeSummaries(summaries)}`;
+				: `${summaries.length} match(es), in drawing order (back to front)${unknownTypeNote(summaries)}:\n${describeSummaries(summaries)}`;
 		}
 		case "getObject":
 			return `"${op.id}" in full:\n${JSON.stringify(docOps.getObject(doc, op.id))}`;
 		case "getObjectBounds": {
 			const bounds = docOps.getObjectBounds(doc, op.id);
 			return bounds === null
-				? `"${op.id}" has no box of its own to measure: a connector follows the objects it joins, and a group holding nothing has nothing to measure`
+				? `"${op.id}" has no box of its own to measure: a connector follows the objects it joins, a group holding nothing has nothing to measure, and an object of a type this build does not know is kept unread`
 				: `"${op.id}" occupies ${describeRectEdges(bounds)}`;
 		}
 		case "getCombinedBounds": {

@@ -12,10 +12,11 @@ import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorReg
  * as a discriminated union. Exceptions are not used for control flow, so callers can handle every
  * case exhaustively via `switch (result.kind)`.
  *
- * `ok.warnings` lists what {@link stripUnknownContent} removed (unknown-type
- * objects with their cascade, and unknown pure-enum values). Empty for a
- * fully-known document. `ok.doc` is the stripped doc, so serializing it is what
- * makes the removal stick on save.
+ * `ok.warnings` lists what {@link stripUnknownContent} removed (unknown pure-enum
+ * values, and the rare unknown-type object it cannot keep) and every object of
+ * an unknown type it kept as it is. Empty for a fully-known document. `ok.doc` is
+ * the stripped doc, so serializing it is what makes a removal stick on save, and
+ * what writes a kept object back unchanged.
  */
 export type CanvasParseResult =
 	| { kind: "ok"; doc: CanvasDoc; warnings: SemanticDiagnostic[] }
@@ -48,10 +49,10 @@ export function parseWithRegistry(
 	}
 
 	try {
-		// Unknown object types (with their cascade — emptied groups, connectors to removed
-		// owners) and unknown pure-enum values are not errors: they are stripped here so the
-		// rest of the document still loads, and reported as ok.warnings. Everything past
-		// this point sees the stripped doc.
+		// Unknown object types and unknown pure-enum values are not errors: the objects are
+		// kept as opaque ones and the values stripped here, so the rest of the document still
+		// loads, and both are reported as ok.warnings. Everything past this point sees the
+		// stripped doc.
 		const { data: strippedData, warnings } = stripUnknownContent(
 			data,
 			registry,

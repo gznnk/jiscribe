@@ -3,12 +3,15 @@
 // WorkspacePathError into 400, so a hole in this function is a hole in the
 // workspace boundary itself.
 
+import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
 	resolveWorkspacePath,
+	resolveWorkspacePathReal,
 	WorkspacePathError,
 } from "../host/workspacePaths";
 
@@ -99,5 +102,105 @@ describe("resolveWorkspacePath", () => {
 		expect(() => resolveWorkspacePath(workspaceRoot, "../secret.txt")).toThrow(
 			/\.\.\/secret\.txt/,
 		);
+	});
+});
+
+// Real directories, because what is under test is where the links on a path
+// actually lead
+describe("resolveWorkspacePathReal", () => {
+	/** The workspace the paths below are relative to */
+	let realWorkspaceRoot: string;
+	/** A directory beside the workspace, standing for everything outside it */
+	let outsideRoot: string;
+
+	beforeEach(async () => {
+		realWorkspaceRoot = await mkdtemp(path.join(tmpdir(), "jiscribe-real-ws-"));
+		outsideRoot = await mkdtemp(path.join(tmpdir(), "jiscribe-real-out-"));
+	});
+
+	afterEach(async () => {
+		await rm(realWorkspaceRoot, { recursive: true, force: true });
+		await rm(outsideRoot, { recursive: true, force: true });
+	});
+
+	it("resolves a file that is really inside", async () => {
+		await writeFile(
+			path.join(realWorkspaceRoot, "diagram.jis.json"),
+			"{}",
+			"utf8",
+		);
+
+		expect(
+			await resolveWorkspacePathReal(realWorkspaceRoot, "diagram.jis.json"),
+		).toBe(path.join(realWorkspaceRoot, "diagram.jis.json"));
+	});
+
+	it("resolves a file that is not there yet", async () => {
+		// A write creates its file, so demanding that it already exists would leave
+		// every new canvas unchecked
+		expect(
+			await resolveWorkspacePathReal(
+				realWorkspaceRoot,
+				"docs/nested/new.jis.json",
+			),
+		).toBe(path.join(realWorkspaceRoot, "docs", "nested", "new.jis.json"));
+	});
+
+	it.skipIf(process.platform === "win32")(
+		"rejects a file that is a link out of the workspace",
+		async () => {
+			const outsideFile = path.join(outsideRoot, "secret.jis.json");
+			await writeFile(outsideFile, "{}", "utf8");
+			await symlink(
+				outsideFile,
+				path.join(realWorkspaceRoot, "linked.jis.json"),
+			);
+
+			await expect(
+				resolveWorkspacePathReal(realWorkspaceRoot, "linked.jis.json"),
+			).rejects.toThrow(WorkspacePathError);
+		},
+	);
+
+	it.skipIf(process.platform === "win32")(
+		"rejects a file under a directory that is a link out of the workspace",
+		async () => {
+			// The file itself does not exist, so what is resolved is the deepest
+			// ancestor that does — which is the link
+			await symlink(outsideRoot, path.join(realWorkspaceRoot, "escape"));
+
+			await expect(
+				resolveWorkspacePathReal(realWorkspaceRoot, "escape/new.jis.json"),
+			).rejects.toThrow(WorkspacePathError);
+		},
+	);
+
+	it.skipIf(process.platform === "win32")(
+		"takes a link that stays inside the workspace",
+		async () => {
+			await mkdir(path.join(realWorkspaceRoot, "docs"), { recursive: true });
+			await writeFile(
+				path.join(realWorkspaceRoot, "docs", "diagram.jis.json"),
+				"{}",
+				"utf8",
+			);
+			await symlink(
+				path.join(realWorkspaceRoot, "docs"),
+				path.join(realWorkspaceRoot, "shortcut"),
+			);
+
+			expect(
+				await resolveWorkspacePathReal(
+					realWorkspaceRoot,
+					"shortcut/diagram.jis.json",
+				),
+			).toBe(path.join(realWorkspaceRoot, "shortcut", "diagram.jis.json"));
+		},
+	);
+
+	it("rejects what the lexical check already rejects", async () => {
+		await expect(
+			resolveWorkspacePathReal(realWorkspaceRoot, "../secret.txt"),
+		).rejects.toThrow(WorkspacePathError);
 	});
 });

@@ -298,7 +298,9 @@ export const requireObjectBounds = (
 		throw new DocOperationError(
 			isConnectorObject(object)
 				? `${object.id} is a connector: it follows the objects it joins, so move or resize those instead`
-				: `${object.id} ("${object.type}") has no position that can be changed`,
+				: definitions.has(object.type)
+					? `${object.id} ("${object.type}") has no position that can be changed`
+					: `${object.id} is "${object.type}", a type this build does not know: it is kept as it is, so it cannot be moved or resized — only restacked, grouped or deleted`,
 		);
 	}
 	return bounds;

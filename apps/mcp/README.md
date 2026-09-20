@@ -49,9 +49,15 @@ file and mirrors it into the viewer. When a person moves or retypes something in
 the viewer, it is written back, so the next read shows what they changed. No
 canvas state is kept in the tools themselves.
 
-Every path a tool takes is absolute. The one exception is an `image` shape's
-`src`, which is relative to the directory its `.jis` lives in and cannot climb
-out of it — so a drawing and the pictures it names travel together.
+Every path a tool takes is absolute and names a canvas file (`.jis`, or the
+longer `.jis.json` / `.jiscribe` / `.jiscribe.json`); anything else is refused,
+so a tool can never rewrite a file of another kind. The path is resolved
+through its symbolic links first: one file named two ways is one file to the
+lock and the undo history, a `.jis` that is a link is edited where it leads,
+and a link to a file of another kind is refused. The one exception is an
+`image` shape's `src`, which is relative to the directory its `.jis` lives in
+and cannot climb out of it — so a drawing and the pictures it names travel
+together.
 
 Three families of tools, 69 in all:
 
@@ -76,10 +82,11 @@ to be edited directly rather than through these tools.
 
 ## The viewer
 
-`open_canvas` starts an HTTP + WebSocket host inside the MCP process (port 5190,
-stepping up one at a time if taken, as far as 5209) and opens a Chromium
-app-mode window — no tabs, no address bar. It falls back to the default browser
-when no Chromium is found.
+`open_canvas` starts an HTTP + WebSocket host inside the MCP process (on
+`127.0.0.1`, port 5190, stepping up one at a time if taken, as far as 5209; the
+URL it returns names that address) and opens a Chromium app-mode window — no
+tabs, no address bar. It falls back to the default browser when no Chromium is
+found.
 
 - `JISCRIBE_MCP_BROWSER` — `tab` (or `default`) for the default browser, or the
   name or path of an executable to use in app mode and headless mode
@@ -87,14 +94,44 @@ when no Chromium is found.
   means "do not put a window up unasked", so `headless: true` is still honoured
 - `JISCRIBE_MCP_VIEWER_ROOT` — serve the viewer from another directory
 
+The host listens on `127.0.0.1` only and answers to `localhost`,
+`127.0.0.1` and `[::1]` alone — a request under any other `Host` is refused,
+which is what DNS rebinding looks like from here. A WebSocket or a write from
+a page on another origin is refused too, and both carry a per-host session
+token the page fetches from `/api/session` (a window left over from a host
+that served another directory on the same port cannot write into this one).
+The file API writes only the file on display and reads only the images a
+diagram points at (reads check the `Host` alone, since a page elsewhere can
+embed such an image but not read it), never a path outside the diagram's
+directory, symbolic links included. Every write is parsed as a canvas document
+first, names the revision the window last synced (`If-Match`, the SHA-256 the
+host put on the `openCanvas` / `docChanged` frame) and goes through the same
+per-file lock the tools use, so a person's save and the AI's write cannot
+overwrite each other unnoticed: a save behind the file is refused with 412.
+Edits the file does not hold yet are not drawn over by a newer file either:
+the window merges them onto it object by object and writes the result, and
+where both sides changed the same object the file wins and a notice names —
+by the text on it, or its type — what was not saved. A newer file that arrives mid-drag or while text is
+being typed waits until the person lets go. The window knows a document by
+the host that sent it as well as by its path, so a file of the same name in
+another directory starts afresh — its undo history does not reach back into
+the previous file — while a reconnect to the same host keeps it. An edit is
+written only to the document it was made on: before another file goes on
+display the window writes out what it holds, and an edit the canvas hands over
+after the switch is reported in a notice rather than saved into the new file.
+Such notices go on their own after a few seconds, since there is nothing left
+to resolve; the error bar is kept for what lasts until it is fixed — a broken
+or missing file, a write that failed.
+
 `open_canvas` with `headless: true` opens a window-less Chromium instead, so the
 16 screen-side tools have something to work with while the user's screen stays
 as it was. It names a Chromium executable directly and never falls back to a
 tab, since no default browser has a headless mode; with none installed the tool
 says so rather than leaving the AI blind. It runs on a throwaway profile in a
-temporary directory, removed when the window goes, so it never contends with the
-browser the user already has open — and carries none of their extensions,
-sessions or history. Under WSL, where the browser is a Windows-side one, that
+temporary directory the host creates for it, removed when the window goes (and
+swept on the next launch if a killed server left it behind), so it never
+contends with the browser the user already has open — and carries none of their
+extensions, sessions or history. Under WSL, where the browser is a Windows-side one, that
 directory is this user's Windows `TEMP`, which Windows itself is asked for; if it
 cannot be had, those browsers are left out of the attempt and the tool says why,
 rather than falling back to a profile someone else on the machine can reach. A viewer that is already connected,
@@ -128,3 +165,15 @@ runtime) — which is what gets published, so a checkout is not needed to run it
 
 To work on the viewer alone, `pnpm --filter jiscribe-mcp dev:viewer` serves it
 from vite on 5196 and proxies to the host on 5190.
+
+`pnpm --filter jiscribe-mcp test:e2e` runs the Playwright suite in `e2e/`, which
+drives the real viewer in a real Chromium against a real host and the server as
+it is shipped. It builds first (the build above, some twenty seconds) because the
+host serves `dist/client/` and refuses to start without it. What it covers is the
+half the vitest suite cannot see: the file being drawn, a tool's write reaching
+the page, a person's edit reaching the file, a second file taking the page over,
+the edits buffered in the page being written out before another file goes up,
+an undo that stays with its own file across a switch to another directory,
+`capture_canvas` answered by the drawn canvas, and a write refused for a file
+that moved on. The hosts take the usual port (5190 upwards), so nothing else may
+be serving a canvas while it runs.
