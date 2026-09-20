@@ -81,17 +81,8 @@ export function findConnectableTargetAt(args: {
 		hitIds.push(id);
 	}
 
-	if (hitIds.length === 0) {
-		return null;
-	}
-	// One hit needs no z-order, and sorting is not free at any length: the sort
-	// indexes the whole of rootIds up front, which costs about as much per call as
-	// the scan above. Most drag events land on nothing or on one shape.
-	if (hitIds.length === 1) {
-		return { id: hitIds[0], object: objects[hitIds[0]] };
-	}
-
-	// Back to front, so the last is the one drawn on top.
+	// Back to front, so the last is the one drawn on top. The one hit a drag event
+	// usually produces costs nothing to order (sortObjectIdsByZOrder returns early).
 	const frontMostId = sortObjectIdsByZOrder(hitIds, objects, rootIds).at(-1);
 	if (frontMostId === undefined) {
 		return null;
