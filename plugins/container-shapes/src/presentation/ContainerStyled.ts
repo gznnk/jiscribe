@@ -5,9 +5,10 @@ import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
 /**
  * Container ("frame") sub-parts. The BODY never captures pointer events, so a
  * click on the interior falls through to whatever object sits inside (or the
- * canvas) — the container is selectable only by its HEADER band and its OUTLINE
- * stroke. This needs no change to the hit-testing path: pass-through is purely
- * these pointer-events rules (getGestureTarget walks to the wrapping <g data-kind>).
+ * canvas) — the container is selectable only by its HEADER band and the strip
+ * along its border. This needs no change to the hit-testing path: pass-through
+ * is purely these pointer-events rules (getGestureTarget walks to the wrapping
+ * <g data-kind>).
  */
 
 /** Optional background tint. `pointer-events: none` = never steals interior clicks. */
@@ -39,16 +40,32 @@ export const ContainerDivider = styled.line<StrokePaintProps>`
 `;
 
 /**
- * Border. `fill: none` means the interior does not capture pointer events
- * (default `visiblePainted`) — only the painted stroke does, so the box edge
- * selects the container while the interior stays pass-through.
+ * Border. `fill: none` keeps the interior pass-through, and
+ * `pointer-events: none` hands the edge over to ContainerOutlineHitArea — the
+ * painted stroke is a 1px target at the default width, and thinner still once
+ * zoomed out.
  */
 export const ContainerOutline = styled.rect<StrokePaintProps>`
 	fill: none;
 	${strokePaint}
+	pointer-events: none;
 	cursor: grab;
 
 	&:focus {
 		outline: none;
 	}
+`;
+
+/**
+ * Invisible grab strip along the border, the same build as AwsGroupOutlineHitArea:
+ * `pointer-events: stroke` makes only the band a target and leaves the interior
+ * through. The band straddles the edge, so its inner half (6 world units) takes
+ * clicks that would otherwise reach a shape placed hard against the frame.
+ */
+export const ContainerOutlineHitArea = styled.rect`
+	fill: none;
+	stroke: transparent;
+	stroke-width: 12;
+	pointer-events: stroke;
+	cursor: grab;
 `;

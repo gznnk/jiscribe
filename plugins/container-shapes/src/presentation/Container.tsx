@@ -5,6 +5,7 @@ import {
 	ContainerDivider,
 	ContainerHeader,
 	ContainerOutline,
+	ContainerOutlineHitArea,
 } from "./ContainerStyled";
 import { calcContainerHeaderHeight } from "../schema/calcContainerHeaderHeight";
 import type { ContainerState } from "../state/ContainerState";
@@ -67,6 +68,7 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 				strokeWidth={strokeWidth}
 				strokeDasharray={strokeDasharray}
 			/>
+			<ContainerOutlineHitArea x={x} y={y} width={width} height={height} />
 			<ContainerOutline
 				x={x}
 				y={y}
