@@ -1,13 +1,13 @@
 import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
 
-import { CONNECTOR_HIT_STROKE_WIDTH } from "./connectorHitArea";
+import { LINE_HIT_STROKE_WIDTH } from "../../utils/hitStrokeWidth";
 
 // Bands of two perpendicular segments overlap where they meet, so a segment shorter than the band
 // width sits entirely inside its neighbours' overlap and cannot be aimed at — a drag there lands on
 // whichever band is on top and moves the wrong axis. Below this length a segment gets no band; the
 // shape stays adjustable from the neighbours, which are the ones actually under the pointer.
-const MIN_SEGMENT_LENGTH = CONNECTOR_HIT_STROKE_WIDTH;
+const MIN_SEGMENT_LENGTH = LINE_HIT_STROKE_WIDTH;
 
 /** A grabbable segment, as a rectangle in world coordinates. */
 type SegmentHitArea = {
@@ -108,7 +108,7 @@ const ConnectorSegmentSlideHitAreasComponent: React.FC<
 > = ({ id, points, disablePointerEvents = false }) => {
 	const areas = collectSegmentHitAreas(
 		points,
-		CONNECTOR_HIT_STROKE_WIDTH,
+		LINE_HIT_STROKE_WIDTH,
 		MIN_SEGMENT_LENGTH,
 	);
 

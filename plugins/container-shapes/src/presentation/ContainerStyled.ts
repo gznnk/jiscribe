@@ -1,6 +1,10 @@
 import styled from "@emotion/styled";
 import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
-import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
+import {
+	fillPaint,
+	FRAME_BORDER_HIT_STROKE_WIDTH,
+	strokePaint,
+} from "@jiscribe/canvas-sdk";
 
 /**
  * Container ("frame") sub-parts. The BODY never captures pointer events, so a
@@ -57,15 +61,14 @@ export const ContainerOutline = styled.rect<StrokePaintProps>`
 `;
 
 /**
- * Invisible grab strip along the border, the same build as AwsGroupOutlineHitArea:
- * `pointer-events: stroke` makes only the band a target and leaves the interior
- * through. The band straddles the edge, so its inner half (6 world units) takes
- * clicks that would otherwise reach a shape placed hard against the frame.
+ * Invisible grab strip along the border. `pointer-events: stroke` makes only the
+ * band a target and leaves the interior through. What the band takes from that
+ * interior is documented on FRAME_BORDER_HIT_STROKE_WIDTH.
  */
 export const ContainerOutlineHitArea = styled.rect`
 	fill: none;
 	stroke: transparent;
-	stroke-width: 12;
+	stroke-width: ${FRAME_BORDER_HIT_STROKE_WIDTH};
 	pointer-events: stroke;
 	cursor: grab;
 `;

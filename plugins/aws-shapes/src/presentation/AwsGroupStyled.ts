@@ -1,6 +1,10 @@
 import styled from "@emotion/styled";
 import type { FillPaintProps, StrokePaintProps } from "@jiscribe/canvas-sdk";
-import { fillPaint, strokePaint } from "@jiscribe/canvas-sdk";
+import {
+	fillPaint,
+	FRAME_BORDER_HIT_STROKE_WIDTH,
+	strokePaint,
+} from "@jiscribe/canvas-sdk";
 
 /**
  * The frame's body. `pointer-events: none`, so it never takes a click meant for
@@ -45,15 +49,15 @@ export const AwsGroupOutline = styled.rect<StrokePaintProps>`
 
 /**
  * A thick invisible grab strip along the border. `pointer-events: stroke` makes
- * only the band of the line a target and leaves the inside through (the same
- * build as canvas's PolylineHitArea). The kinds with no corner badge
- * (availability zone, security group, generic) have a small header band, so
- * without this the only target would be a 1px line.
+ * only the band of the line a target and leaves the inside through. What the
+ * band takes from that inside is documented on FRAME_BORDER_HIT_STROKE_WIDTH.
+ * The kinds with no corner badge (availability zone, security group, generic)
+ * have a small header band, so without this the only target would be a 1px line.
  */
 export const AwsGroupOutlineHitArea = styled.rect`
 	fill: none;
 	stroke: transparent;
-	stroke-width: 12;
+	stroke-width: ${FRAME_BORDER_HIT_STROKE_WIDTH};
 	pointer-events: stroke;
 	cursor: grab;
 `;
