@@ -45,8 +45,12 @@ const resolveInsertionPoint = (
 		if (!childrenByContainer.has(loadedPlace.parentId)) {
 			continue;
 		}
-		for (let index = loadedPlace.precedingCount - 1; index >= 0; index -= 1) {
-			const precedingId = loadedPlace.loadedSiblingIds[index];
+		for (
+			let index = loadedPlace.precedingSiblingCount - 1;
+			index >= 0;
+			index -= 1
+		) {
+			const precedingId = loadedPlace.knownSiblingIds[index];
 			if (
 				containerOf.has(precedingId) &&
 				containerOf.get(precedingId) === loadedPlace.parentId

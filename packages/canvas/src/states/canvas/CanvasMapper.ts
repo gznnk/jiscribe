@@ -73,7 +73,7 @@ export const canvasToState = (
 		parentId: string | undefined,
 		outerPlaces: readonly OpaqueObjectLoadedPlace[],
 	): string[] => {
-		const loadedSiblingIds: string[] = [];
+		const knownSiblingIds: string[] = [];
 		siblingDocs.forEach((siblingDoc) => {
 			const isOpaque = opaqueDocs.has(siblingDoc);
 			const loadedPlaces =
@@ -81,8 +81,8 @@ export const canvasToState = (
 					? [
 							{
 								parentId,
-								loadedSiblingIds,
-								precedingCount: loadedSiblingIds.length,
+								knownSiblingIds,
+								precedingSiblingCount: knownSiblingIds.length,
 							},
 							...outerPlaces,
 						]
@@ -94,9 +94,9 @@ export const canvasToState = (
 				});
 				return;
 			}
-			loadedSiblingIds.push(processObject(siblingDoc, parentId, loadedPlaces));
+			knownSiblingIds.push(processObject(siblingDoc, parentId, loadedPlaces));
 		});
-		return loadedSiblingIds;
+		return knownSiblingIds;
 	};
 
 	// Recurse over the validated tree. It is finite and cannot encode a

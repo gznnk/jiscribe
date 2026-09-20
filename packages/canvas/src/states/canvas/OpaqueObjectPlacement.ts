@@ -13,9 +13,9 @@ export type OpaqueObjectLoadedPlace = {
 	 * at load, in drawing order. Shared by every place recorded in the same
 	 * container.
 	 */
-	loadedSiblingIds: readonly string[];
-	/** How many of `loadedSiblingIds` were drawn before it; 0 = at the back. */
-	precedingCount: number;
+	knownSiblingIds: readonly string[];
+	/** How many of `knownSiblingIds` were drawn before it; 0 = at the back. */
+	precedingSiblingCount: number;
 };
 
 /**

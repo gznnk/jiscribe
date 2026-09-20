@@ -33,14 +33,18 @@ const opaqueConnector = (
 	});
 
 /**
- * One container it sat in: `loadedSiblingIds` in drawing order, and how many of
+ * One container it sat in: `knownSiblingIds` in drawing order, and how many of
  * them came before it.
  */
 const place = (
 	parentId: string | undefined,
-	loadedSiblingIds: readonly string[],
-	precedingCount: number,
-): OpaqueObjectLoadedPlace => ({ parentId, loadedSiblingIds, precedingCount });
+	knownSiblingIds: readonly string[],
+	precedingSiblingCount: number,
+): OpaqueObjectLoadedPlace => ({
+	parentId,
+	knownSiblingIds,
+	precedingSiblingCount,
+});
 
 const placement = (
 	doc: OpaqueObjectDoc,
