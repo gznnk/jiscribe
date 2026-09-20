@@ -27,7 +27,7 @@ import {
  * Text styling is stored per slot, so the write targets whichever slots the
  * selection addresses: the one slot selected below the object when there is
  * one, otherwise **every** slot of the object. The menus read their current
- * value through the same rule (getSelectedOrFirstTextSlot).
+ * value through the same rule (readSelectionTextStyle).
  *
  * The exception is an open editor with a stretch of its text selected: the
  * property then lands on those characters only (styleTextEditSelection), which is

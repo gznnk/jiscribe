@@ -1,4 +1,5 @@
-﻿import { memo, useRef } from "react";
+import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
+import { memo, useRef } from "react";
 
 import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
@@ -6,6 +7,11 @@ import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuPart
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
+import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
+import {
+	isMixedSelectionValue,
+	selectionValueOrFirst,
+} from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -14,10 +20,8 @@ import {
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
-import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "font-size";
-const DEFAULT_FONT_SIZE = 14;
 const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
 // Slider covers the common typographic range; larger sizes via the number input.
@@ -47,8 +51,10 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	);
 
 	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
-	const fontSize = slot?.fontSize ?? DEFAULT_FONT_SIZE;
+	const { fontSize } = readSelectionTextStyle(
+		canvasState,
+		objectTextStyleDefaults,
+	);
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
@@ -70,7 +76,11 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 					<FontSizeMenuWrapper>
 						<ObjectMenuSlider
 							label={messages.menuFontSize}
-							value={fontSize}
+							value={
+								selectionValueOrFirst(fontSize, undefined) ??
+								TEXT_STYLE_FALLBACK.fontSize
+							}
+							isMixed={isMixedSelectionValue(fontSize)}
 							min={MIN_FONT_SIZE}
 							max={MAX_FONT_SIZE}
 							sliderMin={SLIDER_MIN_FONT_SIZE}

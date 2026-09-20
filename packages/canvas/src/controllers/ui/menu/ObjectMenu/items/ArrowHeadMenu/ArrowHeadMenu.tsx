@@ -3,7 +3,7 @@ import { memo, useRef } from "react";
 
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
 import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
-import { getSelectedArrowType } from "./utils/getSelectedArrowType";
+import { MixedArrowHeadIcon } from "./MixedArrowHeadIcon";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import {
 	commandPart,
@@ -12,6 +12,14 @@ import {
 } from "../../../../../gestures/handlers/menu/utils/menuParts";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
+import {
+	readSelectionArrowType,
+	UNSET_ARROW_TYPE,
+} from "../../../utils/readSelectionArrowType";
+import {
+	isMixedSelectionValue,
+	selectionValueOr,
+} from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
@@ -41,8 +49,12 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	const isStartOpen = canvasState.objectMenuOpenId === SECTION_ID_START;
 	const isEndOpen = canvasState.objectMenuOpenId === SECTION_ID_END;
 
-	const currentStart = getSelectedArrowType(canvasState, "startArrow");
-	const currentEnd = getSelectedArrowType(canvasState, "endArrow");
+	const startArrow = readSelectionArrowType(canvasState, "startArrow");
+	const endArrow = readSelectionArrowType(canvasState, "endArrow");
+	const isStartMixed = isMixedSelectionValue(startArrow);
+	const isEndMixed = isMixedSelectionValue(endArrow);
+	const currentStart = selectionValueOr(startArrow, UNSET_ARROW_TYPE);
+	const currentEnd = selectionValueOr(endArrow, UNSET_ARROW_TYPE);
 
 	const {
 		submenuRef: startSubmenuRef,
@@ -66,7 +78,11 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 					data-part={togglePart(SECTION_ID_START)}
 					title={messages.menuStartArrow}
 				>
-					<ArrowHeadIconPreview arrowType={currentStart} direction="start" />
+					{isStartMixed ? (
+						<MixedArrowHeadIcon />
+					) : (
+						<ArrowHeadIconPreview arrowType={currentStart} direction="start" />
+					)}
 				</ObjectMenuButton>
 				{isStartOpen && (
 					<ObjectMenuDropdownPanel
@@ -78,7 +94,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 							{ArrowTypes.map((type) => (
 								<ArrowTypeButton
 									key={`start-${type}`}
-									isActive={currentStart === type}
+									isActive={!isStartMixed && currentStart === type}
 									data-kind="menu"
 									data-id="object-menu"
 									data-part={setPart("startArrow", type)}
@@ -111,7 +127,11 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 					data-part={togglePart(SECTION_ID_END)}
 					title={messages.menuEndArrow}
 				>
-					<ArrowHeadIconPreview arrowType={currentEnd} direction="end" />
+					{isEndMixed ? (
+						<MixedArrowHeadIcon />
+					) : (
+						<ArrowHeadIconPreview arrowType={currentEnd} direction="end" />
+					)}
 				</ObjectMenuButton>
 				{isEndOpen && (
 					<ObjectMenuDropdownPanel
@@ -123,7 +143,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 							{ArrowTypes.map((type) => (
 								<ArrowTypeButton
 									key={`end-${type}`}
-									isActive={currentEnd === type}
+									isActive={!isEndMixed && currentEnd === type}
 									data-kind="menu"
 									data-id="object-menu"
 									data-part={setPart("endArrow", type)}

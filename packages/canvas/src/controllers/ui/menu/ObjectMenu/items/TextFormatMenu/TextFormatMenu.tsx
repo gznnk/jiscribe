@@ -18,13 +18,14 @@ import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ItalicIcon } from "../../../../icons/ItalicIcon";
 import { StrikethroughIcon } from "../../../../icons/StrikethroughIcon";
 import { UnderlineIcon } from "../../../../icons/UnderlineIcon";
+import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
+import { selectionValueOr } from "../../../utils/SelectionValue";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "text-format";
 
@@ -55,12 +56,20 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 	);
 
 	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
-	const isBold = isBoldFontWeight(slot?.fontWeight);
-	const isItalic = slot?.fontStyle === "italic";
-	const isUnderline = hasTextDecorationToken(slot?.textDecoration, "underline");
+	const textStyle = readSelectionTextStyle(
+		canvasState,
+		objectTextStyleDefaults,
+	);
+	// Each button is its own toggle, so mixing is read per field. A field the
+	// selection disagrees about reads as off, so one press brings all of it on.
+	const fontWeight = selectionValueOr(textStyle.fontWeight, undefined);
+	const fontStyle = selectionValueOr(textStyle.fontStyle, undefined);
+	const textDecoration = selectionValueOr(textStyle.textDecoration, undefined);
+	const isBold = isBoldFontWeight(fontWeight);
+	const isItalic = fontStyle === "italic";
+	const isUnderline = hasTextDecorationToken(textDecoration, "underline");
 	const isStrikethrough = hasTextDecorationToken(
-		slot?.textDecoration,
+		textDecoration,
 		"line-through",
 	);
 
@@ -84,7 +93,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 			isActive: isUnderline,
 			part: setPart(
 				"textDecoration",
-				toggleTextDecorationToken(slot?.textDecoration, "underline"),
+				toggleTextDecorationToken(textDecoration, "underline"),
 			),
 			label: messages.menuUnderline,
 			icon: <UnderlineIcon title={messages.menuUnderline} />,
@@ -94,7 +103,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 			isActive: isStrikethrough,
 			part: setPart(
 				"textDecoration",
-				toggleTextDecorationToken(slot?.textDecoration, "line-through"),
+				toggleTextDecorationToken(textDecoration, "line-through"),
 			),
 			label: messages.menuStrikethrough,
 			icon: <StrikethroughIcon title={messages.menuStrikethrough} />,

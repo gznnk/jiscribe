@@ -56,8 +56,8 @@ export const usePreviewFonts = (messages: CanvasMessages): void => {
 };
 
 type ObjectMenuFontFamilyListProps = {
-	/** The stack the text is drawn in now, which marks the active row; an unset family resolves to DEFAULT_FONT_FAMILY before it gets here. */
-	activeFontFamily: string;
+	/** The stack the text is drawn in now, which marks the active row; an unset family resolves to DEFAULT_FONT_FAMILY before it gets here, and undefined (a selection drawn in several) marks none. */
+	activeFontFamily: string | undefined;
 	/** Style property a row writes its stack to: `fontFamily` for a shape's text, `label.fontFamily` for a connector label. */
 	property: string;
 };

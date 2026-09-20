@@ -1,4 +1,5 @@
-﻿import { memo, useRef } from "react";
+﻿import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
+import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../rendering/objects/utils/resolveAutoColor";
@@ -6,6 +7,12 @@ import { togglePart } from "../../../../../gestures/handlers/menu/utils/menuPart
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { useCanvasRegistries } from "../../../../../registries/CanvasRegistriesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
+import { readSelectionTextStyle } from "../../../utils/readSelectionTextStyle";
+import {
+	isMixedSelectionValue,
+	selectionMixedValues,
+	selectionValueOr,
+} from "../../../utils/SelectionValue";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -14,10 +21,8 @@ import {
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
 import type { StylePropertyUpdater } from "../../ObjectMenuTypes";
-import { getSelectedOrFirstTextSlot } from "../../utils/getSelectedOrFirstTextSlot";
 
 const SECTION_ID = "font-color";
-const DEFAULT_FONT_COLOR = "#333333";
 
 type FontColorMenuProps = {
 	canvasState: CanvasControllerState;
@@ -43,8 +48,13 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 	);
 
 	const { objectTextStyleDefaults } = useCanvasRegistries();
-	const slot = getSelectedOrFirstTextSlot(canvasState, objectTextStyleDefaults);
-	const currentColor = slot?.fontColor ?? DEFAULT_FONT_COLOR;
+	const { fontColor } = readSelectionTextStyle(
+		canvasState,
+		objectTextStyleDefaults,
+	);
+	const isMixed = isMixedSelectionValue(fontColor);
+	const currentColor =
+		selectionValueOr(fontColor, undefined) ?? TEXT_STYLE_FALLBACK.fontColor;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
@@ -55,7 +65,15 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuFontColor}
 			>
-				<FontColorIcon underlineColor={resolveAutoColor(currentColor, "ink")} />
+				<FontColorIcon
+					underlineColor={resolveAutoColor(currentColor, "ink")}
+					mixedColors={selectionMixedValues(fontColor)?.map((mixedColor) =>
+						resolveAutoColor(
+							mixedColor ?? TEXT_STYLE_FALLBACK.fontColor,
+							"ink",
+						),
+					)}
+				/>
 			</ObjectMenuButton>
 			{isOpen && (
 				<ObjectMenuDropdownPanel
@@ -64,7 +82,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 					offsetX={offsetX}
 				>
 					<ObjectMenuColorPickerGrid
-						currentColor={currentColor}
+						currentColor={isMixed ? "" : currentColor}
 						property="fontColor"
 						onPropertyUpdate={onPropertyUpdate}
 					/>

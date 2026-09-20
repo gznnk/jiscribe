@@ -168,28 +168,40 @@ const SWATCH_BOX = `
 `;
 
 /**
- * The color a swatch shows. `transparent` draws the checker instead, so an
+ * What a swatch is painted with. `transparent` draws the checker instead, so an
  * unfilled shape is not mistaken for a white one.
  */
+const swatchBackground = (swatchColor: string): string =>
+	swatchColor === "transparent"
+		? `repeating-conic-gradient(${theme.transparentChecker} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
+		: swatchColor;
+
+/** The color a swatch shows. */
 export const PropertyColorSwatch = styled.span<{ swatchColor: string }>`
 	${SWATCH_BOX}
-	background: ${({ swatchColor }) =>
-		swatchColor === "transparent"
-			? `repeating-conic-gradient(${theme.transparentChecker} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
-			: swatchColor};
+	background: ${({ swatchColor }) => swatchBackground(swatchColor)};
 `;
 
 /**
- * Stands in for the swatch where the selection carries several colors. Hatched
- * rather than filled: any single color would read as the one the row states.
+ * Stands in for the swatch where the selection carries several colors: the
+ * box split into upright stripes (PropertyColorMixedSwatchSegment), one per
+ * color, rather than one fill that would read as the one the row states.
  */
 export const PropertyColorMixedSwatch = styled.span`
 	${SWATCH_BOX}
-	background: repeating-linear-gradient(
-		45deg,
-		${theme.foregroundMuted} 0 2px,
-		${theme.inputBg} 2px 5px
-	);
+	display: flex;
+	overflow: hidden;
+`;
+
+/** One stripe of PropertyColorMixedSwatch. */
+export const PropertyColorMixedSwatchSegment = styled.span<{
+	swatchColor: string;
+	/** The share of the box's width the stripe takes, 0..1. */
+	widthFraction: number;
+}>`
+	flex: none;
+	width: ${({ widthFraction }) => widthFraction * 100}%;
+	background: ${({ swatchColor }) => swatchBackground(swatchColor)};
 `;
 
 /** The resolved color of an `auto` swatch, named rather than spelled out in hex. */
