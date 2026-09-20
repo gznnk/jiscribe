@@ -46,11 +46,17 @@ export const collectOpaqueDocs = (
 	};
 	root.forEach(classify);
 
+	// A document of known types only — the usual one — is answered here, before
+	// anything walks the tree again looking for connectors to take along
+	if (opaqueDocs.size === 0) {
+		return opaqueDocs;
+	}
+
 	const connectors = root.filter(
 		(objectDoc) =>
 			objectDoc.type === ConnectorFeatures.type && !opaqueDocs.has(objectDoc),
 	);
-	if (opaqueDocs.size === 0 || connectors.length === 0) {
+	if (connectors.length === 0) {
 		return opaqueDocs;
 	}
 
