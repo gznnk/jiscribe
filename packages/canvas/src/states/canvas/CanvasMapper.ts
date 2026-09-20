@@ -6,7 +6,7 @@ import type { Point } from "@jiscribe/geometry";
 
 import { collectOpaqueDocs } from "./collectOpaqueDocs";
 import type {
-	OpaqueObjectAnchor,
+	OpaqueObjectLoadedPlace,
 	OpaqueObjectPlacement,
 } from "./OpaqueObjectPlacement";
 import { restoreOpaqueObjects } from "./restoreOpaqueObjects";
@@ -65,18 +65,18 @@ export const canvasToState = (
 	const opaqueObjects: OpaqueObjectPlacement[] = [];
 
 	// Maps one container's children in order, holding the opaque ones aside, and
-	// returns the ids of the mapped ones. Anchors are built only where something
+	// returns the ids of the mapped ones. Places are recorded only where something
 	// can use them — an opaque object, or a group that may hold one — and share the
 	// container's id list, which is complete by the time anything reads it.
 	const processSiblings = (
 		siblingDocs: readonly ObjectDoc[],
 		parentId: string | undefined,
-		outerAnchors: readonly OpaqueObjectAnchor[],
+		outerPlaces: readonly OpaqueObjectLoadedPlace[],
 	): string[] => {
 		const loadedSiblingIds: string[] = [];
 		siblingDocs.forEach((siblingDoc) => {
 			const isOpaque = opaqueDocs.has(siblingDoc);
-			const anchors =
+			const loadedPlaces =
 				opaqueDocs.size > 0 && (isOpaque || siblingDoc.type === "group")
 					? [
 							{
@@ -84,17 +84,17 @@ export const canvasToState = (
 								loadedSiblingIds,
 								precedingCount: loadedSiblingIds.length,
 							},
-							...outerAnchors,
+							...outerPlaces,
 						]
-					: outerAnchors;
+					: outerPlaces;
 			if (isOpaque) {
 				opaqueObjects.push({
 					doc: siblingDoc as OpaqueObjectDoc,
-					anchors,
+					loadedPlaces,
 				});
 				return;
 			}
-			loadedSiblingIds.push(processObject(siblingDoc, parentId, anchors));
+			loadedSiblingIds.push(processObject(siblingDoc, parentId, loadedPlaces));
 		});
 		return loadedSiblingIds;
 	};
@@ -105,7 +105,7 @@ export const canvasToState = (
 	const processObject = (
 		objDoc: ObjectDoc,
 		parentId: string | undefined,
-		anchors: readonly OpaqueObjectAnchor[],
+		loadedPlaces: readonly OpaqueObjectLoadedPlace[],
 	): string => {
 		const mappedState = mapper.toState(objDoc);
 		// The registration wraps each resizer with its type's own text-style
@@ -125,7 +125,7 @@ export const canvasToState = (
 			groupState.childIds = processSiblings(
 				groupDoc.children,
 				groupState.id,
-				anchors,
+				loadedPlaces,
 			);
 
 			const bounds = calculateGroupOrientedBounds(

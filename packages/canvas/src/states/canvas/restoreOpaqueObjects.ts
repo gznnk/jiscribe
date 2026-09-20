@@ -5,7 +5,7 @@ import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/Grou
 import { GroupFeatures } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 
 import type {
-	OpaqueObjectAnchor,
+	OpaqueObjectLoadedPlace,
 	OpaqueObjectPlacement,
 } from "./OpaqueObjectPlacement";
 import { readEndpointOwnerId } from "../utils/readEndpointOwnerId";
@@ -32,36 +32,36 @@ const collectNestedIds = (value: unknown, ids: Set<string>): void => {
 };
 
 /**
- * The first anchor whose container is still in the tree, placed after the
+ * The first place whose container is still in the tree, placed after the
  * nearest object that was drawn before it at load and still sits in that same
- * container. The root is always the last anchor, so something always answers.
+ * container. The root is always the last place, so something always answers.
  */
 const resolveInsertionPoint = (
-	anchors: readonly OpaqueObjectAnchor[],
+	loadedPlaces: readonly OpaqueObjectLoadedPlace[],
 	childrenByContainer: ReadonlyMap<string | undefined, ObjectDoc[]>,
 	containerOf: ReadonlyMap<string, string | undefined>,
 ): InsertionPoint => {
-	for (const anchor of anchors) {
-		if (!childrenByContainer.has(anchor.parentId)) {
+	for (const loadedPlace of loadedPlaces) {
+		if (!childrenByContainer.has(loadedPlace.parentId)) {
 			continue;
 		}
-		for (let index = anchor.precedingCount - 1; index >= 0; index -= 1) {
-			const precedingId = anchor.loadedSiblingIds[index];
+		for (let index = loadedPlace.precedingCount - 1; index >= 0; index -= 1) {
+			const precedingId = loadedPlace.loadedSiblingIds[index];
 			if (
 				containerOf.has(precedingId) &&
-				containerOf.get(precedingId) === anchor.parentId
+				containerOf.get(precedingId) === loadedPlace.parentId
 			) {
-				return { parentId: anchor.parentId, afterId: precedingId };
+				return { parentId: loadedPlace.parentId, afterId: precedingId };
 			}
 		}
-		return { parentId: anchor.parentId, afterId: undefined };
+		return { parentId: loadedPlace.parentId, afterId: undefined };
 	}
 	return { parentId: undefined, afterId: undefined };
 };
 
 /**
  * Puts the opaque objects back into a document tree rebuilt from state, each
- * where it sat among its siblings (see {@link OpaqueObjectPlacement.anchors}).
+ * where it sat among its siblings (see {@link OpaqueObjectPlacement.loadedPlaces}).
  *
  * An opaque connector with an end on an object that is no longer in the tree is
  * left out, the way deleting a shape takes its connectors on the canvas; kept,
@@ -111,7 +111,7 @@ export const restoreOpaqueObjects = (
 		string | undefined,
 		Map<string | undefined, ObjectDoc[]>
 	>();
-	placements.forEach(({ doc, anchors }) => {
+	placements.forEach(({ doc, loadedPlaces }) => {
 		if (
 			doc.type === ConnectorFeatures.type &&
 			!(isPresentEnd(doc.source) && isPresentEnd(doc.target))
@@ -119,7 +119,7 @@ export const restoreOpaqueObjects = (
 			return;
 		}
 		const { parentId, afterId } = resolveInsertionPoint(
-			anchors,
+			loadedPlaces,
 			childrenByContainer,
 			containerOf,
 		);

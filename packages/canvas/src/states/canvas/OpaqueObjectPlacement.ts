@@ -2,14 +2,16 @@ import type { OpaqueObjectDoc } from "@jiscribe/doc/model/objects/base/OpaqueObj
 
 /**
  * Where an opaque object sat in one container when the document was loaded: the
- * container, and the known objects in it that were drawn before it.
+ * container, and the known objects in it that were drawn before it. A container
+ * here is a group or the root, not the `container` shape type.
  */
-export type OpaqueObjectAnchor = {
+export type OpaqueObjectLoadedPlace = {
 	/** The group holding it; undefined for the root. */
 	parentId: string | undefined;
 	/**
 	 * Ids of the objects this canvas holds in `objects` that the container held
-	 * at load, in drawing order. Shared by every anchor into the same container.
+	 * at load, in drawing order. Shared by every place recorded in the same
+	 * container.
 	 */
 	loadedSiblingIds: readonly string[];
 	/** How many of `loadedSiblingIds` were drawn before it; 0 = at the back. */
@@ -26,10 +28,11 @@ export type OpaqueObjectPlacement = {
 	/** The object exactly as the document holds it. */
 	doc: OpaqueObjectDoc;
 	/**
-	 * Where it goes back, innermost first: its own container, then the one
-	 * holding that group, out to the root, which is always last. The first whose
-	 * container still exists is used, so an object whose group was ungrouped or
-	 * deleted around it lands where the group was rather than being lost.
+	 * Where it sat when the document was loaded, innermost container first: its
+	 * own container, then the one holding that group, out to the root, which is
+	 * always last. Recorded all the way out because a container can be gone by
+	 * the time the state becomes a document again — `restoreOpaqueObjects` is
+	 * where the choice between them is made.
 	 */
-	anchors: readonly OpaqueObjectAnchor[];
+	loadedPlaces: readonly OpaqueObjectLoadedPlace[];
 };
