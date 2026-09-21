@@ -34,7 +34,6 @@ vi.mock("../canvasDefinitions", async (importActual) => {
 						markdown: {
 							...markdownDefinition,
 							features: { ...markdownDefinition.features, text: "body" },
-							textRuns: undefined,
 						},
 					},
 				};

@@ -649,18 +649,10 @@ function assertTemplateHeightRequirement(
 }
 
 /**
- * Whether the type's own text takes no run: a source body is a plain string by
- * its very kind (`features.text: "source"`), and a `"body"` type may refuse runs
- * by hand.
- */
-const refusesTextRuns = (definition: ObjectDocDefinition): boolean =>
-	definition.features.text === "source" || definition.textRuns === false;
-
-/**
  * Fail generation when a handwritten $def disagrees with the type's definition
  * about what its text may hold. The ops write runs into a text that takes them,
  * so a template holding `text` to a plain string has to be matched by a type that
- * takes none (see {@link refusesTextRuns}), and the other way round. A source
+ * takes none (`features.text: "source"`), and the other way round. A source
  * type additionally carries no emphasis typography, the syntax of its language
  * being what sets that, so a template offering those fields would complete a
  * document the doc validator rejects.
@@ -677,10 +669,10 @@ function assertTemplateTextShape(
 		return;
 	}
 	const isPlainStringText = textProperty.type === "string";
-	const takesNoRuns = refusesTextRuns(definition);
+	const takesNoRuns = definition.features.text === "source";
 	if (isPlainStringText !== takesNoRuns) {
 		throw new Error(
-			`The handwritten $def "${defName}" holds text to ${isPlainStringText ? "a plain string" : "rich text"}, but type "${type}" ${takesNoRuns ? "refuses" : "takes"} text runs (templates/handwrittenDefs.json, textRuns)`,
+			`The handwritten $def "${defName}" holds text to ${isPlainStringText ? "a plain string" : "rich text"}, but type "${type}" ${takesNoRuns ? "refuses" : "takes"} text runs (templates/handwrittenDefs.json, features.text)`,
 		);
 	}
 	if (definition.features.text !== "source") {

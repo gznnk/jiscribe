@@ -362,12 +362,7 @@ const planTextStyle = (
 		definition?.features.text,
 		params.slot,
 	);
-	// A source body is a plain string by its very shape; `textRuns: false` is the
-	// same refusal declared by hand, for a `"body"` type that renders its own source.
-	if (
-		definition?.textRuns === false ||
-		definition?.features.text === "source"
-	) {
+	if (definition?.features.text === "source") {
 		throw new DocOperationError(
 			`${id} ("${object.type}") holds its text as a plain string that takes no styling on part of it, so use setStyle to style the whole of it`,
 		);
@@ -434,13 +429,12 @@ const applyTextStyle = (write: TextStyleWrite): void => {
  * @param doc - Mutated in place
  * @param id - Id of the object to style; must exist in the root tree
  * @param params - The stretch to style and the styling to give it
- * @param definitions - Type table `features.text` and `textRuns` are read from
+ * @param definitions - Type table `features.text` is read from
  * @throws {@link DocOperationError} when the id is missing, when the type holds no
- *   text a stretch can be styled in (a connector label, a slot of rows, a
- *   `text: "source"` body and a type declaring `textRuns: false` are all styled
- *   as a whole, through `setStyle`), when `slot` is absent or unknown on a
- *   slotted type, when `match` does not occur in the text, or when `occurrence` is
- *   past the last one
+ *   text a stretch can be styled in (a connector label, a slot of rows and a
+ *   `text: "source"` body are all styled as a whole, through `setStyle`), when
+ *   `slot` is absent or unknown on a slotted type, when `match` does not occur in
+ *   the text, or when `occurrence` is past the last one
  */
 export const setInlineTextStyle = (
 	doc: CanvasDoc,
@@ -469,7 +463,7 @@ export type SetInlineTextStyleEntry = {
  *   no-op. An id may appear more than once, which is how several stretches of one text
  *   get styled: the entries stack, and where two of them overlap the later one wins on
  *   the properties it sets
- * @param definitions - Type table `features.text` and `textRuns` are read from
+ * @param definitions - Type table `features.text` is read from
  * @throws {@link DocOperationError} for any reason {@link setInlineTextStyle} throws for, with the
  *   offending entry named as `entries[i] (id)` and the document still untouched
  */
