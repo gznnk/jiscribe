@@ -127,7 +127,7 @@
 		"check:notices": "node scripts/generateNotices.mjs --check",
 		"package": "vsce package --no-dependencies",
 		"publish-ext": "vsce publish --no-dependencies",
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:e2e": "node build.mjs && node build-e2e.mjs && vscode-test"

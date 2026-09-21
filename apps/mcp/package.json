@@ -37,7 +37,7 @@
 		"build": "tsc --noEmit && vite build && node build.mjs",
 		"prepublishOnly": "node verifyDist.mjs",
 		"watch": "node build.mjs --watch",
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:e2e": "playwright test",

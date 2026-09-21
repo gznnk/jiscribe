@@ -14,7 +14,7 @@
 		"./testing/harness": "./e2e/testing-harness.ts"
 	},
 	"scripts": {
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"dev:harness": "vite e2e/harness",
 		"generate:fonts": "node build/generateFontsCss.ts",
 		"check:fonts": "node build/generateFontsCss.ts --check",

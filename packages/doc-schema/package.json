@@ -13,7 +13,7 @@
 	"scripts": {
 		"generate": "tsx generator/src/main.ts",
 		"check": "tsx generator/src/main.ts --check",
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {

@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"build": "node build.mjs",
-		"lint": "eslint .",
+		"lint": "eslint --cache --cache-location node_modules/.cache/eslint/ .",
 		"measure:tolerance": "node --experimental-strip-types render-tests/measureTolerance.ts",
 		"test": "vitest run",
 		"test:render": "vitest run --config vitest.render.config.ts",
