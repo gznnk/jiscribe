@@ -1,10 +1,11 @@
 import type { GeometryType } from "./GeometryType";
 import type { ObjectType } from "./ObjectType";
+import type { TextType } from "./TextType";
 
 /**
  * Per-type declaration descriptor for canvas objects.
  * The flags control which feature interfaces are included in the generated
- * object types (Doc / State); `text` also picks between the two doc shapes.
+ * object types (Doc / State); `text` also picks the doc form its text takes.
  */
 export type ObjectFeatures = {
 	/** Object type identifier */
@@ -17,8 +18,8 @@ export type ObjectFeatures = {
 	stroke?: boolean;
 	/** Fill/background styling (FillStyleDoc) */
 	fill?: boolean;
-	/** Text shape: "body" is a single body (root-form doc), "slots" is named slots (keyed-form doc) */
-	text?: "body" | "slots";
+	/** How the type holds its text (see {@link TextType}); left out by a type holding none */
+	text?: TextType;
 	/** Corner radius styling (for rect) */
 	radius?: boolean;
 	/** Arrowhead ends (startArrow / endArrow) */

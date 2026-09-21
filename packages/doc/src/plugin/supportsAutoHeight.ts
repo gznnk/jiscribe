@@ -28,12 +28,15 @@ const AUTO_HEIGHT_PROBE_BOX: Dimensions = { width: 200, height: 100 };
  * following the text it holds (`calcAutoShapeHeight`).
  *
  * True for a type that stores a `height` at all (`geometry: "rect"`), carries one
- * body of text, declares a text region its box actually holds
+ * body of text as `"body"`, declares a text region its box actually holds
  * (`ObjectDocDefinition.textRegion` answering a rectangle rather than `null`),
  * and has not denied it (`ObjectDocDefinition.autoHeight: false`). A shape
  * drawing its label outside the outline, one dividing its box into bands, and one
  * storing no height have nothing to derive a height from, so their `height` stays
- * required.
+ * required. So does a `text: "source"` shape: its body is not drawn by the shared
+ * text layout, so a height measured from the source as wrapped plain text is not
+ * the height it is drawn at — the very reason `ObjectDocDefinition.autoHeight:
+ * false` exists.
  *
  * @param definition - The type's declarations (see {@link AutoHeightDeclaration}); nothing outside them is read, so the answer is a fact about the type
  * @returns True when the document may omit `height` for this type

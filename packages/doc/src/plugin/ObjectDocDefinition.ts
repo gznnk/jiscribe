@@ -51,8 +51,8 @@ export type ObjectDocDefinition = {
 	 * leave the type's `height` out and have it follow the text
 	 * ({@link import("./supportsAutoHeight").supportsAutoHeight}), so a
 	 * `geometry: "rect"` type's declaration decides the shape of its schema too.
-	 * Every type with `features.text: "body"` should
-	 * declare one — {@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
+	 * Every type holding a single body (`features.text: "body"` / `"source"`)
+	 * should declare one — {@link import("./ObjectDocTextRegion").calcFullBoxTextRegion}
 	 * for a plain box,
 	 * {@link import("./ObjectDocTextRegion").calcOutsideBoxTextRegion} for a label
 	 * drawn outside the outline.
@@ -87,6 +87,9 @@ export type ObjectDocDefinition = {
 	 *
 	 * There is no `true`, for the same reason as {@link autoHeight}: leaving it out is
 	 * the normal case, a body taking runs.
+	 *
+	 * To be replaced by `features.text: "source"`, which says the same thing as part
+	 * of the type's text type and takes the emphasis typography away with it.
 	 */
 	textRuns?: false;
 

@@ -77,3 +77,14 @@ describe("supportsAutoHeight", () => {
 		expect(sized).toEqual(["rect"]);
 	});
 });
+
+describe("supportsAutoHeight on a source-text type", () => {
+	it("is false, the shape drawing its body itself rather than through the shared layout", () => {
+		expect(
+			supportsAutoHeight({
+				features: { ...boxFeatures, text: "source" },
+				textRegion: calcFullBoxTextRegion,
+			}),
+		).toBe(false);
+	});
+});

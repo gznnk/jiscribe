@@ -76,9 +76,10 @@ export {
 	TEXT_BOX_PADDING_Y,
 } from "./text/block/textBoxPadding";
 
-// The slot id of a `text: "body"` type's single text, for a headless consumer
-// resolving a type's text region (`ObjectDocDefinition.textRegion`), which takes
-// a slot id as the rendering layer's does.
+// The slot id of a single-body type's one text (`text: "body"` / `"source"`),
+// for a headless consumer resolving a type's text region
+// (`ObjectDocDefinition.textRegion`), which takes a slot id as the rendering
+// layer's does.
 export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
 
 // Where the text-style defaults of a type come from, for a headless consumer

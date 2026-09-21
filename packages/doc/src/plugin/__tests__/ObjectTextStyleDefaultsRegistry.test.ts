@@ -11,6 +11,7 @@ import {
 } from "../ObjectTextStyleDefaultsRegistry";
 
 const slotsFeatures = { ...TextFeatures, text: "slots" } as const;
+const sourceFeatures = { ...TextFeatures, text: "source" } as const;
 const textlessFeatures = { ...TextFeatures, text: undefined } as const;
 
 /** A two-slot type's declaration, the shape a `"slots"` type registers. */
@@ -197,5 +198,22 @@ describe("ObjectTextStyleDefaultsRegistry.registerDefinition", () => {
 		const registry = createObjectTextStyleDefaultsRegistry();
 		registry.registerDefinition("text", { features: TextFeatures });
 		expect(registry.get("text", BODY_TEXT_SLOT_ID)).toBeUndefined();
+	});
+});
+
+describe("extractTextSlotStyleDefaults for a source type", () => {
+	it("keys the creation defaults under the single slot, emphasis left out", () => {
+		expect(
+			extractTextSlotStyleDefaults(sourceFeatures, TEXT_DOC_DEFAULTS),
+		).toEqual({
+			[BODY_TEXT_SLOT_ID]: {
+				textAlign: "left",
+				verticalAlign: "top",
+				fontColor: TEXT_DOC_DEFAULTS.fontColor,
+				fontSize: 16,
+			},
+		});
+		// The body form reads the same defaults and does take the weight.
+		expect(TEXT_DOC_DEFAULTS.fontWeight).toBe("normal");
 	});
 });

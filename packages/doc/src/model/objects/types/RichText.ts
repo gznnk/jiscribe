@@ -11,17 +11,26 @@ import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 export const FONT_SIZE_MIN = 1;
 
 /**
- * The typography that may differ *inside* one body of text. Alignment is
- * deliberately absent: it places the whole block, so it stays on the slot
- * (TextSlot), and only what a run of characters can carry on its own lives here.
+ * The ground a body of text is drawn on: the typography every character takes
+ * unless something marks it out. Kept apart from {@link TextEmphasisStyle}
+ * because a body written in a source language (`ObjectFeatures.text: "source"`)
+ * carries this half alone.
  */
-export type InlineTextStyle = {
+export type TextBaseStyle = {
 	/** Text color (CSS color string) */
 	fontColor?: string;
 	/** Font size in pixels */
 	fontSize?: number;
 	/** Font family */
 	fontFamily?: string;
+};
+
+/**
+ * The typography that marks characters out from the ground around them. The half
+ * a source language spells out in its own syntax, and so the half a
+ * `text: "source"` shape does not carry (SourceTextStyleDoc).
+ */
+export type TextEmphasisStyle = {
 	/** Font weight */
 	fontWeight?: string;
 	/** Font style ("normal" | "italic"; CSS font-style value) */
@@ -34,14 +43,31 @@ export type InlineTextStyle = {
 	textDecoration?: string;
 };
 
-/** Field names of the inline typography, in the order a slot declares them. */
-export const TEXT_INLINE_STYLE_KEYS = exhaustiveKeysOf<InlineTextStyle>()([
+/**
+ * The typography that may differ *inside* one body of text. Alignment is
+ * deliberately absent: it places the whole block, so it stays on the slot
+ * (TextSlot), and only what a run of characters can carry on its own lives here.
+ */
+export type InlineTextStyle = TextBaseStyle & TextEmphasisStyle;
+
+/** Field names of the ground typography, in the order a slot declares them. */
+export const TEXT_BASE_STYLE_KEYS = exhaustiveKeysOf<TextBaseStyle>()([
 	"fontColor",
 	"fontSize",
 	"fontFamily",
+] as const);
+
+/** Field names of the emphasis typography, in the order a slot declares them. */
+export const TEXT_EMPHASIS_STYLE_KEYS = exhaustiveKeysOf<TextEmphasisStyle>()([
 	"fontWeight",
 	"fontStyle",
 	"textDecoration",
+] as const);
+
+/** Field names of the inline typography, in the order a slot declares them. */
+export const TEXT_INLINE_STYLE_KEYS = exhaustiveKeysOf<InlineTextStyle>()([
+	...TEXT_BASE_STYLE_KEYS,
+	...TEXT_EMPHASIS_STYLE_KEYS,
 ] as const);
 
 /**

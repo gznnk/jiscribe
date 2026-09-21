@@ -1,5 +1,6 @@
 import { createFrameObjectFactory } from "../../../model/objects/utils/createFrameObjectFactory";
 import type { ObjectDocDefinition } from "../../../plugin/ObjectDocDefinition";
+import { calcFullBoxTextRegion } from "../../../plugin/ObjectDocTextRegion";
 
 /**
  * The dependency direction stops a canvas test from importing a real plugin, so build a
@@ -161,4 +162,27 @@ export const plainBodyDefinition: ObjectDocDefinition = {
 		text: "",
 	}),
 	textRuns: false,
+};
+
+/**
+ * A shape whose body is written in a source language it renders itself
+ * (`features.text: "source"`), the way the markdown plugin's is: a plain string,
+ * with the emphasis typography left to the syntax. Its region is the whole box,
+ * so a body placement has something to move.
+ */
+export const sourceBodyDefinition: ObjectDocDefinition = {
+	features: {
+		type: "source-card",
+		geometry: "rect",
+		text: "source",
+		connectable: true,
+	},
+	validateDoc: () => [],
+	textRegion: calcFullBoxTextRegion,
+	factory: createFrameObjectFactory({
+		type: "source-card",
+		width: 200,
+		height: 100,
+		text: "",
+	}),
 };

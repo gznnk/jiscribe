@@ -29,6 +29,10 @@ import {
 	type TextSlot,
 } from "../../model/objects/types/TextSlot";
 import {
+	isSingleBodyText,
+	textStyleKeysOf,
+} from "../../model/objects/types/TextType";
+import {
 	validateArrowFields,
 	validateFillStyleFields,
 	validateRadiusStyleFields,
@@ -98,7 +102,7 @@ export const applicableStyleKeys = (
 	definition: ObjectDocDefinition | undefined,
 ): string[] => [
 	...shapeStyleKeys(definition?.features),
-	...(definition?.features.text !== undefined ? TEXT_SLOT_STYLE_KEYS : []),
+	...textStyleKeysOf(definition?.features.text),
 ];
 
 /** Copy the requested subset of `keys` onto `target`, returning the keys written. */
@@ -245,8 +249,8 @@ export const applyStyle = (
 			appliedKeys.add(key),
 		);
 
-		if (features?.text === "body") {
-			const written = applyKeys(object, style, TEXT_SLOT_STYLE_KEYS);
+		if (isSingleBodyText(features?.text)) {
+			const written = applyKeys(object, style, textStyleKeysOf(features?.text));
 			written.forEach((key) => appliedKeys.add(key));
 			dropAppliedRunStyle(object, written);
 		} else if (features?.text === "slots") {

@@ -8,7 +8,11 @@ import {
 	twoConnectedRects,
 	twoRects,
 } from "./support/docFixtures";
-import { cardDefinition, plainBodyDefinition } from "./support/pluginFixtures";
+import {
+	cardDefinition,
+	plainBodyDefinition,
+	sourceBodyDefinition,
+} from "./support/pluginFixtures";
 import type { CanvasDoc } from "../../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../model/objects/base/ObjectDoc";
 import { createFrameObjectFactory } from "../../model/objects/utils/createFrameObjectFactory";
@@ -504,5 +508,47 @@ describe("setInlineTextStyles", () => {
 		]);
 
 		expect(JSON.stringify(batchDoc)).toBe(JSON.stringify(singleDoc));
+	});
+});
+
+describe("a source-text type's body", () => {
+	const sourceOps = createDocOps({
+		plugins: [
+			{ id: "source-plugin", objects: { "source-card": sourceBodyDefinition } },
+		],
+	});
+	const sourceDoc = (): CanvasDoc => {
+		const doc = emptyDoc();
+		sourceOps.addObject(doc, "source-card", { x: 0, y: 0, text: "# title" });
+		return doc;
+	};
+
+	it("is written and read back as the plain characters it holds", () => {
+		const doc = sourceDoc();
+
+		sourceOps.setText(doc, "source-card-1", "# title\n\nbody");
+
+		expect(readObject(doc, "source-card-1").text).toBe("# title\n\nbody");
+		expect(sourceOps.getText(doc, "source-card-1")).toBe("# title\n\nbody");
+	});
+
+	it("refuses a stretch styled on its own, leaving the text untouched", () => {
+		const doc = sourceDoc();
+
+		expect(() =>
+			sourceOps.setInlineTextStyle(doc, "source-card-1", {
+				match: "title",
+				fontWeight: "bold",
+			}),
+		).toThrow(
+			'source-card-1 ("source-card") holds its text as a plain string that takes no styling on part of it, so use setStyle to style the whole of it',
+		);
+		expect(readObject(doc, "source-card-1").text).toBe("# title");
+	});
+
+	it("is listed as a single text, which setText writes with no slot named", () => {
+		expect(
+			sourceOps.listTypes().find((summary) => summary.type === "source-card"),
+		).toMatchObject({ text: "single" });
 	});
 });

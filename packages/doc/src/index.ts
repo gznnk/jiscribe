@@ -88,6 +88,9 @@ export {
 // where the one body is placed against the shape. The schema generator lists
 // these beside the slot's own keys.
 export { TEXT_BODY_KEYS } from "./model/objects/base/TextStyleDoc";
+// The narrower of the two single-body doc forms, for a type that renders its text
+// from a source language of its own (features.text: "source").
+export type { SourceTextStyleDoc } from "./model/objects/base/TextStyleDoc";
 export type { TextVerticalBasis } from "./model/objects/types/TextVerticalBasis";
 export {
 	isTextVerticalBasis,
@@ -98,6 +101,8 @@ export {
 export type {
 	InlineTextStyle,
 	RichText,
+	TextBaseStyle,
+	TextEmphasisStyle,
 	TextRun,
 } from "./model/objects/types/RichText";
 export {
@@ -108,8 +113,18 @@ export {
 	richTextToPlain,
 	sliceRichText,
 	styleRichTextRange,
+	TEXT_BASE_STYLE_KEYS,
+	TEXT_EMPHASIS_STYLE_KEYS,
 	TEXT_INLINE_STYLE_KEYS,
 } from "./model/objects/types/RichText";
+// Which of those a type's text actually accepts, and whether it holds one body at
+// all: the two questions every side asking about `features.text` goes through, so
+// what a shape may be styled with cannot drift from what its doc may hold.
+export type { TextType } from "./model/objects/types/TextType";
+export {
+	isSingleBodyText,
+	textStyleKeysOf,
+} from "./model/objects/types/TextType";
 export type {
 	ExtraStylePropertyDescriptor,
 	StyleValueType,

@@ -1,4 +1,4 @@
-import type { RichText } from "../types/RichText";
+import type { RichText, TextEmphasisStyle } from "../types/RichText";
 import type { TextSlot } from "../types/TextSlot";
 import type { TextVerticalBasis } from "../types/TextVerticalBasis";
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
@@ -21,6 +21,26 @@ export type TextStyleDoc = Omit<TextSlot, "text"> & {
 	 * the type's own declared region (see {@link TextVerticalBasis}).
 	 */
 	textVerticalBasis?: TextVerticalBasis;
+};
+
+/**
+ * The doc form of a body written in a source language (features.text: "source"):
+ * the single-body form, less what the language's own syntax already carries.
+ * Derived from {@link TextStyleDoc} rather than copied, so a field added there is
+ * held to the same subtraction instead of quietly going missing here.
+ *
+ * Two things are taken away. The content is a plain string, never the run form: a
+ * shape that renders its own source draws no styled run, so a run written here
+ * would be dropped on screen. And the emphasis typography (TextEmphasisStyle) is
+ * gone, those being the values the syntax sets — a bold set on both sides would
+ * leave the document saying one thing and the drawing showing another.
+ */
+export type SourceTextStyleDoc = Omit<
+	TextStyleDoc,
+	"text" | keyof TextEmphasisStyle
+> & {
+	/** Text content to display, in the shape's own source language. */
+	text?: string;
 };
 
 /**

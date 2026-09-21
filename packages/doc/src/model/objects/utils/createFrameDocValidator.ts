@@ -5,6 +5,7 @@ import {
 	validatePolyFields,
 	validateRadiusStyleFields,
 	validateRequiredNumber,
+	validateSourceTextStyleFields,
 	validateStrokeStyleFields,
 	validateTextStyleFields,
 	validateTransformFields,
@@ -93,6 +94,9 @@ export const createFrameDocValidator = (
 		// "slots" types carry no root text group at all; their closed slot set is
 		// theirs to validate, and `extra` is where they do it.
 		...(features.text === "body" ? validateTextStyleFields(o, path) : []),
+		...(features.text === "source"
+			? validateSourceTextStyleFields(o, path)
+			: []),
 		...(features.radius ? validateRadiusStyleFields(o, path) : []),
 		// The mappers pass the arrow group through for any type declaring it
 		// (collectStyleKeys), so it must be validated here too — an unchecked

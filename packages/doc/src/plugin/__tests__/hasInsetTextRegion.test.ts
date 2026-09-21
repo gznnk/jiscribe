@@ -2,7 +2,7 @@ import type { Rect } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import { builtinObjectDocDefinitions } from "../builtinObjectDocDefinitions";
-import { hasInsetTextRegion } from "../hasInsetTextRegion";
+import { hasInsetTextRegion, holdsBodyInsideBox } from "../hasInsetTextRegion";
 import type { ObjectDocDefinition } from "../ObjectDocDefinition";
 import {
 	calcFullBoxTextRegion,
@@ -123,5 +123,39 @@ describe("hasInsetTextRegion", () => {
 		// `rect` and `text` lay their text out over the whole box, so the two bases
 		// name the same rectangle; the rest hold no text at all.
 		expect(inset).toEqual(["ellipse"]);
+	});
+});
+
+describe("a source-text type's single body", () => {
+	const sourceFeatures = { ...boxFeatures, text: "source" } as const;
+
+	it("moves with the basis exactly as a body type's does", () => {
+		expect(
+			hasInsetTextRegion({
+				features: sourceFeatures,
+				textRegion: cappedTextRegion(20),
+			}),
+		).toBe(true);
+		expect(
+			hasInsetTextRegion({
+				features: sourceFeatures,
+				textRegion: calcFullBoxTextRegion,
+			}),
+		).toBe(false);
+	});
+
+	it("is held inside the box wherever a body type's would be", () => {
+		expect(
+			holdsBodyInsideBox({
+				features: sourceFeatures,
+				textRegion: calcFullBoxTextRegion,
+			}),
+		).toBe(true);
+		expect(
+			holdsBodyInsideBox({
+				features: sourceFeatures,
+				textRegion: calcOutsideBoxTextRegion,
+			}),
+		).toBe(false);
 	});
 });

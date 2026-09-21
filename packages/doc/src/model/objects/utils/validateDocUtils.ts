@@ -16,7 +16,11 @@ import { STROKE_WIDTH_MIN } from "../base/StrokeStyleDoc";
 import { isArrowType } from "../types/ArrowType";
 import { isEdgeAnchorSide } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
-import type { InlineTextStyle } from "../types/RichText";
+import type {
+	InlineTextStyle,
+	TextBaseStyle,
+	TextEmphasisStyle,
+} from "../types/RichText";
 import { FONT_SIZE_MIN } from "../types/RichText";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { isTextAlign } from "../types/TextAlign";
@@ -425,32 +429,62 @@ const arrowStyleValidators = {
 	endArrow: enumValidator(isArrowType, "must be a valid ArrowType"),
 } as const satisfies Record<keyof ArrowStyleDoc, DocFieldValidator>;
 
+/** The ground typography, in the order of `TEXT_BASE_STYLE_KEYS`. */
+const textBaseStyleValidators = {
+	fontColor: colorValidator,
+	fontSize: numberValidator(FONT_SIZE_MIN),
+	fontFamily: cssValueValidator("font-family"),
+} as const satisfies Record<keyof TextBaseStyle, DocFieldValidator>;
+
+/** The emphasis typography, in the order of `TEXT_EMPHASIS_STYLE_KEYS`. */
+const textEmphasisStyleValidators = {
+	fontWeight: cssValueValidator("font-weight"),
+	fontStyle: cssValueValidator("font-style"),
+	textDecoration: cssValueValidator("text-decoration"),
+} as const satisfies Record<keyof TextEmphasisStyle, DocFieldValidator>;
+
 /**
  * The inline typography, in the order of `TEXT_INLINE_STYLE_KEYS`. Applied to a
  * slot and to every run of its text alike, a run being inlined into the same CSS.
  */
 const inlineTextStyleValidators = {
-	fontColor: colorValidator,
-	fontSize: numberValidator(FONT_SIZE_MIN),
-	fontFamily: cssValueValidator("font-family"),
-	fontWeight: cssValueValidator("font-weight"),
-	fontStyle: cssValueValidator("font-style"),
-	textDecoration: cssValueValidator("text-decoration"),
+	...textBaseStyleValidators,
+	...textEmphasisStyleValidators,
 } as const satisfies Record<keyof InlineTextStyle, DocFieldValidator>;
 
-/**
- * A slot's whole styling: the alignment that places the block (and so has no
- * per-run counterpart) before the inline half, so the iteration order matches
- * `TEXT_SLOT_STYLE_KEYS` and, with it, the order the diagnostics come out in.
- */
-const textSlotStyleValidators = {
+/** The alignment fields, which place the whole block and so have no per-run counterpart. */
+const textBlockStyleValidators = {
 	textAlign: enumValidator(isTextAlign, "must be one of: left, center, right"),
 	verticalAlign: enumValidator(
 		isVerticalAlign,
 		"must be one of: top, middle, bottom",
 	),
+} as const satisfies Record<
+	Exclude<keyof TextSlotStyle, keyof InlineTextStyle>,
+	DocFieldValidator
+>;
+
+/**
+ * A slot's whole styling: the alignment that places the block before the inline
+ * half, so the iteration order matches `TEXT_SLOT_STYLE_KEYS` and, with it, the
+ * order the diagnostics come out in.
+ */
+const textSlotStyleValidators = {
+	...textBlockStyleValidators,
 	...inlineTextStyleValidators,
 } as const satisfies Record<keyof TextSlotStyle, DocFieldValidator>;
+
+/**
+ * The styling a source-language body accepts: the slot's set less the emphasis
+ * half the syntax carries itself (`textStyleKeysOf`), in the same order.
+ */
+const sourceTextStyleValidators = {
+	...textBlockStyleValidators,
+	...textBaseStyleValidators,
+} as const satisfies Record<
+	Exclude<keyof TextSlotStyle, keyof TextEmphasisStyle>,
+	DocFieldValidator
+>;
 
 /** Validate optional stroke style fields: `stroke` (safe CSS color), `strokeWidth` (≥ 0), `strokeDashType`. */
 export function validateStrokeStyleFields(
@@ -543,6 +577,25 @@ export function validateRichTextContent(
 }
 
 /**
+ * Validate the placement a single-body doc carries on the object itself
+ * (`TEXT_BODY_KEYS`), which both root-form text types hold alike.
+ */
+function validateTextBodyFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	if (!("textVerticalBasis" in o) || isTextVerticalBasis(o.textVerticalBasis)) {
+		return [];
+	}
+	return [
+		{
+			path: `${path}.textVerticalBasis`,
+			message: "must be one of: region, frame",
+		},
+	];
+}
+
+/**
  * Validate the text group of a single-body doc (features.text: "body"): `text`
  * as one body of text plus the flat styling fields. A keyed object is rejected
  * here — a type whose text is keyed declares `text: "slots"` and validates its
@@ -556,18 +609,35 @@ export function validateTextStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	const errors: SemanticDiagnostic[] = [];
-	if ("text" in o) {
-		errors.push(...validateRichTextContent(o.text, `${path}.text`));
-	}
-	if ("textVerticalBasis" in o && !isTextVerticalBasis(o.textVerticalBasis)) {
-		errors.push({
-			path: `${path}.textVerticalBasis`,
-			message: "must be one of: region, frame",
-		});
-	}
-	errors.push(...validateTextSlotStyleFields(o, path));
-	return errors;
+	return [
+		...("text" in o ? validateRichTextContent(o.text, `${path}.text`) : []),
+		...validateTextBodyFields(o, path),
+		...validateTextSlotStyleFields(o, path),
+	];
+}
+
+/**
+ * Validate the text group of a source-language doc (features.text: "source"):
+ * the same group {@link validateTextStyleFields} checks, narrowed to what that
+ * shape can hold — `text` as a plain string, and the styling less the emphasis
+ * half (`textStyleKeysOf`). An emphasis field written anyway goes unreported
+ * here, as every other field the type's features do not imply does.
+ *
+ * @param o - The doc to check; a missing `text` is valid (it reads as empty)
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @returns One diagnostic per malformed field; empty when the whole group is valid
+ */
+export function validateSourceTextStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	return [
+		...("text" in o && !isString(o.text)
+			? [{ path: `${path}.text`, message: "must be a string" }]
+			: []),
+		...validateTextBodyFields(o, path),
+		...validateFields(o, path, sourceTextStyleValidators),
+	];
 }
 
 /** Validate the optional corner-radius field `rx` (≥ 0). */

@@ -206,3 +206,65 @@ describe("createFrameDocValidator auto height", () => {
 		]);
 	});
 });
+
+describe("createFrameDocValidator source text group", () => {
+	const geometry = { x: 0, y: 0, width: 10, height: 10 };
+	const validate = createFrameDocValidator(features({ text: "source" }));
+
+	it("accepts a plain body and the styling its shape admits", () => {
+		expect(
+			validate(
+				{
+					...geometry,
+					text: "# title",
+					textAlign: "left",
+					verticalAlign: "top",
+					fontColor: "#0d47a1",
+					fontSize: 14,
+					fontFamily: "Noto Sans JP",
+					textVerticalBasis: "frame",
+				},
+				"root",
+			),
+		).toEqual([]);
+	});
+
+	it("rejects a run list, which the shape renders none of", () => {
+		expect(
+			validate(
+				{ ...geometry, text: [{ text: "# title", fontWeight: "bold" }] },
+				"root",
+			),
+		).toEqual([{ path: "root.text", message: "must be a string" }]);
+	});
+
+	it("checks the styling it admits and the body's placement", () => {
+		expect(
+			paths(
+				validate(
+					{
+						...geometry,
+						textAlign: "justify",
+						fontSize: 0,
+						textVerticalBasis: "middle",
+					},
+					"root",
+				),
+			),
+		).toEqual(["root.textVerticalBasis", "root.textAlign", "root.fontSize"]);
+	});
+
+	it("passes over the emphasis fields, as it does every field the features exclude", () => {
+		expect(
+			validate(
+				{
+					...geometry,
+					fontWeight: "url(javascript:alert(1))",
+					fontStyle: "url(javascript:alert(1))",
+					textDecoration: "url(javascript:alert(1))",
+				},
+				"root",
+			),
+		).toEqual([]);
+	});
+});

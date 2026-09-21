@@ -1,3 +1,4 @@
+import { isSingleBodyText } from "../model/objects/types/TextType";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 import type { DocDefinitions } from "./utils/objectGeometry";
 
@@ -37,18 +38,15 @@ export type ObjectTypeSummary = {
 	summary?: string;
 };
 
-/** The text shape a caller sees; `features.text` names the doc's shape rather than that. */
+/** What a caller addressing the text sees; `features.text` (TextType) names how the doc holds it rather than that. */
 const textKindOf = (
 	definition: ObjectDocDefinition,
 ): ObjectTypeSummary["text"] => {
-	switch (definition.features.text) {
-		case "body":
-			return "single";
-		case "slots":
-			return "slots";
-		default:
-			return null;
+	const textType = definition.features.text;
+	if (isSingleBodyText(textType)) {
+		return "single";
 	}
+	return textType === "slots" ? "slots" : null;
 };
 
 /**

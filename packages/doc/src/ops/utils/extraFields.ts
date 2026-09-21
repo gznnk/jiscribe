@@ -1,6 +1,7 @@
 import { quoteNames } from "./errorText";
 import type { ObjectRecord } from "./objectAccess";
 import { TEXT_BODY_KEYS } from "../../model/objects/base/TextStyleDoc";
+import { isSingleBodyText } from "../../model/objects/types/TextType";
 import { holdsBodyInsideBox } from "../../plugin/hasInsetTextRegion";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";
@@ -24,7 +25,8 @@ const collectWritableKeys = (
 	definition: ObjectDocDefinition,
 ): readonly string[] => [
 	...(definition.extraKeys ?? []),
-	...(definition.features.text === "body" && holdsBodyInsideBox(definition)
+	...(isSingleBodyText(definition.features.text) &&
+	holdsBodyInsideBox(definition)
 		? TEXT_BODY_KEYS
 		: []),
 ];
@@ -83,7 +85,7 @@ export const applyExtraProps = (
 		const inertBodyKeys = unknown.filter(
 			(key) =>
 				(TEXT_BODY_KEYS as readonly string[]).includes(key) &&
-				definition.features.text === "body",
+				isSingleBodyText(definition.features.text),
 		);
 		if (inertBodyKeys.length > 0) {
 			throw new DocOperationError(
