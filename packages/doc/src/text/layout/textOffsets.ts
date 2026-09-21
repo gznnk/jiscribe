@@ -1,7 +1,10 @@
 import { calcMixedFamilyLineSlack } from "./mixedFamilyLineSlack";
 import { TEXT_LINE_HEIGHT } from "./textLineHeight";
-import type { RichText, TextRun } from "../../model/objects/types/RichText";
-import { richTextToPlain } from "../../model/objects/types/RichText";
+import type {
+	RichText,
+	TextRun,
+} from "../../model/objects/types/text/RichText";
+import { richTextToPlain } from "../../model/objects/types/text/RichText";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";
 import { adoptTextMeasurement } from "../measure/textMeasurementSlot";
 import type { TextWidthMeasurer } from "../measure/textWidthMeasurer";

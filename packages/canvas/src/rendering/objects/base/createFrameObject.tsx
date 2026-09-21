@@ -1,8 +1,8 @@
-import { joinRichTextLines } from "@jiscribe/doc/model/objects/types/RichText";
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
-import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/TextType";
+import { joinRichTextLines } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/text/TextType";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";

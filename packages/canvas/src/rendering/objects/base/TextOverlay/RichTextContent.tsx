@@ -1,7 +1,7 @@
 import type {
 	RichText,
 	TextRun,
-} from "@jiscribe/doc/model/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/text/RichText";
 import type React from "react";
 
 import { resolveAutoColor } from "../../utils/resolveAutoColor";

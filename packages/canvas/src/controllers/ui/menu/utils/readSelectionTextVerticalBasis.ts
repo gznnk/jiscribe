@@ -1,4 +1,4 @@
-import type { TextVerticalBasis } from "@jiscribe/doc/model/objects/types/TextVerticalBasis";
+import type { TextVerticalBasis } from "@jiscribe/doc/model/objects/types/text/TextVerticalBasis";
 
 import type { SelectionValue } from "./SelectionValue";
 import { combineSelectionValues } from "./SelectionValue";

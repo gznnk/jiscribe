@@ -1,5 +1,5 @@
-import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { resolveTextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { resolveTextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import type { ObjectDocTextRegionCalculator } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";

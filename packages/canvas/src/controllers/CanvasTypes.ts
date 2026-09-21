@@ -1,6 +1,6 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import type { ViewDoc } from "@jiscribe/doc/model/canvas/ViewDoc";
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { BoundingBox, FrameKeyPoints, Point } from "@jiscribe/geometry";
 
 import type { ConnectorLabelPlacement } from "../connectors/label/calcConnectorLabelPlacement";

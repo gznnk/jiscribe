@@ -1,15 +1,17 @@
 import { isObject } from "@jiscribe/basic-validators";
-import type {
-	InlineTextStyle,
-	RichText,
-	TextRun,
-} from "@jiscribe/doc/model/objects/types/RichText";
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
 import {
 	hasValidInlineTextStyle,
-	normalizeRichText,
 	pickDefinedInlineTextStyle,
+} from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import type {
+	RichText,
+	TextRun,
+} from "@jiscribe/doc/model/objects/types/text/RichText";
+import {
+	normalizeRichText,
 	richTextToPlain,
-} from "@jiscribe/doc/model/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import { resolveAutoColor } from "../../../../rendering/objects/utils/resolveAutoColor";
 

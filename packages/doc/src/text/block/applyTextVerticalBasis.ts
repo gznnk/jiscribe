@@ -1,6 +1,6 @@
 import type { Dimensions, Rect } from "@jiscribe/geometry";
 
-import type { TextVerticalBasis } from "../../model/objects/types/TextVerticalBasis";
+import type { TextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
 
 /**
  * Puts a body text's region on the box its `textVerticalBasis` names, which is

@@ -1,7 +1,7 @@
 import {
 	normalizeRichText,
 	richTextToPlain,
-} from "@jiscribe/doc/model/objects/types/RichText";
+} from "@jiscribe/doc/model/objects/types/text/RichText";
 
 import type { CanvasAction } from "./CanvasActions";
 import {

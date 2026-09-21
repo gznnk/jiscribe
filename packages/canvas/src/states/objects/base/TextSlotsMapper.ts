@@ -1,15 +1,15 @@
 import type { TextStyleDoc } from "@jiscribe/doc/model/objects/base/TextStyleDoc";
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import {
 	isRichText,
 	normalizeRichText,
 	richTextToPlain,
-} from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextType } from "@jiscribe/doc/model/objects/types/TextType";
+} from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextType } from "@jiscribe/doc/model/objects/types/text/TextType";
 import {
 	isSingleBodyText,
 	textStyleKeysOf,
-} from "@jiscribe/doc/model/objects/types/TextType";
+} from "@jiscribe/doc/model/objects/types/text/TextType";
 import { pickDefined } from "@jiscribe/doc/model/objects/utils/pickDefined";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 

@@ -228,8 +228,8 @@ export type { ObjectTextRegionCalculator } from "./rendering/objects/registry/Ob
 // Per-type, per-slot text-style defaults: the registry a canvas resolves an
 // unset text style through, reachable as
 // `CanvasRegistries["objectTextStyleDefaults"]`.
-export type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
-export { resolveTextSlotStyle } from "@jiscribe/doc/model/objects/types/TextSlot";
+export type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+export { resolveTextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 export type {
 	ObjectTextSlotStyleDefaults,
 	ObjectTextStyleDefaultsRegistry,

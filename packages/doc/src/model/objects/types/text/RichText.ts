@@ -1,75 +1,13 @@
-import { isNumber, isObject, isString } from "@jiscribe/basic-validators";
+import { isObject, isString } from "@jiscribe/basic-validators";
 
-import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
-import { pickDefined } from "../utils/pickDefined";
-
-/**
- * Smallest admissible `fontSize` — the `minimum` the JSON schema states for it.
- * Read by both boundaries that check the field: the doc validator
- * (validateDocUtils) and the paste guard (validateStateUtils), a connector's
- * label included.
- */
-export const FONT_SIZE_MIN = 1;
-
-/**
- * The ground a body of text is drawn on: the typography every character takes
- * unless something marks it out. Kept apart from {@link TextEmphasisStyle}
- * because a body written in a source language (`ObjectFeatures.text: "source"`)
- * carries this half alone.
- */
-export type TextBaseStyle = {
-	/** Text color (CSS color string) */
-	fontColor?: string;
-	/** Font size in pixels */
-	fontSize?: number;
-	/** Font family */
-	fontFamily?: string;
-};
-
-/**
- * The typography that marks characters out from the ground around them. The half
- * a source language spells out in its own syntax, and so the half a
- * `text: "source"` shape does not carry (SourceTextStyleDoc).
- */
-export type TextEmphasisStyle = {
-	/** Font weight */
-	fontWeight?: string;
-	/** Font style ("normal" | "italic"; CSS font-style value) */
-	fontStyle?: string;
-	/**
-	 * Text decoration lines: "underline" / "line-through", space-separated when
-	 * both apply (canonical order: underline first). "none" or absent means no
-	 * decoration.
-	 */
-	textDecoration?: string;
-};
-
-/**
- * The typography that may differ *inside* one body of text. Alignment is
- * deliberately absent: it places the whole block, so it stays on the slot
- * (TextSlot), and only what a run of characters can carry on its own lives here.
- */
-export type InlineTextStyle = TextBaseStyle & TextEmphasisStyle;
-
-/** Field names of the ground typography, in the order a slot declares them. */
-export const TEXT_BASE_STYLE_KEYS = exhaustiveKeysOf<TextBaseStyle>()([
-	"fontColor",
-	"fontSize",
-	"fontFamily",
-] as const);
-
-/** Field names of the emphasis typography, in the order a slot declares them. */
-export const TEXT_EMPHASIS_STYLE_KEYS = exhaustiveKeysOf<TextEmphasisStyle>()([
-	"fontWeight",
-	"fontStyle",
-	"textDecoration",
-] as const);
-
-/** Field names of the inline typography, in the order a slot declares them. */
-export const TEXT_INLINE_STYLE_KEYS = exhaustiveKeysOf<InlineTextStyle>()([
-	...TEXT_BASE_STYLE_KEYS,
-	...TEXT_EMPHASIS_STYLE_KEYS,
-] as const);
+import type { InlineTextStyle } from "./InlineTextStyle";
+import {
+	hasInlineTextStyle,
+	hasValidInlineTextStyle,
+	isSameInlineTextStyle,
+	pickDefinedInlineTextStyle,
+	TEXT_INLINE_STYLE_KEYS,
+} from "./InlineTextStyle";
 
 /**
  * One stretch of characters drawn with the same typography — the piece a body of
@@ -96,39 +34,6 @@ export type TextRun = InlineTextStyle & {
  * textarea's `selectionStart` already count in.
  */
 export type RichText = string | TextRun[];
-
-/**
- * Structural check of the inline styling fields, shared by the run and the slot
- * guards. Strings are only checked as strings: whether one is a real CSS color
- * and safe to inline is the state layer's boundary check (isValidTextStyleState),
- * which needs browser APIs this layer cannot reach.
- *
- * @param value - The object carrying the fields; each is checked only when present
- * @returns True when every present inline style field has its declared type
- */
-export const hasValidInlineTextStyle = (
-	value: Record<string, unknown>,
-): boolean => {
-	if (value.fontColor !== undefined && !isString(value.fontColor)) {
-		return false;
-	}
-	if (value.fontSize !== undefined && !isNumber(value.fontSize)) {
-		return false;
-	}
-	if (value.fontFamily !== undefined && !isString(value.fontFamily)) {
-		return false;
-	}
-	if (value.fontWeight !== undefined && !isString(value.fontWeight)) {
-		return false;
-	}
-	if (value.fontStyle !== undefined && !isString(value.fontStyle)) {
-		return false;
-	}
-	if (value.textDecoration !== undefined && !isString(value.textDecoration)) {
-		return false;
-	}
-	return true;
-};
 
 /**
  * Type guard for one run.
@@ -161,21 +66,6 @@ export const isRichText = (value: unknown): value is RichText =>
  */
 export const isStyledRichText = (value: unknown): value is TextRun[] =>
 	Array.isArray(value) && value.length > 0 && value.every(isTextRun);
-
-/** Whether any inline style field is set, i.e. whether the run differs from the slot at all. */
-export const hasInlineTextStyle = (style: InlineTextStyle): boolean =>
-	TEXT_INLINE_STYLE_KEYS.some((key) => style[key] !== undefined);
-
-/** Whether two runs are drawn identically, and so may be merged into one. */
-export const isSameInlineTextStyle = (
-	a: InlineTextStyle,
-	b: InlineTextStyle,
-): boolean => TEXT_INLINE_STYLE_KEYS.every((key) => a[key] === b[key]);
-
-/** Copies the inline fields that are actually set, so a run gains no `undefined`-valued keys. */
-export const pickDefinedInlineTextStyle = (
-	source: InlineTextStyle,
-): InlineTextStyle => pickDefined(source, TEXT_INLINE_STYLE_KEYS);
 
 /**
  * The characters of a body of text, with the styling dropped: what the plain-text

@@ -1,5 +1,5 @@
 import { TextFeatures } from "@jiscribe/doc/model/objects/primitives/text/TextDoc";
-import { isTextLayout } from "@jiscribe/doc/model/objects/types/TextLayout";
+import { isTextLayout } from "@jiscribe/doc/model/objects/types/text/TextLayout";
 
 import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import { createFrameStateValidator } from "../../utils/createFrameStateValidator";

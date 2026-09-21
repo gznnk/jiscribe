@@ -1,4 +1,4 @@
-import { isTextVerticalBasis } from "@jiscribe/doc/model/objects/types/TextVerticalBasis";
+import { isTextVerticalBasis } from "@jiscribe/doc/model/objects/types/text/TextVerticalBasis";
 
 import type { StylePropertyHandler } from "./StylePropertyHandler";
 import type { ObjectTextVerticalBasisRegistry } from "../../states/registry/ObjectTextVerticalBasisRegistry";

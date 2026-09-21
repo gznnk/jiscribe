@@ -1,12 +1,10 @@
 import type { StyleValueType } from "@jiscribe/doc/model/objects/types/ExtraStyleProperty";
-import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/RichText";
-import {
-	clearInlineStyleFromRuns,
-	TEXT_INLINE_STYLE_KEYS,
-} from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/TextType";
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import { TEXT_INLINE_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import { clearInlineStyleFromRuns } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/text/TextType";
 
 import {
 	coerceStyleValue,

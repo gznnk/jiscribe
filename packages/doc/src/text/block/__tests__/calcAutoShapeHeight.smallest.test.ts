@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { MATRIX_TEXTS, REGION_FAMILIES } from "./support/regionFamilies";
-import type { RichText } from "../../../model/objects/types/RichText";
-import type { TextVerticalBasis } from "../../../model/objects/types/TextVerticalBasis";
-import { TextVerticalBases } from "../../../model/objects/types/TextVerticalBasis";
+import type { RichText } from "../../../model/objects/types/text/RichText";
+import type { TextVerticalBasis } from "../../../model/objects/types/text/TextVerticalBasis";
+import { TextVerticalBases } from "../../../model/objects/types/text/TextVerticalBasis";
 import type { ObjectDocTextRegionCalculator } from "../../../plugin/ObjectDocTextRegion";
 import { FALLBACK_FONT } from "../../layout/__tests__/support/fallbackFont";
 import { layoutVisualLines } from "../../layout/layoutVisualLines";

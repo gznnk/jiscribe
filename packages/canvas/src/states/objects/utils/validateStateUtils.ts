@@ -16,21 +16,19 @@ import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryTyp
 import { GEOMETRY_SIZE_MIN } from "@jiscribe/doc/model/objects/types/GeometryType";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
-import type {
-	InlineTextStyle,
-	RichText,
-} from "@jiscribe/doc/model/objects/types/RichText";
-import { FONT_SIZE_MIN } from "@jiscribe/doc/model/objects/types/RichText";
 import { isStrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDashType";
-import { isTextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { isTextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
+import { FONT_SIZE_MIN } from "@jiscribe/doc/model/objects/types/text/TextBaseStyle";
 import type {
 	TextSlot,
 	TextSlotStyle,
-} from "@jiscribe/doc/model/objects/types/TextSlot";
-import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
-import type { TextType } from "@jiscribe/doc/model/objects/types/TextType";
-import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/TextType";
-import { isVerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
+} from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import type { TextType } from "@jiscribe/doc/model/objects/types/text/TextType";
+import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/text/TextType";
+import { isVerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 import { isAutoColor } from "@jiscribe/doc/model/objects/utils/autoColor";
 import {
 	OPACITY_MAX,

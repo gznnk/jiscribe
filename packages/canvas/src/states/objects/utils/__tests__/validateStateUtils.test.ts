@@ -2,8 +2,8 @@ import { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowStyleDoc
 import { FILL_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
 import { RADIUS_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
 import { STROKE_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
-import { TEXT_INLINE_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/RichText";
-import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { TEXT_INLINE_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { describe, expect, it } from "vitest";
 
 import {

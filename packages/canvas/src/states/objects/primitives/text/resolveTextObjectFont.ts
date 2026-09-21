@@ -1,4 +1,4 @@
-import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";

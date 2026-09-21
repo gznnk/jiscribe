@@ -1,17 +1,18 @@
 import { isObject } from "@jiscribe/basic-validators";
 
-import type { InlineTextStyle, RichText } from "./RichText";
+import type { InlineTextStyle } from "./InlineTextStyle";
 import {
 	hasValidInlineTextStyle,
-	isRichText,
 	TEXT_INLINE_STYLE_KEYS,
-} from "./RichText";
+} from "./InlineTextStyle";
+import type { RichText } from "./RichText";
+import { isRichText } from "./RichText";
 import type { TextAlign } from "./TextAlign";
 import { isTextAlign } from "./TextAlign";
 import type { VerticalAlign } from "./VerticalAlign";
 import { isVerticalAlign } from "./VerticalAlign";
-import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
-import { pickDefined } from "../utils/pickDefined";
+import { exhaustiveKeysOf } from "../../utils/exhaustiveKeys";
+import { pickDefined } from "../../utils/pickDefined";
 
 /**
  * The content of one text slot. A `RichText` is one body of text (authored

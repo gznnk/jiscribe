@@ -16,17 +16,15 @@ import { STROKE_WIDTH_MIN } from "../base/StrokeStyleDoc";
 import { isArrowType } from "../types/ArrowType";
 import { isEdgeAnchorSide } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
-import type {
-	InlineTextStyle,
-	TextBaseStyle,
-	TextEmphasisStyle,
-} from "../types/RichText";
-import { FONT_SIZE_MIN } from "../types/RichText";
 import { isStrokeDashType } from "../types/StrokeDashType";
-import { isTextAlign } from "../types/TextAlign";
-import type { TextSlotStyle } from "../types/TextSlot";
-import { isTextVerticalBasis } from "../types/TextVerticalBasis";
-import { isVerticalAlign } from "../types/VerticalAlign";
+import type { InlineTextStyle } from "../types/text/InlineTextStyle";
+import { isTextAlign } from "../types/text/TextAlign";
+import type { TextBaseStyle } from "../types/text/TextBaseStyle";
+import { FONT_SIZE_MIN } from "../types/text/TextBaseStyle";
+import type { TextEmphasisStyle } from "../types/text/TextEmphasisStyle";
+import type { TextSlotStyle } from "../types/text/TextSlot";
+import { isTextVerticalBasis } from "../types/text/TextVerticalBasis";
+import { isVerticalAlign } from "../types/text/VerticalAlign";
 
 /**
  * Validate a required numeric field: it must be a number and, when `min` is given, meet the lower bound.

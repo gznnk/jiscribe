@@ -1,6 +1,6 @@
 import { layoutVisualLines } from "./layoutVisualLines";
 import { createOffsetMeasurer, splitAuthoredLines } from "./textOffsets";
-import type { RichText } from "../../model/objects/types/RichText";
+import type { RichText } from "../../model/objects/types/text/RichText";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";
 
 /**

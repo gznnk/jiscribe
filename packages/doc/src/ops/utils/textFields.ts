@@ -3,9 +3,9 @@ import { type DocDefinitions, isConnectorObject } from "./objectGeometry";
 import {
 	isRichText,
 	richTextToPlain,
-} from "../../model/objects/types/RichText";
-import { isTextRows } from "../../model/objects/types/TextSlot";
-import { isSingleBodyText } from "../../model/objects/types/TextType";
+} from "../../model/objects/types/text/RichText";
+import { isTextRows } from "../../model/objects/types/text/TextSlot";
+import { isSingleBodyText } from "../../model/objects/types/text/TextType";
 import { DocOperationError } from "../errors";
 
 /** Slot objects of a `text: "slots"` doc, keyed by slot id. */

@@ -1,6 +1,7 @@
-import type { RichText, TextEmphasisStyle } from "../types/RichText";
-import type { TextSlot } from "../types/TextSlot";
-import type { TextVerticalBasis } from "../types/TextVerticalBasis";
+import type { RichText } from "../types/text/RichText";
+import type { TextEmphasisStyle } from "../types/text/TextEmphasisStyle";
+import type { TextSlot } from "../types/text/TextSlot";
+import type { TextVerticalBasis } from "../types/text/TextVerticalBasis";
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /**

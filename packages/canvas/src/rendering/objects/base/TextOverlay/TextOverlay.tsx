@@ -1,7 +1,7 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import { richTextToPlain } from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
-import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import { richTextToPlain } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 import type React from "react";
 import { memo } from "react";
 

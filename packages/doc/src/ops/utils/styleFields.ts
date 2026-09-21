@@ -17,21 +17,21 @@ import {
 	type StrokeStyleDoc,
 } from "../../model/objects/base/StrokeStyleDoc";
 import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
-import type { InlineTextStyle } from "../../model/objects/types/RichText";
+import type { InlineTextStyle } from "../../model/objects/types/text/InlineTextStyle";
+import { TEXT_INLINE_STYLE_KEYS } from "../../model/objects/types/text/InlineTextStyle";
 import {
 	clearInlineStyleFromRuns,
 	isStyledRichText,
-	TEXT_INLINE_STYLE_KEYS,
-} from "../../model/objects/types/RichText";
+} from "../../model/objects/types/text/RichText";
 import {
 	isTextRows,
 	TEXT_SLOT_STYLE_KEYS,
 	type TextSlot,
-} from "../../model/objects/types/TextSlot";
+} from "../../model/objects/types/text/TextSlot";
 import {
 	isSingleBodyText,
 	textStyleKeysOf,
-} from "../../model/objects/types/TextType";
+} from "../../model/objects/types/text/TextType";
 import {
 	validateArrowFields,
 	validateFillStyleFields,

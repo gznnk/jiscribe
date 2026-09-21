@@ -1,14 +1,12 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type {
-	InlineTextStyle,
-	RichText,
-} from "@jiscribe/doc/model/objects/types/RichText";
+import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import {
 	splitRichTextLines,
 	styleRichTextRange,
-} from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+} from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";

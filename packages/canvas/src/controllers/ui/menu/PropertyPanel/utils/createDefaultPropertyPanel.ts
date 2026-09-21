@@ -1,5 +1,5 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
-import { acceptsTextEmphasisStyle } from "@jiscribe/doc/model/objects/types/TextType";
+import { acceptsTextEmphasisStyle } from "@jiscribe/doc/model/objects/types/text/TextType";
 
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
 import type {

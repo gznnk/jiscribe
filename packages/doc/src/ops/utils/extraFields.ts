@@ -1,7 +1,7 @@
 import { quoteNames } from "./errorText";
 import type { ObjectRecord } from "./objectAccess";
 import { TEXT_BODY_KEYS } from "../../model/objects/base/TextStyleDoc";
-import { isSingleBodyText } from "../../model/objects/types/TextType";
+import { isSingleBodyText } from "../../model/objects/types/text/TextType";
 import { holdsBodyInsideBox } from "../../plugin/hasInsetTextRegion";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";

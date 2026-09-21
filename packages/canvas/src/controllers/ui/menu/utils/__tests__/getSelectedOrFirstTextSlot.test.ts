@@ -1,4 +1,4 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { describe, it, expect } from "vitest";

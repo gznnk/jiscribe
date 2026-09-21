@@ -1,5 +1,5 @@
-import type { TextVerticalBasis } from "@jiscribe/doc/model/objects/types/TextVerticalBasis";
-import { isTextVerticalBasis } from "@jiscribe/doc/model/objects/types/TextVerticalBasis";
+import type { TextVerticalBasis } from "@jiscribe/doc/model/objects/types/text/TextVerticalBasis";
+import { isTextVerticalBasis } from "@jiscribe/doc/model/objects/types/text/TextVerticalBasis";
 
 import { isTextSlots, type TextSlots } from "../types/TextSlots";
 

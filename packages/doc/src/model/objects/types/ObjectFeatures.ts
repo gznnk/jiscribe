@@ -1,6 +1,6 @@
 import type { GeometryType } from "./GeometryType";
 import type { ObjectType } from "./ObjectType";
-import type { TextType } from "./TextType";
+import type { TextType } from "./text/TextType";
 
 /**
  * Per-type declaration descriptor for canvas objects.

@@ -5,10 +5,10 @@ import { isArrowType } from "../model/objects/types/ArrowType";
 import { isConnectorRouting } from "../model/objects/types/ConnectorRouting";
 import { isAnchorKind } from "../model/objects/types/EndpointRef";
 import { isStrokeDashType } from "../model/objects/types/StrokeDashType";
-import { isTextAlign } from "../model/objects/types/TextAlign";
-import { isTextLayout } from "../model/objects/types/TextLayout";
-import { isTextVerticalBasis } from "../model/objects/types/TextVerticalBasis";
-import { isVerticalAlign } from "../model/objects/types/VerticalAlign";
+import { isTextAlign } from "../model/objects/types/text/TextAlign";
+import { isTextLayout } from "../model/objects/types/text/TextLayout";
+import { isTextVerticalBasis } from "../model/objects/types/text/TextVerticalBasis";
+import { isVerticalAlign } from "../model/objects/types/text/VerticalAlign";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorRegistry";
 

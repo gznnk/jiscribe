@@ -1,4 +1,4 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 

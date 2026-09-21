@@ -1,9 +1,9 @@
 import type { ConnectorLabel } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import { CONNECTOR_LABEL_DEFAULTS } from "@jiscribe/doc/model/objects/connector/ConnectorDoc";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
-import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";

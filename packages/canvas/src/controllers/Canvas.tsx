@@ -1,5 +1,5 @@
 ﻿import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import {
 	memo,
 	useCallback,

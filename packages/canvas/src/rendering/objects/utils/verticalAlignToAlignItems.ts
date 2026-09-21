@@ -1,4 +1,4 @@
-import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 import type React from "react";
 
 /**

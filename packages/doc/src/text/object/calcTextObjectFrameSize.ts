@@ -1,6 +1,6 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
-import type { RichText } from "../../model/objects/types/RichText";
+import type { RichText } from "../../model/objects/types/text/RichText";
 import { calcTextBlockSize } from "../block/calcTextBlockSize";
 import { calcWrappedTextBlockSize } from "../block/calcWrappedTextBlockSize";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";

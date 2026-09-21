@@ -1,4 +1,4 @@
-import { TEXT_EMPHASIS_STYLE_KEYS } from "./RichText";
+import { TEXT_EMPHASIS_STYLE_KEYS } from "./TextEmphasisStyle";
 import type { TextSlotStyle } from "./TextSlot";
 import { TEXT_SLOT_STYLE_KEYS } from "./TextSlot";
 

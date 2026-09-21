@@ -1,5 +1,5 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
-import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
 import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 
 import { calcCaretContentOffset } from "./calcCaretContentOffset";

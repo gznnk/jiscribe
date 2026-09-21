@@ -4,8 +4,8 @@ import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import { STROKE_WIDTH_MIN } from "../base/StrokeStyleDoc";
 import { isConnectorRouting } from "../types/ConnectorRouting";
 import { isOwnedEndpointRef } from "../types/EndpointRef";
-import { FONT_SIZE_MIN } from "../types/RichText";
 import { isStrokeDashType } from "../types/StrokeDashType";
+import { FONT_SIZE_MIN } from "../types/text/TextBaseStyle";
 import type { DocFieldValidator } from "../utils/validateDocUtils";
 import {
 	colorValidator,

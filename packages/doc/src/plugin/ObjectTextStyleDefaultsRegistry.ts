@@ -1,12 +1,15 @@
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
 import type { ObjectType } from "../model/objects/types/ObjectType";
-import type { TextSlot, TextSlotStyle } from "../model/objects/types/TextSlot";
-import { resolveTextSlotStyle } from "../model/objects/types/TextSlot";
-import type { TextType } from "../model/objects/types/TextType";
+import type {
+	TextSlot,
+	TextSlotStyle,
+} from "../model/objects/types/text/TextSlot";
+import { resolveTextSlotStyle } from "../model/objects/types/text/TextSlot";
+import type { TextType } from "../model/objects/types/text/TextType";
 import {
 	isSingleBodyText,
 	textStyleKeysOf,
-} from "../model/objects/types/TextType";
+} from "../model/objects/types/text/TextType";
 import { pickDefined } from "../model/objects/utils/pickDefined";
 import { BODY_TEXT_SLOT_ID } from "../text/style/textSlotId";
 

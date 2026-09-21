@@ -1,7 +1,7 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
-import { isSingleBodyText } from "../model/objects/types/TextType";
+import { isSingleBodyText } from "../model/objects/types/text/TextType";
 import { BODY_TEXT_SLOT_ID } from "../text/style/textSlotId";
 
 /**

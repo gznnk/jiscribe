@@ -9,6 +9,9 @@ import {
 	requireSlotId,
 } from "./utils/textFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
+import type { InlineTextStyle } from "../model/objects/types/text/InlineTextStyle";
+import { TEXT_INLINE_STYLE_KEYS } from "../model/objects/types/text/InlineTextStyle";
+import type { RichText } from "../model/objects/types/text/RichText";
 import {
 	isRichText,
 	joinRichTextLines,
@@ -16,15 +19,10 @@ import {
 	richTextToPlain,
 	splitRichTextLines,
 	styleRichTextRange,
-	TEXT_INLINE_STYLE_KEYS,
-} from "../model/objects/types/RichText";
-import type {
-	InlineTextStyle,
-	RichText,
-} from "../model/objects/types/RichText";
-import { isTextRows } from "../model/objects/types/TextSlot";
-import type { TextType } from "../model/objects/types/TextType";
-import { isSingleBodyText } from "../model/objects/types/TextType";
+} from "../model/objects/types/text/RichText";
+import { isTextRows } from "../model/objects/types/text/TextSlot";
+import type { TextType } from "../model/objects/types/text/TextType";
+import { isSingleBodyText } from "../model/objects/types/text/TextType";
 import { pickDefined } from "../model/objects/utils/pickDefined";
 
 /**

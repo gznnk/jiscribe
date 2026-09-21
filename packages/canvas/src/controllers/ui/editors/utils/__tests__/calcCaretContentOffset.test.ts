@@ -1,4 +1,4 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 import { describe, expect, it } from "vitest";
 

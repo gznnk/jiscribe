@@ -18,7 +18,7 @@ import {
 import { applyRotation, requireRotationDegrees } from "./utils/transformFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
-import type { TextLayout } from "../model/objects/types/TextLayout";
+import type { TextLayout } from "../model/objects/types/text/TextLayout";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../plugin/supportsAutoHeight";
 

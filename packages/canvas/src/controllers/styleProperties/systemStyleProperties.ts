@@ -2,7 +2,7 @@ import type { ARROW_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/ArrowSty
 import type { FILL_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/FillStyleDoc";
 import type { RADIUS_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/RadiusStyleDoc";
 import type { STROKE_STYLE_KEYS } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
-import type { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { TEXT_SLOT_STYLE_KEYS } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 
 import { FeatureGatedStyleProperty } from "./FeatureGatedStyleProperty";
 import { LockAspectRatioProperty } from "./LockAspectRatioProperty";

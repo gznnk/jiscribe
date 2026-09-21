@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import { describe, expect, it } from "vitest";
 
 import { theme } from "../../../../../theme/themeTokens";

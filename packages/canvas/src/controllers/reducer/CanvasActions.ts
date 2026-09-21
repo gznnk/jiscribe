@@ -1,4 +1,4 @@
-import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
+import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { Viewport } from "../../rendering/Viewport";

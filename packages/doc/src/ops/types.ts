@@ -1,4 +1,4 @@
-import { isSingleBodyText } from "../model/objects/types/TextType";
+import { isSingleBodyText } from "../model/objects/types/text/TextType";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 import type { DocDefinitions } from "./utils/objectGeometry";
 

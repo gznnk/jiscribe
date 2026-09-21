@@ -1,5 +1,5 @@
-import type { TextAlign } from "@jiscribe/doc/model/objects/types/TextAlign";
-import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
+import type { TextAlign } from "@jiscribe/doc/model/objects/types/text/TextAlign";
+import type { VerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { TEXT_STYLE_FALLBACK } from "@jiscribe/doc/text/style/textStyleFallback";
 import { negativeToZero } from "@jiscribe/geometry";

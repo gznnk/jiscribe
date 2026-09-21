@@ -1,7 +1,7 @@
 import { DEFAULT_FONT_FAMILY } from "../../../../text/style/fontFamilies";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { TextLayout } from "../../types/TextLayout";
+import type { TextLayout } from "../../types/text/TextLayout";
 import { AUTO_COLOR } from "../../utils/autoColor";
 
 /**
