@@ -14,7 +14,34 @@ import type { FullConfig } from "@playwright/test";
 const BUILD_COMMAND = "pnpm --filter jiscribe-mcp build";
 
 /**
- * Runs the package's own build, from the repository root.
+ * Resolves the workspace root pnpm has to run from: the outer repository when this
+ * one is mounted there as a submodule, this repository's root otherwise. Started
+ * with its cwd inside the submodule, pnpm would install the engine workspace instead
+ * of the outer one — rewriting engine's lockfile and pointing every node_modules at
+ * a store that was never populated.
+ *
+ * @param engineRoot This repository's root, the fallback when git is absent or
+ *   reports no superproject
+ */
+function resolveWorkspaceRoot(engineRoot: string): string {
+	try {
+		const superprojectRoot = execFileSync(
+			"git",
+			["rev-parse", "--show-superproject-working-tree"],
+			{
+				cwd: engineRoot,
+				encoding: "utf8",
+				stdio: ["ignore", "pipe", "ignore"],
+			},
+		).trim();
+		return superprojectRoot === "" ? engineRoot : superprojectRoot;
+	} catch {
+		return engineRoot;
+	}
+}
+
+/**
+ * Runs the package's own build, from the root of the workspace that installed it.
  *
  * @param config Playwright's resolved configuration, read only for `configFile`:
  *   it is the one path here that names the package directory, whatever directory
@@ -27,10 +54,10 @@ export default function buildViewer(config: FullConfig): void {
 		config.configFile === undefined
 			? process.cwd()
 			: path.dirname(config.configFile);
-	const repositoryRoot = path.join(packageRoot, "..", "..");
+	const engineRoot = path.join(packageRoot, "..", "..");
 	try {
 		execFileSync("pnpm", ["--filter", "jiscribe-mcp", "build"], {
-			cwd: repositoryRoot,
+			cwd: resolveWorkspaceRoot(engineRoot),
 			stdio: "inherit",
 		});
 	} catch (error) {
