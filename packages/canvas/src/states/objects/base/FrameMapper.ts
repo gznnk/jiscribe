@@ -31,7 +31,7 @@ import { collectStyleKeys, pick } from "../utils/stylePassthrough";
  * (shapes with geometry: "rect" | "ellipse" + transform).
  *
  * The differences between Doc and State are the geometry, the transform, and the text
- * group (whose styling sits flat on a `"body"` Doc but inside each slot in the State).
+ * group (whose styling sits flat on a root-form Doc but inside each slot in the State).
  * Everything else (stroke / fill / radius / svgText …) shares the same names and types, so
  * this mapper converts only those three and passes the rest through by **explicitly picking
  * them via an allow-list**.

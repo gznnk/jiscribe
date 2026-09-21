@@ -350,7 +350,12 @@ const diagnoseObjectTextLineStarts = (
 	];
 };
 
-/** Every finding about one object's text, empty when it fits and breaks well. */
+/**
+ * Every finding about one object's text, empty when it fits and breaks well.
+ * Only a `"body"` type is measured: a `"source"` body is drawn by the shape's own
+ * renderer rather than by the shared typesetting these metrics come from, and a
+ * `"slots"` type holds no single body to place against the shape.
+ */
 const diagnoseObjectText = (object: ObjectDoc): Diagnostic[] => {
 	const definition = standardObjectDocDefinitions.get(object.type);
 	if (definition?.features.text !== "body") {

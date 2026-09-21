@@ -1,5 +1,6 @@
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 
+import { acceptsTextEmphasisStyle } from "../../utils/acceptsTextEmphasisStyle";
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
 import type {
 	PropertyPanelItem,
@@ -17,7 +18,9 @@ import type {
  * alone, which declares it. Neither has a counterpart in the ObjectMenu.
  *
  * @param features - The type's declaration; `transform`, `geometry`, `fill`, `stroke`, `radius`, `arrow` and `text` are read
- * @returns The sections in display order, each labelled with the English wording its message key carries
+ * @returns The sections in display order, each labelled with the English wording
+ *   its message key carries; the text section leaves the format row out for a
+ *   type accepting no emphasis field ({@link acceptsTextEmphasisStyle})
  */
 export const createDefaultPropertyPanel = (
 	features: ObjectFeatures,
@@ -72,7 +75,11 @@ export const createDefaultPropertyPanel = (
 			{ type: "fontFamily" },
 			{ type: "fontSize" },
 			{ type: "fontColor" },
-			{ type: "textFormat" },
+			// The row writes the emphasis fields and nothing else, so a type that
+			// accepts none of them has no use for it.
+			...(acceptsTextEmphasisStyle(features.text)
+				? [{ type: "textFormat" } as PropertyPanelItem]
+				: []),
 			{ type: "textAlign" },
 		];
 		// A point's height is measured from its own text, so no vertical value has

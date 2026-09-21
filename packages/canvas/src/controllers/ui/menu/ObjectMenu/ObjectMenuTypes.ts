@@ -65,8 +65,23 @@ export type ObjectMenuItemProps = {
 };
 
 export type BuiltinItem =
-	| { type: Exclude<BuiltinItemKey, "borderStyle" | "textAlignment"> }
+	| {
+			type: Exclude<
+				BuiltinItemKey,
+				"borderStyle" | "fontStyle" | "textAlignment"
+			>;
+	  }
 	| { type: "borderStyle"; radius?: boolean }
+	| {
+			type: "fontStyle";
+			/**
+			 * Whether the format toggles (bold / italic / the decoration lines) are
+			 * offered beside the family, size and color. Omitted = offered. A body
+			 * written in a source language sets them in its own syntax, so it accepts
+			 * no emphasis field at all (textStyleKeysOf).
+			 */
+			emphasis?: boolean;
+	  }
 	| {
 			type: "textAlignment";
 			/**

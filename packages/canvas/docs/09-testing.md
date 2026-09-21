@@ -100,7 +100,8 @@ Every suite is laid out the same way and runs on the shared kit described below.
 - **canvas's harness registers no shipped plugin.** It mounts `e2e/plugins/specShapesPlugin.tsx`,
   a test-only stand-in supplying the traits core no longer owns itself, one type per trait
   (e.g. `tile`: drag-drawn, in a category flyout; `pin`: click-placed; `card`: `<g>`-rooted,
-  with a text slot; `panel`: declares its own creation defaults. The full set is
+  with a text slot; `panel`: declares its own creation defaults; `memo`: holds a
+  source-language body (`features.text: "source"`). The full set is
   `specShapesPlugin` in that file). Core specs that used a shipped shape as their subject
   drive these instead
 - **A plugin's harness mounts that plugin alone.** Passing under a solo load is itself the

@@ -2,6 +2,7 @@ import { joinRichTextLines } from "@jiscribe/doc/model/objects/types/RichText";
 import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
 import type { TextSlot } from "@jiscribe/doc/model/objects/types/TextSlot";
+import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/TextType";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { memo, useMemo } from "react";
@@ -119,9 +120,9 @@ export type FrameTextOverlayRenderer = (
  * `"auto"` therefore draws the theme surface, matching what the editor's factory
  * would have written.
  *
- * Text follows `features.text`: a "body" type draws its single body slot, a
- * "slots" type draws one overlay per key of `state.text` (the authority on which
- * slots the shape has). Each overlay is placed by the type's calculator in
+ * Text follows `features.text`: a root-form type ("body" / "source") draws its
+ * single body slot, a "slots" type draws one overlay per key of `state.text` (the
+ * authority on which slots the shape has). Each overlay is placed by the type's calculator in
  * ObjectTextRegionRegistry via `calcTextRegion` (unregistered = full bbox).
  * Editing blanks only the slot the editor is over (`editingSlotId`), so a
  * multi-slot shape keeps showing the rest.
@@ -232,9 +233,9 @@ export const createFrameObject = <TState extends FrameRenderState>(
 
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 		// The features.text gate matches the one used by the text-edit gesture and
-		// property-update side: unset draws no overlay, "body" draws its one named
-		// slot, "slots" enumerates state.text.
-		const textShape = props.features?.text;
+		// property-update side: unset draws no overlay, a root form draws its one
+		// named slot, "slots" enumerates state.text.
+		const textType = props.features?.text;
 
 		const shape: FrameShapeProps = {
 			"data-kind": "object",
@@ -256,7 +257,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		const isEditingSlot = (slotId: string): boolean =>
 			isEditing && (editingSlotId === undefined || editingSlotId === slotId);
 
-		// A "body" shape addresses its one slot by name rather than enumerating,
+		// A root-form shape addresses its one slot by name rather than enumerating,
 		// so a malformed multi-slot state cannot overlap-draw; a missing body slot
 		// draws nothing, same as the enumeration would.
 		const bodySlot = text?.[BODY_TEXT_SLOT_ID];
@@ -264,7 +265,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		return (
 			<>
 				{draw(props, shape)}
-				{textShape === "body" && bodySlot !== undefined && (
+				{isSingleBodyText(textType) && bodySlot !== undefined && (
 					<SlotOverlay
 						state={props}
 						slotId={BODY_TEXT_SLOT_ID}
@@ -273,7 +274,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 						isEditing={isEditingSlot(BODY_TEXT_SLOT_ID)}
 					/>
 				)}
-				{textShape === "slots" &&
+				{textType === "slots" &&
 					Object.entries(text ?? {}).map(([slotId, slot]) => (
 						<SlotOverlay
 							key={slotId}

@@ -76,6 +76,22 @@ describe("createDefaultMenu", () => {
 		]);
 	});
 
+	it("source-like -> the text item with its format toggles turned off", () => {
+		const sections = createDefaultMenu(
+			features({ type: "markdown", transform: true, text: "source" }),
+		);
+		expect(sections).toEqual([
+			{
+				id: "text",
+				// The family, size and color the same item carries stay offered.
+				items: [
+					{ type: "fontStyle", emphasis: false },
+					{ type: "textAlignment" },
+				],
+			},
+		]);
+	});
+
 	it("no flags -> empty", () => {
 		expect(createDefaultMenu(features({}))).toEqual([]);
 	});

@@ -20,9 +20,10 @@ export type TextStyleState = {
 	/**
 	 * Box the body's `verticalAlign` is measured against, applied by
 	 * `calcTextRegion`; absent = the type's own declared region, which is what
-	 * every document written before the field existed means. Only a
-	 * `features.text: "body"` type ever carries it — the mapper sets it in that
-	 * branch alone, a slot having no shape-wide box to be placed against.
+	 * every document written before the field existed means. Only a root-form
+	 * type (`features.text: "body"` / `"source"`) ever carries it — the mapper
+	 * sets it in that branch alone, a slot having no shape-wide box to be placed
+	 * against.
 	 */
 	textVerticalBasis?: TextVerticalBasis;
 };

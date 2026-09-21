@@ -836,6 +836,75 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 				});
 			});
 		});
+
+		describe("on a body written in a source language", () => {
+			/** A shape whose body is source text (features.text = "source"). */
+			const sourceRect = (id: string, style: Record<string, unknown> = {}) =>
+				({
+					...rectObj(id),
+					features: { ...RectFeatures, text: "source" },
+					text: { body: { text: "# Title", ...style } },
+				}) as unknown as ObjectState;
+
+			/** The same shape being edited with its first two characters selected. */
+			const editingSource = (r1: ObjectState): CanvasControllerState =>
+				makeState({
+					selectedIds: ["r1"],
+					objects: { r1 },
+					textEditState: {
+						kind: "shape",
+						objectId: "r1",
+						slotId: "body",
+						text: "# Title",
+						selection: { start: 0, end: 2 },
+					},
+				});
+
+			it("skips an emphasis property, the syntax carrying it instead", () => {
+				const r1 = sourceRect("r1");
+				const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+				expect(applyStyleProperty(state, "fontWeight", "bold")).toBe(state);
+			});
+
+			it("writes a property the body does accept", () => {
+				const r1 = sourceRect("r1");
+				const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+				const result = applyStyleProperty(state, "fontSize", "24");
+				expect(slotsOf(result, "r1").body).toEqual({
+					text: "# Title",
+					fontSize: 24,
+				});
+			});
+
+			it("writes the whole slot even with a stretch selected, the content staying a string", () => {
+				const result = applyStyleProperty(
+					editingSource(sourceRect("r1")),
+					"fontSize",
+					"24",
+				);
+				expect(slotsOf(result, "r1").body).toEqual({
+					text: "# Title",
+					fontSize: 24,
+				});
+			});
+
+			it("styles no stretch with an emphasis property either", () => {
+				const state = editingSource(sourceRect("r1"));
+				expect(applyStyleProperty(state, "fontWeight", "bold")).toBe(state);
+			});
+
+			it("writes an emphasis property onto the selected objects that accept it", () => {
+				const r1 = sourceRect("r1");
+				const r2 = bodyRect("r2");
+				const state = makeState({
+					selectedIds: ["r1", "r2"],
+					objects: { r1, r2 },
+				});
+				const result = applyStyleProperty(state, "fontWeight", "bold");
+				expect(slotsOf(result, "r1").body).toEqual({ text: "# Title" });
+				expect(slotsOf(result, "r2").body.fontWeight).toBe("bold");
+			});
+		});
 	});
 
 	describe("text content property (text)", () => {

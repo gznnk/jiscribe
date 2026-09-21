@@ -1,6 +1,7 @@
 import { isNumber, isObject, isString } from "@jiscribe/basic-validators";
 
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
+import { pickDefined } from "../utils/pickDefined";
 
 /**
  * Smallest admissible `fontSize` — the `minimum` the JSON schema states for it.
@@ -174,16 +175,7 @@ export const isSameInlineTextStyle = (
 /** Copies the inline fields that are actually set, so a run gains no `undefined`-valued keys. */
 export const pickDefinedInlineTextStyle = (
 	source: InlineTextStyle,
-): InlineTextStyle => {
-	const style: Record<string, unknown> = {};
-	for (const key of TEXT_INLINE_STYLE_KEYS) {
-		const value = source[key];
-		if (value !== undefined) {
-			style[key] = value;
-		}
-	}
-	return style;
-};
+): InlineTextStyle => pickDefined(source, TEXT_INLINE_STYLE_KEYS);
 
 /**
  * The characters of a body of text, with the styling dropped: what the plain-text

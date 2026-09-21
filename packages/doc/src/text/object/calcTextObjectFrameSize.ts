@@ -12,7 +12,8 @@ import type { TextMeasureFont } from "../measure/TextMeasureFont";
  *
  * The font arrives already resolved because the two sides resolve it differently: the
  * canvas reads a state's slot (`resolveTextObjectFont`), doc-ops reads the flat fields a
- * `text: "body"` doc spells its styling out in (`resolveBodyFont`). What must not differ
+ * root-form doc (`text: "body"` / `"source"`) spells its styling out in
+ * (`resolveBodyFont`). What must not differ
  * between them is the rule below — which layout measures against a width and which widens
  * to its longest line — so that is what lives here.
  *

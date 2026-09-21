@@ -20,7 +20,7 @@ import { collectStyleKeys, pick } from "../utils/stylePassthrough";
  * conversion is needed — `points` is passed through directly. Everything else (stroke / fill …)
  * also shares names, so this mapper passes it through by **explicitly picking via an allow-list**;
  * the one exception is the text group, which mapText* rebuilds because its styling sits flat on a
- * `"body"` Doc but inside each slot in the State (only for types with features.text).
+ * root-form Doc but inside each slot in the State (only for types with features.text).
  *
  * The picked keys are the style groups enabled in `features` (`collectStyleKeys`, bound to their
  * types via `exhaustiveKeysOf` — adding a field to e.g. StrokeStyleDoc is a compile error until the

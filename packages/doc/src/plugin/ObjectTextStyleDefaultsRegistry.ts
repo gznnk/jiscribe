@@ -7,6 +7,7 @@ import {
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "../model/objects/types/TextType";
+import { pickDefined } from "../model/objects/utils/pickDefined";
 import { BODY_TEXT_SLOT_ID } from "../text/style/textSlotId";
 
 /**
@@ -33,21 +34,6 @@ const textStyleDefaultKeys = (
 export type ObjectTextSlotStyleDefaults = Readonly<
 	Record<string, TextSlotStyle>
 >;
-
-/** The fields of `source` that are set, out of the ones `keys` names, or undefined when it sets none of them. */
-const pickStyleDefaults = (
-	source: Readonly<Record<string, unknown>>,
-	keys: readonly (keyof TextSlotStyle)[],
-): TextSlotStyle | undefined => {
-	const style: Record<string, unknown> = {};
-	for (const key of keys) {
-		const value = source[key];
-		if (value !== undefined) {
-			style[key] = value;
-		}
-	}
-	return Object.keys(style).length === 0 ? undefined : style;
-};
 
 /**
  * The per-slot draw-time defaults of one type, from whichever of its two
@@ -78,11 +64,14 @@ export const extractTextSlotStyleDefaults = (
 		if (defaults === undefined) {
 			return undefined;
 		}
-		const bodyStyle = pickStyleDefaults(
-			defaults,
+		// A root-form type spells the body's styling out flat on the doc, so its
+		// creation defaults are read as that doc's style half.
+		const bodyDefaults: Readonly<TextSlotStyle> = defaults;
+		const bodyStyle = pickDefined(
+			bodyDefaults,
 			textStyleDefaultKeys(features.text),
 		);
-		return bodyStyle === undefined
+		return Object.keys(bodyStyle).length === 0
 			? undefined
 			: { [BODY_TEXT_SLOT_ID]: bodyStyle };
 	}
@@ -91,11 +80,11 @@ export const extractTextSlotStyleDefaults = (
 	}
 	const bySlotId: Record<string, TextSlotStyle> = {};
 	for (const [slotId, slotDefaults] of Object.entries(slotStyleDefaults)) {
-		const style = pickStyleDefaults(
+		const style = pickDefined(
 			slotDefaults,
 			textStyleDefaultKeys(features.text),
 		);
-		if (style !== undefined) {
+		if (Object.keys(style).length > 0) {
 			bySlotId[slotId] = style;
 		}
 	}

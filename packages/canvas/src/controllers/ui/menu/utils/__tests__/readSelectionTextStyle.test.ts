@@ -1,3 +1,4 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
@@ -30,6 +31,24 @@ const makeState = (
 		selectedIds,
 		objects,
 		selectedTextSlot,
+	}) as unknown as CanvasControllerState;
+
+/** An object being edited on its body slot, with its first two characters selected. */
+const editingState = (
+	object: ObjectState,
+	content: RichText,
+): CanvasControllerState =>
+	({
+		selectedIds: ["a"],
+		objects: { a: object },
+		selectedTextSlot: null,
+		textEditState: {
+			kind: "shape",
+			objectId: "a",
+			slotId: "body",
+			text: content,
+			selection: { start: 0, end: 2 },
+		},
 	}) as unknown as CanvasControllerState;
 
 describe("readSelectionTextStyle", () => {
@@ -153,6 +172,37 @@ describe("readSelectionTextStyle", () => {
 		};
 		expect(
 			readSelectionTextStyle(makeState(["a"], objects), textStyleDefaults)
+				.fontSize,
+		).toEqual({ kind: "single", value: 20 });
+	});
+});
+
+describe("readSelectionTextStyle while a stretch of text is edited", () => {
+	it("narrows to the selected characters of an ordinary body", () => {
+		const a = rect("a", {
+			body: {
+				text: [{ text: "hi", fontSize: 30 }, { text: "!" }],
+				fontSize: 20,
+			},
+		});
+		expect(
+			// The draft the editor holds is what the offsets address.
+			readSelectionTextStyle(
+				editingState(a, [{ text: "hi", fontSize: 30 }, { text: "!" }]),
+				textStyleDefaults,
+			).fontSize,
+		).toEqual({ kind: "single", value: 30 });
+	});
+
+	it("reads the whole slot of a source-language body, which the write also lands on", () => {
+		const a = {
+			id: "a",
+			type: "markdown",
+			features: { type: "markdown", geometry: "rect", text: "source" },
+			text: { body: { text: "# Title", fontSize: 20 } },
+		} as unknown as ObjectState;
+		expect(
+			readSelectionTextStyle(editingState(a, "# Title"), textStyleDefaults)
 				.fontSize,
 		).toEqual({ kind: "single", value: 20 });
 	});

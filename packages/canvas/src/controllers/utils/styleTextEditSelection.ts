@@ -53,8 +53,9 @@ export type TextEditSelection = {
  *
  * @param state - The current canvas controller state
  * @returns The selection, or null when there is nothing to style a stretch of: no
- *   open shape editor, a collapsed (or unreported) selection, or an object or slot
- *   that no longer resolves
+ *   open shape editor, a collapsed (or unreported) selection, an object or slot
+ *   that no longer resolves, or a body written in a source language, whose
+ *   characters carry no styling of their own (`features.text: "source"`)
  */
 export const resolveTextEditSelection = (
 	state: CanvasControllerState,
@@ -70,6 +71,12 @@ export const resolveTextEditSelection = (
 
 	const target = state.objects[textEditState.objectId];
 	if (target === undefined || !isTextStyleState(target)) {
+		return null;
+	}
+	// A source-language body is a plain string the shape renders itself: a run
+	// laid over a stretch of it would be dropped on save and never drawn, so
+	// every caller falls back to whole-slot styling by finding no selection here.
+	if (target.features?.text === "source") {
 		return null;
 	}
 	const slot = target.text?.[textEditState.slotId];
@@ -119,6 +126,7 @@ export const resolveTextEditSelection = (
  * @param style - The fields to override on the selected characters; an omitted
  *   one leaves what those characters already carry
  * @returns A new state, or `state` itself when there is no selection to style
+ *   (see {@link resolveTextEditSelection}, which also rules out a source-language body)
  */
 export const styleTextEditSelection = (
 	state: CanvasControllerState,

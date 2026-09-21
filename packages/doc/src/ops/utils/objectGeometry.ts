@@ -45,8 +45,8 @@ const readPoints = (value: unknown): Point[] =>
  * resolved into whatever the object states itself, and the shared last resort
  * for whatever neither sets. A separate resolution from the canvas's
  * `resolveTextObjectFont` because that one reads a state's slot and this one
- * reads the flat fields a `text: "body"` doc spells its styling out in; the two
- * fill in the same fallbacks and must keep doing so.
+ * reads the flat fields a root-form doc (`text: "body"` / `"source"`) spells its
+ * styling out in; the two fill in the same fallbacks and must keep doing so.
  */
 const resolveBodyFont = (
 	object: ObjectRecord,

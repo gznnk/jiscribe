@@ -25,6 +25,7 @@ import type {
 import { isTextRows } from "../model/objects/types/TextSlot";
 import type { TextType } from "../model/objects/types/TextType";
 import { isSingleBodyText } from "../model/objects/types/TextType";
+import { pickDefined } from "../model/objects/utils/pickDefined";
 
 /**
  * The new text for a body that may be styled per range: the characters the
@@ -305,16 +306,8 @@ const findOccurrences = (plain: string, match: string): number[] => {
 };
 
 /** The styling fields the params actually ask for, `match` / `occurrence` / `slot` left out. */
-const requestedStyle = (params: InlineTextStyleParams): InlineTextStyle => {
-	const style: Record<string, unknown> = {};
-	for (const key of TEXT_INLINE_STYLE_KEYS) {
-		const value = params[key];
-		if (value !== undefined) {
-			style[key] = value;
-		}
-	}
-	return style;
-};
+const requestedStyle = (params: InlineTextStyleParams): InlineTextStyle =>
+	pickDefined(params, TEXT_INLINE_STYLE_KEYS);
 
 /** Styles every requested occurrence, last one first so the earlier offsets still hold. */
 const styleOccurrences = (

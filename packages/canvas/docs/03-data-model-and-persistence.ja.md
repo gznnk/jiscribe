@@ -87,6 +87,11 @@ URL と、同じバイト列の `data:` URI の 2 つで、後者が書き出し
 
 - **単一本文の図形（rect / ellipse / diamond / sticky など）** … `text` / `textAlign` / `fontColor` … を
   **トップ階層にフラット**で持つ（`features.text: "body"` が `TextStyleDoc` を合成する）。
+- **ソース言語の図形** … `features.text: "source"` を宣言し、同じフラットな群を、その本文が持てる
+  ぶんだけ狭めて持つ（`SourceTextStyleDoc`）。`text` はプレーンな string のみで run 形式を取らず、
+  装飾のタイポグラフィ（`fontWeight` / `fontStyle` / `textDecoration`）を持たない——それを決めるのは
+  図形自身の構文だから。どのフィールドを受け付けるかの正本は `textStyleKeysOf`、root 形式の単一本文か
+  の判定は `isSingleBodyText`。
 - **複数スロットの図形（uml-shapes の record など）** … `features.text: "slots"` を宣言し、`text` を
   **スロット ID キーのオブジェクト**で持つ（`text: { name: {…}, rows: {…} }`。各スロットは
   `TextSlot` = 内容＋タイポグラフィで、スロット集合は型ごとにクローズド）。
@@ -95,8 +100,10 @@ URL と、同じバイト列の `data:` URI の 2 つで、後者が書き出し
   `@jiscribe/doc` の `ConnectorDoc.ts` の `ConnectorLabel`。背景 `fill`・枠線 `stroke` などは図形と
   同じ語彙を借りるが、`label` の中にネストする点が異なる。
 
-State 側は図形のどちらの形も **keyed スロット一形**に正規化される（`"body"` 型は mapper が単一
-`body` スロットへ展開し、保存時に畳み戻す。`TextSlotsMapper` 参照）。描画・編集・スタイリングの
+State 側は図形のどの形も **keyed スロット一形**に正規化される（root 形式の型は mapper が単一
+`body` スロットへ展開し、保存時に畳み戻す。`TextSlotsMapper` 参照。移すのはその text type が
+受け付けるフィールドだけなので、`"source"` のスロットは装飾のフィールドを持たず、内容は
+プレーンな string で書き戻る）。描画・編集・スタイリングの
 consumer はこの正規形だけを読むので、doc の形による分岐を持たない。
 
 この差は層の都合ではなく、**役割（ロール）の違い**を映したもの。図形の `text` は「その図形の

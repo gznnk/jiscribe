@@ -26,8 +26,8 @@ describe("collectStyleKeys", () => {
 	});
 
 	it("excludes the whole text group, which the mappers rebuild per slot", () => {
-		for (const textShape of ["body", "slots"] as const) {
-			const keys = collectStyleKeys(features({ text: textShape }));
+		for (const textType of ["body", "source", "slots"] as const) {
+			const keys = collectStyleKeys(features({ text: textType }));
 			expect(keys).not.toContain("text");
 			expect(keys).not.toContain("textAlign");
 		}

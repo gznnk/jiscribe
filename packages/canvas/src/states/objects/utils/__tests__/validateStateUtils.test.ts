@@ -241,6 +241,47 @@ describe("validateStateUtils", () => {
 				isValidTextStyleState({ text: { anything: { text: "x" } } }, "slots"),
 			).toBe(true);
 		});
+
+		it("a source type must carry exactly the body slot, as the other root form does", () => {
+			expect(isValidTextStyleState({ text: {} }, "source")).toBe(false);
+			expect(
+				isValidTextStyleState({ text: { weird: { text: "x" } } }, "source"),
+			).toBe(false);
+			expect(
+				isValidTextStyleState(
+					{ text: { body: { text: "# Title" } } },
+					"source",
+				),
+			).toBe(true);
+		});
+
+		// The shape renders its own source and draws no run, so a pasted run-styled
+		// body would be drawn as its characters alone and flattened on the next save.
+		it("a source type refuses a run-styled body", () => {
+			expect(
+				isValidTextStyleState(
+					{ text: { body: { text: [{ text: "# Title" }] } } },
+					"source",
+				),
+			).toBe(false);
+			expect(
+				isValidTextStyleState(
+					{ text: { body: { text: [{ text: "# Ti", fontWeight: "bold" }] } } },
+					"source",
+				),
+			).toBe(false);
+		});
+
+		// The same stance the doc validator takes: a field the type's features do
+		// not imply goes unreported, and the mapper drops it on save.
+		it("lets an emphasis field on a source slot through unreported", () => {
+			expect(
+				isValidTextStyleState(
+					{ text: { body: { text: "# Title", fontWeight: "bold" } } },
+					"source",
+				),
+			).toBe(true);
+		});
 	});
 
 	describe("isValidRadiusStyleState", () => {

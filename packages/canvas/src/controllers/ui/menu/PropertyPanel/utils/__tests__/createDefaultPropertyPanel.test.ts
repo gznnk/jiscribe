@@ -121,6 +121,20 @@ describe("createDefaultPropertyPanel", () => {
 		]);
 	});
 
+	it("offers no format row for a source-language body, whose syntax carries the emphasis", () => {
+		const sections = createDefaultPropertyPanel(
+			features({ type: "markdown", transform: true, text: "source" }),
+		);
+
+		expect(itemsOf(sections, "text")).toEqual([
+			"fontFamily",
+			"fontSize",
+			"fontColor",
+			"textAlign",
+			"verticalAlign",
+		]);
+	});
+
 	it("derives nothing from a type that declares no feature at all", () => {
 		expect(createDefaultPropertyPanel(features({}))).toEqual([]);
 	});

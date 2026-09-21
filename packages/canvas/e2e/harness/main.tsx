@@ -49,6 +49,7 @@ mountPluginHarness({
 		{ type: "stencilPreset", presetId: "text" },
 		{ type: "stencilPreset", presetId: "pin" },
 		{ type: "stencilPreset", presetId: "card" },
+		{ type: "stencilPreset", presetId: "memo" },
 		{ type: "stencilCategory", category: specShapesStencilCategory },
 	],
 	stencilLibrarySections: librarySections,

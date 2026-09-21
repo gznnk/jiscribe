@@ -121,6 +121,44 @@ describe("mapTextDocToState", () => {
 	it("contributes nothing at all for a text-less type", () => {
 		expect(mapTextDocToState(undefined, { text: "hello" })).toEqual({});
 	});
+
+	it("moves a source doc's text and accepted styling into the one body slot", () => {
+		expect(
+			mapTextDocToState("source", { text: "# Title", fontSize: 20 }),
+		).toEqual({ text: { body: { text: "# Title", fontSize: 20 } } });
+	});
+
+	it("leaves an emphasis field of a source doc out of the slot", () => {
+		expect(
+			mapTextDocToState("source", {
+				text: "# Title",
+				fontWeight: "bold",
+				fontStyle: "italic",
+				textDecoration: "underline",
+				textAlign: "center",
+			}),
+		).toEqual({ text: { body: { text: "# Title", textAlign: "center" } } });
+	});
+
+	it("reads a run-styled source text as its characters, the shape drawing no run", () => {
+		expect(
+			mapTextDocToState("source", {
+				text: [{ text: "# Title", fontWeight: "bold" }, { text: "\nbody" }],
+			}),
+		).toEqual({ text: { body: { text: "# Title\nbody" } } });
+	});
+
+	it("carries a source doc's vertical basis onto the object, as a body doc's", () => {
+		expect(
+			mapTextDocToState("source", {
+				text: "# Title",
+				textVerticalBasis: "frame",
+			}),
+		).toEqual({
+			text: { body: { text: "# Title" } },
+			textVerticalBasis: "frame",
+		});
+	});
 });
 
 describe("mapTextStateToDoc", () => {
@@ -175,6 +213,33 @@ describe("mapTextStateToDoc", () => {
 			mapTextStateToDoc(undefined, { text: { body: { text: "hello" } } }),
 		).toEqual({});
 	});
+
+	it("writes a source body back as a plain string, runs flattened to their characters", () => {
+		expect(
+			mapTextStateToDoc("source", {
+				text: {
+					body: {
+						text: [{ text: "# Ti", fontWeight: "bold" }, { text: "tle" }],
+					},
+				},
+			}),
+		).toEqual({ text: "# Title" });
+	});
+
+	it("leaves an emphasis field that slipped into a source slot out of the doc", () => {
+		expect(
+			mapTextStateToDoc("source", {
+				text: {
+					body: {
+						text: "# Title",
+						fontSize: 20,
+						fontWeight: "bold",
+						textDecoration: "underline",
+					},
+				},
+			}),
+		).toEqual({ text: "# Title", fontSize: 20 });
+	});
 });
 
 describe("doc ↔ state text round-trip", () => {
@@ -194,6 +259,18 @@ describe("doc ↔ state text round-trip", () => {
 				mapTextStateToDoc("slots", { text: keyedSlots }),
 			),
 		).toEqual({ text: keyedSlots });
+	});
+
+	it("is the identity for a source type, whose body stays a plain string", () => {
+		const slots: TextSlots = { body: { text: "# Title", fontSize: 20 } };
+		expect(
+			mapTextDocToState("source", mapTextStateToDoc("source", { text: slots })),
+		).toEqual({ text: slots });
+
+		const doc = { text: "# Title", fontSize: 20, textAlign: "center" as const };
+		expect(
+			mapTextStateToDoc("source", mapTextDocToState("source", doc)),
+		).toEqual(doc);
 	});
 
 	it("is idempotent from the doc side, normalizing an empty text to absent", () => {

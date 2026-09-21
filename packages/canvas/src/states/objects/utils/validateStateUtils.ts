@@ -14,7 +14,6 @@ import { isArrowType } from "@jiscribe/doc/model/objects/types/ArrowType";
 import { isOwnedEndpointRef } from "@jiscribe/doc/model/objects/types/EndpointRef";
 import type { GeometryType } from "@jiscribe/doc/model/objects/types/GeometryType";
 import { GEOMETRY_SIZE_MIN } from "@jiscribe/doc/model/objects/types/GeometryType";
-import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type {
@@ -29,6 +28,8 @@ import type {
 	TextSlotStyle,
 } from "@jiscribe/doc/model/objects/types/TextSlot";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/TextSlot";
+import type { TextType } from "@jiscribe/doc/model/objects/types/TextType";
+import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/TextType";
 import { isVerticalAlign } from "@jiscribe/doc/model/objects/types/VerticalAlign";
 import { isAutoColor } from "@jiscribe/doc/model/objects/utils/autoColor";
 import {
@@ -41,6 +42,7 @@ import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { isCssColor } from "./isCssColor";
 import { isTextStyleState } from "../base/TextStyleState";
 import { isTransformState } from "../base/TransformState";
+import type { TextSlots } from "../types/TextSlots";
 
 /**
  * Shared helpers for validating clipboard-derived `ObjectState` (= arbitrary untrusted objects)
@@ -271,7 +273,7 @@ const isValidTextSlotStyle = (slot: TextSlot): boolean =>
 		: isValidRichTextStyle(slot.text));
 
 /**
- * Whether the slot keys are the set `textShape` declares. A `"body"` type holds
+ * Whether the slot keys are the set `textType` declares. A root-form type holds
  * exactly the one `body` slot: the mapper materializes it even for a doc with
  * neither text nor styling (see TextSlotsMapper), so a state missing it, or
  * carrying a key beside it, never came through the mapper. Left unchecked, such
@@ -281,9 +283,9 @@ const isValidTextSlotStyle = (slot: TextSlot): boolean =>
  */
 const hasDeclaredTextSlots = (
 	text: unknown,
-	textShape: ObjectFeatures["text"],
+	textType: TextType | undefined,
 ): boolean => {
-	if (textShape !== "body") {
+	if (!isSingleBodyText(textType)) {
 		return true;
 	}
 	const slotIds = Object.keys(text ?? {});
@@ -291,21 +293,41 @@ const hasDeclaredTextSlots = (
 };
 
 /**
- * In addition to TextStyleState validity, validates the slot key set against the
- * type's declared text shape, and each slot's styling for CSS safety, color
- * validity, and the fontSize minimum — the boundary checks that `isTextSlot`
- * leaves out because they need browser APIs the schema layer cannot reach.
+ * Whether the content is the plain form a source-language body is held in. Such
+ * a body is drawn by the shape's own renderer, which reads no run, so a
+ * run-styled text pasted onto one would be lost on the next save (the mapper
+ * flattens it) after having been drawn as its characters alone.
+ */
+const hasPlainSourceText = (
+	text: TextSlots | undefined,
+	textType: TextType | undefined,
+): boolean =>
+	textType !== "source" ||
+	Object.values(text ?? {}).every((slot) => isString(slot.text));
+
+/**
+ * In addition to TextStyleState validity, validates the slot key set and the
+ * content form against the type's declared text type, and each slot's styling
+ * for CSS safety, color validity, and the fontSize minimum — the boundary checks
+ * that `isTextSlot` leaves out because they need browser APIs the schema layer
+ * cannot reach.
+ *
+ * A styling field the type cannot hold goes unreported, as every other field the
+ * type's features do not imply does; the mapper drops it on save
+ * (`textStyleKeysOf`).
  *
  * @param o - The untrusted state record to check
- * @param textShape - The type's `features.text`; decides which slot keys are
- *   admissible (see {@link hasDeclaredTextSlots})
+ * @param textType - The type's `features.text`; decides which slot keys are
+ *   admissible (see {@link hasDeclaredTextSlots}) and which content forms are
+ *   (see {@link hasPlainSourceText})
  */
 export const isValidTextStyleState = (
 	o: StateRecord,
-	textShape: ObjectFeatures["text"],
+	textType: TextType | undefined,
 ): boolean =>
 	isTextStyleState(o) &&
-	hasDeclaredTextSlots(o.text, textShape) &&
+	hasDeclaredTextSlots(o.text, textType) &&
+	hasPlainSourceText(o.text, textType) &&
 	Object.values(o.text ?? {}).every(isValidTextSlotStyle);
 
 /** Validates RadiusStyleState's rx as a number (minimum: 0 in the schema) when present. */

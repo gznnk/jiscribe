@@ -11,6 +11,7 @@ import { isTextAlign } from "./TextAlign";
 import type { VerticalAlign } from "./VerticalAlign";
 import { isVerticalAlign } from "./VerticalAlign";
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
+import { pickDefined } from "../utils/pickDefined";
 
 /**
  * The content of one text slot. A `RichText` is one body of text (authored
@@ -81,16 +82,7 @@ export const TEXT_SLOT_STYLE_KEYS = exhaustiveKeysOf<Omit<TextSlot, "text">>()([
  */
 export const pickDefinedTextSlotStyle = (
 	source: TextSlot | TextSlotStyle,
-): TextSlotStyle => {
-	const style: Record<string, unknown> = {};
-	for (const key of TEXT_SLOT_STYLE_KEYS) {
-		const value = source[key];
-		if (value !== undefined) {
-			style[key] = value;
-		}
-	}
-	return style;
-};
+): TextSlotStyle => pickDefined(source, TEXT_SLOT_STYLE_KEYS);
 
 /**
  * The styling one slot is actually drawn with: what the slot itself sets, over

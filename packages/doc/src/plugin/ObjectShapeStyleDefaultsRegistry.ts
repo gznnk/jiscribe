@@ -4,6 +4,7 @@ import { STROKE_STYLE_KEYS } from "../model/objects/base/StrokeStyleDoc";
 import type { StrokeStyleDoc } from "../model/objects/base/StrokeStyleDoc";
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
 import type { ObjectType } from "../model/objects/types/ObjectType";
+import { pickDefined } from "../model/objects/utils/pickDefined";
 import { SHAPE_STYLE_FALLBACK } from "../model/objects/utils/shapeStyleFallback";
 import type { ShapeStyleFallback } from "../model/objects/utils/shapeStyleFallback";
 
@@ -54,20 +55,14 @@ export const extractShapeStyleDefaults = (
 	if (defaults === undefined) {
 		return undefined;
 	}
-	const style: Record<string, unknown> = {};
-	const keys = [
+	// The creation defaults spell both style groups out flat on the doc, so they
+	// are read as the two groups' own fields.
+	const shapeDefaults: ObjectShapeStyleDefaults = defaults;
+	const style = pickDefined(shapeDefaults, [
 		...(features.stroke ? STROKE_STYLE_KEYS : []),
 		...(features.fill ? FILL_STYLE_KEYS : []),
-	];
-	for (const key of keys) {
-		const value = defaults[key];
-		if (value !== undefined) {
-			style[key] = value;
-		}
-	}
-	return Object.keys(style).length === 0
-		? undefined
-		: (style as ObjectShapeStyleDefaults);
+	]);
+	return Object.keys(style).length === 0 ? undefined : style;
 };
 
 /**

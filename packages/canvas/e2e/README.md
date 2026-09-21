@@ -14,7 +14,7 @@ packages/canvas/
 │   │   ├── main.tsx       # loads specShapesPlugin into mountPluginHarness (no shipped plugin)
 │   │   └── vite.config.ts # createPluginHarnessViteConfig call
 │   ├── plugins/           # test-only plugins this package registers in its own harness
-│   │   └── specShapesPlugin.tsx  # e.g. tile (drag-drawn) / pin (click-placed) / card (<g>-rooted, text, connectable) / panel (declares its creation defaults)
+│   │   └── specShapesPlugin.tsx  # e.g. tile (drag-drawn) / pin (click-placed) / card (<g>-rooted, text, connectable) / panel (declares its creation defaults) / memo (source-language body)
 │   ├── kit/               # the shared implementation behind the testing entries
 │   │   ├── createCanvasPlaywrightConfig.ts  # ephemeral-port webServer, viewport, headed ergonomics
 │   │   ├── createPluginHarnessViteConfig.ts # dev-server-only vite config
@@ -108,7 +108,8 @@ for the button that shuts it.
 
 Toolbar buttons can also be identified by the `title` attribute, as in
 `[data-id="toolbar"] button[title="Rectangle"]` (Rectangle / Ellipse / Polyline /
-Polygon / Text from core, plus Pin / Card from `e2e/plugins/specShapesPlugin` —
+Polygon / Text from core, plus Pin / Card / Memo from
+`e2e/plugins/specShapesPlugin` —
 the harness pins all of them). No shipped plugin is mounted here; a spec that
 needs one belongs in that plugin's own suite.
 

@@ -215,8 +215,9 @@ export type {
 	SelectionControlProps,
 } from "./controllers/ui/controls/SelectionControlTypes";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
-// The slot id every single-text shape (`features.text: "body"`) holds, i.e. the
-// key its `state.text` carries. A shape with several slots names its own instead.
+// The slot id every single-body shape (`features.text: "body"` / `"source"`)
+// holds, i.e. the key its `state.text` carries. A shape with several slots names
+// its own instead.
 export { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 export { CANVAS_FONT_FAMILIES } from "@jiscribe/doc/text/style/fontFamilies";
 export type {

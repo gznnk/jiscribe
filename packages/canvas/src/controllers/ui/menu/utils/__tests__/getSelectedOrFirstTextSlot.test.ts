@@ -1,3 +1,4 @@
+import type { RichText } from "@jiscribe/doc/model/objects/types/RichText";
 import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { describe, it, expect } from "vitest";
@@ -141,6 +142,62 @@ describe("getSelectedOrFirstTextSlot", () => {
 				textStyleDefaults,
 			)?.fontSize,
 		).toBe(16);
+	});
+});
+
+/**
+ * While an editor is open with a stretch selected, the menus follow that stretch
+ * — except on a body written in a source language, whose characters carry no
+ * styling of their own, so the whole slot is read and the write lands there too
+ * (TextSlotStyleProperty).
+ */
+describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
+	const editingState = (
+		object: ObjectState,
+		content: RichText,
+	): CanvasControllerState =>
+		({
+			selectedIds: ["r1"],
+			objects: { r1: object },
+			selectedTextSlot: null,
+			textEditState: {
+				kind: "shape",
+				objectId: "r1",
+				slotId: BODY_TEXT_SLOT_ID,
+				text: content,
+				selection: { start: 0, end: 2 },
+			},
+		}) as unknown as CanvasControllerState;
+
+	const sourceRect = (text: TextSlots): ObjectState =>
+		({
+			id: "r1",
+			type: "markdown",
+			features: { type: "markdown", geometry: "rect", text: "source" },
+			text,
+		}) as unknown as ObjectState;
+
+	it("reads the styling of the selected characters of an ordinary body", () => {
+		const r = rect("r1", {
+			body: {
+				text: [{ text: "he", fontSize: 30 }, { text: "llo" }],
+				fontSize: 20,
+			},
+		});
+		expect(
+			getSelectedOrFirstTextSlot(
+				// The draft the editor holds is what the offsets address.
+				editingState(r, [{ text: "he", fontSize: 30 }, { text: "llo" }]),
+				textStyleDefaults,
+			)?.fontSize,
+		).toBe(30);
+	});
+
+	it("reads the whole slot of a source-language body", () => {
+		const r = sourceRect({ body: { text: "# Title", fontSize: 20 } });
+		expect(
+			getSelectedOrFirstTextSlot(editingState(r, "# Title"), textStyleDefaults),
+		).toEqual({ text: "# Title", fontSize: 20 });
 	});
 });
 

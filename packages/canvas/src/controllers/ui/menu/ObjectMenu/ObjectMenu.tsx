@@ -99,7 +99,9 @@ const renderItem = (
 						canvasState={canvasState}
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-					<TextFormatMenu canvasState={canvasState} />
+					{item.emphasis !== false && (
+						<TextFormatMenu canvasState={canvasState} />
+					)}
 				</React.Fragment>
 			);
 		case "textAlignment":

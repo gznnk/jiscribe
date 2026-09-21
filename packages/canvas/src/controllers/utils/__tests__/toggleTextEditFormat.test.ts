@@ -148,6 +148,27 @@ describe("toggleTextEditFormat", () => {
 		const idle = makeState();
 		expect(toggleTextEditFormat(idle, "bold", textStyleDefaults)).toBe(idle);
 	});
+
+	it("leaves a source-language body untouched, its syntax carrying the emphasis", () => {
+		const state = makeState({
+			objects: {
+				r1: {
+					id: "r1",
+					type: "markdown",
+					features: { type: "markdown", geometry: "rect", text: "source" },
+					text: { body: { text: "# Title" } },
+				} as unknown,
+			} as CanvasControllerState["objects"],
+			textEditState: {
+				kind: "shape",
+				objectId: "r1",
+				slotId: "body",
+				text: "# Title",
+				selection: { start: 0, end: 2 },
+			},
+		});
+		expect(toggleTextEditFormat(state, "bold", textStyleDefaults)).toBe(state);
+	});
 });
 
 /**
