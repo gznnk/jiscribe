@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { TEXT_SLOT_STYLE_KEYS } from "../TextSlot";
-import { isSingleBodyText, textStyleKeysOf } from "../TextType";
+import {
+	acceptsTextEmphasisStyle,
+	isSingleBodyText,
+	textStyleKeysOf,
+} from "../TextType";
 
 describe("isSingleBodyText", () => {
 	it("is true for the two root-form types and false for the rest", () => {
@@ -34,5 +38,14 @@ describe("textStyleKeysOf", () => {
 
 	it("answers with a fresh array, so a caller may keep what it is handed", () => {
 		expect(textStyleKeysOf("body")).not.toBe(textStyleKeysOf("body"));
+	});
+});
+
+describe("acceptsTextEmphasisStyle", () => {
+	it("is true for every type but the one whose syntax sets the emphasis itself", () => {
+		expect(acceptsTextEmphasisStyle("body")).toBe(true);
+		expect(acceptsTextEmphasisStyle("slots")).toBe(true);
+		expect(acceptsTextEmphasisStyle("source")).toBe(false);
+		expect(acceptsTextEmphasisStyle(undefined)).toBe(false);
 	});
 });

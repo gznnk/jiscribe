@@ -117,11 +117,13 @@ export {
 	TEXT_EMPHASIS_STYLE_KEYS,
 	TEXT_INLINE_STYLE_KEYS,
 } from "./model/objects/types/RichText";
-// Which of those a type's text actually accepts, and whether it holds one body at
-// all: the two questions every side asking about `features.text` goes through, so
-// what a shape may be styled with cannot drift from what its doc may hold.
+// Which of those a type's text actually accepts, whether the emphasis half is
+// among them, and whether it holds one body at all: the questions every side
+// asking about `features.text` goes through, so what a shape may be styled with
+// cannot drift from what its doc may hold.
 export type { TextType } from "./model/objects/types/TextType";
 export {
+	acceptsTextEmphasisStyle,
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "./model/objects/types/TextType";

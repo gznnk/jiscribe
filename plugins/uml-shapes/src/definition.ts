@@ -77,7 +77,11 @@ export const recordDefinition: ObjectTypeDefinition<RecordDoc, RecordState> = {
 		},
 		{
 			id: "text",
-			items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+			items: [
+				{ type: "font" },
+				{ type: "textFormat" },
+				{ type: "textAlignment" },
+			],
 		},
 	],
 };

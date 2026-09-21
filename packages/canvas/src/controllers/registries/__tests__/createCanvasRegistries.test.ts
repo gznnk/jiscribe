@@ -178,7 +178,11 @@ describe("createCanvasRegistries", () => {
 				},
 				{
 					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+					items: [
+						{ type: "font" },
+						{ type: "textFormat" },
+						{ type: "textAlignment" },
+					],
 				},
 			]);
 			// The box holds its text and nothing denies it, so the type may leave

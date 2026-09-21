@@ -29,7 +29,11 @@ export const stickyDefinition: ObjectTypeDefinition<StickyDoc, StickyState> =
 			},
 			{
 				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [
+					{ type: "font" },
+					{ type: "textFormat" },
+					{ type: "textAlignment" },
+				],
 			},
 		],
 	});

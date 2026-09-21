@@ -113,7 +113,11 @@ export const containerDefinition: ObjectTypeDefinition<
 		},
 		{
 			id: "text",
-			items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+			items: [
+				{ type: "font" },
+				{ type: "textFormat" },
+				{ type: "textAlignment" },
+			],
 		},
 	],
 });

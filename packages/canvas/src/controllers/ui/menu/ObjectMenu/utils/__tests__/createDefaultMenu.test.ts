@@ -31,7 +31,11 @@ describe("createDefaultMenu", () => {
 			},
 			{
 				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [
+					{ type: "font" },
+					{ type: "textFormat" },
+					{ type: "textAlignment" },
+				],
 			},
 		]);
 	});
@@ -69,25 +73,23 @@ describe("createDefaultMenu", () => {
 			{
 				id: "text",
 				items: [
-					{ type: "fontStyle" },
+					{ type: "font" },
+					{ type: "textFormat" },
 					{ type: "textAlignment", vertical: false },
 				],
 			},
 		]);
 	});
 
-	it("source-like -> the text item with its format toggles turned off", () => {
+	it("source-like -> the text section without the format item", () => {
 		const sections = createDefaultMenu(
 			features({ type: "markdown", transform: true, text: "source" }),
 		);
 		expect(sections).toEqual([
 			{
 				id: "text",
-				// The family, size and color the same item carries stay offered.
-				items: [
-					{ type: "fontStyle", emphasis: false },
-					{ type: "textAlignment" },
-				],
+				// The family, size and color stay offered.
+				items: [{ type: "font" }, { type: "textAlignment" }],
 			},
 		]);
 	});

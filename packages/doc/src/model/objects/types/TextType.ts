@@ -57,3 +57,20 @@ export const textStyleKeysOf = (
 		(key) => !(TEXT_EMPHASIS_STYLE_KEYS as readonly string[]).includes(key),
 	);
 };
+
+/**
+ * Whether a text of this type takes any of the emphasis fields — bold, italic and
+ * the decoration lines (`TEXT_EMPHASIS_STYLE_KEYS`). The emphasis half is all or
+ * nothing: the base fields and the alignment are taken by every text type, so
+ * this is the only axis on which the types differ in what they may be styled with.
+ *
+ * @param textType - The type's `ObjectFeatures.text`; `undefined`, which is a
+ *   type holding no text at all, is false
+ * @returns True for `"body"` and `"slots"`, false for `"source"` and `undefined`
+ */
+export const acceptsTextEmphasisStyle = (
+	textType: TextType | undefined,
+): boolean => {
+	const accepted = textStyleKeysOf(textType) as readonly string[];
+	return TEXT_EMPHASIS_STYLE_KEYS.some((key) => accepted.includes(key));
+};

@@ -87,9 +87,9 @@ const renderItem = (
 					onPropertyUpdate={onPropertyUpdate}
 				/>
 			);
-		case "fontStyle":
+		case "font":
 			return (
-				<React.Fragment key="fontStyle">
+				<React.Fragment key="font">
 					<FontFamilyMenu canvasState={canvasState} />
 					<FontSizeMenu
 						canvasState={canvasState}
@@ -99,11 +99,10 @@ const renderItem = (
 						canvasState={canvasState}
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-					{item.emphasis !== false && (
-						<TextFormatMenu canvasState={canvasState} />
-					)}
 				</React.Fragment>
 			);
+		case "textFormat":
+			return <TextFormatMenu key="textFormat" canvasState={canvasState} />;
 		case "textAlignment":
 			return (
 				<AlignmentMenu
