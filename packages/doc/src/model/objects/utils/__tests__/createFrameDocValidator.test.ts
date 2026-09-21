@@ -235,7 +235,13 @@ describe("createFrameDocValidator source text group", () => {
 				{ ...geometry, text: [{ text: "# title", fontWeight: "bold" }] },
 				"root",
 			),
-		).toEqual([{ path: "root.text", message: "must be a string" }]);
+		).toEqual([
+			{
+				path: "root.text",
+				message:
+					"must be a plain string: a source text takes no styled runs, so write the emphasis in the source itself",
+			},
+		]);
 	});
 
 	it("checks the styling it admits and the body's placement", () => {

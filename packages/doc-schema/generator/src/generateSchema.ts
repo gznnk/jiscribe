@@ -13,6 +13,7 @@ import {
 	STROKE_WIDTH_MIN,
 	supportsAutoHeight,
 	TEXT_BODY_KEYS,
+	TEXT_EMPHASIS_STYLE_KEYS,
 	TEXT_SLOT_STYLE_KEYS,
 	TRANSFORM_STYLE_KEYS,
 	type ObjectDocDefinition,
@@ -508,6 +509,15 @@ function buildShapeDef(
 			`The $def for geometry "${features.geometry}" of type "${type}" cannot be generated mechanically (move it into a template)`,
 		);
 	}
+	// The shared TextStyle def is the `"body"` vocabulary: `text` as rich text and
+	// the emphasis fields with it. A source body takes neither (textStyleKeysOf),
+	// so assembling one from those refs would publish eight fields the doc
+	// validator rejects.
+	if (features.text === "source") {
+		throw new Error(
+			`The $def for the source text of type "${type}" cannot be generated mechanically (move it into a template)`,
+		);
+	}
 
 	const autoHeight = supportsAutoHeight(definition);
 
@@ -639,10 +649,21 @@ function assertTemplateHeightRequirement(
 }
 
 /**
+ * Whether the type's own text takes no run: a source body is a plain string by
+ * its very kind (`features.text: "source"`), and a `"body"` type may refuse runs
+ * by hand.
+ */
+const refusesTextRuns = (definition: ObjectDocDefinition): boolean =>
+	definition.features.text === "source" || definition.textRuns === false;
+
+/**
  * Fail generation when a handwritten $def disagrees with the type's definition
- * about whether its text may be held as runs. The ops write runs into a text that
- * takes them, so a template holding `text` to a plain string has to be matched by
- * `textRuns: false`, and the other way round.
+ * about what its text may hold. The ops write runs into a text that takes them,
+ * so a template holding `text` to a plain string has to be matched by a type that
+ * takes none (see {@link refusesTextRuns}), and the other way round. A source
+ * type additionally carries no emphasis typography, the syntax of its language
+ * being what sets that, so a template offering those fields would complete a
+ * document the doc validator rejects.
  */
 function assertTemplateTextShape(
 	type: string,
@@ -656,10 +677,21 @@ function assertTemplateTextShape(
 		return;
 	}
 	const isPlainStringText = textProperty.type === "string";
-	const refusesTextRuns = definition.textRuns === false;
-	if (isPlainStringText !== refusesTextRuns) {
+	const takesNoRuns = refusesTextRuns(definition);
+	if (isPlainStringText !== takesNoRuns) {
 		throw new Error(
-			`The handwritten $def "${defName}" holds text to ${isPlainStringText ? "a plain string" : "rich text"}, but type "${type}" ${refusesTextRuns ? "refuses" : "takes"} text runs (templates/handwrittenDefs.json, textRuns)`,
+			`The handwritten $def "${defName}" holds text to ${isPlainStringText ? "a plain string" : "rich text"}, but type "${type}" ${takesNoRuns ? "refuses" : "takes"} text runs (templates/handwrittenDefs.json, textRuns)`,
+		);
+	}
+	if (definition.features.text !== "source") {
+		return;
+	}
+	const offeredEmphasisKeys = TEXT_EMPHASIS_STYLE_KEYS.filter(
+		(key) => properties?.[key] !== undefined,
+	);
+	if (offeredEmphasisKeys.length > 0) {
+		throw new Error(
+			`The handwritten $def "${defName}" offers ${offeredEmphasisKeys.join(", ")}, but type "${type}" writes its body in a source language whose own syntax carries the emphasis (templates/handwrittenDefs.json, features.text "source")`,
 		);
 	}
 }

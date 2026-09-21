@@ -34,6 +34,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outside the workspace and have the command write there.
 - The CSP nonce is drawn from the cryptographic random source.
 
+### Changed
+
+- **BREAKING (file format)**: a `markdown` card no longer carries `fontWeight` /
+  `fontStyle` / `textDecoration`. Its body is Markdown source, so emphasis is
+  written in the syntax (`**bold**`), and the card's own typography (`fontSize`
+  / `fontColor` / `fontFamily`, and the alignment) is the ground the whole
+  document is drawn on. Delete the three keys from a file that still has them —
+  schema validation reports them, and the editor no longer offers bold, italic
+  or the decoration lines on a markdown card. A `text` written as an array of
+  runs, which an older editor could leave behind when part of a body was styled,
+  no longer loads: rewrite it as one plain string, joining the runs' `text`.
+
 ### Fixed
 
 - **A canvas edit no longer overwrites a text edit made while it was on its

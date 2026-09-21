@@ -617,6 +617,14 @@ export function validateTextStyleFields(
 }
 
 /**
+ * What a source body that is not a string is told. It says what to write instead,
+ * since the usual cause is a run list an editor once left behind, and a document
+ * holding one does not open until it is rewritten by hand.
+ */
+const SOURCE_TEXT_MESSAGE =
+	"must be a plain string: a source text takes no styled runs, so write the emphasis in the source itself";
+
+/**
  * Validate the text group of a source-language doc (features.text: "source"):
  * the same group {@link validateTextStyleFields} checks, narrowed to what that
  * shape can hold — `text` as a plain string, and the styling less the emphasis
@@ -633,7 +641,7 @@ export function validateSourceTextStyleFields(
 ): SemanticDiagnostic[] {
 	return [
 		...("text" in o && !isString(o.text)
-			? [{ path: `${path}.text`, message: "must be a string" }]
+			? [{ path: `${path}.text`, message: SOURCE_TEXT_MESSAGE }]
 			: []),
 		...validateTextBodyFields(o, path),
 		...validateFields(o, path, sourceTextStyleValidators),

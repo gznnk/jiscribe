@@ -2,9 +2,10 @@
 // against the file as it was loaded rather than against a clean one.
 //
 // The tools themselves no longer write anything the schema rejects, so the
-// write that trips the check is forced: docOps is built with markdown's
-// `textRuns: false` taken back out, which is exactly how set_text_style
-// used to leave a run array in a markdown body.
+// write that trips the check is forced: docOps is built with markdown declared
+// as an ordinary `"body"` text, which lets set_style put an emphasis field on a
+// markdown card. The parser passes over a field the type's features do not
+// imply, so the write reaches the check, and the schema is what refuses it.
 
 import type { CanvasDocPlugin } from "@jiscribe/doc";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -30,14 +31,18 @@ vi.mock("../canvasDefinitions", async (importActual) => {
 					...plugin,
 					objects: {
 						...plugin.objects,
-						markdown: { ...markdownDefinition, textRuns: undefined },
+						markdown: {
+							...markdownDefinition,
+							features: { ...markdownDefinition.features, text: "body" },
+							textRuns: undefined,
+						},
 					},
 				};
 	});
 	return { ...actual, docOps: createDocOps({ plugins: lenientPlugins }) };
 });
 
-/** A markdown card whose body the forced write turns into runs. */
+/** A markdown card the forced write puts an emphasis field on. */
 const markdownCard = {
 	id: "md",
 	type: "markdown",
@@ -77,12 +82,7 @@ const writeTarget = (doc: CanvasFileContent): Promise<string> =>
 	workspace.writeDoc(`introduced-${testIndex++}.jis.json`, doc);
 
 const styleMarkdown = (path: string) =>
-	client.callTool("set_text_style", {
-		path,
-		id: "md",
-		match: "world",
-		fontWeight: "bold",
-	});
+	client.callTool("set_style", { path, ids: ["md"], fontWeight: "bold" });
 
 describe("a write-back that would introduce a diagnose_canvas error", () => {
 	it("is refused, and the file keeps what it held", async () => {
@@ -91,7 +91,7 @@ describe("a write-back that would introduce a diagnose_canvas error", () => {
 		const result = await styleMarkdown(targetPath);
 
 		expect(result.text).toMatch(
-			/^error: refused to write \(the edit would leave the file failing diagnose_canvas, which it did not before\):\nvalid: false\n1 issue\(s\):\n- error md: schema: \/root\/0\/text must be string/,
+			/^error: refused to write \(the edit would leave the file failing diagnose_canvas, which it did not before\):\nvalid: false\n1 issue\(s\):\n- error md: schema: \/root\/0 must NOT have additional properties/,
 		);
 		expect((await workspace.readDoc(targetPath)).root).toEqual([markdownCard]);
 	});
@@ -115,7 +115,7 @@ describe("a write-back that would introduce a diagnose_canvas error", () => {
 
 		expect(result.text).toMatch(/^error: refused to write/);
 		expect(result.text).toMatch(
-			/- error md: schema: \/root\/1\/text must be string/,
+			/- error md: schema: \/root\/1 must NOT have additional properties/,
 		);
 		expect(result.text).not.toMatch(/odd/);
 	});

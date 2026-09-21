@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 
 import { markdownDocPlugin } from "../doc";
 
-// The schema holds a markdown `text` to a string and the renderer flattens runs,
-// so the doc-ops must not write one.
+// A source body is a plain string the shape renders itself, so the doc-ops must
+// not write a run into it (features.text: "source").
 describe("markdown inline text style", () => {
 	const docOps = createDocOps({ plugins: [markdownDocPlugin] });
 

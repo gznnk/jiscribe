@@ -14,6 +14,11 @@ import type { CreateObjectType, ObjectFeatures } from "@jiscribe/doc";
  * The defaults differ from Rect where the document-ish reading order demands it
  * — a larger box, left/top aligned text, and a theme-following fill so the card
  * reads as a page rather than an outline.
+ *
+ * The body is source (`features.text: "source"`): a plain string, never the run
+ * form, and without the emphasis typography (bold / italic / the decoration
+ * lines) — those the Markdown syntax carries, so the card holds only the ground
+ * its whole document is drawn on (SourceTextStyleDoc).
  */
 export const MarkdownFeatures = {
 	type: "markdown",
@@ -21,7 +26,7 @@ export const MarkdownFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: "body",
+	text: "source",
 	radius: true,
 	connectable: true,
 } as const satisfies ObjectFeatures;
@@ -50,5 +55,4 @@ export const MARKDOWN_DOC_DEFAULTS: Omit<MarkdownDoc, "id"> = {
 	fontColor: AUTO_COLOR,
 	fontSize: 16,
 	fontFamily: DEFAULT_FONT_FAMILY,
-	fontWeight: "normal",
 } as const as MarkdownDoc;
