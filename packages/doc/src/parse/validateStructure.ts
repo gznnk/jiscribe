@@ -33,7 +33,7 @@ function validateObjectNode(
 	// An unregistered type is an opaque object (see OpaqueObjectDoc): held as it is,
 	// so nothing past its id and type is ours to check, and its children — if it has
 	// any — are not walked either. The id was checked above.
-	if (registry.getFeatures(o.type as string) === undefined) {
+	if (!registry.hasType(o.type as string)) {
 		return errors;
 	}
 

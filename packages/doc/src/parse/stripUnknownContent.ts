@@ -131,7 +131,7 @@ const stripUnknownViewFields = (
  *
  * @param data - The JSON.parse result of a candidate document. Anything without an
  *   object shape and a `root` array is returned unchanged (no warnings).
- * @param registry - Decides which types are known via `getFeatures`.
+ * @param registry - Decides which types are known via `hasType`.
  * @returns The (possibly) stripped data and a warning per removed object or field
  *   and per opaque object kept.
  *   Warning paths use the input's indices, so they point into the text the user sees.
@@ -265,7 +265,7 @@ export function stripUnknownContent(
 			return node;
 		}
 
-		if (registry.getFeatures(o.type as string) === undefined) {
+		if (!registry.hasType(o.type as string)) {
 			// Kept verbatim as an opaque object: nothing inside it is read, so its
 			// enum values are not ours to strip and its children are not walked.
 			// Only an id makes it something the rest of the document can refer to

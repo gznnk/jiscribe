@@ -31,6 +31,16 @@ class ObjectDocValidatorRegistry {
 		return this.entries.get(type as ObjectType)?.validate(obj, path) ?? [];
 	}
 
+	/**
+	 * Returns whether a type is registered here at all. A type that is not is one
+	 * the parser has no declaration for, so nothing about a doc of it can be
+	 * checked and it is passed through as an opaque object (see OpaqueObjectDoc).
+	 */
+	hasType(type: string): boolean {
+		return this.entries.has(type as ObjectType);
+	}
+
+	/** The type's descriptor, for reading what it can do; ask {@link hasType} whether it is registered at all. */
 	getFeatures(type: string): ObjectFeatures | undefined {
 		return this.entries.get(type as ObjectType)?.features;
 	}

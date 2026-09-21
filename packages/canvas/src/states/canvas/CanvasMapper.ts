@@ -58,9 +58,8 @@ export const canvasToState = (
 	// O(N × nesting depth). See calculateGroupOrientedBounds.
 	const groupPointCache = new Map<string, Point[]>();
 
-	const opaqueDocs = collectOpaqueDocs(
-		doc.root,
-		(type) => mapper.getFeatures(type) !== undefined,
+	const opaqueDocs = collectOpaqueDocs(doc.root, (type) =>
+		mapper.hasType(type),
 	);
 	const opaqueObjects: OpaqueObjectPlacement[] = [];
 

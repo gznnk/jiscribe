@@ -51,6 +51,16 @@ export class ObjectMapperRegistry {
 		return entry.toDoc(state);
 	}
 
+	/**
+	 * Returns whether a type is registered here at all. A type that is not has no
+	 * mapper, so `toState` / `toDoc` would throw on it and the canvas holds it
+	 * aside as an opaque object instead (see OpaqueObjectPlacement).
+	 */
+	hasType(type: ObjectType): boolean {
+		return this.entries.has(type);
+	}
+
+	/** The type's descriptor, for reading what it can do; ask {@link hasType} whether it is registered at all. */
 	getFeatures(type: ObjectType): ObjectFeatures | undefined {
 		return this.entries.get(type)?.features;
 	}

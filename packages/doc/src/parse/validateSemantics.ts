@@ -53,7 +53,7 @@ export function validateSemantics(
 			seenIds.add(obj.id);
 			idToType.set(obj.id, obj.type);
 
-			if (registry.getFeatures(obj.type) === undefined) {
+			if (!registry.hasType(obj.type)) {
 				collectOpaqueInnerIds(obj, opaqueInnerIds);
 				return;
 			}
@@ -177,7 +177,7 @@ function validateEndpoint(
 		];
 	}
 
-	if (registry.getFeatures(refType) === undefined) {
+	if (!registry.hasType(refType)) {
 		return [];
 	}
 
