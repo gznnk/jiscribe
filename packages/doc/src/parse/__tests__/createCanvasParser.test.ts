@@ -38,6 +38,7 @@ const validateStarDoc: ObjectDocValidateFn = (obj, path) => {
 		errors.push({
 			path: `${path}.points`,
 			message: "must be a positive number",
+			severity: "error",
 		});
 	}
 	return errors;
@@ -169,7 +170,11 @@ describe("createCanvasParser", () => {
 			const strictRectDefinition: ObjectDocDefinition = {
 				features: builtinObjectDocDefinitions.rect.features,
 				validateDoc: (_obj, path) => [
-					{ path, message: "rect is disabled by this parser configuration" },
+					{
+						path,
+						message: "rect is disabled by this parser configuration",
+						severity: "error",
+					},
 				],
 			};
 			const { rect: _omitted, ...presetsWithoutRect } =

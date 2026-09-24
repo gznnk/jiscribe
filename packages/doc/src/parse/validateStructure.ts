@@ -37,18 +37,26 @@ function validateObjectNode(
 	unknownKeyRemovals: UnknownKeyRemoval[],
 ): SemanticDiagnostic[] {
 	if (!isObject(obj)) {
-		return [{ path, message: "must be an object" }];
+		return [{ path, message: "must be an object", severity: "error" }];
 	}
 
 	const o = obj as Record<string, unknown>;
 	const errors: SemanticDiagnostic[] = [];
 
 	if (!isString(o.id) || (o.id as string).length === 0) {
-		errors.push({ path: `${path}.id`, message: "must be a non-empty string" });
+		errors.push({
+			path: `${path}.id`,
+			message: "must be a non-empty string",
+			severity: "error",
+		});
 	}
 
 	if (!isString(o.type)) {
-		errors.push({ path: `${path}.type`, message: "must be a string" });
+		errors.push({
+			path: `${path}.type`,
+			message: "must be a string",
+			severity: "error",
+		});
 		return errors;
 	}
 
@@ -76,7 +84,11 @@ function validateObjectNode(
 	// Group children recursion is a structural rule, so handle it here in validateStructure
 	if (o.type === "group") {
 		if (!isArray(o.children)) {
-			errors.push({ path: `${path}.children`, message: "must be an array" });
+			errors.push({
+				path: `${path}.children`,
+				message: "must be an array",
+				severity: "error",
+			});
 		} else if ((o.children as unknown[]).length === 0) {
 			// An empty group is a degenerate state with undefined bounds. Since the
 			// creation paths always produce children, empty children is treated as
@@ -84,6 +96,7 @@ function validateObjectNode(
 			errors.push({
 				path: `${path}.children`,
 				message: "group must have at least one child",
+				severity: "error",
 			});
 		} else {
 			(o.children as unknown[]).forEach((child, i) => {
@@ -97,6 +110,7 @@ function validateObjectNode(
 						path: childPath,
 						message:
 							"connector must be a top-level entry of 'root', not inside a group's children",
+						severity: "error",
 					});
 				}
 				errors.push(
@@ -130,6 +144,7 @@ export function validateStructure(
 				{
 					path: "/",
 					message: "Document must be an object with a 'root' field",
+					severity: "error",
 				},
 			],
 			unknownKeyRemovals: [],
@@ -144,7 +159,7 @@ export function validateStructure(
 	// no handling for v2+, so unknown versions are not silently accepted but rejected
 	// at the boundary.
 	if (d.version !== 1) {
-		errors.push({ path: "version", message: "must be 1" });
+		errors.push({ path: "version", message: "must be 1", severity: "error" });
 	}
 
 	// The old format (connectors held in a separate array) would silently lose
@@ -155,6 +170,7 @@ export function validateStructure(
 			path: "connectors",
 			message:
 				"'connectors' is no longer a top-level field; place connectors inside 'root' as \"type\": \"connector\" entries (z-order).",
+			severity: "error",
 		});
 	}
 
@@ -166,6 +182,7 @@ export function validateStructure(
 		errors.push({
 			path: "background",
 			message: "must be a safe CSS color value",
+			severity: "error",
 			beyondSchema: true,
 		});
 	}
@@ -177,7 +194,11 @@ export function validateStructure(
 	}
 
 	if (!isArray(d.root)) {
-		errors.push({ path: "root", message: "must be an array" });
+		errors.push({
+			path: "root",
+			message: "must be an array",
+			severity: "error",
+		});
 	} else {
 		// root is a mixed array of objects and connectors. Per-type validation goes
 		// through validateObjectNode → the registry dispatches by type (connector uses

@@ -31,7 +31,7 @@ export function validateViewDoc(
 	path: string,
 ): SemanticDiagnostic[] {
 	if (!isObject(view)) {
-		return [{ path, message: "must be an object" }];
+		return [{ path, message: "must be an object", severity: "error" }];
 	}
 
 	const v = view as Record<string, unknown>;
@@ -39,7 +39,11 @@ export function validateViewDoc(
 
 	if (v.padding !== undefined) {
 		if (!isObject(v.padding)) {
-			errors.push({ path: `${path}.padding`, message: "must be an object" });
+			errors.push({
+				path: `${path}.padding`,
+				message: "must be an object",
+				severity: "error",
+			});
 		} else {
 			const padding = v.padding as Record<string, unknown>;
 			PADDING_SIDES.forEach((side) => {
@@ -54,6 +58,7 @@ export function validateViewDoc(
 		errors.push({
 			path: `${path}.open`,
 			message: 'must be "fit-width" or "fit-all"',
+			severity: "error",
 		});
 	}
 
@@ -61,6 +66,7 @@ export function validateViewDoc(
 		errors.push({
 			path: `${path}.scroll`,
 			message: 'must be "content" or "infinite"',
+			severity: "error",
 		});
 	}
 

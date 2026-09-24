@@ -142,7 +142,15 @@ describe("createFrameDocValidator feature gating", () => {
 
 describe("createFrameDocValidator extra validator", () => {
 	const extra = (o: Record<string, unknown>, path: string) =>
-		"tail" in o ? [] : [{ path: `${path}.tail`, message: "is required" }];
+		"tail" in o
+			? []
+			: [
+					{
+						path: `${path}.tail`,
+						message: "is required",
+						severity: "error" as const,
+					},
+				];
 
 	it("appends the extra diagnostics after the generated ones", () => {
 		const validate = createFrameDocValidator(features(), extra);
@@ -242,6 +250,7 @@ describe("createFrameDocValidator source text group", () => {
 				path: "root.text",
 				message:
 					"must be a plain string: a source text takes no styled runs, so write the emphasis in the source itself",
+				severity: "error",
 			},
 		]);
 	});

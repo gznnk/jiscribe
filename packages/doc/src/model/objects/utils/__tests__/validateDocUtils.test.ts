@@ -618,7 +618,7 @@ describe("validateRequiredNumber", () => {
 
 	it("errors for non-numbers (including missing)", () => {
 		expect(validateRequiredNumber({}, "root", "w")).toEqual([
-			{ path: "root.w", message: "must be a number" },
+			{ path: "root.w", message: "must be a number", severity: "error" },
 		]);
 		expect(
 			validateRequiredNumber({ w: "5" }, "root", "w")[0].message,

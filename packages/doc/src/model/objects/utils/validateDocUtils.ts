@@ -38,10 +38,22 @@ export function validateRequiredNumber(
 ): SemanticDiagnostic[] {
 	const value = o[key];
 	if (!isNumber(value)) {
-		return [{ path: `${path}.${key}`, message: "must be a number" }];
+		return [
+			{
+				path: `${path}.${key}`,
+				message: "must be a number",
+				severity: "error",
+			},
+		];
 	}
 	if (min !== undefined && value < min) {
-		return [{ path: `${path}.${key}`, message: `must be >= ${min}` }];
+		return [
+			{
+				path: `${path}.${key}`,
+				message: `must be >= ${min}`,
+				severity: "error",
+			},
+		];
 	}
 	return [];
 }
@@ -73,7 +85,11 @@ export function validatePolyFields(
 ): SemanticDiagnostic[] {
 	if (!isPoly(o)) {
 		return [
-			{ path: `${path}.points`, message: "must be a valid points array" },
+			{
+				path: `${path}.points`,
+				message: "must be a valid points array",
+				severity: "error",
+			},
 		];
 	}
 	if (o.points.length < minPoints) {
@@ -81,6 +97,7 @@ export function validatePolyFields(
 			{
 				path: `${path}.points`,
 				message: `must have at least ${minPoints} points`,
+				severity: "error",
 			},
 		];
 	}
@@ -103,7 +120,11 @@ export function validateWaypointFields(
 	}
 	if (!isPoly(o)) {
 		return [
-			{ path: `${path}.points`, message: "must be a valid points array" },
+			{
+				path: `${path}.points`,
+				message: "must be a valid points array",
+				severity: "error",
+			},
 		];
 	}
 	return [];
@@ -138,11 +159,19 @@ function validateOwnedEndpointRef(
 	const errors: SemanticDiagnostic[] = [];
 
 	if (typeof r.owner !== "object") {
-		errors.push({ path: `${path}.owner`, message: "must be an object" });
+		errors.push({
+			path: `${path}.owner`,
+			message: "must be an object",
+			severity: "error",
+		});
 	} else {
 		const owner = r.owner as Record<string, unknown>;
 		if (!isString(owner.id)) {
-			errors.push({ path: `${path}.owner.id`, message: "must be a string" });
+			errors.push({
+				path: `${path}.owner.id`,
+				message: "must be a string",
+				severity: "error",
+			});
 		}
 	}
 
@@ -162,7 +191,13 @@ function validateNonFreeAnchor(
 	path: string,
 ): SemanticDiagnostic[] {
 	if (typeof anchor !== "object" || anchor === null) {
-		return [{ path: `${path}.anchor`, message: "must be an object" }];
+		return [
+			{
+				path: `${path}.anchor`,
+				message: "must be an object",
+				severity: "error",
+			},
+		];
 	}
 
 	const a = anchor as Record<string, unknown>;
@@ -181,6 +216,7 @@ function validateNonFreeAnchor(
 					path: `${path}.anchor.id`,
 					message:
 						"must be a non-empty string other than 'center' (use { kind: 'center' })",
+					severity: "error",
 				},
 			];
 		}
@@ -193,6 +229,7 @@ function validateNonFreeAnchor(
 		{
 			path: `${path}.anchor.kind`,
 			message: "must be 'center', 'connectPoint' or 'edge' for owned endpoint",
+			severity: "error",
 		},
 	];
 }
@@ -212,12 +249,14 @@ function validateEdgeAnchor(
 		errors.push({
 			path: `${path}.anchor.side`,
 			message: "must be one of: top, right, bottom, left",
+			severity: "error",
 		});
 	}
 	if (!isNumber(a.t) || a.t < 0 || a.t > 1) {
 		errors.push({
 			path: `${path}.anchor.t`,
 			message: "must be a number between 0 and 1",
+			severity: "error",
 		});
 	}
 	return errors;
@@ -228,7 +267,13 @@ function validateFreeAnchor(
 	path: string,
 ): SemanticDiagnostic[] {
 	if (typeof anchor !== "object" || anchor === null) {
-		return [{ path: `${path}.anchor`, message: "must be an object" }];
+		return [
+			{
+				path: `${path}.anchor`,
+				message: "must be an object",
+				severity: "error",
+			},
+		];
 	}
 
 	const a = anchor as Record<string, unknown>;
@@ -237,25 +282,32 @@ function validateFreeAnchor(
 			{
 				path: `${path}.anchor.kind`,
 				message: "must be 'free' for free endpoint",
+				severity: "error",
 			},
 		];
 	}
 
 	const errors: SemanticDiagnostic[] = [];
 	if (typeof a.point !== "object" || a.point === null) {
-		errors.push({ path: `${path}.anchor.point`, message: "must be an object" });
+		errors.push({
+			path: `${path}.anchor.point`,
+			message: "must be an object",
+			severity: "error",
+		});
 	} else {
 		const p = a.point as Record<string, unknown>;
 		if (!isNumber(p.x)) {
 			errors.push({
 				path: `${path}.anchor.point.x`,
 				message: "must be a number",
+				severity: "error",
 			});
 		}
 		if (!isNumber(p.y)) {
 			errors.push({
 				path: `${path}.anchor.point.y`,
 				message: "must be a number",
+				severity: "error",
 			});
 		}
 	}
@@ -269,18 +321,31 @@ export function validateTransformFields(
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
 	if ("rotation" in o && !isNumber(o.rotation)) {
-		errors.push({ path: `${path}.rotation`, message: "must be a number" });
+		errors.push({
+			path: `${path}.rotation`,
+			message: "must be a number",
+			severity: "error",
+		});
 	}
 	if ("flipX" in o && typeof o.flipX !== "boolean") {
-		errors.push({ path: `${path}.flipX`, message: "must be a boolean" });
+		errors.push({
+			path: `${path}.flipX`,
+			message: "must be a boolean",
+			severity: "error",
+		});
 	}
 	if ("flipY" in o && typeof o.flipY !== "boolean") {
-		errors.push({ path: `${path}.flipY`, message: "must be a boolean" });
+		errors.push({
+			path: `${path}.flipY`,
+			message: "must be a boolean",
+			severity: "error",
+		});
 	}
 	if ("lockAspectRatio" in o && typeof o.lockAspectRatio !== "boolean") {
 		errors.push({
 			path: `${path}.lockAspectRatio`,
 			message: "must be a boolean",
+			severity: "error",
 		});
 	}
 	return errors;
@@ -304,7 +369,14 @@ export type DocFieldValidator = (
 export const colorValidator: DocFieldValidator = (value, path) =>
 	isCssSafeValue(value)
 		? []
-		: [{ path, message: "must be a safe CSS color value", beyondSchema: true }];
+		: [
+				{
+					path,
+					message: "must be a safe CSS color value",
+					severity: "error",
+					beyondSchema: true,
+				},
+			];
 
 /**
  * Builds a validator for a string inlined into a CSS declaration.
@@ -321,6 +393,7 @@ export const cssValueValidator =
 					{
 						path,
 						message: `must be a safe CSS ${cssProperty} value`,
+						severity: "error",
 						beyondSchema: true,
 					},
 				];
@@ -335,10 +408,10 @@ export const numberValidator =
 	(min?: number): DocFieldValidator =>
 	(value, path) => {
 		if (!isNumber(value)) {
-			return [{ path, message: "must be a number" }];
+			return [{ path, message: "must be a number", severity: "error" }];
 		}
 		if (min !== undefined && value < min) {
-			return [{ path, message: `must be >= ${min}` }];
+			return [{ path, message: `must be >= ${min}`, severity: "error" }];
 		}
 		return [];
 	};
@@ -355,7 +428,13 @@ export const numberRangeValidator =
 	(value, path) =>
 		isNumber(value) && value >= min && value <= max
 			? []
-			: [{ path, message: `must be a number between ${min} and ${max}` }];
+			: [
+					{
+						path,
+						message: `must be a number between ${min} and ${max}`,
+						severity: "error",
+					},
+				];
 
 /**
  * Validator for a field written as plain text.
@@ -365,7 +444,9 @@ export const numberRangeValidator =
  * @returns One diagnostic for anything but a string
  */
 export const stringValidator: DocFieldValidator = (value, path) =>
-	isString(value) ? [] : [{ path, message: "must be a string" }];
+	isString(value)
+		? []
+		: [{ path, message: "must be a string", severity: "error" }];
 
 /**
  * Builds a validator for a field limited to a known set of values.
@@ -377,7 +458,7 @@ export const stringValidator: DocFieldValidator = (value, path) =>
 export const enumValidator =
 	(isValid: (value: unknown) => boolean, message: string): DocFieldValidator =>
 	(value, path) =>
-		isValid(value) ? [] : [{ path, message }];
+		isValid(value) ? [] : [{ path, message, severity: "error" }];
 
 /**
  * Validates the fields of one group, each against the validator the group's
@@ -555,6 +636,7 @@ export function validateRichTextContent(
 			{
 				path,
 				message: "must be a string, or an array of runs to style parts of it",
+				severity: "error",
 			},
 		];
 	}
@@ -562,13 +644,23 @@ export function validateRichTextContent(
 		const runPath = `${path}[${index}]`;
 		if (!isObject(run)) {
 			return [
-				{ path: runPath, message: "must be an object with a text field" },
+				{
+					path: runPath,
+					message: "must be an object with a text field",
+					severity: "error",
+				},
 			];
 		}
 		return [
 			...(isString(run.text)
 				? []
-				: [{ path: `${runPath}.text`, message: "must be a string" }]),
+				: [
+						{
+							path: `${runPath}.text`,
+							message: "must be a string",
+							severity: "error" as const,
+						},
+					]),
 			...validateInlineTextStyleFields(run, runPath),
 		];
 	});
@@ -589,6 +681,7 @@ function validateTextBodyFields(
 		{
 			path: `${path}.textVerticalBasis`,
 			message: "must be one of: region, frame",
+			severity: "error",
 		},
 	];
 }
@@ -639,7 +732,13 @@ export function validateSourceTextStyleFields(
 ): SemanticDiagnostic[] {
 	return [
 		...("text" in o && !isString(o.text)
-			? [{ path: `${path}.text`, message: SOURCE_TEXT_MESSAGE }]
+			? [
+					{
+						path: `${path}.text`,
+						message: SOURCE_TEXT_MESSAGE,
+						severity: "error" as const,
+					},
+				]
 			: []),
 		...validateTextBodyFields(o, path),
 		...validateFields(o, path, sourceTextStyleValidators),

@@ -66,11 +66,13 @@ describe("createFrameObjectDoc", () => {
 		const { validateDoc } = createFrameObjectDoc({
 			features: DemoFeatures,
 			defaults: DEMO_DOC_DEFAULTS,
-			validateExtra: (_o, path) => [{ path, message: "extra" }],
+			validateExtra: (_o, path) => [
+				{ path, message: "extra", severity: "error" },
+			],
 		});
 
 		expect(validateDoc(validDoc, "objects[0]")).toEqual([
-			{ path: "objects[0]", message: "extra" },
+			{ path: "objects[0]", message: "extra", severity: "error" },
 		]);
 	});
 

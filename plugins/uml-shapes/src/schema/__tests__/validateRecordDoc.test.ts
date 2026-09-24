@@ -98,6 +98,7 @@ describe("validateRecordDoc", () => {
 				path: "root[0].text.rows",
 				message:
 					'is not a slot of a record: use "stereotype" / "name" / "attributes" / "operations"',
+				severity: "error",
 			},
 		]);
 	});
@@ -128,6 +129,7 @@ describe("validateRecordDoc", () => {
 			{
 				path: "root[0].text.stereotype.text",
 				message: "must be one body of text, not rows",
+				severity: "error",
 			},
 		]);
 	});
@@ -142,6 +144,7 @@ describe("validateRecordDoc", () => {
 			{
 				path: "root[0].text.name.text",
 				message: "must be a string, or an array of runs to style parts of it",
+				severity: "error",
 			},
 		]);
 	});
@@ -153,6 +156,7 @@ describe("validateRecordDoc", () => {
 			{
 				path: "root[0].text.attributes.text",
 				message: "must be an array of rows",
+				severity: "error",
 			},
 		]);
 		expect(
@@ -161,6 +165,7 @@ describe("validateRecordDoc", () => {
 			{
 				path: "root[0].text.operations.text[1]",
 				message: "must be a string, or an array of runs to style parts of it",
+				severity: "error",
 			},
 		]);
 	});
@@ -188,6 +193,7 @@ describe("validateRecordDoc", () => {
 			{
 				path: "root[0].text.name.textAlign",
 				message: "must be one of: left, center, right",
+				severity: "error",
 			},
 		]);
 	});
@@ -204,6 +210,7 @@ describe("validateRecordDoc", () => {
 		expect(validate({ ...baseDoc, width: "wide" })).toContainEqual({
 			path: "root[0].width",
 			message: "must be a number",
+			severity: "error",
 		});
 	});
 });

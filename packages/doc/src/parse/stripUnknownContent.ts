@@ -97,6 +97,7 @@ const stripUnknownViewFields = (
 		warnings.push({
 			path: `view.${field}`,
 			message: `Unknown ${field} value${shownValue}: the field was ignored and will be dropped on save.`,
+			severity: "warning",
 		});
 		stripped = stripped ?? { ...v };
 		delete stripped[field];
@@ -239,6 +240,7 @@ export function stripUnknownContent(
 				warnings.push({
 					path: `${path}.${key}`,
 					message: `Unknown ${key} value${shownValue}: the field was ignored and will be dropped on save.`,
+					severity: "warning",
 					...(ownerId !== undefined ? { id: ownerId } : {}),
 				});
 				changed = true;
@@ -274,6 +276,7 @@ export function stripUnknownContent(
 				warnings.push({
 					path: `${path}.type`,
 					message: `Object type "${o.type as string}" is not a type this build knows: the object is kept as it is but not drawn.`,
+					severity: "warning",
 					id: o.id as string,
 				});
 				return node;
@@ -282,6 +285,7 @@ export function stripUnknownContent(
 			warnings.push({
 				path: `${path}.type`,
 				message: `Unknown object type "${o.type as string}" on an object without an id: the object was ignored and will be dropped on save.`,
+				severity: "warning",
 			});
 			return undefined;
 		}
@@ -298,6 +302,7 @@ export function stripUnknownContent(
 				warnings.push({
 					path: `${path}.${unknownAnchor.endpoint}.anchor.kind`,
 					message: `Unknown anchor kind "${unknownAnchor.kind}": the connector was ignored and will be dropped on save.`,
+					severity: "warning",
 					...(isString(o.id) ? { id: o.id as string } : {}),
 				});
 				return undefined;
@@ -326,6 +331,7 @@ export function stripUnknownContent(
 					path,
 					message:
 						"All children had unknown object types and no id: the group was dropped with them.",
+					severity: "warning",
 					...(isString(enumStripped.id)
 						? { id: enumStripped.id as string }
 						: {}),
@@ -375,6 +381,7 @@ export function stripUnknownContent(
 				warnings.push({
 					path: `root[${i}]`,
 					message: `Endpoint owner "${ownerId}" had an unknown object type: the connector was dropped with it.`,
+					severity: "warning",
 					...(isString(o.id) ? { id: o.id as string } : {}),
 				});
 				return;

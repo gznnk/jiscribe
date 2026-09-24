@@ -47,6 +47,7 @@ export function validateSemantics(
 				errors.push({
 					path: objPath,
 					message: `ID "${obj.id}" is duplicated.`,
+					severity: "error",
 					id: obj.id,
 				});
 			}
@@ -114,6 +115,7 @@ export function validateSemantics(
 					errors.push({
 						path: connPath,
 						message: `Self-loop connector on object "${sourceOwnerId}" cannot use a center anchor; pin both ends to a connectPoint.`,
+						severity: "error",
 						id: connector.id,
 					});
 				}
@@ -172,6 +174,7 @@ function validateEndpoint(
 			{
 				path,
 				message: `Endpoint owner ID "${ownerId}" does not exist.`,
+				severity: "error",
 				id: ownerId,
 			},
 		];
@@ -186,6 +189,7 @@ function validateEndpoint(
 			{
 				path,
 				message: `Endpoint owner "${ownerId}" of type "${refType}" is not connectable.`,
+				severity: "error",
 				id: ownerId,
 			},
 		];

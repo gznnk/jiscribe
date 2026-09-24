@@ -8,7 +8,13 @@ import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
 const validateSvgText: ObjectDocValidateFn = (o, path) =>
 	isString(o.svgText)
 		? []
-		: [{ path: `${path}.svgText`, message: "must be a string" }];
+		: [
+				{
+					path: `${path}.svgText`,
+					message: "must be a string",
+					severity: "error",
+				},
+			];
 
 /** Validates an SvgDoc (shared Frame validation + svgText, generated from features). */
 export const validateSvgDoc: ObjectDocValidateFn = createFrameDocValidator(

@@ -42,7 +42,9 @@ describe("ObjectDocValidatorRegistry", () => {
 		const registry = createObjectDocValidatorRegistry();
 		registry.register("rect", {
 			features: RectFeatures,
-			validateDoc: () => [{ path: "root[0]", message: "always fails" }],
+			validateDoc: () => [
+				{ path: "root[0]", message: "always fails", severity: "error" },
+			],
 		});
 
 		expect(registry.hasType("rect")).toBe(true);
@@ -85,7 +87,9 @@ describe("ObjectDocValidatorRegistry unknown properties", () => {
 			RectFeatures,
 			{ id: "r1", type: "rect", zzUnknown: 1 },
 			undefined,
-			(_o, path) => [{ path: `${path}.tail`, message: "is required" }],
+			(_o, path) => [
+				{ path: `${path}.tail`, message: "is required", severity: "error" },
+			],
 		);
 		expect(diagnostics.map((diagnostic) => diagnostic.path)).toEqual([
 			"root[0].tail",

@@ -301,7 +301,7 @@ describe("parseWithRegistry", () => {
 			if (result.kind === "structure-error") {
 				expect(
 					result.diagnostics.every(
-						(diagnostic) => diagnostic.severity !== "warning",
+						(diagnostic) => diagnostic.severity === "error",
 					),
 				).toBe(true);
 			}

@@ -67,6 +67,7 @@ function validateConnectorLabelFields(
 			path: `${path}.text`,
 			message:
 				"connector has no top-level text; put the label in `label.text` instead.",
+			severity: "error",
 		});
 	}
 
@@ -76,7 +77,14 @@ function validateConnectorLabelFields(
 
 	const label = o.label;
 	if (typeof label !== "object" || label === null) {
-		return [...errors, { path: `${path}.label`, message: "must be an object" }];
+		return [
+			...errors,
+			{
+				path: `${path}.label`,
+				message: "must be an object",
+				severity: "error",
+			},
+		];
 	}
 
 	const l = label as Record<string, unknown>;
@@ -102,7 +110,7 @@ function validateRequiredEndpointRef(
 	path: string,
 ): SemanticDiagnostic[] {
 	if (typeof ref !== "object" || ref === null) {
-		return [{ path, message: "must be an object" }];
+		return [{ path, message: "must be an object", severity: "error" }];
 	}
 	return validateEndpointRef(ref, path);
 }
@@ -129,6 +137,7 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 				{
 					path: `${path}.routing`,
 					message: `connector.routing must be one of "straight" | "orthogonal".`,
+					severity: "error" as const,
 					...(typeof o.id === "string" ? { id: o.id } : {}),
 				},
 			]
@@ -141,6 +150,7 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 					path,
 					message:
 						"connector must have at least one owned endpoint (both endpoints are free).",
+					severity: "error" as const,
 					// This rule is also expressed in the JSON schema (ConnectorDoc's not constraint),
 					// so beyondSchema is not attached (leave the extension to the schema as a structural
 					// error to avoid double-reporting).
