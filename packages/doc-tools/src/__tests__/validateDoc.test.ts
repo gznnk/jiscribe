@@ -38,8 +38,8 @@ describe("validateDoc", () => {
 	});
 
 	it("catches what only the schema can see, an unknown property here", () => {
-		// The parser drops a property no type declares; the schema refuses it, which
-		// is the half of the pair that catches a misspelling.
+		// Both halves speak up about a misspelling: the schema refuses the document
+		// (additionalProperties), and the parser warns that it dropped the property.
 		const result = validateDoc(
 			JSON.stringify({
 				version: 1,
@@ -58,10 +58,21 @@ describe("validateDoc", () => {
 		);
 		expect(result.ok).toBe(false);
 		expect(
-			result.diagnostics.some((diagnostic) =>
-				diagnostic.message.startsWith("schema:"),
-			),
-		).toBe(true);
+			result.diagnostics.map(({ severity, message }) => ({
+				severity,
+				message,
+			})),
+		).toEqual([
+			{
+				severity: "error",
+				message: "schema: /root/0 must NOT have additional properties",
+			},
+			{
+				severity: "warning",
+				message:
+					'Unknown property "fontSizes" on a "rect": it was ignored and will be dropped on save.',
+			},
+		]);
 	});
 
 	it("keeps an object of a type the shipped set lacks, which only the schema refuses", () => {

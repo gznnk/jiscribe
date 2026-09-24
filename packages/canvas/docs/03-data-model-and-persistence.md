@@ -144,7 +144,15 @@ semantic validation is not reached.
    groups left empty and to connectors pointing at what it held).
 2. **Structural validation `validateStructure`** — Validates each node's type and required fields.
    Type-specific validation is delegated to the doc-validator registry the parser built, and only the recursion into a
-   `group`'s `children` is handled here as a structural rule.
+   `group`'s `children` is handled here as a structural rule. The registry reports every field written on an object
+   that the type does not hold — a misspelling, or a style a shape does not take, such as a `fontWeight` on a
+   `markdown` card. It knows which names a type holds from that type's definition (`features` + `extraKeys`), so the
+   check covers every registered type and no `validateDoc` carries an allow-list of its own. That is a **warning**
+   (`SemanticDiagnostic.severity`), not an error: the document still loads, and the parser removes the field from
+   `ok.doc`, so the next save is where it disappears. The warning carries `unknownKeyPath`, the position the parser
+   removes, since the name itself may be any string a file holds. Nothing inside an opaque object is judged this way.
+   When an error is found anywhere in the document, the result is a `structure-error` carrying the errors alone — a
+   document that will not open has nothing to save.
 3. **Semantic validation `validateSemantics`** — Validates consistency that can only be judged by
    traversing the entire document.
    - **Uniqueness of IDs**: IDs must not be duplicated across the root tree (including connectors).

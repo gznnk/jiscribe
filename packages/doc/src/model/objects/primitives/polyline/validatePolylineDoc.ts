@@ -1,5 +1,5 @@
 import { POLYLINE_MIN_POINTS } from "./PolylineDoc";
-import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
 import {
 	validateArrowFields,
 	validatePolyFields,

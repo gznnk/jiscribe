@@ -35,7 +35,14 @@ export {
 	validateInlineTextStyleFields,
 	validateRichTextContent,
 } from "./model/objects/utils/validateDocUtils";
-export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidatorRegistry";
+export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
+
+// The type table the parser checks a document against, for a host that has to
+// ask what a type may hold without a document in hand — which is a question
+// about the registration, not about any one doc (@jiscribe/doc-tools asks it of
+// the shipped set). `createCanvasParser` builds the same table internally.
+export { createDocValidatorRegistry } from "./parse/createDocValidatorRegistry";
+export type { ObjectDocValidatorRegistry } from "./plugin/ObjectDocValidatorRegistry";
 
 export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 

@@ -83,6 +83,21 @@ describe("setExtraProps", () => {
 		);
 	});
 
+	it("refuses a group's children, which the type holds but as structure", () => {
+		// `children` is in group's extraKeys so the parser keeps it, but a child
+		// list is built by grouping and checked as a tree — handing one through
+		// extraProps would put objects nothing validated into the document.
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		docOps.addObject(doc, "rect", { x: 200, y: 0 });
+		const groupId = docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+
+		expect(() => docOps.setExtraProps(doc, groupId, { children: [] })).toThrow(
+			/must not carry "children".*no properties of its own/,
+		);
+		expect(readObject(doc, groupId).children).toHaveLength(2);
+	});
+
 	it("refuses an id that is not in the document", () => {
 		const { doc } = withBadged();
 

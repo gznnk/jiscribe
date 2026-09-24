@@ -23,7 +23,7 @@ the answers an AI gets and the answers CI gets cannot drift.
 `validateDoc` runs the official JSON schema (`@jiscribe/doc-schema/schema`, what an
 editor completes and validates against) **and** the canvas parser loaded with the
 shipped shape set (what actually opens the file). Neither contains the other: the
-schema refuses a misspelled property the parser strips silently, and the parser
+schema refuses a misspelled property the parser at most warns about, and the parser
 catches cross-object rules — duplicate ids, a connector pointing at nothing — that
 no schema can express. The two must be given the same plugin set or they
 disagree, which is why both take it from `@jiscribe/standard-shapes/doc`.

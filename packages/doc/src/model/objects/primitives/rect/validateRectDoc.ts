@@ -1,6 +1,6 @@
 import { RectFeatures } from "./RectDoc";
 import { calcFullBoxTextRegion } from "../../../../plugin/ObjectDocTextRegion";
-import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
 import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
 
 /**

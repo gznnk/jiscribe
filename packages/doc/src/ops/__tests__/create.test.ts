@@ -610,6 +610,20 @@ describe("addObject with a type's own extraProps", () => {
 		).toThrow(/no properties of its own/);
 	});
 
+	it("has no creation path for a group's children at all", () => {
+		// group declares `children` so the parser keeps a document's own, but the
+		// list is structure: there is no factory to reach extraProps through, and
+		// grouping is what builds one.
+		const doc = emptyDoc();
+		expect(() =>
+			docOps.addObject(doc, "group", {
+				x: 0,
+				y: 0,
+				extraProps: { children: [] },
+			}),
+		).toThrow(/cannot be created programmatically/);
+	});
+
 	it("accepts the body placement every single-body type carries, undeclared", () => {
 		const doc = emptyDoc();
 		const id = docOps.addObject(doc, "rect", {

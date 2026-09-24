@@ -1,5 +1,5 @@
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
-import type { ObjectDocValidateFn } from "./ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import type { ObjectTextSlotStyleDefaults } from "./ObjectTextStyleDefaultsRegistry";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { ObjectFactory } from "../model/objects/types/ObjectFactory";

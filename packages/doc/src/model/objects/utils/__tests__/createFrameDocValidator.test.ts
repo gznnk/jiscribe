@@ -20,8 +20,8 @@ const features = (extra: Partial<ObjectFeatures> = {}): ObjectFeatures => ({
 	...extra,
 });
 
-const paths = (errors: SemanticDiagnostic[]): string[] =>
-	errors.map((e) => e.path);
+const paths = (diagnostics: SemanticDiagnostic[]): string[] =>
+	diagnostics.map((diagnostic) => diagnostic.path);
 
 describe("createFrameDocValidator geometry", () => {
 	it("requires x/y/width/height for rect geometry", () => {
@@ -96,6 +96,8 @@ describe("createFrameDocValidator feature gating", () => {
 
 	it("reports nothing beyond geometry when every flag is off", () => {
 		const validate = createFrameDocValidator(features());
+		// A disabled group's fields are not checked here at all; the names the type
+		// does not hold are the registry's to report (ObjectDocValidatorRegistry).
 		expect(validate({ ...geometry, ...brokenStyles }, "root")).toEqual([]);
 	});
 
@@ -261,6 +263,8 @@ describe("createFrameDocValidator source text group", () => {
 	});
 
 	it("passes over the emphasis fields, as it does every field the features exclude", () => {
+		// A field outside the features is not checked here; the registry is what
+		// reports it as a name the shape does not hold.
 		expect(
 			validate(
 				{

@@ -1,5 +1,5 @@
 import { TextFeatures } from "./TextDoc";
-import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
 import { GEOMETRY_SIZE_MIN } from "../../types/GeometryType";
 import { isTextLayout } from "../../types/text/TextLayout";
 import { createFrameDocValidator } from "../../utils/createFrameDocValidator";

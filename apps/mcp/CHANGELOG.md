@@ -240,6 +240,13 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
 
 ### Changed
 
+- **`diagnose_canvas` now names a property the shape does not have.** A
+  misspelling, or a style a type does not take, used to pass the parser without
+  a word and be dropped on the way to the drawing — the value sat in the file
+  looking as though it had taken effect, and vanished the next time a tool wrote
+  the file. It is now reported as a warning that says the field was ignored and
+  will be dropped on save, and any tool that writes the file does drop it. The
+  document still opens either way.
 - **A viewer window left open from 0.10.0 or earlier cannot reconnect to this
   release.** It carries neither the session token nor the revision the host now
   demands. Close it; `open_canvas` opens a new one.

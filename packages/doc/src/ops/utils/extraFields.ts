@@ -1,6 +1,7 @@
 import { quoteNames } from "./errorText";
 import type { ObjectRecord } from "./objectAccess";
 import { TEXT_BODY_KEYS } from "../../model/objects/base/TextStyleDoc";
+import { GROUP_EXTRA_KEYS } from "../../model/objects/primitives/group/GroupDoc";
 import { isSingleBodyText } from "../../model/objects/types/text/TextType";
 import { holdsBodyInsideBox } from "../../plugin/hasInsetTextRegion";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
@@ -13,18 +14,31 @@ export const declaresExtraKey = (
 ): boolean => (definition.extraKeys ?? []).includes(key);
 
 /**
+ * Names a type declares that are structure rather than properties: a group's
+ * `children` is built by grouping and checked as a tree (validateStructure), so
+ * handing one to `extraProps` would put an unchecked object list into the
+ * document. Subtracted here because a definition has no declaration separating
+ * "names the type holds" from "names that may be written" — move this to one
+ * there if a second type ever needs it.
+ */
+const STRUCTURAL_EXTRA_KEYS: readonly string[] = GROUP_EXTRA_KEYS;
+
+/**
  * Every name a props write may set on one type: what the type declares for
- * itself, plus what carrying a single body *inside its box* implies
- * (TEXT_BODY_KEYS). The second group is shared rather than declared by each
- * type, so it is added here instead of being copied into as many `extraKeys`
- * lists — but only where the body has a box to be placed against
- * ({@link holdsBodyInsideBox}): on a type drawing its label outside its
- * outline, the keys would be accepted, written, and never read.
+ * itself, minus what it declares as structure ({@link STRUCTURAL_EXTRA_KEYS}),
+ * plus what carrying a single body *inside its box* implies (TEXT_BODY_KEYS).
+ * The last group is shared rather than declared by each type, so it is added
+ * here instead of being copied into as many `extraKeys` lists — but only where
+ * the body has a box to be placed against ({@link holdsBodyInsideBox}): on a
+ * type drawing its label outside its outline, the keys would be accepted,
+ * written, and never read.
  */
 const collectWritableKeys = (
 	definition: ObjectDocDefinition,
 ): readonly string[] => [
-	...(definition.extraKeys ?? []),
+	...(definition.extraKeys ?? []).filter(
+		(key) => !STRUCTURAL_EXTRA_KEYS.includes(key),
+	),
 	...(isSingleBodyText(definition.features.text) &&
 	holdsBodyInsideBox(definition)
 		? TEXT_BODY_KEYS

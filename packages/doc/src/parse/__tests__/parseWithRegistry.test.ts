@@ -219,6 +219,95 @@ describe("parseWithRegistry", () => {
 		});
 	});
 
+	describe("unknown properties on a known type", () => {
+		it("reads the document, warns, and takes the property out of ok.doc", () => {
+			const result = parse(text(validDoc([rect("r1", { zzUnknown: 1 })])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(rect("r1"));
+				expect(result.warnings).toEqual([
+					{
+						path: "root[0].zzUnknown",
+						message:
+							'Unknown property "zzUnknown" on a "rect": it was ignored and will be dropped on save.',
+						severity: "warning",
+						unknownKeyPath: ["zzUnknown"],
+					},
+				]);
+			}
+		});
+
+		it.each(["a.b", "x[0]", "", "constructor"])(
+			"removes a property named %j, which no path string could be read back into",
+			(name) => {
+				const result = parse(text(validDoc([rect("r1", { [name]: 1 })])));
+				expect(result.kind).toBe("ok");
+				if (result.kind === "ok") {
+					expect(Object.keys(result.doc.root[0])).not.toContain(name);
+					expect(result.warnings).toHaveLength(1);
+				}
+			},
+		);
+
+		it("reaches a group's children", () => {
+			const result = parse(
+				text(
+					validDoc([
+						{
+							id: "g",
+							type: "group",
+							children: [rect("gc", { zzUnknown: 1 })],
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				const group = result.doc.root[0] as unknown as {
+					children: Record<string, unknown>[];
+				};
+				expect(group.children[0]).toEqual(rect("gc"));
+				expect(result.warnings[0].path).toBe("root[0].children[0].zzUnknown");
+			}
+		});
+
+		it("leaves an opaque object's own fields alone", () => {
+			const opaque = { id: "u", type: "hexagram", zzUnknown: 1 };
+			const result = parse(text(validDoc([opaque])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(opaque);
+			}
+		});
+
+		it("lists the strip's warnings first, then the validators'", () => {
+			const result = parse(
+				text(validDoc([rect("r1", { strokeDashType: "wavy", zzUnknown: 1 })])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.warnings.map((warning) => warning.path)).toEqual([
+					"root[0].strokeDashType",
+					"root[0].zzUnknown",
+				]);
+			}
+		});
+
+		it("reports structure-error, warning-free, when an error sits beside it", () => {
+			const result = parse(
+				text(validDoc([{ id: "r1", type: "rect", zzUnknown: 1 }])),
+			);
+			expect(result.kind).toBe("structure-error");
+			if (result.kind === "structure-error") {
+				expect(
+					result.diagnostics.every(
+						(diagnostic) => diagnostic.severity !== "warning",
+					),
+				).toBe(true);
+			}
+		});
+	});
+
 	describe("structure → semantics ordering (short-circuit)", () => {
 		it("returns only structure-error when both structural and semantic errors exist (semantics does not run)", () => {
 			// Combine a missing required field (structural) with a duplicate id (semantic)

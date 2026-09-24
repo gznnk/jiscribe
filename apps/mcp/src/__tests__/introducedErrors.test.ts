@@ -52,7 +52,11 @@ const markdownCard = {
 	text: "hello world",
 };
 
-/** A rect carrying a key the schema does not know, which the parser lets through. */
+/**
+ * A rect carrying a key the schema does not know. The file still opens — the
+ * parser reports the key as a warning rather than refusing — but the key is gone
+ * from what the next write puts back.
+ */
 const rectWithUnknownKey = {
 	id: "odd",
 	type: "rect",
@@ -137,7 +141,9 @@ describe("a file already failing the schema for a reason of its own", () => {
 		expect(result.text).not.toMatch(/^error:/);
 		const { root } = await workspace.readDoc(targetPath);
 		expect(root).toHaveLength(2);
-		expect(root[0]).toMatchObject({ customKey: "kept" });
+		// The write puts back what the parser read, and what it read no longer has
+		// the key: an unknown property is dropped on the first save after it is seen.
+		expect(root[0]).not.toHaveProperty("customKey");
 	});
 
 	// The error keeps its object's id, not its index, so moving that object is not

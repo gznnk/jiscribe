@@ -34,9 +34,9 @@ describe("validateNoteDoc", () => {
 
 	/**
 	 * The fold is a fixed ratio of the box (NOTE_FOLD_RATIO), not a property, so
-	 * there is nothing type-specific to check here. A doc that tries to set one
-	 * anyway parses silently — only the published JSON Schema, being
-	 * additionalProperties:false, calls it out.
+	 * there is nothing type-specific to check here. A doc that sets one anyway is
+	 * told so by the parser's registry, which warns and takes the field out of the
+	 * document it hands back.
 	 */
 	it("stays silent about a fold size it does not declare", () => {
 		expect(validateNoteDoc({ ...baseDoc, fold: 40 }, "root[0]")).toEqual([]);

@@ -1,3 +1,5 @@
+> 🌐 日本語版: [README.ja.md](./README.ja.md)
+
 # @jiscribe/doc
 
 The document model of a jiscribe canvas: the persisted `CanvasDoc` and its object
@@ -123,6 +125,51 @@ classDiagram
     EllipseDoc ..> CreateObjectType : uses (with EllipseFeatures)
     ConnectorDoc ..> CreateObjectType : uses (with ConnectorFeatures)
 ```
+
+## Declaring an object type
+
+A type's fields come from two places. The ones `features` implies — the geometry's
+coordinates, the style groups, the text group — are derived, and no type states
+them. Everything else is the type's own, and the `XxxDoc` type is where those live:
+
+```typescript
+// Example: CalloutDoc.ts
+export type CalloutDoc = CreateObjectType<
+	typeof CalloutFeatures,
+	typeof CalloutDocBrand,
+	{ tail: Point }
+>;
+
+/** Doc fields callout carries beyond the ones its features imply. */
+export const CALLOUT_EXTRA_KEYS = [
+	"tail",
+] as const satisfies readonly (keyof CalloutDoc)[];
+```
+
+The `satisfies` ties the list to the doc type, and the list is written nowhere
+else. It is set on the type's `ObjectDocDefinition` as `extraKeys`, which is the
+one declaration of what the type holds; three sides read it, and none of them
+keeps a list of its own:
+
+| Reader                                                | What it does with the names                                                                                         |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| The parser (`ObjectDocValidatorRegistry`)             | Builds the accepted-name set from `features` + `extraKeys`, warns about every other name and drops it from `ok.doc` |
+| The mapper (`createFrameMapper` / `createPolyMapper`) | Passes exactly these between doc and state                                                                          |
+| doc-ops (`extraProps`)                                | Accepts exactly these as names a caller may write, minus the ones held as structure (group's `children`)            |
+
+`validateDoc` is not on that list. A type's validator checks the values it holds
+and the rules only it knows; which names the type may carry is not its business,
+and it is never handed an allow-list. That keeps the check uniform across all
+registered types, the poly family included, which builds no validator from
+`createFrameDocValidator` at all.
+
+What happens when the two drift: a field added to `XxxDoc` but not to
+`extraKeys` is reported as unknown by the parser and removed from the document
+it hands back, so the value disappears on the next save. `satisfies` does not
+catch it — it only says the list holds no name the type lacks, not that it holds
+them all. For the shipped types, `@jiscribe/doc-tools`' `shippedPropertyNames`
+test is what catches it, by holding the registry against the published JSON
+schema.
 
 ## Usage Example
 

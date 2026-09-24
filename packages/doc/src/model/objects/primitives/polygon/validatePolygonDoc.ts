@@ -1,5 +1,5 @@
 import { POLYGON_MIN_POINTS } from "./PolygonDoc";
-import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
 import {
 	validateFillStyleFields,
 	validatePolyFields,

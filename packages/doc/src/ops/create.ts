@@ -19,6 +19,7 @@ import { applyRotation, requireRotationDegrees } from "./utils/transformFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { TextLayout } from "../model/objects/types/text/TextLayout";
+import { isSemanticError } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../plugin/supportsAutoHeight";
 
@@ -354,7 +355,9 @@ const buildObject = (
 	// Last, so it sees the finished object. The parameters above are each checked as
 	// they are applied, but `extraProps` is an open door: only the type knows which names it
 	// has and what they may hold, and this is where it gets to say so.
-	const diagnostics = definition.validateDoc(created as ObjectRecord, type);
+	const diagnostics = definition
+		.validateDoc(created as ObjectRecord, type)
+		.filter(isSemanticError);
 	if (diagnostics.length > 0) {
 		throw new DocOperationError(
 			`cannot create "${type}": ${diagnostics

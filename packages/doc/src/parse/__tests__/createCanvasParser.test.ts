@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
 import { builtinObjectDocDefinitions } from "../../plugin/builtinObjectDocDefinitions";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
-import type { ObjectDocValidateFn } from "../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../plugin/ObjectDocValidateFn";
 import { createCanvasParser } from "../createCanvasParser";
 
 // createCanvasParser builds a dedicated (non-global) registry from a preset/plugin

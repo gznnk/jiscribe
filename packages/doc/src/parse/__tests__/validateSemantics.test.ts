@@ -17,9 +17,18 @@ const features = (type: string, connectable: boolean): ObjectFeatures =>
 	({ type, geometry: "rect", connectable }) as unknown as ObjectFeatures;
 
 const mockRegistry = createObjectDocValidatorRegistry();
-mockRegistry.register("rect", noopValidate, features("rect", true));
-mockRegistry.register("group", noopValidate, features("group", false));
-mockRegistry.register("connector", noopValidate, features("connector", false));
+mockRegistry.register("rect", {
+	validateDoc: noopValidate,
+	features: features("rect", true),
+});
+mockRegistry.register("group", {
+	validateDoc: noopValidate,
+	features: features("group", false),
+});
+mockRegistry.register("connector", {
+	validateDoc: noopValidate,
+	features: features("connector", false),
+});
 
 // validateSemantics takes a registry argument (the parser builds one per instance). Most
 // of this suite runs against the mock registry above, so wrap it to keep every existing

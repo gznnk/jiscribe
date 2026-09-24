@@ -128,6 +128,10 @@ const validateRecordText: ObjectDocValidateFn = (o, path) => {
  * Reports text styling written at the root. A record styles each slot on its own,
  * so a shape-wide value would be silently dropped by the mapper — the shapes that
  * do take one are the ones whose text is a single body.
+ *
+ * The parser's registry reports these names too, as ones the type does not hold;
+ * this raises them to an error and says where the value belongs instead, rather
+ * than letting a whole shape's typography go quietly on the next save.
  */
 const validateNoRootTextStyle: ObjectDocValidateFn = (o, path) =>
 	TEXT_SLOT_STYLE_KEYS.filter((key) => key in o).map((key) => ({

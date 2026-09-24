@@ -1,5 +1,5 @@
 import type { ConnectorLabel } from "./ConnectorDoc";
-import type { ObjectDocValidateFn } from "../../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../../plugin/ObjectDocValidateFn";
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import { STROKE_WIDTH_MIN } from "../base/StrokeStyleDoc";
 import { isConnectorRouting } from "../types/ConnectorRouting";

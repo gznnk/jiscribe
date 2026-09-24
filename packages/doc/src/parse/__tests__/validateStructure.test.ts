@@ -9,7 +9,7 @@ import { validateStructure as validateStructureWithRegistry } from "../validateS
 // production has. Wrapped so every single-arg call site below stays unchanged.
 const registry = createDocValidatorRegistry();
 const validateStructure = (doc: unknown): SemanticDiagnostic[] =>
-	validateStructureWithRegistry(doc, registry);
+	validateStructureWithRegistry(doc, registry).diagnostics;
 
 // ─── Fixture helpers ─────────────────────────────────────────
 const rect = (id: string, over: Record<string, unknown> = {}) => ({

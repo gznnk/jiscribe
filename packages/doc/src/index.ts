@@ -159,8 +159,13 @@ export type {
 	ShapeStyleGroup,
 } from "./plugin/ObjectShapeStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
-export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidatorRegistry";
+export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
 export type { SemanticDiagnostic } from "./model/types/SemanticDiagnostic";
+export {
+	isSemanticError,
+	isSemanticWarning,
+	severityOf,
+} from "./model/types/SemanticDiagnostic";
 export type { CanvasParser, CanvasParseResult } from "./parse";
 export { createCanvasParser } from "./parse";
 export { builtinObjectDocDefinitions } from "./plugin/builtinObjectDocDefinitions";

@@ -1,5 +1,6 @@
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import { roundDocPoints } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
 import type { Point } from "@jiscribe/geometry";
 
@@ -9,7 +10,7 @@ import type { ObjectState } from "./ObjectState";
 import type { TextDocFields } from "./TextSlotsMapper";
 import { mapTextDocToState, mapTextStateToDoc } from "./TextSlotsMapper";
 import type { TextStyleState } from "./TextStyleState";
-import { collectStyleKeys, pick } from "../utils/stylePassthrough";
+import { pick } from "../utils/stylePassthrough";
 
 /**
  * Generates a Doc↔State mapper from `features` for Poly-family objects

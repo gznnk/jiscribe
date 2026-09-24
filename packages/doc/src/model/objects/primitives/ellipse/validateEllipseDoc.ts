@@ -1,5 +1,5 @@
 import { EllipseFeatures } from "./EllipseDoc";
-import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
 import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
 
 /** Validates an EllipseDoc (Frame-family shared logic generated from features). */
