@@ -159,8 +159,8 @@ node apps/mcp/dist/index.mjs       # stdio; register this path with your client
 
 Run pnpm from the repository root, never with the working directory inside
 `engine/`. The build output stands alone — `dist/index.mjs` (the server),
-`dist/client/` (the viewer), and `dist/node_modules/` (the JSON schema, the two
-guides `read_drawing_guide` returns, and the fonts the text measurement needs at
+`dist/client/` (the viewer), and `dist/node_modules/` (the two guides
+`read_drawing_guide` returns, and the fonts the text measurement needs at
 runtime) — which is what gets published, so a checkout is not needed to run it.
 
 To work on the viewer alone, `pnpm --filter jiscribe-mcp dev:viewer` serves it

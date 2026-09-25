@@ -13,6 +13,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"comments": {
+		"@jiscribe/doc-schema": "A devDependency: nothing here reads the schema at run time (validateDoc validates with the parser alone). __tests__/shippedPropertyNames.test.ts reads it as data, to hold the key constants to the shipped property names.",
 		"@fontsource/*": "Not imported as modules: the Node measurer reads the .woff files and the unicode-range of the @font-face CSS off disk, resolved through Node's own resolution (measure/fontSourcePackages.ts). They are the very files @jiscribe/canvas ships to the browser, which is what keeps a headless measurement on the same faces as the drawing."
 	},
 	"dependencies": {
@@ -23,15 +24,14 @@
 		"@fontsource/source-code-pro": "5.3.0",
 		"@fontsource/source-sans-3": "5.3.0",
 		"@fontsource/source-serif-4": "5.3.0",
-		"@jiscribe/doc-schema": "workspace:*",
 		"@jiscribe/canvas": "workspace:*",
 		"@jiscribe/doc": "workspace:*",
 		"@jiscribe/geometry": "workspace:*",
 		"@jiscribe/standard-shapes": "workspace:*",
-		"ajv": "^8.20.0",
 		"fontkit": "^2.0.4"
 	},
 	"devDependencies": {
+		"@jiscribe/doc-schema": "workspace:*",
 		"@types/fontkit": "^2.0.9",
 		"@types/node": "catalog:",
 		"playwright-core": "^1.62.1",

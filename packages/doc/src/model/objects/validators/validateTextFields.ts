@@ -114,7 +114,11 @@ export function validateInlineTextStyleFields(
  * runs it is written as when parts of it are styled on their own. A run's own
  * styling is validated like a slot's, minus the alignment it cannot carry.
  *
- * @param content - The value written as the text; anything but a string or an array is rejected
+ * An empty run list is rejected rather than read as an empty text: the type guard
+ * lets `[]` through, but the canvas writes an empty body as `""`, so a document
+ * holding `[]` would silently change on its next save.
+ *
+ * @param content - The value written as the text; anything but a string or a non-empty array is rejected
  * @param path - Diagnostic path of the text field, which the run index is appended to
  * @returns One diagnostic per malformed run or field; empty when the text is valid
  */
@@ -130,6 +134,16 @@ export function validateRichTextContent(
 			{
 				path,
 				message: "must be a string, or an array of runs to style parts of it",
+				severity: "error",
+			},
+		];
+	}
+	if (content.length === 0) {
+		return [
+			{
+				path,
+				message:
+					'must not be an empty list of runs: write "" for an empty text, or leave the field out',
 				severity: "error",
 			},
 		];

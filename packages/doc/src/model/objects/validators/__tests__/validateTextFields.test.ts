@@ -38,6 +38,12 @@ describe("validateTextStyleFields", () => {
 		).toEqual([]);
 	});
 
+	it("rejects an empty list of runs, which the next save would rewrite as an absent text", () => {
+		const errors = validateTextStyleFields({ text: [] }, "root");
+		expect(errors.map((error) => error.path)).toEqual(["root.text"]);
+		expect(errors[0].message).toMatch(/empty list of runs/);
+	});
+
 	it("errors on a malformed run, pointing at the run", () => {
 		expect(
 			validateTextStyleFields({ text: [{ text: 1 }] }, "root")[0].path,

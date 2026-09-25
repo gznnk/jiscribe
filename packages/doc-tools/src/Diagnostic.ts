@@ -11,7 +11,7 @@ export type Diagnostic = {
 	severity: DiagnosticSeverity;
 	/** Id of the object the finding is about; absent for a document-wide one. */
 	objectId?: string;
-	/** JSON path into the document (`/root/3/width`), where the finding has one. */
+	/** Path into the document as the parser spells it (`root[3].width`), where the finding has one. */
 	path?: string;
 	/** One line, in English, naming what is wrong and the numbers behind it. */
 	message: string;

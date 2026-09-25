@@ -1,11 +1,12 @@
-// A write-back refuses a document the edit left failing diagnose_canvas, judged
-// against the file as it was loaded rather than against a clean one.
+// A write-back refuses a document the edit left with a diagnose_canvas finding it
+// did not have, judged against the file as it was loaded rather than against a
+// clean one. A warning counts: the parser drops the field it names on the next
+// save, so writing one would lose the value without a word.
 //
-// The tools themselves no longer write anything the schema rejects, so the
-// write that trips the check is forced: docOps is built with markdown declared
-// as an ordinary `"body"` text, which lets set_style put an emphasis field on a
-// markdown card. The parser passes over a field the type's features do not
-// imply, so the write reaches the check, and the schema is what refuses it.
+// The tools themselves no longer write a field a type does not hold, so the write
+// that trips the check is forced: docOps is built with markdown declared as an
+// ordinary `"body"` text, which lets set_style put an emphasis field on a markdown
+// card. The document still opens with it, which is why only this check refuses it.
 
 import type { CanvasDocPlugin } from "@jiscribe/doc";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -53,9 +54,9 @@ const markdownCard = {
 };
 
 /**
- * A rect carrying a key the schema does not know. The file still opens — the
- * parser reports the key as a warning rather than refusing — but the key is gone
- * from what the next write puts back.
+ * A rect carrying a key no type holds. The file still opens — the parser reports
+ * the key as a warning rather than refusing — but the key is gone from what the
+ * next write puts back.
  */
 const rectWithUnknownKey = {
 	id: "odd",
@@ -87,14 +88,16 @@ const writeTarget = (doc: CanvasFileContent): Promise<string> =>
 const styleMarkdown = (path: string) =>
 	client.callTool("set_style", { path, ids: ["md"], fontWeight: "bold" });
 
-describe("a write-back that would introduce a diagnose_canvas error", () => {
+describe("a write-back that would introduce a diagnose_canvas finding", () => {
 	it("is refused, and the file keeps what it held", async () => {
 		const targetPath = await writeTarget({ version: 1, root: [markdownCard] });
 
 		const result = await styleMarkdown(targetPath);
 
-		expect(result.text).toMatch(
-			/^error: refused to write \(the edit would leave the file failing diagnose_canvas, which it did not before\):\nvalid: false\n1 issue\(s\):\n- error md: schema: \/root\/0 must NOT have additional properties/,
+		expect(result.text).toBe(
+			"error: refused to write (the edit would add this to what diagnose_canvas reports for the file):\n" +
+				"valid: true\n1 issue(s):\n" +
+				'- warning md: Unknown property "fontWeight" on a "markdown": it was ignored and will be dropped on save.',
 		);
 		expect((await workspace.readDoc(targetPath)).root).toEqual([markdownCard]);
 	});
@@ -108,7 +111,7 @@ describe("a write-back that would introduce a diagnose_canvas error", () => {
 		expect(undone.text).toBe("error: nothing of yours left to undo");
 	});
 
-	it("is refused in a file already failing the schema for another reason", async () => {
+	it("is refused in a file already carrying a finding of its own", async () => {
 		const targetPath = await writeTarget({
 			version: 1,
 			root: [rectWithUnknownKey, markdownCard],
@@ -118,14 +121,16 @@ describe("a write-back that would introduce a diagnose_canvas error", () => {
 
 		expect(result.text).toMatch(/^error: refused to write/);
 		expect(result.text).toMatch(
-			/- error md: schema: \/root\/1 must NOT have additional properties/,
+			/- warning md: Unknown property "fontWeight" on a "markdown"/,
 		);
+		// Only what the edit added is reported: the rect's own unknown key was
+		// already in the file, and the write drops it rather than adding it.
 		expect(result.text).not.toMatch(/odd/);
 	});
 });
 
-describe("a file already failing the schema for a reason of its own", () => {
-	it("still takes an edit that adds no error", async () => {
+describe("a file already carrying a diagnose_canvas finding of its own", () => {
+	it("still takes an edit that adds none", async () => {
 		const targetPath = await writeTarget({
 			version: 1,
 			root: [rectWithUnknownKey],
@@ -146,8 +151,8 @@ describe("a file already failing the schema for a reason of its own", () => {
 		expect(root[0]).not.toHaveProperty("customKey");
 	});
 
-	// The error keeps its object's id, not its index, so moving that object is not
-	// mistaken for a new error at the index it moved to.
+	// The finding keeps its object's id, not its index, so moving that object is not
+	// mistaken for a new one at the index it moved to.
 	it("still takes a restacking that moves the offending object", async () => {
 		const targetPath = await writeTarget({
 			version: 1,
@@ -169,7 +174,7 @@ describe("a file already failing the schema for a reason of its own", () => {
 		).toEqual(["plain", "odd"]);
 	});
 
-	it("still takes an edit with a document-level key the schema does not know", async () => {
+	it("still takes an edit with a document-level key no document holds", async () => {
 		const targetPath = await workspace.writeText(
 			`introduced-${testIndex++}.jis.json`,
 			'{"version":1,"__proto__":{"polluted":true},"root":[]}\n',
@@ -185,10 +190,11 @@ describe("a file already failing the schema for a reason of its own", () => {
 		expect(result.text).not.toMatch(/^error:/);
 		expect((await workspace.readDoc(targetPath)).root).toHaveLength(1);
 		// A key the document frame does not hold goes the way an object's does: the
-		// parser reports it and drops it, so the write leaves a file the schema takes.
+		// parser reports it and drops it, so the write leaves a file with nothing
+		// left to report.
 		const diagnosis = await client.callTool("diagnose_canvas", {
 			path: targetPath,
 		});
-		expect(diagnosis.text).not.toMatch(/must NOT have additional properties/);
+		expect(diagnosis.text).toBe("valid: true");
 	});
 });

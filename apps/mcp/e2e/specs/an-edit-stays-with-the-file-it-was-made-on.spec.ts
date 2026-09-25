@@ -16,8 +16,8 @@ const DRAG_DX = 70;
 
 /**
  * How long the host is made to take before it asks for the flush: longer than the
- * stretch that first lost an edit this way (the server's one-time schema compile,
- * about a quarter of a second)
+ * stretch that first lost an edit this way (about a quarter of a second, the
+ * server's one-time validator setup back then)
  */
 const HOST_DELAY_MS = 300;
 

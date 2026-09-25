@@ -13,20 +13,28 @@ the answers an AI gets and the answers CI gets cannot drift.
 
 | Function                                          | What it answers                                                                                                                                                                                                       |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `validateDoc(text)`                               | Is this a sound document? Runs both validators the format has and returns their findings together.                                                                                                                    |
+| `validateDoc(text)`                               | Is this a sound document? Reads it with the canvas parser and returns what it found.                                                                                                                                  |
 | `measureWrappedText(text, font, availableWidth?)` | How many lines does this text become, and how big is the block?                                                                                                                                                       |
 | `resolveContentBox(shape)`                        | How much of a shape's box is its text actually laid out in — or is there no box to lay it in?                                                                                                                         |
 | `diagnoseDoc(doc)`                                | Does any text land where it should not — overflowing its shape, a connector label wider than the gap it sits in, a line opening on a closing mark (行頭禁則), a frame-based body running over the shape's decoration? |
 
-## Why validation is two validators
+## Why validation is the parser
 
-`validateDoc` runs the official JSON schema (`@jiscribe/doc-schema/schema`, what an
-editor completes and validates against) **and** the canvas parser loaded with the
-shipped shape set (what actually opens the file). Neither contains the other: the
-schema refuses a misspelled property the parser at most warns about, and the parser
-catches cross-object rules — duplicate ids, a connector pointing at nothing — that
-no schema can express. The two must be given the same plugin set or they
-disagree, which is why both take it from `@jiscribe/standard-shapes/doc`.
+`validateDoc` reads the text with the canvas parser loaded with the shipped shape
+set (`@jiscribe/standard-shapes/doc`) — the very thing that opens the file — and
+reports nothing else. It covers what the official JSON schema
+(`@jiscribe/doc-schema/schema`, what an editor completes and validates against)
+covers, at every depth, plus the cross-object rules no schema can express:
+duplicate ids, a connector pointing at nothing.
+
+The two severities are the two outcomes a host has:
+
+- **error** — the document does not open. A field missing or of the wrong type, a
+  broken value, a rule between objects.
+- **warning** — the document opens without the reported field. An unknown property,
+  an unknown enum value, an object of a type this build does not ship (that one is
+  kept as it is, undrawn). The `doc` handed back is already without them, so the
+  field is gone from the file on the next save.
 
 ## Measurement in Node
 

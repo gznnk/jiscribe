@@ -10,7 +10,7 @@ import {
 } from "./atomicWrite";
 import { canvasParser } from "./canvasDefinitions";
 import { formatDiagnostics } from "./diagnosticReport";
-import { findIntroducedErrors } from "./introducedErrors";
+import { findIntroducedDiagnostics } from "./introducedDiagnostics";
 import { realpathDeepestExisting } from "./realpathDeepestExisting";
 
 /**
@@ -162,10 +162,11 @@ export async function loadCanvasFile(path: string): Promise<LoadedCanvasFile> {
  * The modified document goes through `canvasParser` again, and an invalid one
  * fails with diagnostics instead of being written. This is what keeps a broken
  * `.jis` from being left behind. It then goes through the validator
- * `diagnose_canvas` runs, and a document carrying an error the file it was
- * loaded from did not is refused as well: the parser leaves properties the
- * schema forbids alone, so a tool writing one would otherwise succeed and leave
- * a file only diagnose rejects (see findIntroducedErrors).
+ * `diagnose_canvas` runs, and a document carrying any finding the file it was
+ * loaded from did not is refused as well, a warning included: a field the parser
+ * only warns about is one it drops on the next save, so a tool writing one would
+ * otherwise succeed and leave the value to vanish (see
+ * findIntroducedDiagnostics).
  *
  * The replacement is atomic (`./atomicWrite`), so the watching host and outside
  * editors never see it half written. A file written since it was loaded, by a
@@ -178,9 +179,9 @@ export async function loadCanvasFile(path: string): Promise<LoadedCanvasFile> {
  *   ({@link toCanvasFilePath}). The parent directory is created when missing
  * @param doc The CanvasDoc to write out
  * @param loaded The file as `doc` was loaded from it ({@link loadCanvasFile}):
- *   an error its text already carried is not held against the write, and the
+ *   a finding its text already carried is not held against the write, and the
  *   write is refused if the file has changed from it since. Omitted for a file
- *   being created, where any error refuses it and whatever is there is replaced
+ *   being created, where any finding refuses it and whatever is there is replaced
  * @throws CanvasFileError when the document is refused, the file changed after
  *   it was loaded, or the write fails; the file is left as it was
  */
@@ -199,10 +200,10 @@ export async function saveCanvasFile(
 		);
 	}
 
-	const introducedErrors = findIntroducedErrors(loaded?.text, serialized);
-	if (introducedErrors.length > 0) {
+	const introduced = findIntroducedDiagnostics(loaded?.text, serialized);
+	if (introduced.length > 0) {
 		throw new CanvasFileError(
-			`refused to write (the edit would leave the file failing diagnose_canvas, which it did not before):\n${formatDiagnostics(introducedErrors)}`,
+			`refused to write (the edit would add this to what diagnose_canvas reports for the file):\n${formatDiagnostics(introduced)}`,
 		);
 	}
 
@@ -260,8 +261,7 @@ export async function ensureCanvasFile(path: string): Promise<boolean> {
 	try {
 		await access(filePath);
 	} catch {
-		// Not through saveCanvasFile: an empty canvas has nothing to validate, and
-		// the schema validator's one-time compile would otherwise land on opening
+		// Not through saveCanvasFile: an empty canvas has nothing to validate
 		await writeCanvasText(
 			filePath,
 			serializeCanvasFile({ version: 1, root: [] }),
