@@ -1,4 +1,4 @@
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import {
 	TEXT_BOX_PADDING_X,
 	TEXT_BOX_PADDING_Y,

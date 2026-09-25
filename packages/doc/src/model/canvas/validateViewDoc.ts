@@ -1,7 +1,7 @@
 import { isObject } from "@jiscribe/basic-validators";
 
 import { isViewOpenMode, isViewScrollMode } from "./ViewDoc";
-import { validateOptionalNumber } from "../objects/utils/validateDocUtils";
+import { validateOptionalNumber } from "../objects/validators/validateNumberFields";
 import type { SemanticDiagnostic } from "../types/SemanticDiagnostic";
 
 /** The four sides of `view.padding`, checked one by one so each names its own path. */

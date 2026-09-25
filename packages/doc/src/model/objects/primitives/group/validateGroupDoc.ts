@@ -1,10 +1,10 @@
 import { GroupFeatures } from "./GroupDoc";
 import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
-import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
+import { createFrameDocValidator } from "../../validators/createFrameDocValidator";
 
 /**
  * Validates a GroupDoc (generated from features: geometry "none" + transform).
- * Array validation and recursive processing of children is done in validateStructure.ts.
+ * Array validation and recursive processing of children is done in checkStructure.ts.
  *
  * Note: GroupDoc carries no frame (cx/cy/width/height) — the frame is derived
  * from the children on load (CanvasMapper → calculateGroupOrientedBounds),

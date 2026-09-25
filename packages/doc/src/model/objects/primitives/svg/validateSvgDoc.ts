@@ -2,7 +2,7 @@ import { isString } from "@jiscribe/basic-validators";
 
 import { SvgFeatures } from "./SvgDoc";
 import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
-import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
+import { createFrameDocValidator } from "../../validators/createFrameDocValidator";
 
 /** Validates the Svg-specific field svgText (required string). */
 const validateSvgText: ObjectDocValidateFn = (o, path) =>

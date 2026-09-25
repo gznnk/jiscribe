@@ -23,14 +23,15 @@ as re-export shims onto these, so consumers can migrate one at a time.
 
 ## Directory structure
 
-| Directory | Description                                                                                                                                                                                   |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model/`  | The persisted data structures and their per-type semantics — see below                                                                                                                        |
-| `plugin/` | The doc-side plugin contract: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, `resolveDocDefinitions`, the registries and the built-in definition table |
-| `parse/`  | `createCanvasParser` and the staged validation it runs                                                                                                                                        |
-| `ops/`    | `createDocOps` — programmatic building and reworking of a doc (see `ops/README.md`)                                                                                                           |
-| `text/`   | Text measurement and visual line layout, plus the typography constants display, editing and measurement must agree on                                                                         |
-| `file/`   | `.jis.png` / `.jis.svg` source embedding and extraction                                                                                                                                       |
+| Directory     | Description                                                                                                                                                                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model/`      | The persisted data structures and their per-type semantics — see below                                                                                                                                                                   |
+| `plugin/`     | The doc-side plugin contract: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, the predicates that read a definition (`supportsAutoHeight`, `hasInsetTextRegion`) and the built-in definition table |
+| `registries/` | The tables those definitions are collected into and looked up by type: the doc validators, the factories, the style defaults, and `resolveDocDefinitions`, which merges a preset set with the plugins'                                   |
+| `parse/`      | `createCanvasParser` and the staged validation it runs (`stripUnknownContent` → `checkStructure` → the registry's per-type validation → `checkSemantics`)                                                                                |
+| `ops/`        | `createDocOps` — programmatic building and reworking of a doc (see `ops/README.md`)                                                                                                                                                      |
+| `text/`       | Text measurement and visual line layout, plus the typography constants display, editing and measurement must agree on                                                                                                                    |
+| `file/`       | `.jis.png` / `.jis.svg` source embedding and extraction                                                                                                                                                                                  |
 
 The counterpart of `plugin/` on the canvas side is its own `plugin/` folder, which
 holds the presentation contract (`ObjectTypeDefinition`); a UI definition is
@@ -49,7 +50,8 @@ It leverages TypeScript's type system to automatically compose object types base
 | `objects/`            | Individual object definitions, classified into `base` (field groups shared across types), `primitives` (basic shapes), and `connector` (lines/arrows). Shapes beyond these ship as plugins, not here.                                                                                                                         |
 | `objects/types/`      | Defines the enums and shared types used by objects (`ObjectType`, `GeometryType`, etc.) and the type-composition utility (`CreateObjectType`).                                                                                                                                                                                |
 | `objects/types/text/` | The text half of those types: what a body of text is (`RichText`), the typography it is drawn with (`TextBaseStyle` and `TextEmphasisStyle`, together the `InlineTextStyle` a run may carry), the slot it sits in (`TextSlot`) and how a type holds it (`TextType`). Types only — the measuring and laying out is `../text/`. |
-| `objects/utils/`      | Runtime helpers that assist in generating and validating Docs (`createObjectDoc`, `autoColor`, `validateDocUtils`, etc.).                                                                                                                                                                                                     |
+| `objects/utils/`      | Runtime helpers that assist in generating Docs (`createObjectDoc`, `autoColor`, `roundDocNumbers`, etc.).                                                                                                                                                                                                                     |
+| `objects/validators/` | The checks a doc's field groups are held to — geometry, transform, style, text, endpoints, poly — plus `createFrameDocValidator`, which composes them per `features`. Each `validateXxxDoc` builds on these; the registry is what decides which field _names_ a type may carry.                                               |
 | `types/`              | Vocabulary shared across the whole doc layer: `SemanticDiagnostic`, the diagnostic every `validateXxxDoc` returns and the currency of the parse result.                                                                                                                                                                       |
 
 Turning a text into a `CanvasDoc` is not here but in `../parse/`, which composes a
@@ -70,7 +72,7 @@ classDiagram
     }
     %% NOTE: connectors are NOT a top-level field. They live inside `root`
     %% as `type: "connector"` entries, mixed with shapes in z-order.
-    %% validateStructure explicitly rejects a top-level `connectors` array.
+    %% checkStructure explicitly rejects a top-level `connectors` array.
 
     class ObjectDoc {
         +id: string

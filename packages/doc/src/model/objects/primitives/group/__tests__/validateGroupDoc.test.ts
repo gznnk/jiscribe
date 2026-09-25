@@ -23,7 +23,7 @@ describe("validateGroupDoc", () => {
 		expect(errors.some((e) => e.path === "root.flipX")).toBe(true);
 	});
 
-	it("yields no error here since children are validated by validateStructure", () => {
+	it("yields no error here since children are validated by checkStructure", () => {
 		// The contents of children are outside validateGroupDoc's responsibility
 		expect(validateGroupDoc({ children: "invalid" }, "root")).toEqual([]);
 	});

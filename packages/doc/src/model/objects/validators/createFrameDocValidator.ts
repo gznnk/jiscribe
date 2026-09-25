@@ -1,13 +1,15 @@
-import { validateGeometryFields } from "./geometryFields";
+import { validateGeometryFields } from "./validateGeometryFields";
 import {
 	validateArrowFields,
 	validateFillStyleFields,
 	validateRadiusStyleFields,
-	validateSourceTextStyleFields,
 	validateStrokeStyleFields,
+} from "./validateStyleFields";
+import {
+	validateSourceTextStyleFields,
 	validateTextStyleFields,
-	validateTransformFields,
-} from "./validateDocUtils";
+} from "./validateTextFields";
+import { validateTransformFields } from "./validateTransformFields";
 import type { ObjectDocValidateFn } from "../../../plugin/ObjectDocValidateFn";
 import type { AutoHeightDeclaration } from "../../../plugin/supportsAutoHeight";
 import { supportsAutoHeight } from "../../../plugin/supportsAutoHeight";
@@ -19,8 +21,8 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
  * / arrow according to features, and shape-specific extra checks (such as svg's svgText)
  * are passed via `extra`.
  *
- * Knowledge of which fields to validate lives in the validateDocUtils builders;
- * this function is only responsible for calling the right builders per features.
+ * Knowledge of which fields to validate lives in the sibling `validate*Fields`
+ * helpers; this function is only responsible for calling the right ones per features.
  * Which field *names* the type may hold is not decided here at all — that is the
  * registry's answer, read off the type's definition
  * (`ObjectDocValidatorRegistry.register`), so a validator never carries an

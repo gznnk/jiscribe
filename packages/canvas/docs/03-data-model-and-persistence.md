@@ -127,14 +127,25 @@ is the doc rather than a selection, and `null` clears the field the way the head
 
 For JSON strings coming from outside, a parser from `createCanvasParser` (`@jiscribe/doc`, `parse/`)
 returns its result as a **discriminated union without throwing exceptions** (`CanvasParseResult`, defined in
-`parse/parseWithRegistry.ts`). This lets the extension side and the Webview side share the same logic and
+`parse/createCanvasParser.ts`). This lets the extension side and the Webview side share the same logic and
 prevents errors from slipping through.
 
 Each failure surfaces as its own `kind` (a JSON syntax error, a structure error, a semantic error, or an unexpected
 exception during validation). Success (`ok`) carries, besides the doc, `warnings` reporting what was removed or kept unread.
 
 Validation happens in two stages, preceded by a step that removes unknown content. If the structure does not hold,
-semantic validation is not reached.
+semantic validation is not reached. What each stage of one document's passage looks at, and what it does about
+what it finds:
+
+| Stage                                                                                             | What it looks at                                                                                                                                      | Result                                                                             |
+| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `stripUnknownContent`                                                                             | Unknown values of enum fields; objects of unregistered types                                                                                          | Value removed, or object kept opaque — a warning either way                        |
+| `checkStructure`                                                                                  | The document's own frame: `version`, the legacy top-level `connectors`, `background`, `view`, each `root` entry's `id` / `type`, a group's `children` | Error                                                                              |
+| `registry.validate` (the type's `validateDoc`, plus the names its `features` + `extraKeys` admit) | The values the type's own fields hold; every field name the type does not hold                                                                        | Error for a malformed value; warning carrying `unknownKeyPath` for an unknown name |
+| `checkSemantics`                                                                                  | What only the whole document answers: id uniqueness, a connector's endpoints, a self-loop's anchors                                                   | Error                                                                              |
+| Unknown-key removal                                                                               | The positions those warnings carry                                                                                                                    | The field is deleted from `ok.doc`, so the next save drops it                      |
+
+The removal runs last and only once both error gates have passed: a document that will not open has nothing to save.
 
 1. **Removing unknown content `stripUnknownContent`** — Removes unknown values of enum fields. These are not errors:
    they are reported as the `ok` result's `warnings` and the rest of the document still loads. `ok.doc` is the
@@ -142,7 +153,7 @@ semantic validation is not reached.
    stays in place as an **opaque object** (`OpaqueObjectDoc`), untouched inside, and is reported in `warnings` as
    well. It needs an id to be referred to and kept in place, so only one without an id is removed (cascading to
    groups left empty and to connectors pointing at what it held).
-2. **Structural validation `validateStructure`** — Validates each node's type and required fields.
+2. **Structural validation `checkStructure`** — Validates each node's type and required fields.
    Type-specific validation is delegated to the doc-validator registry the parser built, and only the recursion into a
    `group`'s `children` is handled here as a structural rule. The registry reports every field written on an object
    that the type does not hold — a misspelling, or a style a shape does not take, such as a `fontWeight` on a
@@ -153,7 +164,7 @@ semantic validation is not reached.
    removes, since the name itself may be any string a file holds. Nothing inside an opaque object is judged this way.
    When an error is found anywhere in the document, the result is a `structure-error` carrying the errors alone — a
    document that will not open has nothing to save.
-3. **Semantic validation `validateSemantics`** — Validates consistency that can only be judged by
+3. **Semantic validation `checkSemantics`** — Validates consistency that can only be judged by
    traversing the entire document.
    - **Uniqueness of IDs**: IDs must not be duplicated across the root tree (including connectors).
      Because `CanvasDoc` is a nested tree, a "parent-child cycle" cannot occur structurally; any case that looks like a cycle is effectively "different objects sharing the same ID" — that is, nothing more than an ID duplication.

@@ -6,7 +6,7 @@ import { isConnectorRouting } from "../types/ConnectorRouting";
 import { isOwnedEndpointRef } from "../types/EndpointRef";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { FONT_SIZE_MIN } from "../types/text/TextBaseStyle";
-import type { DocFieldValidator } from "../utils/validateDocUtils";
+import type { DocFieldValidator } from "../validators/fieldValidators";
 import {
 	colorValidator,
 	cssValueValidator,
@@ -14,12 +14,14 @@ import {
 	numberRangeValidator,
 	numberValidator,
 	stringValidator,
-	validateArrowFields,
-	validateEndpointRef,
 	validateFields,
+} from "../validators/fieldValidators";
+import { validateEndpointRef } from "../validators/validateEndpointFields";
+import { validateWaypointFields } from "../validators/validatePolyFields";
+import {
+	validateArrowFields,
 	validateStrokeStyleFields,
-	validateWaypointFields,
-} from "../utils/validateDocUtils";
+} from "../validators/validateStyleFields";
 
 /**
  * The label's optional fields, in the order the diagnostics come out in.

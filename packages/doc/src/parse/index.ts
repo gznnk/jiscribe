@@ -1,5 +1,4 @@
-export { validateSemantics } from "./validateSemantics";
-export { validateStructure } from "./validateStructure";
-export type { CanvasParseResult } from "./parseWithRegistry";
+export { checkSemantics } from "./checkSemantics";
+export { checkStructure } from "./checkStructure";
 export { createCanvasParser } from "./createCanvasParser";
-export type { CanvasParser } from "./createCanvasParser";
+export type { CanvasParser, CanvasParseResult } from "./createCanvasParser";

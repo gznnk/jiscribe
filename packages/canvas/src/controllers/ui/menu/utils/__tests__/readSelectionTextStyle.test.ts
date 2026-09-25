@@ -1,5 +1,5 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
-import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";

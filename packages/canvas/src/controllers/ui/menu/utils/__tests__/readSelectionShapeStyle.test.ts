@@ -1,6 +1,6 @@
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
 import { SHAPE_STYLE_FALLBACK } from "@jiscribe/doc/model/objects/utils/shapeStyleFallback";
-import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
+import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";

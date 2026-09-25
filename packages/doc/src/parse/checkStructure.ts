@@ -7,7 +7,7 @@ import {
 
 import { validateViewDoc } from "../model/canvas/validateViewDoc";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
-import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
 
 /**
  * One field the document writes that its object's type does not hold, located as
@@ -22,7 +22,7 @@ export type UnknownKeyRemoval = {
 	keyPath: readonly (string | number)[];
 };
 
-/** What {@link validateStructure} found. */
+/** What {@link checkStructure} found. */
 export type StructureValidationResult = {
 	/** Diagnostics of both severities, in document order. */
 	diagnostics: SemanticDiagnostic[];
@@ -81,7 +81,7 @@ function validateObjectNode(
 	}
 	errors.push(...diagnostics);
 
-	// Group children recursion is a structural rule, so handle it here in validateStructure
+	// Group children recursion is a structural rule, so handle it here in checkStructure
 	if (o.type === "group") {
 		if (!isArray(o.children)) {
 			errors.push({
@@ -124,7 +124,7 @@ function validateObjectNode(
 }
 
 /**
- * Validates the structural rules of a CanvasDoc: the version constant, the removal of
+ * Checks the structural rules of a CanvasDoc: the version constant, the removal of
  * the legacy top-level `connectors` field, and each entry in `root` (delegating
  * per-type checks to the registry and recursing into group children).
  *
@@ -134,7 +134,7 @@ function validateObjectNode(
  *   unknown-key warnings among them ask to be removed. Both are empty when the
  *   document is structurally valid and holds nothing the types do not know.
  */
-export function validateStructure(
+export function checkStructure(
 	doc: unknown,
 	registry: ObjectDocValidatorRegistry,
 ): StructureValidationResult {

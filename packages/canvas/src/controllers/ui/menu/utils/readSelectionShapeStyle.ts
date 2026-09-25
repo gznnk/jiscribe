@@ -2,7 +2,7 @@ import type { StrokeDashType } from "@jiscribe/doc/model/objects/types/StrokeDas
 import type {
 	ObjectShapeStyleDefaultsRegistry,
 	ShapeStyleGroup,
-} from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
+} from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 
 import { collectSelectionObjects } from "./collectSelectionObjects";
 import { getSelectedShapeStyle } from "./getSelectedShapeStyle";

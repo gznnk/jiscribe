@@ -369,7 +369,7 @@
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"text": "parser の二段検証：構造（validateStructure）→ 意味（validateSemantics）で境界を防御",
+			"text": "parser の二段検証：構造（checkStructure）→ 意味（checkSemantics）で境界を防御",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",

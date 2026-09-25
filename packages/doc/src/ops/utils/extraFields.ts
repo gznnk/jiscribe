@@ -15,7 +15,7 @@ export const declaresExtraKey = (
 
 /**
  * Names a type declares that are structure rather than properties: a group's
- * `children` is built by grouping and checked as a tree (validateStructure), so
+ * `children` is built by grouping and checked as a tree (checkStructure), so
  * handing one to `extraProps` would put an unchecked object list into the
  * document. Subtracted here because a definition has no declaration separating
  * "names the type holds" from "names that may be written" — move this to one

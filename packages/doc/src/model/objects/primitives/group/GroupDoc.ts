@@ -24,7 +24,7 @@ export type GroupDoc = CreateObjectType<
  * Doc fields group carries beyond the ones its features imply (see
  * ObjectDocDefinition.extraKeys). The child list is structure rather than a
  * property: it is built by grouping and checked recursively
- * (validateStructure), which is why doc-ops subtracts it from the names
+ * (checkStructure), which is why doc-ops subtracts it from the names
  * `extraProps` may write (ops/utils/extraFields).
  */
 export const GROUP_EXTRA_KEYS = [

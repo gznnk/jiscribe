@@ -5,7 +5,7 @@ import type {
 	ObjectShapeStyleDefaultsRegistry,
 	ResolvedShapeStyle,
 	ShapeStyleGroup,
-} from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
+} from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 
 import { getFirstSelectedWithStyleGroup } from "./getFirstSelectedWithStyleGroup";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";

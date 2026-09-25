@@ -148,7 +148,7 @@ export const canvasToState = (
 
 	// root is a mixed array of objects and connectors, and its order is the
 	// z-order as-is. The connector invariant (at least one endpoint is owned)
-	// is already guaranteed by validateSemantics at the boundary, so it is not
+	// is already guaranteed by checkSemantics at the boundary, so it is not
 	// re-checked here.
 	const rootIds = processSiblings(doc.root, undefined, []);
 

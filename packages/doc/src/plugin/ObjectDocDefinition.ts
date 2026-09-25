@@ -1,9 +1,9 @@
 import type { ObjectDocTextRegionCalculator } from "./ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
-import type { ObjectTextSlotStyleDefaults } from "./ObjectTextStyleDefaultsRegistry";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
 import type { ObjectFactory } from "../model/objects/types/ObjectFactory";
 import type { ObjectFeatures } from "../model/objects/types/ObjectFeatures";
+import type { ObjectTextSlotStyleDefaults } from "../registries/ObjectTextStyleDefaultsRegistry";
 
 /**
  * Headless (UI-independent) description of a single object type: everything the

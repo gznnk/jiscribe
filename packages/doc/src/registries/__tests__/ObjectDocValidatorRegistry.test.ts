@@ -7,7 +7,7 @@ import { RectFeatures } from "../../model/objects/primitives/rect/RectDoc";
 import { TextFeatures } from "../../model/objects/primitives/text/TextDoc";
 import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
-import type { ObjectDocValidateFn } from "../ObjectDocValidateFn";
+import type { ObjectDocValidateFn } from "../../plugin/ObjectDocValidateFn";
 import { createObjectDocValidatorRegistry } from "../ObjectDocValidatorRegistry";
 
 const noopValidate: ObjectDocValidateFn = () => [];

@@ -34,7 +34,7 @@ import {
 	OPACITY_MAX,
 	OPACITY_MIN,
 } from "@jiscribe/doc/model/objects/utils/opacity";
-import { validateEndpointRef } from "@jiscribe/doc/model/objects/utils/validateDocUtils";
+import { validateEndpointRef } from "@jiscribe/doc/model/objects/validators/validateEndpointFields";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
 import { isCssColor } from "./isCssColor";
@@ -340,7 +340,7 @@ export const isValidArrowFields = (o: StateRecord): boolean =>
  * Validates that childIds is a non-empty array of strings.
  * An empty group is a degenerate state where bounds are undefined, and creation paths always
  * produce children, so an empty array is treated as corruption and rejected (corresponds to the
- * empty-children rejection in the Doc-side validateStructure).
+ * empty-children rejection in the Doc-side checkStructure).
  * Whether the child IDs actually exist in `objects` (self-containedness) is cross-validated by isClipboardData.
  */
 export const isValidChildIds = (o: StateRecord): boolean =>

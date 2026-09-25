@@ -1,7 +1,7 @@
 import {
 	type ObjectShapeStyleDefaultsRegistry,
 	createObjectShapeStyleDefaultsRegistry,
-} from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
+} from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import { createContext, useContext } from "react";
 
 /**

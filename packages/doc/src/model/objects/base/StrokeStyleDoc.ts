@@ -11,7 +11,7 @@ export const DEFAULT_STROKE_WIDTH = 2;
 /**
  * Smallest admissible `strokeWidth` — the `minimum` the JSON schema states for
  * it. Read by both boundaries that check the field: the doc validator
- * (validateDocUtils) and the paste guard (validateStateUtils), a connector's
+ * (validateStyleFields) and the paste guard (validateStateUtils), a connector's
  * label included.
  */
 export const STROKE_WIDTH_MIN = 0;

@@ -2,8 +2,8 @@ import { TextFeatures } from "./TextDoc";
 import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
 import { GEOMETRY_SIZE_MIN } from "../../types/GeometryType";
 import { isTextLayout } from "../../types/text/TextLayout";
-import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
-import { validateRequiredNumber } from "../../utils/validateDocUtils";
+import { createFrameDocValidator } from "../../validators/createFrameDocValidator";
+import { validateRequiredNumber } from "../../validators/validateNumberFields";
 
 /**
  * Validates the layout mode and the width that goes with it. The block layout is

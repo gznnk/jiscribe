@@ -1,4 +1,4 @@
-import type { ShapeStyleGroup } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
+import type { ShapeStyleGroup } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";

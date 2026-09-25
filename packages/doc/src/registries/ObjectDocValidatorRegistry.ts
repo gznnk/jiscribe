@@ -1,5 +1,3 @@
-import type { ObjectDocDefinition } from "./ObjectDocDefinition";
-import type { ObjectDocValidateFn } from "./ObjectDocValidateFn";
 import { OBJECT_COMMON_KEYS } from "../model/objects/base/ObjectDoc";
 import { TEXT_BODY_KEYS } from "../model/objects/base/TextStyleDoc";
 import { TRANSFORM_STYLE_KEYS } from "../model/objects/base/TransformDoc";
@@ -10,8 +8,10 @@ import {
 	textStyleKeysOf,
 } from "../model/objects/types/text/TextType";
 import { collectStyleKeys } from "../model/objects/utils/collectStyleKeys";
-import { collectGeometryKeys } from "../model/objects/utils/geometryFields";
+import { collectGeometryKeys } from "../model/objects/validators/validateGeometryFields";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
+import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
+import type { ObjectDocValidateFn } from "../plugin/ObjectDocValidateFn";
 
 /**
  * What the registry reads off a type's definition: its own check of a doc, and

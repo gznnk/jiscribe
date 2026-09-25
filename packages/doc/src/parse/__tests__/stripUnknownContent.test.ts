@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createDocValidatorRegistry } from "../createDocValidatorRegistry";
+import { createDocValidatorRegistry } from "../../registries/createDocValidatorRegistry";
 import { stripUnknownContent } from "../stripUnknownContent";
 
 // stripUnknownContent decides known/unknown via the registry, so use the same
@@ -62,7 +62,7 @@ describe("stripUnknownContent", () => {
 		expect(result.warnings).toEqual([]);
 	});
 
-	it("returns non-document input unchanged (left to validateStructure)", () => {
+	it("returns non-document input unchanged (left to checkStructure)", () => {
 		expect(strip(null).data).toBe(null);
 		expect(strip({ version: 1 }).warnings).toEqual([]);
 	});
@@ -172,7 +172,7 @@ describe("stripUnknownContent", () => {
 		expect(connectorWarning?.path).toBe("root[2]");
 	});
 
-	it("keeps a connector whose owner never existed (left to validateSemantics)", () => {
+	it("keeps a connector whose owner never existed (left to checkSemantics)", () => {
 		const result = strip(
 			doc([rect("r1"), connector("c1", ownedRef("r1"), ownedRef("ghost"))]),
 		);
@@ -180,7 +180,7 @@ describe("stripUnknownContent", () => {
 		expect(result.warnings).toEqual([]);
 	});
 
-	it("leaves corrupt entries in place (left to validateStructure)", () => {
+	it("leaves corrupt entries in place (left to checkStructure)", () => {
 		const result = strip(
 			doc(["not-an-object", { id: "x", type: 1 }, rect("r1")]),
 		);
@@ -222,7 +222,7 @@ describe("stripUnknownContent", () => {
 			expect(result.warnings[0].path).toBe("root[1].target.anchor.kind");
 		});
 
-		it("keeps a known kind used in the wrong position (left to validateStructure)", () => {
+		it("keeps a known kind used in the wrong position (left to checkStructure)", () => {
 			// "free" on an owned endpoint is a mismatch, not an unknown value.
 			const result = strip(
 				doc([
@@ -234,7 +234,7 @@ describe("stripUnknownContent", () => {
 			expect(result.warnings).toEqual([]);
 		});
 
-		it("keeps a non-string kind (left to validateStructure)", () => {
+		it("keeps a non-string kind (left to checkStructure)", () => {
 			const result = strip(
 				doc([
 					rect("r1"),

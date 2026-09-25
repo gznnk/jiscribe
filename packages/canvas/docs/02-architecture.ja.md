@@ -46,7 +46,7 @@ Doc モデルはこのパッケージには**無い**。canvas が依存する `
 （`packages/doc/src/`）にあり、主に `model/`（Doc 型 + 型別の検証）・`plugin/`
 （`ObjectDocDefinition` / `CanvasDocPlugin` / `resolveDocDefinitions` /
 `ObjectDocValidatorRegistry` / `ObjectFactoryRegistry` など）・`parse/`
-（`createCanvasParser` / `validateStructure` / `validateSemantics` など）・`ops/`
+（`createCanvasParser` / `checkStructure` / `checkSemantics` など）・`ops/`
 （`createDocOps`）・`text/`（テキスト計測）・`file/`（`.jis.png` / `.jis.svg` への
 ソース埋め込み）からなる。いずれも `@jiscribe/doc` から取る →
 [`packages/doc/README.md`](../../doc/README.md)。

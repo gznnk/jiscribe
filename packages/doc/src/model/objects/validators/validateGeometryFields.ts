@@ -1,8 +1,8 @@
 import {
 	validateOptionalNumber,
-	validatePolyFields,
 	validateRequiredNumber,
-} from "./validateDocUtils";
+} from "./validateNumberFields";
+import { validatePolyFields } from "./validatePolyFields";
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import type { GeometryType } from "../types/GeometryType";
 import { GEOMETRY_SIZE_MIN } from "../types/GeometryType";

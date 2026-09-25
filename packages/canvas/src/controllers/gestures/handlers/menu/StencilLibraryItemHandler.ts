@@ -1,5 +1,5 @@
 import { createObjectDoc } from "@jiscribe/doc/model/objects/utils/createObjectDoc";
-import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
+import type { ObjectFactoryRegistry } from "@jiscribe/doc/registries/ObjectFactoryRegistry";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";

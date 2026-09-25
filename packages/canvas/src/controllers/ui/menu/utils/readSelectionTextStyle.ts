@@ -1,5 +1,5 @@
 import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import { collectSelectionObjects } from "./collectSelectionObjects";
 import { getSelectedOrFirstTextSlot } from "./getSelectedOrFirstTextSlot";

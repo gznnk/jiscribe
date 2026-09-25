@@ -7,9 +7,9 @@ import type { GroupDoc } from "../../model/objects/primitives/group/GroupDoc";
 import type { RectDoc } from "../../model/objects/primitives/rect/RectDoc";
 import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
-import { createObjectDocValidatorRegistry } from "../../plugin/ObjectDocValidatorRegistry";
-import { createDocValidatorRegistry } from "../createDocValidatorRegistry";
-import { validateSemantics as validateSemanticsWithRegistry } from "../validateSemantics";
+import { createDocValidatorRegistry } from "../../registries/createDocValidatorRegistry";
+import { createObjectDocValidatorRegistry } from "../../registries/ObjectDocValidatorRegistry";
+import { checkSemantics as checkSemanticsWithRegistry } from "../checkSemantics";
 
 // connectable checks read the registry's features, so register a minimal set for tests.
 const noopValidate = () => [];
@@ -30,13 +30,13 @@ mockRegistry.register("connector", {
 	features: features("connector", false),
 });
 
-// validateSemantics takes a registry argument (the parser builds one per instance). Most
+// checkSemantics takes a registry argument (the parser builds one per instance). Most
 // of this suite runs against the mock registry above, so wrap it to keep every existing
 // single-arg call site unchanged; the last describe passes the built-in one explicitly.
-const validateSemantics = (
+const checkSemantics = (
 	doc: CanvasDoc,
 	registry = mockRegistry,
-): SemanticDiagnostic[] => validateSemanticsWithRegistry(doc, registry);
+): SemanticDiagnostic[] => checkSemanticsWithRegistry(doc, registry);
 
 const rect = (id: string): RectDoc =>
 	({ id, type: "rect" }) as unknown as RectDoc;
@@ -61,14 +61,14 @@ const connector = (
 ): ConnectorDoc =>
 	({ id, type: "connector", source, target }) as unknown as ConnectorDoc;
 
-describe("validateSemantics", () => {
+describe("checkSemantics", () => {
 	describe("A. ID uniqueness", () => {
 		it("returns no errors for a valid tree", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [group("g1", [rect("r1")])],
 			};
-			expect(validateSemantics(doc)).toEqual([]);
+			expect(checkSemantics(doc)).toEqual([]);
 		});
 
 		it("reports duplicate sibling ids as duplicates", () => {
@@ -77,7 +77,7 @@ describe("validateSemantics", () => {
 				root: [rect("dup"), rect("dup")],
 			};
 
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors).toHaveLength(1);
 			expect(errors[0].message).toContain("duplicated");
 		});
@@ -89,7 +89,7 @@ describe("validateSemantics", () => {
 				root: [group("g1", [group("g1", [])])],
 			};
 
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors).toHaveLength(1);
 			expect(errors[0].id).toBe("g1");
 			expect(errors[0].message).toContain("duplicated");
@@ -104,7 +104,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors.some((e) => e.message.includes("duplicated"))).toBe(true);
 		});
 
@@ -113,7 +113,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [rect("dup"), group("g", [group("g2", [rect("dup")])])],
 			};
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			const hit = errors.find((e) => e.message.includes("duplicated"));
 			expect(hit?.path).toBe("root[1].children[0].children[0]");
 			expect(hit?.id).toBe("dup");
@@ -124,7 +124,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [rect("a"), rect("a"), rect("a")],
 			};
-			const errors = validateSemantics(doc).filter((e) =>
+			const errors = checkSemantics(doc).filter((e) =>
 				e.message.includes("duplicated"),
 			);
 			expect(errors).toHaveLength(2);
@@ -141,7 +141,7 @@ describe("validateSemantics", () => {
 					connector("c1", ownedEndpoint("a"), ownedEndpoint("b")),
 				],
 			};
-			expect(validateSemantics(doc)).toEqual([]);
+			expect(checkSemantics(doc)).toEqual([]);
 		});
 
 		it("accepts free endpoints (no owner) without cross-document checks", () => {
@@ -154,7 +154,7 @@ describe("validateSemantics", () => {
 					}),
 				],
 			};
-			expect(validateSemantics(doc)).toEqual([]);
+			expect(checkSemantics(doc)).toEqual([]);
 		});
 
 		it("flags an endpoint owner that does not exist", () => {
@@ -166,7 +166,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors).toHaveLength(1);
 			expect(errors[0].path).toBe("root[1].target");
 			expect(errors[0].message).toContain("does not exist");
@@ -182,7 +182,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors).toHaveLength(1);
 			expect(errors[0].path).toBe("root[2].target");
 			expect(errors[0].message).toContain("not connectable");
@@ -198,7 +198,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(
 				errors.some(
 					(e) =>
@@ -222,7 +222,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			expect(validateSemantics(doc)).toEqual([]);
+			expect(checkSemantics(doc)).toEqual([]);
 		});
 
 		it("rejects a self-loop that uses a center anchor on both ends", () => {
@@ -235,7 +235,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors).toHaveLength(1);
 			expect(errors[0].path).toBe("root[1]");
 			expect(errors[0].id).toBe("c1");
@@ -251,7 +251,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors).toHaveLength(1);
 			expect(errors[0].message).toContain("center anchor");
 		});
@@ -266,7 +266,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			expect(validateSemantics(doc)).toEqual([]);
+			expect(checkSemantics(doc)).toEqual([]);
 		});
 
 		it("reports a dangling reference on the source side with a path", () => {
@@ -277,7 +277,7 @@ describe("validateSemantics", () => {
 					connector("c1", ownedEndpoint("missing"), ownedEndpoint("a")),
 				],
 			};
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors).toHaveLength(1);
 			expect(errors[0].path).toBe("root[1].source");
 			expect(errors[0].message).toContain("does not exist");
@@ -288,7 +288,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [connector("c1", ownedEndpoint("m1"), ownedEndpoint("m2"))],
 			};
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors.map((e) => e.path)).toEqual([
 				"root[0].source",
 				"root[0].target",
@@ -301,7 +301,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [connector("c1", ownedEndpoint("z"), ownedEndpoint("z"))],
 			};
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors.every((e) => e.message.includes("does not exist"))).toBe(
 				true,
 			);
@@ -319,7 +319,7 @@ describe("validateSemantics", () => {
 					connector("c1", ownedEndpoint("g1"), ownedEndpoint("g1")),
 				],
 			};
-			const errors = validateSemantics(doc);
+			const errors = checkSemantics(doc);
 			expect(errors.every((e) => e.message.includes("not connectable"))).toBe(
 				true,
 			);
@@ -337,7 +337,7 @@ describe("validateSemantics", () => {
 					),
 				],
 			};
-			expect(validateSemantics(doc)).toEqual([]);
+			expect(checkSemantics(doc)).toEqual([]);
 		});
 
 		it("reports no error when both endpoints are free (no owner)", () => {
@@ -346,7 +346,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [connector("c1", freeEndpoint, freeEndpoint)],
 			};
-			expect(validateSemantics(doc)).toEqual([]);
+			expect(checkSemantics(doc)).toEqual([]);
 		});
 
 		it("accepts a connector referencing a group's (nested) child", () => {
@@ -358,7 +358,7 @@ describe("validateSemantics", () => {
 					connector("c1", ownedEndpoint("gr"), ownedEndpoint("a")),
 				],
 			};
-			expect(validateSemantics(doc)).toEqual([]);
+			expect(checkSemantics(doc)).toEqual([]);
 		});
 	});
 });
@@ -366,7 +366,7 @@ describe("validateSemantics", () => {
 // The describe above assumes connectable via a mock registry. This one verifies
 // connectable checks against the real registry (production features) to guard
 // against regressions if someone flips Features.connectable.
-describe("validateSemantics (connectable via the real registry)", () => {
+describe("checkSemantics (connectable via the real registry)", () => {
 	const builtinRegistry = createDocValidatorRegistry();
 
 	const targetDoc = (type: string): CanvasDoc => ({
@@ -381,14 +381,14 @@ describe("validateSemantics (connectable via the real registry)", () => {
 	it.each(["rect", "ellipse", "text", "image"])(
 		"%s is connectable (no error)",
 		(type) => {
-			expect(validateSemantics(targetDoc(type), builtinRegistry)).toEqual([]);
+			expect(checkSemantics(targetDoc(type), builtinRegistry)).toEqual([]);
 		},
 	);
 
 	it.each(["polyline", "polygon", "svg", "group"])(
 		"%s is not connectable (not connectable)",
 		(type) => {
-			const errors = validateSemantics(targetDoc(type), builtinRegistry);
+			const errors = checkSemantics(targetDoc(type), builtinRegistry);
 			expect(
 				errors.some(
 					(e) =>

@@ -2,7 +2,7 @@ import { isString } from "@jiscribe/basic-validators";
 
 import { ImageFeatures } from "./ImageDoc";
 import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
-import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
+import { createFrameDocValidator } from "../../validators/createFrameDocValidator";
 
 /**
  * Validates the Image-specific field src (required non-empty string).

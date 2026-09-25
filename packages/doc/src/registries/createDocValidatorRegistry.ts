@@ -1,7 +1,7 @@
-import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorRegistry";
-import { createObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorRegistry";
-import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
-import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
+import type { ObjectDocValidatorRegistry } from "./ObjectDocValidatorRegistry";
+import { createObjectDocValidatorRegistry } from "./ObjectDocValidatorRegistry";
+import type { DocDefinitionsConfig } from "./resolveDocDefinitions";
+import { resolveDocDefinitions } from "./resolveDocDefinitions";
 
 /**
  * Builds a doc-validator registry populated from a resolved definition set. Each call

@@ -371,6 +371,7 @@ export default tseslint.config(
 			"packages/canvas/src/states/**",
 			"packages/doc/src/model/**",
 			"packages/doc/src/plugin/**",
+			"packages/doc/src/registries/**",
 			"packages/doc/src/parse/**",
 		],
 		ignores: [

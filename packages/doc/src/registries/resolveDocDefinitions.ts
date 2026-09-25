@@ -1,5 +1,5 @@
-import { builtinObjectDocDefinitions } from "./builtinObjectDocDefinitions";
-import type { ObjectDocDefinition } from "./ObjectDocDefinition";
+import { builtinObjectDocDefinitions } from "../plugin/builtinObjectDocDefinitions";
+import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 
 /**
  * The slice of `CanvasPlugin` the doc layer reads: just the headless doc

@@ -1,7 +1,7 @@
 import { RectFeatures } from "./RectDoc";
 import { calcFullBoxTextRegion } from "../../../../plugin/ObjectDocTextRegion";
 import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
-import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
+import { createFrameDocValidator } from "../../validators/createFrameDocValidator";
 
 /**
  * Validates a RectDoc (Frame-family shared logic generated from features). The

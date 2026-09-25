@@ -1,5 +1,5 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
-import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { describe, it, expect } from "vitest";
 

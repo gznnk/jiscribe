@@ -24,9 +24,9 @@ export {
 } from "./model/objects/utils/calcDrawBounds";
 export type { DrawBounds } from "./model/objects/utils/calcDrawBounds";
 
-export { createFrameDocValidator } from "./model/objects/utils/createFrameDocValidator";
+export { createFrameDocValidator } from "./model/objects/validators/createFrameDocValidator";
+export { validateOptionalNumber } from "./model/objects/validators/validateNumberFields";
 export {
-	validateOptionalNumber,
 	// A `text: "slots"` type validates its own slots, and their styling is the
 	// same six fields the single-body form has, checked by the same rules.
 	validateTextSlotStyleFields,
@@ -34,15 +34,15 @@ export {
 	// it may be styled in, and the styling one run can carry.
 	validateInlineTextStyleFields,
 	validateRichTextContent,
-} from "./model/objects/utils/validateDocUtils";
+} from "./model/objects/validators/validateTextFields";
 export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
 
 // The type table the parser checks a document against, for a host that has to
 // ask what a type may hold without a document in hand — which is a question
 // about the registration, not about any one doc (@jiscribe/doc-tools asks it of
 // the shipped set). `createCanvasParser` builds the same table internally.
-export { createDocValidatorRegistry } from "./parse/createDocValidatorRegistry";
-export type { ObjectDocValidatorRegistry } from "./plugin/ObjectDocValidatorRegistry";
+export { createDocValidatorRegistry } from "./registries/createDocValidatorRegistry";
+export type { ObjectDocValidatorRegistry } from "./registries/ObjectDocValidatorRegistry";
 
 export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 
@@ -92,7 +92,7 @@ export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
 // Where the text-style defaults of a type come from, for a headless consumer
 // that resolves a slot's styling itself: the registry the canvas fills is a
 // rendering-side thing, and this is the reading that fills it.
-export { extractTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";
+export { extractTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
 
 // Text measurement, which the wrapping and the box sizes both follow from. Headless
 // because it needs no DOM of its own: layoutVisualLines reproduces the display-side

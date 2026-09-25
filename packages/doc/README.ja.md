@@ -22,14 +22,15 @@ jiscribe キャンバスのドキュメントモデル。保存される `Canvas
 
 ## ディレクトリ構成
 
-| ディレクトリ | 説明                                                                                                                                                                    |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model/`     | 保存されるデータ構造と型ごとの意味 — 下記参照                                                                                                                           |
-| `plugin/`    | doc 側のプラグイン契約: `ObjectDocDefinition`（1 つの型のバリデータ + features + ファクトリ）、`CanvasDocPlugin`、`resolveDocDefinitions`、各レジストリ、組み込み定義表 |
-| `parse/`     | `createCanvasParser` と、それが走らせる段階的な検証                                                                                                                     |
-| `ops/`       | `createDocOps` — doc をプログラムから組み立て・作り替える（`ops/README.md` 参照）                                                                                       |
-| `text/`      | テキスト計測と視覚行のレイアウト、および表示・編集・計測が一致していなければならないタイポグラフィ定数                                                                  |
-| `file/`      | `.jis.png` / `.jis.svg` へのソース埋め込みと取り出し                                                                                                                    |
+| ディレクトリ  | 説明                                                                                                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model/`      | 保存されるデータ構造と型ごとの意味 — 下記参照                                                                                                                                                     |
+| `plugin/`     | doc 側のプラグイン契約: `ObjectDocDefinition`（1 つの型のバリデータ + features + ファクトリ）、`CanvasDocPlugin`、定義から読む述語（`supportsAutoHeight` / `hasInsetTextRegion`）、組み込み定義表 |
+| `registries/` | その定義を集めて型で引く器: doc バリデータ・ファクトリ・スタイル既定値の各レジストリと、preset とプラグインの定義を 1 つに束ねる `resolveDocDefinitions`                                          |
+| `parse/`      | `createCanvasParser` と、それが走らせる段階的な検証（`stripUnknownContent` → `checkStructure` → レジストリの型ごとの検証 → `checkSemantics`）                                                     |
+| `ops/`        | `createDocOps` — doc をプログラムから組み立て・作り替える（`ops/README.md` 参照）                                                                                                                 |
+| `text/`       | テキスト計測と視覚行のレイアウト、および表示・編集・計測が一致していなければならないタイポグラフィ定数                                                                                            |
+| `file/`       | `.jis.png` / `.jis.svg` へのソース埋め込みと取り出し                                                                                                                                              |
 
 canvas 側での `plugin/` の相方は canvas 自身の `plugin/` フォルダで、表示側の契約
 （`ObjectTypeDefinition`）を持つ。UI 定義は構造的に doc 定義でもある。
@@ -49,7 +50,8 @@ mapper 関数（`@jiscribe/canvas` の `states/objects/**/XxxMapper.ts`）を通
 | `objects/`            | 個々のオブジェクト定義。`base`（型をまたいで共有するフィールド群）・`primitives`（基本図形）・`connector`（線・矢印）に分かれる。これ以外の図形はプラグインとして出荷され、ここには無い。                                                                                                           |
 | `objects/types/`      | オブジェクトが使う enum と共有型（`ObjectType`・`GeometryType` など）、および型合成ユーティリティ（`CreateObjectType`）を定義する。                                                                                                                                                                 |
 | `objects/types/text/` | そのうちテキストに関わる型: 本文とは何か（`RichText`）、それを描くタイポグラフィ（`TextBaseStyle` と `TextEmphasisStyle`。合わせて 1 つの run が持てる `InlineTextStyle`）、テキストが入るスロット（`TextSlot`）、型がテキストをどう持つか（`TextType`）。型だけで、計測とレイアウトは `../text/`。 |
-| `objects/utils/`      | Doc の生成・検証を助けるランタイムヘルパー（`createObjectDoc`・`autoColor`・`validateDocUtils` など）。                                                                                                                                                                                             |
+| `objects/utils/`      | Doc の生成を助けるランタイムヘルパー（`createObjectDoc`・`autoColor`・`roundDocNumbers` など）。                                                                                                                                                                                                    |
+| `objects/validators/` | doc のフィールド群ごとの検査 — 幾何・transform・スタイル・テキスト・端点・poly — と、`features` に従ってそれらを組み合わせる `createFrameDocValidator`。各 `validateXxxDoc` はこれらの上に建つ。型が持てるフィールド _名_ を決めるのはレジストリの側。                                              |
 | `types/`              | doc 層全体で共有する語彙: `SemanticDiagnostic`（すべての `validateXxxDoc` が返す診断であり、パース結果の通貨）。                                                                                                                                                                                    |
 
 テキストを `CanvasDoc` にするのはここではなく `../parse/` で、これらの定義からレジストリ
@@ -71,7 +73,7 @@ classDiagram
     }
     %% NOTE: connectors are NOT a top-level field. They live inside `root`
     %% as `type: "connector"` entries, mixed with shapes in z-order.
-    %% validateStructure explicitly rejects a top-level `connectors` array.
+    %% checkStructure explicitly rejects a top-level `connectors` array.
 
     class ObjectDoc {
         +id: string

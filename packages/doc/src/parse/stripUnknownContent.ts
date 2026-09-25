@@ -10,7 +10,7 @@ import { isTextLayout } from "../model/objects/types/text/TextLayout";
 import { isTextVerticalBasis } from "../model/objects/types/text/TextVerticalBasis";
 import { isVerticalAlign } from "../model/objects/types/text/VerticalAlign";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
-import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
 
 export type StripUnknownContentResult = {
 	/** The input with unknown content removed (the input itself when nothing was removed). */
@@ -123,12 +123,12 @@ const stripUnknownViewFields = (
  *
  * Object removal cascades to keep the remaining doc valid:
  *   - a group whose children all get removed is removed with them (an empty group
- *     is rejected by validateStructure as corruption)
+ *     is rejected by checkStructure as corruption)
  *   - a connector whose endpoint owner was removed is removed with it (a dangling
- *     reference is rejected by validateSemantics)
+ *     reference is rejected by checkSemantics)
  *
  * Entries that are not objects or whose `type` is not a string are left in place —
- * those are corruption, and validateStructure reports them as errors.
+ * those are corruption, and checkStructure reports them as errors.
  *
  * @param data - The JSON.parse result of a candidate document. Anything without an
  *   object shape and a `root` array is returned unchanged (no warnings).

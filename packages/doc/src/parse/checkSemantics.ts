@@ -5,11 +5,11 @@ import type { GroupDoc } from "../model/objects/primitives/group/GroupDoc";
 import type { EndpointRef } from "../model/objects/types/EndpointRef";
 import type { ObjectType } from "../model/objects/types/ObjectType";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
-import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
 
 /**
  * Checks consistency that can only be determined by traversing the whole document.
- * (Per-node types and required fields are handled by validateStructure / each validateXxxDoc.)
+ * (Per-node types and required fields are handled by checkStructure / each validateXxxDoc.)
  *
  * - A. ID uniqueness: IDs must not be duplicated across the root tree (including connectors).
  *   Because CanvasDoc is a nested tree, a parent/child cycle cannot occur structurally;
@@ -26,7 +26,7 @@ import type { ObjectDocValidatorRegistry } from "../plugin/ObjectDocValidatorReg
  * toward the opposite end, which for a self-loop collapses to null (adjustToOutline fails), leaving
  * the connector silently undrawn. So a self-loop with a center anchor is rejected here.
  */
-export function validateSemantics(
+export function checkSemantics(
 	doc: CanvasDoc,
 	registry: ObjectDocValidatorRegistry,
 ): SemanticDiagnostic[] {
