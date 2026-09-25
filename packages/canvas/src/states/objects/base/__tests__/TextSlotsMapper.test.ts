@@ -48,54 +48,6 @@ describe("mapTextDocToState", () => {
 		).toEqual(["operations", "name", "attributes"]);
 	});
 
-	it("drops integer-like slot ids, which JS would have re-sorted to the front", () => {
-		const docText = {
-			name: { text: "User" },
-			"0": { text: "first" },
-			"12": { text: "twelfth" },
-			attributes: { text: [] },
-		};
-		expect(
-			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
-		).toEqual(["name", "attributes"]);
-	});
-
-	it("keeps slot ids that only look numeric but keep their place", () => {
-		const docText = {
-			"01": { text: "padded" },
-			"-1": { text: "negative" },
-			"1a": { text: "suffixed" },
-		};
-		expect(
-			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
-		).toEqual(["01", "-1", "1a"]);
-	});
-
-	it("keeps canonical numeric ids that are not array indices", () => {
-		// These stringify back to themselves but JS does not re-sort them:
-		// only integers 0 … 2^32−2 are array indices. Dropping them would
-		// lose the slot (and its text) without the reordering that justifies it.
-		const docText = {
-			name: { text: "User" },
-			"1.5": { text: "fractional" },
-			Infinity: { text: "unbounded" },
-			"4294967295": { text: "2^32-1, first non-index integer" },
-		};
-		expect(
-			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
-		).toEqual(["name", "1.5", "Infinity", "4294967295"]);
-	});
-
-	it("still drops the largest array index (2^32−2)", () => {
-		const docText = {
-			name: { text: "User" },
-			"4294967294": { text: "re-sorted to the front by JS" },
-		};
-		expect(
-			Object.keys(mapTextDocToState("slots", { text: docText }).text ?? {}),
-		).toEqual(["name"]);
-	});
-
 	it("carries a body doc's vertical basis onto the object, not into the slot", () => {
 		expect(
 			mapTextDocToState("body", { text: "hello", textVerticalBasis: "frame" }),
@@ -138,14 +90,6 @@ describe("mapTextDocToState", () => {
 				textAlign: "center",
 			}),
 		).toEqual({ text: { body: { text: "# Title", textAlign: "center" } } });
-	});
-
-	it("reads a run-styled source text as its characters, the shape drawing no run", () => {
-		expect(
-			mapTextDocToState("source", {
-				text: [{ text: "# Title", fontWeight: "bold" }, { text: "\nbody" }],
-			}),
-		).toEqual({ text: { body: { text: "# Title\nbody" } } });
 	});
 
 	it("carries a source doc's vertical basis onto the object, as a body doc's", () => {

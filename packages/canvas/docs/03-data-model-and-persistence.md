@@ -137,17 +137,20 @@ Validation happens in two stages, preceded by a step that removes unknown conten
 semantic validation is not reached. What each stage of one document's passage looks at, and what it does about
 what it finds:
 
-| Stage                                                                                             | What it looks at                                                                                                                                      | Result                                                                             |
-| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `stripUnknownContent`                                                                             | Unknown values of enum fields; objects of unregistered types                                                                                          | Value removed, or object kept opaque — a warning either way                        |
-| `checkStructure`                                                                                  | The document's own frame: `version`, the legacy top-level `connectors`, `background`, `view`, each `root` entry's `id` / `type`, a group's `children` | Error                                                                              |
-| `registry.validate` (the type's `validateDoc`, plus the names its `features` + `extraKeys` admit) | The values the type's own fields hold; every field name the type does not hold                                                                        | Error for a malformed value; warning carrying `unknownKeyPath` for an unknown name |
-| `checkSemantics`                                                                                  | What only the whole document answers: id uniqueness, a connector's endpoints, a self-loop's anchors                                                   | Error                                                                              |
-| Unknown-key removal                                                                               | The positions those warnings carry                                                                                                                    | The field is deleted from `ok.doc`, so the next save drops it                      |
+| Stage                                                                                  | What it looks at                                                                                                                                                                                                                                           | Result                                                                                   |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `stripUnknownContent`                                                                  | Enum fields holding a string outside the known set; objects of unregistered types                                                                                                                                                                          | Value removed, or object kept opaque — a warning either way                              |
+| `checkStructure`                                                                       | The document's own frame: `version`, the legacy top-level `connectors`, `$schema`, `background`, `view`, each `root` entry's `id` / `type` / `meta`, a group's `children`; every name the frame does not hold at the root, in `view` and in `view.padding` | Error; warning carrying `unknownKeyPath` for an unknown name                             |
+| `registry.validate` (the type's `validateDoc`)                                         | The values the type's own fields hold                                                                                                                                                                                                                      | Error                                                                                    |
+| `validateDocKeys` (against the names the registry built from `features` + `extraKeys`) | Every field name the type does not hold, on the object and inside the containers doc owns (text runs and slots, poly vertices, a connector's endpoints, anchors and label); a slot id the key order would not survive                                      | Warning carrying `unknownKeyPath` for an unknown name; error for an integer-like slot id |
+| `checkSemantics`                                                                       | What only the whole document answers: id uniqueness, a connector's endpoints, a self-loop's anchors                                                                                                                                                        | Error                                                                                    |
+| Unknown-key removal                                                                    | The positions those warnings carry                                                                                                                                                                                                                         | The field is deleted from `ok.doc`, so the next save drops it                            |
 
 The removal runs last and only once both error gates have passed: a document that will not open has nothing to save.
 
-1. **Removing unknown content `stripUnknownContent`** — Removes unknown values of enum fields. These are not errors:
+1. **Removing unknown content `stripUnknownContent`** — Removes unknown values of enum fields: a string outside the
+   known set, which is what a document written for a newer build holds. A value of another type (`textAlign: 1`) is
+   corruption and is left for the validator to reject. The removals are not errors:
    they are reported as the `ok` result's `warnings` and the rest of the document still loads. `ok.doc` is the
    stripped doc, so saving it is what makes the removal stick. An object of an unregistered type is not removed: it
    stays in place as an **opaque object** (`OpaqueObjectDoc`), untouched inside, and is reported in `warnings` as
@@ -155,13 +158,17 @@ The removal runs last and only once both error gates have passed: a document tha
    groups left empty and to connectors pointing at what it held).
 2. **Structural validation `checkStructure`** — Validates each node's type and required fields.
    Type-specific validation is delegated to the doc-validator registry the parser built, and only the recursion into a
-   `group`'s `children` is handled here as a structural rule. The registry reports every field written on an object
-   that the type does not hold — a misspelling, or a style a shape does not take, such as a `fontWeight` on a
+   `group`'s `children` is handled here as a structural rule. This stage also reports every field written on an object
+   that the type does not hold (`validateDocKeys`) — a misspelling, or a style a shape does not take, such as a `fontWeight` on a
    `markdown` card. It knows which names a type holds from that type's definition (`features` + `extraKeys`), so the
    check covers every registered type and no `validateDoc` carries an allow-list of its own. That is a **warning**
    (`SemanticDiagnostic.severity`), not an error: the document still loads, and the parser removes the field from
    `ok.doc`, so the next save is where it disappears. The warning carries `unknownKeyPath`, the position the parser
-   removes, since the name itself may be any string a file holds. Nothing inside an opaque object is judged this way.
+   removes, since the name itself may be any string a file holds. The same check reaches into the containers doc
+   itself defines — a text run, a slot, a poly vertex, a connector's endpoint, anchor and label — and `checkStructure`
+   applies it to the document's own frame (the root, `view`, `view.padding`). Not to `meta`, which is an open record,
+   nor to a nested object a type declares through `extraKeys` (a callout's `tail`): the mapper passes such a value
+   through whole, so nothing in it is lost. Nothing inside an opaque object is judged this way.
    When an error is found anywhere in the document, the result is a `structure-error` carrying the errors alone — a
    document that will not open has nothing to save.
 3. **Semantic validation `checkSemantics`** — Validates consistency that can only be judged by

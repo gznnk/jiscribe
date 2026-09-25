@@ -23,15 +23,15 @@ as re-export shims onto these, so consumers can migrate one at a time.
 
 ## Directory structure
 
-| Directory     | Description                                                                                                                                                                                                                              |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model/`      | The persisted data structures and their per-type semantics — see below                                                                                                                                                                   |
-| `plugin/`     | The doc-side plugin contract: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, the predicates that read a definition (`supportsAutoHeight`, `hasInsetTextRegion`) and the built-in definition table |
-| `registries/` | The tables those definitions are collected into and looked up by type: the doc validators, the factories, the style defaults, and `resolveDocDefinitions`, which merges a preset set with the plugins'                                   |
-| `parse/`      | `createCanvasParser` and the staged validation it runs (`stripUnknownContent` → `checkStructure` → the registry's per-type validation → `checkSemantics`)                                                                                |
-| `ops/`        | `createDocOps` — programmatic building and reworking of a doc (see `ops/README.md`)                                                                                                                                                      |
-| `text/`       | Text measurement and visual line layout, plus the typography constants display, editing and measurement must agree on                                                                                                                    |
-| `file/`       | `.jis.png` / `.jis.svg` source embedding and extraction                                                                                                                                                                                  |
+| Directory     | Description                                                                                                                                                                                                                                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model/`      | The persisted data structures and their per-type semantics — see below                                                                                                                                                                                                                                                                                             |
+| `plugin/`     | The doc-side plugin contract: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, the predicates that read a definition (`supportsAutoHeight`, `hasInsetTextRegion`), the built-in definition table, and `resolveDocDefinitions`, which merges a preset set with the plugins' into the one map the parser and the ops build from |
+| `registries/` | The tables those definitions are collected into and looked up by type: the doc validators, the factories, the style defaults                                                                                                                                                                                                                                       |
+| `parse/`      | `createCanvasParser` and the staged validation it runs (`stripUnknownContent` → `checkStructure` → the registry's per-type validation → `checkSemantics`)                                                                                                                                                                                                          |
+| `ops/`        | `createDocOps` — programmatic building and reworking of a doc (see `ops/README.md`)                                                                                                                                                                                                                                                                                |
+| `text/`       | Text measurement and visual line layout, plus the typography constants display, editing and measurement must agree on                                                                                                                                                                                                                                              |
+| `file/`       | `.jis.png` / `.jis.svg` source embedding and extraction                                                                                                                                                                                                                                                                                                            |
 
 The counterpart of `plugin/` on the canvas side is its own `plugin/` folder, which
 holds the presentation contract (`ObjectTypeDefinition`); a UI definition is
@@ -153,17 +153,26 @@ else. It is set on the type's `ObjectDocDefinition` as `extraKeys`, which is the
 one declaration of what the type holds; three sides read it, and none of them
 keeps a list of its own:
 
-| Reader                                                | What it does with the names                                                                                         |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| The parser (`ObjectDocValidatorRegistry`)             | Builds the accepted-name set from `features` + `extraKeys`, warns about every other name and drops it from `ok.doc` |
-| The mapper (`createFrameMapper` / `createPolyMapper`) | Passes exactly these between doc and state                                                                          |
-| doc-ops (`extraProps`)                                | Accepts exactly these as names a caller may write, minus the ones held as structure (group's `children`)            |
+| Reader                                                | What it does with the names                                                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The parser (`checkStructure` → `validateDocKeys`)     | Holds a doc against the accepted-name set the registry built from `features` + `extraKeys`, warns about every other name and drops it from `ok.doc` |
+| The mapper (`createFrameMapper` / `createPolyMapper`) | Passes exactly these between doc and state                                                                                                          |
+| doc-ops (`extraProps`)                                | Accepts exactly these as names a caller may write, minus the ones held as structure (group's `children`)                                            |
 
 `validateDoc` is not on that list. A type's validator checks the values it holds
 and the rules only it knows; which names the type may carry is not its business,
 and it is never handed an allow-list. That keeps the check uniform across all
 registered types, the poly family included, which builds no validator from
 `createFrameDocValidator` at all.
+
+The same holds one level down. The containers a doc nests are shapes this
+package defines — a text run, a slot, a poly vertex, a connector's endpoint,
+anchor and label — and each has its key list beside its type (`TEXT_RUN_KEYS`,
+`TEXT_SLOT_KEYS`, `CONNECTOR_LABEL_KEYS`, `ANCHOR_SPEC_KEYS_BY_KIND`, …), which
+the parser walks from the type's `features` (`parse/validateDocKeys.ts`).
+A nested object a type declares through `extraKeys` (a callout's `tail`) is not
+walked: the mapper passes it through whole, so nothing in it is lost, and the
+type's validator is what checks its values.
 
 What happens when the two drift: a field added to `XxxDoc` but not to
 `extraKeys` is reported as unknown by the parser and removed from the document

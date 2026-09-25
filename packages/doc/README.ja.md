@@ -22,15 +22,15 @@ jiscribe キャンバスのドキュメントモデル。保存される `Canvas
 
 ## ディレクトリ構成
 
-| ディレクトリ  | 説明                                                                                                                                                                                              |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model/`      | 保存されるデータ構造と型ごとの意味 — 下記参照                                                                                                                                                     |
-| `plugin/`     | doc 側のプラグイン契約: `ObjectDocDefinition`（1 つの型のバリデータ + features + ファクトリ）、`CanvasDocPlugin`、定義から読む述語（`supportsAutoHeight` / `hasInsetTextRegion`）、組み込み定義表 |
-| `registries/` | その定義を集めて型で引く器: doc バリデータ・ファクトリ・スタイル既定値の各レジストリと、preset とプラグインの定義を 1 つに束ねる `resolveDocDefinitions`                                          |
-| `parse/`      | `createCanvasParser` と、それが走らせる段階的な検証（`stripUnknownContent` → `checkStructure` → レジストリの型ごとの検証 → `checkSemantics`）                                                     |
-| `ops/`        | `createDocOps` — doc をプログラムから組み立て・作り替える（`ops/README.md` 参照）                                                                                                                 |
-| `text/`       | テキスト計測と視覚行のレイアウト、および表示・編集・計測が一致していなければならないタイポグラフィ定数                                                                                            |
-| `file/`       | `.jis.png` / `.jis.svg` へのソース埋め込みと取り出し                                                                                                                                              |
+| ディレクトリ  | 説明                                                                                                                                                                                                                                                                                                |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model/`      | 保存されるデータ構造と型ごとの意味 — 下記参照                                                                                                                                                                                                                                                       |
+| `plugin/`     | doc 側のプラグイン契約: `ObjectDocDefinition`（1 つの型のバリデータ + features + ファクトリ）、`CanvasDocPlugin`、定義から読む述語（`supportsAutoHeight` / `hasInsetTextRegion`）、組み込み定義表、そして preset とプラグインの定義をパーサーと ops が使う 1 つの表に束ねる `resolveDocDefinitions` |
+| `registries/` | その定義を集めて型で引く器: doc バリデータ・ファクトリ・スタイル既定値の各レジストリ                                                                                                                                                                                                                |
+| `parse/`      | `createCanvasParser` と、それが走らせる段階的な検証（`stripUnknownContent` → `checkStructure` → レジストリの型ごとの検証 → `checkSemantics`）                                                                                                                                                       |
+| `ops/`        | `createDocOps` — doc をプログラムから組み立て・作り替える（`ops/README.md` 参照）                                                                                                                                                                                                                   |
+| `text/`       | テキスト計測と視覚行のレイアウト、および表示・編集・計測が一致していなければならないタイポグラフィ定数                                                                                                                                                                                              |
+| `file/`       | `.jis.png` / `.jis.svg` へのソース埋め込みと取り出し                                                                                                                                                                                                                                                |
 
 canvas 側での `plugin/` の相方は canvas 自身の `plugin/` フォルダで、表示側の契約
 （`ObjectTypeDefinition`）を持つ。UI 定義は構造的に doc 定義でもある。
@@ -153,16 +153,23 @@ export const CALLOUT_EXTRA_KEYS = [
 `ObjectDocDefinition` の `extraKeys` に設定する。「その型が持つキー」の宣言はこの 1 つ
 だけで、読み手は 3 つ。どれも自前の一覧を持たない。
 
-| 読み手                                             | 名前をどう使うか                                                                                            |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| パーサー（`ObjectDocValidatorRegistry`）           | `features` + `extraKeys` から許可キー集合を組み立て、それ以外の名前を warning で報告して `ok.doc` から除く  |
-| Mapper（`createFrameMapper` / `createPolyMapper`） | doc ↔ state 間でちょうどこれらを受け渡す                                                                    |
-| doc-ops（`extraProps`）                            | 呼び出し側が書いてよい名前としてちょうどこれらを受け付ける。構造として扱うキー（group の `children`）は除く |
+| 読み手                                             | 名前をどう使うか                                                                                                                       |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| パーサー（`checkStructure` → `validateDocKeys`）   | レジストリが `features` + `extraKeys` から組み立てた許可キー集合に doc を照らし、それ以外の名前を warning で報告して `ok.doc` から除く |
+| Mapper（`createFrameMapper` / `createPolyMapper`） | doc ↔ state 間でちょうどこれらを受け渡す                                                                                               |
+| doc-ops（`extraProps`）                            | 呼び出し側が書いてよい名前としてちょうどこれらを受け付ける。構造として扱うキー（group の `children`）は除く                            |
 
 `validateDoc` はこの一覧に入らない。型のバリデータは自分が持つ値と、その型だけが知る規則を
 検査するもので、どの名前を持てるかは関知しないし、許可リストを渡されることもない。おかげで
 検査はすべての登録済みの型で一様になる — `createFrameDocValidator` をまったく通らない poly
 族も含めて。
+
+1 段下でも同じ。doc が入れ子にする器 — テキストの run・スロット・poly の頂点・コネクターの
+端点・アンカー・label — はこのパッケージが形を決めるもので、それぞれ型の隣にキーの一覧を持つ
+（`TEXT_RUN_KEYS`・`TEXT_SLOT_KEYS`・`CONNECTOR_LABEL_KEYS`・`ANCHOR_SPEC_KEYS_BY_KIND` …）。
+パーサーは型の `features` からそれらを辿る（`parse/validateDocKeys.ts`）。型が `extraKeys`
+で宣言する入れ子のオブジェクト（callout の `tail`）は辿らない。Mapper が値を丸ごと通すので中の
+何も失われず、値の検査は型のバリデータの仕事になる。
 
 2 つが食い違ったときに何が起きるか。`XxxDoc` にフィールドを足して `extraKeys` に足し忘れる
 と、そのフィールドはパーサーに未知として報告され、返される文書から取り除かれる。つまり次の

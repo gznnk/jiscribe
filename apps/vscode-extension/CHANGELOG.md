@@ -45,6 +45,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   or the decoration lines on a markdown card. A `text` written as an array of
   runs, which an older editor could leave behind when part of a body was styled,
   no longer loads: rewrite it as one plain string, joining the runs' `text`.
+- **A broken value keeps the document from opening instead of being dropped.**
+  An enum field holding something other than a string (`"textAlign": 1`) used
+  to be dropped and the document opened without it; a text slot whose id is a
+  plain number (`"0"`) used to vanish on load. Both are now errors in the
+  Problems view, beside what the schema already said. `$schema` and `meta` are
+  held to their types the same way.
 
 ### Fixed
 

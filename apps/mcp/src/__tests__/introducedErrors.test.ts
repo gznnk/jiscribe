@@ -184,9 +184,11 @@ describe("a file already failing the schema for a reason of its own", () => {
 
 		expect(result.text).not.toMatch(/^error:/);
 		expect((await workspace.readDoc(targetPath)).root).toHaveLength(1);
+		// A key the document frame does not hold goes the way an object's does: the
+		// parser reports it and drops it, so the write leaves a file the schema takes.
 		const diagnosis = await client.callTool("diagnose_canvas", {
 			path: targetPath,
 		});
-		expect(diagnosis.text).toMatch(/must NOT have additional properties/);
+		expect(diagnosis.text).not.toMatch(/must NOT have additional properties/);
 	});
 });

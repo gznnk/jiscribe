@@ -1,3 +1,5 @@
+import { exhaustiveKeysOf } from "../objects/utils/exhaustiveKeys";
+
 /**
  * How the view is framed when a document is opened.
  *
@@ -61,6 +63,17 @@ export type ViewPaddingDoc = {
 	left?: number;
 };
 
+/**
+ * The four sides of {@link ViewPaddingDoc}, each checked on its own so a
+ * diagnostic names the side it is about (`validateViewDoc`).
+ */
+export const VIEW_PADDING_KEYS = exhaustiveKeysOf<ViewPaddingDoc>()([
+	"top",
+	"right",
+	"bottom",
+	"left",
+] as const);
+
 /** {@link ViewPaddingDoc} with every side filled in, as {@link resolveViewPadding} returns it. */
 export type ResolvedViewPadding = Required<ViewPaddingDoc>;
 
@@ -115,3 +128,14 @@ export type ViewDoc = {
 	 */
 	scroll?: ViewScrollMode;
 };
+
+/**
+ * Field names {@link ViewDoc} carries, built from the type so a field added to it
+ * reaches the accepted-name set the parser checks `view` against
+ * (`checkStructure`) or fails to compile.
+ */
+export const VIEW_DOC_KEYS = exhaustiveKeysOf<ViewDoc>()([
+	"padding",
+	"open",
+	"scroll",
+] as const);

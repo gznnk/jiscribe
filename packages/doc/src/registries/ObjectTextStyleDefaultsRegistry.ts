@@ -4,14 +4,16 @@ import type {
 	TextSlot,
 	TextSlotStyle,
 } from "../model/objects/types/text/TextSlot";
-import { resolveTextSlotStyle } from "../model/objects/types/text/TextSlot";
+import {
+	resolveTextSlotStyle,
+	BODY_TEXT_SLOT_ID,
+} from "../model/objects/types/text/TextSlot";
 import type { TextType } from "../model/objects/types/text/TextType";
 import {
 	isSingleBodyText,
 	textStyleKeysOf,
 } from "../model/objects/types/text/TextType";
 import { pickDefined } from "../model/objects/utils/pickDefined";
-import { BODY_TEXT_SLOT_ID } from "../text/style/textSlotId";
 
 /**
  * The style fields a type's defaults are read for: what its text type accepts

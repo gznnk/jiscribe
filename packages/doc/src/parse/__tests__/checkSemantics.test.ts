@@ -7,8 +7,7 @@ import type { GroupDoc } from "../../model/objects/primitives/group/GroupDoc";
 import type { RectDoc } from "../../model/objects/primitives/rect/RectDoc";
 import type { ObjectFeatures } from "../../model/objects/types/ObjectFeatures";
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
-import { createDocValidatorRegistry } from "../../registries/createDocValidatorRegistry";
-import { createObjectDocValidatorRegistry } from "../../registries/ObjectDocValidatorRegistry";
+import { createDocValidatorRegistry } from "../../registries/ObjectDocValidatorRegistry";
 import { checkSemantics as checkSemanticsWithRegistry } from "../checkSemantics";
 
 // connectable checks read the registry's features, so register a minimal set for tests.
@@ -16,18 +15,15 @@ const noopValidate = () => [];
 const features = (type: string, connectable: boolean): ObjectFeatures =>
 	({ type, geometry: "rect", connectable }) as unknown as ObjectFeatures;
 
-const mockRegistry = createObjectDocValidatorRegistry();
-mockRegistry.register("rect", {
-	validateDoc: noopValidate,
-	features: features("rect", true),
-});
-mockRegistry.register("group", {
-	validateDoc: noopValidate,
-	features: features("group", false),
-});
-mockRegistry.register("connector", {
-	validateDoc: noopValidate,
-	features: features("connector", false),
+const mockRegistry = createDocValidatorRegistry({
+	presetDefinitions: {
+		rect: { validateDoc: noopValidate, features: features("rect", true) },
+		group: { validateDoc: noopValidate, features: features("group", false) },
+		connector: {
+			validateDoc: noopValidate,
+			features: features("connector", false),
+		},
+	},
 });
 
 // checkSemantics takes a registry argument (the parser builds one per instance). Most

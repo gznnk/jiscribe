@@ -501,6 +501,7 @@ describe("parse: the staged pipeline", () => {
 						message:
 							'Unknown property "zzUnknown" on a "rect": it was ignored and will be dropped on save.',
 						severity: "warning",
+						id: "r1",
 						unknownKeyPath: ["zzUnknown"],
 					},
 				]);
@@ -574,6 +575,174 @@ describe("parse: the staged pipeline", () => {
 						(diagnostic) => diagnostic.severity === "error",
 					),
 				).toBe(true);
+			}
+		});
+	});
+
+	describe("unknown properties inside what a doc nests", () => {
+		// A type whose text is named slots, as the uml record's is: no built-in type
+		// holds one, so the parser is composed with a plugin providing it.
+		const slottedPlugin = {
+			id: "slotted-plugin",
+			objects: {
+				slotted: {
+					features: {
+						type: "slotted",
+						geometry: "rect",
+						transform: true,
+						text: "slots",
+					},
+					validateDoc: () => [],
+				} satisfies ObjectDocDefinition,
+			},
+		};
+
+		const connector = (over: Record<string, unknown> = {}) => ({
+			id: "c1",
+			type: "connector",
+			source: { owner: { id: "r1" }, anchor: { kind: "center" } },
+			target: { anchor: { kind: "free", point: { x: 5, y: 5 } } },
+			...over,
+		});
+
+		it("takes a run's unknown property out of ok.doc, leaving the body as it was", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1", { text: [{ text: "a", fontWeight: "bold", zz: 1 }] }),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(
+					rect("r1", { text: [{ text: "a", fontWeight: "bold" }] }),
+				);
+				expect(result.warnings).toEqual([
+					{
+						path: "root[0].text[0].zz",
+						message:
+							'Unknown property "zz" in "text[0]" of a "rect": it was ignored and will be dropped on save.',
+						severity: "warning",
+						id: "r1",
+						unknownKeyPath: ["text", 0, "zz"],
+					},
+				]);
+			}
+		});
+
+		it("takes a slot's and its rows' unknown properties out of ok.doc", () => {
+			const slotted = (slots: unknown) => ({
+				id: "s1",
+				type: "slotted",
+				x: 0,
+				y: 0,
+				width: 10,
+				height: 10,
+				text: slots,
+			});
+			const result = createCanvasParser({ plugins: [slottedPlugin] }).parse(
+				text(
+					validDoc([
+						slotted({
+							name: { text: "a", textAlign: "center", zz: 1 },
+							rows: { text: [[{ text: "b", zz: 2 }]] },
+						}),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(
+					slotted({
+						name: { text: "a", textAlign: "center" },
+						rows: { text: [[{ text: "b" }]] },
+					}),
+				);
+				expect(
+					result.warnings.map((warning) => warning.unknownKeyPath),
+				).toEqual([
+					["text", "name", "zz"],
+					["text", "rows", "text", 0, 0, "zz"],
+				]);
+			}
+		});
+
+		it("takes an endpoint's, an anchor's and a point's unknown properties out of ok.doc", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						connector({
+							source: {
+								owner: { id: "r1", zz: 1 },
+								anchor: { kind: "center" },
+							},
+							target: {
+								anchor: { kind: "free", point: { x: 5, y: 5, zz: 3 }, zz: 2 },
+							},
+						}),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[1]).toEqual(connector());
+				expect(result.warnings.map((warning) => warning.path)).toEqual([
+					"root[1].source.owner.zz",
+					"root[1].target.anchor.zz",
+					"root[1].target.anchor.point.zz",
+				]);
+			}
+		});
+
+		it("takes a label's unknown property out of ok.doc, keeping the label", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						connector({ label: { text: "yes", position: 0.25, zz: 1 } }),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[1]).toEqual(
+					connector({ label: { text: "yes", position: 0.25 } }),
+				);
+				expect(
+					result.warnings.map((warning) => warning.unknownKeyPath),
+				).toEqual([["label", "zz"]]);
+			}
+		});
+
+		it("takes a waypoint's unknown property out of ok.doc, keeping its coordinates", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						connector({
+							points: [
+								{ x: 1, y: 1 },
+								{ x: 2, y: 2, zz: 1 },
+							],
+						}),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[1]).toEqual(
+					connector({
+						points: [
+							{ x: 1, y: 1 },
+							{ x: 2, y: 2 },
+						],
+					}),
+				);
+				expect(
+					result.warnings.map((warning) => warning.unknownKeyPath),
+				).toEqual([["points", 1, "zz"]]);
 			}
 		});
 	});

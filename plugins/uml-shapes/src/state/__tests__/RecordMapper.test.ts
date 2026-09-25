@@ -133,42 +133,15 @@ describe("recordToState", () => {
 		expect(first.text.attributes?.text).not.toBe(second.text.attributes?.text);
 	});
 
-	it("falls back to an empty slot for a content of the wrong kind", () => {
-		const state = recordToState(
-			makeDoc({
-				name: { text: ["User"] },
-				attributes: { text: "id" },
-			} as unknown as RecordDoc["text"]),
-		);
-		expect(state.text).toEqual({
-			name: { text: "" },
-			attributes: { text: [] },
-		});
-	});
-
-	it("empties a band the doc wrote as an empty array", () => {
-		const state = recordToState(
-			makeDoc({ name: { text: [] } } as unknown as RecordDoc["text"]),
-		);
-		expect(state.text.name.text).toBe("");
-	});
-
 	it("collapses a band's unstyled runs to the plain string they hold", () => {
+		// A band may be written as runs, and every reader of a slot's content takes an
+		// array for the row-partitioned form (isTextRows): left as runs, an edit would
+		// write the band back as rows, which the record's own validator rejects on the
+		// next load.
 		const state = recordToState(
-			makeDoc({
-				name: { text: [{ text: "User" }] },
-			} as unknown as RecordDoc["text"]),
+			makeDoc({ name: { text: [{ text: "User" }] } }),
 		);
 		expect(state.text.name.text).toBe("User");
-	});
-
-	it("keeps a band edited after an empty array one body, not rows", () => {
-		// Editing a band left holding `[]` used to write `["NewTitle"]` back, which
-		// the record's own validator rejects on the next load — an edit corrupting a
-		// document that had loaded clean.
-		const state = recordToState(
-			makeDoc({ name: { text: [] } } as unknown as RecordDoc["text"]),
-		);
 		const edited = commitEdit(state.text.name.text, "NewTitle");
 		expect(edited).toBe("NewTitle");
 		expect(

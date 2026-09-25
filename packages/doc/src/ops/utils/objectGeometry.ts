@@ -4,7 +4,10 @@ import { type ObjectRecord, readChildren } from "./objectAccess";
 import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/text/RichText";
-import { resolveTextSlotStyle } from "../../model/objects/types/text/TextSlot";
+import {
+	resolveTextSlotStyle,
+	BODY_TEXT_SLOT_ID,
+} from "../../model/objects/types/text/TextSlot";
 import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
@@ -15,7 +18,6 @@ import type { TextMeasurement } from "../../text/measure/TextMeasurement";
 import { adoptTextMeasurement } from "../../text/measure/textMeasurementSlot";
 import { calcTextObjectFrameSize } from "../../text/object/calcTextObjectFrameSize";
 import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
-import { BODY_TEXT_SLOT_ID } from "../../text/style/textSlotId";
 import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
 import { DocOperationError } from "../errors";
 

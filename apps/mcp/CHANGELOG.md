@@ -246,7 +246,15 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
   looking as though it had taken effect, and vanished the next time a tool wrote
   the file. It is now reported as a warning that says the field was ignored and
   will be dropped on save, and any tool that writes the file does drop it. The
-  document still opens either way.
+  document still opens either way. The same goes for a property inside a text
+  run or slot, a polyline's point, a connector's endpoint, anchor or label, and
+  at the document root, in `view` and in `view.padding`.
+- **A broken value is refused rather than dropped.** An enum field holding
+  something other than a string (`"textAlign": 1`) used to be dropped with a
+  warning and the document opened without it; a text slot whose id is a plain
+  number (`"0"`) used to vanish on load. `diagnose_canvas` now reports both as
+  errors, and `$schema` and `meta` (with its `name` / `description` /
+  `reference`) are held to their types the same way.
 - **A viewer window left open from 0.10.0 or earlier cannot reconnect to this
   release.** It carries neither the session token nor the revision the host now
   demands. Close it; `open_canvas` opens a new one.

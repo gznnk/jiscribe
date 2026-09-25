@@ -198,7 +198,8 @@ plugin-provided defs are included automatically.
 (`"0"`, `"1"`). JavaScript enumerates integer-like own keys in ascending numeric
 order before insertion order, so the key order of `state.text` — which decides the
 default slot for Enter-to-edit and the render order — would stop reflecting the
-shape's intent. `mapTextDocToState` drops such keys, so they never reach state.
+shape's intent. The parser rejects such an id, so a document carrying one does not
+load.
 
 **`menu`.** Optional, with three meanings: omitted derives the default menu from
 `features`; a declared array replaces it entirely; `[]` means no menu. The

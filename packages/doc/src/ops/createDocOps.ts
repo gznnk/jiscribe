@@ -85,8 +85,8 @@ import type { StyleParams } from "./utils/styleFields";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { ViewDoc } from "../model/canvas/ViewDoc";
 import type { ObjectDoc } from "../model/objects/base/ObjectDoc";
-import type { DocDefinitionsConfig } from "../registries/resolveDocDefinitions";
-import { resolveDocDefinitions } from "../registries/resolveDocDefinitions";
+import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
+import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
 
 /**
  * The whole set of programmatic edits to a CanvasDoc: building it up (`addObject` /

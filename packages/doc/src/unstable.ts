@@ -41,8 +41,11 @@ export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
 // ask what a type may hold without a document in hand — which is a question
 // about the registration, not about any one doc (@jiscribe/doc-tools asks it of
 // the shipped set). `createCanvasParser` builds the same table internally.
-export { createDocValidatorRegistry } from "./registries/createDocValidatorRegistry";
+export { createDocValidatorRegistry } from "./registries/ObjectDocValidatorRegistry";
 export type { ObjectDocValidatorRegistry } from "./registries/ObjectDocValidatorRegistry";
+// The parser's own check of the names a doc carries, for the same host to hold a
+// type's key declaration against a doc without parsing a whole document.
+export { validateDocKeys } from "./parse/validateDocKeys";
 
 export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 
@@ -87,7 +90,7 @@ export {
 // for a headless consumer resolving a type's text region
 // (`ObjectDocDefinition.textRegion`), which takes a slot id as the rendering
 // layer's does.
-export { BODY_TEXT_SLOT_ID } from "./text/style/textSlotId";
+export { BODY_TEXT_SLOT_ID } from "./model/objects/types/text/TextSlot";
 
 // Where the text-style defaults of a type come from, for a headless consumer
 // that resolves a slot's styling itself: the registry the canvas fills is a

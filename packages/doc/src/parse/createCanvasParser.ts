@@ -8,9 +8,9 @@ import {
 	isSemanticError,
 	isSemanticWarning,
 } from "../model/types/SemanticDiagnostic";
-import { createDocValidatorRegistry } from "../registries/createDocValidatorRegistry";
+import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
 import type { ObjectDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
-import type { DocDefinitionsConfig } from "../registries/resolveDocDefinitions";
+import { createDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
 
 /**
  * Result of parsing a Canvas document string.

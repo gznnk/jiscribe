@@ -1,4 +1,4 @@
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import type { Dimensions } from "@jiscribe/geometry";
 import { describe, it, expect } from "vitest";
 

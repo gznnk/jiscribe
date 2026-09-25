@@ -20,10 +20,13 @@ export type StripUnknownContentResult = {
 };
 
 /**
- * Pure-enum doc fields: dropping an unknown value just falls back to the default
- * rendering, so it is stripped instead of rejected. Sanitization checks
- * (isCssSafeValue) and numeric range checks are deliberately NOT here — an unsafe
- * or out-of-range value stays a hard error.
+ * Pure-enum doc fields: dropping a string outside the known set just falls back to
+ * the default rendering, so such a value is stripped instead of rejected — a
+ * document written for a newer build still opens. Only a string is stripped: a
+ * value of another type is corruption rather than an unknown member, and is left in
+ * place for the field's own validator to reject. Sanitization checks (isCssSafeValue) and
+ * numeric range checks are deliberately NOT here — an unsafe or out-of-range value
+ * stays a hard error.
  */
 const pureEnumFields: ReadonlyMap<string, (value: unknown) => boolean> =
 	new Map<string, (value: unknown) => boolean>([
@@ -71,10 +74,11 @@ const viewEnumFields: ReadonlyMap<string, (value: unknown) => boolean> =
 	]);
 
 /**
- * Drops a `view` field that names a value outside its known set, so an older host
- * still opens a document written for a newer one. `view` is a document-root field
- * rather than something inside an object, so it cannot go through
- * {@link pureEnumFields}, which walks the entries of `root` only.
+ * Drops a `view` field holding a string outside its known set, so an older host
+ * still opens a document written for a newer one. A value of another type stays in
+ * place for `validateViewDoc` to reject, the same way {@link pureEnumFields} leaves
+ * one. `view` is a document-root field rather than something inside an object, so it
+ * cannot go through those, which walk the entries of `root` only.
  *
  * @returns The input itself when nothing was removed, so callers can detect the
  *   no-change case by reference.
@@ -90,13 +94,12 @@ const stripUnknownViewFields = (
 	let stripped: Record<string, unknown> | undefined;
 	viewEnumFields.forEach((isKnownValue, field) => {
 		const value = v[field];
-		if (value === undefined || isKnownValue(value)) {
+		if (!isString(value) || isKnownValue(value)) {
 			return;
 		}
-		const shownValue = typeof value === "string" ? ` "${value}"` : "";
 		warnings.push({
 			path: `view.${field}`,
-			message: `Unknown ${field} value${shownValue}: the field was ignored and will be dropped on save.`,
+			message: `Unknown ${field} value "${value}": the field was ignored and will be dropped on save.`,
 			severity: "warning",
 		});
 		stripped = stripped ?? { ...v };
@@ -110,12 +113,16 @@ const stripUnknownViewFields = (
  * the rest of the document still displays, and since saving re-serializes the
  * stripped doc, the removed content disappears on save. Unknown means:
  *   - objects whose `type` is not registered in the registry and that carry no id
- *   - pure-enum fields (see {@link pureEnumFields}) holding a value outside the
+ *   - pure-enum fields (see {@link pureEnumFields}) holding a string outside the
  *     known set, at any nesting depth (flat, connector label, text slots, …)
  *   - connectors with an endpoint anchored to an unknown kind (see
  *     {@link findUnknownAnchorKind}); the anchor is not droppable on its own
  *   - a document-root `view.open` / `view.scroll` naming a mode outside the known
  *     set (see {@link stripUnknownViewFields})
+ *
+ * "Unknown" always means a member outside a closed set, never a value of the wrong
+ * type: one of those is left in place for its own validator to reject, so
+ * corruption is not turned into a warning.
  *
  * An object of an unregistered type that does carry an id is not removed: it stays
  * in place as an opaque object (`OpaqueObjectDoc`), untouched inside, with a
@@ -186,10 +193,15 @@ export function stripUnknownContent(
 				continue;
 			}
 			const isKnownEnumValue = pureEnumFields.get(key);
-			if (isKnownEnumValue !== undefined && !isKnownEnumValue(o[key])) {
+			const propValue = o[key];
+			if (
+				isKnownEnumValue !== undefined &&
+				isString(propValue) &&
+				!isKnownEnumValue(propValue)
+			) {
 				return true;
 			}
-			if (containsUnknownEnumValue(o[key])) {
+			if (containsUnknownEnumValue(propValue)) {
 				return true;
 			}
 		}
@@ -234,12 +246,14 @@ export function stripUnknownContent(
 				return;
 			}
 			const isKnownEnumValue = pureEnumFields.get(key);
-			if (isKnownEnumValue !== undefined && !isKnownEnumValue(propValue)) {
-				const shownValue =
-					typeof propValue === "string" ? ` "${propValue}"` : "";
+			if (
+				isKnownEnumValue !== undefined &&
+				isString(propValue) &&
+				!isKnownEnumValue(propValue)
+			) {
 				warnings.push({
 					path: `${path}.${key}`,
-					message: `Unknown ${key} value${shownValue}: the field was ignored and will be dropped on save.`,
+					message: `Unknown ${key} value "${propValue}": the field was ignored and will be dropped on save.`,
 					severity: "warning",
 					...(ownerId !== undefined ? { id: ownerId } : {}),
 				});

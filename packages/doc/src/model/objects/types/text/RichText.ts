@@ -8,6 +8,7 @@ import {
 	pickDefinedInlineTextStyle,
 	TEXT_INLINE_STYLE_KEYS,
 } from "./InlineTextStyle";
+import { exhaustiveKeysOf } from "../../utils/exhaustiveKeys";
 
 /**
  * One stretch of characters drawn with the same typography — the piece a body of
@@ -21,6 +22,16 @@ export type TextRun = InlineTextStyle & {
 	 */
 	text: string;
 };
+
+/**
+ * Field names one run may carry: its characters, plus the inline half of a slot's
+ * typography. Nothing that places the whole block is here — a run covers part of a
+ * text and has nowhere to place it (TEXT_BLOCK_STYLE_KEYS stays on the slot).
+ */
+export const TEXT_RUN_KEYS = exhaustiveKeysOf<TextRun>()([
+	"text",
+	...TEXT_INLINE_STYLE_KEYS,
+] as const);
 
 /**
  * One body of text: a plain string when all of it is drawn with the slot's own

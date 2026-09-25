@@ -25,7 +25,10 @@ import type {
 	TextSlot,
 	TextSlotStyle,
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
-import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import {
+	isTextRows,
+	BODY_TEXT_SLOT_ID,
+} from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import type { TextType } from "@jiscribe/doc/model/objects/types/text/TextType";
 import { isSingleBodyText } from "@jiscribe/doc/model/objects/types/text/TextType";
 import { isVerticalAlign } from "@jiscribe/doc/model/objects/types/text/VerticalAlign";
@@ -35,7 +38,6 @@ import {
 	OPACITY_MIN,
 } from "@jiscribe/doc/model/objects/utils/opacity";
 import { validateEndpointRef } from "@jiscribe/doc/model/objects/validators/validateEndpointFields";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 
 import { isCssColor } from "./isCssColor";
 import { isTextStyleState } from "../base/TextStyleState";

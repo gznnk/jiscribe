@@ -12,6 +12,8 @@ import { collectGeometryKeys } from "../model/objects/validators/validateGeometr
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
 import type { ObjectDocValidateFn } from "../plugin/ObjectDocValidateFn";
+import type { DocDefinitionsConfig } from "../plugin/resolveDocDefinitions";
+import { resolveDocDefinitions } from "../plugin/resolveDocDefinitions";
 
 /**
  * What the registry reads off a type's definition: its own check of a doc, and
@@ -25,10 +27,21 @@ export type ObjectDocValidatorDeclaration = Pick<
 	"features" | "validateDoc" | "extraKeys"
 >;
 
-type ValidatorEntry = {
-	validate: ObjectDocValidateFn;
+/**
+ * What the parser's key check (`parse/validateDocKeys`) reads off a registered
+ * type: the descriptor that says which containers a doc of it can hold, and the
+ * names the object itself may carry. Built once at registration rather than on
+ * every doc checked.
+ */
+export type DocKeyDeclaration = {
+	/** The type's descriptor, which decides the nested containers to walk. */
 	features: ObjectFeatures;
+	/** Names the object itself may carry, as {@link collectKnownKeys} built them. */
 	knownKeys: ReadonlySet<string>;
+};
+
+type ValidatorEntry = DocKeyDeclaration & {
+	validate: ObjectDocValidateFn;
 };
 
 /**
@@ -50,8 +63,8 @@ const collectKnownKeys = (
 		...(features.transform ? TRANSFORM_STYLE_KEYS : []),
 		...collectStyleKeys(features),
 		// A "slots" type keeps its styling inside each slot, so the object itself
-		// carries the `text` record and nothing more; the closed slot set is the
-		// type's own to check, and its `validateDoc` is where it does it.
+		// carries the `text` record and nothing more; which slot ids it may hold is
+		// the type's own to check, and its `validateDoc` is where it does it.
 		...(features.text !== undefined ? ["text"] : []),
 		...(isSingleBodyText(features.text)
 			? [...textStyleKeysOf(features.text), ...TEXT_BODY_KEYS]
@@ -59,72 +72,51 @@ const collectKnownKeys = (
 		...extraKeys,
 	]);
 
-/**
- * Reports one warning per own key of `o` that the type does not hold. Warnings
- * rather than errors: the canvas already drops such a field on the way to the
- * state, so the document still opens — it just loses the field the next time it
- * is saved, which is what the message says and what `unknownKeyPath` lets the
- * parser carry out.
- */
-const validateKnownKeys = (
-	o: Record<string, unknown>,
-	path: string,
-	entry: ValidatorEntry,
-): SemanticDiagnostic[] =>
-	Object.keys(o)
-		.filter((key) => !entry.knownKeys.has(key))
-		.map((key) => ({
-			path: `${path}.${key}`,
-			message: `Unknown property "${key}" on a "${entry.features.type}": it was ignored and will be dropped on save.`,
-			severity: "warning" as const,
-			unknownKeyPath: [key],
-		}));
-
 class ObjectDocValidatorRegistry {
 	private readonly entries = new Map<ObjectType, ValidatorEntry>();
 
 	/**
-	 * Adds one type, taking the accepted-name set off its declaration once here
-	 * rather than on every doc checked.
-	 *
-	 * @param type - The `type` field a doc writes to name this type; a second registration replaces the first
-	 * @param declaration - The type's definition, or the `{ features, validateDoc, extraKeys }` of one being assembled
+	 * Holds one entry per resolved type, each built from that type's whole
+	 * definition; the accepted-name set is taken off it once here rather than on
+	 * every doc checked.
 	 */
-	register(type: string, declaration: ObjectDocValidatorDeclaration): void {
-		this.entries.set(type as ObjectType, {
-			validate: declaration.validateDoc,
-			features: declaration.features,
-			knownKeys: collectKnownKeys(
-				declaration.features,
-				declaration.extraKeys ?? [],
-			),
+	constructor(definitions: ReadonlyMap<string, ObjectDocValidatorDeclaration>) {
+		definitions.forEach((declaration, type) => {
+			this.entries.set(type as ObjectType, {
+				validate: declaration.validateDoc,
+				features: declaration.features,
+				knownKeys: collectKnownKeys(
+					declaration.features,
+					declaration.extraKeys ?? [],
+				),
+			});
 		});
 	}
 
 	/**
-	 * Checks one object doc: the type's own rules about the values it holds, then
-	 * the names it does not hold at all. The second half is the registry's own —
-	 * a validator knows what its values must look like, not which fields the
-	 * definition lets the type carry.
+	 * Checks one object doc by the type's own rules about the values it holds.
+	 * Which names the doc may carry is not asked here: that is the parser's check
+	 * (`parse/validateDocKeys`), held against {@link getKeyDeclaration}.
 	 *
 	 * @param type - The doc's `type` field; one never registered yields no diagnostics, the object being opaque (see {@link hasType})
 	 * @param obj - The object doc, read as a plain record
 	 * @param path - JSON path of `obj` itself, which every diagnostic is reported under
-	 * @returns The type's diagnostics first, then one `severity: "warning"` entry per unknown field name
 	 */
 	validate(
 		type: string,
 		obj: Record<string, unknown>,
 		path: string,
 	): SemanticDiagnostic[] {
-		const entry = this.entries.get(type as ObjectType);
-		if (entry === undefined) {
-			return [];
-		}
-		return [
-			...entry.validate(obj, path),
-			...validateKnownKeys(obj, path, entry),
-		];
+		return this.entries.get(type as ObjectType)?.validate(obj, path) ?? [];
+	}
+
+	/**
+	 * What the parser holds a doc of the type against when it looks for names the
+	 * type does not hold; undefined for a type never registered, whose docs are
+	 * opaque and not looked into.
+	 */
+	getKeyDeclaration(type: string): DocKeyDeclaration | undefined {
+		return this.entries.get(type as ObjectType);
 	}
 
 	/**
@@ -147,8 +139,19 @@ class ObjectDocValidatorRegistry {
 	}
 }
 
-export const createObjectDocValidatorRegistry =
-	(): ObjectDocValidatorRegistry => new ObjectDocValidatorRegistry();
+/**
+ * Builds a doc-validator registry from a resolved definition set. Each call returns
+ * a fresh instance, so parsers configured differently never see each other's types;
+ * there is no way to build an empty one and fill it later, a registry being what a
+ * definition set says and nothing more.
+ *
+ * @param config - Resolved by {@link resolveDocDefinitions} (see it for the preset/plugin
+ *   merge and duplicate-type semantics). Omit for the built-in set as-is.
+ */
+export const createDocValidatorRegistry = (
+	config?: DocDefinitionsConfig,
+): ObjectDocValidatorRegistry =>
+	new ObjectDocValidatorRegistry(resolveDocDefinitions(config));
 
 // Exported as a type only: a registry is always obtained from the factory above (one per
 // parser — there is no shared global instance), never by construction.

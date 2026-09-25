@@ -1,5 +1,6 @@
 import type { ViewDoc } from "./ViewDoc";
 import type { ObjectDoc } from "../objects/base/ObjectDoc";
+import { exhaustiveKeysOf } from "../objects/utils/exhaustiveKeys";
 
 export type CanvasDoc = CanvasDocV1;
 
@@ -45,3 +46,17 @@ export type CanvasDocV1 = {
 	view?: ViewDoc;
 	root: ObjectDoc[];
 };
+
+/**
+ * Field names the document frame itself carries. Built from the type the same way
+ * OBJECT_COMMON_KEYS is, so a field added to {@link CanvasDocV1} reaches the
+ * accepted-name set the parser checks the root against (`checkStructure`) or fails
+ * to compile.
+ */
+export const CANVAS_DOC_KEYS = exhaustiveKeysOf<CanvasDocV1>()([
+	"$schema",
+	"version",
+	"background",
+	"view",
+	"root",
+] as const);

@@ -5,9 +5,29 @@ import {
 	isString,
 } from "@jiscribe/basic-validators";
 
+import { validateDocKeys } from "./validateDocKeys";
+import { CANVAS_DOC_KEYS } from "../model/canvas/CanvasDoc";
 import { validateViewDoc } from "../model/canvas/validateViewDoc";
+import { VIEW_DOC_KEYS, VIEW_PADDING_KEYS } from "../model/canvas/ViewDoc";
+import { validateMetaFields } from "../model/objects/validators/validateMetaFields";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
 import type { ObjectDocValidatorRegistry } from "../registries/ObjectDocValidatorRegistry";
+
+/**
+ * Names accepted at the document root: the frame's own fields, plus the legacy
+ * `connectors`, which has an error of its own below and so is not reported as an
+ * unknown key as well.
+ */
+const CANVAS_DOC_KEY_SET: ReadonlySet<string> = new Set<string>([
+	...CANVAS_DOC_KEYS,
+	"connectors",
+]);
+
+const VIEW_DOC_KEY_SET: ReadonlySet<string> = new Set<string>(VIEW_DOC_KEYS);
+
+const VIEW_PADDING_KEY_SET: ReadonlySet<string> = new Set<string>(
+	VIEW_PADDING_KEYS,
+);
 
 /**
  * One field the document writes that its object's type does not hold, located as
@@ -16,7 +36,10 @@ import type { ObjectDocValidatorRegistry } from "../registries/ObjectDocValidato
  * position.
  */
 export type UnknownKeyRemoval = {
-	/** The validated object the key sits on, as it sits in the document being parsed. */
+	/**
+	 * The object the key sits under, as it sits in the document being parsed: a
+	 * validated object, or the document itself for a root or `view` key.
+	 */
 	target: Record<string, unknown>;
 	/** Segments from `target` down to the key, the `unknownKeyPath` of the warning that reported it. */
 	keyPath: readonly (string | number)[];
@@ -67,10 +90,22 @@ function validateObjectNode(
 		return errors;
 	}
 
-	// Delegate per-type validation to the registry, which also reports the names
-	// the type does not hold and hands over the position to remove each from; the
-	// object itself is only reachable here.
-	const diagnostics = registry.validate(o.type as string, o, path);
+	// A field every type carries, so it is checked here rather than by any one of
+	// them. Reached only for a registered type: an opaque object is never looked into.
+	errors.push(...validateMetaFields(o, path));
+
+	// Per-type validation is the registry's; the names the type does not hold are
+	// this stage's own check, held against what the registry built at registration.
+	// The position to remove each from is handed over here, the object itself being
+	// reachable only in this walk.
+	const typeDiagnostics = registry.validate(o.type as string, o, path);
+	const keyDeclaration = registry.getKeyDeclaration(o.type as string);
+	const diagnostics = [
+		...typeDiagnostics,
+		...(keyDeclaration === undefined
+			? []
+			: validateDocKeys(o, path, keyDeclaration, typeDiagnostics)),
+	];
 	for (const diagnostic of diagnostics) {
 		if (diagnostic.unknownKeyPath !== undefined) {
 			unknownKeyRemovals.push({
@@ -125,8 +160,12 @@ function validateObjectNode(
 
 /**
  * Checks the structural rules of a CanvasDoc: the version constant, the removal of
- * the legacy top-level `connectors` field, and each entry in `root` (delegating
- * per-type checks to the registry and recursing into group children).
+ * the legacy top-level `connectors` field, the `$schema` pointer, the canvas
+ * surface color, the `view` declaration, each object's `meta`, and each entry in
+ * `root` (delegating per-type checks to the registry and recursing into group
+ * children). Every name the frame does not hold — at the root, in `view` and in
+ * `view.padding` — is reported as a warning and asked to be removed, the way the
+ * registry reports one an object's type does not hold.
  *
  * @param doc - The candidate document, already stripped of unknown content; only read here
  * @param registry - Decides which types are known and holds each type's own validator
@@ -155,6 +194,30 @@ export function checkStructure(
 	const errors: SemanticDiagnostic[] = [];
 	const unknownKeyRemovals: UnknownKeyRemoval[] = [];
 
+	// Every frame key sits under the document itself, whatever its depth, so one
+	// closure covers the root, `view` and `view.padding`. Warnings rather than
+	// errors for the same reason as the per-type ones (ObjectDocValidatorRegistry):
+	// the document still opens, minus the field, which the next save drops.
+	const reportUnknownFrameKeys = (
+		container: Record<string, unknown>,
+		knownKeys: ReadonlySet<string>,
+		containerPath: readonly string[],
+		subject: string,
+	): void => {
+		Object.keys(container)
+			.filter((key) => !knownKeys.has(key))
+			.forEach((key) => {
+				const unknownKeyPath = [...containerPath, key];
+				errors.push({
+					path: unknownKeyPath.join("."),
+					message: `Unknown property "${key}" on ${subject}: it was ignored and will be dropped on save.`,
+					severity: "warning",
+					unknownKeyPath,
+				});
+				unknownKeyRemovals.push({ target: d, keyPath: unknownKeyPath });
+			});
+	};
+
 	// The schema defines version as const 1. Only the v1 format exists and there is
 	// no handling for v2+, so unknown versions are not silently accepted but rejected
 	// at the boundary.
@@ -170,6 +233,18 @@ export function checkStructure(
 			path: "connectors",
 			message:
 				"'connectors' is no longer a top-level field; place connectors inside 'root' as \"type\": \"connector\" entries (z-order).",
+			severity: "error",
+		});
+	}
+
+	reportUnknownFrameKeys(d, CANVAS_DOC_KEY_SET, [], "the document");
+
+	// A legacy pointer that is tolerated on input and dropped on save (see
+	// CanvasDocV1.$schema); tolerating it does not extend to another type of value.
+	if (d.$schema !== undefined && !isString(d.$schema)) {
+		errors.push({
+			path: "$schema",
+			message: "must be a string",
 			severity: "error",
 		});
 	}
@@ -191,6 +266,24 @@ export function checkStructure(
 	// (see CanvasDoc.view).
 	if (d.view !== undefined) {
 		errors.push(...validateViewDoc(d.view, "view"));
+		// Only an object has keys to look at; a value of another type is already an
+		// error from validateViewDoc.
+		if (isObject(d.view)) {
+			reportUnknownFrameKeys(
+				d.view,
+				VIEW_DOC_KEY_SET,
+				["view"],
+				'the document\'s "view"',
+			);
+			if (isObject(d.view.padding)) {
+				reportUnknownFrameKeys(
+					d.view.padding,
+					VIEW_PADDING_KEY_SET,
+					["view", "padding"],
+					'the document\'s "view.padding"',
+				);
+			}
+		}
 	}
 
 	if (!isArray(d.root)) {

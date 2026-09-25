@@ -218,7 +218,7 @@ export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTy
 // The slot id every single-body shape (`features.text: "body"` / `"source"`)
 // holds, i.e. the key its `state.text` carries. A shape with several slots names
 // its own instead.
-export { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
+export { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 export { CANVAS_FONT_FAMILIES } from "@jiscribe/doc/text/style/fontFamilies";
 export type {
 	CanvasFontFamily,

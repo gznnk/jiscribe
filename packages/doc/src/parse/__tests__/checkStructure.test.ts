@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
-import { createDocValidatorRegistry } from "../../registries/createDocValidatorRegistry";
+import { createDocValidatorRegistry } from "../../registries/ObjectDocValidatorRegistry";
 import { checkStructure as checkStructureWithRegistry } from "../checkStructure";
 
 // checkStructure delegates per-type validation and known-type checks to a registry,
@@ -124,6 +124,177 @@ describe("checkStructure: legacy connectors field", () => {
 	it("is not an error when the connectors key is absent", () => {
 		expect(checkStructure(doc([])).some((e) => e.path === "connectors")).toBe(
 			false,
+		);
+	});
+
+	it("is reported once: the legacy error, not also as an unknown root key", () => {
+		const result = checkStructureWithRegistry(
+			{ version: 1, root: [], connectors: [] },
+			registry,
+		);
+		const reports = result.diagnostics.filter((e) => e.path === "connectors");
+		expect(reports).toHaveLength(1);
+		expect(reports[0].severity).toBe("error");
+		expect(result.unknownKeyRemovals).toEqual([]);
+	});
+});
+
+// ─── Names the document frame does not hold ──────────────────────
+describe("checkStructure: unknown frame keys", () => {
+	it("reports an unknown root key as a warning and asks for its removal", () => {
+		const input = doc([], { connectorStyle: "curvy" });
+		const result = checkStructureWithRegistry(input, registry);
+		expect(result.diagnostics).toEqual([
+			{
+				path: "connectorStyle",
+				message:
+					'Unknown property "connectorStyle" on the document: it was ignored and will be dropped on save.',
+				severity: "warning",
+				unknownKeyPath: ["connectorStyle"],
+			},
+		]);
+		expect(result.unknownKeyRemovals).toEqual([
+			{ target: input, keyPath: ["connectorStyle"] },
+		]);
+	});
+
+	it("reports every unknown root key, the known ones untouched", () => {
+		const errors = checkStructure(
+			doc([], { $schema: "s", background: "#fff", zz: 1, yy: 2 }),
+		);
+		expect(errors.map((e) => e.path)).toEqual(["zz", "yy"]);
+	});
+
+	it("reports an unknown view key under the document", () => {
+		const input = doc([], { view: { open: "fit-all", zoom: 2 } });
+		const result = checkStructureWithRegistry(input, registry);
+		expect(result.diagnostics).toEqual([
+			{
+				path: "view.zoom",
+				message:
+					'Unknown property "zoom" on the document\'s "view": it was ignored and will be dropped on save.',
+				severity: "warning",
+				unknownKeyPath: ["view", "zoom"],
+			},
+		]);
+		expect(result.unknownKeyRemovals).toEqual([
+			{ target: input, keyPath: ["view", "zoom"] },
+		]);
+	});
+
+	it("reports an unknown view.padding side", () => {
+		const input = doc([], { view: { padding: { top: 8, middle: 4 } } });
+		const result = checkStructureWithRegistry(input, registry);
+		expect(result.diagnostics.map((e) => e.path)).toEqual([
+			"view.padding.middle",
+		]);
+		expect(result.unknownKeyRemovals).toEqual([
+			{ target: input, keyPath: ["view", "padding", "middle"] },
+		]);
+	});
+
+	it("does not look into a non-object view or padding (already an error)", () => {
+		expect(checkStructure(doc([], { view: 3 })).map((e) => e.severity)).toEqual(
+			["error"],
+		);
+		expect(
+			checkStructure(doc([], { view: { padding: 3 } })).map((e) => e.severity),
+		).toEqual(["error"]);
+	});
+
+	it("reports no unknown key for a fully declared view", () => {
+		const view = {
+			padding: { top: 1, right: 2, bottom: 3, left: 4 },
+			open: "fit-all",
+			scroll: "content",
+		};
+		expect(checkStructure(doc([], { view }))).toEqual([]);
+	});
+});
+
+// ─── $schema ─────────────────────────────────────────────
+describe("checkStructure: $schema", () => {
+	it("accepts a string, which is tolerated on input", () => {
+		expect(
+			checkStructure(doc([], { $schema: "https://example/s.json" })),
+		).toEqual([]);
+	});
+
+	it.each([
+		["number", 1],
+		["object", {}],
+		["null", null],
+	])("a non-string $schema (%s) is an error", (_label, $schema) => {
+		const errors = checkStructure(doc([], { $schema }));
+		expect(has(errors, "$schema", "must be a string")).toBe(true);
+	});
+});
+
+// ─── meta ────────────────────────────────────────────────
+describe("checkStructure: meta", () => {
+	it("accepts an omitted meta and a fully filled one", () => {
+		expect(checkStructure(doc([rect("r1")]))).toEqual([]);
+		expect(
+			checkStructure(
+				doc([
+					rect("r1", {
+						meta: { name: "n", description: "d", reference: "./other.jis" },
+					}),
+				]),
+			),
+		).toEqual([]);
+	});
+
+	it.each([
+		["number", 1],
+		["string", "x"],
+		["array", []],
+		["null", null],
+	])("a non-object meta (%s) is an error", (_label, meta) => {
+		const errors = checkStructure(doc([rect("r1", { meta })]));
+		expect(has(errors, "root[0].meta", "must be an object")).toBe(true);
+	});
+
+	it.each(["name", "description", "reference"])(
+		"a non-string meta.%s is an error",
+		(member) => {
+			const errors = checkStructure(
+				doc([rect("r1", { meta: { [member]: 1 } })]),
+			);
+			expect(has(errors, `root[0].meta.${member}`, "must be a string")).toBe(
+				true,
+			);
+		},
+	);
+
+	it("reports every malformed member, not just the first", () => {
+		const errors = checkStructure(
+			doc([rect("r1", { meta: { name: 1, reference: 2 } })]),
+		);
+		expect(errors.map((e) => e.path)).toEqual([
+			"root[0].meta.name",
+			"root[0].meta.reference",
+		]);
+	});
+
+	it("keeps meta open past the named members", () => {
+		expect(
+			checkStructure(doc([rect("r1", { meta: { author: { id: 7 } } })])),
+		).toEqual([]);
+	});
+
+	it("leaves an opaque object's meta alone (nothing inside it is read)", () => {
+		expect(
+			checkStructure(doc([{ id: "u1", type: "hexagram", meta: 7 }])),
+		).toEqual([]);
+	});
+
+	it("reports a group child's meta at the child's own path", () => {
+		const errors = checkStructure(
+			doc([group("g1", [rect("r1", { meta: 7 })])]),
+		);
+		expect(has(errors, "root[0].children[0].meta", "must be an object")).toBe(
+			true,
 		);
 	});
 });

@@ -1,8 +1,8 @@
 import type { Dimensions } from "@jiscribe/geometry";
 
 import type { ObjectDocDefinition } from "./ObjectDocDefinition";
+import { BODY_TEXT_SLOT_ID } from "../model/objects/types/text/TextSlot";
 import { isSingleBodyText } from "../model/objects/types/text/TextType";
-import { BODY_TEXT_SLOT_ID } from "../text/style/textSlotId";
 
 /**
  * What {@link hasInsetTextRegion} reads off a type: the region declaration that

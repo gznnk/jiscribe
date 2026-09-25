@@ -75,6 +75,16 @@ export const TEXT_SLOT_STYLE_KEYS = exhaustiveKeysOf<Omit<TextSlot, "text">>()([
 ] as const);
 
 /**
+ * Field names one slot may carry: its content, plus its whole typography. What the
+ * parser holds a written slot against, a name outside it being a value the next
+ * save drops (validateDocKeys).
+ */
+export const TEXT_SLOT_KEYS = exhaustiveKeysOf<TextSlot>()([
+	"text",
+	...TEXT_SLOT_STYLE_KEYS,
+] as const);
+
+/**
  * Copies the style fields that are actually set, so a merge target gains no
  * `undefined`-valued keys that would shadow what it falls back to.
  *
@@ -149,4 +159,38 @@ export const isTextSlot = (value: unknown): value is TextSlot => {
 		return false;
 	}
 	return hasValidInlineTextStyle(value);
+};
+
+/**
+ * The id of the slot every single-text shape (rect, ellipse, svg, ...) holds. A
+ * slot id names one editable text region: the key of `state.text`, which is the
+ * authority on the slots a shape has, and what an editing session targets. Only
+ * the shared one is named here — a shape with several slots names its own (see
+ * TextSlots), and a connector's label is not a slot (textEditState kind
+ * "connectorLabel").
+ */
+export const BODY_TEXT_SLOT_ID = "body";
+
+/**
+ * Whether a slot id would be re-sorted by the JS engine. Own keys that are
+ * canonical array indices — integers 0 … 2^32−2 in their shortest decimal form —
+ * are enumerated first, in ascending numeric order, so such an id would silently
+ * move within a slot map whose key order decides the default slot and the drawing
+ * order (issue #231). Only exactly that set is matched: ids like "1.5", "Infinity"
+ * or "4294967295" keep their insertion place, so rejecting them would cost a slot
+ * (and its text) for nothing.
+ *
+ * @param slotId - The key a document wrote under `text`; any string, the slot set
+ *   being the object type's own to name
+ * @returns True for an id the key order would not survive, which the parser
+ *   reports as an error rather than letting the slots silently re-order
+ */
+export const isIntegerLikeTextSlotId = (slotId: string): boolean => {
+	const asNumber = Number(slotId);
+	return (
+		Number.isInteger(asNumber) &&
+		asNumber >= 0 &&
+		asNumber < 2 ** 32 - 1 &&
+		String(asNumber) === slotId
+	);
 };

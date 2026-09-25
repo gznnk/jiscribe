@@ -12,6 +12,7 @@ import type { EndpointRef } from "../types/EndpointRef";
 import type { ExtraStylePropertyDescriptor } from "../types/ExtraStyleProperty";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
 import { AUTO_COLOR } from "../utils/autoColor";
+import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /** Feature descriptor for the connector object type (poly geometry, strokeable, arrow ends, not connectable). */
 export const ConnectorFeatures = {
@@ -86,6 +87,25 @@ export type ConnectorLabel = Pick<
 		/** Signed offset perpendicular to the path (world units); omitted means {@link CONNECTOR_LABEL_DEFAULTS}. */
 		offset?: number;
 	};
+
+/**
+ * Field names a label may carry. Borrowed from three vocabularies and its own two
+ * placement fields, so the list is tied to {@link ConnectorLabel} rather than to
+ * any of them: a name outside it is a value the next save drops (validateDocKeys).
+ */
+export const CONNECTOR_LABEL_KEYS = exhaustiveKeysOf<ConnectorLabel>()([
+	"text",
+	"position",
+	"offset",
+	"fontColor",
+	"fontFamily",
+	"fontSize",
+	"fontWeight",
+	"fill",
+	"stroke",
+	"strokeWidth",
+	"strokeDashType",
+] as const);
 
 /**
  * What an omitted {@link ConnectorLabel} field means to whoever reads the label.

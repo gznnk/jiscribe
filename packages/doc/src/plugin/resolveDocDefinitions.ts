@@ -1,22 +1,11 @@
-import { builtinObjectDocDefinitions } from "../plugin/builtinObjectDocDefinitions";
-import type { ObjectDocDefinition } from "../plugin/ObjectDocDefinition";
-
-/**
- * The slice of `CanvasPlugin` the doc layer reads: just the headless doc
- * contributions. Structural (not imported from `controllers/registries`) so the
- * schema layer doesn't depend on the controllers layer's `CanvasPlugin` type; a
- * full `CanvasPlugin` (or `CanvasDocPlugin`) is assignable because its `objects`
- * values are the UI definitions that extend {@link ObjectDocDefinition}
- * (packages/canvas/docs/12-plugin-architecture.md).
- */
-export type CanvasDocPluginLike = {
-	id: string;
-	objects?: Readonly<Partial<Record<string, ObjectDocDefinition>>>;
-};
+import { builtinObjectDocDefinitions } from "./builtinObjectDocDefinitions";
+import type { CanvasDocPlugin } from "./CanvasDocPlugin";
+import type { ObjectDocDefinition } from "./ObjectDocDefinition";
 
 export type DocDefinitionsConfig = {
 	presetDefinitions?: Readonly<Partial<Record<string, ObjectDocDefinition>>>;
-	plugins?: readonly CanvasDocPluginLike[];
+	/** A full `CanvasPlugin` is assignable, its `objects` values being UI definitions that extend {@link ObjectDocDefinition}. */
+	plugins?: readonly CanvasDocPlugin[];
 };
 
 /**

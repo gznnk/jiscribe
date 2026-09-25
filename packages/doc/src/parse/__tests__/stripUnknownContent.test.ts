@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createDocValidatorRegistry } from "../../registries/createDocValidatorRegistry";
+import { createDocValidatorRegistry } from "../../registries/ObjectDocValidatorRegistry";
+import { createCanvasParser } from "../createCanvasParser";
 import { stripUnknownContent } from "../stripUnknownContent";
 
 // stripUnknownContent decides known/unknown via the registry, so use the same
@@ -379,6 +380,61 @@ describe("stripUnknownContent", () => {
 			expect(result.data).toBe(input);
 			expect(result.warnings).toEqual([]);
 		});
+
+		it.each([
+			["a number", 1],
+			["null", null],
+			["an object", {}],
+		])(
+			"keeps %s in a pure-enum field: corruption, not an unknown member",
+			(_label, textAlign) => {
+				const input = doc([rect("r1", { textAlign })]);
+				const result = strip(input);
+				expect(result.data).toBe(input);
+				expect(result.warnings).toEqual([]);
+			},
+		);
+
+		it("keeps a non-string value nested in a connector label", () => {
+			const input = doc([
+				rect("r1"),
+				{
+					...connector("c1", ownedRef("r1"), freeRef(5, 5)),
+					label: { text: "hello", strokeDashType: 7 },
+				},
+			]);
+			const result = strip(input);
+			expect(result.data).toBe(input);
+			expect(result.warnings).toEqual([]);
+		});
+	});
+
+	describe("what the parser makes of a value left in place", () => {
+		const parser = createCanvasParser();
+
+		it("reports a non-string textAlign as a structure error, not a warning", () => {
+			const result = parser.parse(
+				JSON.stringify(doc([rect("r1", { textAlign: 1 })])),
+			);
+			expect(result.kind).toBe("structure-error");
+			if (result.kind !== "structure-error") {
+				return;
+			}
+			expect(result.diagnostics.map((d) => d.path)).toContain(
+				"root[0].textAlign",
+			);
+		});
+
+		it("reports a non-string view.open as a structure error", () => {
+			const result = parser.parse(
+				JSON.stringify({ version: 1, view: { open: 3 }, root: [rect("r1")] }),
+			);
+			expect(result.kind).toBe("structure-error");
+			if (result.kind !== "structure-error") {
+				return;
+			}
+			expect(result.diagnostics.map((d) => d.path)).toContain("view.open");
+		});
 	});
 
 	describe("view.open", () => {
@@ -396,10 +452,11 @@ describe("stripUnknownContent", () => {
 			expect(result.warnings[0].message).toContain('"fit-diagonal"');
 		});
 
-		it("drops a non-string open the same way (no value quoted)", () => {
-			const result = strip({ version: 1, view: { open: 3 }, root: [] });
-			expect((result.data as { view: object }).view).toEqual({});
-			expect(result.warnings[0].message).not.toContain('"');
+		it("keeps a non-string open, which is corruption (left to validateViewDoc)", () => {
+			const input = { version: 1, view: { open: 3 }, root: [] };
+			const result = strip(input);
+			expect(result.data).toBe(input);
+			expect(result.warnings).toEqual([]);
 		});
 
 		it("returns the input unchanged for a known open mode", () => {
@@ -441,10 +498,11 @@ describe("stripUnknownContent", () => {
 			expect(result.warnings[0].message).toContain('"page"');
 		});
 
-		it("drops a non-string scroll the same way (no value quoted)", () => {
-			const result = strip({ version: 1, view: { scroll: true }, root: [] });
-			expect((result.data as { view: object }).view).toEqual({});
-			expect(result.warnings[0].message).not.toContain('"');
+		it("keeps a non-string scroll, which is corruption (left to validateViewDoc)", () => {
+			const input = { version: 1, view: { scroll: true }, root: [] };
+			const result = strip(input);
+			expect(result.data).toBe(input);
+			expect(result.warnings).toEqual([]);
 		});
 
 		it.each(["content", "infinite"])(
