@@ -339,6 +339,17 @@ describe("stripUnknownContent", () => {
 			expect(result.warnings[0].path).toBe("root[0].children[0].textAlign");
 		});
 
+		it("leaves meta alone: its keys are the host's, not enum fields", () => {
+			const input = doc([
+				rect("r1", {
+					meta: { routing: "custom", nested: { textAlign: "justify" } },
+				}),
+			]);
+			const result = strip(input);
+			expect(result.data).toBe(input);
+			expect(result.warnings).toEqual([]);
+		});
+
 		it("drops an unknown textLayout, leaving the text in the label layout", () => {
 			const result = strip(
 				doc([

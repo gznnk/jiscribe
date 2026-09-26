@@ -31,6 +31,13 @@ const pureEnumFields: ReadonlyMap<string, (value: unknown) => boolean> =
 		["routing", isConnectorRouting],
 	]);
 
+/**
+ * Keys the strip never enters: `children` is walked by the tree walk, and `meta` is
+ * the host's own record (see `MetaDoc`), whose values may share a
+ * name with an enum field without being one.
+ */
+const passthroughKeys: ReadonlySet<string> = new Set(["children", "meta"]);
+
 /** Shared so a node with nothing to strip is answered without an allocation. */
 const noWarnings: readonly SemanticDiagnostic[] = [];
 
@@ -43,7 +50,7 @@ export type StripUnknownEnumValuesResult = {
 
 /**
  * Allocation-free detection of an unknown pure-enum value anywhere in the subtree
- * (`children` excluded — the tree walk scans each child itself). Parsing runs per
+ * (`children` and `meta` excluded, see {@link passthroughKeys}). Parsing runs per
  * text edit in the VSCode host, so the common all-valid document must not pay the
  * copying walk below; this scan is what lets it exit with reads only.
  */
@@ -55,7 +62,7 @@ const containsUnknownEnumValue = (value: unknown): boolean => {
 		return false;
 	}
 	for (const key in value) {
-		if (key === "children") {
+		if (passthroughKeys.has(key)) {
 			continue;
 		}
 		const isKnownEnumValue = pureEnumFields.get(key);
@@ -105,7 +112,7 @@ const stripEnumValue = (
 	return { value: strippedRecord.node, warnings: strippedRecord.warnings };
 };
 
-/** The entries of one record, `children` passed through for the tree walk to own. */
+/** The entries of one record, {@link passthroughKeys} copied as they are. */
 const stripRecordEnumFields = (
 	record: ObjectTreeNode,
 	path: string,
@@ -115,7 +122,7 @@ const stripRecordEnumFields = (
 	let changed = false;
 	const stripped: Record<string, unknown> = {};
 	Object.entries(record).forEach(([key, propValue]) => {
-		if (key === "children") {
+		if (passthroughKeys.has(key)) {
 			stripped[key] = propValue;
 			return;
 		}
@@ -145,7 +152,8 @@ const stripRecordEnumFields = (
 /**
  * Removes unknown pure-enum values at any depth of one object node (flat fields, the
  * connector label, text slots, …). Structural recursion into group children is owned
- * by the tree walk, so `children` is passed through untouched.
+ * by the tree walk, so `children` is passed through untouched, and so is the
+ * host-owned `meta`.
  *
  * @param node - The object node to strip; its `children` are not read
  * @param path - Diagnostic path of the node, which each stripped field is appended to
