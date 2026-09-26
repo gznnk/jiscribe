@@ -216,9 +216,10 @@ export function validateTextStyleFields(
 }
 
 /**
- * What a source body that is not a string is told. It says what to write instead,
- * since the usual cause is a run list an editor once left behind, and a document
- * holding one does not open until it is rewritten by hand.
+ * What a source body that is not a string is told. It says what to write instead:
+ * a plain run list is rewritten by the migrate stage before this runs
+ * (`migrateSourceRuns`), so what reaches here is a value no migration reads, such
+ * as a list mixing strings and runs.
  */
 const SOURCE_TEXT_MESSAGE =
 	"must be a plain string: a source text takes no styled runs, so write the emphasis in the source itself";

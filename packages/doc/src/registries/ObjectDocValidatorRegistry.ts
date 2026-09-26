@@ -114,6 +114,8 @@ class ObjectDocValidatorRegistry {
 	 * What the parser holds a doc of the type against when it looks for names the
 	 * type does not hold; undefined for a type never registered, whose docs are
 	 * opaque and not looked into.
+	 *
+	 * @param type - The doc's `type` field, as `validate` takes it; the declaration returned is the same one `validate` checks values against
 	 */
 	getKeyDeclaration(type: string): DocKeyDeclaration | undefined {
 		return this.entries.get(type as ObjectType);

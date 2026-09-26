@@ -26,7 +26,10 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * re-checking—that IDs are unique, references are consistent, and the tree is
  * acyclic (the policy of not carrying defensive cost internally →
  * docs/01-design-philosophy.md principle 4). Validation is guaranteed at the
- * external-input boundary (host / the `SYNC_EXTERNAL` entry point).
+ * external-input boundary (host / the `SYNC_EXTERNAL` entry point). The parser has to
+ * know the same plugin set this canvas maps: a type the parser was not given is passed
+ * through opaque and unchecked, and if `mapper` carries it anyway, its mapper meets
+ * fields no validator has seen.
  *
  * The registries are passed one by one (not as the full bundle) so the states
  * layer stays decoupled from the controller-layer registries; both of these are
