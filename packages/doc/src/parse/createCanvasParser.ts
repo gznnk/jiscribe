@@ -1,7 +1,8 @@
 import { checkSemantics } from "./checkSemantics";
 import type { UnknownKeyRemoval } from "./checkStructure";
 import { checkStructure } from "./checkStructure";
-import { stripUnknownContent } from "./stripUnknownContent";
+import { migrateDoc } from "./migrate/migrateDoc";
+import { stripUnknownContent } from "./strip";
 import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
 import {
@@ -19,12 +20,14 @@ import { createDocValidatorRegistry } from "../registries/ObjectDocValidatorRegi
  * as a discriminated union. Exceptions are not used for control flow, so callers can handle every
  * case exhaustively via `switch (result.kind)`.
  *
- * `ok.warnings` lists what {@link stripUnknownContent} removed (unknown pure-enum
- * values, and the rare unknown-type object it cannot keep), every object of an
- * unknown type it kept as it is, and every field a type does not hold that the
- * registry found on an object of it. Empty for a fully-known document. `ok.doc`
- * is the stripped doc with those fields removed, so serializing it is what makes
- * a removal stick on save, and what writes a kept object back unchanged.
+ * `ok.warnings` lists what {@link migrateDoc} rewrote (a field written in a form
+ * the format no longer uses), what {@link stripUnknownContent} removed (unknown
+ * pure-enum values, and the rare unknown-type object it cannot keep), every object
+ * of an unknown type it kept as it is, and every field a type does not hold that
+ * the registry found on an object of it. Empty for a document written wholly in the
+ * current form with nothing unknown in it. `ok.doc` is the migrated, stripped doc
+ * with those fields removed, so serializing it is what makes a rewrite or a removal
+ * stick on save, and what writes a kept object back unchanged.
  *
  * The error cases carry errors only: a warning never appears among them, since a
  * document reported as unreadable has nothing to save.
@@ -63,8 +66,9 @@ const removeUnknownKey = ({ target, keyPath }: UnknownKeyRemoval): void => {
 };
 
 /**
- * Parses a Canvas document string in stages — JSON syntax → unknown-content strip →
- * structure → per-type checks → semantics → unknown-key removal — against the given
+ * Parses a Canvas document string in stages — JSON syntax → migration of old forms →
+ * unknown-content strip → structure → per-type checks → semantics → unknown-key
+ * removal — against the given
  * registry (see the stage table in packages/canvas/docs/03-data-model-and-persistence.md).
  * The one body behind every parser's `parse`, so parsers composed from different type
  * sets share identical `CanvasParseResult` semantics.
@@ -84,12 +88,21 @@ const parseDocText = (
 	}
 
 	try {
+		// A field written in a form the format no longer uses is rewritten before it can
+		// be judged, so the validators below only ever see the current form and a document
+		// written by an older build still opens. Reported as ok.warnings, since the next
+		// save writes the rewrite.
+		const { data: migratedData, warnings: migrationWarnings } = migrateDoc(
+			data,
+			registry,
+		);
+
 		// Unknown object types and unknown pure-enum values are not errors: the objects are
 		// kept as opaque ones and the values stripped here, so the rest of the document still
 		// loads, and both are reported as ok.warnings. Everything past this point sees the
 		// stripped doc.
 		const { data: strippedData, warnings } = stripUnknownContent(
-			data,
+			migratedData,
 			registry,
 		);
 
@@ -120,6 +133,7 @@ const parseDocText = (
 			kind: "ok",
 			doc: strippedData as CanvasDoc,
 			warnings: [
+				...migrationWarnings,
 				...warnings,
 				...structureResult.diagnostics.filter(isSemanticWarning),
 				...diagnostics.filter(isSemanticWarning),

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createDocValidatorRegistry } from "../../registries/ObjectDocValidatorRegistry";
-import { createCanvasParser } from "../createCanvasParser";
+import { createDocValidatorRegistry } from "../../../registries/ObjectDocValidatorRegistry";
+import { createCanvasParser } from "../../createCanvasParser";
 import { stripUnknownContent } from "../stripUnknownContent";
 
 // stripUnknownContent decides known/unknown via the registry, so use the same
@@ -150,6 +150,13 @@ describe("stripUnknownContent", () => {
 			"root[0].children[0].type",
 			"root[0]",
 		]);
+	});
+
+	it("keeps a group authored with no children (left to checkStructure)", () => {
+		const input = doc([group("g1", [])]);
+		const result = strip(input);
+		expect(result.data).toBe(input);
+		expect(result.warnings).toEqual([]);
 	});
 
 	it("cascades emptied-group removal through nested groups", () => {

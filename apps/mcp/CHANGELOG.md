@@ -239,6 +239,11 @@ build knows: the object is kept as it is but not drawn.`
 
 ### Changed
 
+- **`diagnose_canvas` reports a field written in a form the format no longer
+  uses.** A `markdown` body written as styled runs, or a text written as an empty
+  list of runs, used to keep the file from opening. Both are now read as the text
+  they stand for — the runs' plain text, an empty text — and reported as a
+  warning saying so; the next tool that writes the file writes the current form.
 - **`diagnose_canvas` no longer runs the JSON schema.** The canvas parser — the
   thing that opens the file — reports everything the schema did, at every depth,
   so a document is checked once instead of twice and a single finding is no

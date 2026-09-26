@@ -28,7 +28,7 @@ as re-export shims onto these, so consumers can migrate one at a time.
 | `model/`      | The persisted data structures and their per-type semantics — see below                                                                                                                                                                                                                                                                                             |
 | `plugin/`     | The doc-side plugin contract: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, the predicates that read a definition (`supportsAutoHeight`, `hasInsetTextRegion`), the built-in definition table, and `resolveDocDefinitions`, which merges a preset set with the plugins' into the one map the parser and the ops build from |
 | `registries/` | The tables those definitions are collected into and looked up by type: the doc validators, the factories, the style defaults                                                                                                                                                                                                                                       |
-| `parse/`      | `createCanvasParser` and the staged validation it runs (`stripUnknownContent` → `checkStructure` → the registry's per-type validation → `checkSemantics`)                                                                                                                                                                                                          |
+| `parse/`      | `createCanvasParser` and the staged validation it runs (`migrate/migrateDoc` → `stripUnknownContent` → `checkStructure` → the registry's per-type validation → `checkSemantics`)                                                                                                                                                                                   |
 | `ops/`        | `createDocOps` — programmatic building and reworking of a doc (see `ops/README.md`)                                                                                                                                                                                                                                                                                |
 | `text/`       | Text measurement and visual line layout, plus the typography constants display, editing and measurement must agree on                                                                                                                                                                                                                                              |
 | `file/`       | `.jis.png` / `.jis.svg` source embedding and extraction                                                                                                                                                                                                                                                                                                            |
@@ -181,6 +181,36 @@ catch it — it only says the list holds no name the type lacks, not that it hol
 them all. For the shipped types, `@jiscribe/doc-tools`' `shippedPropertyNames`
 test is what catches it, by holding the registry against the published JSON
 schema.
+
+## Migrating an old form
+
+A field the format once wrote and no longer does is rewritten by the parser
+before anything is validated, so a document written by an older build still
+opens. The migrations sit in one table in `parse/migrate/migrateDoc.ts`, and each
+is a pure function from one object to the rewritten object plus the warnings for
+what it rewrote.
+
+- **It always runs, with no version gate.** A document carries no generation to
+  key on — every host composes its own plugin set — so a migration recognizes
+  the old form **by its shape** and is a no-op otherwise. That is what makes
+  migrating an already-migrated document change nothing, which is what lets it
+  run on every parse.
+- **Every rewrite is a `warning`.** It is listed first in `ok.warnings`, with the
+  object's `id` when it has one, and `ok.doc` is the migrated doc — so nothing
+  changes silently and the next save writes the current form.
+- **An unregistered type is never touched.** What an opaque object holds is no
+  one's here to read.
+
+This is the discipline a breaking change to the format follows: **design the new
+form so that the old one is distinguishable from it by shape alone, and write the
+migration that turns one into the other.** A change that cannot be told apart
+that way has no migration to write, and every document holding the old form
+becomes a file someone has to edit by hand.
+
+The table holds the document-wide migrations, which an object of every type
+passes through. A migration only one type needs would be a hook on its
+`ObjectDocDefinition`, applied per object after the table; nothing needs one yet,
+so there is no hook.
 
 ## Usage Example
 

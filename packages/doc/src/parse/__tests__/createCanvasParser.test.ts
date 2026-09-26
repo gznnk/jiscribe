@@ -8,7 +8,7 @@ import type { CanvasParseResult } from "../createCanvasParser";
 import { createCanvasParser } from "../createCanvasParser";
 
 // createCanvasParser builds a dedicated (non-global) registry from a preset/plugin
-// composition and runs the staged pipeline behind `parse` (JSON.parse →
+// composition and runs the staged pipeline behind `parse` (JSON.parse → migrateDoc →
 // stripUnknownContent → checkStructure → per-type checks → checkSemantics → unknown-key
 // removal). The first suite exercises the composition contract, the second the
 // pipeline's wiring through the default parser (kind dispatch, ordering, the no-throw
@@ -743,6 +743,107 @@ describe("parse: the staged pipeline", () => {
 				expect(
 					result.warnings.map((warning) => warning.unknownKeyPath),
 				).toEqual([["points", 1, "zz"]]);
+			}
+		});
+	});
+
+	// The migration runs before everything else, so a form the format once wrote
+	// reaches the validators in its current form: validateTextFields rejects both of
+	// these outright, and the document still opens.
+	describe("a field written in a form the format no longer uses", () => {
+		// A source body, as the markdown card's is: no built-in type holds one.
+		const markdownPlugin = {
+			id: "markdown-plugin",
+			objects: {
+				markdown: {
+					features: {
+						type: "markdown",
+						geometry: "rect",
+						transform: true,
+						text: "source",
+					},
+					validateDoc: () => [],
+				} satisfies ObjectDocDefinition,
+			},
+		};
+
+		const card = { ...rect("m1"), type: "markdown" };
+
+		it("reads a source body written as styled runs as its plain text", () => {
+			const result = createCanvasParser({ plugins: [markdownPlugin] }).parse(
+				text(
+					validDoc([
+						{
+							...card,
+							text: [{ text: "a" }, { text: "b", fontWeight: "bold" }],
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual({ ...card, text: "ab" });
+				expect(result.warnings).toEqual([
+					{
+						path: "root[0].text",
+						message:
+							'text was written as styled runs, which a "markdown" body does not take: it is read as the plain text and rewritten so on save.',
+						severity: "warning",
+						id: "m1",
+					},
+				]);
+			}
+		});
+
+		it("reads an empty list of runs as an empty text, dropping the field", () => {
+			const result = parse(text(validDoc([rect("r1", { text: [] })])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(rect("r1"));
+				expect(result.warnings).toEqual([
+					{
+						path: "root[0].text",
+						message:
+							"text was an empty list of runs: it is read as an empty text and the field is dropped on save.",
+						severity: "warning",
+						id: "r1",
+					},
+				]);
+			}
+		});
+
+		it("warns about nothing when the doc it handed back is parsed again", () => {
+			const parser = createCanvasParser({ plugins: [markdownPlugin] });
+			const first = parser.parse(
+				text(
+					validDoc([
+						rect("r1", { text: [] }),
+						{ ...card, text: [{ text: "a" }] },
+					]),
+				),
+			);
+			expect(first.kind).toBe("ok");
+			if (first.kind === "ok") {
+				expect(first.warnings).toHaveLength(2);
+				const second = parser.parse(JSON.stringify(first.doc));
+				expect(second.kind).toBe("ok");
+				if (second.kind === "ok") {
+					expect(second.warnings).toEqual([]);
+					expect(second.doc).toEqual(first.doc);
+				}
+			}
+		});
+
+		it("lists the migration's warnings before the strip's", () => {
+			const result = parse(
+				text(validDoc([rect("r1", { text: [], strokeDashType: "wavy" })])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.warnings.map((warning) => warning.path)).toEqual([
+					"root[0].text",
+					"root[0].strokeDashType",
+				]);
 			}
 		});
 	});
