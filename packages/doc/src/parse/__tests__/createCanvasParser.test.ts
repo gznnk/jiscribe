@@ -795,6 +795,29 @@ describe("parse: the staged pipeline", () => {
 			}
 		});
 
+		it("lists what migrate rewrote before the strip's and the validators' warnings", () => {
+			const result = createCanvasParser({ plugins: [markdownPlugin] }).parse(
+				text(
+					validDoc([
+						{
+							...card,
+							text: [{ text: "a" }],
+							strokeDashType: "wavy",
+							zzUnknown: 1,
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.warnings.map((warning) => warning.path)).toEqual([
+					"root[0].text",
+					"root[0].strokeDashType",
+					"root[0].zzUnknown",
+				]);
+			}
+		});
+
 		it("reads an empty list of runs as an empty text, dropping the field", () => {
 			const result = parse(text(validDoc([rect("r1", { text: [] })])));
 			expect(result.kind).toBe("ok");
