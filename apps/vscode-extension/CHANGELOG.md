@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shortly after every change. The read-only side of a git diff is no longer
   validated.
 
-## [0.10.0] - 2026-09-14
+## [0.10.0] - 2026-09-15
 
 The editor grew two sidebars. Everything a shape can be is now in one panel on
 the right — including the three text switches that used to hide in the floating

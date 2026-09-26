@@ -10,7 +10,8 @@ minor releases.
 What is recorded here is this server's own surface: its tools, the viewer, and
 how it is registered. The canvas it draws on — the shapes, the styles, what a
 `.jis` file can hold — moves with the engine, and the
-[release notes](https://github.com/gznnk/jiscribe/releases) cover that.
+[engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
+covers that.
 
 ## [Unreleased]
 
@@ -280,7 +281,7 @@ build knows: the object is kept as it is but not drawn.`
   canvas had to be opened again. The port is still released when the MCP client
   disconnects or on `close_canvas`.
 
-## [0.10.0] - 2026-09-14
+## [0.10.0] - 2026-09-15
 
 The AI can now fetch the drawing guide instead of being expected to know it, and
 it can be given a canvas to look at without a window appearing on anyone's
