@@ -72,8 +72,10 @@ build knows: the object is kept as it is but not drawn.`
   them, every write-back runs the validator `diagnose_canvas` runs and refuses
   a document carrying a finding the file did not have when the tool read it.
   The comparison is against the file as it was, so one already carrying a
-  finding of its own (a key the format does not know) stays
-  editable, and what it held is written back untouched. The check costs one
+  finding of its own (an object of a type this build does not ship) stays
+  editable, and that object is written back untouched. A property or enum
+  value the format does not know is not kept that way: it is dropped on the
+  write (see Changed). The check costs one
   validation per write — about 15 ms at 200 objects and 140 ms at 2,000 — and
   a second one only when the file holds contents this server has not seen
   (the first edit of it, or one after someone else wrote it).
