@@ -1,6 +1,7 @@
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import type { TransformDoc } from "@jiscribe/doc/model/objects/base/TransformDoc";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
+import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import {
 	roundDocEllipse,
 	roundDocRect,
@@ -24,7 +25,7 @@ import {
 	mapTransformStateToDoc,
 } from "./TransformMapper";
 import type { TransformState } from "./TransformState";
-import { collectStyleKeys, pick } from "../utils/stylePassthrough";
+import { pick } from "../utils/stylePassthrough";
 
 /**
  * Generates a Doc↔State mapper from `features` for Frame-family objects

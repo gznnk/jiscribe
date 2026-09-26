@@ -1,4 +1,4 @@
-<!-- jiscribe guide 0.10.0+ee272095 -->
+<!-- jiscribe guide 0.10.0+1e02488e -->
 
 # The Jiscribe file format
 
@@ -50,6 +50,7 @@ The top level must always have `version` / `root` (the array may be empty).
 - Do not give a `text` a `height` — its height is always measured from the text itself. `width` belongs to its `textLayout: "block"` form alone, where it is required and is the width the text wraps in; the default label form measures its width too, and `fontSize` is what makes it bigger.
 - Do not reuse the same `id`.
 - Do not put a `connector` inside a group's `children` (connectors live at the top level of `root` only).
+- Do not write a property a type does not have — a misspelling, or a style the shape does not take (a `fontWeight` on a `markdown` card, whose emphasis is the Markdown's own). The file still opens, but the property is reported as unknown and **dropped the next time the file is written**, so nothing comes of it. Check with `diagnose_canvas`, which lists each one.
 
 ## Geometry by type
 

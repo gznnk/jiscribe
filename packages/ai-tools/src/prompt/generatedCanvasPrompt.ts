@@ -1,7 +1,7 @@
 // 生成物。編集しないこと（pnpm generate:schema で再生成）。
 // 正本は engine/packages/doc-schema/parts/ にある。
 
-export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.10.0+ee272095 -->
+export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.10.0+1e02488e -->
 
 # Drawing on a Jiscribe canvas
 

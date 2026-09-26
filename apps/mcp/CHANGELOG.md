@@ -61,20 +61,21 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
   and the group tools act on it, while a tool that would edit what is inside
   it (moving, resizing, styling) refuses or skips it and says why.
   `diagnose_canvas` now reports it as `Object type "…" is not a type this
-build knows: the object is kept as it is but not drawn.`, beside the schema
-  error its type still draws.
-- **A tool no longer leaves a file that `diagnose_canvas` rejects.** A call
-  could succeed and write something the parser lets through but the schema
-  forbids: `add_object` / `add_objects` stored a `text` on `lucideIcon`,
+build knows: the object is kept as it is but not drawn.`
+- **A tool no longer leaves a file that `diagnose_canvas` reports on.** A call
+  could succeed and write a field the type does not hold, which the drawing
+  then ignores: `add_object` / `add_objects` stored a `text` on `lucideIcon`,
   `polygon` and `polyline` (the very types `set_text` and `get_text` call
   textless), and `set_text_style` turned a markdown body into styled runs
-  where the schema, and the renderer, take a plain string only. Both are now
+  where the renderer takes a plain string only. Both are now
   refused with an error naming why, and the file is left as it was. Behind
   them, every write-back runs the validator `diagnose_canvas` runs and refuses
-  a document carrying an error the file did not have when the tool read it.
-  The comparison is against the file as it was, so one already failing the
-  schema for a reason of its own (a key the format does not know) stays
-  editable, and what it held is written back untouched. The check costs one
+  a document carrying a finding the file did not have when the tool read it.
+  The comparison is against the file as it was, so one already carrying a
+  finding of its own (an object of a type this build does not ship) stays
+  editable, and that object is written back untouched. A property or enum
+  value the format does not know is not kept that way: it is dropped on the
+  write (see Changed). The check costs one
   validation per write — about 15 ms at 200 objects and 140 ms at 2,000 — and
   a second one only when the file holds contents this server has not seen
   (the first edit of it, or one after someone else wrote it).
@@ -240,6 +241,36 @@ build knows: the object is kept as it is but not drawn.`, beside the schema
 
 ### Changed
 
+- **`diagnose_canvas` reports a field written in a form the format no longer
+  uses.** A `markdown` body written as styled runs, or a text written as an empty
+  list of runs, used to keep the file from opening. Both are now read as the text
+  they stand for — the runs' plain text, an empty text — and reported as a
+  warning saying so; the next tool that writes the file writes the current form.
+- **`diagnose_canvas` no longer runs the JSON schema.** The canvas parser — the
+  thing that opens the file — reports everything the schema did, at every depth,
+  so a document is checked once instead of twice and a single finding is no
+  longer reported in two spellings. What the schema refused outright is now a
+  warning where the document still opens: an unknown property, an unknown enum
+  value, an object of a type this build does not ship. The document loads, and
+  the field is gone from the file the next time it is saved. In exchange, a
+  write-back is refused when it would add **any** finding the file did not have,
+  warnings included: a value the parser only warns about is one the next save
+  drops, which is the loss the refusal exists to prevent.
+- **`diagnose_canvas` now names a property the shape does not have.** A
+  misspelling, or a style a type does not take, used to pass the parser without
+  a word and be dropped on the way to the drawing — the value sat in the file
+  looking as though it had taken effect, and vanished the next time a tool wrote
+  the file. It is now reported as a warning that says the field was ignored and
+  will be dropped on save, and any tool that writes the file does drop it. The
+  document still opens either way. The same goes for a property inside a text
+  run or slot, a polyline's point, a connector's endpoint, anchor or label, and
+  at the document root, in `view` and in `view.padding`.
+- **A broken value is refused rather than dropped.** An enum field holding
+  something other than a string (`"textAlign": 1`) used to be dropped with a
+  warning and the document opened without it; a text slot whose id is a plain
+  number (`"0"`) used to vanish on load. `diagnose_canvas` now reports both as
+  errors, and `$schema` and `meta` (with its `name` / `description` /
+  `reference`) are held to their types the same way.
 - **A viewer window left open from 0.10.0 or earlier cannot reconnect to this
   release.** It carries neither the session token nor the revision the host now
   demands. Close it; `open_canvas` opens a new one.

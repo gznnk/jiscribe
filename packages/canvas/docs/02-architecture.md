@@ -46,7 +46,7 @@ The Doc model is **not** in this package. It lives in `@jiscribe/doc`
 (`packages/doc/src/`), which canvas depends on. Its main parts are `model/` (Doc types + per-type
 validation), `plugin/` (`ObjectDocDefinition` / `CanvasDocPlugin` /
 `resolveDocDefinitions` / `ObjectDocValidatorRegistry` / `ObjectFactoryRegistry`, …),
-`parse/` (`createCanvasParser` / `validateStructure` / `validateSemantics`, …), `ops/`
+`parse/` (`createCanvasParser` / `checkStructure` / `checkSemantics`, …), `ops/`
 (`createDocOps`), `text/` (text measurement) and `file/` (`.jis.png` / `.jis.svg`
 source embedding). Take all of it from `@jiscribe/doc` — see
 [`packages/doc/README.md`](../../doc/README.md).

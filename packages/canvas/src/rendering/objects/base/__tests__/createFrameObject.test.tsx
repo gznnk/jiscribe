@@ -8,10 +8,10 @@ import {
 	DEFAULT_STROKE_OPACITY,
 	DEFAULT_STROKE_WIDTH,
 } from "@jiscribe/doc/model/objects/base/StrokeStyleDoc";
+import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { AUTO_COLOR } from "@jiscribe/doc/model/objects/utils/autoColor";
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
-import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import { createObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
 import type { TransformedFrame } from "@jiscribe/geometry";
 import { act } from "react";
 import { createRoot } from "react-dom/client";

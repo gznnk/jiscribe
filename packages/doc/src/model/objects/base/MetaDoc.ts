@@ -15,3 +15,15 @@ export type MetaDoc = {
 	reference?: string;
 } & Record<string, unknown> &
 	Brand<typeof MetaDocBrand>;
+
+/**
+ * The members {@link MetaDoc} gives a meaning, each a string when present. The
+ * record is open past these — the rest is the host's own — so the list cannot be
+ * tied to the type the way the other key constants are, and `meta` is never
+ * checked for unknown keys.
+ */
+export const META_DOC_STRING_KEYS = [
+	"name",
+	"description",
+	"reference",
+] as const;

@@ -5,6 +5,7 @@ import {
 	isViewOpenMode,
 	isViewScrollMode,
 	resolveViewPadding,
+	VIEW_PADDING_KEYS,
 } from "../ViewDoc";
 
 const paths = (view: unknown) =>
@@ -50,6 +51,15 @@ describe("validateViewDoc", () => {
 			"view.padding.top",
 			"view.padding.bottom",
 		]);
+	});
+
+	it("checks each side VIEW_PADDING_KEYS declares, in that order", () => {
+		const padding = Object.fromEntries(
+			VIEW_PADDING_KEYS.map((side) => [side, -1]),
+		);
+		expect(paths({ padding })).toEqual(
+			VIEW_PADDING_KEYS.map((side) => `view.padding.${side}`),
+		);
 	});
 
 	it("rejects an open mode outside the known set", () => {

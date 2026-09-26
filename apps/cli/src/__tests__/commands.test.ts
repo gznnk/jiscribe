@@ -1,3 +1,5 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -80,6 +82,38 @@ describe("validate", () => {
 		expect(code).toBe(0);
 		expect(stdout.trim().split("\n")).toHaveLength(1);
 		expect(stdout).toMatch(/^ok /);
+	});
+
+	it("prints the parser's warnings and still exits 0, the document opening without the reported fields", () => {
+		const { code, stdout } = capture(() =>
+			runCheckCommand([fixture("oldForm.jis.json")], false),
+		);
+		expect(code).toBe(0);
+		const lines = stdout.trim().split("\n");
+		expect(lines.slice(0, -1).map((line) => line.split(" ")[0])).toEqual([
+			"warning",
+			"warning",
+		]);
+		expect(stdout).toMatch(/^warning .* note text was an empty list of runs/m);
+		expect(stdout).toMatch(/^warning .* note Unknown property "zzUnknown"/m);
+		expect(lines[lines.length - 1]).toMatch(/^ok /);
+	});
+
+	it("passes every shipped example diagram with no finding at all", () => {
+		// The real files, unmutated: a key constant a type forgot to declare, or a
+		// migration misreading a current form, shows up here first.
+		const diagramsDir = fileURLToPath(
+			new URL("../../../canvas-examples/diagrams/", import.meta.url),
+		);
+		const files = readdirSync(diagramsDir)
+			.filter((name) => name.endsWith(".jis.json"))
+			.map((name) => join(diagramsDir, name));
+		expect(files.length).toBeGreaterThan(0);
+		const { code, stdout } = capture(() => runCheckCommand(files, false));
+		expect(code).toBe(0);
+		expect(stdout.trim().split("\n")).toEqual(
+			files.map((file) => `ok ${file}`),
+		);
 	});
 
 	it("exits 1 and names the object for a document the parser rejects", () => {

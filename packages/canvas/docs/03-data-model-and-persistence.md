@@ -127,25 +127,63 @@ is the doc rather than a selection, and `null` clears the field the way the head
 
 For JSON strings coming from outside, a parser from `createCanvasParser` (`@jiscribe/doc`, `parse/`)
 returns its result as a **discriminated union without throwing exceptions** (`CanvasParseResult`, defined in
-`parse/parseWithRegistry.ts`). This lets the extension side and the Webview side share the same logic and
+`parse/createCanvasParser.ts`). This lets the extension side and the Webview side share the same logic and
 prevents errors from slipping through.
 
 Each failure surfaces as its own `kind` (a JSON syntax error, a structure error, a semantic error, or an unexpected
 exception during validation). Success (`ok`) carries, besides the doc, `warnings` reporting what was removed or kept unread.
 
-Validation happens in two stages, preceded by a step that removes unknown content. If the structure does not hold,
-semantic validation is not reached.
+Validation happens in two stages, preceded by a step that rewrites the forms the format no longer writes and one
+that removes unknown content. If the structure does not hold,
+semantic validation is not reached. What each stage of one document's passage looks at, and what it does about
+what it finds:
 
-1. **Removing unknown content `stripUnknownContent`** — Removes unknown values of enum fields. These are not errors:
+| Stage                                                                                  | What it looks at                                                                                                                                                                                                                                           | Result                                                                                                                |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `migrateDoc`                                                                           | The old forms the format once wrote: a source body written as styled runs, an empty list of runs                                                                                                                                                           | Rewritten into the current form — a warning either way                                                                |
+| `stripUnknownContent`                                                                  | Enum fields holding a string outside the known set, in objects and in `view` (`open` / `scroll`); objects of unregistered types; connectors anchored to an unknown kind                                                                                    | Value removed; object kept opaque, or removed when it has no id (cascading); connector removed — a warning either way |
+| `checkStructure`                                                                       | The document's own frame: `version`, the legacy top-level `connectors`, `$schema`, `background`, `view`, each `root` entry's `id` / `type` / `meta`, a group's `children`; every name the frame does not hold at the root, in `view` and in `view.padding` | Error; warning carrying `unknownKeyPath` for an unknown name                                                          |
+| `registry.validate` (the type's `validateDoc`)                                         | The values the type's own fields hold                                                                                                                                                                                                                      | Error                                                                                                                 |
+| `validateDocKeys` (against the names the registry built from `features` + `extraKeys`) | Every field name the type does not hold, on the object and inside the containers doc owns (text runs and slots, poly vertices, a connector's endpoints, anchors and label); a slot id the key order would not survive                                      | Warning carrying `unknownKeyPath` for an unknown name; error for an integer-like slot id                              |
+| `checkSemantics`                                                                       | What only the whole document answers: id uniqueness, a connector's endpoints, a self-loop's anchors                                                                                                                                                        | Error                                                                                                                 |
+| Unknown-key removal                                                                    | The positions those warnings carry                                                                                                                                                                                                                         | The field is deleted from `ok.doc`, so the next save drops it                                                         |
+
+The removal runs last and only once both error gates have passed: a document that will not open has nothing to save.
+
+1. **Migrating an old form `migrateDoc`** — Rewrites a field written in a form the format no longer writes: a
+   `"source"` body written as styled runs (read as its plain text), and an empty list of runs (read as the empty
+   text, which is an absent field for a body and `""` for one row of a slot). It runs on every parse with no
+   version gate — the format has no generation to key on, so each migration recognizes the old form by its shape
+   alone and is a no-op otherwise, which is what makes migrating a migrated document change nothing. Every rewrite
+   is reported in `warnings`, and `ok.doc` is the migrated doc, so the next save is where the current form is
+   written. An object of an unregistered type is never touched. The discipline a new migration follows is in
+   `packages/doc/README.md`.
+2. **Removing unknown content `stripUnknownContent`** — Removes unknown values of enum fields: a string outside the
+   known set, which is what a document written for a newer build holds. A value of another type (`textAlign: 1`) is
+   corruption and is left for the validator to reject. The same holds for the document-root `view`'s `open` and
+   `scroll`. A connector whose endpoint anchors to a kind outside the known set is removed whole, since an anchor
+   cannot be dropped on its own. The removals are not errors:
    they are reported as the `ok` result's `warnings` and the rest of the document still loads. `ok.doc` is the
    stripped doc, so saving it is what makes the removal stick. An object of an unregistered type is not removed: it
    stays in place as an **opaque object** (`OpaqueObjectDoc`), untouched inside, and is reported in `warnings` as
    well. It needs an id to be referred to and kept in place, so only one without an id is removed (cascading to
    groups left empty and to connectors pointing at what it held).
-2. **Structural validation `validateStructure`** — Validates each node's type and required fields.
+3. **Structural validation `checkStructure`** — Validates each node's type and required fields.
    Type-specific validation is delegated to the doc-validator registry the parser built, and only the recursion into a
-   `group`'s `children` is handled here as a structural rule.
-3. **Semantic validation `validateSemantics`** — Validates consistency that can only be judged by
+   `group`'s `children` is handled here as a structural rule. This stage also reports every field written on an object
+   that the type does not hold (`validateDocKeys`) — a misspelling, or a style a shape does not take, such as a `fontWeight` on a
+   `markdown` card. It knows which names a type holds from that type's definition (`features` + `extraKeys`), so the
+   check covers every registered type and no `validateDoc` carries an allow-list of its own. That is a **warning**
+   (`SemanticDiagnostic.severity`), not an error: the document still loads, and the parser removes the field from
+   `ok.doc`, so the next save is where it disappears. The warning carries `unknownKeyPath`, the position the parser
+   removes, since the name itself may be any string a file holds. The same check reaches into the containers doc
+   itself defines — a text run, a slot, a poly vertex, a connector's endpoint, anchor and label — and `checkStructure`
+   applies it to the document's own frame (the root, `view`, `view.padding`). Not to `meta`, which is an open record,
+   nor to a nested object a type declares through `extraKeys` (a callout's `tail`): the mapper passes such a value
+   through whole, so nothing in it is lost. Nothing inside an opaque object is judged this way.
+   When an error is found anywhere in the document, the result is a `structure-error` carrying the errors alone — a
+   document that will not open has nothing to save.
+4. **Semantic validation `checkSemantics`** — Validates consistency that can only be judged by
    traversing the entire document.
    - **Uniqueness of IDs**: IDs must not be duplicated across the root tree (including connectors).
      Because `CanvasDoc` is a nested tree, a "parent-child cycle" cannot occur structurally; any case that looks like a cycle is effectively "different objects sharing the same ID" — that is, nothing more than an ID duplication.

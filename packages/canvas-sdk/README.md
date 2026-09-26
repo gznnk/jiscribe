@@ -38,7 +38,9 @@ ESM 専用、など）。1 ファイル 1 エントリで対応させること�
 
 - `createFrameObjectDoc({ features, defaults, ... })`（`/doc`）— validateDoc / factory を
   導出して `ObjectDocDefinition` を丸ごと返す。族固有 factory は `factory:` で上書き可
-  （`supportsBounds` と型排他）
+  （`supportsBounds` と型排他）。`extraKeys` はその型が持つフィールド名の唯一の宣言で、
+  パーサーはそれと features から集合を組み立て、集合に無い名前を warning で報告して
+  doc から取り除く（**`extraKeys` の書き漏れは保存時のデータ消失になる**）
 - `createFrameObjectDefinition<TDoc, TState>({ doc, component, ... })` — mapper /
   stateValidator / behavior を doc.features から充填して `ObjectTypeDefinition` を返す。
   図形固有のフィールド名は doc 定義の `extraKeys` から読む（宣言は

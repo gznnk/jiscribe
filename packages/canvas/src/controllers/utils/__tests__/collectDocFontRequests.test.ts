@@ -1,4 +1,4 @@
-import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import { createObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { DEFAULT_FONT_FAMILY } from "@jiscribe/doc/text/style/fontFamilies";
 import { describe, expect, it } from "vitest";
 

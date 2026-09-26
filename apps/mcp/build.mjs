@@ -4,16 +4,17 @@
 //   1. vite が出したビューアの JS と CSS を index.html の中へ畳む（単一 HTML 化）。
 //      フォントだけは畳まない（全部で 50MB あり、しかも unicode-range 分割なので
 //      ブラウザは実際に描く範囲しか取りに来ない）。
-//   2. 実行時に node の解決規則で読むもの（JSON スキーマ・ガイド 2 枚・計測用
-//      フォント）を dist/node_modules へ写し、写し漏れが無いか検証する。
+//   2. 実行時に node の解決規則で読むもの（ガイド 2 枚・計測用フォント）を
+//      dist/node_modules へ写し、写し漏れが無いか検証する。
 //   3. esbuild で src/index.ts を単一ファイル dist/index.mjs にバンドルする（Node・ESM）。
 //   4. できた成果物に tools/list を投げ、ツール定義の分量を報告する。
 //
 // 通常ビルド: node build.mjs / 監視: node build.mjs --watch
 // （--watch が監視するのは 3 だけだが、入る前に 2 の staging を一度だけ行う。
 // これが無いと watch しか走らせたことのない clone の dist/ は staging を
-// 一度も持たず、diagnose_canvas が落ちて日本語の計測が黙って推定へ落ちる。
-// staging は冪等なので毎回でも安全。ビューアを触るなら vite の dev サーバーを使う）
+// 一度も持たず、read_drawing_guide が error を返し、日本語の計測が黙って
+// 推定へ落ちる。staging は冪等なので毎回でも安全。ビューアを触るなら vite の
+// dev サーバーを使う）
 
 import { spawn } from "child_process";
 import { cp, mkdir, readdir, readFile, rm, writeFile } from "fs/promises";
@@ -93,17 +94,17 @@ const inlineViewerHtml = async () => {
 
 // ここから下は「リポジトリの外へ持ち出しても同じ答えを返す」ための staging。
 //
-// doc-tools は JSON スキーマとフォントを、バンドルされたコードからではなく
-// node の解決規則で実行時に読む（validateDoc の require.resolve と
-// fontSourcePackages の resolveFontSourceDir）。基準は dist/index.mjs 自身なので、
-// その隣に node_modules を作って必要なファイルだけ置けば、周りにリポジトリが
-// 無くても同じものが見つかる。
+// 計測用フォントと read_drawing_guide のガイド 2 枚は、バンドルされたコードから
+// ではなく node の解決規則で実行時に読む（doc-tools の fontSourcePackages の
+// resolveFontSourceDir と、server.ts の DRAWING_GUIDE_SPECIFIERS）。基準は
+// dist/index.mjs 自身なので、その隣に node_modules を作って必要なファイルだけ
+// 置けば、周りにリポジトリが無くても同じものが見つかる。
 //
 // フォントを置かずに済ませることはできない。doc-tools は見つからない families を
 // 「文字数からの推定」へ黙って落とすので、日本語の計測だけが静かにずれる。
 //
-// read_drawing_guide が返すガイド 2 枚（canvas-prompt.md / authoring-json.md）も
-// 同じ doc-schema から同じ流儀で読むので、ここで一緒に写す。
+// JSON スキーマは写さない。検証はパーサーだけで行うので（doc-tools の
+// validateDoc）、実行時に読むものがもう無い。
 
 const require = createRequire(import.meta.url);
 const stagedModulesDir = join(__dirname, "dist", "node_modules");
@@ -196,19 +197,15 @@ const stageFontPackage = async (packageName) => {
 
 /**
  * doc-schema の assets のうち実行時に読むものを写す（exports 経由で解決されるので
- * package.json ごと）。検証が読む JSON スキーマと、read_drawing_guide が返す
- * ガイド 2 枚。
+ * package.json ごと）。read_drawing_guide が返すガイド 2 枚だけで、JSON スキーマは
+ * 実行時に誰も読まない。
  */
-const DOC_SCHEMA_ASSETS = [
-	"jiscribe.schema.json",
-	"canvas-prompt.md",
-	"authoring-json.md",
-];
+const DOC_SCHEMA_ASSETS = ["canvas-prompt.md", "authoring-json.md"];
 
 const stageDocSchema = async () => {
-	// package.json 自身は exports に無いので、公開されている ./schema から辿る
+	// package.json 自身は exports に無いので、公開されている ./canvas-prompt から辿る
 	const sourceDir = dirname(
-		dirname(require.resolve("@jiscribe/doc-schema/schema")),
+		dirname(require.resolve("@jiscribe/doc-schema/canvas-prompt")),
 	);
 	const targetDir = join(stagedModulesDir, "@jiscribe", "doc-schema");
 	await mkdir(join(targetDir, "assets"), { recursive: true });
@@ -226,7 +223,8 @@ const stageDocSchema = async () => {
  *
  * doc-tools はフォントが見つからない family を「文字数からの推定」へ黙って落とす
  * （エラーにならない）ので、staging が欠けた配布物は出荷されるまで気づけない。
- * ここで落として、壊れたものが dist に残らないようにする。
+ * ガイドの方は read_drawing_guide が error を返すだけの道具になる。ここで落として、
+ * 壊れたものが dist に残らないようにする。
  *
  * 実測ではなく構造を見るのは、この場で測ってもリポジトリの node_modules へ
  * フォールバックしてしまい、staging を測ったことにならないため。
@@ -241,14 +239,11 @@ const verifyStagedRuntimeDependencies = async () => {
 		const manifest = JSON.parse(
 			await readFile(join(schemaDir, "package.json"), "utf8"),
 		);
-		for (const subpath of ["./schema", "./canvas-prompt", "./authoring-json"]) {
+		for (const subpath of ["./canvas-prompt", "./authoring-json"]) {
 			if (manifest.exports?.[subpath] === undefined) {
 				problems.push(`doc-schema: package.json does not export ${subpath}`);
 			}
 		}
-		JSON.parse(
-			await readFile(join(schemaDir, "assets", "jiscribe.schema.json"), "utf8"),
-		);
 		// ガイドは中身を検査できないので、空でないことだけ見る。欠けたまま出荷すると
 		// read_drawing_guide が error を返すだけの道具になる
 		for (const fileName of ["canvas-prompt.md", "authoring-json.md"]) {
@@ -323,8 +318,9 @@ const verifyStagedRuntimeDependencies = async () => {
 	if (problems.length > 0) {
 		throw new Error(
 			[
-				"Staged runtime dependencies are incomplete. Shipping this would make",
-				"diagnose_canvas fail and silently degrade text measurement to estimates.",
+				"Staged runtime dependencies are incomplete. Shipping this would leave",
+				"read_drawing_guide with nothing to return and silently degrade text",
+				"measurement to estimates.",
 				...problems.map((problem) => `  - ${problem}`),
 			].join("\n"),
 		);

@@ -1,11 +1,8 @@
 import { isObject } from "@jiscribe/basic-validators";
 
-import { isViewOpenMode, isViewScrollMode } from "./ViewDoc";
-import { validateOptionalNumber } from "../objects/utils/validateDocUtils";
+import { isViewOpenMode, isViewScrollMode, VIEW_PADDING_KEYS } from "./ViewDoc";
+import { validateOptionalNumber } from "../objects/validators/validateNumberFields";
 import type { SemanticDiagnostic } from "../types/SemanticDiagnostic";
-
-/** The four sides of `view.padding`, checked one by one so each names its own path. */
-const PADDING_SIDES = ["top", "right", "bottom", "left"] as const;
 
 /**
  * Validates the optional `view` field of a CanvasDoc: the padding sides, the
@@ -15,10 +12,11 @@ const PADDING_SIDES = ["top", "right", "bottom", "left"] as const;
  * a negative side would crop the drawing rather than frame it, which no caller
  * of `view` treats as meaningful.
  *
- * An `open` or `scroll` value outside the known set is not an error here in the
- * parse pipeline: `stripUnknownContent` drops it with a warning first, the same
- * way an unknown `textAlign` is dropped. This check is what catches it for a
- * direct caller that skipped the strip.
+ * An `open` or `scroll` holding a *string* outside the known set does not reach
+ * here in the parse pipeline: `stripUnknownContent` drops it with a warning first,
+ * the same way an unknown `textAlign` is dropped. A value of any other type is not
+ * stripped, so this is what rejects it — as it is what catches an unknown mode for
+ * a direct caller that skipped the strip.
  *
  * @param view - The candidate `view` value, unvalidated; anything that is not an
  *   object yields a single diagnostic at `path`
@@ -31,7 +29,7 @@ export function validateViewDoc(
 	path: string,
 ): SemanticDiagnostic[] {
 	if (!isObject(view)) {
-		return [{ path, message: "must be an object" }];
+		return [{ path, message: "must be an object", severity: "error" }];
 	}
 
 	const v = view as Record<string, unknown>;
@@ -39,10 +37,14 @@ export function validateViewDoc(
 
 	if (v.padding !== undefined) {
 		if (!isObject(v.padding)) {
-			errors.push({ path: `${path}.padding`, message: "must be an object" });
+			errors.push({
+				path: `${path}.padding`,
+				message: "must be an object",
+				severity: "error",
+			});
 		} else {
 			const padding = v.padding as Record<string, unknown>;
-			PADDING_SIDES.forEach((side) => {
+			VIEW_PADDING_KEYS.forEach((side) => {
 				errors.push(
 					...validateOptionalNumber(padding, `${path}.padding`, side, 0),
 				);
@@ -54,6 +56,7 @@ export function validateViewDoc(
 		errors.push({
 			path: `${path}.open`,
 			message: 'must be "fit-width" or "fit-all"',
+			severity: "error",
 		});
 	}
 
@@ -61,6 +64,7 @@ export function validateViewDoc(
 		errors.push({
 			path: `${path}.scroll`,
 			message: 'must be "content" or "infinite"',
+			severity: "error",
 		});
 	}
 

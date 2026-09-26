@@ -1,7 +1,7 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
-import type { ObjectFactoryRegistry } from "@jiscribe/doc/plugin/ObjectFactoryRegistry";
-import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectShapeStyleDefaultsRegistry";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectFactoryRegistry } from "@jiscribe/doc/registries/ObjectFactoryRegistry";
+import type { ObjectShapeStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectShapeStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectAnchorRegionRegistry } from "../../rendering/objects/registry/ObjectAnchorRegionRegistry";

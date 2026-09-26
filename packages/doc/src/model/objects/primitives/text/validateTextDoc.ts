@@ -1,9 +1,9 @@
 import { TextFeatures } from "./TextDoc";
-import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
 import { GEOMETRY_SIZE_MIN } from "../../types/GeometryType";
 import { isTextLayout } from "../../types/text/TextLayout";
-import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
-import { validateRequiredNumber } from "../../utils/validateDocUtils";
+import { createFrameDocValidator } from "../../validators/createFrameDocValidator";
+import { validateRequiredNumber } from "../../validators/validateNumberFields";
 
 /**
  * Validates the layout mode and the width that goes with it. The block layout is
@@ -16,7 +16,11 @@ import { validateRequiredNumber } from "../../utils/validateDocUtils";
 const validateTextLayoutFields: ObjectDocValidateFn = (o, path) => {
 	if (o.textLayout !== undefined && !isTextLayout(o.textLayout)) {
 		return [
-			{ path: `${path}.textLayout`, message: "must be one of: label, block" },
+			{
+				path: `${path}.textLayout`,
+				message: "must be one of: label, block",
+				severity: "error",
+			},
 		];
 	}
 	if (o.textLayout !== "block") {
@@ -26,6 +30,7 @@ const validateTextLayoutFields: ObjectDocValidateFn = (o, path) => {
 					path: `${path}.width`,
 					message:
 						'is stored by textLayout "block" alone; set that layout with it, or drop the width',
+					severity: "error",
 				},
 			];
 		}
@@ -36,6 +41,7 @@ const validateTextLayoutFields: ObjectDocValidateFn = (o, path) => {
 			{
 				path: `${path}.width`,
 				message: 'is required when textLayout is "block"',
+				severity: "error",
 			},
 		];
 	}

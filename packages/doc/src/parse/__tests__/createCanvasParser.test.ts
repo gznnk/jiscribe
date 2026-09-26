@@ -1,15 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { SemanticDiagnostic } from "../../model/types/SemanticDiagnostic";
 import { builtinObjectDocDefinitions } from "../../plugin/builtinObjectDocDefinitions";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
-import type { ObjectDocValidateFn } from "../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../plugin/ObjectDocValidateFn";
+import type { CanvasParseResult } from "../createCanvasParser";
 import { createCanvasParser } from "../createCanvasParser";
 
 // createCanvasParser builds a dedicated (non-global) registry from a preset/plugin
-// composition. These tests exercise that composition contract; the individual
-// structure/semantics validation rules themselves are covered by validateStructure.test.ts /
-// validateSemantics.test.ts.
+// composition and runs the staged pipeline behind `parse` (JSON.parse → migrateDoc →
+// stripUnknownContent → checkStructure → per-type checks → checkSemantics → unknown-key
+// removal). The first suite exercises the composition contract, the second the
+// pipeline's wiring through the default parser (kind dispatch, ordering, the no-throw
+// contract); the individual validation rules are covered by checkStructure.test.ts /
+// checkSemantics.test.ts.
 
 const rect = (id: string, over: Record<string, unknown> = {}) => ({
 	id,
@@ -21,6 +25,10 @@ const rect = (id: string, over: Record<string, unknown> = {}) => ({
 	...over,
 });
 const text = (doc: unknown) => JSON.stringify(doc);
+const parse = (text: string): CanvasParseResult =>
+	createCanvasParser().parse(text);
+
+const validDoc = (root: unknown[] = [rect("r1")]) => ({ version: 1, root });
 
 // A minimal stand-in for a plugin object type (mirrors how plugin-container-shapes
 // registers "container"), used instead of importing an actual plugin so this suite has
@@ -38,6 +46,7 @@ const validateStarDoc: ObjectDocValidateFn = (obj, path) => {
 		errors.push({
 			path: `${path}.points`,
 			message: "must be a positive number",
+			severity: "error",
 		});
 	}
 	return errors;
@@ -169,7 +178,11 @@ describe("createCanvasParser", () => {
 			const strictRectDefinition: ObjectDocDefinition = {
 				features: builtinObjectDocDefinitions.rect.features,
 				validateDoc: (_obj, path) => [
-					{ path, message: "rect is disabled by this parser configuration" },
+					{
+						path,
+						message: "rect is disabled by this parser configuration",
+						severity: "error",
+					},
 				],
 			};
 			const { rect: _omitted, ...presetsWithoutRect } =
@@ -278,6 +291,648 @@ describe("createCanvasParser", () => {
 			const doc = { version: 1, root: [rect("dup"), rect("dup")] };
 			const result = createCanvasParser().parse(text(doc));
 			expect(result.kind).toBe("semantic-error");
+		});
+	});
+});
+
+describe("parse: the staged pipeline", () => {
+	describe("result kind dispatch", () => {
+		it("returns ok for a valid doc, with doc matching the input", () => {
+			const doc = validDoc([rect("r1"), rect("r2")]);
+			const result = parse(text(doc));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc).toEqual(doc);
+			}
+		});
+
+		it("passes an ok doc through untouched, preserving metadata such as $schema", () => {
+			const doc = { $schema: "https://example/s.json", ...validDoc() };
+			const result = parse(text(doc));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc).toEqual(doc);
+			}
+		});
+
+		it("returns syntax-error (with a message) for broken JSON", () => {
+			const result = parse("{ not valid json");
+			expect(result.kind).toBe("syntax-error");
+			if (result.kind === "syntax-error") {
+				expect(result.message.length).toBeGreaterThan(0);
+			}
+		});
+
+		it("returns structure-error for a structural error (missing required fields)", () => {
+			const result = parse(text(validDoc([{ id: "x", type: "rect" }])));
+			expect(result.kind).toBe("structure-error");
+			if (result.kind === "structure-error") {
+				expect(result.diagnostics.length).toBeGreaterThan(0);
+			}
+		});
+
+		it("returns ok with warnings for an unknown type (the object is kept as it is)", () => {
+			const unknownObject = {
+				id: "u",
+				type: "rectangle",
+				strokeDashType: "wavy",
+				children: [{ id: "inner", type: "nope" }],
+			};
+			const result = parse(text(validDoc([rect("r1"), unknownObject])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual(["r1", "u"]);
+				// Nothing inside it is ours: not even an unknown enum value is stripped.
+				expect(result.doc.root[1]).toEqual(unknownObject);
+				expect(result.warnings).toHaveLength(1);
+				expect(result.warnings[0].message).toBe(
+					'Object type "rectangle" is not a type this build knows: the object is kept as it is but not drawn.',
+				);
+			}
+		});
+
+		it("drops an unknown-type object that has no id, which nothing could keep in place", () => {
+			const result = parse(
+				text(validDoc([rect("r1"), { type: "rectangle", x: 0 }])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual(["r1"]);
+				expect(result.warnings[0].message).toContain("will be dropped on save");
+			}
+		});
+
+		it("accepts a connector attached to an unknown-type object or to what it holds", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						{ id: "u1", type: "hexagram", children: [{ id: "u1-inner" }] },
+						{
+							id: "c1",
+							type: "connector",
+							points: [],
+							source: { owner: { id: "r1" }, anchor: { kind: "center" } },
+							target: { owner: { id: "u1" }, anchor: { kind: "center" } },
+						},
+						{
+							id: "c2",
+							type: "connector",
+							points: [],
+							source: { owner: { id: "r1" }, anchor: { kind: "center" } },
+							target: {
+								owner: { id: "u1-inner" },
+								anchor: { kind: "center" },
+							},
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual([
+					"r1",
+					"u1",
+					"c1",
+					"c2",
+				]);
+			}
+		});
+
+		it("still rejects an id an unknown-type object shares with another object", () => {
+			const result = parse(
+				text(validDoc([rect("dup"), { id: "dup", type: "hexagram" }])),
+			);
+			expect(result.kind).toBe("semantic-error");
+		});
+
+		it("returns ok with warnings for an unknown enum value (the field is stripped)", () => {
+			const result = parse(
+				text(validDoc([rect("r1", { strokeDashType: "wavy" })])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect("strokeDashType" in result.doc.root[0]).toBe(false);
+				expect(result.warnings).toHaveLength(1);
+				expect(result.warnings[0].path).toBe("root[0].strokeDashType");
+			}
+		});
+
+		it("returns ok with warnings for an unknown anchor kind (the connector is stripped)", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						{
+							id: "c1",
+							type: "connector",
+							points: [],
+							source: { owner: { id: "r1" }, anchor: { kind: "magnetic" } },
+							target: { anchor: { kind: "free", point: { x: 5, y: 5 } } },
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual(["r1"]);
+				expect(result.warnings[0].message).toContain(
+					'Unknown anchor kind "magnetic"',
+				);
+			}
+		});
+
+		it("keeps every entry when all of them have an unknown type", () => {
+			const result = parse(text(validDoc([{ id: "u1", type: "hexagram" }])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root).toEqual([{ id: "u1", type: "hexagram" }]);
+				expect(result.warnings).toHaveLength(1);
+			}
+		});
+
+		it("returns semantic-error when structure is OK but semantics fail (duplicate id)", () => {
+			const result = parse(text(validDoc([rect("dup"), rect("dup")])));
+			expect(result.kind).toBe("semantic-error");
+			if (result.kind === "semantic-error") {
+				expect(
+					result.diagnostics.some((d) => d.message.includes("duplicated")),
+				).toBe(true);
+			}
+		});
+
+		it("reads connectability from the registry's features (a group is not connectable)", () => {
+			const doc = validDoc([
+				rect("a"),
+				{ id: "g", type: "group", children: [rect("gc")] },
+				{
+					id: "c",
+					type: "connector",
+					points: [],
+					source: {
+						owner: { id: "a" },
+						anchor: { kind: "center" },
+					},
+					target: {
+						owner: { id: "g" },
+						anchor: { kind: "center" },
+					},
+				},
+			]);
+			const result = parse(text(doc));
+			expect(result.kind).toBe("semantic-error");
+			if (result.kind === "semantic-error") {
+				expect(
+					result.diagnostics.some((d) => d.message.includes("not connectable")),
+				).toBe(true);
+			}
+		});
+	});
+
+	describe("unknown properties on a known type", () => {
+		it("reads the document, warns, and takes the property out of ok.doc", () => {
+			const result = parse(text(validDoc([rect("r1", { zzUnknown: 1 })])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(rect("r1"));
+				expect(result.warnings).toEqual([
+					{
+						path: "root[0].zzUnknown",
+						message:
+							'Unknown property "zzUnknown" on a "rect": it was ignored and will be dropped on save.',
+						severity: "warning",
+						id: "r1",
+						unknownKeyPath: ["zzUnknown"],
+					},
+				]);
+			}
+		});
+
+		it.each(["a.b", "x[0]", "", "constructor"])(
+			"removes a property named %j, which no path string could be read back into",
+			(name) => {
+				const result = parse(text(validDoc([rect("r1", { [name]: 1 })])));
+				expect(result.kind).toBe("ok");
+				if (result.kind === "ok") {
+					expect(Object.keys(result.doc.root[0])).not.toContain(name);
+					expect(result.warnings).toHaveLength(1);
+				}
+			},
+		);
+
+		it("reaches a group's children", () => {
+			const result = parse(
+				text(
+					validDoc([
+						{
+							id: "g",
+							type: "group",
+							children: [rect("gc", { zzUnknown: 1 })],
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				const group = result.doc.root[0] as unknown as {
+					children: Record<string, unknown>[];
+				};
+				expect(group.children[0]).toEqual(rect("gc"));
+				expect(result.warnings[0].path).toBe("root[0].children[0].zzUnknown");
+			}
+		});
+
+		it("leaves an opaque object's own fields alone", () => {
+			const opaque = { id: "u", type: "hexagram", zzUnknown: 1 };
+			const result = parse(text(validDoc([opaque])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(opaque);
+			}
+		});
+
+		it("lists the strip's warnings first, then the validators'", () => {
+			const result = parse(
+				text(validDoc([rect("r1", { strokeDashType: "wavy", zzUnknown: 1 })])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.warnings.map((warning) => warning.path)).toEqual([
+					"root[0].strokeDashType",
+					"root[0].zzUnknown",
+				]);
+			}
+		});
+
+		it("reports structure-error, warning-free, when an error sits beside it", () => {
+			const result = parse(
+				text(validDoc([{ id: "r1", type: "rect", zzUnknown: 1 }])),
+			);
+			expect(result.kind).toBe("structure-error");
+			if (result.kind === "structure-error") {
+				expect(
+					result.diagnostics.every(
+						(diagnostic) => diagnostic.severity === "error",
+					),
+				).toBe(true);
+			}
+		});
+	});
+
+	describe("unknown properties inside what a doc nests", () => {
+		// A type whose text is named slots, as the uml record's is: no built-in type
+		// holds one, so the parser is composed with a plugin providing it.
+		const slottedPlugin = {
+			id: "slotted-plugin",
+			objects: {
+				slotted: {
+					features: {
+						type: "slotted",
+						geometry: "rect",
+						transform: true,
+						text: "slots",
+					},
+					validateDoc: () => [],
+				} satisfies ObjectDocDefinition,
+			},
+		};
+
+		const connector = (over: Record<string, unknown> = {}) => ({
+			id: "c1",
+			type: "connector",
+			source: { owner: { id: "r1" }, anchor: { kind: "center" } },
+			target: { anchor: { kind: "free", point: { x: 5, y: 5 } } },
+			...over,
+		});
+
+		it("takes a run's unknown property out of ok.doc, leaving the body as it was", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1", { text: [{ text: "a", fontWeight: "bold", zz: 1 }] }),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(
+					rect("r1", { text: [{ text: "a", fontWeight: "bold" }] }),
+				);
+				expect(result.warnings).toEqual([
+					{
+						path: "root[0].text[0].zz",
+						message:
+							'Unknown property "zz" in "text[0]" of a "rect": it was ignored and will be dropped on save.',
+						severity: "warning",
+						id: "r1",
+						unknownKeyPath: ["text", 0, "zz"],
+					},
+				]);
+			}
+		});
+
+		it("takes a slot's and its rows' unknown properties out of ok.doc", () => {
+			const slotted = (slots: unknown) => ({
+				id: "s1",
+				type: "slotted",
+				x: 0,
+				y: 0,
+				width: 10,
+				height: 10,
+				text: slots,
+			});
+			const result = createCanvasParser({ plugins: [slottedPlugin] }).parse(
+				text(
+					validDoc([
+						slotted({
+							name: { text: "a", textAlign: "center", zz: 1 },
+							rows: { text: [[{ text: "b", zz: 2 }]] },
+						}),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(
+					slotted({
+						name: { text: "a", textAlign: "center" },
+						rows: { text: [[{ text: "b" }]] },
+					}),
+				);
+				expect(
+					result.warnings.map((warning) => warning.unknownKeyPath),
+				).toEqual([
+					["text", "name", "zz"],
+					["text", "rows", "text", 0, 0, "zz"],
+				]);
+			}
+		});
+
+		it("takes an endpoint's, an anchor's and a point's unknown properties out of ok.doc", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						connector({
+							source: {
+								owner: { id: "r1", zz: 1 },
+								anchor: { kind: "center" },
+							},
+							target: {
+								anchor: { kind: "free", point: { x: 5, y: 5, zz: 3 }, zz: 2 },
+							},
+						}),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[1]).toEqual(connector());
+				expect(result.warnings.map((warning) => warning.path)).toEqual([
+					"root[1].source.owner.zz",
+					"root[1].target.anchor.zz",
+					"root[1].target.anchor.point.zz",
+				]);
+			}
+		});
+
+		it("takes a label's unknown property out of ok.doc, keeping the label", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						connector({ label: { text: "yes", position: 0.25, zz: 1 } }),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[1]).toEqual(
+					connector({ label: { text: "yes", position: 0.25 } }),
+				);
+				expect(
+					result.warnings.map((warning) => warning.unknownKeyPath),
+				).toEqual([["label", "zz"]]);
+			}
+		});
+
+		it("takes a waypoint's unknown property out of ok.doc, keeping its coordinates", () => {
+			const result = parse(
+				text(
+					validDoc([
+						rect("r1"),
+						connector({
+							points: [
+								{ x: 1, y: 1 },
+								{ x: 2, y: 2, zz: 1 },
+							],
+						}),
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[1]).toEqual(
+					connector({
+						points: [
+							{ x: 1, y: 1 },
+							{ x: 2, y: 2 },
+						],
+					}),
+				);
+				expect(
+					result.warnings.map((warning) => warning.unknownKeyPath),
+				).toEqual([["points", 1, "zz"]]);
+			}
+		});
+	});
+
+	// The migration runs before everything else, so a form the format once wrote
+	// reaches the validators in its current form: validateTextFields rejects both of
+	// these outright, and the document still opens.
+	describe("a field written in a form the format no longer uses", () => {
+		// A source body, as the markdown card's is: no built-in type holds one.
+		const markdownPlugin = {
+			id: "markdown-plugin",
+			objects: {
+				markdown: {
+					features: {
+						type: "markdown",
+						geometry: "rect",
+						transform: true,
+						text: "source",
+					},
+					validateDoc: () => [],
+				} satisfies ObjectDocDefinition,
+			},
+		};
+
+		const card = { ...rect("m1"), type: "markdown" };
+
+		it("reads a source body written as styled runs as its plain text", () => {
+			const result = createCanvasParser({ plugins: [markdownPlugin] }).parse(
+				text(
+					validDoc([
+						{
+							...card,
+							text: [{ text: "a" }, { text: "b", fontWeight: "bold" }],
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual({ ...card, text: "ab" });
+				expect(result.warnings).toEqual([
+					{
+						path: "root[0].text",
+						message:
+							'text was written as styled runs, which a "markdown" body does not take: it is read as the plain text and rewritten so on save.',
+						severity: "warning",
+						id: "m1",
+					},
+				]);
+			}
+		});
+
+		it("lists what migrate rewrote before the strip's and the validators' warnings", () => {
+			const result = createCanvasParser({ plugins: [markdownPlugin] }).parse(
+				text(
+					validDoc([
+						{
+							...card,
+							text: [{ text: "a" }],
+							strokeDashType: "wavy",
+							zzUnknown: 1,
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.warnings.map((warning) => warning.path)).toEqual([
+					"root[0].text",
+					"root[0].strokeDashType",
+					"root[0].zzUnknown",
+				]);
+			}
+		});
+
+		it("reads an empty list of runs as an empty text, dropping the field", () => {
+			const result = parse(text(validDoc([rect("r1", { text: [] })])));
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root[0]).toEqual(rect("r1"));
+				expect(result.warnings).toEqual([
+					{
+						path: "root[0].text",
+						message:
+							"text was an empty list of runs: it is read as an empty text and the field is dropped on save.",
+						severity: "warning",
+						id: "r1",
+					},
+				]);
+			}
+		});
+
+		it("warns about nothing when the doc it handed back is parsed again", () => {
+			const parser = createCanvasParser({ plugins: [markdownPlugin] });
+			const first = parser.parse(
+				text(
+					validDoc([
+						rect("r1", { text: [] }),
+						{ ...card, text: [{ text: "a" }] },
+					]),
+				),
+			);
+			expect(first.kind).toBe("ok");
+			if (first.kind === "ok") {
+				expect(first.warnings).toHaveLength(2);
+				const second = parser.parse(JSON.stringify(first.doc));
+				expect(second.kind).toBe("ok");
+				if (second.kind === "ok") {
+					expect(second.warnings).toEqual([]);
+					expect(second.doc).toEqual(first.doc);
+				}
+			}
+		});
+
+		it("lists the migration's warnings before the strip's", () => {
+			const result = parse(
+				text(validDoc([rect("r1", { text: [], strokeDashType: "wavy" })])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.warnings.map((warning) => warning.path)).toEqual([
+					"root[0].text",
+					"root[0].strokeDashType",
+				]);
+			}
+		});
+	});
+
+	describe("structure → semantics ordering (short-circuit)", () => {
+		it("returns only structure-error when both structural and semantic errors exist (semantics does not run)", () => {
+			// Combine a missing required field (structural) with a duplicate id (semantic)
+			const result = parse(
+				text(validDoc([rect("dup"), rect("dup"), { id: "u", type: "rect" }])),
+			);
+			expect(result.kind).toBe("structure-error");
+			if (result.kind === "structure-error") {
+				// semantics did not run, so "duplicated" is not included
+				expect(
+					result.diagnostics.some((d) => d.message.includes("duplicated")),
+				).toBe(false);
+			}
+		});
+
+		it("returns structure-error when root is not an array (not internal-error)", () => {
+			// Without short-circuiting, checkSemantics would throw on 5.forEach and yield internal-error.
+			const result = parse(text({ version: 1, root: 5 }));
+			expect(result.kind).toBe("structure-error");
+		});
+	});
+
+	describe("no-throw contract", () => {
+		it.each(["", "null", "123", "true", '"str"', "[]", "{}", "[1,2,3]"])(
+			"returns a union without throwing for input %j",
+			(input) => {
+				let result: CanvasParseResult | undefined;
+				expect(() => {
+					result = parse(input);
+				}).not.toThrow();
+				expect([
+					"ok",
+					"syntax-error",
+					"structure-error",
+					"semantic-error",
+					"internal-error",
+				]).toContain(result?.kind);
+			},
+		);
+	});
+
+	describe("internal-error path", () => {
+		it("returns internal-error (with a message) when an unexpected exception occurs during validation", async () => {
+			// Make a validator throw temporarily. vi.doMock + dynamic import confines it to this test.
+			vi.resetModules();
+			vi.doMock("../checkSemantics", () => ({
+				checkSemantics: () => {
+					throw new Error("boom from semantics");
+				},
+			}));
+			try {
+				const { createCanvasParser: freshCreateCanvasParser } =
+					await import("../createCanvasParser");
+				const result = freshCreateCanvasParser().parse(text(validDoc()));
+				expect(result.kind).toBe("internal-error");
+				if (result.kind === "internal-error") {
+					expect(result.message).toContain("boom from semantics");
+				}
+			} finally {
+				vi.doUnmock("../checkSemantics");
+				vi.resetModules();
+			}
 		});
 	});
 });

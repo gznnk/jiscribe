@@ -1,3 +1,5 @@
+> 🌐 日本語版: [README.ja.md](./README.ja.md)
+
 # @jiscribe/doc
 
 The document model of a jiscribe canvas: the persisted `CanvasDoc` and its object
@@ -21,14 +23,15 @@ as re-export shims onto these, so consumers can migrate one at a time.
 
 ## Directory structure
 
-| Directory | Description                                                                                                                                                                                   |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model/`  | The persisted data structures and their per-type semantics — see below                                                                                                                        |
-| `plugin/` | The doc-side plugin contract: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, `resolveDocDefinitions`, the registries and the built-in definition table |
-| `parse/`  | `createCanvasParser` and the staged validation it runs                                                                                                                                        |
-| `ops/`    | `createDocOps` — programmatic building and reworking of a doc (see `ops/README.md`)                                                                                                           |
-| `text/`   | Text measurement and visual line layout, plus the typography constants display, editing and measurement must agree on                                                                         |
-| `file/`   | `.jis.png` / `.jis.svg` source embedding and extraction                                                                                                                                       |
+| Directory     | Description                                                                                                                                                                                                                                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model/`      | The persisted data structures and their per-type semantics — see below                                                                                                                                                                                                                                                                                             |
+| `plugin/`     | The doc-side plugin contract: `ObjectDocDefinition` (one type's validator + features + factory), `CanvasDocPlugin`, the predicates that read a definition (`supportsAutoHeight`, `hasInsetTextRegion`), the built-in definition table, and `resolveDocDefinitions`, which merges a preset set with the plugins' into the one map the parser and the ops build from |
+| `registries/` | The tables those definitions are collected into and looked up by type: the doc validators, the factories, the style defaults                                                                                                                                                                                                                                       |
+| `parse/`      | `createCanvasParser` and the staged validation it runs (`migrate/migrateDoc` → `stripUnknownContent` → `checkStructure` → the registry's per-type validation and `validateDocKeys` → `checkSemantics` → removal of the unknown keys reported)                                                                                                                      |
+| `ops/`        | `createDocOps` — programmatic building and reworking of a doc (see `ops/README.md`)                                                                                                                                                                                                                                                                                |
+| `text/`       | Text measurement and visual line layout, plus the typography constants display, editing and measurement must agree on                                                                                                                                                                                                                                              |
+| `file/`       | `.jis.png` / `.jis.svg` source embedding and extraction                                                                                                                                                                                                                                                                                                            |
 
 The counterpart of `plugin/` on the canvas side is its own `plugin/` folder, which
 holds the presentation contract (`ObjectTypeDefinition`); a UI definition is
@@ -47,7 +50,8 @@ It leverages TypeScript's type system to automatically compose object types base
 | `objects/`            | Individual object definitions, classified into `base` (field groups shared across types), `primitives` (basic shapes), and `connector` (lines/arrows). Shapes beyond these ship as plugins, not here.                                                                                                                         |
 | `objects/types/`      | Defines the enums and shared types used by objects (`ObjectType`, `GeometryType`, etc.) and the type-composition utility (`CreateObjectType`).                                                                                                                                                                                |
 | `objects/types/text/` | The text half of those types: what a body of text is (`RichText`), the typography it is drawn with (`TextBaseStyle` and `TextEmphasisStyle`, together the `InlineTextStyle` a run may carry), the slot it sits in (`TextSlot`) and how a type holds it (`TextType`). Types only — the measuring and laying out is `../text/`. |
-| `objects/utils/`      | Runtime helpers that assist in generating and validating Docs (`createObjectDoc`, `autoColor`, `validateDocUtils`, etc.).                                                                                                                                                                                                     |
+| `objects/utils/`      | Runtime helpers that assist in generating Docs (`createObjectDoc`, `autoColor`, `roundDocNumbers`, etc.).                                                                                                                                                                                                                     |
+| `objects/validators/` | The checks a doc's field groups are held to — geometry, transform, style, text, endpoints, poly — plus `createFrameDocValidator`, which composes them per `features`. Each `validateXxxDoc` builds on these; the registry is what decides which field _names_ a type may carry.                                               |
 | `types/`              | Vocabulary shared across the whole doc layer: `SemanticDiagnostic`, the diagnostic every `validateXxxDoc` returns and the currency of the parse result.                                                                                                                                                                       |
 
 Turning a text into a `CanvasDoc` is not here but in `../parse/`, which composes a
@@ -68,7 +72,7 @@ classDiagram
     }
     %% NOTE: connectors are NOT a top-level field. They live inside `root`
     %% as `type: "connector"` entries, mixed with shapes in z-order.
-    %% validateStructure explicitly rejects a top-level `connectors` array.
+    %% checkStructure explicitly rejects a top-level `connectors` array.
 
     class ObjectDoc {
         +id: string
@@ -123,6 +127,90 @@ classDiagram
     EllipseDoc ..> CreateObjectType : uses (with EllipseFeatures)
     ConnectorDoc ..> CreateObjectType : uses (with ConnectorFeatures)
 ```
+
+## Declaring an object type
+
+A type's fields come from two places. The ones `features` implies — the geometry's
+coordinates, the style groups, the text group — are derived, and no type states
+them. Everything else is the type's own, and the `XxxDoc` type is where those live:
+
+```typescript
+// Example: CalloutDoc.ts
+export type CalloutDoc = CreateObjectType<
+	typeof CalloutFeatures,
+	typeof CalloutDocBrand,
+	{ tail: Point }
+>;
+
+/** Doc fields callout carries beyond the ones its features imply. */
+export const CALLOUT_EXTRA_KEYS = [
+	"tail",
+] as const satisfies readonly (keyof CalloutDoc)[];
+```
+
+The `satisfies` ties the list to the doc type, and the list is written nowhere
+else. It is set on the type's `ObjectDocDefinition` as `extraKeys`, which is the
+one declaration of what the type holds; three sides read it, and none of them
+keeps a list of its own:
+
+| Reader                                                | What it does with the names                                                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The parser (`checkStructure` → `validateDocKeys`)     | Holds a doc against the accepted-name set the registry built from `features` + `extraKeys`, warns about every other name and drops it from `ok.doc` |
+| The mapper (`createFrameMapper` / `createPolyMapper`) | Passes exactly these between doc and state                                                                                                          |
+| doc-ops (`extraProps`)                                | Accepts exactly these as names a caller may write, minus the ones held as structure (group's `children`)                                            |
+
+`validateDoc` is not on that list. A type's validator checks the values it holds
+and the rules only it knows; which names the type may carry is not its business,
+and it is never handed an allow-list. That keeps the check uniform across all
+registered types, the poly family included, which builds no validator from
+`createFrameDocValidator` at all.
+
+The same holds one level down. The containers a doc nests are shapes this
+package defines — a text run, a slot, a poly vertex, a connector's endpoint,
+anchor and label — and each has its key list beside its type (`TEXT_RUN_KEYS`,
+`TEXT_SLOT_KEYS`, `CONNECTOR_LABEL_KEYS`, `ANCHOR_SPEC_KEYS_BY_KIND`, …), which
+the parser walks from the type's `features` (`parse/validateDocKeys.ts`).
+A nested object a type declares through `extraKeys` (a callout's `tail`) is not
+walked: the mapper passes it through whole, so nothing in it is lost, and the
+type's validator is what checks its values.
+
+What happens when the two drift: a field added to `XxxDoc` but not to
+`extraKeys` is reported as unknown by the parser and removed from the document
+it hands back, so the value disappears on the next save. `satisfies` does not
+catch it — it only says the list holds no name the type lacks, not that it holds
+them all. For the shipped types, `@jiscribe/doc-tools`' `shippedPropertyNames`
+test is what catches it, by holding the registry against the published JSON
+schema.
+
+## Migrating an old form
+
+A field the format once wrote and no longer does is rewritten by the parser
+before anything is validated, so a document written by an older build still
+opens. The migrations sit in one table in `parse/migrate/migrateDoc.ts`, and each
+is a pure function from one object to the rewritten object plus the warnings for
+what it rewrote.
+
+- **It always runs, with no version gate.** A document carries no generation to
+  key on — every host composes its own plugin set — so a migration recognizes
+  the old form **by its shape** and is a no-op otherwise. That is what makes
+  migrating an already-migrated document change nothing, which is what lets it
+  run on every parse.
+- **Every rewrite is a `warning`.** It is listed first in `ok.warnings`, with the
+  object's `id` when it has one, and `ok.doc` is the migrated doc — so nothing
+  changes silently and the next save writes the current form.
+- **An unregistered type is never touched.** What an opaque object holds is no
+  one's here to read.
+
+This is the discipline a breaking change to the format follows: **design the new
+form so that the old one is distinguishable from it by shape alone, and write the
+migration that turns one into the other.** A change that cannot be told apart
+that way has no migration to write, and every document holding the old form
+becomes a file someone has to edit by hand.
+
+The table holds the document-wide migrations, which an object of every type
+passes through. A migration only one type needs would be a hook on its
+`ObjectDocDefinition`, applied per object after the table; nothing needs one yet,
+so there is no hook.
 
 ## Usage Example
 

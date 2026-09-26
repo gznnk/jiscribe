@@ -1,8 +1,7 @@
-import { isObject } from "@jiscribe/basic-validators";
 import type { ObjectMapperType } from "@jiscribe/canvas";
 import { createFrameMapper } from "@jiscribe/canvas-sdk";
 import type { RichText, TextSlot } from "@jiscribe/doc";
-import { isRichText, isTextSlot, normalizeRichText } from "@jiscribe/doc";
+import { normalizeRichText } from "@jiscribe/doc";
 
 import type { RecordState, RecordTextState } from "./RecordState";
 import {
@@ -11,48 +10,42 @@ import {
 	RECORD_SLOT_IDS,
 	RecordFeatures,
 } from "../schema/RecordDoc";
-import type { RecordDoc, RecordSlotId } from "../schema/RecordDoc";
+import type {
+	RecordDoc,
+	RecordSlotId,
+	RecordTextDoc,
+} from "../schema/RecordDoc";
 
 /**
- * Forces a text band's content to one body of text, canonicalized the way a
- * `"body"` type's doc is (mapTextDocToState). Canonicalizing is what keeps `[]`
- * out of a band: it passes as an empty run list, yet every reader of a slot's
- * content takes an array for the row-partitioned form (isTextRows), so an edit
- * would write the band back as rows and the record's own validator would reject
- * the document it had loaded.
+ * A text band's content, canonicalized the way a `"body"` type's doc is
+ * (mapTextDocToState), so a band nobody styled per range is the plain string it
+ * was written as. An absent slot is the title's empty band (see
+ * {@link normalizeRecordText}); no other band is materialized.
  */
-const normalizeBandSlot = (value: unknown): TextSlot<RichText> => {
-	if (!isTextSlot(value)) {
+const normalizeBandSlot = (
+	value: TextSlot<RichText> | undefined,
+): TextSlot<RichText> => {
+	if (value === undefined) {
 		return { text: "" };
 	}
-	return {
-		...value,
-		text: isRichText(value.text) ? normalizeRichText(value.text) : "",
-	};
+	return { ...value, text: normalizeRichText(value.text) };
 };
 
 /**
- * Forces a compartment slot's content to an array of rows. The array is always
- * fresh, so records created from the same doc defaults never share one.
+ * A compartment slot's rows. The array is always fresh, so records created from
+ * the same doc defaults never share one.
  */
-const normalizeListSlot = (value: unknown): TextSlot<RichText[]> => {
-	if (!isTextSlot(value)) {
-		return { text: [] };
-	}
-	const content = value.text;
-	return {
-		...value,
-		text: Array.isArray(content) ? content.filter(isRichText) : [],
-	};
-};
+const normalizeListSlot = (
+	value: TextSlot<RichText[]>,
+): TextSlot<RichText[]> => ({ ...value, text: [...value.text] });
 
 /**
- * Forces the slots into the record's normal form: the title always present,
- * every written slot holding the content kind its id fixes, and the keys in
- * RECORD_SLOT_IDS order. Typography is deliberately left alone — omitted styling
- * is resolved per read against RECORD_SLOT_STYLE_DEFAULTS_BY_ID
- * (ObjectTextStyleDefaultsRegistry), so a field the author never wrote is not
- * materialized here and does not appear in the document the next save writes.
+ * Puts the slots into the record's normal form: the title always present, every
+ * written slot's content canonical, and the keys in RECORD_SLOT_IDS order.
+ * Typography is deliberately left alone — omitted styling is resolved per read
+ * against RECORD_SLOT_STYLE_DEFAULTS_BY_ID (ObjectTextStyleDefaultsRegistry), so
+ * a field the author never wrote is not materialized here and does not appear in
+ * the document the next save writes.
  *
  * A slot the doc left out stays out: the key set is what the drawing and the
  * region split read the box's compartments from. The generic doc → state
@@ -64,19 +57,26 @@ const normalizeListSlot = (value: unknown): TextSlot<RichText[]> => {
  * on a stereotyped record `stereotype` holds it, so editing that designates no
  * slot (Enter with nothing but the object selected) opens the stereotype band.
  */
-const normalizeRecordText = (text: unknown): RecordTextState => {
-	const slots = isObject(text) ? text : {};
+const normalizeRecordText = (
+	text: RecordTextDoc | undefined,
+): RecordTextState => {
+	const slots: Partial<RecordTextDoc> = text ?? {};
 	const normalized: Partial<
 		Record<RecordSlotId, TextSlot<RichText | RichText[]>>
 	> = {};
 	for (const slotId of RECORD_SLOT_IDS) {
-		const value = slots[slotId];
-		if (value === undefined && slotId !== RECORD_NAME_SLOT_ID) {
+		if (isRecordListSlotId(slotId)) {
+			const rows = slots[slotId];
+			if (rows !== undefined) {
+				normalized[slotId] = normalizeListSlot(rows);
+			}
 			continue;
 		}
-		normalized[slotId] = isRecordListSlotId(slotId)
-			? normalizeListSlot(value)
-			: normalizeBandSlot(value);
+		const band = slots[slotId];
+		if (band === undefined && slotId !== RECORD_NAME_SLOT_ID) {
+			continue;
+		}
+		normalized[slotId] = normalizeBandSlot(band);
 	}
 	return normalized as RecordTextState;
 };
@@ -97,9 +97,11 @@ export const recordToState: ObjectMapperType<
 	RecordState
 >["toState"] = (doc) => {
 	const state = frameMapper.toState(doc);
+	// Read off the doc rather than `state.text`: the shared pass-through copies the
+	// same map over, and the doc is where the slot content is typed as written.
 	return {
 		...state,
-		text: normalizeRecordText(state.text),
+		text: normalizeRecordText(doc.text),
 	};
 };
 

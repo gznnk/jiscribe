@@ -115,7 +115,8 @@ describe("validateStickyDoc", () => {
 	);
 
 	it("does not validate stroke since sticky has no stroke", () => {
-		// sticky has no border style, so even an invalid stroke passes through
+		// sticky has no border style, so even an invalid stroke passes through here;
+		// the name is reported by the parser's registry.
 		expect(
 			validateStickyDoc({ ...validSticky, stroke: "a;b" }, "root"),
 		).toEqual([]);

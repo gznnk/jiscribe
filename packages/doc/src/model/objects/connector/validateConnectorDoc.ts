@@ -1,12 +1,12 @@
 import type { ConnectorLabel } from "./ConnectorDoc";
-import type { ObjectDocValidateFn } from "../../../plugin/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../../plugin/ObjectDocValidateFn";
 import type { SemanticDiagnostic } from "../../types/SemanticDiagnostic";
 import { STROKE_WIDTH_MIN } from "../base/StrokeStyleDoc";
 import { isConnectorRouting } from "../types/ConnectorRouting";
 import { isOwnedEndpointRef } from "../types/EndpointRef";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { FONT_SIZE_MIN } from "../types/text/TextBaseStyle";
-import type { DocFieldValidator } from "../utils/validateDocUtils";
+import type { DocFieldValidator } from "../validators/fieldValidators";
 import {
 	colorValidator,
 	cssValueValidator,
@@ -14,12 +14,14 @@ import {
 	numberRangeValidator,
 	numberValidator,
 	stringValidator,
-	validateArrowFields,
-	validateEndpointRef,
 	validateFields,
+} from "../validators/fieldValidators";
+import { validateEndpointRef } from "../validators/validateEndpointFields";
+import { validateWaypointFields } from "../validators/validatePolyFields";
+import {
+	validateArrowFields,
 	validateStrokeStyleFields,
-	validateWaypointFields,
-} from "../utils/validateDocUtils";
+} from "../validators/validateStyleFields";
 
 /**
  * The label's optional fields, in the order the diagnostics come out in.
@@ -67,6 +69,7 @@ function validateConnectorLabelFields(
 			path: `${path}.text`,
 			message:
 				"connector has no top-level text; put the label in `label.text` instead.",
+			severity: "error",
 		});
 	}
 
@@ -76,7 +79,14 @@ function validateConnectorLabelFields(
 
 	const label = o.label;
 	if (typeof label !== "object" || label === null) {
-		return [...errors, { path: `${path}.label`, message: "must be an object" }];
+		return [
+			...errors,
+			{
+				path: `${path}.label`,
+				message: "must be an object",
+				severity: "error",
+			},
+		];
 	}
 
 	const l = label as Record<string, unknown>;
@@ -102,7 +112,7 @@ function validateRequiredEndpointRef(
 	path: string,
 ): SemanticDiagnostic[] {
 	if (typeof ref !== "object" || ref === null) {
-		return [{ path, message: "must be an object" }];
+		return [{ path, message: "must be an object", severity: "error" }];
 	}
 	return validateEndpointRef(ref, path);
 }
@@ -129,6 +139,7 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 				{
 					path: `${path}.routing`,
 					message: `connector.routing must be one of "straight" | "orthogonal".`,
+					severity: "error" as const,
 					...(typeof o.id === "string" ? { id: o.id } : {}),
 				},
 			]
@@ -141,6 +152,7 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 					path,
 					message:
 						"connector must have at least one owned endpoint (both endpoints are free).",
+					severity: "error" as const,
 					// This rule is also expressed in the JSON schema (ConnectorDoc's not constraint),
 					// so beyondSchema is not attached (leave the extension to the schema as a structural
 					// error to avoid double-reporting).

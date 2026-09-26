@@ -127,6 +127,7 @@ export const badgeDefinition: ObjectDocDefinition = {
 				{
 					path: `${path}.badge`,
 					message: `must be one of ${BADGE_KINDS.join(" | ")}`,
+					severity: "error",
 					beyondSchema: true,
 				},
 			];

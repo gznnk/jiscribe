@@ -1,6 +1,6 @@
 import type { InlineTextStyle } from "@jiscribe/doc/model/objects/types/text/InlineTextStyle";
 import { readRichTextRangeStyle } from "@jiscribe/doc/model/objects/types/text/RichText";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import { isBoldFontWeight } from "./isBoldFontWeight";
 import {

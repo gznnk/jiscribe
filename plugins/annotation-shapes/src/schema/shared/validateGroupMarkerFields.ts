@@ -16,6 +16,7 @@ export const validateGroupMarkerDirection: ObjectDocValidateFn = (o, path) => {
 		{
 			path: `${path}.direction`,
 			message: `must be one of ${GROUP_MARKER_DIRECTIONS.map((direction) => `"${direction}"`).join(" | ")}`,
+			severity: "error",
 		},
 	];
 };
@@ -34,6 +35,7 @@ export const validateGroupMarkerTipFields: ObjectDocValidateFn = (o, path) => {
 		errors.push({
 			path: `${path}.tipPosition`,
 			message: "must be a number between 0 and 1",
+			severity: "error",
 		});
 	}
 	return errors;

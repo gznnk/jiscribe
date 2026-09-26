@@ -23,7 +23,7 @@ describe("validateGroupDoc", () => {
 		expect(errors.some((e) => e.path === "root.flipX")).toBe(true);
 	});
 
-	it("yields no error here since children are validated by validateStructure", () => {
+	it("yields no error here since children are validated by checkStructure", () => {
 		// The contents of children are outside validateGroupDoc's responsibility
 		expect(validateGroupDoc({ children: "invalid" }, "root")).toEqual([]);
 	});
@@ -45,7 +45,9 @@ describe("validateGroupDoc", () => {
 	});
 
 	it("does not validate stroke/fill/x since group has no geometry/style", () => {
-		// Anything other than transform (stroke/fill/coordinates) is outside group's responsibility and passes through
+		// Anything other than transform (stroke/fill/coordinates) is outside group's
+		// responsibility and passes through; the registry is what reports those
+		// names as ones group does not hold.
 		expect(
 			validateGroupDoc({ stroke: "a;b", fill: 1, x: "no" }, "root"),
 		).toEqual([]);

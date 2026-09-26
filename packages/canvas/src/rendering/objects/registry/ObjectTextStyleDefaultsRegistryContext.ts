@@ -1,7 +1,7 @@
 import {
 	type ObjectTextStyleDefaultsRegistry,
 	createObjectTextStyleDefaultsRegistry,
-} from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+} from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import { createContext, useContext } from "react";
 
 /**

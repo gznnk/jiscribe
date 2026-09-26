@@ -4,11 +4,11 @@ import { applyTextVerticalBasis } from "./applyTextVerticalBasis";
 import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "./autoHeightComfortPadding";
 import { calcTextContentBox } from "./calcTextContentBox";
 import type { RichText } from "../../model/objects/types/text/RichText";
+import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import type { TextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
 import type { ObjectDocTextRegionCalculator } from "../../plugin/ObjectDocTextRegion";
 import { layoutVisualLines } from "../layout/layoutVisualLines";
 import type { TextMeasureFont } from "../measure/TextMeasureFont";
-import { BODY_TEXT_SLOT_ID } from "../style/textSlotId";
 
 /**
  * A shape as {@link calcAutoShapeHeight} needs to see it: the width its text

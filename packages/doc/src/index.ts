@@ -149,18 +149,22 @@ export { hasInsetTextRegion } from "./plugin/hasInsetTextRegion";
 export type { InsetTextRegionDeclaration } from "./plugin/hasInsetTextRegion";
 // The per-slot text-style defaults a `text: "slots"` type declares on its doc
 // definition (`ObjectDocDefinition.textSlotStyleDefaults`).
-export type { ObjectTextSlotStyleDefaults } from "./plugin/ObjectTextStyleDefaultsRegistry";
+export type { ObjectTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
 // The stroke / fill defaults a type declares through its creation defaults, and
 // what one shape's style resolves to once type and last resort are folded in.
-export { extractShapeStyleDefaults } from "./plugin/ObjectShapeStyleDefaultsRegistry";
+export { extractShapeStyleDefaults } from "./registries/ObjectShapeStyleDefaultsRegistry";
 export type {
 	ObjectShapeStyleDefaults,
 	ResolvedShapeStyle,
 	ShapeStyleGroup,
-} from "./plugin/ObjectShapeStyleDefaultsRegistry";
+} from "./registries/ObjectShapeStyleDefaultsRegistry";
 export type { CanvasDocPlugin } from "./plugin/CanvasDocPlugin";
-export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidatorRegistry";
+export type { ObjectDocValidateFn } from "./plugin/ObjectDocValidateFn";
 export type { SemanticDiagnostic } from "./model/types/SemanticDiagnostic";
+export {
+	isSemanticError,
+	isSemanticWarning,
+} from "./model/types/SemanticDiagnostic";
 export type { CanvasParser, CanvasParseResult } from "./parse";
 export { createCanvasParser } from "./parse";
 export { builtinObjectDocDefinitions } from "./plugin/builtinObjectDocDefinitions";

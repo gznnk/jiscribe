@@ -3,6 +3,7 @@ import type { CanvasDoc } from "../model/canvas/CanvasDoc";
 import {
 	isViewOpenMode,
 	isViewScrollMode,
+	VIEW_PADDING_KEYS,
 	type ViewDoc,
 	type ViewOpenMode,
 	type ViewPaddingDoc,
@@ -38,23 +39,6 @@ export const setBackground = (doc: CanvasDoc, color: string | null): void => {
 };
 
 /**
- * Every side of {@link ViewPaddingDoc}, written as a map so that a side added to the
- * type fails to compile until it is entered here. A plain array would leave a new side
- * silently unread — never validated, never stored.
- */
-const PADDING_SIDE_MARKERS: Readonly<Record<keyof ViewPaddingDoc, true>> = {
-	top: true,
-	right: true,
-	bottom: true,
-	left: true,
-};
-
-/** The sides {@link setView} reads, in the order messages list them. */
-const PADDING_SIDES = Object.keys(
-	PADDING_SIDE_MARKERS,
-) as (keyof ViewPaddingDoc)[];
-
-/**
  * What {@link setView} writes. A field left out keeps whatever the document
  * already declares; a field given as null drops that declaration.
  */
@@ -81,7 +65,7 @@ const takeMeaningfulPadding = (
 	padding: ViewPaddingDoc,
 ): ViewPaddingDoc | null => {
 	const stored: ViewPaddingDoc = {};
-	for (const side of PADDING_SIDES) {
+	for (const side of VIEW_PADDING_KEYS) {
 		const value = padding[side];
 		if (value === undefined) {
 			continue;

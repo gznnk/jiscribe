@@ -58,7 +58,8 @@ describe("validateImageDoc", () => {
 	});
 
 	it("does not validate styles other than transform (stroke/fill) (image is a plain box)", () => {
-		// image has no stroke/fill/text, so invalid values here produce no errors
+		// image has no stroke/fill/text, so invalid values here produce no errors;
+		// the names are reported by the registry, not here.
 		const errors = validateImageDoc(
 			{ ...validImage, stroke: "a;b", fill: 123 },
 			"root",

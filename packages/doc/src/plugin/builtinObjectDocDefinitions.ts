@@ -13,7 +13,10 @@ import {
 } from "../model/objects/primitives/ellipse/EllipseDoc";
 import { EllipseObjectFactory } from "../model/objects/primitives/ellipse/EllipseObjectFactory";
 import { validateEllipseDoc } from "../model/objects/primitives/ellipse/validateEllipseDoc";
-import { GroupFeatures } from "../model/objects/primitives/group/GroupDoc";
+import {
+	GROUP_EXTRA_KEYS,
+	GroupFeatures,
+} from "../model/objects/primitives/group/GroupDoc";
 import { validateGroupDoc } from "../model/objects/primitives/group/validateGroupDoc";
 import {
 	IMAGE_EXTRA_KEYS,
@@ -112,6 +115,7 @@ export const builtinObjectDocDefinitions = {
 	group: {
 		features: GroupFeatures,
 		validateDoc: validateGroupDoc,
+		extraKeys: GROUP_EXTRA_KEYS,
 		summary: "container of child objects",
 	},
 	polygon: {

@@ -537,7 +537,7 @@ const collectConnectors = (doc: CanvasDoc, id: string): ObjectRecord[] =>
  * lines a shape carries before moving, restyling or deleting it.
  *
  * @param doc - Searched but not modified; only `doc.root` is scanned, a connector being
- *   barred from a group's children (see validateStructure)
+ *   barred from a group's children (see checkStructure)
  * @param id - Id of the object the connectors hang on; must exist in the root tree.
  *   A connector's own id yields an empty array, since a connector is never an endpoint owner
  * @returns The id of every connector holding `id` at either end, in drawing order, each

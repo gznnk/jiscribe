@@ -2,14 +2,10 @@
 // does.
 //
 // The vitest suite connects `createJiscribeMcpServer()` in-process over
-// `InMemoryTransport` (src/__tests__/mcpTestClient.ts), which cannot be done from
-// here: Playwright picks its loader from the nearest package.json, and neither
-// setting fits this package's source. As ESM (what `"type": "module"` gives) Node
-// refuses the extensionless `ajv/dist/2020` that doc-tools imports; forced to
-// CommonJS, the `import.meta.url` in server.ts and viewerAssets.ts is a syntax
-// error. So the server is taken as it is shipped — the bundle globalSetup builds —
-// and the process boundary buys the environment being set per test rather than
-// through this one's `process.env`.
+// `InMemoryTransport` (src/__tests__/mcpTestClient.ts). Here the server is taken
+// as it is shipped — the bundle globalSetup builds — so what a browser is driven
+// against is the artifact itself, and the process boundary buys the environment
+// being set per test rather than through this one's `process.env`.
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";

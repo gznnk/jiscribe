@@ -1,7 +1,7 @@
 import type { ObjectType } from "@jiscribe/doc/model/objects/types/ObjectType";
 import { readRichTextRangeStyle } from "@jiscribe/doc/model/objects/types/text/RichText";
 import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 
 import { getFirstSelectedWithProp } from "./getFirstSelectedWithProp";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";

@@ -37,8 +37,10 @@ type FrameObjectDocCommonParams = {
 	 * Names of the doc fields this shape carries beyond the ones `features` implies
 	 * (see `ObjectDocDefinition.extraKeys`). Declare it as
 	 * `["tail"] satisfies readonly (keyof CalloutDoc)[]` so the list cannot drift from
-	 * the doc type. The definition this builds is the single place it is declared: the
-	 * mapper and doc-ops both read it from there.
+	 * the doc type. The definition this builds is the single place it is declared:
+	 * the mapper, doc-ops and the parser all read it from there, the last of which
+	 * is what keeps a document's own field from being reported as unknown and
+	 * dropped on save.
 	 */
 	extraKeys?: readonly string[];
 

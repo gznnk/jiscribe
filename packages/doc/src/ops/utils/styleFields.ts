@@ -37,8 +37,8 @@ import {
 	validateFillStyleFields,
 	validateRadiusStyleFields,
 	validateStrokeStyleFields,
-	validateTextSlotStyleFields,
-} from "../../model/objects/utils/validateDocUtils";
+} from "../../model/objects/validators/validateStyleFields";
+import { validateTextSlotStyleFields } from "../../model/objects/validators/validateTextFields";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { DocOperationError } from "../errors";
 

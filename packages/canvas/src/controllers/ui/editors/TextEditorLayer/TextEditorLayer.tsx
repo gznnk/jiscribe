@@ -1,5 +1,5 @@
 import type { RichText } from "@jiscribe/doc/model/objects/types/text/RichText";
-import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/plugin/ObjectTextStyleDefaultsRegistry";
+import type { ObjectTextStyleDefaultsRegistry } from "@jiscribe/doc/registries/ObjectTextStyleDefaultsRegistry";
 import type { BoundingBox, TransformedFrame } from "@jiscribe/geometry";
 import { memo } from "react";
 

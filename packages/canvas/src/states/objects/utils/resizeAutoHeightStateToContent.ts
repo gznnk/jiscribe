@@ -1,12 +1,14 @@
 import type { TextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
-import { resolveTextSlotStyle } from "@jiscribe/doc/model/objects/types/text/TextSlot";
+import {
+	resolveTextSlotStyle,
+	BODY_TEXT_SLOT_ID,
+} from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import type { ObjectDocTextRegionCalculator } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import { calcFullBoxTextRegion } from "@jiscribe/doc/plugin/ObjectDocTextRegion";
 import { AUTO_HEIGHT_COMFORT_PADDING_EM } from "@jiscribe/doc/text/block/autoHeightComfortPadding";
 import { calcAutoShapeHeight } from "@jiscribe/doc/text/block/calcAutoShapeHeight";
 import { TEXT_LINE_HEIGHT } from "@jiscribe/doc/text/layout/textLineHeight";
-import { BODY_TEXT_SLOT_ID } from "@jiscribe/doc/text/style/textSlotId";
 import { isTransformedFrame, roundToDecimal } from "@jiscribe/geometry";
 
 import type { ObjectState } from "../base/ObjectState";

@@ -154,7 +154,7 @@ describe("add_object", () => {
 	});
 
 	// set_text / get_text already call these types textless; creating one with a
-	// text wrote a field the schema rejects.
+	// text wrote a field the type does not hold.
 	it.each(["lucideIcon", "polygon", "polyline"])(
 		"refuses text on %s, which holds none, and leaves the file alone",
 		async (type) => {
@@ -197,7 +197,7 @@ describe("set_text_style", () => {
 		);
 	});
 
-	// A markdown body is source text: the schema holds it to a string, which a
+	// A markdown body is source text: the type holds it as a string, which a
 	// run array is not.
 	it("refuses styling part of a markdown body, and leaves the file alone", async () => {
 		await client.callTool("add_object", {
@@ -392,8 +392,8 @@ describe("set_height_mode", () => {
 describe("a file holding an object of a type this build does not know", () => {
 	/**
 	 * A shape from a plugin this server does not ship, written between two rects
-	 * with a connector to it. The schema rejects its type, so the file fails
-	 * diagnose_canvas before any tool touches it.
+	 * with a connector to it. diagnose_canvas warns about its type before any
+	 * tool touches it.
 	 */
 	const unknownObject = {
 		id: "gadget-1",
@@ -436,7 +436,7 @@ describe("a file holding an object of a type this build does not know", () => {
 			x: 0,
 			y: 200,
 		});
-		// The schema error the file already carried is not held against the edit.
+		// The warning the file already carried is not held against the edit.
 		expect(result.text).toBe('added rect "rect-3" at (0, 200)');
 
 		const written = await workspace.readDoc(targetPath);

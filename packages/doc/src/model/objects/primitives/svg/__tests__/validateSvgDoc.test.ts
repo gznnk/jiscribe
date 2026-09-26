@@ -48,7 +48,8 @@ describe("validateSvgDoc", () => {
 	});
 
 	it("does not validate styles other than transform (stroke/fill) (svg is a plain box)", () => {
-		// svg has no stroke/fill/text, so invalid values here do not produce errors
+		// svg has no stroke/fill/text, so invalid values here do not produce errors;
+		// the names are reported by the registry, not here.
 		const errors = validateSvgDoc(
 			{ ...validSvg, stroke: "a;b", fill: 123 },
 			"root",

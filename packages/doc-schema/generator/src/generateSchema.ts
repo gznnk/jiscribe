@@ -627,8 +627,8 @@ function buildShapeDef(
 /**
  * Fail generation when a handwritten $def disagrees with the parser about whether
  * the type may leave `height` out. Nothing derives a template, so the two would
- * otherwise drift apart silently — one validator of `validateDoc` accepting a
- * document the other rejects.
+ * otherwise drift apart silently — an editor marking a document the parser opens,
+ * or taking one it refuses.
  */
 function assertTemplateHeightRequirement(
 	type: string,

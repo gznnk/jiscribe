@@ -1,8 +1,8 @@
 import { isString } from "@jiscribe/basic-validators";
 
 import { ImageFeatures } from "./ImageDoc";
-import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidatorRegistry";
-import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
+import type { ObjectDocValidateFn } from "../../../../plugin/ObjectDocValidateFn";
+import { createFrameDocValidator } from "../../validators/createFrameDocValidator";
 
 /**
  * Validates the Image-specific field src (required non-empty string).
@@ -13,10 +13,14 @@ import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
  */
 const validateImageSrc: ObjectDocValidateFn = (o, path) => {
 	if (!isString(o.src)) {
-		return [{ path: `${path}.src`, message: "must be a string" }];
+		return [
+			{ path: `${path}.src`, message: "must be a string", severity: "error" },
+		];
 	}
 	if (o.src === "") {
-		return [{ path: `${path}.src`, message: "must name a file" }];
+		return [
+			{ path: `${path}.src`, message: "must name a file", severity: "error" },
+		];
 	}
 	return [];
 };

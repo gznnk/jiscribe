@@ -16,7 +16,12 @@ describe("validateIconName", () => {
 
 	it("reports a non-string name at the field's path", () => {
 		expect(validateIconName({ icon: 42 }, "root[0]")).toEqual([
-			{ path: "root[0].icon", message: "must be a string", beyondSchema: true },
+			{
+				path: "root[0].icon",
+				message: "must be a string",
+				severity: "error",
+				beyondSchema: true,
+			},
 		]);
 	});
 

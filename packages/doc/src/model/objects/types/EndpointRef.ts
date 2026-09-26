@@ -1,5 +1,7 @@
 import type { Point } from "@jiscribe/geometry";
 
+import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
+
 export type CenterAnchorSpec = {
 	kind: "center";
 };
@@ -72,6 +74,35 @@ export type FreeEndpointRef = {
 };
 
 export type EndpointRef = OwnedEndpointRef | FreeEndpointRef;
+
+/**
+ * Field names one endpoint carries. The same two either way: a free endpoint holds
+ * no owner ({@link FreeEndpointRef} types it as `never`), which is a value to
+ * reject rather than a name the endpoint could not have written.
+ */
+export const OWNED_ENDPOINT_REF_KEYS = exhaustiveKeysOf<OwnedEndpointRef>()([
+	"owner",
+	"anchor",
+] as const);
+
+/** Field names the reference to the owning object carries. */
+export const OWNER_REF_KEYS = exhaustiveKeysOf<OwnerRef>()(["id"] as const);
+
+/**
+ * Field names each anchor kind carries, keyed by the `kind` that decides them —
+ * which is why an anchor of an unknown kind has no entry to be held against.
+ * Typed as a full Record so that adding a member to AnchorSpec without listing it
+ * here is a compile error, as it is for {@link isAnchorKind}.
+ */
+export const ANCHOR_SPEC_KEYS_BY_KIND: Record<AnchorKind, readonly string[]> = {
+	center: exhaustiveKeysOf<CenterAnchorSpec>()(["kind"] as const),
+	connectPoint: exhaustiveKeysOf<ConnectPointAnchorSpec>()([
+		"kind",
+		"id",
+	] as const),
+	edge: exhaustiveKeysOf<EdgeAnchorSpec>()(["kind", "side", "t"] as const),
+	free: exhaustiveKeysOf<FreeAnchorSpec>()(["kind", "point"] as const),
+};
 
 /**
  * Determines whether the given value is a ConnectPointId.
