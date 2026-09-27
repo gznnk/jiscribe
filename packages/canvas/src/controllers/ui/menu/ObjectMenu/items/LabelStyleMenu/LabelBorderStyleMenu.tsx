@@ -62,8 +62,6 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLabelBorderStyle}
 			>
@@ -79,8 +77,6 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 						<BorderStyleSection>
 							<ObjectMenuButton
 								isActive={!strokeDashType || strokeDashType === "solid"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("label.strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
@@ -88,8 +84,6 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("label.strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
@@ -97,8 +91,6 @@ const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("label.strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>

@@ -95,8 +95,6 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuConnectorRouting}
 			>
@@ -113,8 +111,6 @@ const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
 							<ObjectMenuButton
 								key={routing}
 								isActive={routing === currentRouting}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={commandPart(commandId)}
 								title={messages[messageKey]}
 							>

@@ -92,8 +92,6 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuBorderStyle}
 			>
@@ -110,8 +108,6 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 						<BorderStyleSection>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "solid"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
@@ -119,8 +115,6 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "dashed"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
@@ -128,8 +122,6 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "dotted"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>

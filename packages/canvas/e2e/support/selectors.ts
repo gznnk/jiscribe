@@ -45,12 +45,11 @@ const STENCIL_LIBRARY_PANEL =
 const PROPERTY_PANEL = '[data-kind="menu"][data-id="property-panel"]';
 
 /**
- * Shared by the ObjectMenu-scoped selectors below. Some of the menu's own items
- * still carry the container's data-kind / data-id beside their data-part, so the
- * container is the one element of it without a part.
+ * Shared by the ObjectMenu-scoped selectors below. The container is the only
+ * element of the menu carrying data-kind / data-id; its items carry data-part
+ * alone and are found through the nearest [data-kind] ancestor at gesture time.
  */
-const OBJECT_MENU =
-	'div[data-kind="menu"][data-id="object-menu"]:not([data-part])';
+const OBJECT_MENU = 'div[data-kind="menu"][data-id="object-menu"]';
 
 /**
  * Shared by the toolbar-scoped selectors below. Scoping them matters because while
