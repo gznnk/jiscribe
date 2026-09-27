@@ -6,6 +6,7 @@ import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/text/RichText";
 import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
+import { calcPointDocCenter } from "../../model/objects/utils/pointDocDrawnTopLeft";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
 import { extractTextSlotStyleDefaults } from "../../registries/ObjectTextStyleDefaultsRegistry";
@@ -13,7 +14,6 @@ import { calcAutoShapeHeight } from "../../text/block/calcAutoShapeHeight";
 import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
 import type { TextMeasurement } from "../../text/measure/TextMeasurement";
 import { adoptTextMeasurement } from "../../text/measure/textMeasurementSlot";
-import { calcTextObjectFrameSize } from "../../text/object/calcTextObjectFrameSize";
 import { resolveDocBodyFont } from "../../text/object/resolveDocBodyFont";
 import { DocOperationError } from "../errors";
 
@@ -179,14 +179,16 @@ export const unionBounds = (boxes: readonly Rect[]): Rect | null => {
  *
  * A shape that states no `height` is measured at the height its text needs
  * ({@link readObjectHeight}), so it is placed, aligned and distributed by the box it is
- * actually drawn at rather than by a flat one.
+ * actually drawn at rather than by a flat one. A `geometry: "point"` shape, which
+ * states no size at all, is measured whole by the size its type declares
+ * (`ObjectDocDefinition.pointSize`).
  *
  * @param object - Any doc object; a group is measured from its children, which is where
  *   its frame comes from (see GroupDoc)
- * @param definitions - Type table `features.geometry` and, for a stated-no-height shape,
- *   `textRegion` are read from
- * @returns The box, or null for a connector, an empty group, and a type this instance
- *   does not know
+ * @param definitions - Type table `features.geometry`, a stated-no-height shape's
+ *   `textRegion` and a point shape's `pointSize` are read from
+ * @returns The box, or null for a connector, an empty group, a type this instance does
+ *   not know, and a point type declaring no size
  */
 export const getObjectBounds = (
 	object: ObjectRecord,
@@ -226,24 +228,28 @@ export const getObjectBounds = (
 		}
 		case "point": {
 			// A point shape stores where it is drawn from and nothing about its size, so
-			// the box is measured from the content every time — through the same layout
-			// rule the canvas maps one into a frame with, so both agree on where it ends.
-			// A type this instance does not know has no font to measure with; it falls
-			// through to null the way an unknown geometry does.
-			const definition = definitions.get(object.type);
-			if (definition === undefined) {
+			// the box is measured from the content every time — through the type's own
+			// declaration, the same measurement its factory places a new one by, so the
+			// two agree on where it ends. A type this instance does not know, or one
+			// declaring no size, has nothing to measure with; it falls through to null
+			// the way an unknown geometry does.
+			const pointSize = definitions.get(object.type)?.pointSize;
+			if (pointSize === undefined) {
 				return null;
 			}
-			const size = calcTextObjectFrameSize(
-				isRichText(object.text) ? object.text : "",
-				resolveBodyFont(object, definition),
-				object.textLayout === "block" && typeof object.width === "number"
-					? object.width
-					: undefined,
+			const size = pointSize(object);
+			// What the doc stores is the corner the shape is *drawn* from — the box's
+			// top-left with the object's rotation and flips applied (see GeometryType) —
+			// so the untransformed box this helper answers with is the one centred on the
+			// same centre, not the one hanging off that corner.
+			const center = calcPointDocCenter(
+				{ x: readNumber(object.x), y: readNumber(object.y) },
+				size,
+				object,
 			);
 			return {
-				x: readNumber(object.x),
-				y: readNumber(object.y),
+				x: center.x - size.width / 2,
+				y: center.y - size.height / 2,
 				width: size.width,
 				height: size.height,
 			};

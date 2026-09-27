@@ -166,3 +166,19 @@ export const sourceBodyDefinition: ObjectDocDefinition = {
 		text: "",
 	}),
 };
+
+/**
+ * A `geometry: "point"` shape declaring no `pointSize`, which is the gap the
+ * declaration exists to close: such a doc states no size of its own, so nothing
+ * else answers how big it is. No shipped type is in this state, so the case is
+ * staged here.
+ */
+export const unsizedPointDefinition: ObjectDocDefinition = {
+	features: {
+		type: "pin",
+		geometry: "point",
+		transform: true,
+		connectable: true,
+	},
+	validateDoc: () => [],
+};

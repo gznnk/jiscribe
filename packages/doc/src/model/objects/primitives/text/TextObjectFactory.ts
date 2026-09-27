@@ -1,27 +1,7 @@
+import { measureTextSize } from "./measureTextSize";
 import { TEXT_DOC_DEFAULTS, type TextDoc, type TextLayoutDoc } from "./TextDoc";
-import { calcTextObjectFrameSize } from "../../../../text/object/calcTextObjectFrameSize";
-import { resolveDocBodyFont } from "../../../../text/object/resolveDocBodyFont";
 import type { ObjectFactory } from "../../types/ObjectFactory";
-import { isRichText } from "../../types/text/RichText";
-import {
-	createPointObjectFactory,
-	type PointObjectSizeResolver,
-} from "../../utils/createPointObjectFactory";
-
-/**
- * The box the text draws, which is the whole of its size: TEXT_DOC_DEFAULTS state
- * the four font fields, so the merged doc always resolves to a concrete font. Only
- * the block layout wraps in a stored width — the rule `TextMapper.textToState`
- * measures a loaded doc by, so a created text and a reloaded one agree on the box.
- */
-const measureTextSize: PointObjectSizeResolver = (doc) =>
-	calcTextObjectFrameSize(
-		isRichText(doc.text) ? doc.text : "",
-		resolveDocBodyFont(doc),
-		doc.textLayout === "block" && typeof doc.width === "number"
-			? doc.width
-			: undefined,
-	);
+import { createPointObjectFactory } from "../../utils/createPointObjectFactory";
 
 /**
  * The width a block text wraps in, which the point factory drops from `overrides`

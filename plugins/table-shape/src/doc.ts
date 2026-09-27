@@ -6,6 +6,7 @@ import {
 	createFrameDocValidator,
 	createPointObjectFactory,
 	EVERY_TEXT_SLOT_ID,
+	type PointObjectSizeResolver,
 } from "@jiscribe/canvas-sdk/doc";
 import { calcOutsideBoxTextRegion } from "@jiscribe/doc";
 import type { CanvasDocPlugin, ObjectDocDefinition } from "@jiscribe/doc";
@@ -22,11 +23,22 @@ import type { TableDoc } from "./schema/TableDoc";
 import { validateTableFields } from "./schema/validateTableFields";
 
 /**
+ * The grid's own size, read off a document of it: the one measurement both the
+ * placement of a new table (the point factory) and the doc-side box of a saved one
+ * (`pointSize`) go through. The cast is what the resolver's untyped doc costs —
+ * `calcTableDocFrameSize` reads only the axes and the rule width, and a doc missing
+ * either axis measures as an empty grid.
+ */
+const measureTableSize: PointObjectSizeResolver = (doc) =>
+	calcTableDocFrameSize(doc as TableDocLayoutSource);
+
+/**
  * `createFrameObjectDoc` is not used here: it derives a factory from a stored
  * `width` / `height`, and a table's box is the grid's answer rather than the
  * document's (TableFeatures). The three fields it would have filled in are
  * spelled out instead. The point factory is handed the grid's own measurement, so a
- * table is placed by its center like every other shape.
+ * table is placed by its center like every other shape, and `pointSize` declares
+ * that same measurement for the doc-ops to measure a saved table by.
  *
  * `textRegion` says the box does not hold the text, the same answer the record
  * gives: the box is divided into cells each sized from its own text, so no width
@@ -42,8 +54,9 @@ export const tableDocDefinition: ObjectDocDefinition = {
 	validateDoc: createFrameDocValidator(TableFeatures, validateTableFields),
 	factory: createPointObjectFactory<Omit<TableDoc, "id">>(
 		TABLE_DOC_DEFAULTS,
-		(doc) => calcTableDocFrameSize(doc as TableDocLayoutSource),
+		measureTableSize,
 	),
+	pointSize: measureTableSize,
 	textRegion: calcOutsideBoxTextRegion,
 	extraKeys: TABLE_EXTRA_KEYS,
 	description:

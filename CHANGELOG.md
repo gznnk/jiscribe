@@ -24,6 +24,13 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- For plugin authors: a `geometry: "point"` type declares the box its document
+  does not store as `ObjectDocDefinition.pointSize`, and the doc-side ops measure
+  it by that instead of by the rule the `text` shape happens to follow. It is the
+  same measurement the type's factory places a new shape by, so placement and
+  measurement cannot drift. A type registering one and declaring no size now
+  fails its own parse-check suite (`@jiscribe/canvas-sdk/testing`) and is reported
+  by `diagnoseDoc`, rather than quietly having no box at all.
 - **A `table` shape: a grid of cells.** Each cell is a text slot of its own, so
   it takes the same rich text, the same typography and the same in-place editing
   every other shape's text does, and carries a `fill` besides. A table stores no
@@ -137,6 +144,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **The reported box of a rotated shape whose size is measured no longer misses
+  it.** `get_object_bounds`, and with it alignment, distribution and overlap
+  checks, read a `text`'s stored coordinate as the box's plain top-left corner —
+  but for a shape storing no size that coordinate is the corner as it is _drawn_,
+  turned with the shape. A rotated or flipped text therefore reported a box
+  beside the one it occupies, a quarter turn putting it a whole box away. An
+  upright one is unchanged, as is the rule that these ops work on the
+  untransformed box.
 - **An object of a type this build does not know survives an edit.** A shape
   from a plugin the host lacks, or from a newer version, was dropped on load, so
   the next save removed it from the file. It is now kept as written, in its

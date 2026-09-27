@@ -2,9 +2,11 @@ import {
 	createEstimateTextMeasurement,
 	offerTextMeasurement,
 } from "@jiscribe/canvas-sdk/doc";
+import { createDocOps } from "@jiscribe/doc";
+import type { CanvasDoc } from "@jiscribe/doc";
 import { describe, expect, it } from "vitest";
 
-import { tableDocDefinition } from "../doc";
+import { tableDocDefinition, tableDocPlugin } from "../doc";
 import { calcTableDocFrameSize } from "../layout/calcTableDocFrameSize";
 import { TABLE_DOC_DEFAULTS } from "../schema/TableDoc";
 
@@ -39,5 +41,25 @@ describe("the table's doc factory", () => {
 
 	it("offers no bounds drawing: the shape does not own its box", () => {
 		expect(factory?.createDocFromBounds).toBeUndefined();
+	});
+});
+
+describe("the table's doc-side box", () => {
+	/** Doc-ops that know the table, which is how a Node host measures one. */
+	const docOps = createDocOps({ plugins: [tableDocPlugin] });
+
+	// Without the type's own size declaration the ops measure a point-geometry doc
+	// as the body text it does not have, and a table reports a box of about nothing
+	// — which every op working off one (align, distribute, overlap) then believes.
+	it("measures the grid, so the ops see the box the table draws", () => {
+		const doc: CanvasDoc = { version: 1, root: [] };
+		const id = docOps.addObject(doc, "table", { x: 40, y: 60 });
+
+		const bounds = docOps.getObjectBounds(doc, id);
+
+		expect(bounds?.width).toBe(defaultSize.width);
+		expect(bounds?.height).toBe(defaultSize.height);
+		expect(bounds?.x).toBeCloseTo(40, 3);
+		expect(bounds?.y).toBeCloseTo(60, 3);
 	});
 });

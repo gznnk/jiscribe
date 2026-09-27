@@ -2,22 +2,40 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import type { CanvasDoc, ObjectDocDefinition } from "@jiscribe/doc";
+import { isMissingPointSize } from "@jiscribe/doc";
 import { standardObjectDocDefinitions } from "@jiscribe/standard-shapes/doc";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { diagnoseDoc } from "../diagnoseDoc";
 import { validateDoc } from "../validateDoc";
 
-const readFixture = (name: string): CanvasDoc => {
-	const path = fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
-	const result = validateDoc(readFileSync(path, "utf8"));
+/**
+ * Parse a document written out here, failing the test when it does not parse: the
+ * checks read a parsed doc, and a hand-built one would skip the very validation
+ * that decides what reaches them.
+ *
+ * @param source - The document, as its file text or as the object it parses to
+ * @param label - Named in the failure so a broken document is identified
+ */
+const parseDoc = (source: string | object, label: string): CanvasDoc => {
+	const text = typeof source === "string" ? source : JSON.stringify(source);
+	const result = validateDoc(text);
 	if (result.doc === undefined) {
 		throw new Error(
-			`${name} does not parse: ${result.diagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,
+			`${label} does not parse: ${result.diagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,
 		);
 	}
 	return result.doc;
 };
+
+const readFixture = (name: string): CanvasDoc =>
+	parseDoc(
+		readFileSync(
+			fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)),
+			"utf8",
+		),
+		name,
+	);
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -232,5 +250,47 @@ describe("diagnoseDoc", () => {
 		const diagnostics = diagnoseDoc(readFixture("overflowing.jis.json"));
 		expect(diagnostics.every((one) => one.severity === "warning")).toBe(true);
 		expect(diagnostics[0].message).toMatch(/rect declares no text region/);
+	});
+
+	describe("a point-geometry type that declares no size", () => {
+		/** A document holding one text, the shipped type whose doc stores no size. */
+		const textDoc = (): CanvasDoc =>
+			parseDoc(
+				{
+					version: 1,
+					root: [{ id: "label", type: "text", x: 0, y: 0, text: "hi" }],
+				},
+				"the one-text doc",
+			);
+
+		it("is warned about rather than passed over", () => {
+			// Unreachable with the shipped set (see the case below), so the gap is
+			// staged here — which is what the warning is a guard against.
+			const text = standardObjectDocDefinitions.get(
+				"text",
+			) as ObjectDocDefinition;
+			vi.spyOn(standardObjectDocDefinitions, "get").mockImplementation(
+				(type) =>
+					type === "text" ? { ...text, pointSize: undefined } : undefined,
+			);
+
+			const diagnostics = diagnoseDoc(textDoc());
+
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0]).toMatchObject({
+				severity: "warning",
+				objectId: "label",
+			});
+			expect(diagnostics[0].message).toMatch(/text stores no size/);
+		});
+
+		it("is not in the shipped set: every point type declares its own size", () => {
+			const undeclared = [...standardObjectDocDefinitions]
+				.filter(([, definition]) => isMissingPointSize(definition))
+				.map(([type]) => type);
+
+			expect(undeclared).toEqual([]);
+			expect(diagnoseDoc(textDoc())).toEqual([]);
+		});
 	});
 });
