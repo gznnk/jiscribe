@@ -26,6 +26,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 - **Shift snaps the rotation handle to 15° steps.** Without Shift a rotation
   is still rounded to the whole degree and does not snap.
+- **Shift keeps a polyline being drawn horizontal or vertical**, whichever way
+  the drag has gone further from where it started. Other shapes draw as before.
 - **Shift adds to the selection as Ctrl and Cmd do**, and holding any of the
   three while dragging over the background adds what the marquee encloses to
   what was already selected instead of replacing it.

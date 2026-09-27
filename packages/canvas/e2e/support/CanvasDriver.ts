@@ -382,11 +382,18 @@ export class CanvasDriver {
 	/**
 	 * Pick a tool, drag to draw a shape, and return the new shape's data-id. The shape is
 	 * auto-selected right after drawing and the ObjectMenu appears.
+	 *
+	 * @param options.shift - Hold Shift through the drag, for verifying the polyline axis lock
+	 * @param options.inspect - Runs with the button still down, like dragInspecting
 	 */
 	async drawShape(
 		tool: ToolTitle,
 		from: { x: number; y: number },
 		to: { x: number; y: number },
+		{
+			shift = false,
+			inspect,
+		}: { shift?: boolean; inspect?: () => Promise<void> } = {},
 	): Promise<string> {
 		const before = await this.captureObjects();
 		const beforeIds = new Set(before.map((obj) => obj.id));
@@ -407,7 +414,13 @@ export class CanvasDriver {
 			)
 			.toBe("crosshair");
 
-		await this.drag(from, to);
+		if (shift || inspect) {
+			await this.dragInspecting(from, to, inspect ?? (async () => {}), {
+				shift,
+			});
+		} else {
+			await this.drag(from, to);
+		}
 
 		// Wait for the new object to appear; if it does not, the operation had no effect.
 		await expect

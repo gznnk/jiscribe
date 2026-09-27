@@ -2,7 +2,6 @@ import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
 import type { Point } from "@jiscribe/geometry";
 
 import type {
-	AxisLockFeedback,
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
@@ -10,7 +9,7 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
-import { ORIGIN_SNAP_PX } from "../../utils/axisLock";
+import { applyAxisLock } from "../../utils/axisLock";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -137,32 +136,17 @@ export class VertexControlHandler extends ControlStrategy {
 		const zoom = state.viewport.zoom;
 
 		// --- Axis lock via Shift ---
-		// Relative to the starting vertex position, move only along the axis with the larger displacement (lock the smaller axis).
-		// Since the decision is based on the cumulative amount, the locked axis follows if the dominant axis swaps during the drag.
-		const dx = event.last.x - startPoint.x;
-		const dy = event.last.y - startPoint.y;
-		const lockedAxis: "x" | "y" | null = event.mods.shift
-			? Math.abs(dx) >= Math.abs(dy)
-				? "y"
-				: "x"
-			: null;
+		// While axis-locked, a tiny free-axis displacement snaps to the starting vertex (crosshair guides).
+		const axisLock = applyAxisLock(startPoint, event.last, {
+			shift: event.mods.shift,
+			zoom,
+			originSnap: true,
+		});
+		const { lockedAxis, snapToOrigin } = axisLock;
+		let cursorX = axisLock.point.x;
+		let cursorY = axisLock.point.y;
 
-		// While axis-locked, if the free-axis displacement is tiny, snap to the starting vertex and show both-axis guides.
-		const freeAxisDelta = lockedAxis === "x" ? dy : dx;
-		const snapToOrigin =
-			lockedAxis !== null && Math.abs(freeAxisDelta) <= ORIGIN_SNAP_PX / zoom;
-
-		// Cursor position reflecting the axis lock (the locked axis / origin snap is replaced with the starting vertex coordinate)
-		let cursorX = event.last.x;
-		let cursorY = event.last.y;
-		if (lockedAxis === "x" || snapToOrigin) {
-			cursorX = startPoint.x;
-		}
-		if (lockedAxis === "y" || snapToOrigin) {
-			cursorY = startPoint.y;
-		}
-
-		// --- Snap correction between objects (skipped while axis-locked / origin-snapping) ---
+		// --- Snap correction between objects (free axis only while axis-locked; skipped on origin snap) ---
 		const snapCandidates = dragStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
@@ -189,19 +173,6 @@ export class VertexControlHandler extends ControlStrategy {
 			);
 		}
 
-		// --- Shift axis-lock feedback (full-viewport guides) ---
-		// The locked axis is a line through the starting vertex's coordinate. During origin snap, show both axes (a crosshair).
-		let axisLockFeedback: AxisLockFeedback | null = null;
-		if (lockedAxis) {
-			if (snapToOrigin) {
-				axisLockFeedback = { x: startPoint.x, y: startPoint.y };
-			} else if (lockedAxis === "y") {
-				axisLockFeedback = { y: startPoint.y };
-			} else {
-				axisLockFeedback = { x: startPoint.x };
-			}
-		}
-
 		// Compute the new vertex position
 		const newPosition: Point = { x: cursorX, y: cursorY };
 
@@ -222,7 +193,7 @@ export class VertexControlHandler extends ControlStrategy {
 			...state,
 			objects: updatedObjects,
 			snapFeedback,
-			axisLockFeedback,
+			axisLockFeedback: axisLock.feedback,
 		};
 	}
 

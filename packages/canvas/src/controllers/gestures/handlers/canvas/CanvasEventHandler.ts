@@ -10,6 +10,7 @@ import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { ZOOM } from "../../../utils/zoom";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
+import { applyAxisLock } from "../utils/axisLock";
 import { isAdditiveSelectionMod } from "../utils/isAdditiveSelectionMod";
 import {
 	SNAP_THRESHOLD_PX,
@@ -198,8 +199,21 @@ export const CanvasEventHandler: GestureHandler = {
 					return nextState;
 				}
 
-				let endX = event.last.x;
-				let endY = event.last.y;
+				// Shift constrains a polyline to horizontal / vertical. No origin snap:
+				// landing back on the start point would leave a zero-length line that
+				// is not placed.
+				const axisLock = applyAxisLock(
+					{ x: currentPreview.startX, y: currentPreview.startY },
+					event.last,
+					{
+						shift: event.mods.shift && drawingObjectType === "polyline",
+						zoom: nextState.viewport.zoom,
+						originSnap: false,
+					},
+				);
+				const { lockedAxis } = axisLock;
+				let endX = axisLock.point.x;
+				let endY = axisLock.point.y;
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 				const snapCandidates =
@@ -208,8 +222,8 @@ export const CanvasEventHandler: GestureHandler = {
 					const result = findSnap(
 						snapCandidates,
 						SNAP_THRESHOLD_PX / nextState.viewport.zoom,
-						[endX],
-						[endY],
+						lockedAxis === "x" ? [] : [endX],
+						lockedAxis === "y" ? [] : [endY],
 					);
 					endX += result.delta.x;
 					endY += result.delta.y;
@@ -239,6 +253,7 @@ export const CanvasEventHandler: GestureHandler = {
 						},
 					},
 					snapFeedback,
+					axisLockFeedback: axisLock.feedback,
 				};
 				return nextState;
 			}
