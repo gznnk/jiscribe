@@ -3,7 +3,12 @@ import { memo, useState } from "react";
 import { usePropertyPanelSections } from "./hooks/usePropertyPanelSections";
 import { ArrowHeadsItem } from "./items/ArrowHeadsItem";
 import type { BuiltinItemProps } from "./items/BuiltinItemProps";
-import { BackgroundItem } from "./items/CanvasItems";
+import {
+	BackgroundItem,
+	ViewOpenItem,
+	ViewPaddingItem,
+	ViewScrollItem,
+} from "./items/CanvasItems";
 import {
 	AutoHeightItem,
 	LockAspectRatioItem,
@@ -183,10 +188,12 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * The panel is one gesture target (`data-kind="menu" data-id="property-panel"`)
  * handled by PropertyPanelHandler: its chrome carries only a data-part, and the
  * close button routes through the command system like the toolbar's own toggle.
- * The controls inside declare themselves as object-menu targets instead, so a
- * press writes through the same `set:` / `command:` grammar the floating menu
- * uses and lands one history entry (ObjectMenuHandler); the fields that take
- * typing opt out of gestures entirely.
+ * The controls inside a selection's sections declare themselves as object-menu
+ * targets instead, so a press writes through the same `set:` / `command:`
+ * grammar the floating menu uses and lands one history entry
+ * (ObjectMenuHandler); the Canvas section's buttons stay on this target and
+ * write the document through `doc:` parts. The fields that take typing opt out
+ * of gestures entirely.
  *
  * Open and collapse state are reducer state, so this component is render-only.
  */
@@ -245,6 +252,12 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 								background={canvasState.background}
 								onDocumentUpdate={onDocumentUpdate}
 							/>
+							<ViewPaddingItem
+								view={canvasState.view}
+								onDocumentUpdate={onDocumentUpdate}
+							/>
+							<ViewOpenItem view={canvasState.view} />
+							<ViewScrollItem view={canvasState.view} />
 						</PropertyPanelAccordion>
 					)}
 					{!showsCanvasSection &&

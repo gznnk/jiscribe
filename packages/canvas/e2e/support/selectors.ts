@@ -38,8 +38,13 @@ const CSS_COLOR_INPUT = 'input[placeholder="CSS color"]';
 const STENCIL_LIBRARY_PANEL =
 	'[data-kind="menu"][data-id="stencil-library-panel"]';
 
-/** Shared by the properties sidebar selectors below, which all scope into it. */
-const PROPERTY_PANEL = '[data-kind="menu"][data-id="property-panel"]';
+/**
+ * Shared by the properties sidebar selectors below, which all scope into it. The
+ * Canvas section's buttons declare the same target (with a data-part), so the
+ * panel root is the one element of it without a part.
+ */
+const PROPERTY_PANEL =
+	'[data-kind="menu"][data-id="property-panel"]:not([data-part])';
 
 /**
  * Shared by the toolbar-scoped selectors below. Scoping them matters because while
@@ -145,6 +150,14 @@ export const selectors = {
 	 */
 	propertyPanelSet: (property: string, value: string) =>
 		`${PROPERTY_PANEL} [data-part="set:${property}:${value}"]`,
+
+	/**
+	 * A button of the Canvas section writing one of the document's own settings
+	 * (`doc:` part; the Canvas section's controls stay on the sidebar's own
+	 * target). An empty `value` is the button that drops the setting.
+	 */
+	propertyPanelDocumentSet: (property: string, value: string) =>
+		`${PROPERTY_PANEL} [data-part="doc:${property}:${value}"]`,
 
 	/** A command button inside the sidebar (the Arrange section's stacking-order buttons). */
 	propertyPanelCommand: (commandId: string) =>

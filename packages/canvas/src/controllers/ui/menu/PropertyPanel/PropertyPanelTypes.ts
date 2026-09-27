@@ -3,6 +3,7 @@ import type { GroupState } from "../../../../states/objects/primitives/group/Gro
 import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import type {
 	DocumentProperty,
+	DocumentPropertyValueMap,
 	MetaProperty,
 	TransformProperty,
 } from "../../../reducer/CanvasActions";
@@ -133,16 +134,18 @@ export type PropertyPanelTransformUpdater = (
  * Canvas section — which is what is on screen when there is no selection — holds
  * no plugin rows.
  *
- * @param property - Which document setting is being stated
- * @param value - A literal CSS color for `background`, or null to clear the setting so the host theme decides again
+ * @param property - Which document setting is being stated; it decides the type of `value`
+ * @param value - Typed by {@link DocumentPropertyValueMap}: a literal CSS color or
+ *   a view mode, null to clear that setting so the host decides again, or a padding
+ *   side in world px (0 drops the side)
  * @param commit - true records the change in history (a swatch, blur / Enter), false only previews it live
  * @param coalesceHistory - true merges this commit into the immediately preceding
  *   commit for the same property, so a burst becomes a single undo entry. Defaults
  *   to false, i.e. every commit gets its own entry
  */
-export type PropertyPanelDocumentUpdater = (
-	property: DocumentProperty,
-	value: string | null,
+export type PropertyPanelDocumentUpdater = <P extends DocumentProperty>(
+	property: P,
+	value: DocumentPropertyValueMap[P],
 	commit: boolean,
 	coalesceHistory?: boolean,
 ) => void;
@@ -185,3 +188,10 @@ export type PropertyPanelItemProps = {
 	onPropertyUpdate: StylePropertyUpdater;
 	onTransformUpdate: PropertyPanelTransformUpdater;
 };
+
+/**
+ * The gesture targets a sidebar control can press into: "object-menu" writes the
+ * selection's style (ObjectMenuHandler), "property-panel" the document's own
+ * settings (PropertyPanelHandler).
+ */
+export type PropertyControlTargetId = "object-menu" | "property-panel";

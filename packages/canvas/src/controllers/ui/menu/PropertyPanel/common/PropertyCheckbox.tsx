@@ -5,6 +5,7 @@ import {
 	PropertyCheckboxButton,
 	PropertyCheckboxLabel,
 } from "./PropertyControlsStyled";
+import type { PropertyControlTargetId } from "../PropertyPanelTypes";
 
 const CHECK_ICON_SIZE = 12;
 
@@ -12,9 +13,11 @@ type PropertyCheckboxProps = {
 	/** Whether the selection is already in the state the box stands for. */
 	isOn: boolean;
 	/**
-	 * The `data-part` the press carries, in the grammar ObjectMenuHandler
+	 * The `data-part` the press carries, in the grammar the control's target
 	 * resolves: `set:{property}:{value}` for a flag written outright,
-	 * `command:{commandId}` for a flag the canvas computes the next state of.
+	 * `command:{commandId}` for a flag the canvas computes the next state of
+	 * (ObjectMenuHandler), or `doc:{property}:{value}` for a document setting
+	 * (PropertyPanelHandler).
 	 */
 	part: string;
 	/**
@@ -25,6 +28,8 @@ type PropertyCheckboxProps = {
 	label: string;
 	/** title of the control; says what the press will do, not what is set. Defaults to `label`. */
 	title?: string;
+	/** The `data-id` the press carries: "object-menu" (the default) for a selection's flag, "property-panel" for a document setting. */
+	targetId?: PropertyControlTargetId;
 };
 
 /**
@@ -42,6 +47,7 @@ const PropertyCheckboxComponent: React.FC<PropertyCheckboxProps> = ({
 	part,
 	label,
 	title = label,
+	targetId = "object-menu",
 }) => (
 	<PropertyCheckboxButton
 		type="button"
@@ -49,7 +55,7 @@ const PropertyCheckboxComponent: React.FC<PropertyCheckboxProps> = ({
 		aria-checked={isOn}
 		title={title}
 		data-kind="menu"
-		data-id="object-menu"
+		data-id={targetId}
 		data-part={part}
 	>
 		<PropertyCheckboxBox isOn={isOn} aria-hidden="true">

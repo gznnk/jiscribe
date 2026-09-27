@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
@@ -99,5 +99,75 @@ describe("PropertyPanelHandler", () => {
 			registries,
 		);
 		expect(next).toBe(state);
+	});
+
+	describe("document parts", () => {
+		it("states a view mode and raises commitVersion so the gesture records it", () => {
+			const state = makeState({ commitVersion: 3 });
+			const next = PropertyPanelHandler.handle(
+				state,
+				makeEvent("click", "property-panel", "doc:view.open:fit-width"),
+				registries,
+			);
+			expect(next.view).toEqual({ open: "fit-width" });
+			expect(next.commitVersion).toBe(4);
+		});
+
+		it("drops the setting for an empty value, and the view with it", () => {
+			const state = makeState({
+				commitVersion: 3,
+				view: { scroll: "content" },
+			});
+			const next = PropertyPanelHandler.handle(
+				state,
+				makeEvent("doubleClick", "property-panel", "doc:view.scroll:"),
+				registries,
+			);
+			expect(next.view).toBeUndefined();
+			expect(next.commitVersion).toBe(4);
+		});
+
+		it("records nothing for the value the document already holds", () => {
+			const state = makeState({ commitVersion: 3, view: { open: "fit-all" } });
+			const next = PropertyPanelHandler.handle(
+				state,
+				makeEvent("click", "property-panel", "doc:view.open:fit-all"),
+				registries,
+			);
+			expect(next).toBe(state);
+		});
+
+		it("ignores and warns about a value the setting does not take, and an unknown setting", () => {
+			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+			const state = makeState({ commitVersion: 3 });
+			for (const part of [
+				"doc:view.open:fit-height",
+				"doc:view.scroll:none",
+				"doc:view.padding.top:-4",
+				"doc:view.padding.top:",
+				"doc:view.zoom:2",
+			]) {
+				expect(
+					PropertyPanelHandler.handle(
+						state,
+						makeEvent("click", "property-panel", part),
+						registries,
+					),
+				).toBe(state);
+			}
+			expect(warnSpy).toHaveBeenCalledTimes(5);
+			warnSpy.mockRestore();
+		});
+
+		it("writes nothing on a press, only on the click that follows", () => {
+			const state = makeState({ commitVersion: 3 });
+			const next = PropertyPanelHandler.handle(
+				state,
+				makeEvent("pressed", "property-panel", "doc:view.open:fit-all"),
+				registries,
+			);
+			expect(next.view).toBeUndefined();
+			expect(next.commitVersion).toBe(3);
+		});
 	});
 });

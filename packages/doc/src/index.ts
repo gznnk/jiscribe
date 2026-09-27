@@ -34,11 +34,8 @@ export type {
 	ViewPaddingDoc,
 	ResolvedViewPadding,
 } from "./model/canvas/ViewDoc";
-export {
-	isViewOpenMode,
-	isViewScrollMode,
-	resolveViewPadding,
-} from "./model/canvas/ViewDoc";
+export { isViewOpenMode, isViewScrollMode } from "./model/canvas/ViewDoc";
+export { resolveViewPadding } from "./model/canvas/resolveViewPadding";
 export type { ObjectDoc } from "./model/objects/base/ObjectDoc";
 // An object of a type the reader does not know, which the parser, the doc-ops and
 // the canvas all keep in place and write back as it was.

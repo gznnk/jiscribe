@@ -19,6 +19,10 @@ import {
 } from "./handlers/handleTransformPropertyUpdate";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
+import {
+	applyDocumentProperty,
+	canApplyDocumentProperty,
+} from "../utils/applyDocumentProperty";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
 import { createMultiSelectGroup } from "../utils/createMultiSelectGroup";
@@ -304,17 +308,19 @@ export const createCanvasReducer =
 				// COW flattening and vertex clearing the other two routes do would
 				// have nothing to act on here.
 				//
-				// `background` is the only DocumentProperty so far, so the value goes
-				// straight to it; null drops the field, which is what puts the surface
-				// back under the host theme (the headless setBackground op's rule).
-				const background = action.value ?? undefined;
-				// A commit of the color already set is recorded, not skipped: the
-				// picker's text input previews while typing, so the color is already
-				// in place when Enter commits it (the same rule as the transform route).
-				if (state.background === background && !action.commit) {
+				// null drops the setting, which hands it back to the host (the
+				// headless setBackground / setView ops' rule).
+				const updated = applyDocumentProperty(state, action);
+				// A commit of the value already set is recorded, not skipped: the
+				// fields preview while typing, so the value is already in place when
+				// Enter commits it (the same rule as the transform route). Only a
+				// value the document cannot hold stays a no-op.
+				if (
+					updated === state &&
+					(!action.commit || !canApplyDocumentProperty(action))
+				) {
 					return state;
 				}
-				const updated = { ...state, background };
 				if (!action.commit) {
 					return updated;
 				}

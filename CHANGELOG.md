@@ -36,6 +36,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   swatch is now split between the colours (up to three), a slider's field is
   left empty, and no button of a set is pressed — the way the property sidebar
   already did.
+- **The property sidebar's Canvas section sets the document's `view`**: the
+  padding on each side, how the view is framed on open, and whether scrolling
+  stops at the content.
 - For plugin authors: `features.text: "source"`, for a shape whose body is
   source text it draws itself (as `markdown` now is). Such a body is a plain
   string, never runs, and carries no `fontWeight` / `fontStyle` /

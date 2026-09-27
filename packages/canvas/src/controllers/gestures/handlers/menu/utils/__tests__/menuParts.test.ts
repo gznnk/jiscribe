@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
 	commandPart,
+	documentPart,
 	parseMenuPart,
 	setPart,
 	sliderPart,
@@ -48,6 +49,24 @@ describe("menuParts", () => {
 			"set:label.fontWeight:bold",
 		);
 		expect(sliderPart("fontSize")).toBe("slider:fontSize");
+	});
+
+	it("reads a document part back, with an empty value standing for null", () => {
+		expect(parseMenuPart(documentPart("view.open", "fit-width"))).toEqual({
+			kind: "doc",
+			property: "view.open",
+			value: "fit-width",
+		});
+		expect(parseMenuPart(documentPart("view.scroll", null))).toEqual({
+			kind: "doc",
+			property: "view.scroll",
+			value: null,
+		});
+		expect(documentPart("view.scroll", "content")).toBe(
+			"doc:view.scroll:content",
+		);
+		// A document part with nothing after the property has no value to write.
+		expect(parseMenuPart("doc:view.open")).toBeNull();
 	});
 
 	it("gives null for a press on the body and for anything outside the grammar", () => {

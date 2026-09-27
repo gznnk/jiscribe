@@ -1,5 +1,5 @@
+import { resolveViewPadding } from "@jiscribe/doc/model/canvas/resolveViewPadding";
 import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
-import { resolveViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
 import { convertRectToBoundingBox } from "@jiscribe/geometry";
 import type { BoundingBox, Rect } from "@jiscribe/geometry";
 
