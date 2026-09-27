@@ -24,18 +24,25 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A `table` shape: a grid of cells.** Each cell is a text slot of its own, so
+  it takes the same rich text, the same typography and the same in-place editing
+  every other shape's text does, and carries a `fill` besides. A table stores no
+  size: its width is the column widths summed, its height the resolved row
+  heights summed, and a row's `height` is a lower bound the text raises rather
+  than a box the text is clipped to. Cells are written as a dense grid — one row
+  per entry of `rows`, one cell per entry of `columns` — and a cell carrying
+  nothing but text may be written as that text alone.
 - For plugin authors: a shape may now declare `geometry: "point"` and let
   `createFrameMapper` map it — the doc stores the position alone and the box is
-  re-derived from the content (`contentResizer`). `@jiscribe/geometry` gained
-  `calcFrameTopLeft` / `calcFrameCenterFromTopLeft` for the corner such a box is
-  grown from and rebuilt around, `@jiscribe/doc` exports
-  `calcWrappedTextBlockSize` so a shape measuring its own text box does not
-  restate the padding rule, and a type whose slot set is not fixed declares its
-  text-style defaults under
-  `EVERY_TEXT_SLOT_ID` — the id `"*"`, which the parser now holds back so that a
-  slot cannot be written under it and read as that declaration. A slot may carry
-  fields of its type's own: every shared write copies a slot whole, which is now
-  stated on `TextSlots` and held by a test.
+  re-derived from the content (`contentResizer`), as the `table` does.
+  `@jiscribe/geometry` gained `calcFrameTopLeft` / `calcFrameCenterFromTopLeft`
+  for the corner such a box is grown from and rebuilt around, `@jiscribe/doc`
+  exports `calcWrappedTextBlockSize` so a shape measuring its own text box does
+  not restate the padding rule, and a type whose slot set is not fixed declares
+  its text-style defaults under `EVERY_TEXT_SLOT_ID` — the id `"*"`, which the
+  parser now holds back so that a slot cannot be written under it and read as
+  that declaration. A slot may carry fields of its type's own: every shared write
+  copies a slot whole, which is now stated on `TextSlots` and held by a test.
 - **Shift snaps the rotation handle to 15° steps.** Without Shift a rotation
   is still rounded to the whole degree and does not snap.
 - **Shift adds to the selection as Ctrl and Cmd do**, and holding any of the

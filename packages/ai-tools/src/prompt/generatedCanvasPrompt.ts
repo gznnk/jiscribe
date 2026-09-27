@@ -1,7 +1,7 @@
 // 生成物。編集しないこと（pnpm generate:schema で再生成）。
 // 正本は engine/packages/doc-schema/parts/ にある。
 
-export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.10.0+1e02488e -->
+export const GENERATED_CANVAS_PROMPT = `<!-- jiscribe guide 0.10.0+72f45af1 -->
 
 # Drawing on a Jiscribe canvas
 
@@ -241,6 +241,7 @@ rather than a \`rect\` with a label on it.
 | \`group\`                 | container of child objects                                         |
 | \`container\`             | titled region (module, subsystem, boundary)                        |
 | \`sticky\`                | sticky note (no stroke or \`rx\`)                                    |
+| \`table\`                 | grid of cells (table)                                              |
 | \`svg\`                   | raw SVG escape hatch (opaque box)                                  |
 | \`image\`                 | picture file (raster or SVG) under the .jis directory (opaque box) |
 | \`connector\` (in \`root\`) | edge / arrow between objects                                       |

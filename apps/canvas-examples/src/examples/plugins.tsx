@@ -39,6 +39,7 @@ import {
 } from "@jiscribe/plugin-lucide-icon-shape";
 import { markdownPlugin } from "@jiscribe/plugin-markdown-shape";
 import { stickyPlugin } from "@jiscribe/plugin-sticky-shape";
+import { tablePlugin } from "@jiscribe/plugin-table-shape";
 import { umlPlugin, umlStencilCategory } from "@jiscribe/plugin-uml-shapes";
 
 // One plugin ships one shape family, complete with its doc schema, its rendering and
@@ -58,6 +59,7 @@ const plugins = [
 	containerPlugin,
 	markdownPlugin,
 	stickyPlugin,
+	tablePlugin,
 	umlPlugin,
 	generalPlugin,
 	annotationPlugin,
@@ -111,7 +113,12 @@ const toolbarSections: ToolbarSection[] = [
 const stencilLibrarySections: StencilCategory[] = [
 	{
 		...basicStencilCategory,
-		presetIds: [...basicStencilCategory.presetIds, "sticky", "markdown"],
+		presetIds: [
+			...basicStencilCategory.presetIds,
+			"sticky",
+			"markdown",
+			"table",
+		],
 	},
 	flowchartStencilCategory,
 	umlStencilCategory,
