@@ -8,6 +8,7 @@ import { RectFeatures } from "@jiscribe/doc/model/objects/primitives/rect/RectDo
 import type { CreateObjectType } from "@jiscribe/doc/model/objects/types/CreateObjectType";
 import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFeatures";
 import type { Dimensions, Transform } from "@jiscribe/geometry";
+import { calcFrameCenterFromTopLeft } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ConnectorState } from "../../connector/ConnectorState";
@@ -16,7 +17,6 @@ import type { PolylineState } from "../../primitives/polyline/PolylineState";
 import { rectToDoc, rectToState } from "../../primitives/rect/RectMapper";
 import type { RectState } from "../../primitives/rect/RectState";
 import type { CreateObjectState } from "../../types/CreateObjectState";
-import { calcCenterFromDrawnTopLeft } from "../../utils/drawnTopLeft";
 import { createFrameMapper } from "../FrameMapper";
 import { createPolyMapper } from "../PolyMapper";
 
@@ -238,7 +238,7 @@ describe("FrameMapper point geometry: the doc carries the drawn top-left corner 
 		state: ReturnType<typeof pointToState>,
 		size: Dimensions,
 	): ReturnType<typeof pointToState> => {
-		const center = calcCenterFromDrawnTopLeft(
+		const center = calcFrameCenterFromTopLeft(
 			{ x: 120, y: 80 },
 			size,
 			state as unknown as Transform,

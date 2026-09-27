@@ -26,11 +26,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 - For plugin authors: a shape may now declare `geometry: "point"` and let
   `createFrameMapper` map it — the doc stores the position alone and the box is
-  re-derived from the content (`contentResizer`). `@jiscribe/canvas` exports
-  `calcDrawnTopLeft` / `calcCenterFromDrawnTopLeft` for the corner such a box is
-  grown from, `@jiscribe/doc` exports `calcWrappedTextBlockSize` so a shape
-  measuring its own text box does not restate the padding rule, and a type whose
-  slot set is not fixed declares its text-style defaults under
+  re-derived from the content (`contentResizer`). `@jiscribe/geometry` gained
+  `calcFrameTopLeft` / `calcFrameCenterFromTopLeft` for the corner such a box is
+  grown from and rebuilt around, `@jiscribe/doc` exports
+  `calcWrappedTextBlockSize` so a shape measuring its own text box does not
+  restate the padding rule, and a type whose slot set is not fixed declares its
+  text-style defaults under
   `EVERY_TEXT_SLOT_ID` — the id `"*"`, which the parser now holds back so that a
   slot cannot be written under it and read as that declaration. A slot may carry
   fields of its type's own: every shared write copies a slot whole, which is now
@@ -61,6 +62,18 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Changed
 
+- **A shape placed from the toolbar or the shape library lands centered on the
+  cursor, whatever its geometry.** `text` used to land with its top-left there
+  instead: a shape whose size is measured rather than stored reported no size to
+  offset a center by, so it was placed by the corner and, dragged out of the
+  library, snapped to nothing. Both follow from the size now being measured at
+  placement time. What a document holds is unchanged — a `text`'s `x` / `y` is
+  still the top-left of the drawn box — and so is `add_object`, whose `x` / `y`
+  still name that corner. **For plugin authors**, `createPointObjectFactory`
+  takes the measurement as its second argument, `calcDimensions` answers with the
+  real half-size, `createDoc` reads its `position` as the center for every
+  geometry, and `calcPointDocDrawnTopLeft` / `calcPointDocCenter` read that
+  conversion off a document's own transform fields.
 - **A property a shape does not have is reported, and dropped on save.** A
   misspelling, or a style a type does not take, used to be read without a word
   and then left out of what the canvas wrote back, so the value sat in the file

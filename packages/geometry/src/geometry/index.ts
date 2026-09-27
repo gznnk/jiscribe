@@ -3,6 +3,8 @@ export * from "./calcFrameCornerPoints";
 export * from "./calcKeyPointsBoundingBox";
 export * from "./calcFrameKeyPoint";
 export * from "./calcFrameKeyPoints";
+export * from "./calcFrameTopLeft";
+export * from "./calcFrameCenterFromTopLeft";
 export * from "./calcOrientedFrameFromPoints";
 export * from "./calcFrameBoxFeatures";
 export * from "./calcPolyBoundingBox";

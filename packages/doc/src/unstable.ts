@@ -13,8 +13,10 @@
 export { createFrameObjectFactory } from "./model/objects/utils/createFrameObjectFactory";
 
 // The point-geometry counterpart: a doc storing a drawn top-left position only, the
-// box being derived from the content by the type's `contentResizer` in the state layer.
+// box being measured from the content — by the factory to place the shape, and by the
+// type's `contentResizer` to keep it sized in the state layer.
 export { createPointObjectFactory } from "./model/objects/utils/createPointObjectFactory";
+export type { PointObjectSizeResolver } from "./model/objects/utils/createPointObjectFactory";
 
 // The bounds+minSize guard every `createDocFromBounds` needs, for shapes that
 // cannot use createFrameObjectFactory (center origin, vertex lists).

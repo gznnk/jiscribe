@@ -5,6 +5,10 @@ import {
 	roundDocSize,
 } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
 import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
+import {
+	calcFrameCenterFromTopLeft,
+	calcFrameTopLeft,
+} from "@jiscribe/geometry";
 
 import { resolveTextObjectFont } from "./resolveTextObjectFont";
 import type { TextState } from "./TextState";
@@ -21,10 +25,6 @@ import {
 	mapTransformDocToState,
 	mapTransformStateToDoc,
 } from "../../base/TransformMapper";
-import {
-	calcCenterFromDrawnTopLeft,
-	calcDrawnTopLeft,
-} from "../../utils/drawnTopLeft";
 import { rebrand } from "../../utils/rebrand";
 
 /**
@@ -47,7 +47,7 @@ export const textToState: DocToStateMapper<TextDoc, TextState> = (doc) => {
 	// The doc's (x, y) is the drawn top-left, so the center is that corner plus the
 	// transformed half-diagonal. Left unrounded: rounding both directions would
 	// round the coordinate twice on a doc round trip.
-	const center = calcCenterFromDrawnTopLeft(
+	const center = calcFrameCenterFromTopLeft(
 		{ x: doc.x, y: doc.y },
 		size,
 		transform,
@@ -73,7 +73,7 @@ export const textToState: DocToStateMapper<TextDoc, TextState> = (doc) => {
  * turn the object into a label on the next save.
  */
 export const textToDoc: StateToDocMapper<TextState, TextDoc> = (state) => {
-	const drawnTopLeft = calcDrawnTopLeft(state);
+	const drawnTopLeft = calcFrameTopLeft(state);
 
 	return rebrand<TextDoc>({
 		...ObjectMapper.toDoc(state),

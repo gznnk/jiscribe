@@ -79,8 +79,9 @@ describe("addObject", () => {
 		expectValid(doc);
 	});
 
-	// A point-geometry doc stores the top-left and no box, so the position reaches
-	// the doc untouched — no measurement, and nothing to offset a center by.
+	// A point-geometry type is placed by its center like every other shape, so this
+	// call's top-left goes through the box measured from the content and back. What
+	// the doc stores is that same corner, exactly.
 	it("keeps the given top-left for a point-geometry type", () => {
 		const doc = emptyDoc();
 		const id = docOps.addObject(doc, "text", {
@@ -104,6 +105,25 @@ describe("addObject", () => {
 		const text = doc.root[0] as Record<string, unknown>;
 		expect(text.x).toBe(12.5);
 		expect(text.y).toBe(-7.25);
+	});
+
+	it("keeps the given top-left for a rotated point-geometry type", () => {
+		// The corner such a doc stores is the drawn one — turned by the object's own
+		// rotation — so the angle has to reach the factory before it places the box.
+		// Getting that wrong moves the shape by a fraction of its size, which no
+		// unrotated case would show.
+		const doc = emptyDoc();
+		docOps.addObject(doc, "text", {
+			x: 100,
+			y: 100,
+			rotation: 37,
+			text: "Hello World",
+		});
+
+		const text = doc.root[0] as Record<string, unknown>;
+		expect(text.rotation).toBe(37);
+		expect(text.x).toBe(100);
+		expect(text.y).toBe(100);
 	});
 
 	it("keeps box fields out of a point-geometry doc", () => {

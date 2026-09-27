@@ -113,14 +113,6 @@ export type { VisualLine } from "@jiscribe/doc/text/layout/VisualLine";
 export type { TextMeasureFont } from "@jiscribe/doc/text/measure/TextMeasureFont";
 
 export { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
-// The two directions between a `geometry: "point"` doc's coordinate and the box a
-// state derives: a shape whose size comes from its content writes the corner it
-// grew from, and grows a new box back around that same corner. A type declaring a
-// `contentResizer` needs the second of the two.
-export {
-	calcCenterFromDrawnTopLeft,
-	calcDrawnTopLeft,
-} from "./states/objects/utils/drawnTopLeft";
 
 // ---------------------------------------------------------------------------
 // Phase A: type-specific selection control parts (packages/canvas/docs/12-plugin-architecture.md)

@@ -4,10 +4,7 @@ import { type ObjectRecord, readChildren } from "./objectAccess";
 import { ConnectorFeatures } from "../../model/objects/connector/ConnectorDoc";
 import type { GeometryType } from "../../model/objects/types/GeometryType";
 import { isRichText } from "../../model/objects/types/text/RichText";
-import {
-	resolveTextSlotStyle,
-	BODY_TEXT_SLOT_ID,
-} from "../../model/objects/types/text/TextSlot";
+import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import { isTextVerticalBasis } from "../../model/objects/types/text/TextVerticalBasis";
 import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
 import { supportsAutoHeight } from "../../plugin/supportsAutoHeight";
@@ -17,8 +14,7 @@ import type { TextMeasureFont } from "../../text/measure/TextMeasureFont";
 import type { TextMeasurement } from "../../text/measure/TextMeasurement";
 import { adoptTextMeasurement } from "../../text/measure/textMeasurementSlot";
 import { calcTextObjectFrameSize } from "../../text/object/calcTextObjectFrameSize";
-import { DEFAULT_FONT_FAMILY } from "../../text/style/fontFamilies";
-import { TEXT_STYLE_FALLBACK } from "../../text/style/textStyleFallback";
+import { resolveDocBodyFont } from "../../text/object/resolveDocBodyFont";
 import { DocOperationError } from "../errors";
 
 /** Type table every geometry helper resolves `features.geometry` through. */
@@ -43,39 +39,20 @@ const readPoints = (value: unknown): Point[] =>
 	Array.isArray(value) ? (value as Point[]) : [];
 
 /**
- * Font the body of `object` is measured with: the type's own body defaults
- * resolved into whatever the object states itself, and the shared last resort
- * for whatever neither sets. A separate resolution from the canvas's
- * `resolveTextObjectFont` because that one reads a state's slot and this one
- * reads the flat fields a root-form doc (`text: "body"` / `"source"`) spells its
- * styling out in; the two fill in the same fallbacks and must keep doing so.
+ * Font the body of `object` is measured with: the type's own body defaults resolved
+ * into whatever the object states itself ({@link resolveDocBodyFont}), the defaults
+ * being the one part of it this layer has to look up.
  */
 const resolveBodyFont = (
 	object: ObjectRecord,
 	definition: ObjectDocDefinition,
-): TextMeasureFont => {
-	const style = resolveTextSlotStyle(
+): TextMeasureFont =>
+	resolveDocBodyFont(
+		object,
 		extractTextSlotStyleDefaults(definition.features, definition.defaults)?.[
 			BODY_TEXT_SLOT_ID
 		],
-		{
-			fontSize:
-				typeof object.fontSize === "number" ? object.fontSize : undefined,
-			fontFamily:
-				typeof object.fontFamily === "string" ? object.fontFamily : undefined,
-			fontWeight:
-				typeof object.fontWeight === "string" ? object.fontWeight : undefined,
-			fontStyle:
-				typeof object.fontStyle === "string" ? object.fontStyle : undefined,
-		},
 	);
-	return {
-		fontSize: style.fontSize ?? TEXT_STYLE_FALLBACK.fontSize,
-		fontFamily: style.fontFamily ?? DEFAULT_FONT_FAMILY,
-		fontWeight: style.fontWeight ?? TEXT_STYLE_FALLBACK.fontWeight,
-		fontStyle: style.fontStyle,
-	};
-};
 
 /**
  * Fields of an object that cannot move its derived height, so that changing one

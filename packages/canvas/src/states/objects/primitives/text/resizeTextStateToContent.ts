@@ -5,15 +5,15 @@ import {
 } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
-import { roundToDecimal } from "@jiscribe/geometry";
+import {
+	calcFrameCenterFromTopLeft,
+	calcFrameTopLeft,
+	roundToDecimal,
+} from "@jiscribe/geometry";
 
 import { resolveTextObjectFont } from "./resolveTextObjectFont";
 import type { TextState } from "./TextState";
 import { readRichTextSlot } from "../../types/TextSlots";
-import {
-	calcCenterFromDrawnTopLeft,
-	calcDrawnTopLeft,
-} from "../../utils/drawnTopLeft";
 
 /**
  * Re-measures a text object's box from the text it currently holds — its height
@@ -46,7 +46,7 @@ export const resizeTextStateToContent = (
 		return state;
 	}
 
-	const drawnTopLeft = calcDrawnTopLeft(state);
+	const drawnTopLeft = calcFrameTopLeft(state);
 	// The corner is rounded before the new center is built around it, so repeated
 	// re-measurements land on the same value instead of drifting a float epsilon
 	// per keystroke — the same rounding the doc mapper applies to it.
@@ -54,7 +54,7 @@ export const resizeTextStateToContent = (
 		x: roundToDecimal(drawnTopLeft.x, PRECISION.COORDINATE),
 		y: roundToDecimal(drawnTopLeft.y, PRECISION.COORDINATE),
 	};
-	const center = calcCenterFromDrawnTopLeft(anchor, size, state);
+	const center = calcFrameCenterFromTopLeft(anchor, size, state);
 	return {
 		...state,
 		cx: center.x,
