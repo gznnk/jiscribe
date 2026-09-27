@@ -66,6 +66,7 @@ import {
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
+import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 import { ChevronRightIcon } from "../../icons/ChevronRightIcon";
 import { CloseIcon } from "../../icons/CloseIcon";
 import type { StylePropertyUpdater } from "../ObjectMenu/ObjectMenuTypes";
@@ -222,6 +223,7 @@ const PropertyPanelComponent: React.FC<PropertyPanelProps> = ({
 			aria-label={messages.propertyPanelTitle}
 			data-kind="menu"
 			data-id="property-panel"
+			{...TEXT_EDITOR_FOCUS_SCOPE_PROPS}
 		>
 			<PropertyPanelHeader>
 				<PropertyPanelTitle>{messages.propertyPanelTitle}</PropertyPanelTitle>

@@ -109,6 +109,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **Styling text from the property sidebar keeps the text being edited.** A
+  press on a sidebar control took the focus off an open text editor, so the
+  caret and the highlighted stretch disappeared and what was typed next went
+  nowhere. The sidebar now keeps the focus on the editor as the floating menu
+  does, and hands it back once a typed field such as the font size is done.
 - **An object of a type this build does not know survives an edit.** A shape
   from a plugin the host lacks, or from a newer version, was dropped on load, so
   the next save removed it from the file. It is now kept as written, in its
