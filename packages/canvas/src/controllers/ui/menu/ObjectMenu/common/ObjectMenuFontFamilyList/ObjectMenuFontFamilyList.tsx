@@ -78,8 +78,6 @@ const ObjectMenuFontFamilyListComponent: React.FC<
 				<FontFamilyListOption
 					key={font.id}
 					isActive={activeFontFamily === font.stack}
-					data-kind="menu"
-					data-id="object-menu"
 					data-part={setPart(property, font.stack)}
 					// The stack carries quotes and commas, which a CSS attribute
 					// selector cannot match on; this is what e2e targets instead.

@@ -3,6 +3,7 @@ import {
 	isViewScrollMode,
 } from "@jiscribe/doc/model/canvas/ViewDoc";
 
+import { applyStylePropertyPart } from "./utils/applyStylePropertyPart";
 import { parseMenuPart } from "./utils/menuParts";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type { DocumentPropertyUpdate } from "../../../reducer/CanvasActions";
@@ -45,27 +46,30 @@ const toDocumentPropertyUpdate = (
 };
 
 /**
- * GestureHandler for the properties sidebar's own chrome.
- * Handles events with targetKind "menu" and targetId "property-panel".
+ * GestureHandler for the properties sidebar.
+ * Handles events with targetKind "menu" and targetId "property-panel": the
+ * panel's container carries the pair, and everything inside it — its own chrome
+ * and the controls of every section, the dropdowns portalled into it included —
+ * carries only a data-part.
  *
  * targetPart format (built and parsed by utils/menuParts.ts):
  * - `command:{commandId}` → execute the command (the close button is
- *   `command:togglePropertyPanel`, the same route as the toolbar's toggle).
+ *   `command:togglePropertyPanel`, the same route as the toolbar's toggle; the
+ *   Arrange buttons run the stacking-order commands).
  * - `toggle:{sectionId}` → collapse that section, or expand it when already
  *   collapsed (click acts as a toggle), the way the shape library's own section
  *   headers do.
+ * - `set:{property}:{value}` / `slider:{property}` → write a style property of
+ *   the selection (applyStylePropertyPart, shared with ObjectMenuHandler).
  * - `doc:{property}:{value}` → state one of the document's own settings (the
  *   Canvas section's buttons), through the same state change the
  *   DOCUMENT_PROPERTY_UPDATE reducer case makes. A value the document already
  *   holds is a no-op; one the setting does not take is a no-op that warns.
  *
- * The controls inside the selection's sections carry their own targetId
- * ("object-menu"), so a style change routes to ObjectMenuHandler exactly as it
- * does from the floating menu. Everything else in the panel — the background, the header, the
- * padding around a section — lands here with no part and does only the light
- * dismiss the toolbar does: a press closes the context menu and any open
- * category flyout, and leaves the selection alone. The panel is persistent
- * chrome, so a press on it never closes the panel.
+ * Every press in the panel — on a control, or on the background, the header, the
+ * padding around a section — does the light dismiss the toolbar does: it closes
+ * the context menu and any open category flyout, and leaves the selection alone.
+ * The panel is persistent chrome, so a press on it never closes the panel.
  */
 export const PropertyPanelHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
@@ -87,8 +91,19 @@ export const PropertyPanelHandler: GestureHandler = {
 			};
 		}
 
-		const isActivation = event.type === "click" || event.type === "doubleClick";
 		const part = parseMenuPart(event.targetPart);
+
+		const styledState = applyStylePropertyPart(
+			nextState,
+			event,
+			part,
+			registries,
+		);
+		if (styledState !== null) {
+			return styledState;
+		}
+
+		const isActivation = event.type === "click" || event.type === "doubleClick";
 		if (!isActivation || part === null) {
 			return nextState;
 		}
@@ -124,7 +139,7 @@ export const PropertyPanelHandler: GestureHandler = {
 				return nextState;
 			}
 			// History recording is delegated to handleGesture's caller, as for the
-			// ObjectMenu's set: parts.
+			// set: parts.
 			return {
 				...updatedState,
 				commitVersion: nextState.commitVersion + 1,

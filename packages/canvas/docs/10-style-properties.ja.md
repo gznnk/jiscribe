@@ -10,13 +10,13 @@ dispatch 関数の編集ではなく**宣言の登録**で追加する。
 ## フロー: 2 経路が 1 つのレジストリに収束する
 
 ```
-ObjectMenu 項目 / スライダー、サイドバーのスウォッチ ── gesture (set:/slider:) ─→ ObjectMenuHandler     ┐
-ObjectMenu 数値入力、サイドバーのコールバック         ── STYLE_PROPERTY_UPDATE ──→ canvasReducer      ┼─→ registries.styleProperty.apply(state, property, value)
-                                                                                         ┘        │
-                                                                            StylePropertyRegistry │
-                                                                   handlers.get(property) ?? extraFallback
-                                                                                                  │
-                                                                         handler.apply(...) ⇒ 新しい state
+ObjectMenu 項目 / スライダー、サイドバーのスウォッチ ── gesture (set:/slider:) ─→ applyStylePropertyPart ┐
+ObjectMenu 数値入力、サイドバーのコールバック         ── STYLE_PROPERTY_UPDATE ──→ canvasReducer       ┼─→ registries.styleProperty.apply(state, property, value)
+                                                                                          ┘        │
+                                                                             StylePropertyRegistry │
+                                                                    handlers.get(property) ?? extraFallback
+                                                                                                   │
+                                                                          handler.apply(...) ⇒ 新しい state
 ```
 
 スライダーは両方にまたがる。ポインタ操作（ドラッグとトラッククリック）は

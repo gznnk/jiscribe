@@ -5,7 +5,6 @@ import {
 	PropertyCheckboxButton,
 	PropertyCheckboxLabel,
 } from "./PropertyControlsStyled";
-import type { PropertyControlTargetId } from "../PropertyPanelTypes";
 
 const CHECK_ICON_SIZE = 12;
 
@@ -13,11 +12,10 @@ type PropertyCheckboxProps = {
 	/** Whether the selection is already in the state the box stands for. */
 	isOn: boolean;
 	/**
-	 * The `data-part` the press carries, in the grammar the control's target
-	 * resolves: `set:{property}:{value}` for a flag written outright,
-	 * `command:{commandId}` for a flag the canvas computes the next state of
-	 * (ObjectMenuHandler), or `doc:{property}:{value}` for a document setting
-	 * (PropertyPanelHandler).
+	 * The `data-part` the press carries into the sidebar (PropertyPanelHandler):
+	 * `set:{property}:{value}` for a flag written outright, `command:{commandId}`
+	 * for a flag the canvas computes the next state of, or
+	 * `doc:{property}:{value}` for a document setting.
 	 */
 	part: string;
 	/**
@@ -28,8 +26,6 @@ type PropertyCheckboxProps = {
 	label: string;
 	/** title of the control; says what the press will do, not what is set. Defaults to `label`. */
 	title?: string;
-	/** The `data-id` the press carries: "object-menu" (the default) for a selection's flag, "property-panel" for a document setting. */
-	targetId?: PropertyControlTargetId;
 };
 
 /**
@@ -40,22 +36,20 @@ type PropertyCheckboxProps = {
  * row's full width from the section's left edge.
  *
  * Writes through the gesture system like the ObjectMenu's own toggles, so the
- * press lands one history entry.
+ * press lands one history entry. Carries only a data-part: the press resolves to
+ * the sidebar that contains it.
  */
 const PropertyCheckboxComponent: React.FC<PropertyCheckboxProps> = ({
 	isOn,
 	part,
 	label,
 	title = label,
-	targetId = "object-menu",
 }) => (
 	<PropertyCheckboxButton
 		type="button"
 		role="checkbox"
 		aria-checked={isOn}
 		title={title}
-		data-kind="menu"
-		data-id={targetId}
 		data-part={part}
 	>
 		<PropertyCheckboxBox isOn={isOn} aria-hidden="true">

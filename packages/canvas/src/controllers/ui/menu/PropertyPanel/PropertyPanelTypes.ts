@@ -188,10 +188,3 @@ export type PropertyPanelItemProps = {
 	onPropertyUpdate: StylePropertyUpdater;
 	onTransformUpdate: PropertyPanelTransformUpdater;
 };
-
-/**
- * The gesture targets a sidebar control can press into: "object-menu" writes the
- * selection's style (ObjectMenuHandler), "property-panel" the document's own
- * settings (PropertyPanelHandler).
- */
-export type PropertyControlTargetId = "object-menu" | "property-panel";

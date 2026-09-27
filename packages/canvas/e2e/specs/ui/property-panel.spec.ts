@@ -268,9 +268,7 @@ test.describe("Properties sidebar", () => {
 
 		// The same command the toolbar toggle fires, reached from the menu; the
 		// menu withdraws once the sidebar stands in for it
-		await canvas.page.click(
-			`${selectors.objectMenu} ${selectors.objectMenuCommand("togglePropertyPanel")}`,
-		);
+		await canvas.page.click(selectors.objectMenuCommand("togglePropertyPanel"));
 		await expect(canvas.page.locator(selectors.propertyPanel)).toBeVisible();
 		await expect(objectMenu).toHaveCount(0);
 		await expect(

@@ -196,7 +196,7 @@ space-separated token list plus `closest` search.
 ### When adding a new interactive element
 
 1. An element that is fully served by standard browser interaction → `data-gesture="none"`
-2. Needs to convey a value via gestures while also requiring native pointer behavior → `data-gesture="native-pointer"` + `data-kind` / `data-id`
+2. Needs to convey a value via gestures while also requiring native pointer behavior → `data-gesture="native-pointer"` + `data-part`, inside the widget that carries `data-kind` / `data-id`
 3. Scrollable and you want to prioritize internal scrolling → `data-gesture="native-wheel"`
 
 ## Sharing gestures with the host page (`gestureHandling`)

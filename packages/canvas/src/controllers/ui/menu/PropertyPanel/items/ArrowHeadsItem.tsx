@@ -68,8 +68,6 @@ const ArrowEndField: React.FC<{
 					<ArrowTypeButton
 						key={type}
 						isActive={!isMixed && current === type}
-						data-kind="menu"
-						data-id="object-menu"
 						data-part={setPart(property, type)}
 						title={messages.arrowTypeNames[type] ?? type}
 					>
@@ -105,8 +103,6 @@ const ArrowHeadsItemComponent: React.FC<BuiltinItemProps> = ({
 			/>
 			<PropertyIconButton
 				type="button"
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={commandPart("swapArrows")}
 				title={messages.menuSwapArrows}
 				aria-label={messages.menuSwapArrows}

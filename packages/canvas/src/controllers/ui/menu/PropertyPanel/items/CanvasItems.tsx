@@ -159,7 +159,6 @@ const ViewOpenItemComponent: React.FC<ViewModeItemProps> = ({ view }) => {
 	return (
 		<PropertyRow label={messages.propertyPanelRowViewOpen}>
 			<PropertySegmentedControl
-				targetId="property-panel"
 				options={[
 					{
 						id: "none",
@@ -201,7 +200,6 @@ const ViewScrollItemComponent: React.FC<ViewModeItemProps> = ({ view }) => {
 
 	return (
 		<PropertyCheckbox
-			targetId="property-panel"
 			isOn={isContent}
 			part={documentPart("view.scroll", isContent ? null : "content")}
 			label={messages.propertyPanelViewScrollContent}

@@ -92,7 +92,7 @@ test.describe("styling through the ObjectMenu", () => {
 		// Click the blank part of the panel (background, not a button): the top-left
 		// corner falls inside the padding of ColorPickerContainer.
 		const panel = canvas.page.locator(
-			'[data-id="object-menu"][data-part="panel"]',
+			`${selectors.objectMenu} [data-part="panel"]`,
 		);
 		await panel.click({ position: { x: 6, y: 6 } });
 

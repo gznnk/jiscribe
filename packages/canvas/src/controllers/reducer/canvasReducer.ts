@@ -214,9 +214,9 @@ export const createCanvasReducer =
 				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React
 				//     onChange events — the ObjectMenu's number input and keyboard-driven slider, and
 				//     the properties sidebar's callback-writing controls — none of which fires a gesture.
-				// (2) ObjectMenuHandler: via the gesture system (set: / slider:), from the ObjectMenu's
-				//     buttons and the sidebar controls that declare themselves as object-menu targets.
-				//     That path does not go through here.
+				// (2) applyStylePropertyPart: via the gesture system (set: / slider:), from the
+				//     ObjectMenu's and the sidebar's buttons and sliders (ObjectMenuHandler /
+				//     PropertyPanelHandler). That path does not go through here.
 				const updated = registries.styleProperty.apply(
 					state,
 					action.property,

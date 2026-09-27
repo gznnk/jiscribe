@@ -187,14 +187,13 @@ const PropertyPanelAccordion: React.FC<PropertyPanelAccordionProps> = ({
  * both of which belong to the selection rather than to any of its types.
  *
  * The panel is one gesture target (`data-kind="menu" data-id="property-panel"`)
- * handled by PropertyPanelHandler: its chrome carries only a data-part, and the
- * close button routes through the command system like the toolbar's own toggle.
- * The controls inside a selection's sections declare themselves as object-menu
- * targets instead, so a press writes through the same `set:` / `command:`
- * grammar the floating menu uses and lands one history entry
- * (ObjectMenuHandler); the Canvas section's buttons stay on this target and
- * write the document through `doc:` parts. The fields that take typing opt out
- * of gestures entirely.
+ * handled by PropertyPanelHandler: everything inside it — its chrome, the
+ * controls of every section, and the dropdowns portalled into it — carries only
+ * a data-part. The close button routes through the command system like the
+ * toolbar's own toggle; a selection's controls write through the same `set:` /
+ * `slider:` / `command:` grammar the floating menu uses and land one history
+ * entry; the Canvas section's buttons write the document through `doc:` parts.
+ * The fields that take typing opt out of gestures entirely.
  *
  * Open and collapse state are reducer state, so this component is render-only.
  */

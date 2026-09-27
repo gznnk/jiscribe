@@ -1070,7 +1070,7 @@ export class CanvasDriver {
 		value: string,
 	) {
 		const italicButton = this.page.locator(
-			'[data-id="object-menu"][data-part^="set:fontStyle:"]',
+			`${selectors.objectMenu} [data-part^="set:fontStyle:"]`,
 		);
 		if ((await italicButton.count()) === 0) {
 			await this.openObjectMenu("text-format");

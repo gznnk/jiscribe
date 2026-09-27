@@ -22,7 +22,7 @@ test.describe("selection controls hidden while dragging", () => {
 			selectors.transformControl("topLeft"),
 		);
 		const anchor = canvas.page.locator(selectors.createAnchor("topCenter"));
-		const objectMenu = canvas.page.locator('[data-id="object-menu"]');
+		const objectMenu = canvas.page.locator(selectors.objectMenu);
 
 		await expect(transformHandle).toHaveCount(1);
 		await expect(anchor).toHaveCount(1);
