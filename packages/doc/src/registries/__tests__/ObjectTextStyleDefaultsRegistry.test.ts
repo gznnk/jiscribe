@@ -8,6 +8,7 @@ import { BODY_TEXT_SLOT_ID } from "../../model/objects/types/text/TextSlot";
 import {
 	createObjectTextStyleDefaultsRegistry,
 	extractTextSlotStyleDefaults,
+	EVERY_TEXT_SLOT_ID,
 } from "../ObjectTextStyleDefaultsRegistry";
 
 const slotsFeatures = { ...TextFeatures, text: "slots" } as const;
@@ -178,6 +179,26 @@ describe("ObjectTextStyleDefaultsRegistry.resolveSlotStyle", () => {
 		expect(
 			registry.resolveSlotStyle("rect", BODY_TEXT_SLOT_ID, undefined),
 		).toEqual({});
+	});
+});
+
+describe("ObjectTextStyleDefaultsRegistry.get with EVERY_TEXT_SLOT_ID", () => {
+	const registry = createObjectTextStyleDefaultsRegistry();
+	registry.register("table", {
+		[EVERY_TEXT_SLOT_ID]: { fontColor: "auto" },
+		r0c0: { fontWeight: "bold" },
+	});
+
+	it("resolves an arbitrary slot id to the reserved key's defaults", () => {
+		expect(registry.get("table", "r3c7")).toEqual({ fontColor: "auto" });
+	});
+
+	it("lets a slot's own declaration win over the reserved key's", () => {
+		expect(registry.get("table", "r0c0")).toEqual({ fontWeight: "bold" });
+	});
+
+	it("yields undefined when neither the slot nor the reserved key is declared", () => {
+		expect(registry.get("rect", "r0c0")).toBeUndefined();
 	});
 });
 

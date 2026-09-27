@@ -96,6 +96,9 @@ export { BODY_TEXT_SLOT_ID } from "./model/objects/types/text/TextSlot";
 // that resolves a slot's styling itself: the registry the canvas fills is a
 // rendering-side thing, and this is the reading that fills it.
 export { extractTextSlotStyleDefaults } from "./registries/ObjectTextStyleDefaultsRegistry";
+// The reserved slot id a "slots" type with a variable slot set declares its
+// shared defaults under, for the same headless consumer.
+export { EVERY_TEXT_SLOT_ID } from "./registries/ObjectTextStyleDefaultsRegistry";
 
 // Text measurement, which the wrapping and the box sizes both follow from. Headless
 // because it needs no DOM of its own: layoutVisualLines reproduces the display-side
@@ -114,6 +117,12 @@ export { calcTextContentBox } from "./text/block/calcTextContentBox";
 // The one place the two vertical bases are told apart, shared so that the
 // overlay, the editor, image export and the fit checks place a body alike.
 export { applyTextVerticalBasis } from "./text/block/applyTextVerticalBasis";
+// The box a text takes when the width is given and the height follows from the
+// lines it wraps into — the one place the text padding is added to those lines. A
+// shape sizing a text box from its own content (a table row's height) takes the
+// box from here instead of restating the padding around calcVisualTextHeight,
+// which puts the same rule in two places.
+export { calcWrappedTextBlockSize } from "./text/block/calcWrappedTextBlockSize";
 export { calcVisualLineCount } from "./text/layout/calcVisualLineCount";
 export { calcVisualTextHeight } from "./text/layout/calcVisualTextHeight";
 export { layoutVisualLines } from "./text/layout/layoutVisualLines";

@@ -1,5 +1,7 @@
+import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { describe, expect, it } from "vitest";
 
+import type { TextSlots } from "../TextSlots";
 import {
 	blankTextSlots,
 	getFirstTextSlotId,
@@ -7,6 +9,7 @@ import {
 	readRichTextSlot,
 	readTextSlot,
 	resolveTextSlotId,
+	writeRichTextSlot,
 	writeTextSlot,
 } from "../TextSlots";
 
@@ -208,6 +211,51 @@ describe("writeTextSlot", () => {
 			),
 		).toEqual({
 			body: { text: [{ text: "a\nb", fontWeight: "bold" }] },
+		});
+	});
+});
+
+/**
+ * A slot may carry fields of its own type beyond the ones TextSlot names — a table
+ * cell carries `fill` — and the shared writes keep them only because each copies
+ * the slot with `{ ...slot }` (TextSlots). A write narrowed to TextSlot's own
+ * fields would drop a cell's background colour with nothing reporting it, so the
+ * contract is pinned here rather than in the type that relies on it.
+ */
+describe("a slot's type-specific fields survive the shared writes", () => {
+	/** A table-like cell: one body of text plus the type's own `fill`. */
+	const cell: TextSlot & { fill: string } = { text: "id", fill: "#eef" };
+	/** The row-partitioned counterpart, for the write that splits at newlines. */
+	const rowCell: TextSlot & { fill: string } = { text: ["id"], fill: "#eef" };
+
+	it("writeRichTextSlot keeps them, runs included", () => {
+		const slots: TextSlots = { cell };
+		expect(
+			writeRichTextSlot(slots, "cell", [{ text: "name", fontWeight: "bold" }]),
+		).toEqual({
+			cell: { text: [{ text: "name", fontWeight: "bold" }], fill: "#eef" },
+		});
+	});
+
+	it("writeTextSlot keeps them", () => {
+		const slots: TextSlots = { cell };
+		expect(writeTextSlot(slots, "cell", "name")).toEqual({
+			cell: { text: "name", fill: "#eef" },
+		});
+	});
+
+	it("writeTextSlot keeps them when the slot is split into rows", () => {
+		const slots: TextSlots = { cell: rowCell };
+		expect(writeTextSlot(slots, "cell", "id\nname")).toEqual({
+			cell: { text: ["id", "name"], fill: "#eef" },
+		});
+	});
+
+	it("blankTextSlots keeps them", () => {
+		const slots: TextSlots = { cell, row: rowCell };
+		expect(blankTextSlots(slots)).toEqual({
+			cell: { text: "", fill: "#eef" },
+			row: { text: [], fill: "#eef" },
 		});
 	});
 });

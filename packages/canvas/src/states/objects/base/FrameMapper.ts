@@ -4,9 +4,16 @@ import type { ObjectFeatures } from "@jiscribe/doc/model/objects/types/ObjectFea
 import { collectStyleKeys } from "@jiscribe/doc/model/objects/utils/collectStyleKeys";
 import {
 	roundDocEllipse,
+	roundDocPoint,
 	roundDocRect,
 } from "@jiscribe/doc/model/objects/utils/roundDocNumbers";
-import type { Ellipse, Frame, Rect } from "@jiscribe/geometry";
+import type {
+	Ellipse,
+	Frame,
+	Point,
+	Rect,
+	TransformedFrame,
+} from "@jiscribe/geometry";
 import {
 	convertEllipseToFrame,
 	convertFrameToEllipse,
@@ -25,11 +32,29 @@ import {
 	mapTransformStateToDoc,
 } from "./TransformMapper";
 import type { TransformState } from "./TransformState";
+import { calcDrawnTopLeft } from "../utils/drawnTopLeft";
 import { pick } from "../utils/stylePassthrough";
 
 /**
- * Generates a Doc↔State mapper from `features` for Frame-family objects
- * (shapes with geometry: "rect" | "ellipse" + transform).
+ * Reads a State as the transformed box {@link calcDrawnTopLeft} takes. A type
+ * declaring no transform carries none of the three fields, and reads as a box
+ * that is neither rotated nor flipped.
+ */
+const readTransformedFrame = (state: ObjectState): TransformedFrame => {
+	const frame = state as unknown as Frame & Partial<TransformState>;
+	return {
+		...frame,
+		rotation: frame.rotation ?? 0,
+		scaleX: frame.scaleX ?? 1,
+		scaleY: frame.scaleY ?? 1,
+	};
+};
+
+/**
+ * Generates a Doc↔State mapper from `features` for Frame-family objects: the ones
+ * whose State is a box with a transform, which their Doc spells as a rect, as an
+ * ellipse, or — a box derived from content — as a position alone
+ * (geometry: "rect" | "ellipse" | "point").
  *
  * The differences between Doc and State are the geometry, the transform, and the text
  * group (whose styling sits flat on a root-form Doc but inside each slot in the State).
@@ -55,8 +80,8 @@ import { pick } from "../utils/stylePassthrough";
  * The round-trip test over every registered type covers this from the runtime side instead.
  *
  * @param features - Feature descriptor of the type being mapped. Its `type` must match
- *   `TDoc["type"]`, and its `geometry` must be a Frame family one (see `createPolyMapper`
- *   for poly shapes).
+ *   `TDoc["type"]`, and its `geometry` must be a Frame family one — "rect", "ellipse" or
+ *   "point" (see `createPolyMapper` for poly shapes).
  * @param extraKeys - Shape-specific field names to pass through (non-style groups).
  */
 export const createFrameMapper = <
@@ -65,11 +90,12 @@ export const createFrameMapper = <
 >(
 	features: ObjectFeatures & {
 		type: TDoc["type"];
-		geometry: "rect" | "ellipse";
+		geometry: "rect" | "ellipse" | "point";
 	},
 	extraKeys: readonly string[] = [],
 ): ObjectMapperType<TDoc, TState> => {
 	const isEllipse = features.geometry === "ellipse";
+	const isPoint = features.geometry === "point";
 	const passthroughKeys = [...collectStyleKeys(features), ...extraKeys];
 
 	return {
@@ -79,10 +105,17 @@ export const createFrameMapper = <
 			// edge lands exactly where the doc's `y` put it, and the derivation pass
 			// grows it from there (resizeAutoHeightStateToContent).
 			const rect = doc as unknown as Rect;
-			const autoHeight = !isEllipse && rect.height === undefined;
-			const frame: Frame = isEllipse
-				? convertEllipseToFrame(doc as unknown as Ellipse)
-				: convertRectToFrame(autoHeight ? { ...rect, height: 0 } : rect);
+			const autoHeight =
+				features.geometry === "rect" && rect.height === undefined;
+			const frame: Frame = isPoint
+				? // A point doc carries no box at all, so the frame starts empty on the
+					// doc's own coordinate: at zero size that coordinate is the center and
+					// the drawn top-left corner alike, whatever the transform. The type's
+					// ObjectContentResizer grows the box from there.
+					{ cx: rect.x, cy: rect.y, width: 0, height: 0 }
+				: isEllipse
+					? convertEllipseToFrame(doc as unknown as Ellipse)
+					: convertRectToFrame(autoHeight ? { ...rect, height: 0 } : rect);
 			const transform: Partial<TransformState> = features.transform
 				? mapTransformDocToState(doc as unknown as TransformDoc)
 				: {};
@@ -98,16 +131,21 @@ export const createFrameMapper = <
 
 		toDoc: (state) => {
 			// Rounded here, not at the State's cx / cy / width / height: the Doc's
-			// geometry is derived from those, and the halving re-introduces a float
-			// tail even when both operands are already round (roundDocNumbers).
+			// geometry is derived from those, and both the halving and the transform
+			// re-introduce a float tail even when the operands are already round
+			// (roundDocNumbers).
 			const frame = state as unknown as Frame;
-			const geometry: Rect | Ellipse = isEllipse
-				? roundDocEllipse(convertFrameToEllipse(frame))
-				: roundDocRect(convertFrameToRect(frame));
+			const geometry: Rect | Ellipse | Point = isPoint
+				? // The whole box is the content's answer, so only the corner it was
+					// grown from goes back out (see GeometryType).
+					roundDocPoint(calcDrawnTopLeft(readTransformedFrame(state)))
+				: isEllipse
+					? roundDocEllipse(convertFrameToEllipse(frame))
+					: roundDocRect(convertFrameToRect(frame));
 			// The derived height is the text's answer, not the document's, so it goes
 			// back out the way it came in: absent. `y` is unaffected — it was read off
 			// the same frame the height was.
-			if (!isEllipse && state.autoHeight === true) {
+			if (features.geometry === "rect" && state.autoHeight === true) {
 				delete (geometry as Partial<Rect>).height;
 			}
 			const transform: Partial<TransformDoc> = features.transform

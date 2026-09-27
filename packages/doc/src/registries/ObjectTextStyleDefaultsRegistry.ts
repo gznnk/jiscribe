@@ -7,6 +7,7 @@ import type {
 import {
 	resolveTextSlotStyle,
 	BODY_TEXT_SLOT_ID,
+	RESERVED_TEXT_SLOT_ID,
 } from "../model/objects/types/text/TextSlot";
 import type { TextType } from "../model/objects/types/text/TextType";
 import {
@@ -31,10 +32,22 @@ const textStyleDefaultKeys = (
 	textStyleKeysOf(textType).filter((key) => key !== "fontFamily");
 
 /**
+ * Slot id standing in for "every slot of this type", for a `"slots"` type whose
+ * slot set is not fixed (a table's cells are `r0c0`, `r0c1`, …, one per
+ * row × column) and so has no list of ids to key its defaults by.
+ *
+ * It is {@link RESERVED_TEXT_SLOT_ID}, which the parser refuses as a slot id, so
+ * the entry cannot be shadowed by a slot of that name.
+ */
+export const EVERY_TEXT_SLOT_ID = RESERVED_TEXT_SLOT_ID;
+
+/**
  * A type's text-style defaults, keyed by the slot id they apply to. A root-form
  * type (`"body"` / `"source"`) declares the one key every single-text shape
  * holds ({@link BODY_TEXT_SLOT_ID}); a `"slots"` type declares one entry per
- * slot of its own set, a slot left out here contributing no defaults.
+ * slot of its own set, a slot left out here contributing no defaults — or, when
+ * its slot set is not fixed, one entry under {@link EVERY_TEXT_SLOT_ID} that
+ * every slot without its own entry falls back to.
  */
 export type ObjectTextSlotStyleDefaults = Readonly<
 	Record<string, TextSlotStyle>
@@ -147,13 +160,15 @@ export class ObjectTextStyleDefaultsRegistry {
 	}
 
 	/**
-	 * The defaults of one slot, or undefined when the type declares none for it.
+	 * The defaults of one slot, or undefined when the type declares none for it
+	 * (via its own entry or {@link EVERY_TEXT_SLOT_ID}).
 	 *
 	 * @param type - The object type the slot belongs to
-	 * @param slotId - Which slot; a root-form type's single slot is BODY_TEXT_SLOT_ID
+	 * @param slotId - Which slot; a root-form type's single slot is BODY_TEXT_SLOT_ID. An entry keyed by this id wins over one keyed by EVERY_TEXT_SLOT_ID
 	 */
 	get(type: ObjectType, slotId: string): TextSlotStyle | undefined {
-		return this.defaultsByType.get(type)?.[slotId];
+		const defaults = this.defaultsByType.get(type);
+		return defaults?.[slotId] ?? defaults?.[EVERY_TEXT_SLOT_ID];
 	}
 
 	/**

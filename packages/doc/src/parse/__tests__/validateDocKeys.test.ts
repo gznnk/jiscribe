@@ -547,6 +547,53 @@ describe("validateDocKeys on an integer-like slot id", () => {
 	);
 });
 
+describe("validateDocKeys on the reserved slot id", () => {
+	// "*" is what a type whose slot set is not fixed declares its shared text-style
+	// defaults under (EVERY_TEXT_SLOT_ID). Refusing it as a slot id here is what
+	// keeps that declaration from being shadowed by a slot of the same name.
+	it("reports it as an error a schema cannot express", () => {
+		expect(
+			validateWith(slottedFeatures, {
+				id: "s1",
+				type: "slotted",
+				text: { "*": { text: "a" } },
+			}),
+		).toEqual([
+			{
+				path: "root[0].text.*",
+				message:
+					'is a reserved slot id: "*" names the text style a type declares for every slot at once, so no slot may be kept under it.',
+				severity: "error",
+				beyondSchema: true,
+				id: "s1",
+			},
+		]);
+	});
+
+	it("says nothing about what such a slot holds, the slot not being kept at all", () => {
+		expect(
+			validateWith(slottedFeatures, {
+				id: "s1",
+				type: "slotted",
+				text: { "*": { text: "a", zz: 1 } },
+			}).map((diagnostic) => diagnostic.severity),
+		).toEqual(["error"]);
+	});
+
+	it.each(["**", "*a", "a*", "star"])(
+		"leaves the id %j alone, only the reserved one being held back",
+		(slotId) => {
+			expect(
+				validateWith(slottedFeatures, {
+					id: "s1",
+					type: "slotted",
+					text: { [slotId]: { text: "a" } },
+				}),
+			).toEqual([]);
+		},
+	);
+});
+
 describe("validateDocKeys against the type's own diagnostics", () => {
 	it("drops a warning the type already reported as an error at the same path", () => {
 		// What the uml record does with text styling written at the root: the name is

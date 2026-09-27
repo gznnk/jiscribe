@@ -41,8 +41,8 @@ import { pick } from "../utils/stylePassthrough";
  * The round-trip test over every registered type covers this from the runtime side instead.
  *
  * @param features - Feature descriptor of the type being mapped. Its `type` must match
- *   `TDoc["type"]`, and its `geometry` must be "poly" (see `createFrameMapper` for rect /
- *   ellipse shapes).
+ *   `TDoc["type"]`, and its `geometry` must be "poly" (see `createFrameMapper` for the
+ *   shapes whose state is a box).
  * @param extraKeys - Shape-specific field names to pass through (non-style groups).
  */
 export const createPolyMapper = <

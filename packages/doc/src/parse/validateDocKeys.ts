@@ -12,6 +12,7 @@ import { TEXT_RUN_KEYS } from "../model/objects/types/text/RichText";
 import {
 	TEXT_SLOT_KEYS,
 	isIntegerLikeTextSlotId,
+	isReservedTextSlotId,
 } from "../model/objects/types/text/TextSlot";
 import { exhaustiveKeysOf } from "../model/objects/utils/exhaustiveKeys";
 import type { SemanticDiagnostic } from "../model/types/SemanticDiagnostic";
@@ -79,14 +80,21 @@ const collectSlotContentKeyPaths = (
 	);
 };
 
-/** What walking a keyed text found: the unknown names, and the slot ids the key order would not survive. */
+/** What walking a keyed text found: the unknown names, and the slot ids no shape may keep its text under. */
 type TextSlotsFindings = {
 	keyPaths: KeyPath[];
+	/** Ids the key order would not survive (isIntegerLikeTextSlotId). */
 	integerLikeSlotIds: string[];
+	/** Ids held back for something else (isReservedTextSlotId). */
+	reservedSlotIds: string[];
 };
 
 const collectTextSlotsFindings = (text: unknown): TextSlotsFindings => {
-	const findings: TextSlotsFindings = { keyPaths: [], integerLikeSlotIds: [] };
+	const findings: TextSlotsFindings = {
+		keyPaths: [],
+		integerLikeSlotIds: [],
+		reservedSlotIds: [],
+	};
 	if (!isObject(text)) {
 		return findings;
 	}
@@ -95,6 +103,10 @@ const collectTextSlotsFindings = (text: unknown): TextSlotsFindings => {
 		// reported on top of it.
 		if (isIntegerLikeTextSlotId(slotId)) {
 			findings.integerLikeSlotIds.push(slotId);
+			continue;
+		}
+		if (isReservedTextSlotId(slotId)) {
+			findings.reservedSlotIds.push(slotId);
 			continue;
 		}
 		findings.keyPaths.push(
@@ -220,7 +232,7 @@ export const validateDocKeys = (
 	const slots =
 		features.text === "slots"
 			? collectTextSlotsFindings(o.text)
-			: { keyPaths: [], integerLikeSlotIds: [] };
+			: { keyPaths: [], integerLikeSlotIds: [], reservedSlotIds: [] };
 	const keyPaths: KeyPath[] = [
 		...Object.keys(o)
 			.filter((key) => !declaration.knownKeys.has(key))
@@ -238,6 +250,14 @@ export const validateDocKeys = (
 				"is a slot id the JS engine would re-order: name the slot something other than a plain number, the key order deciding the default slot and the drawing order.",
 			severity: "error" as const,
 			// No JSON schema can express which property names are canonical array indices.
+			beyondSchema: true,
+		})),
+		...slots.reservedSlotIds.map((slotId) => ({
+			path: `${path}.text.${slotId}`,
+			message:
+				'is a reserved slot id: "*" names the text style a type declares for every slot at once, so no slot may be kept under it.',
+			severity: "error" as const,
+			// The reservation is a rule of this layer, not a shape a schema can state.
 			beyondSchema: true,
 		})),
 		...keyPaths.map((keyPath) =>

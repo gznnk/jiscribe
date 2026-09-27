@@ -24,6 +24,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- For plugin authors: a shape may now declare `geometry: "point"` and let
+  `createFrameMapper` map it — the doc stores the position alone and the box is
+  re-derived from the content (`contentResizer`). `@jiscribe/canvas` exports
+  `calcDrawnTopLeft` / `calcCenterFromDrawnTopLeft` for the corner such a box is
+  grown from, `@jiscribe/doc` exports `calcWrappedTextBlockSize` so a shape
+  measuring its own text box does not restate the padding rule, and a type whose
+  slot set is not fixed declares its text-style defaults under
+  `EVERY_TEXT_SLOT_ID` — the id `"*"`, which the parser now holds back so that a
+  slot cannot be written under it and read as that declaration. A slot may carry
+  fields of its type's own: every shared write copies a slot whole, which is now
+  stated on `TextSlots` and held by a test.
 - **Shift snaps the rotation handle to 15° steps.** Without Shift a rotation
   is still rounded to the whole degree and does not snap.
 - **Shift adds to the selection as Ctrl and Cmd do**, and holding any of the
