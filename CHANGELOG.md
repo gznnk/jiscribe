@@ -81,7 +81,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   breaking change** to the file format: the JSON schema refuses the three keys,
   the parser reports them as unknown properties and drops them on save.
   Overflow diagnosis no longer measures a `markdown` card, since its body is not
-  laid out by the shared typesetting it measures.
+  laid out by the shared typesetting it measures; it names the cards it left
+  unchecked in one warning instead, so the silence is not read as a fit.
 - **`jiscribe validate` checks with the canvas parser alone.** It no longer runs
   the JSON schema: the parser, the thing that opens the file, reports
   everything the schema did, so a finding is no longer reported twice in two

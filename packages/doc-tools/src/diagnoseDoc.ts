@@ -351,6 +351,36 @@ const diagnoseObjectTextLineStarts = (
 };
 
 /**
+ * One warning per `"source"` type with text in the document, naming its objects,
+ * so a caller does not read the silence of {@link diagnoseObjectText} as "fits".
+ * The body is laid out by the shape's own renderer (Markdown as HTML), which the
+ * shared typesetting cannot reproduce, so only the drawn canvas can tell.
+ */
+const diagnoseUncheckedSourceText = (
+	objects: readonly ObjectDoc[],
+): Diagnostic[] => {
+	const idsByType = new Map<string, string[]>();
+	for (const object of objects) {
+		const definition = standardObjectDocDefinitions.get(object.type);
+		const text = (object as TextBodyDoc).text;
+		if (
+			definition?.features.text !== "source" ||
+			text === undefined ||
+			richTextToPlain(text) === ""
+		) {
+			continue;
+		}
+		const ids = idsByType.get(object.type) ?? [];
+		ids.push(object.id);
+		idsByType.set(object.type, ids);
+	}
+	return [...idsByType].map(([type, ids]) => ({
+		severity: "warning",
+		message: `text in ${type} ${ids.join(", ")} is not checked for overflow: ${type} lays its body out itself rather than with the shared typesetting this check measures, so look at the rendered canvas to see whether it fits`,
+	}));
+};
+
+/**
  * Every finding about one object's text, empty when it fits and breaks well.
  * Only a `"body"` type is measured: a `"source"` body is drawn by the shape's own
  * renderer rather than by the shared typesetting these metrics come from, and a
@@ -527,17 +557,23 @@ const diagnoseConnectorLabelLineStarts = (
  * looked at, the width being the author's. A shipped type that holds text but
  * declares no region is reported as a warning rather than passed over silently —
  * nothing measures it, and that is a gap in the shape set rather than a fact
- * about the document.
+ * about the document. A type whose body is source its own renderer lays out
+ * (`features.text: "source"`, Markdown) is not measured either, and the
+ * objects of it holding text are named in one document-wide warning per type,
+ * after the per-object findings.
  *
  * @param doc - A parsed document, as `validateDoc` returns; group children are checked along with the objects at the root
- * @returns One error per overflowing object, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, and per object of a text-bearing type that declares no region; empty when everything fits
+ * @returns One error per overflowing object, in document order, plus a warning per text whose lines start where typesetting forbids, per frame-placed body reaching outside its type's declared region, per connector whose label does not fit between its shapes, per object of a text-bearing type that declares no region, and per `"source"` type whose text went unmeasured (no `objectId`; its objects are listed in the message); empty when everything fits
  */
 export const diagnoseDoc = (doc: CanvasDoc): Diagnostic[] => {
 	const objects = flattenObjects(doc.root);
 	const objectsById = indexObjectsById(objects);
-	return objects.flatMap((object) => [
-		...diagnoseObjectText(object),
-		...diagnoseConnectorLabel(object, objectsById),
-		...diagnoseConnectorLabelLineStarts(object),
-	]);
+	return [
+		...objects.flatMap((object) => [
+			...diagnoseObjectText(object),
+			...diagnoseConnectorLabel(object, objectsById),
+			...diagnoseConnectorLabelLineStarts(object),
+		]),
+		...diagnoseUncheckedSourceText(objects),
+	];
 };
