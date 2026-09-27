@@ -65,6 +65,8 @@ export { OPACITY_MAX, OPACITY_MIN } from "./model/objects/utils/opacity";
 export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
+export type { ArrowType } from "./model/objects/types/ArrowType";
+export { ArrowTypes } from "./model/objects/types/ArrowType";
 export { TRANSFORM_STYLE_KEYS } from "./model/objects/base/TransformDoc";
 // A text slot is the unit of text in both layers, so a type that spells out its
 // own slots (features.text: "slots") declares them with this in its Doc and reuses

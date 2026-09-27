@@ -8,14 +8,13 @@
 // of truth: `z.toJSONSchema(z.object(inputSchema))` derives the JSON Schema, and
 // there is no way back.
 
-import { OPACITY_MAX, OPACITY_MIN } from "@jiscribe/doc";
+import { ArrowTypes, OPACITY_MAX, OPACITY_MIN } from "@jiscribe/doc";
 import { z } from "zod";
 
 import type { CanvasApiRef } from "./canvasApiRef";
 import { MAX_DESCRIBE_CHARS, MAX_SVG_CHARS } from "./canvasOps";
 import type {
 	AiAlignEdge,
-	AiArrowType,
 	AiCanvasOp,
 	AiDistributeAxis,
 	AiHeightMode,
@@ -131,24 +130,6 @@ const TEXT_LAYOUTS = [
 	"block",
 ] as const satisfies readonly AiTextLayout[];
 
-const ARROW_TYPES = [
-	"FilledTriangle",
-	"ConcaveTriangle",
-	"OpenArrow",
-	"HollowTriangle",
-	"FilledDiamond",
-	"HollowDiamond",
-	"Circle",
-	"HollowCircle",
-	"Cross",
-	"CrowFootMany",
-	"CrowFootOneMany",
-	"CrowFootZeroMany",
-	"CrowFootOne",
-	"CrowFootZeroOne",
-	"None",
-] as const satisfies readonly AiArrowType[];
-
 /**
  * The shared style vocabulary; add_object and set_style speak the same one.
  * Properties a type has no place for (fill on a connector, an arrowhead on a rect,
@@ -194,13 +175,13 @@ const styleSchema = {
 			"Opacity of the outline, 0 (invisible) to 1 (opaque, the default); it multiplies the alpha the stroke color already carries. On a connector this fades the line itself.",
 		),
 	startArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe(
 			"Arrowhead at the start of the line. Only for polyline and connector; no other type takes it. A connector's arrowheads can also be set as it is drawn, by connect.",
 		),
 	endArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe(
 			"Arrowhead at the end of the line, the one that carries the direction (FilledTriangle for a flow). Only for polyline and connector.",
@@ -346,11 +327,11 @@ const connectorDrawSchema = {
 		.optional()
 		.describe("Anchor on the target (default center)."),
 	startArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe("Arrowhead at the source end."),
 	endArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe("Arrowhead at the target end (use FilledTriangle for a flow)."),
 	label: z
@@ -407,11 +388,11 @@ const connectorChangeSchema = {
 		.optional()
 		.describe("Move the target end to this anchor."),
 	startArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe('Arrowhead at the source end; "None" removes it.'),
 	endArrow: z
-		.enum(ARROW_TYPES)
+		.enum(ArrowTypes)
 		.optional()
 		.describe('Arrowhead at the target end; "None" removes it.'),
 	routing: z.enum(ROUTINGS).optional().describe("Line shape."),

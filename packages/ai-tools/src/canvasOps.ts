@@ -10,6 +10,7 @@ import type {
 	AddObjectParams,
 	AlignEdge,
 	AnchorHandleId,
+	ArrowType,
 	ConnectParams,
 	DistributeAxis,
 	InlineTextStyleParams,
@@ -311,10 +312,10 @@ export type AiHeightMode = SetHeightModeParams["mode"];
 /** The text layout add_object may create a shape in; borrowed from the creation params */
 export type AiTextLayout = NonNullable<AddObjectParams["textLayout"]>;
 
-/** Arrowhead kind; canvas does not export ArrowType, so it is borrowed from ConnectParams */
-export type AiArrowType = NonNullable<ConnectParams["startArrow"]>;
+/** Arrowhead kind; the tool declarations enumerate it from doc's ArrowTypes */
+export type AiArrowType = ArrowType;
 
-/** How a connector line bends; borrowed the same way */
+/** How a connector line bends; borrowed from ConnectParams */
 export type AiRouting = NonNullable<ConnectParams["routing"]>;
 
 /** A bend on a connector route; geometry's Point borrowed through canvas */
