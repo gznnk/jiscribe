@@ -8,7 +8,15 @@
 // of truth: `z.toJSONSchema(z.object(inputSchema))` derives the JSON Schema, and
 // there is no way back.
 
-import { ArrowTypes, OPACITY_MAX, OPACITY_MIN } from "@jiscribe/doc";
+import {
+	ArrowTypes,
+	ConnectorRoutings,
+	ConnectPointIds,
+	OPACITY_MAX,
+	OPACITY_MIN,
+	TextLayouts,
+} from "@jiscribe/doc";
+import type { AnchorHandleId } from "@jiscribe/doc";
 import { z } from "zod";
 
 import type { CanvasApiRef } from "./canvasApiRef";
@@ -18,8 +26,6 @@ import type {
 	AiCanvasOp,
 	AiDistributeAxis,
 	AiHeightMode,
-	AiRouting,
-	AiTextLayout,
 	AiZOrderPlacement,
 } from "./canvasOps";
 import type { AiCanvasCapabilities } from "./capabilities";
@@ -86,13 +92,11 @@ const defineCanvasTool = <Shape extends z.ZodRawShape>(
 	drives: options.drives,
 });
 
+/** The named anchors of AnchorHandleId; its edge anchors (`{ side, t }`) are not offered to the AI */
 const ANCHOR_HANDLE_IDS = [
 	"center",
-	"topCenter",
-	"rightCenter",
-	"bottomCenter",
-	"leftCenter",
-] as const;
+	...ConnectPointIds,
+] as const satisfies readonly AnchorHandleId[];
 
 const ALIGN_EDGES = [
 	"left",
@@ -115,20 +119,10 @@ const Z_ORDER_PLACEMENTS = [
 	"backward",
 ] as const satisfies readonly AiZOrderPlacement[];
 
-const ROUTINGS = [
-	"straight",
-	"orthogonal",
-] as const satisfies readonly AiRouting[];
-
 const HEIGHT_MODES = [
 	"auto",
 	"fixed",
 ] as const satisfies readonly AiHeightMode[];
-
-const TEXT_LAYOUTS = [
-	"label",
-	"block",
-] as const satisfies readonly AiTextLayout[];
 
 /**
  * The shared style vocabulary; add_object and set_style speak the same one.
@@ -341,7 +335,7 @@ const connectorDrawSchema = {
 			'Text drawn on the line, e.g. "yes" / "no". Sits on the line itself, so never place a separate text shape next to a connector.',
 		),
 	routing: z
-		.enum(ROUTINGS)
+		.enum(ConnectorRoutings)
 		.optional()
 		.describe(
 			"Line shape; omitted derives it from the anchors (center ends give a straight line).",
@@ -395,7 +389,7 @@ const connectorChangeSchema = {
 		.enum(ArrowTypes)
 		.optional()
 		.describe('Arrowhead at the target end; "None" removes it.'),
-	routing: z.enum(ROUTINGS).optional().describe("Line shape."),
+	routing: z.enum(ConnectorRoutings).optional().describe("Line shape."),
 	points: z
 		.array(pointSchema)
 		.optional()
@@ -711,7 +705,7 @@ export const createCanvasToolDescriptors = (
 				].join(" "),
 			),
 		textLayout: z
-			.enum(TEXT_LAYOUTS)
+			.enum(TextLayouts)
 			.optional()
 			.describe(
 				[

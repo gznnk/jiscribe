@@ -67,6 +67,12 @@ export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
 export type { ArrowType } from "./model/objects/types/ArrowType";
 export { ArrowTypes } from "./model/objects/types/ArrowType";
+export type { ConnectPointId } from "./model/objects/types/EndpointRef";
+export { ConnectPointIds } from "./model/objects/types/EndpointRef";
+export type { ConnectorRouting } from "./model/objects/types/ConnectorRouting";
+export { ConnectorRoutings } from "./model/objects/types/ConnectorRouting";
+export type { TextLayout } from "./model/objects/types/text/TextLayout";
+export { TextLayouts } from "./model/objects/types/text/TextLayout";
 export { TRANSFORM_STYLE_KEYS } from "./model/objects/base/TransformDoc";
 // A text slot is the unit of text in both layers, so a type that spells out its
 // own slots (features.text: "slots") declares them with this in its Doc and reuses

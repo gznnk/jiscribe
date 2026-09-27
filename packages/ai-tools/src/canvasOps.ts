@@ -12,6 +12,7 @@ import type {
 	AnchorHandleId,
 	ArrowType,
 	ConnectParams,
+	ConnectorRouting,
 	DistributeAxis,
 	InlineTextStyleParams,
 	ObjectFilter,
@@ -22,6 +23,7 @@ import type {
 	SetPositionEntry,
 	SetTextEntry,
 	StyleParams,
+	TextLayout,
 	UpdateConnectorEntry,
 	UpdateConnectorParams,
 	ZOrderPlacement,
@@ -309,14 +311,14 @@ export type AiSetTextStyleEntry = SetInlineTextStyleEntry;
 /** Which way set_height_mode switches a height: stated by the document, or derived from the text */
 export type AiHeightMode = SetHeightModeParams["mode"];
 
-/** The text layout add_object may create a shape in; borrowed from the creation params */
-export type AiTextLayout = NonNullable<AddObjectParams["textLayout"]>;
+/** The text layout add_object may create a shape in; the tool declarations enumerate it from doc's TextLayouts */
+export type AiTextLayout = TextLayout;
 
 /** Arrowhead kind; the tool declarations enumerate it from doc's ArrowTypes */
 export type AiArrowType = ArrowType;
 
-/** How a connector line bends; borrowed from ConnectParams */
-export type AiRouting = NonNullable<ConnectParams["routing"]>;
+/** How a connector line bends; the tool declarations enumerate it from doc's ConnectorRoutings */
+export type AiRouting = ConnectorRouting;
 
 /** A bend on a connector route; geometry's Point borrowed through canvas */
 export type AiPoint = NonNullable<ConnectParams["points"]>[number];
