@@ -20,15 +20,21 @@ import { isValidTableState } from "./state/validateTableState";
 import { TableStencils } from "./stencil/TableStencils";
 
 /**
- * No resize handles: the box is the grid's answer, so a handle dragged against it
- * would fight the next re-derivation. Column widths and row heights are what a
- * table is resized by, and they get their own controls rather than the transform
- * frame's.
+ * The left and right handles alone. Dragging one distributes the width change
+ * across every column in the proportions it holds, which the content resizer does
+ * on reading a width the columns do not sum to (resizeTableStateToContent) — so
+ * the handle does not fight the re-derivation, it feeds it.
+ *
+ * No handle on the height: a row's stored height is a lower bound its text raises,
+ * which makes a dragged bottom edge and deleted text indistinguishable to the
+ * resizer, the one place a handle's write is visible. The height stays the grid's
+ * answer, and a row is given a height by dragging its boundary
+ * ({@link TABLE_SELECTION_CONTROLS}).
  *
  * Declared once at module scope because the registry memoizes on the declaration
  * itself (ObjectTransformHandlesRegistry).
  */
-const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: false };
+const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
 
 /**
  * The two boundary controls. One registration per axis covers every boundary of

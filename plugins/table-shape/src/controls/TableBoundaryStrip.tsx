@@ -11,8 +11,11 @@ import { memo } from "react";
  * enough to aim at without a steady hand; narrow enough that the cells either
  * side keep the double click that opens them for editing, since the strip is
  * drawn over them.
+ *
+ * Also the clearance a strip keeps from a transform handle it would otherwise
+ * cover (TableRowBoundaryControl).
  */
-const BOUNDARY_HIT_WIDTH = 8;
+export const BOUNDARY_HIT_WIDTH = 8;
 
 /**
  * Paint of a strip that is a target and nothing else. `transparent` counts as

@@ -24,6 +24,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A table can be resized by its left and right edges**, the width change spread
+  over every column in the proportions it holds. A column never goes under its
+  minimum, and a table dragged narrower than its columns can be simply stops.
+  There are no handles on the height: a row's stored height is a lower bound its
+  text raises, so the height follows the cells and a row is given one by dragging
+  its boundary.
 - **A table's column and row boundaries can be dragged.** Grabbing the rule
   between two columns gives one of them the width the other loses, so the table's
   own edges stay where they are however far the boundary is pushed — past a
