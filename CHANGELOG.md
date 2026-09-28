@@ -100,6 +100,10 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - **Stacking order and the aspect-ratio lock left the floating menu.** Both are
   in the property sidebar (the lock now also for a multi-selection and a
   group), and stacking order stays on the context menu and Ctrl/Cmd+`[` `]`.
+- **An unlocked aspect ratio is no longer written.** Once a shape's lock had
+  been turned off, every save wrote `"lockAspectRatio": false`, although false
+  is the default; it is now left out, as an upright `rotation` and an unset
+  flip already were.
 - **For plugin authors**, three breaking changes to the canvas API:
   - The menu item `{ type: "fontStyle" }` is split into `{ type: "font" }`
     (family, size, colour) and `{ type: "textFormat" }` (bold, italic,

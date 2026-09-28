@@ -16,7 +16,7 @@ export const ObjectMapper = {
 		return {
 			id: doc.id,
 			type: doc.type,
-			meta: doc.meta ? MetaMapper.toState(doc.meta) : undefined,
+			...(doc.meta && { meta: MetaMapper.toState(doc.meta) }),
 		} as ObjectState;
 	},
 
@@ -29,7 +29,7 @@ export const ObjectMapper = {
 		return {
 			id: state.id,
 			type: state.type,
-			meta: state.meta ? MetaMapper.toDoc(state.meta) : undefined,
+			...(state.meta && { meta: MetaMapper.toDoc(state.meta) }),
 		} as ObjectDoc;
 	},
 };

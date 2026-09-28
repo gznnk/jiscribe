@@ -9,12 +9,15 @@ import type { TransformState } from "../TransformState";
 
 describe("TransformMapper", () => {
 	describe("mapTransformDocToState", () => {
-		it("unspecified rotation becomes 0, and unspecified flip becomes scale 1", () => {
+		it("fills every unspecified field with its default", () => {
 			const state = mapTransformDocToState({} as TransformDoc);
 
-			expect(state.rotation).toBe(0);
-			expect(state.scaleX).toBe(1);
-			expect(state.scaleY).toBe(1);
+			expect(state).toEqual({
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+				lockAspectRatio: false,
+			});
 		});
 
 		it("converts flipX/flipY=true to scaleX/scaleY=-1", () => {
@@ -39,16 +42,15 @@ describe("TransformMapper", () => {
 	});
 
 	describe("mapTransformStateToDoc", () => {
-		it("omits rotation when 0, and omits flip for positive scale", () => {
+		it("leaves out the keys of every field at its default", () => {
 			const doc = mapTransformStateToDoc({
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
-			} as TransformState);
+				lockAspectRatio: false,
+			});
 
-			expect(doc.rotation).toBeUndefined();
-			expect(doc.flipX).toBeUndefined();
-			expect(doc.flipY).toBeUndefined();
+			expect(Object.keys(doc)).toEqual([]);
 		});
 
 		it("converts negative scaleX/scaleY to flipX/flipY=true", () => {
@@ -80,7 +82,7 @@ describe("TransformMapper", () => {
 				scaleY: 1,
 			} as TransformState);
 
-			expect(doc.rotation).toBeUndefined();
+			expect("rotation" in doc).toBe(false);
 		});
 
 		it("preserves lockAspectRatio", () => {
