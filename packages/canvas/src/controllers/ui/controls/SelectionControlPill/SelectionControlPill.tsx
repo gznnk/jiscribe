@@ -18,6 +18,12 @@ type SelectionControlPillProps = {
 	/** data-part value (the control's derived `selection:<objectType>:<name>`). */
 	part: string;
 	cursor: string;
+	/**
+	 * Whether the part this pill stands for is the selected one. Inverts the
+	 * fill/stroke pair and thickens the stroke, the same way a selected vertex
+	 * handle reads (VertexControls). Omitted = not selected.
+	 */
+	selected?: boolean;
 };
 
 /**
@@ -34,11 +40,13 @@ const SelectionControlPillComponent: React.FC<SelectionControlPillProps> = ({
 	objectId,
 	part,
 	cursor,
+	selected = false,
 }) => {
 	const { handleDimensions } = useCanvasTheme();
 	const pillWidth = PILL_WIDTH / zoom;
 	const pillHeight = PILL_HEIGHT / zoom;
-	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
+	const adjustedStrokeWidth =
+		(handleDimensions.anchorStrokeWidth * (selected ? 1.5 : 1)) / zoom;
 
 	return (
 		<g transform={`translate(${cx} ${cy}) rotate(${rotation})`}>
@@ -53,8 +61,8 @@ const SelectionControlPillComponent: React.FC<SelectionControlPillProps> = ({
 				data-id={objectId}
 				data-part={part}
 				style={{
-					fill: theme.handleFill,
-					stroke: theme.handleAccent,
+					fill: selected ? theme.handleAccent : theme.handleFill,
+					stroke: selected ? theme.handleFill : theme.handleAccent,
 					cursor,
 				}}
 			/>

@@ -15,10 +15,11 @@ type TransformControlsLayerProps = {
 	zoom?: number;
 	isTextEditing: boolean;
 	/**
-	 * Whether a text slot is selected inside the object; already validated by
-	 * resolveObjectPartSelection, since a stale flag would keep the handles hidden
+	 * Whether a part selected inside the object is drawn with a box around it
+	 * (isObjectPartOutlined); already validated by resolveObjectPartSelection,
+	 * since a stale flag would keep the handles hidden
 	 */
-	isTextSlotSelected: boolean;
+	isObjectPartOutlined: boolean;
 	/** Kind of the drag in progress; null when none is */
 	activeDragKind: DragKind | null;
 };
@@ -37,7 +38,7 @@ const TransformControlsLayerComponent: React.FC<
 	multiSelectGroup,
 	zoom = 1,
 	isTextEditing,
-	isTextSlotSelected,
+	isObjectPartOutlined,
 	activeDragKind,
 }) => {
 	const registries = useCanvasRegistries();
@@ -47,9 +48,10 @@ const TransformControlsLayerComponent: React.FC<
 		return null;
 	}
 
-	// Hidden while a slot is selected: resizing and rotating still act on the whole
-	// object, so handles on its frame would compete with the slot box for the eye.
-	if (isTextSlotSelected) {
+	// Hidden while an outlined part is selected: resizing and rotating still act on
+	// the whole object, so handles on its frame would compete with that part's box
+	// for the eye. A kind drawing no box leaves nothing to compete with.
+	if (isObjectPartOutlined) {
 		return null;
 	}
 

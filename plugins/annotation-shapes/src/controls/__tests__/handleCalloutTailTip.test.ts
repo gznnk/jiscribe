@@ -1,6 +1,7 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
+	SelectionControlResult,
 } from "@jiscribe/canvas";
 import type { Point } from "@jiscribe/geometry";
 import { describe, expect, it } from "vitest";
@@ -41,47 +42,76 @@ const makeEvent = (
 	mods: { shift: false, alt: false, ctrl: false, meta: false },
 });
 
+/** A click on the tip handle; a click reports where it was and nothing else. */
+const clickAt = (last: Point): SelectionControlEvent => ({
+	type: "click",
+	last,
+	mods: { shift: false, alt: false, ctrl: false, meta: false },
+});
+
+/** The object the handler put in its result, or null for no change. */
+const objectOf = (
+	result: SelectionControlResult<CalloutState> | null,
+): CalloutState | null => result?.object ?? null;
+
 describe("handleCalloutTailTip", () => {
 	it("derives side=right and the edge projection from a rightward drag", () => {
-		const next = handleCalloutTailTip(
-			makeContext(makeCallout()),
-			makeEvent({ x: 190, y: 100 }),
+		const next = objectOf(
+			handleCalloutTailTip(
+				makeContext(makeCallout()),
+				makeEvent({ x: 190, y: 100 }),
+			),
 		);
-		expect(next.tail).toEqual({ side: "right", position: 0.5 });
+		expect(next?.tail).toEqual({ side: "right", position: 0.5 });
 	});
 
 	it("derives side=bottom when the vertical axis dominates", () => {
-		const next = handleCalloutTailTip(
-			makeContext(makeCallout()),
-			makeEvent({ x: 40, y: 400 }),
+		const next = objectOf(
+			handleCalloutTailTip(
+				makeContext(makeCallout()),
+				makeEvent({ x: 40, y: 400 }),
+			),
 		);
-		expect(next.tail).toEqual({ side: "bottom", position: 0.2 });
+		expect(next?.tail).toEqual({ side: "bottom", position: 0.2 });
 	});
 
 	it("clamps position to [0, 1] when the pointer runs past the edge", () => {
-		const next = handleCalloutTailTip(
-			makeContext(makeCallout()),
-			makeEvent({ x: 400, y: 300 }),
+		const next = objectOf(
+			handleCalloutTailTip(
+				makeContext(makeCallout()),
+				makeEvent({ x: 400, y: 300 }),
+			),
 		);
-		expect(next.tail).toEqual({ side: "right", position: 1 });
+		expect(next?.tail).toEqual({ side: "right", position: 1 });
 	});
 
 	it("maps the pointer through the inverse transform for rotated callouts", () => {
 		// rotation=90: world (100, 160) -> local (60, 0) -> right at 0.5
-		const next = handleCalloutTailTip(
-			makeContext(makeCallout({ rotation: 90 })),
-			makeEvent({ x: 100, y: 160 }),
+		const next = objectOf(
+			handleCalloutTailTip(
+				makeContext(makeCallout({ rotation: 90 })),
+				makeEvent({ x: 100, y: 160 }),
+			),
 		);
-		expect(next.tail).toEqual({ side: "right", position: 0.5 });
+		expect(next?.tail).toEqual({ side: "right", position: 0.5 });
 	});
 
 	it("returns the updated object without mutating the input", () => {
 		const callout = makeCallout();
-		const next = handleCalloutTailTip(
-			makeContext(callout),
-			makeEvent({ x: 190, y: 100 }),
+		const next = objectOf(
+			handleCalloutTailTip(makeContext(callout), makeEvent({ x: 190, y: 100 })),
 		);
 		expect(callout.tail).toBeUndefined();
 		expect(next).not.toBe(callout);
+	});
+
+	it("selects the tip on a click, without touching the tail", () => {
+		const result = handleCalloutTailTip(
+			makeContext(makeCallout()),
+			clickAt({ x: 190, y: 100 }),
+		);
+		expect(result).toEqual({
+			selection: { kind: "tail", partIds: ["tip"] },
+		});
 	});
 });

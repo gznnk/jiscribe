@@ -1,4 +1,4 @@
-import type { SelectionControlEvent } from "@jiscribe/canvas";
+import type { SelectionControlDragEvent } from "@jiscribe/canvas";
 import {
 	calcInverseAffineTransformedPoint,
 	degreesToRadians,
@@ -26,7 +26,7 @@ import type { TableState } from "../state/TableState";
  */
 export const calcTableLocalDragDelta = (
 	startTable: TableState,
-	event: SelectionControlEvent,
+	event: SelectionControlDragEvent,
 ): Point => {
 	const radians = degreesToRadians(startTable.rotation);
 	const localStart = calcInverseAffineTransformedPoint(

@@ -1,10 +1,11 @@
-import { test, expect } from "@jiscribe/canvas-sdk/testing/e2e";
+import { test, expect, selectors } from "@jiscribe/canvas-sdk/testing/e2e";
 import type { CanvasDriver } from "@jiscribe/canvas-sdk/testing/e2e";
 
 /**
  * Guards re-attaching the callout tail:
  * - a handle (selection:callout:tailTip) appears at the tail tip on selection
  * - free-dragging that handle changes side / position and the path follows
+ * - clicking it selects the tip as a sub-part, which the handle draws
  *
  * The callout is drawn out of the annotation category flyout, which is where it
  * lives since it moved to @jiscribe/plugin-annotation-shapes.
@@ -35,6 +36,20 @@ async function connectorSourceY(
 		const y = first?.split(",")[1];
 		return y === undefined ? null : Number(y);
 	}, id);
+}
+
+/**
+ * The tip handle's resolved fill and stroke. Read as a pair rather than compared
+ * against a literal colour: the selected pill swaps the two, so the assertion
+ * holds under any theme.
+ */
+async function tailHandleColors(
+	canvas: CanvasDriver,
+): Promise<{ fill: string; stroke: string }> {
+	return canvas.page.locator(TAIL_HANDLE).evaluate((element) => {
+		const style = getComputedStyle(element);
+		return { fill: style.fill, stroke: style.stroke };
+	});
 }
 
 /** Reads the d attribute of the given callout's path. */
@@ -106,5 +121,37 @@ test.describe("callout tail re-attach", () => {
 				message: "the connector endpoint follows the moved tail",
 			})
 			.toBeCloseTo(380, 0);
+	});
+
+	test("draws the tip handle as selected once it is clicked, without moving the tail", async ({
+		canvas,
+	}) => {
+		const id = await createCallout(
+			canvas,
+			{ x: 300, y: 220 },
+			{ x: 500, y: 380 },
+		);
+		await expect(canvas.page.locator(TAIL_HANDLE)).toBeVisible();
+
+		const unselected = await tailHandleColors(canvas);
+		const before = await calloutPathD(canvas, id);
+
+		// The default tail tip: bottom edge, position 0.2 = x=340, y=380.
+		await canvas.clickAt({ x: 340, y: 380 });
+
+		await expect
+			.poll(async () => (await tailHandleColors(canvas)).fill, {
+				message: "the tip handle takes the accent as its fill once selected",
+			})
+			.toBe(unselected.stroke);
+		expect((await tailHandleColors(canvas)).stroke).toBe(unselected.fill);
+		// A click selects the part; it is not a zero-length drag of it.
+		expect(await calloutPathD(canvas, id)).toBe(before);
+		// The tip draws no box of its own, so there is nothing for the frame's
+		// handles to compete with and they stay (isObjectPartOutlined). A selected
+		// text slot, which does draw one, still hides them.
+		await expect(
+			canvas.page.locator(selectors.transformControl("rightCenter")),
+		).toBeVisible();
 	});
 });

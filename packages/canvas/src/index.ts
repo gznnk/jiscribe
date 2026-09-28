@@ -209,11 +209,16 @@ export type {
 	PropertyPanelTransformUpdater,
 } from "./controllers/ui/menu/PropertyPanel/PropertyPanelTypes";
 export type {
+	SelectionControlClickEvent,
 	SelectionControlContext,
 	SelectionControlDefinition,
+	SelectionControlDragEvent,
 	SelectionControlEvent,
+	SelectionControlEventType,
 	SelectionControlProps,
+	SelectionControlResult,
 } from "./controllers/ui/controls/SelectionControlTypes";
+export { DEFAULT_SELECTION_CONTROL_EVENTS } from "./controllers/gestures/registry/RegisteredSelectionControl";
 export type { ObjectPartSelection } from "./controllers/selection/ObjectPartSelection";
 export type { ObjectPartDefinition } from "./controllers/selection/ObjectPartRegistry";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";

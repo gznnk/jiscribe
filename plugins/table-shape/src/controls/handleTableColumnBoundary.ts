@@ -1,6 +1,7 @@
 import type {
 	SelectionControlContext,
 	SelectionControlEvent,
+	SelectionControlResult,
 } from "@jiscribe/canvas";
 
 import { calcTableLocalDragDelta } from "./calcTableLocalDragDelta";
@@ -25,7 +26,12 @@ import type { TableState } from "../state/TableState";
 export const handleTableColumnBoundary = (
 	context: SelectionControlContext<TableState>,
 	event: SelectionControlEvent,
-): TableState | null => {
+): SelectionControlResult<TableState> | null => {
+	// Drags only: the control declares no `events`, so nothing else reaches
+	// here and the union is merely wider than the traffic.
+	if (event.type !== "drag" && event.type !== "dragEnd") {
+		return null;
+	}
 	const boundaryIndex = parseTableBoundaryIndex(event.subPart);
 	if (boundaryIndex === null) {
 		return null;
@@ -36,5 +42,5 @@ export const handleTableColumnBoundary = (
 		boundaryIndex,
 		calcTableLocalDragDelta(startTable, event).x,
 	);
-	return columns === null ? null : { ...startTable, columns };
+	return columns === null ? null : { object: { ...startTable, columns } };
 };

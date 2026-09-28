@@ -7,6 +7,10 @@ import {
 import { memo } from "react";
 
 import {
+	CALLOUT_TAIL_PART_ID,
+	CALLOUT_TAIL_PART_KIND,
+} from "./calloutTailPart";
+import {
 	calcCalloutTailTipPoint,
 	isVerticalTailSide,
 } from "../presentation/Callout";
@@ -16,14 +20,16 @@ import type { CalloutState } from "../state/callout/CalloutState";
 /**
  * Handle for dragging the callout's tail tip. Free 2D drag; the handler
  * normalizes the pointer into tail side + position. Rendered as a pill on the
- * bounding-box edge the tail sits on, oriented along that edge.
+ * bounding-box edge the tail sits on, oriented along that edge, and drawn
+ * selected while the tip is the selected sub-part (a click on it, handled by
+ * handleCalloutTailTip).
  *
  * data-kind="control" + data-id=<objectId> + data-part={part}
  * (part comes from the selectionControls registration via SelectionControlsLayer).
  */
 const CalloutTailTipControlComponent: React.FC<
 	SelectionControlProps<CalloutState>
-> = ({ object, zoom, part }) => {
+> = ({ object, zoom, part, selectedParts }) => {
 	const { id, cx, cy, width, height, rotation, scaleX, scaleY } = object;
 
 	const tail = resolveCalloutTail(object);
@@ -39,6 +45,10 @@ const CalloutTailTipControlComponent: React.FC<
 		cy,
 	);
 
+	const isTipSelected =
+		selectedParts?.kind === CALLOUT_TAIL_PART_KIND &&
+		selectedParts.partIds.includes(CALLOUT_TAIL_PART_ID);
+
 	return (
 		<SelectionControlPill
 			cx={handlePoint.x}
@@ -48,6 +58,7 @@ const CalloutTailTipControlComponent: React.FC<
 			objectId={id}
 			part={part}
 			cursor="move"
+			selected={isTipSelected}
 		/>
 	);
 };

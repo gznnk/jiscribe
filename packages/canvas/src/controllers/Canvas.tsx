@@ -63,6 +63,7 @@ import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
+import { isObjectPartOutlined } from "./selection/isObjectPartOutlined";
 import { resolveObjectPartSelection } from "./selection/resolveObjectPartSelection";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
@@ -701,6 +702,11 @@ const CanvasComponent = ({
 		state,
 		registries.objectPart,
 	);
+	const objectPartOutlined = isObjectPartOutlined(
+		state.objects,
+		registries.objectPart,
+		objectPartSelection,
+	);
 
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
@@ -811,7 +817,7 @@ const CanvasComponent = ({
 									multiSelectGroup={state.multiSelectGroup}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
-									isTextSlotSelected={objectPartSelection !== null}
+									isObjectPartOutlined={objectPartOutlined}
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer
@@ -833,6 +839,7 @@ const CanvasComponent = ({
 									objects={state.objects}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
+									objectPartSelection={objectPartSelection}
 								/>
 								<DragGhost stencilLibraryDrag={state.stencilLibraryDrag} />
 								<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
