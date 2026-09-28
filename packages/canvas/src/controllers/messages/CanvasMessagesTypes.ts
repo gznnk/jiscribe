@@ -60,6 +60,32 @@ export type CanvasMessageStrings = {
 	propertyPanelSectionMeta: string;
 	/** Label of the row stating the canvas surface color, and the aria-label of its field */
 	propertyPanelRowBackground: string;
+	/** Label of the row holding the four fields of the document's view padding */
+	propertyPanelRowPadding: string;
+	/** aria-label of the field stating the empty space kept above the content */
+	propertyPanelFieldPaddingTop: string;
+	/** aria-label of the field stating the empty space kept right of the content */
+	propertyPanelFieldPaddingRight: string;
+	/** aria-label of the field stating the empty space kept below the content */
+	propertyPanelFieldPaddingBottom: string;
+	/** aria-label of the field stating the empty space kept left of the content */
+	propertyPanelFieldPaddingLeft: string;
+	/** Label of the row choosing how the view is framed when the document is opened */
+	propertyPanelRowViewOpen: string;
+	/** The segment declaring no framing, so the host frames the view its own way; drawn in a third of the row, so keep it short */
+	propertyPanelViewOpenNone: string;
+	/** Tooltip of {@link propertyPanelViewOpenNone}, where there is room to say what it does */
+	propertyPanelViewOpenNoneTitle: string;
+	/** The segment fitting the padded content's width on open; drawn in a third of the row, so keep it short */
+	propertyPanelViewOpenFitWidth: string;
+	/** Tooltip of {@link propertyPanelViewOpenFitWidth}, where there is room to say what it does */
+	propertyPanelViewOpenFitWidthTitle: string;
+	/** The segment fitting the whole padded content on open; drawn in a third of the row, so keep it short */
+	propertyPanelViewOpenFitAll: string;
+	/** Tooltip of {@link propertyPanelViewOpenFitAll}, where there is room to say what it does */
+	propertyPanelViewOpenFitAllTitle: string;
+	/** Checkbox walling panning in at the padded content rather than leaving the board endless */
+	propertyPanelViewScrollContent: string;
 	/** Label of the color row (fill, stroke, font color) */
 	propertyPanelRowColor: string;
 	/** Label of the stroke-thickness row */

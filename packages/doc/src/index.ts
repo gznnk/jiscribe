@@ -34,11 +34,8 @@ export type {
 	ViewPaddingDoc,
 	ResolvedViewPadding,
 } from "./model/canvas/ViewDoc";
-export {
-	isViewOpenMode,
-	isViewScrollMode,
-	resolveViewPadding,
-} from "./model/canvas/ViewDoc";
+export { isViewOpenMode, isViewScrollMode } from "./model/canvas/ViewDoc";
+export { resolveViewPadding } from "./model/canvas/resolveViewPadding";
 export type { ObjectDoc } from "./model/objects/base/ObjectDoc";
 // An object of a type the reader does not know, which the parser, the doc-ops and
 // the canvas all keep in place and write back as it was.
@@ -68,6 +65,14 @@ export { OPACITY_MAX, OPACITY_MIN } from "./model/objects/utils/opacity";
 export { AUTO_COLOR } from "./model/objects/utils/autoColor";
 export { RADIUS_STYLE_KEYS } from "./model/objects/base/RadiusStyleDoc";
 export { ARROW_STYLE_KEYS } from "./model/objects/base/ArrowStyleDoc";
+export type { ArrowType } from "./model/objects/types/ArrowType";
+export { ArrowTypes } from "./model/objects/types/ArrowType";
+export type { ConnectPointId } from "./model/objects/types/EndpointRef";
+export { ConnectPointIds } from "./model/objects/types/EndpointRef";
+export type { ConnectorRouting } from "./model/objects/types/ConnectorRouting";
+export { ConnectorRoutings } from "./model/objects/types/ConnectorRouting";
+export type { TextLayout } from "./model/objects/types/text/TextLayout";
+export { TextLayouts } from "./model/objects/types/text/TextLayout";
 export { TRANSFORM_STYLE_KEYS } from "./model/objects/base/TransformDoc";
 // A text slot is the unit of text in both layers, so a type that spells out its
 // own slots (features.text: "slots") declares them with this in its Doc and reuses

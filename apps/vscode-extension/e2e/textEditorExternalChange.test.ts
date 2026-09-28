@@ -58,9 +58,8 @@ describe("canvas editor and changes made outside it", () => {
 		const document = await vscode.workspace.openTextDocument(uri);
 		const recorder = recordChangeEvents(document);
 
-		// Unindented, so a write-back would show up in the text itself: what the
-		// editor hands the webview is re-indented, and that is what would come
-		// back through the commit path.
+		// Unindented, so a write-back would show up in the text itself: the canvas
+		// commits the document re-serialized with indentation.
 		const editedText = compactCanvasDocJson(["r1", "r2"]);
 		await replaceWholeDocument(document, editedText);
 		await waitFor(

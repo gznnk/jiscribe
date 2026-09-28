@@ -89,6 +89,51 @@ describe("diagnoseDoc", () => {
 		expect(diagnoseDoc(doc)).toEqual([]);
 	});
 
+	describe("markdown, whose body the shape lays out itself", () => {
+		const markdown = (id: string, text: string) =>
+			({
+				id,
+				type: "markdown",
+				x: 0,
+				y: 0,
+				width: 40,
+				height: 20,
+				text,
+			}) as never;
+
+		it("names every markdown object with text in one warning instead of measuring it", () => {
+			// Far more text than 40x20 holds as plain text: no overflow error is
+			// reported, since plain-text metrics do not describe rendered Markdown.
+			const long = `# Heading\n\n${"a line of body copy\n".repeat(30)}`;
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					markdown("md-1", long),
+					{
+						id: "group1",
+						type: "group",
+						children: [markdown("md-2", "short")],
+					} as never,
+				],
+			};
+			const diagnostics = diagnoseDoc(doc);
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0].severity).toBe("warning");
+			expect(diagnostics[0].objectId).toBeUndefined();
+			expect(diagnostics[0].message).toMatch(
+				/^text in markdown md-1, md-2 is not checked for overflow/,
+			);
+		});
+
+		it("says nothing about a markdown object with no text", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [markdown("md-1", "")],
+			};
+			expect(diagnoseDoc(doc)).toEqual([]);
+		});
+	});
+
 	describe("connector labels", () => {
 		/** The fitting fixture with the two shapes moved to leave `gap` between them. */
 		const docWithGap = (gap: number): CanvasDoc => {

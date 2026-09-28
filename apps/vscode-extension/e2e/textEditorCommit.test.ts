@@ -184,7 +184,7 @@ describe("canvas editor and a commit from the Webview", () => {
 		);
 
 		// A change the editor did not make is news for the canvas, so this one has
-		// to arrive. Written unindented, so the re-indentation on the way out shows.
+		// to arrive. Written unindented, so any rewriting on the way out shows.
 		const externalText = compactCanvasDocJson(["r1", "r2", "r3"]);
 		await replaceWholeDocument(editor.document, externalText);
 		await waitFor(
@@ -201,8 +201,8 @@ describe("canvas editor and a commit from the Webview", () => {
 		);
 		assert.equal(
 			updatesAfterExternalChange[0].data,
-			canvasDocJson(["r1", "r2", "r3"]),
-			"the Webview was not sent the re-indented document text",
+			externalText,
+			"the Webview was not sent the document text as it stands",
 		);
 		editor.dispose();
 		await editor.document.save();

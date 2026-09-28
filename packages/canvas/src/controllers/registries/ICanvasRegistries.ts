@@ -106,8 +106,8 @@ export interface ICanvasRegistries {
 		get(commandId: string): CommandLike | undefined;
 	};
 	/**
-	 * Styleable-property update dispatch, used by the object-menu gesture handler
-	 * and the reducer's STYLE_PROPERTY_UPDATE. Inline shape for the same acyclicity
+	 * Styleable-property update dispatch, used by the menus' gesture route
+	 * (applyStylePropertyPart) and the reducer's STYLE_PROPERTY_UPDATE. Inline shape for the same acyclicity
 	 * reason as `command` (the concrete class is `StylePropertyRegistry`).
 	 */
 	styleProperty: {

@@ -87,8 +87,6 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuTextAlignment}
 			>
@@ -106,8 +104,6 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 								<ObjectMenuButton
 									key={value}
 									isActive={!isTextAlignMixed && textAlign === value}
-									data-kind="menu"
-									data-id="object-menu"
 									data-part={setPart("textAlign", value)}
 									title={messages[messageKey]}
 								>
@@ -121,8 +117,6 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 									<ObjectMenuButton
 										key={value}
 										isActive={!isVerticalAlignMixed && verticalAlign === value}
-										data-kind="menu"
-										data-id="object-menu"
 										data-part={setPart("verticalAlign", value)}
 										title={messages[messageKey]}
 									>

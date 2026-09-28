@@ -53,8 +53,9 @@ type ObjectMenuColorPickerGridProps = {
 /**
  * Color picker grid.
  * Displays preset color swatches (4×7 grid) and a CSS color text input.
- * Each swatch has data-kind="menu" and updates the property through the gesture system,
- * unless `writesThroughCallback` opts the picker out of gestures entirely.
+ * Each swatch carries a `set:` data-part and updates the property through the
+ * gesture system, resolved to the menu or sidebar that contains it, unless
+ * `writesThroughCallback` opts the picker out of gestures entirely.
  * The swatch showing `currentColor` writes nothing where the pick is provably
  * no change (`currentColorIsShared`), a commit of the color already in place
  * being recorded as a history entry that changes nothing.
@@ -153,8 +154,6 @@ const ObjectMenuColorPickerGridComponent: React.FC<
 						: () => onPropertyUpdate(property, value, true),
 				}
 			: {
-					"data-kind": "menu",
-					"data-id": "object-menu",
 					"data-part": setPart(property, value),
 					"data-gesture": picked ? "none" : undefined,
 				};

@@ -247,7 +247,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 *
 	 * @param channel - the resolved panel's channel; posting through the panel
 	 *   directly would hide the message from the bridge registry
-	 * @param document - the edited document, re-indented on the way out
+	 * @param document - the edited document, sent as its text except when blank
 	 *   (toWebviewDocSource)
 	 * @param commitGate - told about the stamp here, the one place an update is
 	 *   built, so no posted version can go unrecorded

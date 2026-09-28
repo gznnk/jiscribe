@@ -159,14 +159,15 @@ export async function loadCanvasFile(path: string): Promise<LoadedCanvasFile> {
 /**
  * Validate a CanvasDoc and then write it back to the file.
  *
- * The modified document goes through `canvasParser` again, and an invalid one
- * fails with diagnostics instead of being written. This is what keeps a broken
- * `.jis` from being left behind. It then goes through the validator
- * `diagnose_canvas` runs, and a document carrying any finding the file it was
- * loaded from did not is refused as well, a warning included: a field the parser
- * only warns about is one it drops on the next save, so a tool writing one would
- * otherwise succeed and leave the value to vanish (see
- * findIntroducedDiagnostics).
+ * The text about to be written goes through the validator `diagnose_canvas`
+ * runs, and a document carrying any finding the file it was loaded from did not
+ * is refused with diagnostics instead of being written (see
+ * findIntroducedDiagnostics). That covers an invalid document: the file loaded
+ * through `canvasParser`, so every error in the result is one the edit
+ * introduced. This is what keeps a broken `.jis` from being left behind. A
+ * warning is refused too: a field the parser only warns about is one it drops on
+ * the next save, so a tool writing one would otherwise succeed and leave the
+ * value to vanish.
  *
  * The replacement is atomic (`./atomicWrite`), so the watching host and outside
  * editors never see it half written. A file written since it was loaded, by a
@@ -192,13 +193,6 @@ export async function saveCanvasFile(
 ): Promise<void> {
 	const filePath = await toCanvasFilePath(path);
 	const serialized = serializeCanvasFile(doc);
-
-	const result = canvasParser.parse(serialized);
-	if (result.kind !== "ok") {
-		throw new CanvasFileError(
-			`refused to write (resulting document is invalid):\n${formatParseResult(result)}`,
-		);
-	}
 
 	const introduced = findIntroducedDiagnostics(loaded?.text, serialized);
 	if (introduced.length > 0) {

@@ -137,10 +137,10 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 （`ObjectMenuColorPickerGrid` / `ObjectMenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を
 再実装せずに再利用するための割り切り。専用アクションを増やす案は、この commit 機微を二重持ちすることになるため
 採らない。ただしスタイルレジストリの管轄外のものは兄弟アクションを通る。枠そのものの数値（位置・サイズ・回転）は
-`TRANSFORM_PROPERTY_UPDATE`、doc 自身の設定（キャンバス面の `background` など）は `DOCUMENT_PROPERTY_UPDATE`、
+`TRANSFORM_PROPERTY_UPDATE`、doc 自身の設定（キャンバス面の `background` と表示の宣言 `view`）は `DOCUMENT_PROPERTY_UPDATE`、
 オブジェクトの `meta` は `META_PROPERTY_UPDATE`。どれも commit 機微は二重に持たず、コミット末尾
 （`controllers/reducer/canvasReducer.ts` の `commitPropertyUpdate`）を共有する。`DOCUMENT_PROPERTY_UPDATE` は
-対象が選択ではなく doc である点が違い、`null` はヘッドレスの `setBackground` と同じく「フィールドを消してテーマに従う」を意味する。
+対象が選択ではなく doc である点が違い、`null` はヘッドレスの `setBackground` / `setView` と同じく「フィールドを消してホストに任せる」を意味する。
 
 ## parser の二段検証（境界での防御）
 

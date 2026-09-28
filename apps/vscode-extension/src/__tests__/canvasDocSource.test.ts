@@ -10,13 +10,10 @@ describe("toWebviewDocSource", () => {
 		expect(toWebviewDocSource("\n \t\n")).toBe(EMPTY_CANVAS_DOC_JSON);
 	});
 
-	it("re-indents parseable JSON", () => {
+	it("passes any other text through unchanged", () => {
 		expect(toWebviewDocSource('{"version":1,"root":[]}')).toBe(
-			EMPTY_CANVAS_DOC_JSON,
+			'{"version":1,"root":[]}',
 		);
-	});
-
-	it("passes broken JSON through so the Webview reports the error", () => {
 		expect(toWebviewDocSource("{ nope")).toBe("{ nope");
 	});
 });

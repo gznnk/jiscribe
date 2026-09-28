@@ -96,4 +96,110 @@ describe("calcSnapCandidates", () => {
 		expect(xCoords).toEqual([...xCoords].sort((p, q) => p - q));
 		expect(yCoords).toEqual([...yCoords].sort((p, q) => p - q));
 	});
+
+	describe("poly objects", () => {
+		const polyline = {
+			type: "polyline",
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 30, y: 20 },
+				{ x: 100, y: 60 },
+			],
+		} as unknown as ObjectState;
+		const polyKeyPoints = makeKeyPoints(0, 0, 100, 60);
+
+		it("emits one x and one y vertex candidate per point, plus the bbox center, and no bbox edges", () => {
+			const { x, y } = calcSnapCandidates(
+				{ p: polyline },
+				{ p: polyKeyPoints },
+			);
+
+			expect(x).toEqual([
+				{
+					objectId: "p",
+					coordinate: 0,
+					edge: "vertex",
+					perpendicularMin: 0,
+					perpendicularMax: 0,
+				},
+				{
+					objectId: "p",
+					coordinate: 30,
+					edge: "vertex",
+					perpendicularMin: 20,
+					perpendicularMax: 20,
+				},
+				{
+					objectId: "p",
+					coordinate: 50,
+					edge: "hCenter",
+					perpendicularMin: 0,
+					perpendicularMax: 60,
+				},
+				{
+					objectId: "p",
+					coordinate: 100,
+					edge: "vertex",
+					perpendicularMin: 60,
+					perpendicularMax: 60,
+				},
+			]);
+			expect(y).toEqual([
+				{
+					objectId: "p",
+					coordinate: 0,
+					edge: "vertex",
+					perpendicularMin: 0,
+					perpendicularMax: 0,
+				},
+				{
+					objectId: "p",
+					coordinate: 20,
+					edge: "vertex",
+					perpendicularMin: 30,
+					perpendicularMax: 30,
+				},
+				{
+					objectId: "p",
+					coordinate: 30,
+					edge: "vCenter",
+					perpendicularMin: 0,
+					perpendicularMax: 100,
+				},
+				{
+					objectId: "p",
+					coordinate: 60,
+					edge: "vertex",
+					perpendicularMin: 100,
+					perpendicularMax: 100,
+				},
+			]);
+		});
+
+		it("treats a polygon the same way", () => {
+			const polygon = { ...polyline, type: "polygon" } as ObjectState;
+
+			const { x, y } = calcSnapCandidates({ p: polygon }, { p: polyKeyPoints });
+
+			expect(x.map((c) => c.edge)).toEqual([
+				"vertex",
+				"vertex",
+				"hCenter",
+				"vertex",
+			]);
+			expect(y.map((c) => c.edge)).toEqual([
+				"vertex",
+				"vertex",
+				"vCenter",
+				"vertex",
+			]);
+		});
+
+		it("contributes nothing when it has no keyPoints", () => {
+			const { x, y } = calcSnapCandidates({ p: polyline }, {});
+
+			expect(x).toHaveLength(0);
+			expect(y).toHaveLength(0);
+		});
+	});
 });

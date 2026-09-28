@@ -66,6 +66,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   copies a slot whole, which is now stated on `TextSlots` and held by a test.
 - **Shift snaps the rotation handle to 15° steps.** Without Shift a rotation
   is still rounded to the whole degree and does not snap.
+- **Shift keeps a polyline being drawn horizontal or vertical**, whichever way
+  the drag has gone further from where it started. Other shapes draw as before.
 - **Shift adds to the selection as Ctrl and Cmd do**, and holding any of the
   three while dragging over the background adds what the marquee encloses to
   what was already selected instead of replacing it.
@@ -76,6 +78,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   swatch is now split between the colours (up to three), a slider's field is
   left empty, and no button of a set is pressed — the way the property sidebar
   already did.
+- **The property sidebar's Canvas section sets the document's `view`**: the
+  padding on each side, how the view is framed on open, and whether scrolling
+  stops at the content.
 - For plugin authors: `features.text: "source"`, for a shape whose body is
   source text it draws itself (as `markdown` now is). Such a body is a plain
   string, never runs, and carries no `fontWeight` / `fontStyle` /
@@ -130,7 +135,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   breaking change** to the file format: the JSON schema refuses the three keys,
   the parser reports them as unknown properties and drops them on save.
   Overflow diagnosis no longer measures a `markdown` card, since its body is not
-  laid out by the shared typesetting it measures.
+  laid out by the shared typesetting it measures; it names the cards it left
+  unchecked in one warning instead, so the silence is not read as a fit.
 - **`jiscribe validate` checks with the canvas parser alone.** It no longer runs
   the JSON schema: the parser, the thing that opens the file, reports
   everything the schema did, so a finding is no longer reported twice in two
@@ -166,6 +172,17 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   beside the one it occupies, a quarter turn putting it a whole box away. An
   upright one is unchanged, as is the rule that these ops work on the
   untransformed box.
+- **A polyline's or polygon's vertex no longer snaps to its own outline.**
+  Dragging a vertex (or one just inserted) pulled it onto the edges and centre
+  of the shape's box as it was when the drag began. Other shapes now snap to a
+  polyline's or polygon's vertices and centre instead of its box edges, and a
+  vertex being dragged snaps to the other vertices of its own shape but not to
+  its centre.
+- **Styling text from the property sidebar keeps the text being edited.** A
+  press on a sidebar control took the focus off an open text editor, so the
+  caret and the highlighted stretch disappeared and what was typed next went
+  nowhere. The sidebar now keeps the focus on the editor as the floating menu
+  does, and hands it back once a typed field such as the font size is done.
 - **An object of a type this build does not know survives an edit.** A shape
   from a plugin the host lacks, or from a newer version, was dropped on load, so
   the next save removed it from the file. It is now kept as written, in its

@@ -115,12 +115,10 @@ test.describe("styling a stretch of text from the ObjectMenu", () => {
 		await canvas.setTextFormat("fontWeight", "normal");
 		await expect
 			.poll(async () =>
-				canvas.page.evaluate(() =>
-					document
-						.querySelector(
-							'[data-id="object-menu"][data-part^="set:fontWeight:"]',
-						)
-						?.getAttribute("data-part"),
+				canvas.page.evaluate(
+					(selector) =>
+						document.querySelector(selector)?.getAttribute("data-part"),
+					`${selectors.objectMenu} [data-part^="set:fontWeight:"]`,
 				),
 			)
 			.toBe("set:fontWeight:bold");

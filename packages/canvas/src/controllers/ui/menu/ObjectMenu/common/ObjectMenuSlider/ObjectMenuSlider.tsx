@@ -45,7 +45,9 @@ const clamp = (value: number, lower: number, upper: number): number =>
 /**
  * ObjectMenuSlider component.
  * A UI control for adjusting values using a slider.
- * Uses CanvasEvent system (data-kind/data-id) for property updates.
+ * Pointer changes write through the gesture system: the track carries only a
+ * `slider:` data-part, so the press resolves to the menu or sidebar that
+ * contains it.
  *
  * The slider track (`sliderMin`..`sliderMax`, stepped by `step`) covers the
  * common range for quick, coarse adjustment. The number input accepts the full
@@ -80,7 +82,7 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	inputValueRef.current = inputValue;
 	// whether the user has made a valid edit that has not yet been committed
 	const pendingCommit = useRef(false);
-	// Pointer changes on the track are written by the gesture path (ObjectMenuHandler),
+	// Pointer changes on the track are written by the gesture path (applyStylePropertyPart),
 	// which is the sole writer for them; dispatching from onChange too would fire on
 	// every drag frame. Keyboard changes have no gesture of their own, so they are the
 	// only ones this component forwards, gated by this flag.
@@ -212,8 +214,6 @@ const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 				onKeyUp={commitKeyboardEdit}
 				onBlur={commitKeyboardEdit}
 				onPointerUp={handleSliderPointerUp}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={sliderPart(property)}
 				data-gesture="native-pointer"
 			/>

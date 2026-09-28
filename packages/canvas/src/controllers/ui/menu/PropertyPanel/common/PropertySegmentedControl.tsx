@@ -10,9 +10,10 @@ export type PropertySegmentedOption = {
 	/** Distinguishes the option within the control; not written anywhere. */
 	id: string;
 	/**
-	 * The `data-part` the press carries, in the grammar ObjectMenuHandler
-	 * resolves: `set:{property}:{value}` for a plain value, `command:{commandId}`
-	 * for a toggle the canvas computes itself.
+	 * The `data-part` the press carries into the sidebar (PropertyPanelHandler):
+	 * `set:{property}:{value}` for a plain value, `command:{commandId}` for a
+	 * toggle the canvas computes itself, or `doc:{property}:{value}` for a
+	 * document setting.
 	 */
 	part: string;
 	/** title / aria-label of the button. */
@@ -37,9 +38,9 @@ type PropertySegmentedControlProps = {
 
 /**
  * A row of mutually visible choices, each writing straight through the gesture
- * system (`data-kind="menu" data-id="object-menu"`), which is the same route the
- * ObjectMenu's own buttons take — so a press lands one property update and one
- * history entry, with no callback in between.
+ * system — the buttons carry only a data-part, so a press resolves to the
+ * sidebar that contains them — and landing one property update and one history
+ * entry, with no callback in between.
  */
 const PropertySegmentedControlComponent: React.FC<
 	PropertySegmentedControlProps
@@ -55,8 +56,6 @@ const PropertySegmentedControlComponent: React.FC<
 					aria-pressed={isActive}
 					title={option.title}
 					aria-label={option.title}
-					data-kind="menu"
-					data-id="object-menu"
 					data-part={option.part}
 				>
 					{option.content}

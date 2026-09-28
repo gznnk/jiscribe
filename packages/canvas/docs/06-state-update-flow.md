@@ -13,18 +13,18 @@ This "assemble the entire transition in one place" policy follows principle 3 of
 `CanvasAction` (`controllers/reducer/CanvasActions.ts`) is the union of every action the reducer accepts;
 what each action means is documented on its type in that file. The main actions and where they are delegated:
 
-| Action                      | Role                                                                  | Delegates to                                                                                 |
-| --------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `GESTURE`                   | Gestures originating from pointer/wheel input                         | `handleGesture` → [Gesture System](./04-gesture-system.md)                                   |
-| `COMMAND`                   | Commands from shortcuts/menus/toolbar (incl. undo/redo)               | `handleCommand` → [Command System](./05-command-system.md)                                   |
-| `PASTE`                     | Applying clipboard data                                               | `handlePaste`                                                                                |
-| `STYLE_PROPERTY_UPDATE`     | Style input of the ObjectMenu / properties sidebar (preview / commit) | `StylePropertyRegistry.apply` → [Style Property System](./10-style-properties.md)            |
-| `TRANSFORM_PROPERTY_UPDATE` | Properties sidebar frame-number input (preview / commit)              | `handleTransformPropertyUpdate` → the same resize / rotate utilities the transform drag uses |
-| `DOCUMENT_PROPERTY_UPDATE`  | Properties sidebar Canvas section (preview / commit)                  | (inline) — writes `state.background`; `null` clears it and the host theme decides again      |
-| `META_PROPERTY_UPDATE`      | Properties sidebar input for an object's `meta` (preview / commit)    | `handleMetaPropertyUpdate`                                                                   |
-| `SYNC_EXTERNAL`             | Importing a doc from the external host                                | → [External Sync](./07-external-sync.md)                                                     |
-| `LOAD_DOCUMENT`             | Loading another document (an import that drops history)               | → [External Sync](./07-external-sync.md)                                                     |
-| `END_TEXT_EDIT`             | Committing / cancelling a text edit                                   | A commit goes to `commitTextEditIfNeeded`; a cancel just discards the edit state             |
+| Action                      | Role                                                                  | Delegates to                                                                                                                                                        |
+| --------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GESTURE`                   | Gestures originating from pointer/wheel input                         | `handleGesture` → [Gesture System](./04-gesture-system.md)                                                                                                          |
+| `COMMAND`                   | Commands from shortcuts/menus/toolbar (incl. undo/redo)               | `handleCommand` → [Command System](./05-command-system.md)                                                                                                          |
+| `PASTE`                     | Applying clipboard data                                               | `handlePaste`                                                                                                                                                       |
+| `STYLE_PROPERTY_UPDATE`     | Style input of the ObjectMenu / properties sidebar (preview / commit) | `StylePropertyRegistry.apply` → [Style Property System](./10-style-properties.md)                                                                                   |
+| `TRANSFORM_PROPERTY_UPDATE` | Properties sidebar frame-number input (preview / commit)              | `handleTransformPropertyUpdate` → the same resize / rotate utilities the transform drag uses                                                                        |
+| `DOCUMENT_PROPERTY_UPDATE`  | Properties sidebar Canvas section (preview / commit)                  | `applyDocumentProperty` — writes `state.background` or one part of `state.view` (normalized by `mergeViewDoc`); `null` drops the setting and the host decides again |
+| `META_PROPERTY_UPDATE`      | Properties sidebar input for an object's `meta` (preview / commit)    | `handleMetaPropertyUpdate`                                                                                                                                          |
+| `SYNC_EXTERNAL`             | Importing a doc from the external host                                | → [External Sync](./07-external-sync.md)                                                                                                                            |
+| `LOAD_DOCUMENT`             | Loading another document (an import that drops history)               | → [External Sync](./07-external-sync.md)                                                                                                                            |
+| `END_TEXT_EDIT`             | Committing / cancelling a text edit                                   | A commit goes to `commitTextEditIfNeeded`; a cancel just discards the edit state                                                                                    |
 
 Other actions only swap a piece of state inside the reducer, such as setting the camera or the selection, or
 updating the draft during a text edit. `UPDATE_TEXT_EDIT`, for instance, only replaces the draft; the commit into

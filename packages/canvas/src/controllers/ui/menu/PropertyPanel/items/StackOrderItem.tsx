@@ -43,8 +43,6 @@ const StackOrderItemComponent: React.FC<
 						type="button"
 						disabled={!resolved.enabled}
 						title={label}
-						data-kind="menu"
-						data-id="object-menu"
 						data-part={commandPart(commandId)}
 					>
 						{label}

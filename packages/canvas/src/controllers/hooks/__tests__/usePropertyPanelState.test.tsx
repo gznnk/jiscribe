@@ -160,7 +160,7 @@ describe("usePropertyPanelState", () => {
 		expect(render(connectorChanged)).not.toBe(first);
 	});
 
-	it("moves to the new state on the sidebar's own changes: collapse, background, text edit", () => {
+	it("moves to the new state on the sidebar's own changes: collapse, background, view, text edit", () => {
 		const initial = baseState();
 		const { render } = mount(initial);
 		const collapsed = {
@@ -173,8 +173,13 @@ describe("usePropertyPanelState", () => {
 		expect(render(collapsed)).toBe(collapsed);
 		const recolored = { ...collapsed, background: "#123456" };
 		expect(render(recolored)).toBe(recolored);
-		const editing = {
+		const reframed: CanvasControllerState = {
 			...recolored,
+			view: { open: "fit-width" },
+		};
+		expect(render(reframed)).toBe(reframed);
+		const editing = {
+			...reframed,
 			textEditState: { kind: "shape", objectId: "selected", slotId: "main" },
 		} as unknown as CanvasControllerState;
 		expect(render(editing)).toBe(editing);

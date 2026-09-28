@@ -55,6 +55,7 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
+import type { DocumentPropertyUpdate } from "./reducer/CanvasActions";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
 import type { ResolveImageBlob } from "../export";
@@ -535,10 +536,12 @@ const CanvasComponent = ({
 
 	const handleDocumentUpdate = useCallback<PropertyPanelDocumentUpdater>(
 		(property, value, commit, coalesceHistory = false) => {
+			// The updater's type parameter ties `value` to `property`, but TS cannot
+			// carry that tie into the discriminated union the action is.
+			const update = { property, value } as DocumentPropertyUpdate;
 			dispatch({
 				type: "DOCUMENT_PROPERTY_UPDATE",
-				property,
-				value,
+				...update,
 				commit,
 				coalesceHistory,
 			});

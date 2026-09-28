@@ -69,8 +69,6 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuLineStyle}
 			>
@@ -86,8 +84,6 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 						<LineStyleSection>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "solid"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("strokeDashType", "solid")}
 								title={messages.menuSolidLine}
 							>
@@ -95,8 +91,6 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "dashed"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("strokeDashType", "dashed")}
 								title={messages.menuDashedLine}
 							>
@@ -104,8 +98,6 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={!isDashMixed && dashType === "dotted"}
-								data-kind="menu"
-								data-id="object-menu"
 								data-part={setPart("strokeDashType", "dotted")}
 								title={messages.menuDottedLine}
 							>

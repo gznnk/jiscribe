@@ -58,8 +58,6 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="menu"
-				data-id="object-menu"
 				data-part={togglePart(SECTION_ID)}
 				title={messages.menuBackgroundColor}
 			>

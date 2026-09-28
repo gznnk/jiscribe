@@ -99,13 +99,21 @@ export type ConnectorDraft =
 // ---------------------------------------------------------------------------
 
 export type SnapEdge =
-	"left" | "right" | "top" | "bottom" | "hCenter" | "vCenter";
+	| "left"
+	| "right"
+	| "top"
+	| "bottom"
+	| "hCenter"
+	| "vCenter"
+	/** A single polyline / polygon vertex; its perpendicular range is that point */
+	| "vertex";
 
 /**
  * A snap candidate point.
  *
- * For an x candidate (left/right/hCenter) `coordinate` is the X coordinate and
- * perpendicularMin/Max are the object's top/bottom; for a y candidate they swap.
+ * For an x candidate (left/right/hCenter/vertex) `coordinate` is the X coordinate and
+ * perpendicularMin/Max are the object's top/bottom (a vertex's own Y for "vertex");
+ * for a y candidate they swap.
  */
 export type SnapCandidate = {
 	objectId: string;
@@ -118,9 +126,9 @@ export type SnapCandidate = {
 };
 
 export type SnapCandidates = {
-	/** left/right/hCenter candidates, sorted ascending by coordinate */
+	/** left/right/hCenter/vertex candidates, sorted ascending by coordinate */
 	x: SnapCandidate[];
-	/** top/bottom/vCenter candidates, sorted ascending by coordinate */
+	/** top/bottom/vCenter/vertex candidates, sorted ascending by coordinate */
 	y: SnapCandidate[];
 };
 
