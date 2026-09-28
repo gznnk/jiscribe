@@ -101,6 +101,7 @@ import {
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
 import { createTextSlotPartDefinition } from "../selection/createTextSlotPartDefinition";
+import { TEXT_SLOT_PART_KIND } from "../selection/textSlotPartKind";
 import { createVertexPartDefinition } from "../selection/createVertexPartDefinition";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
@@ -547,12 +548,16 @@ export const applyObjectDefinition = (
 	// from the very calculator it draws them with, so there is nothing per type
 	// to say. A type that declares "textSlot" itself meets the registry's
 	// duplicate check rather than silently shadowing this one.
+	// A `text: "slots"` type gets the slot part for free. Declaring `"textSlot"`
+	// itself replaces that default rather than colliding with it — the rule `menu`
+	// and `propertyPanel` already follow — which is how a type says what Delete
+	// does to its slots (ObjectPartDefinition.delete); spread
+	// `createTextSlotPartDefinition` to keep the rest.
+	const declaredParts = definition.parts ?? [];
 	const parts =
-		definition.features.text === "slots"
-			? [
-					...(definition.parts ?? []),
-					createTextSlotPartDefinition(definition.textRegion),
-				]
+		definition.features.text === "slots" &&
+		!declaredParts.some((part) => part.kind === TEXT_SLOT_PART_KIND)
+			? [...declaredParts, createTextSlotPartDefinition(definition.textRegion)]
 			: definition.parts;
 	if (parts) {
 		registries.objectPart.register(type, parts);

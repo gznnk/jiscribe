@@ -24,6 +24,10 @@ const clearSelectedVertex = (
 	state: CanvasControllerState,
 ): CanvasControllerState => ({ ...state, selectedVertex: null });
 
+const clearObjectPartSelection = (
+	state: CanvasControllerState,
+): CanvasControllerState => ({ ...state, objectPartSelection: null });
+
 /**
  * Command that deletes the current selection. Prioritizes vertex deletion when a
  * vertex is selected; otherwise removes selected objects (with group descendants)
@@ -50,6 +54,15 @@ export const DeleteCommand: ExecutableCommand = {
 		) {
 			return true;
 		}
+		// The same for a part selection: a type that registers a deletion for the
+		// selected kind claims the key; one that registers none leaves it to mean
+		// what it means for the object as a whole.
+		if (
+			state.objectPartSelection !== null &&
+			canDeleteObjectParts(state, state.objectPartSelection, registries)
+		) {
+			return true;
+		}
 		return state.selectedIds.length > 0 || state.selectedConnectorId !== null;
 	},
 
@@ -67,6 +80,22 @@ export const DeleteCommand: ExecutableCommand = {
 					clearSelectedVertex,
 				) ?? clearSelectedVertex(state)
 			);
+		}
+
+		// A part selection whose type deletes that kind is handled there and stops.
+		// Unlike the vertex branch this falls through when the type registers no
+		// deletion, which is what keeps Delete over a text slot deleting the shape
+		// the slot belongs to.
+		if (state.objectPartSelection !== null) {
+			const deleted = deleteObjectParts(
+				state,
+				state.objectPartSelection,
+				registries,
+				clearObjectPartSelection,
+			);
+			if (deleted !== null) {
+				return deleted;
+			}
 		}
 
 		// Collect the IDs to delete (for groups, recursively include descendants)

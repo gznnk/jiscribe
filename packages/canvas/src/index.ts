@@ -221,6 +221,12 @@ export type {
 export { DEFAULT_SELECTION_CONTROL_EVENTS } from "./controllers/gestures/registry/RegisteredSelectionControl";
 export type { ObjectPartSelection } from "./controllers/selection/ObjectPartSelection";
 export type { ObjectPartDefinition } from "./controllers/selection/ObjectPartRegistry";
+// The kind every `text: "slots"` type's slots are selected under, and the
+// definition core registers for them. A type spreads the definition to refine one
+// part of it — what Delete does to its slots, say — its own declaration replacing
+// the default rather than colliding with it (applyObjectDefinition).
+export { TEXT_SLOT_PART_KIND } from "./controllers/selection/textSlotPartKind";
+export { createTextSlotPartDefinition } from "./controllers/selection/createTextSlotPartDefinition";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 // The slot id every single-body shape (`features.text: "body"` / `"source"`)
 // holds, i.e. the key its `state.text` carries. A shape with several slots names
