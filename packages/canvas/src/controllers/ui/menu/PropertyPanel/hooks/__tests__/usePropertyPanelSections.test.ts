@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
 import { createPropertyPanelRegistry } from "../../PropertyPanelRegistry";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
 import { getPropertyPanelSections } from "../usePropertyPanelSections";
@@ -132,7 +133,7 @@ const stateOf = (
 		objects: {},
 		selectedIds: [],
 		selectedConnectorId: null,
-		selectedTextSlot: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -211,7 +212,11 @@ describe("getPropertyPanelSections", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
 			selectedIds: ["r-1"],
-			selectedTextSlot: { objectId: "r-1", slotId: "body" },
+			objectPartSelection: {
+				objectId: "r-1",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["body"],
+			},
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([
@@ -266,7 +271,11 @@ describe("getPropertyPanelSections", () => {
 		const state = stateOf({
 			objects: { "k-1": shape("k-1", "container") },
 			selectedIds: ["k-1"],
-			selectedTextSlot: { objectId: "k-1", slotId: "body" },
+			objectPartSelection: {
+				objectId: "k-1",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["body"],
+			},
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([
@@ -380,14 +389,18 @@ describe("getPropertyPanelSections", () => {
 		expect(getPropertyPanelSections(state, registry)).toEqual(RECT_SECTIONS);
 	});
 
-	// A slot resolves for a selection of one alone (resolveSelectedTextSlot), so the
+	// A slot resolves for a selection of one alone (resolveObjectPartSelection), so the
 	// multi-selection box is put beside one to reach the narrowing at all.
 	it("keeps the aspect-ratio lock out of a selected slot's sections", () => {
 		const state = stateOf({
 			objects: { "r-1": shape("r-1", "rect") },
 			selectedIds: ["r-1"],
 			multiSelectGroup: multiSelectGroupOf(["r-1"]),
-			selectedTextSlot: { objectId: "r-1", slotId: "body" },
+			objectPartSelection: {
+				objectId: "r-1",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["body"],
+			},
 		});
 
 		expect(getPropertyPanelSections(state, registry)).toEqual([

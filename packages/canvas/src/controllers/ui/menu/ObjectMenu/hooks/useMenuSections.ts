@@ -2,8 +2,8 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { resolveObjectPartSelection } from "../../../../selection/resolveObjectPartSelection";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
-import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
@@ -114,7 +114,7 @@ export const getMenuSections = (
 ): ObjectMenuSection[] => {
 	const sections = collectSelectionSections(state, objectMenuRegistry);
 	if (
-		resolveSelectedTextSlot(state) === null &&
+		resolveObjectPartSelection(state) === null &&
 		state.textEditState?.kind !== "shape"
 	) {
 		return sections;
@@ -131,7 +131,8 @@ export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
 ): ObjectMenuSection[] => {
-	const { selectedIds, selectedConnectorId, selectedTextSlot, objects } = state;
+	const { selectedIds, selectedConnectorId, objectPartSelection, objects } =
+		state;
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the item set is narrowed while it is (getMenuSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
@@ -144,7 +145,7 @@ export const useMenuSections = (
 			enabled,
 			selectedIds,
 			selectedConnectorId,
-			selectedTextSlot,
+			objectPartSelection,
 			isEditingShapeText,
 			objects,
 			objectMenu,

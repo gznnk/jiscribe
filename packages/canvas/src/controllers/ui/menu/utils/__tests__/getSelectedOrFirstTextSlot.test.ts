@@ -7,6 +7,8 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { TextSlots } from "../../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
+import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { getSelectedOrFirstTextSlot } from "../getSelectedOrFirstTextSlot";
 
 /** The types under test register no defaults, so the resolution is the identity here. */
@@ -26,12 +28,12 @@ const group = (id: string, childIds: string[]): GroupState =>
 const makeState = (
 	selectedIds: string[],
 	objects: Record<string, ObjectState>,
-	selectedTextSlot: CanvasControllerState["selectedTextSlot"] = null,
+	objectPartSelection: ObjectPartSelection | null = null,
 ): CanvasControllerState =>
 	({
 		selectedIds,
 		objects,
-		selectedTextSlot,
+		objectPartSelection,
 	}) as unknown as CanvasControllerState;
 
 describe("getSelectedOrFirstTextSlot", () => {
@@ -116,7 +118,11 @@ describe("getSelectedOrFirstTextSlot", () => {
 		});
 		expect(
 			getSelectedOrFirstTextSlot(
-				makeState(["r1"], { r1: r }, { objectId: "r1", slotId: "rows" }),
+				makeState(
+					["r1"],
+					{ r1: r },
+					{ objectId: "r1", kind: TEXT_SLOT_PART_KIND, partIds: ["rows"] },
+				),
 				textStyleDefaults,
 			)?.fontSize,
 		).toBe(11);
@@ -131,14 +137,26 @@ describe("getSelectedOrFirstTextSlot", () => {
 		// The slot's object is no longer the sole selection
 		expect(
 			getSelectedOrFirstTextSlot(
-				makeState(["r1", "r2"], { r1, r2 }, { objectId: "r1", slotId: "rows" }),
+				makeState(
+					["r1", "r2"],
+					{ r1, r2 },
+					{ objectId: "r1", kind: TEXT_SLOT_PART_KIND, partIds: ["rows"] },
+				),
 				textStyleDefaults,
 			)?.fontSize,
 		).toBe(16);
 		// The slot itself is gone from the object
 		expect(
 			getSelectedOrFirstTextSlot(
-				makeState(["r1"], { r1 }, { objectId: "r1", slotId: "operations" }),
+				makeState(
+					["r1"],
+					{ r1 },
+					{
+						objectId: "r1",
+						kind: TEXT_SLOT_PART_KIND,
+						partIds: ["operations"],
+					},
+				),
 				textStyleDefaults,
 			)?.fontSize,
 		).toBe(16);
@@ -159,7 +177,7 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 		({
 			selectedIds: ["r1"],
 			objects: { r1: object },
-			selectedTextSlot: null,
+			objectPartSelection: null,
 			textEditState: {
 				kind: "shape",
 				objectId: "r1",

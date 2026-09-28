@@ -3,7 +3,7 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 import { Outline } from "../Outline";
 import { TextSlotOutline } from "../TextSlotOutline";
@@ -13,11 +13,11 @@ type SelectionOverlayProps = {
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
 	/**
-	 * Slot selection already validated by resolveSelectedTextSlot; a raw
-	 * state.selectedTextSlot must not be passed, as a stale one would draw a box
+	 * Part selection already validated by resolveObjectPartSelection; a raw
+	 * state.objectPartSelection must not be passed, as a stale one would draw a box
 	 * around a slot that is no longer selected
 	 */
-	selectedTextSlot?: CanvasControllerState["selectedTextSlot"];
+	objectPartSelection?: ObjectPartSelection | null;
 };
 
 /**
@@ -31,7 +31,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	selectedIds,
 	objects,
 	multiSelectGroup,
-	selectedTextSlot = null,
+	objectPartSelection = null,
 }) => {
 	if (selectedIds.length === 0) {
 		return null;
@@ -61,7 +61,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 					<Outline
 						key={id}
 						frame={obj}
-						dashed={selectedTextSlot?.objectId === id}
+						dashed={objectPartSelection?.objectId === id}
 					/>
 				);
 			})}
@@ -71,10 +71,10 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 				isTransformedFrame(multiSelectGroup) && (
 					<Outline key="multi-select-group" frame={multiSelectGroup} />
 				)}
-			{selectedTextSlot && objects[selectedTextSlot.objectId] && (
+			{objectPartSelection && objects[objectPartSelection.objectId] && (
 				<TextSlotOutline
-					object={objects[selectedTextSlot.objectId]}
-					slotId={selectedTextSlot.slotId}
+					object={objects[objectPartSelection.objectId]}
+					slotId={objectPartSelection.partIds[0]}
 				/>
 			)}
 		</g>

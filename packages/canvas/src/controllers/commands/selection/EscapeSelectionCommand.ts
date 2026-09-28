@@ -2,7 +2,7 @@ import {
 	clearAllSelection,
 	isSelectionClearable,
 } from "./utils/clearAllSelection";
-import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
+import { resolveObjectPartSelection } from "../../selection/resolveObjectPartSelection";
 import type { ExecutableCommand } from "../CommandTypes";
 
 export const EscapeSelectionCommand: ExecutableCommand = {
@@ -20,8 +20,8 @@ export const EscapeSelectionCommand: ExecutableCommand = {
 		// first, leaving the object it belongs to selected. The step changes what the
 		// menu acts on, so an open submenu closes with it (clearAllSelection does the
 		// same on the step after).
-		if (resolveSelectedTextSlot(state) !== null) {
-			return { ...state, selectedTextSlot: null, objectMenuOpenId: null };
+		if (resolveObjectPartSelection(state) !== null) {
+			return { ...state, objectPartSelection: null, objectMenuOpenId: null };
 		}
 		return clearAllSelection(state);
 	},

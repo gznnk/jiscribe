@@ -29,7 +29,7 @@ import type {
 } from "./ObjectMenuTypes";
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
+import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
 type ObjectMenuProps = {
@@ -201,7 +201,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// style the text being edited.
 	const showSystemSections =
 		shouldRender &&
-		resolveSelectedTextSlot(canvasState) === null &&
+		resolveObjectPartSelection(canvasState) === null &&
 		canvasState.textEditState?.kind !== "shape";
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import {
 	getTextSlotCycleTarget,
 	selectAdjacentTextSlot,
@@ -24,13 +25,13 @@ const baseState = (
 	({
 		objects: { "rec-1": recordObject },
 		selectedIds: ["rec-1"],
-		selectedTextSlot: null,
+		objectPartSelection: null,
 		activeDrag: null,
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
 const selectedSlotId = (state: CanvasControllerState): string | undefined =>
-	state.selectedTextSlot?.slotId;
+	state.objectPartSelection?.partIds[0];
 
 describe("getTextSlotCycleTarget", () => {
 	it("returns the sole selected object when it spells its text out as slots", () => {
@@ -92,12 +93,20 @@ describe("selectAdjacentTextSlot", () => {
 
 	it("wraps around at either end", () => {
 		const atLast = baseState({
-			selectedTextSlot: { objectId: "rec-1", slotId: "operations" },
+			objectPartSelection: {
+				objectId: "rec-1",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["operations"],
+			},
 		});
 		expect(selectedSlotId(selectAdjacentTextSlot(atLast, 1))).toBe("name");
 
 		const atFirst = baseState({
-			selectedTextSlot: { objectId: "rec-1", slotId: "name" },
+			objectPartSelection: {
+				objectId: "rec-1",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["name"],
+			},
 		});
 		expect(selectedSlotId(selectAdjacentTextSlot(atFirst, -1))).toBe(
 			"operations",
@@ -107,7 +116,11 @@ describe("selectAdjacentTextSlot", () => {
 	it("treats a stale slot selection as none selected", () => {
 		// The slot names an object that is not the selection, so it does not decide the start.
 		const state = baseState({
-			selectedTextSlot: { objectId: "other", slotId: "operations" },
+			objectPartSelection: {
+				objectId: "other",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["operations"],
+			},
 		});
 		expect(selectedSlotId(selectAdjacentTextSlot(state, 1))).toBe("name");
 	});

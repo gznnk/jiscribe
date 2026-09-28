@@ -56,7 +56,7 @@ export function useObjectMenuPosition(
 	const {
 		selectedIds,
 		selectedConnectorId,
-		selectedTextSlot,
+		objectPartSelection,
 		objects,
 		viewport,
 		contextMenuPosition,
@@ -82,10 +82,10 @@ export function useObjectMenuPosition(
 	// width must be re-measured then too or the centering uses the stale width;
 	// opening and closing a text editor narrows it the same way.
 	const selectedIdsString = selectedIds.slice().sort().join(",");
-	const selectedTextSlotKey =
-		selectedTextSlot === null
+	const objectPartSelectionKey =
+		objectPartSelection === null
 			? null
-			: `${selectedTextSlot.objectId}:${selectedTextSlot.slotId}`;
+			: `${objectPartSelection.objectId}:${objectPartSelection.partIds.join(",")}`;
 	const textEditKey =
 		textEditState === null
 			? null
@@ -155,7 +155,7 @@ export function useObjectMenuPosition(
 		shouldRender,
 		selectedIdsString,
 		selectedConnectorId,
-		selectedTextSlotKey,
+		objectPartSelectionKey,
 		textEditKey,
 	]);
 

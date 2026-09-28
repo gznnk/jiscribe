@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { DeselectAllCommand } from "../DeselectAllCommand";
 
 const registries = createTestRegistries();
@@ -14,7 +15,7 @@ const baseState = (
 		selectedIds: [],
 		selectedConnectorId: null,
 		selectedVertex: null,
-		selectedTextSlot: null,
+		objectPartSelection: null,
 		multiSelectGroup: null,
 		areaSelection: null,
 		shapeDrawing: null,
@@ -61,10 +62,14 @@ describe("DeselectAllCommand", () => {
 				},
 			} as never,
 			selectedIds: ["rec-1"],
-			selectedTextSlot: { objectId: "rec-1", slotId: "rows" },
+			objectPartSelection: {
+				objectId: "rec-1",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["rows"],
+			},
 		});
 		const next = DeselectAllCommand.execute(state, registries);
-		expect(next.selectedTextSlot).toBeNull();
+		expect(next.objectPartSelection).toBeNull();
 		expect(next.selectedIds).toEqual([]);
 	});
 

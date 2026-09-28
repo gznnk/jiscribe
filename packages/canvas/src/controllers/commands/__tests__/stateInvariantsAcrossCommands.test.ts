@@ -12,7 +12,8 @@ import type { ConnectorState } from "../../../states/objects/connector/Connector
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
+import { resolveObjectPartSelection } from "../../selection/resolveObjectPartSelection";
+import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 
 const registries = createTestRegistries();
 
@@ -48,20 +49,21 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 	}
 
 	// A slot selection, once it survives the resolver, must name a live slot of the
-	// sole selected object. The raw selectedTextSlot is deliberately allowed to go
-	// stale (resolveSelectedTextSlot's contract), so only the resolved value is pinned.
-	const resolvedTextSlot = resolveSelectedTextSlot(state);
-	if (resolvedTextSlot !== null) {
-		const { objectId, slotId } = resolvedTextSlot;
+	// sole selected object. The raw objectPartSelection is deliberately allowed to go
+	// stale (resolveObjectPartSelection's contract), so only the resolved value is pinned.
+	const resolvedPartSelection = resolveObjectPartSelection(state);
+	if (resolvedPartSelection !== null) {
+		const { objectId, partIds } = resolvedPartSelection;
+		const slotId = partIds[0];
 		if (state.selectedIds.length !== 1 || state.selectedIds[0] !== objectId) {
 			violations.push(
-				`selectedTextSlot resolves to ${objectId} which is not the sole selection`,
+				`objectPartSelection resolves to ${objectId} which is not the sole selection`,
 			);
 		}
 		const owner = state.objects[objectId];
 		if (!isTextStyleState(owner) || owner.text?.[slotId] === undefined) {
 			violations.push(
-				`selectedTextSlot resolves to slot ${slotId} which ${objectId} does not have`,
+				`objectPartSelection resolves to slot ${slotId} which ${objectId} does not have`,
 			);
 		}
 	}
@@ -170,12 +172,16 @@ describe("every command preserves structural invariants", () => {
 		},
 		{
 			// No built-in type spells its text out as slots, so this exercises the
-			// stale side: no command may turn a raw selectedTextSlot into a live one.
+			// stale side: no command may turn a raw objectPartSelection into a live one.
 			label: "one shape selected with a stale text slot",
 			build: () =>
 				createCommandState(twoRectsWithConnectorDoc, {
 					selectedIds: ["rect-1"],
-					selectedTextSlot: { objectId: "rect-1", slotId: "no-such-slot" },
+					objectPartSelection: {
+						objectId: "rect-1",
+						kind: TEXT_SLOT_PART_KIND,
+						partIds: ["no-such-slot"],
+					},
 				}),
 		},
 		{

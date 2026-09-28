@@ -5,8 +5,8 @@ import {
 	getFirstTextSlotId,
 	readRichTextSlot,
 } from "../../../states/objects/types/TextSlots";
+import { resolveObjectPartSelection } from "../../selection/resolveObjectPartSelection";
 import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
-import { resolveSelectedTextSlot } from "../../utils/resolveSelectedTextSlot";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -87,10 +87,10 @@ export const StartTextEditCommand: ExecutableCommand = {
 		}
 
 		// Enter carries no pointer position, so the slot already selected one level
-		// below the object decides; resolveSelectedTextSlot validates it against
+		// below the object decides; resolveObjectPartSelection validates it against
 		// this very single selection, so a stale one falls back to the first slot.
 		const slotId =
-			resolveSelectedTextSlot(state)?.slotId ??
+			resolveObjectPartSelection(state)?.partIds[0] ??
 			getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;

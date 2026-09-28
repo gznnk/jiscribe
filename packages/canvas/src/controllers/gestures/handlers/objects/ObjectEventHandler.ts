@@ -23,6 +23,7 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
@@ -77,8 +78,8 @@ function handleObjectClick(
 		selectedConnectorId: null,
 		// Clear the vertex selection
 		selectedVertex: null,
-		// Clear the text slot selection
-		selectedTextSlot: null,
+		// Clear the sub-object part selection
+		objectPartSelection: null,
 		// Close the submenu on selection change
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,
@@ -117,21 +118,25 @@ function handleTextSlotClick(
 	// A slot change moves what the menu acts on, so it closes the open submenu just
 	// as an object selection change does. Re-clicking the same slot changes nothing
 	// and returns the state untouched, leaving the submenu as it was.
-	const currentSlot = canvasState.selectedTextSlot;
+	const currentSlot = canvasState.objectPartSelection;
 	if (slotId === null) {
 		return currentSlot === null
 			? canvasState
-			: { ...canvasState, selectedTextSlot: null, objectMenuOpenId: null };
+			: { ...canvasState, objectPartSelection: null, objectMenuOpenId: null };
 	}
 	if (
 		currentSlot?.objectId === targetObject.id &&
-		currentSlot.slotId === slotId
+		currentSlot.partIds[0] === slotId
 	) {
 		return canvasState;
 	}
 	return {
 		...canvasState,
-		selectedTextSlot: { objectId: targetObject.id, slotId },
+		objectPartSelection: {
+			objectId: targetObject.id,
+			kind: TEXT_SLOT_PART_KIND,
+			partIds: [slotId],
+		},
 		objectMenuOpenId: null,
 	};
 }
@@ -365,8 +370,8 @@ function handleObjectDragStart(
 		selectedConnectorId: null,
 		// Clear the vertex selection
 		selectedVertex: null,
-		// Clear the text slot selection
-		selectedTextSlot: null,
+		// Clear the sub-object part selection
+		objectPartSelection: null,
 		// Close the object menu dropdown at drag start
 		objectMenuOpenId: null,
 		stencilLibraryOpenCategory: null,

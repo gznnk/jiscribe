@@ -39,8 +39,8 @@ export const canDeleteObjectParts = (
  * @param selection - The parts to delete, in the type's own part-id namespace
  * @param registries - The bundle holding `objectPart`
  * @param clearPartSelection - Blanks the state field this selection was read
- *   from; core keeps no single part-selection channel yet, so the field is the
- *   caller's to name
+ *   from; a selection reaches here either from the generic part channel or from
+ *   a legacy per-kind field, so the field is the caller's to name
  * @returns The state to commit — `state` itself when the type refused the
  *   deletion — or null when nothing is registered to delete this kind of part
  *   or the selection has gone stale, leaving the caller to decide what the

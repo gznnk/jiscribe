@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { resolveSelectedTextSlot } from "../resolveSelectedTextSlot";
+import type { ObjectPartSelection } from "../ObjectPartSelection";
+import { resolveObjectPartSelection } from "../resolveObjectPartSelection";
+import { TEXT_SLOT_PART_KIND } from "../textSlotPartKind";
 
 /** A record-like shape: multiple text slots, declared via features.text = "slots". */
 const slotShape = (id: string): ObjectState =>
@@ -16,28 +18,35 @@ const slotShape = (id: string): ObjectState =>
 const makeState = (
 	objects: Record<string, ObjectState>,
 	selectedIds: string[],
-	selectedTextSlot: CanvasControllerState["selectedTextSlot"],
+	objectPartSelection: ObjectPartSelection | null,
 ): CanvasControllerState =>
 	({
 		objects,
 		selectedIds,
-		selectedTextSlot,
+		objectPartSelection,
 	}) as unknown as CanvasControllerState;
 
-describe("resolveSelectedTextSlot", () => {
+/** The single-slot part selection every case here is built from. */
+const textSlot = (objectId: string, slotId: string): ObjectPartSelection => ({
+	objectId,
+	kind: TEXT_SLOT_PART_KIND,
+	partIds: [slotId],
+});
+
+describe("resolveObjectPartSelection", () => {
 	it("returns the slot selection itself (same reference) when it is valid", () => {
-		const selectedTextSlot = { objectId: "rec-1", slotId: "rows" };
+		const objectPartSelection = textSlot("rec-1", "rows");
 		const state = makeState(
 			{ "rec-1": slotShape("rec-1") },
 			["rec-1"],
-			selectedTextSlot,
+			objectPartSelection,
 		);
-		expect(resolveSelectedTextSlot(state)).toBe(selectedTextSlot);
+		expect(resolveObjectPartSelection(state)).toBe(objectPartSelection);
 	});
 
 	it("returns null when nothing is slot-selected", () => {
 		const state = makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], null);
-		expect(resolveSelectedTextSlot(state)).toBeNull();
+		expect(resolveObjectPartSelection(state)).toBeNull();
 	});
 
 	it("returns null once the selection covers more than the slot's object", () => {
@@ -45,11 +54,11 @@ describe("resolveSelectedTextSlot", () => {
 			"rec-1": slotShape("rec-1"),
 			"rec-2": slotShape("rec-2"),
 		};
-		const slot = { objectId: "rec-1", slotId: "name" };
+		const slot = textSlot("rec-1", "name");
 		expect(
-			resolveSelectedTextSlot(makeState(objects, ["rec-1", "rec-2"], slot)),
+			resolveObjectPartSelection(makeState(objects, ["rec-1", "rec-2"], slot)),
 		).toBeNull();
-		expect(resolveSelectedTextSlot(makeState(objects, [], slot))).toBeNull();
+		expect(resolveObjectPartSelection(makeState(objects, [], slot))).toBeNull();
 	});
 
 	it("returns null when the selection moved to another object", () => {
@@ -57,19 +66,13 @@ describe("resolveSelectedTextSlot", () => {
 			"rec-1": slotShape("rec-1"),
 			"rec-2": slotShape("rec-2"),
 		};
-		const state = makeState(objects, ["rec-2"], {
-			objectId: "rec-1",
-			slotId: "name",
-		});
-		expect(resolveSelectedTextSlot(state)).toBeNull();
+		const state = makeState(objects, ["rec-2"], textSlot("rec-1", "name"));
+		expect(resolveObjectPartSelection(state)).toBeNull();
 	});
 
 	it("returns null when the object is gone", () => {
-		const state = makeState({}, ["rec-1"], {
-			objectId: "rec-1",
-			slotId: "name",
-		});
-		expect(resolveSelectedTextSlot(state)).toBeNull();
+		const state = makeState({}, ["rec-1"], textSlot("rec-1", "name"));
+		expect(resolveObjectPartSelection(state)).toBeNull();
 	});
 
 	it("returns null for a shape that does not declare slot text", () => {
@@ -79,27 +82,30 @@ describe("resolveSelectedTextSlot", () => {
 			features: { text: "body" },
 			text: { body: { text: "hello" } },
 		} as unknown as ObjectState;
-		const state = makeState({ "rect-1": singleSlotRect }, ["rect-1"], {
-			objectId: "rect-1",
-			slotId: "body",
-		});
-		expect(resolveSelectedTextSlot(state)).toBeNull();
+		const state = makeState(
+			{ "rect-1": singleSlotRect },
+			["rect-1"],
+			textSlot("rect-1", "body"),
+		);
+		expect(resolveObjectPartSelection(state)).toBeNull();
 	});
 
 	it("returns null when the slot no longer exists on the object", () => {
-		const state = makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], {
-			objectId: "rec-1",
-			slotId: "operations",
-		});
-		expect(resolveSelectedTextSlot(state)).toBeNull();
+		const state = makeState(
+			{ "rec-1": slotShape("rec-1") },
+			["rec-1"],
+			textSlot("rec-1", "operations"),
+		);
+		expect(resolveObjectPartSelection(state)).toBeNull();
 	});
 
 	it("returns null for a slot id that only names an Object.prototype member", () => {
-		const state = makeState({ "rec-1": slotShape("rec-1") }, ["rec-1"], {
-			objectId: "rec-1",
-			slotId: "toString",
-		});
-		expect(resolveSelectedTextSlot(state)).toBeNull();
+		const state = makeState(
+			{ "rec-1": slotShape("rec-1") },
+			["rec-1"],
+			textSlot("rec-1", "toString"),
+		);
+		expect(resolveObjectPartSelection(state)).toBeNull();
 	});
 
 	it("returns null when the object's text is not the keyed normal form", () => {
@@ -109,10 +115,11 @@ describe("resolveSelectedTextSlot", () => {
 			features: { text: "slots" },
 			text: 123,
 		} as unknown as ObjectState;
-		const state = makeState({ "rec-1": brokenShape }, ["rec-1"], {
-			objectId: "rec-1",
-			slotId: "name",
-		});
-		expect(resolveSelectedTextSlot(state)).toBeNull();
+		const state = makeState(
+			{ "rec-1": brokenShape },
+			["rec-1"],
+			textSlot("rec-1", "name"),
+		);
+		expect(resolveObjectPartSelection(state)).toBeNull();
 	});
 });

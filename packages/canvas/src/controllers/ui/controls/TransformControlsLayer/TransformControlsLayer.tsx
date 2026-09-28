@@ -16,7 +16,7 @@ type TransformControlsLayerProps = {
 	isTextEditing: boolean;
 	/**
 	 * Whether a text slot is selected inside the object; already validated by
-	 * resolveSelectedTextSlot, since a stale flag would keep the handles hidden
+	 * resolveObjectPartSelection, since a stale flag would keep the handles hidden
 	 */
 	isTextSlotSelected: boolean;
 	/** Kind of the drag in progress; null when none is */

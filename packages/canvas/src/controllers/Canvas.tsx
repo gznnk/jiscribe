@@ -63,6 +63,7 @@ import { CanvasView } from "../rendering/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
+import { resolveObjectPartSelection } from "./selection/resolveObjectPartSelection";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
 import { SelectionControlsLayer } from "./ui/controls/SelectionControlsLayer";
@@ -104,7 +105,6 @@ import type { StencilCategory } from "./ui/objects/StencilCategory";
 import { collectDocFontRequests } from "./utils/collectDocFontRequests";
 import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { EXPORT_FIT_PADDING } from "./utils/resolveExportOptions";
-import { resolveSelectedTextSlot } from "./utils/resolveSelectedTextSlot";
 import { snapViewportToDevicePixels } from "./utils/snapViewportToDevicePixels";
 import type { TextEditFormat } from "./utils/toggleTextEditFormat";
 
@@ -697,7 +697,7 @@ const CanvasComponent = ({
 	);
 	const { minX, minY, zoom } = drawnViewport;
 
-	const selectedTextSlot = resolveSelectedTextSlot(state);
+	const objectPartSelection = resolveObjectPartSelection(state);
 
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 
@@ -794,7 +794,7 @@ const CanvasComponent = ({
 									selectedIds={state.selectedIds}
 									objects={draftObjects}
 									multiSelectGroup={state.multiSelectGroup}
-									selectedTextSlot={selectedTextSlot}
+									objectPartSelection={objectPartSelection}
 								/>
 								<ConnectorControlsLayer
 									selectedConnectorId={state.selectedConnectorId}
@@ -808,7 +808,7 @@ const CanvasComponent = ({
 									multiSelectGroup={state.multiSelectGroup}
 									zoom={state.viewport.zoom}
 									isTextEditing={!!state.textEditState}
-									isTextSlotSelected={selectedTextSlot !== null}
+									isTextSlotSelected={objectPartSelection !== null}
 									activeDragKind={state.activeDrag?.kind ?? null}
 								/>
 								<ConnectionAnchorsLayer

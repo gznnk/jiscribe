@@ -1,6 +1,6 @@
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { resolveObjectPartSelection } from "../../../../selection/resolveObjectPartSelection";
 import { resolveMetaTargetId } from "../../../../utils/resolveMetaTargetId";
-import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 
 /**
  * Whether the sidebar shows its Meta section — the note the selected object
@@ -17,7 +17,7 @@ import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSl
  */
 export const isMetaSectionShown = (state: CanvasControllerState): boolean => {
 	if (
-		resolveSelectedTextSlot(state) !== null ||
+		resolveObjectPartSelection(state) !== null ||
 		state.textEditState?.kind === "shape"
 	) {
 		return false;

@@ -9,7 +9,7 @@ import type { TextStyleState } from "../../../../states/objects/base/TextStyleSt
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { getFirstTextSlotId } from "../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { resolveSelectedTextSlot } from "../../../utils/resolveSelectedTextSlot";
+import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { resolveTextEditSelection } from "../../../utils/styleTextEditSelection";
 
 /**
@@ -48,8 +48,8 @@ const withTypeStyleDefaults = (
  * draws even where the author set nothing — and a toggle reads its direction off
  * the same value.
  *
- * @param state - The current canvas controller state; a stale `selectedTextSlot`
- *   is neutralized here (resolveSelectedTextSlot), so the raw value never reaches
+ * @param state - The current canvas controller state; a stale `objectPartSelection`
+ *   is neutralized here (resolveObjectPartSelection), so the raw value never reaches
  *   what the menus display
  * @param textStyleDefaults - Per-canvas ObjectTextStyleDefaultsRegistry, keyed by
  *   the type of whichever object the slot was found on
@@ -71,15 +71,16 @@ export const getSelectedOrFirstTextSlot = (
 		};
 	}
 
-	const selectedTextSlot = resolveSelectedTextSlot(state);
-	if (selectedTextSlot !== null) {
-		const target = state.objects[selectedTextSlot.objectId];
+	const objectPartSelection = resolveObjectPartSelection(state);
+	if (objectPartSelection !== null) {
+		const target = state.objects[objectPartSelection.objectId];
 		if (isTextStyleState(target)) {
+			const slotId = objectPartSelection.partIds[0];
 			return withTypeStyleDefaults(
 				textStyleDefaults,
 				target.type,
-				selectedTextSlot.slotId,
-				target.text?.[selectedTextSlot.slotId],
+				slotId,
+				target.text?.[slotId],
 			);
 		}
 	}

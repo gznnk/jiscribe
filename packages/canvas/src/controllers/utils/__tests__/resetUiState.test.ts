@@ -21,7 +21,7 @@ describe("resetUiState", () => {
 			connectorDraft: null,
 			selectedConnectorId: null,
 			selectedVertex: null,
-			selectedTextSlot: null,
+			objectPartSelection: null,
 			snapFeedback: null,
 			axisLockFeedback: null,
 			shapeDrawing: null,

@@ -2,8 +2,8 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import { resolveObjectPartSelection } from "../../../../selection/resolveObjectPartSelection";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
-import { resolveSelectedTextSlot } from "../../../../utils/resolveSelectedTextSlot";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
 import type { PropertyPanelRegistry } from "../PropertyPanelRegistry";
 import { PROPERTY_PANEL_SECTIONS } from "../propertyPanelSections";
@@ -148,7 +148,7 @@ export const getPropertyPanelSections = (
 ): PropertyPanelSection[] => {
 	const sections = collectSelectionSections(state, propertyPanelRegistry);
 	if (
-		resolveSelectedTextSlot(state) === null &&
+		resolveObjectPartSelection(state) === null &&
 		state.textEditState?.kind !== "shape"
 	) {
 		// This path alone: the branch below hands a selected slot the text section
@@ -175,7 +175,8 @@ export const getPropertyPanelSections = (
 export const usePropertyPanelSections = (
 	state: CanvasControllerState,
 ): PropertyPanelSection[] => {
-	const { selectedIds, selectedConnectorId, selectedTextSlot, objects } = state;
+	const { selectedIds, selectedConnectorId, objectPartSelection, objects } =
+		state;
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the section set is narrowed while it is (getPropertyPanelSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
@@ -187,7 +188,7 @@ export const usePropertyPanelSections = (
 		[
 			selectedIds,
 			selectedConnectorId,
-			selectedTextSlot,
+			objectPartSelection,
 			isEditingShapeText,
 			objects,
 			propertyPanel,

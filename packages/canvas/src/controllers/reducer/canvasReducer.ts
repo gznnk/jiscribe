@@ -203,7 +203,7 @@ export const createCanvasReducer =
 					// previous selection means nothing for the new one (same clears as
 					// SelectAllCommand).
 					selectedVertex: null,
-					selectedTextSlot: null,
+					objectPartSelection: null,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
 				};
