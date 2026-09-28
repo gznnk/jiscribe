@@ -5,6 +5,7 @@ import {
 	cellCenter,
 	cellCount,
 	cellRect,
+	drawnTextCenter,
 	tableOutlineRect,
 	trackGrip,
 } from "../support/tableDom";
@@ -27,31 +28,6 @@ async function insertTrack(
 	arrow: "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight",
 ): Promise<void> {
 	await canvas.page.keyboard.press(`Alt+Shift+${arrow}`);
-}
-
-/**
- * Where one piece of drawn text sits, in client px: the middle of the innermost
- * element holding exactly that text. Found by the text rather than by a
- * `data-part`, the slot overlays carrying none.
- */
-async function textCenter(
-	canvas: CanvasDriver,
-	text: string,
-): Promise<{ x: number; y: number }> {
-	const center = await canvas.page.evaluate((wanted) => {
-		const holder = [...document.querySelectorAll("*")]
-			.reverse()
-			.find((element) => element.textContent?.trim() === wanted);
-		if (holder === undefined) {
-			return null;
-		}
-		const box = holder.getBoundingClientRect();
-		return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-	}, text);
-	if (center === null) {
-		throw new Error(`"${text}" is not drawn`);
-	}
-	return center;
 }
 
 /** Places a table and picks one of its cells, which is the reference an insertion runs from. */
@@ -118,7 +94,7 @@ test.describe("table insert track", () => {
 		// The text was in the second row and is now in the third, every id under it
 		// having moved one along.
 		await expect.poll(async () => cellCount(canvas, id)).toBe(6);
-		const drawnAt = await textCenter(canvas, "below");
+		const drawnAt = await drawnTextCenter(canvas, "below");
 		const cell = await cellRect(canvas, id, "r2c0");
 		expect(drawnAt.x).toBeGreaterThan(cell.x);
 		expect(drawnAt.x).toBeLessThan(cell.x + cell.width);

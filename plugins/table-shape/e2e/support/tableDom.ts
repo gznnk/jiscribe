@@ -124,6 +124,74 @@ export async function clickTrackGrip(
 }
 
 /**
+ * The `+` badge offered at one boundary, by the `data-part` its control gives it.
+ *
+ * @param canvas - The driver for the page under test
+ * @param axis - Which strip of badges to look in: the rows down the left or the columns across the top
+ * @param at - The insertion position, 0-based; the badges number one more than the tracks, the outer edges included
+ * @returns A locator for the badge's circle, which may match nothing when the table is not the sole selection
+ */
+export function insertBadge(
+	canvas: CanvasDriver,
+	axis: "rowInsert" | "columnInsert",
+	at: number,
+) {
+	return canvas.page.locator(
+		`[data-kind="control"][data-part="selection:table:${axis}:${at}"]`,
+	);
+}
+
+/**
+ * Clicks one `+` badge at its middle, which inserts a track at that boundary.
+ *
+ * @param canvas - The driver for the page under test
+ * @param axis - Which strip of badges to click in
+ * @param at - The insertion position; throws when the table is not selected and the badges are not drawn
+ */
+export async function clickInsertBadge(
+	canvas: CanvasDriver,
+	axis: "rowInsert" | "columnInsert",
+	at: number,
+): Promise<void> {
+	const box = await insertBadge(canvas, axis, at).boundingBox();
+	if (box === null) {
+		throw new Error(`no ${axis} ${at}`);
+	}
+	await canvas.clickAt(
+		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
+	);
+}
+
+/**
+ * Where one piece of drawn text sits, in client px: the middle of the innermost
+ * element holding exactly that text. Found by the text rather than by a
+ * `data-part`, the slot overlays carrying none.
+ *
+ * @param canvas - The driver for the page under test
+ * @param text - The text to find, matched against the trimmed content of an element; throws when nothing is drawn with exactly it
+ * @returns The centre of its box, in client px
+ */
+export async function drawnTextCenter(
+	canvas: CanvasDriver,
+	text: string,
+): Promise<{ x: number; y: number }> {
+	const center = await canvas.page.evaluate((wanted) => {
+		const holder = [...document.querySelectorAll("*")]
+			.reverse()
+			.find((element) => element.textContent?.trim() === wanted);
+		if (holder === undefined) {
+			return null;
+		}
+		const box = holder.getBoundingClientRect();
+		return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	}, text);
+	if (center === null) {
+		throw new Error(`"${text}" is not drawn`);
+	}
+	return center;
+}
+
+/**
  * Every box the selection overlay draws, in order: the selected object's own
  * outline first, then one per selected sub-part (SelectionOverlay). Read off the
  * attributes rather than by visibility, an outline being a fill-less rect.

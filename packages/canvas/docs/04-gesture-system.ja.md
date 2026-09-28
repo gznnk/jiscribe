@@ -84,8 +84,14 @@
 
 `handleGesture` は `dragStart` で state の `activeDrag`（型は `controllers/CanvasTypes.ts` の `ActiveDrag`）を開き、
 `dragEnd` で `null` に戻す。`activeDrag.startSnapshot` は操作開始時の objects / keyPoints /
-snapCandidates 等で、ドラッグ中の計算はこれを基準にする。`dragEnd` 時に doc が実際に変化していれば
-`commitVersion` を進め、履歴記録のトリガにする（詳細は [状態更新フロー](./06-state-update-flow.ja.md)）。
+snapCandidates 等で、ドラッグ中の計算はこれを基準にする。
+
+ジェスチャーの締めは `dragEnd` / `click` / `doubleClick`（`EVENT_COMMIT_TYPES`）で、いずれも COW の
+objects ビューを平坦化し、ドラッグ用の記録を落とし、doc が実際に変化していれば `commitVersion` を進めて
+履歴記録のトリガにする（詳細は [状態更新フロー](./06-state-update-flow.ja.md)）。click が含まれるのは
+それ自体が 1 つのジェスチャーだからで、選択コントロールが click にオブジェクトを返せばそれは編集であり、
+そうでなければ記録されないまま残る。`history` 自身を動かしたジェスチャーは commit ではない——これが
+ツールバーの undo が自分自身を記録しないようにしている条件である。
 
 `activeDrag.kind`（`DragKind`）はそのドラッグが何をしているかを表す。`handleGesture` が全ドラッグを
 `"other"` で開くので、`activeDrag !== null` は常に「ドラッグ中」を意味する。区別が必要なハンドラは

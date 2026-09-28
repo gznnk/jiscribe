@@ -24,6 +24,16 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A table's rows and columns can be added by the `+` beside the grid.** A round
+  `+` stands at every boundary a track can go at — every rule and both outer
+  edges of each axis — and clicking one inserts an empty track there. The cells
+  keep their contents as the grid renumbers around it, the inserted track is left
+  selected so a second insertion or a Delete needs no further aiming, and one
+  undo takes the insertion back.
+- For plugin authors: a selection control's click may now change the document.
+  A handler answering a `click` or a `doubleClick` with an `object` is committed
+  by the same step that closes out a drag, so the edit is materialized, recorded
+  in history and saved. A click that changes nothing still records nothing.
 - **A table's rows and columns can be selected, added and removed.** A grip
   outside the top and left edges picks a whole column or row; clicking a cell
   picks it, and Shift widens the pick to a range. Delete clears the picked cells'

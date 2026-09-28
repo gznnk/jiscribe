@@ -114,7 +114,7 @@ const createTableInsertCommand = (spec: TableInsertCommandSpec): Command => ({
  *
  * Insertion and removal are deliberately absent from the type's ObjectMenu — the
  * menu carries what styles a table, and reshaping the grid belongs to the keys,
- * the grips and the right-click menu.
+ * the grips, the `+` badges and the right-click menu.
  */
 export const TABLE_INSERT_COMMANDS: readonly Command[] =
 	TABLE_INSERT_COMMAND_SPECS.map(createTableInsertCommand);

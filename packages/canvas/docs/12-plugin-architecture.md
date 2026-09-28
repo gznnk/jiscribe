@@ -279,7 +279,10 @@ the Layout section; both take their wording from the plugin's own dictionary.
 gesture) — no base class. `handle` receives the object's own information (current frame plus the
 gesture-start snapshot) and the cursor, and nothing else; part derivation, snapshot
 guarding, copy-on-write write-back and edge-scroll release are handled by an
-internal adapter.
+internal adapter. A control names the gesture kinds it wants (`events`, defaulting
+to the drag pair), and the object it answers with is committed whichever kind
+carried it — a click that inserts something is recorded and saved exactly as the
+end of a drag is.
 
 ## What is not extensible yet
 

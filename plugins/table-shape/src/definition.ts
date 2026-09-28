@@ -9,12 +9,15 @@ import { createFrameBehavior } from "@jiscribe/canvas-sdk";
 
 import { TABLE_CONTEXT_MENU } from "./commands/tableContextMenu";
 import { handleTableColumnBoundary } from "./controls/handleTableColumnBoundary";
+import { createTableInsertHandler } from "./controls/handleTableInsert";
 import { handleTableRowBoundary } from "./controls/handleTableRowBoundary";
 import { createTableTrackGripHandler } from "./controls/handleTableTrackGrip";
 import { TableColumnBoundaryControl } from "./controls/TableColumnBoundaryControl";
 import { TableColumnGripControl } from "./controls/TableColumnGripControl";
+import { TableColumnInsertControl } from "./controls/TableColumnInsertControl";
 import { TableRowBoundaryControl } from "./controls/TableRowBoundaryControl";
 import { TableRowGripControl } from "./controls/TableRowGripControl";
+import { TableRowInsertControl } from "./controls/TableRowInsertControl";
 import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
 import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
@@ -46,12 +49,18 @@ import { TableStencils } from "./stencil/TableStencils";
 const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
 
 /**
- * Four controls: a boundary per axis and a grip per axis. One registration covers
- * every boundary or track of its axis — each strip appends its own index to the
- * control's `data-part`, and the handler reads it back off the event's `subPart`
- * (parseTableBoundaryIndex / parseTableTrackPartId). A registration per boundary
- * would instead have to change as rows and columns come and go, which
+ * Six controls: a boundary, a grip and an insert badge per axis. One registration
+ * covers every boundary or track of its axis — each handle appends its own index
+ * to the control's `data-part`, and the handler reads it back off the event's
+ * `subPart` (parseTableBoundaryIndex / parseTableTrackPartId). A registration per
+ * boundary would instead have to change as rows and columns come and go, which
  * registration is not able to do — it happens once per type.
+ *
+ * Dragging a boundary and inserting at one are separate controls rather than one
+ * control taking both events. They number different things — the strips run along
+ * the inner rules alone, where a `+` stands at every insertion position, the outer
+ * two edges included — and a click on the drag strip has to stay a no-op, a
+ * missed drag being the commonest way to produce one.
  *
  * Neither boundary handler writes the table's box. Both return the pair of tracks
  * they rewrote, and the box is re-derived from them on the same reducer tick
@@ -59,7 +68,9 @@ const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: "width" };
  * frame exactly where it was.
  *
  * The grips write no object at all, only the part selection, so a click on one is
- * never a document change.
+ * never a document change. A `+` badge is the one control here that changes the
+ * document on a click, which handleGesture closes out and commits exactly as it
+ * does the end of a drag.
  */
 const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 	{
@@ -83,6 +94,18 @@ const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
 		events: ["click"],
 		Component: TableColumnGripControl,
 		handle: createTableTrackGripHandler(TABLE_COLUMN_PART_KIND),
+	},
+	{
+		name: "rowInsert",
+		events: ["click"],
+		Component: TableRowInsertControl,
+		handle: createTableInsertHandler(TABLE_ROW_PART_KIND),
+	},
+	{
+		name: "columnInsert",
+		events: ["click"],
+		Component: TableColumnInsertControl,
+		handle: createTableInsertHandler(TABLE_COLUMN_PART_KIND),
 	},
 ];
 
@@ -120,8 +143,8 @@ const TABLE_PARTS: ObjectPartDefinition<TableState>[] = [
  * its rules and the text items for its cells, and nothing else the features would
  * offer. With no cell picked, a text edit from the menu writes into every cell at
  * once (TextSlotStyleProperty); clicking one first narrows it to that cell.
- * Reshaping the grid is in neither section: it belongs to the keys, the grips and
- * the right-click rows ({@link TABLE_CONTEXT_MENU}).
+ * Reshaping the grid is in neither section: it belongs to the keys, the grips, the
+ * `+` badges and the right-click rows ({@link TABLE_CONTEXT_MENU}).
  */
 export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	...tableDocDefinition,
