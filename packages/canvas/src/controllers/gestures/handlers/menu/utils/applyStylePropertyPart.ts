@@ -37,6 +37,7 @@ export const applyStylePropertyPart = (
 			state,
 			part.property,
 			part.value,
+			registries.objectPart,
 		);
 		return {
 			...newState,
@@ -74,6 +75,7 @@ export const applyStylePropertyPart = (
 			state,
 			property,
 			event.inputValue,
+			registries.objectPart,
 		);
 		return { ...newState, selectedVertex: null };
 	}
@@ -92,6 +94,7 @@ export const applyStylePropertyPart = (
 			state,
 			property,
 			event.inputValue,
+			registries.objectPart,
 		);
 		return {
 			...newState,

@@ -72,10 +72,11 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
 	const textStyle = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPart,
 	);
 	const isTextAlignMixed = isMixedSelectionValue(textStyle.textAlign);
 	const textAlign = selectionValueOr(textStyle.textAlign, undefined) ?? "left";

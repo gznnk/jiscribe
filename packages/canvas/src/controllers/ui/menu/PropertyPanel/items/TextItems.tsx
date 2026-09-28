@@ -55,10 +55,11 @@ const FontFamilyItemComponent: React.FC<BuiltinItemProps> = ({
 }) => {
 	const messages = useCanvasMessages();
 	usePreviewFonts(messages);
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
 	const textStyle = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPart,
 	);
 	// An unset family draws in the default one, so that is the entry to mark active.
 	const fontFamily =
@@ -93,10 +94,11 @@ const FontSizeItemComponent: React.FC<BuiltinItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
 	const { fontSize } = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPart,
 	);
 
 	return (
@@ -127,10 +129,11 @@ const FontColorItemComponent: React.FC<BuiltinItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
 	const { fontColor } = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPart,
 	);
 
 	return (
@@ -163,10 +166,11 @@ const TextFormatItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
 	const textStyle = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPart,
 	);
 	// Each button is its own toggle, so mixing is read per field: a selection that
 	// disagrees only about the weight still lights italic on the ones it agrees on.
@@ -233,10 +237,11 @@ const TextAlignItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
 	const selectionTextAlign = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPart,
 	).textAlign;
 	const textAlign = selectionValueOr(selectionTextAlign, undefined) ?? "left";
 
@@ -279,10 +284,11 @@ const VerticalAlignItemComponent: React.FC<BuiltinItemProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
 	const selectionVerticalAlign = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPart,
 	).verticalAlign;
 	const verticalAlign =
 		selectionValueOr(selectionVerticalAlign, undefined) ?? "middle";

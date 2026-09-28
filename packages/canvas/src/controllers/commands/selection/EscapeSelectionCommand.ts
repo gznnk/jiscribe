@@ -15,12 +15,12 @@ export const EscapeSelectionCommand: ExecutableCommand = {
 
 	canExecute: isSelectionClearable,
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		// Escape steps out one level at a time: a live slot selection is dropped
 		// first, leaving the object it belongs to selected. The step changes what the
 		// menu acts on, so an open submenu closes with it (clearAllSelection does the
 		// same on the step after).
-		if (resolveObjectPartSelection(state) !== null) {
+		if (resolveObjectPartSelection(state, registries.objectPart) !== null) {
 			return { ...state, objectPartSelection: null, objectMenuOpenId: null };
 		}
 		return clearAllSelection(state);

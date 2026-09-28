@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createTextSlotPartRegistry } from "../../../../../selection/__tests__/support/textSlotPartRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
 import { isMetaSectionShown } from "../isMetaSectionShown";
 
@@ -26,27 +27,36 @@ const makeState = (
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
+/** The only slotted fixture here wears the "card" type. */
+const objectPart = createTextSlotPartRegistry("card");
+
 describe("isMetaSectionShown", () => {
 	it("shows the section for a single selected object", () => {
-		expect(isMetaSectionShown(makeState({ selectedIds: ["rect-1"] }))).toBe(
-			true,
-		);
+		expect(
+			isMetaSectionShown(makeState({ selectedIds: ["rect-1"] }), objectPart),
+		).toBe(true);
 	});
 
 	it("shows it for a selected connector", () => {
 		expect(
-			isMetaSectionShown(makeState({ selectedConnectorId: "conn-1" })),
+			isMetaSectionShown(
+				makeState({ selectedConnectorId: "conn-1" }),
+				objectPart,
+			),
 		).toBe(true);
 	});
 
 	it("hides it for a multi-selection, which names no single note", () => {
 		expect(
-			isMetaSectionShown(makeState({ selectedIds: ["rect-1", "rect-2"] })),
+			isMetaSectionShown(
+				makeState({ selectedIds: ["rect-1", "rect-2"] }),
+				objectPart,
+			),
 		).toBe(false);
 	});
 
 	it("hides it while nothing is selected", () => {
-		expect(isMetaSectionShown(makeState({}))).toBe(false);
+		expect(isMetaSectionShown(makeState({}), objectPart)).toBe(false);
 	});
 
 	it("hides it while a text slot is selected", () => {
@@ -60,7 +70,7 @@ describe("isMetaSectionShown", () => {
 			objects: { "card-1": slottedShape("card-1") },
 		});
 
-		expect(isMetaSectionShown(state)).toBe(false);
+		expect(isMetaSectionShown(state, objectPart)).toBe(false);
 	});
 
 	it("hides it while a shape's text is being edited", () => {
@@ -74,6 +84,6 @@ describe("isMetaSectionShown", () => {
 			},
 		});
 
-		expect(isMetaSectionShown(state)).toBe(false);
+		expect(isMetaSectionShown(state, objectPart)).toBe(false);
 	});
 });

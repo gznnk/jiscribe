@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createTextSlotPartRegistry } from "../../../../../selection/__tests__/support/textSlotPartRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../../../../selection/textSlotPartKind";
 import { createPropertyPanelRegistry } from "../../PropertyPanelRegistry";
 import type { PropertyPanelSection } from "../../PropertyPanelTypes";
@@ -110,6 +111,17 @@ registry.register("badge", BADGE_SECTIONS);
 registry.register("gauge", GAUGE_SECTIONS);
 registry.register("box", BOX_SECTIONS);
 
+/** Every fixture shape spells its text out as slots, whatever type it wears. */
+const objectPart = createTextSlotPartRegistry(
+	"rect",
+	"ellipse",
+	"connector",
+	"container",
+	"badge",
+	"gauge",
+	"box",
+);
+
 /** A shape holding one named text slot, so a slot selection can resolve against it. */
 const shape = (id: string, type: string): ObjectState =>
 	({
@@ -140,7 +152,9 @@ const stateOf = (
 
 describe("getPropertyPanelSections", () => {
 	it("offers nothing while nothing is selected", () => {
-		expect(getPropertyPanelSections(stateOf({}), registry)).toEqual([]);
+		expect(getPropertyPanelSections(stateOf({}), registry, objectPart)).toEqual(
+			[],
+		);
 	});
 
 	it("returns the selected type's sections untouched", () => {
@@ -149,7 +163,9 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["r-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual(RECT_SECTIONS);
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
+			RECT_SECTIONS,
+		);
 	});
 
 	it("returns the connector's sections when one is selected", () => {
@@ -158,7 +174,9 @@ describe("getPropertyPanelSections", () => {
 			selectedConnectorId: "c-1",
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual(LINE_SECTIONS);
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
+			LINE_SECTIONS,
+		);
 	});
 
 	it("keeps only the rows every selected type offers", () => {
@@ -170,7 +188,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["r-1", "e-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
 			{
 				id: "layout",
 				label: "Layout",
@@ -190,7 +208,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["r-1", "c-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual([]);
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([]);
 	});
 
 	it("expands a selected group into the types it holds", () => {
@@ -204,7 +222,9 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry).map((section) => section.id),
+			getPropertyPanelSections(state, registry, objectPart).map(
+				(section) => section.id,
+			),
 		).toEqual(["layout", "fill", "text"]);
 	});
 
@@ -219,7 +239,7 @@ describe("getPropertyPanelSections", () => {
 			},
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
 			{
 				id: "text",
 				label: "Text",
@@ -234,7 +254,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["k-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual(
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
 			CONTAINER_SECTIONS,
 		);
 	});
@@ -248,7 +268,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["k-1", "k-2"],
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual(
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
 			CONTAINER_SECTIONS,
 		);
 	});
@@ -262,7 +282,7 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["k-1", "b-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
 			{ id: "fill", label: "Fill", items: [{ type: "fill" }] },
 		]);
 	});
@@ -278,7 +298,7 @@ describe("getPropertyPanelSections", () => {
 			},
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
 			{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
 		]);
 	});
@@ -290,7 +310,9 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry).map((section) => section.id),
+			getPropertyPanelSections(state, registry, objectPart).map(
+				(section) => section.id,
+			),
 		).toEqual(["fill", "gauge"]);
 	});
 
@@ -304,7 +326,9 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(
-			getPropertyPanelSections(state, registry).map((section) => section.id),
+			getPropertyPanelSections(state, registry, objectPart).map(
+				(section) => section.id,
+			),
 		).toEqual(["fill"]);
 	});
 
@@ -318,7 +342,7 @@ describe("getPropertyPanelSections", () => {
 			multiSelectGroup: multiSelectGroupOf(["r-1", "e-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry)[0]).toEqual({
+		expect(getPropertyPanelSections(state, registry, objectPart)[0]).toEqual({
 			id: "layout",
 			label: "Layout",
 			items: [
@@ -339,7 +363,9 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["g-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry)[0].items).toContainEqual({
+		expect(
+			getPropertyPanelSections(state, registry, objectPart)[0].items,
+		).toContainEqual({
 			type: "lockAspectRatio",
 		});
 	});
@@ -354,7 +380,7 @@ describe("getPropertyPanelSections", () => {
 			multiSelectGroup: multiSelectGroupOf(["r-1", "c-1"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
 			{
 				id: "layout",
 				label: "Layout",
@@ -373,7 +399,9 @@ describe("getPropertyPanelSections", () => {
 			multiSelectGroup: multiSelectGroupOf(["b-1", "b-2"]),
 		});
 
-		expect(getPropertyPanelSections(state, registry)[0].items).toEqual([
+		expect(
+			getPropertyPanelSections(state, registry, objectPart)[0].items,
+		).toEqual([
 			{ type: "position" },
 			{ type: "size" },
 			{ type: "lockAspectRatio" },
@@ -386,7 +414,9 @@ describe("getPropertyPanelSections", () => {
 			selectedIds: ["r-1"],
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual(RECT_SECTIONS);
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual(
+			RECT_SECTIONS,
+		);
 	});
 
 	// A slot resolves for a selection of one alone (resolveObjectPartSelection), so the
@@ -403,7 +433,7 @@ describe("getPropertyPanelSections", () => {
 			},
 		});
 
-		expect(getPropertyPanelSections(state, registry)).toEqual([
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
 			{
 				id: "text",
 				label: "Text",
@@ -420,7 +450,9 @@ describe("getPropertyPanelSections", () => {
 		} as unknown as Partial<CanvasControllerState>);
 
 		expect(
-			getPropertyPanelSections(state, registry).map((section) => section.id),
+			getPropertyPanelSections(state, registry, objectPart).map(
+				(section) => section.id,
+			),
 		).toEqual(["text"]);
 	});
 });

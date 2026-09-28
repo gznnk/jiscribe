@@ -1,5 +1,5 @@
+import type { ObjectPartRegistry } from "./ObjectPartRegistry";
 import type { ObjectPartSelection } from "./ObjectPartSelection";
-import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -9,16 +9,24 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * graftTextEditDraft: selectedIds and the object map are rewritten from dozens of
  * places, none of which then has to know about parts.
  *
- * Part ids are looked up in the object's `text`, the keying every
- * `features.text === "slots"` type shares; no part definition is consulted.
+ * Both the namespace and every id in it are the object type's to judge: an
+ * unregistered `kind` resolves to nothing (so a selection meant for another kind
+ * is dropped rather than read by slot rules), and each id is put to the
+ * definition's `has`. Ids that no longer name a part are dropped one by one —
+ * a range whose middle part was removed keeps the rest — and only a selection
+ * left with nothing resolves to null.
  *
  * @param state - The current canvas controller state
+ * @param objectPart - Per-canvas ObjectPartRegistry; the definition registered
+ *   for `(object type, kind)` decides which ids still exist
  * @returns `state.objectPartSelection` itself (same reference, so memoized readers keep
- *   bailing out) when its object is the sole selection, declares `features.text ===
- *   "slots"` and still has the part; null in every other case
+ *   bailing out) when its object is the sole selection, registers the kind and still
+ *   holds every id; a narrowed copy when some ids are gone; null when the selection
+ *   does not qualify at all or nothing is left of it
  */
 export const resolveObjectPartSelection = (
 	state: CanvasControllerState,
+	objectPart: ObjectPartRegistry,
 ): ObjectPartSelection | null => {
 	const { objectPartSelection, selectedIds } = state;
 	if (objectPartSelection === null) {
@@ -32,19 +40,32 @@ export const resolveObjectPartSelection = (
 	}
 
 	const target = state.objects[objectPartSelection.objectId];
-	if (target === undefined || target.features?.text !== "slots") {
+	if (target === undefined) {
 		return null;
 	}
-	if (!isTextStyleState(target) || target.text === undefined) {
+	const part = objectPart.get(target.type, objectPartSelection.kind);
+	if (part === undefined) {
 		return null;
 	}
-	if (
-		!Object.prototype.hasOwnProperty.call(
-			target.text,
-			objectPartSelection.partIds[0],
-		)
-	) {
+
+	const livePartIds = objectPartSelection.partIds.filter((partId) =>
+		part.has(target, partId),
+	);
+	if (livePartIds.length === 0) {
 		return null;
 	}
-	return objectPartSelection;
+	if (livePartIds.length === objectPartSelection.partIds.length) {
+		return objectPartSelection;
+	}
+	const { anchorPartId } = objectPartSelection;
+	return {
+		...objectPartSelection,
+		partIds: livePartIds,
+		// An anchor that went with the dropped parts stops being one; the first
+		// surviving part stands in for it (the reading of an absent anchor).
+		anchorPartId:
+			anchorPartId !== undefined && livePartIds.includes(anchorPartId)
+				? anchorPartId
+				: undefined,
+	};
 };

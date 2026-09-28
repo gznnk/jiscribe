@@ -55,10 +55,11 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 		isOpen,
 	);
 
-	const { objectTextStyleDefaults } = useCanvasRegistries();
+	const { objectTextStyleDefaults, objectPart } = useCanvasRegistries();
 	const textStyle = readSelectionTextStyle(
 		canvasState,
 		objectTextStyleDefaults,
+		objectPart,
 	);
 	// Each button is its own toggle, so mixing is read per field. A field the
 	// selection disagrees about reads as off, so one press brings all of it on.
@@ -123,7 +124,7 @@ const TextFormatMenuComponent: React.FC<TextFormatMenuProps> = ({
 
 	const isTextFocused =
 		canvasState.textEditState?.kind === "shape" ||
-		resolveObjectPartSelection(canvasState) !== null;
+		resolveObjectPartSelection(canvasState, objectPart) !== null;
 	if (isTextFocused) {
 		return <>{formatButtons.map(renderFormatButton)}</>;
 	}

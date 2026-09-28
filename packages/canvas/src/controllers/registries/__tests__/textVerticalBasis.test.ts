@@ -125,7 +125,12 @@ describe("the vertical basis a body is placed against", () => {
 
 	describe("stated outright through the style property", () => {
 		const applyBasis = (state: CanvasControllerState, value: string) =>
-			registries.styleProperty.apply(state, "textVerticalBasis", value);
+			registries.styleProperty.apply(
+				state,
+				"textVerticalBasis",
+				value,
+				registries.objectPart,
+			);
 
 		it("places every switchable body on the box named, and leaves the rest alone", () => {
 			const state = controllerStateOf(

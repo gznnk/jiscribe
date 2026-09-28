@@ -14,6 +14,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../states/objects/base/TextStyleState";
 import type { TextSlots } from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { ObjectPartRegistry } from "../selection/ObjectPartRegistry";
 import {
 	resolveTextEditSelection,
 	styleTextEditSelection,
@@ -25,8 +26,8 @@ import {
  * mixing types takes the property only on the objects that can hold it.
  *
  * Text styling is stored per slot, so the write targets whichever slots the
- * selection addresses: the one slot selected below the object when there is
- * one, otherwise **every** slot of the object. The menus read their current
+ * selection addresses: the slots selected below the object when any are,
+ * otherwise **every** slot of the object. The menus read their current
  * value through the same rule (readSelectionTextStyle).
  *
  * The exception is an open editor with a stretch of its text selected: the
@@ -44,13 +45,14 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		state: CanvasControllerState,
 		property: string,
 		value: string,
+		objectPart: ObjectPartRegistry,
 	): CanvasControllerState {
 		const ranged = this.applyToTextEditSelection(state, property, value);
 		if (ranged !== null) {
 			return ranged;
 		}
 		return this.clearAppliedInlineStyleFromDraft(
-			super.apply(state, property, value),
+			super.apply(state, property, value, objectPart),
 			state,
 			property,
 		);
@@ -138,23 +140,28 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 		obj: ObjectState,
 		path: readonly string[],
 		value: string | number | boolean,
-		selectedSlotId: string | undefined,
+		selectedSlotIds: readonly string[] | undefined,
 	): ObjectState | null {
 		const slots = (obj as ObjectState & TextStyleState).text;
 		if (slots === undefined) {
 			return null;
 		}
 		const property = path[0];
-		const selectedSlot =
-			selectedSlotId === undefined ? undefined : slots[selectedSlotId];
-		if (selectedSlotId !== undefined && selectedSlot !== undefined) {
-			return {
-				...obj,
-				text: {
-					...slots,
-					[selectedSlotId]: this.writeSlotValue(selectedSlot, property, value),
-				},
-			} as ObjectState;
+		// A slot the object has since lost is no target; with none of them left the
+		// write falls back to the whole object, as it does with nothing selected.
+		const targetSlotIds = selectedSlotIds?.filter(
+			(slotId) => slots[slotId] !== undefined,
+		);
+		if (targetSlotIds !== undefined && targetSlotIds.length > 0) {
+			const updatedSlots: TextSlots = { ...slots };
+			for (const slotId of targetSlotIds) {
+				updatedSlots[slotId] = this.writeSlotValue(
+					slots[slotId],
+					property,
+					value,
+				);
+			}
+			return { ...obj, text: updatedSlots } as ObjectState;
 		}
 		const updatedSlots: TextSlots = Object.fromEntries(
 			Object.entries(slots).map(([slotId, slot]) => [

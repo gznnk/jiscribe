@@ -7,6 +7,7 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { TextSlots } from "../../../../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTextSlotPartRegistry } from "../../../../selection/__tests__/support/textSlotPartRegistry";
 import type { ObjectPartSelection } from "../../../../selection/ObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../../selection/textSlotPartKind";
 import { getSelectedOrFirstTextSlot } from "../getSelectedOrFirstTextSlot";
@@ -36,10 +37,17 @@ const makeState = (
 		objectPartSelection,
 	}) as unknown as CanvasControllerState;
 
+/** Every fixture here wears the rect type with features.text: "slots". */
+const objectPart = createTextSlotPartRegistry("rect");
+
 describe("getSelectedOrFirstTextSlot", () => {
 	it("returns undefined when nothing is selected", () => {
 		expect(
-			getSelectedOrFirstTextSlot(makeState([], {}), textStyleDefaults),
+			getSelectedOrFirstTextSlot(
+				makeState([], {}),
+				textStyleDefaults,
+				objectPart,
+			),
 		).toBeUndefined();
 	});
 
@@ -49,6 +57,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
+				objectPart,
 			),
 		).toBeUndefined();
 	});
@@ -59,6 +68,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
+				objectPart,
 			),
 		).toEqual({
 			text: "hello",
@@ -75,6 +85,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
+				objectPart,
 			)?.fontWeight,
 		).toBe("bold");
 	});
@@ -86,6 +97,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1", "r2"], { r1: textless, r2: withText }),
 				textStyleDefaults,
+				objectPart,
 			),
 		).toEqual({ text: "hello", fontSize: 20 });
 	});
@@ -97,6 +109,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["g1"], { g1: g, r1: r }),
 				textStyleDefaults,
+				objectPart,
 			),
 		).toEqual({ text: "hello", fontSize: 20 });
 	});
@@ -107,6 +120,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 			getSelectedOrFirstTextSlot(
 				makeState(["r1"], { r1: r }),
 				textStyleDefaults,
+				objectPart,
 			),
 		).toBeUndefined();
 	});
@@ -124,6 +138,56 @@ describe("getSelectedOrFirstTextSlot", () => {
 					{ objectId: "r1", kind: TEXT_SLOT_PART_KIND, partIds: ["rows"] },
 				),
 				textStyleDefaults,
+				objectPart,
+			)?.fontSize,
+		).toBe(11);
+	});
+
+	it("reports what a range of slots agrees on and leaves the rest unset", () => {
+		const r = rect("r1", {
+			name: { text: "User", fontSize: 16, textAlign: "center" },
+			rows: { text: ["id"], fontSize: 16, textAlign: "left" },
+		});
+		const style = getSelectedOrFirstTextSlot(
+			makeState(
+				["r1"],
+				{ r1: r },
+				{
+					objectId: "r1",
+					kind: TEXT_SLOT_PART_KIND,
+					partIds: ["name", "rows"],
+					anchorPartId: "name",
+				},
+			),
+			textStyleDefaults,
+			objectPart,
+		);
+		expect(style?.fontSize).toBe(16);
+		// The two disagree, so the field reads as unset (the "mixed" convention).
+		expect(style?.textAlign).toBeUndefined();
+		// A range stands for no one text, so the content is empty.
+		expect(style?.text).toBe("");
+	});
+
+	it("reads a range down to the parts that still exist", () => {
+		const r = rect("r1", {
+			name: { text: "User", fontSize: 16 },
+			rows: { text: ["id"], fontSize: 11 },
+		});
+		expect(
+			getSelectedOrFirstTextSlot(
+				makeState(
+					["r1"],
+					{ r1: r },
+					{
+						objectId: "r1",
+						kind: TEXT_SLOT_PART_KIND,
+						partIds: ["rows", "operations"],
+						anchorPartId: "rows",
+					},
+				),
+				textStyleDefaults,
+				objectPart,
 			)?.fontSize,
 		).toBe(11);
 	});
@@ -143,6 +207,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 					{ objectId: "r1", kind: TEXT_SLOT_PART_KIND, partIds: ["rows"] },
 				),
 				textStyleDefaults,
+				objectPart,
 			)?.fontSize,
 		).toBe(16);
 		// The slot itself is gone from the object
@@ -158,6 +223,7 @@ describe("getSelectedOrFirstTextSlot", () => {
 					},
 				),
 				textStyleDefaults,
+				objectPart,
 			)?.fontSize,
 		).toBe(16);
 	});
@@ -207,6 +273,7 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 				// The draft the editor holds is what the offsets address.
 				editingState(r, [{ text: "he", fontSize: 30 }, { text: "llo" }]),
 				textStyleDefaults,
+				objectPart,
 			)?.fontSize,
 		).toBe(30);
 	});
@@ -214,7 +281,11 @@ describe("getSelectedOrFirstTextSlot while a stretch of text is edited", () => {
 	it("reads the whole slot of a source-language body", () => {
 		const r = sourceRect({ body: { text: "# Title", fontSize: 20 } });
 		expect(
-			getSelectedOrFirstTextSlot(editingState(r, "# Title"), textStyleDefaults),
+			getSelectedOrFirstTextSlot(
+				editingState(r, "# Title"),
+				textStyleDefaults,
+				objectPart,
+			),
 		).toEqual({ text: "# Title", fontSize: 20 });
 	});
 });
@@ -229,15 +300,22 @@ describe("getSelectedOrFirstTextSlot with the type's own defaults", () => {
 	it("reports the type's default for a field the slot leaves unset", () => {
 		const r = rect("r1", { body: { text: "hello" } });
 		expect(
-			getSelectedOrFirstTextSlot(makeState(["r1"], { r1: r }), leftTop),
+			getSelectedOrFirstTextSlot(
+				makeState(["r1"], { r1: r }),
+				leftTop,
+				objectPart,
+			),
 		).toEqual({ text: "hello", textAlign: "left", verticalAlign: "top" });
 	});
 
 	it("reports the slot's own value where it has one", () => {
 		const r = rect("r1", { body: { text: "hello", textAlign: "right" } });
 		expect(
-			getSelectedOrFirstTextSlot(makeState(["r1"], { r1: r }), leftTop)
-				?.textAlign,
+			getSelectedOrFirstTextSlot(
+				makeState(["r1"], { r1: r }),
+				leftTop,
+				objectPart,
+			)?.textAlign,
 		).toBe("right");
 	});
 });

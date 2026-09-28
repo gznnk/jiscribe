@@ -697,7 +697,10 @@ const CanvasComponent = ({
 	);
 	const { minX, minY, zoom } = drawnViewport;
 
-	const objectPartSelection = resolveObjectPartSelection(state);
+	const objectPartSelection = resolveObjectPartSelection(
+		state,
+		registries.objectPart,
+	);
 
 	const toolbarSections = toolbar?.sections ?? DEFAULT_TOOLBAR_SECTIONS;
 

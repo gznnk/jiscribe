@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
+import type { ObjectPartRegistry } from "../../../../selection/ObjectPartRegistry";
 import { resolveObjectPartSelection } from "../../../../selection/resolveObjectPartSelection";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { mergeSectionsByKey } from "../../utils/mergeSectionsByKey";
@@ -140,15 +141,17 @@ const filterShownSections = (
  *
  * @param state - The current canvas controller state; the selection, the objects it names and the text focus are read
  * @param propertyPanelRegistry - Per-canvas PropertyPanelRegistry, asked once per concrete type in the selection
+ * @param objectPart - Per-canvas ObjectPartRegistry, which decides whether the selection addresses parts inside one object
  * @returns The sections in display order; empty when nothing is selected, the selected types share nothing, or every section turned the selection down
  */
 export const getPropertyPanelSections = (
 	state: CanvasControllerState,
 	propertyPanelRegistry: PropertyPanelRegistry,
+	objectPart: ObjectPartRegistry,
 ): PropertyPanelSection[] => {
 	const sections = collectSelectionSections(state, propertyPanelRegistry);
 	if (
-		resolveObjectPartSelection(state) === null &&
+		resolveObjectPartSelection(state, objectPart) === null &&
 		state.textEditState?.kind !== "shape"
 	) {
 		// This path alone: the branch below hands a selected slot the text section
@@ -180,10 +183,10 @@ export const usePropertyPanelSections = (
 	// The editing session itself is not read, only whether one is open on a shape:
 	// the section set is narrowed while it is (getPropertyPanelSections).
 	const isEditingShapeText = state.textEditState?.kind === "shape";
-	const { propertyPanel } = useCanvasRegistries();
+	const { propertyPanel, objectPart } = useCanvasRegistries();
 
 	return useMemo(
-		() => getPropertyPanelSections(state, propertyPanel),
+		() => getPropertyPanelSections(state, propertyPanel, objectPart),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[
 			selectedIds,
@@ -192,6 +195,7 @@ export const usePropertyPanelSections = (
 			isEditingShapeText,
 			objects,
 			propertyPanel,
+			objectPart,
 		],
 	);
 };

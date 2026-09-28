@@ -29,6 +29,7 @@ import type {
 } from "./ObjectMenuTypes";
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
@@ -179,6 +180,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	onPropertyUpdate,
 	onOpenReference,
 }) => {
+	const { objectPart } = useCanvasRegistries();
 	const menuRef = useRef<HTMLDivElement>(null);
 	// Reported to the positioning hook, which holds the menu still while it is
 	// under the pointer — the flat format buttons resize an auto-sized text on
@@ -201,7 +203,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// style the text being edited.
 	const showSystemSections =
 		shouldRender &&
-		resolveObjectPartSelection(canvasState) === null &&
+		resolveObjectPartSelection(canvasState, objectPart) === null &&
 		canvasState.textEditState?.kind !== "shape";
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)

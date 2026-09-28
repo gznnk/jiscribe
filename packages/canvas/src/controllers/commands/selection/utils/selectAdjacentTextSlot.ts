@@ -2,6 +2,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ObjectPartRegistry } from "../../../selection/ObjectPartRegistry";
 import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 
@@ -35,13 +36,19 @@ export const getTextSlotCycleTarget = (
 };
 
 /**
- * Moves the slot selection one step along the object's slot order (the key order
- * of `state.text`), wrapping around at either end.
+ * Moves the slot selection one step along the object's own slot order (the
+ * `textSlot` part definition's `list`), wrapping around at either end.
+ *
+ * A step always lands on exactly one slot: a range selected with a modifier
+ * collapses, leaving the slot next to the end the step travels towards — the
+ * last of the range going forwards, the first of it going back.
  *
  * @param state - The current canvas controller state; a stale `objectPartSelection`
  *   counts as no slot selected (resolveObjectPartSelection)
  * @param step - 1 for the next slot, -1 for the previous; with no slot selected
  *   yet these enter at the first and the last slot respectively
+ * @param objectPart - Per-canvas ObjectPartRegistry, which answers both the slot
+ *   order and whether the live selection still names slots of this object
  * @returns A new state with `objectPartSelection` moved and any open ObjectMenu submenu
  *   closed, or the input state when the selection does not qualify or the object
  *   declares no slot at all
@@ -49,17 +56,27 @@ export const getTextSlotCycleTarget = (
 export const selectAdjacentTextSlot = (
 	state: CanvasControllerState,
 	step: 1 | -1,
+	objectPart: ObjectPartRegistry,
 ): CanvasControllerState => {
 	const target = getTextSlotCycleTarget(state);
 	if (target === null) {
 		return state;
 	}
-	const slotIds = Object.keys(target.text ?? {});
+	const part = objectPart.get(target.type, TEXT_SLOT_PART_KIND);
+	const slotIds = part?.list?.(target) ?? [];
 	if (slotIds.length === 0) {
 		return state;
 	}
 
-	const currentSlotId = resolveObjectPartSelection(state)?.partIds[0];
+	const currentSlot = resolveObjectPartSelection(state, objectPart);
+	const currentPartIds =
+		currentSlot?.kind === TEXT_SLOT_PART_KIND ? currentSlot.partIds : undefined;
+	const currentSlotId =
+		currentPartIds === undefined
+			? undefined
+			: step === 1
+				? currentPartIds[currentPartIds.length - 1]
+				: currentPartIds[0];
 	const currentIndex =
 		currentSlotId === undefined ? -1 : slotIds.indexOf(currentSlotId);
 	const nextIndex =

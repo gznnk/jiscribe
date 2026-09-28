@@ -13,6 +13,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createObjectTextVerticalBasisRegistry } from "../../../states/registry/ObjectTextVerticalBasisRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
+import { createTextSlotPartRegistry } from "../../selection/__tests__/support/textSlotPartRegistry";
 import { TEXT_SLOT_PART_KIND } from "../../selection/textSlotPartKind";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
 
@@ -42,11 +43,16 @@ initializeStyleProperties(
 styleRegistry.registerExtras(EXTRA_SHAPE_TYPE, ExtraShapeExtraStyleProperties);
 styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 
+// The slot-selection fixtures wear the rect type (with features.text: "slots"),
+// and one synthetic group that holds slots of its own.
+const objectPartRegistry = createTextSlotPartRegistry("rect", "group");
+
 const applyStyleProperty = (
 	state: CanvasControllerState,
 	property: string,
 	value: string,
-): CanvasControllerState => styleRegistry.apply(state, property, value);
+): CanvasControllerState =>
+	styleRegistry.apply(state, property, value, objectPartRegistry);
 
 type MinState = Pick<
 	CanvasControllerState,
@@ -778,6 +784,68 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 					name: { text: "User", fontSize: 12 },
 					rows: { text: ["id"], fontSize: 24 },
 				});
+			});
+
+			it("writes every slot of a selected range, leaving the rest as they were", () => {
+				const r1 = {
+					...slotRect("r1", { fontSize: 12 }),
+					text: {
+						head: { text: "Head", fontSize: 12 },
+						name: { text: "User", fontSize: 12 },
+						rows: { text: ["id"], fontSize: 12 },
+					},
+				} as unknown as ObjectState;
+				const state = makeState({
+					selectedIds: ["r1"],
+					objects: { r1 },
+					objectPartSelection: {
+						objectId: "r1",
+						kind: TEXT_SLOT_PART_KIND,
+						partIds: ["name", "rows"],
+						anchorPartId: "name",
+					},
+				});
+				const result = applyStyleProperty(state, "fontSize", "24");
+				expect(slotsOf(result, "r1")).toEqual({
+					head: { text: "Head", fontSize: 12 },
+					name: { text: "User", fontSize: 24 },
+					rows: { text: ["id"], fontSize: 24 },
+				});
+			});
+
+			it("writes the slots of a range that still exist and no others", () => {
+				const r1 = slotRect("r1", { fontSize: 12 });
+				const state = makeState({
+					selectedIds: ["r1"],
+					objects: { r1 },
+					objectPartSelection: {
+						objectId: "r1",
+						kind: TEXT_SLOT_PART_KIND,
+						partIds: ["rows", "operations"],
+						anchorPartId: "rows",
+					},
+				});
+				const result = applyStyleProperty(state, "fontSize", "24");
+				expect(slotsOf(result, "r1")).toEqual({
+					name: { text: "User", fontSize: 12 },
+					rows: { text: ["id"], fontSize: 24 },
+				});
+			});
+
+			it("writes every slot when what is selected below the object is not a slot", () => {
+				const r1 = slotRect("r1", { fontSize: 12 });
+				const state = makeState({
+					selectedIds: ["r1"],
+					objects: { r1 },
+					objectPartSelection: {
+						objectId: "r1",
+						kind: "vertex",
+						partIds: ["0"],
+					},
+				});
+				const result = applyStyleProperty(state, "fontSize", "24");
+				expect(slotsOf(result, "r1").name.fontSize).toBe(24);
+				expect(slotsOf(result, "r1").rows.fontSize).toBe(24);
 			});
 
 			it("writes every slot once the selection covers more than the slot's object", () => {

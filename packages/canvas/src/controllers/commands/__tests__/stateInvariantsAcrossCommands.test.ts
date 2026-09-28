@@ -51,7 +51,10 @@ const collectInvariantViolations = (state: CanvasControllerState): string[] => {
 	// A slot selection, once it survives the resolver, must name a live slot of the
 	// sole selected object. The raw objectPartSelection is deliberately allowed to go
 	// stale (resolveObjectPartSelection's contract), so only the resolved value is pinned.
-	const resolvedPartSelection = resolveObjectPartSelection(state);
+	const resolvedPartSelection = resolveObjectPartSelection(
+		state,
+		registries.objectPart,
+	);
 	if (resolvedPartSelection !== null) {
 		const { objectId, partIds } = resolvedPartSelection;
 		const slotId = partIds[0];

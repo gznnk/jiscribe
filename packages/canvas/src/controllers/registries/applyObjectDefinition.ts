@@ -100,6 +100,7 @@ import {
 	rotateByGroup as textRotateByGroup,
 	transformByGroup as textTransformByGroup,
 } from "../behaviors/primitives/TextController";
+import { createTextSlotPartDefinition } from "../selection/createTextSlotPartDefinition";
 import { createVertexPartDefinition } from "../selection/createVertexPartDefinition";
 import type { ObjectTransformHandles } from "../ui/controls/ObjectTransformHandlesRegistry";
 import {
@@ -541,8 +542,20 @@ export const applyObjectDefinition = (
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}
-	if (definition.parts) {
-		registries.objectPart.register(type, definition.parts);
+	// A type spelling its text out as slots takes part in slot selection without
+	// declaring anything: the ids are the keys of its `text` and the boxes come
+	// from the very calculator it draws them with, so there is nothing per type
+	// to say. A type that declares "textSlot" itself meets the registry's
+	// duplicate check rather than silently shadowing this one.
+	const parts =
+		definition.features.text === "slots"
+			? [
+					...(definition.parts ?? []),
+					createTextSlotPartDefinition(definition.textRegion),
+				]
+			: definition.parts;
+	if (parts) {
+		registries.objectPart.register(type, parts);
 	}
 	if (definition.extraStyleProperties) {
 		registries.styleProperty.registerExtras(

@@ -23,6 +23,9 @@ import type {
 	SnapFeedback,
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
+import { collectObjectPartRange } from "../../../selection/collectObjectPartRange";
+import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
+import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { TEXT_SLOT_PART_KIND } from "../../../selection/textSlotPartKind";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
@@ -35,6 +38,7 @@ import type {
 import type { Mods } from "../../registry/ObjectBehaviorTypes";
 import { ORIGIN_SNAP_PX } from "../utils/axisLock";
 import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
+import { isAdditiveSelectionMod } from "../utils/isAdditiveSelectionMod";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import {
 	buildSnapFeedback,
@@ -94,11 +98,18 @@ function handleObjectClick(
  * Unlike the double-click path it does not go through resolveTextSlotId: a click that
  * misses every slot (no [data-part], or one naming something else) must not select the
  * first slot by fallback, it steps back up to the object level by clearing the slot.
+ *
+ * With an additive modifier held the click extends the live selection instead of
+ * replacing it: the run from its anchor to the clicked slot, in the order the
+ * type lists its slots. A plain click leaves one slot selected, and that slot is
+ * the anchor the next extension runs from.
  */
 function handleTextSlotClick(
 	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
 	targetPart: string | undefined,
+	isExtending: boolean,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	if (
 		targetObject.features?.text !== "slots" ||
@@ -124,20 +135,69 @@ function handleTextSlotClick(
 			? canvasState
 			: { ...canvasState, objectPartSelection: null, objectMenuOpenId: null };
 	}
+
+	const extended = isExtending
+		? extendTextSlotSelection(canvasState, targetObject, slotId, registries)
+		: null;
 	if (
+		extended === null &&
 		currentSlot?.objectId === targetObject.id &&
+		currentSlot.partIds.length === 1 &&
 		currentSlot.partIds[0] === slotId
 	) {
 		return canvasState;
 	}
 	return {
 		...canvasState,
-		objectPartSelection: {
+		objectPartSelection: extended ?? {
 			objectId: targetObject.id,
 			kind: TEXT_SLOT_PART_KIND,
 			partIds: [slotId],
 		},
 		objectMenuOpenId: null,
+	};
+}
+
+/**
+ * The slot selection a modifier-held click widens the live one to: every slot
+ * between its anchor and the clicked slot. Null when there is nothing to extend
+ * from — no live slot selection on this very object — which leaves the caller to
+ * treat the click as a plain one.
+ */
+function extendTextSlotSelection(
+	canvasState: CanvasControllerState,
+	targetObject: ObjectState,
+	slotId: string,
+	registries: ICanvasRegistries,
+): ObjectPartSelection | null {
+	const currentSlot = resolveObjectPartSelection(
+		canvasState,
+		registries.objectPart,
+	);
+	if (
+		currentSlot === null ||
+		currentSlot.objectId !== targetObject.id ||
+		currentSlot.kind !== TEXT_SLOT_PART_KIND
+	) {
+		return null;
+	}
+	const part = registries.objectPart.get(
+		targetObject.type,
+		TEXT_SLOT_PART_KIND,
+	);
+	if (part?.list === undefined) {
+		return null;
+	}
+	const anchorPartId = currentSlot.anchorPartId ?? currentSlot.partIds[0];
+	return {
+		objectId: targetObject.id,
+		kind: TEXT_SLOT_PART_KIND,
+		partIds: collectObjectPartRange(
+			part.list(targetObject),
+			anchorPartId,
+			slotId,
+		),
+		anchorPartId,
 	};
 }
 
@@ -454,6 +514,27 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the click event
 		if (event.type === "click") {
+			const isSoleSelection =
+				nextState.selectedIds.length === 1 &&
+				nextState.selectedIds[0] === targetObject.id;
+			// An additive modifier over an object that already has a part selected
+			// widens that selection. Left to handleObjectClick it would instead
+			// deselect the object, which is the one thing the modifier cannot mean
+			// while the pointer is aimed one level below it.
+			const extendsPartSelection =
+				isSoleSelection &&
+				isAdditiveSelectionMod(event.mods) &&
+				resolveObjectPartSelection(nextState, registries.objectPart)?.kind ===
+					TEXT_SLOT_PART_KIND;
+			if (extendsPartSelection) {
+				return handleTextSlotClick(
+					nextState,
+					targetObject,
+					event.targetPart,
+					true,
+					registries,
+				);
+			}
 			const afterClick = handleObjectClick(nextState, targetObject, event.mods);
 			// A click that leaves the selection as it was, on the object that is already
 			// the whole selection, addresses a text slot inside it instead. Any modifier
@@ -464,12 +545,17 @@ export const ObjectEventHandler: GestureHandler = {
 				!event.mods.meta &&
 				!event.mods.shift &&
 				!event.mods.alt &&
-				nextState.selectedIds.length === 1 &&
-				nextState.selectedIds[0] === targetObject.id;
+				isSoleSelection;
 			if (!addressesTextSlot) {
 				return afterClick;
 			}
-			return handleTextSlotClick(afterClick, targetObject, event.targetPart);
+			return handleTextSlotClick(
+				afterClick,
+				targetObject,
+				event.targetPart,
+				false,
+				registries,
+			);
 		}
 
 		// Handle the double-click event

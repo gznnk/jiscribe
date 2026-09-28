@@ -52,7 +52,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return canEditText(state.objects[state.selectedIds[0]]);
 	},
 
-	execute(state) {
+	execute(state, registries) {
 		// When a connector is selected, start editing its label (label.text).
 		if (state.selectedConnectorId && state.selectedIds.length === 0) {
 			const connector = state.objects[state.selectedConnectorId];
@@ -90,7 +90,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		// below the object decides; resolveObjectPartSelection validates it against
 		// this very single selection, so a stale one falls back to the first slot.
 		const slotId =
-			resolveObjectPartSelection(state)?.partIds[0] ??
+			resolveObjectPartSelection(state, registries.objectPart)?.partIds[0] ??
 			getFirstTextSlotId(targetObject.text);
 		if (slotId === undefined) {
 			return state;
