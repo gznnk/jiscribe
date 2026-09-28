@@ -134,11 +134,12 @@ describe("canvasReducer (integration)", () => {
 			const state = createState({
 				selectedIds: ["rect-1"],
 				activeModal: "export",
-				viewport: { minX: 7, minY: 9, width: 800, height: 600, zoom: 2 },
+				// Shows the rect at every x the entries put it, margin included.
+				viewport: { minX: -93, minY: -91, width: 800, height: 600, zoom: 2 },
 			});
 			const reverted = applyActions(state, [revertTo(entries.oldest)]);
 
-			expect(reverted.viewport).toEqual(state.viewport);
+			expect(reverted.viewport).toBe(state.viewport);
 			expect(reverted.activeModal).toBe("export");
 			expect(reverted.selectedIds).toEqual(["rect-1"]);
 		});

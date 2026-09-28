@@ -80,6 +80,28 @@ describe("calcCameraToRevealBox", () => {
 		});
 	});
 
+	it("centres a box longer than the visible rect when asked to", () => {
+		// 600 wide against 400 shown: centred on x (0 - 200); 100 tall fits, so y
+		// takes the smallest pan.
+		expect(
+			calcCameraToRevealBox(viewport, box(-300, 350, 300, 450), 0, "center"),
+		).toEqual({ minX: -200, minY: 150, zoom: 1 });
+	});
+
+	it("centres an oversized box even while the view lies inside it", () => {
+		expect(
+			calcCameraToRevealBox(viewport, box(-500, -100, 1300, 400), 0, "center"),
+		).toEqual({ minX: 200, minY: 0, zoom: 1 });
+	});
+
+	it("counts the padding when judging whether a box is oversized", () => {
+		// 380 wide fits the 400 shown, but not with 24 on each side: centred on
+		// 290 rather than panned the 104 that brings the padded right edge in.
+		expect(
+			calcCameraToRevealBox(viewport, box(100, 50, 480, 120), 24, "center"),
+		).toEqual({ minX: 90, minY: 0, zoom: 1 });
+	});
+
 	it("never changes the zoom", () => {
 		// zoom 2 halves the visible world rect to 200x150.
 		const zoomed: Viewport = { ...viewport, zoom: 2 };
