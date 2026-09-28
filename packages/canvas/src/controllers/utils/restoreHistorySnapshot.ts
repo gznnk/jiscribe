@@ -2,6 +2,7 @@ import { createMultiSelectGroup } from "./createMultiSelectGroup";
 import { resetUiState } from "./resetUiState";
 import { resolveDocSnapshot } from "./resolveDocSnapshot";
 import { resolveRequestedSelection } from "./resolveRequestedSelection";
+import { revealHistoryChange } from "./revealHistoryChange";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
@@ -43,13 +44,15 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  *
  * What survives the swap is the point of sharing it: the objects come from the
  * snapshot, everything transient is dropped (resetUiState), and a short list of
- * fields is deliberately carried over — the view the user is looking at, what is
- * on the clipboard, an open modal, the two sidebars, and the selection as far as
- * the restored objects still hold it. The selection is not part of any entry:
+ * fields is deliberately carried over — the zoom, what is on the clipboard, an
+ * open modal, the two sidebars, and the selection as far as the restored objects
+ * still hold it. The selection is not part of any entry:
  * the ids selected before the swap are simply re-selected if they exist after
  * it, so undoing a property change leaves the shape selected for the next try,
  * while undoing a creation (or redoing a deletion) loses the shape and its
- * selection with it. `commitVersion` is *not* bumped (restoring is
+ * selection with it. Neither is the camera: it pans only as far as it takes to
+ * show what the swap changed (revealHistoryChange), so a change off screen is
+ * not undone out of sight. `commitVersion` is *not* bumped (restoring is
  * not a new edit) while `saveRequest` is raised (the file on disk no longer
  * matches), a
  * pairing that is easy to get wrong in three places and impossible to get wrong
@@ -59,9 +62,11 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  * @param history - The stacks to end up with; its `present` is the entry
  *   restored, and the caller is what decides where the other entries went
  * @param registries - The canvas's registries; the mapper materializes the
- *   snapshot and the content resizer re-measures what is sized from its content
+ *   snapshots, the content resizer re-measures what is sized from its content,
+ *   and the visual bounds measure what the camera reveals
  * @returns The restored state. The entries that merely moved between stacks stay
- *   unresolved snapshots, so only the one being restored costs a rebuild
+ *   unresolved snapshots; only the one being restored and the one being left
+ *   (compared to find what changed) are resolved
  */
 export const restoreHistorySnapshot = (
 	state: CanvasControllerState,
@@ -69,8 +74,9 @@ export const restoreHistorySnapshot = (
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const mapper = registries.objectMapper;
+	const restoredDoc = resolveDocSnapshot(history.present, mapper);
 	const restoredState = canvasToState(
-		resolveDocSnapshot(history.present, mapper),
+		restoredDoc,
 		mapper,
 		registries.objectContentResizer,
 	);
@@ -93,7 +99,14 @@ export const restoreHistorySnapshot = (
 			restoredState.objects,
 			state.multiSelectGroup,
 		),
-		viewport: state.viewport,
+		viewport: revealHistoryChange(
+			state.viewport,
+			resolveDocSnapshot(state.history.present, mapper),
+			state.objects,
+			restoredDoc,
+			restoredState.objects,
+			registries.objectVisualBounds,
+		),
 		// Only the host's half of the wall is carried over; the rest of the entry is
 		// the measurement cache, and limitViewScroll notices the swapped objects and
 		// `view` and re-measures on the next view scroll.

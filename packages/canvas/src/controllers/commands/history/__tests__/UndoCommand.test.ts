@@ -1,6 +1,7 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
 import { describe, expect, it } from "vitest";
 
+import { canvasToState } from "../../../../states/canvas/CanvasMapper";
 import type { CanvasControllerState, DocSnapshot } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import {
@@ -36,7 +37,14 @@ const makeState = (params: {
 			present: params.present,
 			future: params.future,
 		},
-		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+		// What the present entry holds, which is where a removed object is measured.
+		objects: canvasToState(
+			resolveDocSnapshot(params.present, registries.objectMapper),
+			registries.objectMapper,
+			registries.objectContentResizer,
+		).objects,
+		// Shows both rects with the margin undo reveals them with.
+		viewport: { minX: -100, minY: -100, width: 800, height: 600, zoom: 1 },
 		activeDrag: params.activeDrag ?? null,
 		textEditState: params.textEditState ?? null,
 		selectedIds: params.selectedIds ?? [],
@@ -91,13 +99,13 @@ describe("UndoCommand", () => {
 		expect(next.commitVersion).toBe(5);
 	});
 
-	it("preserves the viewport", () => {
+	it("keeps the viewport while what it undoes is in view", () => {
 		const state = makeState({
 			past: [snapshotPrev],
 			present: snapshotCurrent,
 			future: [],
 		});
-		expect(UndoCommand.execute(state, registries).viewport).toEqual(
+		expect(UndoCommand.execute(state, registries).viewport).toBe(
 			state.viewport,
 		);
 	});

@@ -94,6 +94,11 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   warnings, and a file carrying only warnings passes with exit code 0;
   `render` and `preview` draw such a file instead of refusing it. `text: []`
   is no longer refused (see above).
+- **Undo, redo and reverting show what they changed.** When the change was
+  off screen the view used to stay where it was, so nothing seemed to happen.
+  The view now pans just far enough to show the objects the step changed, or
+  where removed ones were, and centres on them when they do not fit. The zoom
+  is never changed, and the camera is still not part of the history.
 - **Pasting lands where you are looking.** A paste whose usual place, beside the
   original, is off screen goes to the middle of the view; pasting again while
   the copy is still selected steps on from it, as Duplicate does.
