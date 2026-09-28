@@ -28,7 +28,7 @@ const openMenuState = (): CanvasControllerState => {
 		...base,
 		objects: { ...base.objects, a: rect, c: connector },
 		rootIds: [...base.rootIds, "a", "c"],
-		contextMenuPosition: { clientX: 100, clientY: 100 },
+		contextMenuPosition: { clientX: 100, clientY: 100, target: null },
 	});
 };
 
@@ -110,6 +110,7 @@ describe("handleGesture - context menu auto-close", () => {
 		expect(nextState.contextMenuPosition).toEqual({
 			clientX: 100,
 			clientY: 100,
+			target: null,
 		});
 	});
 });

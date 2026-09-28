@@ -47,8 +47,9 @@ Because `execute` is a pure function, each Command can be tested in isolation (s
 ## Categories and included commands
 
 Commands are split into directories by purpose (under `controllers/commands/`; e.g. `selection/`, `arrange/`, `view/`).
-The list of commands registered on a canvas is `ALL_COMMANDS` (`controllers/registries/initializeCommands.ts`), which is the source of truth.
-`createCanvasRegistries` registers all of them by default, or only a subset when the configuration restricts the enabled commands.
+The built-in commands are `ALL_COMMANDS` (`controllers/registries/initializeCommands.ts`), which is the source of truth for them.
+A canvas registers those first and then each plugin's own (`CanvasPlugin.commands`), in plugin declaration order, so the registered set is the two together.
+`createCanvasRegistries` registers all of them by default, or only a subset when the configuration restricts the enabled commands — one list narrows both.
 
 `Command.category` is a classification used for grouping in the UI; the values it can take are in `CommandTypes.ts`.
 The directory structure is more fine-grained because it is the organizational unit at the implementation level.

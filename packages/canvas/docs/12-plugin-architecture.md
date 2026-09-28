@@ -285,5 +285,8 @@ Honest limits, so you do not design against something that is not there.
 What _is_ fully available: adding shape types with their own doc schema, validation,
 rendering, stencils, menus, properties-sidebar sections, style properties,
 outline/snap behaviour, type-specific
-selection controls, shared SVG defs, and their own i18n — all from an external
-package.
+selection controls, shared SVG defs, commands of their own, and their own i18n —
+all from an external package. A command is written against `Command` from
+`@jiscribe/canvas-sdk`, which carries the controller state and the registry
+bundle it is handed; those live on the unstable surface because a command reads
+and returns the canvas's working state rather than a settled contract.

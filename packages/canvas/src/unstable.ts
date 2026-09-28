@@ -223,3 +223,18 @@ export { theme as canvasThemeCssVars } from "./theme/themeTokens";
 // browser scrollbar next to a custom one is exactly the kind of seam a plugin should not
 // be introducing.
 export { SCROLLBAR_WIDTH, scrollbarStyles } from "./theme/themeScrollbarStyles";
+
+// What a plugin's own commands are written against (`CanvasPlugin.commands`).
+// A command is a pure state transition, so its two parameter types come along:
+// the controller state it reads and returns, and the registry bundle it resolves
+// per-type declarations through. Both are the canvas's working surface rather
+// than a settled contract — they live here, and not on the stable entry, because
+// a command has to see them to be one at all.
+export type {
+	Command,
+	ExecutableCommand,
+	KeyBinding,
+	PlatformKeyBindings,
+} from "./controllers/commands/CommandTypes";
+export type { CanvasControllerState } from "./controllers/CanvasTypes";
+export type { ICanvasRegistries } from "./controllers/registries/ICanvasRegistries";

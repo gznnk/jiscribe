@@ -484,7 +484,18 @@ export type CanvasControllerState = CanvasState & {
 	historyCoalesce: HistoryCoalesce;
 
 	/** Client coordinates; null when no context menu should be displayed */
-	contextMenuPosition: { clientX: number; clientY: number } | null;
+	contextMenuPosition: {
+		clientX: number;
+		clientY: number;
+		/**
+		 * What the press landed on, as the gesture layer had already resolved it
+		 * (getGestureTarget); null for the background. Recorded rather than routed:
+		 * the right button and the long press stay canvas-level on purpose
+		 * (isPerTargetInteraction), so this is the menu's only way to know what it
+		 * was opened over.
+		 */
+		target: { kind: string; id: string; part?: string } | null;
+	} | null;
 
 	/**
 	 * Modal currently open; null when none is. Deliberately left out of UiStateReset:

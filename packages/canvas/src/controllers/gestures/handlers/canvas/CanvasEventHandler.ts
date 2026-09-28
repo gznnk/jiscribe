@@ -8,7 +8,10 @@ import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { ZOOM } from "../../../utils/zoom";
-import type { GestureHandler } from "../../registry/GestureHandlerTypes";
+import type {
+	CanvasEvent,
+	GestureHandler,
+} from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { isAdditiveSelectionMod } from "../utils/isAdditiveSelectionMod";
 import {
@@ -17,6 +20,27 @@ import {
 	findSnap,
 } from "../utils/snap/findSnap";
 import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
+
+/**
+ * What a press landed on, in the form the context menu records it. The gesture
+ * layer resolves this for every event, right button and long press included
+ * (getGestureTarget), and only an id-less press — the background — answers null.
+ *
+ * @param event - The press being recorded; its `targetKind` / `targetId` / `targetPart` are read
+ * @returns The target, or null where the press carried no id to name one
+ */
+const readGestureTarget = (
+	event: CanvasEvent,
+): { kind: string; id: string; part?: string } | null => {
+	if (event.targetKind === undefined || event.targetId === undefined) {
+		return null;
+	}
+	return {
+		kind: event.targetKind,
+		id: event.targetId,
+		...(event.targetPart !== undefined ? { part: event.targetPart } : {}),
+	};
+};
 
 /**
  * Handles events that occur on the canvas.
@@ -108,6 +132,7 @@ export const CanvasEventHandler: GestureHandler = {
 				contextMenuPosition: {
 					clientX: event.clientLast.x,
 					clientY: event.clientLast.y,
+					target: readGestureTarget(event),
 				},
 				// A new context menu supersedes any open ObjectMenu / category flyout.
 				objectMenuOpenId: null,
@@ -126,6 +151,7 @@ export const CanvasEventHandler: GestureHandler = {
 					contextMenuPosition: {
 						clientX: event.clientLast.x,
 						clientY: event.clientLast.y,
+						target: readGestureTarget(event),
 					},
 					// A new context menu supersedes any open ObjectMenu / category flyout.
 					objectMenuOpenId: null,
