@@ -1,8 +1,8 @@
+import { calcViewportToRevealHistoryChange } from "./calcViewportToRevealHistoryChange";
 import { createMultiSelectGroup } from "./createMultiSelectGroup";
 import { resetUiState } from "./resetUiState";
 import { resolveDocSnapshot } from "./resolveDocSnapshot";
 import { resolveRequestedSelection } from "./resolveRequestedSelection";
-import { revealHistoryChange } from "./revealHistoryChange";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
@@ -51,8 +51,8 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  * it, so undoing a property change leaves the shape selected for the next try,
  * while undoing a creation (or redoing a deletion) loses the shape and its
  * selection with it. Neither is the camera: it pans only as far as it takes to
- * show what the swap changed (revealHistoryChange), so a change off screen is
- * not undone out of sight. `commitVersion` is *not* bumped (restoring is
+ * show what the swap changed (calcViewportToRevealHistoryChange), so a change
+ * off screen is not undone out of sight. `commitVersion` is *not* bumped (restoring is
  * not a new edit) while `saveRequest` is raised (the file on disk no longer
  * matches), a
  * pairing that is easy to get wrong in three places and impossible to get wrong
@@ -99,7 +99,7 @@ export const restoreHistorySnapshot = (
 			restoredState.objects,
 			state.multiSelectGroup,
 		),
-		viewport: revealHistoryChange(
+		viewport: calcViewportToRevealHistoryChange(
 			state.viewport,
 			resolveDocSnapshot(state.history.present, mapper),
 			state.objects,

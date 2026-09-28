@@ -11,7 +11,7 @@ import { createDocSnapshotFromDoc } from "../../utils/resolveDocSnapshot";
 
 /**
  * Undo, redo and revert pan the camera to what they changed when it is off
- * screen, and never touch the zoom (revealHistoryChange).
+ * screen, and never touch the zoom (calcViewportToRevealHistoryChange).
  */
 
 /** An 800x600 view at the given camera, far from every fixture rect by default. */

@@ -113,7 +113,7 @@ const unionObjectBoxes = (
  * @returns The viewport to show; only `minX` / `minY` ever differ from
  *   `viewport`
  */
-export const revealHistoryChange = (
+export const calcViewportToRevealHistoryChange = (
 	viewport: Viewport,
 	leftDoc: CanvasDoc,
 	leftObjects: Record<string, ObjectState>,

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Viewport } from "../../../rendering/Viewport";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import { createTestRegistries } from "../../registries/createCanvasRegistries";
-import { revealHistoryChange } from "../revealHistoryChange";
+import { calcViewportToRevealHistoryChange } from "../calcViewportToRevealHistoryChange";
 
 const registries = createTestRegistries();
 
@@ -36,7 +36,7 @@ const reveal = (
 	leftDoc: CanvasDoc,
 	restoredDoc: CanvasDoc,
 ): Viewport =>
-	revealHistoryChange(
+	calcViewportToRevealHistoryChange(
 		from,
 		leftDoc,
 		canvasToState(
@@ -53,7 +53,7 @@ const reveal = (
 		registries.objectVisualBounds,
 	);
 
-describe("revealHistoryChange", () => {
+describe("calcViewportToRevealHistoryChange", () => {
 	it("returns the same viewport when the change is already in view", () => {
 		const leftDoc = docOf([rect("a", 100, 100)]);
 		const restoredDoc = docOf([rect("a", 200, 100)]);
