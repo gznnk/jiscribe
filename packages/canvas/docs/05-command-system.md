@@ -38,9 +38,9 @@ Because `execute` is a pure function, each Command can be tested in isolation (s
 
 ### Key components
 
-- `CommandRegistry` (`commands/CommandRegistry.ts`) — one per canvas, reached as the registry bundle's `registries.command`; `get` looks a command up by ID and `findByShortcut` by key event, among others
+- `CommandRegistry` (`commands/CommandRegistry.ts`) — one per canvas, reached as the registry bundle's `registries.command`; `get` looks a command up by ID and `findAllByShortcut` returns every command a key event matches, among others
 - `handleCommand` (`commands/handlers/handleCommand.ts`) — returns the state unchanged when the command it got has no `execute` or its `canExecute` is false, and calls `execute` otherwise
-- `useKeyboardShortcuts` (`hooks/`) — resolves keydown events via `findByShortcut` and dispatches (disabled while an input field is focused); a command whose execution is passed in `callbacks` is run through that instead
+- `useKeyboardShortcuts` (`hooks/`) — resolves keydown events via `findAllByShortcut` and dispatches the first match whose `canExecute` passes, leaving the keystroke to the browser when none does (disabled while an input field is focused); a command whose execution is passed in `callbacks` is run through that instead
 - `CommandUtils` — platform detection, `getPlatformShortcuts` / `formatShortcut` (`⌘A` ↔ `Ctrl+A`)
 - Registration is done all at once in `registries/` (`initializeCommands`)
 

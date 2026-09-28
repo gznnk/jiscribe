@@ -10,8 +10,17 @@ export class CommandRegistry {
 
 	/**
 	 * Registers a command.
+	 *
+	 * @param command - Its `id` must be free: a second registration under an id
+	 *   already taken throws, so a plugin cannot quietly replace a built-in
+	 *   command (same rule as object types, see docs/12-plugin-architecture.md).
 	 */
 	register(command: Command): this {
+		if (this.commands.has(command.id)) {
+			throw new Error(
+				`CommandRegistry: command id "${command.id}" is already registered`,
+			);
+		}
 		this.commands.set(command.id, command);
 		return this;
 	}
@@ -50,11 +59,22 @@ export class CommandRegistry {
 	}
 
 	/**
-	 * Finds the command matching a keyboard event.
+	 * Finds every command a keyboard event matches, in registration order.
 	 * Matches against the shortcuts for the current platform.
+	 *
+	 * All matches are returned rather than the first, because a binding may be
+	 * shared by commands that are available in different contexts (Tab over a
+	 * table cell versus over a shape's text slots). The caller picks among them
+	 * by `canExecute`; see useKeyboardShortcuts.
+	 *
+	 * @param event - The keydown to match; `code` is compared for
+	 *   layout-independent bindings and `key` for character ones, and the
+	 *   modifier flags must agree exactly (shift only for the `code` form).
+	 * @returns The matching commands in the order they were registered, or an
+	 *   empty array when the keystroke is not bound.
 	 */
-	findByShortcut(event: KeyboardEvent): Command | undefined {
-		return Array.from(this.commands.values()).find((cmd) => {
+	findAllByShortcut(event: KeyboardEvent): Command[] {
+		return Array.from(this.commands.values()).filter((cmd) => {
 			if (!cmd.shortcuts) {
 				return false;
 			}

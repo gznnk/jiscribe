@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
+import type { Command } from "../../commands/CommandTypes";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
 // Minimal stand-in for a plugin object type (mirrors how plugin-container-shapes
@@ -25,6 +26,14 @@ const buildFakeDefinition = (type: string): ObjectTypeDefinition =>
 		},
 		menu: [],
 	});
+
+/** Minimal stand-in for a plugin command: an id, and an execute that changes nothing. */
+const buildFakeCommand = (id: string): Command => ({
+	id,
+	label: id,
+	canExecute: () => true,
+	execute: (state) => state,
+});
 
 describe("createCanvasRegistries", () => {
 	describe("default (no config)", () => {
@@ -275,6 +284,51 @@ describe("createCanvasRegistries", () => {
 			expect(() => createCanvasRegistries({ plugins: [rectPlugin] })).toThrow(
 				/rect-plugin.*"rect"/,
 			);
+		});
+
+		it("registers a plugin's commands after the built-in set", () => {
+			const registries = createCanvasRegistries({
+				plugins: [{ id: "cell-plugin", commands: [buildFakeCommand("cell")] }],
+			});
+			expect(registries.command.get("cell")).toBeDefined();
+			expect(registries.command.getAll().at(-1)?.id).toBe("cell");
+		});
+
+		it("narrows the plugin's commands with the same config.commands list", () => {
+			const registries = createCanvasRegistries({
+				commands: ["undo", "cell"],
+				plugins: [
+					{
+						id: "cell-plugin",
+						commands: [buildFakeCommand("cell"), buildFakeCommand("row")],
+					},
+				],
+			});
+			expect(registries.command.getAll().map((command) => command.id)).toEqual([
+				"undo",
+				"cell",
+			]);
+		});
+
+		it("throws when a plugin's command id collides with a built-in", () => {
+			expect(() =>
+				createCanvasRegistries({
+					plugins: [
+						{ id: "undo-plugin", commands: [buildFakeCommand("undo")] },
+					],
+				}),
+			).toThrow(/"undo".*already registered/);
+		});
+
+		it("throws when two plugins declare the same command id", () => {
+			expect(() =>
+				createCanvasRegistries({
+					plugins: [
+						{ id: "plugin-a", commands: [buildFakeCommand("cell")] },
+						{ id: "plugin-b", commands: [buildFakeCommand("cell")] },
+					],
+				}),
+			).toThrow(/"cell".*already registered/);
 		});
 
 		it("throws when two plugins declare the same object type", () => {

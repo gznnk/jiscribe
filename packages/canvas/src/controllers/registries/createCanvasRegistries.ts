@@ -42,9 +42,11 @@ import { createStencilRegistry } from "../ui/objects/StencilRegistry";
  *   2. register the object-type-independent sets (gesture handlers, system
  *      style properties) — always all,
  *   3. apply the configured object types (default: every type),
- *   4. register commands, optionally restricted by `config.commands`,
- *   5. apply `config.plugins` in declared order. A plugin object type that
- *      collides with a built-in or an earlier plugin throws (see `CanvasPlugin`).
+ *   4. register the built-in commands followed by the plugins' own, optionally
+ *      restricted by `config.commands`,
+ *   5. apply `config.plugins` in declared order. A plugin object type or command
+ *      id that collides with a built-in or an earlier plugin throws (see
+ *      `CanvasPlugin`).
  *
  * Passing no `config` reproduces the full set, matching the historical singleton
  * behavior (backward compatible).
@@ -102,7 +104,7 @@ export const createCanvasRegistries = (
 		}
 	}
 
-	initializeCommands(registries, config?.commands);
+	initializeCommands(registries, config?.commands, config?.plugins);
 
 	for (const plugin of config?.plugins ?? []) {
 		for (const [type, definition] of Object.entries(plugin.objects ?? {})) {
