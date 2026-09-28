@@ -1,9 +1,16 @@
 export { calcTableLocalDragDelta } from "./calcTableLocalDragDelta";
+export { calcTableStripPlacement } from "./calcTableStripPlacement";
+export type { TableStripPlacement } from "./calcTableStripPlacement";
 export { handleTableColumnBoundary } from "./handleTableColumnBoundary";
 export { handleTableRowBoundary } from "./handleTableRowBoundary";
+export { createTableTrackGripHandler } from "./handleTableTrackGrip";
 export { resolveTableColumnBoundaryDrag } from "./resolveTableColumnBoundaryDrag";
 export { resolveTableRowBoundaryDrag } from "./resolveTableRowBoundaryDrag";
 export { parseTableBoundaryIndex } from "./tableBoundaryPart";
 export { TableBoundaryStrip } from "./TableBoundaryStrip";
 export { TableColumnBoundaryControl } from "./TableColumnBoundaryControl";
+export { TableColumnGripControl } from "./TableColumnGripControl";
 export { TableRowBoundaryControl } from "./TableRowBoundaryControl";
+export { TableRowGripControl } from "./TableRowGripControl";
+export { TableTrackGrip } from "./TableTrackGrip";
+export { TableTrackGrips } from "./TableTrackGrips";

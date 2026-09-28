@@ -142,6 +142,30 @@ export const TABLE_CELL_STYLE_DEFAULTS = {
 export const tableCellSlotId = (row: number, column: number): string =>
 	`r${row}c${column}`;
 
+/** The grammar {@link tableCellSlotId} writes, and the only spelling read back. */
+const TABLE_CELL_SLOT_ID_PATTERN = /^r(\d+)c(\d+)$/;
+
+/**
+ * The grid position one cell id names — the inverse of {@link tableCellSlotId},
+ * for the operations that have to move a cell when a row or a column is inserted
+ * ahead of it.
+ *
+ * Only the exact spelling is read back: a slot id from somewhere else
+ * (`BODY_TEXT_SLOT_ID`, a record's compartment name) is refused rather than
+ * coerced into a position the grid never had.
+ *
+ * @param slotId - A cell's slot id as `state.text` keys it, e.g. `r0c2`
+ * @returns The 0-based position, or null when the id is not a cell id at all
+ */
+export const parseTableCellSlotId = (
+	slotId: string,
+): { row: number; column: number } | null => {
+	const matched = TABLE_CELL_SLOT_ID_PATTERN.exec(slotId);
+	return matched === null
+		? null
+		: { row: Number(matched[1]), column: Number(matched[2]) };
+};
+
 /**
  * The cell ids of a grid, in the order they are keyed into state: row by row
  * from the top, left to right within a row. That order is what makes the first

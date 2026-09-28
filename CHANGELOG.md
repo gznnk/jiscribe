@@ -24,6 +24,21 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A table's rows and columns can be selected, added and removed.** A grip
+  outside the top and left edges picks a whole column or row; clicking a cell
+  picks it, and Shift widens the pick to a range. Delete clears the picked cells'
+  text, or removes the picked row or column — never the last one left. Rows and
+  columns are inserted from the right-click menu or with Shift+Alt+arrow, and the
+  cells keep their contents as the grid renumbers around the insertion.
+- For plugin authors: a type declares what parts of itself can be selected
+  (`ObjectTypeDefinition.parts`), and core carries one selection below the object
+  level for every type — a range of them, not one. A `text: "slots"` type gets its
+  slots as parts without declaring anything, and declaring them itself replaces
+  that default, which is how a type says what Delete does to them. A selection
+  control can now take a click and answer with a selection rather than only with
+  its own object, a type may contribute commands (`CanvasPlugin.commands`) and
+  rows on the context menu (`ObjectTypeDefinition.contextMenu`), and two commands
+  may share a keyboard shortcut as long as their `canExecute` disagree.
 - **A table can be resized by its left and right edges**, the width change spread
   over every column in the proportions it holds. A column never goes under its
   minimum, and a table dragged narrower than its columns can be simply stops.

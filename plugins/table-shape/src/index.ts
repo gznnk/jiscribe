@@ -12,6 +12,35 @@ export * from "./state/TableState";
 export { tableToDoc, tableToState } from "./state/TableMapper";
 export { isValidTableState } from "./state/validateTableState";
 export { resizeTableStateToContent } from "./state/resizeTableStateToContent";
+export { growTableFromDrawnCorner } from "./state/growTableFromDrawnCorner";
+
+export { clearTableCells } from "./grid/clearTableCells";
+export { insertTableTrack } from "./grid/insertTableTrack";
+export { readTableCell } from "./grid/readTableCell";
+export { remapTablePartSelectionForInsert } from "./grid/remapTablePartSelectionForInsert";
+export { removeTableTracks } from "./grid/removeTableTracks";
+export { rewriteTableGrid } from "./grid/rewriteTableGrid";
+export {
+	countTableTracks,
+	parseTableTrackPartId,
+	TABLE_COLUMN_PART_KIND,
+	TABLE_ROW_PART_KIND,
+	tableTrackPartId,
+} from "./grid/tableTrack";
+export type { TableAxis } from "./grid/tableTrack";
+
+export { createTableTrackPartDefinition } from "./parts/tableTrackParts";
+
+export { TABLE_INSERT_COMMANDS } from "./commands/tableInsertCommands";
+export { TABLE_REMOVE_COMMANDS } from "./commands/tableRemoveCommands";
+export { TABLE_CONTEXT_MENU } from "./commands/tableContextMenu";
+export { resolveTableInsertTarget } from "./commands/resolveTableInsertTarget";
+export type {
+	TableInsertSide,
+	TableInsertTarget,
+} from "./commands/resolveTableInsertTarget";
+export { resolveTableTrackSelection } from "./commands/resolveTableTrackSelection";
+export type { TableTrackSelection } from "./commands/resolveTableTrackSelection";
 
 export { calcTableLayout } from "./layout/calcTableLayout";
 export type { TableLayout, TableLayoutState } from "./layout/calcTableLayout";
@@ -22,6 +51,8 @@ export { TableBox } from "./presentation/TableBox";
 
 export {
 	calcTableLocalDragDelta,
+	calcTableStripPlacement,
+	createTableTrackGripHandler,
 	handleTableColumnBoundary,
 	handleTableRowBoundary,
 	parseTableBoundaryIndex,
@@ -29,8 +60,13 @@ export {
 	resolveTableRowBoundaryDrag,
 	TableBoundaryStrip,
 	TableColumnBoundaryControl,
+	TableColumnGripControl,
 	TableRowBoundaryControl,
+	TableRowGripControl,
+	TableTrackGrip,
+	TableTrackGrips,
 } from "./controls";
+export type { TableStripPlacement } from "./controls";
 
 export { TableIcon } from "./stencil/TableIcon";
 export { TableStencils } from "./stencil/TableStencils";

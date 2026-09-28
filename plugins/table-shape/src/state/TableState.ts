@@ -23,7 +23,8 @@ declare const TableStateBrand: unique symbol;
  *
  * The cell ids in `text` are exactly `tableCellSlotIds(rows.length,
  * columns.length)`, no more and no fewer. Everything that adds or removes a row
- * or a column goes through the one function that keeps that true.
+ * or a column goes through `rewriteTableGrid`, which keeps that true by
+ * construction rather than by each caller splicing the map correctly.
  */
 export type TableState = CreateObjectState<
 	typeof TableFeatures,

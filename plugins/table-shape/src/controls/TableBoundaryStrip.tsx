@@ -1,10 +1,7 @@
-import {
-	calcEuclideanDistance,
-	calcVectorAngleRad,
-	radiansToDegrees,
-} from "@jiscribe/geometry";
 import type { Point } from "@jiscribe/geometry";
 import { memo } from "react";
+
+import { calcTableStripPlacement } from "./calcTableStripPlacement";
 
 /**
  * How thick the strip is, in screen px, straddling the rule it follows. Wide
@@ -59,16 +56,11 @@ const TableBoundaryStripComponent: React.FC<TableBoundaryStripProps> = ({
 	part,
 	cursor,
 }) => {
-	const length = calcEuclideanDistance(from.x, from.y, to.x, to.y);
-	const angle = radiansToDegrees(
-		calcVectorAngleRad(to.x, to.y, from.x, from.y),
-	);
+	const { transform, length } = calcTableStripPlacement(from, to);
 	const thickness = BOUNDARY_HIT_WIDTH / zoom;
 
 	return (
-		<g
-			transform={`translate(${(from.x + to.x) / 2} ${(from.y + to.y) / 2}) rotate(${angle})`}
-		>
+		<g transform={transform}>
 			<rect
 				x={-length / 2}
 				y={-thickness / 2}

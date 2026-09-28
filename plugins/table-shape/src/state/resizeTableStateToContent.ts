@@ -1,38 +1,7 @@
-import { PRECISION } from "@jiscribe/canvas-sdk";
-import {
-	calcFrameCenterFromTopLeft,
-	calcFrameTopLeft,
-	roundToDecimal,
-} from "@jiscribe/geometry";
-import type { Dimensions } from "@jiscribe/geometry";
-
+import { growTableFromDrawnCorner } from "./growTableFromDrawnCorner";
 import type { TableState } from "./TableState";
 import { calcTableFrameSize } from "../layout/calcTableFrameSize";
 import { distributeTableWidthToColumns } from "../layout/distributeTableWidthToColumns";
-
-/**
- * The state with `size` as its box. The box grows right and down: the corner the
- * document names stays where it is drawn (calcFrameTopLeft), and the center moves
- * instead.
- */
-const growFromDrawnCorner = (
-	state: TableState,
-	size: Dimensions,
-): TableState => {
-	const drawnTopLeft = calcFrameTopLeft(state);
-	const anchor = {
-		x: roundToDecimal(drawnTopLeft.x, PRECISION.COORDINATE),
-		y: roundToDecimal(drawnTopLeft.y, PRECISION.COORDINATE),
-	};
-	const center = calcFrameCenterFromTopLeft(anchor, size, state);
-	return {
-		...state,
-		cx: center.x,
-		cy: center.y,
-		width: size.width,
-		height: size.height,
-	};
-};
 
 /**
  * Reconciles a table's box with its own grid, in whichever direction they
@@ -83,12 +52,12 @@ export const resizeTableStateToContent = (state: TableState): TableState => {
 		const columns = distributeTableWidthToColumns(state.columns, state.width);
 		if (columns !== null) {
 			const widened = { ...state, columns };
-			return growFromDrawnCorner(widened, calcTableFrameSize(widened));
+			return growTableFromDrawnCorner(widened, calcTableFrameSize(widened));
 		}
-		return growFromDrawnCorner(state, gridSize);
+		return growTableFromDrawnCorner(state, gridSize);
 	}
 	if (gridSize.width === state.width && gridSize.height === state.height) {
 		return state;
 	}
-	return growFromDrawnCorner(state, gridSize);
+	return growTableFromDrawnCorner(state, gridSize);
 };
