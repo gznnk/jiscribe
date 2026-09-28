@@ -26,6 +26,7 @@ import { createObjectTextVerticalBasisRegistry } from "../../states/registry/Obj
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import { createObjectPartRegistry } from "../selection/ObjectPartRegistry";
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import { createObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
@@ -74,6 +75,7 @@ export const createCanvasRegistries = (
 		objectBehavior: createObjectBehaviorRegistry(),
 		objectTransformHandles: createObjectTransformHandlesRegistry(),
 		selectionControl: createSelectionControlRegistry(),
+		objectPart: createObjectPartRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),

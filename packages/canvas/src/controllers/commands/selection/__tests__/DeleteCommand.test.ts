@@ -172,13 +172,28 @@ describe("DeleteCommand", () => {
 		});
 
 		it("is executable when there is a vertex selection", () => {
+			const poly = makePolyline("p", [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+				{ x: 20, y: 0 },
+			]);
 			const state = makeState({
 				selectedIds: [],
-				objects: {},
-				rootIds: [],
+				objects: { p: poly },
+				rootIds: ["p"],
 				selectedVertex: { objectId: "p", vertexIndex: 0 },
 			});
 			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
+		});
+
+		it("is not executable when the vertex-selection target has no deletable vertices", () => {
+			const state = makeState({
+				selectedIds: [],
+				objects: { r: makeRect("r") },
+				rootIds: ["r"],
+				selectedVertex: { objectId: "r", vertexIndex: 0 },
+			});
+			expect(DeleteCommand.canExecute(state, registries)).toBe(false);
 		});
 
 		it("is executable when there is a connector selection", () => {
