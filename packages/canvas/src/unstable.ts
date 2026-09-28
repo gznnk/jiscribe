@@ -81,6 +81,8 @@ export {
 } from "./rendering/objects/utils/calcTextRegion";
 export { createSvgTransform } from "./rendering/objects/utils/createSvgTransform";
 
+export { formatPolygonPoints } from "./rendering/objects/utils/formatPolygonPoints";
+
 export { resolveAutoColor } from "./rendering/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./rendering/objects/utils/resolveAutoColor";
 

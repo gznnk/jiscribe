@@ -1,5 +1,6 @@
 import type { Point } from "@jiscribe/geometry";
 
+import { pathLength } from "./routeCost";
 import { DEFAULT_CONNECTOR_MARGIN } from "./routingConstants";
 import { simplifyPath } from "./simplifyPath";
 import { stubPoint } from "./stub";
@@ -192,20 +193,4 @@ const arcCorners = (
 		.filter((x) => x.offset > EPS && x.offset < arc - EPS)
 		.sort((a, b) => a.offset - b.offset)
 		.map((x) => pointAtParam(x.param, ring, width, height, perimeter));
-};
-
-/**
- * Total length of an orthogonal path (sum of segment lengths).
- *
- * @param points - The path's point sequence
- * @returns The sum of all segment lengths
- */
-const pathLength = (points: Point[]): number => {
-	let total = 0;
-	for (let i = 1; i < points.length; i++) {
-		total +=
-			Math.abs(points[i].x - points[i - 1].x) +
-			Math.abs(points[i].y - points[i - 1].y);
-	}
-	return total;
 };
