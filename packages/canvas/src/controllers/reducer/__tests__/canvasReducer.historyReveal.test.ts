@@ -144,5 +144,48 @@ describe("canvasReducer (integration)", () => {
 			// y fits, so it takes the smallest pan: the 24-unit margin above the rects.
 			expect(undone.viewport.minY).toBe(-24);
 		});
+
+		it("stops the reveal at the scroll wall", () => {
+			// A wall flush with the content: rect-2's right edge, 2010, is the wall.
+			let state = createTestState(
+				{
+					...docOf(rectDoc("rect-1", 0, 0), rectDoc("rect-2", 2000, 0)),
+					view: {
+						scroll: "content",
+						padding: { top: 0, right: 0, bottom: 0, left: 0 },
+					},
+				} as CanvasDoc,
+				{ selectedIds: ["rect-2"] },
+			);
+			state = runCommands(state, "move-right");
+			state = { ...state, viewport: viewAt(0, 0) };
+
+			const undone = runCommands(state, "undo");
+
+			// The 48px margin would take minX to 1258; the wall holds it at 2010 - 800.
+			expect(undone.viewport.minX).toBe(1210);
+			expect(isInView(undone, "rect-2")).toBe(true);
+		});
+
+		it("does not pull back a view already beyond the scroll wall", () => {
+			let state = createTestState(
+				{
+					...docOf(rectDoc("rect-1", 0, 0), rectDoc("rect-2", 2000, 0)),
+					view: {
+						scroll: "content",
+						padding: { top: 0, right: 0, bottom: 0, left: 0 },
+					},
+				} as CanvasDoc,
+				{ selectedIds: ["rect-2"] },
+			);
+			state = runCommands(state, "move-right");
+			// Past the wall on the right, with rect-2 off screen to the left.
+			state = { ...state, viewport: viewAt(2500, 0) };
+
+			const undone = runCommands(state, "undo");
+
+			// The reveal pans left to the margin before rect-2, as without a wall.
+			expect(undone.viewport.minX).toBe(1952);
+		});
 	});
 });

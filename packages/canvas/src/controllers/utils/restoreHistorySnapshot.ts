@@ -1,9 +1,15 @@
+import { calcScrollBounds } from "./calcScrollBounds";
 import { calcViewportToRevealHistoryChange } from "./calcViewportToRevealHistoryChange";
+import { clampScrolledCamera } from "./clampScrolledCamera";
 import { createMultiSelectGroup } from "./createMultiSelectGroup";
+import { isSameCamera } from "./isSameCamera";
 import { resetUiState } from "./resetUiState";
 import { resolveDocSnapshot } from "./resolveDocSnapshot";
 import { resolveRequestedSelection } from "./resolveRequestedSelection";
+import { resolveScrollWallPadding } from "./resolveScrollWallPadding";
+import type { Viewport } from "../../rendering/Viewport";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
+import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
@@ -38,6 +44,44 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
 	canOfferHistoryNavigation(state) && state.activeDrag === null;
 
 /**
+ * The revealed viewport held inside the scroll wall of the restored document, as
+ * a view scroll would be (clampScrolledCamera): the reveal margin gives way to
+ * the wall, while a view already outside it is not pulled back. The wall is
+ * measured from the restored objects, since the carried-over measurement still
+ * describes the entry being left.
+ */
+const holdRevealInsideScrollWall = (
+	revealed: Viewport,
+	state: CanvasControllerState,
+	restoredState: CanvasState,
+	registries: ICanvasRegistries,
+): Viewport => {
+	if (revealed === state.viewport) {
+		return revealed;
+	}
+	const wallPadding = resolveScrollWallPadding(
+		state.scrollLimit.hostConfig,
+		restoredState.view,
+	);
+	if (wallPadding === null) {
+		return revealed;
+	}
+	const camera = clampScrolledCamera(
+		revealed,
+		state.viewport,
+		calcScrollBounds(
+			wallPadding,
+			restoredState.objects,
+			registries.objectVisualBounds,
+		),
+	);
+	if (isSameCamera(state.viewport, camera)) {
+		return state.viewport;
+	}
+	return { ...revealed, minX: camera.minX, minY: camera.minY };
+};
+
+/**
  * Moves the canvas onto another history entry — the one state transition undo,
  * redo and revert all make. Only the stacks differ between them, so the caller
  * hands in the history it wants to end up with and this restores its `present`.
@@ -51,8 +95,8 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
  * it, so undoing a property change leaves the shape selected for the next try,
  * while undoing a creation (or redoing a deletion) loses the shape and its
  * selection with it. Neither is the camera: it pans only as far as it takes to
- * show what the swap changed (calcViewportToRevealHistoryChange), so a change
- * off screen is not undone out of sight. `commitVersion` is *not* bumped (restoring is
+ * show what the swap changed (calcViewportToRevealHistoryChange), stopping at
+ * the scroll wall, so a change off screen is not undone out of sight. `commitVersion` is *not* bumped (restoring is
  * not a new edit) while `saveRequest` is raised (the file on disk no longer
  * matches), a
  * pairing that is easy to get wrong in three places and impossible to get wrong
@@ -99,13 +143,18 @@ export const restoreHistorySnapshot = (
 			restoredState.objects,
 			state.multiSelectGroup,
 		),
-		viewport: calcViewportToRevealHistoryChange(
-			state.viewport,
-			resolveDocSnapshot(state.history.present, mapper),
-			state.objects,
-			restoredDoc,
-			restoredState.objects,
-			registries.objectVisualBounds,
+		viewport: holdRevealInsideScrollWall(
+			calcViewportToRevealHistoryChange(
+				state.viewport,
+				resolveDocSnapshot(state.history.present, mapper),
+				state.objects,
+				restoredDoc,
+				restoredState.objects,
+				registries.objectVisualBounds,
+			),
+			state,
+			restoredState,
+			registries,
 		),
 		// Only the host's half of the wall is carried over; the rest of the entry is
 		// the measurement cache, and limitViewScroll notices the swapped objects and
