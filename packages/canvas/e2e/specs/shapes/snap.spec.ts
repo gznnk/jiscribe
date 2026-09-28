@@ -258,3 +258,75 @@ test.describe("corner (vertex) snapping", () => {
 			.toBe("matrix(1, 0, 0, 1, 250, 200)");
 	});
 });
+
+/**
+ * Polyline vertex snapping: a polyline offers each vertex and its bbox center as
+ * candidates, and a vertex being dragged snaps to the other vertices of its own
+ * polyline but not to its own center (which moves with the drag).
+ */
+test.describe("polyline vertex snapping", () => {
+	// Vertices (100,300) (200,150) (500,300): candidates X 100/200/500 + center 300,
+	// Y 150/300 + center 225. The middle vertex is off-center so it does not share the
+	// center's X. Selected after the insert, so the vertex controls are shown.
+	const drawBentPolyline = async (canvas: CanvasDriver) => {
+		const id = await canvas.drawShape(
+			"Polyline",
+			{ x: 100, y: 300 },
+			{ x: 500, y: 300 },
+		);
+		// Drag the segment's midpoint insert control to add the middle vertex
+		await canvas.drag({ x: 300, y: 300 }, { x: 200, y: 150 });
+		return id;
+	};
+
+	test("snaps a vertex onto another vertex of the same polyline with a vertical guide", async ({
+		canvas,
+	}) => {
+		const id = await drawBentPolyline(canvas);
+
+		// End vertex (500,300) -> (204,420): X 204 is 4 from the middle vertex's 200;
+		// Y 420 is beyond the threshold of every Y candidate.
+		await canvas.dragInspecting(
+			{ x: 500, y: 300 },
+			{ x: 204, y: 420 },
+			async () => {
+				await expect(canvas.snapGuides("x")).toHaveCount(1);
+				await expect(canvas.snapGuides("y")).toHaveCount(0);
+				expect(await canvas.snapGuideCoordinates("x")).toEqual([200]);
+			},
+		);
+
+		await expect
+			.poll(() => canvas.connectorPoints(id))
+			.toEqual([
+				{ x: 100, y: 300 },
+				{ x: 200, y: 150 },
+				{ x: 200, y: 420 },
+			]);
+	});
+
+	test("does not snap a vertex onto its own polyline's bbox center", async ({
+		canvas,
+	}) => {
+		const id = await drawBentPolyline(canvas);
+
+		// End vertex (500,300) -> (303,228): 3 from the drag-start center (300,225) on
+		// both axes and beyond the threshold of every other candidate.
+		await canvas.dragInspecting(
+			{ x: 500, y: 300 },
+			{ x: 303, y: 228 },
+			async () => {
+				await expect(canvas.snapGuides("x")).toHaveCount(0);
+				await expect(canvas.snapGuides("y")).toHaveCount(0);
+			},
+		);
+
+		await expect
+			.poll(() => canvas.connectorPoints(id))
+			.toEqual([
+				{ x: 100, y: 300 },
+				{ x: 200, y: 150 },
+				{ x: 303, y: 228 },
+			]);
+	});
+});

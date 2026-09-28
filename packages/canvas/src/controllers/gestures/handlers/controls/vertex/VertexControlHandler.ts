@@ -10,6 +10,7 @@ import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFr
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { applyAxisLock } from "../../utils/axisLock";
+import { excludeCenterCandidates } from "../../utils/snap/excludeCenterCandidates";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -61,7 +62,7 @@ export class VertexControlHandler extends ControlStrategy {
 		if (event.type === "click") {
 			nextState = this.handleClick(nextState, objectId, vertexIndex);
 		} else if (event.type === "dragStart") {
-			nextState = this.handleDragStart(nextState, event);
+			nextState = this.handleDragStart(nextState, objectId);
 		} else if (event.type === "drag") {
 			nextState = this.handleDrag(nextState, event, objectId, vertexIndex);
 		} else if (event.type === "dragEnd") {
@@ -94,18 +95,36 @@ export class VertexControlHandler extends ControlStrategy {
 
 	/**
 	 * Handles the start of a drag on a vertex control.
+	 * Drops the edited object's own center from this drag's snap candidates, since the
+	 * center moves with the vertex; the drag-start cache is left untouched.
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
-		_event: CanvasEvent,
+		objectId: string,
 	): CanvasControllerState {
-		return {
+		const nextState: CanvasControllerState = {
 			...state,
 			selectedVertex: null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,
 		};
+
+		const startSnapshot = state.activeDrag?.startSnapshot;
+		if (state.activeDrag && startSnapshot?.snapCandidates) {
+			nextState.activeDrag = {
+				...state.activeDrag,
+				startSnapshot: {
+					...startSnapshot,
+					snapCandidates: excludeCenterCandidates(
+						startSnapshot.snapCandidates,
+						objectId,
+					),
+				},
+			};
+		}
+
+		return nextState;
 	}
 
 	/**

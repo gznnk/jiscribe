@@ -112,6 +112,12 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Fixed
 
+- **A polyline's or polygon's vertex no longer snaps to its own outline.**
+  Dragging a vertex (or one just inserted) pulled it onto the edges and centre
+  of the shape's box as it was when the drag began. Other shapes now snap to a
+  polyline's or polygon's vertices and centre instead of its box edges, and a
+  vertex being dragged snaps to the other vertices of its own shape but not to
+  its centre.
 - **Styling text from the property sidebar keeps the text being edited.** A
   press on a sidebar control took the focus off an open text editor, so the
   caret and the highlighted stretch disappeared and what was typed next went
