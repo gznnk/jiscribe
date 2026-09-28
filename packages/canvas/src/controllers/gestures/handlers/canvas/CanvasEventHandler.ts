@@ -4,7 +4,7 @@ import { roundToDecimal } from "@jiscribe/geometry";
 
 import { calcPannedViewport } from "./utils/calcPannedViewport";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
-import type { SnapFeedback } from "../../../CanvasTypes";
+import type { PressTarget, SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { ZOOM } from "../../../utils/zoom";
@@ -30,9 +30,7 @@ import { isSnapSuppressed } from "../utils/snap/isSnapSuppressed";
  * @param event - The press being recorded; its `targetKind` / `targetId` / `targetPart` are read
  * @returns The target, or null where the press carried no id to name one
  */
-const readGestureTarget = (
-	event: CanvasEvent,
-): { kind: string; id: string; part?: string } | null => {
+const readGestureTarget = (event: CanvasEvent): PressTarget | null => {
 	if (event.targetKind === undefined || event.targetId === undefined) {
 		return null;
 	}

@@ -199,6 +199,10 @@ export type {
 	OpenReferenceHandler,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 export type {
+	ContextMenuContribution,
+	ContextMenuItem,
+} from "./controllers/ui/menu/ContextMenu/ContextMenuTypes";
+export type {
 	PropertyPanelSection,
 	PropertyPanelItem,
 	PropertyPanelBuiltinItem,

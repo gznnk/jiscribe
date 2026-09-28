@@ -8,6 +8,7 @@ import {
 	MenuSeparator,
 } from "./ContextMenuStyled";
 import { useContextMenuPosition } from "./useContextMenuPosition";
+import { resolveContextMenuItems } from "./utils/resolveContextMenuItems";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import {
 	formatShortcut,
@@ -17,26 +18,21 @@ import { commandPart } from "../../../gestures/handlers/menu/utils/menuParts";
 import { useCommandState } from "../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 
-/**
- * Both kinds resolve label / shortcut / enabled from the command registry;
- * they differ only in execution wiring: "command" dispatches via the gesture
- * system (data-part), "callback" invokes callbacks[commandId] directly
- * (definition-only commands such as paste).
- */
-type CommandMenuItem =
-	| { type: "command"; commandId: string }
-	| { type: "callback"; commandId: string }
-	| { type: "separator" };
+/** Where the menu was opened, and over what: the state slice it is driven by. */
+type ContextMenuPosition = NonNullable<
+	CanvasControllerState["contextMenuPosition"]
+>;
 
 type ContextMenuProps = {
-	position: { clientX: number; clientY: number } | null;
+	position: ContextMenuPosition | null;
 	canvasState: CanvasControllerState;
 	callbacks: Record<string, () => void>;
 };
 
 type ContextMenuBodyProps = {
-	position: { clientX: number; clientY: number };
+	position: ContextMenuPosition;
 	canvasState: CanvasControllerState;
 	callbacks: Record<string, () => void>;
 };
@@ -48,29 +44,15 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const messages = useCanvasMessages();
+	const registries = useCanvasRegistries();
 	const resolveCommand = useCommandState(canvasState);
 	const { left, top } = useContextMenuPosition(position, menuRef);
 
-	const menuItems: CommandMenuItem[] = [
-		{ type: "command", commandId: "cut" },
-		{ type: "command", commandId: "copy" },
-		{ type: "command", commandId: "duplicate" },
-		{ type: "callback", commandId: "paste" },
-		{ type: "command", commandId: "delete" },
-		{ type: "separator" },
-		{ type: "command", commandId: "selectAll" },
-		{ type: "command", commandId: "deselectAll" },
-		{ type: "separator" },
-		{ type: "command", commandId: "bringToFront" },
-		{ type: "command", commandId: "bringForward" },
-		{ type: "command", commandId: "sendBackward" },
-		{ type: "command", commandId: "sendToBack" },
-		{ type: "separator" },
-		{ type: "command", commandId: "group" },
-		{ type: "command", commandId: "ungroup" },
-		{ type: "separator" },
-		{ type: "command", commandId: "export" },
-	];
+	const menuItems = resolveContextMenuItems(
+		position.target,
+		canvasState.objects,
+		registries.contextMenu,
+	);
 
 	return (
 		<Menu ref={menuRef} left={left} top={top}>
@@ -79,6 +61,10 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 					return <MenuSeparator key={`sep-${index}`} />;
 				}
 
+				// An unregistered id draws no row at all, rather than a dead one:
+				// a command switched off by `CanvasConfig.commands`, and a
+				// contributed item naming a command its plugin never registered,
+				// both land here.
 				const resolved = resolveCommand(item.commandId);
 				if (!resolved) {
 					return null;
@@ -105,7 +91,13 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 							};
 
 				return (
-					<MenuItem key={command.id} disabled={!enabled} {...executionProps}>
+					// Keyed by position as well as id: a contribution may name a
+					// command the built-in block already carries.
+					<MenuItem
+						key={`${index}:${command.id}`}
+						disabled={!enabled}
+						{...executionProps}
+					>
 						<MenuItemLabel>{getCommandLabel(messages, command)}</MenuItemLabel>
 						{firstShortcut && (
 							<MenuItemShortcut>

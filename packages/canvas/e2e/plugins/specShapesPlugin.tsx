@@ -28,6 +28,7 @@ import { memo } from "react";
 
 import type {
 	CanvasPlugin,
+	ContextMenuContribution,
 	CreateObjectState,
 	CreateObjectType,
 	ObjectFeatures,
@@ -36,7 +37,11 @@ import type {
 	StencilIconProps,
 } from "../../src";
 import { BODY_TEXT_SLOT_ID } from "../../src";
-import type { FrameShapeProps, TextEditable } from "../../src/unstable";
+import type {
+	Command,
+	FrameShapeProps,
+	TextEditable,
+} from "../../src/unstable";
 import {
 	TextOverlay,
 	calcFullTextRegion,
@@ -233,9 +238,39 @@ const PIN_DOC_DEFAULTS: Omit<PinDoc, "id"> = {
 } as const as PinDoc;
 
 /**
+ * The command the pin puts in the context menu. It opens the properties sidebar,
+ * an effect a spec can see in the DOM without the command having to touch an
+ * object, so what a click on a contributed row proves is the dispatch alone.
+ */
+const openPinPanelCommand: Command = {
+	id: "openPinPanel",
+	label: "Open properties (spec)",
+	canExecute: (state) => !state.propertyPanel.isOpen,
+	execute: (state) => ({
+		...state,
+		propertyPanel: { ...state.propertyPanel, isOpen: true },
+	}),
+};
+
+/**
+ * The pin's context-menu rows: the separator that sets them apart from the
+ * built-in block, the command above, and an id nothing registers — the stale
+ * name a plugin can ship, which the menu has to draw no row at all for.
+ */
+const pinContextMenu: ContextMenuContribution = {
+	placement: "after",
+	items: [
+		{ type: "separator" },
+		{ type: "command", commandId: openPinPanelCommand.id },
+		{ type: "command", commandId: "pinCommandNobodyRegistered" },
+	],
+};
+
+/**
  * Click-placed shape: `supportsBounds: false` leaves the factory without
  * `createDocFromBounds`, which is what makes the StencilLibrary place it on press
- * instead of entering drawing mode.
+ * instead of entering drawing mode. It is also the only spec shape adding rows to
+ * the context menu, so a spec pressing any other shape sees the built-in block.
  */
 const pinDefinition: ObjectTypeDefinition<PinDoc, PinState> = {
 	features: PinFeatures,
@@ -247,6 +282,7 @@ const pinDefinition: ObjectTypeDefinition<PinDoc, PinState> = {
 	stateValidator: createFrameStateValidator(PinFeatures),
 	behavior: createFrameBehavior<PinState>(),
 	component: createFrameObject<PinState>(drawSpecShapeBox),
+	contextMenu: pinContextMenu,
 	stencils: [
 		{ id: "pin", objectType: "pin", label: "Pin", icon: SpecShapeIcon },
 	],
@@ -443,6 +479,7 @@ export const specShapesPlugin: CanvasPlugin = {
 		panel: panelDefinition,
 		memo: memoDefinition,
 	},
+	commands: [openPinPanelCommand],
 };
 
 /**
