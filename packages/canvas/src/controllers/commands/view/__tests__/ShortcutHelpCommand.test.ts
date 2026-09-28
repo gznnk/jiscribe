@@ -31,7 +31,7 @@ describe("ShortcutHelpCommand", () => {
 	});
 
 	// The binding is key-based ("?"), so the shift the character already implies
-	// must not be checked separately (see CommandRegistry.findByShortcut).
+	// must not be checked separately (see CommandRegistry.findAllByShortcut).
 	it("is matched from a Shift-produced `?` keydown", () => {
 		const event = {
 			key: "?",
@@ -42,7 +42,9 @@ describe("ShortcutHelpCommand", () => {
 			altKey: false,
 		} as KeyboardEvent;
 
-		expect(registries.command.findByShortcut(event)?.id).toBe("shortcutHelp");
+		expect(
+			registries.command.findAllByShortcut(event).map((command) => command.id),
+		).toEqual(["shortcutHelp"]);
 	});
 
 	it("is not matched when a modifier is held", () => {
@@ -55,6 +57,6 @@ describe("ShortcutHelpCommand", () => {
 			altKey: false,
 		} as KeyboardEvent;
 
-		expect(registries.command.findByShortcut(event)).toBeUndefined();
+		expect(registries.command.findAllByShortcut(event)).toEqual([]);
 	});
 });

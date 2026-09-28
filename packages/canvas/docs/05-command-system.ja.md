@@ -38,9 +38,9 @@ Command パターンで一元管理するしくみ。
 
 ### 主要コンポーネント
 
-- `CommandRegistry`（`commands/CommandRegistry.ts`）… キャンバスごとに 1 つあり、レジストリ束の `registries.command` として引く。ID で引く `get`、キーイベントから引く `findByShortcut` など
+- `CommandRegistry`（`commands/CommandRegistry.ts`）… キャンバスごとに 1 つあり、レジストリ束の `registries.command` として引く。ID で引く `get`、キーイベントに一致するコマンドを全て返す `findAllByShortcut` など
 - `handleCommand`（`commands/handlers/handleCommand.ts`）… `get` で引いたコマンドが `execute` を持たないとき、または `canExecute` が偽のときは state をそのまま返し、それ以外は `execute` を呼ぶ
-- `useKeyboardShortcuts`（`hooks/`）… keydown を `findByShortcut` で解決して dispatch（入力フィールド上では無効化）。`callbacks` に実行を渡されたコマンドはそちらを呼ぶ
+- `useKeyboardShortcuts`（`hooks/`）… keydown を `findAllByShortcut` で解決し、`canExecute` が通った最初の 1 つを dispatch（どれも通らなければキーはブラウザへ渡す。入力フィールド上では無効化）。`callbacks` に実行を渡されたコマンドはそちらを呼ぶ
 - `CommandUtils`… プラットフォーム判定・`getPlatformShortcuts` / `formatShortcut`（`⌘A` ↔ `Ctrl+A`）
 - 登録は `registries/`（`initializeCommands`）でまとめて行う
 

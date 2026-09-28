@@ -18,7 +18,9 @@ engine's registries are the same ones the built-in types go through.
 
 The type is `CanvasPlugin` (`packages/canvas/src/plugin/CanvasPlugin.ts`), and its
 substance is `objects`: keyed by `ObjectType`, with the type's definition as the
-value.
+value. `commands` is the second contribution: an array of `Command`, registered
+after the built-in set in plugin declaration order and narrowed by the same
+`config.commands` list.
 
 A host wires it in through `initialConfig`:
 
@@ -89,9 +91,15 @@ with no config gives the default configuration: every built-in type and nothing 
   enable/disable is a non-goal: a document can contain objects of a type that was
   just unregistered, and there is no coherent answer for what should happen to them.
 - **Merge order** is `presetDefinitions` → `plugins` in declaration order.
-- **A duplicate type throws at construction.** Not last-wins — an accidental
-  collision between two plugins fails loudly instead of silently changing which
-  shape renders. Deliberate replacement is expressed as removal plus addition.
+- **A duplicate type, or a duplicate command id, throws at construction.** Not
+  last-wins — an accidental collision between two plugins fails loudly instead of
+  silently changing which shape renders or which command a menu entry runs.
+  Deliberate replacement is expressed as removal plus addition.
+- **A shared key binding is resolved by `canExecute`, not by order.** Several
+  commands may claim the same keystroke; it goes to the first one that reports
+  itself available, and to the browser when none does. Commands sharing a binding
+  must therefore be available in mutually exclusive contexts — the sweep in
+  `initializeCommands.exclusivity.test.ts` holds them to it.
 - Adding plugins does not move the validation boundary: the parser remains the one
   place documents are checked, and everything past it assumes valid input
   ([Design Philosophy](./01-design-philosophy.md)).
@@ -270,7 +278,7 @@ Honest limits, so you do not design against something that is not there.
 | UI slots                         | Only the toolbar's `{ type: "slot" }` items. No slot for an overlay layer; the properties sidebar takes a component only as a row of a section a type declares, not as a panel of its own |
 | Fine-grained property write-back | The handle has no `updateProperties`. Replacing the `doc` prop is treated as an external change: it resets the selection and cuts the history boundary, so it is not an editing path      |
 | Interaction tuning               | Snap thresholds and similar constants are hardcoded. Edge scrolling and pan/zoom cannot be disabled from outside                                                                          |
-| Commands                         | `config.commands` can narrow the built-in set, but a plugin cannot contribute a command or rebind a shortcut                                                                              |
+| Command shortcuts                | A plugin contributes commands (`CanvasPlugin.commands`) and can claim a binding an existing command also holds, but it cannot rebind or unbind that command's own shortcut                |
 | ObjectMenu item kinds            | The built-in kinds are a fixed switch; only `custom` component items are data-driven                                                                                                      |
 | Properties sidebar item kinds    | The built-in kinds are a fixed lookup; only `custom` component rows are data-driven, and one cannot say it is text-slot-aware                                                             |
 
