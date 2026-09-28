@@ -80,9 +80,9 @@ export function canvasDocJson(objectIds: readonly string[] = ["r1"]): string {
  * The same document with no pretty-printing, for the tests that have to tell
  * "left exactly as written" apart from "rewritten by the editor".
  *
- * The editor re-indents whatever it hands the webview, so a document already in
- * its output shape would come back byte-identical from a write-back loop; this
- * one would not.
+ * The canvas commits the document re-serialized with indentation, so a document
+ * already in that shape would come back byte-identical from a write-back loop;
+ * this one would not.
  *
  * @param objectIds - one rect per id, as in {@link canvasDocJson}
  */
