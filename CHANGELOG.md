@@ -24,6 +24,14 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ### Added
 
+- **A table's column and row boundaries can be dragged.** Grabbing the rule
+  between two columns gives one of them the width the other loses, so the table's
+  own edges stay where they are however far the boundary is pushed — past a
+  column's minimum it simply stops. Rows trade the same way, with one asymmetry a
+  row's stored height forces: that height is a lower bound the text raises, so
+  dragging a boundary up stops at the text of the row above it, while dragging it
+  down past the text of the row below grows the table rather than clipping that
+  text.
 - For plugin authors: a `geometry: "point"` type declares the box its document
   does not store as `ObjectDocDefinition.pointSize`, and the doc-side ops measure
   it by that instead of by the rule the `text` shape happens to follow. It is the

@@ -46,6 +46,12 @@ test.describe("dragging a table out of the shape library", () => {
 		let ghost: { x: number; y: number; width: number; height: number };
 		try {
 			await canvas.page.mouse.move(to.x, to.y, { steps: 12 });
+			// The ghost is mounted on a frame of its own, so waiting on the element is
+			// what keeps this from racing the render (the kit synchronizes on state,
+			// never on time — see e2e/README.md).
+			await canvas.page
+				.locator(`[data-id="${GHOST_ID}"]`)
+				.waitFor({ state: "attached" });
 			ghost = await drawnBox(canvas, GHOST_ID);
 		} finally {
 			await canvas.page.mouse.up();

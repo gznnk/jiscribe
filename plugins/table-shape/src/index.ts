@@ -19,6 +19,18 @@ export { calcTableFrameSize } from "./layout/calcTableFrameSize";
 export { calcTableTextRegion } from "./presentation/calcTableTextRegion";
 export { TableBox } from "./presentation/TableBox";
 
+export {
+	calcTableLocalDragDelta,
+	handleTableColumnBoundary,
+	handleTableRowBoundary,
+	parseTableBoundaryIndex,
+	resolveTableColumnBoundaryDrag,
+	resolveTableRowBoundaryDrag,
+	TableBoundaryStrip,
+	TableColumnBoundaryControl,
+	TableRowBoundaryControl,
+} from "./controls";
+
 export { TableIcon } from "./stencil/TableIcon";
 export { TableStencils } from "./stencil/TableStencils";
 

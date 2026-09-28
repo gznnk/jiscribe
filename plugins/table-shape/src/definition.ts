@@ -1,9 +1,14 @@
 import type {
 	ObjectTypeDefinition,
 	ObjectTransformHandles,
+	SelectionControlDefinition,
 } from "@jiscribe/canvas";
 import { createFrameBehavior } from "@jiscribe/canvas-sdk";
 
+import { handleTableColumnBoundary } from "./controls/handleTableColumnBoundary";
+import { handleTableRowBoundary } from "./controls/handleTableRowBoundary";
+import { TableColumnBoundaryControl } from "./controls/TableColumnBoundaryControl";
+import { TableRowBoundaryControl } from "./controls/TableRowBoundaryControl";
 import { tableDocDefinition } from "./doc";
 import { calcTableTextRegion } from "./presentation/calcTableTextRegion";
 import { TableBox } from "./presentation/TableBox";
@@ -26,6 +31,31 @@ import { TableStencils } from "./stencil/TableStencils";
 const TABLE_TRANSFORM_HANDLES: ObjectTransformHandles = { resize: false };
 
 /**
+ * The two boundary controls. One registration per axis covers every boundary of
+ * that axis: each strip appends its index to the control's `data-part`, and the
+ * handler reads it back off the event's `subPart` (parseTableBoundaryIndex). A
+ * registration per boundary would instead have to change as rows and columns come
+ * and go, which registration is not able to do — it happens once per type.
+ *
+ * Neither handler writes the table's box. Both return the pair of tracks they
+ * rewrote, and the box is re-derived from them on the same reducer tick
+ * (resizeTableStateToContent), which is what makes a column drag leave the outer
+ * frame exactly where it was.
+ */
+const TABLE_SELECTION_CONTROLS: SelectionControlDefinition<TableState>[] = [
+	{
+		name: "columnBoundary",
+		Component: TableColumnBoundaryControl,
+		handle: handleTableColumnBoundary,
+	},
+	{
+		name: "rowBoundary",
+		Component: TableRowBoundaryControl,
+		handle: handleTableRowBoundary,
+	},
+];
+
+/**
  * `createFrameObjectDefinition` is not used here for the reason its doc half is
  * not (see ./doc): it is built around a stored box. The mapper and the content
  * resizer are the two halves that replace it.
@@ -43,6 +73,7 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	component: TableBox,
 	textRegion: calcTableTextRegion,
 	behavior: createFrameBehavior<TableState>(),
+	selectionControls: TABLE_SELECTION_CONTROLS,
 	transformHandles: TABLE_TRANSFORM_HANDLES,
 	stencils: TableStencils,
 	menu: [

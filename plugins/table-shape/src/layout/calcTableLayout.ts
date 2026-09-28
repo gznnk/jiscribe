@@ -132,6 +132,41 @@ const resolveRowHeight = (
 		row.height ?? 0,
 	);
 
+/**
+ * Rule width the cells are measured against: the same three steps the drawing
+ * resolves its stroke through (ObjectShapeStyleDefaultsRegistry), which is what
+ * keeps the measured cell and the drawn one the same width.
+ */
+const resolveTableStrokeWidth = (state: TableLayoutState): number =>
+	state.strokeWidth ??
+	TABLE_DOC_DEFAULTS.strokeWidth ??
+	SHAPE_STYLE_FALLBACK.strokeWidth;
+
+/** Stands in for a row's bound where only its text's own demand is wanted. */
+const NO_ROW_BOUND: TableRowDoc = {};
+
+/**
+ * The height one row's own text asks for, with its stored bound left out: the floor
+ * {@link calcTableLayout} will not draw the row below, however small the bound is.
+ * What a boundary drag can squeeze the row to before the table has to grow instead
+ * (resolveTableRowBoundaryDrag).
+ *
+ * @param state - The tracks, the cells and the rule width, as the layout reads them
+ * @param rowIndex - Which row to measure; one the grid does not have has no cells to ask, and measures as 0
+ * @returns The floor in local px. An empty cell still asks for a line, so only a grid with no columns at all floors at 0
+ */
+export const calcTableRowTextFloor = (
+	state: TableLayoutState,
+	rowIndex: number,
+): number =>
+	resolveRowHeight(
+		rowIndex,
+		NO_ROW_BOUND,
+		state.columns ?? [],
+		state.text,
+		resolveTableStrokeWidth(state),
+	);
+
 /** The running edges of one track: the first edge, then one per size. */
 const accumulateEdges = (start: number, sizes: readonly number[]): number[] => {
 	const edges = [start];
@@ -159,13 +194,7 @@ const accumulateEdges = (start: number, sizes: readonly number[]): number[] => {
 export const calcTableLayout = (state: TableLayoutState): TableLayout => {
 	const columns = state.columns ?? [];
 	const rows = state.rows ?? [];
-	// The same three steps the drawing resolves its stroke through
-	// (ObjectShapeStyleDefaultsRegistry), which is what keeps the measured cell
-	// and the drawn one the same width.
-	const strokeWidth =
-		state.strokeWidth ??
-		TABLE_DOC_DEFAULTS.strokeWidth ??
-		SHAPE_STYLE_FALLBACK.strokeWidth;
+	const strokeWidth = resolveTableStrokeWidth(state);
 
 	const rowHeights = rows.map((row, rowIndex) =>
 		resolveRowHeight(rowIndex, row, columns, state.text, strokeWidth),

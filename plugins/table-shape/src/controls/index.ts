@@ -1,0 +1,9 @@
+export { calcTableLocalDragDelta } from "./calcTableLocalDragDelta";
+export { handleTableColumnBoundary } from "./handleTableColumnBoundary";
+export { handleTableRowBoundary } from "./handleTableRowBoundary";
+export { resolveTableColumnBoundaryDrag } from "./resolveTableColumnBoundaryDrag";
+export { resolveTableRowBoundaryDrag } from "./resolveTableRowBoundaryDrag";
+export { parseTableBoundaryIndex } from "./tableBoundaryPart";
+export { TableBoundaryStrip } from "./TableBoundaryStrip";
+export { TableColumnBoundaryControl } from "./TableColumnBoundaryControl";
+export { TableRowBoundaryControl } from "./TableRowBoundaryControl";
