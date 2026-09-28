@@ -25,6 +25,7 @@ import type {
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import type { ObjectPartRegistry } from "../selection/ObjectPartRegistry";
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { ObjectTransformHandlesRegistry } from "../ui/controls/ObjectTransformHandlesRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
@@ -85,6 +86,11 @@ export type CanvasRegistries = {
 	objectBehavior: ObjectBehaviorRegistry;
 	objectTransformHandles: ObjectTransformHandlesRegistry;
 	selectionControl: SelectionControlRegistry;
+	/**
+	 * Per-type sub-part definitions, keyed by `(type, kind)`: what a part
+	 * selection inside an object means to the type that owns it.
+	 */
+	objectPart: ObjectPartRegistry;
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;

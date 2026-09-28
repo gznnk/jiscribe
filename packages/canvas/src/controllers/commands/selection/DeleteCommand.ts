@@ -1,11 +1,28 @@
-﻿import { isPoly } from "@jiscribe/doc/model/objects/types/Poly";
-
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { VERTEX_PART_KIND } from "../../selection/createVertexPartDefinition";
+import {
+	canDeleteObjectParts,
+	deleteObjectParts,
+} from "../../selection/deleteObjectParts";
+import type { ObjectPartSelection } from "../../selection/ObjectPartSelection";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { ExecutableCommand } from "../CommandTypes";
+
+/** Reads the legacy single-vertex field as the part selection the registry takes. */
+const toVertexPartSelection = (
+	selectedVertex: NonNullable<CanvasControllerState["selectedVertex"]>,
+): ObjectPartSelection => ({
+	objectId: selectedVertex.objectId,
+	kind: VERTEX_PART_KIND,
+	partIds: [String(selectedVertex.vertexIndex)],
+});
+
+const clearSelectedVertex = (
+	state: CanvasControllerState,
+): CanvasControllerState => ({ ...state, selectedVertex: null });
 
 /**
  * Command that deletes the current selection. Prioritizes vertex deletion when a
@@ -20,53 +37,36 @@ export const DeleteCommand: ExecutableCommand = {
 		default: [{ code: "Delete" }, { code: "Backspace" }],
 	},
 
-	canExecute: (state) => {
-		return (
-			state.selectedVertex !== null ||
-			state.selectedIds.length > 0 ||
-			state.selectedConnectorId !== null
-		);
+	canExecute: (state, registries) => {
+		// A vertex selection only claims the key where its type registers a
+		// deletion for it; otherwise the key belongs to whatever else is selected.
+		if (
+			state.selectedVertex !== null &&
+			canDeleteObjectParts(
+				state,
+				toVertexPartSelection(state.selectedVertex),
+				registries,
+			)
+		) {
+			return true;
+		}
+		return state.selectedIds.length > 0 || state.selectedConnectorId !== null;
 	},
 
 	execute: (state, registries) => {
 		// When a selectedVertex exists, prioritize vertex deletion.
 		// Even if selectedIds still contains objects, return from this branch so we
-		// don't fall through to object deletion.
+		// don't fall through to object deletion: a selection the type cannot act on
+		// is only cleared.
 		if (state.selectedVertex !== null) {
-			const { objectId, vertexIndex } = state.selectedVertex;
-			const poly = state.objects[objectId];
-
-			if (!isPoly(poly)) {
-				return { ...state, selectedVertex: null };
-			}
-
-			const points = poly.points;
-			const minPoints = poly.type === "polygon" ? 3 : 2;
-
-			// Do not delete below the minimum vertex count
-			if (points.length <= minPoints) {
-				return state;
-			}
-
-			const newPoints = points.filter((_, i) => i !== vertexIndex);
-			const updatedPoly = { ...poly, points: newPoints };
-
-			let nextState: CanvasControllerState = {
-				...state,
-				objects: {
-					...state.objects,
-					[objectId]: updatedPoly,
-				},
-				selectedVertex: null,
-				lastDuplicate: null,
-				commitVersion: state.commitVersion + 1,
-			};
-
-			if (updatedPoly.parentId) {
-				nextState = updateGroupBoundsFromRoot(nextState, updatedPoly.parentId);
-			}
-
-			return nextState;
+			return (
+				deleteObjectParts(
+					state,
+					toVertexPartSelection(state.selectedVertex),
+					registries,
+					clearSelectedVertex,
+				) ?? clearSelectedVertex(state)
+			);
 		}
 
 		// Collect the IDs to delete (for groups, recursively include descendants)
