@@ -1,10 +1,13 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
 import type { ObjectDoc } from "@jiscribe/doc/model/objects/base/ObjectDoc";
 import type { GroupDoc } from "@jiscribe/doc/model/objects/primitives/group/GroupDoc";
 import type { BoundingBox } from "@jiscribe/geometry";
 
 import { calcCameraToRevealBox } from "./calcCameraToRevealBox";
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
+import { calcScrollBounds } from "./calcScrollBounds";
+import { clampScrolledCamera } from "./clampScrolledCamera";
 import { isSameCamera } from "./isSameCamera";
 import type { ObjectVisualBoundsRegistry } from "../../rendering/objects/registry/ObjectVisualBoundsRegistry";
 import type { Viewport } from "../../rendering/Viewport";
@@ -98,6 +101,10 @@ const unionObjectBoxes = (
  * large for the view at that zoom is centred on each axis it overflows.
  * Changes to `background`, `view` or stacking order alone move nothing.
  *
+ * The pan stops at the scroll wall the way a view scroll does
+ * (clampScrolledCamera): the reveal margin gives way to the wall, while a view
+ * already outside it is not pulled back.
+ *
  * @param viewport - The viewport before the swap; returned as is (same
  *   reference) when nothing needs to move, including while it is unmeasured
  *   (either side 0 or less)
@@ -109,7 +116,11 @@ const unionObjectBoxes = (
  * @param restoredObjects - The objects after the swap, where added and modified
  *   objects are measured
  * @param visualBounds - Widens each box by what its shape draws outside its
- *   geometry (see calcObjectBoundingBox)
+ *   geometry (see calcObjectBoundingBox), the wall's content extent included
+ * @param scrollWallPadding - The restored document's wall margin as
+ *   resolveScrollWallPadding answers it, or null when panning is unrestricted.
+ *   The wall is measured from `restoredObjects`, not taken from the state's
+ *   cached measurement, which still describes the entry being left
  * @returns The viewport to show; only `minX` / `minY` ever differ from
  *   `viewport`
  */
@@ -120,6 +131,7 @@ export const calcViewportToRevealHistoryChange = (
 	restoredDoc: CanvasDoc,
 	restoredObjects: Record<string, ObjectState>,
 	visualBounds: Pick<ObjectVisualBoundsRegistry, "get">,
+	scrollWallPadding: ResolvedViewPadding | null,
 ): Viewport => {
 	if (leftDoc === restoredDoc) {
 		return viewport;
@@ -136,13 +148,24 @@ export const calcViewportToRevealHistoryChange = (
 		return viewport;
 	}
 
-	const camera = calcCameraToRevealBox(
+	const revealCamera = calcCameraToRevealBox(
 		viewport,
 		changedBox,
 		HISTORY_REVEAL_PADDING,
 		"center",
 	);
-	if (!camera || isSameCamera(viewport, camera)) {
+	if (!revealCamera) {
+		return viewport;
+	}
+	const camera =
+		scrollWallPadding === null
+			? revealCamera
+			: clampScrolledCamera(
+					{ ...viewport, ...revealCamera },
+					viewport,
+					calcScrollBounds(scrollWallPadding, restoredObjects, visualBounds),
+				);
+	if (isSameCamera(viewport, camera)) {
 		return viewport;
 	}
 	return { ...viewport, minX: camera.minX, minY: camera.minY };

@@ -1,4 +1,5 @@
 import type { CanvasDoc } from "@jiscribe/doc/model/canvas/CanvasDoc";
+import type { ResolvedViewPadding } from "@jiscribe/doc/model/canvas/ViewDoc";
 import { describe, expect, it } from "vitest";
 
 import type { Viewport } from "../../../rendering/Viewport";
@@ -30,11 +31,15 @@ const viewport: Viewport = {
 	zoom: 1,
 };
 
-/** The reveal for a swap from `leftDoc` to `restoredDoc`, seen from `from`. */
+/**
+ * The reveal for a swap from `leftDoc` to `restoredDoc`, seen from `from`,
+ * inside a wall of `scrollWallPadding` (none by default).
+ */
 const reveal = (
 	from: Viewport,
 	leftDoc: CanvasDoc,
 	restoredDoc: CanvasDoc,
+	scrollWallPadding: ResolvedViewPadding | null = null,
 ): Viewport =>
 	calcViewportToRevealHistoryChange(
 		from,
@@ -51,7 +56,11 @@ const reveal = (
 			registries.objectContentResizer,
 		).objects,
 		registries.objectVisualBounds,
+		scrollWallPadding,
 	);
+
+/** A wall flush with the content on every side. */
+const flushWall: ResolvedViewPadding = { top: 0, right: 0, bottom: 0, left: 0 };
 
 describe("calcViewportToRevealHistoryChange", () => {
 	it("returns the same viewport when the change is already in view", () => {
@@ -165,5 +174,33 @@ describe("calcViewportToRevealHistoryChange", () => {
 		const restoredDoc = docOf([rect("a", 5000, 100)]);
 
 		expect(reveal(unmeasured, leftDoc, restoredDoc)).toBe(unmeasured);
+	});
+
+	it("stops the pan at the scroll wall, giving up the margin past it", () => {
+		// The content ends at 2010, so the wall holds minX at 2010 - 800.
+		const leftDoc = docOf([rect("a", 0, 0), rect("b", 2010, 0)]);
+		const restoredDoc = docOf([rect("a", 0, 0), rect("b", 2000, 0)]);
+
+		expect(reveal(viewport, leftDoc, restoredDoc).minX).toBe(1258);
+		expect(reveal(viewport, leftDoc, restoredDoc, flushWall).minX).toBe(1210);
+	});
+
+	it("does not pull back a view already beyond the wall", () => {
+		const leftDoc = docOf([rect("a", 0, 0), rect("b", 2010, 0)]);
+		const restoredDoc = docOf([rect("a", 0, 0), rect("b", 2000, 0)]);
+		const beyondWall = { ...viewport, minX: 2500 };
+
+		// Panning left to rect b's margin, as without a wall.
+		expect(reveal(beyondWall, leftDoc, restoredDoc, flushWall).minX).toBe(1952);
+	});
+
+	it("returns the same viewport when the wall leaves no room to pan", () => {
+		// A view already at the wall's right end: the reveal right would pass it.
+		const leftDoc = docOf([rect("a", 0, 0), rect("b", 780, 0)]);
+		const restoredDoc = docOf([rect("a", 0, 0), rect("b", 800, 0)]);
+		// minY -48 already leaves the margin above b, so only x would move.
+		const atWall = { ...viewport, minX: 10, minY: -48 };
+
+		expect(reveal(atWall, leftDoc, restoredDoc, flushWall)).toBe(atWall);
 	});
 });

@@ -166,26 +166,5 @@ describe("canvasReducer (integration)", () => {
 			expect(undone.viewport.minX).toBe(1210);
 			expect(isInView(undone, "rect-2")).toBe(true);
 		});
-
-		it("does not pull back a view already beyond the scroll wall", () => {
-			let state = createTestState(
-				{
-					...docOf(rectDoc("rect-1", 0, 0), rectDoc("rect-2", 2000, 0)),
-					view: {
-						scroll: "content",
-						padding: { top: 0, right: 0, bottom: 0, left: 0 },
-					},
-				} as CanvasDoc,
-				{ selectedIds: ["rect-2"] },
-			);
-			state = runCommands(state, "move-right");
-			// Past the wall on the right, with rect-2 off screen to the left.
-			state = { ...state, viewport: viewAt(2500, 0) };
-
-			const undone = runCommands(state, "undo");
-
-			// The reveal pans left to the margin before rect-2, as without a wall.
-			expect(undone.viewport.minX).toBe(1952);
-		});
 	});
 });

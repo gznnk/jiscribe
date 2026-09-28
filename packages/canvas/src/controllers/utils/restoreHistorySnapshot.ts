@@ -1,15 +1,10 @@
-import { calcScrollBounds } from "./calcScrollBounds";
 import { calcViewportToRevealHistoryChange } from "./calcViewportToRevealHistoryChange";
-import { clampScrolledCamera } from "./clampScrolledCamera";
 import { createMultiSelectGroup } from "./createMultiSelectGroup";
-import { isSameCamera } from "./isSameCamera";
 import { resetUiState } from "./resetUiState";
 import { resolveDocSnapshot } from "./resolveDocSnapshot";
 import { resolveRequestedSelection } from "./resolveRequestedSelection";
 import { resolveScrollWallPadding } from "./resolveScrollWallPadding";
-import type { Viewport } from "../../rendering/Viewport";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
-import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { CanvasControllerState, HistoryState } from "../CanvasTypes";
 import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
@@ -44,44 +39,6 @@ export const canNavigateHistory = (state: CanvasControllerState): boolean =>
 	canOfferHistoryNavigation(state) && state.activeDrag === null;
 
 /**
- * The revealed viewport held inside the scroll wall of the restored document, as
- * a view scroll would be (clampScrolledCamera): the reveal margin gives way to
- * the wall, while a view already outside it is not pulled back. The wall is
- * measured from the restored objects, since the carried-over measurement still
- * describes the entry being left.
- */
-const holdRevealInsideScrollWall = (
-	revealed: Viewport,
-	state: CanvasControllerState,
-	restoredState: CanvasState,
-	registries: ICanvasRegistries,
-): Viewport => {
-	if (revealed === state.viewport) {
-		return revealed;
-	}
-	const wallPadding = resolveScrollWallPadding(
-		state.scrollLimit.hostConfig,
-		restoredState.view,
-	);
-	if (wallPadding === null) {
-		return revealed;
-	}
-	const camera = clampScrolledCamera(
-		revealed,
-		state.viewport,
-		calcScrollBounds(
-			wallPadding,
-			restoredState.objects,
-			registries.objectVisualBounds,
-		),
-	);
-	if (isSameCamera(state.viewport, camera)) {
-		return state.viewport;
-	}
-	return { ...revealed, minX: camera.minX, minY: camera.minY };
-};
-
-/**
  * Moves the canvas onto another history entry — the one state transition undo,
  * redo and revert all make. Only the stacks differ between them, so the caller
  * hands in the history it wants to end up with and this restores its `present`.
@@ -96,18 +53,18 @@ const holdRevealInsideScrollWall = (
  * while undoing a creation (or redoing a deletion) loses the shape and its
  * selection with it. Neither is the camera: it pans only as far as it takes to
  * show what the swap changed (calcViewportToRevealHistoryChange), stopping at
- * the scroll wall, so a change off screen is not undone out of sight. `commitVersion` is *not* bumped (restoring is
- * not a new edit) while `saveRequest` is raised (the file on disk no longer
- * matches), a
- * pairing that is easy to get wrong in three places and impossible to get wrong
- * in one.
+ * the scroll wall, so a change off screen is not undone out of sight.
+ * `commitVersion` is *not* bumped (restoring is not a new edit) while
+ * `saveRequest` is raised (the file on disk no longer matches), a pairing that
+ * is easy to get wrong in three places and impossible to get wrong in one.
  *
  * @param state - The state being navigated away from
  * @param history - The stacks to end up with; its `present` is the entry
  *   restored, and the caller is what decides where the other entries went
  * @param registries - The canvas's registries; the mapper materializes the
  *   snapshots, the content resizer re-measures what is sized from its content,
- *   and the visual bounds measure what the camera reveals
+ *   and the visual bounds measure what the camera reveals and the wall it
+ *   stops at
  * @returns The restored state. The entries that merely moved between stacks stay
  *   unresolved snapshots; only the one being restored and the one being left
  *   (compared to find what changed) are resolved
@@ -143,18 +100,17 @@ export const restoreHistorySnapshot = (
 			restoredState.objects,
 			state.multiSelectGroup,
 		),
-		viewport: holdRevealInsideScrollWall(
-			calcViewportToRevealHistoryChange(
-				state.viewport,
-				resolveDocSnapshot(state.history.present, mapper),
-				state.objects,
-				restoredDoc,
-				restoredState.objects,
-				registries.objectVisualBounds,
+		viewport: calcViewportToRevealHistoryChange(
+			state.viewport,
+			resolveDocSnapshot(state.history.present, mapper),
+			state.objects,
+			restoredDoc,
+			restoredState.objects,
+			registries.objectVisualBounds,
+			resolveScrollWallPadding(
+				state.scrollLimit.hostConfig,
+				restoredState.view,
 			),
-			state,
-			restoredState,
-			registries,
 		),
 		// Only the host's half of the wall is carried over; the rest of the entry is
 		// the measurement cache, and limitViewScroll notices the swapped objects and

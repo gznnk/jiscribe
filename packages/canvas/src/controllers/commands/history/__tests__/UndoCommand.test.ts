@@ -45,6 +45,12 @@ const makeState = (params: {
 		).objects,
 		// Shows both rects with the margin undo reveals them with.
 		viewport: { minX: -100, minY: -100, width: 800, height: 600, zoom: 1 },
+		scrollLimit: {
+			hostConfig: null,
+			rect: null,
+			measuredFrom: null,
+			measuredView: undefined,
+		},
 		activeDrag: params.activeDrag ?? null,
 		textEditState: params.textEditState ?? null,
 		selectedIds: params.selectedIds ?? [],
