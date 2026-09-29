@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import { calcFrameCenterFromTopLeft } from "../../geometry/calcFrameCenterFromTopLeft";
-import { calcFrameTopLeft } from "../../geometry/calcFrameTopLeft";
+import { calcFrameKeyPoint } from "../../geometry/calcFrameKeyPoint";
 import type { Dimensions, Transform } from "../../types";
 
 const SIZE: Dimensions = { width: 40, height: 20 };
@@ -35,16 +35,14 @@ describe("calcFrameCenterFromTopLeft", () => {
 		{ rotation: 37, scaleX: 1, scaleY: 1 },
 		{ rotation: 90, scaleX: -1, scaleY: 1 },
 		{ rotation: 210, scaleX: -1, scaleY: -1 },
-	])("round-trips calcFrameTopLeft under %o", (transform) => {
+	])("round-trips the frame's top-left key point under %o", (transform) => {
 		const center = calcFrameCenterFromTopLeft({ x: 12.5, y: -7.25 }, SIZE, {
 			...transform,
 		});
-		const corner = calcFrameTopLeft({
-			cx: center.x,
-			cy: center.y,
-			...SIZE,
-			...transform,
-		});
+		const corner = calcFrameKeyPoint(
+			{ cx: center.x, cy: center.y, ...SIZE, ...transform },
+			"topLeft",
+		);
 		expect(corner.x).toBeCloseTo(12.5);
 		expect(corner.y).toBeCloseTo(-7.25);
 	});

@@ -7,7 +7,7 @@ import { PRECISION } from "@jiscribe/doc/model/objects/utils/precision";
 import { calcTextObjectFrameSize } from "@jiscribe/doc/text/object/calcTextObjectFrameSize";
 import {
 	calcFrameCenterFromTopLeft,
-	calcFrameTopLeft,
+	calcFrameKeyPoint,
 	roundToDecimal,
 } from "@jiscribe/geometry";
 
@@ -46,7 +46,7 @@ export const resizeTextStateToContent = (
 		return state;
 	}
 
-	const drawnTopLeft = calcFrameTopLeft(state);
+	const drawnTopLeft = calcFrameKeyPoint(state, "topLeft");
 	// The corner is rounded before the new center is built around it, so repeated
 	// re-measurements land on the same value instead of drifting a float epsilon
 	// per keystroke — the same rounding the doc mapper applies to it.

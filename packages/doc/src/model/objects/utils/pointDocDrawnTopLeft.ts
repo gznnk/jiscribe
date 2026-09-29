@@ -1,6 +1,6 @@
 import {
 	calcFrameCenterFromTopLeft,
-	calcFrameTopLeft,
+	calcFrameKeyPoint,
 	type Dimensions,
 	type Point,
 	type Transform,
@@ -24,7 +24,7 @@ const readDocTransform = (
  * Where a box of `size` centered on `center` has its top-left corner drawn. That
  * corner is what a `geometry: "point"` doc stores as `(x, y)` (see GeometryType), so
  * every path writing such a doc from a center goes through here — the doc's own
- * transform fields being what this adds to {@link calcFrameTopLeft}.
+ * transform fields being what this adds to the frame's own key point.
  *
  * @param center - The box's center in world coordinates
  * @param size - The box's size in local px, before the transform; a zero size answers `center` itself
@@ -36,13 +36,16 @@ export const calcPointDocDrawnTopLeft = (
 	size: Dimensions,
 	doc: Readonly<Record<string, unknown>>,
 ): Point =>
-	calcFrameTopLeft({
-		cx: center.x,
-		cy: center.y,
-		width: size.width,
-		height: size.height,
-		...readDocTransform(doc),
-	});
+	calcFrameKeyPoint(
+		{
+			cx: center.x,
+			cy: center.y,
+			width: size.width,
+			height: size.height,
+			...readDocTransform(doc),
+		},
+		"topLeft",
+	);
 
 /**
  * The inverse of {@link calcPointDocDrawnTopLeft}: the center a box of `size` needs for

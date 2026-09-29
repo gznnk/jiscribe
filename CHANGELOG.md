@@ -95,7 +95,7 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 - For plugin authors: a shape may now declare `geometry: "point"` and let
   `createFrameMapper` map it — the doc stores the position alone and the box is
   re-derived from the content (`contentResizer`), as the `table` does.
-  `@jiscribe/geometry` gained `calcFrameTopLeft` / `calcFrameCenterFromTopLeft`
+  `@jiscribe/geometry` gained `calcFrameKeyPoint` / `calcFrameCenterFromTopLeft`
   for the corner such a box is grown from and rebuilt around, `@jiscribe/doc`
   exports `calcWrappedTextBlockSize` so a shape measuring its own text box does
   not restate the padding rule, and a type whose slot set is not fixed declares

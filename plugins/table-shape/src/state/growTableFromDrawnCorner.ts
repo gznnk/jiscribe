@@ -1,7 +1,7 @@
 import { PRECISION } from "@jiscribe/canvas-sdk";
 import {
 	calcFrameCenterFromTopLeft,
-	calcFrameTopLeft,
+	calcFrameKeyPoint,
 	roundToDecimal,
 } from "@jiscribe/geometry";
 import type { Dimensions } from "@jiscribe/geometry";
@@ -10,7 +10,8 @@ import type { TableState } from "./TableState";
 
 /**
  * The state with `size` as its box, grown right and down: the corner the table is
- * drawn from stays where it is (calcFrameTopLeft) and the center moves instead.
+ * drawn from stays where it is (the frame's "topLeft" key point) and the center
+ * moves instead.
  *
  * That corner is read off `state`, so the state handed in has to still carry the
  * box the table is drawn at — a new size belongs in `size`, never written onto
@@ -24,7 +25,7 @@ export const growTableFromDrawnCorner = (
 	state: TableState,
 	size: Dimensions,
 ): TableState => {
-	const drawnTopLeft = calcFrameTopLeft(state);
+	const drawnTopLeft = calcFrameKeyPoint(state, "topLeft");
 	const anchor = {
 		x: roundToDecimal(drawnTopLeft.x, PRECISION.COORDINATE),
 		y: roundToDecimal(drawnTopLeft.y, PRECISION.COORDINATE),

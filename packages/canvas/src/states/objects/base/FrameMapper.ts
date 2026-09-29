@@ -15,7 +15,7 @@ import type {
 	TransformedFrame,
 } from "@jiscribe/geometry";
 import {
-	calcFrameTopLeft,
+	calcFrameKeyPoint,
 	convertEllipseToFrame,
 	convertFrameToEllipse,
 	convertFrameToRect,
@@ -36,7 +36,7 @@ import type { TransformState } from "./TransformState";
 import { pick } from "../utils/stylePassthrough";
 
 /**
- * Reads a State as the transformed box {@link calcFrameTopLeft} takes. A type
+ * Reads a State as the transformed box calcFrameKeyPoint takes. A type
  * declaring no transform carries none of the three fields, and reads as a box
  * that is neither rotated nor flipped.
  */
@@ -138,7 +138,9 @@ export const createFrameMapper = <
 			const geometry: Rect | Ellipse | Point = isPoint
 				? // The whole box is the content's answer, so only the corner it was
 					// grown from goes back out (see GeometryType).
-					roundDocPoint(calcFrameTopLeft(readTransformedFrame(state)))
+					roundDocPoint(
+						calcFrameKeyPoint(readTransformedFrame(state), "topLeft"),
+					)
 				: isEllipse
 					? roundDocEllipse(convertFrameToEllipse(frame))
 					: roundDocRect(convertFrameToRect(frame));
