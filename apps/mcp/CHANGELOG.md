@@ -13,8 +13,6 @@ how it is registered. The canvas it draws on — the shapes, the styles, what a
 [engine's changelog](https://github.com/gznnk/jiscribe/blob/main/CHANGELOG.md)
 covers that.
 
-## [Unreleased]
-
 ## [0.11.0] - 2026-09-29
 
 ### Security
