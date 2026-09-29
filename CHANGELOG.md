@@ -13,6 +13,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-29
+
 ### Security
 
 - **Markdown no longer fetches the images it names.** `![alt](url)` in a
@@ -48,7 +50,9 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   Ctrl+B / I / U on it. `@jiscribe/doc` exports `TextType`, `textStyleKeysOf`,
   `isSingleBodyText` and `acceptsTextEmphasisStyle` to ask which styling a type
   takes, `OpaqueObjectDoc` for an object of a type the reader does not know,
-  and `isSemanticError` / `isSemanticWarning`. `@jiscribe/canvas-sdk` exports
+  `ArrowTypes`, `ConnectPointIds`, `ConnectorRoutings` and `TextLayouts` for
+  the values those properties take, and `isSemanticError` /
+  `isSemanticWarning`. `@jiscribe/canvas-sdk` exports
   `FRAME_BORDER_HIT_STROKE_WIDTH`, and `@jiscribe/geometry`
   `calcOutlinePointAlongLocalRayForRotatedEllipse` and
   `convertTransformedFrameToEllipse`.
@@ -98,7 +102,8 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   off screen the view used to stay where it was, so nothing seemed to happen.
   The view now pans just far enough to show the objects the step changed, or
   where removed ones were, and centres on them when they do not fit. The zoom
-  is never changed, and the camera is still not part of the history.
+  is never changed, the view never pans past where scrolling stops, and the
+  camera is still not part of the history.
 - **Pasting lands where you are looking.** A paste whose usual place, beside the
   original, is off screen goes to the middle of the view; pasting again while
   the copy is still selected steps on from it, as Duplicate does.
@@ -285,7 +290,8 @@ The first release in this repository.
 Earlier versions were released before this repository was public and are not
 recorded here.
 
-[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/gznnk/jiscribe/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/gznnk/jiscribe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/gznnk/jiscribe/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/gznnk/jiscribe/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/gznnk/jiscribe/releases/tag/v0.8.0

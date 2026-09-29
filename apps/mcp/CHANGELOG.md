@@ -15,6 +15,8 @@ covers that.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-29
+
 ### Security
 
 - **The viewer's host checks who is talking to it.** It answered any page a
@@ -239,6 +241,9 @@ build knows: the object is kept as it is but not drawn.`
 - A `HEAD` request is answered as `GET` is, without the body, wherever `GET`
   is served (the viewer page, its fonts, an image, the session token); it
   used to be a 404.
+- **Ctrl+S (Cmd+S) in the viewer no longer opens the browser's Save Page
+  dialog.** It writes out a pending edit at once and briefly shows that
+  changes are saved automatically.
 
 ### Changed
 
