@@ -30,14 +30,20 @@ surface — [apps/mcp/CHANGELOG.md](apps/mcp/CHANGELOG.md) and
   `CanvasPlugin.messages` is that channel, and a host outranks it — the same
   order a stencil's label already resolved in. The `table`'s six grid commands
   and its Cell Color button ship English and Japanese.
-- **A table cell's background can be set from the floating menu.** Cell Color
-  paints the picked cells, or every cell when none is picked, and shows the
-  colours split when they disagree. **No fill** takes a cell back to letting what
-  is behind the table show through, which is not the same document as a cell
-  filled with `transparent`. For plugin authors: an `extraStyleProperties`
-  descriptor may name a `textSlotField`, which stores the property on the
-  selected slots rather than on the object, and a `custom` menu item declaring
-  `slotAware` survives the narrowing that happens while a slot is picked.
+- **A table cell's background can be set from the floating menu or the property
+  sidebar.** Cell Color paints the picked cells, or every cell when none is
+  picked, and shows the colours split when they disagree. **No fill** takes a
+  cell back to letting what is behind the table show through, which is not the
+  same document as a cell filled with `transparent`. Both surfaces read and write
+  the same cells, so the swatch states the value of exactly what it would change.
+  For plugin authors: an `extraStyleProperties` descriptor may name a
+  `textSlotField`, which stores the property on the selected slots rather than on
+  the object; a `custom` item declaring `slotAware` survives the narrowing that
+  happens while a slot is picked — on the property sidebar as well as the
+  floating menu, where such a row now receives the resolved
+  `objectPartSelection`; and `createDefaultPropertyPanel` /
+  `appendPropertyPanelItems` / `PROPERTY_PANEL_SECTIONS` let a type add a row to
+  the built-in panel instead of restating it.
 - **A table's rows and columns can be added by the `+` beside the grid.** A round
   `+` stands at every boundary a track can go at — every rule and both outer
   edges of each axis — and clicking one inserts an empty track there. The cells

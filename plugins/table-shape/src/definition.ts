@@ -5,7 +5,12 @@ import type {
 	ObjectTransformHandles,
 	SelectionControlDefinition,
 } from "@jiscribe/canvas";
-import { createFrameBehavior } from "@jiscribe/canvas-sdk";
+import {
+	appendPropertyPanelItems,
+	createDefaultPropertyPanel,
+	createFrameBehavior,
+	PROPERTY_PANEL_SECTIONS,
+} from "@jiscribe/canvas-sdk";
 
 import { TABLE_CONTEXT_MENU } from "./commands/tableContextMenu";
 import { handleTableColumnBoundary } from "./controls/handleTableColumnBoundary";
@@ -22,11 +27,12 @@ import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
 import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
 import { TableCellColorMenu } from "./menu/TableCellColorMenu";
+import { TableCellColorRow } from "./menu/TableCellColorRow";
 import { createTableTrackPartDefinition } from "./parts/tableTrackParts";
 import { calcTableTextRegion } from "./presentation/calcTableTextRegion";
 import { TableBox } from "./presentation/TableBox";
 import type { TableDoc } from "./schema/TableDoc";
-import { TABLE_EXTRA_STYLE_PROPERTIES } from "./schema/TableDoc";
+import { TABLE_EXTRA_STYLE_PROPERTIES, TableFeatures } from "./schema/TableDoc";
 import { resizeTableStateToContent } from "./state/resizeTableStateToContent";
 import { tableToDoc, tableToState } from "./state/TableMapper";
 import type { TableState } from "./state/TableState";
@@ -136,6 +142,32 @@ const TABLE_PARTS: ObjectPartDefinition<TableState>[] = [
 	},
 ];
 
+/** Identity of the cell-background control on both surfaces; matched by the multi-type merge. */
+const TABLE_CELL_FILL_ITEM_ID = "table-cell-fill";
+
+/**
+ * The properties sidebar: what the features imply, plus the cell background.
+ *
+ * A declared `propertyPanel` replaces the default rather than adding to it, so
+ * the default is built here and appended to — the core types that add a row do
+ * the same. The row goes under the shared Fill heading, which is already worded
+ * in every locale the canvas knows, and lands last because a table's features
+ * declare no fill of its own for that section to have been created by.
+ *
+ * `slotAware`, for the reason the menu item carries it: the write lands on the
+ * cells, so the row has to survive one being picked.
+ */
+const TABLE_PROPERTY_PANEL = appendPropertyPanelItems(
+	createDefaultPropertyPanel(TableFeatures),
+	PROPERTY_PANEL_SECTIONS.fill,
+	{
+		type: "custom",
+		id: TABLE_CELL_FILL_ITEM_ID,
+		component: TableCellColorRow,
+		slotAware: true,
+	},
+);
+
 /**
  * `createFrameObjectDefinition` is not used here for the reason its doc half is
  * not (see ./doc): it is built around a stored box. The mapper and the content
@@ -152,6 +184,9 @@ const TABLE_PARTS: ObjectPartDefinition<TableState>[] = [
  * stroke items, being the other half of how a table looks, and is the only custom
  * item here that survives a cell being picked — it writes what a cell holds, so
  * it declares `slotAware` (filterTextSlotMenuSections drops every other one).
+ * The sidebar takes the same background as a row of its own
+ * ({@link TABLE_PROPERTY_PANEL}); the floating menu is not the only place a user
+ * looks for it.
  */
 export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	...tableDocDefinition,
@@ -167,13 +202,14 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	transformHandles: TABLE_TRANSFORM_HANDLES,
 	stencils: TableStencils,
 	extraStyleProperties: TABLE_EXTRA_STYLE_PROPERTIES,
+	propertyPanel: TABLE_PROPERTY_PANEL,
 	menu: [
 		{
 			id: "style",
 			items: [
 				{
 					type: "custom",
-					id: "table-cell-fill",
+					id: TABLE_CELL_FILL_ITEM_ID,
 					component: TableCellColorMenu,
 					slotAware: true,
 				},

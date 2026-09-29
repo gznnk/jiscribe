@@ -102,6 +102,37 @@ const BADGE_SECTIONS: PropertyPanelSection[] = [
 	},
 ];
 
+/** Stands in for a row that writes what a slot itself holds (a table cell's background). */
+const CellFillRow = (): null => null;
+
+/**
+ * A plugin type whose fill section carries a slot-aware row, so the narrowing has
+ * one to keep outside the text section — and a plain custom row beside a built-in
+ * text row, so it has one to drop inside it.
+ */
+const TABLE_SECTIONS: PropertyPanelSection[] = [
+	{
+		id: "fill",
+		label: "Fill",
+		items: [
+			{
+				type: "custom",
+				id: "cell-fill",
+				component: CellFillRow,
+				slotAware: true,
+			},
+		],
+	},
+	{
+		id: "text",
+		label: "Text",
+		items: [
+			{ type: "fontSize" },
+			{ type: "custom", id: "cell-note", component: BadgeRow },
+		],
+	},
+];
+
 const registry = createPropertyPanelRegistry();
 registry.register("rect", RECT_SECTIONS);
 registry.register("ellipse", ELLIPSE_SECTIONS);
@@ -110,6 +141,7 @@ registry.register("container", CONTAINER_SECTIONS);
 registry.register("badge", BADGE_SECTIONS);
 registry.register("gauge", GAUGE_SECTIONS);
 registry.register("box", BOX_SECTIONS);
+registry.register("table", TABLE_SECTIONS);
 
 /** Every fixture shape spells its text out as slots, whatever type it wears. */
 const objectPart = createTextSlotPartRegistry(
@@ -120,6 +152,7 @@ const objectPart = createTextSlotPartRegistry(
 	"badge",
 	"gauge",
 	"box",
+	"table",
 );
 
 /** A shape holding one named text slot, so a slot selection can resolve against it. */
@@ -299,6 +332,36 @@ describe("getPropertyPanelSections", () => {
 		});
 
 		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+			{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
+		]);
+	});
+
+	it("keeps a slot-aware custom row once a slot is selected, section and all", () => {
+		const state = stateOf({
+			objects: { "t-1": shape("t-1", "table") },
+			selectedIds: ["t-1"],
+			objectPartSelection: {
+				objectId: "t-1",
+				kind: TEXT_SLOT_PART_KIND,
+				partIds: ["body"],
+			},
+		});
+
+		// The Fill section survives on the strength of that one row, where the
+		// text section's plain custom row goes and its built-in stays.
+		expect(getPropertyPanelSections(state, registry, objectPart)).toEqual([
+			{
+				id: "fill",
+				label: "Fill",
+				items: [
+					{
+						type: "custom",
+						id: "cell-fill",
+						component: CellFillRow,
+						slotAware: true,
+					},
+				],
+			},
 			{ id: "text", label: "Text", items: [{ type: "fontSize" }] },
 		]);
 	});

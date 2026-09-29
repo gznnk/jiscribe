@@ -16,24 +16,7 @@ import {
 	ensurePropertyPanelItems,
 	propertyPanelItemKey,
 } from "../utils/appendPropertyPanelItems";
-
-/**
- * Narrows the sections down to the rows a selected text slot can receive: the
- * text section's built-in rows, the one section a slot can take anything from.
- * Custom rows go with the other sections, since a plugin row has no way to say
- * it is slot-aware. A section left empty is dropped so no accordion header
- * survives on its own.
- */
-const filterTextSlotSections = (
-	sections: PropertyPanelSection[],
-): PropertyPanelSection[] =>
-	sections
-		.filter((section) => section.id === PROPERTY_PANEL_SECTIONS.text.id)
-		.map((section) => ({
-			...section,
-			items: section.items.filter((item) => item.type !== "custom"),
-		}))
-		.filter((section) => section.items.length > 0);
+import { filterTextSlotPanelSections } from "../utils/filterTextSlotPanelSections";
 
 /**
  * Collects the sidebar sections of the current selection, before any slot
@@ -128,11 +111,12 @@ const filterShownSections = (
  * Computes the sidebar sections to display from the current selection.
  *
  * While a text slot is selected the sections are narrowed to the text one and
- * its custom rows go with them (filterTextSlotSections), so the panel never
- * offers a control the slot cannot receive — the same narrowing the ObjectMenu
- * does, and for the same reason an open text editor narrows them too: what is
- * offered there has to be something a stretch of the text being edited can take,
- * and reshaping the shape mid-edit is not it.
+ * the rows that declare themselves slot-aware (filterTextSlotPanelSections), so
+ * the panel never offers a control the slot cannot receive — the same narrowing
+ * the ObjectMenu does, through the same predicate, and for the same reason an
+ * open text editor narrows them too: what is offered there has to be something a
+ * stretch of the text being edited can take, and reshaping the shape mid-edit is
+ * not it.
  *
  * A multi-selection and a group are given the aspect-ratio lock whatever they
  * hold: the lock is theirs rather than their members', and the merge would drop
@@ -165,7 +149,7 @@ export const getPropertyPanelSections = (
 			state,
 		);
 	}
-	return filterShownSections(filterTextSlotSections(sections), state);
+	return filterShownSections(filterTextSlotPanelSections(sections), state);
 };
 
 /**

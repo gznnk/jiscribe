@@ -6,23 +6,19 @@ import {
 	ObjectMenuColorPickerGrid,
 	ObjectMenuDropdownPanel,
 	ObjectMenuItemPositioner,
-	readSelectionSlotField,
 	selectionMixedValues,
 	selectionValueOr,
 	setPart,
 	togglePart,
-	useObjectPartRegistry,
 	useSubmenuPosition,
 } from "@jiscribe/canvas-sdk";
 import { memo, useRef } from "react";
 
 import { NoFillButton, NoFillRow } from "./TableCellColorMenuStyled";
+import { useTableCellFill } from "./useTableCellFill";
 import { useTableStrings } from "../messages/useTableStrings";
 import { resolveCellPaint } from "../presentation/resolveCellPaint";
-import {
-	TABLE_CELL_FILL_FIELD,
-	TABLE_CELL_FILL_PROPERTY,
-} from "../schema/TableDoc";
+import { TABLE_CELL_FILL_PROPERTY } from "../schema/TableDoc";
 
 const SECTION_ID = "table-cell-color";
 
@@ -31,8 +27,9 @@ const SECTION_ID = "table-cell-color";
  * the table — a picked row or column being its own cells (tableTrackParts) — or
  * on every cell when the table alone is selected. Those are the targets the
  * write itself takes, which is why the swatch can be read off them
- * (readSelectionSlotField): cells that disagree draw the button's circle split
- * between their colors and highlight no swatch in the grid.
+ * ({@link useTableCellFill}, shared with the sidebar's row so the two surfaces
+ * cannot read different cells): cells that disagree draw the button's circle
+ * split between their colors and highlight no swatch in the grid.
  *
  * The shared grid is used rather than a palette of this plugin's own (as sticky
  * has): a cell's background is an ordinary background color, and the grid is what
@@ -51,16 +48,13 @@ const TableCellColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	onPropertyUpdate,
 }) => {
 	const strings = useTableStrings();
-	const objectPart = useObjectPartRegistry();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = openSectionId === SECTION_ID;
-	const cellFill = readSelectionSlotField(
-		selectedIds,
+	const cellFill = useTableCellFill({
 		objects,
+		selectedIds,
 		objectPartSelection,
-		objectPart,
-		TABLE_CELL_FILL_FIELD,
-	);
+	});
 	const isMixed = isMixedSelectionValue(cellFill);
 	const sharedFill = selectionValueOr(cellFill, undefined);
 	const isNoFill = !isMixed && sharedFill === undefined;
