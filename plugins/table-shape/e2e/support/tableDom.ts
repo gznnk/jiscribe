@@ -64,6 +64,36 @@ export async function cellCenter(
 }
 
 /**
+ * The color one cell's surface is painted with, as the browser resolves it.
+ * Read from the computed style rather than an attribute because the paint goes
+ * through CSS, which is what lets a stored `"auto"` resolve to a theme token
+ * (TableBox). An unfilled cell reports `rgba(0, 0, 0, 0)`.
+ *
+ * @param canvas - The driver for the page under test
+ * @param objectId - The table's object id
+ * @param cellId - The cell's slot id (`r0c1`), which is its `data-part`
+ * @returns The computed `fill`; throws when the cell is not drawn
+ */
+export async function cellFillColor(
+	canvas: CanvasDriver,
+	objectId: string,
+	cellId: string,
+): Promise<string> {
+	return canvas.page.evaluate(
+		([id, part]) => {
+			const cell = document.querySelector(
+				`[data-kind="object"][data-id="${id}"] [data-part="${part}"]`,
+			);
+			if (cell === null) {
+				throw new Error(`no cell ${part} on ${id}`);
+			}
+			return getComputedStyle(cell).fill;
+		},
+		[objectId, cellId] as const,
+	);
+}
+
+/**
  * How many cells the table draws, which is its grid's size — rows times columns,
  * counted off the drawing rather than the state.
  *

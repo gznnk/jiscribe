@@ -30,6 +30,7 @@ import type {
 import { resolveOpenReference } from "./utils/resolveOpenReference";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
+import type { ObjectPartSelection } from "../../../selection/ObjectPartSelection";
 import { resolveObjectPartSelection } from "../../../selection/resolveObjectPartSelection";
 import { TEXT_EDITOR_FOCUS_SCOPE_PROPS } from "../../editors/TextEditor/TextEditorFocusScope";
 
@@ -42,6 +43,7 @@ type ObjectMenuProps = {
 const renderItem = (
 	item: ObjectMenuItem,
 	canvasState: CanvasControllerState,
+	objectPartSelection: ObjectPartSelection | null,
 	onPropertyUpdate: StylePropertyUpdater,
 	onOpenReference: OpenReferenceHandler | undefined,
 ): React.ReactNode => {
@@ -135,6 +137,7 @@ const renderItem = (
 					objects={canvasState.objects}
 					selectedIds={canvasState.selectedIds}
 					selectedConnectorId={canvasState.selectedConnectorId}
+					objectPartSelection={objectPartSelection}
 					openSectionId={canvasState.objectMenuOpenId}
 					onPropertyUpdate={onPropertyUpdate}
 				/>
@@ -198,12 +201,18 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
 	const objectSections = useMenuSections(canvasState, shouldRender);
+	// Resolved once and handed to every custom item as well: an item that writes
+	// into the picked parts reads the same value the write will be matched against.
+	const objectPartSelection = resolveObjectPartSelection(
+		canvasState,
+		objectPart,
+	);
 	// None of the system sections acts on a text slot, so they all go while one is
 	// selected — and likewise while an editor is open, where the menu is there to
 	// style the text being edited.
 	const showSystemSections =
 		shouldRender &&
-		resolveObjectPartSelection(canvasState, objectPart) === null &&
+		objectPartSelection === null &&
 		canvasState.textEditState?.kind !== "shape";
 	const systemSections = showSystemSections
 		? buildSystemSections(canvasState, onOpenReference)
@@ -230,7 +239,13 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 			}
 			renderedItemKeys.add(key);
 			sectionItems.push(
-				renderItem(item, canvasState, onPropertyUpdate, onOpenReference),
+				renderItem(
+					item,
+					canvasState,
+					objectPartSelection,
+					onPropertyUpdate,
+					onOpenReference,
+				),
 			);
 		});
 		return (

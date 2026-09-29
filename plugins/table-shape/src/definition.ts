@@ -21,10 +21,12 @@ import { TableRowInsertControl } from "./controls/TableRowInsertControl";
 import { tableDocDefinition } from "./doc";
 import { clearTableCells } from "./grid/clearTableCells";
 import { TABLE_COLUMN_PART_KIND, TABLE_ROW_PART_KIND } from "./grid/tableTrack";
+import { TableCellColorMenu } from "./menu/TableCellColorMenu";
 import { createTableTrackPartDefinition } from "./parts/tableTrackParts";
 import { calcTableTextRegion } from "./presentation/calcTableTextRegion";
 import { TableBox } from "./presentation/TableBox";
 import type { TableDoc } from "./schema/TableDoc";
+import { TABLE_EXTRA_STYLE_PROPERTIES } from "./schema/TableDoc";
 import { resizeTableStateToContent } from "./state/resizeTableStateToContent";
 import { tableToDoc, tableToState } from "./state/TableMapper";
 import type { TableState } from "./state/TableState";
@@ -145,6 +147,11 @@ const TABLE_PARTS: ObjectPartDefinition<TableState>[] = [
  * once (TextSlotStyleProperty); clicking one first narrows it to that cell.
  * Reshaping the grid is in neither section: it belongs to the keys, the grips, the
  * `+` badges and the right-click rows ({@link TABLE_CONTEXT_MENU}).
+ *
+ * The cell background is the one item this shape draws itself. It sits with the
+ * stroke items, being the other half of how a table looks, and is the only custom
+ * item here that survives a cell being picked — it writes what a cell holds, so
+ * it declares `slotAware` (filterTextSlotMenuSections drops every other one).
  */
 export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	...tableDocDefinition,
@@ -159,10 +166,20 @@ export const tableDefinition: ObjectTypeDefinition<TableDoc, TableState> = {
 	contextMenu: TABLE_CONTEXT_MENU,
 	transformHandles: TABLE_TRANSFORM_HANDLES,
 	stencils: TableStencils,
+	extraStyleProperties: TABLE_EXTRA_STYLE_PROPERTIES,
 	menu: [
 		{
 			id: "style",
-			items: [{ type: "borderColor" }, { type: "borderStyle", radius: false }],
+			items: [
+				{
+					type: "custom",
+					id: "table-cell-fill",
+					component: TableCellColorMenu,
+					slotAware: true,
+				},
+				{ type: "borderColor" },
+				{ type: "borderStyle", radius: false },
+			],
 		},
 		{
 			id: "text",

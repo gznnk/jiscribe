@@ -9,9 +9,10 @@ const TEXT_SLOT_ITEM_KEYS: ReadonlySet<BuiltinItemKey> = new Set([
 
 /**
  * Narrows menu sections down to the items that operate on a selected text slot.
- * Custom items are dropped along with the other builtins, since a plugin item has no
- * way to say it is slot-aware. Sections left empty are removed so no divider survives
- * on its own.
+ * A custom item is kept only where it declares itself `slotAware`, that being a
+ * plugin item's one way of saying its write lands on the slot rather than on the
+ * object; every other one goes with the builtins outside the set above. Sections
+ * left empty are removed so no divider survives on its own.
  */
 export const filterTextSlotMenuSections = (
 	sections: ObjectMenuSection[],
@@ -19,8 +20,10 @@ export const filterTextSlotMenuSections = (
 	sections
 		.map((section) => ({
 			id: section.id,
-			items: section.items.filter(
-				(item) => item.type !== "custom" && TEXT_SLOT_ITEM_KEYS.has(item.type),
+			items: section.items.filter((item) =>
+				item.type === "custom"
+					? item.slotAware === true
+					: TEXT_SLOT_ITEM_KEYS.has(item.type),
 			),
 		}))
 		.filter((section) => section.items.length > 0);

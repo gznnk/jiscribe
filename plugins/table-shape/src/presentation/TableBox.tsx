@@ -1,11 +1,9 @@
 import { createFrameObject } from "@jiscribe/canvas-sdk";
 
+import { resolveCellPaint } from "./resolveCellPaint";
 import { TableCellSurface, TableOutline, TableRule } from "./TableBoxStyled";
 import { calcTableLayout } from "../layout/calcTableLayout";
 import type { TableState } from "../state/TableState";
-
-/** What a cell with no background of its own paints: nothing, while still taking the pointer (see TableCellSurface). */
-const UNFILLED_CELL_PAINT = "transparent";
 
 /**
  * Table presentation: a grid of cells under the rules that divide them. Shared
@@ -52,7 +50,7 @@ export const TableBox = createFrameObject<TableState>((state, shape) => {
 					y={rect.y}
 					width={rect.width}
 					height={rect.height}
-					fillColor={state.text?.[cellId]?.fill ?? UNFILLED_CELL_PAINT}
+					fillColor={resolveCellPaint(state.text?.[cellId]?.fill)}
 				/>
 			))}
 			{/* The inner edges alone: the outer two are the outline's own sides. */}

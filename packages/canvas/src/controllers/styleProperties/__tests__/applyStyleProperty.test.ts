@@ -34,6 +34,23 @@ const ExtraShapeExtraStyleProperties = {
 	accentColor: { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
+// A second synthetic type whose extra property lives on its text slots rather
+// than on the object (plugins/table-shape declares `cellFill` this way): the
+// property is named apart from the field so the test cannot pass by writing the
+// name it was given.
+const SLOT_EXTRA_SHAPE_TYPE = "slotExtraShapeFixture";
+const SlotExtraShapeFeatures = {
+	type: SLOT_EXTRA_SHAPE_TYPE,
+	geometry: "rect",
+	stroke: true,
+	fill: false,
+	text: "slots",
+	connectable: true,
+} as const satisfies ObjectFeatures;
+const SlotExtraShapeExtraStyleProperties = {
+	cellFill: { valueType: "string", textSlotField: "fill" },
+} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
+
 // Production-shaped registry: system handlers + the extras under test.
 const styleRegistry = createStylePropertyRegistry();
 initializeStyleProperties(
@@ -41,11 +58,19 @@ initializeStyleProperties(
 	createObjectTextVerticalBasisRegistry(),
 );
 styleRegistry.registerExtras(EXTRA_SHAPE_TYPE, ExtraShapeExtraStyleProperties);
+styleRegistry.registerExtras(
+	SLOT_EXTRA_SHAPE_TYPE,
+	SlotExtraShapeExtraStyleProperties,
+);
 styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 
 // The slot-selection fixtures wear the rect type (with features.text: "slots"),
 // and one synthetic group that holds slots of its own.
-const objectPartRegistry = createTextSlotPartRegistry("rect", "group");
+const objectPartRegistry = createTextSlotPartRegistry(
+	"rect",
+	"group",
+	SLOT_EXTRA_SHAPE_TYPE,
+);
 
 const applyStyleProperty = (
 	state: CanvasControllerState,
@@ -1148,6 +1173,90 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 			const e1 = extraShapeObj("e1");
 			const state = makeState({ selectedIds: ["e1"], objects: { e1 } });
 			expect(applyStyleProperty(state, "notAProperty", "x")).toBe(state);
+		});
+	});
+
+	describe("shape-declared extras stored on the text slots (cellFill)", () => {
+		const cellShapeObj = (id: string): ObjectState =>
+			({
+				id,
+				type: SLOT_EXTRA_SHAPE_TYPE,
+				features: SlotExtraShapeFeatures,
+				stroke: "#000000",
+				strokeWidth: 1,
+				cx: 0,
+				cy: 0,
+				width: 100,
+				height: 100,
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+				text: {
+					r0c0: { text: "head", fill: "#eef" },
+					r0c1: { text: "tail" },
+				},
+			}) as unknown as ObjectState;
+
+		const cellsOf = (
+			state: CanvasControllerState,
+			id: string,
+		): Record<string, Record<string, unknown>> =>
+			(
+				state.objects[id] as unknown as {
+					text: Record<string, Record<string, unknown>>;
+				}
+			).text;
+
+		it("writes the declared field on every slot while none is picked", () => {
+			const s1 = cellShapeObj("s1");
+			const state = makeState({ selectedIds: ["s1"], objects: { s1 } });
+			const result = applyStyleProperty(state, "cellFill", "#fee");
+			expect(cellsOf(result, "s1")).toEqual({
+				r0c0: { text: "head", fill: "#fee" },
+				r0c1: { text: "tail", fill: "#fee" },
+			});
+			// The property name is the menu's, not a field of the object's own.
+			expect("cellFill" in result.objects["s1"]).toBe(false);
+		});
+
+		it("writes only the picked slots", () => {
+			const s1 = cellShapeObj("s1");
+			const state = makeState({
+				selectedIds: ["s1"],
+				objects: { s1 },
+				objectPartSelection: {
+					objectId: "s1",
+					kind: TEXT_SLOT_PART_KIND,
+					partIds: ["r0c1"],
+				},
+			});
+			const result = applyStyleProperty(state, "cellFill", "#fee");
+			expect(cellsOf(result, "s1")).toEqual({
+				r0c0: { text: "head", fill: "#eef" },
+				r0c1: { text: "tail", fill: "#fee" },
+			});
+		});
+
+		it("drops the field when written empty rather than storing the empty string", () => {
+			const s1 = cellShapeObj("s1");
+			const state = makeState({
+				selectedIds: ["s1"],
+				objects: { s1 },
+				objectPartSelection: {
+					objectId: "s1",
+					kind: TEXT_SLOT_PART_KIND,
+					partIds: ["r0c0"],
+				},
+			});
+			const result = applyStyleProperty(state, "cellFill", "");
+			expect(cellsOf(result, "s1").r0c0).toEqual({ text: "head" });
+			expect("fill" in cellsOf(result, "s1").r0c0).toBe(false);
+		});
+
+		it("leaves a shape that declares no such extra untouched", () => {
+			const r1 = rectObj("r1");
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			expect(applyStyleProperty(state, "cellFill", "#fee")).toBe(state);
 		});
 	});
 });

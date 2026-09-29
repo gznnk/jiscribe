@@ -6,6 +6,7 @@ import type { TextSlot } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { isTextRows } from "@jiscribe/doc/model/objects/types/text/TextSlot";
 import { textStyleKeysOf } from "@jiscribe/doc/model/objects/types/text/TextType";
 
+import { resolveAddressedTextSlotIds } from "./addressedTextSlots";
 import {
 	coerceStyleValue,
 	SelectionStyleProperty,
@@ -147,28 +148,14 @@ export class TextSlotStyleProperty extends SelectionStyleProperty {
 			return null;
 		}
 		const property = path[0];
-		// A slot the object has since lost is no target; with none of them left the
-		// write falls back to the whole object, as it does with nothing selected.
-		const targetSlotIds = selectedSlotIds?.filter(
-			(slotId) => slots[slotId] !== undefined,
-		);
-		if (targetSlotIds !== undefined && targetSlotIds.length > 0) {
-			const updatedSlots: TextSlots = { ...slots };
-			for (const slotId of targetSlotIds) {
-				updatedSlots[slotId] = this.writeSlotValue(
-					slots[slotId],
-					property,
-					value,
-				);
-			}
-			return { ...obj, text: updatedSlots } as ObjectState;
+		const updatedSlots: TextSlots = { ...slots };
+		for (const slotId of resolveAddressedTextSlotIds(slots, selectedSlotIds)) {
+			updatedSlots[slotId] = this.writeSlotValue(
+				slots[slotId],
+				property,
+				value,
+			);
 		}
-		const updatedSlots: TextSlots = Object.fromEntries(
-			Object.entries(slots).map(([slotId, slot]) => [
-				slotId,
-				this.writeSlotValue(slot, property, value),
-			]),
-		);
 		return { ...obj, text: updatedSlots } as ObjectState;
 	}
 

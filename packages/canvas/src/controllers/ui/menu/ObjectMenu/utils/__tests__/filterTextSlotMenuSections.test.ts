@@ -55,6 +55,45 @@ describe("filterTextSlotMenuSections", () => {
 		]);
 	});
 
+	it("keeps a custom item that declares itself slot-aware", () => {
+		const slotAwareItem = {
+			type: "custom" as const,
+			id: "cell-fill",
+			component: CustomItemComponent,
+			slotAware: true,
+		};
+		const sections: ObjectMenuSection[] = [
+			{
+				id: "style",
+				items: [slotAwareItem, { type: "backgroundColor" }],
+			},
+		];
+
+		// Its section survives on the strength of that one item, where the builtin
+		// beside it goes.
+		expect(filterTextSlotMenuSections(sections)).toEqual([
+			{ id: "style", items: [slotAwareItem] },
+		]);
+	});
+
+	it("drops a custom item that states slotAware false", () => {
+		const sections: ObjectMenuSection[] = [
+			{
+				id: "style",
+				items: [
+					{
+						type: "custom",
+						id: "plugin-item",
+						component: CustomItemComponent,
+						slotAware: false,
+					},
+				],
+			},
+		];
+
+		expect(filterTextSlotMenuSections(sections)).toEqual([]);
+	});
+
 	it("removes a section that the filter emptied", () => {
 		const sections: ObjectMenuSection[] = [
 			{ id: "line", items: [{ type: "lineColor" }, { type: "lineStyle" }] },

@@ -2,6 +2,7 @@ import { AUTO_COLOR } from "@jiscribe/canvas-sdk/doc";
 import { DEFAULT_STROKE_WIDTH } from "@jiscribe/doc";
 import type {
 	CreateObjectType,
+	ExtraStylePropertyDescriptor,
 	ObjectFeatures,
 	RichText,
 	TextSlot,
@@ -43,9 +44,40 @@ export const TableFeatures = {
  * holds that true (see the design memo).
  */
 export type TableCell = TextSlot<RichText> & {
-	/** Cell background, any CSS color; omitted draws no background. */
+	/**
+	 * Cell background: any CSS color, or `"auto"` to follow the theme's shape
+	 * surface. Omitted draws no background, which is not the same as a color that
+	 * happens to paint nothing — what is behind the table shows through instead
+	 * (TableBox).
+	 */
 	fill?: string;
 };
+
+/**
+ * The name a cell's background is set under from the UI, which is not the
+ * field's own name. A style property's name is canvas-wide, and `fill` there is
+ * the shape fill gated by `features.fill` — which a table declares false — so
+ * the cells need a name of their own; the declaration below is what ties it back
+ * to the field ({@link TABLE_EXTRA_STYLE_PROPERTIES}).
+ */
+export const TABLE_CELL_FILL_PROPERTY = "cellFill";
+
+/** The field on a cell that {@link TABLE_CELL_FILL_PROPERTY} writes ({@link TableCell}). */
+export const TABLE_CELL_FILL_FIELD = "fill";
+
+/**
+ * Table-specific styleable properties beyond what the features imply
+ * (ExtraStylePropertyRegistry). Just the one: a cell's background, stored on the
+ * cell rather than on the table, so the write lands on the cells picked below it
+ * and falls back to every cell — and an empty value drops the field, which is
+ * how "no fill" is reached (see `textSlotField`).
+ */
+export const TABLE_EXTRA_STYLE_PROPERTIES = {
+	[TABLE_CELL_FILL_PROPERTY]: {
+		valueType: "string",
+		textSlotField: TABLE_CELL_FILL_FIELD,
+	},
+} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 /**
  * A cell as a document may write it: the whole object, or just its text when

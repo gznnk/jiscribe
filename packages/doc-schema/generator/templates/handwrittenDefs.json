@@ -550,7 +550,7 @@
 										"default": ""
 									},
 									"fill": {
-										"description": "Cell background, any CSS color; omitted draws no background. A table has no background of its own — this is where one is set.",
+										"description": "Cell background: any CSS color, or \"auto\" to follow the theme. Omitted draws no background, so whatever is behind the table shows through. A table has no background of its own — this is where one is set.",
 										"type": "string"
 									},
 									"textAlign": {

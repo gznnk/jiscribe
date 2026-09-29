@@ -157,6 +157,26 @@ export { getFirstSelectedWithStyleGroup } from "./controllers/ui/menu/utils/getF
 export { getFirstSelectedPropValue } from "./controllers/ui/menu/utils/getFirstSelectedPropValue";
 export { getSelectedShapeStyle } from "./controllers/ui/menu/utils/getSelectedShapeStyle";
 
+// What a whole selection says about one property — one value, several it
+// disagrees on, or no object carrying it — and the readers a row draws that
+// with. The built-in color menus state a selection through these
+// (BackgroundColorMenu): `selectionValueOr` for the swatch's own color and
+// `selectionMixedValues` for the slices it is split into when they disagree.
+export type { SelectionValue } from "./controllers/ui/menu/utils/SelectionValue";
+export {
+	combineSelectionValues,
+	isMixedSelectionValue,
+	selectionMixedValues,
+	selectionValueOr,
+	selectionValueOrFirst,
+} from "./controllers/ui/menu/utils/SelectionValue";
+
+// The read half of an ExtraStyleProperties declaration that names a
+// `textSlotField`: what the slots such a property's write would land on say
+// about it, folded by the rule above. Pair it with a `slotAware` custom item, or
+// the menu goes as soon as a slot is picked.
+export { readSelectionSlotField } from "./controllers/ui/menu/utils/readSelectionSlotField";
+
 // ---------------------------------------------------------------------------
 // Properties sidebar UI kit (packages/canvas/docs/12-plugin-architecture.md)
 // ---------------------------------------------------------------------------
@@ -172,7 +192,8 @@ export { getSelectedShapeStyle } from "./controllers/ui/menu/utils/getSelectedSh
 // ObjectMenu uses (PropertySegmentedControl / PropertyCheckbox); writing
 // `data-part` by hand is discouraged for the same reason as there.
 // Custom rows are dropped while a text slot is selected, since a plugin row has
-// no way to say it is slot-aware.
+// no way to say it is slot-aware — the ObjectMenu's custom item has one
+// (`slotAware`), and no row has asked for the same yet.
 // A section may also carry `isShown`, asked about the selection
 // (PropertyPanelSelection) before the section is drawn: a section whose every row
 // would return null uses it to take its heading away with them.

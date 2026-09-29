@@ -54,6 +54,19 @@ describe("a cell's fill", () => {
 		expect(tableToDoc(tableToState(filledDoc))).toEqual(filledDoc);
 	});
 
+	it("saves as the short form again once the field is taken away", () => {
+		// What the menu's "no fill" write leaves behind is the field gone, not
+		// emptied — which is the only way a cell gets back to writing as its text
+		// alone (ExtraStyleProperty).
+		const state = tableToState(filledDoc);
+		const { fill: _dropped, ...clearedCell } = state.text.r0c0;
+		const doc = tableToDoc({
+			...state,
+			text: { ...state.text, r0c0: clearedCell },
+		});
+		expect(doc.cells[0][0]).toBe("設計");
+	});
+
 	it("is on the slot the mapper hands the canvas", () => {
 		const state = tableToState(filledDoc);
 		expect(state.text.r0c0).toEqual(filledCell);
